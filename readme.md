@@ -1,5 +1,7 @@
 # rugpulld
 
+[![Node.js CI](https://github.com/rugpullindex/rugpulld/actions/workflows/node.js.yml/badge.svg)](https://github.com/rugpullindex/rugpulld/actions/workflows/node.js.yml)
+
 ### rugpulld is a network daemon for the rugpull network
 
 ## installation
