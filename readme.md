@@ -2,7 +2,12 @@
 
 [![Node.js CI](https://github.com/rugpullindex/rugpulld/actions/workflows/node.js.yml/badge.svg)](https://github.com/rugpullindex/rugpulld/actions/workflows/node.js.yml)
 
-### rugpulld is a network daemon for the rugpull network
+### rugpulld is a peer2peer network using Ethereum's layer 2 to enable signal and data trading.
+
+## why?
+
+At rugpullindex.com, we want to decentralize our crawler infrastructure. We have, hence, called for building a "[Community Crawler](https://rugpullindex.com/blog/2021-12-19/community-crawler)". rugpulld is a peer2peer network using Ethereum's layer 2 to enable
+signal and data trading. It implements a continuously-running data bounty market using libp2p and zksync. The project is under construction.
 
 ## installation
 
