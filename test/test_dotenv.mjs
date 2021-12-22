@@ -10,27 +10,28 @@ test("that repo contains a .env-copy file with all possible configuration option
   const copyName = ".env-copy";
   const copyPath = resolve(appdir(), copyName);
   const content = (await readFile(copyPath)).toString();
-  let assertions = 1;
   t.truthy(content);
 
   const name = ".env";
   const envPath = resolve(appdir(), name);
 
-  try {
-    await access(envPath, constants.F_OK);
-    const envContent = (await readFile(envPath)).toString();
-    const expr = new RegExp(".*=.*", "gm");
-    const envMatches = envContent.match(expr);
-    const copyMatches = content.match(expr);
-    t.is(envMatches.length, copyMatches.length);
-    assertions += 1;
-  } catch {}
-
-  const options = ["LOG_LEVEL", "NODE_ENV"];
-
-  assertions += options.length;
-  t.plan(assertions);
-  for (let option of options) {
-    t.true(content.includes(option), `${option} missing`);
-  }
+  const expr = new RegExp(".*=.*", "gm");
+  const allOptions = [
+    "LOG_LEVEL",
+    "NODE_ENV",
+    "BIND_ADDRESS_V4",
+    "PORT",
+    "IS_BOOTSTRAP_NODE",
+    "USE_EPHEMERAL_ID"
+  ];
+  await access(envPath, constants.F_OK);
+  const envContent = (await readFile(envPath)).toString();
+  const envMatches = envContent.match(expr);
+  const copyMatches = content.match(expr);
+  t.is(envMatches.length, copyMatches.length);
+  t.is(
+    copyMatches.length,
+    allOptions.length,
+    ".env-copy and required `allOptions` mismatch"
+  );
 });

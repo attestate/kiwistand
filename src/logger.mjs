@@ -1,6 +1,4 @@
 // @format
-import dotenv from "dotenv";
-dotenv.config();
 import pino from "pino";
 import pretty from "pino-pretty";
 import { env } from "process";
