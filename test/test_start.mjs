@@ -44,12 +44,25 @@ test.serial("run as bootstrap node", async t => {
   t.pass();
 });
 
-test.serial("run a default node", async t => {
+test.serial("run a default node that gets bootstrapped", async t => {
   const config = (await import("../src/config.mjs")).default;
   const node = await import("../src/index.mjs");
-  const n1 = await node.start(config);
+
+  let publicNode;
+  const handlers = {
+    "peer:discovery": peer => {
+      publicNode = peer;
+    }
+  };
+  const n1 = await node.start(config, handlers);
+  t.truthy(publicNode);
+  t.true(
+    config.config.peerDiscovery.bootstrap.list[0].includes(
+      publicNode.toB58String()
+    )
+  );
+
   await n1.stop();
-  t.pass();
 });
 
 test.serial("if nodes can be bootstrapped", async t => {

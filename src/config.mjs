@@ -18,7 +18,9 @@ let peerId = {
 let IS_BOOTSTRAP_NODE = env.IS_BOOTSTRAP_NODE === "true" ? true : false;
 if (IS_BOOTSTRAP_NODE) {
   if (PORT !== DEFAULT_PORT) {
-    throw new Error(`Bootstrap nodes must run on default port ${DEFAULT_PORT}, current port ${PORT}`);
+    throw new Error(
+      `Bootstrap nodes must run on default port ${DEFAULT_PORT}, current port ${PORT}`
+    );
   }
   peerId.isBootstrap = true;
   logger.info("Launching as bootstrap node");
@@ -37,6 +39,7 @@ if (USE_EPHEMERAL_ID) {
   peerId.path = `${appdir()}/.keys.json`;
 }
 
+const protocolPrefix = "rugpulld";
 const config = {
   peerId,
   modules: {
@@ -49,14 +52,15 @@ const config = {
     listen: [`/ip4/${BIND_ADDRESS_V4}/tcp/${PORT}`]
   },
   config: {
+    protocolPrefix,
     autoDial: true,
     peerDiscovery: {
       [Bootstrap.tag]: {
         interval: 2000,
         enabled: true,
         list: [
-          `/ip4/78.46.212.31/tcp/${DEFAULT_PORT}/p2p/12D3KooWDDfCNMZcC2qqYoUNEJuieCGhh5D9p7JDVivAodcx1PaU`,
-          `/ip4/127.0.0.1/tcp/${DEFAULT_PORT}/p2p/12D3KooWDDfCNMZcC2qqYoUNEJuieCGhh5D9p7JDVivAodcx1PaU`
+          `/ip4/78.46.212.31/tcp/${DEFAULT_PORT}/${protocolPrefix}/12D3KooWDDfCNMZcC2qqYoUNEJuieCGhh5D9p7JDVivAodcx1PaU`,
+          `/ip4/127.0.0.1/tcp/${DEFAULT_PORT}/${protocolPrefix}/12D3KooWDDfCNMZcC2qqYoUNEJuieCGhh5D9p7JDVivAodcx1PaU`
         ]
       }
     }

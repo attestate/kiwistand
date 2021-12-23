@@ -10,7 +10,9 @@ import config from "./config.mjs";
 
   node.multiaddrs.forEach(addr => {
     logger.info(
-      `listening: ${addr.toString()}/p2p/${node.peerId.toB58String()}`
+      `listening: ${addr.toString()}/${
+        config.config.protocolPrefix
+      }/${node.peerId.toB58String()}`
     );
   });
 })();
