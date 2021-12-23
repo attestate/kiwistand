@@ -7,7 +7,7 @@ export
 setup:
 	curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -
 	sudo apt-get install -y nodejs
-	npm i
+	npm i --ignore-scripts
 
 .PHONY: run
 run:
