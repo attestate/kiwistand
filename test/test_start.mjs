@@ -9,7 +9,8 @@ test("if nodes can be bootstrapped", async t => {
     process: {
       env: {
         ...env,
-        IS_BOOTSTRAP_NODE: "true"
+        IS_BOOTSTRAP_NODE: "true",
+        USE_EPHEMERAL_ID: "false"
       }
     }
   });

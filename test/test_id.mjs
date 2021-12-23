@@ -48,7 +48,6 @@ test("if creating an id is possible", async t => {
 });
 
 test.serial("if id can be persisted", async t => {
-  t.truthy(config.peerId.path);
   const id = await create();
   await store(idPath, id);
 

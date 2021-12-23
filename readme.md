@@ -21,6 +21,15 @@ cp .env-copy .env
 npm run dev
 ```
 
+## setup on Ubuntu
+
+```
+apt-get update
+sudo apt-get install build-essential
+make setup
+make run
+```
+
 ## license
 
 GPL-3.0-only, see LICENSE file

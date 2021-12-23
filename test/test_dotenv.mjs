@@ -22,7 +22,8 @@ test("that repo contains a .env-copy file with all possible configuration option
     "BIND_ADDRESS_V4",
     "PORT",
     "IS_BOOTSTRAP_NODE",
-    "USE_EPHEMERAL_ID"
+    "USE_EPHEMERAL_ID",
+    "IPV4"
   ];
   await access(envPath, constants.F_OK);
   const envContent = (await readFile(envPath)).toString();

@@ -39,7 +39,7 @@ const config = {
       interval: 60e3,
       enabled: true,
       list: [
-        "/ip4/127.0.0.1/tcp/53462/p2p/12D3KooWDDfCNMZcC2qqYoUNEJuieCGhh5D9p7JDVivAodcx1PaU"
+        "/ip4/78.46.212.31/tcp/53462/p2p/12D3KooWDDfCNMZcC2qqYoUNEJuieCGhh5D9p7JDVivAodcx1PaU"
       ]
     }
   }
