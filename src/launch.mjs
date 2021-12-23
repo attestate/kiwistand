@@ -4,7 +4,7 @@ import config from "./config.mjs";
 
 (async () => {
   const handlers = {
-    "peer:discovery": peer => logger.log(`discovered ${peer.toB58String()}`)
+    "peer:discovery": peer => logger.info(`discovered ${peer.toB58String()}`)
   };
   const node = await start(config, handlers);
 

@@ -5,43 +5,69 @@ import process from "process";
 
 import { start } from "../src/index.mjs";
 
-test("run as bootstrap node", async t => {
+test.serial(
+  "run as bootstrap node but without correct default port",
+  async t => {
+    await t.throwsAsync(async () => {
+      await esmock("../src/config.mjs", {
+        process: {
+          ...process,
+          env: {
+            ...process.env,
+            BIND_ADDRESS_V4: "127.0.0.1",
+            PORT: "1234",
+            USE_EPHEMERAL_ID: "false",
+            IS_BOOTSTRAP_NODE: "true"
+          }
+        }
+      });
+    });
+  }
+);
+
+test.serial("run as bootstrap node", async t => {
   const config = await esmock("../src/config.mjs", {
     process: {
       ...process,
       env: {
         ...process.env,
         BIND_ADDRESS_V4: "127.0.0.1",
-        PORT: 0,
+        PORT: "53462",
         USE_EPHEMERAL_ID: "false",
         IS_BOOTSTRAP_NODE: "true"
       }
     }
   });
   delete config["default"];
-  await start(config);
+  const node = await start(config);
+  await node.stop();
   t.pass();
 });
 
-test("run a default node", async t => {
+test.serial("run a default node", async t => {
   const config = (await import("../src/config.mjs")).default;
   const node = await import("../src/index.mjs");
-  await node.start(config);
+  const n1 = await node.start(config);
+  await n1.stop();
   t.pass();
 });
 
-test("if nodes can be bootstrapped", async t => {
+test.serial("if nodes can be bootstrapped", async t => {
+  t.plan(6);
   const config1 = await esmock("../src/config.mjs", {
     process: {
       ...process,
       env: {
         ...process.env,
+        PORT: "53462",
+        BIND_ADDRESS_V4: "127.0.0.1",
         IS_BOOTSTRAP_NODE: "true",
         USE_EPHEMERAL_ID: "false"
       }
     }
   });
   delete config1["default"];
+  delete config1["esmockKey"];
   t.true(config1.peerId.isBootstrap);
   t.false(config1.peerId.isEphemeral);
   const node1 = await start(config1);
@@ -51,9 +77,10 @@ test("if nodes can be bootstrapped", async t => {
       ...process,
       env: {
         ...process.env,
+        BIND_ADDRESS_V4: "127.0.0.1",
         IS_BOOTSTRAP_NODE: "false",
         USE_EPHEMERAL_ID: "true",
-        PORT: 0
+        PORT: "0"
       }
     }
   });
@@ -61,12 +88,19 @@ test("if nodes can be bootstrapped", async t => {
   t.false(config2.peerId.isBootstrap);
   t.true(config2.peerId.isEphemeral);
 
+  let discovery;
   const handlers2 = {
     "peer:discovery": peer => {
-      t.true(
-        config2.peerDiscovery.bootstrap.list[0].includes(peer.toB58String())
-      );
+      discovery = peer;
     }
   };
   const node2 = await start(config2, handlers2);
+  t.truthy(discovery);
+  t.true(
+    config2.config.peerDiscovery.bootstrap.list[0].includes(
+      discovery.toB58String()
+    )
+  );
+  await node1.stop();
+  await node2.stop();
 });
