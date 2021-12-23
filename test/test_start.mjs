@@ -66,7 +66,7 @@ test.serial("run a default node that gets bootstrapped", async t => {
 });
 
 test.serial("if nodes can be bootstrapped", async t => {
-  t.plan(6);
+  t.plan(2);
   const config1 = await esmock("../src/config.mjs", {
     process: {
       ...process,
@@ -81,8 +81,6 @@ test.serial("if nodes can be bootstrapped", async t => {
   });
   delete config1["default"];
   delete config1["esmockKey"];
-  t.true(config1.peerId.isBootstrap);
-  t.false(config1.peerId.isEphemeral);
   const node1 = await start(config1);
 
   const config2 = await esmock("../src/config.mjs", {
@@ -98,8 +96,6 @@ test.serial("if nodes can be bootstrapped", async t => {
     }
   });
   delete config2["default"];
-  t.false(config2.peerId.isBootstrap);
-  t.true(config2.peerId.isEphemeral);
 
   let discovery;
   const handlers2 = {
