@@ -39,8 +39,8 @@ if (IS_BOOTSTRAP_NODE) {
       interval: 2000,
       enabled: true,
       list: [
-        `/ip4/78.46.212.31/tcp/${DEFAULT_PORT}/${config.protocolPrefix}/12D3KooWDDfCNMZcC2qqYoUNEJuieCGhh5D9p7JDVivAodcx1PaU`,
-        `/ip4/127.0.0.1/tcp/${DEFAULT_PORT}/${config.protocolPrefix}/12D3KooWDDfCNMZcC2qqYoUNEJuieCGhh5D9p7JDVivAodcx1PaU`
+        `/ip4/78.46.212.31/tcp/${DEFAULT_PORT}/${config.protocolPrefix}/16Uiu2HAmJXT69MYTEDLRYEgezd43uxhuA3yE2BGWTcsLuQeNeSLz`,
+        `/ip4/127.0.0.1/tcp/${DEFAULT_PORT}/${config.protocolPrefix}/16Uiu2HAmJXT69MYTEDLRYEgezd43uxhuA3yE2BGWTcsLuQeNeSLz`
       ]
     }
   };
