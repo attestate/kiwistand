@@ -11,11 +11,11 @@ setup:
 
 .PHONY: run
 run:
-	nohup node -r dotenv/config --no-warnings ./src/launch.mjs &> out.log &
+	nohup node -r dotenv/config --no-warnings ./src/launch.mjs &
 
 .PHONY: deploy
 deploy:
-	rsync -avz . root@$(IPV4):./rugpulld --exclude=\"node_modules\" --exclude=\".git\"
+	rsync -avz . root@$(IPV4):./rugpulld --exclude="node_modules" --exclude=".env" --exclude=".git"
 
 .PHONY: connect
 connect:

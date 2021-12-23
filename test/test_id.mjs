@@ -28,7 +28,7 @@ test.serial("if bootstrapping id is working", async t => {
   } catch (err) {
     t.true(true);
   }
-  const peerId = await bootstrap(idPath);
+  const peerId = await bootstrap(idPath, config.peerId.options);
   t.true(peerId instanceof PeerId);
 
   try {
@@ -42,13 +42,13 @@ test.serial("if bootstrapping id is working", async t => {
 });
 
 test("if creating an id is possible", async t => {
-  const id = await create();
+  const id = await create(config.peerId.options);
   t.true(id instanceof PeerId);
   t.truthy(id);
 });
 
 test.serial("if id can be persisted", async t => {
-  const id = await create();
+  const id = await create(config.peerId.options);
   await store(idPath, id);
 
   try {
@@ -68,7 +68,7 @@ test.serial("loading a non-existent peer id file", async t => {
 });
 
 test.serial("if id can be loaded", async t => {
-  const id = await create();
+  const id = await create(config.peerId.options);
   await store(idPath, id);
   const peerId = await load(idPath);
   t.true(peerId instanceof PeerId);

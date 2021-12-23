@@ -1,12 +1,12 @@
 import { start } from "./index.mjs";
 import logger from "./logger.mjs";
-import { discovery } from "./handlers/market.mjs";
+import config from "./config.mjs";
 
 (async () => {
   const handlers = {
-    "peer:discovery": discovery
+    "peer:discovery": peer => logger.log(`discovered ${peer.toB58String()}`)
   };
-  const node = await start(handlers);
+  const node = await start(config, handlers);
 
   node.multiaddrs.forEach(addr => {
     logger.info(

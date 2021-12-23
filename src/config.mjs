@@ -1,4 +1,8 @@
 import { env } from "process";
+import TCP from "libp2p-tcp";
+import { NOISE } from "@chainsafe/libp2p-noise";
+import MPLEX from "libp2p-mplex";
+import Bootstrap from "libp2p-bootstrap";
 
 import { appdir } from "./utils.mjs";
 import logger from "./logger.mjs";
@@ -31,16 +35,25 @@ if (USE_EPHEMERAL_ID) {
 
 const config = {
   peerId,
+  modules: {
+    transport: [TCP],
+    connEncryption: [NOISE],
+    streamMuxer: [MPLEX],
+    peerDiscovery: [Bootstrap]
+  },
   addresses: {
     listen: [`/ip4/${BIND_ADDRESS_V4}/tcp/${PORT}`]
   },
-  peerDiscovery: {
-    bootstrap: {
-      interval: 60e3,
-      enabled: true,
-      list: [
-        "/ip4/78.46.212.31/tcp/53462/p2p/12D3KooWDDfCNMZcC2qqYoUNEJuieCGhh5D9p7JDVivAodcx1PaU"
-      ]
+  config: {
+    peerDiscovery: {
+      [Bootstrap.tag]: {
+        interval: 2000,
+        enabled: true,
+        list: [
+          "/ip4/78.46.212.31/tcp/53462/p2p/12D3KooWDDfCNMZcC2qqYoUNEJuieCGhh5D9p7JDVivAodcx1PaU",
+          "/ip4/127.0.0.1/tcp/53462/p2p/12D3KooWDDfCNMZcC2qqYoUNEJuieCGhh5D9p7JDVivAodcx1PaU"
+        ]
+      }
     }
   }
 };
