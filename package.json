@@ -5,7 +5,7 @@
   "main": "./src/index.mjs",
   "scripts": {
     "test": "ava --verbose",
-    "dev": "node -r dotenv/config --no-warnings ./src/launch.mjs"
+    "dev": "DEBUG=attestate* node -r dotenv/config --no-warnings ./src/launch.mjs"
   },
   "repository": {
     "type": "git",
@@ -36,17 +36,24 @@
     "@libp2p/mplex": "7.1.0",
     "@libp2p/peer-id": "1.1.16",
     "@libp2p/tcp": "6.0.4",
+    "debug": "4.3.4",
     "dotenv": "16.0.3",
-    "esmock": "1.7.2",
-    "libp2p": "0.40.0",
-    "pino": "7.6.0"
+    "libp2p": "0.40.0"
   },
   "devDependencies": {
     "ava": "3.15.0",
-    "pino-pretty": "7.3.0"
+    "esmock": "1.7.2"
   },
   "ava": {
-    "nodeArguments": ["--loader=esmock", "--no-warnings"],
-    "require": ["dotenv/config"]
+    "environmentArguments": {
+      "DEBUG": "attestate*"
+    },
+    "nodeArguments": [
+      "--loader=esmock",
+      "--no-warnings"
+    ],
+    "require": [
+      "dotenv/config"
+    ]
   }
 }

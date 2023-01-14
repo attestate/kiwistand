@@ -1,7 +1,7 @@
 //@format
 import { createLibp2p } from "libp2p";
 
-import logger from "./logger.mjs";
+import log from "./logger.mjs";
 import { bootstrap } from "./id.mjs";
 
 export async function start(config, handlers = {}) {
@@ -9,7 +9,7 @@ export async function start(config, handlers = {}) {
   const node = await createLibp2p({ ...config, peerId });
 
   for (const [key, value] of Object.entries(handlers)) {
-    logger.info(`Adding "${key}" handler`);
+    log(`Adding "${key}" handler`);
     node.addEventListener(key, value);
   }
 

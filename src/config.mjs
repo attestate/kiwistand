@@ -6,7 +6,7 @@ import { bootstrap } from "@libp2p/bootstrap";
 import { gossipsub } from "@chainsafe/libp2p-gossipsub";
 
 import { appdir } from "./utils.mjs";
-import logger from "./logger.mjs";
+import log from "./logger.mjs";
 
 const { BIND_ADDRESS_V4, PORT } = env;
 const DEFAULT_PORT = "53462";
@@ -29,9 +29,9 @@ if (IS_BOOTSTRAP_NODE) {
       `Bootstrap nodes must run on default port ${DEFAULT_PORT}, current port ${PORT}`
     );
   }
-  logger.info("Launching as bootstrap node");
+  log("Launching as bootstrap node");
 } else {
-  logger.info("Configuring bootstrap nodes");
+  log("Configuring bootstrap nodes");
   config.peerDiscovery = [
     bootstrap({
       list: [
@@ -49,9 +49,9 @@ if (IS_BOOTSTRAP_NODE) {
 
 let USE_EPHEMERAL_ID = env.USE_EPHEMERAL_ID === "true" ? true : false;
 if (USE_EPHEMERAL_ID) {
-  logger.info("Using in-memory id.");
+  log("Using in-memory id.");
 } else {
-  logger.info("Using id from disk.");
+  log("Using id from disk.");
   config.peerId.path = `${appdir()}/.keys.json`;
 }
 

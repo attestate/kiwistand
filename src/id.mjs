@@ -6,6 +6,8 @@ import {
 } from "@libp2p/peer-id-factory";
 import { writeFile, readFile } from "fs/promises";
 
+import log from "./logger.mjs";
+
 export async function bootstrap(path) {
   let peerId;
   if (!path) {
@@ -22,7 +24,7 @@ export async function bootstrap(path) {
       throw err;
     }
   }
-  console.log("Loaded id", peerId.toCID());
+  log(`Loaded id: ${peerId.toCID()}`);
   return peerId;
 }
 
