@@ -4,7 +4,7 @@
   "description": "rugpulld is a network daemon for the rugpull network",
   "main": "./src/index.mjs",
   "scripts": {
-    "test": "ava --node-arguments=\"-r dotenv/config --loader=esmock --no-warnings\"",
+    "test": "ava --verbose",
     "dev": "node -r dotenv/config --no-warnings ./src/launch.mjs"
   },
   "repository": {
@@ -30,20 +30,23 @@
   },
   "homepage": "https://github.com/rugpullindex/rugpulld#readme",
   "dependencies": {
-    "@chainsafe/libp2p-noise": "5.0.0",
-    "dotenv": "10.0.0",
+    "@chainsafe/libp2p-gossipsub": "5.2.1",
+    "@chainsafe/libp2p-noise": "10.2.0",
+    "@libp2p/bootstrap": "5.0.0",
+    "@libp2p/mplex": "7.1.0",
+    "@libp2p/peer-id": "1.1.16",
+    "@libp2p/tcp": "6.0.4",
+    "dotenv": "16.0.3",
     "esmock": "1.7.2",
-    "libp2p": "0.35.6",
-    "libp2p-bootstrap": "0.14.0",
-    "libp2p-gossipsub": "0.12.1",
-    "libp2p-mplex": "0.10.5",
-    "libp2p-tcp": "0.17.2",
-    "multiaddr": "10.0.1",
-    "peer-id": "0.16.0",
+    "libp2p": "0.40.0",
     "pino": "7.6.0"
   },
   "devDependencies": {
     "ava": "3.15.0",
     "pino-pretty": "7.3.0"
+  },
+  "ava": {
+    "nodeArguments": ["--loader=esmock", "--no-warnings"],
+    "require": ["dotenv/config"]
   }
 }

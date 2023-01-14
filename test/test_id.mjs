@@ -1,10 +1,10 @@
 //@format
 import test from "ava";
-import PeerId from "peer-id";
 import { access, unlink } from "fs/promises";
 import { constants } from "fs";
+import { createSecp256k1PeerId } from "@libp2p/peer-id-factory";
 
-import { bootstrap, create, load, store } from "../src/id.mjs";
+import { bootstrap, load, store } from "../src/id.mjs";
 import config from "../src/config.mjs";
 import { appdir } from "../src/utils.mjs";
 
@@ -20,35 +20,28 @@ async function teardown(t) {
   await unlink(idPath);
 }
 
-test.serial("if bootstrapping id is working", async t => {
-  t.plan(3);
+test.serial("if bootstrapping id is working", async (t) => {
   try {
     await access(idPath, constants.F_OK);
     t.fail();
   } catch (err) {
     t.true(true);
   }
-  const peerId = await bootstrap(idPath, config.peerId.options);
-  t.true(peerId instanceof PeerId);
+  const peerId = await bootstrap(idPath);
 
   try {
     await access(idPath, constants.F_OK);
     t.pass();
   } catch (err) {
+    t.log(err);
     t.fail();
   }
 
   t.teardown(teardown);
 });
 
-test("if creating an id is possible", async t => {
-  const id = await create(config.peerId.options);
-  t.true(id instanceof PeerId);
-  t.truthy(id);
-});
-
-test.serial("if id can be persisted", async t => {
-  const id = await create(config.peerId.options);
+test.serial("if id can be persisted", async (t) => {
+  const id = await createSecp256k1PeerId();
   await store(idPath, id);
 
   try {
@@ -61,17 +54,16 @@ test.serial("if id can be persisted", async t => {
   t.teardown(teardown);
 });
 
-test.serial("loading a non-existent peer id file", async t => {
+test.serial("loading a non-existent peer id file", async (t) => {
   await t.throwsAsync(async () => await load(idPath), {
-    instanceOf: Error
+    instanceOf: Error,
   });
 });
 
-test.serial("if id can be loaded", async t => {
-  const id = await create(config.peerId.options);
+test.serial("if id can be loaded", async (t) => {
+  const id = await createSecp256k1PeerId();
   await store(idPath, id);
   const peerId = await load(idPath);
-  t.true(peerId instanceof PeerId);
-  t.is(id.toB58String(), peerId.toB58String());
+  t.is(id.toString(), peerId.toString());
   t.teardown(teardown);
 });

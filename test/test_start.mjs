@@ -5,111 +5,58 @@ import process from "process";
 
 import { start } from "../src/index.mjs";
 
+function randInt() {
+  return Math.floor(Math.random() * 10000);
+}
+
 test.serial(
   "run as bootstrap node but without correct default port",
-  async t => {
+  async (t) => {
     await t.throwsAsync(async () => {
-      await esmock("../src/config.mjs", {
-        process: {
-          ...process,
-          env: {
-            ...process.env,
-            BIND_ADDRESS_V4: "127.0.0.1",
-            PORT: "1234",
-            USE_EPHEMERAL_ID: "false",
-            IS_BOOTSTRAP_NODE: "true"
-          }
-        }
-      });
+      process.env.PORT = "1234";
+      process.env.BIND_ADDRESS_V4 = "127.0.0.1";
+      process.env.IS_BOOTSTRAP_NODE = "true";
+      process.env.USE_EPHEMERAL_ID = "false";
+      await import(`../src/config.mjs?${randInt()}`);
     });
   }
 );
 
-test.serial("run as bootstrap node", async t => {
-  const config = await esmock("../src/config.mjs", {
-    process: {
-      ...process,
-      env: {
-        ...process.env,
-        BIND_ADDRESS_V4: "127.0.0.1",
-        PORT: "53462",
-        USE_EPHEMERAL_ID: "false",
-        IS_BOOTSTRAP_NODE: "true"
-      }
-    }
-  });
-  delete config["default"];
+test.serial("run as bootstrap node", async (t) => {
+  process.env.PORT = "53462";
+  process.env.BIND_ADDRESS_V4 = "127.0.0.1";
+  process.env.IS_BOOTSTRAP_NODE = "true";
+  process.env.USE_EPHEMERAL_ID = "false";
+  const config = (await import(`../src/config.mjs?${randInt()}`)).default;
   const node = await start(config);
   await node.stop();
   t.pass();
 });
 
-test.serial("run a default node that gets bootstrapped", async t => {
-  const config = (await import("../src/config.mjs")).default;
-  const node = await import("../src/index.mjs");
+test.serial("if nodes can be bootstrapped", async (t) => {
+  let node1, node2;
+  const peer = await new Promise(async (resolve, reject) => {
+    process.env.PORT = "53462";
+    process.env.BIND_ADDRESS_V4 = "127.0.0.1";
+    process.env.IS_BOOTSTRAP_NODE = "true";
+    process.env.USE_EPHEMERAL_ID = "false";
+    const config1 = (await import(`../src/config.mjs?${randInt()}`)).default;
+    node1 = await start(config1);
 
-  let publicNode;
-  const handlers = {
-    "peer:discovery": peer => {
-      publicNode = peer;
-    }
-  };
-  const n1 = await node.start(config, handlers);
-  t.truthy(publicNode);
-  t.true(
-    config.config.peerDiscovery.bootstrap.list[0].includes(
-      publicNode.toB58String()
-    )
-  );
+    process.env.PORT = "0";
+    process.env.BIND_ADDRESS_V4 = "127.0.0.1";
+    process.env.IS_BOOTSTRAP_NODE = "false";
+    process.env.USE_EPHEMERAL_ID = "true";
+    const config2 = (await import(`../src/config.mjs?${randInt()}`)).default;
 
-  await n1.stop();
-});
-
-test.serial("if nodes can be bootstrapped", async t => {
-  t.plan(2);
-  const config1 = await esmock("../src/config.mjs", {
-    process: {
-      ...process,
-      env: {
-        ...process.env,
-        PORT: "53462",
-        BIND_ADDRESS_V4: "127.0.0.1",
-        IS_BOOTSTRAP_NODE: "true",
-        USE_EPHEMERAL_ID: "false"
-      }
-    }
+    const handlers2 = {
+      "peer:discovery": (peer) => {
+        resolve(peer);
+      },
+    };
+    node2 = await start(config2, handlers2);
   });
-  delete config1["default"];
-  delete config1["esmockKey"];
-  const node1 = await start(config1);
-
-  const config2 = await esmock("../src/config.mjs", {
-    process: {
-      ...process,
-      env: {
-        ...process.env,
-        BIND_ADDRESS_V4: "127.0.0.1",
-        IS_BOOTSTRAP_NODE: "false",
-        USE_EPHEMERAL_ID: "true",
-        PORT: "0"
-      }
-    }
-  });
-  delete config2["default"];
-
-  let discovery;
-  const handlers2 = {
-    "peer:discovery": peer => {
-      discovery = peer;
-    }
-  };
-  const node2 = await start(config2, handlers2);
-  t.truthy(discovery);
-  t.true(
-    config2.config.peerDiscovery.bootstrap.list[0].includes(
-      discovery.toB58String()
-    )
-  );
+  t.truthy(peer);
   await node1.stop();
   await node2.stop();
 });

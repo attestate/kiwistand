@@ -4,11 +4,11 @@ import config from "./config.mjs";
 
 (async () => {
   const handlers = {
-    "peer:discovery": peer => logger.info(`discovered ${peer.toB58String()}`)
+    "peer:discovery": (peer) => logger.info(`discovered ${peer.toB58String()}`),
   };
   const node = await start(config, handlers);
 
-  node.multiaddrs.forEach(addr => {
+  node.multiaddrs.forEach((addr) => {
     logger.info(
       `listening: ${addr.toString()}/${
         config.config.protocolPrefix
