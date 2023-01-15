@@ -10,7 +10,7 @@ export async function start(config, handlers = {}) {
 
   for (const [key, value] of Object.entries(handlers)) {
     log(`Adding "${key}" handler`);
-    node.addEventListener(key, value);
+    node.handle(key, value);
   }
 
   await node.start();
