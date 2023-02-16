@@ -41,7 +41,12 @@ test.serial("if nodes can be bootstrapped", async (t) => {
     process.env.IS_BOOTSTRAP_NODE = "true";
     process.env.USE_EPHEMERAL_ID = "false";
     const config1 = (await import(`../src/config.mjs?${randInt()}`)).default;
-    node1 = await start(config1);
+    const handlers1 = {
+      "peer:discovery": (peer) => {
+        t.log("Bootstrap node: Found peer", peer);
+      },
+    };
+    node1 = await start(config1, handlers1);
 
     process.env.PORT = "0";
     process.env.BIND_ADDRESS_V4 = "127.0.0.1";
