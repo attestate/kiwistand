@@ -4,7 +4,7 @@
   "description": "rugpulld is a network daemon for the rugpull network",
   "main": "./src/index.mjs",
   "scripts": {
-    "test": "ava --verbose",
+    "test": "ava --serial --verbose",
     "dev": "DEBUG=attestate* node -r dotenv/config --no-warnings ./src/launch.mjs"
   },
   "repository": {
@@ -45,6 +45,7 @@
     "ethers": "5.7.2",
     "it-all": "2.0.0",
     "it-length-prefixed": "8.0.4",
+    "it-map": "2.0.0",
     "libp2p": "0.40.0",
     "uint8arrays": "4.0.3"
   },

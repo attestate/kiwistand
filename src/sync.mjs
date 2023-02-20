@@ -3,6 +3,7 @@ import * as lp from "it-length-prefixed";
 import { pipe } from "it-pipe";
 import { toString } from "uint8arrays/to-string";
 import { fromString } from "uint8arrays/from-string";
+import map from "it-map";
 import all from "it-all";
 
 import log from "./logger.mjs";
@@ -15,9 +16,12 @@ export async function toWire(message, sink) {
 
 export async function fromWire(source) {
   return await pipe(source, lp.decode(), async (_source) => {
-    const [message] = await all(_source);
-    const sMessage = toString(message.subarray());
-    return JSON.parse(sMessage);
+    const results = await map(_source, (message) => {
+      if (!message) return;
+      const sMessage = toString(message.subarray());
+      return JSON.parse(sMessage);
+    });
+    return await all(results);
   });
 }
 

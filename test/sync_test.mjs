@@ -35,5 +35,5 @@ test("serializing from wire", async (t) => {
   const stream = await pipe([buf], lp.encode());
 
   const actual = await fromWire(stream);
-  t.deepEqual(actual, message);
+  t.deepEqual(actual, [message]);
 });
