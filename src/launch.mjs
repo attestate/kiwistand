@@ -1,11 +1,10 @@
 import { start } from "./index.mjs";
 import log from "./logger.mjs";
 import config from "./config.mjs";
-import { handleDiscovery, handleMessage } from "./sync.mjs";
+import { handleDiscovery } from "./sync.mjs";
 
 const handlers = {
   "peer:discovery": handleDiscovery,
-  "/messages/1.0.0/": handleMessage,
 };
 
 (async () => {
