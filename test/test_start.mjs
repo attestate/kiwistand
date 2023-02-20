@@ -51,8 +51,8 @@ test.serial("if nodes can be bootstrapped", async (t) => {
     const nodeHandler1 = {};
     const connHandler1 = {};
     const protoHandler1 = {
-      "/test/1.0.0": ({ stream }) => {
-        pipe(stream.source, lp.decode(), async function (source) {
+      "/test/1.0.0": async ({ stream }) => {
+        await pipe(stream.source, lp.decode(), async function (source) {
           for await (const msg of source) {
             const s = toString(msg.subarray());
             resolve(JSON.parse(s));
@@ -75,7 +75,11 @@ test.serial("if nodes can be bootstrapped", async (t) => {
           evt.detail.multiaddrs[0],
           "/test/1.0.0"
         );
-        pipe([fromString(JSON.stringify(message))], lp.encode(), stream.sink);
+        await pipe(
+          [fromString(JSON.stringify(message))],
+          lp.encode(),
+          stream.sink
+        );
       },
     };
     const connHandler2 = {};
