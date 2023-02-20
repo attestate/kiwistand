@@ -3,6 +3,7 @@ import test from "ava";
 import esmock from "esmock";
 import process from "process";
 
+import * as lp from "it-length-prefixed";
 import { pipe } from "it-pipe";
 import { toString } from "uint8arrays/to-string";
 import { fromString } from "uint8arrays/from-string";
@@ -39,7 +40,8 @@ test.serial("run as bootstrap node", async (t) => {
 
 test.serial("if nodes can be bootstrapped", async (t) => {
   let node1, node2;
-  const message = await new Promise(async (resolve, reject) => {
+  const message = { hello: "world" };
+  const actual = await new Promise(async (resolve, reject) => {
     process.env.PORT = "53462";
     process.env.BIND_ADDRESS_V4 = "127.0.0.1";
     process.env.IS_BOOTSTRAP_NODE = "true";
@@ -50,9 +52,10 @@ test.serial("if nodes can be bootstrapped", async (t) => {
     const connHandler1 = {};
     const protoHandler1 = {
       "/test/1.0.0": ({ stream }) => {
-        pipe(stream.source, async function (source) {
+        pipe(stream.source, lp.decode(), async function (source) {
           for await (const msg of source) {
-            resolve(toString(msg.subarray()));
+            const s = toString(msg.subarray());
+            resolve(JSON.parse(s));
           }
         });
       },
@@ -72,13 +75,13 @@ test.serial("if nodes can be bootstrapped", async (t) => {
           evt.detail.multiaddrs[0],
           "/test/1.0.0"
         );
-        pipe([fromString("this is a message")], stream.sink);
+        pipe([fromString(JSON.stringify(message))], lp.encode(), stream.sink);
       },
     };
     const connHandler2 = {};
     node2 = await start(config2, nodeHandler2, connHandler2);
   });
-  t.is(message, "this is a message");
+  t.deepEqual(actual, message);
   await node1.stop();
   await node2.stop();
 });
