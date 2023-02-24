@@ -25,6 +25,10 @@ export async function fromWire(source) {
   });
 }
 
-export function handleDiscovery(peer) {
-  log(`discovered ${peer.toCID()}`);
+export function handleDiscovery(evt) {
+  log(`discovered ${evt.detail.id.toString()}`);
+}
+
+export function handleConnection(evt) {
+  log(`connected ${evt.detail.remotePeer.toString()}`);
 }

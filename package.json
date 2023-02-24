@@ -5,7 +5,9 @@
   "main": "./src/index.mjs",
   "scripts": {
     "test": "ava --serial --verbose",
-    "dev": "DEBUG=attestate* node -r dotenv/config --no-warnings ./src/launch.mjs"
+    "dev": "DEBUG=attestate* node -r dotenv/config --no-warnings ./src/launch.mjs",
+    "dev:bootstrap": "BIND_ADDRESS_V4=\"127.0.0.1\" IS_BOOTSTRAP_NODE=true USE_EPHEMERAL_ID=false npm run dev",
+    "dev:anon": "BIND_ADDRESS_V4=\"127.0.0.1\" PORT=0 IS_BOOTSTRAP_NODE=false USE_EPHEMERAL_ID=true npm run dev"
   },
   "repository": {
     "type": "git",
