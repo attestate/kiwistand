@@ -8,7 +8,8 @@ export async function start(
   config,
   nodeHandlers = {},
   connectionHandlers = {},
-  protocolHandlers = {}
+  protocolHandlers = {},
+  pubsubHandlers = {}
 ) {
   const peerId = await bootstrap(config.peerId.path);
   const node = await createLibp2p({ ...config, peerId });
@@ -24,6 +25,10 @@ export async function start(
   for await (const [key, value] of Object.entries(protocolHandlers)) {
     log(`Adding "${key}" protocol handler`);
     await node.handle(key, value);
+  }
+  for await (const [key, value] of Object.entries(pubsubHandlers)) {
+    log(`Adding "${key}" pubsub handler`);
+    await node.pubsub.addEventListener(key, value);
   }
 
   await node.start();

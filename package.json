@@ -37,6 +37,7 @@
     "@libp2p/bootstrap": "5.0.0",
     "@libp2p/mplex": "7.1.0",
     "@libp2p/peer-id": "1.1.16",
+    "@libp2p/pubsub-peer-discovery": "8.0.0",
     "@libp2p/tcp": "6.0.4",
     "ajv": "8.12.0",
     "ajv-formats": "2.1.1",

@@ -4,6 +4,7 @@ import { noise } from "@chainsafe/libp2p-noise";
 import { mplex } from "@libp2p/mplex";
 import { bootstrap } from "@libp2p/bootstrap";
 import { gossipsub } from "@chainsafe/libp2p-gossipsub";
+import { pubsubPeerDiscovery } from "@libp2p/pubsub-peer-discovery";
 
 import { appdir } from "./utils.mjs";
 import log from "./logger.mjs";
@@ -15,11 +16,15 @@ const config = {
   transports: [tcp()],
   streamMuxers: [mplex()],
   connectionEncryption: [noise()],
-  pubsub: gossipsub(),
+  pubsub: gossipsub({
+    doPX: true,
+    allowPublishToZeroPeers: true,
+  }),
   protocolPrefix: "p2p",
   addresses: {
     listen: [`/ip4/${BIND_ADDRESS_V4}/tcp/${PORT}`],
   },
+  peerDiscovery: [],
 };
 
 let IS_BOOTSTRAP_NODE = env.IS_BOOTSTRAP_NODE === "true" ? true : false;
@@ -32,20 +37,20 @@ if (IS_BOOTSTRAP_NODE) {
   log("Launching as bootstrap node");
 } else {
   log("Configuring bootstrap nodes");
-  config.peerDiscovery = [
+  config.peerDiscovery.push(
     bootstrap({
       list: [
         // TODO: We must this allowed to be defined when running config
         `/ip4/127.0.0.1/tcp/${DEFAULT_PORT}/${config.protocolPrefix}/bafzaajiiaijccazrvdlmhms6g7cr6lurqp5aih27agldbplnh77i5oxn74sjm7773q`,
       ],
-      timeout: 0,
-      tagName: "bootstrap",
-    }),
-  ];
+    })
+  );
   config.connectionManager = {
     autoDial: true,
   };
 }
+
+config.peerDiscovery.push(pubsubPeerDiscovery());
 
 let USE_EPHEMERAL_ID = env.USE_EPHEMERAL_ID === "true" ? true : false;
 if (USE_EPHEMERAL_ID) {

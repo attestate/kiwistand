@@ -32,3 +32,11 @@ export function handleDiscovery(evt) {
 export function handleConnection(evt) {
   log(`connected ${evt.detail.remotePeer.toString()}`);
 }
+
+export function handleDisconnection(evt) {
+  log(`disconnected ${evt.detail.remotePeer.toString()}`);
+}
+
+export function handleMessage(evt) {
+  log(`${evt.detail.topic}:`, new TextDecoder().decode(evt.detail.data));
+}
