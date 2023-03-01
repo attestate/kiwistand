@@ -9,10 +9,11 @@ export async function start(
   nodeHandlers = {},
   connectionHandlers = {},
   protocolHandlers = {},
-  pubsubHandlers = {}
+  topics = []
 ) {
   const peerId = await bootstrap(config.peerId.path);
   const node = await createLibp2p({ ...config, peerId });
+  await node.start();
 
   for (const [key, value] of Object.entries(nodeHandlers)) {
     log(`Adding "${key}" handler to node`);
@@ -26,12 +27,15 @@ export async function start(
     log(`Adding "${key}" protocol handler`);
     await node.handle(key, value);
   }
-  for await (const [key, value] of Object.entries(pubsubHandlers)) {
-    log(`Adding "${key}" pubsub handler`);
-    await node.pubsub.addEventListener(key, value);
-  }
 
-  await node.start();
+  for await (const { name, handlers } of topics) {
+    log(`Subscribing to pubsub topic: "${name}"`);
+    node.pubsub.subscribe(name);
+    for await (const [key, value] of Object.entries(handlers)) {
+      log(`Adding "${key}" pubsub handler`);
+      await node.pubsub.addEventListener(key, value);
+    }
+  }
 
   return node;
 }

@@ -5,7 +5,7 @@ import {
   handleDiscovery,
   handleConnection,
   handleDisconnection,
-  handleMessage,
+  topics,
 } from "./sync.mjs";
 
 const handlers = {
@@ -17,9 +17,6 @@ const handlers = {
     "peer:disconnect": handleDisconnection,
   },
   protocol: {},
-  pubsub: {
-    message: handleMessage,
-  },
 };
 
 (async () => {
@@ -28,18 +25,8 @@ const handlers = {
     handlers.node,
     handlers.connection,
     handlers.protocol,
-    handlers.pubsub
+    topics
   );
-
-  const topic = "replicatest";
-  node.pubsub.subscribe(topic);
-  setInterval(() => {
-    try {
-      node.pubsub.publish(topic, new TextEncoder().encode("banana"));
-    } catch (err) {
-      console.error(err);
-    }
-  }, 2000);
 
   node.getMultiaddrs().forEach((addr) => {
     log(`listening: ${addr.toString()}`);

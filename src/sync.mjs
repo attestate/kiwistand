@@ -37,6 +37,16 @@ export function handleDisconnection(evt) {
   log(`disconnected ${evt.detail.remotePeer.toString()}`);
 }
 
-export function handleMessage(evt) {
+function handleMessage(evt) {
   log(`${evt.detail.topic}:`, new TextDecoder().decode(evt.detail.data));
 }
+
+export const TOPIC_PREFIX = "COPYCAT/v0.0.1";
+export const topics = [
+  {
+    name: `${TOPIC_PREFIX}/messages`,
+    handlers: {
+      message: handleMessage,
+    },
+  },
+];
