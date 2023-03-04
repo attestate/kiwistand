@@ -7,6 +7,7 @@ import {
   createFromProtobuf,
 } from "@libp2p/peer-id-factory";
 import { keccak256 } from "ethereum-cryptography/keccak.js";
+import { toHex } from "ethereum-cryptography/utils.js";
 import canonicalize from "canonicalize";
 import Ajv from "ajv";
 import addFormats from "ajv-formats";
@@ -51,7 +52,11 @@ export async function load(path) {
 export function toDigest(value) {
   const copy = { ...value };
   const canonical = Buffer.from(canonicalize(copy));
-  return keccak256(canonical);
+  const digest = `0x${toHex(keccak256(canonical))}`;
+  return {
+    digest,
+    canonical,
+  };
 }
 
 export function create(text, timestamp) {
@@ -81,15 +86,15 @@ export function verify(message) {
     log(
       `Wrongly formatted message: ${JSON.stringify(messageValidator.errors)}`
     );
-    return;
+    throw new Error("Wrongly formatted message");
   }
-  const { signature } = message;
-  delete message["signature"];
+  const copy = { ...message };
+  delete copy["signature"];
   const address = utils.verifyTypedData(
     EIP712_DOMAIN,
     EIP712_TYPES,
-    message,
-    signature
+    copy,
+    message.signature
   );
   return address;
 }

@@ -6,7 +6,7 @@ import { resolve } from "path";
 
 import { appdir } from "../src/utils.mjs";
 
-test("that repo contains a .env-copy file with all possible configuration options", async t => {
+test("that repo contains a .env-copy file with all possible configuration options", async (t) => {
   const copyName = ".env-copy";
   const copyPath = resolve(appdir(), copyName);
   const content = (await readFile(copyPath)).toString();
@@ -23,7 +23,9 @@ test("that repo contains a .env-copy file with all possible configuration option
     "PORT",
     "IS_BOOTSTRAP_NODE",
     "USE_EPHEMERAL_ID",
-    "IPV4"
+    "IPV4",
+    "HTTP_PORT",
+    "DATA_DIR",
   ];
   await access(envPath, constants.F_OK);
   const envContent = (await readFile(envPath)).toString();

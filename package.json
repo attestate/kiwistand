@@ -6,8 +6,8 @@
   "scripts": {
     "test": "ava --timeout=20s --serial --verbose",
     "dev": "DEBUG=attestate* node -r dotenv/config --no-warnings ./src/launch.mjs",
-    "dev:bootstrap": "BIND_ADDRESS_V4=\"127.0.0.1\" IS_BOOTSTRAP_NODE=true USE_EPHEMERAL_ID=false npm run dev",
-    "dev:anon": "BIND_ADDRESS_V4=\"127.0.0.1\" PORT=0 IS_BOOTSTRAP_NODE=false USE_EPHEMERAL_ID=true npm run dev"
+    "dev:bootstrap": "DATA_DIR=bootstrap BIND_ADDRESS_V4=\"127.0.0.1\" IS_BOOTSTRAP_NODE=true USE_EPHEMERAL_ID=false npm run dev",
+    "dev:anon": "DATA_DIR=anon BIND_ADDRESS_V4=\"127.0.0.1\" PORT=0 IS_BOOTSTRAP_NODE=false USE_EPHEMERAL_ID=true npm run dev"
   },
   "repository": {
     "type": "git",
@@ -34,6 +34,7 @@
   "dependencies": {
     "@chainsafe/libp2p-gossipsub": "5.2.1",
     "@chainsafe/libp2p-noise": "10.2.0",
+    "@ethereumjs/trie": "5.0.4",
     "@libp2p/bootstrap": "5.0.0",
     "@libp2p/mplex": "7.1.0",
     "@libp2p/peer-id": "1.1.16",
@@ -46,10 +47,12 @@
     "dotenv": "16.0.3",
     "ethereum-cryptography": "1.1.2",
     "ethers": "5.7.2",
+    "fastify": "4.14.0",
     "it-all": "2.0.0",
     "it-length-prefixed": "8.0.4",
     "it-map": "2.0.0",
     "libp2p": "0.40.0",
+    "lmdb": "2.7.9",
     "uint8arrays": "4.0.3"
   },
   "devDependencies": {

@@ -8,7 +8,8 @@ import { pipe } from "it-pipe";
 import { toString } from "uint8arrays/to-string";
 import { fromString } from "uint8arrays/from-string";
 
-import { fromWire, toWire, topics } from "../src/sync.mjs";
+import { fromWire, toWire } from "../src/sync.mjs";
+import * as topics from "../src/topics.mjs";
 import { start } from "../src/index.mjs";
 
 function randInt() {
@@ -179,7 +180,7 @@ test.serial(
         nodeHandler1,
         connHandler1,
         protoHandler1,
-        topics
+        topics.all
       );
       peerId1 = node1.peerId.toString();
 
@@ -210,7 +211,7 @@ test.serial(
         nodeHandler2,
         connHandler2,
         protoHandler2,
-        topics
+        topics.all
       );
       peerId2 = node2.peerId.toString();
 
@@ -241,7 +242,7 @@ test.serial(
         nodeHandler3,
         connHandler3,
         protoHandler3,
-        topics
+        topics.all
       );
       peerId3 = node3.peerId.toString();
     });

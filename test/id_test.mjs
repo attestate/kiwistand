@@ -35,14 +35,10 @@ test("generating digest from message", (t) => {
     timestamp: "2023-01-15T16:06:31.749Z",
     text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
   };
-  const digest = toDigest(message);
-  t.deepEqual(
+  const { digest } = toDigest(message);
+  t.is(
     digest,
-    new Uint8Array([
-      204, 57, 163, 117, 34, 162, 221, 25, 66, 100, 240, 236, 123, 185, 172,
-      164, 105, 75, 164, 225, 174, 78, 163, 141, 8, 70, 3, 131, 85, 218, 23,
-      186,
-    ])
+    "0xcc39a37522a2dd194264f0ec7bb9aca4694ba4e1ae4ea38d0846038355da17ba"
   );
 });
 

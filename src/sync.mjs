@@ -7,6 +7,7 @@ import map from "it-map";
 import all from "it-all";
 
 import log from "./logger.mjs";
+import * as store from "./store.mjs";
 
 export async function toWire(message, sink) {
   const sMessage = JSON.stringify(message);
@@ -29,7 +30,9 @@ export function handleDiscovery(evt) {
   log(`discovered ${evt.detail.id.toString()}`);
 }
 
-export function handleConnection(evt) {
+export async function handleConnection(evt) {
+  const trie = await store.create();
+  console.log(trie.root());
   log(`connected ${evt.detail.remotePeer.toString()}`);
 }
 
@@ -40,13 +43,3 @@ export function handleDisconnection(evt) {
 function handleMessage(evt) {
   log(`${evt.detail.topic}:`, new TextDecoder().decode(evt.detail.data));
 }
-
-export const TOPIC_PREFIX = "COPYCAT/v0.0.1";
-export const topics = [
-  {
-    name: `${TOPIC_PREFIX}/messages`,
-    handlers: {
-      message: handleMessage,
-    },
-  },
-];

@@ -4,3 +4,6 @@ node_modules
 .keys.json
 out.log
 nohup.out
+bootstrap
+data
+anon
