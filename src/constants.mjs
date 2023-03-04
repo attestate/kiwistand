@@ -14,6 +14,7 @@ export const EIP712_TYPES = {
 export const SCHEMATA = {
   message: {
     type: "object",
+    additionalProperties: false,
     properties: {
       timestamp: {
         $comment: "unix timestamp",

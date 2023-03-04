@@ -15,8 +15,7 @@ export async function create() {
   });
 }
 
-const allowlist = ["0x0f6A79A579658E401E0B81c6dde1F2cd51d97176"];
-export async function add(trie, message, distribute) {
+export async function add(trie, message, libp2p, allowlist) {
   const address = verify(message);
   const included = allowlist.includes(address);
   if (!included) {
@@ -31,10 +30,7 @@ export async function add(trie, message, distribute) {
   log(`Storing message with digest "${digest}"`);
   await trie.put(Buffer.from(id), Buffer.from(canonical));
 
-  if (distribute) {
-    libp2pnode.pubsub.publish(
-      messages.name,
-      new TextEncoder().encode(canonical)
-    );
+  if (libp2p) {
+    libp2p.pubsub.publish(messages.name, new TextEncoder().encode(canonical));
   }
 }
