@@ -9,7 +9,7 @@ import { toString } from "uint8arrays/to-string";
 import { fromString } from "uint8arrays/from-string";
 
 import { fromWire, toWire } from "../src/sync.mjs";
-import * as topics from "../src/topics.mjs";
+import * as messages from "../src/topics/messages.mjs";
 import { start } from "../src/index.mjs";
 
 function randInt() {
@@ -175,13 +175,9 @@ test.serial(
       };
       const protoHandler1 = {};
 
-      node1 = await start(
-        config1,
-        nodeHandler1,
-        connHandler1,
-        protoHandler1,
-        topics.all
-      );
+      node1 = await start(config1, nodeHandler1, connHandler1, protoHandler1, [
+        messages,
+      ]);
       peerId1 = node1.peerId.toString();
 
       process.env.PORT = "0";
@@ -206,13 +202,9 @@ test.serial(
         },
       };
       const protoHandler2 = {};
-      node2 = await start(
-        config2,
-        nodeHandler2,
-        connHandler2,
-        protoHandler2,
-        topics.all
-      );
+      node2 = await start(config2, nodeHandler2, connHandler2, protoHandler2, [
+        messages,
+      ]);
       peerId2 = node2.peerId.toString();
 
       process.env.PORT = "0";
@@ -237,13 +229,9 @@ test.serial(
         },
       };
       const protoHandler3 = {};
-      node3 = await start(
-        config3,
-        nodeHandler3,
-        connHandler3,
-        protoHandler3,
-        topics.all
-      );
+      node3 = await start(config3, nodeHandler3, connHandler3, protoHandler3, [
+        messages,
+      ]);
       peerId3 = node3.peerId.toString();
     });
     t.true(connections["1t2"]);

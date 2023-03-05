@@ -6,7 +6,7 @@ import { Trie } from "@ethereumjs/trie";
 import log from "./logger.mjs";
 import LMDB from "./lmdb.mjs";
 import { verify, toDigest } from "./id.mjs";
-import { messages } from "./topics.mjs";
+import * as messages from "./topics/messages.mjs";
 
 export async function create() {
   return await Trie.create({

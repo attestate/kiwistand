@@ -7,7 +7,7 @@ import {
   handleConnection,
   handleDisconnection,
 } from "./sync.mjs";
-import * as topics from "./topics.mjs";
+import * as messages from "./topics/messages.mjs";
 import * as server from "./http.mjs";
 
 const handlers = {
@@ -27,7 +27,7 @@ const handlers = {
     handlers.node,
     handlers.connection,
     handlers.protocol,
-    topics.all
+    [{messages.name, messages.handlers}]
   );
 
   await server.launch();
