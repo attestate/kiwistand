@@ -60,6 +60,7 @@
     "esmock": "1.7.2"
   },
   "ava": {
+    "files": ["**/*_test.mjs"],
     "environmentArguments": {
       "DEBUG": "attestate*"
     },

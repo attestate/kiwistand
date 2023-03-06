@@ -5,6 +5,7 @@ export default class LMDB {
     this.path = path;
     this.database = open({
       compression: true,
+      // TODO: Potentially, we should rename this.
       name: "@ethereumjs/trie",
       path,
     });

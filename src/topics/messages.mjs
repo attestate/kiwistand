@@ -12,7 +12,13 @@ export const handlers = {
       return;
     }
 
-    const text = new TextDecoder().decode(evt.detail.data);
+    let text;
+    try {
+      text = new TextDecoder().decode(evt.detail.data);
+    } catch (err) {
+      log(`Couldn't parse event data to text`);
+      return;
+    }
 
     let message;
     try {
