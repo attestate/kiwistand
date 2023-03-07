@@ -1,10 +1,55 @@
 // @format
+import { env } from "process";
+import { rm } from "fs/promises";
+
 import test from "ava";
 import { Wallet, utils } from "ethers";
 
 import * as id from "../src/id.mjs";
 import config from "../src/config.mjs";
 import * as store from "../src/store.mjs";
+
+test("try getting level zero", async (t) => {
+  await t.throwsAsync(async () => await store.nodesByLevel(null, 0), {
+    instanceOf: Error,
+    message: "'level' parameter must be greater than 0",
+  });
+});
+
+test("get trie nodes and make sure they're sorted", async (t) => {
+  env.DATA_DIR = "dbtest";
+  const trie = await store.create();
+  await trie.put(Buffer.from("00", "hex"), Buffer.from("A", "utf8"));
+  await trie.put(Buffer.from("01", "hex"), Buffer.from("B", "utf8"));
+  await trie.put(Buffer.from("02", "hex"), Buffer.from("C", "utf8"));
+  await trie.put(Buffer.from("03", "hex"), Buffer.from("D", "utf8"));
+  await trie.put(Buffer.from("0001", "hex"), Buffer.from("E", "utf8"));
+  await trie.put(Buffer.from("00010203", "hex"), Buffer.from("F", "utf8"));
+  const nodes = await store.nodesByLevel(trie, 1);
+  t.deepEqual(nodes, [
+    { key: Buffer.from("00", "hex"), value: Buffer.from("A", "utf8") },
+    { key: Buffer.from("01", "hex"), value: Buffer.from("B", "utf8") },
+    { key: Buffer.from("02", "hex"), value: Buffer.from("C", "utf8") },
+    { key: Buffer.from("03", "hex"), value: Buffer.from("D", "utf8") },
+  ]);
+  await rm(env.DATA_DIR, { recursive: true });
+});
+
+test("get trie nodes by level", async (t) => {
+  env.DATA_DIR = "dbtest";
+  const trie = await store.create();
+  await trie.put(Buffer.from("00", "hex"), Buffer.from("A", "utf8"));
+  await trie.put(Buffer.from("01", "hex"), Buffer.from("B", "utf8"));
+  await trie.put(Buffer.from("02", "hex"), Buffer.from("C", "utf8"));
+  await trie.put(Buffer.from("03", "hex"), Buffer.from("D", "utf8"));
+  await trie.put(Buffer.from("0001", "hex"), Buffer.from("E", "utf8"));
+  await trie.put(Buffer.from("00010203", "hex"), Buffer.from("F", "utf8"));
+  const nodes = await store.nodesByLevel(trie, 2);
+  t.deepEqual(nodes, [
+    { key: Buffer.from("0001", "hex"), value: Buffer.from("E", "utf8") },
+  ]);
+  await rm(env.DATA_DIR, { recursive: true });
+});
 
 test("try to add invalidly formatted message to store", async (t) => {
   const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
