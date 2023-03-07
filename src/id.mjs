@@ -52,7 +52,7 @@ export async function load(path) {
 export function toDigest(value) {
   const copy = { ...value };
   const canonical = Buffer.from(canonicalize(copy));
-  const digest = `0x${toHex(keccak256(canonical))}`;
+  const digest = toHex(keccak256(canonical));
   return {
     digest,
     canonical,

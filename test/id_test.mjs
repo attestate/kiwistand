@@ -38,7 +38,7 @@ test("generating digest from message", (t) => {
   const { digest } = toDigest(message);
   t.is(
     digest,
-    "0xcc39a37522a2dd194264f0ec7bb9aca4694ba4e1ae4ea38d0846038355da17ba"
+    "cc39a37522a2dd194264f0ec7bb9aca4694ba4e1ae4ea38d0846038355da17ba"
   );
 });
 

@@ -26,8 +26,8 @@ export async function add(trie, message, libp2p, allowlist) {
   }
 
   const { digest, canonical } = toDigest(message);
-  const id = `${message.timestamp}-${digest}`;
-  log(`Storing message with digest "${digest}"`);
+  const id = `${message.timestamp}${digest}`;
+  log(`Storing message with id "${id}"`);
   await trie.put(Buffer.from(id), Buffer.from(canonical));
 
   if (libp2p) {

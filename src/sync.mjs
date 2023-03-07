@@ -39,7 +39,3 @@ export async function handleConnection(evt) {
 export function handleDisconnection(evt) {
   log(`disconnected ${evt.detail.remotePeer.toString()}`);
 }
-
-function handleMessage(evt) {
-  log(`${evt.detail.topic}:`, new TextDecoder().decode(evt.detail.data));
-}
