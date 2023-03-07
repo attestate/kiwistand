@@ -27,7 +27,7 @@ const handlers = {
     handlers.node,
     handlers.connection,
     handlers.protocol,
-    [{messages.name, messages.handlers}]
+    [messages]
   );
 
   await server.launch();
