@@ -1,7 +1,7 @@
 {
-  "name": "rugpulld",
+  "name": "goblin",
   "version": "0.0.1",
-  "description": "rugpulld is a network daemon for the rugpull network",
+  "description": "goblin is the p2p node client for goblin.exchange, a web3 writer friendly Hacker News that nobody controls but everybody co-owns",
   "main": "./src/index.mjs",
   "scripts": {
     "test": "ava --timeout=20s --serial --verbose",
@@ -25,12 +25,12 @@
   "engines": {
     "node": ">=16"
   },
-  "author": "Tim Daubenschütz",
+  "author": "The Goblin Exchange Developers",
   "license": "GPL-3.0-only",
   "bugs": {
-    "url": "https://github.com/rugpullindex/rugpulld/issues"
+    "url": "https://github.com/attestate/golbin/issues"
   },
-  "homepage": "https://github.com/rugpullindex/rugpulld#readme",
+  "homepage": "https://github.com/attestate/goblin#readme",
   "dependencies": {
     "@chainsafe/libp2p-gossipsub": "5.2.1",
     "@chainsafe/libp2p-noise": "10.2.0",
