@@ -9,6 +9,51 @@ import * as id from "../src/id.mjs";
 import config from "../src/config.mjs";
 import * as store from "../src/store.mjs";
 
+test("syncing a trie", async (t) => {
+  env.DATA_DIR = "dbtestA";
+  const trieA = await store.create();
+  await trieA.put(Buffer.from("0000", "hex"), Buffer.from("A", "utf8"));
+  await trieA.put(Buffer.from("0001", "hex"), Buffer.from("B", "utf8"));
+  await trieA.put(Buffer.from("0002", "hex"), Buffer.from("C", "utf8"));
+  await trieA.put(Buffer.from("0004", "hex"), Buffer.from("D", "utf8"));
+
+  env.DATA_DIR = "dbtestB";
+  const trieB = await store.create();
+  await trieB.put(Buffer.from("0000", "hex"), Buffer.from("A", "utf8"));
+  await trieB.put(Buffer.from("0001", "hex"), Buffer.from("B", "utf8"));
+  await trieB.put(Buffer.from("0002", "hex"), Buffer.from("C", "utf8"));
+  await trieB.put(Buffer.from("0005", "hex"), Buffer.from("E", "utf8"));
+
+  t.notDeepEqual(trieA.root(), trieB.root());
+
+  const [l0A] = await store.walk(trieA, 0);
+  const [l0B] = await store.walk(trieB, 0);
+  t.notDeepEqual(l0A.hash, l0B.hash);
+
+  const [l1A] = await store.walk(trieA, 1);
+  const [l1B] = await store.walk(trieB, 1);
+  t.notDeepEqual(l1A.hash, l1B.hash);
+
+  const l2A = await store.walk(trieA, 2);
+  const l2B = await store.walk(trieB, 2);
+  t.deepEqual(l2A[0].hash, l2B[0].hash);
+  t.deepEqual(l2A[1].hash, l2B[1].hash);
+  t.deepEqual(l2A[2].hash, l2B[2].hash);
+  t.notDeepEqual(l2A[3].hash, l2B[3].hash);
+});
+
+test("efficient trie retrieval of zero-th level", async (t) => {
+  env.DATA_DIR = "dbtest";
+  const trie = await store.create();
+  const level = 0;
+  const nodes = await store.walk(trie, level);
+  t.is(nodes.length, 1);
+  t.true(nodes[0].key instanceof Buffer);
+  t.is(nodes[0].key.length, level);
+  t.is(nodes[0].level, level);
+  await rm(env.DATA_DIR, { recursive: true });
+});
+
 test("efficient trie retrieval of first level", async (t) => {
   env.DATA_DIR = "dbtest";
   const trie = await store.create();
@@ -19,7 +64,10 @@ test("efficient trie retrieval of first level", async (t) => {
   const level = 1;
   const nodes = await store.walk(trie, level);
   t.is(nodes.length, 1);
-  t.is(nodes[0].key.length, 0);
+  console.log(nodes);
+  t.is(Buffer.compare(nodes[0].key, Buffer.from("00", "hex")), 0);
+  t.is(nodes[0].key.length, level);
+  t.is(nodes[0].level, level);
   await rm(env.DATA_DIR, { recursive: true });
 });
 
@@ -44,6 +92,8 @@ test("efficient trie retrieval of third level", async (t) => {
   t.is(Buffer.compare(nodes[2].key, Buffer.from("000002", "hex")), 0);
   t.is(Buffer.compare(nodes[3].key, Buffer.from("000003", "hex")), 0);
   t.is(Buffer.compare(nodes[4].key, Buffer.from("000004", "hex")), 0);
+  t.is(nodes[0].level, level);
+  t.is(nodes[1].level, level);
 
   await rm(env.DATA_DIR, { recursive: true });
 });

@@ -7,7 +7,31 @@ import { fromString } from "uint8arrays/from-string";
 import * as lp from "it-length-prefixed";
 import all from "it-all";
 
-import { fromWire, toWire } from "../src/sync.mjs";
+import { compareLevels, fromWire, toWire } from "../src/sync.mjs";
+
+test("compare levels of node lists", (t) => {
+  const levelA = [
+    {
+      hash: Buffer.from("00", "hex"),
+    },
+    {
+      hash: Buffer.from("01", "hex"),
+    },
+  ];
+  const levelB = [
+    {
+      hash: Buffer.from("00", "hex"),
+    },
+    {
+      hash: Buffer.from("01", "hex"),
+    },
+    {
+      hash: Buffer.from("03", "hex"),
+    },
+  ];
+  const results = compareLevels(levelA, levelB);
+  t.deepEqual(results, [true, true, false]);
+});
 
 test("serializing into wire", async (t) => {
   t.plan(1);

@@ -17,6 +17,8 @@ export async function create() {
   });
 }
 
+// NOTE: Function not tested because we took it from the ethereumjs/trie code
+// base.
 export function nibblesToBuffer(arr) {
   const buf = Buffer.alloc(arr.length / 2);
   for (let i = 0; i < buf.length; i++) {
@@ -26,19 +28,32 @@ export function nibblesToBuffer(arr) {
   return buf;
 }
 
+// TODO: The indexing of level is off here. It'd be best if the tree's root was
+// level=0 etc.
+// One problem is that for the root, the proof property will be empty as well as
+// the buffer. But the same is true for a potential first extension node.
 export async function walk(trie, level) {
-  level -= 1;
-  if (level < 0) {
-    throw new Error("'level' parameter must be greater than 0");
+  if (level === 0) {
+    return [
+      {
+        level: 0,
+        key: Buffer.alloc(0),
+        hash: trie.root(),
+      },
+    ];
   }
+
+  const levelCopy = level;
   let nodes = [];
-  const onFound = async (nodeRef, node, key, walkController) => {
+  const onFound = (nodeRef, node, key, walkController) => {
     if (level === 0) {
       nodes.push({
+        level: levelCopy,
         key: nibblesToBuffer(key),
         hash: Buffer.from(keccak256(rlp.encode(node.raw()))),
       });
     } else {
+      console.log(node);
       level -= 1;
       walkController.allChildren(node, key);
     }
@@ -62,8 +77,12 @@ export async function add(trie, message, libp2p, allowlist) {
   }
 
   const { digest, canonical } = toDigest(message);
-  // TODO: This won't work as the hex will be interpreted by one big hex and not
-  // a combination of timestamp and digest.
+  // TODO: This won't work as the hex will be interpreted by one big hex and
+  // not a combination of timestamp and digest.
+  // NOTE: Upon another examination, this could still work. We, technically,
+  // don't need to extract either the hash or the timestamp from the id itself.
+  // The timestamp is in the message itself and the hash can be generated. So we
+  // might be fine!
   const id = `${message.timestamp.toString(16)}${digest}`;
   log(`Storing message with id "${id}"`);
   await trie.put(Buffer.from(id, "hex"), Buffer.from(canonical, "utf8"));

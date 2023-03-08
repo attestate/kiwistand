@@ -9,6 +9,21 @@ import all from "it-all";
 import log from "./logger.mjs";
 import * as store from "./store.mjs";
 
+// This function must return the differences in nodes and it also must indicate
+// the point of view.
+export function compareLevels(a, b) {
+  const maxLength = Math.max(a.length, b.length);
+  const results = [];
+  for (let i = 0; i < maxLength; i++) {
+    if (!a[i] || !b[i]) {
+      results[i] = false;
+    } else {
+      results[i] = Buffer.compare(a[i].hash, b[i].hash) === 0 ? true : false;
+    }
+  }
+  return results;
+}
+
 export async function toWire(message, sink) {
   const sMessage = JSON.stringify(message);
   const buf = fromString(sMessage);
