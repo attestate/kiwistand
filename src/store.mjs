@@ -1,7 +1,9 @@
 // @format
 import { env } from "process";
 
-import { Trie } from "@ethereumjs/trie";
+import { Trie, BranchNode, ExtensionNode, LeafNode } from "@ethereumjs/trie";
+import rlp from "@ethereumjs/rlp";
+import { keccak256 } from "ethereum-cryptography/keccak.js";
 
 import log from "./logger.mjs";
 import LMDB from "./lmdb.mjs";
@@ -15,35 +17,38 @@ export async function create() {
   });
 }
 
-export async function nodesByLevel(trie, level) {
-  if (level <= 0) {
+export function nibblesToBuffer(arr) {
+  const buf = Buffer.alloc(arr.length / 2);
+  for (let i = 0; i < buf.length; i++) {
+    let q = i * 2;
+    buf[i] = (arr[q] << 4) + arr[++q];
+  }
+  return buf;
+}
+
+export async function walk(trie, level) {
+  level -= 1;
+  if (level < 0) {
     throw new Error("'level' parameter must be greater than 0");
   }
-  const nodes = [];
-  const set = new Set();
-  const stream = trie.createReadStream();
-  return new Promise((resolve, reject) => {
-    // NOTE: This isn't the most efficient implementation of a breadth first
-    // walk as it's going over the entire tree before ending. A much more
-    // efficient implementation would go only breadth first.
-    stream
-      .on("data", (node) => {
-        const slice = node.key.slice(0, level).toString("hex");
-        // NOTE: Technically, if we have all same-length keys then this check
-        // isn't necessary. But I was neither sure of that for now, nor do I
-        // encode this information into the tests.
-        if (slice.length < level * 2) return;
-        if (!set.has(slice)) {
-          set.add(slice);
-          nodes.push(node);
-        }
-      })
-      .on("end", () => {
-        stream.destroy();
-        const sort = (a, b) => Buffer.compare(a.key, b.key);
-        resolve(nodes.sort(sort));
+  let nodes = [];
+  const onFound = async (nodeRef, node, key, walkController) => {
+    if (level === 0) {
+      nodes.push({
+        key: nibblesToBuffer(key),
+        hash: Buffer.from(keccak256(rlp.encode(node.raw()))),
       });
-  });
+    } else {
+      level -= 1;
+      walkController.allChildren(node, key);
+    }
+  };
+
+  await trie.walkTrie(trie.root(), onFound);
+  for await (let node of nodes) {
+    node.proof = await trie.createProof(node.key);
+  }
+  return nodes;
 }
 
 export async function add(trie, message, libp2p, allowlist) {
