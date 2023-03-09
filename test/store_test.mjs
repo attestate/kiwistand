@@ -9,6 +9,41 @@ import * as id from "../src/id.mjs";
 import config from "../src/config.mjs";
 import * as store from "../src/store.mjs";
 
+test("hashing an extension node", async (t) => {
+  env.DATA_DIR = "dbtestA";
+  const trieA = await store.create();
+  await trieA.put(Buffer.from("0000", "hex"), Buffer.from("A", "utf8"));
+  await trieA.put(Buffer.from("0001", "hex"), Buffer.from("B", "utf8"));
+  await trieA.put(Buffer.from("0002", "hex"), Buffer.from("C", "utf8"));
+  await trieA.put(Buffer.from("0004", "hex"), Buffer.from("D", "utf8"));
+  const { stack } = await trieA.findPath(Buffer.from("", "hex"));
+  const [node] = stack;
+  const digest = store.hash(node);
+  t.true(digest instanceof Buffer);
+  const expected = Buffer.from(
+    "134daeb91d5637da80800d2d1cc5975177e60e83acbbf86d4fc9d2154abc4235",
+    "hex"
+  );
+  t.is(Buffer.compare(digest, expected), 0);
+
+  env.DATA_DIR = "dbtestB";
+  const trieB = await store.create();
+  await trieB.put(Buffer.from("1234", "hex"), Buffer.from("A", "utf8"));
+  await trieB.put(Buffer.from("1234567", "hex"), Buffer.from("B", "utf8"));
+  const pathB = await trieB.findPath(Buffer.from("", "hex"));
+  const nodeB = pathB.stack[0];
+  const digestB = store.hash(nodeB);
+  t.true(digestB instanceof Buffer);
+  const expectedB = Buffer.from(
+    "56913c47f6536846f9f4d93a8da5104631898c028567768895473892cf561c67",
+    "hex"
+  );
+  t.is(Buffer.compare(digestB, expectedB), 0);
+
+  await rm("dbtestA", { recursive: true });
+  await rm("dbtestB", { recursive: true });
+});
+
 test("syncing a trie", async (t) => {
   env.DATA_DIR = "dbtestA";
   const trieA = await store.create();
@@ -46,7 +81,7 @@ test("efficient trie retrieval of zero-th level", async (t) => {
   env.DATA_DIR = "dbtest";
   const trie = await store.create();
   const level = 0;
-  const nodes = await store.walk(trie, level);
+  const nodes = await store.descend(trie, level);
   t.is(nodes.length, 1);
   t.true(nodes[0].key instanceof Buffer);
   t.is(nodes[0].key.length, level);
@@ -62,12 +97,37 @@ test("efficient trie retrieval of first level", async (t) => {
   await trie.put(Buffer.from("000002", "hex"), Buffer.from("C", "utf8"));
   await trie.put(Buffer.from("000004", "hex"), Buffer.from("D", "utf8"));
   const level = 1;
-  const nodes = await store.walk(trie, level);
+  const nodes = await store.descend(trie, level);
   t.is(nodes.length, 1);
-  console.log(nodes);
-  t.is(Buffer.compare(nodes[0].key, Buffer.from("00", "hex")), 0);
-  t.is(nodes[0].key.length, level);
+  t.is(Buffer.compare(nodes[0].key, Buffer.from("0000", "hex")), 0);
   t.is(nodes[0].level, level);
+  await rm(env.DATA_DIR, { recursive: true });
+});
+
+test("efficient trie retrieval of second level", async (t) => {
+  env.DATA_DIR = "dbtest";
+  const trie = await store.create();
+  await trie.put(Buffer.from("000000", "hex"), Buffer.from("A", "utf8"));
+  await trie.put(Buffer.from("000001", "hex"), Buffer.from("B", "utf8"));
+  await trie.put(Buffer.from("000002", "hex"), Buffer.from("C", "utf8"));
+  await trie.put(Buffer.from("000003", "hex"), Buffer.from("D", "utf8"));
+  await trie.put(Buffer.from("00000400", "hex"), Buffer.from("E", "utf8"));
+  await trie.put(Buffer.from("00000401", "hex"), Buffer.from("F", "utf8"));
+  const level = 2;
+  const nodes = await store.descend(trie, level);
+
+  t.is(nodes.length, 5);
+  t.is(Buffer.compare(nodes[0].key, Buffer.from("000000", "hex")), 0);
+  t.is(Buffer.compare(nodes[1].key, Buffer.from("000001", "hex")), 0);
+  t.is(Buffer.compare(nodes[2].key, Buffer.from("000002", "hex")), 0);
+  t.is(Buffer.compare(nodes[3].key, Buffer.from("000003", "hex")), 0);
+  t.is(Buffer.compare(nodes[4].key, Buffer.from("000004", "hex")), 0);
+  t.is(nodes[0].level, level);
+  t.is(nodes[1].level, level);
+  t.is(nodes[2].level, level);
+  t.is(nodes[3].level, level);
+  t.is(nodes[4].level, level);
+
   await rm(env.DATA_DIR, { recursive: true });
 });
 
@@ -81,17 +141,30 @@ test("efficient trie retrieval of third level", async (t) => {
   await trie.put(Buffer.from("00000400", "hex"), Buffer.from("E", "utf8"));
   await trie.put(Buffer.from("00000401", "hex"), Buffer.from("F", "utf8"));
   const level = 3;
-  const nodes = await store.walk(trie, level);
-  console.log(nodes);
+  const nodes = await store.descend(trie, level);
 
-  t.is(nodes.length, 5);
-  // NOTE: This is different per trie and ExtensionNodes
-  t.is(nodes[0].key.length, level);
-  t.is(Buffer.compare(nodes[0].key, Buffer.from("000000", "hex")), 0);
-  t.is(Buffer.compare(nodes[1].key, Buffer.from("000001", "hex")), 0);
-  t.is(Buffer.compare(nodes[2].key, Buffer.from("000002", "hex")), 0);
-  t.is(Buffer.compare(nodes[3].key, Buffer.from("000003", "hex")), 0);
-  t.is(Buffer.compare(nodes[4].key, Buffer.from("000004", "hex")), 0);
+  t.is(nodes.length, 1);
+  t.is(Buffer.compare(nodes[0].key, Buffer.from("000004", "hex")), 0);
+  t.is(nodes[0].level, level);
+
+  await rm(env.DATA_DIR, { recursive: true });
+});
+
+test("efficient trie retrieval of fourth level", async (t) => {
+  env.DATA_DIR = "dbtest";
+  const trie = await store.create();
+  await trie.put(Buffer.from("000000", "hex"), Buffer.from("A", "utf8"));
+  await trie.put(Buffer.from("000001", "hex"), Buffer.from("B", "utf8"));
+  await trie.put(Buffer.from("000002", "hex"), Buffer.from("C", "utf8"));
+  await trie.put(Buffer.from("000003", "hex"), Buffer.from("D", "utf8"));
+  await trie.put(Buffer.from("00000400", "hex"), Buffer.from("E", "utf8"));
+  await trie.put(Buffer.from("00000401", "hex"), Buffer.from("F", "utf8"));
+  const level = 4;
+  const nodes = await store.descend(trie, level);
+
+  t.is(nodes.length, 2);
+  t.is(Buffer.compare(nodes[0].key, Buffer.from("00000400", "hex")), 0);
+  t.is(Buffer.compare(nodes[1].key, Buffer.from("00000401", "hex")), 0);
   t.is(nodes[0].level, level);
   t.is(nodes[1].level, level);
 

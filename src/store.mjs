@@ -17,6 +17,17 @@ export async function create() {
   });
 }
 
+export function hash(node) {
+  if (node instanceof BranchNode || node instanceof LeafNode) {
+    return Buffer.from(keccak256(rlp.encode(node.raw())));
+  } else if (node instanceof ExtensionNode) {
+    const raw = [nibblesToBuffer(node.encodedKey()), null];
+    return Buffer.from(keccak256(rlp.encode(raw)));
+  } else {
+    throw new Error("Must be BranchNode, LeafNode or ExtensionNode");
+  }
+}
+
 // NOTE: Function not tested because we took it from the ethereumjs/trie code
 // base.
 export function nibblesToBuffer(arr) {
@@ -26,6 +37,35 @@ export function nibblesToBuffer(arr) {
     buf[i] = (arr[q] << 4) + arr[++q];
   }
   return buf;
+}
+
+export async function descend(trie, level) {
+  if (level === 0) {
+    return [
+      {
+        level: 0,
+        key: Buffer.alloc(0),
+        hash: trie.root(),
+      },
+    ];
+  }
+  const levelCopy = level;
+  let nodes = [];
+  const onFound = (nodeRef, node, key, walkController) => {
+    if (level === 0) {
+      nodes.push({
+        level: levelCopy,
+        key: nibblesToBuffer(key),
+        hash: hash(node),
+        node,
+      });
+    } else if (node instanceof BranchNode || node instanceof ExtensionNode) {
+      level -= 1;
+      walkController.allChildren(node, key);
+    }
+  };
+  await trie.walkTrie(trie.root(), onFound);
+  return nodes;
 }
 
 // TODO: The indexing of level is off here. It'd be best if the tree's root was
@@ -43,27 +83,29 @@ export async function walk(trie, level) {
     ];
   }
 
-  const levelCopy = level;
-  let nodes = [];
-  const onFound = (nodeRef, node, key, walkController) => {
-    if (level === 0) {
-      nodes.push({
-        level: levelCopy,
-        key: nibblesToBuffer(key),
-        hash: Buffer.from(keccak256(rlp.encode(node.raw()))),
-      });
-    } else {
-      console.log(node);
-      level -= 1;
-      walkController.allChildren(node, key);
-    }
-  };
+  const nodes = [];
+  const set = new Set();
+  const stream = trie.createReadStream();
+  return new Promise((resolve, reject) => {
+    stream
+      .on("data", async (data) => {
+        const slice = data.key.slice(0, level);
+        if (!set.has(slice.toString("hex"))) {
+          set.add(slice.toString("hex"));
 
-  await trie.walkTrie(trie.root(), onFound);
-  for await (let node of nodes) {
-    node.proof = await trie.createProof(node.key);
-  }
-  return nodes;
+          const path = await trie.findPath(slice);
+
+          nodes.push({
+            key: data.key,
+          });
+        }
+      })
+      .on("end", () => {
+        stream.destroy();
+        const sort = (a, b) => Buffer.compare(a.key, b.key);
+        resolve(nodes.sort(sort));
+      });
+  });
 }
 
 export async function add(trie, message, libp2p, allowlist) {
