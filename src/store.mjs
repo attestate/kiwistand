@@ -68,46 +68,6 @@ export async function descend(trie, level) {
   return nodes;
 }
 
-// TODO: The indexing of level is off here. It'd be best if the tree's root was
-// level=0 etc.
-// One problem is that for the root, the proof property will be empty as well as
-// the buffer. But the same is true for a potential first extension node.
-export async function walk(trie, level) {
-  if (level === 0) {
-    return [
-      {
-        level: 0,
-        key: Buffer.alloc(0),
-        hash: trie.root(),
-      },
-    ];
-  }
-
-  const nodes = [];
-  const set = new Set();
-  const stream = trie.createReadStream();
-  return new Promise((resolve, reject) => {
-    stream
-      .on("data", async (data) => {
-        const slice = data.key.slice(0, level);
-        if (!set.has(slice.toString("hex"))) {
-          set.add(slice.toString("hex"));
-
-          const path = await trie.findPath(slice);
-
-          nodes.push({
-            key: data.key,
-          });
-        }
-      })
-      .on("end", () => {
-        stream.destroy();
-        const sort = (a, b) => Buffer.compare(a.key, b.key);
-        resolve(nodes.sort(sort));
-      });
-  });
-}
-
 export async function add(trie, message, libp2p, allowlist) {
   const address = verify(message);
   const included = allowlist.includes(address);

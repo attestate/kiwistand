@@ -44,39 +44,6 @@ test("hashing an extension node", async (t) => {
   await rm("dbtestB", { recursive: true });
 });
 
-test("syncing a trie", async (t) => {
-  env.DATA_DIR = "dbtestA";
-  const trieA = await store.create();
-  await trieA.put(Buffer.from("0000", "hex"), Buffer.from("A", "utf8"));
-  await trieA.put(Buffer.from("0001", "hex"), Buffer.from("B", "utf8"));
-  await trieA.put(Buffer.from("0002", "hex"), Buffer.from("C", "utf8"));
-  await trieA.put(Buffer.from("0004", "hex"), Buffer.from("D", "utf8"));
-
-  env.DATA_DIR = "dbtestB";
-  const trieB = await store.create();
-  await trieB.put(Buffer.from("0000", "hex"), Buffer.from("A", "utf8"));
-  await trieB.put(Buffer.from("0001", "hex"), Buffer.from("B", "utf8"));
-  await trieB.put(Buffer.from("0002", "hex"), Buffer.from("C", "utf8"));
-  await trieB.put(Buffer.from("0005", "hex"), Buffer.from("E", "utf8"));
-
-  t.notDeepEqual(trieA.root(), trieB.root());
-
-  const [l0A] = await store.walk(trieA, 0);
-  const [l0B] = await store.walk(trieB, 0);
-  t.notDeepEqual(l0A.hash, l0B.hash);
-
-  const [l1A] = await store.walk(trieA, 1);
-  const [l1B] = await store.walk(trieB, 1);
-  t.notDeepEqual(l1A.hash, l1B.hash);
-
-  const l2A = await store.walk(trieA, 2);
-  const l2B = await store.walk(trieB, 2);
-  t.deepEqual(l2A[0].hash, l2B[0].hash);
-  t.deepEqual(l2A[1].hash, l2B[1].hash);
-  t.deepEqual(l2A[2].hash, l2B[2].hash);
-  t.notDeepEqual(l2A[3].hash, l2B[3].hash);
-});
-
 test("efficient trie retrieval of zero-th level", async (t) => {
   env.DATA_DIR = "dbtest";
   const trie = await store.create();
