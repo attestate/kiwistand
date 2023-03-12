@@ -39,6 +39,55 @@ export function nibblesToBuffer(arr) {
   return buf;
 }
 
+export async function compare(localTrie, remote) {
+  const missing = [];
+  const mismatch = [];
+  for (let remoteNode of remote) {
+    // NOTE: In case the level:0 is being compared and we're having to deal
+    // with the root node.
+    if (
+      remoteNode.level === 0 &&
+      remoteNode.key.length === 0 &&
+      Buffer.compare(localTrie.root(), remoteNode.hash) !== 0
+    ) {
+      mismatch.push(remoteNode);
+      break;
+    }
+
+    // NOTE: There are several ways we can look for matches in the database.
+    // But most important is that we differentiate between nodes that are
+    // missing and nodes that are hash-mismatches. That is because in cases of
+    // hash mismatches, we know that the local node has the same subtree
+    // available and that we'll have to descend deeper into the tree until we
+    // find missing nodes. Whereas for missing nodes, we're well-served by
+    // requesting them from the paired node.
+    let node;
+    try {
+      node = await localTrie.lookupNode(remoteNode.hash);
+    } catch (err) {
+      if (err.toString().includes("Missing node in DB")) {
+        const path = await localTrie.findPath(remoteNode.key);
+        node = path.node;
+      } else {
+        throw err;
+      }
+    }
+
+    if (!node) {
+      missing.push(remoteNode);
+      continue;
+    }
+
+    if (Buffer.compare(hash(node), remoteNode.hash) !== 0) {
+      mismatch.push(remoteNode);
+    }
+  }
+  return {
+    missing,
+    mismatch,
+  };
+}
+
 export async function descend(trie, level) {
   if (level === 0) {
     return [
@@ -53,9 +102,16 @@ export async function descend(trie, level) {
   let nodes = [];
   const onFound = (nodeRef, node, key, walkController) => {
     if (level === 0) {
+      if (node instanceof LeafNode) {
+        const fragments = [key, node.key()].map(nibblesToBuffer);
+        key = Buffer.concat(fragments);
+      } else {
+        key = nibblesToBuffer(key);
+      }
+
       nodes.push({
         level: levelCopy,
-        key: nibblesToBuffer(key),
+        key,
         hash: hash(node),
         node,
       });
@@ -85,6 +141,7 @@ export async function add(trie, message, libp2p, allowlist) {
   // don't need to extract either the hash or the timestamp from the id itself.
   // The timestamp is in the message itself and the hash can be generated. So we
   // might be fine!
+  // TODO2: We must extract the timestamp and hash from the ID again.
   const id = `${message.timestamp.toString(16)}${digest}`;
   log(`Storing message with id "${id}"`);
   await trie.put(Buffer.from(id, "hex"), Buffer.from(canonical, "utf8"));
