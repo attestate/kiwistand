@@ -23,12 +23,13 @@ export async function create() {
   });
 }
 
+// NOTE: https://ethereum.github.io/execution-specs/diffs/frontier_homestead/trie/index.html#ethereum.frontier.trie.encode_internal_node
 export function hash(node) {
-  if (node instanceof BranchNode || node instanceof LeafNode) {
-    const encoded = rlp.encode(node.raw());
-    if (encoded.length < 32) return node.raw();
-    return Buffer.from(keccak256(encoded));
-  } else if (node instanceof ExtensionNode) {
+  if (
+    node instanceof BranchNode ||
+    node instanceof LeafNode ||
+    node instanceof ExtensionNode
+  ) {
     const encoded = rlp.encode(node.raw());
     if (encoded.length < 32) return node.raw();
     return Buffer.from(keccak256(encoded));
