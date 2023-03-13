@@ -1,43 +1,96 @@
 // @format
 import { env } from "process";
 import { rm } from "fs/promises";
+import { randomBytes } from "crypto";
+import { resolve } from "path";
 
 import test from "ava";
 import { Wallet, utils } from "ethers";
+import { BranchNode, ExtensionNode, LeafNode } from "@ethereumjs/trie";
+import rlp from "@ethereumjs/rlp";
 
 import * as id from "../src/id.mjs";
 import config from "../src/config.mjs";
 import * as store from "../src/store.mjs";
 
-test("complex trie comparison", async (t) => {
+const letter = () => {
+  const set = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const position = Math.floor(Math.random() * set.length);
+  return Buffer.from(set[position], "utf8");
+};
+
+const hex = (size = 8) => randomBytes(size);
+
+const number = (min, max) => {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+};
+
+const fill = async (trieA) => {
+  const entries = number(3, 5);
+
+  for (let i = 0; i < entries; i++) {
+    const key = hex(4);
+    const value = letter();
+    await trieA.put(key, value);
+  }
+};
+
+// TODO Post pone until we know if we can serialize an entire subtrie
+test("fill random trie", async (t) => {
+  env.DATA_DIR = "dbtestA";
+  const trieA = await store.create();
+  const emptyRoot = trieA.root();
+  await fill(trieA);
+  t.not(Buffer.compare(emptyRoot, trieA.root()), 0);
+
+  const trieB = trieA.copy();
+  await fill(trieB);
+  t.not(Buffer.compare(trieA.root(), trieB.root()), 0);
+
+  const remotes = await store.descend(trieB, 0);
+  const results = await store.compare(trieA, remotes);
+
+  await rm("dbtestA", { recursive: true });
+});
+
+test("hashing on all nodes", async (t) => {
   env.DATA_DIR = "dbtestA";
   const trieA = await store.create();
   await trieA.put(Buffer.from("0100", "hex"), Buffer.from("A", "utf8"));
+  await trieA.put(Buffer.from("0101", "hex"), Buffer.from("C", "utf8"));
   await trieA.put(Buffer.from("0200", "hex"), Buffer.from("D", "utf8"));
+
+  const throwIfMissing = true;
+  const [root] = await store.descend(trieA, 0);
+  t.true(
+    (await trieA.lookupNode(root.hash, throwIfMissing)) instanceof ExtensionNode
+  );
+
+  const [branch] = await store.descend(trieA, 1);
+  t.true(rlp.encode(branch.node.raw()).length > 32);
+  t.true((await trieA.lookupNode(branch.hash)) instanceof BranchNode);
+
+  const [ext, leaf] = await store.descend(trieA, 2);
+  t.true(rlp.encode(ext.node.raw()).length < 32);
+  t.true((await trieA.lookupNode(ext.hash)) instanceof ExtensionNode);
+  t.true(rlp.encode(leaf.node.raw()).length < 32);
+  t.true((await trieA.lookupNode(leaf.hash)) instanceof LeafNode);
 
   env.DATA_DIR = "dbtestB";
   const trieB = await store.create();
-  await trieB.put(Buffer.from("0100", "hex"), Buffer.from("A", "utf8"));
-  await trieB.put(Buffer.from("0101", "hex"), Buffer.from("C", "utf8"));
-  await trieB.put(Buffer.from("0200", "hex"), Buffer.from("D", "utf8"));
+  const b32 = "6fd43e7cffc31bb581d7421c8698e29aa2bd8e7186a394b85299908b4eb9";
+  await trieB.put(Buffer.from("6fd4", "hex"), Buffer.from("A", "utf8"));
+  await trieB.put(Buffer.from(b32, "hex"), Buffer.from("B", "utf8"));
+  await trieB.put(Buffer.from(b32 + "1234", "hex"), Buffer.from("C", "utf8"));
 
-  const remotes0 = await store.descend(trieB, 0);
-  const results0 = await store.compare(trieA, remotes0);
-  t.is(results0.missing.length, 0);
-  t.is(results0.mismatch.length, 1);
-  t.is(Buffer.compare(results0.mismatch[0].hash, trieB.root()), 0);
+  const [branchB] = await store.descend(trieB, 1);
+  t.true((await trieB.lookupNode(branchB.hash)) instanceof BranchNode);
 
-  const remotes1 = await store.descend(trieB, 1);
-  const results1 = await store.compare(trieA, remotes1);
-  t.is(results1.missing.length, 1);
-  t.is(results1.mismatch.length, 0);
-  t.is(results1.missing[0].key.length, 0);
-
-  const remotes2 = await store.descend(trieB, 2);
-  const results2 = await store.compare(trieA, remotes2);
-  t.is(results2.missing.length, 1);
-  t.is(results2.mismatch.length, 0);
-  t.is(Buffer.compare(results2.missing[0].key, Buffer.from("01", "hex")), 0);
+  const [extB] = await store.descend(trieB, 2);
+  t.true(rlp.encode(extB.node.raw()).length > 32);
+  t.true((await trieB.lookupNode(extB.hash)) instanceof ExtensionNode);
 
   await rm("dbtestA", { recursive: true });
   await rm("dbtestB", { recursive: true });
@@ -68,30 +121,6 @@ test("leaf node key algorithm", async (t) => {
   await rm("dbtestB", { recursive: true });
 });
 
-test("compare tries", async (t) => {
-  env.DATA_DIR = "dbtestA";
-  const trieA = await store.create();
-  await trieA.put(Buffer.from("000000", "hex"), Buffer.from("A", "utf8"));
-  await trieA.put(Buffer.from("000100", "hex"), Buffer.from("B", "utf8"));
-
-  env.DATA_DIR = "dbtestB";
-  const trieB = await store.create();
-  await trieB.put(Buffer.from("000000", "hex"), Buffer.from("A", "utf8"));
-  await trieB.put(Buffer.from("000100", "hex"), Buffer.from("B", "utf8"));
-  await trieB.put(Buffer.from("000101", "hex"), Buffer.from("C", "utf8"));
-
-  const remotes = await store.descend(trieB, 4);
-  const { missing, mismatch } = await store.compare(trieA, remotes);
-  t.is(missing.length, 1);
-  t.is(mismatch.length, 1);
-
-  t.is(Buffer.compare(missing[0].key, Buffer.from("000101", "hex")), 0);
-  t.is(Buffer.compare(mismatch[0].key, Buffer.from("000100", "hex")), 0);
-
-  await rm("dbtestA", { recursive: true });
-  await rm("dbtestB", { recursive: true });
-});
-
 test("comparing level zero", async (t) => {
   env.DATA_DIR = "dbtestA";
   const trieA = await store.create();
@@ -108,8 +137,8 @@ test("comparing level zero", async (t) => {
   const results = await store.compare(trieA, remotes);
   t.deepEqual(results.mismatch, remotes);
 
-  await rm("dbtestA", { recursive: true });
-  await rm("dbtestB", { recursive: true });
+  await rm(resolve("dbtestA"), { recursive: true });
+  await rm(resolve("dbtestB"), { recursive: true });
 });
 
 test("comparing level one", async (t) => {
@@ -148,44 +177,13 @@ test("comparing level two", async (t) => {
 
   const remotes = await store.descend(trieB, 2);
   const results = await store.compare(trieA, remotes);
-  t.is(results.missing.length, 1);
-  t.is(results.mismatch.length, 0);
-  t.is(Buffer.compare(results.missing[0].key, Buffer.from("0001", "hex")), 0);
-
-  await rm("dbtestA", { recursive: true });
-  await rm("dbtestB", { recursive: true });
-});
-
-test("hashing an extension node", async (t) => {
-  env.DATA_DIR = "dbtestA";
-  const trieA = await store.create();
-  await trieA.put(Buffer.from("0000", "hex"), Buffer.from("A", "utf8"));
-  await trieA.put(Buffer.from("0001", "hex"), Buffer.from("B", "utf8"));
-  await trieA.put(Buffer.from("0002", "hex"), Buffer.from("C", "utf8"));
-  await trieA.put(Buffer.from("0004", "hex"), Buffer.from("D", "utf8"));
-  const { stack } = await trieA.findPath(Buffer.from("", "hex"));
-  const [node] = stack;
-  const digest = store.hash(node);
-  t.true(digest instanceof Buffer);
-  const expected = Buffer.from(
-    "134daeb91d5637da80800d2d1cc5975177e60e83acbbf86d4fc9d2154abc4235",
-    "hex"
+  t.is(results.missing.length, 0);
+  t.is(results.mismatch.length, 2);
+  t.is(
+    Buffer.compare(results.mismatch[0].key, Buffer.from("000000", "hex")),
+    0
   );
-  t.is(Buffer.compare(digest, expected), 0);
-
-  env.DATA_DIR = "dbtestB";
-  const trieB = await store.create();
-  await trieB.put(Buffer.from("1234", "hex"), Buffer.from("A", "utf8"));
-  await trieB.put(Buffer.from("1234567", "hex"), Buffer.from("B", "utf8"));
-  const pathB = await trieB.findPath(Buffer.from("", "hex"));
-  const nodeB = pathB.stack[0];
-  const digestB = store.hash(nodeB);
-  t.true(digestB instanceof Buffer);
-  const expectedB = Buffer.from(
-    "56913c47f6536846f9f4d93a8da5104631898c028567768895473892cf561c67",
-    "hex"
-  );
-  t.is(Buffer.compare(digestB, expectedB), 0);
+  t.is(Buffer.compare(results.mismatch[1].key, Buffer.from("0001", "hex")), 0);
 
   await rm("dbtestA", { recursive: true });
   await rm("dbtestB", { recursive: true });

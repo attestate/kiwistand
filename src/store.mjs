@@ -1,7 +1,13 @@
 // @format
 import { env } from "process";
 
-import { Trie, BranchNode, ExtensionNode, LeafNode } from "@ethereumjs/trie";
+import {
+  Trie,
+  WalkController,
+  BranchNode,
+  ExtensionNode,
+  LeafNode,
+} from "@ethereumjs/trie";
 import rlp from "@ethereumjs/rlp";
 import { keccak256 } from "ethereum-cryptography/keccak.js";
 
@@ -19,10 +25,13 @@ export async function create() {
 
 export function hash(node) {
   if (node instanceof BranchNode || node instanceof LeafNode) {
-    return Buffer.from(keccak256(rlp.encode(node.raw())));
+    const encoded = rlp.encode(node.raw());
+    if (encoded.length < 32) return node.raw();
+    return Buffer.from(keccak256(encoded));
   } else if (node instanceof ExtensionNode) {
-    const raw = [nibblesToBuffer(node.encodedKey()), null];
-    return Buffer.from(keccak256(rlp.encode(raw)));
+    const encoded = rlp.encode(node.raw());
+    if (encoded.length < 32) return node.raw();
+    return Buffer.from(keccak256(encoded));
   } else {
     throw new Error("Must be BranchNode, LeafNode or ExtensionNode");
   }
@@ -37,6 +46,20 @@ export function nibblesToBuffer(arr) {
     buf[i] = (arr[q] << 4) + arr[++q];
   }
   return buf;
+}
+
+export async function subtrie(localTrie, hash) {
+  let toggle = false;
+  const onNode = (nodeRef, node, key, walkController) => {
+    if (!toggle) {
+      toggle = true;
+      console.log(hash);
+      walkController.pushNodeToQueue(hash);
+    } else {
+      walkController.allChildren(node, key);
+    }
+  };
+  return await WalkController.newWalk(onNode, localTrie, localTrie.root());
 }
 
 export async function compare(localTrie, remote) {
@@ -75,10 +98,7 @@ export async function compare(localTrie, remote) {
 
     if (!node) {
       missing.push(remoteNode);
-      continue;
-    }
-
-    if (Buffer.compare(hash(node), remoteNode.hash) !== 0) {
+    } else {
       mismatch.push(remoteNode);
     }
   }
