@@ -37,20 +37,17 @@ const fill = async (trieA) => {
   }
 };
 
-// TODO Post pone until we know if we can serialize an entire subtrie
-test("fill random trie", async (t) => {
+test("extracting subtrie", async (t) => {
   env.DATA_DIR = "dbtestA";
   const trieA = await store.create();
-  const emptyRoot = trieA.root();
-  await fill(trieA);
-  t.not(Buffer.compare(emptyRoot, trieA.root()), 0);
+  await trieA.put(Buffer.from("0100", "hex"), Buffer.from("A", "utf8"));
+  await trieA.put(Buffer.from("0101", "hex"), Buffer.from("C", "utf8"));
+  await trieA.put(Buffer.from("0200", "hex"), Buffer.from("D", "utf8"));
 
-  const trieB = trieA.copy();
-  await fill(trieB);
-  t.not(Buffer.compare(trieA.root(), trieB.root()), 0);
-
-  const remotes = await store.descend(trieB, 0);
-  const results = await store.compare(trieA, remotes);
+  const [branch] = await store.descend(trieA, 1);
+  const nodes = await store.subtrie(trieA, branch.node);
+  t.notDeepEqual(nodes[0], branch.node);
+  t.is(nodes.length, 5);
 
   await rm("dbtestA", { recursive: true });
 });

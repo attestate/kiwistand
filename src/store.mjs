@@ -49,18 +49,20 @@ export function nibblesToBuffer(arr) {
   return buf;
 }
 
-export async function subtrie(localTrie, hash) {
+export async function subtrie(localTrie, rootNode) {
   let toggle = false;
+  const nodes = [];
   const onNode = (nodeRef, node, key, walkController) => {
     if (!toggle) {
       toggle = true;
-      console.log(hash);
-      walkController.pushNodeToQueue(hash);
+      walkController.allChildren(rootNode);
     } else {
+      nodes.push(node);
       walkController.allChildren(node, key);
     }
   };
-  return await WalkController.newWalk(onNode, localTrie, localTrie.root());
+  await WalkController.newWalk(onNode, localTrie, localTrie.root());
+  return nodes;
 }
 
 export async function compare(localTrie, remote) {
