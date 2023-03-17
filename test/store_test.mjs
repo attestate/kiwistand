@@ -37,6 +37,79 @@ const fill = async (trieA) => {
   }
 };
 
+test("filtering out marked nodes on descend", async (t) => {
+  env.DATA_DIR = "dbtestA";
+  const trieA = await store.create();
+  await trieA.put(Buffer.from("0100", "hex"), Buffer.from("A", "utf8"));
+  await trieA.put(Buffer.from("0101", "hex"), Buffer.from("C", "utf8"));
+  await trieA.put(Buffer.from("0200", "hex"), Buffer.from("D", "utf8"));
+
+  const original = await store.descend(trieA, 2);
+  t.is(original.length, 2);
+  const [ext, leaf] = original;
+
+  const marked = [ext.hash];
+  const filtered = await store.descend(trieA, 2, marked);
+  t.is(filtered.length, 1);
+  t.notDeepEqual(filtered[0], ext);
+
+  await rm("dbtestA", { recursive: true });
+});
+
+test("lookup nodes", async (t) => {
+  env.DATA_DIR = "dbtestA";
+  const trieA = await store.create();
+  await trieA.put(Buffer.from("0100", "hex"), Buffer.from("A", "utf8"));
+  await trieA.put(Buffer.from("0101", "hex"), Buffer.from("C", "utf8"));
+  await trieA.put(Buffer.from("0200", "hex"), Buffer.from("D", "utf8"));
+
+  const [branch] = await store.descend(trieA, 1);
+  t.true(rlp.encode(branch.node.raw()).length > 32);
+
+  const actual0 = await store.lookup(trieA, branch.hash, branch.key);
+  t.is(actual0.type, "match");
+  t.deepEqual(actual0.node, branch.node);
+
+  const [ext, leaf] = await store.descend(trieA, 2);
+  t.true(rlp.encode(ext.node.raw()).length < 32);
+  t.true(rlp.encode(leaf.node.raw()).length < 32);
+
+  const actual1 = await store.lookup(trieA, ext.hash, ext.key);
+  t.is(actual1.type, "missing");
+  t.deepEqual(actual1.node, ext.node);
+
+  const actual2 = await store.lookup(trieA, leaf.hash, leaf.key);
+  t.is(actual2.type, "missing");
+  t.deepEqual(actual2.node, leaf.node);
+
+  await rm("dbtestA", { recursive: true });
+});
+
+test("comparing nodes with each other", async (t) => {
+  env.DATA_DIR = "dbtestA";
+  const trieA = await store.create();
+  await trieA.put(Buffer.from("0100", "hex"), Buffer.from("A", "utf8"));
+  await trieA.put(Buffer.from("0101", "hex"), Buffer.from("C", "utf8"));
+  await trieA.put(Buffer.from("0200", "hex"), Buffer.from("D", "utf8"));
+
+  const [branch] = await store.descend(trieA, 1);
+  t.true(rlp.encode(branch.node.raw()).length > 32);
+  t.true(store.isEqual(branch.hash, branch.hash));
+  t.false(store.isEqual(branch.hash, Buffer.from("abc", "hex")));
+
+  const [ext, leaf] = await store.descend(trieA, 2);
+  t.true(rlp.encode(ext.node.raw()).length < 32);
+  t.true(rlp.encode(leaf.node.raw()).length < 32);
+  t.false(store.isEqual(ext.hash, leaf.hash));
+  t.true(store.isEqual(ext.hash, ext.hash));
+  t.true(store.isEqual(leaf.hash, leaf.hash));
+
+  t.false(store.isEqual(branch.hash, leaf.hash));
+  t.false(store.isEqual(leaf.hash, branch.hash));
+
+  await rm("dbtestA", { recursive: true });
+});
+
 test("extracting subtrie", async (t) => {
   env.DATA_DIR = "dbtestA";
   const trieA = await store.create();
@@ -45,9 +118,11 @@ test("extracting subtrie", async (t) => {
   await trieA.put(Buffer.from("0200", "hex"), Buffer.from("D", "utf8"));
 
   const [branch] = await store.descend(trieA, 1);
-  const nodes = await store.subtrie(trieA, branch.node);
-  t.notDeepEqual(nodes[0], branch.node);
-  t.is(nodes.length, 5);
+  const nodes = await store.subtrie(trieA, branch.hash);
+  t.deepEqual(nodes[0].node, branch.node);
+  t.truthy(nodes[0].hash);
+  t.truthy(nodes[0].key);
+  t.is(nodes.length, 6);
 
   await rm("dbtestA", { recursive: true });
 });
@@ -62,18 +137,26 @@ test("hashing on all nodes", async (t) => {
   const throwIfMissing = true;
   const [root] = await store.descend(trieA, 0);
   t.true(
-    (await trieA.lookupNode(root.hash, throwIfMissing)) instanceof ExtensionNode
+    (await store.lookup(trieA, root.hash, root.key)).node instanceof
+      ExtensionNode
   );
 
   const [branch] = await store.descend(trieA, 1);
   t.true(rlp.encode(branch.node.raw()).length > 32);
-  t.true((await trieA.lookupNode(branch.hash)) instanceof BranchNode);
+  t.true(
+    (await store.lookup(trieA, branch.hash, branch.key)).node instanceof
+      BranchNode
+  );
 
   const [ext, leaf] = await store.descend(trieA, 2);
   t.true(rlp.encode(ext.node.raw()).length < 32);
-  t.true((await trieA.lookupNode(ext.hash)) instanceof ExtensionNode);
+  t.true(
+    (await store.lookup(trieA, ext.hash, ext.key)).node instanceof ExtensionNode
+  );
   t.true(rlp.encode(leaf.node.raw()).length < 32);
-  t.true((await trieA.lookupNode(leaf.hash)) instanceof LeafNode);
+  t.true(
+    (await store.lookup(trieA, leaf.hash, leaf.key)).node instanceof LeafNode
+  );
 
   env.DATA_DIR = "dbtestB";
   const trieB = await store.create();
@@ -83,11 +166,17 @@ test("hashing on all nodes", async (t) => {
   await trieB.put(Buffer.from(b32 + "1234", "hex"), Buffer.from("C", "utf8"));
 
   const [branchB] = await store.descend(trieB, 1);
-  t.true((await trieB.lookupNode(branchB.hash)) instanceof BranchNode);
+  t.true(
+    (await store.lookup(trieB, branchB.hash, branchB.key)).node instanceof
+      BranchNode
+  );
 
   const [extB] = await store.descend(trieB, 2);
   t.true(rlp.encode(extB.node.raw()).length > 32);
-  t.true((await trieB.lookupNode(extB.hash)) instanceof ExtensionNode);
+  t.true(
+    (await store.lookup(trieB, extB.hash, extB.key)).node instanceof
+      ExtensionNode
+  );
 
   await rm("dbtestA", { recursive: true });
   await rm("dbtestB", { recursive: true });
@@ -174,13 +263,9 @@ test("comparing level two", async (t) => {
 
   const remotes = await store.descend(trieB, 2);
   const results = await store.compare(trieA, remotes);
-  t.is(results.missing.length, 0);
-  t.is(results.mismatch.length, 2);
-  t.is(
-    Buffer.compare(results.mismatch[0].key, Buffer.from("000000", "hex")),
-    0
-  );
-  t.is(Buffer.compare(results.mismatch[1].key, Buffer.from("0001", "hex")), 0);
+  // NOTE: The results here match, because the ethereumjs/trie doesn't hash
+  // values that are below 32 bytes in their RLP encoded form.
+  t.is(results.missing.length, 2);
 
   await rm("dbtestA", { recursive: true });
   await rm("dbtestB", { recursive: true });

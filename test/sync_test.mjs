@@ -1,4 +1,7 @@
 // @format
+import { env } from "process";
+import { rm } from "fs/promises";
+
 import test from "ava";
 import { pipe } from "it-pipe";
 import { pushable } from "it-pushable";
@@ -7,30 +10,53 @@ import { fromString } from "uint8arrays/from-string";
 import * as lp from "it-length-prefixed";
 import all from "it-all";
 
-import { compareLevels, fromWire, toWire } from "../src/sync.mjs";
+import {
+  deserialize,
+  compare,
+  initiate,
+  fromWire,
+  toWire,
+} from "../src/sync.mjs";
+import * as store from "../src/store.mjs";
 
-test("compare levels of node lists", (t) => {
-  const levelA = [
-    {
-      hash: Buffer.from("00", "hex"),
-    },
-    {
-      hash: Buffer.from("01", "hex"),
-    },
-  ];
-  const levelB = [
-    {
-      hash: Buffer.from("00", "hex"),
-    },
-    {
-      hash: Buffer.from("01", "hex"),
-    },
-    {
-      hash: Buffer.from("03", "hex"),
-    },
-  ];
-  const results = compareLevels(levelA, levelB);
-  t.deepEqual(results, [true, true, false]);
+test("syncing tries", async (t) => {
+  env.DATA_DIR = "dbtestA";
+  const trieA = await store.create();
+  await trieA.put(Buffer.from("0100", "hex"), Buffer.from("A", "utf8"));
+  await trieA.put(Buffer.from("0101", "hex"), Buffer.from("C", "utf8"));
+  await trieA.put(Buffer.from("0200", "hex"), Buffer.from("D", "utf8"));
+
+  const peerIdA = "A";
+  const level = 0;
+  const exclude = [];
+
+  env.DATA_DIR = "dbtestB";
+  const trieB = await store.create();
+  t.notDeepEqual(trieA.root(), trieB.root());
+  const root = trieB.root();
+  trieB.checkpoint();
+  t.true(trieB.hasCheckpoints());
+
+  const sendMock = async (peerId, protocol, message) => {
+    if (protocol === "/levels/1.0.0") {
+      return await compare(trieB, message);
+    } else if (protocol === "/leaves/1.0.0") {
+      const missing = deserialize(message);
+      for await (let { node, key } of missing) {
+        await trieB.put(key, node.value());
+      }
+    }
+  };
+
+  await initiate(trieA, peerIdA, exclude, level, sendMock);
+
+  await trieB.commit();
+  t.false(trieA.hasCheckpoints());
+  t.notDeepEqual(trieB.root(), root);
+  t.deepEqual(trieA.root(), trieB.root());
+
+  await rm("dbtestA", { recursive: true });
+  await rm("dbtestB", { recursive: true });
 });
 
 test("serializing into wire", async (t) => {

@@ -2,19 +2,69 @@
 import test from "ava";
 import esmock from "esmock";
 import process from "process";
+import { rm } from "fs/promises";
 
 import * as lp from "it-length-prefixed";
 import { pipe } from "it-pipe";
 import { toString } from "uint8arrays/to-string";
 import { fromString } from "uint8arrays/from-string";
 
-import { fromWire, toWire } from "../src/sync.mjs";
+import { fromWire, toWire, handleConnection, receive } from "../src/sync.mjs";
 import * as messages from "../src/topics/messages.mjs";
 import { start } from "../src/index.mjs";
 
 function randInt() {
   return Math.floor(Math.random() * 10000);
 }
+
+test.skip("If a node can send an initiate message", async (t) => {
+  let node1, node2;
+  const message = { hello: "world" };
+  const actual = await new Promise(async (resolve, reject) => {
+    // TODO: We need to be able to configure both nodes as using a different
+    // data directory. And right now, that's not possible because we cannot
+    // control when store.create is being called by which node.
+    process.env.TEST_DB_OVERWRITE = "true";
+    process.env.PORT = "53462";
+    process.env.BIND_ADDRESS_V4 = "127.0.0.1";
+    process.env.IS_BOOTSTRAP_NODE = "false";
+    process.env.USE_EPHEMERAL_ID = "false";
+    const config1 = (await import(`../src/config.mjs?${randInt()}`)).default;
+
+    const nodeHandler1 = {};
+    const connHandler1 = {};
+    const protoHandler1 = {
+      "/levels/1.0.0": receive,
+    };
+
+    node1 = await start(config1, nodeHandler1, connHandler1, protoHandler1);
+
+    process.env.TEST_DB_OVERWRITE = "true";
+    process.env.PORT = "0";
+    process.env.BIND_ADDRESS_V4 = "127.0.0.1";
+    process.env.IS_BOOTSTRAP_NODE = "false";
+    process.env.USE_EPHEMERAL_ID = "true";
+    const config2 = (await import(`../src/config.mjs?${randInt()}`)).default;
+
+    const nodeHandler2 = {};
+    const connHandler2 = {
+      "peer:connect": handleConnection,
+    };
+    node2 = await start(config2, nodeHandler2, connHandler2);
+    global.libp2pnode = node2;
+
+    await node1.dial(node2.peerId);
+  });
+
+  await node1.stop();
+  await node2.stop();
+  try {
+    await rm(`data-${node1.peerId.toString()}`, { recursive: true });
+    await rm(`data-${node2.peerId.toString()}`, { recursive: true });
+  } catch (err) {
+    console.warn(err.toString());
+  }
+});
 
 test.serial(
   "run as bootstrap node but without correct default port",
