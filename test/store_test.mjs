@@ -110,6 +110,15 @@ test("comparing nodes with each other", async (t) => {
   await rm("dbtestA", { recursive: true });
 });
 
+test("descend on level 1 with an empty trie", async (t) => {
+  env.DATA_DIR = "dbtestA";
+  const trieA = await store.create();
+
+  const nodes = await store.descend(trieA, 1);
+  t.deepEqual(nodes, []);
+  await rm("dbtestA", { recursive: true });
+});
+
 test("hashing on all nodes", async (t) => {
   env.DATA_DIR = "dbtestA";
   const trieA = await store.create();

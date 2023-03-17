@@ -103,6 +103,7 @@ export async function lookup(trie, hash, key) {
       result.node = path.node;
       result.type = "mismatch";
     } else {
+      log(`Throwing error for looking up: "${hash.toString()}"`);
       throw err;
     }
   }
@@ -187,7 +188,16 @@ export async function descend(trie, level, exclude = []) {
       walkController.allChildren(node, key);
     }
   };
-  await trie.walkTrie(trie.root(), onFound);
+  try {
+    await trie.walkTrie(trie.root(), onFound);
+  } catch (err) {
+    if (err.toString().includes("Missing node in DB")) {
+      log("descend: Didn't find any nodes");
+      return nodes;
+    } else {
+      throw err;
+    }
+  }
   return nodes;
 }
 

@@ -64,7 +64,7 @@ export async function initiate(
   level = 0,
   innerSend = send
 ) {
-  log(`Initiating sync for peerId: "${peerId}"`);
+  log(`Initiating sync for peerId: "${peerId}" and level "${level}"`);
   const remotes = await store.descend(trie, level, exclude);
 
   if (remotes.length === 0) {
@@ -82,6 +82,13 @@ export async function initiate(
 
   const matches = deserialize(results.match).map((node) => node.hash);
   return await initiate(trie, peerId, matches, level + 1, innerSend);
+}
+
+export async function put(trie, message) {
+  const missing = deserialize(message);
+  for await (let { node, key } of missing) {
+    await trie.put(key, node.value());
+  }
 }
 
 // TODO: We must validate the incoming remotes using a JSON schema.
