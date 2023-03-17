@@ -80,7 +80,6 @@ export async function initiate(
   if (missing.length > 0)
     await innerSend(peerId, "/leaves/1.0.0", serialize(missing));
 
-  // TODO: We must send these nodes to the other hub
   const matches = deserialize(results.match).map((node) => node.hash);
   return await initiate(trie, peerId, matches, level + 1, innerSend);
 }

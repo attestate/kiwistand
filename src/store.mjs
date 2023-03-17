@@ -1,6 +1,5 @@
 // @format
 import { env } from "process";
-import assert from "assert/strict";
 
 import {
   Trie,
@@ -54,44 +53,6 @@ export function nibblesToBuffer(arr) {
     buf[i] = (arr[q] << 4) + arr[++q];
   }
   return buf;
-}
-
-export async function subtrie(localTrie, root) {
-  let toggle = false;
-  const nodes = [];
-  const onNode = (nodeRef, node, key, walkController) => {
-    if (!toggle) {
-      toggle = true;
-      walkController.pushNodeToQueue(root);
-    } else {
-      nodes.push({
-        key,
-        hash: hash(node),
-        node,
-      });
-      walkController.allChildren(node, key);
-    }
-  };
-  await WalkController.newWalk(onNode, localTrie, localTrie.root());
-  return nodes;
-}
-
-// NOTE:
-//
-// At last: there should be a function that can send and receive nodes within
-// the tree synchronization. E.g. it accepts the collected nodes, or it asks
-// for a comparison on a level basis.
-//
-// I think it probably makes most sense to frame this type of API a stateless,
-// similar to rest, where nodes can access the resources of other nodes to
-// build their own local state.
-
-export async function collect(localTrie, hashes) {
-  const nodes = [];
-  for await (let root of missing) {
-    nodes.push(await subtrie(localTrie, root));
-  }
-  return nodes;
 }
 
 export function isEqual(buf1, buf2) {
@@ -186,7 +147,7 @@ export async function compare(localTrie, remotes) {
 // TODO: It's probably better to have an inclusion marking, but it then needs
 // to be based on the children. We should adjust the compare method too to
 // include matches.
-export async function descend(trie, level, marked = []) {
+export async function descend(trie, level, exclude = []) {
   if (level === 0) {
     return [
       {
@@ -200,11 +161,11 @@ export async function descend(trie, level, marked = []) {
   const levelCopy = level;
   let nodes = [];
   const onFound = (nodeRef, node, key, walkController) => {
-    // NOTE: The idea of the marked array is that it contains nodes that have
+    // NOTE: The idea of the "exclue" array is that it contains nodes that have
     // matched on the remote trie, and so we don't have to send them along in a
     // future comparison. Hence, if we have a match, we simply return.
     const nodeHash = hash(node);
-    const match = marked.find((markedNode) => isEqual(markedNode, nodeHash));
+    const match = exclude.find((markedNode) => isEqual(markedNode, nodeHash));
     if (match) return;
 
     if (level === 0) {

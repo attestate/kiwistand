@@ -110,23 +110,6 @@ test("comparing nodes with each other", async (t) => {
   await rm("dbtestA", { recursive: true });
 });
 
-test("extracting subtrie", async (t) => {
-  env.DATA_DIR = "dbtestA";
-  const trieA = await store.create();
-  await trieA.put(Buffer.from("0100", "hex"), Buffer.from("A", "utf8"));
-  await trieA.put(Buffer.from("0101", "hex"), Buffer.from("C", "utf8"));
-  await trieA.put(Buffer.from("0200", "hex"), Buffer.from("D", "utf8"));
-
-  const [branch] = await store.descend(trieA, 1);
-  const nodes = await store.subtrie(trieA, branch.hash);
-  t.deepEqual(nodes[0].node, branch.node);
-  t.truthy(nodes[0].hash);
-  t.truthy(nodes[0].key);
-  t.is(nodes.length, 6);
-
-  await rm("dbtestA", { recursive: true });
-});
-
 test("hashing on all nodes", async (t) => {
   env.DATA_DIR = "dbtestA";
   const trieA = await store.create();
