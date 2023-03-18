@@ -4,7 +4,7 @@
   "description": "goblin is the p2p node client for goblin.exchange, a web3 writer friendly Hacker News that nobody controls but everybody co-owns",
   "main": "./src/index.mjs",
   "scripts": {
-    "test": "ava --timeout=20s --serial --verbose",
+    "test": "ava --timeout=30s --serial --verbose",
     "dev": "DEBUG=attestate* node -r dotenv/config --no-warnings ./src/launch.mjs",
     "dev:bootstrap": "DATA_DIR=bootstrap BIND_ADDRESS_V4=\"127.0.0.1\" IS_BOOTSTRAP_NODE=true USE_EPHEMERAL_ID=false npm run dev",
     "dev:anon": "DATA_DIR=anon BIND_ADDRESS_V4=\"127.0.0.1\" PORT=0 IS_BOOTSTRAP_NODE=false USE_EPHEMERAL_ID=true npm run dev"

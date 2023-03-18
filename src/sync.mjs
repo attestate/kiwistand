@@ -36,7 +36,10 @@ export function serialize(nodes) {
   for (let node of nodes) {
     node.key = node.key.toString("hex");
     node.hash = node.hash.toString("hex");
-    if (node.node) node.node = node.node.serialize();
+    if (node.node) {
+      // TODO: We definitely have to fix the (de-)serialization...
+      node.node = node.node.serialize().toString("hex");
+    }
   }
   return nodes;
 }
@@ -45,16 +48,21 @@ export function deserialize(nodes) {
   for (let node of nodes) {
     node.key = Buffer.from(node.key, "hex");
     node.hash = Buffer.from(node.hash, "hex");
-    if (node.node) node.node = decodeNode(node.node);
+    if (node.node) {
+      // TODO: We definitely have to fix the (de-)serialization...
+      node.node = decodeNode(Buffer.from(node.node, "hex"));
+    }
   }
   return nodes;
 }
 
-export async function send(peerId, protocol, message) {
-  const { sink, source } = await libp2pnode.dialProtocol(peerId, protocol);
-  await toWire(message, sink);
-  const [results] = await fromWire(source);
-  return results;
+export function send(libp2p) {
+  return async (peerId, protocol, message) => {
+    const { sink, source } = await libp2p.dialProtocol(peerId, protocol);
+    await toWire(message, sink);
+    const [results] = await fromWire(source);
+    return results;
+  };
 }
 
 export async function initiate(
@@ -62,13 +70,21 @@ export async function initiate(
   peerId,
   exclude = [],
   level = 0,
-  innerSend = send
+  innerSend
 ) {
-  log(`Initiating sync for peerId: "${peerId}" and level "${level}"`);
+  log(
+    `Initiating sync for peerId: "${peerId}" and level "${level}" and root "${trie
+      .root()
+      .toString("hex")}"`
+  );
   const remotes = await store.descend(trie, level, exclude);
 
   if (remotes.length === 0) {
-    log(`Ending initiate on level: "${level}"`);
+    log(
+      `Ending initiate on level: "${level}" with root: "${trie
+        .root()
+        .toString("hex")}"`
+    );
     return;
   }
   // TODO: The levels magic constant here should somehow be externally defined
@@ -77,8 +93,15 @@ export async function initiate(
   const missing = deserialize(results.missing).filter(
     ({ node }) => node instanceof LeafNode
   );
-  if (missing.length > 0)
-    await innerSend(peerId, "/leaves/1.0.0", serialize(missing));
+  if (missing.length > 0) {
+    log("Sending missing leaves to peer node");
+    try {
+      await innerSend(peerId, "/leaves/1.0.0", serialize(missing));
+    } catch (err) {
+      log("Error sending leaves to peer");
+      throw err;
+    }
+  }
 
   const matches = deserialize(results.match).map((node) => node.hash);
   return await initiate(trie, peerId, matches, level + 1, innerSend);
@@ -87,11 +110,15 @@ export async function initiate(
 export async function put(trie, message) {
   const missing = deserialize(message);
   for await (let { node, key } of missing) {
-    await trie.put(key, node.value());
+    const value = node.value();
+    log(`Adding key "${key.toString("hex")}" value "${value}"`);
+    await trie.put(key, value);
   }
 }
 
 // TODO: We must validate the incoming remotes using a JSON schema.
+// TODO: It's very easy to confused this method with the one at store (it
+// happened to me). We must rename it.
 export async function compare(trie, message) {
   const { missing, mismatch, match } = await store.compare(
     trie,
@@ -107,17 +134,51 @@ export async function compare(trie, message) {
 export function receive(handler) {
   return async ({ stream }) => {
     const [message] = await fromWire(stream.source);
+    log(`receiving message: "${JSON.stringify(message)}"`);
     const response = await handler(message);
 
+    if (!response) {
+      log("Closing stream as response is missing");
+      return stream.close();
+    }
+    log(`sending response: "${JSON.stringify(response)}"`);
     await toWire(response, stream.sink);
   };
 }
 
-export async function handleConnection(evt) {
-  log(`connected ${evt.detail.remotePeer.toString()}`);
-  const trie = await store.create();
-  const level = 0;
-  return await initiate(trie, evt.detail.remotePeer, level);
+export function handleLevels(trie) {
+  return receive(async (message) => {
+    log("Received levels and comparing them");
+    const result = await compare(trie, message);
+    // TODO: On the second iteration, this isn't returning.
+    return result;
+  });
+}
+
+export function handleLeaves(trie) {
+  return receive(async (message) => {
+    log("Received leaves and storing them in db");
+    trie.checkpoint();
+    // TODO: Ideally, this uses a version of add message as to validate other
+    // properties
+    await put(trie, message);
+    await trie.commit();
+  });
+}
+
+export function handleConnection(libp2p, trie) {
+  return async (evt) => {
+    log(`connected ${evt.detail.remotePeer.toString()}`);
+    const level = 0;
+    const exclude = [];
+    return await initiate(
+      trie,
+      evt.detail.remotePeer,
+      exclude,
+      level,
+      send(libp2p)
+    );
+  };
 }
 
 export function handleDisconnection(evt) {

@@ -13,30 +13,6 @@ import * as id from "../src/id.mjs";
 import config from "../src/config.mjs";
 import * as store from "../src/store.mjs";
 
-const letter = () => {
-  const set = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-  const position = Math.floor(Math.random() * set.length);
-  return Buffer.from(set[position], "utf8");
-};
-
-const hex = (size = 8) => randomBytes(size);
-
-const number = (min, max) => {
-  min = Math.ceil(min);
-  max = Math.floor(max);
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-};
-
-const fill = async (trieA) => {
-  const entries = number(3, 5);
-
-  for (let i = 0; i < entries; i++) {
-    const key = hex(4);
-    const value = letter();
-    await trieA.put(key, value);
-  }
-};
-
 test("filtering out marked nodes on descend", async (t) => {
   env.DATA_DIR = "dbtestA";
   const trieA = await store.create();

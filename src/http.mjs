@@ -9,14 +9,15 @@ import allowlist from "../allowlist.mjs";
 
 const fastify = Fastify({ logger: true });
 
-fastify.post("/messages", async (request, reply) => {
-  const message = request.body;
-  const trie = await store.create();
-  const distribute = libp2pnode;
-  await store.add(trie, message, distribute, allowlist);
-});
+export function handleMessage(trie, libp2p) {
+  return async (request, reply) => {
+    const message = request.body;
+    await store.add(trie, message, libp2p, allowlist);
+  };
+}
 
-export async function launch() {
+export async function launch(trie, libp2p) {
+  fastify.post("/messages", handleMessage(trie, libp2p));
   try {
     await fastify.listen({ port: env.HTTP_PORT });
   } catch (err) {

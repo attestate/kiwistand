@@ -18,13 +18,9 @@ import { verify, toDigest } from "./id.mjs";
 import * as messages from "./topics/messages.mjs";
 
 export async function create() {
-  let dir = env.DATA_DIR;
-  if (env.TEST_DB_OVERWRITE === "true") {
-    dir = `${env.DATA_DIR}-${libp2pnode.peerId.toString()}`;
-    log(`Found test environment for db, using name: "${dir}"`);
-  }
+  log(`Creating trie with DATA_DIR: "${env.DATA_DIR}"`);
   return await Trie.create({
-    db: new LMDB(dir),
+    db: new LMDB(env.DATA_DIR),
     useRootPersistence: true,
   });
 }
@@ -218,12 +214,17 @@ export async function add(trie, message, libp2p, allowlist) {
   // don't need to extract either the hash or the timestamp from the id itself.
   // The timestamp is in the message itself and the hash can be generated. So we
   // might be fine!
-  // TODO2: We must extract the timestamp and hash from the ID again.
+  // TODO: We must extract the timestamp and hash from the ID again.
   const id = `${message.timestamp.toString(16)}${digest}`;
   log(`Storing message with id "${id}"`);
+  // TODO: We should check if checkpointing is off here.
   await trie.put(Buffer.from(id, "hex"), Buffer.from(canonical, "utf8"));
 
   if (libp2p) {
     libp2p.pubsub.publish(messages.name, new TextEncoder().encode(canonical));
+  } else {
+    log(
+      "Didn't distribute message after ingestion because libp2p instance isn't defined"
+    );
   }
 }

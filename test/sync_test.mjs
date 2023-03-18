@@ -20,43 +20,46 @@ import {
 } from "../src/sync.mjs";
 import * as store from "../src/store.mjs";
 
-test("ending syncing early when trying in other direction", async (t) => {
-  env.DATA_DIR = "dbtestA";
-  const trieA = await store.create();
+test.serial(
+  "ending syncing early when trying in other direction",
+  async (t) => {
+    env.DATA_DIR = "dbtestA";
+    const trieA = await store.create();
 
-  env.DATA_DIR = "dbtestB";
-  const trieB = await store.create();
-  await trieB.put(Buffer.from("0100", "hex"), Buffer.from("A", "utf8"));
-  await trieB.put(Buffer.from("0101", "hex"), Buffer.from("C", "utf8"));
-  await trieB.put(Buffer.from("0200", "hex"), Buffer.from("D", "utf8"));
+    env.DATA_DIR = "dbtestB";
+    const trieB = await store.create();
+    await trieB.put(Buffer.from("0100", "hex"), Buffer.from("A", "utf8"));
+    await trieB.put(Buffer.from("0101", "hex"), Buffer.from("C", "utf8"));
+    await trieB.put(Buffer.from("0200", "hex"), Buffer.from("D", "utf8"));
 
-  t.notDeepEqual(trieA.root(), trieB.root());
-  const root = trieB.root();
-  trieB.checkpoint();
-  t.true(trieB.hasCheckpoints());
+    t.notDeepEqual(trieA.root(), trieB.root());
+    const root = trieB.root();
+    trieB.checkpoint();
+    t.true(trieB.hasCheckpoints());
 
-  const sendMock = async (peerId, protocol, message) => {
-    if (protocol === "/levels/1.0.0") {
-      return await compare(trieB, message);
-    } else if (protocol === "/leaves/1.0.0") {
-      return await put(trieB, message);
-    }
-  };
+    const sendMock = async (peerId, protocol, message) => {
+      if (protocol === "/levels/1.0.0") {
+        return await compare(trieB, message);
+      } else if (protocol === "/leaves/1.0.0") {
+        return await put(trieB, message);
+      }
+    };
 
-  const peerIdA = "A";
-  const level = 0;
-  const exclude = [];
-  await initiate(trieA, peerIdA, exclude, level, sendMock);
+    const peerIdA = "A";
+    const level = 0;
+    const exclude = [];
+    await initiate(trieA, peerIdA, exclude, level, sendMock);
 
-  await trieB.commit();
-  t.false(trieA.hasCheckpoints());
-  t.notDeepEqual(trieA.root(), trieB.root());
+    await trieB.commit();
+    t.false(trieA.hasCheckpoints());
+    t.notDeepEqual(trieA.root(), trieB.root());
 
-  await rm("dbtestA", { recursive: true });
-  await rm("dbtestB", { recursive: true });
-});
+    await rm("dbtestA", { recursive: true });
+    await rm("dbtestB", { recursive: true });
+  }
+);
 
-test("syncing a partial trie", async (t) => {
+test.serial("syncing a partial trie", async (t) => {
   env.DATA_DIR = "dbtestA";
   const trieA = await store.create();
   await trieA.put(Buffer.from("0100", "hex"), Buffer.from("A", "utf8"));
@@ -95,7 +98,7 @@ test("syncing a partial trie", async (t) => {
   await rm("dbtestB", { recursive: true });
 });
 
-test("syncing an empty trie", async (t) => {
+test.serial("syncing an empty trie", async (t) => {
   env.DATA_DIR = "dbtestA";
   const trieA = await store.create();
   await trieA.put(Buffer.from("0100", "hex"), Buffer.from("A", "utf8"));
