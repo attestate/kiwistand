@@ -116,9 +116,6 @@ export async function compare(localTrie, remotes) {
     if (remoteNode.level === 0 && isEqual(localTrie.root(), remoteNode.hash)) {
       match.push(remoteNode);
       break;
-    } else if (remoteNode.level === 0 && remoteNode.key.length === 0) {
-      mismatch.push(remoteNode);
-      break;
     }
 
     const { node, type } = await lookup(
@@ -151,12 +148,17 @@ export async function compare(localTrie, remotes) {
 // messages in the tests with actually signed messages to move closer towards
 // the actual test cases in production.
 export async function descend(trie, level, exclude = []) {
-  if (level === 0) {
+  const emptyRoot = Buffer.from(
+    "56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+    "hex"
+  );
+  if (level === 0 && isEqual(emptyRoot, trie.root())) {
     return [
       {
         level: 0,
         key: Buffer.alloc(0),
         hash: trie.root(),
+        node: null,
       },
     ];
   }
@@ -164,21 +166,15 @@ export async function descend(trie, level, exclude = []) {
   const levelCopy = level;
   let nodes = [];
   const onFound = (nodeRef, node, key, walkController) => {
-    // TODO: Remove
-    console.log(key, node, level);
     // NOTE: The idea of the "exclue" array is that it contains nodes that have
     // matched on the remote trie, and so we don't have to send them along in a
     // future comparison. Hence, if we have a match, we simply return.
     const nodeHash = hash(node);
     const match = exclude.find((markedNode) => isEqual(markedNode, nodeHash));
-    // TODO: Remove
-    console.log("match", match);
     if (match) return;
 
-    // TODO: There are cases with real data when node is a LeafNode but
-    // level=1. In those cases, don't we want to add Leaf to the nodes?
     if (level === 0) {
-      if (node instanceof LeafNode) {
+      if (levelCopy !== 0 && node instanceof LeafNode) {
         const fragments = [key, node.key()].map(nibblesToBuffer);
         key = Buffer.concat(fragments);
       } else {
@@ -206,8 +202,6 @@ export async function descend(trie, level, exclude = []) {
       throw err;
     }
   }
-  // TODO: Remove
-  console.log("nodes", nodes);
   return nodes;
 }
 

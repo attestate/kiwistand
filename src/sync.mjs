@@ -79,8 +79,6 @@ export async function initiate(
       .toString("hex")}"`
   );
   const remotes = await store.descend(trie, level, exclude);
-  // TODO: Remove
-  console.log(remotes);
 
   if (remotes.length === 0) {
     log(
@@ -113,7 +111,9 @@ export async function initiate(
 export async function put(trie, message) {
   const missing = deserialize(message);
   for await (let { node, key } of missing) {
-    const value = node.value();
+    // TODO: Adding the JSON parsing here is awful and can lead to the
+    // application crashing.
+    const value = JSON.parse(node.value());
     const libp2p = null;
     log(`Adding to database value "${value}"`);
     await store.add(trie, value, libp2p, allowlist);
@@ -163,8 +163,6 @@ export function handleLeaves(trie) {
   return receive(async (message) => {
     log("Received leaves and storing them in db");
     trie.checkpoint();
-    // TODO: Ideally, this uses a version of add message as to validate other
-    // properties
     await put(trie, message);
     await trie.commit();
   });

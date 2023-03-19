@@ -8,6 +8,7 @@ import { pipe } from "it-pipe";
 import { toString } from "uint8arrays/to-string";
 import { fromString } from "uint8arrays/from-string";
 import { CustomEvent } from "@libp2p/interfaces/events";
+import { Wallet, utils } from "ethers";
 
 import {
   deserialize,
@@ -20,6 +21,7 @@ import * as messages from "../src/topics/messages.mjs";
 import { start, handlers } from "../src/index.mjs";
 import * as store from "../src/store.mjs";
 import log from "../src/logger.mjs";
+import { sign, create } from "../src/id.mjs";
 
 async function simplePut(trie, message) {
   const missing = deserialize(message);
@@ -49,7 +51,71 @@ function randInt() {
   return Math.floor(Math.random() * 10000);
 }
 
-test("if sync works over the network", async (t) => {
+test("if sync of signed messages work over the network", async (t) => {
+  const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
+  const privateKey =
+    "0xad54bdeade5537fb0a553190159783e45d02d316a992db05cbed606d3ca36b39";
+  const signer = new Wallet(privateKey);
+  t.is(signer.address, address);
+
+  const text = "hello world";
+  const timestamp = 1676559616;
+  const message = create(text, timestamp);
+  const signedMessage = await sign(signer, message);
+  t.deepEqual(signedMessage, {
+    ...message,
+    signature:
+      "0x36223f46ea950a810689fb72ea1fd075922c5f7d7a7c644c1ee3787fb9d21a847b4e93d126a40e209e8871440058ad87a6a2e772c8d6f9e0bf397dee457141411b",
+  });
+
+  process.env.AUTO_SYNC = "false";
+  process.env.DATA_DIR = "dbtestA";
+  process.env.PORT = "53462";
+  process.env.IS_BOOTSTRAP_NODE = "true";
+  process.env.USE_EPHEMERAL_ID = "false";
+  const config1 = (await import(`../src/config.mjs?${randInt()}`)).default;
+  const trieA = await store.create();
+  const libp2p = null;
+  const allowlist = [address];
+  await store.add(trieA, signedMessage, libp2p, allowlist);
+
+  const node1 = await start(
+    config1,
+    handlers.node,
+    handlers.connection,
+    handlers.protocol,
+    [],
+    trieA
+  );
+
+  process.env.DATA_DIR = "dbtestB";
+  process.env.PORT = "0";
+  process.env.IS_BOOTSTRAP_NODE = "false";
+  process.env.USE_EPHEMERAL_ID = "true";
+  const config2 = (await import(`../src/config.mjs?${randInt()}`)).default;
+  const trieB = await store.create();
+  t.notDeepEqual(trieA.root(), trieB.root());
+
+  const node2 = await start(
+    config2,
+    handlers.node,
+    handlers.connection,
+    handlers.protocol,
+    [],
+    trieB
+  );
+
+  const addrs = node2.getMultiaddrs();
+  await node1.goblin.initiate(addrs[0]);
+  t.deepEqual(trieA.root(), trieB.root());
+
+  await node1.stop();
+  await node2.stop();
+  await rm("dbtestA", { recursive: true });
+  await rm("dbtestB", { recursive: true });
+});
+
+test("if sync of simple messages work over the network", async (t) => {
   process.env.AUTO_SYNC = "false";
   process.env.DATA_DIR = "dbtestA";
   process.env.PORT = "53462";

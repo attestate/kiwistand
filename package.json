@@ -57,8 +57,7 @@
     "uint8arrays": "4.0.3"
   },
   "devDependencies": {
-    "ava": "3.15.0",
-    "esmock": "1.7.2"
+    "ava": "3.15.0"
   },
   "ava": {
     "files": [
@@ -68,7 +67,6 @@
       "DEBUG": "attestate*"
     },
     "nodeArguments": [
-      "--loader=esmock",
       "--no-warnings"
     ],
     "require": [
