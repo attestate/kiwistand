@@ -11,7 +11,6 @@ import * as lp from "it-length-prefixed";
 import all from "it-all";
 
 import {
-  put,
   deserialize,
   compare,
   initiate,
@@ -19,6 +18,18 @@ import {
   toWire,
 } from "../src/sync.mjs";
 import * as store from "../src/store.mjs";
+import log from "../src/logger.mjs";
+
+async function simplePut(trie, message) {
+  const missing = deserialize(message);
+  for await (let { node, key } of missing) {
+    const value = node.value();
+    log(
+      `TESTFN: Adding to key "${key.toString("hex")}" database value "${value}"`
+    );
+    await trie.put(key, value);
+  }
+}
 
 test.serial(
   "ending syncing early when trying in other direction",
@@ -41,7 +52,7 @@ test.serial(
       if (protocol === "/levels/1.0.0") {
         return await compare(trieB, message);
       } else if (protocol === "/leaves/1.0.0") {
-        return await put(trieB, message);
+        return await simplePut(trieB, message);
       }
     };
 
@@ -80,7 +91,7 @@ test.serial("syncing a partial trie", async (t) => {
     if (protocol === "/levels/1.0.0") {
       return await compare(trieB, message);
     } else if (protocol === "/leaves/1.0.0") {
-      return await put(trieB, message);
+      return await simplePut(trieB, message);
     }
   };
 
@@ -116,7 +127,7 @@ test.serial("syncing an empty trie", async (t) => {
     if (protocol === "/levels/1.0.0") {
       return await compare(trieB, message);
     } else if (protocol === "/leaves/1.0.0") {
-      return await put(trieB, message);
+      return await simplePut(trieB, message);
     }
   };
 

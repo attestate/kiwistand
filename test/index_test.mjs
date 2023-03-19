@@ -9,10 +9,41 @@ import { toString } from "uint8arrays/to-string";
 import { fromString } from "uint8arrays/from-string";
 import { CustomEvent } from "@libp2p/interfaces/events";
 
-import { fromWire, toWire, handleConnection, receive } from "../src/sync.mjs";
+import {
+  deserialize,
+  fromWire,
+  toWire,
+  handleConnection,
+  receive,
+} from "../src/sync.mjs";
 import * as messages from "../src/topics/messages.mjs";
 import { start, handlers } from "../src/index.mjs";
 import * as store from "../src/store.mjs";
+import log from "../src/logger.mjs";
+
+async function simplePut(trie, message) {
+  const missing = deserialize(message);
+  for await (let { node, key } of missing) {
+    const value = node.value();
+    log(
+      `TESTFN: Adding to key "${key.toString("hex")}" database value "${value}"`
+    );
+    await trie.put(key, value);
+  }
+}
+
+function simpleHandleLeaves(trie) {
+  return receive(async (message) => {
+    log("Received leaves and storing them in db");
+    trie.checkpoint();
+    // NOTE: To test the trie syncing algorithm with simple values and variable
+    // values we're initially testing it with an insertion function that
+    // accepts any kind of key value (and not only correctly signed messages by
+    // a member of an allowlist).
+    await simplePut(trie, message);
+    await trie.commit();
+  });
+}
 
 function randInt() {
   return Math.floor(Math.random() * 10000);
@@ -34,7 +65,7 @@ test("if sync works over the network", async (t) => {
     config1,
     handlers.node,
     handlers.connection,
-    handlers.protocol,
+    { ...handlers.protocol, ...{ "/leaves/1.0.0": simpleHandleLeaves } },
     [],
     trieA
   );
@@ -51,7 +82,7 @@ test("if sync works over the network", async (t) => {
     config2,
     handlers.node,
     handlers.connection,
-    handlers.protocol,
+    { ...handlers.protocol, ...{ "/leaves/1.0.0": simpleHandleLeaves } },
     [],
     trieB
   );

@@ -9,6 +9,7 @@ import { LeafNode, decodeNode } from "@ethereumjs/trie";
 
 import log from "./logger.mjs";
 import * as store from "./store.mjs";
+import allowlist from "../allowlist.mjs";
 
 export async function toWire(message, sink) {
   const sMessage = JSON.stringify(message);
@@ -113,8 +114,9 @@ export async function put(trie, message) {
   const missing = deserialize(message);
   for await (let { node, key } of missing) {
     const value = node.value();
-    log(`Adding key "${key.toString("hex")}" value "${value}"`);
-    await trie.put(key, value);
+    const libp2p = null;
+    log(`Adding to database value "${value}"`);
+    await store.add(trie, value, libp2p, allowlist);
   }
 }
 
