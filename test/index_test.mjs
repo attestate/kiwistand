@@ -18,56 +18,50 @@ function randInt() {
   return Math.floor(Math.random() * 10000);
 }
 
-// TODO: Everything seems to work, but it's unclear how to intercept the test
-// to make an assessment whether the two tries are equal.
-// Maybe an architecture where we can function call methods on the node level
-// and then work with e.g events internally could work out. How we're doing
-// things right now seems unsustainable also from a CLI perspective later on.
 test("if sync works over the network", async (t) => {
-  let node1, node2;
-  await new Promise(async (resolve, reject) => {
-    process.env.DATA_DIR = "dbtestA";
-    process.env.PORT = "53462";
-    process.env.IS_BOOTSTRAP_NODE = "true";
-    process.env.USE_EPHEMERAL_ID = "false";
-    const config1 = (await import(`../src/config.mjs?${randInt()}`)).default;
-    const trieA = await store.create();
-    await trieA.put(Buffer.from("0100", "hex"), Buffer.from("A", "utf8"));
-    await trieA.put(Buffer.from("0101", "hex"), Buffer.from("C", "utf8"));
-    await trieA.put(Buffer.from("0200", "hex"), Buffer.from("D", "utf8"));
+  process.env.AUTO_SYNC = "false";
+  process.env.DATA_DIR = "dbtestA";
+  process.env.PORT = "53462";
+  process.env.IS_BOOTSTRAP_NODE = "true";
+  process.env.USE_EPHEMERAL_ID = "false";
+  const config1 = (await import(`../src/config.mjs?${randInt()}`)).default;
+  const trieA = await store.create();
+  await trieA.put(Buffer.from("0100", "hex"), Buffer.from("A", "utf8"));
+  await trieA.put(Buffer.from("0101", "hex"), Buffer.from("C", "utf8"));
+  await trieA.put(Buffer.from("0200", "hex"), Buffer.from("D", "utf8"));
 
-    node1 = await start(
-      config1,
-      handlers.node,
-      handlers.connection,
-      handlers.protocol,
-      [],
-      trieA
-    );
+  const node1 = await start(
+    config1,
+    handlers.node,
+    handlers.connection,
+    handlers.protocol,
+    [],
+    trieA
+  );
 
-    process.env.DATA_DIR = "dbtestB";
-    process.env.PORT = "0";
-    process.env.IS_BOOTSTRAP_NODE = "false";
-    process.env.USE_EPHEMERAL_ID = "true";
-    const config2 = (await import(`../src/config.mjs?${randInt()}`)).default;
-    const trieB = await store.create();
-    t.notDeepEqual(trieA.root(), trieB.root());
+  process.env.DATA_DIR = "dbtestB";
+  process.env.PORT = "0";
+  process.env.IS_BOOTSTRAP_NODE = "false";
+  process.env.USE_EPHEMERAL_ID = "true";
+  const config2 = (await import(`../src/config.mjs?${randInt()}`)).default;
+  const trieB = await store.create();
+  t.notDeepEqual(trieA.root(), trieB.root());
 
-    node2 = await start(
-      config2,
-      handlers.node,
-      handlers.connection,
-      handlers.protocol,
-      [],
-      trieB
-    );
+  const node2 = await start(
+    config2,
+    handlers.node,
+    handlers.connection,
+    handlers.protocol,
+    [],
+    trieB
+  );
 
-    const addrs = node1.getMultiaddrs();
-    const conn = await node2.dial(addrs[0]);
-  });
+  const addrs = node2.getMultiaddrs();
+  await node1.goblin.initiate(addrs[0]);
+  t.deepEqual(trieA.root(), trieB.root());
+
   await node1.stop();
   await node2.stop();
-
   await rm("dbtestA", { recursive: true });
   await rm("dbtestB", { recursive: true });
 });
@@ -85,23 +79,13 @@ test.serial(
   }
 );
 
-test.serial("run only as bootstrap node", async (t) => {
-  process.env.PORT = "53462";
-  process.env.BIND_ADDRESS_V4 = "127.0.0.1";
-  process.env.IS_BOOTSTRAP_NODE = "true";
-  process.env.USE_EPHEMERAL_ID = "false";
-  const config = (await import(`../src/config.mjs?${randInt()}`)).default;
-  const node = await start(config);
-  await node.stop();
-  t.pass();
-});
-
 test.serial(
   "if nodes can be bootstrapped using from and to wire",
   async (t) => {
     let node1, node2;
     const message = { hello: "world" };
     const actual = await new Promise(async (resolve, reject) => {
+      process.env.AUTO_SYNC = "false";
       process.env.PORT = "53462";
       process.env.BIND_ADDRESS_V4 = "127.0.0.1";
       process.env.IS_BOOTSTRAP_NODE = "true";
@@ -116,8 +100,17 @@ test.serial(
           resolve(result);
         },
       };
+      const topics = [];
+      const trie = await store.create();
 
-      node1 = await start(config1, nodeHandler1, connHandler1, protoHandler1);
+      node1 = await start(
+        config1,
+        nodeHandler1,
+        connHandler1,
+        protoHandler1,
+        topics,
+        trie
+      );
 
       process.env.PORT = "0";
       process.env.BIND_ADDRESS_V4 = "127.0.0.1";
@@ -135,7 +128,15 @@ test.serial(
         },
       };
       const connHandler2 = {};
-      node2 = await start(config2, nodeHandler2, connHandler2);
+      const protoHandler2 = {};
+      node2 = await start(
+        config2,
+        nodeHandler2,
+        connHandler2,
+        protoHandler2,
+        topics,
+        trie
+      );
     });
     t.deepEqual(actual, [message]);
     await node1.stop();
@@ -143,7 +144,7 @@ test.serial(
   }
 );
 
-test.serial("if nodes can be bootstrapped", async (t) => {
+test.serial("if nodes can only be bootstrapped", async (t) => {
   let node1, node2;
   const message = { hello: "world" };
   const actual = await new Promise(async (resolve, reject) => {
@@ -165,8 +166,17 @@ test.serial("if nodes can be bootstrapped", async (t) => {
         });
       },
     };
+    const topics = [];
+    const trie = await store.create();
 
-    node1 = await start(config1, nodeHandler1, connHandler1, protoHandler1);
+    node1 = await start(
+      config1,
+      nodeHandler1,
+      connHandler1,
+      protoHandler1,
+      topics,
+      trie
+    );
 
     process.env.PORT = "0";
     process.env.BIND_ADDRESS_V4 = "127.0.0.1";
@@ -188,7 +198,15 @@ test.serial("if nodes can be bootstrapped", async (t) => {
       },
     };
     const connHandler2 = {};
-    node2 = await start(config2, nodeHandler2, connHandler2);
+    const protoHandler2 = {};
+    node2 = await start(
+      config2,
+      nodeHandler2,
+      connHandler2,
+      protoHandler2,
+      topics,
+      trie
+    );
   });
   t.deepEqual(actual, message);
   await node1.stop();

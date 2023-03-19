@@ -1,29 +1,25 @@
 // TODO: We should rename this file into a more descriptive name.
 //@format
+import { env } from "process";
+
 import { createLibp2p } from "libp2p";
 
 import log from "./logger.mjs";
 import { bootstrap } from "./id.mjs";
-import {
-  handleLevels,
-  handleLeaves,
-  handleDiscovery,
-  handleConnection,
-  handleDisconnection,
-} from "./sync.mjs";
+import * as sync from "./sync.mjs";
 import * as store from "./store.mjs";
 
 export const handlers = {
   node: {
-    "peer:discovery": handleDiscovery,
+    "peer:discovery": sync.handleDiscovery,
   },
   connection: {
-    "peer:connect": handleConnection,
-    "peer:disconnect": handleDisconnection,
+    "peer:connect": sync.handleConnection,
+    "peer:disconnect": sync.handleDisconnection,
   },
   protocol: {
-    "/levels/1.0.0": handleLevels,
-    "/leaves/1.0.0": handleLeaves,
+    "/levels/1.0.0": sync.handleLevels,
+    "/leaves/1.0.0": sync.handleLeaves,
   },
 };
 
@@ -39,20 +35,6 @@ export async function start(
   const node = await createLibp2p({ ...config, peerId });
   await node.start();
 
-  // NOTE: We're manually passing in libp2p's instantiation foward as we want
-  // to avoid having to declare a global object.
-  // TODO: Find a more elegant way of doing this.
-  let connHandlerCopy = { ...connectionHandlers };
-  try {
-    connHandlerCopy["peer:connect"] = connHandlerCopy["peer:connect"](
-      node,
-      trie
-    );
-  } catch (err) {
-    log(
-      `Error setting up connection handler (expected during testing): "${err.toString()}"`
-    );
-  }
   let protocolHandlerCopy = { ...protocolHandlers };
   try {
     protocolHandlerCopy["/levels/1.0.0"] =
@@ -69,7 +51,7 @@ export async function start(
     log(`Adding "${key}" handler to node`);
     node.addEventListener(key, value);
   }
-  for (const [key, value] of Object.entries(connHandlerCopy)) {
+  for (const [key, value] of Object.entries(connectionHandlers)) {
     log(`Adding "${key}" handler to connectionManager`);
     node.connectionManager.addEventListener(key, value);
   }
@@ -85,6 +67,20 @@ export async function start(
       log(`Adding "${key}" pubsub handler`);
       await node.pubsub.addEventListener(key, value);
     }
+  }
+
+  node.goblin = {};
+  node.goblin.initiate = async (peerId) => {
+    const level = 0;
+    const exclude = [];
+    return await sync.initiate(trie, peerId, exclude, level, sync.send(node));
+  };
+
+  if (env.AUTO_SYNC === "true") {
+    node.connectionManager.addEventListener(
+      "peer:connect",
+      async (evt) => await node.goblin.initiate(evt.detail.remotePeer)
+    );
   }
 
   node.getMultiaddrs().forEach((addr) => {

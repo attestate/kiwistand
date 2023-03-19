@@ -78,6 +78,8 @@ export async function initiate(
       .toString("hex")}"`
   );
   const remotes = await store.descend(trie, level, exclude);
+  // TODO: Remove
+  console.log(remotes);
 
   if (remotes.length === 0) {
     log(
@@ -166,19 +168,8 @@ export function handleLeaves(trie) {
   });
 }
 
-export function handleConnection(libp2p, trie) {
-  return async (evt) => {
-    log(`connected ${evt.detail.remotePeer.toString()}`);
-    const level = 0;
-    const exclude = [];
-    return await initiate(
-      trie,
-      evt.detail.remotePeer,
-      exclude,
-      level,
-      send(libp2p)
-    );
-  };
+export function handleConnection(evt) {
+  log(`connected ${evt.detail.remotePeer.toString()}`);
 }
 
 export function handleDisconnection(evt) {

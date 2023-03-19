@@ -141,9 +141,15 @@ export async function compare(localTrie, remotes) {
   };
 }
 
-// TODO: It's probably better to have an inclusion marking, but it then needs
-// to be based on the children. We should adjust the compare method too to
-// include matches.
+// TODO: This function doesn't perform well for all cases yet. E.g. A leaf can
+// be discovered on level one and in that case we currently have an awkward
+// mechanism to match it. Generally speaking, we haven't tested the syncing
+// mechanism with real data, and neither have we fuzzed it, which means there
+// can be all sorts of unexpected issues.
+//
+// Hence, it can make sense to refactor the put method, and change all mock
+// messages in the tests with actually signed messages to move closer towards
+// the actual test cases in production.
 export async function descend(trie, level, exclude = []) {
   if (level === 0) {
     return [
@@ -158,13 +164,19 @@ export async function descend(trie, level, exclude = []) {
   const levelCopy = level;
   let nodes = [];
   const onFound = (nodeRef, node, key, walkController) => {
+    // TODO: Remove
+    console.log(key, node, level);
     // NOTE: The idea of the "exclue" array is that it contains nodes that have
     // matched on the remote trie, and so we don't have to send them along in a
     // future comparison. Hence, if we have a match, we simply return.
     const nodeHash = hash(node);
     const match = exclude.find((markedNode) => isEqual(markedNode, nodeHash));
+    // TODO: Remove
+    console.log("match", match);
     if (match) return;
 
+    // TODO: There are cases with real data when node is a LeafNode but
+    // level=1. In those cases, don't we want to add Leaf to the nodes?
     if (level === 0) {
       if (node instanceof LeafNode) {
         const fragments = [key, node.key()].map(nibblesToBuffer);
@@ -194,6 +206,8 @@ export async function descend(trie, level, exclude = []) {
       throw err;
     }
   }
+  // TODO: Remove
+  console.log("nodes", nodes);
   return nodes;
 }
 

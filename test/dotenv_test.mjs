@@ -26,6 +26,7 @@ test("that repo contains a .env-copy file with all possible configuration option
     "IPV4",
     "HTTP_PORT",
     "DATA_DIR",
+    "AUTO_SYNC",
   ];
   await access(envPath, constants.F_OK);
   const envContent = (await readFile(envPath)).toString();
