@@ -1,7 +1,22 @@
 //@format
+import { env } from "process";
 import htm from "htm";
 import vhtml from "vhtml";
+
 const html = htm.bind(vhtml);
+
+let theme = {};
+if (env.THEME === "kiwi") {
+  theme.color = "limegreen";
+  theme.emoji = "🥝";
+  theme.name = "Kiwi News";
+} else if (env.THEME === "orange") {
+  theme.color = "orange";
+  theme.emoji = "🍊";
+  theme.name = "Orange News";
+} else {
+  throw new Error("Must define env.THEME");
+}
 
 const stories = [
   {
@@ -20,6 +35,7 @@ const stories = [
 export default html`
   <html lang="en" op="news">
     <head>
+      <meta charset="utf-8" />
       <meta name="referrer" content="origin" />
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <link rel="stylesheet" type="text/css" href="public/news.css" />
@@ -37,7 +53,7 @@ export default html`
           bgcolor="#f6f6ef"
         >
           <tr>
-            <td bgcolor="limegreen">
+            <td bgcolor="${theme.color}">
               <table
                 border="0"
                 cellpadding="0"
@@ -49,7 +65,7 @@ export default html`
                   <td style="width:18px;padding-right:4px"></td>
                   <td style="line-height:12pt; height:10px;">
                     <span class="pagetop"
-                      ><b class="hnname"><a href="news">Kiwi News</a></b>
+                      ><b class="hnname">${`${theme.emoji} ${theme.name}`}</b>
                     </span>
                   </td>
                   <td style="text-align:right;padding-right:4px;"></td>
@@ -69,11 +85,7 @@ export default html`
                       </td>
                       <td valign="top" class="votelinks">
                         <center>
-                          <a
-                            id="up_35233479"
-                            class="clicky"
-                            href="vote?id=35233479&amp;how=up&amp;auth=35e5fcf3c548e800b0227c63dc48cd7b3cf5d285&amp;goto=news"
-                          >
+                          <a id="up_35233479" class="clicky" href="#">
                             <div class="votearrow" title="upvote"></div>
                           </a>
                         </center>
