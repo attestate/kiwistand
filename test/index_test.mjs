@@ -59,13 +59,15 @@ test("if sync of signed messages work over the network", async (t) => {
   t.is(signer.address, address);
 
   const text = "hello world";
+  const href = "https://example.com";
+  const type = "amplify";
   const timestamp = 1676559616;
-  const message = create(text, timestamp);
+  const message = create(text, href, type, timestamp);
   const signedMessage = await sign(signer, message);
   t.deepEqual(signedMessage, {
     ...message,
     signature:
-      "0x36223f46ea950a810689fb72ea1fd075922c5f7d7a7c644c1ee3787fb9d21a847b4e93d126a40e209e8871440058ad87a6a2e772c8d6f9e0bf397dee457141411b",
+      "0x7c7f7baf99096c5d5bfb7469d5eb15e95dce27d872882c524eaf8d463f1d6caf325379e71937fc9fd955c6dbf8e6b4f9002f364451baa90a48dce60cc1450abb1b",
   });
 
   process.env.AUTO_SYNC = "false";

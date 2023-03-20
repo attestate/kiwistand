@@ -21,13 +21,15 @@ test("descend levels with actual data ", async (t) => {
   t.is(signer.address, address);
 
   const text = "hello world";
+  const href = "https://example.com";
+  const type = "amplify";
   const timestamp = 1676559616;
-  const message = id.create(text, timestamp);
+  const message = id.create(text, href, type, timestamp);
   const signedMessage = await id.sign(signer, message);
   t.deepEqual(signedMessage, {
     ...message,
     signature:
-      "0x36223f46ea950a810689fb72ea1fd075922c5f7d7a7c644c1ee3787fb9d21a847b4e93d126a40e209e8871440058ad87a6a2e772c8d6f9e0bf397dee457141411b",
+      "0x7c7f7baf99096c5d5bfb7469d5eb15e95dce27d872882c524eaf8d463f1d6caf325379e71937fc9fd955c6dbf8e6b4f9002f364451baa90a48dce60cc1450abb1b",
   });
 
   env.DATA_DIR = "dbtestA";
@@ -379,8 +381,10 @@ test("try to add invalidly formatted message to store", async (t) => {
   t.is(signer.address, address);
 
   const text = "hello world";
+  const href = "https://example.com";
+  const type = "amplify";
   const timestamp = 1676559616;
-  const message = id.create(text, timestamp);
+  const message = id.create(text, href, type, timestamp);
   message.extra = "bla";
   const signedMessage = await id.sign(signer, message);
 
@@ -414,8 +418,10 @@ test("try to add invalidly signed message to store", async (t) => {
   t.is(signer.address, address);
 
   const text = "hello world";
+  const href = "https://example.com";
+  const type = "amplify";
   const timestamp = 1676559616;
-  const message = id.create(text, timestamp);
+  const message = id.create(text, href, type, timestamp);
   message.signature = "0xbeef";
 
   const trie = {
@@ -449,8 +455,10 @@ test("trying to add message to store that isn't on allowlist", async (t) => {
   t.is(signer.address, address);
 
   const text = "hello world";
+  const href = "https://example.com";
+  const type = "amplify";
   const timestamp = 1676559616;
-  const message = id.create(text, timestamp);
+  const message = id.create(text, href, type, timestamp);
   const signedMessage = await id.sign(signer, message);
 
   const trie = {
@@ -484,8 +492,10 @@ test("adding message to the store", async (t) => {
   t.is(signer.address, address);
 
   const text = "hello world";
+  const href = "https://example.com";
+  const type = "amplify";
   const timestamp = 1676559616;
-  const message = id.create(text, timestamp);
+  const message = id.create(text, href, type, timestamp);
   const signedMessage = await id.sign(signer, message);
 
   const trie = {
@@ -493,6 +503,7 @@ test("adding message to the store", async (t) => {
       t.truthy(key);
       t.truthy(value);
     },
+    root: () => Buffer.from("abc", "hex"),
   };
   const libp2p = {
     pubsub: {

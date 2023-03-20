@@ -6,7 +6,9 @@ export const EIP712_DOMAIN = {
 
 export const EIP712_TYPES = {
   Message: [
-    { name: "text", type: "string" },
+    { name: "title", type: "string" },
+    { name: "href", type: "string" },
+    { name: "type", type: "string" },
     { name: "timestamp", type: "uint256" },
   ],
 };
@@ -20,9 +22,14 @@ export const SCHEMATA = {
         $comment: "unix timestamp",
         type: "integer",
       },
-      text: {
+      type: {
         type: "string",
-        maxLength: 5000,
+      },
+      title: {
+        type: "string",
+      },
+      href: {
+        type: "string",
       },
       signature: {
         type: "string",

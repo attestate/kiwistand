@@ -59,9 +59,11 @@ export function toDigest(value) {
   };
 }
 
-export function create(text, timestamp) {
+export function create(title, href, type, timestamp) {
   const message = {
-    text,
+    title,
+    href,
+    type,
     timestamp,
   };
   return message;
