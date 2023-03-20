@@ -115,7 +115,7 @@ export async function put(trie, message) {
     // application crashing.
     const value = JSON.parse(node.value());
     const libp2p = null;
-    log(`Adding to database value "${value}"`);
+    log(`Adding to database value "${node.value()}"`);
     await store.add(trie, value, libp2p, allowlist);
   }
 }

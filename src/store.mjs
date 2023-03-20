@@ -227,6 +227,7 @@ export async function add(trie, message, libp2p, allowlist) {
   log(`Storing message with id "${id}"`);
   // TODO: We should check if checkpointing is off here.
   await trie.put(Buffer.from(id, "hex"), Buffer.from(canonical, "utf8"));
+  log(`New root: "${trie.root().toString("hex")}"`);
 
   if (libp2p) {
     libp2p.pubsub.publish(messages.name, new TextEncoder().encode(canonical));
