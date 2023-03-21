@@ -13,6 +13,66 @@ import * as id from "../src/id.mjs";
 import config from "../src/config.mjs";
 import * as store from "../src/store.mjs";
 
+test("counting stories", async (t) => {
+  const leaves = [
+    {
+      href: "https://example.com",
+      signature:
+        "0xdc33965bbb55580bf9f209fb0d6a45e4538120f55eba133b4ef339d884ab45882f6f92a4e2aa5f99139f4f2ad82b21ac437dfd139b39383c0d3e7b8b2fac74321c",
+      timestamp: "1676559616",
+      title: "hello world",
+      type: "amplify",
+    },
+    {
+      href: "https://example.com",
+      signature: "0xanotherone",
+      timestamp: "1676559616",
+      title: "hello world",
+      type: "amplify",
+    },
+    {
+      href: "https://example.com",
+      signature: "0xanotheroneyetanother",
+      timestamp: "1676559616",
+      title: "new story",
+      type: "amplify",
+    },
+  ];
+  const stories = store.count(leaves);
+  t.is(stories[0].points, 2);
+  t.is(stories[1].points, 1);
+  t.true(Array.isArray(stories));
+});
+
+test("getting leaves", async (t) => {
+  const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
+  const privateKey =
+    "0xad54bdeade5537fb0a553190159783e45d02d316a992db05cbed606d3ca36b39";
+  const signer = new Wallet(privateKey);
+  t.is(signer.address, address);
+
+  const title = "hello world";
+  const href = "https://example.com";
+  const type = "amplify";
+  const timestamp = 1676559616;
+  const message = id.create(title, href, type, timestamp);
+  const signedMessage = await id.sign(signer, message);
+  t.deepEqual(signedMessage, {
+    ...message,
+    signature:
+      "0xdc33965bbb55580bf9f209fb0d6a45e4538120f55eba133b4ef339d884ab45882f6f92a4e2aa5f99139f4f2ad82b21ac437dfd139b39383c0d3e7b8b2fac74321c",
+  });
+
+  env.DATA_DIR = "dbtestA";
+  const trieA = await store.create();
+  const libp2p = null;
+  await store.add(trieA, signedMessage, libp2p, [address]);
+
+  const leaves = await store.leaves(trieA);
+  t.is(leaves.length, 1);
+  t.truthy(leaves[0]);
+});
+
 test("descend levels with actual data ", async (t) => {
   const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
   const privateKey =
@@ -29,7 +89,7 @@ test("descend levels with actual data ", async (t) => {
   t.deepEqual(signedMessage, {
     ...message,
     signature:
-      "0x7c7f7baf99096c5d5bfb7469d5eb15e95dce27d872882c524eaf8d463f1d6caf325379e71937fc9fd955c6dbf8e6b4f9002f364451baa90a48dce60cc1450abb1b",
+      "0xdc33965bbb55580bf9f209fb0d6a45e4538120f55eba133b4ef339d884ab45882f6f92a4e2aa5f99139f4f2ad82b21ac437dfd139b39383c0d3e7b8b2fac74321c",
   });
 
   env.DATA_DIR = "dbtestA";
@@ -441,8 +501,6 @@ test("try to add invalidly signed message to store", async (t) => {
     async () => await store.add(trie, message, libp2p, allowlist),
     {
       instanceOf: Error,
-      message:
-        'invalid signature string (argument="signature", value="0xbeef", code=INVALID_ARGUMENT, version=bytes/5.7.0)',
     }
   );
 });

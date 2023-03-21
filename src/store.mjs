@@ -237,3 +237,50 @@ export async function add(trie, message, libp2p, allowlist) {
     );
   }
 }
+
+export function count(leaves) {
+  const stories = {};
+
+  for (const leaf of leaves) {
+    let story = stories[leaf.title];
+
+    if (!story) {
+      story = {
+        title: leaf.title,
+        href: leaf.href,
+        points: 1,
+      };
+    } else {
+      story.points += 1;
+    }
+
+    stories[leaf.title] = story;
+  }
+
+  return Object.values(stories).sort((a, b) => b.points - a.points);
+}
+
+export async function leaves(trie) {
+  const nodes = [];
+  const onFound = (nodeRef, node, key, walkController) => {
+    if (node instanceof LeafNode) {
+      const fragments = [key, node.key()].map(nibblesToBuffer);
+      key = Buffer.concat(fragments);
+      const value = node.value().toString("utf8");
+      nodes.push(JSON.parse(value));
+    } else if (node instanceof BranchNode || node instanceof ExtensionNode) {
+      walkController.allChildren(node, key);
+    }
+  };
+  try {
+    await trie.walkTrie(trie.root(), onFound);
+  } catch (err) {
+    if (err.toString().includes("Missing node in DB")) {
+      log("descend: Didn't find any nodes");
+      return nodes;
+    } else {
+      throw err;
+    }
+  }
+  return nodes;
+}

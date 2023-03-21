@@ -27,8 +27,9 @@ export function handleMessage(trie, libp2p) {
 }
 
 export async function launch(trie, libp2p) {
-  fastify.get("/", (request, reply) => {
-    return reply.code(200).type("text/html").send(index);
+  fastify.get("/", async (request, reply) => {
+    const content = await index(trie);
+    return reply.code(200).type("text/html").send(content);
   });
 
   fastify.post("/messages", handleMessage(trie, libp2p));

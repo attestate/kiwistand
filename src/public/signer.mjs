@@ -31,20 +31,24 @@ async function send() {
   var randomnumber =
     Math.floor(Math.random() * (maximum - minimum + 1)) + minimum;
   const message = posts[randomnumber];
+  message.timestamp = Math.floor(Date.now() / 1000);
 
   const signature = await signer._signTypedData(
     EIP712_DOMAIN,
     EIP712_TYPES,
     message
   );
-  message.signature = signature;
+  const body = JSON.stringify({
+    ...message,
+    signature,
+  });
 
   await fetch("/messages", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(message),
+    body,
   }).catch((error) => console.error(error));
   location.reload();
 }

@@ -106,7 +106,7 @@ test("sign message", async (t) => {
   t.deepEqual(signedMessage, {
     ...message,
     signature:
-      "0x7c7f7baf99096c5d5bfb7469d5eb15e95dce27d872882c524eaf8d463f1d6caf325379e71937fc9fd955c6dbf8e6b4f9002f364451baa90a48dce60cc1450abb1b",
+      "0xdc33965bbb55580bf9f209fb0d6a45e4538120f55eba133b4ef339d884ab45882f6f92a4e2aa5f99139f4f2ad82b21ac437dfd139b39383c0d3e7b8b2fac74321c",
   });
 });
 
@@ -126,7 +126,7 @@ test("verify message", async (t) => {
   t.deepEqual(signedMessage, {
     ...message,
     signature:
-      "0x7c7f7baf99096c5d5bfb7469d5eb15e95dce27d872882c524eaf8d463f1d6caf325379e71937fc9fd955c6dbf8e6b4f9002f364451baa90a48dce60cc1450abb1b",
+      "0xdc33965bbb55580bf9f209fb0d6a45e4538120f55eba133b4ef339d884ab45882f6f92a4e2aa5f99139f4f2ad82b21ac437dfd139b39383c0d3e7b8b2fac74321c",
   });
   const recoveredAddr = verify(signedMessage);
   t.is(recoveredAddr, address);
