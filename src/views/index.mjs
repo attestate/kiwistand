@@ -41,6 +41,7 @@ export default html`
       <link rel="stylesheet" type="text/css" href="public/news.css" />
       <link rel="shortcut icon" href="favicon.ico" />
       <title>Kiwi News</title>
+      <script type="module" src="public/signer.mjs"></script>
     </head>
     <body>
       <center>
@@ -68,7 +69,9 @@ export default html`
                       ><b class="hnname">${`${theme.emoji} ${theme.name}`}</b>
                     </span>
                   </td>
-                  <td style="text-align:right;padding-right:4px;"></td>
+                  <td style="text-align:right;padding-right:4px;">
+                    <span id="myButton">Submit story</span>
+                  </td>
                 </tr>
               </table>
             </td>

@@ -20,7 +20,7 @@ export const SCHEMATA = {
     properties: {
       timestamp: {
         $comment: "unix timestamp",
-        type: "integer",
+        type: "string",
       },
       type: {
         type: "string",
