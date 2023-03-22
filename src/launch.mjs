@@ -9,6 +9,9 @@ import * as store from "./store.mjs";
 
 (async () => {
   const trie = await store.create();
+  // NOTE: We're passing in the trie here as we don't want to make it globally
+  // available to run more than one node in the tests
+  messages.handlers.message = messages.handlers.message(trie);
   const node = await start(
     config,
     handlers.node,

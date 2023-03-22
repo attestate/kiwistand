@@ -138,15 +138,6 @@ export async function compare(localTrie, remotes) {
   };
 }
 
-// TODO: This function doesn't perform well for all cases yet. E.g. A leaf can
-// be discovered on level one and in that case we currently have an awkward
-// mechanism to match it. Generally speaking, we haven't tested the syncing
-// mechanism with real data, and neither have we fuzzed it, which means there
-// can be all sorts of unexpected issues.
-//
-// Hence, it can make sense to refactor the put method, and change all mock
-// messages in the tests with actually signed messages to move closer towards
-// the actual test cases in production.
 export async function descend(trie, level, exclude = []) {
   const emptyRoot = Buffer.from(
     "56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
@@ -230,6 +221,9 @@ export async function add(trie, message, libp2p, allowlist) {
   log(`New root: "${trie.root().toString("hex")}"`);
 
   if (libp2p) {
+    log(
+      `Sending message to peers: "${messages.name}" and message: "${canonical}"`
+    );
     libp2p.pubsub.publish(messages.name, new TextEncoder().encode(canonical));
   } else {
     log(

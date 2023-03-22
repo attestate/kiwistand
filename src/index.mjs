@@ -35,6 +35,7 @@ export async function start(
   const node = await createLibp2p({ ...config, peerId });
   await node.start();
 
+  // TODO: Move this into the launch file
   let protocolHandlerCopy = { ...protocolHandlers };
   try {
     protocolHandlerCopy["/levels/1.0.0"] =
