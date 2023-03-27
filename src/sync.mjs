@@ -1,19 +1,17 @@
 // @format
 import * as lp from "it-length-prefixed";
 import { pipe } from "it-pipe";
-import { toString } from "uint8arrays/to-string";
-import { fromString } from "uint8arrays/from-string";
 import map from "it-map";
 import all from "it-all";
 import { LeafNode, decodeNode } from "@ethereumjs/trie";
+import { encode, decode } from "cbor-x";
 
 import log from "./logger.mjs";
 import * as store from "./store.mjs";
 import allowlist from "../allowlist.mjs";
 
 export async function toWire(message, sink) {
-  const sMessage = JSON.stringify(message);
-  const buf = fromString(sMessage);
+  const buf = encode(message);
   return await pipe([buf], lp.encode(), sink);
 }
 
@@ -21,8 +19,8 @@ export async function fromWire(source) {
   return await pipe(source, lp.decode(), async (_source) => {
     const results = await map(_source, (message) => {
       if (!message) return;
-      const sMessage = toString(message.subarray());
-      return JSON.parse(sMessage);
+      const buf = Buffer.from(message.subarray());
+      return decode(buf);
     });
     return await all(results);
   });
@@ -111,9 +109,7 @@ export async function initiate(
 export async function put(trie, message) {
   const missing = deserialize(message);
   for await (let { node, key } of missing) {
-    // TODO: Adding the JSON parsing here is awful and can lead to the
-    // application crashing.
-    const value = JSON.parse(node.value());
+    const value = decode(node.value());
     const libp2p = null;
     log(`Adding to database value "${node.value()}"`);
     await store.add(trie, value, libp2p, allowlist);

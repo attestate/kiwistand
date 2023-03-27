@@ -45,7 +45,7 @@
     "@libp2p/tcp": "6.0.4",
     "ajv": "8.12.0",
     "ajv-formats": "2.1.1",
-    "canonicalize": "1.0.8",
+    "cbor-x": "1.5.1",
     "debug": "4.3.4",
     "dotenv": "16.0.3",
     "ethereum-cryptography": "1.1.2",
@@ -58,7 +58,6 @@
     "libp2p": "0.40.0",
     "lmdb": "2.7.9",
     "nodemon": "2.0.21",
-    "uint8arrays": "4.0.3",
     "vhtml": "2.2.0"
   },
   "devDependencies": {

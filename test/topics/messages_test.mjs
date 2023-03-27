@@ -1,5 +1,6 @@
 // @format
 import test from "ava";
+import { encode, decode } from "cbor-x";
 
 import { handlers, name } from "../../src/topics/messages.mjs";
 import * as store from "../../src/store.mjs";
@@ -31,12 +32,13 @@ test("return upon unparsable json", async (t) => {
   const evt = {
     detail: {
       topic: name,
-      data: new TextEncoder().encode("unparsable json"),
+      data: encode("unparsable json"),
     },
   };
   const trie = await store.create();
-  await handlers.message(trie)(evt);
-  t.pass();
+  await t.throwsAsync(async () => await handlers.message(trie)(evt), {
+    message: "Wrongly formatted message",
+  });
 });
 
 test("adding message to trie", async (t) => {
@@ -45,7 +47,7 @@ test("adding message to trie", async (t) => {
   const evt = {
     detail: {
       topic: name,
-      data: new TextEncoder().encode(text),
+      data: encode(text),
     },
   };
   // NOTE: handlers.message will fail within store.add with is where we wanted

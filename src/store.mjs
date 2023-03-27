@@ -11,6 +11,7 @@ import {
 } from "@ethereumjs/trie";
 import rlp from "@ethereumjs/rlp";
 import { keccak256 } from "ethereum-cryptography/keccak.js";
+import { encode, decode } from "cbor-x";
 
 import log from "./logger.mjs";
 import LMDB from "./lmdb.mjs";
@@ -217,14 +218,14 @@ export async function add(trie, message, libp2p, allowlist) {
   const id = `${message.timestamp.toString(16)}${digest}`;
   log(`Storing message with id "${id}"`);
   // TODO: We should check if checkpointing is off here.
-  await trie.put(Buffer.from(id, "hex"), Buffer.from(canonical, "utf8"));
+  await trie.put(Buffer.from(id, "hex"), canonical);
   log(`New root: "${trie.root().toString("hex")}"`);
 
   if (libp2p) {
     log(
       `Sending message to peers: "${messages.name}" and message: "${canonical}"`
     );
-    libp2p.pubsub.publish(messages.name, new TextEncoder().encode(canonical));
+    libp2p.pubsub.publish(messages.name, canonical);
   } else {
     log(
       "Didn't distribute message after ingestion because libp2p instance isn't defined"
@@ -260,8 +261,8 @@ export async function leaves(trie) {
     if (node instanceof LeafNode) {
       const fragments = [key, node.key()].map(nibblesToBuffer);
       key = Buffer.concat(fragments);
-      const value = node.value().toString("utf8");
-      nodes.push(JSON.parse(value));
+      const value = decode(node.value());
+      nodes.push(value);
     } else if (node instanceof BranchNode || node instanceof ExtensionNode) {
       walkController.allChildren(node, key);
     }

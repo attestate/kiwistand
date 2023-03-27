@@ -5,10 +5,9 @@ import { rm } from "fs/promises";
 
 import * as lp from "it-length-prefixed";
 import { pipe } from "it-pipe";
-import { toString } from "uint8arrays/to-string";
-import { fromString } from "uint8arrays/from-string";
 import { CustomEvent } from "@libp2p/interfaces/events";
 import { Wallet, utils } from "ethers";
+import { encode, decode } from "cbor-x";
 
 import {
   deserialize,
@@ -259,8 +258,9 @@ test.serial("if nodes can only be bootstrapped", async (t) => {
       "/test/1.0.0": async ({ stream }) => {
         await pipe(stream.source, lp.decode(), async function (source) {
           for await (const msg of source) {
-            const s = toString(msg.subarray());
-            resolve(JSON.parse(s));
+            const buf = Buffer.from(msg.subarray());
+            const data = decode(buf);
+            resolve(data);
           }
         });
       },
@@ -289,11 +289,7 @@ test.serial("if nodes can only be bootstrapped", async (t) => {
           evt.detail.multiaddrs[0],
           "/test/1.0.0"
         );
-        await pipe(
-          [fromString(JSON.stringify(message))],
-          lp.encode(),
-          stream.sink
-        );
+        await pipe([encode(message)], lp.encode(), stream.sink);
       },
     };
     const connHandler2 = {};

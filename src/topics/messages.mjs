@@ -1,4 +1,7 @@
 // @format
+
+import { decode } from "cbor-x";
+
 import log from "../logger.mjs";
 import * as store from "../store.mjs";
 import allowlist from "../../allowlist.mjs";
@@ -13,21 +16,14 @@ export const handlers = {
         return;
       }
 
-      let text;
+      let message;
       try {
-        text = new TextDecoder().decode(evt.detail.data);
+        message = decode(evt.detail.data);
       } catch (err) {
-        log(`Couldn't parse event data to text`);
+        log(`Couldn't parse event data from cbor to object`);
         return;
       }
 
-      let message;
-      try {
-        message = JSON.parse(text);
-      } catch (err) {
-        log(`Couldn't parse message: "${err.toString()}`);
-        return;
-      }
       const libp2p = null;
       await store.add(trie, message, libp2p, allowlist);
     };

@@ -8,7 +8,7 @@ import {
 } from "@libp2p/peer-id-factory";
 import { keccak256 } from "ethereum-cryptography/keccak.js";
 import { toHex } from "ethereum-cryptography/utils.js";
-import canonicalize from "canonicalize";
+import { encode } from "cbor-x";
 import Ajv from "ajv";
 import addFormats from "ajv-formats";
 import { utils } from "ethers";
@@ -51,7 +51,7 @@ export async function load(path) {
 
 export function toDigest(value) {
   const copy = { ...value };
-  const canonical = Buffer.from(canonicalize(copy));
+  const canonical = encode(copy);
   const digest = toHex(keccak256(canonical));
   return {
     digest,

@@ -5,10 +5,10 @@ import { rm } from "fs/promises";
 import test from "ava";
 import { pipe } from "it-pipe";
 import { pushable } from "it-pushable";
-import { toString } from "uint8arrays/to-string";
-import { fromString } from "uint8arrays/from-string";
 import * as lp from "it-length-prefixed";
+
 import all from "it-all";
+import { encode, decode } from "cbor-x";
 
 import {
   deserialize,
@@ -152,8 +152,7 @@ test("serializing into wire", async (t) => {
     const messages = await all(source);
     const sMessages = await pipe(messages, lp.decode(), async (source) => {
       const [msg] = await all(source);
-      const sActual = toString(msg.subarray());
-      const actual = JSON.parse(sActual);
+      const actual = decode(Buffer.from(msg.subarray()));
       t.deepEqual(actual, message);
     });
   };
@@ -166,8 +165,7 @@ test("serializing from wire", async (t) => {
   const message = { hello: "world" };
   const source = pushable();
 
-  const sMessage = JSON.stringify(message);
-  const buf = fromString(sMessage);
+  const buf = encode(message);
   const stream = await pipe([buf], lp.encode());
 
   const actual = await fromWire(stream);
