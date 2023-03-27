@@ -32,6 +32,12 @@ export async function launch(trie, libp2p) {
     return reply.code(200).type("text/html").send(content);
   });
 
+  fastify.get("/stories", async (request, reply) => {
+    const leaves = await store.leaves(trie);
+    const stories = store.count(leaves);
+    return reply.code(200).send(stories);
+  });
+
   fastify.post("/messages", handleMessage(trie, libp2p));
   try {
     await fastify.listen({ port: env.HTTP_PORT });
