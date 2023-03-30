@@ -433,6 +433,42 @@ test("efficient trie retrieval of fourth level", async (t) => {
   await rm(env.DATA_DIR, { recursive: true });
 });
 
+test("try adding message with invalid href", async (t) => {
+  const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
+  const privateKey =
+    "0xad54bdeade5537fb0a553190159783e45d02d316a992db05cbed606d3ca36b39";
+  const signer = new Wallet(privateKey);
+  t.is(signer.address, address);
+
+  const text = "hello world";
+  const href = "this isn't a link";
+  const type = "amplify";
+  const timestamp = 1676559616;
+  const message = id.create(text, href, type, timestamp);
+  const signedMessage = await id.sign(signer, message);
+
+  const trie = {
+    put: (key, value) => {
+      t.fail();
+    },
+  };
+  const libp2p = {
+    pubsub: {
+      publish: (name, message) => {
+        t.fail();
+      },
+    },
+  };
+  const allowlist = [address];
+  await t.throwsAsync(
+    async () => await store.add(trie, signedMessage, libp2p, allowlist),
+    {
+      instanceOf: Error,
+      message: "Wrongly formatted message",
+    }
+  );
+});
+
 test("try to add invalidly formatted message to store", async (t) => {
   const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
   const privateKey =
