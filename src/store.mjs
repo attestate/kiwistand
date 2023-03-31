@@ -198,6 +198,7 @@ export async function descend(trie, level, exclude = []) {
 }
 
 export async function add(trie, message, libp2p, allowlist) {
+  const currentRoot = trie.root();
   const address = verify(message);
   const included = allowlist.includes(address);
   if (!included) {
@@ -219,18 +220,20 @@ export async function add(trie, message, libp2p, allowlist) {
   log(`Storing message with id "${id}"`);
   // TODO: We should check if checkpointing is off here.
   await trie.put(Buffer.from(id, "hex"), canonical);
-  log(`New root: "${trie.root().toString("hex")}"`);
+  const nextRoot = trie.root();
+  log(`New root: "${nextRoot.toString("hex")}"`);
 
-  if (libp2p) {
-    log(
-      `Sending message to peers: "${messages.name}" and message: "${canonical}"`
-    );
-    libp2p.pubsub.publish(messages.name, canonical);
-  } else {
+  if (!libp2p) {
     log(
       "Didn't distribute message after ingestion because libp2p instance isn't defined"
     );
+    return;
   }
+
+  log(
+    `Sending message to peers: "${messages.name}" and message: "${canonical}"`
+  );
+  libp2p.pubsub.publish(messages.name, canonical);
 }
 
 export function count(leaves) {

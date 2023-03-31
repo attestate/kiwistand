@@ -53,6 +53,8 @@ test("adding message to trie", async (t) => {
   // NOTE: handlers.message will fail within store.add with is where we wanted
   // to reach
   const trie = await store.create();
+  // TODO: This test must not throw but actually receive a valid message and
+  // then call the right trie method to insert the message into the trie.
   await t.throwsAsync(async () => await handlers.message(trie)(evt), {
     instanceOf: Error,
     message: "Wrongly formatted message",

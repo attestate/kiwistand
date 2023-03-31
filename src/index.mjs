@@ -23,18 +23,21 @@ export const handlers = {
   },
 };
 
-export async function start(
-  config,
+export async function start(config) {
+  const peerId = await bootstrap(config.peerId.path);
+  const node = await createLibp2p({ ...config, peerId });
+  await node.start();
+  return node;
+}
+
+export async function subscribe(
+  node,
   nodeHandlers = {},
   connectionHandlers = {},
   protocolHandlers = {},
   topics = [],
   trie
 ) {
-  const peerId = await bootstrap(config.peerId.path);
-  const node = await createLibp2p({ ...config, peerId });
-  await node.start();
-
   // TODO: Move this into the launch file
   let protocolHandlerCopy = { ...protocolHandlers };
   try {
@@ -77,12 +80,7 @@ export async function start(
     return await sync.initiate(trie, peerId, exclude, level, sync.send(node));
   };
 
-  if (env.AUTO_SYNC === "true") {
-    node.connectionManager.addEventListener(
-      "peer:connect",
-      async (evt) => await node.goblin.initiate(evt.detail.remotePeer)
-    );
-  }
+  sync.advertise(trie, node, env.ROOT_ADVERTISEMENT_TIMEOUT);
 
   node.getMultiaddrs().forEach((addr) => {
     log(`listening: ${addr.toString()}`);

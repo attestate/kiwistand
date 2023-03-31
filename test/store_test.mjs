@@ -451,6 +451,7 @@ test("try adding message with invalid href", async (t) => {
     put: (key, value) => {
       t.fail();
     },
+    root: () => {},
   };
   const libp2p = {
     pubsub: {
@@ -488,6 +489,7 @@ test("try to add invalidly formatted message to store", async (t) => {
     put: (key, value) => {
       t.fail();
     },
+    root: () => {},
   };
   const libp2p = {
     pubsub: {
@@ -524,6 +526,7 @@ test("try to add invalidly signed message to store", async (t) => {
     put: (key, value) => {
       t.fail();
     },
+    root: () => {},
   };
   const libp2p = {
     pubsub: {
@@ -559,6 +562,7 @@ test("trying to add message to store that isn't on allowlist", async (t) => {
     put: (key, value) => {
       t.fail();
     },
+    root: () => {},
   };
   const libp2p = {
     pubsub: {

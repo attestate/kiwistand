@@ -28,6 +28,7 @@ test("that repo contains a .env-copy file with all possible configuration option
     "DATA_DIR",
     "AUTO_SYNC",
     "THEME",
+    "ROOT_ADVERTISEMENT_TIMEOUT",
   ];
   await access(envPath, constants.F_OK);
   const envContent = (await readFile(envPath)).toString();

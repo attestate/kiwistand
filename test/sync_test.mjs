@@ -16,6 +16,7 @@ import {
   initiate,
   fromWire,
   toWire,
+  advertise,
 } from "../src/sync.mjs";
 import * as store from "../src/store.mjs";
 import log from "../src/logger.mjs";
@@ -30,6 +31,28 @@ async function simplePut(trie, message) {
     await trie.put(key, value);
   }
 }
+
+test("advertising root periodically", async (t) => {
+  env.DATA_DIR = "dbtestA";
+  const trie = await store.create();
+  t.plan(3);
+  let publishCalled = false;
+  const node = {
+    pubsub: {
+      publish: (name, message) => {
+        publishCalled = true;
+        t.truthy(name);
+        const expected = encode({ root: trie.root().toString("hex") });
+        t.deepEqual(message, expected);
+      },
+    },
+  };
+  const timeout = 10;
+  await advertise(trie, node, timeout);
+  t.true(publishCalled);
+
+  await rm("dbtestA", { recursive: true });
+});
 
 test.serial(
   "ending syncing early when trying in other direction",

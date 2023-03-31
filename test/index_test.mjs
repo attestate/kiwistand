@@ -17,7 +17,7 @@ import {
   receive,
 } from "../src/sync.mjs";
 import * as messages from "../src/topics/messages.mjs";
-import { start, handlers } from "../src/index.mjs";
+import { start, subscribe, handlers } from "../src/index.mjs";
 import * as store from "../src/store.mjs";
 import log from "../src/logger.mjs";
 import { sign, create } from "../src/id.mjs";
@@ -80,8 +80,9 @@ test("if sync of signed messages work over the network", async (t) => {
   const allowlist = [address];
   await store.add(trieA, signedMessage, libp2p, allowlist);
 
-  const node1 = await start(
-    config1,
+  const node1 = await start(config1);
+  await subscribe(
+    node1,
     handlers.node,
     handlers.connection,
     handlers.protocol,
@@ -97,8 +98,9 @@ test("if sync of signed messages work over the network", async (t) => {
   const trieB = await store.create();
   t.notDeepEqual(trieA.root(), trieB.root());
 
-  const node2 = await start(
-    config2,
+  const node2 = await start(config2);
+  await subscribe(
+    node2,
     handlers.node,
     handlers.connection,
     handlers.protocol,
@@ -128,8 +130,9 @@ test("if sync of simple messages work over the network", async (t) => {
   await trieA.put(Buffer.from("0101", "hex"), Buffer.from("C", "utf8"));
   await trieA.put(Buffer.from("0200", "hex"), Buffer.from("D", "utf8"));
 
-  const node1 = await start(
-    config1,
+  const node1 = await start(config1);
+  await subscribe(
+    node1,
     handlers.node,
     handlers.connection,
     { ...handlers.protocol, ...{ "/leaves/1.0.0": simpleHandleLeaves } },
@@ -145,8 +148,9 @@ test("if sync of simple messages work over the network", async (t) => {
   const trieB = await store.create();
   t.notDeepEqual(trieA.root(), trieB.root());
 
-  const node2 = await start(
-    config2,
+  const node2 = await start(config2);
+  await subscribe(
+    node2,
     handlers.node,
     handlers.connection,
     { ...handlers.protocol, ...{ "/leaves/1.0.0": simpleHandleLeaves } },
@@ -201,8 +205,9 @@ test.serial(
       const topics = [];
       const trie = await store.create();
 
-      node1 = await start(
-        config1,
+      node1 = await start(config1);
+      await subscribe(
+        node1,
         nodeHandler1,
         connHandler1,
         protoHandler1,
@@ -227,8 +232,9 @@ test.serial(
       };
       const connHandler2 = {};
       const protoHandler2 = {};
-      node2 = await start(
-        config2,
+      node2 = await start(config2);
+      await subscribe(
+        node2,
         nodeHandler2,
         connHandler2,
         protoHandler2,
@@ -268,8 +274,9 @@ test.serial("if nodes can only be bootstrapped", async (t) => {
     const topics = [];
     const trie = await store.create();
 
-    node1 = await start(
-      config1,
+    node1 = await start(config1);
+    await subscribe(
+      node1,
       nodeHandler1,
       connHandler1,
       protoHandler1,
@@ -294,8 +301,9 @@ test.serial("if nodes can only be bootstrapped", async (t) => {
     };
     const connHandler2 = {};
     const protoHandler2 = {};
-    node2 = await start(
-      config2,
+    node2 = await start(config2);
+    await subscribe(
+      node2,
       nodeHandler2,
       connHandler2,
       protoHandler2,
@@ -346,8 +354,9 @@ test.skip("if third node can be discovered from bootstrap and newly online node"
     const protoHandler1 = {};
 
     const topic = "testtopic";
-    node1 = await start(
-      config1,
+    node1 = await start(config1);
+    await subscribe(
+      node1,
       nodeHandler1,
       connHandler1,
       protoHandler1,
@@ -378,8 +387,9 @@ test.skip("if third node can be discovered from bootstrap and newly online node"
       },
     };
     const protoHandler2 = {};
-    node2 = await start(
-      config2,
+    node2 = await start(config2);
+    await subscribe(
+      node2,
       nodeHandler2,
       connHandler2,
       protoHandler2,
@@ -410,8 +420,9 @@ test.skip("if third node can be discovered from bootstrap and newly online node"
       },
     };
     const protoHandler3 = {};
-    node3 = await start(
-      config3,
+    node3 = await start(config3);
+    await subscribe(
+      node3,
       nodeHandler3,
       connHandler3,
       protoHandler3,
