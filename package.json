@@ -5,7 +5,7 @@
   "main": "./src/index.mjs",
   "scripts": {
     "test": "ava --timeout=30s --serial --verbose",
-    "dev": "DEBUG=attestate* node -r dotenv/config --no-warnings ./src/launch.mjs",
+    "dev": "DEBUG=\"attestate*|express:router\" node -r dotenv/config --no-warnings ./src/launch.mjs",
     "watch": "HTTP_PORT=3000 nodemon --watch src/views --exec 'npm run dev'",
     "dev:bootstrap": "THEME=orange HTTP_PORT=3000 DATA_DIR=bootstrap BIND_ADDRESS_V4=\"127.0.0.1\" IS_BOOTSTRAP_NODE=true USE_EPHEMERAL_ID=false npm run dev",
     "dev:anon": "THEME=kiwi HTTP_PORT=4000 DATA_DIR=anon BIND_ADDRESS_V4=\"127.0.0.1\" PORT=0 IS_BOOTSTRAP_NODE=false USE_EPHEMERAL_ID=true npm run dev"
@@ -37,7 +37,6 @@
     "@chainsafe/libp2p-noise": "10.2.0",
     "@ethereumjs/rlp": "4.0.1",
     "@ethereumjs/trie": "5.0.4",
-    "@fastify/static": "6.9.0",
     "@libp2p/bootstrap": "5.0.0",
     "@libp2p/mplex": "7.1.0",
     "@libp2p/peer-id": "1.1.16",
@@ -50,7 +49,7 @@
     "dotenv": "16.0.3",
     "ethereum-cryptography": "1.1.2",
     "ethers": "5.2.0",
-    "fastify": "4.14.0",
+    "express": "4.18.2",
     "htm": "3.1.1",
     "it-all": "2.0.0",
     "it-length-prefixed": "8.0.4",

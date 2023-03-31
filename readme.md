@@ -30,6 +30,7 @@ npm run dev
 - [ ] Make the "Submit Story" button only visible in debug mode
 - [ ] Find better approach for frontend and potentially separate it from node
   software
+- [ ] Send leave messages through pagination.
 
 ## license
 

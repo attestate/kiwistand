@@ -29,10 +29,10 @@ export default async function index(trie) {
         <meta charset="utf-8" />
         <meta name="referrer" content="origin" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link rel="stylesheet" type="text/css" href="public/news.css" />
+        <link rel="stylesheet" type="text/css" href="news.css" />
         <link rel="shortcut icon" href="favicon.ico" />
         <title>Kiwi News</title>
-        <script type="module" src="public/signer.mjs"></script>
+        <script type="module" src="signer.mjs"></script>
       </head>
       <body>
         <center>
