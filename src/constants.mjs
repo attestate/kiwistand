@@ -1,7 +1,18 @@
+// @format
+import { keccak256 } from "ethereum-cryptography/keccak.js";
+
+// NOTE: ethers-rs only allows strings as inputs that then get keccak256-hashed
+// as salts. Hence, as a work-around, we hash a canonical string value here to
+// simulate ethers-rs behavior.
+//
+// ethers-rs issue: https://github.com/gakonst/ethers-rs/issues/2321
+const domainSeparatorSalt = Buffer.from("kiwinews domain separator salt");
+const salt = Buffer.from(keccak256(domainSeparatorSalt)).toString("hex");
+
 export const EIP712_DOMAIN = {
-  name: "replica",
-  version: "1",
-  chainId: 6666,
+  name: "kiwinews",
+  version: "1.0.0",
+  salt: `0x${salt}`,
 };
 
 export const EIP712_TYPES = {

@@ -36,9 +36,7 @@ test("return upon unparsable json", async (t) => {
     },
   };
   const trie = await store.create();
-  await t.throwsAsync(async () => await handlers.message(trie)(evt), {
-    message: "Wrongly formatted message",
-  });
+  await t.throwsAsync(async () => await handlers.message(trie)(evt));
 });
 
 test("adding message to trie", async (t) => {
@@ -55,8 +53,5 @@ test("adding message to trie", async (t) => {
   const trie = await store.create();
   // TODO: This test must not throw but actually receive a valid message and
   // then call the right trie method to insert the message into the trie.
-  await t.throwsAsync(async () => await handlers.message(trie)(evt), {
-    instanceOf: Error,
-    message: "Wrongly formatted message",
-  });
+  await t.throwsAsync(async () => await handlers.message(trie)(evt));
 });

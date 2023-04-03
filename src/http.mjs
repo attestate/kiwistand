@@ -10,11 +10,18 @@ import index from "./views/index.mjs";
 
 const app = express();
 app.use(express.static("src/public"));
+app.use(express.json());
 
 export function handleMessage(trie, libp2p) {
   return async (request, reply) => {
     const message = request.body;
-    await store.add(trie, message, libp2p, allowlist);
+    try {
+      await store.add(trie, message, libp2p, allowlist);
+    } catch (err) {
+      log(
+        `Error adding message upon POST /messages request: "${err.toString()}"`
+      );
+    }
   };
 }
 

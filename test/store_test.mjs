@@ -60,7 +60,7 @@ test("getting leaves", async (t) => {
   t.deepEqual(signedMessage, {
     ...message,
     signature:
-      "0xdc33965bbb55580bf9f209fb0d6a45e4538120f55eba133b4ef339d884ab45882f6f92a4e2aa5f99139f4f2ad82b21ac437dfd139b39383c0d3e7b8b2fac74321c",
+      "0x1df128dfe1f86df4e20ecc6ebbd586e0ab56e3fc8d0db9210422c3c765633ad8793af68aa232cf39cc3f75ea18f03260258f7276c2e0d555f98e1cf16672dd201c",
   });
 
   env.DATA_DIR = "dbtestA";
@@ -89,7 +89,7 @@ test("descend levels with actual data ", async (t) => {
   t.deepEqual(signedMessage, {
     ...message,
     signature:
-      "0xdc33965bbb55580bf9f209fb0d6a45e4538120f55eba133b4ef339d884ab45882f6f92a4e2aa5f99139f4f2ad82b21ac437dfd139b39383c0d3e7b8b2fac74321c",
+      "0x1df128dfe1f86df4e20ecc6ebbd586e0ab56e3fc8d0db9210422c3c765633ad8793af68aa232cf39cc3f75ea18f03260258f7276c2e0d555f98e1cf16672dd201c",
   });
 
   env.DATA_DIR = "dbtestA";
@@ -462,11 +462,7 @@ test("try adding message with invalid href", async (t) => {
   };
   const allowlist = [address];
   await t.throwsAsync(
-    async () => await store.add(trie, signedMessage, libp2p, allowlist),
-    {
-      instanceOf: Error,
-      message: "Wrongly formatted message",
-    }
+    async () => await store.add(trie, signedMessage, libp2p, allowlist)
   );
 });
 
@@ -500,11 +496,7 @@ test("try to add invalidly formatted message to store", async (t) => {
   };
   const allowlist = [address];
   await t.throwsAsync(
-    async () => await store.add(trie, signedMessage, libp2p, allowlist),
-    {
-      instanceOf: Error,
-      message: "Wrongly formatted message",
-    }
+    async () => await store.add(trie, signedMessage, libp2p, allowlist)
   );
 });
 
@@ -537,10 +529,7 @@ test("try to add invalidly signed message to store", async (t) => {
   };
   const allowlist = [address];
   await t.throwsAsync(
-    async () => await store.add(trie, message, libp2p, allowlist),
-    {
-      instanceOf: Error,
-    }
+    async () => await store.add(trie, message, libp2p, allowlist)
   );
 });
 

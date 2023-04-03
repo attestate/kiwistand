@@ -85,10 +85,11 @@ const messageValidator = ajv.compile(SCHEMATA.message);
 export function verify(message) {
   const result = messageValidator(message);
   if (!result) {
-    log(
-      `Wrongly formatted message: ${JSON.stringify(messageValidator.errors)}`
-    );
-    throw new Error("Wrongly formatted message");
+    const errMessage = `Wrongly formatted message: ${JSON.stringify(
+      messageValidator.errors
+    )}`;
+    log(errMessage);
+    throw new Error(errMessage);
   }
   const copy = { ...message };
   delete copy["signature"];
