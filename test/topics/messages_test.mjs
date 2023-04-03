@@ -24,8 +24,12 @@ test("return upon unparsable uint8 array", async (t) => {
     },
   };
   const trie = await store.create();
+  const emptyRoot = trie.root();
   await handlers.message(trie)(evt);
-  t.pass();
+  // NOTE: The message must not end up as a leaf in the trie and so if the trie
+  // still has the empty root as a root, then that means the message was
+  // dropped.
+  t.deepEqual(emptyRoot, trie.root());
 });
 
 test("return upon unparsable json", async (t) => {
@@ -36,7 +40,12 @@ test("return upon unparsable json", async (t) => {
     },
   };
   const trie = await store.create();
-  await t.throwsAsync(async () => await handlers.message(trie)(evt));
+  const emptyRoot = trie.root();
+  await handlers.message(trie)(evt);
+  // NOTE: The message must not end up as a leaf in the trie and so if the trie
+  // still has the empty root as a root, then that means the message was
+  // dropped.
+  t.deepEqual(emptyRoot, trie.root());
 });
 
 test("adding message to trie", async (t) => {
@@ -48,10 +57,11 @@ test("adding message to trie", async (t) => {
       data: encode(text),
     },
   };
-  // NOTE: handlers.message will fail within store.add with is where we wanted
-  // to reach
   const trie = await store.create();
-  // TODO: This test must not throw but actually receive a valid message and
-  // then call the right trie method to insert the message into the trie.
-  await t.throwsAsync(async () => await handlers.message(trie)(evt));
+  const emptyRoot = trie.root();
+  await handlers.message(trie)(evt);
+  // NOTE: The message must not end up as a leaf in the trie and so if the trie
+  // still has the empty root as a root, then that means the message was
+  // dropped.
+  t.deepEqual(emptyRoot, trie.root());
 });

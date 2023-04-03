@@ -25,7 +25,13 @@ export const handlers = {
       }
 
       const libp2p = null;
-      await store.add(trie, message, libp2p, allowlist);
+      try {
+        await store.add(trie, message, libp2p, allowlist);
+      } catch (err) {
+        log(
+          `message handler: Didn't add message to database because of error: "${err.toString()}"`
+        );
+      }
     };
   },
 };

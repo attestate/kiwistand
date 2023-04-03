@@ -26,6 +26,7 @@ npm run dev
 - [ ] Consider just exposing one RPC endpoint for submitting messages instead
   of having one endpoint for accepting leaves and another for user-facing
   applications.
+- [x] Sanitize endpoints that ingest data and make sure they are resilient.
 - [ ] For gossip-received messages, reject them if they're too old
 - [ ] Make the "Submit Story" button only visible in debug mode
 - [ ] Find better approach for frontend and potentially separate it from node

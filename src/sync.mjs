@@ -145,8 +145,14 @@ export async function put(trie, message) {
   for await (let { node, key } of missing) {
     const value = decode(node.value());
     const libp2p = null;
-    log(`Adding to database value "${node.value()}"`);
-    await store.add(trie, value, libp2p, allowlist);
+    try {
+      await store.add(trie, value, libp2p, allowlist);
+      log(`Adding to database value "${node.value()}"`);
+    } catch (err) {
+      log(
+        `put: Didn't add message to database because of error: "${err.toString()}"`
+      );
+    }
   }
 }
 

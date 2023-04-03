@@ -91,6 +91,7 @@ export function verify(message) {
     log(errMessage);
     throw new Error(errMessage);
   }
+
   const copy = { ...message };
   delete copy["signature"];
   const address = utils.verifyTypedData(
