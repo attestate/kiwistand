@@ -29,6 +29,8 @@ test("that repo contains a .env-copy file with all possible configuration option
     "AUTO_SYNC",
     "THEME",
     "ROOT_ADVERTISEMENT_TIMEOUT",
+    "MIN_TIMESTAMP_SECS",
+    "TIMESTAMP_TOLERANCE_SECS",
   ];
   await access(envPath, constants.F_OK);
   const envContent = (await readFile(envPath)).toString();

@@ -198,7 +198,6 @@ export async function descend(trie, level, exclude = []) {
 }
 
 export async function add(trie, message, libp2p, allowlist) {
-  const currentRoot = trie.root();
   const address = verify(message);
   const included = allowlist.includes(address);
   if (!included) {
@@ -206,6 +205,24 @@ export async function add(trie, message, libp2p, allowlist) {
       `Address "${address}" wasn't found in the allow list. Dropping message`
     );
     throw new Error("Signing address wasn't found in allow list");
+  }
+
+  const minTimestampSecs = parseInt(env.MIN_TIMESTAMP_SECS, 10);
+  if (message.timestamp < minTimestampSecs) {
+    log(
+      `Message timestamp is from before 2023 and so message is dropped: "${message.timestamp}"`
+    );
+    return;
+  }
+
+  const nowSecs = Date.now() / 1000;
+  const toleranceSecs = parseInt(env.MAX_TIMESTAMP_DELTA_SECS, 10);
+  const maxTimestampSecs = nowSecs + toleranceSecs;
+  if (message.timestamp >= maxTimestampSecs) {
+    log(
+      `Message timestamp is more than "${toleranceSecs}" seconds in the future and so message is dropped: "${message.timestamp}"`
+    );
+    return;
   }
 
   const { digest, canonical } = toDigest(message);
@@ -220,8 +237,7 @@ export async function add(trie, message, libp2p, allowlist) {
   log(`Storing message with id "${id}"`);
   // TODO: We should check if checkpointing is off here.
   await trie.put(Buffer.from(id, "hex"), canonical);
-  const nextRoot = trie.root();
-  log(`New root: "${nextRoot.toString("hex")}"`);
+  log(`New root: "${trie.root().toString("hex")}"`);
 
   if (!libp2p) {
     log(

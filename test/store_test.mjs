@@ -570,6 +570,70 @@ test("trying to add message to store that isn't on allowlist", async (t) => {
   );
 });
 
+test("adding message from too far into the future", async (t) => {
+  env.MAX_TIMESTAMP_DELTA_SECS = 60;
+  const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
+  const privateKey =
+    "0xad54bdeade5537fb0a553190159783e45d02d316a992db05cbed606d3ca36b39";
+  const signer = new Wallet(privateKey);
+  t.is(signer.address, address);
+
+  const text = "hello world";
+  const href = "https://example.com";
+  const type = "amplify";
+  const timestamp = Math.floor(Date.now() / 1000) + 61;
+  const message = id.create(text, href, type, timestamp);
+  const signedMessage = await id.sign(signer, message);
+
+  const trie = {
+    put: (key, value) => {
+      t.fail();
+    },
+    root: () => Buffer.from("abc", "hex"),
+  };
+  const libp2p = {
+    pubsub: {
+      publish: (name, message) => {
+        t.fail();
+      },
+    },
+  };
+  const allowlist = [address];
+  await store.add(trie, signedMessage, libp2p, allowlist);
+});
+
+test("adding message from before minimum timestamp", async (t) => {
+  const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
+  const privateKey =
+    "0xad54bdeade5537fb0a553190159783e45d02d316a992db05cbed606d3ca36b39";
+  const signer = new Wallet(privateKey);
+  t.is(signer.address, address);
+
+  const text = "hello world";
+  const href = "https://example.com";
+  const type = "amplify";
+  const timestamp = 0;
+  const message = id.create(text, href, type, timestamp);
+  const signedMessage = await id.sign(signer, message);
+
+  const trie = {
+    put: (key, value) => {
+      t.fail();
+    },
+    root: () => Buffer.from("abc", "hex"),
+  };
+  const libp2p = {
+    pubsub: {
+      publish: (name, message) => {
+        t.fail();
+      },
+    },
+  };
+  const allowlist = [address];
+  env.MIN_TIMESTAMP_SECS = 1;
+  await store.add(trie, signedMessage, libp2p, allowlist);
+});
+
 test("adding message to the store", async (t) => {
   t.plan(5);
   const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
