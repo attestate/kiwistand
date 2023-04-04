@@ -37,6 +37,7 @@ npm run dev
   software
 - [x] Send leave messages through pagination.
 - [ ] Add basic documentation
+- [ ] Implement an on-chain allow list tracker
 
 ## license
 
