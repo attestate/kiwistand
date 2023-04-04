@@ -21,7 +21,9 @@ export function handleMessage(trie, libp2p) {
       log(
         `Error adding message upon POST /messages request: "${err.toString()}"`
       );
+      return reply.status(400).send();
     }
+    return reply.status(200).send();
   };
 }
 

@@ -7,9 +7,9 @@ button.addEventListener("click", send);
 
 async function send() {
   const EIP712_DOMAIN = {
-    name: "replica",
-    version: "1",
-    chainId: 6666,
+    name: "kiwinews",
+    version: "1.0.0",
+    salt: "0xfe7a9d68e99b6942bb3a36178b251da8bd061c20ed1e795207ae97183b590e5b",
   };
 
   const EIP712_TYPES = {
@@ -50,5 +50,5 @@ async function send() {
     },
     body,
   }).catch((error) => console.error(error));
-  location.reload();
+  history.go(0);
 }
