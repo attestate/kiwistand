@@ -60,7 +60,7 @@ export async function launch(trie, libp2p) {
     return reply.status(200).type("text/html").send(content);
   });
 
-  app.get("/messages", listMessages(trie));
+  app.post("/list", listMessages(trie));
   app.post("/messages", handleMessage(trie, libp2p));
   app.listen(env.HTTP_PORT, () =>
     log(`Launched HTTP server at port "${env.HTTP_PORT}"`)
