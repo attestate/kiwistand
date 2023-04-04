@@ -8,6 +8,7 @@ import test from "ava";
 import { Wallet, utils } from "ethers";
 import { BranchNode, ExtensionNode, LeafNode } from "@ethereumjs/trie";
 import rlp from "@ethereumjs/rlp";
+import { encode } from "cbor-x";
 
 import * as id from "../src/id.mjs";
 import config from "../src/config.mjs";
@@ -44,6 +45,54 @@ test("counting stories", async (t) => {
   t.true(Array.isArray(stories));
 });
 
+test("amount limiting factor", async (t) => {
+  env.DATA_DIR = "dbtestA";
+  const trieA = await store.create();
+  await trieA.put(Buffer.from("0101", "hex"), encode({ num: 0 }));
+  await trieA.put(Buffer.from("1010", "hex"), encode({ num: 1 }));
+  await trieA.put(Buffer.from("1100", "hex"), encode({ num: 2 }));
+
+  const from = 0;
+  const amount = 2;
+  const leaves = await store.leaves(trieA, from, amount);
+  t.is(leaves.length, 2);
+  t.deepEqual([{ num: 0 }, { num: 1 }], leaves);
+
+  await rm("dbtestA", { recursive: true });
+});
+
+test("getting more paginated leaves than exist but only return existing", async (t) => {
+  env.DATA_DIR = "dbtestA";
+  const trieA = await store.create();
+  await trieA.put(Buffer.from("0101", "hex"), encode({ num: 0 }));
+  await trieA.put(Buffer.from("1010", "hex"), encode({ num: 1 }));
+  await trieA.put(Buffer.from("1100", "hex"), encode({ num: 2 }));
+
+  const from = 1;
+  const amount = 50;
+  const leaves = await store.leaves(trieA, from, amount);
+  t.is(leaves.length, 2);
+  t.deepEqual([{ num: 1 }, { num: 2 }], leaves);
+
+  await rm("dbtestA", { recursive: true });
+});
+
+test("getting paginated leaves", async (t) => {
+  env.DATA_DIR = "dbtestA";
+  const trieA = await store.create();
+  await trieA.put(Buffer.from("0101", "hex"), encode({ num: 0 }));
+  await trieA.put(Buffer.from("1010", "hex"), encode({ num: 1 }));
+  await trieA.put(Buffer.from("1100", "hex"), encode({ num: 2 }));
+
+  const from = 1;
+  const amount = 2;
+  const leaves = await store.leaves(trieA, from, amount);
+  t.is(leaves.length, amount);
+  t.deepEqual([{ num: 1 }, { num: 2 }], leaves);
+
+  await rm("dbtestA", { recursive: true });
+});
+
 test("getting leaves", async (t) => {
   const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
   const privateKey =
@@ -71,6 +120,8 @@ test("getting leaves", async (t) => {
   const leaves = await store.leaves(trieA);
   t.is(leaves.length, 1);
   t.truthy(leaves[0]);
+
+  await rm("dbtestA", { recursive: true });
 });
 
 test("descend levels with actual data ", async (t) => {

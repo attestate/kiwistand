@@ -274,18 +274,26 @@ export function count(leaves) {
   return Object.values(stories).sort((a, b) => b.points - a.points);
 }
 
-export async function leaves(trie) {
+export async function leaves(trie, from, amount) {
+  let pointer = 0;
   const nodes = [];
   const onFound = (nodeRef, node, key, walkController) => {
+    if (Number.isInteger(amount) && nodes.length >= amount) return;
+
     if (node instanceof LeafNode) {
+      pointer += 1;
+
       const fragments = [key, node.key()].map(nibblesToBuffer);
       key = Buffer.concat(fragments);
       const value = decode(node.value());
+
+      if (Number.isInteger(from) && pointer <= from) return;
       nodes.push(value);
     } else if (node instanceof BranchNode || node instanceof ExtensionNode) {
       walkController.allChildren(node, key);
     }
   };
+
   try {
     await trie.walkTrie(trie.root(), onFound);
   } catch (err) {

@@ -1,4 +1,6 @@
 // @format
+import { env } from "process";
+
 import { keccak256 } from "ethereum-cryptography/keccak.js";
 
 // NOTE: ethers-rs only allows strings as inputs that then get keccak256-hashed
@@ -25,6 +27,25 @@ export const EIP712_TYPES = {
 };
 
 export const SCHEMATA = {
+  pagination: {
+    type: "object",
+    additionalProperties: false,
+    properties: {
+      from: {
+        $comment:
+          "The number of entries the request should be offset by. It is inclusive.",
+        type: "integer",
+        minimum: 0,
+      },
+      amount: {
+        $comment: "The number of entries that the request should contain",
+        type: "integer",
+        minimum: 0,
+        maximum: parseInt(env.HTTP_MESSAGES_MAX_PAGE_SIZE, 10),
+      },
+    },
+    required: ["from", "amount"],
+  },
   message: {
     type: "object",
     additionalProperties: false,
@@ -52,5 +73,6 @@ export const SCHEMATA = {
         pattern: "0x[a-fA-F0-9]+",
       },
     },
+    required: ["timestamp", "type", "title", "href", "signature"],
   },
 };

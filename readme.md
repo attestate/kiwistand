@@ -27,11 +27,16 @@ npm run dev
   of having one endpoint for accepting leaves and another for user-facing
   applications.
 - [x] Sanitize endpoints that ingest data and make sure they are resilient.
-- [ ] For gossip-received messages, reject them if they're too old
+- [x] For gossip-received messages, reject them when they're too far in the
+  future.
+- [ ] Add "key delegation" message
+- [ ] Consider that users can currently amplify a story twice and find a
+  solution
 - [ ] Make the "Submit Story" button only visible in debug mode
 - [ ] Find better approach for frontend and potentially separate it from node
   software
-- [ ] Send leave messages through pagination.
+- [x] Send leave messages through pagination.
+- [ ] Add basic documentation
 
 ## license
 

@@ -25,6 +25,7 @@ test("that repo contains a .env-copy file with all possible configuration option
     "USE_EPHEMERAL_ID",
     "IPV4",
     "HTTP_PORT",
+    "HTTP_MESSAGES_MAX_PAGE_SIZE",
     "DATA_DIR",
     "AUTO_SYNC",
     "THEME",
