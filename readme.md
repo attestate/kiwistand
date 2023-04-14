@@ -32,12 +32,12 @@ npm run dev
 - [ ] Add "key delegation" message
 - [ ] Consider that users can currently amplify a story twice and find a
   solution
-- [ ] Make the "Submit Story" button only visible in debug mode
+- [x] Make the "Submit Story" button only visible in debug mode
 - [ ] Find better approach for frontend and potentially separate it from node
   software
 - [x] Send leave messages through pagination.
 - [ ] Add basic documentation
-- [ ] Implement an on-chain allow list tracker
+- [x] Implement an on-chain allow list tracker
 
 ## license
 
