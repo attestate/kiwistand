@@ -1,4 +1,6 @@
 // @format
+import { boot as crawl } from "@attestate/crawler";
+
 import { start, subscribe } from "./index.mjs";
 import log from "./logger.mjs";
 import config from "./config.mjs";
@@ -7,8 +9,10 @@ import * as roots from "./topics/roots.mjs";
 import { handlers } from "./index.mjs";
 import * as server from "./http.mjs";
 import * as store from "./store.mjs";
+import crawlPath from "./chainstate/config.crawler.mjs";
 
 (async () => {
+  crawl(crawlPath);
   const trie = await store.create();
   const node = await start(config);
 
