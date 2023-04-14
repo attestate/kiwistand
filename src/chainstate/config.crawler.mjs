@@ -3,9 +3,6 @@ import * as blockLogs from "@attestate/crawler-call-block-logs";
 import { order } from "./loader.mjs";
 
 export default {
-  environment: {
-    dataDir: "chainstate",
-  },
   path: [
     {
       name: "call-block-logs",

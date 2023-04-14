@@ -13,6 +13,7 @@ import rlp from "@ethereumjs/rlp";
 import { keccak256 } from "ethereum-cryptography/keccak.js";
 import { encode, decode } from "cbor-x";
 
+import * as registry from "./chainstate/registry.mjs";
 import log from "./logger.mjs";
 import LMDB from "./lmdb.mjs";
 import { verify, toDigest } from "./id.mjs";
@@ -197,7 +198,8 @@ export async function descend(trie, level, exclude = []) {
   return nodes;
 }
 
-export async function add(trie, message, libp2p, allowlist) {
+export async function add(trie, message, libp2p) {
+  const allowlist = await registry.allowlist();
   const address = verify(message);
   const included = allowlist.includes(address);
   if (!included) {
