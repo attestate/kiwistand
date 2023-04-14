@@ -17,7 +17,6 @@ export default {
         module: blockLogs.extractor,
         args: {
           start: 16873658,
-          end: 17045200,
           address: "0xebB15487787cBF8Ae2ffe1a6Cca5a50E63003786",
           topics: [
             "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
