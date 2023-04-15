@@ -5,10 +5,12 @@
   "main": "./src/index.mjs",
   "scripts": {
     "test": "ava --timeout=30s --serial --verbose",
-    "dev": "DEBUG=\"*attestate*|express:router\" node -r dotenv/config --no-warnings ./src/launch.mjs",
+    "connect": "ssh root@91.107.210.214",
+    "deploy": "rsync -avz . root@91.107.210.214:./kiwistand --exclude \"node_modules\" --exclude=\".git\"",
+    "dev": "DEBUG=\"*attestate*\" node -r dotenv/config --no-warnings ./src/launch.mjs",
     "watch": "HTTP_PORT=3000 nodemon --watch src/views --exec 'npm run dev'",
-    "dev:bootstrap": "THEME=orange HTTP_PORT=3000 DATA_DIR=bootstrap BIND_ADDRESS_V4=\"127.0.0.1\" IS_BOOTSTRAP_NODE=true USE_EPHEMERAL_ID=false npm run dev",
-    "dev:anon": "THEME=kiwi HTTP_PORT=4000 DATA_DIR=anon BIND_ADDRESS_V4=\"127.0.0.1\" PORT=0 IS_BOOTSTRAP_NODE=false USE_EPHEMERAL_ID=true npm run dev"
+    "dev:bootstrap": "THEME=kiwi HTTP_PORT=80 DATA_DIR=bootstrap BIND_ADDRESS_V4=\"127.0.0.1\" IS_BOOTSTRAP_NODE=true USE_EPHEMERAL_ID=false npm run dev",
+    "dev:anon": "THEME=orange HTTP_PORT=4000 DATA_DIR=anon BIND_ADDRESS_V4=\"0.0.0.0\" PORT=0 IS_BOOTSTRAP_NODE=false USE_EPHEMERAL_ID=true npm run dev"
   },
   "repository": {
     "type": "git",

@@ -23,6 +23,7 @@ if (env.THEME === "kiwi") {
 export default async function index(trie) {
   const leaves = await store.leaves(trie);
   const stories = store.count(leaves);
+  const signer = `<script type="module" src="signer.mjs"></script>`;
   return html`
     <html lang="en" op="news">
       <head>
@@ -32,7 +33,6 @@ export default async function index(trie) {
         <link rel="stylesheet" type="text/css" href="news.css" />
         <link rel="shortcut icon" href="favicon.ico" />
         <title>Kiwi News</title>
-        <script type="module" src="signer.mjs"></script>
       </head>
       <body>
         <center>
@@ -61,7 +61,11 @@ export default async function index(trie) {
                       </span>
                     </td>
                     <td style="text-align:right;padding-right:4px;">
-                      <span id="myButton">Submit story</span>
+                      <a
+                        target="_blank"
+                        href="https://github.com/attestate/kiwistand-cli"
+                        >Submit Story</a
+                      >
                     </td>
                   </tr>
                 </table>

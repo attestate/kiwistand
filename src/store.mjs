@@ -258,11 +258,13 @@ export function count(leaves) {
   const stories = {};
 
   for (const leaf of leaves) {
-    let story = stories[leaf.title];
+    const key = `${leaf.url}-${leaf.title}`;
+    let story = stories[key];
 
     if (!story) {
       story = {
         title: leaf.title,
+        timestamp: leaf.timestamp,
         href: leaf.href,
         points: 1,
       };
@@ -270,10 +272,12 @@ export function count(leaves) {
       story.points += 1;
     }
 
-    stories[leaf.title] = story;
+    stories[key] = story;
   }
 
-  return Object.values(stories).sort((a, b) => b.points - a.points);
+  return Object.values(stories)
+    .sort((a, b) => b.timestamp - a.timestamp)
+    .sort((a, b) => b.points - a.points);
 }
 
 export async function leaves(trie, from, amount) {

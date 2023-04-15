@@ -41,7 +41,7 @@ if (IS_BOOTSTRAP_NODE) {
     bootstrap({
       list: [
         // TODO: We must this allowed to be defined when running config
-        `/ip4/127.0.0.1/tcp/${DEFAULT_PORT}/${config.protocolPrefix}/bafzaajiiaijccazrvdlmhms6g7cr6lurqp5aih27agldbplnh77i5oxn74sjm7773q`,
+        `/ip4/91.107.210.214/tcp/${DEFAULT_PORT}/${config.protocolPrefix}/bafzaajiiaijccazrvdlmhms6g7cr6lurqp5aih27agldbplnh77i5oxn74sjm7773q`,
       ],
     })
   );
