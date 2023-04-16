@@ -1,6 +1,6 @@
 # attestate/kiwistand
 
-[![Node.js CI](https://github.com/attestate/replica/actions/workflows/node.js.yml/badge.svg)](https://github.com/attestate/replica/actions/workflows/node.js.yml)
+[![Node.js CI](https://github.com/attestate/kiwistand/actions/workflows/node.js.yml/badge.svg)](https://github.com/attestate/kiwistand/actions/workflows/node.js.yml)
 
 ### kiwistand is a p2p node client for a web3 writer friendly Hacker News that nobody controls but everybody co-owns
 
