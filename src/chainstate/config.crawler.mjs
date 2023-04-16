@@ -3,6 +3,13 @@ import * as blockLogs from "@attestate/crawler-call-block-logs";
 import { order } from "./loader.mjs";
 
 export default {
+  environment: {
+    // NOTE: We're hard-coding these values here as they're mandated (falsely)
+    // by the @attestate/crawler but since kiwistand will never use them for
+    // anything.
+    ipfsHttpsGateway: "https://",
+    arweaveHttpsGateway: "https://",
+  },
   path: [
     {
       name: "call-block-logs",

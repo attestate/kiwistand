@@ -17,6 +17,7 @@ test("that repo contains a .env-copy file with all possible configuration option
 
   const expr = new RegExp(".*=.*", "gm");
   const allOptions = [
+    "RPC_HTTP_HOST",
     "LOG_LEVEL",
     "NODE_ENV",
     "BIND_ADDRESS_V4",

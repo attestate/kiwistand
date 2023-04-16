@@ -16,6 +16,18 @@ cp .env-copy .env
 npm run dev
 ```
 
+If your Ethereum RPC node is behind a reverse proxy with Authorization
+requirements, consider adding the `@attestate/crawler` `RPC_API_KEY`
+environment variable
+([details](https://attestate.com/crawler/main/configuration.html#environment-variables)).
+
+## node operators
+
+Since https://news.kiwistand.com is now running live as a p2p node, you're
+invited to run your own nodes and frontends. However, please consider to join a
+chat like the [attestate dev chat](https://t.me/attestate) to stay in touch for
+eventual upgrade announcements as the protocol is far from being complete.
+
 ## Roadmap
 
 - [ ] Send proof along with sending leaves and understand what qualities
