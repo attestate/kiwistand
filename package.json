@@ -64,6 +64,7 @@
     "libp2p": "0.40.0",
     "lmdb": "2.7.9",
     "nodemon": "2.0.21",
+    "pm2": "5.3.0",
     "vhtml": "2.2.0"
   },
   "devDependencies": {
