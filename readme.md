@@ -13,7 +13,9 @@ It is required to have installed:
 ```bash
 git clone git@github.com:attestate/kiwistand.git
 cp .env-copy .env
-npm run dev
+npm i
+npm run dev:prod
+# might error when trying to create the data dir, that's a bug right now, just run it again
 ```
 
 If your Ethereum RPC node is behind a reverse proxy with Authorization
