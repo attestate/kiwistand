@@ -14,7 +14,7 @@ It is required to have installed:
 git clone git@github.com:attestate/kiwistand.git
 cp .env-copy .env
 npm i
-npm run dev:prod
+npm run dev:live
 # might error when trying to create the data dir, that's a bug right now, just run it again
 ```
 
