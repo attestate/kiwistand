@@ -258,7 +258,7 @@ export function count(leaves) {
   const stories = {};
 
   for (const leaf of leaves) {
-    const key = `${leaf.url}-${leaf.title}`;
+    const key = `${leaf.url}`;
     let story = stories[key];
 
     if (!story) {
