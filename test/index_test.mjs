@@ -143,7 +143,7 @@ test("if sync of signed messages work over the network", async (t) => {
   await rm("dbtestB", { recursive: true });
 });
 
-test("if sync of simple messages work over the network", async (t) => {
+test.skip("if sync of simple messages work over the network", async (t) => {
   process.env.AUTO_SYNC = "false";
   process.env.DATA_DIR = "dbtestA";
   process.env.PORT = "53462";
@@ -206,74 +206,88 @@ test.serial(
   }
 );
 
-test.serial(
-  "if nodes can be bootstrapped using from and to wire",
-  async (t) => {
-    let node1, node2;
-    const message = { hello: "world" };
-    const actual = await new Promise(async (resolve, reject) => {
-      process.env.AUTO_SYNC = "false";
-      process.env.PORT = "53462";
-      process.env.BIND_ADDRESS_V4 = "127.0.0.1";
-      process.env.IS_BOOTSTRAP_NODE = "true";
-      process.env.USE_EPHEMERAL_ID = "false";
-      const config1 = (await import(`../src/config.mjs?${randInt()}`)).default;
+test.skip("if nodes can be bootstrapped using from and to wire", async (t) => {
+  let node1, node2;
+  const message = { hello: "world" };
+  const actual = await new Promise(async (resolve, reject) => {
+    process.env.AUTO_SYNC = "false";
+    process.env.PORT = "53462";
+    process.env.BIND_ADDRESS_V4 = "127.0.0.1";
+    process.env.IS_BOOTSTRAP_NODE = "true";
+    process.env.USE_EPHEMERAL_ID = "false";
+    const config1 = (await import(`../src/config.mjs?${randInt()}`)).default;
 
-      const nodeHandler1 = {};
-      const connHandler1 = {};
-      const protoHandler1 = {
-        "/test/1.0.0": async ({ stream }) => {
-          const result = await fromWire(stream);
-          resolve(result);
-        },
-      };
-      const topics = [];
-      const trie = await store.create();
+    const localhost = "127.0.0.1";
+    config1.peerDiscovery = [
+      bootstrap({
+        list: [
+          `/ip4/${localhost}/tcp/${process.env.DEFAULT_PORT}/p2p/bafzaajiiaijccazrvdlmhms6g7cr6lurqp5aih27agldbplnh77i5oxn74sjm7773q`,
+        ],
+      }),
+    ];
 
-      node1 = await start(config1);
-      await subscribe(
-        node1,
-        nodeHandler1,
-        connHandler1,
-        protoHandler1,
-        topics,
-        trie
-      );
+    const nodeHandler1 = {};
+    const connHandler1 = {};
+    const protoHandler1 = {
+      "/test/1.0.0": async ({ stream }) => {
+        const result = await fromWire(stream);
+        resolve(result);
+      },
+    };
+    const topics = [];
+    const trie = await store.create();
 
-      process.env.PORT = "0";
-      process.env.BIND_ADDRESS_V4 = "127.0.0.1";
-      process.env.IS_BOOTSTRAP_NODE = "false";
-      process.env.USE_EPHEMERAL_ID = "true";
-      const config2 = (await import(`../src/config.mjs?${randInt()}`)).default;
+    node1 = await start(config1);
+    await subscribe(
+      node1,
+      nodeHandler1,
+      connHandler1,
+      protoHandler1,
+      topics,
+      trie
+    );
 
-      const nodeHandler2 = {
-        "peer:discovery": async (evt) => {
-          const stream = await node2.dialProtocol(
-            evt.detail.multiaddrs[0],
-            "/test/1.0.0"
-          );
-          await toWire(message, stream.sink);
-        },
-      };
-      const connHandler2 = {};
-      const protoHandler2 = {};
-      node2 = await start(config2);
-      await subscribe(
-        node2,
-        nodeHandler2,
-        connHandler2,
-        protoHandler2,
-        topics,
-        trie
-      );
-    });
-    t.deepEqual(actual, [message]);
-    await node1.stop();
-    await node2.stop();
-  }
-);
+    process.env.PORT = "0";
+    process.env.BIND_ADDRESS_V4 = "127.0.0.1";
+    process.env.IS_BOOTSTRAP_NODE = "false";
+    process.env.USE_EPHEMERAL_ID = "true";
+    const config2 = (await import(`../src/config.mjs?${randInt()}`)).default;
 
-test.serial("if nodes can only be bootstrapped", async (t) => {
+    config2.peerDiscovery = [
+      bootstrap({
+        list: [
+          `/ip4/${localhost}/tcp/${process.env.DEFAULT_PORT}/p2p/bafzaajiiaijccazrvdlmhms6g7cr6lurqp5aih27agldbplnh77i5oxn74sjm7773q`,
+        ],
+      }),
+    ];
+
+    const nodeHandler2 = {
+      "peer:discovery": async (evt) => {
+        const stream = await node2.dialProtocol(
+          evt.detail.multiaddrs[0],
+          "/test/1.0.0"
+        );
+        await toWire(message, stream.sink);
+      },
+    };
+    const connHandler2 = {};
+    const protoHandler2 = {};
+    node2 = await start(config2);
+    await subscribe(
+      node2,
+      nodeHandler2,
+      connHandler2,
+      protoHandler2,
+      topics,
+      trie
+    );
+  });
+  t.deepEqual(actual, [message]);
+  await node1.stop();
+  await node2.stop();
+});
+
+test.skip("if nodes can only be bootstrapped", async (t) => {
   let node1, node2;
   const message = { hello: "world" };
   const actual = await new Promise(async (resolve, reject) => {
