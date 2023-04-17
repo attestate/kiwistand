@@ -2,7 +2,10 @@
 import test from "ava";
 import process from "process";
 import { rm } from "fs/promises";
+import { resolve } from "path";
 
+import { database } from "@attestate/crawler";
+import { bootstrap } from "@libp2p/bootstrap";
 import * as lp from "it-length-prefixed";
 import { pipe } from "it-pipe";
 import { CustomEvent } from "@libp2p/interfaces/events";
@@ -57,6 +60,7 @@ test("if sync of signed messages work over the network", async (t) => {
   const signer = new Wallet(privateKey);
   t.is(signer.address, address);
 
+  const localhost = "127.0.0.1";
   const text = "hello world";
   const href = "https://example.com";
   const type = "amplify";
@@ -75,6 +79,14 @@ test("if sync of signed messages work over the network", async (t) => {
   process.env.IS_BOOTSTRAP_NODE = "true";
   process.env.USE_EPHEMERAL_ID = "false";
   const config1 = (await import(`../src/config.mjs?${randInt()}`)).default;
+  config1.peerDiscovery = [
+    bootstrap({
+      list: [
+        `/ip4/${localhost}/tcp/${process.env.DEFAULT_PORT}/p2p/bafzaajiiaijccazrvdlmhms6g7cr6lurqp5aih27agldbplnh77i5oxn74sjm7773q`,
+      ],
+    }),
+  ];
+
   const trieA = await store.create();
   const libp2p = null;
   const allowlist = [address];
@@ -91,10 +103,23 @@ test("if sync of signed messages work over the network", async (t) => {
   );
 
   process.env.DATA_DIR = "dbtestB";
+  const path = resolve(process.env.DATA_DIR, "call-block-logs-load");
+  const db = database.open(path);
+  const name = database.order("call-block-logs");
+  const subdb = db.openDB(name);
+  await subdb.put(["abc"], address);
+
   process.env.PORT = "0";
   process.env.IS_BOOTSTRAP_NODE = "false";
   process.env.USE_EPHEMERAL_ID = "true";
   const config2 = (await import(`../src/config.mjs?${randInt()}`)).default;
+  config2.peerDiscovery = [
+    bootstrap({
+      list: [
+        `/ip4/${localhost}/tcp/${process.env.DEFAULT_PORT}/p2p/bafzaajiiaijccazrvdlmhms6g7cr6lurqp5aih27agldbplnh77i5oxn74sjm7773q`,
+      ],
+    }),
+  ];
   const trieB = await store.create();
   t.notDeepEqual(trieA.root(), trieB.root());
 
