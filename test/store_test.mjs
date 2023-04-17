@@ -40,8 +40,8 @@ test("counting stories", async (t) => {
     },
   ];
   const stories = store.count(leaves);
-  t.is(stories[0].points, 2);
-  t.is(stories[1].points, 1);
+  t.is(stories[0].points, 3);
+  t.is(stories.length, 1);
   t.true(Array.isArray(stories));
 });
 
