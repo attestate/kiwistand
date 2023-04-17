@@ -8,8 +8,8 @@ import addFormats from "ajv-formats";
 import log from "./logger.mjs";
 import * as store from "./store.mjs";
 import { SCHEMATA } from "./constants.mjs";
-import allowlist from "../allowlist.mjs";
 import index from "./views/index.mjs";
+import * as registry from "./chainstate/registry.mjs";
 
 const ajv = new Ajv();
 addFormats(ajv);
@@ -20,6 +20,7 @@ app.use(express.json());
 export function handleMessage(trie, libp2p) {
   return async (request, reply) => {
     const message = request.body;
+    const allowlist = await registry.allowlist();
     try {
       await store.add(trie, message, libp2p, allowlist);
     } catch (err) {

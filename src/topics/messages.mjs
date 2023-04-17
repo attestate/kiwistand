@@ -4,8 +4,8 @@ import { decode } from "cbor-x";
 
 import log from "../logger.mjs";
 import * as store from "../store.mjs";
-import allowlist from "../../allowlist.mjs";
 import { TOPIC_PREFIX } from "./index.mjs";
+import * as registry from "../chainstate/registry.mjs";
 
 export const name = `${TOPIC_PREFIX}/messages`;
 export const handlers = {
@@ -25,6 +25,7 @@ export const handlers = {
       }
 
       const libp2p = null;
+      const allowlist = await registry.allowlist();
       try {
         await store.add(trie, message, libp2p, allowlist);
       } catch (err) {

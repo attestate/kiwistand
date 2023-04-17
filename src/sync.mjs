@@ -10,8 +10,8 @@ import { encode, decode } from "cbor-x";
 
 import log from "./logger.mjs";
 import * as store from "./store.mjs";
-import allowlist from "../allowlist.mjs";
 import * as roots from "./topics/roots.mjs";
+import * as registry from "./chainstate/registry.mjs";
 
 export async function toWire(message, sink) {
   const buf = encode(message);
@@ -145,6 +145,7 @@ export async function put(trie, message) {
   for await (let { node, key } of missing) {
     const value = decode(node.value());
     const libp2p = null;
+    const allowlist = await registry.allowlist();
     try {
       await store.add(trie, value, libp2p, allowlist);
       log(`Adding to database value "${node.value()}"`);
