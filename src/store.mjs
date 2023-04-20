@@ -1,5 +1,6 @@
 // @format
 import { env } from "process";
+import { resolve } from "path";
 
 import {
   Trie,
@@ -12,6 +13,7 @@ import {
 import rlp from "@ethereumjs/rlp";
 import { keccak256 } from "ethereum-cryptography/keccak.js";
 import { encode, decode } from "cbor-x";
+import { open } from "lmdb";
 
 import log from "./logger.mjs";
 import LMDB from "./lmdb.mjs";
@@ -21,6 +23,7 @@ import * as messages from "./topics/messages.mjs";
 export async function create() {
   log(`Creating trie with DATA_DIR: "${env.DATA_DIR}"`);
   return await Trie.create({
+    // TODO: Understand if this should this use "resolve"?
     db: new LMDB(env.DATA_DIR),
     useRootPersistence: true,
   });
@@ -197,6 +200,19 @@ export async function descend(trie, level, exclude = []) {
   return nodes;
 }
 
+export async function passes(message, address) {
+  const db = open({
+    compression: true,
+    name: "constraints",
+    encoding: "cbor",
+    path: resolve(env.DATA_DIR),
+  });
+  const key = `${address}:${message.href}:${message.type}`;
+  const seenBefore = await db.doesExist(key);
+  await db.put(key);
+  return !seenBefore;
+}
+
 export async function add(trie, message, libp2p, allowlist) {
   const address = verify(message);
   const included = allowlist.includes(address);
@@ -223,6 +239,13 @@ export async function add(trie, message, libp2p, allowlist) {
       `Message timestamp is more than "${toleranceSecs}" seconds in the future and so message is dropped: "${message.timestamp}"`
     );
     return;
+  }
+
+  const legit = await passes(message, address);
+  if (!legit) {
+    const message = `Message doesn't pass legitimacy criteria. Itwas probably submitted twice.`;
+    log(message);
+    throw new Error(message);
   }
 
   const { digest, canonical } = toDigest(message);

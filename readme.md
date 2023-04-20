@@ -45,7 +45,7 @@ eventual upgrade announcements as the protocol is far from being complete.
 - [x] For gossip-received messages, reject them when they're too far in the
   future.
 - [ ] Add "key delegation" message
-- [ ] Consider that users can currently amplify a story twice and find a
+- [x] Consider that users can currently amplify a story twice and find a
   solution
 - [x] Make the "Submit Story" button only visible in debug mode
 - [ ] Find better approach for frontend and potentially separate it from node

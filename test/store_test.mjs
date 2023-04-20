@@ -14,6 +14,28 @@ import * as id from "../src/id.mjs";
 import config from "../src/config.mjs";
 import * as store from "../src/store.mjs";
 
+test("if message passes constraint", async (t) => {
+  env.DATA_DIR = "dbtestA";
+  const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
+  const message = {
+    href: "https://example.com",
+    signature:
+      "0x1df128dfe1f86df4e20ecc6ebbd586e0ab56e3fc8d0db9210422c3c765633ad8793af68aa232cf39cc3f75ea18f03260258f7276c2e0d555f98e1cf16672dd201c",
+    timestamp: 1676559616,
+    title: "hello world",
+    type: "amplify",
+  };
+  const result0 = await store.passes(message, address);
+  t.true(result0);
+  const result1 = await store.passes(message, address);
+  t.false(result1);
+
+  const result2 = await store.passes(message, address);
+  t.false(result2);
+
+  await rm("dbtestA", { recursive: true });
+});
+
 test("counting stories", async (t) => {
   const leaves = [
     {
@@ -685,7 +707,8 @@ test("adding message from before minimum timestamp", async (t) => {
   await store.add(trie, signedMessage, libp2p, allowlist);
 });
 
-test("adding message to the store", async (t) => {
+test.serial("adding message to the store", async (t) => {
+  env.DATA_DIR = "dbtestA";
   t.plan(5);
   const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
   const privateKey =
@@ -717,4 +740,51 @@ test("adding message to the store", async (t) => {
   };
   const allowlist = [address];
   await store.add(trie, signedMessage, libp2p, allowlist);
+  await rm("dbtestA", { recursive: true });
 });
+
+test.serial(
+  "adding message twice to the store (e.g. with slightly different timestamp)",
+  async (t) => {
+    env.DATA_DIR = "dbtestA";
+    const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
+    const privateKey =
+      "0xad54bdeade5537fb0a553190159783e45d02d316a992db05cbed606d3ca36b39";
+    const signer = new Wallet(privateKey);
+    t.is(signer.address, address);
+
+    const text = "hello world";
+    const href = "https://example.com";
+    const type = "amplify";
+    const timestamp0 = 1676559616;
+    const message = id.create(text, href, type, timestamp0);
+    const signedMessage0 = await id.sign(signer, message);
+
+    const trie = {
+      put: (key, value) => {
+        t.truthy(key);
+        t.truthy(value);
+      },
+      root: () => Buffer.from("abc", "hex"),
+    };
+    const libp2p = {
+      pubsub: {
+        publish: (name, message) => {
+          t.truthy(name);
+          t.truthy(message);
+        },
+      },
+    };
+    const allowlist = [address];
+    await store.add(trie, signedMessage0, libp2p, allowlist);
+
+    const timestamp1 = timestamp0 + 1;
+    const message1 = id.create(text, href, type, timestamp1);
+    const signedMessage1 = await id.sign(signer, message1);
+
+    await t.throwsAsync(
+      async () => await store.add(trie, signedMessage1, libp2p, allowlist)
+    );
+    await rm("dbtestA", { recursive: true });
+  }
+);
