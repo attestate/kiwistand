@@ -27,6 +27,11 @@ export default async function index(trie) {
   return html`
     <html lang="en" op="news">
       <head>
+        <script
+          defer
+          data-domain="news.kiwistand.com"
+          src="https://plausible.io/js/script.js"
+        ></script>
         <meta charset="utf-8" />
         <meta name="referrer" content="origin" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
