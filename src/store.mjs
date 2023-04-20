@@ -289,16 +289,30 @@ export function count(leaves) {
         href: leaf.href,
         points: 1,
       };
+      stories[key] = story;
     } else {
-      story.points += 1;
+      // Check if the leaf type is "amplify"
+      if (leaf.type === "amplify") {
+        story.points += 1;
+      }
     }
-
-    stories[key] = story;
   }
 
+  // Calculate decay factor
+  const currentTime = Date.now();
+  const decayFactor = 2; // You can adjust this value to control the rate at which the relevancy decays
+
   return Object.values(stories)
-    .sort((a, b) => b.timestamp - a.timestamp)
-    .sort((a, b) => b.points - a.points);
+    .sort((a, b) => {
+      const timeDifferenceA = (currentTime - a.timestamp) / (1000 * 60 * 60);
+      const timeDifferenceB = (currentTime - b.timestamp) / (1000 * 60 * 60);
+
+      const decayedPointsA = a.points / Math.pow(decayFactor, timeDifferenceA);
+      const decayedPointsB = b.points / Math.pow(decayFactor, timeDifferenceB);
+
+      return decayedPointsB - decayedPointsA;
+    })
+    .reverse();
 }
 
 export async function leaves(trie, from, amount) {
