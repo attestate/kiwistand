@@ -291,28 +291,37 @@ export function count(leaves) {
       };
       stories[key] = story;
     } else {
-      // Check if the leaf type is "amplify"
       if (leaf.type === "amplify") {
         story.points += 1;
       }
     }
   }
 
-  // Calculate decay factor
-  const currentTime = Date.now();
-  const decayFactor = 2; // You can adjust this value to control the rate at which the relevancy decays
+  const currentTime = Date.now() / 1000; // Convert current time to seconds
+  const decayFactor = 4;
+  const newStoryBoost = 1.5; // Boost factor for newer stories
 
-  return Object.values(stories)
-    .sort((a, b) => {
-      const timeDifferenceA = (currentTime - a.timestamp) / (1000 * 60 * 60);
-      const timeDifferenceB = (currentTime - b.timestamp) / (1000 * 60 * 60);
+  const sortedStories = Object.values(stories).sort((a, b) => {
+    const timeDifferenceA = (currentTime - a.timestamp) / (60 * 60); // Calculate the time difference in hours
+    const timeDifferenceB = (currentTime - b.timestamp) / (60 * 60); // Calculate the time difference in hours
 
-      const decayedPointsA = a.points / Math.pow(decayFactor, timeDifferenceA);
-      const decayedPointsB = b.points / Math.pow(decayFactor, timeDifferenceB);
+    const isNewStoryA = timeDifferenceA <= 12; // Consider a story new if it is less than or equal to 12 hours old
+    const isNewStoryB = timeDifferenceB <= 12; // Consider a story new if it is less than or equal to 12 hours old
 
-      return decayedPointsB - decayedPointsA;
-    })
-    .reverse();
+    const decayedPointsA = a.points / Math.pow(decayFactor, timeDifferenceA);
+    const decayedPointsB = b.points / Math.pow(decayFactor, timeDifferenceB);
+
+    const boostedDecayedPointsA = isNewStoryA
+      ? decayedPointsA * newStoryBoost
+      : decayedPointsA;
+    const boostedDecayedPointsB = isNewStoryB
+      ? decayedPointsB * newStoryBoost
+      : decayedPointsB;
+
+    return boostedDecayedPointsB - boostedDecayedPointsA;
+  });
+
+  return sortedStories;
 }
 
 export async function leaves(trie, from, amount) {
