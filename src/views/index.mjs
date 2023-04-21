@@ -22,7 +22,7 @@ if (env.THEME === "kiwi") {
 
 export default async function index(trie) {
   const leaves = await store.leaves(trie);
-  const stories = store.count(leaves).slice(0, 30);
+  const stories = store.count(leaves).slice(0, 3);
   const signer = `<script type="module" src="signer.mjs"></script>`;
   return html`
     <html lang="en" op="news">
@@ -94,7 +94,11 @@ export default async function index(trie) {
                         <td valign="top" class="votelinks">
                           <center>
                             <a id="up_35233479" class="clicky" href="#">
-                              <div class="votearrow" title="upvote"></div>
+                              <div
+                                style="display: none;"
+                                class="votearrow"
+                                title="upvote"
+                              ></div>
                             </a>
                           </center>
                         </td>
@@ -108,9 +112,11 @@ export default async function index(trie) {
                         <td colspan="2"></td>
                         <td class="subtext">
                           <span class="subline">
-                            <span class="score" id="score_35233479"
-                              >${story.points} points</span
-                            >
+                            <span
+                              style="display: inline-block; height: 10px;"
+                              class="score"
+                              id="score_35233479"
+                            ></span>
                           </span>
                         </td>
                       </tr>
@@ -121,6 +127,7 @@ export default async function index(trie) {
               `
             )}
           </table>
+          Three great stories about crypto a day, check back tomorrow.
         </center>
       </body>
     </html>
