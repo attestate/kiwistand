@@ -8,8 +8,9 @@ import addFormats from "ajv-formats";
 import log from "./logger.mjs";
 import * as store from "./store.mjs";
 import { SCHEMATA } from "./constants.mjs";
-import index from "./views/index.mjs";
 import * as registry from "./chainstate/registry.mjs";
+
+import index from "./views/index.mjs";
 
 const ajv = new Ajv();
 addFormats(ajv);

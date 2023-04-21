@@ -2,6 +2,7 @@
 import { env } from "process";
 import htm from "htm";
 import vhtml from "vhtml";
+import url from "url";
 
 import * as store from "../store.mjs";
 
@@ -20,27 +21,23 @@ if (env.THEME === "kiwi") {
   throw new Error("Must define env.THEME");
 }
 
+function extractDomain(link) {
+  const parsedUrl = new url.URL(link);
+  return parsedUrl.hostname;
+}
+
 export default async function index(trie) {
   const leaves = await store.leaves(trie);
   const stories = store.count(leaves).slice(0, 3);
-  const signer = `<script type="module" src="signer.mjs"></script>`;
+  const scripts = html``;
   return html`
     <html lang="en" op="news">
       <head>
-        <!-- Google tag (gtag.js) -->
         <script
           async
           src="https://www.googletagmanager.com/gtag/js?id=G-21BKTD0NKN"
         ></script>
-        <script>
-          window.dataLayer = window.dataLayer || [];
-          function gtag() {
-            dataLayer.push(arguments);
-          }
-          gtag("js", new Date());
-
-          gtag("config", "G-21BKTD0NKN");
-        </script>
+        <script src="ga.js"></script>
         <meta charset="utf-8" />
         <meta name="referrer" content="origin" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -80,11 +77,7 @@ export default async function index(trie) {
                       </span>
                     </td>
                     <td style="text-align:right;padding-right:4px;">
-                      <a
-                        target="_blank"
-                        href="https://github.com/attestate/kiwistand-cli"
-                        >Submit Story</a
-                      >
+                      <a target="_blank" href="/submit">Submit Story</a>
                     </td>
                   </tr>
                 </table>
@@ -98,7 +91,9 @@ export default async function index(trie) {
                     <table border="0" cellpadding="0" cellspacing="0">
                       <tr class="athing" id="35233479">
                         <td align="right" valign="top" class="title">
-                          <span class="rank">${i + 1}.</span>
+                          <span style="padding-right: 5px" class="rank"
+                            >${i + 1}.
+                          </span>
                         </td>
                         <td valign="top" class="votelinks">
                           <center>
@@ -114,6 +109,9 @@ export default async function index(trie) {
                         <td class="title">
                           <span class="titleline">
                             <a href="${story.href}">${story.title}</a>
+                            <span style="padding-left: 5px">
+                              (${extractDomain(story.href)})
+                            </span>
                           </span>
                         </td>
                       </tr>
