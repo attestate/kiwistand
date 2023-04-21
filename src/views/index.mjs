@@ -27,11 +27,20 @@ export default async function index(trie) {
   return html`
     <html lang="en" op="news">
       <head>
+        <!-- Google tag (gtag.js) -->
         <script
-          defer
-          data-domain="news.kiwistand.com"
-          src="https://plausible.io/js/script.js"
+          async
+          src="https://www.googletagmanager.com/gtag/js?id=G-21BKTD0NKN"
         ></script>
+        <script>
+          window.dataLayer = window.dataLayer || [];
+          function gtag() {
+            dataLayer.push(arguments);
+          }
+          gtag("js", new Date());
+
+          gtag("config", "G-21BKTD0NKN");
+        </script>
         <meta charset="utf-8" />
         <meta name="referrer" content="origin" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -127,7 +136,38 @@ export default async function index(trie) {
               `
             )}
           </table>
-          Three great stories about crypto a day, check back tomorrow.
+          Three great stories about crypto a day, check back tomorrow for more!
+          <div
+            id="privacy-notice"
+            style="width: 85%; padding: 5px; font-size: 10px;"
+          >
+            <h2 style="font-size: 12px; margin: 0 0 3px; color: #f0f0f0;">
+              Privacy Notice & Cookie Policy
+            </h2>
+            <p style="margin: 0 0 3px; color: #e0e0e0;">
+              We use Google Analytics, a web analysis service provided by Google
+              Inc., on our website. Google Analytics uses cookies to analyze
+              your use of the website, generate reports on website activity, and
+              provide other services related to website usage and internet
+              usage.
+            </p>
+            <p style="margin: 0 0 3px; color: #e0e0e0;">
+              Google may transfer this information to third parties if required
+              by law or if third parties process this data on behalf of Google.
+              Google will not associate your IP address with any other data held
+              by Google.
+            </p>
+            <p style="margin: 0; color: #e0e0e0;">
+              By using this website, you consent to the processing of data about
+              you by Google in the manner and for the purposes set out above.
+              For more information, please review our
+              <a
+                href="/privacy-policy"
+                style="color: #ffffff; text-decoration: underline;"
+                >Privacy Policy</a
+              >.
+            </p>
+          </div>
         </center>
       </body>
     </html>
