@@ -6,7 +6,7 @@
   "scripts": {
     "test": "ava --timeout=30s --serial --verbose",
     "connect": "ssh root@91.107.210.214",
-    "deploy": "rsync -avz . root@91.107.210.214:./kiwistand --exclude=anon --exclude \"node_modules\" --exclude=\".git\" --exclude=bootstrap",
+    "deploy": "rsync -avz . root@91.107.210.214:./kiwistand --exclude=anon --exclude \"node_modules\" --exclude=\".git\" --exclude=bootstrap --exclude=data",
     "dev": "DEBUG=\"*attestate*\" node -r dotenv/config --no-warnings ./src/launch.mjs",
     "watch": "HTTP_PORT=3000 nodemon --watch src/views --exec 'npm run dev:anon'",
     "dev:bootstrap": "THEME=kiwi HTTP_PORT=80 DATA_DIR=bootstrap BIND_ADDRESS_V4=\"127.0.0.1\" IS_BOOTSTRAP_NODE=true USE_EPHEMERAL_ID=false npm run dev",
