@@ -18,19 +18,43 @@ const app = express();
 app.use(express.static("src/public"));
 app.use(express.json());
 
-export function handleMessage(trie, libp2p) {
+export function sendError(reply, code, message, details) {
+  log(`http error: "${code}", "${message}", "${details}"`);
+  return reply.status(code).json({
+    status: "error",
+    code,
+    message,
+    details,
+  });
+}
+
+export function sendStatus(reply, code, message, details, data) {
+  const obj = {
+    status: "success",
+    code,
+    message,
+    details,
+  };
+  if (data) obj.data = data;
+  return reply.status(code).json(obj);
+}
+
+export function handleMessage(trie, libp2p, getAllowlist) {
   return async (request, reply) => {
     const message = request.body;
-    const allowlist = await registry.allowlist();
+    const allowlist = await getAllowlist();
     try {
       await store.add(trie, message, libp2p, allowlist);
     } catch (err) {
-      log(
-        `Error adding message upon POST /messages request: "${err.toString()}"`
-      );
-      return reply.status(400).send();
+      const code = 400;
+      const httpMessage = "Bad Request";
+      return sendError(reply, code, httpMessage, err.toString());
     }
-    return reply.status(200).send();
+
+    const code = 200;
+    const httpMessage = "OK";
+    const details = "Message included";
+    return sendStatus(reply, code, httpMessage, details);
   };
 }
 
@@ -41,16 +65,20 @@ export function listMessages(trie) {
   return async (request, reply) => {
     const result = requestValidator(request.body);
     if (!result) {
-      const errMessage = `Wrongly formatted message: ${JSON.stringify(
+      const code = 400;
+      const message = "Bad Request";
+      const details = `Wrongly formatted message: ${JSON.stringify(
         requestValidator.errors
       )}`;
-      log(errMessage);
-      return reply.status(400).send(errMessage);
+      return sendError(reply, code, message, details);
     }
 
     const { from, amount } = request.body;
     const leaves = await store.leaves(trie, from, amount);
-    return reply.status(200).json(leaves);
+    const code = 200;
+    const message = "OK";
+    const details = `Extracted leaves from "${from}" and amount "${amount}"`;
+    return sendStatus(reply, code, message, details, leaves);
   };
 }
 
@@ -63,7 +91,7 @@ export async function launch(trie, libp2p) {
   });
 
   app.post("/list", listMessages(trie));
-  app.post("/messages", handleMessage(trie, libp2p));
+  app.post("/messages", handleMessage(trie, libp2p, registry.allowlist));
   app.listen(env.HTTP_PORT, () =>
     log(`Launched HTTP server at port "${env.HTTP_PORT}"`)
   );

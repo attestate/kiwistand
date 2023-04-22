@@ -4,7 +4,7 @@ import { constants } from "fs";
 
 import test from "ava";
 import { createSecp256k1PeerId } from "@libp2p/peer-id-factory";
-import { Wallet, utils } from "ethers";
+import { Wallet } from "ethers";
 
 import {
   sign,

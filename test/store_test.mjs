@@ -635,11 +635,7 @@ test("trying to add message to store that isn't on allowlist", async (t) => {
   };
   const allowlist = [];
   await t.throwsAsync(
-    async () => await store.add(trie, signedMessage, libp2p, allowlist),
-    {
-      instanceOf: Error,
-      message: "Signing address wasn't found in allow list",
-    }
+    async () => await store.add(trie, signedMessage, libp2p, allowlist)
   );
 });
 
@@ -672,7 +668,9 @@ test("adding message from too far into the future", async (t) => {
     },
   };
   const allowlist = [address];
-  await store.add(trie, signedMessage, libp2p, allowlist);
+  await t.throwsAsync(
+    async () => await store.add(trie, signedMessage, libp2p, allowlist)
+  );
 });
 
 test("adding message from before minimum timestamp", async (t) => {
@@ -704,7 +702,9 @@ test("adding message from before minimum timestamp", async (t) => {
   };
   const allowlist = [address];
   env.MIN_TIMESTAMP_SECS = 1;
-  await store.add(trie, signedMessage, libp2p, allowlist);
+  await t.throwsAsync(
+    async () => await store.add(trie, signedMessage, libp2p, allowlist)
+  );
 });
 
 test.serial("adding message to the store", async (t) => {

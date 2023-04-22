@@ -217,35 +217,32 @@ export async function add(trie, message, libp2p, allowlist) {
   const address = verify(message);
   const included = allowlist.includes(address);
   if (!included) {
-    log(
-      `Address "${address}" wasn't found in the allow list. Dropping message`
-    );
-    throw new Error("Signing address wasn't found in allow list");
+    const err = `Address "${address}" wasn't found in the allow list. Dropping message.`;
+    log(err);
+    throw new Error(err);
   }
 
   const minTimestampSecs = parseInt(env.MIN_TIMESTAMP_SECS, 10);
   if (message.timestamp < minTimestampSecs) {
-    log(
-      `Message timestamp is from before 2023 and so message is dropped: "${message.timestamp}"`
-    );
-    return;
+    const err = `Message timestamp is from before the year 2023 and so message is dropped: "${message.timestamp}"`;
+    log(err);
+    throw new Error(err);
   }
 
   const nowSecs = Date.now() / 1000;
   const toleranceSecs = parseInt(env.MAX_TIMESTAMP_DELTA_SECS, 10);
   const maxTimestampSecs = nowSecs + toleranceSecs;
   if (message.timestamp >= maxTimestampSecs) {
-    log(
-      `Message timestamp is more than "${toleranceSecs}" seconds in the future and so message is dropped: "${message.timestamp}"`
-    );
-    return;
+    const err = `Message timestamp is more than "${toleranceSecs}" seconds in the future and so message is dropped: "${message.timestamp}"`;
+    log(err);
+    throw new Error(err);
   }
 
   const legit = await passes(message, address);
   if (!legit) {
-    const message = `Message doesn't pass legitimacy criteria. Itwas probably submitted twice.`;
-    log(message);
-    throw new Error(message);
+    const err = `Message doesn't pass legitimacy criteria (duplicate). It was probably submitted and accepted before.`;
+    log(err);
+    throw new Error(err);
   }
 
   const { digest, canonical } = toDigest(message);
