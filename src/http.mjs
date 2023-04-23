@@ -12,6 +12,7 @@ import * as registry from "./chainstate/registry.mjs";
 
 import index from "./views/index.mjs";
 import subscribe from "./views/subscribe.mjs";
+import submit from "./views/submit.mjs";
 
 const ajv = new Ajv();
 addFormats(ajv);
@@ -92,6 +93,9 @@ export async function launch(trie, libp2p) {
   });
   app.get("/subscribe", async (request, reply) => {
     return reply.status(200).type("text/html").send(subscribe());
+  });
+  app.get("/submit", async (request, reply) => {
+    return reply.status(200).type("text/html").send(submit());
   });
 
   app.post("/list", listMessages(trie));

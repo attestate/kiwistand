@@ -1,4 +1,7 @@
 node_modules
+src/web/node_modules
+src/public/assets/*
+src/public/bundle.js
 .DS_Store
 .env
 .keys.json
