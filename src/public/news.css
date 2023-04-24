@@ -13,7 +13,7 @@ a:visited { color:#828282; text-decoration:none; }
 
 .default { font-family:Verdana, Geneva, sans-serif; font-size: 10pt; color:#828282; }
 .admin   { font-family:Verdana, Geneva, sans-serif; font-size:8.5pt; color:#000000; }
-.title   { font-family:Verdana, Geneva, sans-serif; font-size: 10pt; color:#828282; overflow:hidden; }
+.title   { font-family:Verdana, Geneva, sans-serif; font-size: 14pt; color:#828282; overflow:hidden; }
 .subtext { font-family:Verdana, Geneva, sans-serif; font-size:  7pt; color:#828282; }
 .yclinks { font-family:Verdana, Geneva, sans-serif; font-size:  8pt; color:#828282; }
 .pagetop { font-family:Verdana, Geneva, sans-serif; font-size: 10pt; color:#222222; line-height:12px; }
