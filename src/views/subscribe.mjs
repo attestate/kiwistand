@@ -113,14 +113,6 @@ export default function index(trie) {
             more!</span
           >
           <br />
-          <span>Today's stories were curated by </span>
-          <a style="color:black;" href="https://twitter.com/mptherealmvp">
-            @mptherealmvp</a
-          >
-          <span> and </span>
-          <a style="color:black;" href="https://warpcast.com/chrsmaral"
-            >@chrsmaral</a
-          >
           <div
             id="privacy-notice"
             style="width: 85%; padding: 5px; font-size: 10px;"
