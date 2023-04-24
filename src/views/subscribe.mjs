@@ -4,8 +4,6 @@ import htm from "htm";
 import vhtml from "vhtml";
 import url from "url";
 
-import * as store from "../store.mjs";
-
 const html = htm.bind(vhtml);
 
 let theme = {};
@@ -21,14 +19,7 @@ if (env.THEME === "kiwi") {
   throw new Error("Must define env.THEME");
 }
 
-function extractDomain(link) {
-  const parsedUrl = new url.URL(link);
-  return parsedUrl.hostname;
-}
-
-export default async function index(trie) {
-  const leaves = await store.leaves(trie);
-  const stories = store.count(leaves).slice(0, 4);
+export default function index(trie) {
   return html`
     <html lang="en" op="news">
       <head>
@@ -71,72 +62,51 @@ export default async function index(trie) {
                   <tr>
                     <td style="width:18px;padding-right:4px"></td>
                     <td style="line-height:12pt; height:10px;">
-                      <span class="pagetop"
-                        ><b class="hnname">${`${theme.emoji} ${theme.name}`}</b>
+                      <span class="pagetop">
+                        <b class="hnname">
+                          <a href="/"> ${`${theme.emoji} ${theme.name}`} </a>
+                        </b>
                       </span>
                     </td>
-                    <td style="text-align:right;padding-right:4px;">
-                      <a href="/subscribe">Subscribe</a>
-                    </td>
+                    <td style="text-align:right;padding-right:4px;"></td>
                   </tr>
                 </table>
               </td>
             </tr>
-            ${stories.map(
-              (story, i) => html`
-                <tr>
-                  <td>
-                    <table
-                      style="padding: 5px;"
-                      border="0"
-                      cellpadding="0"
-                      cellspacing="0"
-                    >
-                      <tr class="athing" id="35233479">
-                        <td align="right" valign="top" class="title">
-                          <span style="padding-right: 5px" class="rank"
-                            >${i + 1}.
-                          </span>
-                        </td>
-                        <td valign="top" class="votelinks">
-                          <center>
-                            <a id="up_35233479" class="clicky" href="#">
-                              <div
-                                style="display: none;"
-                                class="votearrow"
-                                title="upvote"
-                              ></div>
-                            </a>
-                          </center>
-                        </td>
-                        <td class="title">
-                          <span class="titleline">
-                            <a href="${story.href}">${story.title}</a>
-                            <span style="padding-left: 5px">
-                              (${extractDomain(story.href)})
-                            </span>
-                          </span>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td colspan="2"></td>
-                        <td class="subtext">
-                          <span class="subline">
-                            <span
-                              style="display: inline-block; height: 10px;"
-                              class="score"
-                              id="score_35233479"
-                              >${story.points} points</span
-                            >
-                          </span>
-                        </td>
-                      </tr>
-                      <tr class="spacer" style="height:5px"></tr>
-                    </table>
-                  </td>
-                </tr>
-              `
-            )}
+            <tr>
+              <td style="padding: 10px; font-size: 16px;">
+                <b>Who here ordered those Kiwis?!</b>
+                <p>
+                  <u>Here's the deal:</u>
+                  <br />
+
+                  - Every morning we're sending you an email with the link to
+                  this website.
+                  <br />
+                  - That's it. No spam and we'll keep your data safe!
+                </p>
+                <form
+                  action="https://buttondown.email/api/emails/embed-subscribe/kiwinews"
+                  method="post"
+                  target="popupwindow"
+                  onsubmit="window.open('https://buttondown.email/kiwinews', 'popupwindow')"
+                  class="embeddable-buttondown-form"
+                >
+                  <input
+                    style="min-width: 20rem; font-size: 16px"
+                    placeholder="your email"
+                    type="email"
+                    name="email"
+                    id="bd-email"
+                  />
+                  <input
+                    style="font-size: 17px"
+                    type="submit"
+                    value="Subscribe"
+                  />
+                </form>
+              </td>
+            </tr>
           </table>
           <span
             >Three great stories about crypto a day, check back tomorrow for

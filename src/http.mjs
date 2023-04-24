@@ -11,6 +11,7 @@ import { SCHEMATA } from "./constants.mjs";
 import * as registry from "./chainstate/registry.mjs";
 
 import index from "./views/index.mjs";
+import subscribe from "./views/subscribe.mjs";
 
 const ajv = new Ajv();
 addFormats(ajv);
@@ -88,6 +89,9 @@ export async function launch(trie, libp2p) {
   app.get("/", async (request, reply) => {
     const content = await index(trie);
     return reply.status(200).type("text/html").send(content);
+  });
+  app.get("/subscribe", async (request, reply) => {
+    return reply.status(200).type("text/html").send(subscribe());
   });
 
   app.post("/list", listMessages(trie));
