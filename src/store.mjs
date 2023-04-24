@@ -290,6 +290,7 @@ export function count(leaves) {
     } else {
       if (leaf.type === "amplify") {
         story.points += 1;
+        if (!story.title && leaf.title) story.title = leaf.title;
       }
     }
   }
