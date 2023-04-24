@@ -69,7 +69,7 @@ export default function submit() {
                       </span>
                     </td>
                     <td style="text-align:right;padding-right:4px;">
-                      <a target="_blank" href="/submit">Submit Story</a>
+                      <div id="connector"></div>
                     </td>
                   </tr>
                 </table>

@@ -77,6 +77,8 @@ export default async function index(trie) {
                     </td>
                     <td style="text-align:right;padding-right:4px;">
                       <a href="/subscribe">Subscribe</a>
+                      <span> | </span>
+                      <span id="connector"></span>
                     </td>
                   </tr>
                 </table>
@@ -183,6 +185,7 @@ export default async function index(trie) {
             </p>
           </div>
         </center>
+        <script src="bundle.js"></script>
       </body>
     </html>
   `;

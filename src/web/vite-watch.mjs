@@ -14,7 +14,7 @@ async function buildVite() {
 
 buildVite();
 
-const watcher = chokidar.watch("./src/web", {
+const watcher = chokidar.watch("src", {
   ignored: /(^|[/\\])\../, // Ignore dotfiles
   persistent: true,
 });

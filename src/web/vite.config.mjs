@@ -12,7 +12,7 @@ export default defineConfig({
       },
     },
     chunkSizeWarningLimit: 0,
-    minify: "terser",
+    minify: false,
   },
   plugins: [react()],
 });
