@@ -28,8 +28,7 @@ function extractDomain(link) {
 
 export default async function index(trie) {
   const leaves = await store.leaves(trie);
-  const stories = store.count(leaves).slice(0, 3);
-  const scripts = html``;
+  const stories = store.count(leaves).slice(0, 4);
   return html`
     <html lang="en" op="news">
       <head>
@@ -67,7 +66,7 @@ export default async function index(trie) {
                   cellpadding="0"
                   cellspacing="0"
                   width="100%"
-                  style="padding:5px"
+                  style="padding:10px"
                 >
                   <tr>
                     <td style="width:18px;padding-right:4px"></td>
@@ -76,19 +75,21 @@ export default async function index(trie) {
                         ><b class="hnname">${`${theme.emoji} ${theme.name}`}</b>
                       </span>
                     </td>
-                    <td style="text-align:right;padding-right:4px;">
-                      <a target="_blank" href="/submit">Submit Story</a>
-                    </td>
+                    <td style="text-align:right;padding-right:4px;"></td>
                   </tr>
                 </table>
               </td>
             </tr>
-            <tr id="pagespace" title="" style="height:10px"></tr>
             ${stories.map(
               (story, i) => html`
                 <tr>
                   <td>
-                    <table border="0" cellpadding="0" cellspacing="0">
+                    <table
+                      style="padding: 5px;"
+                      border="0"
+                      cellpadding="0"
+                      cellspacing="0"
+                    >
                       <tr class="athing" id="35233479">
                         <td align="right" valign="top" class="title">
                           <span style="padding-right: 5px" class="rank"
@@ -123,7 +124,8 @@ export default async function index(trie) {
                               style="display: inline-block; height: 10px;"
                               class="score"
                               id="score_35233479"
-                            ></span>
+                              >${story.points} points</span
+                            >
                           </span>
                         </td>
                       </tr>
@@ -134,7 +136,19 @@ export default async function index(trie) {
               `
             )}
           </table>
-          Three great stories about crypto a day, check back tomorrow for more! Today's stories were curated by <a href="https://twitter.com/mptherealmvp">@mptherealmvp</a>
+          <span
+            >Three great stories about crypto a day, check back tomorrow for
+            more!</span
+          >
+          <br />
+          <span>Today's stories were curated by </span>
+          <a style="color:black;" href="https://twitter.com/mptherealmvp">
+            @mptherealmvp</a
+          >
+          <span> and </span>
+          <a style="color:black;" href="https://warpcast.com/chrsmaral"
+            >@chrsmaral</a
+          >
           <div
             id="privacy-notice"
             style="width: 85%; padding: 5px; font-size: 10px;"
