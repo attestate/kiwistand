@@ -20,6 +20,12 @@ const app = express();
 app.use(express.static("src/public"));
 app.use(express.json());
 
+if (!env.THEME_COLOR || !env.THEME_EMOJI || !env.THEME_NAME) {
+  throw new Error(
+    "The environment variables THEME_COLOR, THEME_EMOJI and THEME_NAME must be defined"
+  );
+}
+
 export function sendError(reply, code, message, details) {
   log(`http error: "${code}", "${message}", "${details}"`);
   return reply.status(code).json({
