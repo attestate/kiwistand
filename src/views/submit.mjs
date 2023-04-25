@@ -2,7 +2,7 @@
 import htm from "htm";
 import vhtml from "vhtml";
 
-import Header from "./components/Header.mjs";
+import Header from "./components/header.mjs";
 import Footer from "./components/footer.mjs";
 
 const html = htm.bind(vhtml);

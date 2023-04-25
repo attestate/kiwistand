@@ -8,12 +8,9 @@ const footer = html`
     >Three great stories about crypto a day, check back tomorrow for more!</span
   >
   <br />
-  <span>Today's stories were curated by </span>
-  <a style="color:black;" href="https://twitter.com/mptherealmvp">
-    @mptherealmvp</a
-  >
-  <span> and </span>
-  <a style="color:black;" href="https://warpcast.com/chrsmaral">@chrsmaral</a>
+  <span>Today's stories are curated by </span>
+  <a style="color:black;" href="https://warpcast.com/les"> @les</a>
+  <span> and other Kiwi News NFT holders.</span>
   <div id="privacy-notice" style="width: 85%; padding: 5px; font-size: 10px;">
     <h2 style="font-size: 12px; margin: 0 0 3px; color: #f0f0f0;">
       Privacy Notice & Cookie Policy
