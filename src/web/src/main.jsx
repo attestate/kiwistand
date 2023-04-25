@@ -1,11 +1,20 @@
 import './polyfills';
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import Connector from './Connector.jsx'
+import Navigation from './Navigation.jsx'
+import SubmitForm from './SubmitForm.jsx'
 
-const connector = document.getElementById('connector');
-ReactDOM.createRoot(connector).render(
+const navigation = document.getElementById('navigation');
+ReactDOM.createRoot(navigation).render(
   <React.StrictMode>
-    <Connector />
+    <Navigation />
   </React.StrictMode>,
 )
+const submitForm = document.getElementById('submit-form');
+if (submitForm) {
+  ReactDOM.createRoot(submitForm).render(
+    <React.StrictMode>
+      <SubmitForm />
+    </React.StrictMode>,
+  )
+}

@@ -41,6 +41,9 @@ export default function submit() {
             <tr>
               ${Header}
             </tr>
+            <tr>
+              <td id="submit-form"></td>
+            </tr>
           </table>
           ${Footer}
         </center>

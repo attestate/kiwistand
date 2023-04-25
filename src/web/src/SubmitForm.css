@@ -1,0 +1,54 @@
+.form-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 1rem 0 1rem 0;
+}
+
+label {
+  font-size: 16px;
+}
+
+.label-input-container {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+input[type='text'],
+input[type='url'] {
+  width: 100%;
+  padding: 5px 10px;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+
+button {
+  width: 100%;
+  padding: 5px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+@media (min-width: 768px) {
+  .label-input-container {
+    flex-direction: row;
+    gap: 10px;
+    align-items: center;
+  }
+
+  label {
+    width: 100px;
+  }
+}
+
+.connect-kit-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  background-color: #ffffff;
+  flex-direction: column;
+}

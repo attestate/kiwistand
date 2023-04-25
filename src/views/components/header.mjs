@@ -22,12 +22,8 @@ const header = html`
             </b>
           </span>
         </td>
-        <td
-          style="display: flex; justify-content: flex-end; text-align:right;padding-right:4px;"
-        >
-          <a style="color:black" href="/subscribe">Subscribe</a>
-          <span>|</span>
-          <span id="connector"></span>
+        <td style="text-align:right;padding-right:4px;">
+          <span id="navigation"></span>
         </td>
       </tr>
     </table>
