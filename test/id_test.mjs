@@ -1,6 +1,7 @@
 //@format
 import { access, unlink } from "fs/promises";
 import { constants } from "fs";
+import { env } from "process";
 
 import test from "ava";
 import { createSecp256k1PeerId } from "@libp2p/peer-id-factory";
@@ -14,9 +15,11 @@ import {
   bootstrap,
   load,
   store,
+  timelimit,
 } from "../src/id.mjs";
 import config from "../src/config.mjs";
 import { appdir } from "../src/utils.mjs";
+import { EIP712_MESSAGE } from "../src/constants.mjs";
 
 const idPath = `${appdir()}/test/.keys.json`;
 
@@ -51,6 +54,35 @@ test("if digest is canonical for various messages", (t) => {
     "121af03649b7ee31ddeda1693a2ce53492a63c6ff3116564a8b7dd5dca721884"
   );
   t.is(outcome0.digest, outcome1.digest);
+});
+
+test("timestamp minimum value", async (t) => {
+  const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
+  const privateKey =
+    "0xad54bdeade5537fb0a553190159783e45d02d316a992db05cbed606d3ca36b39";
+  const signer = new Wallet(privateKey);
+  t.is(signer.address, address);
+
+  env.MIN_TIMESTAMP_SECS = 1672527600;
+  const text = "hello world";
+  const href = "https://example.com";
+  const type = "amplify";
+  const timestamp = env.MIN_TIMESTAMP_SECS - 1;
+  const message = create(text, href, type, timestamp);
+  const signedMessage = await sign(signer, message, EIP712_MESSAGE);
+  t.deepEqual(signedMessage, {
+    ...message,
+    signature:
+      "0x6000a12a762919d683894d52c6391b2e40b9dc98293ac5fea599961d3397a7997073feabb333800263d07147819cf20e3c766620e23e2167917d95055912fea11c",
+  });
+
+  t.throws(() => verify(signedMessage));
+});
+
+test("timelimit function", (t) => {
+  env.MAX_TIMESTAMP_DELTA_SECS = 120;
+  timelimit(Math.floor(Date.now() / 1000));
+  t.throws(() => timelimit(2000000000));
 });
 
 test("generating digest from message", (t) => {
@@ -125,7 +157,7 @@ test("sign message", async (t) => {
   const type = "amplify";
   const timestamp = 1676559616;
   const message = create(text, href, type, timestamp);
-  const signedMessage = await sign(signer, message);
+  const signedMessage = await sign(signer, message, EIP712_MESSAGE);
   t.deepEqual(signedMessage, {
     ...message,
     signature:
@@ -145,7 +177,7 @@ test("verify message", async (t) => {
   const type = "amplify";
   const timestamp = 1676559616;
   const message = create(text, href, type, timestamp);
-  const signedMessage = await sign(signer, message);
+  const signedMessage = await sign(signer, message, EIP712_MESSAGE);
   t.deepEqual(signedMessage, {
     ...message,
     signature:

@@ -3,6 +3,7 @@ import { fetchBuilder, MemoryCache } from "node-fetch-cache";
 import normalizeUrl from "normalize-url";
 
 import * as id from "../id.mjs";
+import { EIP712_MESSAGE } from "../constants.mjs";
 
 const fetch = fetchBuilder.withCache(
   new MemoryCache({
@@ -33,10 +34,13 @@ export async function getBanlist() {
   };
 }
 
+// TODO: In different views, sometimes this moderation function is used to
+// generate the addresses of a poster, and sometimes id.ecrecover is used
+// directly (e.g. for index.mjs, we add them in the editor picks).
 export function moderate(leaves, config) {
   return leaves
     .map((leaf) => ({
-      address: id.ecrecover(leaf),
+      address: id.ecrecover(leaf, EIP712_MESSAGE),
       ...leaf,
     }))
     .filter(({ address }) => !config.addresses.includes(address.toLowerCase()))

@@ -10,6 +10,7 @@ import Footer from "./components/footer.mjs";
 import * as store from "../store.mjs";
 import * as id from "../id.mjs";
 import { count } from "./feed.mjs";
+import { EIP712_MESSAGE } from "../constants.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -21,7 +22,7 @@ function extractDomain(link) {
 export function selectUpvotes(leaves, address) {
   return leaves
     .map((leaf) => ({
-      address: id.ecrecover(leaf),
+      address: id.ecrecover(leaf, EIP712_MESSAGE),
       ...leaf,
     }))
     .filter((leaf) => address === leaf.address);

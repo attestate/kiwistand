@@ -9,6 +9,7 @@ import { Wallet } from "ethers";
 import { sign, create } from "../src/id.mjs";
 import { handleMessage, listMessages } from "../src/http.mjs";
 import * as store from "../src/store.mjs";
+import { EIP712_MESSAGE } from "../src/constants.mjs";
 
 async function removeTestFolders() {
   try {
@@ -52,7 +53,7 @@ test("listMessages success", async (t) => {
   const type = "amplify";
   const timestamp = 1676559616;
   const message = create(title, href, type, timestamp);
-  const signedMessage = await sign(signer, message);
+  const signedMessage = await sign(signer, message, EIP712_MESSAGE);
   t.deepEqual(signedMessage, {
     ...message,
     signature:
@@ -86,7 +87,7 @@ test("handleMessage should send back an error upon invalid address signer", asyn
   const type = "amplify";
   const timestamp = 1676559616;
   const message = create(text, href, type, timestamp);
-  const signedMessage = await sign(signer, message);
+  const signedMessage = await sign(signer, message, EIP712_MESSAGE);
 
   const request = {
     body: signedMessage,
@@ -126,7 +127,7 @@ test("handleMessage should handle a valid message and return 200 OK", async (t) 
   const type = "amplify";
   const timestamp = 1676559616;
   const message = create(text, href, type, timestamp);
-  const signedMessage = await sign(signer, message);
+  const signedMessage = await sign(signer, message, EIP712_MESSAGE);
 
   const request = {
     body: signedMessage,

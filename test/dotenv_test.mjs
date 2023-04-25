@@ -31,7 +31,7 @@ test("that repo contains a .env-copy file with all possible configuration option
     "AUTO_SYNC",
     "ROOT_ADVERTISEMENT_TIMEOUT",
     "MIN_TIMESTAMP_SECS",
-    "TIMESTAMP_TOLERANCE_SECS",
+    "MAX_TIMESTAMP_DELTA_SECS",
     "THEME_COLOR",
     "THEME_EMOJI",
     "THEME_NAME",

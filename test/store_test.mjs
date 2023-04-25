@@ -13,6 +13,7 @@ import { encode } from "cbor-x";
 import * as id from "../src/id.mjs";
 import config from "../src/config.mjs";
 import * as store from "../src/store.mjs";
+import { EIP712_MESSAGE } from "../src/constants.mjs";
 
 test("if message passes constraint", async (t) => {
   env.DATA_DIR = "dbtestA";
@@ -96,7 +97,7 @@ test("getting leaves", async (t) => {
   const type = "amplify";
   const timestamp = 1676559616;
   const message = id.create(title, href, type, timestamp);
-  const signedMessage = await id.sign(signer, message);
+  const signedMessage = await id.sign(signer, message, EIP712_MESSAGE);
   t.deepEqual(signedMessage, {
     ...message,
     signature:
@@ -130,7 +131,7 @@ test("descend levels with actual data ", async (t) => {
   const type = "amplify";
   const timestamp = 1676559616;
   const message = id.create(text, href, type, timestamp);
-  const signedMessage = await id.sign(signer, message);
+  const signedMessage = await id.sign(signer, message, EIP712_MESSAGE);
   t.deepEqual(signedMessage, {
     ...message,
     signature:
@@ -234,7 +235,7 @@ test("descend on level 1 with an empty trie", async (t) => {
   await rm("dbtestA", { recursive: true });
 });
 
-test("hashing on all nodes", async (t) => {
+test.serial("hashing on all nodes", async (t) => {
   env.DATA_DIR = "dbtestA";
   const trieA = await store.create();
   await trieA.put(Buffer.from("0100", "hex"), Buffer.from("A", "utf8"));
@@ -490,7 +491,7 @@ test("try adding message with invalid href", async (t) => {
   const type = "amplify";
   const timestamp = 1676559616;
   const message = id.create(text, href, type, timestamp);
-  const signedMessage = await id.sign(signer, message);
+  const signedMessage = await id.sign(signer, message, EIP712_MESSAGE);
 
   const trie = {
     put: (key, value) => {
@@ -524,7 +525,7 @@ test("try to add invalidly formatted message to store", async (t) => {
   const timestamp = 1676559616;
   const message = id.create(text, href, type, timestamp);
   message.extra = "bla";
-  const signedMessage = await id.sign(signer, message);
+  const signedMessage = await id.sign(signer, message, EIP712_MESSAGE);
 
   const trie = {
     put: (key, value) => {
@@ -590,7 +591,7 @@ test("trying to add message to store that isn't on allowlist", async (t) => {
   const type = "amplify";
   const timestamp = 1676559616;
   const message = id.create(text, href, type, timestamp);
-  const signedMessage = await id.sign(signer, message);
+  const signedMessage = await id.sign(signer, message, EIP712_MESSAGE);
 
   const trie = {
     put: (key, value) => {
@@ -624,7 +625,7 @@ test("adding message from too far into the future", async (t) => {
   const type = "amplify";
   const timestamp = Math.floor(Date.now() / 1000) + 61;
   const message = id.create(text, href, type, timestamp);
-  const signedMessage = await id.sign(signer, message);
+  const signedMessage = await id.sign(signer, message, EIP712_MESSAGE);
 
   const trie = {
     put: (key, value) => {
@@ -657,7 +658,7 @@ test("adding message from before minimum timestamp", async (t) => {
   const type = "amplify";
   const timestamp = 0;
   const message = id.create(text, href, type, timestamp);
-  const signedMessage = await id.sign(signer, message);
+  const signedMessage = await id.sign(signer, message, EIP712_MESSAGE);
 
   const trie = {
     put: (key, value) => {
@@ -693,7 +694,7 @@ test.serial("adding message to the store", async (t) => {
   const type = "amplify";
   const timestamp = 1676559616;
   const message = id.create(text, href, type, timestamp);
-  const signedMessage = await id.sign(signer, message);
+  const signedMessage = await id.sign(signer, message, EIP712_MESSAGE);
 
   const trie = {
     put: (key, value) => {
@@ -730,7 +731,7 @@ test.serial(
     const type = "amplify";
     const timestamp0 = 1676559616;
     const message = id.create(text, href, type, timestamp0);
-    const signedMessage0 = await id.sign(signer, message);
+    const signedMessage0 = await id.sign(signer, message, EIP712_MESSAGE);
 
     const trie = {
       put: (key, value) => {
@@ -752,7 +753,7 @@ test.serial(
 
     const timestamp1 = timestamp0 + 1;
     const message1 = id.create(text, href, type, timestamp1);
-    const signedMessage1 = await id.sign(signer, message1);
+    const signedMessage1 = await id.sign(signer, message1, EIP712_MESSAGE);
 
     await t.throwsAsync(
       async () => await store.add(trie, signedMessage1, libp2p, allowlist)

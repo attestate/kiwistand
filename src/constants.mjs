@@ -43,7 +43,15 @@ export const EIP712_DOMAIN = {
   salt: `0x${salt}`,
 };
 
-export const EIP712_TYPES = {
+export const EIP712_DELEGATION = {
+  Delegation: [
+    { name: "delegate", type: "address" },
+    { name: "type", type: "string" },
+    { name: "timestamp", type: "uint256" },
+  ],
+};
+
+export const EIP712_MESSAGE = {
   Message: [
     { name: "title", type: "string" },
     { name: "href", type: "string" },
@@ -70,6 +78,13 @@ const nodes = {
   },
 };
 
+const timestamp = {
+  $comment:
+    "unix timestamp that must be more recent than 2023 (or whatever the value of MIN_TIMESTAMP_SECS is).",
+  type: "integer",
+  minimum: parseInt(env.MIN_TIMESTAMP_SECS, 10),
+};
+
 export const SCHEMATA = {
   comparison: {
     type: "object",
@@ -84,6 +99,30 @@ export const SCHEMATA = {
       },
       match: {
         ...nodes,
+      },
+    },
+  },
+  delegation: {
+    type: "object",
+    additionalProperties: false,
+    required: ["delegate", "type", "timestamp", "signature"],
+    properties: {
+      delegate: {
+        $comment:
+          "An Ethereum address that the signer is delegating their privileges to",
+        type: "string",
+        pattern: "0x[a-fA-F0-9]{40}",
+      },
+      type: {
+        $comment:
+          "Delegates can be 'appointed' and 'revoked'. A priorly-appointed delegate can only be 'revoked' by the appointer address",
+        type: "string",
+        enum: ["appoint", "revoke"],
+      },
+      timestamp,
+      signature: {
+        type: "string",
+        pattern: "0x[a-fA-F0-9]+",
       },
     },
   },
@@ -110,10 +149,7 @@ export const SCHEMATA = {
     type: "object",
     additionalProperties: false,
     properties: {
-      timestamp: {
-        $comment: "unix timestamp",
-        type: "integer",
-      },
+      timestamp,
       type: {
         type: "string",
         enum: ["amplify"],

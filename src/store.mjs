@@ -18,7 +18,7 @@ import { open } from "lmdb";
 
 import log from "./logger.mjs";
 import LMDB from "./lmdb.mjs";
-import { verify, toDigest } from "./id.mjs";
+import { timelimit, verify, toDigest } from "./id.mjs";
 import * as messages from "./topics/messages.mjs";
 
 export async function create() {
@@ -214,7 +214,7 @@ export async function passes(message, address) {
   return !seenBefore;
 }
 
-export async function add(trie, message, libp2p, allowlist, synching = false) {
+export async function add(trie, message, libp2p, allowlist, syncing = false) {
   const address = verify(message);
   const included = allowlist.includes(address);
   if (!included) {
@@ -223,20 +223,10 @@ export async function add(trie, message, libp2p, allowlist, synching = false) {
     throw new Error(err);
   }
 
-  const minTimestampSecs = parseInt(env.MIN_TIMESTAMP_SECS, 10);
-  if (message.timestamp < minTimestampSecs) {
-    const err = `Message timestamp is from before the year 2023 and so message is dropped: "${message.timestamp}"`;
-    log(err);
-    throw new Error(err);
-  }
-
-  const nowSecs = Date.now() / 1000;
-  const toleranceSecs = parseInt(env.MAX_TIMESTAMP_DELTA_SECS, 10);
-  const maxTimestampSecs = nowSecs + toleranceSecs;
-  if (!synching && message.timestamp >= maxTimestampSecs) {
-    const err = `Message timestamp is more than "${toleranceSecs}" seconds in the future and so message is dropped: "${message.timestamp}"`;
-    log(err);
-    throw new Error(err);
+  if (!syncing) {
+    // NOTE: Will throw if invariant is violated. And it is fine if the error
+    // bubbles up beyond "add"'s scope.
+    timelimit(message.timestamp);
   }
 
   const legit = await passes(message, address);

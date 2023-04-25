@@ -11,6 +11,7 @@ import * as store from "../store.mjs";
 import * as id from "../id.mjs";
 import { count } from "./feed.mjs";
 import { getConfig } from "./moderation.mjs";
+import { EIP712_MESSAGE } from "../constants.mjs";
 
 const html = htm.bind(vhtml);
 const fetch = fetchBuilder.withCache(
@@ -30,7 +31,7 @@ function extractDomain(link) {
 function editorPicks(leaves, config) {
   return leaves
     .map((leaf) => ({
-      address: id.ecrecover(leaf),
+      address: id.ecrecover(leaf, EIP712_MESSAGE),
       ...leaf,
     }))
     .filter(
@@ -49,7 +50,6 @@ const url =
 export default async function index(trie, theme) {
   const [response] = await getConfig("3wi");
   const config = parseConfig(response);
-  console.log(config, response);
 
   const from = null;
   const amount = null;

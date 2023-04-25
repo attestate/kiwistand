@@ -15,7 +15,7 @@ const LinkSubmissionForm = () => {
   const { data, error, isError, isLoading, isSuccess, signTypedDataAsync } =
     useSignTypedData({
       domain: API.EIP712_DOMAIN,
-      types: API.EIP712_TYPES,
+      types: API.EIP712_MESSAGE,
       value,
     });
 

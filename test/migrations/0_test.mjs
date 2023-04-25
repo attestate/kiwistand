@@ -8,6 +8,7 @@ import { Wallet } from "ethers";
 import * as id from "../../src/id.mjs";
 import * as store from "../../src/store.mjs";
 import * as migration0 from "../../src/migrations/0.mjs";
+import { EIP712_MESSAGE } from "../../src/constants.mjs";
 
 async function removeTestFolders() {
   try {
@@ -46,7 +47,7 @@ test.serial("entire migration flow", async (t) => {
   const type0 = "amplify";
   const timestamp0 = 1676559617;
   const message0 = id.create(title0, href0, type0, timestamp0);
-  const signedMessage0 = await id.sign(signer, message0);
+  const signedMessage0 = await id.sign(signer, message0, EIP712_MESSAGE);
   t.deepEqual(signedMessage0, {
     ...message0,
     signature:
@@ -58,7 +59,7 @@ test.serial("entire migration flow", async (t) => {
   const type1 = "amplify";
   const timestamp1 = 1676559616;
   const message1 = id.create(title1, href1, type1, timestamp1);
-  const signedMessage1 = await id.sign(signer, message1);
+  const signedMessage1 = await id.sign(signer, message1, EIP712_MESSAGE);
   t.deepEqual(signedMessage1, {
     ...message1,
     signature:
@@ -92,7 +93,7 @@ test.serial(
     const type0 = "amplify";
     const timestamp0 = 1676559617;
     const message0 = id.create(title0, href0, type0, timestamp0);
-    const signedMessage0 = await id.sign(signer, message0);
+    const signedMessage0 = await id.sign(signer, message0, EIP712_MESSAGE);
     t.deepEqual(signedMessage0, {
       ...message0,
       signature:
@@ -104,7 +105,7 @@ test.serial(
     const type1 = "amplify";
     const timestamp1 = 1676559616;
     const message1 = id.create(title1, href1, type1, timestamp1);
-    const signedMessage1 = await id.sign(signer, message1);
+    const signedMessage1 = await id.sign(signer, message1, EIP712_MESSAGE);
     t.deepEqual(signedMessage1, {
       ...message1,
       signature:
@@ -141,7 +142,7 @@ test.serial(
     const type0 = "amplify";
     const timestamp0 = 1676559617;
     const message0 = id.create(title0, href0, type0, timestamp0);
-    const signedMessage0 = await id.sign(signer, message0);
+    const signedMessage0 = await id.sign(signer, message0, EIP712_MESSAGE);
     t.deepEqual(signedMessage0, {
       ...message0,
       signature:
@@ -153,7 +154,7 @@ test.serial(
     const type1 = "amplify";
     const timestamp1 = 1676559616;
     const message1 = id.create(title1, href1, type1, timestamp1);
-    const signedMessage1 = await id.sign(signer, message1);
+    const signedMessage1 = await id.sign(signer, message1, EIP712_MESSAGE);
     t.deepEqual(signedMessage1, {
       ...message1,
       signature:
@@ -188,7 +189,7 @@ test.serial("if migration aborts on partially migrated trie", async (t) => {
   const type = "amplify";
   const timestamp = 1676559616;
   const message = id.create(title, href, type, timestamp);
-  const signedMessage = await id.sign(signer, message);
+  const signedMessage = await id.sign(signer, message, EIP712_MESSAGE);
   t.deepEqual(signedMessage, {
     ...message,
     signature:
@@ -224,7 +225,7 @@ test.serial(
     const type = "amplify";
     const timestamp = 1676559616;
     const message = id.create(title, href, type, timestamp);
-    const signedMessage = await id.sign(signer, message);
+    const signedMessage = await id.sign(signer, message, EIP712_MESSAGE);
     t.deepEqual(signedMessage, {
       ...message,
       signature:

@@ -1,19 +1,9 @@
 // @format
-
-export const EIP712_DOMAIN = {
-  name: "kiwinews",
-  version: "1.0.0",
-  salt: "0xfe7a9d68e99b6942bb3a36178b251da8bd061c20ed1e795207ae97183b590e5b",
-};
-
-export const EIP712_TYPES = {
-  Message: [
-    { name: "title", type: "string" },
-    { name: "href", type: "string" },
-    { name: "type", type: "string" },
-    { name: "timestamp", type: "uint256" },
-  ],
-};
+export {
+  EIP712_MESSAGE,
+  EIP721_DELEGATION,
+  EIP712_DOMAIN,
+} from "../../constants.mjs";
 
 export function messageFab(title, href) {
   return {

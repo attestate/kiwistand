@@ -22,7 +22,7 @@ const Vote = (props) => {
   const { data, signTypedDataAsync } =
     useSignTypedData({
       domain: API.EIP712_DOMAIN,
-      types: API.EIP712_TYPES,
+      types: API.EIP712_MESSAGE,
       value,
     });
 
