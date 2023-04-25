@@ -15,9 +15,10 @@ function extractDomain(link) {
   return parsedUrl.hostname;
 }
 
+const totalStories = parseInt(env.TOTAL_STORIES, 10);
 export default async function index(trie) {
   const leaves = await store.leaves(trie);
-  const stories = store.count(leaves).slice(0, 4);
+  const stories = store.count(leaves).slice(0, totalStories);
   return html`
     <html lang="en" op="news">
       <head>
