@@ -1,25 +1,28 @@
 // @format
 import { useState } from 'react';
-import { useAccount, WagmiConfig, createClient } from "wagmi";
+import { useSignTypedData, useAccount, WagmiConfig, createClient } from "wagmi";
 import { ConnectKitProvider, ConnectKitButton, getDefaultClient } from "connectkit";
 
+import * as API from "./API.mjs";
 import client from "./client.mjs";
 import './SubmitForm.css';
 
 const LinkSubmissionForm = () => {
   const [title, setTitle] = useState('');
   const [url, setUrl] = useState('');
+  const value = API.messageFab(title, url);
+  const { data, error, isError, isLoading, isSuccess, signTypedDataAsync } =
+    useSignTypedData({
+      domain: API.EIP712_DOMAIN,
+      types: API.EIP712_TYPES,
+      value,
+    });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // Here, you would make an API call to submit the data to Hacker News.
-    // For example purposes, we're just logging the data to the console.
-    console.log({ title, url });
-
-    // Clear the form fields after submission.
-    setTitle('');
-    setUrl('');
+    const signature = await signTypedDataAsync();
+    await API.send(value, signature);
+    window.location.replace('/');
   };
 
   return (
