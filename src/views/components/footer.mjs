@@ -9,7 +9,7 @@ const footer = html`
   >
   <br />
   <span>Today's stories are curated by </span>
-  <a style="color:black;" href="https://warpcast.com/les"> @les</a>
+  <a style="color:black;" href="https://warpcast.com/tldr"> @tldr</a>
   <span> and other Kiwi News NFT holders.</span>
   <div id="privacy-notice" style="width: 85%; padding: 5px; font-size: 10px;">
     <h2 style="font-size: 12px; margin: 0 0 3px; color: #f0f0f0;">
