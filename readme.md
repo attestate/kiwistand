@@ -48,8 +48,8 @@ eventual upgrade announcements as the protocol is far from being complete.
 - [x] Consider that users can currently amplify a story twice and find a
   solution
 - [x] Make the "Submit Story" button only visible in debug mode
-- [ ] Find better approach for frontend and potentially separate it from node
-  software
+- [x] Find better approach for frontend
+- [ ] Separate frontend from node
 - [x] Send leave messages through pagination.
 - [ ] Add basic documentation
 - [x] Implement an on-chain allow list tracker
