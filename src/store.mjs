@@ -214,7 +214,7 @@ export async function passes(message, address) {
   return !seenBefore;
 }
 
-export async function add(trie, message, libp2p, allowlist) {
+export async function add(trie, message, libp2p, allowlist, synching = false) {
   const address = verify(message);
   const included = allowlist.includes(address);
   if (!included) {
@@ -233,7 +233,7 @@ export async function add(trie, message, libp2p, allowlist) {
   const nowSecs = Date.now() / 1000;
   const toleranceSecs = parseInt(env.MAX_TIMESTAMP_DELTA_SECS, 10);
   const maxTimestampSecs = nowSecs + toleranceSecs;
-  if (message.timestamp >= maxTimestampSecs) {
+  if (!synching && message.timestamp >= maxTimestampSecs) {
     const err = `Message timestamp is more than "${toleranceSecs}" seconds in the future and so message is dropped: "${message.timestamp}"`;
     log(err);
     throw new Error(err);
@@ -241,7 +241,9 @@ export async function add(trie, message, libp2p, allowlist) {
 
   const legit = await passes(message, address);
   if (!legit) {
-    const err = `Message doesn't pass legitimacy criteria (duplicate). It was probably submitted and accepted before.`;
+    const err = `Message "${JSON.stringify(
+      message
+    )}" with address "${address}" doesn't pass legitimacy criteria (duplicate). It was probably submitted and accepted before.`;
     log(err);
     throw new Error(err);
   }
@@ -285,6 +287,7 @@ export function count(leaves) {
         title: leaf.title,
         timestamp: leaf.timestamp,
         href: leaf.href,
+        address: leaf.address,
         points: 1,
       };
       stories[key] = story;
@@ -297,7 +300,7 @@ export function count(leaves) {
   }
 
   const currentTime = Date.now() / 1000; // Convert current time to seconds
-  const decayFactor = 4;
+  const decayFactor = 2;
   const newStoryBoost = 1.5; // Boost factor for newer stories
 
   const sortedStories = Object.values(stories).sort((a, b) => {

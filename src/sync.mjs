@@ -146,8 +146,9 @@ export async function put(trie, message) {
     const value = decode(node.value());
     const libp2p = null;
     const allowlist = await registry.allowlist();
+    const synching = true;
     try {
-      await store.add(trie, value, libp2p, allowlist);
+      await store.add(trie, value, libp2p, allowlist, true);
       log(`Adding to database value "${node.value()}"`);
     } catch (err) {
       log(

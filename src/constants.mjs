@@ -60,7 +60,9 @@ export const SCHEMATA = {
       },
       title: {
         type: "string",
-        minLength: 1,
+        // NOTE: We want to have a title with at least a length of 1 in the
+        // future, but I think for now this is causing a synchronization bug
+        //minLength: 1,
         maxLength: 80,
       },
       href: {
