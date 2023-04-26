@@ -5,6 +5,7 @@ import url from "url";
 import htm from "htm";
 import vhtml from "vhtml";
 import normalizeUrl from "normalize-url";
+import { formatDistanceToNow } from "date-fns";
 
 import Header from "./components/header.mjs";
 import Footer from "./components/footer.mjs";
@@ -120,12 +121,17 @@ export default async function index(trie) {
                               id="score_35233479"
                             >
                               ${story.points}
-                              <span> points | </span>
+                              <span> points by </span>
                               <a
                                 target="_blank"
                                 href="https://etherscan.io/address/${story.address}"
                                 >${shorten(story.address)}</a
                               >
+                              <span> </span>
+                              ${formatDistanceToNow(
+                                new Date(story.timestamp * 1000)
+                              )}
+                              <span> ago</span>
                             </span>
                           </span>
                         </td>
