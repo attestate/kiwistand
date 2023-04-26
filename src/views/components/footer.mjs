@@ -5,16 +5,6 @@ import vhtml from "vhtml";
 
 const html = htm.bind(vhtml);
 const footer = html`
-  <span
-    >Three great stories about crypto a day (Mon-Fr), check back tomorrow for
-    more! Or <a style="color: black;" href="/subscribe">subscribe</a> to our
-    newsletter.</span
-  >
-  <br />
-  <span>Today's Editor Picks are curated by </span>
-  <a style="color:black;" href="${env.TODAYS_EDITOR_URL}">
-    ${env.TODAYS_EDITOR_NAME}</a
-  >!
   <div id="privacy-notice" style="width: 85%; padding: 5px; font-size: 10px;">
     <h2 style="font-size: 12px; margin: 0 0 3px; color: #f0f0f0;">
       Privacy Notice & Cookie Policy

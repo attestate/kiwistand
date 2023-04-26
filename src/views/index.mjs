@@ -122,7 +122,18 @@ export default async function index(trie) {
               `
             )}
           </table>
-          ${Footer}
+          <span
+            >Three great stories about crypto a day (Mon-Fr), check back
+            tomorrow for more!
+          </span>
+          <span> Or </span>
+          <a style="color: black;" href="/subscribe">subscribe</a>
+          <span> to our newsletter.</span>
+          <br />
+          <span>Today's Editor Picks are curated by </span>
+          <a style="color:black;" href="${env.TODAYS_EDITOR_URL}">
+            ${env.TODAYS_EDITOR_NAME}</a
+          >! ${Footer}
         </center>
       </body>
     </html>
