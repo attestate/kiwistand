@@ -22,7 +22,7 @@ const LinkSubmissionForm = () => {
     e.preventDefault();
     const signature = await signTypedDataAsync();
     await API.send(value, signature);
-    window.location.replace('/feed');
+    window.location.replace('/feed?bpc=1');
   };
 
   return (
