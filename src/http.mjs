@@ -11,6 +11,7 @@ import { SCHEMATA } from "./constants.mjs";
 import * as registry from "./chainstate/registry.mjs";
 
 import index from "./views/index.mjs";
+import feed from "./views/feed.mjs";
 import subscribe from "./views/subscribe.mjs";
 import submit from "./views/submit.mjs";
 
@@ -95,6 +96,10 @@ export async function launch(trie, libp2p) {
   // to demo the front end.
   app.get("/", async (request, reply) => {
     const content = await index(trie);
+    return reply.status(200).type("text/html").send(content);
+  });
+  app.get("/feed", async (request, reply) => {
+    const content = await feed(trie);
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/subscribe", async (request, reply) => {

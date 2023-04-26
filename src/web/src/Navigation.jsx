@@ -13,11 +13,9 @@ export const Navigation = () => {
         const divider = <span> | </span>;
         const submit = <a style={{ color: "black", cursor: "pointer" }} href="/submit">Submit</a>;
 
-        //{isConnected ? <span>{submit}{divider}</span> : ""}
         return (
           <div>
-            <a style={{color: "black"}} href="/subscribe">Subscribe</a>
-            {divider}
+            {isConnected ? <span>{submit}{divider}</span> : ""}
             <a style={{color: "black", cursor: "pointer"}} onClick={show}>
               {isConnected ? shorten(address) : "Connect"}
             </a>

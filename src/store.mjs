@@ -2,6 +2,7 @@
 import { env } from "process";
 import { resolve } from "path";
 
+import normalizeUrl from "normalize-url";
 import {
   Trie,
   WalkController,
@@ -276,7 +277,7 @@ export function count(leaves) {
   const stories = {};
 
   for (const leaf of leaves) {
-    const key = `${leaf.href}`;
+    const key = `${normalizeUrl(leaf.href)}`;
     let story = stories[key];
 
     if (!story) {

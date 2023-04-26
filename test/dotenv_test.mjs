@@ -29,10 +29,17 @@ test("that repo contains a .env-copy file with all possible configuration option
     "HTTP_MESSAGES_MAX_PAGE_SIZE",
     "DATA_DIR",
     "AUTO_SYNC",
-    "THEME",
     "ROOT_ADVERTISEMENT_TIMEOUT",
     "MIN_TIMESTAMP_SECS",
     "TIMESTAMP_TOLERANCE_SECS",
+    "THEME_COLOR",
+    "THEME_EMOJI",
+    "THEME_NAME",
+    "TODAYS_EDITOR_STORY_COUNT",
+    "TODAYS_EDITOR_ADDRESS",
+    "TODAYS_EDITOR_URL",
+    "TODAYS_EDITOR_NAME",
+    "DEBUG",
   ];
   await access(envPath, constants.F_OK);
   const envContent = (await readFile(envPath)).toString();

@@ -60,6 +60,7 @@ export const SCHEMATA = {
       },
       title: {
         type: "string",
+        minLength: 1,
         maxLength: 80,
       },
       href: {

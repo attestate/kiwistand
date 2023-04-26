@@ -21,6 +21,9 @@ const header = html`
               <a href="/"> ${`${env.THEME_EMOJI} ${env.THEME_NAME}`} </a>
             </b>
           </span>
+          <a style="color: black;" href="/">Editor Picks</a>
+          <span> | </span>
+          <a style="color: black;" href="/feed">Feed</a>
         </td>
         <td style="text-align:right;padding-right:4px;">
           <span id="navigation"></span>

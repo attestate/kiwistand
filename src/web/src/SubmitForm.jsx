@@ -22,7 +22,7 @@ const LinkSubmissionForm = () => {
     e.preventDefault();
     const signature = await signTypedDataAsync();
     await API.send(value, signature);
-    window.location.replace('/');
+    window.location.replace('/feed');
   };
 
   return (
@@ -30,6 +30,7 @@ const LinkSubmissionForm = () => {
       <div className="label-input-container">
         <label htmlFor="title">Title:</label>
         <input
+          disabled={isLoading}
           type="text"
           id="title"
           value={title}
@@ -41,6 +42,7 @@ const LinkSubmissionForm = () => {
       <div className="label-input-container">
         <label htmlFor="url">URL:</label>
         <input
+          disabled={isLoading}
           type="url"
           id="url"
           value={url}
@@ -48,7 +50,11 @@ const LinkSubmissionForm = () => {
           required
         />
       </div>
-      <button type="submit">Submit</button>
+      <button 
+        disabled={isLoading}
+        type="submit">
+      {isLoading ? "Please confirm signature..." : "Submit"}
+      </button>
       <p>
         NOTE: Your submission will only be accepted by the Kiwi News p2p network if
         the address that's signing the message also minted the <a target="_blank" style={{color: "black"}} href="https://kiwistand.com">kiwistand.com</a> NFT.

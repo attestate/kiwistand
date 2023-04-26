@@ -1,12 +1,15 @@
 //@format
 import { env } from "process";
+import url from "url";
+
 import htm from "htm";
 import vhtml from "vhtml";
-import url from "url";
+import normalizeUrl from "normalize-url";
 
 import Header from "./components/header.mjs";
 import Footer from "./components/footer.mjs";
 import * as store from "../store.mjs";
+import banlist from "../../banlist.mjs";
 import * as id from "../id.mjs";
 
 const html = htm.bind(vhtml);
@@ -16,23 +19,22 @@ function extractDomain(link) {
   return parsedUrl.hostname;
 }
 
-// NOTE: I've not added this function to the code base at store.editorPicks as
-// I think this is a function that belongs in the client frontend and not into
-// the node code base.
-function editorPicks(leaves) {
+const addresses = banlist.addresses.map((addr) => addr.toLowerCase());
+const hrefs = banlist.hrefs.map((href) => normalizeUrl(href));
+export function moderate(leaves) {
   return leaves
     .map((leaf) => ({
       address: id.ecrecover(leaf),
       ...leaf,
     }))
-    .filter(
-      ({ address }) => address.toLowerCase() === env.TODAYS_EDITOR_ADDRESS
-    );
+    .filter(({ address }) => !addresses.includes(address.toLowerCase()))
+    .filter(({ href }) => !hrefs.includes(normalizeUrl(href)));
 }
 
-const totalStories = parseInt(env.TODAYS_EDITOR_STORY_COUNT, 10);
+const totalStories = parseInt(env.TOTAL_STORIES, 10);
 export default async function index(trie) {
-  const leaves = editorPicks(await store.leaves(trie));
+  let leaves = await store.leaves(trie);
+  leaves = moderate(leaves);
   const stories = store.count(leaves).slice(0, totalStories);
   return html`
     <html lang="en" op="news">
@@ -111,7 +113,8 @@ export default async function index(trie) {
                               style="display: inline-block; height: 10px;"
                               class="score"
                               id="score_35233479"
-                            ></span>
+                              >${story.points} points</span
+                            >
                           </span>
                         </td>
                       </tr>

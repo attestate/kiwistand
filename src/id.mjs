@@ -81,6 +81,18 @@ export async function sign(signer, message) {
   };
 }
 
+export function ecrecover(message) {
+  const copy = { ...message };
+  delete copy["signature"];
+  const address = utils.verifyTypedData(
+    EIP712_DOMAIN,
+    EIP712_TYPES,
+    copy,
+    message.signature
+  );
+  return address;
+}
+
 const messageValidator = ajv.compile(SCHEMATA.message);
 export function verify(message) {
   const result = messageValidator(message);
@@ -92,13 +104,5 @@ export function verify(message) {
     throw new Error(errMessage);
   }
 
-  const copy = { ...message };
-  delete copy["signature"];
-  const address = utils.verifyTypedData(
-    EIP712_DOMAIN,
-    EIP712_TYPES,
-    copy,
-    message.signature
-  );
-  return address;
+  return ecrecover(message);
 }
