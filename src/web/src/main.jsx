@@ -4,6 +4,7 @@ import ReactDOM from 'react-dom/client'
 import Navigation from './Navigation.jsx'
 import SubmitForm from './SubmitForm.jsx'
 import Vote from './Vote.jsx'
+import EnsName from './EnsName.jsx'
 
 const navigation = document.getElementById('navigation');
 ReactDOM.createRoot(navigation).render(
@@ -31,4 +32,16 @@ if (voteArrows && voteArrows.length > 0) {
       </React.StrictMode>,
     )
   });
+}
+
+const ensNameComponents = document.querySelectorAll("ens-name");
+if (ensNameComponents) {
+  for (let elem of ensNameComponents) {
+    const address = elem.getAttribute("address");
+    ReactDOM.createRoot(elem).render(
+      <React.StrictMode>
+        <EnsName address={address} />
+      </React.StrictMode>,
+    );
+  }
 }

@@ -32,11 +32,6 @@ export function moderate(leaves) {
     .filter(({ href }) => !hrefs.includes(normalizeUrl(href)));
 }
 
-const shorten = (address) =>
-  address.slice(0, 6) +
-  "..." +
-  address.slice(address.length - 4, address.length);
-
 const totalStories = parseInt(env.TOTAL_STORIES, 10);
 export default async function index(trie) {
   let leaves = await store.leaves(trie);
@@ -122,11 +117,7 @@ export default async function index(trie) {
                             >
                               ${story.points}
                               <span> points by </span>
-                              <a
-                                target="_blank"
-                                href="https://etherscan.io/address/${story.address}"
-                                >${shorten(story.address)}</a
-                              >
+                              <ens-name address=${story.address} />
                               <span> </span>
                               ${formatDistanceToNow(
                                 new Date(story.timestamp * 1000)
