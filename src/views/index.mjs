@@ -26,7 +26,8 @@ function editorPicks(leaves) {
       ...leaf,
     }))
     .filter(
-      ({ address }) => address.toLowerCase() === env.TODAYS_EDITOR_ADDRESS
+      ({ address }) =>
+        address.toLowerCase() === env.TODAYS_EDITOR_ADDRESS.toLowerCase()
     );
 }
 

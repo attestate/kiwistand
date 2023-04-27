@@ -1,11 +1,12 @@
 // @format
 import { useState } from 'react';
-import { useSignTypedData, useAccount, WagmiConfig, createClient } from "wagmi";
-import { ConnectKitProvider, ConnectKitButton, getDefaultClient } from "connectkit";
+import { useSignTypedData, useAccount, WagmiConfig } from "wagmi";
+import { ConnectKitProvider, ConnectKitButton } from "connectkit";
 
 import * as API from "./API.mjs";
 import client from "./client.mjs";
 import './SubmitForm.css';
+import { showMessage } from "./message.mjs";
 
 const LinkSubmissionForm = () => {
   const [title, setTitle] = useState('');
@@ -20,6 +21,7 @@ const LinkSubmissionForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    showMessage("Please sign the message in your wallet!");
     const signature = await signTypedDataAsync();
     await API.send(value, signature);
     window.location.replace('/feed?bpc=1');

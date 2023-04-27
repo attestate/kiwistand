@@ -95,9 +95,9 @@ export default async function index(trie) {
                           <center>
                             <a id="up_35233479" class="clicky" href="#">
                               <div
-                                style="display: none;"
-                                class="votearrow"
-                                title="upvote"
+                                class="votearrowcontainer"
+                                data-title="${story.title}"
+                                data-href="${story.href}"
                               ></div>
                             </a>
                           </center>
