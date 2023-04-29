@@ -5,6 +5,9 @@ import Navigation from './Navigation.jsx'
 import SubmitForm from './SubmitForm.jsx'
 import Vote from './Vote.jsx'
 import EnsName from './EnsName.jsx'
+import { loadTheme } from "./theme.mjs";
+
+loadTheme();
 
 const navigation = document.getElementById('navigation');
 ReactDOM.createRoot(navigation).render(

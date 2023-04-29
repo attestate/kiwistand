@@ -18,7 +18,8 @@ const header = html`
         <td style="line-height:12pt; height:10px;">
           <span class="pagetop"
             ><b class="hnname">
-              <a href="/"> ${`${env.THEME_EMOJI} ${env.THEME_NAME}`} </a>
+              <span>${env.THEME_EMOJI} </span>
+              <a href="/">${env.THEME_NAME}</a>
             </b>
           </span>
           <a style="color: black;" href="/">Editor Picks</a>
