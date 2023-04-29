@@ -33,7 +33,7 @@ export function moderate(leaves) {
 }
 
 const totalStories = parseInt(env.TOTAL_STORIES, 10);
-export default async function index(trie) {
+export default async function index(trie, theme) {
   let leaves = await store.leaves(trie);
   leaves = moderate(leaves);
   const stories = store.count(leaves).slice(0, totalStories);
@@ -68,7 +68,7 @@ export default async function index(trie) {
             bgcolor="#f6f6ef"
           >
             <tr>
-              ${Header}
+              ${Header(theme)}
             </tr>
             ${stories.map(
               (story, i) => html`

@@ -4,8 +4,8 @@ import htm from "htm";
 import vhtml from "vhtml";
 
 const html = htm.bind(vhtml);
-const header = html`
-  <td bgcolor="${env.THEME_COLOR}">
+const header = (theme) => html`
+  <td bgcolor="${theme.color}">
     <table
       border="0"
       cellpadding="0"
@@ -18,8 +18,8 @@ const header = html`
         <td style="line-height:12pt; height:10px;">
           <span class="pagetop"
             ><b class="hnname">
-              <span>${env.THEME_EMOJI} </span>
-              <a href="/">${env.THEME_NAME}</a>
+              <span>${theme.emoji} </span>
+              <a href="/">${theme.name} News</a>
             </b>
           </span>
           <a style="color: black;" href="/">Editor Picks</a>

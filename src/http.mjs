@@ -4,6 +4,7 @@ import { env } from "process";
 import express from "express";
 import Ajv from "ajv";
 import addFormats from "ajv-formats";
+import cookieParser from "cookie-parser";
 
 import log from "./logger.mjs";
 import * as store from "./store.mjs";
@@ -14,12 +15,31 @@ import index from "./views/index.mjs";
 import feed from "./views/feed.mjs";
 import subscribe from "./views/subscribe.mjs";
 import submit from "./views/submit.mjs";
+import themes from "./themes.mjs";
 
 const ajv = new Ajv();
 addFormats(ajv);
 const app = express();
 app.use(express.static("src/public"));
 app.use(express.json());
+app.use(cookieParser());
+
+function loadTheme(req, res, next) {
+  const themeId = parseInt(req.cookies.currentTheme, 10);
+  const savedTheme = themes.find((theme) => theme.id === themeId);
+
+  const theme = savedTheme || {
+    id: 14,
+    emoji: "🥝",
+    name: "Kiwi News",
+    color: "limegreen",
+  };
+
+  res.locals.theme = theme;
+
+  next();
+}
+app.use(loadTheme);
 
 if (!env.THEME_COLOR || !env.THEME_EMOJI || !env.THEME_NAME) {
   throw new Error(
@@ -95,18 +115,21 @@ export async function launch(trie, libp2p) {
   // NOTE: This endpoint is only supposed to be enabled for as long as we need
   // to demo the front end.
   app.get("/", async (request, reply) => {
-    const content = await index(trie);
+    const content = await index(trie, reply.locals.theme);
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/feed", async (request, reply) => {
-    const content = await feed(trie);
+    const content = await feed(trie, reply.locals.theme);
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/subscribe", async (request, reply) => {
-    return reply.status(200).type("text/html").send(subscribe());
+    return reply
+      .status(200)
+      .type("text/html")
+      .send(subscribe(reply.locals.theme));
   });
   app.get("/submit", async (request, reply) => {
-    return reply.status(200).type("text/html").send(submit());
+    return reply.status(200).type("text/html").send(submit(reply.locals.theme));
   });
 
   app.post("/list", listMessages(trie));

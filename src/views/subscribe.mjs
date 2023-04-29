@@ -7,7 +7,7 @@ import Footer from "./components/footer.mjs";
 
 const html = htm.bind(vhtml);
 
-export default function index(trie) {
+export default function index(theme) {
   return html`
     <html lang="en" op="news">
       <head>
@@ -39,7 +39,7 @@ export default function index(trie) {
             bgcolor="#f6f6ef"
           >
             <tr>
-              ${Header}
+              ${Header(theme)}
             </tr>
             <tr>
               <td style="padding: 10px; font-size: 16px;">

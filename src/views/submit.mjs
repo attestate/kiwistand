@@ -7,7 +7,7 @@ import Footer from "./components/footer.mjs";
 
 const html = htm.bind(vhtml);
 
-export default function submit() {
+export default function submit(theme) {
   return html`
     <html lang="en" op="news">
       <head>
@@ -39,7 +39,7 @@ export default function submit() {
             bgcolor="#f6f6ef"
           >
             <tr>
-              ${Header}
+              ${Header(theme)}
             </tr>
             <tr>
               <td id="submit-form"></td>
