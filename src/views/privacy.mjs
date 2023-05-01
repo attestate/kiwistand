@@ -4,39 +4,13 @@ import url from "url";
 
 import htm from "htm";
 import vhtml from "vhtml";
-import normalizeUrl from "normalize-url";
-import { formatDistanceToNow } from "date-fns";
 
 import Header from "./components/header.mjs";
 import Footer from "./components/footer.mjs";
-import * as store from "../store.mjs";
-import banlist from "../../banlist.mjs";
-import * as id from "../id.mjs";
 
 const html = htm.bind(vhtml);
 
-function extractDomain(link) {
-  const parsedUrl = new url.URL(link);
-  return parsedUrl.hostname;
-}
-
-const addresses = banlist.addresses.map((addr) => addr.toLowerCase());
-const hrefs = banlist.hrefs.map((href) => normalizeUrl(href));
-export function moderate(leaves) {
-  return leaves
-    .map((leaf) => ({
-      address: id.ecrecover(leaf),
-      ...leaf,
-    }))
-    .filter(({ address }) => !addresses.includes(address.toLowerCase()))
-    .filter(({ href }) => !hrefs.includes(normalizeUrl(href)));
-}
-
-const totalStories = parseInt(env.TOTAL_STORIES, 10);
-export default async function index(trie, theme) {
-  let leaves = await store.leaves(trie);
-  leaves = moderate(leaves);
-  const stories = store.count(leaves).slice(0, totalStories);
+export default async function index(theme) {
   return html`
     <html lang="en" op="news">
       <head>
