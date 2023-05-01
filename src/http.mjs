@@ -13,6 +13,7 @@ import * as registry from "./chainstate/registry.mjs";
 
 import index from "./views/index.mjs";
 import feed from "./views/feed.mjs";
+import privacy from "./views/privacy.mjs";
 import subscribe from "./views/subscribe.mjs";
 import submit from "./views/submit.mjs";
 import themes from "./themes.mjs";
@@ -127,6 +128,12 @@ export async function launch(trie, libp2p) {
       .status(200)
       .type("text/html")
       .send(subscribe(reply.locals.theme));
+  });
+  app.get("/privacy-policy", async (request, reply) => {
+    return reply
+      .status(200)
+      .type("text/html")
+      .send(privacy(reply.locals.theme));
   });
   app.get("/submit", async (request, reply) => {
     return reply.status(200).type("text/html").send(submit(reply.locals.theme));
