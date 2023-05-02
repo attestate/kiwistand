@@ -34,7 +34,7 @@ function editorPicks(leaves) {
 const totalStories = parseInt(env.TODAYS_EDITOR_STORY_COUNT, 10);
 export default async function index(trie, theme) {
   const leaves = editorPicks(await store.leaves(trie));
-  const stories = store.count(leaves).slice(0, totalStories);
+  const stories = store.count(leaves).slice(0, totalStories).reverse();
   return html`
     <html lang="en" op="news">
       <head>
