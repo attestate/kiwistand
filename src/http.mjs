@@ -17,6 +17,7 @@ import privacy from "./views/privacy.mjs";
 import nft from "./views/nft.mjs";
 import subscribe from "./views/subscribe.mjs";
 import submit from "./views/submit.mjs";
+import upvotes from "./views/upvotes.mjs";
 import themes from "./themes.mjs";
 
 const ajv = new Ajv();
@@ -138,6 +139,14 @@ export async function launch(trie, libp2p) {
   });
   app.get("/welcome", async (request, reply) => {
     return reply.status(200).type("text/html").send(nft(reply.locals.theme));
+  });
+  app.get("/upvotes", async (request, reply) => {
+    const content = await upvotes(
+      trie,
+      reply.locals.theme,
+      request.query.address
+    );
+    return reply.status(200).type("text/html").send(content);
   });
   app.get("/submit", async (request, reply) => {
     return reply.status(200).type("text/html").send(submit(reply.locals.theme));
