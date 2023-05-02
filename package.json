@@ -39,7 +39,7 @@
   },
   "homepage": "https://github.com/attestate/goblin#readme",
   "dependencies": {
-    "@attestate/crawler": "0.5.1",
+    "@attestate/crawler": "0.5.2",
     "@attestate/crawler-call-block-logs": "0.3.0",
     "@chainsafe/libp2p-gossipsub": "5.2.1",
     "@chainsafe/libp2p-noise": "10.2.0",
