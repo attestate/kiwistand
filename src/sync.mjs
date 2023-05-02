@@ -91,6 +91,8 @@ export function deserialize(nodes) {
 
 export function send(libp2p) {
   return async (peerId, protocol, message) => {
+    // NOTE: dialProtocol may throw and it has to be caught and handled in the
+    // respective functions using "send".
     const { sink, source } = await libp2p.dialProtocol(peerId, protocol);
     await toWire(message, sink);
     const [results] = await fromWire(source);
@@ -122,7 +124,15 @@ export async function initiate(
   }
   // TODO: The levels magic constant here should somehow be externally defined
   // as a constant.
-  const results = await innerSend(peerId, "/levels/1.0.0", serialize(remotes));
+  let results;
+  try {
+    results = await innerSend(peerId, "/levels/1.0.0", serialize(remotes));
+  } catch (err) {
+    const message = `Tried sending level comparison of nodes "${JSON.stringify(
+      remotes
+    )}" to peer "${peerId}" but failed for error "${err.toString()}"`;
+    throw new Error(message);
+  }
   const missing = deserialize(results.missing).filter(
     ({ node }) => node instanceof LeafNode
   );

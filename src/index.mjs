@@ -77,7 +77,12 @@ export async function subscribe(
   node.goblin.initiate = async (peerId) => {
     const level = 0;
     const exclude = [];
-    return await sync.initiate(trie, peerId, exclude, level, sync.send(node));
+    try {
+      await sync.initiate(trie, peerId, exclude, level, sync.send(node));
+    } catch (err) {
+      log(`node-level initiate failed because of error: "${err.toString()}"`);
+    }
+    return;
   };
 
   sync.advertise(trie, node, env.ROOT_ADVERTISEMENT_TIMEOUT);
