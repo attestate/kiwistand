@@ -7,6 +7,8 @@ import Footer from "./components/footer.mjs";
 
 const html = htm.bind(vhtml);
 
+const price = "0.005";
+
 export default function (theme) {
   return html`
     <html lang="en" op="news">
@@ -134,7 +136,9 @@ export default function (theme) {
                           class="kiwi-nft"
                         />
                         <div class="image-meta">
-                          <span>Minting Price: <strong>0.01 Ξ</strong></span>
+                          <span
+                            >Minting Price: <strong>${price} Ξ</strong></span
+                          >
                           <span> | </span>
                           <a
                             href="https://etherscan.io/address/0xebb15487787cbf8ae2ffe1a6cca5a50e63003786"
@@ -145,12 +149,12 @@ export default function (theme) {
                       </div>
                       <div class="text-container">
                         <p class="selling-points">
-                          Connect your wallet and buy a Kiwi NFT to:
+                          Become part of our community by buying a Kiwi NFT to:
                         </p>
                         <ul class="list-unstyled selling-points">
                           <li class="bullet-point">
                             <strong>•</strong> Submit and upvote stories on the
-                            Kiwi News network
+                            Kiwi News p2p network
                           </li>
                           <li class="bullet-point">
                             <strong>•</strong> Expose your content to a broader
@@ -167,17 +171,41 @@ export default function (theme) {
                         </ul>
                         <p>
                           Your contribution supports the project's growth and
-                          its creator,
+                          its creator team, including
                           <span> </span>
                           <a
                             href="https://warpcast.com/timdaub"
                             style="color: #4CAF50; text-decoration: none;"
                             >@timdaub</a
-                          >.
+                          >
+                          <span>, </span>
+                          <a
+                            href="https://warpcast.com/macbudkowski"
+                            style="color: #4CAF50; text-decoration: none;"
+                            >@macbudkowski</a
+                          >
+                          <span>, </span>
+                          <a
+                            href="https://warpcast.com/freeatnet"
+                            style="color: #4CAF50; text-decoration: none;"
+                            >@freeatnet</a
+                          >
+                          <span>, </span>
+                          <a
+                            href="https://warpcast.com/chrsmaral"
+                            style="color: #4CAF50; text-decoration: none;"
+                            >@chrsmaral</a
+                          >
+                          <span> and others!</span>
                         </p>
-                        <button class="buy-button">
-                          Buy Kiwi NFT for 0.01 Ξ
-                        </button>
+                        <a
+                          target="_blank"
+                          href="https://zora.co/collect/0xebb15487787cbf8ae2ffe1a6cca5a50e63003786"
+                        >
+                          <button class="buy-button">
+                            Buy Kiwi NFT for ${price} Ξ (on Zora)
+                          </button>
+                        </a>
                       </div>
                     </div>
                   </section>
