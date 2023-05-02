@@ -134,7 +134,7 @@ export default async function index(trie, theme) {
           <span>Today's Editor Picks are curated by </span>
           <a style="color:black;" href="${env.TODAYS_EDITOR_URL}">
             ${env.TODAYS_EDITOR_NAME}</a
-          >! ${Footer}
+          >! (submitted by @macbudkowski) ${Footer}
         </center>
       </body>
     </html>
