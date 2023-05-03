@@ -63,7 +63,7 @@ export default function (theme) {
           .kiwi-nft {
             max-width: 100%;
             height: auto;
-            border: 4px solid #4caf50;
+            border: 4px solid ${theme.color};
             border-radius: 5px;
           }
           .image-meta {
@@ -84,10 +84,10 @@ export default function (theme) {
             padding-right: 10px;
           }
           .bullet-point strong {
-            color: #4caf50;
+            color: ${theme.color};
           }
           .buy-button {
-            background-color: #4caf50;
+            background-color: ${theme.color};
             border: none;
             color: white;
             padding: 10px 20px;
@@ -142,7 +142,7 @@ export default function (theme) {
                           <span> | </span>
                           <a
                             href="https://etherscan.io/address/0xebb15487787cbf8ae2ffe1a6cca5a50e63003786"
-                            style="color: #4CAF50; text-decoration: none;"
+                            style="color: ${theme.color}; text-decoration: none;"
                             >View on Etherscan</a
                           >
                         </div>
@@ -175,25 +175,25 @@ export default function (theme) {
                           <span> </span>
                           <a
                             href="https://warpcast.com/timdaub"
-                            style="color: #4CAF50; text-decoration: none;"
+                            style="color: ${theme.color}; text-decoration: none;"
                             >@timdaub</a
                           >
                           <span>, </span>
                           <a
                             href="https://warpcast.com/macbudkowski"
-                            style="color: #4CAF50; text-decoration: none;"
+                            style="color: ${theme.color}; text-decoration: none;"
                             >@macbudkowski</a
                           >
                           <span>, </span>
                           <a
                             href="https://warpcast.com/freeatnet"
-                            style="color: #4CAF50; text-decoration: none;"
+                            style="color: ${theme.color}; text-decoration: none;"
                             >@freeatnet</a
                           >
                           <span>, </span>
                           <a
                             href="https://warpcast.com/chrsmaral"
-                            style="color: #4CAF50; text-decoration: none;"
+                            style="color: ${theme.color}; text-decoration: none;"
                             >@chrsmaral</a
                           >
                           <span> and others!</span>
