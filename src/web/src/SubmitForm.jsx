@@ -24,7 +24,7 @@ const LinkSubmissionForm = () => {
     showMessage("Please sign the message in your wallet!");
     const signature = await signTypedDataAsync();
     await API.send(value, signature);
-    window.location.replace('/feed?bpc=1');
+    window.location.replace('/new?bpc=1');
   };
 
   return (
