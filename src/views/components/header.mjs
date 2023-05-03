@@ -14,7 +14,6 @@ const header = (theme) => html`
       style="padding:10px"
     >
       <tr>
-        <td style="width:18px;padding-right:4px"></td>
         <td style="line-height:12pt; height:10px;">
           <span class="pagetop"
             ><b class="hnname">
