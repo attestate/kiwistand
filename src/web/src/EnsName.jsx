@@ -19,17 +19,17 @@ const Container = (props) => {
   );
 };
 
-const EtherscanLink = ({address, name}) => {
-  const link = `https://etherscan.io/address/${address}`;
-  return <a target="_blank" href={link}>{name}</a>;
+const ProfileLink = ({address, name }) => {
+  const link = `/upvotes?address=${address}`;
+  return <a href={link}>{name}</a>;
 };
 
 const EnsName = (props) => {
   const { data, isError, isLoading } = useEnsName({
     address: props.address
   });
-  if (isLoading || isError || !data) return <EtherscanLink address={props.address} name={shorten(props.address)} />;
-  return <EtherscanLink address={props.address} name={data} />
+  if (isLoading || isError || !data) return <ProfileLink address={props.address} name={shorten(props.address)} />;
+  return <ProfileLink address={props.address} name={data} />
 };
 
 export default Container;

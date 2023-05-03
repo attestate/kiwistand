@@ -5,7 +5,7 @@ import url from "url";
 import htm from "htm";
 import vhtml from "vhtml";
 import normalizeUrl from "normalize-url";
-import { formatDistanceToNow, differenceInMinutes } from "date-fns";
+import { formatDistanceToNow } from "date-fns";
 
 import Header from "./components/header.mjs";
 import Footer from "./components/footer.mjs";
@@ -31,12 +31,6 @@ export function moderate(leaves) {
     .filter(({ address }) => !addresses.includes(address.toLowerCase()))
     .filter(({ href }) => !hrefs.includes(normalizeUrl(href)));
 }
-
-const itemAge = (timestamp) => {
-  const now = new Date();
-  const ageInMinutes = differenceInMinutes(now, new Date(timestamp * 1000));
-  return ageInMinutes;
-};
 
 export function count(leaves) {
   const stories = {};
@@ -65,20 +59,11 @@ export function count(leaves) {
   return Object.values(stories);
 }
 
-const calculateScore = (votes, itemHourAge, gravity = 1.8) => {
-  return (votes - 1) / Math.pow(itemHourAge + 2, gravity);
-};
-
 const totalStories = parseInt(env.TOTAL_STORIES, 10);
-export default async function index(trie, theme) {
+export default async function (trie, theme) {
   const leaves = moderate(await store.leaves(trie));
   const stories = count(leaves)
-    .map((story) => {
-      const score = calculateScore(story.upvotes, itemAge(story.timestamp));
-      story.score = score;
-      return story;
-    })
-    .sort((a, b) => b.score - a.score)
+    .sort((a, b) => b.timestamp - a.timestamp)
     .slice(0, totalStories);
 
   return html`

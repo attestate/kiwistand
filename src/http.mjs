@@ -13,6 +13,7 @@ import * as registry from "./chainstate/registry.mjs";
 
 import index from "./views/index.mjs";
 import feed from "./views/feed.mjs";
+import newest from "./views/new.mjs";
 import privacy from "./views/privacy.mjs";
 import nft from "./views/nft.mjs";
 import subscribe from "./views/subscribe.mjs";
@@ -123,6 +124,10 @@ export async function launch(trie, libp2p) {
   });
   app.get("/feed", async (request, reply) => {
     const content = await feed(trie, reply.locals.theme);
+    return reply.status(200).type("text/html").send(content);
+  });
+  app.get("/new", async (request, reply) => {
+    const content = await newest(trie, reply.locals.theme);
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/subscribe", async (request, reply) => {

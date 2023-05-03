@@ -10,6 +10,7 @@ import Footer from "./components/footer.mjs";
 import * as store from "../store.mjs";
 import banlist from "../../banlist.mjs";
 import * as id from "../id.mjs";
+import { count } from "./feed.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -30,7 +31,7 @@ export function selectUpvotes(leaves, address) {
 export default async function (trie, theme, address) {
   let leaves = await store.leaves(trie);
   leaves = selectUpvotes(leaves, address);
-  let stories = store.count(leaves);
+  let stories = count(leaves);
   stories = stories.sort((a, b) => {
     const timestampA = new Date(a.timestamp);
     const timestampB = new Date(b.timestamp);
@@ -76,6 +77,16 @@ export default async function (trie, theme, address) {
           >
             <tr>
               ${Header(theme)}
+            </tr>
+            <tr>
+              <td>
+                <div style="padding: 10px; color: black; font-size: 16px">
+                  <span>Profile: </span>
+                  <ens-name address=${address} />
+                  <hr />
+                  <span>All upvotes and submissions: </span>
+                </div>
+              </td>
             </tr>
             ${stories.map(
               (story, i) => html`

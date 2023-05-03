@@ -8,6 +8,7 @@ import Header from "./components/header.mjs";
 import Footer from "./components/footer.mjs";
 import * as store from "../store.mjs";
 import * as id from "../id.mjs";
+import { count } from "./feed.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -34,7 +35,10 @@ function editorPicks(leaves) {
 const totalStories = parseInt(env.TODAYS_EDITOR_STORY_COUNT, 10);
 export default async function index(trie, theme) {
   const leaves = editorPicks(await store.leaves(trie));
-  const stories = store.count(leaves).slice(0, totalStories).reverse();
+  const stories = count(leaves)
+    .sort((a, b) => b.timestamp - a.timestamp)
+    .slice(0, totalStories)
+    .reverse();
   return html`
     <html lang="en" op="news">
       <head>

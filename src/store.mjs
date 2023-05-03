@@ -275,57 +275,6 @@ export async function add(trie, message, libp2p, allowlist, synching = false) {
   libp2p.pubsub.publish(messages.name, canonical);
 }
 
-export function count(leaves) {
-  const stories = {};
-
-  for (const leaf of leaves) {
-    const key = `${normalizeUrl(leaf.href)}`;
-    let story = stories[key];
-
-    if (!story) {
-      story = {
-        title: leaf.title,
-        timestamp: leaf.timestamp,
-        href: leaf.href,
-        address: leaf.address,
-        points: 1,
-      };
-      stories[key] = story;
-    } else {
-      if (leaf.type === "amplify") {
-        story.points += 1;
-        if (!story.title && leaf.title) story.title = leaf.title;
-      }
-    }
-  }
-
-  const currentTime = Date.now() / 1000; // Convert current time to seconds
-  const decayFactor = 2;
-  const newStoryBoost = 1.5; // Boost factor for newer stories
-
-  const sortedStories = Object.values(stories).sort((a, b) => {
-    const timeDifferenceA = (currentTime - a.timestamp) / (60 * 60); // Calculate the time difference in hours
-    const timeDifferenceB = (currentTime - b.timestamp) / (60 * 60); // Calculate the time difference in hours
-
-    const isNewStoryA = timeDifferenceA <= 12; // Consider a story new if it is less than or equal to 12 hours old
-    const isNewStoryB = timeDifferenceB <= 12; // Consider a story new if it is less than or equal to 12 hours old
-
-    const decayedPointsA = a.points / Math.pow(decayFactor, timeDifferenceA);
-    const decayedPointsB = b.points / Math.pow(decayFactor, timeDifferenceB);
-
-    const boostedDecayedPointsA = isNewStoryA
-      ? decayedPointsA * newStoryBoost
-      : decayedPointsA;
-    const boostedDecayedPointsB = isNewStoryB
-      ? decayedPointsB * newStoryBoost
-      : decayedPointsB;
-
-    return boostedDecayedPointsB - boostedDecayedPointsA;
-  });
-
-  return sortedStories;
-}
-
 export async function leaves(trie, from, amount) {
   let pointer = 0;
   const nodes = [];

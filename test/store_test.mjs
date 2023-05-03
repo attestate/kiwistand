@@ -36,37 +36,6 @@ test("if message passes constraint", async (t) => {
   await rm("dbtestA", { recursive: true });
 });
 
-test("counting stories", async (t) => {
-  const leaves = [
-    {
-      href: "https://example.com",
-      signature:
-        "0xdc33965bbb55580bf9f209fb0d6a45e4538120f55eba133b4ef339d884ab45882f6f92a4e2aa5f99139f4f2ad82b21ac437dfd139b39383c0d3e7b8b2fac74321c",
-      timestamp: "1676559616",
-      title: "hello world",
-      type: "amplify",
-    },
-    {
-      href: "https://example.com",
-      signature: "0xanotherone",
-      timestamp: "1676559616",
-      title: "hello world",
-      type: "amplify",
-    },
-    {
-      href: "https://example.com",
-      signature: "0xanotheroneyetanother",
-      timestamp: "1676559616",
-      title: "new story",
-      type: "amplify",
-    },
-  ];
-  const stories = store.count(leaves);
-  t.is(stories[0].points, 3);
-  t.is(stories.length, 1);
-  t.true(Array.isArray(stories));
-});
-
 test("amount limiting factor", async (t) => {
   env.DATA_DIR = "dbtestA";
   const trieA = await store.create();

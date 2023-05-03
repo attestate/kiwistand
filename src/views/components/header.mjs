@@ -24,7 +24,9 @@ const header = (theme) => html`
           </span>
           <a style="color: black;" href="/">Editor Picks</a>
           <span> | </span>
-          <a style="color: black;" href="/feed">Feed</a>
+          <a style="color: black;" href="/feed">Top</a>
+          <span> | </span>
+          <a style="color: black;" href="/new">New</a>
         </td>
         <td style="text-align:right;padding-right:4px;">
           <span id="navigation"></span>
