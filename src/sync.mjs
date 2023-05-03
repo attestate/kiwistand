@@ -13,6 +13,19 @@ import * as store from "./store.mjs";
 import * as roots from "./topics/roots.mjs";
 import * as registry from "./chainstate/registry.mjs";
 
+export function setSyncPeer(peerId) {
+  if (!peerId) {
+    log("Unsetting global peer");
+  } else {
+    log(`Setting global peer: "${peerId}"`);
+  }
+  global.peer = peerId;
+}
+
+export function getSyncPeer() {
+  return global.peer;
+}
+
 export async function toWire(message, sink) {
   const buf = encode(message);
   return await pipe([buf], lp.encode(), sink);
@@ -105,6 +118,14 @@ export async function initiate(
   level = 0,
   innerSend
 ) {
+  const { result, syncPeer, newPeer } = isValidPeer(peerId);
+  if (!result) {
+    log(
+      `initiate: Currently syncing with "${syncPeer}" but tried initiating with "${newPeer}". Aborting`
+    );
+    return;
+  }
+
   log(
     `Initiating sync for peerId: "${peerId}" and level "${level}" and root "${trie
       .root()
@@ -118,12 +139,13 @@ export async function initiate(
         .root()
         .toString("hex")}"`
     );
+    setSyncPeer();
     return;
   }
   // TODO: The levels magic constant here should somehow be externally defined
   // as a constant.
-  const results = await innerSend(peerId, "/levels/1.0.0", serialize(remotes));
-  const missing = deserialize(results.missing).filter(
+  const response = await innerSend(peerId, "/levels/1.0.0", serialize(remotes));
+  const missing = deserialize(response.missing).filter(
     ({ node }) => node instanceof LeafNode
   );
   if (missing.length > 0) {
@@ -136,7 +158,7 @@ export async function initiate(
     }
   }
 
-  const matches = deserialize(results.match).map((node) => node.hash);
+  const matches = deserialize(response.match).map((node) => node.hash);
   return await initiate(trie, peerId, matches, level + 1, innerSend);
 }
 
@@ -174,10 +196,10 @@ export async function compare(trie, message) {
 }
 
 export function receive(handler) {
-  return async ({ stream }) => {
+  return async ({ connection, stream }) => {
     const [message] = await fromWire(stream.source);
     log(`receiving message: "${JSON.stringify(message)}"`);
-    const response = await handler(message);
+    const response = await handler(message, connection.remotePeer);
 
     if (!response) {
       log("Closing stream as response is missing");
@@ -188,17 +210,58 @@ export function receive(handler) {
   };
 }
 
+export function isValidPeer(newPeer) {
+  const syncPeer = getSyncPeer();
+
+  if (!syncPeer) {
+    setSyncPeer(newPeer);
+    return {
+      result: true,
+      syncPeer: newPeer,
+      newPeer,
+    };
+  }
+
+  if (syncPeer.equals(newPeer)) {
+    return {
+      result: true,
+      syncPeer,
+      newPeer,
+    };
+  }
+
+  return {
+    result: false,
+    syncPeer,
+    newPeer,
+  };
+}
+
 export function handleLevels(trie) {
-  return receive(async (message) => {
+  return receive(async (message, peer) => {
+    const { result, syncPeer, newPeer } = isValidPeer(peer);
+    if (!result) {
+      log(
+        `handle levels: Currently syncing with "${syncPeer}" but received levels from "${newPeer}". Aborting`
+      );
+      return;
+    }
+
     log("Received levels and comparing them");
-    const result = await compare(trie, message);
-    // TODO: On the second iteration, this isn't returning.
-    return result;
+    return await compare(trie, message);
   });
 }
 
 export function handleLeaves(trie) {
-  return receive(async (message) => {
+  return receive(async (message, peer) => {
+    const { result, syncPeer, newPeer } = isValidPeer(peer);
+    if (!result) {
+      log(
+        `handle leaves: Currently syncing with "${syncPeer}" but received leaves from "${newPeer}". Aborting`
+      );
+      return;
+    }
+
     log("Received leaves and storing them in db");
     trie.checkpoint();
     await put(trie, message);
