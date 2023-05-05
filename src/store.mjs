@@ -248,18 +248,10 @@ export async function add(trie, message, libp2p, allowlist, synching = false) {
     throw new Error(err);
   }
 
-  const { digest, canonical } = toDigest(message);
-  // TODO: This won't work as the hex will be interpreted by one big hex and
-  // not a combination of timestamp and digest.
-  // NOTE: Upon another examination, this could still work. We, technically,
-  // don't need to extract either the hash or the timestamp from the id itself.
-  // The timestamp is in the message itself and the hash can be generated. So we
-  // might be fine!
-  // TODO: We must extract the timestamp and hash from the ID again.
-  const id = `${message.timestamp.toString(16)}${digest}`;
-  log(`Storing message with id "${id}"`);
+  const { canonical, index } = toDigest(message);
+  log(`Storing message with index "${index}"`);
   // TODO: We should check if checkpointing is off here.
-  await trie.put(Buffer.from(id, "hex"), canonical);
+  await trie.put(Buffer.from(index, "hex"), canonical);
   log(`New root: "${trie.root().toString("hex")}"`);
 
   if (!libp2p) {
@@ -299,7 +291,7 @@ export async function leaves(trie, from, amount) {
     await trie.walkTrie(trie.root(), onFound);
   } catch (err) {
     if (err.toString().includes("Missing node in DB")) {
-      log("descend: Didn't find any nodes");
+      log("leaves: Didn't find any nodes");
       return nodes;
     } else {
       throw err;

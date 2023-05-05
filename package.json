@@ -65,6 +65,7 @@
     "it-all": "2.0.0",
     "it-length-prefixed": "8.0.4",
     "it-map": "2.0.0",
+    "json-canonicalize": "1.0.5",
     "libp2p": "0.40.0",
     "lmdb": "2.7.9",
     "nodemon": "2.0.21",

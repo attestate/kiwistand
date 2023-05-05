@@ -10,10 +10,14 @@ import { handlers } from "./index.mjs";
 import * as server from "./http.mjs";
 import * as store from "./store.mjs";
 import crawlPath from "./chainstate/config.crawler.mjs";
+import * as migration0 from "./migrations/0.mjs";
 
 (async () => {
-  crawl(crawlPath);
   const trie = await store.create();
+  await migration0.rehash(trie);
+  process.exit(0);
+
+  crawl(crawlPath);
   const node = await start(config);
 
   // NOTE: We're passing in the trie here as we don't want to make it globally
