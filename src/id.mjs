@@ -12,6 +12,7 @@ import { encode } from "cbor-x";
 import Ajv from "ajv";
 import addFormats from "ajv-formats";
 import { utils } from "ethers";
+import canonicalize from "canonicalize";
 
 import { SCHEMATA, EIP712_DOMAIN, EIP712_TYPES } from "./constants.mjs";
 
@@ -50,12 +51,14 @@ export async function load(path) {
 }
 
 export function toDigest(value) {
-  const copy = { ...value };
+  const copy = canonicalize({ ...value });
   const canonical = encode(copy);
   const digest = toHex(keccak256(canonical));
+  const index = `${value.timestamp.toString(16)}${digest}`;
   return {
     digest,
     canonical,
+    index,
   };
 }
 
