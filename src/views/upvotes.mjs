@@ -29,7 +29,10 @@ export function selectUpvotes(leaves, address) {
 }
 
 export default async function (trie, theme, address) {
-  let leaves = await store.leaves(trie);
+  const from = null;
+  const amount = null;
+  const parser = JSON.parse;
+  let leaves = await store.leaves(trie, from, amount, parser);
   leaves = selectUpvotes(leaves, address);
   let stories = count(leaves);
   stories = stories.sort((a, b) => {

@@ -61,7 +61,11 @@ export function count(leaves) {
 
 const totalStories = parseInt(env.TOTAL_STORIES, 10);
 export default async function (trie, theme) {
-  const leaves = moderate(await store.leaves(trie));
+  const from = null;
+  const amount = null;
+  const parser = JSON.parse;
+  const leaves = moderate(await store.leaves(trie, from, amount, parser));
+
   const stories = count(leaves)
     .sort((a, b) => b.timestamp - a.timestamp)
     .slice(0, totalStories);

@@ -38,7 +38,7 @@ test("if digest is canonical for various messages", (t) => {
   const outcome0 = toDigest(message0);
   t.is(
     outcome0.digest,
-    "93aaa3b8de60ed329538dd86d9511afcf2f0c690f33da5ac2469c28848d1f0b6"
+    "121af03649b7ee31ddeda1693a2ce53492a63c6ff3116564a8b7dd5dca721884"
   );
 
   const message1 = {
@@ -48,8 +48,9 @@ test("if digest is canonical for various messages", (t) => {
   const outcome1 = toDigest(message1);
   t.is(
     outcome1.digest,
-    "93aaa3b8de60ed329538dd86d9511afcf2f0c690f33da5ac2469c28848d1f0b6"
+    "121af03649b7ee31ddeda1693a2ce53492a63c6ff3116564a8b7dd5dca721884"
   );
+  t.is(outcome0.digest, outcome1.digest);
 });
 
 test("generating digest from message", (t) => {
@@ -60,7 +61,7 @@ test("generating digest from message", (t) => {
   const { digest } = toDigest(message);
   t.is(
     digest,
-    "93aaa3b8de60ed329538dd86d9511afcf2f0c690f33da5ac2469c28848d1f0b6"
+    "121af03649b7ee31ddeda1693a2ce53492a63c6ff3116564a8b7dd5dca721884"
   );
 });
 

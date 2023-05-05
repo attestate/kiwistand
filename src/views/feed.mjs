@@ -71,7 +71,10 @@ const calculateScore = (votes, itemHourAge, gravity = 1.8) => {
 
 const totalStories = parseInt(env.TOTAL_STORIES, 10);
 export default async function index(trie, theme) {
-  const leaves = moderate(await store.leaves(trie));
+  const from = null;
+  const amount = null;
+  const parser = JSON.parse;
+  const leaves = moderate(await store.leaves(trie, from, amount, parser));
   const stories = count(leaves)
     .map((story) => {
       const score = calculateScore(story.upvotes, itemAge(story.timestamp));

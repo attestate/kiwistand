@@ -14,6 +14,10 @@ import * as roots from "./topics/roots.mjs";
 import * as registry from "./chainstate/registry.mjs";
 
 export function syncPeerFactory() {
+  // NOTE: We open a closure here for "peer" and the user calls the
+  // syncPeerFactory such that for the functions, peer is always defined within
+  // the factory's scope. This allows us to pass around state but having the
+  // code remain fairly functional and classless.
   let peer;
   function isValid(newPeer) {
     const syncPeer = get();
@@ -202,12 +206,22 @@ export async function put(trie, message) {
   const missing = deserialize(message);
   for await (let { node, key } of missing) {
     const value = decode(node.value());
+    //let obj;
+    //try {
+    //  obj = JSON.parse(value);
+    //} catch (err) {
+    //  log(
+    //    `put: Couldn't JSON-parse message "${value}" to in trie: ${err.toString()}`
+    //  );
+    //  return;
+    //}
+
     const libp2p = null;
     const allowlist = await registry.allowlist();
     const synching = true;
     try {
       await store.add(trie, value, libp2p, allowlist, true);
-      log(`Adding to database value "${node.value()}"`);
+      log(`Adding to database value (as JSON) "${value}"`);
     } catch (err) {
       log(
         `put: Didn't add message to database because of error: "${err.toString()}"`

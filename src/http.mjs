@@ -107,7 +107,8 @@ export function listMessages(trie) {
     }
 
     const { from, amount } = request.body;
-    const leaves = await store.leaves(trie, from, amount);
+    const parser = JSON.parse;
+    const leaves = await store.leaves(trie, from, amount, parser);
     const code = 200;
     const message = "OK";
     const details = `Extracted leaves from "${from}" and amount "${amount}"`;

@@ -34,7 +34,10 @@ function editorPicks(leaves) {
 
 const totalStories = parseInt(env.TODAYS_EDITOR_STORY_COUNT, 10);
 export default async function index(trie, theme) {
-  const leaves = editorPicks(await store.leaves(trie));
+  const from = null;
+  const amount = null;
+  const parser = JSON.parse;
+  const leaves = editorPicks(await store.leaves(trie, from, amount, parser));
   const stories = count(leaves)
     .sort((a, b) => b.timestamp - a.timestamp)
     .slice(0, totalStories);

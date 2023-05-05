@@ -10,6 +10,24 @@ import { sign, create } from "../src/id.mjs";
 import { handleMessage, listMessages } from "../src/http.mjs";
 import * as store from "../src/store.mjs";
 
+async function removeTestFolders() {
+  try {
+    await rm("dbtestA", { recursive: true });
+  } catch (error) {
+    if (error.code !== "ENOENT") throw error;
+  }
+
+  try {
+    await rm("dbtestB", { recursive: true });
+  } catch (error) {
+    if (error.code !== "ENOENT") throw error;
+  }
+}
+
+test.afterEach.always(async () => {
+  await removeTestFolders();
+});
+
 test("listMessages success", async (t) => {
   const mockRequest = {
     body: {
@@ -164,7 +182,7 @@ test("listing messages", async (t) => {
   env.DATA_DIR = "dbtestA";
   const trie = await store.create();
   const message = { hello: "world" };
-  await trie.put(Buffer.from("0100", "hex"), encode(message));
+  await trie.put(Buffer.from("0100", "hex"), encode(JSON.stringify(message)));
 
   const route = listMessages(trie);
   const request = {

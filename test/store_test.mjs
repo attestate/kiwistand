@@ -108,7 +108,10 @@ test("getting leaves", async (t) => {
   const libp2p = null;
   await store.add(trieA, signedMessage, libp2p, [address]);
 
-  const leaves = await store.leaves(trieA);
+  const from = null;
+  const amount = null;
+  const parser = JSON.parse;
+  const leaves = await store.leaves(trieA, from, amount, parser);
   t.is(leaves.length, 1);
   t.truthy(leaves[0]);
 
