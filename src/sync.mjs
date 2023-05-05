@@ -13,17 +13,52 @@ import * as store from "./store.mjs";
 import * as roots from "./topics/roots.mjs";
 import * as registry from "./chainstate/registry.mjs";
 
-export function setSyncPeer(peerId) {
-  if (!peerId) {
-    log("Unsetting global peer");
-  } else {
-    log(`Setting global peer: "${peerId}"`);
-  }
-  global.peer = peerId;
-}
+export function syncPeerFactory() {
+  let peer;
+  function isValid(newPeer) {
+    const syncPeer = get();
 
-export function getSyncPeer() {
-  return global.peer;
+    if (!syncPeer) {
+      set(newPeer);
+      return {
+        result: true,
+        syncPeer: newPeer,
+        newPeer,
+      };
+    }
+
+    if (syncPeer.equals(newPeer)) {
+      return {
+        result: true,
+        syncPeer,
+        newPeer,
+      };
+    }
+
+    return {
+      result: false,
+      syncPeer,
+      newPeer,
+    };
+  }
+
+  function set(peerId) {
+    if (!peerId) {
+      log("Unsetting global peer");
+    } else {
+      log(`Setting global peer: "${peerId}"`);
+    }
+    peer = peerId;
+  }
+
+  function get() {
+    return peer;
+  }
+  return {
+    get,
+    set,
+    isValid,
+  };
 }
 
 export async function toWire(message, sink) {
@@ -116,9 +151,10 @@ export async function initiate(
   peerId,
   exclude = [],
   level = 0,
-  innerSend
+  innerSend,
+  peerFab
 ) {
-  const { result, syncPeer, newPeer } = isValidPeer(peerId);
+  const { result, syncPeer, newPeer } = peerFab.isValid(peerId);
   if (!result) {
     log(
       `initiate: Currently syncing with "${syncPeer}" but tried initiating with "${newPeer}". Aborting`
@@ -139,7 +175,7 @@ export async function initiate(
         .root()
         .toString("hex")}"`
     );
-    setSyncPeer();
+    peerFab.set();
     return;
   }
   // TODO: The levels magic constant here should somehow be externally defined
@@ -159,7 +195,7 @@ export async function initiate(
   }
 
   const matches = deserialize(response.match).map((node) => node.hash);
-  return await initiate(trie, peerId, matches, level + 1, innerSend);
+  return await initiate(trie, peerId, matches, level + 1, innerSend, peerFab);
 }
 
 export async function put(trie, message) {
@@ -210,36 +246,9 @@ export function receive(handler) {
   };
 }
 
-export function isValidPeer(newPeer) {
-  const syncPeer = getSyncPeer();
-
-  if (!syncPeer) {
-    setSyncPeer(newPeer);
-    return {
-      result: true,
-      syncPeer: newPeer,
-      newPeer,
-    };
-  }
-
-  if (syncPeer.equals(newPeer)) {
-    return {
-      result: true,
-      syncPeer,
-      newPeer,
-    };
-  }
-
-  return {
-    result: false,
-    syncPeer,
-    newPeer,
-  };
-}
-
-export function handleLevels(trie) {
+export function handleLevels(trie, peerFab) {
   return receive(async (message, peer) => {
-    const { result, syncPeer, newPeer } = isValidPeer(peer);
+    const { result, syncPeer, newPeer } = peerFab.isValid(peer);
     if (!result) {
       log(
         `handle levels: Currently syncing with "${syncPeer}" but received levels from "${newPeer}". Aborting`
@@ -252,9 +261,9 @@ export function handleLevels(trie) {
   });
 }
 
-export function handleLeaves(trie) {
+export function handleLeaves(trie, peerFab) {
   return receive(async (message, peer) => {
-    const { result, syncPeer, newPeer } = isValidPeer(peer);
+    const { result, syncPeer, newPeer } = peerFab.isValid(peer);
     if (!result) {
       log(
         `handle leaves: Currently syncing with "${syncPeer}" but received leaves from "${newPeer}". Aborting`

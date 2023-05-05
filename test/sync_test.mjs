@@ -17,7 +17,9 @@ import {
   fromWire,
   toWire,
   advertise,
+  syncPeerFactory,
 } from "../src/sync.mjs";
+import { bootstrap } from "../src/id.mjs";
 import * as store from "../src/store.mjs";
 import log from "../src/logger.mjs";
 
@@ -79,10 +81,11 @@ test.serial(
       }
     };
 
-    const peerIdA = "A";
+    const peerIdA = await bootstrap();
     const level = 0;
     const exclude = [];
-    await initiate(trieA, peerIdA, exclude, level, sendMock);
+    const peerFab = syncPeerFactory();
+    await initiate(trieA, peerIdA, exclude, level, sendMock, peerFab);
 
     await trieB.commit();
     t.false(trieA.hasCheckpoints());
@@ -118,10 +121,11 @@ test.serial("syncing a partial trie", async (t) => {
     }
   };
 
-  const peerIdA = "A";
+  const peerIdA = await bootstrap();
   const level = 0;
   const exclude = [];
-  await initiate(trieA, peerIdA, exclude, level, sendMock);
+  const peerFab = syncPeerFactory();
+  await initiate(trieA, peerIdA, exclude, level, sendMock, peerFab);
 
   await trieB.commit();
   t.false(trieA.hasCheckpoints());
@@ -154,10 +158,11 @@ test.serial("syncing an empty trie", async (t) => {
     }
   };
 
-  const peerIdA = "A";
+  const peerIdA = await bootstrap();
   const level = 0;
   const exclude = [];
-  await initiate(trieA, peerIdA, exclude, level, sendMock);
+  const peerFab = syncPeerFactory();
+  await initiate(trieA, peerIdA, exclude, level, sendMock, peerFab);
 
   await trieB.commit();
   t.false(trieA.hasCheckpoints());

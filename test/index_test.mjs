@@ -25,6 +25,24 @@ import * as store from "../src/store.mjs";
 import log from "../src/logger.mjs";
 import { sign, create } from "../src/id.mjs";
 
+async function removeTestFolders() {
+  try {
+    await rm("dbtestA", { recursive: true });
+  } catch (error) {
+    if (error.code !== "ENOENT") throw error;
+  }
+
+  try {
+    await rm("dbtestB", { recursive: true });
+  } catch (error) {
+    if (error.code !== "ENOENT") throw error;
+  }
+}
+
+test.afterEach.always(async () => {
+  await removeTestFolders();
+});
+
 async function simplePut(trie, message) {
   const missing = deserialize(message);
   for await (let { node, key } of missing) {

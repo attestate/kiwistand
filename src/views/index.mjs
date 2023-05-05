@@ -37,8 +37,7 @@ export default async function index(trie, theme) {
   const leaves = editorPicks(await store.leaves(trie));
   const stories = count(leaves)
     .sort((a, b) => b.timestamp - a.timestamp)
-    .slice(0, totalStories)
-    .reverse();
+    .slice(0, totalStories);
   return html`
     <html lang="en" op="news">
       <head>

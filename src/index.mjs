@@ -38,13 +38,19 @@ export async function subscribe(
   topics = [],
   trie
 ) {
+  const peerFab = sync.syncPeerFactory();
+
   // TODO: Move this into the launch file
   let protocolHandlerCopy = { ...protocolHandlers };
   try {
-    protocolHandlerCopy["/levels/1.0.0"] =
-      protocolHandlerCopy["/levels/1.0.0"](trie);
-    protocolHandlerCopy["/leaves/1.0.0"] =
-      protocolHandlerCopy["/leaves/1.0.0"](trie);
+    protocolHandlerCopy["/levels/1.0.0"] = protocolHandlerCopy["/levels/1.0.0"](
+      trie,
+      peerFab
+    );
+    protocolHandlerCopy["/leaves/1.0.0"] = protocolHandlerCopy["/leaves/1.0.0"](
+      trie,
+      peerFab
+    );
   } catch (err) {
     log(
       `Error setting up protocol handler (expected during testing): "${err.toString()}"`
@@ -77,7 +83,14 @@ export async function subscribe(
   node.goblin.initiate = async (peerId) => {
     const level = 0;
     const exclude = [];
-    return await sync.initiate(trie, peerId, exclude, level, sync.send(node));
+    return await sync.initiate(
+      trie,
+      peerId,
+      exclude,
+      level,
+      sync.send(node),
+      peerFab
+    );
   };
 
   sync.advertise(trie, node, env.ROOT_ADVERTISEMENT_TIMEOUT);
