@@ -33,26 +33,8 @@ eventual upgrade announcements as the protocol is far from being complete.
 
 ## Roadmap
 
-- [ ] Send proof along with sending leaves and understand what qualities
-  proving roots brings.
-- [x] For each new root, gossip it to the network to encourage synchronization
-  - [x] But only gossip periodically and not upon every receival of a new
-    message (as this is what the gossipsub topics are for)
-- [ ] Consider just exposing one RPC endpoint for submitting messages instead
-  of having one endpoint for accepting leaves and another for user-facing
-  applications.
-- [x] Sanitize endpoints that ingest data and make sure they are resilient.
-- [x] For gossip-received messages, reject them when they're too far in the
-  future.
-- [ ] Add "key delegation" message
-- [x] Consider that users can currently amplify a story twice and find a
-  solution
-- [x] Make the "Submit Story" button only visible in debug mode
-- [x] Find better approach for frontend
-- [ ] Separate frontend from node
-- [x] Send leave messages through pagination.
-- [ ] Add basic documentation
-- [x] Implement an on-chain allow list tracker
+Here is the [Roadmap file](https://hackmd.io/GtcGsKrlS_-vIFjhxQVw8w) we try to
+keep updated weekly. If not message @timdaub (e.g. on Telegram).
 
 ## license
 
