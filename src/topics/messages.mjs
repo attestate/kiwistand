@@ -1,13 +1,20 @@
 // @format
+import { strict as assert } from "assert";
 
 import { decode } from "cbor-x";
 
 import log from "../logger.mjs";
 import * as store from "../store.mjs";
-import { TOPIC_PREFIX } from "./index.mjs";
 import * as registry from "../chainstate/registry.mjs";
+import { PROTOCOL } from "../constants.mjs";
 
-export const name = `${TOPIC_PREFIX}/messages`;
+const { prefix } = PROTOCOL.pubsub;
+const { version, id } = PROTOCOL.pubsub.topics.messages;
+assert.ok(prefix);
+assert.ok(version);
+assert.ok(id);
+export const name = `${prefix}/${version}/${id}`;
+
 export const handlers = {
   message: (trie) => {
     return async (evt) => {

@@ -24,6 +24,9 @@ import { start, subscribe, handlers } from "../src/index.mjs";
 import * as store from "../src/store.mjs";
 import log from "../src/logger.mjs";
 import { sign, create } from "../src/id.mjs";
+import { PROTOCOL } from "../src/constants.mjs";
+
+const { leaves } = PROTOCOL.protocols;
 
 async function removeTestFolders() {
   try {
@@ -186,7 +189,10 @@ test.skip("if sync of simple messages work over the network", async (t) => {
     node1,
     handlers.node,
     handlers.connection,
-    { ...handlers.protocol, ...{ "/leaves/1.0.0": simpleHandleLeaves } },
+    {
+      ...handlers.protocol,
+      ...{ [`/${leaves.id}/${leaves.version}`]: simpleHandleLeaves },
+    },
     [],
     trieA
   );
@@ -204,7 +210,10 @@ test.skip("if sync of simple messages work over the network", async (t) => {
     node2,
     handlers.node,
     handlers.connection,
-    { ...handlers.protocol, ...{ "/leaves/1.0.0": simpleHandleLeaves } },
+    {
+      ...handlers.protocol,
+      ...{ [`/${leaves.id}/${leaves.version}`]: simpleHandleLeaves },
+    },
     [],
     trieB
   );

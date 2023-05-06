@@ -12,6 +12,9 @@ import log from "./logger.mjs";
 import * as store from "./store.mjs";
 import * as roots from "./topics/roots.mjs";
 import * as registry from "./chainstate/registry.mjs";
+import { PROTOCOL } from "./constants.mjs";
+
+const { levels, leaves } = PROTOCOL.protocols;
 
 export function syncPeerFactory() {
   // NOTE: We open a closure here for "peer" and the user calls the
@@ -184,14 +187,22 @@ export async function initiate(
   }
   // TODO: The levels magic constant here should somehow be externally defined
   // as a constant.
-  const response = await innerSend(peerId, "/levels/1.0.0", serialize(remotes));
+  const response = await innerSend(
+    peerId,
+    `/${levels.id}/${levels.version}`,
+    serialize(remotes)
+  );
   const missing = deserialize(response.missing).filter(
     ({ node }) => node instanceof LeafNode
   );
   if (missing.length > 0) {
     log("Sending missing leaves to peer node");
     try {
-      await innerSend(peerId, "/leaves/1.0.0", serialize(missing));
+      await innerSend(
+        peerId,
+        `/${leaves.id}/${leaves.version}`,
+        serialize(missing)
+      );
     } catch (err) {
       log("Error sending leaves to peer");
       throw err;

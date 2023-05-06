@@ -3,6 +3,32 @@ import { env } from "process";
 
 import { keccak256 } from "ethereum-cryptography/keccak.js";
 
+export const PROTOCOL = {
+  pubsub: {
+    prefix: "kiwi",
+    topics: {
+      roots: {
+        id: "roots",
+        version: "0.0.1",
+      },
+      messages: {
+        id: "messages",
+        version: "0.0.1",
+      },
+    },
+  },
+  protocols: {
+    leaves: {
+      id: "leaves",
+      version: "2.0.0",
+    },
+    levels: {
+      id: "levels",
+      version: "2.0.0",
+    },
+  },
+};
+
 // NOTE: ethers-rs only allows strings as inputs that then get keccak256-hashed
 // as salts. Hence, as a work-around, we hash a canonical string value here to
 // simulate ethers-rs behavior.

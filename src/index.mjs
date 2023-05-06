@@ -8,6 +8,9 @@ import log from "./logger.mjs";
 import { bootstrap } from "./id.mjs";
 import * as sync from "./sync.mjs";
 import * as store from "./store.mjs";
+import { PROTOCOL } from "./constants.mjs";
+
+const { leaves, levels } = PROTOCOL.protocols;
 
 export const handlers = {
   node: {
@@ -18,8 +21,8 @@ export const handlers = {
     "peer:disconnect": sync.handleDisconnection,
   },
   protocol: {
-    "/levels/1.0.0": sync.handleLevels,
-    "/leaves/1.0.0": sync.handleLeaves,
+    [`/${levels.id}/${levels.version}`]: sync.handleLevels,
+    [`/${leaves.id}/${leaves.version}`]: sync.handleLeaves,
   },
 };
 
@@ -43,14 +46,10 @@ export async function subscribe(
   // TODO: Move this into the launch file
   let protocolHandlerCopy = { ...protocolHandlers };
   try {
-    protocolHandlerCopy["/levels/1.0.0"] = protocolHandlerCopy["/levels/1.0.0"](
-      trie,
-      peerFab
-    );
-    protocolHandlerCopy["/leaves/1.0.0"] = protocolHandlerCopy["/leaves/1.0.0"](
-      trie,
-      peerFab
-    );
+    protocolHandlerCopy[`/${levels.id}/${levels.version}`] =
+      protocolHandlerCopy[`/${levels.id}/${levels.version}`](trie, peerFab);
+    protocolHandlerCopy[`/${leaves.id}/${leaves.version}`] =
+      protocolHandlerCopy[`/${leaves.id}/${leaves.version}`](trie, peerFab);
   } catch (err) {
     log(
       `Error setting up protocol handler (expected during testing): "${err.toString()}"`

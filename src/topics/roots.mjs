@@ -1,13 +1,20 @@
 // @format
 import { env } from "process";
+import { strict as assert } from "assert";
 
 import { decode } from "cbor-x";
 
 import log from "../logger.mjs";
-import { TOPIC_PREFIX } from "./index.mjs";
 import { initiate } from "../sync.mjs";
+import { PROTOCOL } from "../constants.mjs";
 
-export const name = `${TOPIC_PREFIX}/roots`;
+const { prefix } = PROTOCOL.pubsub;
+const { version, id } = PROTOCOL.pubsub.topics.roots;
+assert.ok(prefix);
+assert.ok(version);
+assert.ok(id);
+export const name = `${prefix}/${version}/${id}`;
+
 export const handlers = {
   message: (trie, node) => {
     return async (evt) => {

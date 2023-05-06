@@ -22,6 +22,7 @@ import {
 import { bootstrap } from "../src/id.mjs";
 import * as store from "../src/store.mjs";
 import log from "../src/logger.mjs";
+import { PROTOCOL } from "../src/constants.mjs";
 
 async function simplePut(trie, message) {
   const missing = deserialize(message);
@@ -73,10 +74,11 @@ test.serial(
     trieB.checkpoint();
     t.true(trieB.hasCheckpoints());
 
+    const { levels, leaves } = PROTOCOL.protocols;
     const sendMock = async (peerId, protocol, message) => {
-      if (protocol === "/levels/1.0.0") {
+      if (protocol === `/${levels.id}/${levels.version}`) {
         return await compare(trieB, message);
-      } else if (protocol === "/leaves/1.0.0") {
+      } else if (protocol === `/${leaves.id}/${leaves.version}`) {
         return await simplePut(trieB, message);
       }
     };
@@ -113,10 +115,11 @@ test.serial("syncing a partial trie", async (t) => {
   trieB.checkpoint();
   t.true(trieB.hasCheckpoints());
 
+  const { levels, leaves } = PROTOCOL.protocols;
   const sendMock = async (peerId, protocol, message) => {
-    if (protocol === "/levels/1.0.0") {
+    if (protocol === `/${levels.id}/${levels.version}`) {
       return await compare(trieB, message);
-    } else if (protocol === "/leaves/1.0.0") {
+    } else if (protocol === `/${leaves.id}/${leaves.version}`) {
       return await simplePut(trieB, message);
     }
   };
@@ -150,10 +153,11 @@ test.serial("syncing an empty trie", async (t) => {
   trieB.checkpoint();
   t.true(trieB.hasCheckpoints());
 
+  const { levels, leaves } = PROTOCOL.protocols;
   const sendMock = async (peerId, protocol, message) => {
-    if (protocol === "/levels/1.0.0") {
+    if (protocol === `/${levels.id}/${levels.version}`) {
       return await compare(trieB, message);
-    } else if (protocol === "/leaves/1.0.0") {
+    } else if (protocol === `/${leaves.id}/${leaves.version}`) {
       return await simplePut(trieB, message);
     }
   };
