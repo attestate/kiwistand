@@ -17,6 +17,7 @@ npm i
 npm i -g pm2
 pm2 start
 # might error when trying to create the data dir, that's a bug right now, just run it again
+# e.g. pm2 restart all
 ```
 
 If your Ethereum RPC node is behind a reverse proxy with Authorization
@@ -31,7 +32,11 @@ invited to run your own nodes and frontends. However, please consider to join a
 chat like the [attestate dev chat](https://t.me/attestate) to stay in touch for
 eventual upgrade announcements as the protocol is far from being complete.
 
-## Roadmap
+## changelog
+
+See changelog.md file.
+
+## roadmap
 
 Here is the [Roadmap file](https://hackmd.io/GtcGsKrlS_-vIFjhxQVw8w) we try to
 keep updated weekly. If not message @timdaub (e.g. on Telegram).
