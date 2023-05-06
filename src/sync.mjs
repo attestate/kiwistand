@@ -217,21 +217,21 @@ export async function put(trie, message) {
   const missing = deserialize(message);
   for await (let { node, key } of missing) {
     const value = decode(node.value());
-    //let obj;
-    //try {
-    //  obj = JSON.parse(value);
-    //} catch (err) {
-    //  log(
-    //    `put: Couldn't JSON-parse message "${value}" to in trie: ${err.toString()}`
-    //  );
-    //  return;
-    //}
+    let obj;
+    try {
+      obj = JSON.parse(value);
+    } catch (err) {
+      log(
+        `put: Couldn't JSON-parse message "${value}" to in trie: ${err.toString()}`
+      );
+      return;
+    }
 
     const libp2p = null;
     const allowlist = await registry.allowlist();
     const synching = true;
     try {
-      await store.add(trie, value, libp2p, allowlist, true);
+      await store.add(trie, obj, libp2p, allowlist, true);
       log(`Adding to database value (as JSON) "${value}"`);
     } catch (err) {
       log(
