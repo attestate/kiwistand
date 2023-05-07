@@ -7,14 +7,17 @@ import map from "it-map";
 import all from "it-all";
 import { LeafNode, decodeNode } from "@ethereumjs/trie";
 import { encode, decode } from "cbor-x";
+import Ajv from "ajv";
 
 import log from "./logger.mjs";
 import * as store from "./store.mjs";
 import * as roots from "./topics/roots.mjs";
 import * as registry from "./chainstate/registry.mjs";
-import { PROTOCOL } from "./constants.mjs";
+import { SCHEMATA, PROTOCOL } from "./constants.mjs";
 
 const { levels, leaves } = PROTOCOL.protocols;
+const ajv = new Ajv();
+const comparisonValidator = ajv.compile(SCHEMATA.comparison);
 
 export function syncPeerFactory() {
   // NOTE: We open a closure here for "peer" and the user calls the
@@ -166,6 +169,9 @@ export async function initiate(
     log(
       `initiate: Currently syncing with "${syncPeer}" but tried initiating with "${newPeer}". Aborting`
     );
+    // NOTE: We are NOT unsetting the peerFab syncPeer here as that'd overwrite
+    // the current peer (which crucially must not be overwritten for the
+    // on-going sync to continue taking place).
     return;
   }
 
@@ -185,13 +191,21 @@ export async function initiate(
     peerFab.set();
     return;
   }
-  // TODO: The levels magic constant here should somehow be externally defined
-  // as a constant.
   const response = await innerSend(
     peerId,
     `/${levels.id}/${levels.version}`,
     serialize(remotes)
   );
+  if (!comparisonValidator(response)) {
+    log(
+      `Wrongly formatted comparison message: ${JSON.stringify(
+        comparisonValidator.errors
+      )}. Instead got "${response}". Aborting initiate.`
+    );
+    peerFab.set();
+    return;
+  }
+
   const missing = deserialize(response.missing).filter(
     ({ node }) => node instanceof LeafNode
   );
@@ -205,6 +219,7 @@ export async function initiate(
       );
     } catch (err) {
       log("Error sending leaves to peer");
+      peerFab.set();
       throw err;
     }
   }

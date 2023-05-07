@@ -35,6 +35,36 @@ async function simplePut(trie, message) {
   }
 }
 
+test("initiate should not crash when innerSend returns an undefined missing field", async (t) => {
+  const mockPeerFab = {
+    isValid: () => ({
+      result: true,
+      syncPeer: "syncPeer",
+      newPeer: "newPeer",
+    }),
+    set: () => {},
+  };
+
+  const mockInnerSend = () => {
+    return {
+      missing: undefined,
+    };
+  };
+
+  const trie = await store.create();
+  const peerId = "testPeerId";
+  const exclude = [];
+  const level = 0;
+
+  try {
+    await initiate(trie, peerId, exclude, level, mockInnerSend, mockPeerFab);
+  } catch (error) {
+    t.fail(`initiate function crashed with error: ${error.message}`);
+  }
+
+  t.pass();
+});
+
 test("advertising root periodically", async (t) => {
   env.DATA_DIR = "dbtestA";
   const trie = await store.create();

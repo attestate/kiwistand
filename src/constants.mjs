@@ -52,7 +52,41 @@ export const EIP712_TYPES = {
   ],
 };
 
+const node = {
+  type: "object",
+  additionalProperties: false,
+  required: ["key", "hash", "node"],
+  properties: {
+    key: { type: "string" },
+    hash: { type: "string" },
+    node: { type: "string" },
+  },
+};
+
+const nodes = {
+  type: "array",
+  items: {
+    ...node,
+  },
+};
+
 export const SCHEMATA = {
+  comparison: {
+    type: "object",
+    additionalProperties: false,
+    required: ["missing", "mismatch", "match"],
+    properties: {
+      missing: {
+        ...nodes,
+      },
+      mismatch: {
+        ...nodes,
+      },
+      match: {
+        ...nodes,
+      },
+    },
+  },
   pagination: {
     type: "object",
     additionalProperties: false,
