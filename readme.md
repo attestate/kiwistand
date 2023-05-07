@@ -25,6 +25,12 @@ requirements, consider adding the `@attestate/crawler` `RPC_API_KEY`
 environment variable
 ([details](https://attestate.com/crawler/main/configuration.html#environment-variables)).
 
+## tech stack details
+
+- [Youtube: Kiwistand - a decentralized Hacker News | Tim Daubenschütz (4mins)](https://www.youtube.com/watch?v=WujtU15yAyk)
+- [Loom: Set Reconciliation demo (40 secs)](https://www.loom.com/share/abf43323b00547689bf11520f565f4bc)
+- [Loom: Set Reconciliation algorithm explained (9mins)](https://www.loom.com/share/2a68f5e22d9843ab99edad2deaed9281)
+
 ## node operators
 
 Since https://news.kiwistand.com is now running live as a p2p node, you're
