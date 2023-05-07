@@ -8,7 +8,6 @@ import normalizeUrl from "normalize-url";
 import Header from "./components/header.mjs";
 import Footer from "./components/footer.mjs";
 import * as store from "../store.mjs";
-import banlist from "../../banlist.mjs";
 import * as id from "../id.mjs";
 import { count } from "./feed.mjs";
 

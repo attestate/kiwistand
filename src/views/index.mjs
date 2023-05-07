@@ -1,46 +1,66 @@
 //@format
-import { env } from "process";
+import { URL } from "url";
+
 import htm from "htm";
 import vhtml from "vhtml";
-import url from "url";
+import { fetchBuilder, MemoryCache } from "node-fetch-cache";
 
 import Header from "./components/header.mjs";
 import Footer from "./components/footer.mjs";
 import * as store from "../store.mjs";
 import * as id from "../id.mjs";
 import { count } from "./feed.mjs";
+import { getConfig } from "./moderation.mjs";
 
 const html = htm.bind(vhtml);
+const fetch = fetchBuilder.withCache(
+  new MemoryCache({
+    ttl: 60000 * 5, //5mins
+  })
+);
 
 function extractDomain(link) {
-  const parsedUrl = new url.URL(link);
+  const parsedUrl = new URL(link);
   return parsedUrl.hostname;
 }
 
 // NOTE: I've not added this function to the code base at store.editorPicks as
 // I think this is a function that belongs in the client frontend and not into
 // the node code base.
-function editorPicks(leaves) {
+function editorPicks(leaves, config) {
   return leaves
     .map((leaf) => ({
       address: id.ecrecover(leaf),
       ...leaf,
     }))
     .filter(
-      ({ address }) =>
-        address.toLowerCase() === env.TODAYS_EDITOR_ADDRESS.toLowerCase()
+      ({ address }) => address.toLowerCase() === config.address.toLowerCase()
     );
 }
 
-const totalStories = parseInt(env.TODAYS_EDITOR_STORY_COUNT, 10);
+function parseConfig(config) {
+  const copy = { ...config };
+  copy.numberOfStories = parseInt(config.numberOfStories, 10);
+  return copy;
+}
+
+const url =
+  "https://opensheet.elk.sh/1kh9zHwzekLb7toabpdSfd87pINBpyVU6Q8jLliBXtEc/3wi";
 export default async function index(trie, theme) {
+  const [response] = await getConfig("3wi");
+  const config = parseConfig(response);
+  console.log(config, response);
+
   const from = null;
   const amount = null;
   const parser = JSON.parse;
-  const leaves = editorPicks(await store.leaves(trie, from, amount, parser));
+  const leaves = editorPicks(
+    await store.leaves(trie, from, amount, parser),
+    config
+  );
   const stories = count(leaves)
     .sort((a, b) => b.timestamp - a.timestamp)
-    .slice(0, totalStories);
+    .slice(0, config.numberOfStories);
   return html`
     <html lang="en" op="news">
       <head>
@@ -138,9 +158,8 @@ export default async function index(trie, theme) {
           <span> to our newsletter.</span>
           <br />
           <span>Today's Editor Picks are curated by </span>
-          <a style="color:black;" href="${env.TODAYS_EDITOR_URL}">
-            ${env.TODAYS_EDITOR_NAME}</a
-          >! (submitted by @macbudkowski) ${Footer}
+          <a style="color:black;" href="${config.link}"> ${config.name}</a>!
+          ${Footer}
         </center>
       </body>
     </html>

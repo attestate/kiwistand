@@ -10,26 +10,14 @@ import { formatDistanceToNow, differenceInMinutes } from "date-fns";
 import Header from "./components/header.mjs";
 import Footer from "./components/footer.mjs";
 import * as store from "../store.mjs";
-import banlist from "../../banlist.mjs";
 import * as id from "../id.mjs";
+import * as moderation from "./moderation.mjs";
 
 const html = htm.bind(vhtml);
 
 function extractDomain(link) {
   const parsedUrl = new url.URL(link);
   return parsedUrl.hostname;
-}
-
-const addresses = banlist.addresses.map((addr) => addr.toLowerCase());
-const hrefs = banlist.hrefs.map((href) => normalizeUrl(href));
-export function moderate(leaves) {
-  return leaves
-    .map((leaf) => ({
-      address: id.ecrecover(leaf),
-      ...leaf,
-    }))
-    .filter(({ address }) => !addresses.includes(address.toLowerCase()))
-    .filter(({ href }) => !hrefs.includes(normalizeUrl(href)));
 }
 
 const itemAge = (timestamp) => {
@@ -71,10 +59,12 @@ const calculateScore = (votes, itemHourAge, gravity = 1.8) => {
 
 const totalStories = parseInt(env.TOTAL_STORIES, 10);
 export default async function index(trie, theme) {
+  const config = await moderation.getBanlist();
   const from = null;
   const amount = null;
   const parser = JSON.parse;
-  const leaves = moderate(await store.leaves(trie, from, amount, parser));
+  let leaves = await store.leaves(trie, from, amount, parser);
+  leaves = moderation.moderate(leaves, config);
   const stories = count(leaves)
     .map((story) => {
       const score = calculateScore(story.upvotes, itemAge(story.timestamp));
