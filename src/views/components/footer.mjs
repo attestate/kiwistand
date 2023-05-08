@@ -11,6 +11,8 @@ const footer = html`
   <a href="/welcome">Access NFT</a>
   <span> | </span>
   <a href="/subscribe">Newsletter</a>
+  <span> | </span>
+  <a href="https://attestate.com/kiwistand/main/">Documentation</a>
   <script src="bundle.js"></script>
 `;
 export default footer;
