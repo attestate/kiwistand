@@ -24,7 +24,7 @@ export function selectUpvotes(leaves, address) {
       address: id.ecrecover(leaf),
       ...leaf,
     }))
-    .filter((leaf) => address === leaf.address);
+    .filter((leaf) => address.toLowerCase() === leaf.address.toLowerCase());
 }
 
 export default async function (trie, theme, address) {
