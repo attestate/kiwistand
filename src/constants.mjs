@@ -57,6 +57,7 @@ const node = {
   additionalProperties: false,
   required: ["key", "hash", "node"],
   properties: {
+    level: { type: "integer" },
     key: { type: "string" },
     hash: { type: "string" },
     node: { type: "string" },
