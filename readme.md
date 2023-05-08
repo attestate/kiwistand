@@ -25,6 +25,11 @@ requirements, consider adding the `@attestate/crawler` `RPC_API_KEY`
 environment variable
 ([details](https://attestate.com/crawler/main/configuration.html#environment-variables)).
 
+## docs
+
+We document the code base in Sphinx, see ./docs. We host the documentation at
+[attestate.com/kiwistand/main](https://attestate.com/kiwistand/main/).
+
 ## tech stack details
 
 - [Youtube: Kiwistand - a decentralized Hacker News | Tim Daubenschütz (4mins)](https://www.youtube.com/watch?v=WujtU15yAyk)
