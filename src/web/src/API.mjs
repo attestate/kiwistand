@@ -31,7 +31,7 @@ export async function send(message, signature) {
   });
 
   try {
-    await fetch("/messages", {
+    await fetch("/api/v1/messages", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
