@@ -69,6 +69,14 @@ JSON Schemas
 Endpoints
 ---------
 
+**GET /allowlist**
+
+Retrieves the allow list, which includes all Ethereum addresses that have
+minted the NFT at the contract located at
+`0xebb15487787cbf8ae2ffe1a6cca5a50e63003786 <https://etherscan.io/address/0xebb15487787cbf8ae2ffe1a6cca5a50e63003786>`_.
+Please note that it may take some time for the indexer to pick up a new mint
+(usually around 1-2 minutes).
+
 **POST /list**
 
 Lists messages with the given pagination parameters.
@@ -78,7 +86,8 @@ Request body:
 - ``from`` (integer): The number of entries the request should be offset by. It
   is inclusive.
 - ``amount`` (integer): The number of entries that the request should contain.
-  Must be between 0 and HTTP_MESSAGES_MAX_PAGE_SIZE.
+  Must be between 0 and HTTP_MESSAGES_MAX_PAGE_SIZE, as defined in the `.env
+  file <https://github.com/attestate/kiwistand/blob/main/.env-copy>`_.
 
 **POST /messages**
 
@@ -87,7 +96,7 @@ Adds a message to the Kiwistand P2P node.
 Request body:
 
 - ``timestamp`` (integer): Unix timestamp. Must be bigger than
-  MIN_TIMESTAMP_SECS (1672527600).
+  MIN_TIMESTAMP_SECS (1672527600), as defined in the `.env file <https://github.com/attestate/kiwistand/blob/main/.env-copy>`_.
 - ``type`` (string): Message type. Currently, only "amplify" is supported.
 - ``title`` (string): Message title. Max length is 80 characters.
 - ``href`` (string): Message link. Must be a valid URI with a max length of
@@ -95,17 +104,17 @@ Request body:
 - ``signature`` (string): Message signature. Must match the pattern
   "0x[a-fA-F0-9]+".
 
-Constraints for store.add
--------------------------
+Acceptance Criteria for Messages
+--------------------------------
 
 1. Every message must comply with the message JSON schema.
-2. The timestamp must be bigger than MIN_TIMESTAMP_SECS (1672527600).
+2. The timestamp must be bigger than MIN_TIMESTAMP_SECS (1672527600), as
+   defined in the `.env file <https://github.com/attestate/kiwistand/blob/main/.env-copy>`_.
 3. The timestamp must be accurate according to the amount of seconds defined in
-   HTTP_MESSAGES_MAX_PAGE_SIZE (50).
+   HTTP_MESSAGES_MAX_PAGE_SIZE (50), as defined in the `.env file <https://github.com/attestate/kiwistand/blob/main/.env-copy>`_.
 4. The sender's address must be in the allowlist, which consists of all NFT
    minters of the contract on Ethereum mainnet at address
-   0xebb15487787cbf8ae2ffe1a6cca5a50e63003786. Refer to Etherscan or the
-   "collect" page on zora.co for more information.
+   `0xebb15487787cbf8ae2ffe1a6cca5a50e63003786 <https://etherscan.io/address/0xebb15487787cbf8ae2ffe1a6cca5a50e63003786>`_. Refer to Etherscan for more information.
 5. When running ecrecover on the signature, it must reproduce an address on the
    allowlist. EIP712 is used as the signing method
    (https://eips.ethereum.org/EIPS/eip-712).
