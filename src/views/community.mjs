@@ -1,65 +1,65 @@
 //@format
-import { URL } from "url";
+import url from "url";
 
 import htm from "htm";
 import vhtml from "vhtml";
-import { fetchBuilder, MemoryCache } from "node-fetch-cache";
+import normalizeUrl from "normalize-url";
 
 import Header from "./components/header.mjs";
 import Footer from "./components/footer.mjs";
 import * as store from "../store.mjs";
 import * as id from "../id.mjs";
-import { count } from "./feed.mjs";
-import { getConfig } from "./moderation.mjs";
+import * as moderation from "./moderation.mjs";
 
 const html = htm.bind(vhtml);
-const fetch = fetchBuilder.withCache(
-  new MemoryCache({
-    ttl: 60000 * 5, //5mins
-  })
-);
 
-function extractDomain(link) {
-  const parsedUrl = new URL(link);
-  return parsedUrl.hostname;
-}
+const countPoints = (messages) => {
+  messages = messages.sort((a, b) => a.timestamp - b.timestamp);
+  const submissions = new Map();
+  const points = {};
 
-// NOTE: I've not added this function to the code base at store.editorPicks as
-// I think this is a function that belongs in the client frontend and not into
-// the node code base.
-function editorPicks(leaves, config) {
-  return leaves
-    .map((leaf) => ({
-      address: id.ecrecover(leaf),
-      ...leaf,
-    }))
-    .filter(
-      ({ address }) => address.toLowerCase() === config.address.toLowerCase()
-    );
-}
+  function add(points, address) {
+    if (
+      typeof points[address] !== undefined &&
+      Number.isInteger(points[address])
+    ) {
+      points[address] += 1;
+    } else {
+      points[address] = 1;
+    }
+  }
 
-function parseConfig(config) {
-  const copy = { ...config };
-  copy.numberOfStories = parseInt(config.numberOfStories, 10);
-  return copy;
-}
+  messages.forEach((message) => {
+    const normalizedUrl = normalizeUrl(message.href);
+    const address = id.ecrecover(message);
 
-const url =
-  "https://opensheet.elk.sh/1kh9zHwzekLb7toabpdSfd87pINBpyVU6Q8jLliBXtEc/3wi";
-export default async function index(trie, theme) {
-  const [response] = await getConfig("3wi");
-  const config = parseConfig(response);
+    if (!submissions.has(normalizedUrl)) {
+      submissions.set(normalizedUrl, address);
+      add(points, address);
+    } else {
+      const submitter = submissions.get(normalizedUrl);
+      add(points, submitter);
+    }
+  });
 
+  const list = [];
+  for (const [address, karma] of Object.entries(points)) {
+    list.push({ address, karma });
+  }
+
+  return list.sort((a, b) => b.karma - a.karma);
+};
+
+export default async function (trie, theme) {
+  const config = await moderation.getBanlist();
   const from = null;
   const amount = null;
   const parser = JSON.parse;
-  const leaves = editorPicks(
-    await store.leaves(trie, from, amount, parser),
-    config
-  );
-  const stories = count(leaves)
-    .sort((a, b) => b.timestamp - a.timestamp)
-    .slice(0, config.numberOfStories);
+  let leaves = await store.leaves(trie, from, amount, parser);
+  leaves = moderation.moderate(leaves, config);
+  const users = countPoints(leaves);
+  const totalKarma = users.reduce((total, obj) => total + obj.karma, 0);
+
   return html`
     <html lang="en" op="news">
       <head>
@@ -93,8 +93,15 @@ export default async function index(trie, theme) {
             <tr>
               ${Header(theme)}
             </tr>
-            ${stories.map(
-              (story, i) => html`
+            <tr>
+              <td>
+                <p style="padding: 5px; font-size: 14pt;">
+                  <b>COMMUNITY:</b> Click their names to see their profiles.
+                </p>
+              </td>
+            </tr>
+            ${users.map(
+              (user, i) => html`
                 <tr>
                   <td>
                     <table
@@ -122,42 +129,16 @@ export default async function index(trie, theme) {
                         </td>
                         <td class="title">
                           <span class="titleline">
-                            <a href="${story.href}">${story.title}</a>
-                            <span style="padding-left: 5px">
-                              (${extractDomain(story.href)})
-                            </span>
+                            <ens-name address=${user.address} /> (${user.karma})
                           </span>
                         </td>
                       </tr>
-                      <tr>
-                        <td colspan="2"></td>
-                        <td class="subtext">
-                          <span class="subline">
-                            <span
-                              style="display: inline-block; height: 10px;"
-                              class="score"
-                              id="score_35233479"
-                            ></span>
-                          </span>
-                        </td>
-                      </tr>
-                      <tr class="spacer" style="height:5px"></tr>
                     </table>
                   </td>
                 </tr>
               `
             )}
           </table>
-          <span
-            >Three great stories about crypto a day (Mon-Fr), check back
-            tomorrow for more!
-          </span>
-          <span> Or </span>
-          <a style="color: black;" href="/subscribe">subscribe</a>
-          <span> to our newsletter.</span>
-          <br />
-          <span>Today's Editor Picks are curated by </span>
-          <a style="color:black;" href="${config.link}"> ${config.name}</a>!
           ${Footer}
         </center>
       </body>
