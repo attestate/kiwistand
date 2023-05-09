@@ -25,6 +25,7 @@ import themes from "./themes.mjs";
 const ajv = new Ajv();
 addFormats(ajv);
 const app = express();
+const api = express.Router();
 app.use(express.static("src/public"));
 app.use(express.json());
 app.use(cookieParser());
@@ -172,9 +173,11 @@ export async function launch(trie, libp2p) {
     return reply.status(200).type("text/html").send(submit(reply.locals.theme));
   });
 
-  app.post("/list", listMessages(trie));
-  app.get("/allowlist", listAllowed(registry.allowlist));
-  app.post("/messages", handleMessage(trie, libp2p, registry.allowlist));
+  api.post("/list", listMessages(trie));
+  api.get("/allowlist", listAllowed(registry.allowlist));
+  api.post("/messages", handleMessage(trie, libp2p, registry.allowlist));
+
+  app.use("/api/v1", api);
   app.listen(env.HTTP_PORT, () =>
     log(`Launched HTTP server at port "${env.HTTP_PORT}"`)
   );

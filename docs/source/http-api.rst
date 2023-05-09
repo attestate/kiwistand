@@ -66,10 +66,16 @@ JSON Schemas
     "required": ["timestamp", "type", "title", "href", "signature"]
   }
 
+API Versioning
+--------------
+
+As of the current version, all API endpoints are prefixed with `/api/v1`. This
+is part of our move towards better API versioning.
+
 Endpoints
 ---------
 
-**GET /allowlist**
+**GET /api/v1/allowlist**
 
 Retrieves the allow list, which includes all Ethereum addresses that have
 minted the NFT at the contract located at
@@ -77,7 +83,7 @@ minted the NFT at the contract located at
 Please note that it may take some time for the indexer to pick up a new mint
 (usually around 1-2 minutes).
 
-**POST /list**
+**POST /api/v1/list**
 
 Lists messages with the given pagination parameters.
 
@@ -89,7 +95,7 @@ Request body:
   Must be between 0 and HTTP_MESSAGES_MAX_PAGE_SIZE, as defined in the `.env
   file <https://github.com/attestate/kiwistand/blob/main/.env-copy>`_.
 
-**POST /messages**
+**POST /api/v1/messages**
 
 Adds a message to the Kiwistand P2P node.
 
