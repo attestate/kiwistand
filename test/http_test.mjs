@@ -7,7 +7,7 @@ import { encode } from "cbor-x";
 import { Wallet } from "ethers";
 
 import { sign, create } from "../src/id.mjs";
-import { handleMessage, listMessages } from "../src/http.mjs";
+import { handleMessage, listMessages, listAllowed } from "../src/http.mjs";
 import * as store from "../src/store.mjs";
 
 async function removeTestFolders() {
@@ -26,6 +26,25 @@ async function removeTestFolders() {
 
 test.afterEach.always(async () => {
   await removeTestFolders();
+});
+
+test("list allowed addresses", async (t) => {
+  const mockRequest = {};
+  const mockReply = {
+    status: (code) => ({
+      json: (response) => response,
+    }),
+  };
+
+  const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
+  const allowlist = () => [address];
+  const response = await listAllowed(allowlist)(mockRequest, mockReply);
+
+  t.is(response.status, "success");
+  t.is(response.code, 200);
+  t.is(response.message, "OK");
+  t.is(response.data.length, 1);
+  t.deepEqual(response.data, allowlist());
 });
 
 test("listMessages success", async (t) => {

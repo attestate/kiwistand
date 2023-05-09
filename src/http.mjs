@@ -92,6 +92,15 @@ export function handleMessage(trie, libp2p, getAllowlist) {
   };
 }
 
+export function listAllowed(getAllowlist) {
+  return async (request, reply) => {
+    const code = 200;
+    const httpMessage = "OK";
+    const details = "Returning allow list";
+    return sendStatus(reply, code, httpMessage, details, await getAllowlist());
+  };
+}
+
 // TODO: We should return information about the total amount of leaves
 // somewhere potentially.
 export function listMessages(trie) {
@@ -164,6 +173,7 @@ export async function launch(trie, libp2p) {
   });
 
   app.post("/list", listMessages(trie));
+  app.get("/allowlist", listAllowed(registry.allowlist));
   app.post("/messages", handleMessage(trie, libp2p, registry.allowlist));
   app.listen(env.HTTP_PORT, () =>
     log(`Launched HTTP server at port "${env.HTTP_PORT}"`)
