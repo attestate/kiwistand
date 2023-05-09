@@ -291,5 +291,9 @@ const themes = [
   { id: 289, emoji: "💧", name: "Droplet", color: "#2196f3" },
   { id: 290, emoji: "🌊", name: "Water Wave", color: "#2196f3" },
   { id: 291, emoji: "🫧", name: "Bubbles", color: "#90caf9" },
+  { id: 292, emoji: "🟪", name: "Purple", color: "#8A63D2" },
+  { id: 293, emoji: "🧿", name: "Nazar", color: "#0208a8" },
+  { id: 294, emoji: "📰", name: "Oldschool", color: "#F8F7F3" },
+  { id: 295, emoji: "⭐", name: "Star", color: "#FDCC0D" },
 ];
 export default themes;
