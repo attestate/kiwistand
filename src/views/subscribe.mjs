@@ -43,15 +43,20 @@ export default function index(theme) {
             </tr>
             <tr>
               <td style="padding: 10px; font-size: 16px;">
-                <b>Who here ordered those Kiwis?!</b>
+                <b>Kiwi News Daily Newsletter</b>
                 <p>
-                  <u>Here's the deal:</u>
+                  Just discovered this site and want to stay informed about
+                  updates?
+                </p>
+                <p>
+                  <b>Here's our deal for you:</b>
                   <br />
 
-                  - Every morning we're sending you an email with the link to
-                  this website.
+                  - 1 Email a day (USA morning) with link to Kiwi News
                   <br />
-                  - That's it. No spam and we'll keep your data safe!
+                  - Get latest Editor's Picks from the Kiwi community
+                  <br />
+                  - No spam and your email is safe.
                 </p>
                 <form
                   action="https://buttondown.email/api/emails/embed-subscribe/kiwinews"

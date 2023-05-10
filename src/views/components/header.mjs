@@ -21,9 +21,7 @@ const header = (theme) => html`
               <a href="/">${theme.name} News</a>
             </b>
           </span>
-          <a style="color: black;" href="/">Editor Picks</a>
-          <span> | </span>
-          <a style="color: black;" href="/feed">Top</a>
+          <a style="color: black;" href="/">Top</a>
           <span> | </span>
           <a style="color: black;" href="/new">New</a>
           <span> | </span>

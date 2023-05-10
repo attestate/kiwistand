@@ -11,7 +11,6 @@ import * as store from "./store.mjs";
 import { SCHEMATA } from "./constants.mjs";
 import * as registry from "./chainstate/registry.mjs";
 
-import index from "./views/index.mjs";
 import feed from "./views/feed.mjs";
 import newest from "./views/new.mjs";
 import privacy from "./views/privacy.mjs";
@@ -128,15 +127,15 @@ export function listMessages(trie) {
 }
 
 export async function launch(trie, libp2p) {
-  // NOTE: This endpoint is only supposed to be enabled for as long as we need
-  // to demo the front end.
   app.get("/", async (request, reply) => {
-    const content = await index(trie, reply.locals.theme);
-    return reply.status(200).type("text/html").send(content);
-  });
-  app.get("/feed", async (request, reply) => {
     const content = await feed(trie, reply.locals.theme);
     return reply.status(200).type("text/html").send(content);
+  });
+  // NOTE: During the process of combining the feed and the editor's picks, we
+  // decided to expose people to the community pick's tab right from the front
+  // page, which is why while deprecating the /feed, we're forwarding to root.
+  app.get("/feed", function (req, res) {
+    res.redirect(301, "/");
   });
   app.get("/new", async (request, reply) => {
     const content = await newest(trie, reply.locals.theme);
