@@ -200,7 +200,7 @@ export async function initiate(
     log(
       `Wrongly formatted comparison message: ${JSON.stringify(
         comparisonValidator.errors
-      )}. Instead got "${response}". Aborting initiate.`
+      )}. Instead got "${JSON.stringify(response)}". Aborting initiate.`
     );
     peerFab.set();
     return;
