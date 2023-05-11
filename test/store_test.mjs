@@ -25,12 +25,13 @@ test("if message passes constraint", async (t) => {
     title: "hello world",
     type: "amplify",
   };
-  const result0 = await store.passes(message, address);
+  const metadb = store.metadata();
+  const result0 = await store.passes(metadb, message, address);
   t.true(result0);
-  const result1 = await store.passes(message, address);
+  const result1 = await store.passes(metadb, message, address);
   t.false(result1);
 
-  const result2 = await store.passes(message, address);
+  const result2 = await store.passes(metadb, message, address);
   t.false(result2);
 
   await rm("dbtestA", { recursive: true });

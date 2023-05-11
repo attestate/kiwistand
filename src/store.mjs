@@ -201,20 +201,31 @@ export async function descend(trie, level, exclude = []) {
   return nodes;
 }
 
-export async function passes(message, address) {
-  const db = open({
+export function metadata(options) {
+  return open({
     compression: true,
     name: "constraints",
     encoding: "cbor",
     path: resolve(env.DATA_DIR),
+    ...options,
   });
+}
+
+export async function passes(db, message, address) {
   const key = `${address}:${message.href}:${message.type}`;
   const seenBefore = await db.doesExist(key);
   await db.put(key);
   return !seenBefore;
 }
 
-export async function add(trie, message, libp2p, allowlist, synching = false) {
+export async function add(
+  trie,
+  message,
+  libp2p,
+  allowlist,
+  synching = false,
+  metadb = metadata()
+) {
   const address = verify(message);
   const included = allowlist.includes(address);
   if (!included) {
@@ -239,7 +250,7 @@ export async function add(trie, message, libp2p, allowlist, synching = false) {
     throw new Error(err);
   }
 
-  const legit = await passes(message, address);
+  const legit = await passes(metadb, message, address);
   if (!legit) {
     const err = `Message "${JSON.stringify(
       message
