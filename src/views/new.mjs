@@ -5,7 +5,7 @@ import url from "url";
 import htm from "htm";
 import vhtml from "vhtml";
 import normalizeUrl from "normalize-url";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, sub } from "date-fns";
 
 import Header from "./components/header.mjs";
 import Footer from "./components/footer.mjs";
@@ -50,10 +50,14 @@ const totalStories = parseInt(env.TOTAL_STORIES, 10);
 export default async function (trie, theme) {
   const config = await moderation.getBanlist();
 
+  const aWeekAgo = sub(new Date(), {
+    weeks: 1,
+  });
+  const aWeekAgoUnixTime = Math.floor(aWeekAgo.getTime() / 1000);
   const from = null;
   const amount = null;
   const parser = JSON.parse;
-  let leaves = await store.leaves(trie, from, amount, parser);
+  let leaves = await store.leaves(trie, from, amount, parser, aWeekAgoUnixTime);
   leaves = moderation.moderate(leaves, config);
 
   const stories = count(leaves)

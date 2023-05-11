@@ -5,7 +5,7 @@ import url from "url";
 import htm from "htm";
 import vhtml from "vhtml";
 import normalizeUrl from "normalize-url";
-import { formatDistanceToNow, differenceInMinutes } from "date-fns";
+import { sub, formatDistanceToNow, differenceInMinutes } from "date-fns";
 import { fetchBuilder, MemoryCache } from "node-fetch-cache";
 
 import Header from "./components/header.mjs";
@@ -113,10 +113,14 @@ async function editors(leaves) {
 }
 
 export default async function index(trie, theme) {
+  const aWeekAgo = sub(new Date(), {
+    weeks: 1,
+  });
+  const aWeekAgoUnixTime = Math.floor(aWeekAgo.getTime() / 1000);
   const from = null;
   const amount = null;
   const parser = JSON.parse;
-  let leaves = await store.leaves(trie, from, amount, parser);
+  let leaves = await store.leaves(trie, from, amount, parser, aWeekAgoUnixTime);
 
   const { editorPicks, config } = await editors(leaves);
   const editorLinks = editorPicks.map(({ href }) => normalizeUrl(href));

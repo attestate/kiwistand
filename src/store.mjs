@@ -286,7 +286,7 @@ export async function add(
   libp2p.pubsub.publish(messages.name, canonical);
 }
 
-export async function leaves(trie, from, amount, parser) {
+export async function leaves(trie, from, amount, parser, startDatetime) {
   let pointer = 0;
   const nodes = [];
   const onFound = (nodeRef, node, key, walkController) => {
@@ -301,7 +301,10 @@ export async function leaves(trie, from, amount, parser) {
 
       if (Number.isInteger(from) && pointer <= from) return;
       if (parser) {
-        nodes.push(parser(value));
+        const parsed = parser(value);
+        if (parsed.timestamp < startDatetime) return;
+
+        nodes.push(parsed);
       } else {
         nodes.push(value);
       }
