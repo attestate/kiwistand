@@ -22,16 +22,25 @@ import { verify, toDigest } from "./id.mjs";
 import * as messages from "./topics/messages.mjs";
 
 export async function create(options) {
-  log(
-    `Creating trie with DATA_DIR: "${
-      env.DATA_DIR
-    }" and options "${JSON.stringify(options)}" (they overwrite)`
-  );
   return await Trie.create({
     // TODO: Understand if this should this use "resolve"? The metadata db uses
     // resolve.
     db: new LMDB({ path: env.DATA_DIR }),
     useRootPersistence: true,
+    // NOTE: We enable nodePruning so that the ethereumjs/trie library reliably
+    // deletes content in the database for us (it doesn't by default).
+    useNodePruning: true,
+    ...options,
+  });
+}
+
+export function metadata(options) {
+  return open({
+    compression: true,
+    name: "constraints",
+    encoding: "cbor",
+    keyEncoding: "ordered-binary",
+    path: resolve(env.DATA_DIR),
     ...options,
   });
 }
@@ -207,17 +216,10 @@ export async function descend(trie, level, exclude = []) {
   return nodes;
 }
 
-export function metadata(options) {
-  return open({
-    compression: true,
-    name: "constraints",
-    encoding: "cbor",
-    path: resolve(env.DATA_DIR),
-    ...options,
-  });
-}
-
 export async function passes(db, message, address) {
+  // TODO: We should/must consider adding normalizeUrl here as otherwise a user
+  // might be able to sneakily upvote twice by manipulating the URLs in such
+  // way that the frontend normalizes them into two URLs.
   const key = `${address}:${message.href}:${message.type}`;
   const seenBefore = await db.doesExist(key);
   await db.put(key);

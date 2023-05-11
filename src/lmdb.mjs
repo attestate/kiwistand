@@ -12,6 +12,7 @@ export default class LMDB {
       // make this the default here too. "ordered-binary" allows us to make
       // range queries that e.g. start at a certain date.
       encoding: "cbor",
+      keyEncoding: "ordered-binary",
       ...options,
     });
   }
