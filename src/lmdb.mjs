@@ -1,15 +1,19 @@
 import { open } from "lmdb";
 
 export default class LMDB {
-  constructor(path) {
+  constructor(path, encoding = "cbor") {
     this.path = path;
     this.database = open({
       compression: true,
       // TODO: Rename
       name: "@ethereumjs/trie",
-      encoding: "cbor",
+      encoding,
       path,
     });
+  }
+
+  async keys() {
+    return this.database.getKeys();
   }
 
   async get(key) {
@@ -21,6 +25,7 @@ export default class LMDB {
   }
 
   async del(key) {
+    console.log("deleting");
     await this.database.remove(key);
   }
 

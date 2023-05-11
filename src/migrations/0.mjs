@@ -49,6 +49,7 @@ export async function isMigrated(trie, message) {
 
   const oldOutcome = oldToDigest(message);
   const oldValue = await trie.get(Buffer.from(oldOutcome.index, "hex"));
+
   assert.notEqual(newOutcome.index, oldOutcome.index);
   if (oldValue && newValue) {
     throw new Error(

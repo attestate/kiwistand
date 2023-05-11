@@ -21,12 +21,13 @@ import LMDB from "./lmdb.mjs";
 import { verify, toDigest } from "./id.mjs";
 import * as messages from "./topics/messages.mjs";
 
-export async function create() {
-  log(`Creating trie with DATA_DIR: "${env.DATA_DIR}"`);
+export async function create(path = env.DATA_DIR, encoding) {
+  log(`Creating trie with DATA_DIR: "${path}"`);
   return await Trie.create({
     // TODO: Understand if this should this use "resolve"?
-    db: new LMDB(env.DATA_DIR),
+    db: new LMDB(path, encoding),
     useRootPersistence: true,
+    useNodePruning: true,
   });
 }
 
@@ -177,6 +178,8 @@ export async function descend(trie, level, exclude = []) {
         key = nibblesToBuffer(key);
       }
 
+      const value = decode(node.value());
+      console.log(value);
       nodes.push({
         level: levelCopy,
         key,
@@ -201,11 +204,13 @@ export async function descend(trie, level, exclude = []) {
   return nodes;
 }
 
-export async function passes(message, address) {
+export async function passes(db, message, address) {
   const db = open({
     compression: true,
     name: "constraints",
     encoding: "cbor",
+    // TODO: We're not using resolve anywhere else for DATA_DIR so we should
+    // figure out if it is a good idea to use it here.
     path: resolve(env.DATA_DIR),
   });
   const key = `${address}:${message.href}:${message.type}`;
@@ -214,7 +219,14 @@ export async function passes(message, address) {
   return !seenBefore;
 }
 
-export async function add(trie, message, libp2p, allowlist, synching = false) {
+export async function add(
+  trie,
+  message,
+  libp2p,
+  allowlist,
+  synching = false,
+  db
+) {
   const address = verify(message);
   const included = allowlist.includes(address);
   if (!included) {

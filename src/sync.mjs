@@ -274,14 +274,14 @@ export async function compare(trie, message) {
 export function receive(handler) {
   return async ({ connection, stream }) => {
     const [message] = await fromWire(stream.source);
-    log(`receiving message: "${JSON.stringify(message)}"`);
+    //log(`receiving message: "${JSON.stringify(message)}"`);
     const response = await handler(message, connection.remotePeer);
 
     if (!response) {
       log("Closing stream as response is missing");
       return stream.close();
     }
-    log(`sending response: "${JSON.stringify(response)}"`);
+    //log(`sending response: "${JSON.stringify(response)}"`);
     await toWire(response, stream.sink);
   };
 }

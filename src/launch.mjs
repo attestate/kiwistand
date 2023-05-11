@@ -10,11 +10,9 @@ import { handlers } from "./index.mjs";
 import * as server from "./http.mjs";
 import * as store from "./store.mjs";
 import crawlPath from "./chainstate/config.crawler.mjs";
-import * as migration0 from "./migrations/0.mjs";
 
 (async () => {
   const trie = await store.create();
-  await migration0.run(trie);
 
   crawl(crawlPath);
   const node = await start(config);

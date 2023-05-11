@@ -120,12 +120,15 @@ export default async function index(trie, theme) {
 
   const { editorPicks, config } = await editors(leaves);
   const editorLinks = editorPicks.map(({ href }) => normalizeUrl(href));
+  let stories = await topstories(leaves);
   if (editorLinks.length > 0) {
-    leaves = leaves.filter(({ href }) =>
-      editorLinks.some((pick) => pick.href !== normalizeUrl(href))
-    );
+    stories = stories.map((story) => {
+      if (editorLinks.some((pick) => pick.href !== normalizeUrl(story.href))) {
+        story.title = `* ${story.title}`;
+      }
+      return story;
+    });
   }
-  const stories = await topstories(leaves);
 
   return html`
     <html lang="en" op="news">
@@ -223,8 +226,6 @@ export default async function index(trie, theme) {
                               class="score"
                               id="score_35233479"
                             >
-                              ${story.upvotes}
-                              <span> points by </span>
                               <ens-name address=${story.address} />
                               <span> </span>
                               ${formatDistanceToNow(
