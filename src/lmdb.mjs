@@ -1,14 +1,18 @@
 import { open } from "lmdb";
 
+// TODO: Implementation misses a "keys" function, see:
+// https://github.com/ethereumjs/ethereumjs-monorepo/pull/2696
 export default class LMDB {
-  constructor(path) {
-    this.path = path;
+  constructor(options) {
+    this.path = options.path;
     this.database = open({
       compression: true,
-      // TODO: Rename
       name: "@ethereumjs/trie",
+      // TODO: When we have transitioned to "ordered-binary", then we should
+      // make this the default here too. "ordered-binary" allows us to make
+      // range queries that e.g. start at a certain date.
       encoding: "cbor",
-      path,
+      ...options,
     });
   }
 

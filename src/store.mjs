@@ -21,12 +21,18 @@ import LMDB from "./lmdb.mjs";
 import { verify, toDigest } from "./id.mjs";
 import * as messages from "./topics/messages.mjs";
 
-export async function create() {
-  log(`Creating trie with DATA_DIR: "${env.DATA_DIR}"`);
+export async function create(options) {
+  log(
+    `Creating trie with DATA_DIR: "${
+      env.DATA_DIR
+    }" and options "${JSON.stringify(options)}" (they overwrite)`
+  );
   return await Trie.create({
-    // TODO: Understand if this should this use "resolve"?
-    db: new LMDB(env.DATA_DIR),
+    // TODO: Understand if this should this use "resolve"? The metadata db uses
+    // resolve.
+    db: new LMDB({ path: env.DATA_DIR }),
     useRootPersistence: true,
+    ...options,
   });
 }
 
