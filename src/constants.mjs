@@ -55,12 +55,16 @@ export const EIP712_TYPES = {
 const node = {
   type: "object",
   additionalProperties: false,
-  required: ["key", "hash", "node"],
+  required: ["key", "hash"],
   properties: {
     level: { type: "integer" },
     key: { type: "string" },
     hash: { type: "string" },
-    node: { type: "string" },
+    node: {
+      $comment:
+        "Type 'null' is allowed here as e.g. the root node might be of that type",
+      type: ["string", "null"],
+    },
   },
 };
 
