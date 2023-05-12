@@ -36,7 +36,7 @@
   "author": "The Goblin Exchange Developers",
   "license": "GPL-3.0-only",
   "bugs": {
-    "url": "https://github.com/attestate/golbin/issues"
+    "url": "https://github.com/attestate/goblin/issues"
   },
   "homepage": "https://github.com/attestate/goblin#readme",
   "dependencies": {
