@@ -96,7 +96,19 @@ async function editors(leaves) {
         ({ address }) => address.toLowerCase() === config.address.toLowerCase()
       );
   }
-  const [response] = await moderation.getConfig("3wi");
+  let response;
+  try {
+    response = (await moderation.getConfig("3wi"))[0];
+  } catch (err) {
+    log(`3wi: Couldn't get editor pick config: ${err.toString()}`);
+    return {
+      editorPicks: [],
+      config: {
+        name: "isyettoberevealed!",
+        link: "https://anddoesnthaveawebsite.com",
+      },
+    };
+  }
   const config = parseConfig(response);
 
   const from = null;

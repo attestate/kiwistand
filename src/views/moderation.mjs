@@ -3,6 +3,7 @@ import { fetchBuilder, MemoryCache } from "node-fetch-cache";
 import normalizeUrl from "normalize-url";
 
 import * as id from "../id.mjs";
+import log from "../logger.mjs";
 
 const fetch = fetchBuilder.withCache(
   new MemoryCache({
@@ -22,10 +23,28 @@ export async function getConfig(sheet) {
 }
 
 export async function getBanlist() {
-  const addrResponse = await getConfig("banlist_addresses");
+  let addrResponse;
+  try {
+    addrResponse = await getConfig("banlist_addresses");
+  } catch (err) {
+    log(`banlist_addresses: Couldn't get config: ${err.toString()}`);
+    return {
+      addresses: [],
+      links: [],
+    };
+  }
   const addresses = addrResponse.map(({ address }) => address.toLowerCase());
 
-  const linkResponse = await getConfig("banlist_links");
+  let linkResponse;
+  try {
+    linkResponse = await getConfig("banlist_links");
+  } catch (err) {
+    log(`banlist_links: Couldn't get config: ${err.toString()}`);
+    return {
+      addresses: [],
+      links: [],
+    };
+  }
   const links = linkResponse.map(({ link }) => normalizeUrl(link));
   return {
     addresses,
