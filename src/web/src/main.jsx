@@ -6,6 +6,7 @@ import SubmitForm from './SubmitForm.jsx'
 import Vote from './Vote.jsx'
 import EnsName from './EnsName.jsx'
 import { loadTheme } from "./theme.mjs";
+import { showMessage } from "./message.mjs";
 
 loadTheme();
 
@@ -47,4 +48,13 @@ if (ensNameComponents) {
       </React.StrictMode>,
     );
   }
+}
+
+let url = new URL(window.location.href);
+let messageParam = url.searchParams.get('message');
+
+if (messageParam) {
+  showMessage(messageParam);
+  url.searchParams.delete('message');
+  window.history.replaceState({}, '', url.href);
 }

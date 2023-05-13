@@ -23,8 +23,18 @@ const LinkSubmissionForm = () => {
     e.preventDefault();
     showMessage("Please sign the message in your wallet!");
     const signature = await signTypedDataAsync();
-    await API.send(value, signature);
-    window.location.replace('/new?bpc=1');
+    const response = await API.send(value, signature);
+
+    let message;
+    if (response.status === "success") {
+      message = "Thanks for your submission, have a 🥝";
+    } else {
+      message = `Error! Sad Kiwi! "${response.details}"`;
+    }
+    let url = new URL(window.location.origin+"/new");
+    url.searchParams.set('bpc', '1');
+    url.searchParams.set('message', message);
+    window.location.href = url.href;
   };
 
   return (

@@ -30,8 +30,9 @@ export async function send(message, signature) {
     signature,
   });
 
+  let response;
   try {
-    await fetch("/api/v1/messages", {
+    response = await fetch("/api/v1/messages", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -41,4 +42,17 @@ export async function send(message, signature) {
   } catch (err) {
     console.error(error);
   }
+
+  let result;
+  try {
+    result = await response.json();
+  } catch (err) {
+    return {
+      status: "error",
+      code: "NA",
+      message: "NA",
+      details: "Couldn't parse response json",
+    };
+  }
+  return result;
 }

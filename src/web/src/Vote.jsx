@@ -30,8 +30,19 @@ const Vote = (props) => {
     e.preventDefault();
     showMessage("Please sign the message in your wallet");
     const signature = await signTypedDataAsync();
-    await API.send(value, signature);
-    window.location.replace('/feed?bpc=1');
+    const response = await API.send(value, signature);
+
+    console.log(response);
+    let message;
+    if (response.status === "success") {
+      message = "Thanks for your upvote! Have a 🥝";
+    } else if(response.status === "error") {
+      message = `Sad Kiwi :( "${response.details}"`;
+    }
+    let url = new URL(window.location.href);
+    url.searchParams.set('bpc', '1');
+    url.searchParams.set('message', message);
+    window.location.href = url.href;
   };
 
   const { isConnected } = useAccount()
