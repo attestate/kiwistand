@@ -1,6 +1,6 @@
 // @format
 import { WagmiConfig, createClient } from "wagmi";
-import { ConnectKitProvider, ConnectKitButton, getDefaultClient } from "connectkit";
+import { Avatar, ConnectKitProvider, ConnectKitButton, getDefaultClient } from "connectkit";
 
 import client from "./client.mjs";
 
@@ -14,11 +14,13 @@ export const Navigation = () => {
         const submit = <a style={{ color: "black", cursor: "pointer" }} href="/submit">Submit</a>;
         const upvotes = <a style={{ color: "black", cursor: "pointer" }} href={"/upvotes?address="+address}>Upvotes</a>;
 
+        // {isConnected ? <span>{submit}{divider}</span> : ""}
         return (
           <div>
-            {isConnected ? <span>{submit}{divider}</span> : ""}
             {isConnected ? <span>{upvotes}{divider}</span> : ""}
+
             <a style={{color: "black", cursor: "pointer"}} onClick={show}>
+              {isConnected ? <span style={{marginRight: "5px", display: "inline-block"}}><Avatar name={address} size={8} radius={0} /> </span> : ""}
               {isConnected ? shorten(address) : "Connect"}
             </a>
           </div>

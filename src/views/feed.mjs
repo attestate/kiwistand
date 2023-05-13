@@ -230,7 +230,7 @@ export default async function index(trie, theme) {
                         <td class="subtext">
                           <span class="subline">
                             <span
-                              style="display: inline-block; height: 10px;"
+                              style="display: inline-block; height: auto;"
                               class="score"
                               id="score_35233479"
                             >
@@ -300,7 +300,7 @@ export default async function index(trie, theme) {
                         <td class="subtext">
                           <span class="subline">
                             <span
-                              style="display: inline-block; height: 10px;"
+                              style="display: inline-block; height: auto;"
                               class="score"
                               id="score_35233479"
                             >

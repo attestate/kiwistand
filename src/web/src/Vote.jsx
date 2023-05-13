@@ -1,6 +1,6 @@
 // @format
 import { useSignTypedData, useAccount, WagmiConfig } from "wagmi";
-import { ConnectKitProvider } from "connectkit";
+import { ConnectKitProvider, ConnectKitButton } from "connectkit";
 
 import * as API from "./API.mjs";
 import client from "./client.mjs";
@@ -45,12 +45,24 @@ const Vote = (props) => {
     window.location.href = url.href;
   };
 
-  const { isConnected } = useAccount()
-  if (isConnected) {
-    return <div onClick={handleSubmit} className="votearrow" title="upvote"></div>;
-  } else {
-    return null;
-  }
+  return (
+    <ConnectKitButton.Custom>
+      {({ show, isConnected }) => {
+        return (
+          <div
+            onClick={(e) => {
+              if (!isConnected) {
+                show()
+              }
+              handleSubmit(e)
+            }}
+            className="votearrow"
+            title="upvote">
+          </div>
+        );
+      }}
+    </ConnectKitButton.Custom>
+  );
 };
 
 export default Container;

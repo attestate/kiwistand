@@ -78,9 +78,15 @@ const LinkSubmissionForm = () => {
 const CenteredConnectKitButton = () => {
   return (
     <div className="connect-kit-wrapper">
-      <b>
-        To submit a link, you'll have to connect your wallet first.
-      </b>
+      <h3>You're almost there!</h3>
+      <p>
+        To submit links to the p2p network you'll need to:
+        <br />
+        <br />
+        🥝 connect your wallet
+        <br />
+        🥝 mint our News Access NFT.
+      </p>
       <ConnectKitButton />
     </div>
   );
