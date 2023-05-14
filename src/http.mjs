@@ -19,6 +19,7 @@ import subscribe from "./views/subscribe.mjs";
 import submit from "./views/submit.mjs";
 import upvotes from "./views/upvotes.mjs";
 import community from "./views/community.mjs";
+import dau from "./views/dau.mjs";
 import themes from "./themes.mjs";
 
 const ajv = new Ajv();
@@ -143,6 +144,10 @@ export async function launch(trie, libp2p) {
   });
   app.get("/community", async (request, reply) => {
     const content = await community(trie, reply.locals.theme);
+    return reply.status(200).type("text/html").send(content);
+  });
+  app.get("/dau", async (request, reply) => {
+    const content = await dau(trie, reply.locals.theme);
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/subscribe", async (request, reply) => {
