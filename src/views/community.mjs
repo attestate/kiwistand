@@ -139,6 +139,36 @@ export default async function (trie, theme) {
                 </tr>
               `
             )}
+            <tr>
+              <td>
+                <hr />
+                <p style="color: black; padding: 5px; font-size: 14pt;">
+                  <b>Disperse Template:</b>
+                  <br />
+                  <span
+                    >To donate to those that have submitted useful content, you
+                    can use the CSV below on
+                  </span>
+                  <span> </span>
+                  <a href="https://disperse.app/">disperse.app</a> to donate
+                  funds. The total funds add up to 0.01 ETH. Works on Optimism.
+                </p>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <pre>
+${users.map(
+                    (user) => `${user.address},${(
+                      (user.karma / totalKarma) *
+                      0.01
+                    ).toFixed(18)}
+`
+                  )}
+                </pre
+                >
+              </td>
+            </tr>
           </table>
           ${Footer}
         </center>
