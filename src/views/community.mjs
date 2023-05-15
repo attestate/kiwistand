@@ -95,7 +95,7 @@ export default async function (trie, theme) {
             </tr>
             <tr>
               <td>
-                <p style="padding: 5px; font-size: 14pt;">
+                <p style="color: black; padding: 5px; font-size: 14pt;">
                   <b>COMMUNITY:</b> Click their names to see their profiles.
                 </p>
               </td>
@@ -129,7 +129,8 @@ export default async function (trie, theme) {
                         </td>
                         <td class="title">
                           <span class="titleline">
-                            <ens-name address=${user.address} /> (${user.karma})
+                            <ens-name address=${user.address} />
+                            <span> (${user.karma} ${theme.emoji})</span>
                           </span>
                         </td>
                       </tr>
