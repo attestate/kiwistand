@@ -13,6 +13,8 @@ const footer = html`
   <a href="/subscribe">Newsletter</a>
   <span> | </span>
   <a href="https://attestate.com/kiwistand/main/">Documentation</a>
+  <span> | </span>
+  <a href="/activity">Activity</a>
   <script src="bundle.js"></script>
 `;
 export default footer;
