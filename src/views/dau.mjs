@@ -161,9 +161,13 @@ export default async function (trie, theme) {
               ${Header(theme)}
             </tr>
             <tr>
-              <td>
+              <td style="padding: 20px;">
                 <p>
                   <b>DEFINITION:</b>
+                  <br />
+                  - To calculate the values on this chart we're getting all
+                  messages that have occurred in the p2p network and analyze
+                  them.
                   <br />
                   - We consider someone a Daily Active User if, for a given day,
                   they've, at least, interacted on the site once by either
