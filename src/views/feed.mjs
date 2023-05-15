@@ -200,24 +200,26 @@ export default async function index(trie, theme) {
             <tr>
               ${Header(theme)}
             </tr>
-            <tr style="background-color: #e6e6df;">
-              <td>
-                <p
-                  style="color: black; padding: 10px; font-size: 12pt; font-weight: bold;"
-                >
-                  <a
-                    style="font-size: 16pt; color: ${theme.color}"
-                    href="/subscribe"
-                    >✉</a
-                  >
-                  <span> </span>
-                  <span>Today's Editor's Picks by </span>
-                  <a style="color:black;" href="${config.link}">
-                    ${config.name}</a
-                  >!
-                </p>
-              </td>
-            </tr>
+            ${editorPicks.length > 0
+              ? html` <tr style="background-color: #e6e6df;">
+                  <td>
+                    <p
+                      style="color: black; padding: 10px; font-size: 12pt; font-weight: bold;"
+                    >
+                      <a
+                        style="font-size: 16pt; color: ${theme.color}"
+                        href="/subscribe"
+                        >✉</a
+                      >
+                      <span> </span>
+                      <span>Today's Editor's Picks by </span>
+                      <a style="color:black;" href="${config.link}">
+                        ${config.name}</a
+                      >!
+                    </p>
+                  </td>
+                </tr>`
+              : ""}
             ${editorPicks.map(
               (story, i) => html`
                 <tr style="background-color: #e6e6df;">
