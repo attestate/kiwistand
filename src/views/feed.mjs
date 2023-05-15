@@ -13,6 +13,7 @@ import Footer from "./components/footer.mjs";
 import * as store from "../store.mjs";
 import * as id from "../id.mjs";
 import * as moderation from "./moderation.mjs";
+import log from "../logger.mjs";
 
 const html = htm.bind(vhtml);
 const fetch = fetchBuilder.withCache(
@@ -78,16 +79,14 @@ async function topstories(leaves) {
 }
 
 async function editors(leaves) {
-  const url =
-    "https://opensheet.elk.sh/1kh9zHwzekLb7toabpdSfd87pINBpyVU6Q8jLliBXtEc/3wi";
   function parseConfig(config) {
     const copy = { ...config };
     copy.numberOfStories = parseInt(config.numberOfStories, 10);
     return copy;
   }
 
-  function editorPicks(leaves, config) {
-    return leaves
+  function editorPicks(leaves, config, links) {
+    const editorStories = leaves
       .map((leaf) => ({
         address: id.ecrecover(leaf),
         ...leaf,
@@ -95,6 +94,13 @@ async function editors(leaves) {
       .filter(
         ({ address }) => address.toLowerCase() === config.address.toLowerCase()
       );
+
+    if (links && Array.isArray(links) && links.length > 0) {
+      return editorStories.filter(({ href }) =>
+        links.includes(!!href && normalizeUrl(href))
+      );
+    }
+    return editorStories;
   }
   let response;
   try {
@@ -103,6 +109,7 @@ async function editors(leaves) {
     log(`3wi: Couldn't get editor pick config: ${err.toString()}`);
     return {
       editorPicks: [],
+      links: [],
       config: {
         name: "isyettoberevealed!",
         link: "https://anddoesnthaveawebsite.com",
@@ -111,15 +118,35 @@ async function editors(leaves) {
   }
   const config = parseConfig(response);
 
+  let links;
+  try {
+    links = await moderation.getConfig("editor_links");
+  } catch (err) {
+    log(`editor_links: Couldn't get editor pick config: ${err.toString()}`);
+    return {
+      editorPicks: [],
+      links: [],
+      config: {
+        name: "isyettoberevealed!",
+        link: "https://anddoesnthaveawebsite.com",
+      },
+    };
+  }
+
+  if (links && Array.isArray(links)) {
+    links = links.map(({ link }) => !!link && normalizeUrl(link));
+  }
+
   const from = null;
   const amount = null;
   const parser = JSON.parse;
-  const picks = editorPicks(leaves, config);
+  const picks = editorPicks(leaves, config, links);
   const stories = count(picks)
     .sort((a, b) => b.timestamp - a.timestamp)
     .slice(0, config.numberOfStories);
   return {
     editorPicks: stories,
+    links,
     config,
   };
 }
@@ -135,7 +162,9 @@ export default async function index(trie, theme) {
   let leaves = await store.leaves(trie, from, amount, parser, aWeekAgoUnixTime);
 
   const { editorPicks, config } = await editors(leaves);
-  const editorLinks = editorPicks.map(({ href }) => normalizeUrl(href));
+  const editorLinks = editorPicks.map(
+    ({ href }) => !!href && normalizeUrl(href)
+  );
   const stories = await topstories(leaves);
 
   return html`
