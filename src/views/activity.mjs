@@ -19,12 +19,13 @@ const generateFeed = (messages) => {
   const firstAmplify = {};
 
   return messages
+    .sort((a, b) => a.timestamp - b.timestamp)
     .map((message) => {
       const address = id.ecrecover(message);
       const href = normalizeUrl(!!message.href && message.href);
 
-      if (message.type === "amplify" && !firstAmplify[message.href]) {
-        firstAmplify[message.href] = true;
+      if (message.type === "amplify" && !firstAmplify[href]) {
+        firstAmplify[href] = true;
         return { address, verb: "submitted", message };
       } else {
         return { address, verb: "upvoted", message };

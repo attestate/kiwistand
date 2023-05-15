@@ -12,7 +12,7 @@ export const Navigation = () => {
       {({ isConnected, show, hide, address }) => {
         const divider = <span> | </span>;
         const submit = <a style={{ color: "black", cursor: "pointer" }} href="/submit">Submit</a>;
-        const upvotes = <a style={{ color: "black", cursor: "pointer" }} href={"/upvotes?address="+address}>Upvotes</a>;
+        const upvotes = <a style={{ color: "black", cursor: "pointer" }} href={"/upvotes?address="+address}>Profile</a>;
 
         // {isConnected ? <span>{submit}{divider}</span> : ""}
         return (

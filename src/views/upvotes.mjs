@@ -4,6 +4,8 @@ import url from "url";
 import htm from "htm";
 import vhtml from "vhtml";
 import normalizeUrl from "normalize-url";
+import { formatDistanceToNow } from "date-fns";
+import { utils } from "ethers";
 
 import Header from "./components/header.mjs";
 import Footer from "./components/footer.mjs";
@@ -18,34 +20,81 @@ function extractDomain(link) {
   return parsedUrl.hostname;
 }
 
-export function selectUpvotes(leaves, address) {
-  return leaves
-    .map((leaf) => ({
-      address: id.ecrecover(leaf),
-      ...leaf,
-    }))
-    .filter((leaf) => address.toLowerCase() === leaf.address.toLowerCase());
-}
+const classify = (messages) => {
+  const firstAmplify = {};
+
+  return messages
+    .sort((a, b) => a.timestamp - b.timestamp)
+    .map((message) => {
+      const href = normalizeUrl(!!message.href && message.href);
+
+      if (message.type === "amplify" && !firstAmplify[href]) {
+        firstAmplify[href] = true;
+        return { verb: "submit", message };
+      } else {
+        return { verb: "upvote", message };
+      }
+    })
+    .sort((a, b) => b.message.timestamp - a.message.timestamp);
+};
 
 export default async function (trie, theme, address) {
+  if (!utils.isAddress(address)) {
+    return html`Not a valid address`;
+  }
   const from = null;
   const amount = null;
   const parser = JSON.parse;
   let leaves = await store.leaves(trie, from, amount, parser);
-  leaves = selectUpvotes(leaves, address);
-  let stories = count(leaves);
-  stories = stories.sort((a, b) => {
-    const timestampA = new Date(a.timestamp);
-    const timestampB = new Date(b.timestamp);
+  leaves = leaves.map((leaf) => ({
+    address: id.ecrecover(leaf),
+    ...leaf,
+  }));
+  const actions = classify(leaves);
+  const taintedSubmissions = actions
+    .filter(
+      (action) =>
+        address.toLowerCase() === action.message.address.toLowerCase() &&
+        action.verb === "submit"
+    )
+    .map((action) => normalizeUrl(action.message.href));
+  const taintedUpvotes = actions
+    .filter(
+      (action) =>
+        address.toLowerCase() === action.message.address.toLowerCase() &&
+        action.verb === "upvote"
+    )
+    .map((action) => normalizeUrl(action.message.href));
+  const submissions = count(leaves)
+    .filter((story) => taintedSubmissions.includes(normalizeUrl(story.href)))
+    .sort((a, b) => {
+      const timestampA = new Date(a.timestamp);
+      const timestampB = new Date(b.timestamp);
 
-    if (timestampA < timestampB) {
-      return 1;
-    }
-    if (timestampA > timestampB) {
-      return -1;
-    }
-    return 0;
-  });
+      if (timestampA < timestampB) {
+        return 1;
+      }
+      if (timestampA > timestampB) {
+        return -1;
+      }
+      return 0;
+    })
+    .slice(0, 10);
+  const upvotes = count(leaves)
+    .filter((story) => taintedUpvotes.includes(normalizeUrl(story.href)))
+    .sort((a, b) => {
+      const timestampA = new Date(a.timestamp);
+      const timestampB = new Date(b.timestamp);
+
+      if (timestampA < timestampB) {
+        return 1;
+      }
+      if (timestampA > timestampB) {
+        return -1;
+      }
+      return 0;
+    })
+    .slice(0, 10);
 
   return html`
     <html lang="en" op="news">
@@ -80,32 +129,30 @@ export default async function (trie, theme, address) {
             <tr>
               ${Header(theme)}
             </tr>
-            <tr>
-              <td>
-                <div style="padding: 10px; color: black; font-size: 16px">
-                  <span>Profile: </span>
-                  <ens-name address=${address} />
-                  <hr />
-                  <span>All upvotes and submissions: </span>
-                </div>
-              </td>
-            </tr>
-            ${stories.map(
+            ${submissions.length > 0
+              ? html` <tr>
+                  <td>
+                    <div style="padding: 10px; color: black; font-size: 16px">
+                      <span>Profile: </span>
+                      <ens-name address=${address} />
+                      <hr />
+                      <b>LAST 10 SUBMISSIONS: </b>
+                    </div>
+                  </td>
+                </tr>`
+              : ""}
+            ${submissions.map(
               (story, i) => html`
-                <tr>
+                <tr style="font-size: 12pt;">
                   <td>
                     <table
-                      style="padding: 5px;"
+                      style="padding: 5px 5px 5px 15px;"
                       border="0"
                       cellpadding="0"
                       cellspacing="0"
                     >
                       <tr class="athing" id="35233479">
-                        <td align="right" valign="top" class="title">
-                          <span style="padding-right: 5px" class="rank"
-                            >${i + 1}.
-                          </span>
-                        </td>
+                        <td align="right" valign="top" class="title"></td>
                         <td valign="top" class="votelinks">
                           <center></center>
                         </td>
@@ -121,10 +168,83 @@ export default async function (trie, theme, address) {
                       <tr>
                         <td colspan="2"></td>
                         <td class="subtext">
-                          <span class="subline"> </span>
+                          <span class="subline">
+                            <span
+                              style="display: inline-block; height: auto;"
+                              class="score"
+                              id="score_35233479"
+                            >
+                              ${story.upvotes}
+                              <span> points </span>
+                              <span> submitted </span>
+                              ${formatDistanceToNow(
+                                new Date(story.timestamp * 1000)
+                              )}
+                              <span> ago</span>
+                            </span>
+                          </span>
                         </td>
                       </tr>
-                      <tr class="spacer" style="height:5px"></tr>
+                    </table>
+                  </td>
+                </tr>
+              `
+            )}
+            ${upvotes.length > 0
+              ? html` <tr>
+                  <td>
+                    <div style="padding: 10px; color: black; font-size: 16px">
+                      <hr />
+                      <b>LAST 10 UPVOTES: </b>
+                    </div>
+                  </td>
+                </tr>`
+              : ""}
+            ${upvotes.map(
+              (story, i) => html`
+                <tr style="font-size: 12pt;">
+                  <td>
+                    <table
+                      style="padding: 5px 5px 5px 15px;"
+                      border="0"
+                      cellpadding="0"
+                      cellspacing="0"
+                    >
+                      <tr class="athing" id="35233479">
+                        <td align="right" valign="top" class="title"></td>
+                        <td valign="top" class="votelinks">
+                          <center></center>
+                        </td>
+                        <td class="title">
+                          <span class="titleline">
+                            <a href="${story.href}">${story.title}</a>
+                            <span style="padding-left: 5px">
+                              (${extractDomain(story.href)})
+                            </span>
+                          </span>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td colspan="2"></td>
+                        <td class="subtext">
+                          <span class="subline">
+                            <span
+                              style="display: inline-block; height: auto;"
+                              class="score"
+                              id="score_35233479"
+                            >
+                              ${story.upvotes}
+                              <span> points by </span>
+                              <ens-name address=${story.address} />
+                              <span> submitted </span>
+                              ${formatDistanceToNow(
+                                new Date(story.timestamp * 1000)
+                              )}
+                              <span> ago</span>
+                            </span>
+                          </span>
+                        </td>
+                      </tr>
                     </table>
                   </td>
                 </tr>
