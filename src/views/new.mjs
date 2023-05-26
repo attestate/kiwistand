@@ -131,8 +131,9 @@ export default async function (trie, theme) {
                               <span> </span>
                               <span
                                 style="vertical-align:top; font-size: 0.8em; font-weight: bolder;"
-                                >⤴</span
                               >
+                                ${String.fromCharCode(0x2934, 0xfe0e)}
+                              </span>
                             </a>
                             <span style="padding-left: 5px">
                               (${extractDomain(story.href)})
