@@ -237,7 +237,9 @@ export async function add(
   const address = verify(message);
   const included = allowlist.includes(address);
   if (!included) {
-    const err = `Address "${address}" wasn't found in the allow list. Dropping message.`;
+    const err = `Address "${address}" wasn't found in the allow list. Dropping message "${JSON.stringify(
+      message
+    )}".`;
     log(err);
     throw new Error(err);
   }
