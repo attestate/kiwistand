@@ -58,3 +58,85 @@ if (messageParam) {
   url.searchParams.delete('message');
   window.history.replaceState({}, '', url.href);
 }
+
+const processLink = async (link) => {
+  let url = new URL(link.href);
+  if(url.hostname !== 'app.spinamp.xyz' || !url.pathname.startsWith('/track/')) return;
+  
+  const trackSlug = url.pathname.split('/').pop();
+  
+  const response = await fetch('https://spindex-api.spinamp.xyz/v1/graphql', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      query: `
+        query {
+          allProcessedTracks(filter: {slug: {equalTo: "${trackSlug}"}}) {
+            edges {
+              node {
+                title
+                artistByArtistId {
+                  name
+                }
+                lossyAudioIpfsHash
+              }
+            }
+          }
+        }`
+    }),
+  });
+  
+  const data = await response.json();
+  const trackData = data.data.allProcessedTracks.edges[0].node;
+  
+  const player = document.createElement('span');
+  player.style.background = '#ecdcca';
+  player.style.border = 'solid 1px #1f4a4f';
+  player.style.padding = '2px 5px';
+  player.style.borderRadius = '5px';
+  player.style.display = 'inline-block';
+  player.style.marginLeft = '10px';
+  
+  const playButton = document.createElement('span');
+  const timeMarker = document.createElement('span');
+  timeMarker.textContent = '...'; // temporary placeholder
+  
+  const videoElement = document.createElement('video');
+  videoElement.src = `https://media.spinamp.xyz/v1/${trackData.lossyAudioIpfsHash}?resource_type=video`;
+  videoElement.style.display = 'none';
+  
+  playButton.textContent = '▶'; // unicode play symbol
+  playButton.style.cursor = 'pointer';
+  playButton.style.marginRight = '10px';
+  playButton.onclick = () => {
+    if(videoElement.paused) {
+      videoElement.play();
+      playButton.textContent = '⏸'; // unicode pause symbol
+    } else {
+      videoElement.pause();
+      playButton.textContent = '▶'; // unicode play symbol
+    }
+  };
+  
+  videoElement.onloadedmetadata = () => {
+    const totalMinutes = Math.floor(videoElement.duration / 60);
+    const totalSeconds = Math.floor(videoElement.duration % 60);
+    timeMarker.textContent = `${totalMinutes}:${totalSeconds < 10 ? '0' + totalSeconds : totalSeconds}`;
+  };
+
+  videoElement.ontimeupdate = () => {
+    const remainingSeconds = videoElement.duration - videoElement.currentTime;
+    const minutes = Math.floor(remainingSeconds / 60);
+    const seconds = Math.floor(remainingSeconds % 60);
+    timeMarker.textContent = `${minutes}:${seconds < 10 ? '0' + seconds : seconds}`;
+  };
+
+  player.appendChild(playButton);
+  player.appendChild(timeMarker);
+  player.appendChild(videoElement);
+  
+  link.parentNode.insertBefore(player, link.nextSibling);
+};
+
+document.querySelectorAll('a').forEach(processLink);
+
