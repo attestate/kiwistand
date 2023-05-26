@@ -129,16 +129,21 @@ export default async function (trie, theme, address) {
             <tr>
               ${Header(theme)}
             </tr>
-            ${submissions.length > 0
+            <tr>
+              <td>
+                <div style="padding: 10px; color: black; font-size: 16px">
+                  <span>Profile: </span>
+                  <ens-name address=${address} />
+                  <hr />
+                  ${submissions.length > 0
+                    ? html`<b>LAST 10 SUBMISSIONS: </b>`
+                    : ""}
+                </div>
+              </td>
+            </tr>
+            ${submissions.length === 0 && upvotes.length === 0
               ? html` <tr>
-                  <td>
-                    <div style="padding: 10px; color: black; font-size: 16px">
-                      <span>Profile: </span>
-                      <ens-name address=${address} />
-                      <hr />
-                      <b>LAST 10 SUBMISSIONS: </b>
-                    </div>
-                  </td>
+                  <td>No activity yet...</td>
                 </tr>`
               : ""}
             ${submissions.map(

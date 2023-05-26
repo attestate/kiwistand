@@ -10,6 +10,7 @@ import Footer from "./components/footer.mjs";
 import * as store from "../store.mjs";
 import * as id from "../id.mjs";
 import * as moderation from "./moderation.mjs";
+import * as registry from "../chainstate/registry.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -57,8 +58,16 @@ export default async function (trie, theme) {
   const parser = JSON.parse;
   let leaves = await store.leaves(trie, from, amount, parser);
   leaves = moderation.moderate(leaves, config);
-  const users = countPoints(leaves);
+  let users = countPoints(leaves);
   const totalKarma = users.reduce((total, obj) => total + obj.karma, 0);
+
+  const allowList = await registry.allowlist();
+  const inactiveUsers = allowList
+    .filter((address) => {
+      return !users.find((user) => user.address === address);
+    })
+    .map((address) => ({ karma: "0", address }));
+  users = [...users, ...inactiveUsers];
 
   return html`
     <html lang="en" op="news">
@@ -130,6 +139,7 @@ export default async function (trie, theme) {
                         <td class="title">
                           <span class="titleline">
                             <ens-name address=${user.address} />
+                            <span> </span>
                             <span> (${user.karma} ${theme.emoji})</span>
                           </span>
                         </td>
