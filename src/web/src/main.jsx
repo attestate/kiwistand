@@ -101,31 +101,31 @@ const processLink = async (link) => {
   const timeMarker = document.createElement('span');
   timeMarker.textContent = '...'; // temporary placeholder
   
-  const videoElement = document.createElement('video');
-  videoElement.src = `https://media.spinamp.xyz/v1/${trackData.lossyAudioIpfsHash}?resource_type=video`;
-  videoElement.style.display = 'none';
+  const audioElement = document.createElement('audio');
+  audioElement.src = `https://media.spinamp.xyz/v1/${trackData.lossyAudioIpfsHash}?resource_type=video`;
+  audioElement.style.display = 'none';
   
   playButton.textContent = '▶'; // unicode play symbol
   playButton.style.cursor = 'pointer';
   playButton.style.marginRight = '10px';
   playButton.onclick = () => {
-    if(videoElement.paused) {
-      videoElement.play();
+    if(audioElement.paused) {
+      audioElement.play();
       playButton.textContent = '⏸'; // unicode pause symbol
     } else {
-      videoElement.pause();
+      audioElement.pause();
       playButton.textContent = '▶'; // unicode play symbol
     }
   };
   
-  videoElement.onloadedmetadata = () => {
-    const totalMinutes = Math.floor(videoElement.duration / 60);
-    const totalSeconds = Math.floor(videoElement.duration % 60);
+  audioElement.onloadedmetadata = () => {
+    const totalMinutes = Math.floor(audioElement.duration / 60);
+    const totalSeconds = Math.floor(audioElement.duration % 60);
     timeMarker.textContent = `${totalMinutes}:${totalSeconds < 10 ? '0' + totalSeconds : totalSeconds}`;
   };
 
-  videoElement.ontimeupdate = () => {
-    const remainingSeconds = videoElement.duration - videoElement.currentTime;
+  audioElement.ontimeupdate = () => {
+    const remainingSeconds = audioElement.duration - audioElement.currentTime;
     const minutes = Math.floor(remainingSeconds / 60);
     const seconds = Math.floor(remainingSeconds % 60);
     timeMarker.textContent = `${minutes}:${seconds < 10 ? '0' + seconds : seconds}`;
@@ -133,7 +133,7 @@ const processLink = async (link) => {
 
   player.appendChild(playButton);
   player.appendChild(timeMarker);
-  player.appendChild(videoElement);
+  player.appendChild(audioElement);
   
   link.parentNode.insertBefore(player, link.nextSibling);
 };
