@@ -249,7 +249,9 @@ export default async function index(trie, theme) {
                         </td>
                         <td class="title">
                           <span class="titleline">
-                            <a href="${story.href}">${story.title}</a>
+                            <a target="_blank" href="${story.href}"
+                              >${story.title}</a
+                            >
                             <span style="padding-left: 5px">
                               (${extractDomain(story.href)})
                             </span>
@@ -319,7 +321,14 @@ export default async function index(trie, theme) {
                         </td>
                         <td class="title">
                           <span class="titleline">
-                            <a href="${story.href}">${story.title}</a>
+                            <a target="_blank" href="${story.href}">
+                              ${story.title}
+                              <span> </span>
+                              <span
+                                style="vertical-align:top; font-size: 0.8em; font-weight: bolder;"
+                                >⤴</span
+                              >
+                            </a>
                             <span style="padding-left: 5px">
                               (${extractDomain(story.href)})
                             </span>
