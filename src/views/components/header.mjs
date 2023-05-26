@@ -28,6 +28,10 @@ const header = (theme) => html`
           <a style="color: black;" href="/community">Community</a>
           <span> | </span>
           <a style="color: black; cursor: pointer;" href="/submit">Submit</a>
+          <span> | </span>
+          <a style="color: black; cursor: pointer;" href="/subscribe"
+            >Newsletter</a
+          >
         </td>
         <td style="text-align:right;padding-right:4px;">
           <span id="navigation"></span>

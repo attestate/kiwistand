@@ -17,6 +17,8 @@ const footer = html`
   <a href="https://attestate.com/kiwistand/main/">API</a>
   <span> | </span>
   <a href="/about">About</a>
+  <span> | </span>
+  <a target="_blank" href="https://kiwinews.sleekplan.app/">Request Feature</a>
   <script src="bundle.js"></script>
 `;
 export default footer;
