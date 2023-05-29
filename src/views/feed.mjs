@@ -10,6 +10,7 @@ import { fetchBuilder, MemoryCache } from "node-fetch-cache";
 
 import Header from "./components/header.mjs";
 import Footer from "./components/footer.mjs";
+import Head from "./components/head.mjs";
 import * as store from "../store.mjs";
 import * as id from "../id.mjs";
 import * as moderation from "./moderation.mjs";
@@ -170,22 +171,7 @@ export default async function index(trie, theme) {
   return html`
     <html lang="en" op="news">
       <head>
-        <script
-          async
-          src="https://www.googletagmanager.com/gtag/js?id=G-21BKTD0NKN"
-        ></script>
-        <script src="ga.js"></script>
-        <meta charset="utf-8" />
-        <meta name="referrer" content="origin" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link
-          rel="apple-touch-icon"
-          sizes="152x152"
-          href="apple-touch-icon.png"
-        />
-        <link rel="stylesheet" type="text/css" href="news.css" />
-        <link rel="shortcut icon" href="favicon.ico" />
-        <title>Kiwi News</title>
+        ${Head}
       </head>
       <body>
         <center>
