@@ -325,6 +325,7 @@ export function handleLeaves(trie, peerFab) {
     trie.checkpoint();
     await put(trie, message);
     await trie.commit();
+    peerFab.set();
   });
 }
 
