@@ -164,6 +164,16 @@ export async function initiate(
   innerSend,
   peerFab
 ) {
+  const lastSyncPeer = peerFab.get();
+  if (lastSyncPeer && lastSyncPeer.equals(peerId) && level === 0) {
+    // NOTE: There can be cases where a sync takes long and some process might
+    // trigger a second sync between two nodes. This case, we are catching
+    // and ending here.
+    log(
+      "initiate: Caught the two same nodes attempting to start a second sync on level=0 and shutting it down."
+    );
+    return;
+  }
   const { result, syncPeer, newPeer } = peerFab.isValid(peerId);
   if (!result) {
     log(
@@ -274,14 +284,14 @@ export async function compare(trie, message) {
 export function receive(handler) {
   return async ({ connection, stream }) => {
     const [message] = await fromWire(stream.source);
-    log(`receiving message: "${JSON.stringify(message)}"`);
+    //log(`receiving message: "${JSON.stringify(message)}"`);
     const response = await handler(message, connection.remotePeer);
 
     if (!response) {
       log("Closing stream as response is missing");
       return stream.close();
     }
-    log(`sending response: "${JSON.stringify(response)}"`);
+    //log(`sending response: "${JSON.stringify(response)}"`);
     await toWire(response, stream.sink);
   };
 }
