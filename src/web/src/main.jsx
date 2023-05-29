@@ -140,3 +140,9 @@ const processLink = async (link) => {
 
 document.querySelectorAll('a').forEach(processLink);
 
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', async () => {
+    await navigator.serviceWorker.register('/serviceWorker.js')
+  });
+}
+
