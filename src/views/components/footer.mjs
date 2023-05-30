@@ -19,6 +19,11 @@ const footer = html`
   <a href="/about">About</a>
   <span> | </span>
   <a target="_blank" href="https://kiwinews.sleekplan.app/">Request Feature</a>
-  <script src="bundle.js"></script>
+  <script defer src="bundle.js"></script>
+  <script
+    async
+    src="https://www.googletagmanager.com/gtag/js?id=G-21BKTD0NKN"
+  ></script>
+  <script async src="ga.js"></script>
 `;
 export default footer;
