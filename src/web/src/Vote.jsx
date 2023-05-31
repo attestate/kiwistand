@@ -3,12 +3,12 @@ import { useSignTypedData, useAccount, WagmiConfig } from "wagmi";
 import { ConnectKitProvider, ConnectKitButton } from "connectkit";
 
 import * as API from "./API.mjs";
-import client from "./client.mjs";
+import config from "./config.mjs";
 import { showMessage } from "./message.mjs";
 
 const Container = (props) => {
   return (
-    <WagmiConfig client={client}>
+    <WagmiConfig config={config}>
       <ConnectKitProvider>
         <Vote {...props} />
       </ConnectKitProvider>
@@ -18,19 +18,20 @@ const Container = (props) => {
 
 
 const Vote = (props) => {
-  const value = API.messageFab(props.title, props.href);
+  const message = API.messageFab(props.title, props.href);
   const { data, signTypedDataAsync } =
     useSignTypedData({
       domain: API.EIP712_DOMAIN,
       types: API.EIP712_TYPES,
-      value,
+      primaryType: "Message",
+      message,
     });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     showMessage("Please sign the message in your wallet");
     const signature = await signTypedDataAsync();
-    const response = await API.send(value, signature);
+    const response = await API.send(message, signature);
 
     console.log(response);
     let message;

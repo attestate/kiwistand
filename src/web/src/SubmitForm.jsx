@@ -4,26 +4,27 @@ import { useSignTypedData, useAccount, WagmiConfig } from "wagmi";
 import { ConnectKitProvider, ConnectKitButton } from "connectkit";
 
 import * as API from "./API.mjs";
-import client from "./client.mjs";
+import config from "./config.mjs";
 import './SubmitForm.css';
 import { showMessage } from "./message.mjs";
 
 const LinkSubmissionForm = () => {
   const [title, setTitle] = useState('');
   const [url, setUrl] = useState('');
-  const value = API.messageFab(title, url);
+  const message = API.messageFab(title, url);
   const { data, error, isError, isLoading, isSuccess, signTypedDataAsync } =
     useSignTypedData({
       domain: API.EIP712_DOMAIN,
       types: API.EIP712_TYPES,
-      value,
+      primaryType: "Message",
+      message,
     });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     showMessage("Please sign the message in your wallet!");
     const signature = await signTypedDataAsync();
-    const response = await API.send(value, signature);
+    const response = await API.send(message, signature);
 
     let message;
     if (response.status === "success") {
@@ -96,7 +97,7 @@ const CenteredConnectKitButton = () => {
 const Form = () => {
   const { isConnected } = useAccount()
   return (
-    <WagmiConfig client={client}>
+    <WagmiConfig config={config}>
     <ConnectKitProvider>
       {isConnected ? <LinkSubmissionForm /> : <CenteredConnectKitButton />}
       </ConnectKitProvider>

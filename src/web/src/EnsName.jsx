@@ -2,7 +2,7 @@
 import { useEnsName, WagmiConfig } from "wagmi";
 import { ConnectKitProvider } from "connectkit";
 
-import client from "./client.mjs";
+import config from "./config.mjs";
 
 const shorten = (address) =>
   address.slice(0, 6) +
@@ -11,7 +11,7 @@ const shorten = (address) =>
 
 const Container = (props) => {
   return (
-    <WagmiConfig client={client}>
+    <WagmiConfig config={config}>
       <ConnectKitProvider>
         <EnsName {...props} />
       </ConnectKitProvider>

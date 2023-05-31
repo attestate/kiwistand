@@ -1,8 +1,8 @@
 // @format
-import { WagmiConfig, createClient } from "wagmi";
-import { Avatar, ConnectKitProvider, ConnectKitButton, getDefaultClient } from "connectkit";
+import { WagmiConfig } from "wagmi";
+import { Avatar, ConnectKitProvider, ConnectKitButton } from "connectkit";
 
-import client from "./client.mjs";
+import config from "./config.mjs";
 
 const shorten = address => address.slice(0,6)+"..."+address.slice(address.length-4, address.length);
 
@@ -32,7 +32,7 @@ export const Navigation = () => {
 
 const Connector = () => {
   return (
-    <WagmiConfig client={client}>
+    <WagmiConfig config={config}>
     <ConnectKitProvider>
         <Navigation />
       </ConnectKitProvider>
