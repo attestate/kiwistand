@@ -15,7 +15,7 @@ git clone git@github.com:attestate/kiwistand.git
 cp .env-copy .env
 npm i
 # and then for the frontend
-cd src/web && npm i
+cd src/web && npm i &&& cd ../..
 npm run dev:anon
 # might error when trying to create the data dir, that's a bug right now, just run it again
 ```
