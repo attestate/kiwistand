@@ -8,7 +8,7 @@ import Head from "./components/head.mjs";
 
 const html = htm.bind(vhtml);
 
-const price = "0.005";
+const price = "0.01";
 
 export default function (theme) {
   return html`

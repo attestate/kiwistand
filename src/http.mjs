@@ -16,6 +16,7 @@ import newest from "./views/new.mjs";
 import privacy from "./views/privacy.mjs";
 import nft from "./views/nft.mjs";
 import subscribe from "./views/subscribe.mjs";
+import guidelines from "./views/guidelines.mjs"
 import submit from "./views/submit.mjs";
 import upvotes from "./views/upvotes.mjs";
 import community from "./views/community.mjs";
@@ -156,6 +157,10 @@ export async function launch(trie, libp2p) {
     const content = await about(trie, reply.locals.theme);
     return reply.status(200).type("text/html").send(content);
   });
+  app.get("/guidelines", async (request, reply) => {
+    const content = await guidelines(trie, reply.locals.theme);
+    return reply.status(200).type("text/html").send(content);
+  });
   app.get("/activity", async (request, reply) => {
     const content = await activity(trie, reply.locals.theme);
     return reply.status(200).type("text/html").send(content);
@@ -195,4 +200,6 @@ export async function launch(trie, libp2p) {
   app.listen(env.HTTP_PORT, () =>
     log(`Launched HTTP server at port "${env.HTTP_PORT}"`)
   );
+
+  
 }
