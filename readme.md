@@ -14,10 +14,10 @@ It is required to have installed:
 git clone git@github.com:attestate/kiwistand.git
 cp .env-copy .env
 npm i
-npm i -g pm2
-pm2 start
+# and then for the frontend
+cd src/web && npm i &&& cd ../..
+npm run dev:anon
 # might error when trying to create the data dir, that's a bug right now, just run it again
-# e.g. pm2 restart all
 ```
 
 If your Ethereum RPC node is behind a reverse proxy with Authorization
