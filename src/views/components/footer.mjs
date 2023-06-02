@@ -19,6 +19,8 @@ const footer = html`
   <a href="/about">About</a>
   <span> | </span>
   <a target="_blank" href="https://kiwinews.sleekplan.app/">Request Feature</a>
+  <span> | </span>
+  <a href="/guidelines">Guidelines</a>
   <script defer src="bundle.js"></script>
   <script
     async

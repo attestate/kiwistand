@@ -2,7 +2,7 @@ import './polyfills';
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import Navigation from './Navigation.jsx'
-import SubmitForm from './SubmitForm.jsx'
+import SubmitButton from './SubmitButton.jsx'
 import Vote from './Vote.jsx'
 import EnsName from './EnsName.jsx'
 import { loadTheme } from "./theme.mjs";
@@ -16,12 +16,13 @@ ReactDOM.createRoot(navigation).render(
     <Navigation />
   </React.StrictMode>,
 )
-const submitForm = document.getElementById('submit-form');
-if (submitForm) {
-  ReactDOM.createRoot(submitForm).render(
+
+const submitButtonContainer = document.getElementById('submit-button');
+if (submitButtonContainer) {
+  ReactDOM.createRoot(submitButtonContainer).render(
     <React.StrictMode>
-      <SubmitForm />
-    </React.StrictMode>,
+      <SubmitButton />
+    </React.StrictMode>
   )
 }
 

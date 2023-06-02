@@ -1,4 +1,3 @@
-//@format
 import htm from "htm";
 import vhtml from "vhtml";
 
@@ -28,7 +27,47 @@ export default function submit(theme) {
               ${Header(theme)}
             </tr>
             <tr>
-              <td id="submit-form"></td>
+              <td>
+                <form style="${formContainerStyle}">
+                  <div style="${labelInputContainerStyle}">
+                    <label for="title" style="${labelStyle}">Title:</label
+                    ><br />
+                    <textarea
+                      id="titleInput"
+                      name="title"
+                      rows="4"
+                      cols="50"
+                      maxlength="80"
+                      required
+                      style="${inputStyle}"
+                      wrap="soft"
+                    ></textarea>
+                  </div>
+                  <div style="${labelInputContainerStyle}">
+                    <label for="link" style="${labelStyle}">Link:</label><br />
+                    <input
+                      id="urlInput"
+                      type="text"
+                      name="link"
+                      size="50"
+                      maxlength="2048"
+                      required
+                      style="${inputStyle}"
+                    />
+                  </div>
+                  <div id="submit-button">
+                    <button
+                      type="submit"
+                      value="Submit"
+                      style="${buttonStyle}"
+                    />
+                  </div>
+                </form>
+                <p style="${noteStyle}">
+                  <span>Please be mindful of our </span>
+                  <a style="color:black;" href="/guidelines">Guidelines</a>.
+                </p>
+              </td>
             </tr>
           </table>
           ${Footer}
@@ -37,3 +76,44 @@ export default function submit(theme) {
     </html>
   `;
 }
+
+const formContainerStyle = `
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 1rem 2rem;
+`;
+
+const labelInputContainerStyle = `
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+`;
+
+const labelStyle = `
+  font-size: 16px;
+`;
+
+const inputStyle = `
+  width: 100%;
+  padding: 5px 10px;
+  font-size: 16px;
+  box-sizing: border-box;
+`;
+
+const buttonStyle = `
+  width: 100%;
+  padding: 5px;
+  font-size: 16px;
+  cursor: pointer;
+`;
+
+const noteStyle = `
+  font-size: 14px;
+  text-align: center;
+  line-height: 1.5;
+  color: #777;
+  padding: 0 3px 15px 3px;
+`;
