@@ -133,7 +133,7 @@ export default async function (trie, theme, address) {
                 <div style="padding: 10px; color: black; font-size: 16px; line-height: 1.5;">
                   <span>Profile: </span>
                   <ens-name address=${address} />
-                  ${ensData.description ? html`"<span> <span>${ensData.description}"<br />` : html`<br />`}
+                  ${ensData.description ? html`<span> </span>"${ensData.description}"<br />` : html`<br />`}
                   ${ensData.url ? html`Website: <a target="_blank" href="${ensData.url}">${ensData.url}</a><br />` : ""}
                   ${ensData.twitter ? html`Twitter: <a href="https://twitter.com/${ensData.twitter}" target="_blank" rel="noopener noreferrer">@${ensData.twitter}</a><br />` : ""}
                   ${ensData.github ? html`GitHub: <a href="https://github.com/${ensData.github}" target="_blank" rel="noopener noreferrer">${ensData.github}</a><br />` : ""}
