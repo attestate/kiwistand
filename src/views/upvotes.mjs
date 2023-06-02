@@ -6,6 +6,7 @@ import vhtml from "vhtml";
 import normalizeUrl from "normalize-url";
 import { formatDistanceToNow } from "date-fns";
 import { utils } from "ethers";
+import { fetchBuilder, MemoryCache } from "node-fetch-cache";
 
 import Header from "./components/header.mjs";
 import Footer from "./components/footer.mjs";
@@ -15,10 +16,21 @@ import * as id from "../id.mjs";
 import { count } from "./feed.mjs";
 
 const html = htm.bind(vhtml);
+const fetch = fetchBuilder.withCache(
+  new MemoryCache({
+    ttl: 86400000, // 24 hours
+  })
+);
 
 function extractDomain(link) {
   const parsedUrl = new url.URL(link);
   return parsedUrl.hostname;
+}
+
+async function fetchENSData(address) {
+  const response = await fetch(`https://ensdata.net/${address}`);
+  const data = await response.json();
+  return data;
 }
 
 const classify = (messages) => {
@@ -43,6 +55,7 @@ export default async function (trie, theme, address) {
   if (!utils.isAddress(address)) {
     return html`Not a valid address`;
   }
+  const ensData = await fetchENSData(address);
   const from = null;
   const amount = null;
   const parser = JSON.parse;
@@ -117,9 +130,14 @@ export default async function (trie, theme, address) {
             </tr>
             <tr>
               <td>
-                <div style="padding: 10px; color: black; font-size: 16px">
+                <div style="padding: 10px; color: black; font-size: 16px; line-height: 1.5;">
                   <span>Profile: </span>
                   <ens-name address=${address} />
+                  ${ensData.description ? html`"<span> <span>${ensData.description}"<br />` : html`<br />`}
+                  ${ensData.url ? html`Website: <a target="_blank" href="${ensData.url}">${ensData.url}</a><br />` : ""}
+                  ${ensData.twitter ? html`Twitter: <a href="https://twitter.com/${ensData.twitter}" target="_blank" rel="noopener noreferrer">@${ensData.twitter}</a><br />` : ""}
+                  ${ensData.github ? html`GitHub: <a href="https://github.com/${ensData.github}" target="_blank" rel="noopener noreferrer">${ensData.github}</a><br />` : ""}
+                  ${ensData.discord ? html`Discord: ${ensData.discord}<br />` : ""}
                   <hr />
                   ${submissions.length > 0
                     ? html`<b>LAST 10 SUBMISSIONS: </b>`
