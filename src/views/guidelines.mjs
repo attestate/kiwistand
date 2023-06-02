@@ -39,7 +39,7 @@ export default function (theme) {
                     </li>
                     <li>
                       If you have a choice between an original source and a
-                      report about something found on the other side, choose the
+                      report about something found on the other website, choose the
                       original source.
                     </li>
                     <li>
