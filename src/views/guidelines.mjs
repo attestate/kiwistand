@@ -34,7 +34,7 @@ export default function (theme) {
                     <ul>
                       <li>We welcome content that might expand the intellectual horizons of web3 builders: tech, economics, culture, sociology, art, etc.</li>
                       <li>If you have a choice between an original source and a report about something found on the other side, choose the original source.</li>
-                      <li>Ensure the links are not paywalled - you can remove paywalls with RemovePaywall.com or Archive.ph</li>
+                      <li>Ensure the links are not paywalled (consider NOT posting paywalled content)</li>
                     </ul>
                     <p><b>How to prepare your title:</b></p>
                     <ul>
