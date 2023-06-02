@@ -51,7 +51,7 @@ export default function (theme) {
                   <ul>
                     <li>
                       If you don't use the original title, ensure your title is
-                      not too clickbaity and is not CAPSLOCKed.
+                      not too clickbaity and is not fully CAPSLOCKed.
                     </li>
                     <li>
                       Fit into less than 80 characters. Otherwise, the title
