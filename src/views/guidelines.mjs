@@ -39,7 +39,7 @@ export default function (theme) {
                     </li>
                     <li>
                       If you have a choice between an original source and a
-                      report about something found on the other website, choose the
+                      report about it found on another website, choose the
                       original source.
                     </li>
                     <li>
@@ -51,7 +51,7 @@ export default function (theme) {
                   <ul>
                     <li>
                       If you don't use the original title, ensure your title is
-                      not too clickbaity.
+                      not too clickbaity and is not CAPSLOCKed.
                     </li>
                     <li>
                       Fit into less than 80 characters. Otherwise, the title
