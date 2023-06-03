@@ -8,7 +8,7 @@ import Head from "./components/head.mjs";
 
 const html = htm.bind(vhtml);
 
-const price = "0.005";
+const price = "0.01";
 
 export default function (theme) {
   return html`
@@ -186,10 +186,10 @@ export default function (theme) {
                         </p>
                         <a
                           target="_blank"
-                          href="https://zora.co/collect/0xebb15487787cbf8ae2ffe1a6cca5a50e63003786"
+                          href="https://mint.fun/0xebb15487787cbf8ae2ffe1a6cca5a50e63003786"
                         >
                           <button class="buy-button">
-                            Buy Kiwi NFT for ${price} Ξ (on Zora)
+                            Buy Kiwi NFT for ${price} Ξ (on mint.fun)
                           </button>
                         </a>
                       </div>
