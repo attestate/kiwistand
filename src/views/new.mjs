@@ -47,7 +47,6 @@ export function count(leaves) {
   return Object.values(stories);
 }
 
-const totalStories = parseInt(env.TOTAL_STORIES, 10);
 export default async function (trie, theme) {
   const config = await moderation.getLists();
 
@@ -63,7 +62,7 @@ export default async function (trie, theme) {
 
   const stories = count(leaves)
     .sort((a, b) => b.timestamp - a.timestamp)
-    .slice(0, totalStories);
+    .slice(0, 40);
 
   return html`
     <html lang="en" op="news">
