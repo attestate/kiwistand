@@ -358,7 +358,7 @@ export default async function index(trie, theme) {
             )}
           </table>
           <div style="width: 85%; margin: auto; text-align: center; font-size: 16px; color: black; background-color: #3DC617; padding: 10px; box-sizing: border-box;">
-        Looking for more links? Check out the <a href="/new" style="color: black;"><u>New Links Tab</a></u>
+        Hungry for more links? Check out the <a href="/new" style="color: black;"><u>New Links Tab</a></u>
         </div>
           ${Footer}
         </center>
