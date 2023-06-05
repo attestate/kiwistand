@@ -40,7 +40,8 @@ function calculateDAU(messages) {
 
   for (const msg of messages) {
     const date = timestampToDate(msg.timestamp);
-    const address = id.ecrecover(msg);
+    const cacheEnabled = true;
+    const address = id.ecrecover(msg, cacheEnabled);
 
     if (!dauMap.has(date)) {
       dauMap.set(date, new Set());

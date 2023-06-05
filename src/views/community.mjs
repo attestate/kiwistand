@@ -33,7 +33,8 @@ const countPoints = (messages) => {
 
   messages.forEach((message) => {
     const normalizedUrl = normalizeUrl(message.href);
-    const address = id.ecrecover(message);
+    const cacheEnabled = true;
+    const address = id.ecrecover(message, cacheEnabled);
 
     if (!submissions.has(normalizedUrl)) {
       submissions.set(normalizedUrl, address);

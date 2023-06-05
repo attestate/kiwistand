@@ -60,8 +60,9 @@ export default async function (trie, theme, address) {
   const amount = null;
   const parser = JSON.parse;
   let leaves = await store.leaves(trie, from, amount, parser);
+  const cacheEnabled = true;
   leaves = leaves.map((leaf) => ({
-    address: id.ecrecover(leaf),
+    address: id.ecrecover(leaf, cacheEnabled),
     ...leaf,
   }));
   const actions = classify(leaves);
@@ -130,14 +131,41 @@ export default async function (trie, theme, address) {
             </tr>
             <tr>
               <td>
-                <div style="padding: 10px; color: black; font-size: 16px; line-height: 1.5;">
+                <div
+                  style="padding: 10px; color: black; font-size: 16px; line-height: 1.5;"
+                >
                   <span>Profile: </span>
                   <ens-name address=${address} />
-                  ${ensData.description ? html`<span> </span>"${ensData.description}"<br />` : html`<br />`}
-                  ${ensData.url ? html`Website: <a target="_blank" href="${ensData.url}">${ensData.url}</a><br />` : ""}
-                  ${ensData.twitter ? html`Twitter: <a href="https://twitter.com/${ensData.twitter}" target="_blank" rel="noopener noreferrer">@${ensData.twitter}</a><br />` : ""}
-                  ${ensData.github ? html`GitHub: <a href="https://github.com/${ensData.github}" target="_blank" rel="noopener noreferrer">${ensData.github}</a><br />` : ""}
-                  ${ensData.discord ? html`Discord: ${ensData.discord}<br />` : ""}
+                  ${ensData.description
+                    ? html`<span> </span>"${ensData.description}"<br />`
+                    : html`<br />`}
+                  ${ensData.url
+                    ? html`Website:
+                        <a target="_blank" href="${ensData.url}"
+                          >${ensData.url}</a
+                        ><br />`
+                    : ""}
+                  ${ensData.twitter
+                    ? html`Twitter:
+                        <a
+                          href="https://twitter.com/${ensData.twitter}"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          >@${ensData.twitter}</a
+                        ><br />`
+                    : ""}
+                  ${ensData.github
+                    ? html`GitHub:
+                        <a
+                          href="https://github.com/${ensData.github}"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          >${ensData.github}</a
+                        ><br />`
+                    : ""}
+                  ${ensData.discord
+                    ? html`Discord: ${ensData.discord}<br />`
+                    : ""}
                   <hr />
                   ${submissions.length > 0
                     ? html`<b>LAST 10 SUBMISSIONS: </b>`

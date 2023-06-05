@@ -53,9 +53,10 @@ export async function getBanlist() {
 }
 
 export function moderate(leaves, config) {
+  const cacheEnabled = true;
   return leaves
     .map((leaf) => ({
-      address: id.ecrecover(leaf),
+      address: id.ecrecover(leaf, cacheEnabled),
       ...leaf,
     }))
     .filter(({ address }) => !config.addresses.includes(address.toLowerCase()))

@@ -87,9 +87,10 @@ async function editors(leaves) {
   }
 
   function editorPicks(leaves, config, links) {
+    const cacheEnabled = true;
     const editorStories = leaves
       .map((leaf) => ({
-        address: id.ecrecover(leaf),
+        address: id.ecrecover(leaf, cacheEnabled),
         ...leaf,
       }))
       .filter(

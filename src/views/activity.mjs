@@ -22,7 +22,8 @@ const generateFeed = (messages) => {
   return messages
     .sort((a, b) => a.timestamp - b.timestamp)
     .map((message) => {
-      const address = id.ecrecover(message);
+      const cacheEnabled = true;
+      const address = id.ecrecover(message, cacheEnabled);
       const href = normalizeUrl(!!message.href && message.href);
 
       if (message.type === "amplify" && !firstAmplify[href]) {

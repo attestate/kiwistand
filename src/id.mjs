@@ -84,16 +84,32 @@ export async function sign(signer, message) {
   };
 }
 
-export function ecrecover(message) {
+let cache = new Map();
+
+function cacheResult(cacheKey, computeFunc) {
+  if (cache.has(cacheKey)) {
+    return cache.get(cacheKey);
+  }
+
+  const result = computeFunc();
+  cache.set(cacheKey, result);
+
+  return result;
+}
+
+export function ecrecover(message, enableCache = false) {
   const copy = { ...message };
   delete copy["signature"];
-  const address = utils.verifyTypedData(
-    EIP712_DOMAIN,
-    EIP712_TYPES,
-    copy,
-    message.signature
-  );
-  return address;
+
+  const computeFunc = () =>
+    utils.verifyTypedData(EIP712_DOMAIN, EIP712_TYPES, copy, message.signature);
+
+  if (enableCache) {
+    const cacheKey = JSON.stringify(copy) + message.signature;
+    return cacheResult(cacheKey, computeFunc);
+  }
+
+  return computeFunc();
 }
 
 const messageValidator = ajv.compile(SCHEMATA.message);
