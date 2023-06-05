@@ -43,6 +43,7 @@ test("initiate should not crash when innerSend returns an undefined missing fiel
       newPeer: "newPeer",
     }),
     set: () => {},
+    get: () => {},
   };
 
   const mockInnerSend = () => {
@@ -56,11 +57,7 @@ test("initiate should not crash when innerSend returns an undefined missing fiel
   const exclude = [];
   const level = 0;
 
-  try {
-    await initiate(trie, peerId, exclude, level, mockInnerSend, mockPeerFab);
-  } catch (error) {
-    t.fail(`initiate function crashed with error: ${error.message}`);
-  }
+  await initiate(trie, peerId, exclude, level, mockInnerSend, mockPeerFab);
 
   t.pass();
 });
