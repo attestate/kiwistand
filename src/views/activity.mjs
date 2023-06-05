@@ -23,14 +23,13 @@ const generateFeed = (messages) => {
     .sort((a, b) => a.timestamp - b.timestamp)
     .map((message) => {
       const cacheEnabled = true;
-      const address = id.ecrecover(message, cacheEnabled);
       const href = normalizeUrl(!!message.href && message.href);
 
       if (message.type === "amplify" && !firstAmplify[href]) {
         firstAmplify[href] = true;
-        return { address, verb: "submitted", message };
+        return { address: message.address, verb: "submitted", message };
       } else {
-        return { address, verb: "upvoted", message };
+        return { address: message.address, verb: "upvoted", message };
       }
     })
     .sort((a, b) => b.message.timestamp - a.message.timestamp);
