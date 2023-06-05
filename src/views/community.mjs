@@ -54,7 +54,7 @@ const countPoints = (messages) => {
 };
 
 export default async function (trie, theme) {
-  const config = await moderation.getBanlist();
+  const config = await moderation.getLists();
   const from = null;
   const amount = null;
   const parser = JSON.parse;

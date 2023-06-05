@@ -67,7 +67,7 @@ const calculateScore = (votes, itemHourAge, gravity = 1.8) => {
 
 async function topstories(leaves) {
   const totalStories = parseInt(env.TOTAL_STORIES, 10);
-  const config = await moderation.getBanlist();
+  const config = await moderation.getLists();
   leaves = moderation.moderate(leaves, config);
   return count(leaves)
     .map((story) => {

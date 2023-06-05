@@ -64,7 +64,7 @@ function generateRow(activity, i) {
 }
 
 export default async function (trie, theme) {
-  const config = await moderation.getBanlist();
+  const config = await moderation.getLists();
 
   const cutoff = sub(new Date(), {
     days: 3,
