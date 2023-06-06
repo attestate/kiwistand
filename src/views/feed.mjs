@@ -187,26 +187,28 @@ export default async function index(trie, theme) {
             <tr>
               ${Header(theme)}
             </tr>
-            ${editorPicks.length > 0
-              ? html` <tr style="background-color: #e6e6df;">
-                  <td>
-                    <p
-                      style="color: black; padding: 10px; font-size: 12pt; font-weight: bold;"
-                    >
-                      <a
-                        style="font-size: 16pt; color: ${theme.color}"
-                        href="/subscribe"
-                        >✉</a
+            ${
+              editorPicks.length > 0
+                ? html` <tr style="background-color: #e6e6df;">
+                    <td>
+                      <p
+                        style="color: black; padding: 10px; font-size: 12pt; font-weight: bold;"
                       >
-                      <span> </span>
-                      <span>Today's Editor's Picks by </span>
-                      <a style="color:black;" href="${config.link}">
-                        ${config.name}</a
-                      >!
-                    </p>
-                  </td>
-                </tr>`
-              : ""}
+                        <a
+                          style="font-size: 16pt; color: ${theme.color}"
+                          href="/subscribe"
+                          >✉</a
+                        >
+                        <span> </span>
+                        <span>Today's Editor's Picks by </span>
+                        <a style="color:black;" href="${config.link}">
+                          ${config.name}</a
+                        >!
+                      </p>
+                    </td>
+                  </tr>`
+                : ""
+            }
             ${editorPicks.map(
               (story, i) => html`
                 <tr style="background-color: #e6e6df;">
@@ -357,7 +359,9 @@ export default async function index(trie, theme) {
               `
             )}
           </table>
-          <div style="width: 85%; margin: auto; text-align: center; font-size: 16px; color: black; background-color: #3DC617; padding: 10px; box-sizing: border-box;">
+          <div style="width: 85%; margin: auto; text-align: center; font-size: 16px; color: black; background-color: ${
+            theme.color
+          }; padding: 10px; box-sizing: border-box;">
         Hungry for more links? Check out the <a href="/new" style="color: black;"><u>New Links Tab</a></u>
         </div>
           ${Footer}
