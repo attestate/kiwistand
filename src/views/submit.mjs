@@ -65,7 +65,12 @@ export default function submit(theme) {
                 </form>
                 <p style="${noteStyle}">
                   <span>Please be mindful of our </span>
-                  <a style="color:black;" href="/guidelines">Guidelines</a>.
+                  <a
+                    style="color:black;"
+                    target="_blank"
+                    href="https://hackmd.io/a-r--DX2T5uEEKX0Z8PRlQ?view"
+                    >Guidelines</a
+                  >.
                 </p>
               </td>
             </tr>
