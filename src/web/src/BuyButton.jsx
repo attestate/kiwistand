@@ -126,7 +126,7 @@ const BuyButton = () => {
       {isLoading && <div>Please sign transaction</div>}
       {isSuccess && <div>Thanks for minting!</div>}
     </button>
-    {isSuccess && <div>Transaction: <a href="https://etherscan.io/tx/{data.hash}">Transaction (etherscan)</a>}</div>}
+    {isSuccess && <div>Transaction: <a href="https://etherscan.io/tx/{data.hash}">Transaction (etherscan)</a></div>}
     </div>
   );
 };
