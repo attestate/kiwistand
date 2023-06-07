@@ -184,14 +184,20 @@ export default function (theme) {
                           >
                           <span> and others!</span>
                         </p>
-                        <a
-                          target="_blank"
-                          href="https://mint.fun/0xebb15487787cbf8ae2ffe1a6cca5a50e63003786"
-                        >
+                        <div id="buy-button">
                           <button class="buy-button">
-                            Buy Kiwi NFT for ${price} Ξ (on mint.fun)
+                            Buy Kiwi NFT for ${price} Ξ
                           </button>
-                        </a>
+                        </div>
+                        <br />
+                        <span>Or buy on </span>
+                        <br />
+                        <a
+                          style="color:black;"
+                          href="https://mint.fun/0xebb15487787cbf8ae2ffe1a6cca5a50e63003786"
+                          target="_blank"
+                          >mint.fun</a
+                        >
                       </div>
                     </div>
                   </section>

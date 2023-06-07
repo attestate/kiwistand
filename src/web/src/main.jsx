@@ -3,6 +3,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import Navigation from './Navigation.jsx'
 import SubmitButton from './SubmitButton.jsx'
+import BuyButton from './BuyButton.jsx'
 import Vote from './Vote.jsx'
 import EnsName from './EnsName.jsx'
 import { loadTheme } from "./theme.mjs";
@@ -22,6 +23,15 @@ if (submitButtonContainer) {
   ReactDOM.createRoot(submitButtonContainer).render(
     <React.StrictMode>
       <SubmitButton />
+    </React.StrictMode>
+  )
+}
+
+const buyButtonContainer = document.getElementById('buy-button');
+if (buyButtonContainer) {
+  ReactDOM.createRoot(buyButtonContainer).render(
+    <React.StrictMode>
+      <BuyButton />
     </React.StrictMode>
   )
 }
