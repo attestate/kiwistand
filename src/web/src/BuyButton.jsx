@@ -104,8 +104,9 @@ const BuyButton = () => {
   })
 
   const quantity = 1;
-  const value = ZORA_MINT_FEE.add(salesDetails.data.publicSalePrice);
-  const { config, error } = usePrepareContractWrite({
+  const salesPrice = salesDetails?.data?.publicSalePrice || 0;
+  const value = ZORA_MINT_FEE.add(salesPrice);
+  const { config } = usePrepareContractWrite({
     address,
     abi,
     functionName: 'purchase',
@@ -115,14 +116,11 @@ const BuyButton = () => {
     },
     chainId: mainnet.id
   })
-  if (error) {
-    showMessage("Can't mint because of configuration error");
-  }
   const { data, write, isLoading, isSuccess } = useContractWrite(config)
   return (
     <div>
     <button className="buy-button" disabled={!write || isLoading} onClick={() => write?.()}>
-      {!isLoading && !isSuccess && <div>Buy Kiwi NFT for {utils.formatEther(salesDetails.data.publicSalePrice)} Ξ</div>}
+      {!isLoading && !isSuccess && <div>Buy Kiwi NFT for {utils.formatEther(salesPrice)} Ξ</div>}
       {isLoading && <div>Please sign transaction</div>}
       {isSuccess && <div>Thanks for minting!</div>}
     </button>
