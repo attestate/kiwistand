@@ -413,11 +413,9 @@ export default async function index(trie, theme) {
               `
             )}
           </table>
-          <div style="width: 85%; margin: auto; text-align: center; font-size: 16px; color: black; background-color: ${
-            theme.color
-          }; padding: 10px; box-sizing: border-box;">
-        Hungry for more links? Check out the <a href="/new" style="color: black;"><u>New Links Tab</a></u>
-        </div>
+          <div id="boxmain" style="background-color: ${theme.color};">
+          Hungry for more links? Check out the <a href="/new" style="color: black;"><u>New Links Tab</u></a>
+          </div>
           ${Footer}
         </center>
       </body>
