@@ -29,8 +29,8 @@ const header = (theme) => html`
           <span> | </span>
           <a style="color: black; cursor: pointer;" href="/submit">Submit</a>
           <span> | </span>
-          <a style="color: black; cursor: pointer;" href="/subscribe"
-            >Newsletter</a
+          <a style="color: black; cursor: pointer;" href="/activity"
+            >Activity</a
           >
         </td>
         <td style="text-align:right;padding-right:4px;">
