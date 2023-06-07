@@ -190,33 +190,116 @@ export default async function index(trie, theme, page) {
             <tr>
               ${Header(theme)}
             </tr>
-            ${
-              page === 0 && editorPicks.length > 0
-                ? html` <tr style="background-color: #e6e6df;">
-                    <td>
-                      <p
-                        style="color: black; padding: 10px; font-size: 12pt; font-weight: bold;"
+            ${page === 0 && editorPicks.length > 0
+              ? html` <tr style="background-color: #e6e6df;">
+                  <td>
+                    <p
+                      style="color: black; padding: 10px; font-size: 12pt; font-weight: bold;"
+                    >
+                      <a
+                        style="font-size: 16pt; color: ${theme.color}"
+                        href="/subscribe"
+                        >✉</a
                       >
-                        <a
-                          style="font-size: 16pt; color: ${theme.color}"
-                          href="/subscribe"
-                          >✉</a
-                        >
-                        <span> </span>
-                        <span>Today's Editor's Picks by </span>
-                        <a style="color:black;" href="${config.link}">
-                          ${config.name}</a
-                        >!
-                      </p>
-                    </td>
-                  </tr>`
-                : ""
-            }
-            ${
-              page === 0 &&
-              editorPicks.map(
-                (story, i) => html`
-                  <tr style="background-color: #e6e6df;">
+                      <span> </span>
+                      <span>Today's Editor's Picks by </span>
+                      <a style="color:black;" href="${config.link}">
+                        ${config.name}</a
+                      >!
+                    </p>
+                  </td>
+                </tr>`
+              : ""}
+            ${page === 0 &&
+            editorPicks.map(
+              (story, i) => html`
+                <tr style="background-color: #e6e6df;">
+                  <td>
+                    <table
+                      style="padding: 5px;"
+                      border="0"
+                      cellpadding="0"
+                      cellspacing="0"
+                    >
+                      <tr class="athing" id="35233479">
+                        <td align="right" valign="top" class="title">
+                          <span style="padding-right: 5px" class="rank"
+                            >${i + 1}.
+                          </span>
+                        </td>
+                        <td valign="top" class="votelinks">
+                          <center>
+                            <a id="up_35233479" class="clicky" href="#">
+                              <div
+                                class="votearrowcontainer"
+                                data-title="${story.title}"
+                                data-href="${story.href}"
+                              ></div>
+                            </a>
+                          </center>
+                        </td>
+                        <td class="title">
+                          <span class="titleline">
+                            <a target="_blank" href="${story.href}">
+                              ${story.title}
+                              <span> </span>
+                              <span
+                                style="vertical-align:top; font-size: 0.8em; font-weight: bolder;"
+                              >
+                                ${String.fromCharCode(0x2934, 0xfe0e)}
+                              </span>
+                            </a>
+                            <span style="padding-left: 5px">
+                              (${extractDomain(story.href)})
+                            </span>
+                          </span>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td colspan="2"></td>
+                        <td class="subtext">
+                          <span class="subline">
+                            <span
+                              style="display: inline-block; height: auto;"
+                              class="score"
+                              id="score_35233479"
+                            >
+                              <ens-name address=${story.address} />
+                              <span> </span>
+                              ${formatDistanceToNow(
+                                new Date(story.timestamp * 1000)
+                              )}
+                              <span> ago | </span>
+                              <a
+                                target="_blank"
+                                href="https://warpcast.com/~/compose?embeds[]=${story.href}"
+                                >share on Warpcast</a
+                              >
+                            </span>
+                          </span>
+                        </td>
+                      </tr>
+                      <tr class="spacer" style="height:5px"></tr>
+                    </table>
+                  </td>
+                </tr>
+              `
+            )}
+            <tr>
+              <td>
+                <p
+                  style="color: black; padding: 10px; font-size: 12pt; font-weight: bold;"
+                >
+                  <span
+                    >Community's Picks
+                    ${page !== 0 ? html`(page: ${page})` : ""}</span
+                  >
+                </p>
+              </td>
+            </tr>
+            ${page === 0
+              ? html`
+                  <tr>
                     <td>
                       <table
                         style="padding: 5px;"
@@ -227,24 +310,22 @@ export default async function index(trie, theme, page) {
                         <tr class="athing" id="35233479">
                           <td align="right" valign="top" class="title">
                             <span style="padding-right: 5px" class="rank"
-                              >${i + 1}.
+                              >*
                             </span>
                           </td>
                           <td valign="top" class="votelinks">
                             <center>
-                              <a id="up_35233479" class="clicky" href="#">
-                                <div
-                                  class="votearrowcontainer"
-                                  data-title="${story.title}"
-                                  data-href="${story.href}"
-                                ></div>
-                              </a>
+                              <a id="up_35233479" class="clicky" href="#"> </a>
                             </center>
                           </td>
                           <td class="title">
-                            <span class="titleline">
-                              <a target="_blank" href="${story.href}">
-                                ${story.title}
+                            <span style="font-weight: bold;" class="titleline">
+                              <a
+                                target="_blank"
+                                href="https://hackmd.io/a-r--DX2T5uEEKX0Z8PRlQ?view"
+                              >
+                                Submission Guidelines (please read before
+                                posting)
                                 <span> </span>
                                 <span
                                   style="vertical-align:top; font-size: 0.8em; font-weight: bolder;"
@@ -253,7 +334,7 @@ export default async function index(trie, theme, page) {
                                 </span>
                               </a>
                               <span style="padding-left: 5px">
-                                (${extractDomain(story.href)})
+                                (hackmd.io)
                               </span>
                             </span>
                           </td>
@@ -267,12 +348,6 @@ export default async function index(trie, theme, page) {
                                 class="score"
                                 id="score_35233479"
                               >
-                                <ens-name address=${story.address} />
-                                <span> </span>
-                                ${formatDistanceToNow(
-                                  new Date(story.timestamp * 1000)
-                                )}
-                                <span> ago</span>
                               </span>
                             </span>
                           </td>
@@ -282,86 +357,7 @@ export default async function index(trie, theme, page) {
                     </td>
                   </tr>
                 `
-              )
-            }
-            <tr>
-              <td>
-                <p
-                  style="color: black; padding: 10px; font-size: 12pt; font-weight: bold;"
-                >
-                  <span>Community's Picks ${
-                    page !== 0 ? html`(page: ${page})` : ""
-                  }</span>
-                </p>
-              </td>
-            </tr>
-            ${
-              page === 0
-                ? html`
-                    <tr>
-                      <td>
-                        <table
-                          style="padding: 5px;"
-                          border="0"
-                          cellpadding="0"
-                          cellspacing="0"
-                        >
-                          <tr class="athing" id="35233479">
-                            <td align="right" valign="top" class="title">
-                              <span style="padding-right: 5px" class="rank"
-                                >*
-                              </span>
-                            </td>
-                            <td valign="top" class="votelinks">
-                              <center>
-                                <a id="up_35233479" class="clicky" href="#">
-                                </a>
-                              </center>
-                            </td>
-                            <td class="title">
-                              <span
-                                style="font-weight: bold;"
-                                class="titleline"
-                              >
-                                <a
-                                  target="_blank"
-                                  href="https://hackmd.io/a-r--DX2T5uEEKX0Z8PRlQ?view"
-                                >
-                                  Submission Guidelines (please read before
-                                  posting)
-                                  <span> </span>
-                                  <span
-                                    style="vertical-align:top; font-size: 0.8em; font-weight: bolder;"
-                                  >
-                                    ${String.fromCharCode(0x2934, 0xfe0e)}
-                                  </span>
-                                </a>
-                                <span style="padding-left: 5px">
-                                  (hackmd.io)
-                                </span>
-                              </span>
-                            </td>
-                          </tr>
-                          <tr>
-                            <td colspan="2"></td>
-                            <td class="subtext">
-                              <span class="subline">
-                                <span
-                                  style="display: inline-block; height: auto;"
-                                  class="score"
-                                  id="score_35233479"
-                                >
-                                </span>
-                              </span>
-                            </td>
-                          </tr>
-                          <tr class="spacer" style="height:5px"></tr>
-                        </table>
-                      </td>
-                    </tr>
-                  `
-                : ""
-            }
+              : ""}
             ${stories.map(
               (story, i) => html`
                 <tr>
@@ -422,7 +418,12 @@ export default async function index(trie, theme, page) {
                               ${formatDistanceToNow(
                                 new Date(story.timestamp * 1000)
                               )}
-                              <span> ago</span>
+                              <span> ago | </span>
+                              <a
+                                target="_blank"
+                                href="https://warpcast.com/~/compose?embeds[]=${story.href}"
+                                >share on Warpcast</a
+                              >
                             </span>
                           </span>
                         </td>
@@ -442,19 +443,15 @@ export default async function index(trie, theme, page) {
                   cellspacing="0"
                 >
                   <tr class="athing" id="35233479">
-                    <td align="right" valign="top" class="title">
-                    </td>
+                    <td align="right" valign="top" class="title"></td>
                     <td valign="top" class="votelinks">
                       <center>
-                        <a id="up_35233479" class="clicky" href="#">
-                        </a>
+                        <a id="up_35233479" class="clicky" href="#"> </a>
                       </center>
                     </td>
                     <td class="title">
                       <span style="margin-left: 10px;" class="titleline">
-                        <a href="?page=${page + 1}">
-                          More
-                        </a>
+                        <a href="?page=${page + 1}"> More </a>
                       </span>
                     </td>
                   </tr>
@@ -477,7 +474,8 @@ export default async function index(trie, theme, page) {
             </tr>
           </table>
           <div id="boxmain" style="background-color: ${theme.color};">
-          Hungry for more links? Check out the <a href="/new" style="color: black;"><u>New Links Tab</u></a>
+            Hungry for more links? Check out the
+            <a href="/new" style="color: black;"><u>New Links Tab</u></a>
           </div>
           ${Footer}
         </center>

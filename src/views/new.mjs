@@ -142,7 +142,12 @@ export default async function (trie, theme) {
                               ${formatDistanceToNow(
                                 new Date(story.timestamp * 1000)
                               )}
-                              <span> ago</span>
+                              <span> ago | </span>
+                              <a
+                                target="_blank"
+                                href="https://warpcast.com/~/compose?embeds[]=${story.href}"
+                                >share on Warpcast</a
+                              >
                             </span>
                           </span>
                         </td>
