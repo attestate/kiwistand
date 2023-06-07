@@ -67,7 +67,7 @@ const calculateScore = (votes, itemHourAge, gravity = 1.8) => {
 
 async function topstories(leaves) {
   const totalStories = parseInt(env.TOTAL_STORIES, 10);
-  const config = await moderation.getBanlist();
+  const config = await moderation.getLists();
   leaves = moderation.moderate(leaves, config);
   return count(leaves)
     .map((story) => {
@@ -187,26 +187,28 @@ export default async function index(trie, theme) {
             <tr>
               ${Header(theme)}
             </tr>
-            ${editorPicks.length > 0
-              ? html` <tr style="background-color: #e6e6df;">
-                  <td>
-                    <p
-                      style="color: black; padding: 10px; font-size: 12pt; font-weight: bold;"
-                    >
-                      <a
-                        style="font-size: 16pt; color: ${theme.color}"
-                        href="/subscribe"
-                        >✉</a
+            ${
+              editorPicks.length > 0
+                ? html` <tr style="background-color: #e6e6df;">
+                    <td>
+                      <p
+                        style="color: black; padding: 10px; font-size: 12pt; font-weight: bold;"
                       >
-                      <span> </span>
-                      <span>Today's Editor's Picks by </span>
-                      <a style="color:black;" href="${config.link}">
-                        ${config.name}</a
-                      >!
-                    </p>
-                  </td>
-                </tr>`
-              : ""}
+                        <a
+                          style="font-size: 16pt; color: ${theme.color}"
+                          href="/subscribe"
+                          >✉</a
+                        >
+                        <span> </span>
+                        <span>Today's Editor's Picks by </span>
+                        <a style="color:black;" href="${config.link}">
+                          ${config.name}</a
+                        >!
+                      </p>
+                    </td>
+                  </tr>`
+                : ""
+            }
             ${editorPicks.map(
               (story, i) => html`
                 <tr style="background-color: #e6e6df;">
@@ -285,6 +287,60 @@ export default async function index(trie, theme) {
                 </p>
               </td>
             </tr>
+            <tr>
+              <td>
+                <table
+                  style="padding: 5px;"
+                  border="0"
+                  cellpadding="0"
+                  cellspacing="0"
+                >
+                  <tr class="athing" id="35233479">
+                    <td align="right" valign="top" class="title">
+                      <span style="padding-right: 5px" class="rank"
+                        >*
+                      </span>
+                    </td>
+                    <td valign="top" class="votelinks">
+                      <center>
+                        <a id="up_35233479" class="clicky" href="#">
+                        </a>
+                      </center>
+                    </td>
+                    <td class="title">
+                      <span style="font-weight: bold;" class="titleline">
+                        <a target="_blank" href="https://hackmd.io/a-r--DX2T5uEEKX0Z8PRlQ?view">
+                          Submission Guidelines (please read before posting)
+                          <span> </span>
+                          <span
+                            style="vertical-align:top; font-size: 0.8em; font-weight: bolder;"
+                          >
+                            ${String.fromCharCode(0x2934, 0xfe0e)}
+                          </span>
+                        </a>
+                        <span style="padding-left: 5px">
+                          (hackmd.io)
+                        </span>
+                      </span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td colspan="2"></td>
+                    <td class="subtext">
+                      <span class="subline">
+                        <span
+                          style="display: inline-block; height: auto;"
+                          class="score"
+                          id="score_35233479"
+                        >
+                        </span>
+                      </span>
+                    </td>
+                  </tr>
+                  <tr class="spacer" style="height:5px"></tr>
+                </table>
+              </td>
+            </tr>
             ${stories.map(
               (story, i) => html`
                 <tr>
@@ -357,7 +413,9 @@ export default async function index(trie, theme) {
               `
             )}
           </table>
-          <div style="width: 85%; margin: auto; text-align: center; font-size: 16px; color: black; background-color: #3DC617; padding: 10px; box-sizing: border-box;">
+          <div style="width: 85%; margin: auto; text-align: center; font-size: 16px; color: black; background-color: ${
+            theme.color
+          }; padding: 10px; box-sizing: border-box;">
         Hungry for more links? Check out the <a href="/new" style="color: black;"><u>New Links Tab</a></u>
         </div>
           ${Footer}

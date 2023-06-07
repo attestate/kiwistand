@@ -29,45 +29,9 @@ export default function (theme) {
             </tr>
             <tr>
               <td>
-                <div style="padding: 20px;">
-                  <p><b>What links to submit on Kiwi News:</b></p>
-                  <ul>
-                    <li>
-                      We welcome content that might expand the intellectual
-                      horizons of web3 builders: tech, economics, culture,
-                      sociology, art, etc.
-                    </li>
-                    <li>
-                      If you have a choice between an original source and a
-                      report about it found on another website, choose the
-                      original source.
-                    </li>
-                    <li>
-                      Ensure the links are not paywalled (consider NOT posting
-                      paywalled content)
-                    </li>
-                  </ul>
-                  <p><b>How to prepare your title:</b></p>
-                  <ul>
-                    <li>
-                      If you don't use the original title, ensure your title is
-                      not too clickbaity and is not fully CAPSLOCKed.
-                    </li>
-                    <li>
-                      Fit into less than 80 characters. Otherwise, the title
-                      will be cropped.
-                    </li>
-                    <li>
-                      Don't put the name of the site (like YouTube or Reddit) in
-                      the title since it's going to be displayed below the link.
-                    </li>
-                  </ul>
-                  <p>
-                    Since we want to keep the content quality high, we reserve
-                    the right to moderate the links that won't follow these
-                    rules.
-                  </p>
-                </div>
+                <a href="https://hackmd.io/a-r--DX2T5uEEKX0Z8PRlQ?view"
+                  >Guidelines have moved here</a
+                >
               </td>
             </tr>
           </table>

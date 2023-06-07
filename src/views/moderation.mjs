@@ -22,16 +22,19 @@ export async function getConfig(sheet) {
   }
 }
 
-export async function getBanlist() {
+export async function getLists() {
+  const defaultObj = {
+    addresses: [],
+    titles: {},
+    links: [],
+  };
+
   let addrResponse;
   try {
     addrResponse = await getConfig("banlist_addresses");
   } catch (err) {
     log(`banlist_addresses: Couldn't get config: ${err.toString()}`);
-    return {
-      addresses: [],
-      links: [],
-    };
+    return defaultObj;
   }
   const addresses = addrResponse.map(({ address }) => address.toLowerCase());
 
@@ -40,25 +43,41 @@ export async function getBanlist() {
     linkResponse = await getConfig("banlist_links");
   } catch (err) {
     log(`banlist_links: Couldn't get config: ${err.toString()}`);
-    return {
-      addresses: [],
-      links: [],
-    };
+    return defaultObj;
   }
   const links = linkResponse.map(({ link }) => normalizeUrl(link));
+
+  let titleResponse;
+  try {
+    titleResponse = await getConfig("moderation_titles");
+  } catch (err) {
+    log(`moderation_titles: Couldn't get config: ${err.toString()}`);
+    return defaultObj;
+  }
+  const titles = {};
+  for (let obj of titleResponse) {
+    titles[normalizeUrl(obj.link)] = obj.title;
+  }
   return {
+    titles,
     addresses,
     links,
   };
 }
 
 export function moderate(leaves, config) {
-  const cacheEnabled = true;
   return leaves
-    .map((leaf) => ({
-      address: id.ecrecover(leaf, cacheEnabled),
-      ...leaf,
-    }))
+    .map((leaf) => {
+      const alternativeTitle = config.titles[normalizeUrl(leaf.href)];
+      const nextTitle = alternativeTitle ? alternativeTitle : leaf.title;
+
+      const cacheEnabled = true;
+      return {
+        ...leaf,
+        address: id.ecrecover(leaf, cacheEnabled),
+        title: nextTitle,
+      };
+    })
     .filter(({ address }) => !config.addresses.includes(address.toLowerCase()))
     .filter(({ href }) => !config.links.includes(normalizeUrl(href)));
 }

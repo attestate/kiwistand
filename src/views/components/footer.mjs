@@ -20,7 +20,9 @@ const footer = html`
   <span> | </span>
   <a target="_blank" href="https://kiwinews.sleekplan.app/">Request Feature</a>
   <span> | </span>
-  <a href="/guidelines">Guidelines</a>
+  <a target="_blank" href="https://hackmd.io/a-r--DX2T5uEEKX0Z8PRlQ?view"
+    >Guidelines</a
+  >
   <script defer src="bundle.js"></script>
   <script
     async
