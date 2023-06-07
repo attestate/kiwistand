@@ -131,7 +131,7 @@ export default async function (trie, theme) {
                         <td class="subtext">
                           <span class="subline">
                             <span
-                              style="display: inline-block; height: 10px;"
+                              style="display: inline-block;"
                               class="score"
                               id="score_35233479"
                             >
