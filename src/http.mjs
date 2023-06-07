@@ -16,7 +16,7 @@ import newest from "./views/new.mjs";
 import privacy from "./views/privacy.mjs";
 import nft from "./views/nft.mjs";
 import subscribe from "./views/subscribe.mjs";
-import guidelines from "./views/guidelines.mjs"
+import guidelines from "./views/guidelines.mjs";
 import submit from "./views/submit.mjs";
 import upvotes from "./views/upvotes.mjs";
 import community from "./views/community.mjs";
@@ -132,7 +132,11 @@ export function listMessages(trie) {
 
 export async function launch(trie, libp2p) {
   app.get("/", async (request, reply) => {
-    const content = await feed(trie, reply.locals.theme);
+    let page = parseInt(request.query.page);
+    if (isNaN(page) || page < 1) {
+      page = 0;
+    }
+    const content = await feed(trie, reply.locals.theme, page);
     return reply.status(200).type("text/html").send(content);
   });
   // NOTE: During the process of combining the feed and the editor's picks, we
@@ -200,6 +204,4 @@ export async function launch(trie, libp2p) {
   app.listen(env.HTTP_PORT, () =>
     log(`Launched HTTP server at port "${env.HTTP_PORT}"`)
   );
-
-  
 }
