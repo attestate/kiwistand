@@ -18,7 +18,7 @@ const header = (theme) => html`
           <td style="line-height:12pt; height:10px;">
             <span class="pagetop">
               <b class="hnname">
-                <span>🥦</span><a href="/"> Broccoli News</a>
+                <span>${theme.emoji}</span><a href="/"> ${theme.name} News</a>
               </b>
             </span>
             <div id="menu">
