@@ -17,7 +17,7 @@ a:visited { color:#828282; text-decoration:none; }
 .title   { display: table-row; font-family:Verdana, Geneva, sans-serif; font-size: 14pt; color:#828282; }
 .subtext { font-family:Verdana, Geneva, sans-serif; font-size:  9pt; color:#828282; }
 .yclinks { font-family:Verdana, Geneva, sans-serif; font-size:  8pt; color:#828282; }
-.pagetop { font-family:Verdana, Geneva, sans-serif; font-size: 14pt; color:#222222; line-height:12px; }
+.pagetop { font-family:Verdana, Geneva, sans-serif; font-size: 14pt; color:#222222; line-height:normal; margin: 3px 5px;}
 .comhead { font-family:Verdana, Geneva, sans-serif; font-size:  8pt; color:#828282; }
 .comment { font-family:Verdana, Geneva, sans-serif; font-size:  9pt; }
 .hnname  { margin-right: 5px; }
@@ -153,32 +153,87 @@ and (max-width : 750px) {
 
 
 @media only screen and (min-width : 300px) and (max-width : 389px) {
-  .comment { max-width: 270px; overflow: hidden }
+  .comment { max-width: 270px; overflow: hidden; }
 }
 @media only screen and (min-width : 390px) and (max-width : 509px) {
-  .comment { max-width: 350px; overflow: hidden }
+  .comment { max-width: 350px; overflow: hidden; }
 }
 @media only screen and (min-width : 510px) and (max-width : 599px) {
-  .comment { max-width: 460px; overflow: hidden }
+  .comment { max-width: 460px; overflow: hidden; }
 }
 @media only screen and (min-width : 600px) and (max-width : 689px) {
-  .comment { max-width: 540px; overflow: hidden }
+  .comment { max-width: 540px; overflow: hidden; }
 }
 @media only screen and (min-width : 690px) and (max-width : 809px) {
-  .comment { max-width: 620px; overflow: hidden }
+  .comment { max-width: 620px; overflow: hidden; }
 }
 @media only screen and (min-width : 810px) and (max-width : 899px) {
-  .comment { max-width: 730px; overflow: hidden }
+  .comment { max-width: 730px; overflow: hidden; }
 }
 @media only screen and (min-width : 900px) and (max-width : 1079px) {
-  .comment { max-width: 810px; overflow: hidden }
+  .comment { max-width: 810px; overflow: hidden; }
 }
 @media only screen and (min-width : 1080px) and (max-width : 1169px) {
-  .comment { max-width: 970px; overflow: hidden }
+  .comment { max-width: 970px; overflow: hidden; }
 }
 @media only screen and (min-width : 1170px) and (max-width : 1259px) {
-  .comment { max-width: 1050px; overflow: hidden }
+  .comment { max-width: 1050px; overflow: hidden; }
 }
 @media only screen and (min-width : 1260px) and (max-width : 1349px) {
-  .comment { max-width: 1130px; overflow: hidden }
+  .comment { max-width: 1130px; overflow: hidden; }
 }
+
+// Navigation
+#menu { padding-top: 10px; }
+@media screen and (max-width: 600px) {
+  .hide-on-mobile {
+    display: none !important;
+  }
+}
+
+#content {
+    flex: 1;
+    padding: 20px;
+}
+
+#footer {
+  display: none;
+}
+
+@media screen and (max-width: 600px) {
+  #footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background-color: #f8f8f8;
+    box-shadow: 0px -2px 10px rgba(0, 0, 0, 0.1);
+    display: flex; /* Ensure #footer is a flex container */
+    justify-content: space-around;
+    align-items: center; /* Aligns the .footer-item vertically in the middle */
+  }
+
+  .footer-item {
+    display: flex;
+    flex-grow: 1; /* Enables the .footer-item to fill its parent width */
+    justify-content: center; /* Centers content within each .footer-item */
+  }
+
+  .footer-item a {
+    padding: 10px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center; /* Ensures that the <a> tag contents are centered */
+    width: 100%; /* ensure the <a> tag covers the whole space */
+    height: 100%;
+    text-decoration: none;
+    font-size: 14px;
+  }
+
+  .icon, .icon svg {
+    width: 30px; /* Instead of setting height, set width to keep SVG responsive */
+    height: auto;
+    font-size: 20px;
+    margin-right: 5px;
+  }
+}
+

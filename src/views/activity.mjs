@@ -6,6 +6,7 @@ import htm from "htm";
 import vhtml from "vhtml";
 import normalizeUrl from "normalize-url";
 import { formatDistanceToNow, sub } from "date-fns";
+import { utils } from "ethers";
 
 import Header from "./components/header.mjs";
 import Footer from "./components/footer.mjs";
@@ -26,10 +27,16 @@ const generateFeed = (messages) => {
       const href = normalizeUrl(!!message.href && message.href);
 
       if (message.type === "amplify" && !firstAmplify[href]) {
-        firstAmplify[href] = true;
+        firstAmplify[href] = message;
         return { address: message.address, verb: "submitted", message };
       } else {
-        return { address: message.address, verb: "upvoted", message };
+        const submission = firstAmplify[href];
+        return {
+          address: message.address,
+          verb: "upvoted",
+          message,
+          towards: submission.address,
+        };
       }
     })
     .sort((a, b) => b.message.timestamp - a.message.timestamp);
@@ -55,18 +62,24 @@ function generateRow(activity, i) {
         <span> ago: </span>
         <ens-name address=${activity.address} />
 
-        <span> ${activity.verb} </span>
+        <span> ${activity.verb} your submission </span>
         "<a href="${activity.message.href}">${title}</a>"
       </td>
     </tr>
   `;
 }
 
-export default async function (trie, theme) {
-  const config = await moderation.getLists();
+export default async function (trie, theme, address) {
+  if (!address) {
+    return html`Address has to be a query parameter`;
+  }
+  if (!utils.isAddress(address)) {
+    return html`Not a valid address`;
+  }
 
+  const config = await moderation.getLists();
   const cutoff = sub(new Date(), {
-    days: 3,
+    weeks: 1,
   });
   const cutoffUnixtime = Math.floor(cutoff.getTime() / 1000);
   const from = null;
@@ -76,6 +89,12 @@ export default async function (trie, theme) {
   leaves = moderation.moderate(leaves, config);
 
   const activities = generateFeed(leaves);
+  const notifications = activities.filter(
+    (activity) =>
+      activity.verb === "upvoted" &&
+      activity.towards.toLowerCase() === address.toLowerCase()
+  );
+
   return html`
     <html lang="en" op="news">
       <head>
@@ -94,9 +113,9 @@ export default async function (trie, theme) {
             <tr>
               ${Header(theme)}
             </tr>
-            ${activities.map(generateRow)}
+            ${notifications.map(generateRow)}
           </table>
-          ${Footer}
+          ${Footer(theme)}
         </center>
       </body>
     </html>

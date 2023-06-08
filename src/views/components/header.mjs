@@ -7,36 +7,30 @@ const html = htm.bind(vhtml);
 const header = (theme) => html`
   <td bgcolor="${theme.color}">
     <table
-      border="0"
-      cellpadding="0"
-      cellspacing="0"
-      width="100%"
       style="padding:10px"
+      width="100%"
+      cellspacing="0"
+      cellpadding="0"
+      border="0"
     >
-      <tr>
-        <td style="line-height:12pt; height:10px;">
-          <span class="pagetop"
-            ><b class="hnname">
-              <span>${theme.emoji} </span>
-              <a href="/">${theme.name} News</a>
-            </b>
-          </span>
-          <a style="color: black;" href="/">Top</a>
-          <span> | </span>
-          <a style="color: black;" href="/new">New</a>
-          <span> | </span>
-          <a style="color: black;" href="/community">Community</a>
-          <span> | </span>
-          <a style="color: black; cursor: pointer;" href="/submit">Submit</a>
-          <span> | </span>
-          <a style="color: black; cursor: pointer;" href="/activity"
-            >Activity</a
-          >
-        </td>
-        <td style="text-align:right;padding-right:4px;">
-          <span id="navigation"></span>
-        </td>
-      </tr>
+      <tbody>
+        <tr>
+          <td style="line-height:12pt; height:10px;">
+            <span class="pagetop">
+              <b class="hnname">
+                <span>🥦</span><a href="/"> Broccoli News</a>
+              </b>
+            </span>
+            <div id="menu">
+              <a style="color: black;" href="/">Top</a><span> | </span>
+              <a style="color: black;" href="/new">New</a><span> | </span>
+              <a style="color: black;" href="/community">Community</a>
+              <span> | </span>
+              <span id="navigation"></span>
+            </div>
+          </td>
+        </tr>
+      </tbody>
     </table>
   </td>
 `;

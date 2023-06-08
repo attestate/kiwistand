@@ -166,7 +166,11 @@ export async function launch(trie, libp2p) {
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/activity", async (request, reply) => {
-    const content = await activity(trie, reply.locals.theme);
+    const content = await activity(
+      trie,
+      reply.locals.theme,
+      request.query.address
+    );
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/subscribe", async (request, reply) => {

@@ -75,7 +75,7 @@ export default function submit(theme) {
               </td>
             </tr>
           </table>
-          ${Footer}
+          ${Footer(theme)}
         </center>
       </body>
     </html>

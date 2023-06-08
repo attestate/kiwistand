@@ -159,7 +159,7 @@ export default async function (trie, theme) {
               `
             )}
           </table>
-          ${Footer}
+          ${Footer(theme)}
         </center>
       </body>
     </html>

@@ -10,20 +10,27 @@ export const Navigation = () => {
   return (
     <ConnectKitButton.Custom>
       {({ isConnected, show, hide, address }) => {
+        if (isConnected && window.innerWidth <= 600) {
+          document.querySelector("#footer").style.display = "flex";
+        } else {
+          document.querySelector("#footer").style.display = "none";
+        }
+
         const divider = <span> | </span>;
-        const submit = <a style={{ color: "black", cursor: "pointer" }} href="/submit">Submit</a>;
-        const upvotes = <a style={{ color: "black", cursor: "pointer" }} href={"/upvotes?address="+address}>Profile</a>;
+        const submit = <span className="hide-on-mobile"><a style={{ color: "black", cursor: "pointer" }} href={"/submit"}>Submit</a></span>;
+        const upvotes = <span className="hide-on-mobile">{divider}<a style={{ color: "black", cursor: "pointer" }} href={"/upvotes?address="+address}>Profile</a></span>;
+        const notifications = <span className="hide-on-mobile">{divider}<a className="hide-on-mobile" style={{ color: "black", cursor: "pointer" }} href={"/activity?address="+address}>Activity</a></span>;
 
-        // {isConnected ? <span>{submit}{divider}</span> : ""}
         return (
-          <div>
-            {isConnected ? <span>{upvotes}{divider}</span> : ""}
+          <span>
+            {isConnected ? <span>{submit}{upvotes}{notifications}</span> : ""}
 
+            {isConnected ? <span className="hide-on-mobile">{divider}</span>: ""}
             <a style={{color: "black", cursor: "pointer"}} onClick={show}>
               {isConnected ? <span style={{marginRight: "5px", display: "inline-block"}}><Avatar name={address} size={8} radius={0} /> </span> : ""}
-              {isConnected ? shorten(address) : "Connect"}
+              {isConnected ? shorten(address) : "Connect" }
             </a>
-          </div>
+          </span>
         );
       }}
     </ConnectKitButton.Custom>

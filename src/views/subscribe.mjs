@@ -67,7 +67,7 @@ export default function index(theme) {
               </td>
             </tr>
           </table>
-          ${Footer}
+          ${Footer(theme)}
         </center>
       </body>
     </html>

@@ -1,11 +1,14 @@
 import './polyfills';
 import React from 'react'
 import ReactDOM from 'react-dom/client'
+import { getAccount } from '@wagmi/core'
+
 import Navigation from './Navigation.jsx'
 import SubmitButton from './SubmitButton.jsx'
 import BuyButton from './BuyButton.jsx'
 import Vote from './Vote.jsx'
 import EnsName from './EnsName.jsx'
+import Link from './Link.jsx'
 import { loadTheme } from "./theme.mjs";
 import { showMessage } from "./message.mjs";
 
@@ -23,6 +26,36 @@ if (submitButtonContainer) {
   ReactDOM.createRoot(submitButtonContainer).render(
     <React.StrictMode>
       <SubmitButton />
+    </React.StrictMode>
+  )
+}
+
+const activityLink = document.querySelector('.activity-link');
+if (activityLink) {
+  ReactDOM.createRoot(activityLink).render(
+    <React.StrictMode>
+      <Link to="/activity">
+        <i class="icon">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M18.9,11.2s0-8.7-6.9-8.7-6.9,8.7-6.9,8.7v3.9L2.5,17.5h19l-2.6-2.4Z"
+              fill="none"
+              stroke="#000000"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+            />
+
+            <path
+              d="M14.5,20.5s-.5,1-2.5,1-2.5-1-2.5-1"
+              fill="none"
+              stroke="#000000"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+            />
+          </svg> </i>
+      </Link>
     </React.StrictMode>
   )
 }

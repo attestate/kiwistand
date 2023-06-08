@@ -167,7 +167,7 @@ ${users.map(
               </td>
             </tr>
           </table>
-          ${Footer}
+          ${Footer(theme)}
         </center>
       </body>
     </html>
