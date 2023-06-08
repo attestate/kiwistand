@@ -145,7 +145,7 @@ export default async function (trie, theme) {
                               <span> ago | </span>
                               <a
                                 target="_blank"
-                                href="https://warpcast.com/~/compose?embeds[]=${story.href}"
+                                href="https://warpcast.com/~/compose?embeds[]=${story.href}&embeds[]=https://news.kiwistand.com"
                                 >share on Warpcast</a
                               >
                             </span>
