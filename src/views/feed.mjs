@@ -474,8 +474,7 @@ export default async function index(trie, theme, page) {
             </tr>
           </table>
           <div id="boxmain" style="background-color: ${theme.color};">
-            Hungry for more links? Check out the
-            <a href="/new" style="color: black;"><u>New Links Tab</u></a>
+            Hungry for more links? Check out the <a href="/new" style="color: black;"><u>New Links Tab</u></a>
           </div>
           ${Footer}
         </center>
