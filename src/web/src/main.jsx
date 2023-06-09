@@ -5,7 +5,6 @@ import { getAccount } from '@wagmi/core'
 
 import Navigation from './Navigation.jsx'
 import SubmitButton from './SubmitButton.jsx'
-import BuyButton from './BuyButton.jsx'
 import Vote from './Vote.jsx'
 import EnsName from './EnsName.jsx'
 import Link from './Link.jsx'
@@ -56,15 +55,6 @@ if (activityLink) {
             />
           </svg> </i>
       </Link>
-    </React.StrictMode>
-  )
-}
-
-const buyButtonContainer = document.getElementById('buy-button');
-if (buyButtonContainer) {
-  ReactDOM.createRoot(buyButtonContainer).render(
-    <React.StrictMode>
-      <BuyButton />
     </React.StrictMode>
   )
 }
