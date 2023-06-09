@@ -18,16 +18,15 @@ export const Navigation = () => {
 
         const divider = <span> | </span>;
         const submit = <span className="hide-on-mobile"><a style={{ color: "black", cursor: "pointer" }} href={"/submit"}>Submit</a></span>;
-        const upvotes = <span className="hide-on-mobile">{divider}<a style={{ color: "black", cursor: "pointer" }} href={"/upvotes?address="+address}>Profile</a></span>;
+        const upvotes = <span><span class="hide-on-mobile"> | </span><a style={{ color: "black", cursor: "pointer" }} href={"/upvotes?address="+address}>Profile</a></span>;
         const notifications = <span className="hide-on-mobile">{divider}<a className="hide-on-mobile" style={{ color: "black", cursor: "pointer" }} href={"/activity?address="+address}>Activity</a></span>;
 
         return (
           <span>
             {isConnected ? <span>{submit}{upvotes}{notifications}</span> : ""}
 
-            {isConnected ? <span className="hide-on-mobile">{divider}</span>: ""}
             <a style={{color: "black", cursor: "pointer"}} onClick={show}>
-              {isConnected ? <span style={{marginRight: "5px", display: "inline-block"}}><Avatar name={address} size={8} radius={0} /> </span> : ""}
+              {isConnected ? <span style={{color: "#828282"}}> | <span style={{color: "black", marginRight: "5px", display: "inline-block"}}><Avatar name={address} size={8} radius={0} /> </span></span> : ""}
               {isConnected ? shorten(address) : "Connect" }
             </a>
           </span>
