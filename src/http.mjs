@@ -171,6 +171,7 @@ export async function launch(trie, libp2p) {
       reply.locals.theme,
       request.query.address
     );
+    reply.cookie(`etag`, etag, { maxAge: 86400 * 1000, sameSite: "Strict" });
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/subscribe", async (request, reply) => {

@@ -1,5 +1,6 @@
 // @format
 import themes from "../../themes.mjs";
+import { getCookie, setCookie } from "./session.mjs";
 
 function applyTheme(theme) {
   const hnName = document.querySelector(".hnname a");
@@ -18,21 +19,17 @@ function changeTheme() {
 }
 
 function saveTheme(theme) {
-  document.cookie = `currentTheme=${theme.id};path=/;max-age=2592000`;
+  setCookie("currentTheme", theme.id, 2592000);
 }
 
 export function loadTheme() {
-  const cookies = document.cookie.split("; ");
-  const savedThemeCookie = cookies.find((cookie) =>
-    cookie.startsWith("currentTheme=")
-  );
+  const themeId = parseInt(getCookie("currentTheme"), 10);
 
-  if (!savedThemeCookie) {
+  if (!themeId) {
     applyTheme({ id: 14, emoji: "🥝", name: "Kiwi", color: "limegreen" });
     return;
   }
 
-  const themeId = parseInt(savedThemeCookie.split("=")[1], 10);
   const savedTheme = themes.find((theme) => theme.id === themeId);
 
   if (!savedTheme) {
