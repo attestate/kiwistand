@@ -9,16 +9,13 @@ import client from "./client.mjs";
 async function fetchNotifications(address) {
   const response = await fetch(`/activity?address=${address}`, {
     method: 'GET',
-    headers: {
-      'If-None-Match': getCookie('etag')
-    },
     credentials: 'omit'
   });
 
-  const newEtag = response.headers.get('ETag');
-  const oldEtag = getCookie('etag');
+  const nextLastUpdate = response.headers.get('X-LAST-UPDATE');
+  const lastUpdate= getCookie('lastUpdate');
 
-  return oldEtag !== newEtag;
+  return lastUpdate !== nextLastUpdate;
 }
 
 const Container = (props) => {

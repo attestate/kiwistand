@@ -43,27 +43,50 @@ const generateFeed = (messages) => {
 };
 
 function generateRow(activity, i) {
-  let backgroundColor;
-  if (i % 2 === 0) {
-    backgroundColor = "rgba(0,0,0,0.03)";
-  } else {
-    backgroundColor = "rgba(0,0,0,0)";
-  }
   let title;
   if (activity.message.title === "") {
     title = activity.message.href;
   } else {
     title = activity.message.title;
   }
-  return html`
-    <tr style="background-color:${backgroundColor}">
-      <td style="padding: 3px 6px 3px 6px;">
-        ${formatDistanceToNow(new Date(activity.message.timestamp * 1000))}
-        <span> ago: </span>
-        <ens-name address=${activity.address} />
+  let borderColor = i % 2 === 0 ? "rgba(0,0,0,0.05)" : "rgba(0,0,0,0.10)";
 
-        <span> ${activity.verb} your submission </span>
-        "<a href="${activity.message.href}">${title}</a>"
+  return html`
+    <tr>
+      <td>
+        <div
+          style="display: flex; align-items: center; border-bottom: 1px solid ${borderColor}; padding: 5px;"
+        >
+          <div style="width: 15px; margin-right: 15px;">
+            <svg
+              fill="#000000"
+              width="15px"
+              height="15px"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M4 14h4v7a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-7h4a1.001 1.001 0 0 0 .781-1.625l-8-10c-.381-.475-1.181-.475-1.562 0l-8 10A1.001 1.001 0 0 0 4 14z"
+              />
+            </svg>
+          </div>
+          <div style="width: 15px; height: 15px; margin-right: 15px;">
+            <ens-avatar address=${activity.address} />
+          </div>
+          <div>
+            <p>
+              <strong
+                ><ens-name address=${activity.address} /> ${activity.verb} your
+                submission</strong
+              >
+            </p>
+            <p>
+              <a href="${activity.message.href}" style="color: gray;"
+                >"${title}"</a
+              >
+            </p>
+          </div>
+        </div>
       </td>
     </tr>
   `;
@@ -95,7 +118,9 @@ export default async function (trie, theme, address) {
       activity.towards.toLowerCase() === address.toLowerCase()
   );
 
-  return html`
+  const lastUpdate =
+    notifications.length > 0 ? notifications[0].message.timestamp : null;
+  const content = html`
     <html lang="en" op="news">
       <head>
         ${Head}
@@ -120,4 +145,8 @@ export default async function (trie, theme, address) {
       </body>
     </html>
   `;
+  return {
+    content,
+    lastUpdate,
+  };
 }

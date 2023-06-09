@@ -166,12 +166,15 @@ export async function launch(trie, libp2p) {
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/activity", async (request, reply) => {
-    const content = await activity(
+    const { content, lastUpdate } = await activity(
       trie,
       reply.locals.theme,
       request.query.address
     );
-    reply.cookie(`etag`, etag, { maxAge: 86400 * 1000, sameSite: "Strict" });
+    if (lastUpdate) {
+      reply.setHeader("X-LAST-UPDATE", lastUpdate);
+      reply.cookie("lastUpdate", lastUpdate);
+    }
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/subscribe", async (request, reply) => {

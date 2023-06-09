@@ -2,14 +2,17 @@ import './polyfills';
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { getAccount } from '@wagmi/core'
+import { WagmiConfig } from "wagmi";
+import { Avatar, ConnectKitProvider } from "connectkit";
 
 import Navigation from './Navigation.jsx'
 import SubmitButton from './SubmitButton.jsx'
 import Vote from './Vote.jsx'
 import EnsName from './EnsName.jsx'
-import Link from './Link.jsx'
+import Bell from './Bell.jsx'
 import { loadTheme } from "./theme.mjs";
 import { showMessage } from "./message.mjs";
+import client from "./client.mjs";
 
 loadTheme();
 
@@ -29,11 +32,11 @@ if (submitButtonContainer) {
   )
 }
 
-const activityLink = document.querySelector('.activity-link');
-if (activityLink) {
-  ReactDOM.createRoot(activityLink).render(
+const activityBell = document.querySelector('.activity-link');
+if (activityBell) {
+  ReactDOM.createRoot(activityBell).render(
     <React.StrictMode>
-      <Link to="/activity">
+      <Bell to="/activity">
         <i class="icon">
           <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path
@@ -54,7 +57,7 @@ if (activityLink) {
               stroke-width="2"
             />
           </svg> </i>
-      </Link>
+      </Bell>
     </React.StrictMode>
   )
 }
@@ -70,6 +73,22 @@ if (voteArrows && voteArrows.length > 0) {
       </React.StrictMode>,
     )
   });
+}
+
+const avatars = document.querySelectorAll("ens-avatar");
+if (avatars) {
+  for (let elem of avatars) {
+    const address = elem.getAttribute("address");
+    ReactDOM.createRoot(elem).render(
+      <React.StrictMode>
+        <WagmiConfig client={client}>
+          <ConnectKitProvider>
+            <Avatar name={address} size={15} radius={0} />
+          </ConnectKitProvider>
+        </WagmiConfig>
+      </React.StrictMode>,
+    );
+  }
 }
 
 const ensNameComponents = document.querySelectorAll("ens-name");
