@@ -83,7 +83,7 @@ function generateRow(activity, i) {
             <p>
               <a
                 href="${activity.message.href}"
-                style="color: gray; word-wrap: break-word; overflow-wrap: break-word;"
+                style="color: gray; word-break: break-all;"
               >
                 "${title.substring(0, 80)}"
               </a>
