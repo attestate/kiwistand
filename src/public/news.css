@@ -236,4 +236,25 @@ and (max-width : 750px) {
     margin-right: 5px;
   }
 }
+.kiwi-svg {
+  height: auto;
+  margin-bottom: 2em;
+  max-width: 60%;
+}
 
+.notification-text {
+  font-size: 1.2em;
+  max-width: 70%;
+  margin: 0 auto;
+}
+
+@media (min-width: 768px) {
+  .feed-container {
+    max-width: 60%;
+    margin: 0 auto;
+  }
+
+  .kiwi-svg {
+    max-width: 40%;
+  }
+}
