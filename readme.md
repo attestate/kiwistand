@@ -35,6 +35,7 @@ We document the code base in Sphinx, see ./docs. We host the documentation at
 - [Youtube: Kiwistand - a decentralized Hacker News | Tim Daubenschütz (4mins)](https://www.youtube.com/watch?v=WujtU15yAyk)
 - [Loom: Set Reconciliation demo (40 secs)](https://www.loom.com/share/abf43323b00547689bf11520f565f4bc)
 - [Loom: Set Reconciliation algorithm explained (9mins)](https://www.loom.com/share/2a68f5e22d9843ab99edad2deaed9281)
+- [Loom: How to get started editing the Kiwi News frontend](https://www.loom.com/share/e0e8866450d54c52b161e77907d1ccb9)
 
 ## node operators
 
