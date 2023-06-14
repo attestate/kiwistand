@@ -10,6 +10,7 @@ import SubmitButton from './SubmitButton.jsx'
 import Vote from './Vote.jsx'
 import EnsName from './EnsName.jsx'
 import Bell from './Bell.jsx'
+import PaidFeature from './PaidFeature.jsx'
 import { loadTheme } from "./theme.mjs";
 import { showMessage } from "./message.mjs";
 import client from "./client.mjs";
@@ -61,6 +62,50 @@ if (activityBell) {
     </React.StrictMode>
   )
 }
+
+
+async function renderPaidFeature() {
+  const response = await fetch('/api/v1/allowlist');
+  const data = await response.json();
+  const allowList = data.data;
+
+  const shareButtons = document.querySelectorAll('paid-share');
+  if (shareButtons && shareButtons.length > 0) {
+    shareButtons.forEach(button => {
+      const href = button.getAttribute("href");
+      ReactDOM.createRoot(button).render(
+        <React.StrictMode>
+          <PaidFeature
+            allowList={allowList}
+            freeFeature={
+              <>
+                <span> | </span>
+                <a
+                  href="/welcome"
+                >
+                  Share on Warpcast [paid]
+                </a>
+              </>
+            }
+          >
+            <>
+              <span> | </span>
+              <a
+                target="_blank"
+                href={"https://warpcast.com/~/compose?embeds[]="+href}
+              >
+                Share on Warpcast
+              </a>
+            </>
+          </PaidFeature>
+        </React.StrictMode>,
+      )
+    });
+  }
+
+
+}
+renderPaidFeature();
 
 const voteArrows = document.querySelectorAll('.votearrowcontainer');
 if (voteArrows && voteArrows.length > 0) {

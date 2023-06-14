@@ -139,7 +139,7 @@ export default function (theme) {
                         </p>
                         <ul class="list-unstyled selling-points">
                           <li class="bullet-point">
-                            <strong>•</strong> Submit and upvote stories on the
+                            <strong>•</strong> Submit and curate stories on the
                             Kiwi News p2p network
                           </li>
                           <li class="bullet-point">
@@ -147,8 +147,12 @@ export default function (theme) {
                             audience, driving growth and marketing
                           </li>
                           <li class="bullet-point">
-                            <strong>•</strong> Curate top crypto stories and
-                            shape the discourse
+                            <strong>•</strong> Share our links to Warpcast and
+                            receive the token-gated newsletter
+                          </li>
+                          <li class="bullet-point">
+                            <strong>•</strong> Co-create the Kiwi News
+                            moderation system and influence governance
                           </li>
                           <li class="bullet-point">
                             <strong>•</strong> Gain access to the exclusive

@@ -269,12 +269,9 @@ export default async function index(trie, theme, page) {
                               ${formatDistanceToNow(
                                 new Date(story.timestamp * 1000)
                               )}
-                              <span> ago | </span>
-                              <a
-                                target="_blank"
-                                href="https://warpcast.com/~/compose?embeds[]=${story.href}&embeds[]=https://news.kiwistand.com"
-                                >share on Warpcast</a
-                              >
+                              <paid-share
+                                href="https://warpcast.com/~/compose?embeds[]=${story.href}"
+                              ></paid-share>
                             </span>
                           </span>
                         </td>
@@ -418,12 +415,10 @@ export default async function index(trie, theme, page) {
                               ${formatDistanceToNow(
                                 new Date(story.timestamp * 1000)
                               )}
-                              <span> ago | </span>
-                              <a
-                                target="_blank"
-                                href="https://warpcast.com/~/compose?embeds[]=${story.href}&embeds[]=https://news.kiwistand.com"
-                                >share on Warpcast</a
-                              >
+                              <span> ago</span>
+                              <paid-share
+                                href="https://warpcast.com/~/compose?embeds[]=${story.href}"
+                              ></paid-share>
                             </span>
                           </span>
                         </td>
