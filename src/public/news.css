@@ -73,9 +73,10 @@ pre:hover { overflow:auto }
   width:      10px;
   height:     10px;
   border:     0px;
-  margin:     3px 2px 6px;
+  margin:     3px 6px 6px;
   background: url("grayarrow.gif")
   no-repeat;
+  transform: scale(1.7,1.7); 
 }
 
 .votelinks.nosee div.votearrow.rotate180 {
@@ -88,13 +89,12 @@ table.padtab td { padding:0px 10px }
   .votearrow { background-size: 10px; background-image: url("grayarrow2x.gif"); }
 }
 
-.rotate180 {
-  -webkit-transform: rotate(180deg);  /* Chrome and other webkit browsers */
-  -moz-transform:    rotate(180deg);  /* FF */
-  -o-transform:      rotate(180deg);  /* Opera */
-  -ms-transform:     rotate(180deg);  /* IE9 */
-  transform:         rotate(180deg);  /* W3C complaint browsers */
-
+.votearrow.rotate180 {
+  -webkit-transform: rotate(180deg) scale(1.7,1.7);  /* Chrome and other webkit browsers */
+  -moz-transform:    rotate(180deg) scale(1.7,1.7);  /* FF */
+  -o-transform:      rotate(180deg) scale(1.7,1.7);  /* Opera */
+  -ms-transform:     rotate(180deg) scale(1.7,1.7);  /* IE9 */
+  transform:         rotate(180deg) scale(1.7,1.7);  /* W3C complaint browsers */
   /* IE8 and below */
   -ms-filter: "progid:DXImageTransform.Microsoft.Matrix(M11=-1, M12=0, M21=0, M22=-1, DX=0, DY=0, SizingMethod='auto expand')";
 }
@@ -135,13 +135,13 @@ and (max-width : 750px) {
   img[src='s.gif'][width='840'] { width: 252px; }
   .title { display: table-row; font-size: 14pt; line-height: 14pt;  }
   .subtext { font-size: 9pt; }
-  .votearrow { transform: scale(1.3,1.3); margin-right: 6px; }
+  .votearrow { transform: scale(1.7,1.7); margin-right: 6px; }
   .votearrow.rotate180 {
-    -webkit-transform: rotate(180deg) scale(1.3,1.3);  /* Chrome and other webkit browsers */
-    -moz-transform:    rotate(180deg) scale(1.3,1.3);  /* FF */
-    -o-transform:      rotate(180deg) scale(1.3,1.3);  /* Opera */
-    -ms-transform:     rotate(180deg) scale(1.3,1.3);  /* IE9 */
-    transform:         rotate(180deg) scale(1.3,1.3);  /* W3C complaint browsers */
+    -webkit-transform: rotate(180deg) scale(1.7,1.7);  /* Chrome and other webkit browsers */
+    -moz-transform:    rotate(180deg) scale(1.7,1.7);  /* FF */
+    -o-transform:      rotate(180deg) scale(1.7,1.7);  /* Opera */
+    -ms-transform:     rotate(180deg) scale(1.7,1.7);  /* IE9 */
+    transform:         rotate(180deg) scale(1.7,1.7);  /* W3C complaint browsers */
   }
   .votelinks { min-width: 18px; }
   .votelinks a { display: block; margin-bottom: 9px; }
@@ -183,7 +183,7 @@ and (max-width : 750px) {
   .comment { max-width: 1130px; overflow: hidden; }
 }
 
-// Navigation
+/* Navigation */
 #menu { padding-top: 10px; }
 @media screen and (max-width: 600px) {
   .hide-on-mobile {
