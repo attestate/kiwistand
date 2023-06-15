@@ -32,7 +32,7 @@ export default function (theme) {
             <tr>
               <td>
                 <div style="padding: 20px;">
-                  <p><b>Problem:</b></p>
+                  <h2><b>Why do we build Kiwi:</b></h2>
                   <p>
                     Reaching new people on the Internet is hard. So is finding
                     great, non-mainstream quality content.
@@ -58,20 +58,21 @@ export default function (theme) {
                     haystack of unrelated posts.
                   </p>
                   <p>
-                    <b>That's why we created Kiwi News</b> - to level the
-                    playing field and provide a platform for creators to be
-                    heard and for quality content to triumph. Even when it's not
-                    shared by the most popular kid in the room.
+                    That's why we created Kiwi News - to help both creators and readers. 
                   </p>
                   <p>
-                    Kiwi users can now take a look at the community-curated
+                    For creators we provide a platform that levels the playing field and helps them to be
+                    heard. Even when their content is not
+                    shared by the most popular kids in the room.
+
+                    Kiwi readers on the other hand can now take a look at the community-curated
                     links and uncover hidden gems in 5 minutes, instead of
                     digging on different social media for hours.
                   </p>
                   <p>
                     If you want to join our cause,
                     <span> </span>
-                    <a style="color: black;" href="/welcome">mint a Kiwi NFT</a>
+                    <u><a style="color: black;" href="/welcome">mint a Kiwi NFT</a></u>
                     <span> </span>
                     and submit and upvote links to co-create a rich,
                     intellectual space. Every action taken on Kiwi News is a
