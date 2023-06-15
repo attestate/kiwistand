@@ -46,7 +46,8 @@ const countPoints = (messages) => {
   });
 
   const list = [];
-  for (const [address, karma] of Object.entries(points)) {
+  for (const address of Object.keys(points)) {
+    const karma = points[address];
     list.push({ address, karma });
   }
 
@@ -60,17 +61,17 @@ export default async function (trie, theme) {
   const parser = JSON.parse;
   let leaves = await store.leaves(trie, from, amount, parser);
   leaves = moderation.moderate(leaves, config);
-  let users = countPoints(leaves);
-  const totalKarma = users.reduce((total, obj) => total + obj.karma, 0);
+  const users = countPoints(leaves);
 
   const allowList = await registry.allowlist();
-  const inactiveUsers = allowList
-    .filter((address) => {
-      return !users.find((user) => user.address === address);
-    })
-    .map((address) => ({ karma: "0", address }));
-  users = [...users, ...inactiveUsers];
-
+  const combinedUsers = allowList.map((address) => {
+    const foundUser = users.find(
+      (user) => user.address.toLowerCase() === address.toLowerCase()
+    );
+    const karma = foundUser ? foundUser.karma : "0";
+    return { address, karma };
+  });
+  combinedUsers.sort((a, b) => parseInt(b.karma) - parseInt(a.karma));
   return html`
     <html lang="en" op="news">
       <head>
@@ -110,7 +111,7 @@ export default async function (trie, theme) {
               </p>
               </td>
             </tr>
-            ${users.map(
+            ${combinedUsers.map(
               (user, i) => html`
                 <tr>
                   <td>
@@ -150,36 +151,6 @@ export default async function (trie, theme) {
                 </tr>
               `
             )}
-            <tr>
-              <td>
-                <hr />
-                <p style="color: black; padding: 5px; font-size: 14pt;">
-                  <b>Disperse Template:</b>
-                  <br />
-                  <span
-                    >To donate to those that have submitted useful content, you
-                    can use the CSV below on
-                  </span>
-                  <span> </span>
-                  <a href="https://disperse.app/">disperse.app</a> to donate
-                  funds. The total funds add up to 0.01 ETH. Works on Optimism.
-                </p>
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <pre>
-${users.map(
-                    (user) => `${user.address},${(
-                      (user.karma / totalKarma) *
-                      0.01
-                    ).toFixed(18)}
-`
-                  )}
-                </pre
-                >
-              </td>
-            </tr>
           </table>
           ${Footer(theme)}
         </center>
