@@ -13,7 +13,7 @@ export async function allowlist() {
   const name = database.order("call-block-logs");
   const subdb = db.openDB(name);
   const all = await database.all(subdb, "");
-  const addresses = all.map(({ value }) => value.toLowerCase());
+  const addresses = all.map(({ value }) => value);
   const uniqueAddresses = Array.from(new Set(addresses));
   return uniqueAddresses;
 }
