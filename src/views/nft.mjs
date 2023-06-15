@@ -123,7 +123,9 @@ export default function (theme) {
                         />
                         <div class="image-meta">
                           <span
-                            >Minting Price: <strong>${price} ETH</strong></span
+                            >Minting Price:
+                            <span> </span>
+                            <strong><nft-price /> ETH</strong></span
                           >
                           <span> | </span>
                           <a
@@ -194,7 +196,7 @@ export default function (theme) {
                           target="_blank"
                         >
                           <button class="buy-button">
-                            Buy Kiwi NFT for ${price} ETH (on zora.co)
+                            Buy Kiwi NFT for <nft-price /> ETH (on zora.co)
                           </button>
                         </a>
                         <br />

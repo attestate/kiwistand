@@ -10,6 +10,7 @@ import SubmitButton from './SubmitButton.jsx'
 import Vote from './Vote.jsx'
 import EnsName from './EnsName.jsx'
 import Bell from './Bell.jsx'
+import NFTPrice from './NFTPrice.jsx'
 import PaidFeature from './PaidFeature.jsx'
 import { loadTheme } from "./theme.mjs";
 import { showMessage } from "./message.mjs";
@@ -92,7 +93,7 @@ async function renderPaidFeature() {
               <span> | </span>
               <a
                 target="_blank"
-                href={"https://warpcast.com/~/compose?embeds[]="+href}
+                href={href}
               >
                 Share on Warpcast
               </a>
@@ -115,6 +116,18 @@ if (voteArrows && voteArrows.length > 0) {
     ReactDOM.createRoot(arrow).render(
       <React.StrictMode>
         <Vote title={title} href={href} />
+      </React.StrictMode>,
+    )
+  });
+}
+
+const nftPriceElements = document.querySelectorAll('nft-price');
+
+if (nftPriceElements && nftPriceElements.length > 0) {
+  nftPriceElements.forEach(element => {
+    ReactDOM.createRoot(element).render(
+      <React.StrictMode>
+        <NFTPrice />
       </React.StrictMode>,
     )
   });
