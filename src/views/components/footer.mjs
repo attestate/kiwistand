@@ -80,6 +80,8 @@ const footer = (theme) => html`
   <a target="_blank" href="https://hackmd.io/a-r--DX2T5uEEKX0Z8PRlQ?view"
     >Guidelines</a
   >
+  <span> | </span>
+  <a href="/why">Why?</a>
   <script defer src="bundle.js"></script>
   <script
     async

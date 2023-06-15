@@ -34,29 +34,54 @@ export default function (theme) {
                 <div style="padding: 20px;">
                   <h2><b>Learn more about Kiwi</b></h2>
                   <p>
-                  <b>Why we are building Kiwi:</b>
-                  <br/>
-                  <a style="color: black;" href="/why"><u>https://news.kiwistand.com/why</u></a>
+                    <b>Why we are building Kiwi:</b>
+                    <br />
+                    <a style="color: black;" href="/why"><u>/why</u></a>
                   </p>
                   <p>
-                  <b>How to get involved:</b>
-                  <br/>
-                  <a style="color: black;" href="https://news.kiwistand.com/welcome"><u>https://news.kiwistand.com/welcome</u></a>
+                    <b>How to get involved:</b>
+                    <br />
+                    <a style="color: black;" href="/welcome"><u>/welcome</u></a>
                   </p>
                   <p>
-                  <b>Submission guidelines:</b>
-                  <br/> 
-                  <a style="color: black;" href="https://hackmd.io/a-r--DX2T5uEEKX0Z8PRlQ?view"><u>https://hackmd.io/a-r--DX2T5uEEKX0Z8PRlQ?view</u></a>
+                    <b>Submission guidelines:</b>
+                    <br />
+                    <a
+                      style="color: black;"
+                      target="_blank"
+                      href="https://hackmd.io/a-r--DX2T5uEEKX0Z8PRlQ?view"
+                      ><u>https://hackmd.io/a-r--DX2T5uEEKX0Z8PRlQ?view</u></a
+                    >
                   </p>
                   <p>
-                  <b>Our plans:</b>
-                  <br/> 
-                  <a style="color: black;" href="https://hackmd.io/egIZnDStR8-zUtQuTUrxyw"><u>https://hackmd.io/egIZnDStR8-zUtQuTUrxyw</u></a>
+                    <b>Our current plans:</b>
+                    <br />
+                    <a
+                      style="color: black;"
+                      target="_blank"
+                      href="https://hackmd.io/egIZnDStR8-zUtQuTUrxyw"
+                      ><u>Kiwi News Season 2</u></a
+                    >
                   </p>
                   <p>
-                  <b>Feature Requests:</b>
-                  <br/>
-                  <a style="color: black;" href="https://kiwinews.sleekplan.app/"><u>https://kiwinews.sleekplan.app/</u></a>
+                    <b>Feature Requests:</b>
+                    <br />
+                    <a
+                      style="color: black;"
+                      target="_blank"
+                      href="https://kiwinews.sleekplan.app/"
+                      ><u>https://kiwinews.sleekplan.app/</u></a
+                    >
+                  </p>
+                  <p>
+                    <b>Economics:</b>
+                    <br />
+                    <a
+                      style="color: black;"
+                      target="_blank"
+                      href="https://hackmd.io/zmZsDW-XTsizJzChl1n3WA?view"
+                      ><u>Dynamic Pricing for Kiwi NFT</u></a
+                    >
                   </p>
                 </div>
               </td>
