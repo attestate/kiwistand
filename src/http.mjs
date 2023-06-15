@@ -23,6 +23,7 @@ import community from "./views/community.mjs";
 import dau from "./views/dau.mjs";
 import activity from "./views/activity.mjs";
 import about from "./views/about.mjs";
+import why from "./views/why.mjs";
 import themes from "./themes.mjs";
 
 const ajv = new Ajv();
@@ -159,6 +160,10 @@ export async function launch(trie, libp2p) {
   });
   app.get("/about", async (request, reply) => {
     const content = await about(trie, reply.locals.theme);
+    return reply.status(200).type("text/html").send(content);
+  });
+  app.get("/why", async (request, reply) => {
+    const content = await why(trie, reply.locals.theme);
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/guidelines", async (request, reply) => {

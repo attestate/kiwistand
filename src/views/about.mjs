@@ -32,51 +32,31 @@ export default function (theme) {
             <tr>
               <td>
                 <div style="padding: 20px;">
-                  <h2><b>Why do we build Kiwi:</b></h2>
+                  <h2><b>Learn more about Kiwi</b></h2>
                   <p>
-                    Reaching new people on the Internet is hard. So is finding
-                    great, non-mainstream quality content.
+                  <b>Why we are building Kiwi:</b>
+                  <br/>
+                  <a style="color: black;" href="/why"><u>https://news.kiwistand.com/why</u></a>
                   </p>
                   <p>
-                    As social media became the principal tool for distributing
-                    content, creators with fewer than 10k followers face an
-                    uphill battle to be noticed, even if their work is
-                    extraordinary.
+                  <b>How to get involved:</b>
+                  <br/>
+                  <a style="color: black;" href="https://news.kiwistand.com/welcome"><u>https://news.kiwistand.com/welcome</u></a>
                   </p>
                   <p>
-                    It's especially true in web3 where Hacker News - once a
-                    leading forum for intellectual exchange - has become openly
-                    hostile towards crypto. Creators are thus relegated to
-                    sharing their content through Discord, Telegram, and various
-                    social media channels, praying that by a stroke of luck,
-                    someone will notice their work.
+                  <b>Submission guidelines:</b>
+                  <br/> 
+                  <a style="color: black;" href="https://hackmd.io/a-r--DX2T5uEEKX0Z8PRlQ?view"><u>https://hackmd.io/a-r--DX2T5uEEKX0Z8PRlQ?view</u></a>
                   </p>
                   <p>
-                    On the other hand, if you are a reader looking for great
-                    things, you need to check noisy social media newsfeeds and
-                    group chats, hoping to find the content needle in the
-                    haystack of unrelated posts.
+                  <b>Our plans:</b>
+                  <br/> 
+                  <a style="color: black;" href="https://hackmd.io/egIZnDStR8-zUtQuTUrxyw"><u>https://hackmd.io/egIZnDStR8-zUtQuTUrxyw</u></a>
                   </p>
                   <p>
-                    That's why we created Kiwi News - to help both creators and readers. 
-                  </p>
-                  <p>
-                    For creators we provide a platform that levels the playing field and helps them to be
-                    heard. Even when their content is not
-                    shared by the most popular kids in the room.
-
-                    Kiwi readers on the other hand can now take a look at the community-curated
-                    links and uncover hidden gems in 5 minutes, instead of
-                    digging on different social media for hours.
-                  </p>
-                  <p>
-                    If you want to join our cause,
-                    <span> </span>
-                    <u><a style="color: black;" href="/welcome">mint a Kiwi NFT</a></u>
-                    <span> </span>
-                    and submit and upvote links to co-create a rich,
-                    intellectual space. Every action taken on Kiwi News is a
-                    vote for better content.
+                  <b>Feature Requests:</b>
+                  <br/>
+                  <a style="color: black;" href="https://kiwinews.sleekplan.app/"><u>https://kiwinews.sleekplan.app/</u></a>
                   </p>
                 </div>
               </td>

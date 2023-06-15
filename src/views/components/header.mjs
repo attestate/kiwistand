@@ -24,7 +24,8 @@ const header = (theme) => html`
             <div id="menu">
               <a style="color: black;" href="/">Top</a><span> | </span>
               <a style="color: black;" href="/new">New</a><span> | </span>
-              <a style="color: black;" href="/community">Community</a>
+              <a style="color: black;" href="/community">Community</a><span> | </span>
+              <a style="color: black;" href="/about">About</a>
               <span> | </span>
               <span id="navigation"></span>
             </div>
