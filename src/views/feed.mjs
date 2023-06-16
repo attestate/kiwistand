@@ -409,7 +409,7 @@ export default async function index(trie, theme, page) {
                               id="score_35233479"
                             >
                               ${story.upvotes}
-                              <span> points by </span>
+                              <span> upvotes | submitted by </span>
                               <ens-name address=${story.address} />
                               <span> </span>
                               ${formatDistanceToNow(
