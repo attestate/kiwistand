@@ -258,3 +258,85 @@ and (max-width : 750px) {
     max-width: 40%;
   }
 }
+
+
+#leaderboard {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+
+#leaderboard th, #leaderboard td {
+  padding: 8px;
+}
+
+
+#leaderboard tr {
+  border-bottom: 0.5px solid #ddd;
+}
+
+#leaderboard tr:last-child {
+  border-bottom: none;
+}
+
+
+#leaderboard th {
+  background-color: #3DC617;
+  text-align: center;
+  color:#ffffff;
+  border: none;
+}
+
+#leaderboard .rank {
+  width: 12.5%;
+  text-align: center;
+}
+
+#leaderboard .user {
+  width: 57.5%;
+  text-align: center;
+}
+
+#leaderboard .points {
+  width: 30%;
+  text-align: center;
+}
+
+#leaderboard td, #leaderboard th {
+  border: none;
+}
+
+#leaderboard ens-avatar {
+  margin-right: 10px;
+}
+
+#leaderboard .user .user-content {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+#leaderboard .user .user-content .avatar-container {
+  width: 40px; /* Adjust this value to set the avatar size */
+  text-align: center;
+  margin-right: 5px; /* This creates some space between the avatar and the username */
+}
+
+#leaderboard .user .user-content .username-container {
+  text-align: left;
+  flex-grow: 1; /* This makes the username container take up the remaining space */
+}
+
+/* Desktop */
+@media screen and (min-width: 768px) {
+  #leaderboard .user .user-content {
+    padding-left: 35%;
+  }
+}
+
+/* Mobile */
+@media screen and (max-width: 767px) {
+  #leaderboard .user .user-content {
+    padding-left: 15%;
+  }
+}

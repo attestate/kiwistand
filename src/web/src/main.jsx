@@ -137,11 +137,13 @@ const avatars = document.querySelectorAll("ens-avatar");
 if (avatars) {
   for (let elem of avatars) {
     const address = elem.getAttribute("address");
+    const isLeaderboard = elem.hasAttribute("leaderboard");
+    const size = isLeaderboard ? 35 : 15;
     ReactDOM.createRoot(elem).render(
       <React.StrictMode>
         <WagmiConfig client={client}>
           <ConnectKitProvider>
-            <Avatar name={address} size={15} radius={0} />
+            <Avatar name={address} size={size} radius={0} />
           </ConnectKitProvider>
         </WagmiConfig>
       </React.StrictMode>,
