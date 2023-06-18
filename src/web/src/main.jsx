@@ -98,7 +98,7 @@ async function renderPaidFeature() {
                 <a
                   href="/welcome"
                 >
-                  Share on Warpcast [paid]
+                  Share [paid]
                 </a>
               </>
             }
@@ -109,7 +109,7 @@ async function renderPaidFeature() {
                 target="_blank"
                 href={href}
               >
-                Share on Warpcast
+                Share
               </a>
             </>
           </PaidFeature>
