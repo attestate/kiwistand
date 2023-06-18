@@ -5,7 +5,7 @@ import { getAccount } from '@wagmi/core'
 import { WagmiConfig } from "wagmi";
 import { Avatar, ConnectKitProvider } from "connectkit";
 
-import Navigation from './Navigation.jsx'
+import {ConnectedProfile, ConnectedActivity, ConnectedConnectButton} from './Navigation.jsx'
 import SubmitButton from './SubmitButton.jsx'
 import Vote from './Vote.jsx'
 import EnsName from './EnsName.jsx'
@@ -18,10 +18,24 @@ import client from "./client.mjs";
 
 loadTheme();
 
-const navigation = document.getElementById('navigation');
-ReactDOM.createRoot(navigation).render(
+const profileLink = document.querySelector('nav-profile');
+ReactDOM.createRoot(profileLink).render(
   <React.StrictMode>
-    <Navigation />
+    <ConnectedProfile />
+  </React.StrictMode>,
+)
+
+const activityLink = document.querySelector('nav-activity');
+ReactDOM.createRoot(activityLink).render(
+  <React.StrictMode>
+    <ConnectedActivity />
+  </React.StrictMode>,
+)
+
+const connectLink = document.querySelector('nav-connect');
+ReactDOM.createRoot(connectLink).render(
+  <React.StrictMode>
+    <ConnectedConnectButton />
   </React.StrictMode>,
 )
 

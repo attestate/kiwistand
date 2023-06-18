@@ -1,49 +1,84 @@
-// @format
-import { WagmiConfig, createClient } from "wagmi";
-import { Avatar, ConnectKitProvider, ConnectKitButton, getDefaultClient } from "connectkit";
-
+import { WagmiConfig, createClient, useAccount } from "wagmi";
+import { Avatar, ConnectKitProvider, ConnectKitButton } from "connectkit";
 import client from "./client.mjs";
+import { useEffect, useState } from 'react';
 
 const shorten = address => address.slice(0,6)+"..."+address.slice(address.length-4, address.length);
 
-export const Navigation = () => {
+const Profile = () => {
+  const { address, isConnected } = useAccount();
+  const [display, setDisplay] = useState(false);
+  
+  useEffect(() => {
+    if (address && isConnected) {
+      document.querySelector("#profile-container").style.display = "";
+      setDisplay(true);
+    } else {
+      document.querySelector("#profile-container").style.display = "none";
+      setDisplay(false);
+    }
+  }, [address]);
+
+  return display ? (
+    <span>
+      <a style={{ color: "black", cursor: "pointer" }} href={"/upvotes?address="+address}>Profile</a>
+    </span>
+  ) : null;
+};
+
+const Activity = () => {
+  const { address, isConnected } = useAccount();
+  const [display, setDisplay] = useState(false);
+
+  useEffect(() => {
+    if (address && isConnected) {
+      document.querySelector("#activity-container").style.display = "";
+      setDisplay(true);
+    } else {
+      document.querySelector("#activity-container").style.display = "none";
+      setDisplay(false);
+    }
+  }, [address]);
+
+  return display ? (
+    <span className="hide-on-mobile">
+      <a style={{ color: "black", cursor: "pointer" }} href={"/activity?address="+address}>Notifications</a>
+    </span>
+  ) : null;
+};
+
+const ConnectButton = () => {
   return (
     <ConnectKitButton.Custom>
-      {({ isConnected, show, hide, address }) => {
+      {({ isConnected, show, address }) => {
         if (isConnected && window.innerWidth <= 600) {
           document.querySelector("#footer").style.display = "flex";
         } else {
           document.querySelector("#footer").style.display = "none";
         }
 
-        const divider = <span> | </span>;
-        const submit = <span className="hide-on-mobile"><a style={{ color: "black", cursor: "pointer" }} href={"/submit"}>Submit</a></span>;
-        const upvotes = <span><span class="hide-on-mobile"> | </span><a style={{ color: "black", cursor: "pointer" }} href={"/upvotes?address="+address}>Profile</a></span>;
-        const notifications = <span className="hide-on-mobile">{divider}<a className="hide-on-mobile" style={{ color: "black", cursor: "pointer" }} href={"/activity?address="+address}>Activity</a></span>;
-
         return (
-          <span>
-            {isConnected ? <span>{submit}{upvotes}{notifications}</span> : ""}
-
-            <a style={{color: "black", cursor: "pointer"}} onClick={show}>
-              {isConnected ? <span style={{color: "#828282"}}> | <span style={{color: "black", marginRight: "5px", display: "inline-block"}}><Avatar name={address} size={8} radius={0} /> </span></span> : ""}
-              {isConnected ? shorten(address) : "Connect" }
-            </a>
-          </span>
+          <a style={{color: "black", cursor: "pointer"}} onClick={show}>
+            {isConnected ? <span style={{color: "#828282"}}> <span style={{color: "black", marginRight: "5px", display: "inline-block"}}><Avatar name={address} size={8} radius={0} /> </span></span> : ""}
+            {isConnected ? shorten(address) : "Connect" }
+          </a>
         );
       }}
     </ConnectKitButton.Custom>
   );
 };
 
-const Connector = () => {
+const Connector = ({children}) => {
   return (
     <WagmiConfig client={client}>
-    <ConnectKitProvider>
-        <Navigation />
+      <ConnectKitProvider>
+        {children}
       </ConnectKitProvider>
     </WagmiConfig>
   );
 };
 
-export default Connector;
+export const ConnectedProfile = () => <Connector><Profile /></Connector>;
+export const ConnectedActivity = () => <Connector><Activity /></Connector>;
+export const ConnectedConnectButton = () => <Connector><ConnectButton /></Connector>;
+
