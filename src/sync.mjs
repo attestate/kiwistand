@@ -281,14 +281,17 @@ export async function compare(trie, message) {
   };
 }
 
-export function receive(handler) {
+export function receive(peerFab, handler) {
   return async ({ connection, stream }) => {
     const [message] = await fromWire(stream.source);
     //log(`receiving message: "${JSON.stringify(message)}"`);
     const response = await handler(message, connection.remotePeer);
 
     if (!response) {
-      log("Closing stream as response is missing");
+      log(
+        "Failed to handle response from remote. Can't generate answer, closing stream."
+      );
+      peerFab.set();
       return stream.close();
     }
     //log(`sending response: "${JSON.stringify(response)}"`);
@@ -297,7 +300,7 @@ export function receive(handler) {
 }
 
 export function handleLevels(trie, peerFab) {
-  return receive(async (message, peer) => {
+  return receive(peerFab, async (message, peer) => {
     const { result, syncPeer, newPeer } = peerFab.isValid(peer);
     if (!result) {
       log(
@@ -312,7 +315,7 @@ export function handleLevels(trie, peerFab) {
 }
 
 export function handleLeaves(trie, peerFab) {
-  return receive(async (message, peer) => {
+  return receive(peerFab, async (message, peer) => {
     const { result, syncPeer, newPeer } = peerFab.isValid(peer);
     if (!result) {
       log(
