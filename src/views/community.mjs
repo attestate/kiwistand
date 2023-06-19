@@ -5,6 +5,7 @@ import htm from "htm";
 import vhtml from "vhtml";
 import normalizeUrl from "normalize-url";
 
+import * as ens from "../ens.mjs";
 import Header from "./components/header.mjs";
 import Footer from "./components/footer.mjs";
 import Head from "./components/head.mjs";
@@ -64,14 +65,23 @@ export default async function (trie, theme) {
   const users = countPoints(leaves);
 
   const allowList = await registry.allowlist();
-  const combinedUsers = allowList.map((address) => {
+  let combinedUsers = [];
+  for await (let address of allowList) {
     const foundUser = users.find(
       (user) => user.address.toLowerCase() === address.toLowerCase()
     );
     const karma = foundUser ? foundUser.karma : "0";
-    return { address, karma };
-  });
+
+    const ensData = await ens.resolve(address);
+
+    combinedUsers.push({
+      address,
+      karma,
+      displayName: ensData.displayName,
+    });
+  }
   combinedUsers.sort((a, b) => parseInt(b.karma) - parseInt(a.karma));
+
   return html`
     <html lang="en" op="news">
       <head>
@@ -143,8 +153,6 @@ export default async function (trie, theme) {
   </td>
 </tr>
 </table>
-
-
           ${Footer(theme)}
         </center>
       </body>
