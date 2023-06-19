@@ -8,6 +8,7 @@ import normalizeUrl from "normalize-url";
 import { sub, formatDistanceToNow, differenceInMinutes } from "date-fns";
 import { fetchBuilder, MemoryCache } from "node-fetch-cache";
 
+import * as ens from "../ens.mjs";
 import Header from "./components/header.mjs";
 import Footer from "./components/footer.mjs";
 import Head from "./components/head.mjs";
@@ -48,6 +49,7 @@ export function count(leaves) {
         timestamp: leaf.timestamp,
         href: leaf.href,
         address: leaf.address,
+        displayName: leaf.displayName,
         upvotes: 1,
       };
       stories[key] = story;
@@ -170,7 +172,16 @@ export default async function index(trie, theme, page) {
   const totalStories = parseInt(env.TOTAL_STORIES, 10);
   const start = totalStories * page;
   const end = totalStories * (page + 1);
-  const stories = await topstories(leaves, start, end);
+  const storyPromises = await topstories(leaves, start, end);
+
+  let stories = [];
+  for await (let story of storyPromises) {
+    const ensData = await ens.resolve(story.address);
+    stories.push({
+      ...story,
+      displayName: ensData.displayName,
+    });
+  }
 
   return html`
     <html lang="en" op="news">
@@ -265,7 +276,9 @@ export default async function index(trie, theme, page) {
                               class="score"
                               id="score_35233479"
                             >
-                              <ens-name address=${story.address} />
+                              <a href="/upvotes?address=${story.address}">
+                                ${story.displayName}
+                              </a>
                               <span> </span>
                               ${formatDistanceToNow(
                                 new Date(story.timestamp * 1000)
@@ -410,8 +423,10 @@ export default async function index(trie, theme, page) {
                               id="score_35233479"
                             >
                               ${story.upvotes}
-                              <span> upvotes | submitted by </span>
-                              <ens-name address=${story.address} />
+                              <span> points by </span>
+                              <a href="/upvotes?address=${story.address}">
+                                ${story.displayName}
+                              </a>
                               <span> </span>
                               ${formatDistanceToNow(
                                 new Date(story.timestamp * 1000)

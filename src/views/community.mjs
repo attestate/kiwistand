@@ -5,6 +5,7 @@ import htm from "htm";
 import vhtml from "vhtml";
 import normalizeUrl from "normalize-url";
 
+import * as ens from "../ens.mjs";
 import Header from "./components/header.mjs";
 import Footer from "./components/footer.mjs";
 import Head from "./components/head.mjs";
@@ -64,14 +65,23 @@ export default async function (trie, theme) {
   const users = countPoints(leaves);
 
   const allowList = await registry.allowlist();
-  const combinedUsers = allowList.map((address) => {
+  let combinedUsers = [];
+  for await (let address of allowList) {
     const foundUser = users.find(
       (user) => user.address.toLowerCase() === address.toLowerCase()
     );
     const karma = foundUser ? foundUser.karma : "0";
-    return { address, karma };
-  });
+
+    const ensData = await ens.resolve(address);
+
+    combinedUsers.push({
+      address,
+      karma,
+      displayName: ensData.displayName,
+    });
+  }
   combinedUsers.sort((a, b) => parseInt(b.karma) - parseInt(a.karma));
+
   return html`
     <html lang="en" op="news">
       <head>
@@ -111,40 +121,49 @@ export default async function (trie, theme) {
               </p>
               </td>
             </tr>
-            <tr>
-  <td>
-    <table id="leaderboard" style="padding: 5px;" border="0.5" cellpadding="0" cellspacing="0" width="100%">
-      <tr>
-        <th>Rank</th>
-        <th>User</th>
-        <th>Points</th>
-      </tr>
-      ${combinedUsers.map(
-        (user, i) => html`
-          <tr class="athing" id="35233479">
-            <td align="center" class="rank">${i + 1}.</td>
-            <td class="user">
-              <div class="user-content">
-                <div class="avatar-container">
-                  <ens-avatar address=${user.address} leaderboard />
-                </div>
-                <div class="username-container">
-                  <a href="/profile/${user.address}">
-                    <ens-name address=${user.address} />
-                  </a>
-                </div>
-              </div>
-            </td>
-            <td align="center" class="points">${user.karma} ${theme.emoji}</td>
-          </tr>
-        `
-      )}
-    </table>
-  </td>
-</tr>
-</table>
-
-
+            ${combinedUsers.map(
+              (user, i) => html`
+                <tr>
+                  <td>
+                    <table
+                      style="padding: 5px;"
+                      border="0"
+                      cellpadding="0"
+                      cellspacing="0"
+                    >
+                      <tr class="athing" id="35233479">
+                        <td align="right" valign="top" class="title">
+                          <span style="padding-right: 5px" class="rank"
+                            >${i + 1}.
+                          </span>
+                        </td>
+                        <td valign="top" class="votelinks">
+                          <center>
+                            <a id="up_35233479" class="clicky" href="#">
+                              <div
+                                style="display: none;"
+                                class="votearrow"
+                                title="upvote"
+                              ></div>
+                            </a>
+                          </center>
+                        </td>
+                        <td class="title">
+                          <span class="titleline">
+                            <a href="/upvotes?address=${user.address}">
+                              ${user.displayName}
+                            </a>
+                            <span> </span>
+                            <span> (${user.karma} ${theme.emoji})</span>
+                          </span>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              `
+            )}
+          </table>
           ${Footer(theme)}
         </center>
       </body>

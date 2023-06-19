@@ -8,7 +8,6 @@ import { Avatar, ConnectKitProvider } from "connectkit";
 import {ConnectedProfile, ConnectedActivity, ConnectedConnectButton} from './Navigation.jsx'
 import SubmitButton from './SubmitButton.jsx'
 import Vote from './Vote.jsx'
-import EnsName from './EnsName.jsx'
 import Bell from './Bell.jsx'
 import NFTPrice from './NFTPrice.jsx'
 import PaidFeature from './PaidFeature.jsx'
@@ -159,18 +158,6 @@ if (avatars) {
             <Avatar name={address} size={size} radius={0} />
           </ConnectKitProvider>
         </WagmiConfig>
-      </React.StrictMode>,
-    );
-  }
-}
-
-const ensNameComponents = document.querySelectorAll("ens-name");
-if (ensNameComponents) {
-  for (let elem of ensNameComponents) {
-    const address = elem.getAttribute("address");
-    ReactDOM.createRoot(elem).render(
-      <React.StrictMode>
-        <EnsName address={address} />
       </React.StrictMode>,
     );
   }
