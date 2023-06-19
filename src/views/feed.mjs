@@ -49,6 +49,7 @@ export function count(leaves) {
         timestamp: leaf.timestamp,
         href: leaf.href,
         address: leaf.address,
+        displayName: leaf.displayName,
         upvotes: 1,
       };
       stories[key] = story;
