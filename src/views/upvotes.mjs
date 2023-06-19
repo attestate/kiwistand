@@ -55,9 +55,9 @@ export default async function (trie, theme, address) {
       const recoveredAddress = id.ecrecover(leaf, cacheEnabled);
       const ensData = await ens.resolve(recoveredAddress);
       return {
+        ...leaf,
         address: recoveredAddress,
         displayName: ensData.displayName,
-        ...leaf,
       };
     })
   );
