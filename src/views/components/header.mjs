@@ -21,13 +21,54 @@ const header = (theme) => html`
                 <span>${theme.emoji}</span><a href="/"> ${theme.name} News</a>
               </b>
             </span>
-            <div id="menu">
-              <a style="color: black;" href="/">Top</a><span> | </span>
-              <a style="color: black;" href="/new">New</a><span> | </span>
-              <a style="color: black;" href="/community">Community</a><span> | </span>
-              <a style="color: black;" href="/about">About</a>
-              <span> | </span>
-              <span id="navigation"></span>
+            <div
+              style="display: flex; flex-wrap: wrap; justify-content: flex-start; align-items: center;"
+            >
+              <div
+                style="flex: 0 0 auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-left: 10px;"
+              >
+                <a style="color: black;" href="/">Top</a>
+              </div>
+              <div
+                style="flex: 0 0 auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-left: 10px;"
+              >
+                <a style="color: black;" href="/new">New</a>
+              </div>
+              <div
+                style="flex: 0 0 auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-left: 10px;"
+              >
+                <a style="color: black;" href="/community">Community</a>
+              </div>
+              <div
+                style="flex: 0 0 auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-left: 10px;"
+                class="hide-on-mobile"
+              >
+                <a style="color: black; cursor: pointer;" href="/submit"
+                  >Submit</a
+                >
+              </div>
+
+              <div
+                style="flex: 0 0 auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-left: 10px;"
+                id="profile-container"
+                class="hide-on-mobile"
+              >
+                <nav-profile />
+              </div>
+
+              <div
+                style="flex: 0 0 auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-left: 10px;"
+                id="activity-container"
+                class="hide-on-mobile"
+              >
+                <nav-activity />
+              </div>
+
+              <div
+                style="flex: 0 0 auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-left: 10px;"
+              >
+                <nav-connect />
+              </div>
             </div>
           </td>
         </tr>

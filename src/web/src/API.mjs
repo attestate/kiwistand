@@ -1,4 +1,5 @@
 // @format
+import { getCookie, setCookie } from "./session.mjs";
 
 export const EIP712_DOMAIN = {
   name: "kiwinews",
@@ -24,15 +25,24 @@ export function messageFab(title, href) {
   };
 }
 
+function getApiUrl(endpoint, port = window.location.port) {
+  const hostname = window.location.hostname;
+  return `${window.location.protocol}//${hostname}${
+    port ? ":" + port : ""
+  }${endpoint}`;
+}
+
 export async function send(message, signature) {
   const body = JSON.stringify({
     ...message,
     signature,
   });
 
+  const url = getApiUrl("/api/v1/messages", 8000);
+
   let response;
   try {
-    response = await fetch("/api/v1/messages", {
+    response = await fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -40,7 +50,7 @@ export async function send(message, signature) {
       body,
     });
   } catch (err) {
-    console.error(error);
+    console.error(err);
   }
 
   let result;
@@ -55,4 +65,32 @@ export async function send(message, signature) {
     };
   }
   return result;
+}
+
+export async function fetchNotifications(address) {
+  const url = getApiUrl(`/activity?address=${address}`);
+
+  const response = await fetch(url, {
+    method: "GET",
+    credentials: "omit",
+  });
+
+  const nextLastUpdate = response.headers.get("X-LAST-UPDATE");
+  const lastUpdate = getCookie("lastUpdate");
+
+  return lastUpdate !== nextLastUpdate;
+}
+
+export async function fetchAllowList() {
+  const url = getApiUrl("/api/v1/allowlist", 8000);
+
+  let response;
+  try {
+    response = await fetch(url);
+    const data = await response.json();
+    return data.data;
+  } catch (err) {
+    console.error(err);
+    return null;
+  }
 }

@@ -98,7 +98,7 @@ export default async function (trie, theme) {
                             >${i + 1}.
                           </span>
                         </td>
-                        <td valign="top" class="votelinks">
+                        <td style="width:25px;" valign="top" class="votelinks">
                           <center>
                             <a id="up_35233479" class="clicky" href="#">
                               <div

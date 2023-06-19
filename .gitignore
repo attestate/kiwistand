@@ -1,4 +1,5 @@
 node_modules
+dbtest
 src/web/node_modules
 src/public/assets/*
 src/public/bundle.js

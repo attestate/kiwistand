@@ -5,7 +5,7 @@ import { getAccount } from '@wagmi/core'
 import { WagmiConfig } from "wagmi";
 import { Avatar, ConnectKitProvider } from "connectkit";
 
-import Navigation from './Navigation.jsx'
+import {ConnectedProfile, ConnectedActivity, ConnectedConnectButton} from './Navigation.jsx'
 import SubmitButton from './SubmitButton.jsx'
 import Vote from './Vote.jsx'
 import EnsName from './EnsName.jsx'
@@ -14,14 +14,29 @@ import NFTPrice from './NFTPrice.jsx'
 import PaidFeature from './PaidFeature.jsx'
 import { loadTheme } from "./theme.mjs";
 import { showMessage } from "./message.mjs";
+import { fetchAllowList } from "./API.mjs";
 import client from "./client.mjs";
 
 loadTheme();
 
-const navigation = document.getElementById('navigation');
-ReactDOM.createRoot(navigation).render(
+const profileLink = document.querySelector('nav-profile');
+ReactDOM.createRoot(profileLink).render(
   <React.StrictMode>
-    <Navigation />
+    <ConnectedProfile />
+  </React.StrictMode>,
+)
+
+const activityLink = document.querySelector('nav-activity');
+ReactDOM.createRoot(activityLink).render(
+  <React.StrictMode>
+    <ConnectedActivity />
+  </React.StrictMode>,
+)
+
+const connectLink = document.querySelector('nav-connect');
+ReactDOM.createRoot(connectLink).render(
+  <React.StrictMode>
+    <ConnectedConnectButton />
   </React.StrictMode>,
 )
 
@@ -66,9 +81,7 @@ if (activityBell) {
 
 
 async function renderPaidFeature() {
-  const response = await fetch('/api/v1/allowlist');
-  const data = await response.json();
-  const allowList = data.data;
+  const allowList = await fetchAllowList();
 
   const shareButtons = document.querySelectorAll('paid-share');
   if (shareButtons && shareButtons.length > 0) {
@@ -84,7 +97,7 @@ async function renderPaidFeature() {
                 <a
                   href="/welcome"
                 >
-                  Share on Warpcast [paid]
+                  Share
                 </a>
               </>
             }
@@ -95,7 +108,7 @@ async function renderPaidFeature() {
                 target="_blank"
                 href={href}
               >
-                Share on Warpcast
+                Share
               </a>
             </>
           </PaidFeature>
@@ -171,87 +184,6 @@ if (messageParam) {
   url.searchParams.delete('message');
   window.history.replaceState({}, '', url.href);
 }
-
-const processLink = async (link) => {
-  let url = new URL(link.href);
-  if(url.hostname !== 'app.spinamp.xyz' || !url.pathname.startsWith('/track/')) return;
-  
-  const trackSlug = url.pathname.split('/').pop();
-  
-  const response = await fetch('https://spindex-api.spinamp.xyz/v1/graphql', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      query: `
-        query {
-          allProcessedTracks(filter: {slug: {equalTo: "${trackSlug}"}}) {
-            edges {
-              node {
-                title
-                artistByArtistId {
-                  name
-                }
-                lossyAudioIpfsHash
-              }
-            }
-          }
-        }`
-    }),
-  });
-  
-  const data = await response.json();
-  const trackData = data.data.allProcessedTracks.edges[0].node;
-  
-  const player = document.createElement('span');
-  player.style.background = '#ecdcca';
-  player.style.border = 'solid 1px #1f4a4f';
-  player.style.padding = '2px 5px';
-  player.style.borderRadius = '5px';
-  player.style.display = 'inline-block';
-  player.style.marginLeft = '10px';
-  
-  const playButton = document.createElement('span');
-  const timeMarker = document.createElement('span');
-  timeMarker.textContent = '...'; // temporary placeholder
-  
-  const audioElement = document.createElement('audio');
-  audioElement.src = `https://media.spinamp.xyz/v1/${trackData.lossyAudioIpfsHash}?resource_type=video`;
-  audioElement.style.display = 'none';
-  
-  playButton.textContent = '▶'; // unicode play symbol
-  playButton.style.cursor = 'pointer';
-  playButton.style.marginRight = '10px';
-  playButton.onclick = () => {
-    if(audioElement.paused) {
-      audioElement.play();
-      playButton.textContent = '⏸'; // unicode pause symbol
-    } else {
-      audioElement.pause();
-      playButton.textContent = '▶'; // unicode play symbol
-    }
-  };
-  
-  audioElement.onloadedmetadata = () => {
-    const totalMinutes = Math.floor(audioElement.duration / 60);
-    const totalSeconds = Math.floor(audioElement.duration % 60);
-    timeMarker.textContent = `${totalMinutes}:${totalSeconds < 10 ? '0' + totalSeconds : totalSeconds}`;
-  };
-
-  audioElement.ontimeupdate = () => {
-    const remainingSeconds = audioElement.duration - audioElement.currentTime;
-    const minutes = Math.floor(remainingSeconds / 60);
-    const seconds = Math.floor(remainingSeconds % 60);
-    timeMarker.textContent = `${minutes}:${seconds < 10 ? '0' + seconds : seconds}`;
-  };
-
-  player.appendChild(playButton);
-  player.appendChild(timeMarker);
-  player.appendChild(audioElement);
-  
-  link.parentNode.insertBefore(player, link.nextSibling);
-};
-
-document.querySelectorAll('a').forEach(processLink);
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {

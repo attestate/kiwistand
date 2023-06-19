@@ -7,7 +7,8 @@ import config from "./config.mjs";
 import * as messages from "./topics/messages.mjs";
 import * as roots from "./topics/roots.mjs";
 import { handlers } from "./index.mjs";
-import * as server from "./http.mjs";
+import * as api from "./api.mjs";
+import * as http from "./http.mjs";
 import * as store from "./store.mjs";
 import crawlPath from "./chainstate/config.crawler.mjs";
 
@@ -30,5 +31,6 @@ import crawlPath from "./chainstate/config.crawler.mjs";
     [messages, roots],
     trie
   );
-  await server.launch(trie, node);
+  await api.launch(trie, node);
+  await http.launch(trie, node);
 })();

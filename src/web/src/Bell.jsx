@@ -3,20 +3,8 @@ import { useEffect, useState } from "react";
 import { WagmiConfig, useAccount } from "wagmi";
 import { ConnectKitProvider } from "connectkit";
 
-import { getCookie, setCookie } from "./session.mjs";
+import { fetchNotifications } from "./API.mjs";
 import client from "./client.mjs";
-
-async function fetchNotifications(address) {
-  const response = await fetch(`/activity?address=${address}`, {
-    method: 'GET',
-    credentials: 'omit'
-  });
-
-  const nextLastUpdate = response.headers.get('X-LAST-UPDATE');
-  const lastUpdate= getCookie('lastUpdate');
-
-  return lastUpdate !== nextLastUpdate;
-}
 
 const Container = (props) => {
   return (
@@ -35,11 +23,13 @@ const Link = ({to, children}) => {
   const [hasNewNotifications, setHasNewNotifications] = useState(false);
 
   useEffect(() => {
-    const fetchAndUpdateNotifications = async () => {
-      const isNew = await fetchNotifications(address);
-      setHasNewNotifications(isNew);
+    if (address) {
+      const fetchAndUpdateNotifications = async () => {
+        const isNew = await fetchNotifications(address);
+        setHasNewNotifications(isNew);
+      }
+      fetchAndUpdateNotifications();
     }
-    fetchAndUpdateNotifications();
   }, [address]);
 
   return (
