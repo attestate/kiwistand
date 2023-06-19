@@ -17,6 +17,16 @@ const api = express.Router();
 api.use(express.json());
 api.use(cors());
 
+function getSSLOptions() {
+  if (env.NODE_ENV === "production" && env.SSL_CERT_PATH && env.SSL_KEY_PATH) {
+    return {
+      key: fs.readFileSync(env.SSL_KEY_PATH, "utf8"),
+      cert: fs.readFileSync(env.SSL_CERT_PATH, "utf8"),
+    };
+  }
+  return null;
+}
+
 export function sendError(reply, code, message, details) {
   log(`http error: "${code}", "${message}", "${details}"`);
   return reply.status(code).json({
@@ -96,7 +106,18 @@ export function launch(trie, libp2p) {
 
   const app = express();
   app.use("/api/v1", api);
-  app.listen(env.API_PORT, () =>
-    log(`Launched API server at port "${env.API_PORT}"`)
-  );
+  const sslOptions = getSSLOptions();
+
+  if (sslOptions) {
+    const httpsServer = https.createServer(sslOptions, app);
+    httpsServer.listen(env.API_PORT, () =>
+      log(
+        `Launched SSL-enabled API server in production at port "${env.API_PORT}"`
+      )
+    );
+  } else {
+    app.listen(env.API_PORT, () =>
+      log(`Launched API server at port "${env.API_PORT}"`)
+    );
+  }
 }
