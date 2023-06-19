@@ -123,39 +123,45 @@ export default async function (trie, theme) {
             </tr>
             <tr>
   <td>
-    <table id="leaderboard" style="padding: 5px;" border="0.5" cellpadding="0" cellspacing="0" width="100%">
-      <tr>
-        <th>Rank</th>
-        <th>User</th>
-        <th>Points</th>
-      </tr>
+    <div style="padding-top: 5px; width: 100%;">
       ${combinedUsers.map(
         (user, i) => html`
-          <tr class="athing" id="35233479">
-            <td align="center" class="rank">${i + 1}.</td>
-            <td class="user">
-              <div class="user-content">
-                <div class="avatar-container">
-                  <ens-avatar address=${user.address} leaderboard />
+          <a
+            href="/upvotes?address=${user.address}"
+            style="color: inherit; text-decoration: none;"
+          >
+            <div
+              style="display: flex; justify-content: space-between; align-items: center; padding: 8px; box-sizing: border-box;"
+            >
+              <div style="width: 8%; text-align: left;">${i + 1}.</div>
+              <div style="display: flex; align-items: center; width: 60%;">
+                <div style="width: 40px; height: 40px; box-sizing: border-box;">
+                  <ens-avatar
+                    address="${user.address}"
+                    leaderboard
+                    style="width: 40px; height: 40px;"
+                  />
                 </div>
-                <div class="username-container">
-                  <a href="/profile/${user.address}">
-                    <ens-name address=${user.address} />
-                  </a>
+                <div style="margin-left: 10px; flex-grow: 1;">
+                  ${user.displayName}
                 </div>
               </div>
-            </td>
-            <td align="center" class="points">${user.karma} ${theme.emoji}</td>
-          </tr>
+              <div
+                style="width: 32%; min-width: 100px; padding-right: 15px; text-align: right; font-size: 1.2em;"
+              >
+                ${user.karma} ${theme.emoji}
+              </div>
+            </div>
+          </a>
         `
       )}
-    </table>
+     </div>
   </td>
 </tr>
-</table>
-          ${Footer(theme)}
-        </center>
-      </body>
-    </html>
-  `;
+        </table>
+        ${Footer(theme)}
+      </center>
+    </body>
+  </html>
+`;
 }
