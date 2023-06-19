@@ -6,7 +6,6 @@ import vhtml from "vhtml";
 import normalizeUrl from "normalize-url";
 import { formatDistanceToNow } from "date-fns";
 import { utils } from "ethers";
-import { fetchBuilder, MemoryCache } from "node-fetch-cache";
 
 import Header from "./components/header.mjs";
 import Footer from "./components/footer.mjs";
@@ -14,23 +13,13 @@ import Head from "./components/head.mjs";
 import * as store from "../store.mjs";
 import * as id from "../id.mjs";
 import { count } from "./feed.mjs";
+import * as ens from "../ens.mjs";
 
 const html = htm.bind(vhtml);
-const fetch = fetchBuilder.withCache(
-  new MemoryCache({
-    ttl: 86400000, // 24 hours
-  })
-);
 
 function extractDomain(link) {
   const parsedUrl = new url.URL(link);
   return parsedUrl.hostname;
-}
-
-async function fetchENSData(address) {
-  const response = await fetch(`https://ensdata.net/${address}`);
-  const data = await response.json();
-  return data;
 }
 
 const classify = (messages) => {
@@ -55,16 +44,23 @@ export default async function (trie, theme, address) {
   if (!utils.isAddress(address)) {
     return html`Not a valid address`;
   }
-  const ensData = await fetchENSData(address);
+  const ensData = await ens.resolve(address);
   const from = null;
   const amount = null;
   const parser = JSON.parse;
   let leaves = await store.leaves(trie, from, amount, parser);
   const cacheEnabled = true;
-  leaves = leaves.map((leaf) => ({
-    address: id.ecrecover(leaf, cacheEnabled),
-    ...leaf,
-  }));
+  leaves = await Promise.all(
+    leaves.map(async (leaf) => {
+      const recoveredAddress = id.ecrecover(leaf, cacheEnabled);
+      const ensData = await ens.resolve(recoveredAddress);
+      return {
+        address: recoveredAddress,
+        displayName: ensData.displayName,
+        ...leaf,
+      };
+    })
+  );
   const actions = classify(leaves);
   const taintedSubmissions = actions
     .filter(
@@ -135,36 +131,54 @@ export default async function (trie, theme, address) {
                   style="padding: 10px; color: black; font-size: 16px; line-height: 1.5;"
                 >
                   <span>Profile: </span>
-                  <ens-name address=${address} />
+                  <a
+                    target="_blank"
+                    href="https://etherscan.io/address/${ensData.address}"
+                  >
+                    ${ensData.displayName}
+                    ${String.fromCharCode(0x2934, 0xfe0e)}
+                  </a>
                   ${ensData.description
                     ? html`<span> </span>"${ensData.description}"<br />`
                     : html`<br />`}
                   ${ensData.url
-                    ? html`Website:
+                    ? html`<span>Website: </span>
                         <a target="_blank" href="${ensData.url}"
-                          >${ensData.url}</a
+                          >${ensData.url} ${String.fromCharCode(0x2934, 0xfe0e)} </a
                         ><br />`
                     : ""}
                   ${ensData.twitter
-                    ? html`Twitter:
+                    ? html` <span>Twitter: </span>
                         <a
                           href="https://twitter.com/${ensData.twitter}"
                           target="_blank"
                           rel="noopener noreferrer"
-                          >@${ensData.twitter}</a
+                          >@${ensData.twitter}
+                          ${String.fromCharCode(0x2934, 0xfe0e)} </a
                         ><br />`
                     : ""}
                   ${ensData.github
-                    ? html`GitHub:
+                    ? html`<span>GitHub: </span>
                         <a
                           href="https://github.com/${ensData.github}"
                           target="_blank"
                           rel="noopener noreferrer"
-                          >${ensData.github}</a
+                          >${ensData.github}
+                          ${String.fromCharCode(0x2934, 0xfe0e)} </a
+                        ><br />`
+                    : ""}
+                  ${ensData.telegram
+                    ? html`<span>Telegram: </span>
+                        <a
+                          href="https://t.me/${ensData.telegram}"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          >${ensData.telegram}
+                          ${String.fromCharCode(0x2934, 0xfe0e)} </a
                         ><br />`
                     : ""}
                   ${ensData.discord
-                    ? html`Discord: ${ensData.discord}<br />`
+                    ? html`<span>Discord: </span> ${ensData.discord}<br />`
                     : ""}
                   <hr />
                   ${submissions.length > 0
@@ -272,7 +286,9 @@ export default async function (trie, theme, address) {
                             >
                               ${story.upvotes}
                               <span> points by </span>
-                              <ens-name address=${story.address} />
+                              <a href="/upvotes?address=${story.address}">
+                                ${story.displayName}
+                              </a>
                               <span> submitted </span>
                               ${formatDistanceToNow(
                                 new Date(story.timestamp * 1000)

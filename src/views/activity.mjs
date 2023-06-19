@@ -8,6 +8,7 @@ import normalizeUrl from "normalize-url";
 import { formatDistanceToNow, sub } from "date-fns";
 import { utils } from "ethers";
 
+import * as ens from "../ens.mjs";
 import Header from "./components/header.mjs";
 import Footer from "./components/footer.mjs";
 import Head from "./components/head.mjs";
@@ -75,9 +76,12 @@ function generateRow(activity, i) {
           </div>
           <div>
             <p>
-              <strong
-                ><ens-name address=${activity.address} /> ${activity.verb} your
-                submission</strong
+              <strong>
+                <a href="/upvotes?address=${activity.address}">
+                  ${activity.displayName}
+                </a>
+                <span> </span>
+                ${activity.verb} your submission</strong
               >
             </p>
             <p>
@@ -115,11 +119,20 @@ export default async function (trie, theme, address) {
   leaves = moderation.moderate(leaves, config);
 
   const activities = generateFeed(leaves);
-  const notifications = activities.filter(
+  const filteredActivities = activities.filter(
     (activity) =>
       activity.verb === "upvoted" &&
       activity.towards.toLowerCase() === address.toLowerCase()
   );
+
+  let notifications = [];
+  for await (let activity of filteredActivities) {
+    const ensData = await ens.resolve(activity.address);
+    notifications.push({
+      ...activity,
+      displayName: ensData.displayName,
+    });
+  }
 
   let lastUpdate = "0";
   let feed = html`

@@ -7,6 +7,7 @@ import vhtml from "vhtml";
 import normalizeUrl from "normalize-url";
 import { formatDistanceToNow, sub } from "date-fns";
 
+import * as ens from "../ens.mjs";
 import Header from "./components/header.mjs";
 import Footer from "./components/footer.mjs";
 import Head from "./components/head.mjs";
@@ -60,9 +61,18 @@ export default async function (trie, theme) {
   let leaves = await store.leaves(trie, from, amount, parser, aWeekAgoUnixTime);
   leaves = moderation.moderate(leaves, config);
 
-  const stories = count(leaves)
-    .sort((a, b) => b.timestamp - a.timestamp)
-    .slice(0, 40);
+  let counts = count(leaves);
+  let sortedCounts = counts.sort((a, b) => b.timestamp - a.timestamp);
+  let slicedCounts = sortedCounts.slice(0, 40);
+
+  let stories = [];
+  for await (let item of slicedCounts) {
+    const ensData = await ens.resolve(item.address);
+    stories.push({
+      ...item,
+      displayName: ensData.displayName,
+    });
+  }
 
   return html`
     <html lang="en" op="news">
@@ -137,7 +147,10 @@ export default async function (trie, theme) {
                             >
                               ${story.upvotes}
                               <span> points by </span>
-                              <ens-name address=${story.address} />
+                              <a href="/upvotes?address=${story.address}">
+                                ${story.displayName}
+                              </a>
+
                               <span> </span>
                               ${formatDistanceToNow(
                                 new Date(story.timestamp * 1000)
