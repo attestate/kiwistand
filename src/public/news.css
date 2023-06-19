@@ -317,24 +317,22 @@ and (max-width : 750px) {
 }
 
 #leaderboard .user .user-content .avatar-container {
-  width: 40px; /* Adjust this value to set the avatar size */
+  width: 40px; 
   text-align: center;
-  margin-right: 5px; /* This creates some space between the avatar and the username */
+  margin-right: 5px; 
 }
 
 #leaderboard .user .user-content .username-container {
   text-align: left;
-  flex-grow: 1; /* This makes the username container take up the remaining space */
+  flex-grow: 1; 
 }
 
-/* Desktop */
 @media screen and (min-width: 768px) {
   #leaderboard .user .user-content {
     padding-left: 35%;
   }
 }
 
-/* Mobile */
 @media screen and (max-width: 767px) {
   #leaderboard .user .user-content {
     padding-left: 15%;

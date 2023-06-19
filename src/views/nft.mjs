@@ -136,31 +136,38 @@ export default function (theme) {
                         </div>
                       </div>
                       <div class="text-container">
-                        <p class="selling-points">
-                          Become part of our community by buying a Kiwi NFT to:
-                        </p>
-                        <ul class="list-unstyled selling-points">
-                          <li class="bullet-point">
-                            <strong>•</strong> Submit and curate stories on the
-                            Kiwi News p2p network
-                          </li>
-                          <li class="bullet-point">
-                            <strong>•</strong> Expose your content to a broader
-                            audience, driving growth and marketing
-                          </li>
-                          <li class="bullet-point">
-                            <strong>•</strong> Share our links to Warpcast and
-                            receive the token-gated newsletter
-                          </li>
-                          <li class="bullet-point">
-                            <strong>•</strong> Co-create the Kiwi News
-                            moderation system and influence governance
-                          </li>
-                          <li class="bullet-point">
-                            <strong>•</strong> Gain access to the exclusive
-                            "Kiwi News NFT Holder" Telegram channel
-                          </li>
-                        </ul>
+                      <p style="font-size: 0.9rem;">
+                        Kiwi News is the prime feed for engineers building a decentralized future.
+                      </p>
+                      <p style="font-size: 0.9rem;">
+                        You don’t need to scroll Twitter anymore - all our content is handpicked and curated by the crypto-savvy community. 
+                      </p>
+                      <p style="font-size: 0.9rem;">
+                        We all follow <u><a href="https://hackmd.io/a-r--DX2T5uEEKX0Z8PRlQ?view">Submission Guidelines</a></u> to protect the feed from mid and off-topic content.
+                      </p>
+                      <p style="font-size: 0.9rem;">
+                        We are also credibly neutral - Kiwi News is built on top of the <u><a href="https://github.com/attestate/kiwistand/">P2P network</a></u>.
+                      </p>
+                      <p style="font-size: 0.9rem;">
+                        <b>If you want to join our community, mint the Kiwi NFT to:</b>
+                      </p>
+                      <ul class="list-unstyled selling-points">
+                        <li class="bullet-point">
+                          <strong>•</strong> Submit and curate stories on the Kiwi News P2P network,
+                        </li>
+                        <li class="bullet-point">
+                          <strong>•</strong> Get distribution by exposing your content to a broader crypto-native audience,
+                        </li>
+                        <li class="bullet-point">
+                          <strong>•</strong> Share our links to Warpcast,
+                        </li>
+                        <li class="bullet-point">
+                          <strong>•</strong> Co-create the Kiwi News moderation system and influence governance,
+                        </li>
+                        <li class="bullet-point">
+                          <strong>•</strong> Gain access to the exclusive "Kiwi News NFT Holder" Telegram channel.
+                        </li>
+                      </ul>
                         <p>
                           Your contribution supports the project's growth and
                           its creator team, including
