@@ -7,7 +7,7 @@ import { encode } from "cbor-x";
 import { Wallet } from "ethers";
 
 import { sign, create } from "../src/id.mjs";
-import { handleMessage, listMessages, listAllowed } from "../src/http.mjs";
+import { handleMessage, listMessages, listAllowed } from "../src/api.mjs";
 import * as store from "../src/store.mjs";
 
 async function removeTestFolders() {
