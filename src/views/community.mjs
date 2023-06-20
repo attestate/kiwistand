@@ -121,52 +121,47 @@ export default async function (trie, theme) {
               </p>
               </td>
             </tr>
-            ${combinedUsers.map(
-              (user, i) => html`
-                <tr>
-                  <td>
-                    <table
-                      style="padding: 5px;"
-                      border="0"
-                      cellpadding="0"
-                      cellspacing="0"
-                    >
-                      <tr class="athing" id="35233479">
-                        <td align="right" valign="top" class="title">
-                          <span style="padding-right: 5px" class="rank"
-                            >${i + 1}.
-                          </span>
-                        </td>
-                        <td valign="top" class="votelinks">
-                          <center>
-                            <a id="up_35233479" class="clicky" href="#">
-                              <div
-                                style="display: none;"
-                                class="votearrow"
-                                title="upvote"
-                              ></div>
-                            </a>
-                          </center>
-                        </td>
-                        <td class="title">
-                          <span class="titleline">
-                            <a href="/upvotes?address=${user.address}">
-                              ${user.displayName}
-                            </a>
-                            <span> </span>
-                            <span> (${user.karma} ${theme.emoji})</span>
-                          </span>
-                        </td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-              `
-            )}
-          </table>
-          ${Footer(theme)}
-        </center>
-      </body>
-    </html>
-  `;
+            <tr>
+  <td>
+    <div style="padding-top: 5px; width: 100%;">
+      ${combinedUsers.map(
+        (user, i) => html`
+          <a
+            href="/upvotes?address=${user.address}"
+            style="color: inherit; text-decoration: none;"
+          >
+            <div
+              style="display: flex; justify-content: space-between; align-items: center; padding: 8px; box-sizing: border-box;"
+            >
+              <div style="width: 8%; text-align: left;">${i + 1}.</div>
+              <div style="display: flex; align-items: center; width: 60%;">
+                <div style="width: 40px; height: 40px; box-sizing: border-box;">
+                  <ens-avatar
+                    address="${user.address}"
+                    leaderboard
+                    style="width: 40px; height: 40px;"
+                  />
+                </div>
+                <div style="margin-left: 10px; flex-grow: 1;">
+                  ${user.displayName}
+                </div>
+              </div>
+              <div
+                style="width: 32%; min-width: 100px; padding-right: 15px; text-align: right; font-size: 1.2em;"
+              >
+                ${user.karma} ${theme.emoji}
+              </div>
+            </div>
+          </a>
+        `
+      )}
+     </div>
+  </td>
+</tr>
+        </table>
+        ${Footer(theme)}
+      </center>
+    </body>
+  </html>
+`;
 }

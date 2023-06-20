@@ -20,7 +20,6 @@ module.exports = {
         USE_EPHEMERAL_ID: false,
         SSL_CERT_PATH: "/etc/letsencrypt/live/news.kiwistand.com/fullchain.pem",
         SSL_KEY_PATH: "/etc/letsencrypt/live/news.kiwistand.com/privkey.pem"
-
       },
       time: true
     },

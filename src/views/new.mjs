@@ -146,11 +146,10 @@ export default async function (trie, theme) {
                               id="score_35233479"
                             >
                               ${story.upvotes}
-                              <span> points by </span>
+                              <span> upvotes by </span>
                               <a href="/upvotes?address=${story.address}">
                                 ${story.displayName}
                               </a>
-
                               <span> </span>
                               ${formatDistanceToNow(
                                 new Date(story.timestamp * 1000)

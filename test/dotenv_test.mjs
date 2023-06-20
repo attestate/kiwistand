@@ -36,17 +36,17 @@ test("that repo contains a .env-copy file with all possible configuration option
     "THEME_COLOR",
     "THEME_EMOJI",
     "THEME_NAME",
-    "TODAYS_EDITOR_STORY_COUNT",
-    "TODAYS_EDITOR_ADDRESS",
-    "TODAYS_EDITOR_URL",
-    "TODAYS_EDITOR_NAME",
     "DEBUG",
   ];
   await access(envPath, constants.F_OK);
   const envContent = (await readFile(envPath)).toString();
   const envMatches = envContent.match(expr);
   const copyMatches = content.match(expr);
-  t.is(envMatches.length, copyMatches.length);
+  t.is(
+    envMatches.length,
+    copyMatches.length,
+    ".env-copy and .env aren't matching"
+  );
   t.is(
     copyMatches.length,
     allOptions.length,

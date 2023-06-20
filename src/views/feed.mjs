@@ -423,7 +423,7 @@ export default async function index(trie, theme, page) {
                               id="score_35233479"
                             >
                               ${story.upvotes}
-                              <span> points by </span>
+                              <span> upvotes by </span>
                               <a href="/upvotes?address=${story.address}">
                                 ${story.displayName}
                               </a>

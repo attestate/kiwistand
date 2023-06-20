@@ -16,29 +16,41 @@ assert.ok(id);
 export const name = `${prefix}/${version}/${id}`;
 
 export const handlers = {
-  message: (trie) => {
+  message: (trie, allowlistFn = registry.allowlist) => {
     return async (evt) => {
       if (evt.detail.topic !== name) {
-        log(`Topic name "${evt.detail.topic}" didn't match`);
-        return;
+        log(`message handler: Topic name "${evt.detail.topic}" didn't match`);
+        return false;
       }
 
       let message;
       try {
         message = decode(evt.detail.data);
       } catch (err) {
-        log(`Couldn't parse event data from cbor to object`);
-        return;
+        log(`message handler: Couldn't parse event data from cbor to object`);
+        return false;
+      }
+
+      let obj;
+      try {
+        obj = JSON.parse(message);
+      } catch (err) {
+        log(
+          `message handler: Couldn't JSON-parse message "${message}" to in trie: ${err.toString()}`
+        );
+        return false;
       }
 
       const libp2p = null;
-      const allowlist = await registry.allowlist();
+      const allowlist = await allowlistFn();
       try {
-        await store.add(trie, message, libp2p, allowlist);
+        await store.add(trie, obj, libp2p, allowlist);
+        return true;
       } catch (err) {
         log(
           `message handler: Didn't add message to database because of error: "${err.toString()}"`
         );
+        return false;
       }
     };
   },
