@@ -3,6 +3,7 @@ import vhtml from "vhtml";
 
 import Header from "./components/header.mjs";
 import Footer from "./components/footer.mjs";
+import Sidebar from "./components/sidebar.mjs";
 import Head from "./components/head.mjs";
 
 const html = htm.bind(vhtml);
@@ -14,6 +15,7 @@ export default function submit(theme) {
         ${Head}
       </head>
       <body>
+        ${Sidebar}
         <center>
           <table
             id="hnmain"

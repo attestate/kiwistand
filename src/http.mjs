@@ -80,15 +80,15 @@ export async function launch(trie, libp2p) {
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/about", async (request, reply) => {
-    const content = await about(trie, reply.locals.theme);
+    const content = await about(reply.locals.theme);
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/why", async (request, reply) => {
-    const content = await why(trie, reply.locals.theme);
+    const content = await why(reply.locals.theme);
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/guidelines", async (request, reply) => {
-    const content = await guidelines(trie, reply.locals.theme);
+    const content = await guidelines(reply.locals.theme);
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/activity", async (request, reply) => {

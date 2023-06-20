@@ -8,6 +8,7 @@ import normalizeUrl from "normalize-url";
 import * as ens from "../ens.mjs";
 import Header from "./components/header.mjs";
 import Footer from "./components/footer.mjs";
+import Sidebar from "./components/sidebar.mjs";
 import Head from "./components/head.mjs";
 import * as store from "../store.mjs";
 import * as id from "../id.mjs";
@@ -88,6 +89,7 @@ export default async function (trie, theme) {
         ${Head}
       </head>
       <body>
+        ${Sidebar}
         <center>
           <table
             id="hnmain"

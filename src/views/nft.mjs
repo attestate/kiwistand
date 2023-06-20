@@ -3,6 +3,7 @@ import htm from "htm";
 import vhtml from "vhtml";
 
 import Header from "./components/header.mjs";
+import Sidebar from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
 import Head from "./components/head.mjs";
 
@@ -95,6 +96,7 @@ export default function (theme) {
         </style>
       </head>
       <body>
+        ${Sidebar}
         <center>
           <table
             id="hnmain"

@@ -3,12 +3,11 @@ import htm from "htm";
 import vhtml from "vhtml";
 
 import Header from "./components/header.mjs";
+import Sidebar from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
 import Head from "./components/head.mjs";
 
 const html = htm.bind(vhtml);
-
-const price = "0.01";
 
 export default function (theme) {
   return html`
@@ -17,6 +16,7 @@ export default function (theme) {
         ${Head}
       </head>
       <body>
+        ${Sidebar}
         <center>
           <table
             id="hnmain"

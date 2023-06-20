@@ -5,18 +5,44 @@ import { getAccount } from '@wagmi/core'
 import { WagmiConfig } from "wagmi";
 import { Avatar, ConnectKitProvider } from "connectkit";
 
-import {ConnectedProfile, ConnectedActivity, ConnectedConnectButton} from './Navigation.jsx'
+import {ConnectedProfile, ConnectedDisconnectButton, ConnectedConnectButton} from './Navigation.jsx'
 import SubmitButton from './SubmitButton.jsx'
 import Vote from './Vote.jsx'
 import Bell from './Bell.jsx'
 import NFTPrice from './NFTPrice.jsx'
 import PaidFeature from './PaidFeature.jsx'
-import { loadTheme } from "./theme.mjs";
 import { showMessage } from "./message.mjs";
 import { fetchAllowList } from "./API.mjs";
 import client from "./client.mjs";
 
-loadTheme();
+function handleClick(event) {
+  const sidebar = document.querySelector('.sidebar');
+  const isClickOutside = !sidebar.contains(event.target);
+  const isSidebarOpen = sidebar.style.left === "0" || sidebar.style.left === "0px";
+  const isSidebarToggle = event.target.closest(".sidebar-toggle") !== null;
+
+  if (isSidebarToggle || (isClickOutside && isSidebarOpen)) {
+    toggleSidebar();
+  }
+}
+
+function toggleSidebar() {
+  const sidebar = document.querySelector('.sidebar');
+  const isSidebarOpen = sidebar.style.left === "0" || sidebar.style.left === "0px";
+  var sidebarWidth;
+
+  if (window.innerWidth >= 1200) {
+    sidebarWidth = isSidebarOpen ? '-15%' : '0';
+  } else if (window.innerWidth >= 768 && window.innerWidth < 1200) {
+    sidebarWidth = isSidebarOpen ? '-20%' : '0';
+  } else {
+    sidebarWidth = isSidebarOpen ? '-50%' : '0';
+  }
+
+  document.querySelector('.sidebar').style.left = sidebarWidth;
+}
+
+document.addEventListener("click", handleClick);
 
 const profileLink = document.querySelector('nav-profile');
 ReactDOM.createRoot(profileLink).render(
@@ -24,16 +50,16 @@ ReactDOM.createRoot(profileLink).render(
     <ConnectedProfile />
   </React.StrictMode>,
 )
-
-const activityLink = document.querySelector('nav-activity');
-ReactDOM.createRoot(activityLink).render(
+const disconnect = document.querySelector('nav-disconnect');
+ReactDOM.createRoot(disconnect).render(
   <React.StrictMode>
-    <ConnectedActivity />
+    <ConnectedDisconnectButton />
   </React.StrictMode>,
 )
 
-const connectLink = document.querySelector('nav-connect');
-ReactDOM.createRoot(connectLink).render(
+const connectButton = document.querySelector('#connectButton');
+connectButton.style="";
+ReactDOM.createRoot(connectButton).render(
   <React.StrictMode>
     <ConnectedConnectButton />
   </React.StrictMode>,
@@ -47,37 +73,6 @@ if (submitButtonContainer) {
     </React.StrictMode>
   )
 }
-
-const activityBell = document.querySelector('.activity-link');
-if (activityBell) {
-  ReactDOM.createRoot(activityBell).render(
-    <React.StrictMode>
-      <Bell to="/activity">
-        <i class="icon">
-          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path
-              d="M18.9,11.2s0-8.7-6.9-8.7-6.9,8.7-6.9,8.7v3.9L2.5,17.5h19l-2.6-2.4Z"
-              fill="none"
-              stroke="#000000"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-            />
-
-            <path
-              d="M14.5,20.5s-.5,1-2.5,1-2.5-1-2.5-1"
-              fill="none"
-              stroke="#000000"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-            />
-          </svg> </i>
-      </Bell>
-    </React.StrictMode>
-  )
-}
-
 
 async function renderPaidFeature() {
   const allowList = await fetchAllowList();

@@ -196,46 +196,6 @@ and (max-width : 750px) {
     padding: 20px;
 }
 
-#footer {
-  display: none;
-}
-
-@media screen and (max-width: 600px) {
-  #footer {
-    position: fixed;
-    bottom: 0;
-    width: 100%;
-    background-color: #f8f8f8;
-    box-shadow: 0px -2px 10px rgba(0, 0, 0, 0.1);
-    display: flex; /* Ensure #footer is a flex container */
-    justify-content: space-around;
-    align-items: center; /* Aligns the .footer-item vertically in the middle */
-  }
-
-  .footer-item {
-    display: flex;
-    flex-grow: 1; /* Enables the .footer-item to fill its parent width */
-    justify-content: center; /* Centers content within each .footer-item */
-  }
-
-  .footer-item a {
-    padding: 10px 0;
-    display: flex;
-    align-items: center;
-    justify-content: center; /* Ensures that the <a> tag contents are centered */
-    width: 100%; /* ensure the <a> tag covers the whole space */
-    height: 100%;
-    text-decoration: none;
-    font-size: 14px;
-  }
-
-  .icon, .icon svg {
-    width: 30px; /* Instead of setting height, set width to keep SVG responsive */
-    height: auto;
-    font-size: 20px;
-    margin-right: 5px;
-  }
-}
 .kiwi-svg {
   height: auto;
   margin-bottom: 2em;
@@ -256,5 +216,33 @@ and (max-width : 750px) {
 
   .kiwi-svg {
     max-width: 40%;
+  }
+}
+.sidebar {
+  height: 100%;
+  width: 50%; /* modified width for small screens */
+  position: fixed;
+  z-index: 1;
+  top: 0;
+  left: -50%;
+  background-color: #e6e6df;
+  overflow-x: hidden;
+  transition: 0.5s;
+  border-right: 1px solid black;
+}
+
+/* Media query for medium screens */
+@media (min-width: 768px) {
+  .sidebar {
+    width: 20%; /* modified width for medium screens */
+    left: -20%;
+  }
+}
+
+/* Media query for larger screens */
+@media (min-width: 1200px) {
+  .sidebar {
+    width: 15%; /* modified width for large screens */
+    left: -15%;
   }
 }

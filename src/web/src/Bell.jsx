@@ -6,17 +6,7 @@ import { ConnectKitProvider } from "connectkit";
 import { fetchNotifications } from "./API.mjs";
 import client from "./client.mjs";
 
-const Container = (props) => {
-  return (
-    <WagmiConfig client={client}>
-      <ConnectKitProvider>
-        <Link {...props} />
-      </ConnectKitProvider>
-    </WagmiConfig>
-  );
-};
-
-const Link = ({to, children}) => {
+const Bell = ({to, children}) => {
   const { address } = useAccount();
   const link = `${to}?address=${address}`;
 
@@ -34,21 +24,23 @@ const Link = ({to, children}) => {
 
   return (
     <a href={link} style={{ position: 'relative' }}>
-      {children}
-      {hasNewNotifications && 
-        <div style={{
-          position: 'absolute',
-          top: '8px',
-          right: '54px',
-          width: '10px',
-          height: '10px',
-          borderRadius: '50%',
-          backgroundColor: 'red',
-          zIndex: 100,
-        }}></div>
-      }
-    </a>
+  {children}
+  {hasNewNotifications && (
+    <div
+      style={{
+        position: 'absolute',
+        top: '-88%',
+        right: '35%',
+        width: '10px',
+        height: '10px',
+        borderRadius: '50%',
+        backgroundColor: 'red',
+        zIndex: 100,
+      }}
+    ></div>
+  )}
+</a>
   );
 };
 
-export default Container;
+export default Bell;

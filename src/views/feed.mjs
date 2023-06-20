@@ -10,6 +10,8 @@ import { fetchBuilder, MemoryCache } from "node-fetch-cache";
 
 import * as ens from "../ens.mjs";
 import Header from "./components/header.mjs";
+import SecondHeader from "./components/secondheader.mjs";
+import Sidebar from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
 import Head from "./components/head.mjs";
 import * as store from "../store.mjs";
@@ -189,6 +191,7 @@ export default async function index(trie, theme, page) {
         ${Head}
       </head>
       <body>
+        ${Sidebar}
         <center>
           <table
             id="hnmain"
@@ -200,6 +203,9 @@ export default async function index(trie, theme, page) {
           >
             <tr>
               ${Header(theme)}
+            </tr>
+            <tr>
+              ${SecondHeader(theme, "top")}
             </tr>
             ${page === 0 && editorPicks.length > 0
               ? html` <tr style="background-color: #e6e6df;">

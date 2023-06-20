@@ -10,6 +10,7 @@ import { utils } from "ethers";
 
 import * as ens from "../ens.mjs";
 import Header from "./components/header.mjs";
+import Sidebar from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
 import Head from "./components/head.mjs";
 import * as store from "../store.mjs";
@@ -174,6 +175,7 @@ export default async function (trie, theme, address) {
         ${Head}
       </head>
       <body>
+        ${Sidebar}
         <center>
           <table
             id="hnmain"

@@ -10,6 +10,7 @@ import { plot } from "svg-line-chart";
 
 import Header from "./components/header.mjs";
 import Footer from "./components/footer.mjs";
+import Sidebar from "./components/sidebar.mjs";
 import Head from "./components/head.mjs";
 import * as store from "../store.mjs";
 import * as moderation from "./moderation.mjs";
@@ -135,6 +136,7 @@ export default async function (trie, theme) {
         ${Head}
       </head>
       <body>
+        ${Sidebar}
         <center>
           <table
             id="hnmain"

@@ -4,6 +4,7 @@ import vhtml from "vhtml";
 
 import Header from "./components/header.mjs";
 import Footer from "./components/footer.mjs";
+import Sidebar from "./components/sidebar.mjs";
 import Head from "./components/head.mjs";
 
 const html = htm.bind(vhtml);
@@ -17,6 +18,7 @@ export default function (theme) {
         ${Head}
       </head>
       <body>
+        ${Sidebar}
         <center>
           <table
             id="hnmain"
@@ -58,21 +60,26 @@ export default function (theme) {
                     haystack of unrelated posts.
                   </p>
                   <p>
-                    That's why we created Kiwi News - to help both creators and readers. 
+                    That's why we created Kiwi News - to help both creators and
+                    readers.
                   </p>
                   <p>
-                    For creators we provide a platform that levels the playing field and helps them to be
-                    heard. Even when their content is not
-                    shared by the most popular kids in the room.
-
-                    Kiwi readers on the other hand can now take a look at the community-curated
-                    links and uncover hidden gems in 5 minutes, instead of
-                    digging on different social media for hours.
+                    For creators we provide a platform that levels the playing
+                    field and helps them to be heard. Even when their content is
+                    not shared by the most popular kids in the room. Kiwi
+                    readers on the other hand can now take a look at the
+                    community-curated links and uncover hidden gems in 5
+                    minutes, instead of digging on different social media for
+                    hours.
                   </p>
                   <p>
                     If you want to join our cause,
                     <span> </span>
-                    <u><a style="color: black;" href="/welcome">mint a Kiwi NFT</a></u>
+                    <u
+                      ><a style="color: black;" href="/welcome"
+                        >mint a Kiwi NFT</a
+                      ></u
+                    >
                     <span> </span>
                     and submit and upvote links to co-create a rich,
                     intellectual space. Every action taken on Kiwi News is a
