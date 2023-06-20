@@ -220,6 +220,24 @@ export default function (theme) {
                       </div>
                     </div>
                   </section>
+                  <div class="text-container">
+                  <p style="font-size: 0.9rem;"><strong>FAQ:</strong></p>
+
+                  <p style="font-size: 0.9rem;"><strong>Who is picking these links?</strong></p>
+                  <p style="font-size: 0.9rem;">We are a community of 80+ crypto-savvy people who submit and upvote links to create a newsfeed we all want to use. You can learn more about the community <a href="https://news.kiwistand.com/community"><u>here</a></u>.</p>
+
+                  <p style="font-size: 0.9rem;"><strong>Why do build this?</strong></p>
+                  <p style="font-size: 0.9rem;">We want to create a space where crypto content can thrive. Where creators can reach new audiences and readers can find inspiring texts, podcasts and videos. You can read more about our vision <a href="https://news.kiwistand.com/why"><u>here</a></u>.</p>
+
+                  <p style="font-size: 0.9rem;"><strong>What is your current roadmap?</strong></p>
+                  <p style="font-size: 0.9rem;">We are working to make the web app experience more seamless. We also plan to ship the mobile app. You can read more about our plans here <a href="https://hackmd.io/egIZnDStR8-zUtQuTUrxyw"><u>here</a></u>.</p>
+
+                  <p style="font-size: 0.9rem;"><strong>Where can I share my feature requests?</strong></p>
+                  <p style="font-size: 0.9rem;">If you’re our NFT holder, you can reach out to @timdaub or @macbudkowski to get added to the holders-only Telegram Chat. If you don’t hold our NFT, you can always add your requests <a href="https://kiwinews.sleekplan.app/"><u>here</a></u>.</p>
+
+                  <p style="font-size: 0.9rem;"><strong>How do you determine the price of the NFT?</strong></p>
+                  <p style="font-size: 0.9rem;">We have a simple algorithm for price discovery. You can learn more about it <a href="https://hackmd.io/zmZsDW-XTsizJzChl1n3WA?view"><u>here</a></u>.</p>
+                  </div>
                 </div>
               </td>
             </tr>
