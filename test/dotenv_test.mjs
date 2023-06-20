@@ -42,7 +42,11 @@ test("that repo contains a .env-copy file with all possible configuration option
   const envContent = (await readFile(envPath)).toString();
   const envMatches = envContent.match(expr);
   const copyMatches = content.match(expr);
-  t.is(envMatches.length, copyMatches.length);
+  t.is(
+    envMatches.length,
+    copyMatches.length,
+    ".env-copy and .env aren't matching"
+  );
   t.is(
     copyMatches.length,
     allOptions.length,
