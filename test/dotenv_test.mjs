@@ -36,10 +36,6 @@ test("that repo contains a .env-copy file with all possible configuration option
     "THEME_COLOR",
     "THEME_EMOJI",
     "THEME_NAME",
-    "TODAYS_EDITOR_STORY_COUNT",
-    "TODAYS_EDITOR_ADDRESS",
-    "TODAYS_EDITOR_URL",
-    "TODAYS_EDITOR_NAME",
     "DEBUG",
   ];
   await access(envPath, constants.F_OK);
