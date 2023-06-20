@@ -1,7 +1,7 @@
 {
-  "name": "goblin",
+  "name": "kiwistand",
   "version": "0.0.1",
-  "description": "goblin is the p2p node client for goblin.exchange, a web3 writer friendly Hacker News that nobody controls but everybody co-owns",
+  "description": "kiwistand is the p2p node client for kiwinews.xyz, a web3 writer friendly Hacker News that nobody controls but everybody co-owns",
   "main": "./src/index.mjs",
   "scripts": {
     "build": "cd src/web && NODE_ENV=production npm run build",
@@ -19,26 +19,23 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/rugpullindex/rugpulld.git"
+    "url": "git+ssh://git@github.com/attestate/kiwistand.git"
   },
   "keywords": [
-    "rugpull",
-    "data",
-    "tokens",
-    "layer2",
-    "blockchain",
-    "ethereum",
-    "p2p"
+    "peer-to-peer",
+    "eip-712",
+    "data-storage",
+    "ethereum"
   ],
   "engines": {
-    "node": ">=16"
+    "node": ">=19"
   },
-  "author": "The Goblin Exchange Developers",
+  "author": "The Kiwi News Developers",
   "license": "GPL-3.0-only",
   "bugs": {
-    "url": "https://github.com/attestate/goblin/issues"
+    "url": "https://github.com/attestate/kiwistand/issues"
   },
-  "homepage": "https://github.com/attestate/goblin#readme",
+  "homepage": "https://github.com/attestate/kiwistand#readme",
   "dependencies": {
     "@attestate/crawler": "0.5.3",
     "@attestate/crawler-call-block-logs": "0.3.0",
