@@ -6,7 +6,7 @@ const html = htm.bind(vhtml);
 const secondheader = (theme, site) => html`
   <td>
     <div
-      style="display: flex; justify-content: space-between; align-items: center; padding: 10px 15px 10px 15px; color: white;"
+      style="min-height: 40px; display: flex; justify-content: space-between; align-items: center; padding: 10px 15px 10px 15px; color: white;"
     >
       <div>
         <a href="/">
@@ -28,12 +28,7 @@ const secondheader = (theme, site) => html`
           </button>
         </a>
       </div>
-      <div style="text-align: center; padding-right: 4px;">
-        <a href="/welcome" style="text-decoration: underline; color: black;">
-          Learn more <br />
-          about 🥝
-        </a>
-      </div>
+      <nav-learn-more />
     </div>
   </td>
 `;

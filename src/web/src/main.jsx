@@ -5,7 +5,7 @@ import { getAccount } from '@wagmi/core'
 import { WagmiConfig } from "wagmi";
 import { Avatar, ConnectKitProvider } from "connectkit";
 
-import {ConnectedProfile, ConnectedDisconnectButton, ConnectedConnectButton} from './Navigation.jsx'
+import {ConnectedProfile, ConnectedLearnMore, ConnectedDisconnectButton, ConnectedConnectButton} from './Navigation.jsx'
 import SubmitButton from './SubmitButton.jsx'
 import Vote from './Vote.jsx'
 import Bell from './Bell.jsx'
@@ -48,6 +48,12 @@ const profileLink = document.querySelector('nav-profile');
 ReactDOM.createRoot(profileLink).render(
   <React.StrictMode>
     <ConnectedProfile />
+  </React.StrictMode>,
+)
+const learnMore = document.querySelector('nav-learn-more');
+ReactDOM.createRoot(learnMore).render(
+  <React.StrictMode>
+    <ConnectedLearnMore />
   </React.StrictMode>,
 )
 const disconnect = document.querySelector('nav-disconnect');

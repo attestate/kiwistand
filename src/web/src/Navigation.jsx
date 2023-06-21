@@ -7,6 +7,24 @@ import Bell from './Bell.jsx'
 
 const shorten = address => address.slice(0,6)+"..."+address.slice(address.length-4, address.length);
 
+const LearnMore = () => {
+  const { isConnected } = useAccount();
+  const [display, setDisplay] = useState(false);
+  
+  useEffect(() => {
+    setDisplay(!isConnected);
+  }, [isConnected]);
+
+  return display ? (
+    <div style={{textAlign: "center", paddingRight: "4px"}}>
+      <a href="/welcome" style={{textDecoration: "underline", color: "black"}}>
+        Learn more <br />
+        about 🥝
+      </a>
+    </div>
+  ) : null;
+};
+
 const Profile = () => {
   const { address, isConnected } = useAccount();
   const [display, setDisplay] = useState(false);
@@ -200,4 +218,5 @@ const Connector = ({children}) => {
 export const ConnectedProfile = () => <Connector><Profile /></Connector>;
 export const ConnectedDisconnectButton = () => <Connector><DisconnectButton/></Connector>;
 export const ConnectedConnectButton = () => <Connector><ConnectButton /></Connector>;
+export const ConnectedLearnMore = () => <Connector><LearnMore/></Connector>;
 

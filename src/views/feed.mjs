@@ -314,67 +314,6 @@ export default async function index(trie, theme, page) {
                 </p>
               </td>
             </tr>
-            ${page === 0
-              ? html`
-                  <tr>
-                    <td>
-                      <table
-                        style="padding: 5px;"
-                        border="0"
-                        cellpadding="0"
-                        cellspacing="0"
-                      >
-                        <tr class="athing" id="35233479">
-                          <td align="right" valign="top" class="title">
-                            <span style="padding-right: 5px" class="rank"
-                              >*
-                            </span>
-                          </td>
-                          <td valign="top" class="votelinks">
-                            <center>
-                              <a id="up_35233479" class="clicky" href="#"> </a>
-                            </center>
-                          </td>
-                          <td class="title">
-                            <span style="font-weight: bold;" class="titleline">
-                              <a
-                                target="_blank"
-                                href="https://hackmd.io/a-r--DX2T5uEEKX0Z8PRlQ?view"
-                              >
-                                Submission Guidelines (please read before
-                                posting)
-                                <span> </span>
-                                <span
-                                  style="vertical-align:top; font-size: 0.8em; font-weight: bolder;"
-                                >
-                                  ${String.fromCharCode(0x2934, 0xfe0e)}
-                                </span>
-                              </a>
-                              <span style="padding-left: 5px">
-                                (hackmd.io)
-                              </span>
-                            </span>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td colspan="2"></td>
-                          <td class="subtext">
-                            <span class="subline">
-                              <span
-                                style="display: inline-block; height: auto;"
-                                class="score"
-                                id="score_35233479"
-                              >
-                              </span>
-                            </span>
-                          </td>
-                        </tr>
-                        <tr class="spacer" style="height:5px"></tr>
-                      </table>
-                    </td>
-                  </tr>
-                `
-              : ""}
             ${stories.map(
               (story, i) => html`
                 <tr>

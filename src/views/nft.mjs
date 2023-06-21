@@ -117,16 +117,16 @@ export default function (theme) {
                   </header>
                   <div class="text-container">
                       <p style="font-size: 0.9rem;">
-                        Kiwi News is the prime feed for engineers building a decentralized future.
+                        Kiwi News is the prime feed for hacker engineers building a decentralized future.
                       </p>
                       <p style="font-size: 0.9rem;">
-                        You don’t need to scroll Twitter anymore - all our content is handpicked and curated by the crypto-savvy <a href="https://news.kiwistand.com/community">Community</a>. 
+                        You don’t need to scroll Twitter anymore - all our content is handpicked and curated by the crypto-savvy <a href="/community">Community</a>. 
                       </p>
                       <p style="font-size: 0.9rem;">
-                        We all follow <u><a href="https://hackmd.io/a-r--DX2T5uEEKX0Z8PRlQ?view">Submission Guidelines</a></u> to protect the feed from mid and off-topic content.
+                        We all follow <u><a target="_blank" href="https://hackmd.io/a-r--DX2T5uEEKX0Z8PRlQ?view">Submission Guidelines</a></u> to protect the feed from mid and off-topic content.
                       </p>
                       <p style="font-size: 0.9rem;">
-                        We are also credibly neutral - Kiwi News is built on top of the <u><a href="https://github.com/attestate/kiwistand/">P2P network</a></u>.
+                        We are also credibly neutral - Kiwi News is built on top of the <u><a target="_blank" href="https://github.com/attestate/kiwistand/">P2P network</a></u>.
                       </p>
                   </div>
                   <section>
@@ -146,7 +146,9 @@ export default function (theme) {
                           <span> | </span>
                           <a
                             href="https://etherscan.io/address/0xebb15487787cbf8ae2ffe1a6cca5a50e63003786"
-                            style="color: ${theme.color}; text-decoration: none;"
+                            style="color: ${
+                              theme.color
+                            }; text-decoration: none;"
                             >View on Etherscan</a
                           >
                         </div>
@@ -177,26 +179,38 @@ export default function (theme) {
                           its creator team, including
                           <span> </span>
                           <a
+                            target="_blank"
                             href="https://warpcast.com/timdaub"
-                            style="color: ${theme.color}; text-decoration: none;"
+                            style="color: ${
+                              theme.color
+                            }; text-decoration: none;"
                             >@timdaub</a
                           >
                           <span>, </span>
                           <a
+                            target="_blank"
                             href="https://warpcast.com/macbudkowski"
-                            style="color: ${theme.color}; text-decoration: none;"
+                            style="color: ${
+                              theme.color
+                            }; text-decoration: none;"
                             >@macbudkowski</a
                           >
                           <span>, </span>
                           <a
+                            target="_blank"
                             href="https://warpcast.com/freeatnet"
-                            style="color: ${theme.color}; text-decoration: none;"
+                            style="color: ${
+                              theme.color
+                            }; text-decoration: none;"
                             >@freeatnet</a
                           >
                           <span>, </span>
                           <a
+                            target="_blank"
                             href="https://warpcast.com/chrsmaral"
-                            style="color: ${theme.color}; text-decoration: none;"
+                            style="color: ${
+                              theme.color
+                            }; text-decoration: none;"
                             >@chrsmaral</a
                           >
                           <span> and others!</span>
@@ -226,19 +240,19 @@ export default function (theme) {
                   <p style="font-size: 0.9rem;"><strong>FAQ:</strong></p>
 
                   <p style="font-size: 0.9rem;"><strong>Who is picking these links?</strong></p>
-                  <p style="font-size: 0.9rem;">We are a community of 80+ crypto-savvy people who submit and upvote links to create a newsfeed we all want to use. You can learn more about the community <a href="https://news.kiwistand.com/community"><u>here</a></u>.</p>
+                  <p style="font-size: 0.9rem;">We are a community of 80+ crypto-savvy people who submit and upvote links to create a newsfeed we all want to use. You can learn more about the community <a href="/community"><u>here</a></u>.</p>
 
                   <p style="font-size: 0.9rem;"><strong>Why do build this?</strong></p>
-                  <p style="font-size: 0.9rem;">We want to create a space where crypto content can thrive. Where creators can reach new audiences and readers can find inspiring texts, podcasts and videos. You can read more about our vision <a href="https://news.kiwistand.com/why"><u>here</a></u>.</p>
+                  <p style="font-size: 0.9rem;">We want to create a space where crypto content can thrive. Where creators can reach new audiences and readers can find inspiring texts, podcasts and videos. You can read more about our vision <a href="/why"><u>here</a></u>.</p>
 
                   <p style="font-size: 0.9rem;"><strong>What is your current roadmap?</strong></p>
-                  <p style="font-size: 0.9rem;">We are working to make the web app experience more seamless. We also plan to ship the mobile app. You can read more about our plans here <a href="https://hackmd.io/egIZnDStR8-zUtQuTUrxyw"><u>here</a></u>.</p>
+                  <p style="font-size: 0.9rem;">We are working to make the web app experience more seamless. We also plan to ship the mobile app. You can read more about our plans here <a target="_blank" href="https://hackmd.io/egIZnDStR8-zUtQuTUrxyw"><u>here</a></u>.</p>
 
                   <p style="font-size: 0.9rem;"><strong>Where can I share my feature requests?</strong></p>
-                  <p style="font-size: 0.9rem;">If you’re our NFT holder, you can reach out to @timdaub or @macbudkowski to get added to the holders-only Telegram Chat. If you don’t hold our NFT, you can always add your requests <a href="https://kiwinews.sleekplan.app/"><u>here</a></u>.</p>
+                  <p style="font-size: 0.9rem;">If you’re our NFT holder, you can reach out to @timdaub or @macbudkowski to get added to the holders-only Telegram Chat. If you don’t hold our NFT, you can always add your requests <a target="_blank" href="https://kiwinews.sleekplan.app/"><u>here</a></u>.</p>
 
                   <p style="font-size: 0.9rem;"><strong>How do you determine the price of the NFT?</strong></p>
-                  <p style="font-size: 0.9rem;">We have a simple algorithm for price discovery. You can learn more about it <a href="https://hackmd.io/zmZsDW-XTsizJzChl1n3WA?view"><u>here</a></u>.</p>
+                  <p style="font-size: 0.9rem;">We have a simple algorithm for price discovery. You can learn more about it <a target="_blanK" href="https://hackmd.io/zmZsDW-XTsizJzChl1n3WA?view"><u>here</a></u>.</p>
                   </div>
                 </div>
               </td>
