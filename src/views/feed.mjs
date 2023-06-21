@@ -289,9 +289,16 @@ export default async function index(trie, theme, page) {
                               ${formatDistanceToNow(
                                 new Date(story.timestamp * 1000)
                               )}
-                              <paid-share
-                                href="https://warpcast.com/~/compose?embeds[]=${story.href}"
-                              ></paid-share>
+                              <span> ago | </span>
+                              <a
+                                target="_blank"
+                                data-free="https://warpcast.com/~/compose?embeds[]=${story.href}&text=${encodeURIComponent(
+                                  `Found on Kiwi News: "${story.title}"`
+                                )}&embeds[]=https://news.kiwistand.com"
+                                data-premium="https://warpcast.com/~/compose?embeds[]=${story.href}"
+                              >
+                                Share
+                              </a>
                             </span>
                           </span>
                         </td>
@@ -376,10 +383,16 @@ export default async function index(trie, theme, page) {
                               ${formatDistanceToNow(
                                 new Date(story.timestamp * 1000)
                               )}
-                              <span> ago</span>
-                              <paid-share
-                                href="https://warpcast.com/~/compose?embeds[]=${story.href}"
-                              ></paid-share>
+                              <span> ago | </span>
+                              <a
+                                target="_blank"
+                                data-free="https://warpcast.com/~/compose?embeds[]=${story.href}&text=${encodeURIComponent(
+                                  `Found on Kiwi News: "${story.title}"`
+                                )}&embeds[]=https://news.kiwistand.com"
+                                data-premium="https://warpcast.com/~/compose?embeds[]=${story.href}"
+                              >
+                                Share
+                              </a>
                             </span>
                           </span>
                         </td>

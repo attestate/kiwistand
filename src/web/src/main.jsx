@@ -1,7 +1,7 @@
 import './polyfills';
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { getAccount } from '@wagmi/core'
+import { getAccount, watchAccount } from '@wagmi/core'
 import { WagmiConfig } from "wagmi";
 import { Avatar, ConnectKitProvider } from "connectkit";
 
@@ -10,10 +10,26 @@ import SubmitButton from './SubmitButton.jsx'
 import Vote from './Vote.jsx'
 import Bell from './Bell.jsx'
 import NFTPrice from './NFTPrice.jsx'
-import PaidFeature from './PaidFeature.jsx'
 import { showMessage } from "./message.mjs";
 import { fetchAllowList } from "./API.mjs";
 import client from "./client.mjs";
+
+
+async function updateLink(account) {
+  const allowList = await fetchAllowList();
+  const { address, isConnected } = account;
+
+  const links = document.querySelectorAll('[data-premium], [data-free]');
+  links.forEach((link) => {
+    const premiumLink = link.getAttribute('data-premium');
+    const freeLink = link.getAttribute('data-free');
+    const targetLink = (isConnected && allowList.includes(address)) ? premiumLink : freeLink;
+
+    link.setAttribute('href', targetLink);
+  });
+}
+
+const unwatch = watchAccount(updateLink);
 
 function handleClick(event) {
   const sidebar = document.querySelector('.sidebar');
@@ -51,11 +67,13 @@ ReactDOM.createRoot(profileLink).render(
   </React.StrictMode>,
 )
 const learnMore = document.querySelector('nav-learn-more');
-ReactDOM.createRoot(learnMore).render(
-  <React.StrictMode>
-    <ConnectedLearnMore />
-  </React.StrictMode>,
-)
+if (learnMore) {
+  ReactDOM.createRoot(learnMore).render(
+    <React.StrictMode>
+      <ConnectedLearnMore />
+    </React.StrictMode>,
+  )
+}
 const disconnect = document.querySelector('nav-disconnect');
 ReactDOM.createRoot(disconnect).render(
   <React.StrictMode>
@@ -79,47 +97,6 @@ if (submitButtonContainer) {
     </React.StrictMode>
   )
 }
-
-async function renderPaidFeature() {
-  const allowList = await fetchAllowList();
-
-  const shareButtons = document.querySelectorAll('paid-share');
-  if (shareButtons && shareButtons.length > 0) {
-    shareButtons.forEach(button => {
-      const href = button.getAttribute("href");
-      ReactDOM.createRoot(button).render(
-        <React.StrictMode>
-          <PaidFeature
-            allowList={allowList}
-            freeFeature={
-              <>
-                <span> | </span>
-                <a
-                  href="/welcome"
-                >
-                  Share
-                </a>
-              </>
-            }
-          >
-            <>
-              <span> | </span>
-              <a
-                target="_blank"
-                href={href}
-              >
-                Share
-              </a>
-            </>
-          </PaidFeature>
-        </React.StrictMode>,
-      )
-    });
-  }
-
-
-}
-renderPaidFeature();
 
 const voteArrows = document.querySelectorAll('.votearrowcontainer');
 if (voteArrows && voteArrows.length > 0) {
