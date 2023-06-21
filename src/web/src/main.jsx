@@ -33,29 +33,35 @@ const unwatch = watchAccount(updateLink);
 
 function handleClick(event) {
   const sidebar = document.querySelector('.sidebar');
+  const overlay = document.querySelector('#overlay');
   const isClickOutside = !sidebar.contains(event.target);
   const isSidebarOpen = sidebar.style.left === "0" || sidebar.style.left === "0px";
   const isSidebarToggle = event.target.closest(".sidebar-toggle") !== null;
+  const isClickOnOverlay = event.target === overlay;
 
-  if (isSidebarToggle || (isClickOutside && isSidebarOpen)) {
+  if (isSidebarToggle || (isClickOutside && isSidebarOpen) || isClickOnOverlay) {
     toggleSidebar();
   }
 }
 
 function toggleSidebar() {
   const sidebar = document.querySelector('.sidebar');
+  const overlay = document.querySelector('#overlay');
   const isSidebarOpen = sidebar.style.left === "0" || sidebar.style.left === "0px";
   var sidebarWidth;
 
   if (window.innerWidth >= 1200) {
-    sidebarWidth = isSidebarOpen ? '-15%' : '0';
+    sidebarWidth = isSidebarOpen ? '-25%' : '0';
   } else if (window.innerWidth >= 768 && window.innerWidth < 1200) {
-    sidebarWidth = isSidebarOpen ? '-20%' : '0';
+    sidebarWidth = isSidebarOpen ? '-30%' : '0';
   } else {
-    sidebarWidth = isSidebarOpen ? '-50%' : '0';
+    sidebarWidth = isSidebarOpen ? '-75%' : '0';
   }
 
-  document.querySelector('.sidebar').style.left = sidebarWidth;
+  sidebar.style.left = sidebarWidth;
+
+  // If the sidebar is open, show the overlay, else hide it
+  overlay.style.display = isSidebarOpen ? 'none' : 'block';
 }
 
 document.addEventListener("click", handleClick);

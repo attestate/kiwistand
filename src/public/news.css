@@ -220,29 +220,103 @@ and (max-width : 750px) {
 }
 .sidebar {
   height: 100%;
-  width: 50%; /* modified width for small screens */
   position: fixed;
-  z-index: 1;
+  z-index: 7;
   top: 0;
-  left: -50%;
+  width: 75%;
+  left: -75%;
   background-color: #e6e6df;
   overflow-x: hidden;
   transition: 0.5s;
+  padding-top: 35%;
   border-right: 1px solid black;
 }
 
 /* Media query for medium screens */
 @media (min-width: 768px) {
   .sidebar {
-    width: 20%; /* modified width for medium screens */
-    left: -20%;
+    width: 30%; /* modified width for medium screens */
+    left: -30%;
+    padding-top: 10%;
   }
 }
 
 /* Media query for larger screens */
 @media (min-width: 1200px) {
   .sidebar {
-    width: 15%; /* modified width for large screens */
-    left: -15%;
+    width: 25%; /* modified width for large screens */
+    left: -25%;
+    padding-top: 10%;
   }
 }
+
+.sidebar a {
+  margin: 1.25rem 10px 10px 10px;
+  font-size: 1.7rem;
+  font-weight: bold;
+}
+
+.svg-container {
+  width: 23%;
+}
+
+.sidebar .icon-svg {
+  padding: 0 20px 0 5px;
+}
+
+@media (min-width: 768px) {
+  .sidebar a {
+    font-size: 2em; /* Adjust to preferred size */
+  }
+
+  .sidebar .icon-svg {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .sidebar a {
+    font-size: 2em; /* Adjust to preferred size */
+  }
+
+  .sidebar .icon-svg {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+.sidebar-div {
+  color: black;
+  text-decoration: none;
+  display: block;
+  margin: 1.25rem 10px 10px 10px;
+  font-size: 1.7rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+@media (min-width: 768px) {
+  .sidebar-div {
+    font-size: 2em; /* Adjust to preferred size */
+  }
+}
+
+@media (min-width: 1200px) {
+  .sidebar-div {
+    font-size: 2em; /* Adjust to preferred size */
+  }
+}
+
+
+#overlay {
+  display: none; /* Initially hidden */
+  position: fixed; /* Full-screen positioning */
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black */
+  z-index: 6; /* Overlay should be on top of everything else */
+}
+

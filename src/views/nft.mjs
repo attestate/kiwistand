@@ -126,7 +126,7 @@ export default function (theme) {
                         We all follow <u><a target="_blank" href="https://hackmd.io/a-r--DX2T5uEEKX0Z8PRlQ?view">Submission Guidelines</a></u> to protect the feed from mid and off-topic content.
                       </p>
                       <p style="font-size: 0.9rem;">
-                        We are also credibly neutral - Kiwi News is built on top of the <u><a target="_blank" href="https://github.com/attestate/kiwistand/">P2P network</a></u>.
+                        We are also credibly neutral - Kiwi News is built on top of the <u><a target="_blank" href="https://github.com/attestate/kiwistand/">Kiwistand P2P network</a></u>.
                       </p>
                   </div>
                   <section>

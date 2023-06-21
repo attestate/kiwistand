@@ -25,34 +25,10 @@ const LearnMore = () => {
   ) : null;
 };
 
-const Profile = () => {
-  const { address, isConnected } = useAccount();
-  const [display, setDisplay] = useState(false);
-  
-  useEffect(() => {
-    if (address && isConnected) {
-      setDisplay(true);
-    } else {
-      setDisplay(false);
-    }
-  }, [address, isConnected]);
-
-  return display ? (
-    <a
-      href={"/upvotes?address=" + address}
-      style={{
-        color: "black", 
-        textDecoration: "none", 
-        display: "block", 
-        margin: "10px", 
-        fontWeight: "bold", 
-        fontSize: "16px"
-      }}
-    >
-      <div style={{display: "flex", alignItems: "center"}}>
-        <div style={{width: "24px", height: "24px", marginRight: "10px"}}>
-
+const ProfileSVG = () => (
   <svg
+    style={{paddingLeft: "8px", width: "1.5rem"}}
+    className="icon-svg"
     xmlns="http://www.w3.org/2000/svg"
     xmlns:xlink="http://www.w3.org/1999/xlink"
     viewBox="0 0 20 20"
@@ -82,12 +58,83 @@ const Profile = () => {
       </g>
     </g>
   </svg>
+);
+const Profile = () => {
+  const { address, isConnected } = useAccount();
+  const [display, setDisplay] = useState(false);
+  
+  useEffect(() => {
+    if (address && isConnected) {
+      setDisplay(true);
+    } else {
+      setDisplay(false);
+    }
+  }, [address, isConnected]);
+
+  return display ? (
+    <a 
+      href={"/upvotes?address=" + address} 
+      style={{color: "black", textDecoration: "none", display: "block"}}
+    >
+      <div style={{display: "flex", alignItems: "center"}}>
+        <div className="svg-container">
+          <ProfileSVG />
         </div>
         Profile
       </div>
     </a>
   ) : null;
 };
+
+const DisconnectSVG = () => (
+  <svg
+    style={{paddingTop: "5px", width: "1.8rem"}}
+    className="icon-svg"
+    xmlns="http://www.w3.org/2000/svg"
+    xmlns:xlink="http://www.w3.org/1999/xlink"
+    version="1.1"
+    id="_x32_"
+    viewBox="0 0 512 512"
+    xml:space="preserve"
+  >
+    <g>
+      <path
+        class="st0"
+        d="M210.287,176.988h-57.062c-36.544,0-67.206,24.836-76.238,58.53H0v40.973h76.987   c9.04,33.686,39.702,58.522,76.238,58.522h57.062v-38.588h43.025v-80.84h-43.025V176.988z"
+      />
+      <path
+        class="st0"
+        d="M435.005,235.517c-9.032-33.694-39.686-58.53-76.23-58.53h-57.062v158.024h57.062   c36.544,0,67.191-24.836,76.23-58.522H512v-40.973H435.005z"
+      />
+    </g>
+  </svg>
+);
+const DisconnectButton = () => {
+  return (
+    <ConnectKitButton.Custom>
+      {({ isConnected, show}) => {
+        if (isConnected) {
+          return (
+            <div 
+              onClick={show} 
+              className="sidebar-div"
+            >
+              <div style={{display: "flex", alignItems: "center"}}>
+                <div className="svg-container">
+                  <DisconnectSVG />
+                </div>
+                Disconnect
+              </div>
+            </div>
+          );
+        } else {
+          return null;
+        }
+      }}
+    </ConnectKitButton.Custom>
+  );
+};
+
 
 const ConnectButton = () => {
   const buttonStyle = {
@@ -149,58 +196,6 @@ const ConnectButton = () => {
           );
         }}
       }
-    </ConnectKitButton.Custom>
-  );
-};
-
-const DisconnectButton = () => {
-  return (
-    <ConnectKitButton.Custom>
-      {({ isConnected, show}) => {
-        if (isConnected) {
-          return (
-            <div
-              onClick={show}
-              style={{
-                color: "black", 
-                textDecoration: "none", 
-                display: "block", 
-                margin: "10px", 
-                fontWeight: "bold", 
-                fontSize: "16px",
-                cursor: "pointer"  // Add a pointer cursor
-              }}
-            >
-              <div style={{display: "flex", alignItems: "center"}}>
-                <div style={{width: "24px", height: "24px", marginRight: "10px"}}>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    xmlns:xlink="http://www.w3.org/1999/xlink"
-                    version="1.1"
-                    id="_x32_"
-                    viewBox="0 0 512 512"
-                    xml:space="preserve"
-                  >
-                    <g>
-                      <path
-                        class="st0"
-                        d="M210.287,176.988h-57.062c-36.544,0-67.206,24.836-76.238,58.53H0v40.973h76.987   c9.04,33.686,39.702,58.522,76.238,58.522h57.062v-38.588h43.025v-80.84h-43.025V176.988z"
-                      />
-                      <path
-                        class="st0"
-                        d="M435.005,235.517c-9.032-33.694-39.686-58.53-76.23-58.53h-57.062v158.024h57.062   c36.544,0,67.191-24.836,76.23-58.522H512v-40.973H435.005z"
-                      />
-                    </g>
-                  </svg>
-                </div>
-                Disconnect
-              </div>
-            </div>
-          );
-        } else {
-          return null;
-        }
-      }}
     </ConnectKitButton.Custom>
   );
 };

@@ -5,7 +5,7 @@ import vhtml from "vhtml";
 
 const html = htm.bind(vhtml);
 const footer = (theme) => html`
-  <div style="position: fixed; bottom: 20px; right: 20px; z-index: 1000;">
+  <div style="position: fixed; bottom: 20px; right: 20px; z-index: 5;">
     <a
       href="/submit"
       style="display: flex; align-items: center; justify-content: center; height: 50px; width: 50px; background-color: ${theme.color}; border-radius: 2px; box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);"
