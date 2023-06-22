@@ -23,7 +23,7 @@ function extractDomain(link) {
   return parsedUrl.hostname;
 }
 
-const classify = (messages) => {
+export const classify = (messages) => {
   const firstAmplify = {};
 
   return messages

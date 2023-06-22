@@ -16,7 +16,7 @@ import subscribe from "./views/subscribe.mjs";
 import guidelines from "./views/guidelines.mjs";
 import upvotes from "./views/upvotes.mjs";
 import community from "./views/community.mjs";
-import dau from "./views/dau.mjs";
+import stats from "./views/stats.mjs";
 import activity from "./views/activity.mjs";
 import about from "./views/about.mjs";
 import why from "./views/why.mjs";
@@ -67,6 +67,9 @@ export async function launch(trie, libp2p) {
   app.get("/feed", function (req, res) {
     res.redirect(301, "/");
   });
+  app.get("/dau", function (req, res) {
+    res.redirect(301, "/stats");
+  });
   app.get("/new", async (request, reply) => {
     const content = await newest(trie, reply.locals.theme);
     return reply.status(200).type("text/html").send(content);
@@ -75,8 +78,8 @@ export async function launch(trie, libp2p) {
     const content = await community(trie, reply.locals.theme);
     return reply.status(200).type("text/html").send(content);
   });
-  app.get("/dau", async (request, reply) => {
-    const content = await dau(trie, reply.locals.theme);
+  app.get("/stats", async (request, reply) => {
+    const content = await stats(trie, reply.locals.theme);
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/about", async (request, reply) => {
