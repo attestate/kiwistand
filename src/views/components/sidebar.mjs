@@ -182,7 +182,7 @@ const sidebar = html`
       style="border: none; border-top: 1px solid black; margin-top: 1.25rem"
     />
     <a
-      href="/about"
+      href="/welcome"
       style="font-weight: normal; color: black; text-decoration: none; display: block;"
     >
       <div style="display: flex; align-items: center;">
