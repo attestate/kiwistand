@@ -123,7 +123,7 @@ const DisconnectButton = () => {
                 <div className="svg-container">
                   <DisconnectSVG />
                 </div>
-                Disconnect
+                <div style={{fontWeight: "normal"}}>Disconnect</div>
               </div>
             </div>
           );
