@@ -8,7 +8,7 @@ import Head from "./components/head.mjs";
 
 const html = htm.bind(vhtml);
 
-export default function submit(theme) {
+export default function submit(theme, url = '', title = '') {
   return html`
     <html lang="en" op="news">
       <head>
@@ -43,7 +43,7 @@ export default function submit(theme) {
                       required
                       style="${inputStyle}"
                       wrap="soft"
-                    ></textarea>
+                    >${title}</textarea>
                   </div>
                   <div style="${labelInputContainerStyle}">
                     <label for="link" style="${labelStyle}">Link:</label><br />
@@ -55,6 +55,7 @@ export default function submit(theme) {
                       maxlength="2048"
                       required
                       style="${inputStyle}"
+                      value="${url}"
                     />
                   </div>
                   <div id="submit-button">
@@ -83,6 +84,7 @@ export default function submit(theme) {
     </html>
   `;
 }
+
 
 const formContainerStyle = `
   display: flex;
