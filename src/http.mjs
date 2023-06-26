@@ -129,10 +129,13 @@ export async function launch(trie, libp2p) {
     );
     return reply.status(200).type("text/html").send(content);
   });
-  app.get("/submit", async (request, reply) => {
-    return reply.status(200).type("text/html").send(submit(reply.locals.theme));
-  });
 
+  app.get("/submit", async (request, reply) => {
+    const { url, title } = request.query;
+    const content = await submit(reply.locals.theme, url, title);
+    return reply.status(200).type("text/html").send(content);
+  });
+  
   app.listen(env.HTTP_PORT, () =>
     log(`Launched HTTP server at port "${env.HTTP_PORT}"`)
   );
