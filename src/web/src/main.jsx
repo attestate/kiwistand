@@ -10,6 +10,7 @@ import SubmitButton from './SubmitButton.jsx'
 import Vote from './Vote.jsx'
 import Bell from './Bell.jsx'
 import NFTPrice from './NFTPrice.jsx'
+import OnboardingModal from './OnboardingModal.jsx'
 import { showMessage } from "./message.mjs";
 import { fetchAllowList } from "./API.mjs";
 import client from "./client.mjs";
@@ -86,6 +87,14 @@ ReactDOM.createRoot(disconnect).render(
     <ConnectedDisconnectButton />
   </React.StrictMode>,
 )
+const onboarding = document.querySelector('nav-onboarding-modal');
+if (onboarding) {
+  ReactDOM.createRoot(onboarding).render(
+    <React.StrictMode>
+      <OnboardingModal />
+    </React.StrictMode>,
+  )
+}
 
 const connectButton = document.querySelector('#connectButton');
 connectButton.style="";
