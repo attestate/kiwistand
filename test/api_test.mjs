@@ -114,10 +114,11 @@ test("handleMessage should send back an error upon invalid address signer", asyn
   const reply = {
     status: (code) => reply,
     json: (response) => {
+      console.log(response);
       t.is(response.status, "error");
       t.is(response.code, 400);
       t.is(response.message, "Bad Request");
-      t.true(response.details.includes("Dropping message"));
+      t.true(response.details.includes("You must mint"));
     },
   };
 
