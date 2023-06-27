@@ -16,6 +16,7 @@ export default function (theme) {
     <html lang="en" op="news">
       <head>
         ${Head}
+        <script src="https://unpkg.com/@zoralabs/zorb@^0.0/dist/zorb-web-component.umd.js"></script>
         <style>
           body {
             font-family: Arial, sans-serif;
@@ -50,8 +51,8 @@ export default function (theme) {
           .kiwi-nft {
             max-width: 100%;
             height: auto;
-            border: 4px solid ${theme.color};
-            border-radius: 5px;
+            border-radius: 3px;
+            box-shadow: 0 0 10px #f7b074, 0 0 20px #f7b074; /* Add inner glow effect */
           }
           .image-meta {
             font-size: 0.9rem;
@@ -71,10 +72,10 @@ export default function (theme) {
             padding-right: 10px;
           }
           .bullet-point strong {
-            color: ${theme.color};
+            color: #f7b074;
           }
           .buy-button {
-            background-color: ${theme.color};
+            background-color: black;
             border: none;
             color: white;
             padding: 10px 20px;
@@ -84,7 +85,10 @@ export default function (theme) {
             font-size: 0.9rem;
             cursor: pointer;
             border-radius: 3px;
+            box-shadow: 0 0 10px #f7b074, 0 0 20px #f7b074; /* Add inner glow effect */
+            font-family: 'Helvetica', 'Arial', sans-serif;
           }
+
           @media screen and (max-width: 768px) {
             .image-and-text {
               flex-direction: column;
@@ -146,9 +150,7 @@ export default function (theme) {
                           <span> | </span>
                           <a
                             href="https://etherscan.io/address/0xebb15487787cbf8ae2ffe1a6cca5a50e63003786"
-                            style="color: ${
-                              theme.color
-                            }; text-decoration: none;"
+                            style="color: #f7b074; text-decoration: none;"
                             >View on Etherscan</a
                           >
                         </div>
@@ -181,36 +183,28 @@ export default function (theme) {
                           <a
                             target="_blank"
                             href="https://warpcast.com/timdaub"
-                            style="color: ${
-                              theme.color
-                            }; text-decoration: none;"
+                            style="color: #f7b074; text-decoration: none;"
                             >@timdaub</a
                           >
                           <span>, </span>
                           <a
                             target="_blank"
                             href="https://warpcast.com/macbudkowski"
-                            style="color: ${
-                              theme.color
-                            }; text-decoration: none;"
+                            style="color: #f7b074; text-decoration: none;"
                             >@macbudkowski</a
                           >
                           <span>, </span>
                           <a
                             target="_blank"
                             href="https://warpcast.com/freeatnet"
-                            style="color: ${
-                              theme.color
-                            }; text-decoration: none;"
+                            style="color: #f7b074; text-decoration: none;"
                             >@freeatnet</a
                           >
                           <span>, </span>
                           <a
                             target="_blank"
                             href="https://warpcast.com/chrsmaral"
-                            style="color: ${
-                              theme.color
-                            }; text-decoration: none;"
+                            style="color: #f7b074; text-decoration: none;"
                             >@chrsmaral</a
                           >
                           <span> and others!</span>
@@ -220,11 +214,11 @@ export default function (theme) {
                           href="https://zora.co/collect/0xebb15487787cbf8ae2ffe1a6cca5a50e63003786"
                           target="_blank"
                         >
-                          <button class="buy-button">
-                            Buy Kiwi NFT for <nft-price /> ETH (on zora.co)
+                          <button class="buy-button" style="display: flex; align-items: center;">
+                            <zora-zorb style="margin-right: 15px;" size="20px" address="0xf7b2c2eb58a5f801119df7e9bf9f9b66c62bb011"></zora-zorb>
+                            <span> Buy on <b>ZORA</b> for <nft-price /> ETH</span>
                           </button>
                         </a>
-                        <br />
                         <br />
                         <span>alternatives: </span>
                         <a
