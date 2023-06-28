@@ -5,7 +5,7 @@ import url from "url";
 import htm from "htm";
 import vhtml from "vhtml";
 import normalizeUrl from "normalize-url";
-import { formatDistanceToNow, sub } from "date-fns";
+import { formatDistanceToNow, sub, add } from "date-fns";
 import { plot } from "svg-line-chart";
 
 import Header from "./components/header.mjs";
@@ -18,6 +18,63 @@ import * as id from "../id.mjs";
 import { classify } from "./upvotes.mjs";
 
 const html = htm.bind(vhtml);
+
+function calculateRetention(messages, days = 14) {
+  // We will group messages by address and order them by timestamp
+  const messagesByAddress = new Map();
+  for (const message of messages) {
+    if (!messagesByAddress.has(message.address)) {
+      messagesByAddress.set(message.address, []);
+    }
+    messagesByAddress.get(message.address).push(message);
+  }
+
+  for (const [address, userMessages] of messagesByAddress.entries()) {
+    userMessages.sort((a, b) => a.timestamp - b.timestamp);
+    messagesByAddress.set(address, userMessages);
+  }
+
+  // We calculate the retention array with default 0% retention for all days
+  const retention = new Array(days).fill(0);
+  let totalUsers = 0;
+
+  for (const [address, userMessages] of messagesByAddress.entries()) {
+    const firstDay = timestampToDate(userMessages[0].timestamp);
+
+    // We generate an array of the days the user posted a message
+    const userActivityDays = userMessages.map((msg) =>
+      timestampToDate(msg.timestamp)
+    );
+    userActivityDays.sort();
+
+    // For each day in the retention period
+    for (let i = 1; i <= days; i++) {
+      const targetDay = new Date(
+        new Date(firstDay).setDate(new Date(firstDay).getDate() + i)
+      );
+      targetDay.setHours(0, 0, 0, 0);
+
+      // We check if the user posted a message in that day or any following day
+      if (userActivityDays.some((day) => new Date(day) >= targetDay)) {
+        retention[i - 1] += 1;
+      }
+    }
+    totalUsers += 1;
+  }
+
+  const retentionRates = retention.map((val, i) => {
+    // Calculate the date for the current retention rate
+    const date = new Date();
+    date.setDate(date.getDate() - days + i);
+
+    return {
+      date,
+      rate: Math.floor((val / totalUsers) * 100),
+    };
+  });
+
+  return retentionRates;
+}
 
 function timestampToDate(ts) {
   const date = new Date(ts * 1000);
@@ -202,6 +259,7 @@ export default async function (trie, theme) {
   const behavior = calculateActions(actions);
   const mauData = calculateMAU(messagesWithAddresses);
   const wauData = calculateWAU(messagesWithAddresses);
+  const d21Data = calculateRetention(messagesWithAddresses, 21);
 
   const options = {
     props: {
@@ -291,10 +349,20 @@ export default async function (trie, theme) {
     options
   );
 
-  const upvotesChart = plot(html)(
-    { x: behavior.dates.map((date) => new Date(date)), y: behavior.upvotes },
-    options
-  );
+  const upvotesData = {
+    x: behavior.dates.map((date) => new Date(date)),
+    y: behavior.upvotes,
+  };
+  const upvotesChart = plot(html)(upvotesData, options);
+
+  const d21 = {
+    x: [
+      ...d21Data.map((data) => data.date),
+      add(d21Data[0].date, { days: 30 }),
+    ],
+    y: [...d21Data.map((data) => data.rate), 0],
+  };
+  const d21Chart = plot(html)(d21, options);
 
   return html`
     <html lang="en" op="news">
@@ -411,6 +479,25 @@ export default async function (trie, theme) {
                   - Any upvote to Kiwi News
                 </p>
                 ${upvotesChart}
+                <p>
+                  <b>21 day retention DEFINITION:</b>
+                  <br />
+                  - day 0: User upvotes or submits a link
+                  <br />
+                  - day 1-21: Percentage of users who come back after day zero
+                  to submit or upvote a link
+                  <br />
+                  - Don't be fooled by this chart, we're adding a dummy date
+                  with value zero as last value because our charting library is
+                  not perfect
+                  <br />
+                  <b>Note:</b> This is not a cohort-based analysis. It does not
+                  track the behavior of a group of users who joined or performed
+                  an action during a specific time period. Instead, it
+                  calculates the retention based on individual user activity
+                  over a 21-day period.
+                </p>
+                ${d21Chart}
               </td>
             </tr>
           </table>
