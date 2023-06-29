@@ -198,7 +198,7 @@ const sidebar = html`
     <a href="/" style="font-weight: normal; color: black; text-decoration: none; display: block;">
       <div style="display: flex; align-items: center;">
         <div class="svg-container">${home}</div>
-        Back
+        Home
       </div>
     </a>
   </div>
