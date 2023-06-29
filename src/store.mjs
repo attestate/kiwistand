@@ -241,7 +241,7 @@ export async function add(
       message
     )}".`;
     log(err);
-    throw new Error(err);
+    throw new Error("You must mint the Kiwi NFT to upvote and submit!");
   }
 
   const minTimestampSecs = parseInt(env.MIN_TIMESTAMP_SECS, 10);

@@ -15,7 +15,7 @@ const secondheader = (theme, site) => html`
               site === "top" ? theme.color : "#7f8c8d"
             }; color: ${site === "top" ? theme.color : "#7f8c8d"};`}
           >
-            Top
+            Hot
           </button>
         </a>
         <a href="/new">

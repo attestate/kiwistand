@@ -110,7 +110,7 @@ export default async function (trie, theme, address) {
 
   const config = await moderation.getLists();
   const cutoff = sub(new Date(), {
-    weeks: 1,
+    weeks: 2,
   });
   const cutoffUnixtime = Math.floor(cutoff.getTime() / 1000);
   const from = null;
