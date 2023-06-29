@@ -97,7 +97,7 @@ class SimpleModal extends React.Component {
       <div style={{ padding: '0 5vw' }}>
         <h2>gm!</h2>
         <p>
-          <i>Kiwi News is <b> the frontpage of web3!</b> Where we share and curate our top stories.</i>
+          <i>Kiwi News is <b> the frontpage of web3!</b> Here a community of crypto veterans shares and curates crypto-related stories from around the Internet.</i>
           <br />
           <br />
           Click any link in the feed to see what we find interesting!
