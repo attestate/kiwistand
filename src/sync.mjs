@@ -190,7 +190,16 @@ export async function initiate(
       .root()
       .toString("hex")}"`
   );
-  const remotes = await store.descend(trie, level, exclude);
+
+  let remotes;
+  try {
+    remotes = await store.descend(trie, level, exclude);
+  } catch (err) {
+    log(`Error in initiate function
+ ${err.toString()}`);
+    peerFab.set();
+    throw err;
+  }
 
   if (remotes.length === 0) {
     log(
@@ -201,12 +210,30 @@ export async function initiate(
     peerFab.set();
     return;
   }
-  const response = await innerSend(
-    peerId,
-    `/${levels.id}/${levels.version}`,
-    serialize(remotes)
-  );
-  if (!comparisonValidator(response)) {
+
+  let response;
+  try {
+    response = await innerSend(
+      peerId,
+      `/${levels.id}/${levels.version}`,
+      serialize(remotes)
+    );
+  } catch (err) {
+    log(`initiate: error in innerSend to levels ${err.toString()}`);
+    peerFab.set();
+    return;
+  }
+
+  let isValidResponse;
+  try {
+    isValidResponse = comparisonValidator(response);
+  } catch (err) {
+    log(`initiate: ajv response validator failed: ${err.toString()}`);
+    peerFab.set();
+    return;
+  }
+
+  if (!isValidResponse) {
     log(
       `Wrongly formatted comparison message: ${JSON.stringify(
         comparisonValidator.errors
@@ -216,9 +243,19 @@ export async function initiate(
     return;
   }
 
-  const missing = deserialize(response.missing).filter(
-    ({ node }) => node instanceof LeafNode
-  );
+  let missing;
+  try {
+    missing = deserialize(response.missing).filter(
+      ({ node }) => node instanceof LeafNode
+    );
+  } catch (err) {
+    log(
+      `initiate: error deserializing response to parse missing. ${err.toString()}`
+    );
+    peerFab.set();
+    return;
+  }
+
   if (missing.length > 0) {
     log("Sending missing leaves to peer node");
     try {
@@ -228,13 +265,21 @@ export async function initiate(
         serialize(missing)
       );
     } catch (err) {
-      log("Error sending leaves to peer");
+      log(`initiate: Error sending leaves to peer: ${err.toString}`);
       peerFab.set();
-      throw err;
+      return;
     }
   }
 
-  const matches = deserialize(response.match).map((node) => node.hash);
+  let matches;
+  try {
+    matches = deserialize(response.match).map((node) => node.hash);
+  } catch (err) {
+    log(`initiate: Error deserializing the leaves response: ${err.toString()}`);
+    peerFab.set();
+    return;
+  }
+
   return await initiate(trie, peerId, matches, level + 1, innerSend, peerFab);
 }
 
