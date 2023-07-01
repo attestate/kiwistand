@@ -16,6 +16,8 @@ export default function (theme) {
     <html lang="en" op="news">
       <head>
         ${Head}
+        <title>About Kiwi News: Your prime feed for decentralized future</title>
+        <meta name="description" content="Learn about Kiwi News, the prime feed for hacker engineers building a decentralized future. Our content is handpicked and curated by a crypto-savvy community. Join us by minting the Kiwi NFT.">
         <script src="https://unpkg.com/@zoralabs/zorb@^0.0/dist/zorb-web-component.umd.js"></script>
         <style>
           body {
