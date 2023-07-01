@@ -136,6 +136,9 @@ export function serialize(nodes) {
 }
 
 export function deserialize(nodes) {
+  if (!nodes || !nodes.length) {
+    throw new Error(`deserialize: Encountered value error: "${nodes}"`);
+  }
   for (let node of nodes) {
     node.key = Buffer.from(node.key, "hex");
     node.hash = Buffer.from(node.hash, "hex");
@@ -164,6 +167,7 @@ export async function initiate(
   innerSend,
   peerFab
 ) {
+  log(`initiate: level "${level}", exclude: "${JSON.stringify(exclude)}"`);
   const lastSyncPeer = peerFab.get();
   if (lastSyncPeer && lastSyncPeer.equals(peerId) && level === 0) {
     // NOTE: There can be cases where a sync takes long and some process might
@@ -195,8 +199,7 @@ export async function initiate(
   try {
     remotes = await store.descend(trie, level, exclude);
   } catch (err) {
-    log(`Error in initiate function
- ${err.toString()}`);
+    log(`Error in initiate function ${err.toString()}`);
     peerFab.set();
     throw err;
   }
@@ -245,9 +248,7 @@ export async function initiate(
 
   let missing;
   try {
-    missing = deserialize(response.missing).filter(
-      ({ node }) => node instanceof LeafNode
-    );
+    missing = deserialize(response.missing);
   } catch (err) {
     log(
       `initiate: error deserializing response to parse missing. ${err.toString()}`
@@ -256,6 +257,8 @@ export async function initiate(
     return;
   }
 
+  missing = missing.filter(({ node }) => node instanceof LeafNode);
+  log(`initiate: level "${level}", missing: "${JSON.stringify(missing)}"`);
   if (missing.length > 0) {
     log("Sending missing leaves to peer node");
     try {
@@ -273,18 +276,35 @@ export async function initiate(
 
   let matches;
   try {
-    matches = deserialize(response.match).map((node) => node.hash);
+    matches = deserialize(response.match);
   } catch (err) {
     log(`initiate: Error deserializing the leaves response: ${err.toString()}`);
     peerFab.set();
     return;
   }
 
-  return await initiate(trie, peerId, matches, level + 1, innerSend, peerFab);
+  matches = matches.map((node) => node.hash);
+  log(`initiate: level "${level}", matches: "${JSON.stringify(matches)}"`);
+  const allMatches = [...exclude, ...matches];
+  return await initiate(
+    trie,
+    peerId,
+    allMatches,
+    level + 1,
+    innerSend,
+    peerFab
+  );
 }
 
 export async function put(trie, message) {
-  const missing = deserialize(message);
+  let missing;
+  try {
+    missing = deserialize(message);
+  } catch (err) {
+    log(`put: error deserializing message: "${message}", ${err.toString()}`);
+    return;
+  }
+
   for await (let { node, key } of missing) {
     const value = decode(node.value());
     let obj;
@@ -315,10 +335,17 @@ export async function put(trie, message) {
 // TODO: It's very easy to confused this method with the one at store (it
 // happened to me). We must rename it.
 export async function compare(trie, message) {
-  const { missing, mismatch, match } = await store.compare(
-    trie,
-    deserialize(message)
-  );
+  let remotes;
+  try {
+    remotes = deserialize(message);
+  } catch (err) {
+    log(
+      `compare: error deserializing message: "${message}", ${err.toString()}`
+    );
+    return;
+  }
+
+  const { missing, mismatch, match } = await store.compare(trie, remotes);
   return {
     missing: serialize(missing),
     mismatch: serialize(mismatch),
