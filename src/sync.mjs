@@ -402,7 +402,6 @@ export function handleLevels(trie, peerFab) {
       );
       return;
     }
-    if (!trie.hasCheckpoints()) trie.checkpoint();
 
     let comparisons;
     try {
@@ -410,7 +409,6 @@ export function handleLevels(trie, peerFab) {
       comparisons = await compare(trie, message);
     } catch (err) {
       elog(err, "handleLevels: error in compare, aborting");
-      await trie.revert();
       peerFab.set();
       return;
     }
@@ -430,13 +428,7 @@ export function handleLeaves(trie, peerFab) {
       return;
     }
 
-    if (!trie.hasCheckpoints()) {
-      const message = `handleLeaves: trie isn't in checkpoint mode and hence must not accept new messages`;
-      await trie.revert();
-      peerFab.set();
-      throw new Error(message);
-    }
-
+    if (!trie.hasCheckpoints()) trie.checkpoint();
     log("handleLeaves: Received leaves and storing them in db");
     try {
       await put(trie, message);
