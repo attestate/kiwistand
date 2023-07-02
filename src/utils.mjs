@@ -9,3 +9,10 @@ function dirname() {
 export function appdir() {
   return path.resolve(dirname(), "../");
 }
+
+export function elog(err, msg) {
+  if (msg) {
+    console.error(`Message: ${msg}`);
+  }
+  console.error(`Stack Trace: ${err.stack}`);
+}

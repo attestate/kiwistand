@@ -216,6 +216,12 @@ export async function descend(trie, level, exclude = []) {
   return nodes;
 }
 
+// TODO: The current synchronization algorithm makes use of checkpoints,
+// commits and reverts, but this function is used in sync.put and store.add,
+// but it isn't checkpointing or reverting, it just writes directly - even upon
+// soft writes into the trie. This is an issue as we e.g. could do a sync where
+// most writes are soft-written, the sync fails, but the actual constraints are
+// then written to the database.
 export async function passes(db, message, address) {
   // TODO: We should/must consider adding normalizeUrl here as otherwise a user
   // might be able to sneakily upvote twice by manipulating the URLs in such

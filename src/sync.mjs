@@ -14,6 +14,7 @@ import * as store from "./store.mjs";
 import * as roots from "./topics/roots.mjs";
 import * as registry from "./chainstate/registry.mjs";
 import { SCHEMATA, PROTOCOL } from "./constants.mjs";
+import { elog } from "./utils.mjs";
 
 const { levels, leaves } = PROTOCOL.protocols;
 const ajv = new Ajv();
@@ -160,7 +161,7 @@ export function send(libp2p) {
 }
 
 export async function initiate(
-  trie, // must be checkpointed
+  trie, // is ideally an immutable copy of the system's trie.
   peerId,
   exclude = [],
   level = 0,
@@ -199,9 +200,9 @@ export async function initiate(
   try {
     remotes = await store.descend(trie, level, exclude);
   } catch (err) {
-    log(`Error in initiate function ${err.toString()}`);
+    elog(err, "initiate: failed descending and aborting.");
     peerFab.set();
-    throw err;
+    return;
   }
 
   if (remotes.length === 0) {
@@ -222,7 +223,7 @@ export async function initiate(
       serialize(remotes)
     );
   } catch (err) {
-    log(`initiate: error in innerSend to levels ${err.toString()}`);
+    elog(err, "initiate: error when sending levels");
     peerFab.set();
     return;
   }
@@ -231,7 +232,10 @@ export async function initiate(
   try {
     isValidResponse = comparisonValidator(response);
   } catch (err) {
-    log(`initiate: ajv response validator failed: ${err.toString()}`);
+    elog(
+      err,
+      "initiate: response of received levels comparison was schema-invalid"
+    );
     peerFab.set();
     return;
   }
@@ -250,25 +254,24 @@ export async function initiate(
   try {
     missing = deserialize(response.missing);
   } catch (err) {
-    log(
-      `initiate: error deserializing response to parse missing. ${err.toString()}`
-    );
+    elog(err, "initiate: deserializing response to parse 'missing' failed");
     peerFab.set();
     return;
   }
-
   missing = missing.filter(({ node }) => node instanceof LeafNode);
+
   log(`initiate: level "${level}", missing: "${JSON.stringify(missing)}"`);
   if (missing.length > 0) {
-    log("Sending missing leaves to peer node");
+    log(`Sending "${missing.length}" missing leaves to peer node`);
     try {
       await innerSend(
         peerId,
         `/${leaves.id}/${leaves.version}`,
+        // TODO: This might go wrong and we might wanna try catch it separately.
         serialize(missing)
       );
     } catch (err) {
-      log(`initiate: Error sending leaves to peer: ${err.toString}`);
+      elog(err, "initiate: Failed while sending leaves");
       peerFab.set();
       return;
     }
@@ -278,14 +281,14 @@ export async function initiate(
   try {
     matches = deserialize(response.match);
   } catch (err) {
-    log(`initiate: Error deserializing the leaves response: ${err.toString()}`);
+    elog(err, "initiate: deserializing 'matches' failed");
     peerFab.set();
     return;
   }
-
   matches = matches.map((node) => node.hash);
   log(`initiate: level "${level}", matches: "${JSON.stringify(matches)}"`);
   const allMatches = [...exclude, ...matches];
+
   return await initiate(
     trie,
     peerId,
