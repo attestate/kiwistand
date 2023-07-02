@@ -305,19 +305,25 @@ export async function put(trie, message) {
     missing = deserialize(message);
   } catch (err) {
     log(`put: error deserializing message: "${message}", ${err.toString()}`);
-    return;
+    throw err;
   }
 
   for await (let { node, key } of missing) {
-    const value = decode(node.value());
+    let value;
+    try {
+      value = decode(node.value());
+    } catch (err) {
+      elog(err, `put: can't decode node value "${node.value()}"`);
+      break;
+      throw err;
+    }
+
     let obj;
     try {
       obj = JSON.parse(value);
     } catch (err) {
-      log(
-        `put: Couldn't JSON-parse message "${value}" to in trie: ${err.toString()}`
-      );
-      return;
+      elog(err, `put: Can't JSON-parse value "${value}"`);
+      throw err;
     }
 
     const libp2p = null;
@@ -327,9 +333,10 @@ export async function put(trie, message) {
       await store.add(trie, obj, libp2p, allowlist, true);
       log(`Adding to database value (as JSON) "${value}"`);
     } catch (err) {
-      log(
-        `put: Didn't add message to database because of error: "${err.toString()}"`
-      );
+      // NOTE: We're not bubbling the error up here because we want to be
+      // tolerant as to the errors that store.add sends (e.g. duplicate errors
+      // may be tolerable in the consensus).
+      elog(err, "put: Didn't add message to database");
     }
   }
 }
@@ -345,7 +352,7 @@ export async function compare(trie, message) {
     log(
       `compare: error deserializing message: "${message}", ${err.toString()}`
     );
-    return;
+    throw err;
   }
 
   const { missing, mismatch, match } = await store.compare(trie, remotes);
@@ -356,26 +363,40 @@ export async function compare(trie, message) {
   };
 }
 
-export function receive(peerFab, handler) {
+export function receive(peerFab, trie, expectResponse, handler) {
   return async ({ connection, stream }) => {
     const [message] = await fromWire(stream.source);
-    //log(`receiving message: "${JSON.stringify(message)}"`);
-    const response = await handler(message, connection.remotePeer);
 
-    if (!response) {
+    let response;
+    try {
+      response = await handler(message, connection.remotePeer);
+    } catch (err) {
+      elog(
+        err,
+        `receive: unexpected error in handler with message "${JSON.stringify(
+          message
+        )}"`
+      );
+      peerFab.set();
+      await trie.revert();
+      return stream.close();
+    }
+
+    if (expectResponse && !response) {
       log(
         "Failed to handle response from remote. Can't generate answer, closing stream."
       );
       peerFab.set();
+      await trie.revert();
       return stream.close();
     }
-    //log(`sending response: "${JSON.stringify(response)}"`);
     await toWire(response, stream.sink);
   };
 }
 
 export function handleLevels(trie, peerFab) {
-  return receive(peerFab, async (message, peer) => {
+  const expectResponse = true;
+  return receive(peerFab, trie, expectResponse, async (message, peer) => {
     const { result, syncPeer, newPeer } = peerFab.isValid(peer);
     if (!result) {
       log(
@@ -383,14 +404,26 @@ export function handleLevels(trie, peerFab) {
       );
       return;
     }
+    if (!trie.hasCheckpoints()) trie.checkpoint();
 
-    log("Received levels and comparing them");
-    return await compare(trie, message);
+    let comparisons;
+    try {
+      log("Received levels and comparing them");
+      comparisons = await compare(trie, message);
+    } catch (err) {
+      elog(err, "handleLevels: error in compare, aborting");
+      await trie.revert();
+      peerFab.set();
+      return;
+    }
+
+    return comparisons;
   });
 }
 
 export function handleLeaves(trie, peerFab) {
-  return receive(peerFab, async (message, peer) => {
+  const expectResponse = false;
+  return receive(peerFab, trie, expectResponse, async (message, peer) => {
     const { result, syncPeer, newPeer } = peerFab.isValid(peer);
     if (!result) {
       log(
@@ -399,9 +432,33 @@ export function handleLeaves(trie, peerFab) {
       return;
     }
 
-    log("Received leaves and storing them in db");
-    trie.checkpoint();
-    await put(trie, message);
+    if (!trie.hasCheckpoints()) {
+      const message = `handleLeaves: trie isn't in checkpoint mode and hence must not accept new messages`;
+      await trie.revert();
+      peerFab.set();
+      throw new Error(message);
+    }
+
+    log("handleLeaves: Received leaves and storing them in db");
+    try {
+      await put(trie, message);
+    } catch (err) {
+      elog(err, "handleLeaves: Unexpected error");
+      await trie.revert();
+      peerFab.set();
+      throw err;
+    }
+
+    // NOTE: While there could be a strategy where we continuously stay in a
+    // checkpoint the entire time when the synchronization is going one, this
+    // seems detrimental to the mechanism, in that it introduces a high-stakes
+    // operation towards the very end where after many minutes of back and
+    // forth all data is being committed into the trie. So right now it seems
+    // more robust if we hence open a checkpoint the first time new levels are
+    // sent, and we close it by the time leaves are being received. While this
+    // means that practically for every newly received leaf, the
+    // synchronization starts over again, it sequentializes downloading the
+    // leaves into many sub tasks which are more likely to succeed.
     await trie.commit();
     peerFab.set();
   });
