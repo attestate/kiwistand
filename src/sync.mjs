@@ -168,7 +168,6 @@ export async function initiate(
   innerSend,
   peerFab
 ) {
-  log(`initiate: level "${level}", exclude: "${JSON.stringify(exclude)}"`);
   const lastSyncPeer = peerFab.get();
   if (lastSyncPeer && lastSyncPeer.equals(peerId) && level === 0) {
     // NOTE: There can be cases where a sync takes long and some process might
@@ -260,7 +259,6 @@ export async function initiate(
   }
   missing = missing.filter(({ node }) => node instanceof LeafNode);
 
-  log(`initiate: level "${level}", missing: "${JSON.stringify(missing)}"`);
   if (missing.length > 0) {
     log(`Sending "${missing.length}" missing leaves to peer node`);
     try {
