@@ -137,8 +137,8 @@ export function serialize(nodes) {
 }
 
 export function deserialize(nodes) {
-  if (!nodes || !nodes.length) {
-    throw new Error(`deserialize: Encountered value error: "${nodes}"`);
+  if (!nodes && !Array.isArray(nodes)) {
+    throw new Error(`deserialize: Didn't encounter array of nodes "${nodes}"`);
   }
   for (let node of nodes) {
     node.key = Buffer.from(node.key, "hex");
@@ -277,18 +277,18 @@ export async function initiate(
     }
   }
 
-  let matches;
-  try {
-    matches = deserialize(response.match);
-  } catch (err) {
-    elog(err, "initiate: deserializing 'matches' failed");
-    peerFab.set();
-    return;
+  let allMatches = [...exclude];
+  if (response.match && response.match.length !== 0) {
+    let matches;
+    try {
+      matches = deserialize(response.match);
+    } catch (err) {
+      elog(err, "initiate: deserializing 'matches' failed");
+      peerFab.set();
+      return;
+    }
+    allMatches = [...allMatches, ...matches.map(({ hash }) => hash)];
   }
-  matches = matches.map((node) => node.hash);
-  log(`initiate: level "${level}", matches: "${JSON.stringify(matches)}"`);
-  const allMatches = [...exclude, ...matches];
-
   return await initiate(
     trie,
     peerId,

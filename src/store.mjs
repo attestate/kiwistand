@@ -19,6 +19,7 @@ import { open } from "lmdb";
 import log from "./logger.mjs";
 import LMDB from "./lmdb.mjs";
 import { verify, toDigest } from "./id.mjs";
+import { elog } from "./utils.mjs";
 import * as messages from "./topics/messages.mjs";
 
 export async function create(options) {
@@ -177,11 +178,13 @@ export async function descend(trie, level, exclude = []) {
   const levelCopy = level;
   let nodes = [];
   const onFound = (nodeRef, node, key, walkController) => {
-    // NOTE: The idea of the "exclue" array is that it contains nodes that have
-    // matched on the remote trie, and so we don't have to send them along in a
-    // future comparison. Hence, if we have a match, we simply return.
     const nodeHash = hash(node);
+    // TODO: Would be better if this was a set where all the hashes are included
+    // e.g. as strings? It seems very slow to look up something using find.
     const match = exclude.find((markedNode) => isEqual(markedNode, nodeHash));
+    // NOTE: The idea of the "exclude" array is that it contains nodes that
+    // have matched on the remote trie, and so we don't have to send them along
+    // in a future comparison. Hence, if we have a match, we simply return.
     if (match) return;
 
     if (level === 0) {
@@ -207,7 +210,7 @@ export async function descend(trie, level, exclude = []) {
     await trie.walkTrie(trie.root(), onFound);
   } catch (err) {
     if (err.toString().includes("Missing node in DB")) {
-      log("descend: Didn't find any nodes");
+      elog(err, "descend: Didn't find any nodes");
       return nodes;
     } else {
       throw err;
