@@ -235,6 +235,27 @@ test("descend on level 1 with an empty trie", async (t) => {
   await rm("dbtestA", { recursive: true });
 });
 
+test("store.descend function should correctly handle high branching factor", async (t) => {
+  env.DATA_DIR = "dbtestA";
+  const trieA = await store.create();
+
+  // Manually create a trie with a high branching factor
+  await trieA.put(Buffer.from("0100", "hex"), Buffer.from("A", "utf8"));
+  await trieA.put(Buffer.from("0101", "hex"), Buffer.from("B", "utf8"));
+  await trieA.put(Buffer.from("0102", "hex"), Buffer.from("C", "utf8"));
+  await trieA.put(Buffer.from("0103", "hex"), Buffer.from("D", "utf8"));
+  await trieA.put(Buffer.from("0104", "hex"), Buffer.from("E", "utf8"));
+  await trieA.put(Buffer.from("0200", "hex"), Buffer.from("F", "utf8"));
+
+  const level = 4;
+  const nodes = await store.descend(trieA, level);
+
+  // Check that all nodes are included in the result
+  t.is(nodes.length, 5);
+
+  await rm("dbtestA", { recursive: true });
+});
+
 test("hashing on all nodes", async (t) => {
   env.DATA_DIR = "dbtestA";
   const trieA = await store.create();

@@ -5,7 +5,6 @@ import { resolve } from "path";
 import normalizeUrl from "normalize-url";
 import {
   Trie,
-  WalkController,
   BranchNode,
   ExtensionNode,
   LeafNode,
@@ -21,6 +20,7 @@ import LMDB from "./lmdb.mjs";
 import { verify, toDigest } from "./id.mjs";
 import { elog } from "./utils.mjs";
 import * as messages from "./topics/messages.mjs";
+import { newWalk } from "./WalkController.mjs";
 
 export async function create(options) {
   return await Trie.create({
@@ -175,9 +175,8 @@ export async function descend(trie, level, exclude = []) {
     ];
   }
 
-  const levelCopy = level;
   let nodes = [];
-  const onFound = (nodeRef, node, key, walkController) => {
+  const onFound = (_, node, key, walkController, currentLevel) => {
     const nodeHash = hash(node);
     // TODO: Would be better if this was a set where all the hashes are included
     // e.g. as strings? It seems very slow to look up something using find.
@@ -187,8 +186,8 @@ export async function descend(trie, level, exclude = []) {
     // in a future comparison. Hence, if we have a match, we simply return.
     if (match) return;
 
-    if (level === 0) {
-      if (levelCopy !== 0 && node instanceof LeafNode) {
+    if (currentLevel === 0) {
+      if (level !== 0 && node instanceof LeafNode) {
         const fragments = [key, node.key()].map(nibblesToBuffer);
         key = Buffer.concat(fragments);
       } else {
@@ -196,18 +195,18 @@ export async function descend(trie, level, exclude = []) {
       }
 
       nodes.push({
-        level: levelCopy,
+        level,
         key,
         hash: nodeHash,
         node,
       });
     } else if (node instanceof BranchNode || node instanceof ExtensionNode) {
-      level -= 1;
-      walkController.allChildren(node, key);
+      currentLevel -= 1;
+      walkController.allChildren(node, key, currentLevel);
     }
   };
   try {
-    await trie.walkTrie(trie.root(), onFound);
+    await newWalk(onFound, trie, trie.root(), level);
   } catch (err) {
     if (err.toString().includes("Missing node in DB")) {
       elog(err, "descend: Didn't find any nodes");
@@ -300,7 +299,7 @@ export async function add(
 export async function leaves(trie, from, amount, parser, startDatetime) {
   let pointer = 0;
   const nodes = [];
-  const onFound = (nodeRef, node, key, walkController) => {
+  const onFound = (_, node, key, walkController) => {
     if (Number.isInteger(amount) && nodes.length >= amount) return;
 
     if (node instanceof LeafNode) {
