@@ -189,6 +189,10 @@ export default async function index(trie, theme, page) {
     <html lang="en" op="news">
       <head>
         ${Head}
+        <meta
+          name="description"
+          content="Kiwi News is the prime feed for hacker engineers building a decentralized future. All our content is handpicked and curated by crypto veterans."
+        />
       </head>
       <body>
         ${Sidebar}
