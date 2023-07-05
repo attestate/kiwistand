@@ -82,8 +82,10 @@ export async function subscribe(
   node.goblin.initiate = async (peerId) => {
     const level = 0;
     const exclude = [];
+    const includeCheckpoints = false;
+    const trieCopy = trie.copy(includeCheckpoints);
     return await sync.initiate(
-      trie,
+      trieCopy,
       peerId,
       exclude,
       level,

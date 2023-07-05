@@ -14,6 +14,7 @@ import * as store from "./store.mjs";
 import * as roots from "./topics/roots.mjs";
 import * as registry from "./chainstate/registry.mjs";
 import { SCHEMATA, PROTOCOL } from "./constants.mjs";
+import { elog } from "./utils.mjs";
 
 const { levels, leaves } = PROTOCOL.protocols;
 const ajv = new Ajv();
@@ -136,6 +137,9 @@ export function serialize(nodes) {
 }
 
 export function deserialize(nodes) {
+  if (!nodes && !Array.isArray(nodes)) {
+    throw new Error(`deserialize: Didn't encounter array of nodes "${nodes}"`);
+  }
   for (let node of nodes) {
     node.key = Buffer.from(node.key, "hex");
     node.hash = Buffer.from(node.hash, "hex");
@@ -157,7 +161,7 @@ export function send(libp2p) {
 }
 
 export async function initiate(
-  trie, // must be checkpointed
+  trie, // is ideally an immutable copy of the system's trie.
   peerId,
   exclude = [],
   level = 0,
@@ -195,18 +199,7 @@ export async function initiate(
   try {
     remotes = await store.descend(trie, level, exclude);
   } catch (err) {
-    log(`Error in initiate function
- ${err.toString()}`);
-    peerFab.set();
-    throw err;
-  }
-
-  if (remotes.length === 0) {
-    log(
-      `Ending initiate on level: "${level}" with root: "${trie
-        .root()
-        .toString("hex")}"`
-    );
+    elog(err, "initiate: failed descending and aborting.");
     peerFab.set();
     return;
   }
@@ -219,7 +212,17 @@ export async function initiate(
       serialize(remotes)
     );
   } catch (err) {
-    log(`initiate: error in innerSend to levels ${err.toString()}`);
+    elog(err, "initiate: error when sending levels");
+    peerFab.set();
+    return;
+  }
+
+  if (remotes.length === 0) {
+    log(
+      `Ending initiate on level: "${level}" with root: "${trie
+        .root()
+        .toString("hex")}"`
+    );
     peerFab.set();
     return;
   }
@@ -228,7 +231,10 @@ export async function initiate(
   try {
     isValidResponse = comparisonValidator(response);
   } catch (err) {
-    log(`initiate: ajv response validator failed: ${err.toString()}`);
+    elog(
+      err,
+      "initiate: response of received levels comparison was schema-invalid"
+    );
     peerFab.set();
     return;
   }
@@ -245,68 +251,91 @@ export async function initiate(
 
   let missing;
   try {
-    missing = deserialize(response.missing).filter(
-      ({ node }) => node instanceof LeafNode
-    );
+    missing = deserialize(response.missing);
   } catch (err) {
-    log(
-      `initiate: error deserializing response to parse missing. ${err.toString()}`
-    );
+    elog(err, "initiate: deserializing response to parse 'missing' failed");
     peerFab.set();
     return;
   }
+  missing = missing.filter(({ node }) => node instanceof LeafNode);
 
   if (missing.length > 0) {
-    log("Sending missing leaves to peer node");
+    log(`Sending "${missing.length}" missing leaves to peer node`);
     try {
       await innerSend(
         peerId,
         `/${leaves.id}/${leaves.version}`,
+        // TODO: This might go wrong and we might wanna try catch it separately.
         serialize(missing)
       );
     } catch (err) {
-      log(`initiate: Error sending leaves to peer: ${err.toString}`);
+      elog(err, "initiate: Failed while sending leaves");
       peerFab.set();
       return;
     }
   }
 
-  let matches;
-  try {
-    matches = deserialize(response.match).map((node) => node.hash);
-  } catch (err) {
-    log(`initiate: Error deserializing the leaves response: ${err.toString()}`);
-    peerFab.set();
-    return;
+  let allMatches = [...exclude];
+  if (response.match && response.match.length !== 0) {
+    let matches;
+    try {
+      matches = deserialize(response.match);
+    } catch (err) {
+      elog(err, "initiate: deserializing 'matches' failed");
+      peerFab.set();
+      return;
+    }
+    allMatches = [...allMatches, ...matches.map(({ hash }) => hash)];
   }
-
-  return await initiate(trie, peerId, matches, level + 1, innerSend, peerFab);
+  return await initiate(
+    trie,
+    peerId,
+    allMatches,
+    level + 1,
+    innerSend,
+    peerFab
+  );
 }
 
-export async function put(trie, message) {
-  const missing = deserialize(message);
+export async function put(trie, message, metadb, allowlist) {
+  let missing;
+  try {
+    missing = deserialize(message);
+  } catch (err) {
+    // TODO: There should be a timeout when levels are sent, that if there's no
+    // follow up, then the peerFab is reset. Actually, it'd be great if the pee
+    log(`put: error deserializing message: "${message}", ${err.toString()}`);
+    throw err;
+  }
+
   for await (let { node, key } of missing) {
-    const value = decode(node.value());
+    let value;
+    try {
+      value = decode(node.value());
+    } catch (err) {
+      elog(err, `put: can't decode node value "${node.value()}"`);
+      break;
+      throw err;
+    }
+
     let obj;
     try {
       obj = JSON.parse(value);
     } catch (err) {
-      log(
-        `put: Couldn't JSON-parse message "${value}" to in trie: ${err.toString()}`
-      );
-      return;
+      elog(err, `put: Can't JSON-parse value "${value}"`);
+      throw err;
     }
 
     const libp2p = null;
-    const allowlist = await registry.allowlist();
     const synching = true;
     try {
-      await store.add(trie, obj, libp2p, allowlist, true);
-      log(`Adding to database value (as JSON) "${value}"`);
+      await store.add(trie, obj, libp2p, allowlist, true, metadb);
+      log(`Adding to database value (as JSON)`);
     } catch (err) {
-      log(
-        `put: Didn't add message to database because of error: "${err.toString()}"`
-      );
+      // NOTE: We're not bubbling the error up here because we want to be
+      // tolerant as to the errors that store.add sends (e.g. duplicate errors
+      // may be tolerable in the consensus).
+      elog(err, "put: Didn't add message to database");
     }
   }
 }
@@ -315,10 +344,22 @@ export async function put(trie, message) {
 // TODO: It's very easy to confused this method with the one at store (it
 // happened to me). We must rename it.
 export async function compare(trie, message) {
-  const { missing, mismatch, match } = await store.compare(
-    trie,
-    deserialize(message)
-  );
+  let remotes;
+  try {
+    remotes = deserialize(message);
+  } catch (err) {
+    log(
+      `compare: error deserializing message: "${message}", ${err.toString()}`
+    );
+    throw err;
+  }
+
+  if (remotes && Array.isArray(remotes) && remotes.length === 0) {
+    // NOTE: This may happen when there is nothing to compare anymore.
+    throw new Error("Received empty list of levels.");
+  }
+
+  const { missing, mismatch, match } = await store.compare(trie, remotes);
   return {
     missing: serialize(missing),
     mismatch: serialize(mismatch),
@@ -326,26 +367,10 @@ export async function compare(trie, message) {
   };
 }
 
-export function receive(peerFab, handler) {
-  return async ({ connection, stream }) => {
-    const [message] = await fromWire(stream.source);
-    //log(`receiving message: "${JSON.stringify(message)}"`);
-    const response = await handler(message, connection.remotePeer);
-
-    if (!response) {
-      log(
-        "Failed to handle response from remote. Can't generate answer, closing stream."
-      );
-      peerFab.set();
-      return stream.close();
-    }
-    //log(`sending response: "${JSON.stringify(response)}"`);
-    await toWire(response, stream.sink);
-  };
-}
 
 export function handleLevels(trie, peerFab) {
-  return receive(peerFab, async (message, peer) => {
+  const expectResponse = true;
+  return receive(peerFab, trie, expectResponse, async (message, peer) => {
     const { result, syncPeer, newPeer } = peerFab.isValid(peer);
     if (!result) {
       log(
@@ -354,13 +379,23 @@ export function handleLevels(trie, peerFab) {
       return;
     }
 
-    log("Received levels and comparing them");
-    return await compare(trie, message);
+    let comparisons;
+    try {
+      log("Received levels and comparing them");
+      comparisons = await compare(trie, message);
+    } catch (err) {
+      elog(err, "handleLevels: error in compare, aborting");
+      peerFab.set();
+      return;
+    }
+
+    return comparisons;
   });
 }
 
 export function handleLeaves(trie, peerFab) {
-  return receive(peerFab, async (message, peer) => {
+  const expectResponse = false;
+  return receive(peerFab, trie, expectResponse, async (message, peer) => {
     const { result, syncPeer, newPeer } = peerFab.isValid(peer);
     if (!result) {
       log(
@@ -369,9 +404,40 @@ export function handleLeaves(trie, peerFab) {
       return;
     }
 
-    log("Received leaves and storing them in db");
-    trie.checkpoint();
-    await put(trie, message);
+    if (!trie.hasCheckpoints()) trie.checkpoint();
+    log("handleLeaves: Received leaves and storing them in db");
+
+    try {
+      const metadb = store.metadata();
+      await metadb.transaction(async () => {
+        try {
+          // NOTE: We're adding multiple statements here to the try catch
+          // because in each of their failure, we want to abort writing into
+          // the databases.
+          const allowlist = await registry.allowlist();
+          await put(trie, message, metadb, allowlist);
+          return true;
+        } catch (err) {
+          elog(err, "handleLeaves: Unexpected error");
+          await trie.revert();
+          peerFab.set();
+          return false;
+        }
+      });
+    } catch (err) {
+      elog(err, "error in metadb callback");
+    }
+
+    // NOTE: While there could be a strategy where we continuously stay in a
+    // checkpoint the entire time when the synchronization is going one, this
+    // seems detrimental to the mechanism, in that it introduces a high-stakes
+    // operation towards the very end where after many minutes of back and
+    // forth all data is being committed into the trie. So right now it seems
+    // more robust if we hence open a checkpoint the first time new levels are
+    // sent, and we close it by the time leaves are being received. While this
+    // means that practically for every newly received leaf, the
+    // synchronization starts over again, it sequentializes downloading the
+    // leaves into many sub tasks which are more likely to succeed.
     await trie.commit();
     peerFab.set();
   });

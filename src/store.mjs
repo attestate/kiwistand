@@ -5,7 +5,6 @@ import { resolve } from "path";
 import normalizeUrl from "normalize-url";
 import {
   Trie,
-  WalkController,
   BranchNode,
   ExtensionNode,
   LeafNode,
@@ -19,13 +18,16 @@ import { open } from "lmdb";
 import log from "./logger.mjs";
 import LMDB from "./lmdb.mjs";
 import { verify, toDigest } from "./id.mjs";
+import { elog } from "./utils.mjs";
 import * as messages from "./topics/messages.mjs";
+import { newWalk } from "./WalkController.mjs";
 
+const maxReaders = 500;
 export async function create(options) {
   return await Trie.create({
     // TODO: Understand if this should this use "resolve"? The metadata db uses
     // resolve.
-    db: new LMDB({ path: env.DATA_DIR }),
+    db: new LMDB({ path: env.DATA_DIR, maxReaders }),
     useRootPersistence: true,
     // NOTE: We enable nodePruning so that the ethereumjs/trie library reliably
     // deletes content in the database for us (it doesn't by default).
@@ -41,6 +43,7 @@ export function metadata(options) {
     encoding: "cbor",
     keyEncoding: "ordered-binary",
     path: resolve(env.DATA_DIR),
+    maxReaders,
     ...options,
   });
 }
@@ -174,18 +177,19 @@ export async function descend(trie, level, exclude = []) {
     ];
   }
 
-  const levelCopy = level;
   let nodes = [];
-  const onFound = (nodeRef, node, key, walkController) => {
-    // NOTE: The idea of the "exclue" array is that it contains nodes that have
-    // matched on the remote trie, and so we don't have to send them along in a
-    // future comparison. Hence, if we have a match, we simply return.
+  const onFound = (_, node, key, walkController, currentLevel) => {
     const nodeHash = hash(node);
+    // TODO: Would be better if this was a set where all the hashes are included
+    // e.g. as strings? It seems very slow to look up something using find.
     const match = exclude.find((markedNode) => isEqual(markedNode, nodeHash));
+    // NOTE: The idea of the "exclude" array is that it contains nodes that
+    // have matched on the remote trie, and so we don't have to send them along
+    // in a future comparison. Hence, if we have a match, we simply return.
     if (match) return;
 
-    if (level === 0) {
-      if (levelCopy !== 0 && node instanceof LeafNode) {
+    if (currentLevel === 0) {
+      if (level !== 0 && node instanceof LeafNode) {
         const fragments = [key, node.key()].map(nibblesToBuffer);
         key = Buffer.concat(fragments);
       } else {
@@ -193,21 +197,21 @@ export async function descend(trie, level, exclude = []) {
       }
 
       nodes.push({
-        level: levelCopy,
+        level,
         key,
         hash: nodeHash,
         node,
       });
     } else if (node instanceof BranchNode || node instanceof ExtensionNode) {
-      level -= 1;
-      walkController.allChildren(node, key);
+      currentLevel -= 1;
+      walkController.allChildren(node, key, currentLevel);
     }
   };
   try {
-    await trie.walkTrie(trie.root(), onFound);
+    await newWalk(onFound, trie, trie.root(), level);
   } catch (err) {
     if (err.toString().includes("Missing node in DB")) {
-      log("descend: Didn't find any nodes");
+      elog(err, "descend: Didn't find any nodes");
       return nodes;
     } else {
       throw err;
@@ -216,6 +220,12 @@ export async function descend(trie, level, exclude = []) {
   return nodes;
 }
 
+// TODO: The current synchronization algorithm makes use of checkpoints,
+// commits and reverts, but this function is used in sync.put and store.add,
+// but it isn't checkpointing or reverting, it just writes directly - even upon
+// soft writes into the trie. This is an issue as we e.g. could do a sync where
+// most writes are soft-written, the sync fails, but the actual constraints are
+// then written to the database.
 export async function passes(db, message, address) {
   // TODO: We should/must consider adding normalizeUrl here as otherwise a user
   // might be able to sneakily upvote twice by manipulating the URLs in such
@@ -291,7 +301,7 @@ export async function add(
 export async function leaves(trie, from, amount, parser, startDatetime) {
   let pointer = 0;
   const nodes = [];
-  const onFound = (nodeRef, node, key, walkController) => {
+  const onFound = (_, node, key, walkController) => {
     if (Number.isInteger(amount) && nodes.length >= amount) return;
 
     if (node instanceof LeafNode) {

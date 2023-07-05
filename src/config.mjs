@@ -37,11 +37,15 @@ if (IS_BOOTSTRAP_NODE) {
   log("Launching as bootstrap node");
 } else {
   log("Configuring bootstrap nodes");
+  let bootstrapAddr = "91.107.210.214";
+  if (BIND_ADDRESS_V4 === "127.0.0.1") {
+    bootstrapAddr = "127.0.0.1";
+  }
   config.peerDiscovery.push(
     bootstrap({
       list: [
         // TODO: We must this allowed to be defined when running config
-        `/ip4/91.107.210.214/tcp/${DEFAULT_PORT}/${config.protocolPrefix}/bafzaajiiaijccazrvdlmhms6g7cr6lurqp5aih27agldbplnh77i5oxn74sjm7773q`,
+        `/ip4/${bootstrapAddr}/tcp/${DEFAULT_PORT}/${config.protocolPrefix}/bafzaajiiaijccazrvdlmhms6g7cr6lurqp5aih27agldbplnh77i5oxn74sjm7773q`,
       ],
     })
   );

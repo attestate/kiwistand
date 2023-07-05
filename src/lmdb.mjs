@@ -15,6 +15,7 @@ export default class LMDB {
       keyEncoding: "ordered-binary",
       ...options,
     });
+    this.options = options;
   }
 
   async get(key) {
@@ -42,6 +43,6 @@ export default class LMDB {
   }
 
   copy() {
-    return new LMDB(this.path);
+    return new LMDB(this.options);
   }
 }

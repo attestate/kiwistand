@@ -20,7 +20,7 @@ export const PROTOCOL = {
   protocols: {
     leaves: {
       id: "leaves",
-      version: "2.0.0",
+      version: "3.0.0",
     },
     levels: {
       id: "levels",
