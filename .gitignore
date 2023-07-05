@@ -11,6 +11,7 @@ nohup.out
 bootstrap
 data
 anon
+anonlocal
 dbtestA
 dbtestB
 backup
