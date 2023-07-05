@@ -80,8 +80,10 @@ export default async function (trie, theme) {
     <html lang="en" op="news">
       <head>
         ${Head}
-        <title>Kiwi News: Latest web3 news for hackers</title>
-        <meta name="description" content="Explore the latest news in the decentralized world on Kiwi News. Stay updated with fresh content handpicked by crypto veterans.">        
+        <meta
+          name="description"
+          content="Explore the latest news in the decentralized world on Kiwi News. Stay updated with fresh content handpicked by crypto veterans."
+        />
       </head>
       <body>
         ${Sidebar}
