@@ -204,16 +204,6 @@ export async function initiate(
     return;
   }
 
-  if (remotes.length === 0) {
-    log(
-      `Ending initiate on level: "${level}" with root: "${trie
-        .root()
-        .toString("hex")}"`
-    );
-    peerFab.set();
-    return;
-  }
-
   let response;
   try {
     response = await innerSend(
@@ -223,6 +213,16 @@ export async function initiate(
     );
   } catch (err) {
     elog(err, "initiate: error when sending levels");
+    peerFab.set();
+    return;
+  }
+
+  if (remotes.length === 0) {
+    log(
+      `Ending initiate on level: "${level}" with root: "${trie
+        .root()
+        .toString("hex")}"`
+    );
     peerFab.set();
     return;
   }
@@ -302,6 +302,8 @@ export async function put(trie, message) {
   try {
     missing = deserialize(message);
   } catch (err) {
+    // TODO: There should be a timeout when levels are sent, that if there's no
+    // follow up, then the peerFab is reset. Actually, it'd be great if the pee
     log(`put: error deserializing message: "${message}", ${err.toString()}`);
     throw err;
   }
@@ -329,7 +331,7 @@ export async function put(trie, message) {
     const synching = true;
     try {
       await store.add(trie, obj, libp2p, allowlist, true);
-      log(`Adding to database value (as JSON) "${value}"`);
+      log(`Adding to database value (as JSON)`);
     } catch (err) {
       // NOTE: We're not bubbling the error up here because we want to be
       // tolerant as to the errors that store.add sends (e.g. duplicate errors
@@ -351,6 +353,11 @@ export async function compare(trie, message) {
       `compare: error deserializing message: "${message}", ${err.toString()}`
     );
     throw err;
+  }
+
+  if (remotes && Array.isArray(remotes) && remotes.length === 0) {
+    // NOTE: This may happen when there is nothing to compare anymore.
+    throw new Error("Received empty list of levels.");
   }
 
   const { missing, mismatch, match } = await store.compare(trie, remotes);
@@ -376,7 +383,6 @@ export function receive(peerFab, trie, expectResponse, handler) {
         )}"`
       );
       peerFab.set();
-      await trie.revert();
       return stream.close();
     }
 
@@ -385,7 +391,6 @@ export function receive(peerFab, trie, expectResponse, handler) {
         "Failed to handle response from remote. Can't generate answer, closing stream."
       );
       peerFab.set();
-      await trie.revert();
       return stream.close();
     }
     await toWire(response, stream.sink);

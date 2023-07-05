@@ -22,11 +22,12 @@ import { elog } from "./utils.mjs";
 import * as messages from "./topics/messages.mjs";
 import { newWalk } from "./WalkController.mjs";
 
+const maxReaders = 500;
 export async function create(options) {
   return await Trie.create({
     // TODO: Understand if this should this use "resolve"? The metadata db uses
     // resolve.
-    db: new LMDB({ path: env.DATA_DIR }),
+    db: new LMDB({ path: env.DATA_DIR, maxReaders }),
     useRootPersistence: true,
     // NOTE: We enable nodePruning so that the ethereumjs/trie library reliably
     // deletes content in the database for us (it doesn't by default).
@@ -42,6 +43,7 @@ export function metadata(options) {
     encoding: "cbor",
     keyEncoding: "ordered-binary",
     path: resolve(env.DATA_DIR),
+    maxReaders,
     ...options,
   });
 }
