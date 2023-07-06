@@ -6,12 +6,12 @@ const html = htm.bind(vhtml);
 const secondheader = (theme, site) => html`
   <td>
     <div
-      style="min-height: 40px; display: flex; justify-content: space-between; align-items: center; padding: 10px 15px 10px 15px; color: white;"
+      style="background-color: #e6e6df; min-height: 40px; display: flex; justify-content: space-between; align-items: center; padding: 10px 15px 10px 15px; color: white;"
     >
       <div>
         <a href="/">
           <button
-            style=${`border-radius: 2px; padding: 5px 15px 5px 15px; background-color: transparent; border: 1px solid ${
+            style=${`font-size: 1.01rem; border-radius: 2px; cursor: pointer; padding: 5px 15px 5px 15px; background-color: transparent; border: 1px solid ${
               site === "top" ? theme.color : "#7f8c8d"
             }; color: ${site === "top" ? theme.color : "#7f8c8d"};`}
           >
@@ -20,7 +20,7 @@ const secondheader = (theme, site) => html`
         </a>
         <a href="/new">
           <button
-            style=${`margin-left: 10px; border-radius: 2px; padding: 5px 15px 5px 15px; background-color: transparent; border: 1px solid ${
+            style=${`font-size: 1.01rem; margin-left: 10px; cursor: pointer; border-radius: 2px; padding: 5px 15px 5px 15px; background-color: transparent; border: 1px solid ${
               site === "new" ? theme.color : "#7f8c8d"
             }; color: ${site === "new" ? theme.color : "#7f8c8d"};`}
           >

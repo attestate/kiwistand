@@ -87,7 +87,7 @@ export default async function (trie, theme) {
     <html lang="en" op="news">
       <head>
         ${Head}
-        <meta name="description" content="Meet the Kiwi News community, which curates our feed. You can also check out our leaderboard to see who's most active.">
+        <meta name="description" content="Meet the Kiwi News community, which curates our feed. You can also check out our leaderboard to see who's most active." />
       </head>
       <body>
         ${Sidebar}

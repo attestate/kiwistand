@@ -21,7 +21,7 @@ const header = (theme) => html` <td bgcolor="${theme.color}">
           >
             <div
               class="sidebar-toggle"
-              style="cursor: pointer; display: flex; align-items: center; justify-content: center;"
+              style="padding: 7px; cursor: pointer; display: flex; align-items: center; justify-content: center;"
             >
               <svg
                 style="padding-top: 2px;"
@@ -48,7 +48,7 @@ const header = (theme) => html` <td bgcolor="${theme.color}">
             </a>
 
             <div
-              style="display: flex; justify-content: flex-end; width: 100px;"
+              style="padding: 7px; display: flex; justify-content: flex-end; width: 100px;"
             >
               <div id="connectButton"></div>
             </div>

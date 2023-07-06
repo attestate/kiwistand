@@ -130,7 +130,7 @@ export default async function (trie, theme, address) {
             <tr>
               <td>
                 <div
-                  style="padding: 10px; color: black; font-size: 16px; line-height: 1.5;"
+                  style="padding: 10px 10px 0 10px; color: black; font-size: 16px; line-height: 1.5;"
                 >
                   <span>Profile: </span>
                   <a
@@ -199,7 +199,7 @@ export default async function (trie, theme, address) {
                 <tr style="font-size: 12pt;">
                   <td>
                     <table
-                      style="padding: 5px 5px 5px 15px;"
+                      style="padding: 5px 5px 0 15px;"
                       border="0"
                       cellpadding="0"
                       cellspacing="0"
@@ -246,7 +246,9 @@ export default async function (trie, theme, address) {
             ${upvotes.length > 0
               ? html` <tr>
                   <td>
-                    <div style="padding: 10px; color: black; font-size: 16px">
+                    <div
+                      style="padding: 10px 10px 0 10px; color: black; font-size: 16px"
+                    >
                       <hr />
                       <b>LAST 10 UPVOTES: </b>
                     </div>
@@ -258,7 +260,7 @@ export default async function (trie, theme, address) {
                 <tr style="font-size: 12pt;">
                   <td>
                     <table
-                      style="padding: 5px 5px 5px 15px;"
+                      style="padding: 5px 5px 0 15px;"
                       border="0"
                       cellpadding="0"
                       cellspacing="0"
@@ -305,6 +307,9 @@ export default async function (trie, theme, address) {
                 </tr>
               `
             )}
+            <tr style="height: 13px;">
+              <td></td>
+            </tr>
           </table>
           ${Footer(theme)}
         </center>
