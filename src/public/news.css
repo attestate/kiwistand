@@ -336,4 +336,11 @@ a.meta-link:hover {
   text-decoration: underline;
 }
 
+a.caster-link {
+  color: #828282;
+}
 
+a.caster-link:hover {
+  color: #c848ff;
+  text-decoration: underline;
+}

@@ -159,7 +159,7 @@ export default async function (trie, theme) {
                                   `Find on Kiwi News: "${story.title}"`
                                 )}&embeds[]=https://news.kiwistand.com"
                                 data-premium="https://warpcast.com/~/compose?embeds[]=${story.href}"
-                                class="meta-link"
+                                class="caster-link"
                               >
                                 Cast
                               </a>
