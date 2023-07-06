@@ -17,6 +17,7 @@ import {
 } from "../src/id.mjs";
 import config from "../src/config.mjs";
 import { appdir } from "../src/utils.mjs";
+import { EIP712_MESSAGE } from "../src/constants.mjs";
 
 const idPath = `${appdir()}/test/.keys.json`;
 
@@ -125,7 +126,7 @@ test("sign message", async (t) => {
   const type = "amplify";
   const timestamp = 1676559616;
   const message = create(text, href, type, timestamp);
-  const signedMessage = await sign(signer, message);
+  const signedMessage = await sign(signer, message, EIP712_MESSAGE);
   t.deepEqual(signedMessage, {
     ...message,
     signature:
@@ -145,7 +146,7 @@ test("verify message", async (t) => {
   const type = "amplify";
   const timestamp = 1676559616;
   const message = create(text, href, type, timestamp);
-  const signedMessage = await sign(signer, message);
+  const signedMessage = await sign(signer, message, EIP712_MESSAGE);
   t.deepEqual(signedMessage, {
     ...message,
     signature:

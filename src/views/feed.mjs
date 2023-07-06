@@ -18,6 +18,7 @@ import * as store from "../store.mjs";
 import * as id from "../id.mjs";
 import * as moderation from "./moderation.mjs";
 import log from "../logger.mjs";
+import { EIP712_MESSAGE } from "../constants.mjs";
 
 const html = htm.bind(vhtml);
 const fetch = fetchBuilder.withCache(
@@ -91,7 +92,7 @@ async function editors(leaves) {
     const cacheEnabled = true;
     const editorStories = leaves
       .map((leaf) => ({
-        address: id.ecrecover(leaf, cacheEnabled),
+        address: id.ecrecover(leaf, EIP712_MESSAGE, cacheEnabled),
         ...leaf,
       }))
       .filter(

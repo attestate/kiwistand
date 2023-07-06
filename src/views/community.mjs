@@ -14,6 +14,7 @@ import * as store from "../store.mjs";
 import * as id from "../id.mjs";
 import * as moderation from "./moderation.mjs";
 import * as registry from "../chainstate/registry.mjs";
+import { EIP712_MESSAGE } from "../constants.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -36,7 +37,7 @@ const countPoints = (messages) => {
   messages.forEach((message) => {
     const normalizedUrl = normalizeUrl(message.href);
     const cacheEnabled = true;
-    const address = id.ecrecover(message, cacheEnabled);
+    const address = id.ecrecover(message, EIP712_MESSAGE, cacheEnabled);
 
     if (!submissions.has(normalizedUrl)) {
       submissions.set(normalizedUrl, address);

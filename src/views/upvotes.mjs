@@ -12,6 +12,7 @@ import Footer from "./components/footer.mjs";
 import Sidebar from "./components/sidebar.mjs";
 import Head from "./components/head.mjs";
 import * as store from "../store.mjs";
+import { EIP712_MESSAGE } from "../constants.mjs";
 import * as id from "../id.mjs";
 import { count } from "./feed.mjs";
 import * as ens from "../ens.mjs";
@@ -53,7 +54,7 @@ export default async function (trie, theme, address) {
   const cacheEnabled = true;
   leaves = await Promise.all(
     leaves.map(async (leaf) => {
-      const recoveredAddress = id.ecrecover(leaf, cacheEnabled);
+      const recoveredAddress = id.ecrecover(leaf, EIP712_MESSAGE, cacheEnabled);
       const ensData = await ens.resolve(recoveredAddress);
       return {
         ...leaf,

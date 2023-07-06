@@ -4,6 +4,7 @@ import normalizeUrl from "normalize-url";
 
 import * as id from "../id.mjs";
 import log from "../logger.mjs";
+import { EIP721_MESSAGE } from "../constants.mjs";
 
 const fetch = fetchBuilder.withCache(
   new MemoryCache({
@@ -74,7 +75,7 @@ export function moderate(leaves, config) {
       const cacheEnabled = true;
       return {
         ...leaf,
-        address: id.ecrecover(leaf, cacheEnabled),
+        address: id.ecrecover(leaf, EIP712_MESSAGE, cacheEnabled),
         title: nextTitle,
       };
     })

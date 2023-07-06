@@ -24,7 +24,7 @@ import { start, subscribe, handlers } from "../src/index.mjs";
 import * as store from "../src/store.mjs";
 import log from "../src/logger.mjs";
 import { sign, create } from "../src/id.mjs";
-import { PROTOCOL } from "../src/constants.mjs";
+import { EIP712_MESSAGE, PROTOCOL } from "../src/constants.mjs";
 
 const { leaves } = PROTOCOL.protocols;
 
@@ -95,7 +95,7 @@ test("if sync of signed messages work over the network", async (t) => {
   const type = "amplify";
   const timestamp = 1676559616;
   const message = create(text, href, type, timestamp);
-  const signedMessage = await sign(signer, message);
+  const signedMessage = await sign(signer, message, EIP712_MESSAGE);
   t.deepEqual(signedMessage, {
     ...message,
     signature:

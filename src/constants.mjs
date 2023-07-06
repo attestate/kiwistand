@@ -43,7 +43,7 @@ export const EIP712_DOMAIN = {
   salt: `0x${salt}`,
 };
 
-export const EIP712_TYPES = {
+export const EIP712_MESSAGE = {
   Message: [
     { name: "title", type: "string" },
     { name: "href", type: "string" },

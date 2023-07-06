@@ -16,6 +16,7 @@ import * as store from "../store.mjs";
 import * as moderation from "./moderation.mjs";
 import * as id from "../id.mjs";
 import { classify } from "./upvotes.mjs";
+import { EIP712_MESSAGE } from "../constants.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -246,7 +247,11 @@ export default async function (trie, theme) {
         return messageDate >= cutOffDate;
       })
       .map(async (msg) => {
-        const recoveredAddress = id.ecrecover(msg, cacheEnabled);
+        const recoveredAddress = id.ecrecover(
+          msg,
+          EIP712_MESSAGE,
+          cacheEnabled
+        );
         return {
           ...msg,
           address: recoveredAddress,
