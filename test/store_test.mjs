@@ -723,6 +723,7 @@ test.serial("adding message to the store", async (t) => {
       t.truthy(value);
     },
     root: () => Buffer.from("abc", "hex"),
+    hasCheckpoints: () => false,
   };
   const libp2p = {
     pubsub: {
@@ -760,6 +761,7 @@ test.serial(
         t.truthy(value);
       },
       root: () => Buffer.from("abc", "hex"),
+      hasCheckpoints: () => false,
     };
     const libp2p = {
       pubsub: {
