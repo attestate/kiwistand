@@ -237,7 +237,7 @@ export default function (theme) {
                   <p style="font-size: 0.9rem;"><strong>Who is picking these links?</strong></p>
                   <p style="font-size: 0.9rem;">We are a community of 80+ crypto-savvy people who submit and upvote links to create a newsfeed we all want to use. You can learn more about the community <a href="/community"><u>here</a></u>.</p>
 
-                  <p style="font-size: 0.9rem;"><strong>Why do build this?</strong></p>
+                  <p style="font-size: 0.9rem;"><strong>Why do we build this?</strong></p>
                   <p style="font-size: 0.9rem;">We want to create a space where crypto content can thrive. Where creators can reach new audiences and readers can find inspiring texts, podcasts and videos. You can read more about our vision <a href="/why"><u>here</a></u>.</p>
 
                   <p style="font-size: 0.9rem;"><strong>What is your current roadmap?</strong></p>
