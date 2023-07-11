@@ -1,58 +1,72 @@
 // @format
+import { env } from "process";
+
 import * as blockLogs from "@attestate/crawler-call-block-logs";
-import { order } from "./loader.mjs";
+import * as delegations from "./delegations.mjs";
 
 export default {
   environment: {
     // NOTE: We're hard-coding these values here as they're mandated (falsely)
     // by the @attestate/crawler but since kiwistand will never use them for
     // anything.
+    rpcHttpHost: env.OPTIMISM_RPC_HTTP_HOST,
     ipfsHttpsGateway: "https://",
     arweaveHttpsGateway: "https://",
   },
   path: [
     {
-      name: "call-block-logs",
+      name: "list-delegations",
       coordinator: {
         archive: false,
         module: blockLogs.state,
         interval: 1000 * 60,
       },
       extractor: {
-        module: blockLogs.extractor,
+        module: {
+          ...blockLogs.extractor,
+          update: delegations.update,
+        },
         args: {
-          start: 16873658,
-          address: "0xebB15487787cBF8Ae2ffe1a6Cca5a50E63003786",
+          start: 106733451,
+          address: "0x08b7ecfac2c5754abafb789c84f8fa37c9f088b0",
           topics: [
-            "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
-            "0x0000000000000000000000000000000000000000000000000000000000000000",
+            // keccak256("Delegate(bytes32[3])") ===
+            "0x9fcbf2ac7d9825115ae81812d10efa7fce04fcc9ca46f1d416aba53cdea8483e",
           ],
           blockspan: 5000,
         },
         output: {
-          name: "call-block-logs-extraction",
+          name: "list-delegations-extraction",
         },
       },
       transformer: {
         module: blockLogs.transformer,
-        args: {},
+        args: {
+          inputs: [
+            {
+              type: "bytes32[3]",
+              name: "data",
+              indexed: false,
+            },
+          ],
+        },
         input: {
-          name: "call-block-logs-extraction",
+          name: "list-delegations-extraction",
         },
         output: {
-          name: "call-block-logs-transformation",
+          name: "list-delegations-transformation",
         },
       },
       loader: {
         module: {
           ...blockLogs.loader,
-          order,
+          order: delegations.order,
         },
         input: {
-          name: "call-block-logs-transformation",
+          name: "list-delegations-transformation",
         },
         output: {
-          name: "call-block-logs-load",
+          name: "list-delegations-load",
         },
       },
     },

@@ -67,6 +67,7 @@ export default async function (trie, theme, address) {
   const taintedSubmissions = actions
     .filter(
       (action) =>
+        // TODO: Should start using ethers.utils.getAddress
         address.toLowerCase() === action.message.address.toLowerCase() &&
         action.verb === "submit"
     )
@@ -74,6 +75,7 @@ export default async function (trie, theme, address) {
   const taintedUpvotes = actions
     .filter(
       (action) =>
+        // TODO: Should start using ethers.utils.getAddress
         address.toLowerCase() === action.message.address.toLowerCase() &&
         action.verb === "upvote"
     )

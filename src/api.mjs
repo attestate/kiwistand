@@ -50,12 +50,13 @@ export function sendStatus(reply, code, message, details, data) {
   return reply.status(code).json(obj);
 }
 
-export function handleMessage(trie, libp2p, getAllowlist) {
+export function handleMessage(trie, libp2p, getAllowlist, getDelegations) {
   return async (request, reply) => {
     const message = request.body;
     const allowlist = await getAllowlist();
+    const delegations = await getDelegations();
     try {
-      await store.add(trie, message, libp2p, allowlist);
+      await store.add(trie, message, libp2p, allowlist, delegations);
     } catch (err) {
       const code = 400;
       const httpMessage = "Bad Request";
@@ -75,6 +76,21 @@ export function listAllowed(getAllowlist) {
     const httpMessage = "OK";
     const details = "Returning allow list";
     return sendStatus(reply, code, httpMessage, details, await getAllowlist());
+  };
+}
+
+export function listDelegations(getDelegations) {
+  return async (request, reply) => {
+    const code = 200;
+    const httpMessage = "OK";
+    const details = "Returning delegations list";
+    return sendStatus(
+      reply,
+      code,
+      httpMessage,
+      details,
+      await getDelegations()
+    );
   };
 }
 
@@ -104,7 +120,11 @@ export function listMessages(trie) {
 export function launch(trie, libp2p) {
   api.post("/list", listMessages(trie));
   api.get("/allowlist", listAllowed(registry.allowlist));
-  api.post("/messages", handleMessage(trie, libp2p, registry.allowlist));
+  api.get("/delegations", listDelegations(registry.delegations));
+  api.post(
+    "/messages",
+    handleMessage(trie, libp2p, registry.allowlist, registry.delegations)
+  );
 
   const app = express();
   app.use("/api/v1", api);

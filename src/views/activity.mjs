@@ -123,6 +123,7 @@ export default async function (trie, theme, address) {
   const filteredActivities = activities.filter(
     (activity) =>
       activity.verb === "upvoted" &&
+      // TODO: Should start using ethers.utils.getAddress
       activity.towards.toLowerCase() === address.toLowerCase()
   );
 

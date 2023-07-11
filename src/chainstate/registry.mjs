@@ -1,6 +1,20 @@
 // @format
-import { database } from "@attestate/crawler";
 import { resolve } from "path";
+
+import { utils } from "ethers";
+import { database } from "@attestate/crawler";
+import { organize } from "@attestate/delegator2";
+
+export async function delegations() {
+  const path = resolve(process.env.DATA_DIR, "list-delegations-load");
+  const maxReaders = 500;
+  const db = database.open(path, maxReaders);
+  const name = database.order("list-delegations");
+  const subdb = db.openDB(name);
+  const all = await database.all(subdb, "");
+  const logs = all.map(({ value }) => ({ ...value, data: value.data.data }));
+  return organize(logs);
+}
 
 export async function allowlist() {
   const path = resolve(process.env.DATA_DIR, "call-block-logs-load");
@@ -13,7 +27,7 @@ export async function allowlist() {
   const name = database.order("call-block-logs");
   const subdb = db.openDB(name);
   const all = await database.all(subdb, "");
-  const addresses = all.map(({ value }) => value);
+  const addresses = all.map(({ value }) => utils.getAddress(value));
   const uniqueAddresses = Array.from(new Set(addresses));
   return uniqueAddresses;
 }

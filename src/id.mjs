@@ -108,6 +108,22 @@ export function ecrecover(message, types, enableCache = false) {
   return computeFunc();
 }
 
+// NOTE: registry.allowlist guarantees checksummed addresses and so does
+// @attestate/delegator2.
+export function eligible(allowlist, delegations, address) {
+  address = utils.getAddress(address);
+  const allowed0 = allowlist.includes(address);
+  if (allowed0) return address;
+
+  const from = delegations[address];
+  if (!from) return false;
+
+  const allowed1 = allowlist.includes(from);
+  if (allowed1) return from;
+
+  return false;
+}
+
 const messageValidator = ajv.compile(SCHEMATA.message);
 export function verify(message) {
   const result = messageValidator(message);

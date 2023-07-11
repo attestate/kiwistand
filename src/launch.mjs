@@ -1,4 +1,6 @@
 // @format
+import { env } from "process";
+
 import { boot as crawl } from "@attestate/crawler";
 
 import { start, subscribe } from "./index.mjs";
@@ -10,12 +12,14 @@ import { handlers } from "./index.mjs";
 import * as api from "./api.mjs";
 import * as http from "./http.mjs";
 import * as store from "./store.mjs";
-import crawlPath from "./chainstate/config.crawler.mjs";
+import mintCrawlPath from "./chainstate/mint.config.crawler.mjs";
+import delegateCrawlPath from "./chainstate/delegate.config.crawler.mjs";
 
 (async () => {
   const trie = await store.create();
 
-  crawl(crawlPath);
+  crawl(mintCrawlPath);
+  crawl(delegateCrawlPath);
   const node = await start(config);
 
   // NOTE: We're passing in the trie here as we don't want to make it globally

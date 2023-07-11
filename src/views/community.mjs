@@ -70,6 +70,7 @@ export default async function (trie, theme) {
   let combinedUsers = [];
   for await (let address of allowList) {
     const foundUser = users.find(
+      // TODO: Should start using ethers.utils.getAddress
       (user) => user.address.toLowerCase() === address.toLowerCase()
     );
     const karma = foundUser ? foundUser.karma : "0";

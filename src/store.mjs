@@ -2,6 +2,7 @@
 import { env } from "process";
 import { resolve } from "path";
 
+import { utils } from "ethers";
 import normalizeUrl from "normalize-url";
 import {
   Trie,
@@ -17,7 +18,7 @@ import { open } from "lmdb";
 
 import log from "./logger.mjs";
 import LMDB from "./lmdb.mjs";
-import { verify, toDigest } from "./id.mjs";
+import { verify, toDigest, eligible } from "./id.mjs";
 import { elog } from "./utils.mjs";
 import * as messages from "./topics/messages.mjs";
 import { newWalk } from "./WalkController.mjs";
@@ -226,11 +227,13 @@ export async function descend(trie, level, exclude = []) {
 // soft writes into the trie. This is an issue as we e.g. could do a sync where
 // most writes are soft-written, the sync fails, but the actual constraints are
 // then written to the database.
-export async function passes(db, message, address) {
+export async function passes(db, message, identity) {
   // TODO: We should/must consider adding normalizeUrl here as otherwise a user
   // might be able to sneakily upvote twice by manipulating the URLs in such
   // way that the frontend normalizes them into two URLs.
-  const key = `${address}:${message.href}:${message.type}`;
+  // NOTE: We use `utils.getAddress` from ethers here to make sure we hash a
+  // canonical key into the database.
+  const key = `${utils.getAddress(identity)}:${message.href}:${message.type}`;
   const seenBefore = await db.doesExist(key);
   await db.put(key);
   return !seenBefore;
@@ -241,13 +244,14 @@ export async function add(
   message,
   libp2p,
   allowlist,
+  delegations,
   synching = false,
   metadb = metadata()
 ) {
   const address = verify(message);
-  const included = allowlist.includes(address);
-  if (!included) {
-    const err = `Address "${address}" wasn't found in the allow list. Dropping message "${JSON.stringify(
+  const identity = eligible(allowlist, delegations, address);
+  if (!identity) {
+    const err = `Address "${address}" wasn't found in the allow list or delegations list. Dropping message "${JSON.stringify(
       message
     )}".`;
     log(err);
@@ -270,11 +274,11 @@ export async function add(
     throw new Error(err);
   }
 
-  const legit = await passes(metadb, message, address);
+  const legit = await passes(metadb, message, identity);
   if (!legit) {
     const err = `Message "${JSON.stringify(
       message
-    )}" with address "${address}" doesn't pass legitimacy criteria (duplicate). It was probably submitted and accepted before.`;
+    )}" with address "${identity}" doesn't pass legitimacy criteria (duplicate). It was probably submitted and accepted before.`;
     log(err);
     throw new Error(err);
   }

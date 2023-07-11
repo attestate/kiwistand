@@ -7,7 +7,12 @@ import { encode } from "cbor-x";
 import { Wallet } from "ethers";
 
 import { sign, create } from "../src/id.mjs";
-import { handleMessage, listMessages, listAllowed } from "../src/api.mjs";
+import {
+  handleMessage,
+  listMessages,
+  listAllowed,
+  listDelegations,
+} from "../src/api.mjs";
 import * as store from "../src/store.mjs";
 import { EIP712_MESSAGE } from "../src/constants.mjs";
 
@@ -27,6 +32,25 @@ async function removeTestFolders() {
 
 test.afterEach.always(async () => {
   await removeTestFolders();
+});
+
+test("list delegation addresses", async (t) => {
+  const mockRequest = {};
+  const mockReply = {
+    status: (code) => ({
+      json: (response) => response,
+    }),
+  };
+
+  const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
+  const delegations = () => [address];
+  const response = await listDelegations(delegations)(mockRequest, mockReply);
+
+  t.is(response.status, "success");
+  t.is(response.code, 200);
+  t.is(response.message, "OK");
+  t.is(response.data.length, 1);
+  t.deepEqual(response.data, delegations());
 });
 
 test("list allowed addresses", async (t) => {
@@ -82,7 +106,8 @@ test("listMessages success", async (t) => {
   env.DATA_DIR = "dbtestA";
   const trie = await store.create();
   const libp2p = null;
-  await store.add(trie, signedMessage, libp2p, [address]);
+  const allowlist = [address];
+  await store.add(trie, signedMessage, libp2p, allowlist);
 
   const response = await listMessages(trie)(mockRequest, mockReply);
 
@@ -128,7 +153,8 @@ test("handleMessage should send back an error upon invalid address signer", asyn
   const libp2p = null;
   const zeroAddr = "0x0000000000000000000000000000000000000000";
   const allowlist = () => [zeroAddr];
-  const handler = handleMessage(trie, libp2p, allowlist);
+  const delegations = () => ({});
+  const handler = handleMessage(trie, libp2p, allowlist, delegations);
 
   await handler(request, reply);
 
@@ -167,7 +193,8 @@ test("handleMessage should handle a valid message and return 200 OK", async (t) 
   const trie = await store.create();
   const libp2p = null;
   const allowlist = () => [address];
-  const handler = handleMessage(trie, libp2p, allowlist);
+  const delegations = () => ({});
+  const handler = handleMessage(trie, libp2p, allowlist, delegations);
 
   await handler(request, reply);
 

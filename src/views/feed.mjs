@@ -96,6 +96,7 @@ async function editors(leaves) {
         ...leaf,
       }))
       .filter(
+        // TODO: Should start using ethers.utils.getAddress
         ({ address }) => address.toLowerCase() === config.address.toLowerCase()
       );
 
