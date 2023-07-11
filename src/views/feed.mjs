@@ -223,7 +223,7 @@ export default async function index(trie, theme, page) {
                         >✉</a
                       >
                       <span> </span>
-                      <span>Today's Editor's Picks by </span>
+                      <span>Links picked by today's editor </span>
                       <a style="color:black;" href="${config.link}">
                         ${config.name}</a
                       >!
@@ -286,7 +286,7 @@ export default async function index(trie, theme, page) {
                   style="color: black; padding: 10px 10px 0 10px; font-size: 12pt; font-weight: bold;"
                 >
                   <span
-                    >Community's Picks
+                    >Community Picks
                     ${page !== 0 ? html`(page: ${page})` : ""}</span
                   >
                 </p>

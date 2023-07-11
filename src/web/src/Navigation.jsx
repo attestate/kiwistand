@@ -155,34 +155,33 @@ const ConnectButton = () => {
 
         if (isConnected) {
           return (
-      <Bell to="/activity">
-        <i class="icon">
-          <svg style={{width:"25px"}} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path
-              d="M18.9,11.2s0-8.7-6.9-8.7-6.9,8.7-6.9,8.7v3.9L2.5,17.5h19l-2.6-2.4Z"
-              fill="none"
-              stroke="#000000"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-            />
+            <Bell to="/activity">
+              <i class="icon">
+                <svg style={{width:"25px"}} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path
+                    d="M18.9,11.2s0-8.7-6.9-8.7-6.9,8.7-6.9,8.7v3.9L2.5,17.5h19l-2.6-2.4Z"
+                    fill="none"
+                    stroke="#000000"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                  />
 
-            <path
-              d="M14.5,20.5s-.5,1-2.5,1-2.5-1-2.5-1"
-              fill="none"
-              stroke="#000000"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-            />
-          </svg> </i>
-      </Bell>
-
+                  <path
+                    d="M14.5,20.5s-.5,1-2.5,1-2.5-1-2.5-1"
+                    fill="none"
+                    stroke="#000000"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                  />
+                </svg> 
+              </i>
+            </Bell>
           );
-
         } else {
           return (
-            <a style={buttonStyle} onClick={show}>
+            <button style={buttonStyle} onClick={show}>
               {isConnected ? (
                 <span style={{color: "#828282"}}>
                   <span style={{color: "black", marginRight: "5px", display: "inline-block"}}>
@@ -192,26 +191,10 @@ const ConnectButton = () => {
               ) : ""}
 
               {isConnected ? shorten(address) : "Connect" }
-            </a>
+            </button>
           );
         }}
       }
     </ConnectKitButton.Custom>
   );
 };
-
-const Connector = ({children}) => {
-  return (
-    <WagmiConfig client={client}>
-      <ConnectKitProvider>
-        {children}
-      </ConnectKitProvider>
-    </WagmiConfig>
-  );
-};
-
-export const ConnectedProfile = () => <Connector><Profile /></Connector>;
-export const ConnectedDisconnectButton = () => <Connector><DisconnectButton/></Connector>;
-export const ConnectedConnectButton = () => <Connector><ConnectButton /></Connector>;
-export const ConnectedLearnMore = () => <Connector><LearnMore/></Connector>;
-
