@@ -280,9 +280,10 @@ export async function add(
   }
 
   const { canonical, index } = toDigest(message);
-  log(`Storing message with index "${index}"`);
   // TODO: We should check if checkpointing is off here.
   await trie.put(Buffer.from(index, "hex"), canonical);
+  log(`During storage, has checkpoints ${trie.hasCheckpoints()}`);
+  log(`Stored message with index "${index}" and message: "${canonical}"`);
   log(`New root: "${trie.root().toString("hex")}"`);
 
   if (!libp2p) {
@@ -292,9 +293,7 @@ export async function add(
     return;
   }
 
-  log(
-    `Sending message to peers: "${messages.name}" and message: "${canonical}"`
-  );
+  log(`Sending message to peers: "${messages.name}" and index: "${index}"`);
   libp2p.pubsub.publish(messages.name, canonical);
 }
 

@@ -80,8 +80,10 @@ export default async function (trie, theme) {
     <html lang="en" op="news">
       <head>
         ${Head}
-        <title>Kiwi News: Latest web3 news for hackers</title>
-        <meta name="description" content="Explore the latest news in the decentralized world on Kiwi News. Stay updated with fresh content handpicked by crypto veterans.">        
+        <meta
+          name="description"
+          content="Explore the latest news in the decentralized world on Kiwi News. Stay updated with fresh content handpicked by crypto veterans."
+        />
       </head>
       <body>
         ${Sidebar}
@@ -104,58 +106,46 @@ export default async function (trie, theme) {
               (story, i) => html`
                 <tr>
                   <td>
-                    <table
-                      style="padding: 5px;"
-                      border="0"
-                      cellpadding="0"
-                      cellspacing="0"
-                    >
-                      <tr class="athing" id="35233479">
-                        <td align="right" valign="top" class="title">
-                          <span style="padding-right: 5px" class="rank"
-                            >${i + 1}.
-                          </span>
-                        </td>
-                        <td style="width:25px;" valign="top" class="votelinks">
-                          <center>
-                            <a id="up_35233479" class="clicky" href="#">
-                              <div
-                                class="votearrowcontainer"
-                                data-title="${story.title}"
-                                data-href="${story.href}"
-                              ></div>
-                            </a>
-                          </center>
-                        </td>
-                        <td class="title">
-                          <span class="titleline">
-                            <a target="_blank" href="${story.href}">
-                              ${story.title}
-                              <span> </span>
-                              <span
-                                style="vertical-align:top; font-size: 0.8em; font-weight: bolder;"
-                              >
-                                ${String.fromCharCode(0x2934, 0xfe0e)}
-                              </span>
-                            </a>
-                            <span style="padding-left: 5px">
-                              (${extractDomain(story.href)})
-                            </span>
-                          </span>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td colspan="2"></td>
-                        <td class="subtext">
-                          <span class="subline">
-                            <span
-                              style="display: inline-block;"
-                              class="score"
-                              id="score_35233479"
+                    <div style="padding: 10px 5px 0 10px;">
+                      <div style="display: flex; align-items: flex-start;">
+                        <div
+                          style="font-size: 13pt; display: flex; align-items: center; min-width: 35px;"
+                        >
+                          <span>${i + 1}.</span>
+                        </div>
+                        <div
+                          style="display: flex; align-items: center; min-width: 30px;"
+                        >
+                          <a href="#">
+                            <div
+                              class="votearrowcontainer"
+                              data-title="${story.title}"
+                              data-href="${story.href}"
+                            ></div>
+                          </a>
+                        </div>
+                        <div style="flex-grow: 1;">
+                          <span>
+                            <a
+                              href="${story.href}"
+                              target="_blank"
+                              class="story-link"
+                              style="line-height: 13pt; font-size: 13pt;"
                             >
+                              ${story.title}
+                            </a>
+                            <span style="padding-left: 5px"
+                              >(${extractDomain(story.href)})</span
+                            >
+                          </span>
+                          <div style="margin-top: 2px; font-size: 10pt;">
+                            <span>
                               ${story.upvotes}
                               <span> upvotes by </span>
-                              <a href="/upvotes?address=${story.address}">
+                              <a
+                                href="/upvotes?address=${story.address}"
+                                class="meta-link"
+                              >
                                 ${story.displayName}
                               </a>
                               <span> </span>
@@ -166,18 +156,18 @@ export default async function (trie, theme) {
                               <a
                                 target="_blank"
                                 data-free="https://warpcast.com/~/compose?embeds[]=${story.href}&text=${encodeURIComponent(
-                                  `Found on Kiwi News: "${story.title}"`
+                                  `Find on Kiwi News: "${story.title}"`
                                 )}&embeds[]=https://news.kiwistand.com"
                                 data-premium="https://warpcast.com/~/compose?embeds[]=${story.href}"
+                                class="caster-link"
                               >
-                                Share
+                                Cast
                               </a>
                             </span>
-                          </span>
-                        </td>
-                      </tr>
-                      <tr class="spacer" style="height:5px"></tr>
-                    </table>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </td>
                 </tr>
               `
