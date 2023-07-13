@@ -94,7 +94,7 @@ export function listDelegations(getDelegations) {
   };
 }
 
-export function listMessages(trie) {
+export function listMessages(trie, getAllowlist, getDelegations) {
   const requestValidator = ajv.compile(SCHEMATA.pagination);
   return async (request, reply) => {
     const result = requestValidator(request.body);
@@ -109,16 +109,30 @@ export function listMessages(trie) {
 
     const { from, amount } = request.body;
     const parser = JSON.parse;
-    const leaves = await store.leaves(trie, from, amount, parser);
+    const startDatetime = null;
+    const allowlist = await getAllowlist();
+    const delegations = await getDelegations();
+    const leaves = await store.posts(
+      trie,
+      from,
+      amount,
+      parser,
+      startDatetime,
+      allowlist,
+      delegations
+    );
     const code = 200;
     const message = "OK";
-    const details = `Extracted leaves from "${from}" and amount "${amount}"`;
+    const details = `Extracted posts from "${from}" and amount "${amount}"`;
     return sendStatus(reply, code, message, details, leaves);
   };
 }
 
 export function launch(trie, libp2p) {
-  api.post("/list", listMessages(trie));
+  api.post(
+    "/list",
+    listMessages(trie, registry.allowlist, registry.delegations)
+  );
   api.get("/allowlist", listAllowed(registry.allowlist));
   api.get("/delegations", listDelegations(registry.delegations));
   api.post(

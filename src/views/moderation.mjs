@@ -77,13 +77,12 @@ export function moderate(leaves, config) {
         const cacheEnabled = true;
         return {
           ...leaf,
-          address: id.ecrecover(leaf, EIP712_MESSAGE, cacheEnabled),
           title: nextTitle,
         };
       })
       // TODO: Should start using ethers.utils.getAddress
       .filter(
-        ({ address }) => !config.addresses.includes(address.toLowerCase())
+        ({ identity }) => !config.addresses.includes(identity.toLowerCase())
       )
       .filter(({ href }) => !config.links.includes(normalizeUrl(href)))
   );

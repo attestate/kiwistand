@@ -103,6 +103,26 @@ Request body:
   Must be between 0 and HTTP_MESSAGES_MAX_PAGE_SIZE, as defined in the `.env
   file <https://github.com/attestate/kiwistand/blob/main/.env-copy>`_.
 
+Response body
+
+- ``status`` (string): The status of the request. Possible values are "success"
+  or "error".
+- ``code`` (integer): The HTTP status code.
+- ``message`` (string): A brief description of the response.
+- ``details`` (string): A more detailed description of the response.
+- ``data`` (array): An array of objects, each representing a post. Each post
+  object has the following properties:
+  - ``href`` (string): The URL of the post.
+  - ``signature`` (string): The signature of the post.
+  - ``timestamp`` (integer): The timestamp of the post.
+  - ``title`` (string): The title of the post.
+  - ``type`` (string): The type of the post.
+  - ``signer`` (string): The Ethereum address that signed the message. Can be a
+    delegated address or the address that represents the user's identity.
+  - ``identity`` (string): The Ethereum address of the identity (the wallet
+    with which the user minted the NFT).
+
+
 **POST /api/v1/messages**
 
 Adds a message to the Kiwistand P2P node.

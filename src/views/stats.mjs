@@ -13,10 +13,8 @@ import Footer from "./components/footer.mjs";
 import Sidebar from "./components/sidebar.mjs";
 import Head from "./components/head.mjs";
 import * as store from "../store.mjs";
-import * as moderation from "./moderation.mjs";
-import * as id from "../id.mjs";
+import * as registry from "../chainstate/registry.mjs";
 import { classify } from "./upvotes.mjs";
-import { EIP712_MESSAGE } from "../constants.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -24,22 +22,22 @@ function calculateRetention(messages, days = 14) {
   // We will group messages by address and order them by timestamp
   const messagesByAddress = new Map();
   for (const message of messages) {
-    if (!messagesByAddress.has(message.address)) {
-      messagesByAddress.set(message.address, []);
+    if (!messagesByAddress.has(message.identity)) {
+      messagesByAddress.set(message.identity, []);
     }
-    messagesByAddress.get(message.address).push(message);
+    messagesByAddress.get(message.identity).push(message);
   }
 
-  for (const [address, userMessages] of messagesByAddress.entries()) {
+  for (const [identity, userMessages] of messagesByAddress.entries()) {
     userMessages.sort((a, b) => a.timestamp - b.timestamp);
-    messagesByAddress.set(address, userMessages);
+    messagesByAddress.set(identity, userMessages);
   }
 
   // We calculate the retention array with default 0% retention for all days
   const retention = new Array(days).fill(0);
   let totalUsers = 0;
 
-  for (const [address, userMessages] of messagesByAddress.entries()) {
+  for (const [identity, userMessages] of messagesByAddress.entries()) {
     const firstDay = timestampToDate(userMessages[0].timestamp);
 
     // We generate an array of the days the user posted a message
@@ -101,13 +99,13 @@ function calculateMAU(messagesWithAddresses) {
   for (const msg of messagesWithAddresses) {
     const date = new Date(msg.timestamp * 1000);
     const month = `${date.getFullYear()}-${date.getMonth() + 1}`;
-    const address = msg.address;
+    const identity = msg.identity;
 
     if (!mauMap.has(month)) {
       mauMap.set(month, new Set());
     }
 
-    mauMap.get(month).add(address);
+    mauMap.get(month).add(identity);
   }
 
   const sortedMonths = Array.from(mauMap.keys()).sort();
@@ -121,13 +119,13 @@ function calculateDAU(messagesWithAddresses) {
 
   for (const msg of messagesWithAddresses) {
     const date = timestampToDate(msg.timestamp);
-    const address = msg.address;
+    const identity = msg.identity;
 
     if (!dauMap.has(date)) {
       dauMap.set(date, new Set());
     }
 
-    dauMap.get(date).add(address);
+    dauMap.get(date).add(identity);
   }
 
   const dates = generateDateRange(
@@ -203,13 +201,13 @@ function calculateWAU(messagesWithAddresses) {
     const date = new Date(msg.timestamp * 1000);
     // Use date's year and week number as key
     const week = `${date.getFullYear()}-${getWeekNumber(date)}`;
-    const address = msg.address;
+    const identity = msg.identity;
 
     if (!wauMap.has(week)) {
       wauMap.set(week, new Set());
     }
 
-    wauMap.get(week).add(address);
+    wauMap.get(week).add(identity);
   }
 
   const sortedWeeks = Array.from(wauMap.keys()).sort();
@@ -236,27 +234,26 @@ export default async function (trie, theme) {
   const from = null;
   const amount = null;
   const parser = JSON.parse;
-  const messages = await store.leaves(trie, from, amount, parser);
+  const startDatetime = null;
+  const allowlist = await registry.allowlist();
+  const delegations = await registry.delegations();
+  const messages = await store.posts(
+    trie,
+    from,
+    amount,
+    parser,
+    startDatetime,
+    allowlist,
+    delegations
+  );
 
   const cacheEnabled = true;
   const messagesWithAddresses = await Promise.all(
-    messages
-      .filter((msg) => {
-        const messageDate = new Date(msg.timestamp * 1000);
-        const cutOffDate = new Date(2023, 3); // months are 0-indexed in JS, so 3 is April
-        return messageDate >= cutOffDate;
-      })
-      .map(async (msg) => {
-        const recoveredAddress = id.ecrecover(
-          msg,
-          EIP712_MESSAGE,
-          cacheEnabled
-        );
-        return {
-          ...msg,
-          address: recoveredAddress,
-        };
-      })
+    messages.filter((msg) => {
+      const messageDate = new Date(msg.timestamp * 1000);
+      const cutOffDate = new Date(2023, 3); // months are 0-indexed in JS, so 3 is April
+      return messageDate >= cutOffDate;
+    })
   );
 
   const dauData = calculateDAU(messagesWithAddresses);

@@ -11,7 +11,6 @@ import Footer from "./components/footer.mjs";
 import Sidebar from "./components/sidebar.mjs";
 import Head from "./components/head.mjs";
 import * as store from "../store.mjs";
-import * as id from "../id.mjs";
 import * as moderation from "./moderation.mjs";
 import * as registry from "../chainstate/registry.mjs";
 import { EIP712_MESSAGE } from "../constants.mjs";
@@ -23,25 +22,24 @@ const countPoints = (messages) => {
   const submissions = new Map();
   const points = {};
 
-  function add(points, address) {
+  function add(points, identity) {
     if (
-      typeof points[address] !== undefined &&
-      Number.isInteger(points[address])
+      typeof points[identity] !== undefined &&
+      Number.isInteger(points[identity])
     ) {
-      points[address] += 1;
+      points[identity] += 1;
     } else {
-      points[address] = 1;
+      points[identity] = 1;
     }
   }
 
   messages.forEach((message) => {
     const normalizedUrl = normalizeUrl(message.href);
     const cacheEnabled = true;
-    const address = id.ecrecover(message, EIP712_MESSAGE, cacheEnabled);
 
     if (!submissions.has(normalizedUrl)) {
-      submissions.set(normalizedUrl, address);
-      add(points, address);
+      submissions.set(normalizedUrl, message.identity);
+      add(points, message.identity);
     } else {
       const submitter = submissions.get(normalizedUrl);
       add(points, submitter);
@@ -49,9 +47,9 @@ const countPoints = (messages) => {
   });
 
   const list = [];
-  for (const address of Object.keys(points)) {
-    const karma = points[address];
-    list.push({ address, karma });
+  for (const identity of Object.keys(points)) {
+    const karma = points[identity];
+    list.push({ identity, karma });
   }
 
   return list.sort((a, b) => b.karma - a.karma);
@@ -62,7 +60,18 @@ export default async function (trie, theme) {
   const from = null;
   const amount = null;
   const parser = JSON.parse;
-  let leaves = await store.leaves(trie, from, amount, parser);
+  const startDatetime = null;
+  const allowlist = await registry.allowlist();
+  const delegations = await registry.delegations();
+  let leaves = await store.posts(
+    trie,
+    from,
+    amount,
+    parser,
+    startDatetime,
+    allowlist,
+    delegations
+  );
   leaves = moderation.moderate(leaves, config);
   const users = countPoints(leaves);
 
@@ -71,14 +80,14 @@ export default async function (trie, theme) {
   for await (let address of allowList) {
     const foundUser = users.find(
       // TODO: Should start using ethers.utils.getAddress
-      (user) => user.address.toLowerCase() === address.toLowerCase()
+      (user) => user.identity.toLowerCase() === address.toLowerCase()
     );
     const karma = foundUser ? foundUser.karma : "0";
 
     const ensData = await ens.resolve(address);
 
     combinedUsers.push({
-      address,
+      identity: address,
       karma,
       displayName: ensData.displayName,
     });
@@ -132,7 +141,7 @@ export default async function (trie, theme) {
       ${combinedUsers.map(
         (user, i) => html`
           <a
-            href="/upvotes?address=${user.address}"
+            href="/upvotes?address=${user.identity}"
             style="color: inherit; text-decoration: none;"
           >
             <div
@@ -142,7 +151,7 @@ export default async function (trie, theme) {
               <div style="display: flex; align-items: center; width: 60%;">
                 <div style="width: 40px; height: 40px; box-sizing: border-box;">
                   <ens-avatar
-                    address="${user.address}"
+                    address="${user.identity}"
                     leaderboard
                     style="width: 40px; height: 40px;"
                   />

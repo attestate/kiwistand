@@ -18,7 +18,8 @@ import { open } from "lmdb";
 
 import log from "./logger.mjs";
 import LMDB from "./lmdb.mjs";
-import { verify, toDigest, eligible } from "./id.mjs";
+import { verify, ecrecover, toDigest, eligible } from "./id.mjs";
+import { EIP712_MESSAGE } from "./constants.mjs";
 import { elog } from "./utils.mjs";
 import * as messages from "./topics/messages.mjs";
 import { newWalk } from "./WalkController.mjs";
@@ -299,6 +300,30 @@ export async function add(
 
   log(`Sending message to peers: "${messages.name}" and index: "${index}"`);
   libp2p.pubsub.publish(messages.name, canonical);
+}
+
+export async function posts(
+  trie,
+  from,
+  amount,
+  parser,
+  startDateTime,
+  allowlist,
+  delegations
+) {
+  const nodes = await leaves(trie, from, amount, parser, startDateTime);
+
+  const cacheEnabled = true;
+  return nodes.map((node) => {
+    const signer = ecrecover(node, EIP712_MESSAGE, cacheEnabled);
+    const identity = eligible(allowlist, delegations, signer);
+    if (!identity) throw new Error("Found in-eligible message in storage");
+    return {
+      ...node,
+      signer,
+      identity,
+    };
+  });
 }
 
 export async function leaves(trie, from, amount, parser, startDatetime) {

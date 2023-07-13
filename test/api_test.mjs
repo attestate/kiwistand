@@ -109,12 +109,21 @@ test("listMessages success", async (t) => {
   const allowlist = [address];
   await store.add(trie, signedMessage, libp2p, allowlist);
 
-  const response = await listMessages(trie)(mockRequest, mockReply);
+  const getAllowlist = () => allowlist;
+  const getDelegations = () => ({});
+  const response = await listMessages(
+    trie,
+    getAllowlist,
+    getDelegations
+  )(mockRequest, mockReply);
 
+  console.log(response);
   t.is(response.status, "success");
   t.is(response.code, 200);
   t.is(response.message, "OK");
   t.is(response.data[0].title, "hello world");
+  t.is(response.data[0].signer, address);
+  t.is(response.data[0].identity, address);
 
   await rm("dbtestA", { recursive: true });
 });
@@ -217,43 +226,6 @@ test("listing messages with false pagination", async (t) => {
       return {
         json: (message) => {
           t.truthy(message);
-        },
-      };
-    },
-  };
-  await route(request, reply);
-
-  await rm("dbtestA", { recursive: true });
-});
-
-test("listing messages", async (t) => {
-  env.DATA_DIR = "dbtestA";
-  const trie = await store.create();
-  const message = { hello: "world" };
-  await trie.put(Buffer.from("0100", "hex"), encode(JSON.stringify(message)));
-
-  const route = listMessages(trie);
-  const request = {
-    body: {
-      from: 0,
-      amount: 40,
-    },
-  };
-  t.plan(2);
-  const reply = {
-    status: (code) => {
-      t.is(code, 200);
-
-      return {
-        send: () => {},
-        json: (payload) => {
-          t.deepEqual(payload, {
-            code: 200,
-            data: [message],
-            details: `Extracted leaves from "0" and amount "40"`,
-            message: "OK",
-            status: "success",
-          });
         },
       };
     },

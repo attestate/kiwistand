@@ -13,9 +13,9 @@ import Sidebar from "./components/sidebar.mjs";
 import Head from "./components/head.mjs";
 import * as store from "../store.mjs";
 import { EIP712_MESSAGE } from "../constants.mjs";
-import * as id from "../id.mjs";
 import { count } from "./feed.mjs";
 import * as ens from "../ens.mjs";
+import * as registry from "../chainstate/registry.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -42,23 +42,32 @@ export const classify = (messages) => {
     .sort((a, b) => b.message.timestamp - a.message.timestamp);
 };
 
-export default async function (trie, theme, address) {
-  if (!utils.isAddress(address)) {
+export default async function (trie, theme, identity) {
+  if (!utils.isAddress(identity)) {
     return html`Not a valid address`;
   }
-  const ensData = await ens.resolve(address);
+  const ensData = await ens.resolve(identity);
   const from = null;
   const amount = null;
   const parser = JSON.parse;
-  let leaves = await store.leaves(trie, from, amount, parser);
+  const startDatetime = null;
+  const allowlist = await registry.allowlist();
+  const delegations = await registry.delegations();
+  let leaves = await store.posts(
+    trie,
+    from,
+    amount,
+    parser,
+    startDatetime,
+    allowlist,
+    delegations
+  );
   const cacheEnabled = true;
   leaves = await Promise.all(
     leaves.map(async (leaf) => {
-      const recoveredAddress = id.ecrecover(leaf, EIP712_MESSAGE, cacheEnabled);
-      const ensData = await ens.resolve(recoveredAddress);
+      const ensData = await ens.resolve(leaf.identity);
       return {
         ...leaf,
-        address: recoveredAddress,
         displayName: ensData.displayName,
       };
     })
@@ -68,7 +77,7 @@ export default async function (trie, theme, address) {
     .filter(
       (action) =>
         // TODO: Should start using ethers.utils.getAddress
-        address.toLowerCase() === action.message.address.toLowerCase() &&
+        identity.toLowerCase() === action.message.identity.toLowerCase() &&
         action.verb === "submit"
     )
     .map((action) => normalizeUrl(action.message.href));
@@ -76,7 +85,7 @@ export default async function (trie, theme, address) {
     .filter(
       (action) =>
         // TODO: Should start using ethers.utils.getAddress
-        address.toLowerCase() === action.message.address.toLowerCase() &&
+        identity.toLowerCase() === action.message.identity.toLowerCase() &&
         action.verb === "upvote"
     )
     .map((action) => normalizeUrl(action.message.href));
@@ -293,7 +302,7 @@ export default async function (trie, theme, address) {
                             >
                               ${story.upvotes}
                               <span> points by </span>
-                              <a href="/upvotes?address=${story.address}">
+                              <a href="/upvotes?address=${story.identity}">
                                 ${story.displayName}
                               </a>
                               <span> submitted </span>

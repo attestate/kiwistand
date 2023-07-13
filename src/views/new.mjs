@@ -15,6 +15,7 @@ import Footer from "./components/footer.mjs";
 import Head from "./components/head.mjs";
 import * as store from "../store.mjs";
 import * as moderation from "./moderation.mjs";
+import * as registry from "../chainstate/registry.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -36,7 +37,7 @@ export function count(leaves) {
         title: leaf.title,
         timestamp: leaf.timestamp,
         href: leaf.href,
-        address: leaf.address,
+        identity: leaf.identity,
         upvotes: 1,
       };
       stories[key] = story;
@@ -56,11 +57,21 @@ export default async function (trie, theme) {
   const aWeekAgo = sub(new Date(), {
     weeks: 1,
   });
-  const aWeekAgoUnixTime = Math.floor(aWeekAgo.getTime() / 1000);
   const from = null;
   const amount = null;
   const parser = JSON.parse;
-  let leaves = await store.leaves(trie, from, amount, parser, aWeekAgoUnixTime);
+  const aWeekAgoUnixTime = Math.floor(aWeekAgo.getTime() / 1000);
+  const allowlist = await registry.allowlist();
+  const delegations = await registry.delegations();
+  let leaves = await store.posts(
+    trie,
+    from,
+    amount,
+    parser,
+    aWeekAgoUnixTime,
+    allowlist,
+    delegations
+  );
   leaves = moderation.moderate(leaves, config);
 
   let counts = count(leaves);
@@ -69,7 +80,7 @@ export default async function (trie, theme) {
 
   let stories = [];
   for await (let item of slicedCounts) {
-    const ensData = await ens.resolve(item.address);
+    const ensData = await ens.resolve(item.identity);
     stories.push({
       ...item,
       displayName: ensData.displayName,
@@ -143,7 +154,7 @@ export default async function (trie, theme) {
                               ${story.upvotes}
                               <span> upvotes by </span>
                               <a
-                                href="/upvotes?address=${story.address}"
+                                href="/upvotes?address=${story.identity}"
                                 class="meta-link"
                               >
                                 ${story.displayName}
