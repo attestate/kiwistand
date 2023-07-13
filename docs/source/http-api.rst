@@ -91,6 +91,18 @@ minted the NFT at the contract located at
 Please note that it may take some time for the indexer to pick up a new mint
 (usually around 1-2 minutes).
 
+**GET /api/v1/delegations**
+
+Retrieves an object of valid delegations in the form of ``to:from``, where
+``from`` must be the user's "identity," meaning the wallet they minted the NFT
+with, whereas ``to`` can be any delegated Ethereum address.
+
+The rules of what we consider a valid delegation are documented in the
+`delegator2 repository <https://github.com/attestate/delegator2>`_.
+
+Please note that it may take some time for the indexer to pick up a new mint
+(usually around 1-2 minutes).
+
 **POST /api/v1/list**
 
 Lists messages with the given pagination parameters.
