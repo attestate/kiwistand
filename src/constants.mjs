@@ -9,22 +9,22 @@ export const PROTOCOL = {
     topics: {
       roots: {
         id: "roots",
-        version: "0.0.1",
+        version: "1.0.0",
       },
       messages: {
         id: "messages",
-        version: "0.0.1",
+        version: "1.0.0",
       },
     },
   },
   protocols: {
     leaves: {
       id: "leaves",
-      version: "3.0.0",
+      version: "4.0.0",
     },
     levels: {
       id: "levels",
-      version: "2.0.0",
+      version: "3.0.0",
     },
   },
 };
@@ -43,7 +43,7 @@ export const EIP712_DOMAIN = {
   salt: `0x${salt}`,
 };
 
-export const EIP712_TYPES = {
+export const EIP712_MESSAGE = {
   Message: [
     { name: "title", type: "string" },
     { name: "href", type: "string" },

@@ -12,6 +12,7 @@ import { encode } from "cbor-x";
 
 import * as id from "../src/id.mjs";
 import config from "../src/config.mjs";
+import { EIP712_MESSAGE } from "../src/constants.mjs";
 import * as store from "../src/store.mjs";
 
 test("if message passes constraint", async (t) => {
@@ -97,7 +98,7 @@ test("getting leaves", async (t) => {
   const type = "amplify";
   const timestamp = 1676559616;
   const message = id.create(title, href, type, timestamp);
-  const signedMessage = await id.sign(signer, message);
+  const signedMessage = await id.sign(signer, message, EIP712_MESSAGE);
   t.deepEqual(signedMessage, {
     ...message,
     signature:
@@ -107,7 +108,8 @@ test("getting leaves", async (t) => {
   env.DATA_DIR = "dbtestA";
   const trieA = await store.create();
   const libp2p = null;
-  await store.add(trieA, signedMessage, libp2p, [address]);
+  const allowlist = [address];
+  await store.add(trieA, signedMessage, libp2p, allowlist);
 
   const from = null;
   const amount = null;
@@ -131,7 +133,7 @@ test("descend levels with actual data ", async (t) => {
   const type = "amplify";
   const timestamp = 1676559616;
   const message = id.create(text, href, type, timestamp);
-  const signedMessage = await id.sign(signer, message);
+  const signedMessage = await id.sign(signer, message, EIP712_MESSAGE);
   t.deepEqual(signedMessage, {
     ...message,
     signature:
@@ -141,7 +143,8 @@ test("descend levels with actual data ", async (t) => {
   env.DATA_DIR = "dbtestA";
   const trieA = await store.create();
   const libp2p = null;
-  await store.add(trieA, signedMessage, libp2p, [address]);
+  const allowlist = [address];
+  await store.add(trieA, signedMessage, libp2p, allowlist);
 
   const [root] = await store.descend(trieA, 0);
   t.is(root.key.length, 0);
@@ -512,7 +515,7 @@ test("try adding message with invalid href", async (t) => {
   const type = "amplify";
   const timestamp = 1676559616;
   const message = id.create(text, href, type, timestamp);
-  const signedMessage = await id.sign(signer, message);
+  const signedMessage = await id.sign(signer, message, EIP712_MESSAGE);
 
   const trie = {
     put: (key, value) => {
@@ -546,7 +549,7 @@ test("try to add invalidly formatted message to store", async (t) => {
   const timestamp = 1676559616;
   const message = id.create(text, href, type, timestamp);
   message.extra = "bla";
-  const signedMessage = await id.sign(signer, message);
+  const signedMessage = await id.sign(signer, message, EIP712_MESSAGE);
 
   const trie = {
     put: (key, value) => {
@@ -600,6 +603,118 @@ test("try to add invalidly signed message to store", async (t) => {
   );
 });
 
+test("add with delegated address but from isn't on allow list", async (t) => {
+  env.DATA_DIR = "dbtestA";
+  const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
+  const privateKey =
+    "0xad54bdeade5537fb0a553190159783e45d02d316a992db05cbed606d3ca36b39";
+  const signer = new Wallet(privateKey);
+  t.is(signer.address, address);
+
+  const text = "hello world";
+  const href = "https://example.com";
+  const type = "amplify";
+  const timestamp = 1676559616;
+  const message = id.create(text, href, type, timestamp);
+  const signedMessage = await id.sign(signer, message, EIP712_MESSAGE);
+
+  const trie = {
+    put: (key, value) => {
+      t.truthy(key);
+      t.truthy(value);
+    },
+    root: () => Buffer.from("abc", "hex"),
+    hasCheckpoints: () => false,
+  };
+  const libp2p = null;
+  const allowlist = [];
+  const delegations = {
+    [address]: allowlist[0],
+  };
+
+  await t.throwsAsync(
+    async () =>
+      await store.add(trie, signedMessage, libp2p, allowlist, delegations)
+  );
+  await rm("dbtestA", { recursive: true });
+});
+
+test("attempting to upvote twice, once with custody and delegate address", async (t) => {
+  env.DATA_DIR = "dbtestA";
+  const address0 = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
+  const privateKey0 =
+    "0xad54bdeade5537fb0a553190159783e45d02d316a992db05cbed606d3ca36b39";
+  const signer0 = new Wallet(privateKey0);
+  t.is(signer0.address, address0);
+
+  const text = "hello world";
+  const href = "https://example.com";
+  const type = "amplify";
+  const timestamp = 1676559616;
+  const message0 = id.create(text, href, type, timestamp);
+  const signedMessage0 = await id.sign(signer0, message0, EIP712_MESSAGE);
+
+  const address1 = "0x82e6F643A7613458E18fa1E80624d0C33ed753Cc";
+  const privateKey1 =
+    "0xc9c0da9974ac1278e4896f2590ad6766f07dd1ce1d19f14d71302da37b490434";
+  const signer1 = new Wallet(privateKey1);
+  t.is(signer1.address, address1);
+
+  const signedMessage1 = await id.sign(signer1, message0, EIP712_MESSAGE);
+
+  const trie = {
+    put: (key, value) => {
+      t.truthy(key);
+      t.truthy(value);
+    },
+    root: () => Buffer.from("abc", "hex"),
+    hasCheckpoints: () => false,
+  };
+  const libp2p = null;
+  const allowlist = [address0];
+  const delegations = {
+    [address1]: address0,
+  };
+  await store.add(trie, signedMessage0, libp2p, allowlist, delegations);
+  await t.throwsAsync(
+    async () =>
+      await store.add(trie, signedMessage1, libp2p, allowlist, delegations)
+  );
+  await rm("dbtestA", { recursive: true });
+});
+
+test("trying to add a message to store that isn't on allowlist but was delegated", async (t) => {
+  env.DATA_DIR = "dbtestA";
+  const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
+  const privateKey =
+    "0xad54bdeade5537fb0a553190159783e45d02d316a992db05cbed606d3ca36b39";
+  const signer = new Wallet(privateKey);
+  t.is(signer.address, address);
+
+  const text = "hello world";
+  const href = "https://example.com";
+  const type = "amplify";
+  const timestamp = 1676559616;
+  const message = id.create(text, href, type, timestamp);
+  const signedMessage = await id.sign(signer, message, EIP712_MESSAGE);
+
+  const trie = {
+    put: (key, value) => {
+      t.truthy(key);
+      t.truthy(value);
+    },
+    root: () => Buffer.from("abc", "hex"),
+    hasCheckpoints: () => false,
+  };
+  const libp2p = null;
+  const allowlist = ["0xee324c588cef1bf1c1360883e4318834af66366d"];
+  const delegations = {
+    [address]: allowlist[0],
+  };
+  await store.add(trie, signedMessage, libp2p, allowlist, delegations);
+  await rm("dbtestA", { recursive: true });
+});
+
 test("trying to add message to store that isn't on allowlist", async (t) => {
   const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
   const privateKey =
@@ -612,7 +727,7 @@ test("trying to add message to store that isn't on allowlist", async (t) => {
   const type = "amplify";
   const timestamp = 1676559616;
   const message = id.create(text, href, type, timestamp);
-  const signedMessage = await id.sign(signer, message);
+  const signedMessage = await id.sign(signer, message, EIP712_MESSAGE);
 
   const trie = {
     put: (key, value) => {
@@ -646,7 +761,7 @@ test("adding message from too far into the future", async (t) => {
   const type = "amplify";
   const timestamp = Math.floor(Date.now() / 1000) + 61;
   const message = id.create(text, href, type, timestamp);
-  const signedMessage = await id.sign(signer, message);
+  const signedMessage = await id.sign(signer, message, EIP712_MESSAGE);
 
   const trie = {
     put: (key, value) => {
@@ -679,7 +794,7 @@ test("adding message from before minimum timestamp", async (t) => {
   const type = "amplify";
   const timestamp = 0;
   const message = id.create(text, href, type, timestamp);
-  const signedMessage = await id.sign(signer, message);
+  const signedMessage = await id.sign(signer, message, EIP712_MESSAGE);
 
   const trie = {
     put: (key, value) => {
@@ -715,7 +830,7 @@ test.serial("adding message to the store", async (t) => {
   const type = "amplify";
   const timestamp = 1676559616;
   const message = id.create(text, href, type, timestamp);
-  const signedMessage = await id.sign(signer, message);
+  const signedMessage = await id.sign(signer, message, EIP712_MESSAGE);
 
   const trie = {
     put: (key, value) => {
@@ -723,6 +838,7 @@ test.serial("adding message to the store", async (t) => {
       t.truthy(value);
     },
     root: () => Buffer.from("abc", "hex"),
+    hasCheckpoints: () => false,
   };
   const libp2p = {
     pubsub: {
@@ -752,7 +868,7 @@ test.serial(
     const type = "amplify";
     const timestamp0 = 1676559616;
     const message = id.create(text, href, type, timestamp0);
-    const signedMessage0 = await id.sign(signer, message);
+    const signedMessage0 = await id.sign(signer, message, EIP712_MESSAGE);
 
     const trie = {
       put: (key, value) => {
@@ -760,6 +876,7 @@ test.serial(
         t.truthy(value);
       },
       root: () => Buffer.from("abc", "hex"),
+      hasCheckpoints: () => false,
     };
     const libp2p = {
       pubsub: {
@@ -774,7 +891,7 @@ test.serial(
 
     const timestamp1 = timestamp0 + 1;
     const message1 = id.create(text, href, type, timestamp1);
-    const signedMessage1 = await id.sign(signer, message1);
+    const signedMessage1 = await id.sign(signer, message1, EIP712_MESSAGE);
 
     await t.throwsAsync(
       async () => await store.add(trie, signedMessage1, libp2p, allowlist)

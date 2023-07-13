@@ -9,6 +9,14 @@ Overview
 The API provides methods for interacting with the Kiwistand P2P node, including
 adding messages and listing messages.
 
+Ports
+-----
+
+Kiwistand used to ship with running both the frontend and the node REST API on
+the same port (``HTTP_PORT``). To more easily code-split the node code and
+frontend code, we're now, however, running the node's REST API on ``API_PORT``.
+For news.kiwistand.com it is at 8000.
+
 JSON Schemas
 ------------
 
@@ -83,6 +91,18 @@ minted the NFT at the contract located at
 Please note that it may take some time for the indexer to pick up a new mint
 (usually around 1-2 minutes).
 
+**GET /api/v1/delegations**
+
+Retrieves an object of valid delegations in the form of ``to:from``, where
+``from`` must be the user's "identity," meaning the wallet they minted the NFT
+with, whereas ``to`` can be any delegated Ethereum address.
+
+The rules of what we consider a valid delegation are documented in the
+`delegator2 repository <https://github.com/attestate/delegator2>`_.
+
+Please note that it may take some time for the indexer to pick up a new mint
+(usually around 1-2 minutes).
+
 **POST /api/v1/list**
 
 Lists messages with the given pagination parameters.
@@ -94,6 +114,26 @@ Request body:
 - ``amount`` (integer): The number of entries that the request should contain.
   Must be between 0 and HTTP_MESSAGES_MAX_PAGE_SIZE, as defined in the `.env
   file <https://github.com/attestate/kiwistand/blob/main/.env-copy>`_.
+
+Response body
+
+- ``status`` (string): The status of the request. Possible values are "success"
+  or "error".
+- ``code`` (integer): The HTTP status code.
+- ``message`` (string): A brief description of the response.
+- ``details`` (string): A more detailed description of the response.
+- ``data`` (array): An array of objects, each representing a post. Each post
+  object has the following properties:
+  - ``href`` (string): The URL of the post.
+  - ``signature`` (string): The signature of the post.
+  - ``timestamp`` (integer): The timestamp of the post.
+  - ``title`` (string): The title of the post.
+  - ``type`` (string): The type of the post.
+  - ``signer`` (string): The Ethereum address that signed the message. Can be a
+    delegated address or the address that represents the user's identity.
+  - ``identity`` (string): The Ethereum address of the identity (the wallet
+    with which the user minted the NFT).
+
 
 **POST /api/v1/messages**
 

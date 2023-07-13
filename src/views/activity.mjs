@@ -14,6 +14,7 @@ import Sidebar from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
 import Head from "./components/head.mjs";
 import * as store from "../store.mjs";
+import * as registry from "../chainstate/registry.mjs";
 import * as id from "../id.mjs";
 import * as moderation from "./moderation.mjs";
 
@@ -30,14 +31,14 @@ const generateFeed = (messages) => {
 
       if (message.type === "amplify" && !firstAmplify[href]) {
         firstAmplify[href] = message;
-        return { address: message.address, verb: "submitted", message };
+        return { identity: message.identity, verb: "submitted", message };
       } else {
         const submission = firstAmplify[href];
         return {
-          address: message.address,
+          identity: message.identity,
           verb: "upvoted",
           message,
-          towards: submission.address,
+          towards: submission.identity,
         };
       }
     })
@@ -73,12 +74,12 @@ function generateRow(activity, i) {
             </svg>
           </div>
           <div style="width: 15px; height: 15px; margin-right: 15px;">
-            <ens-avatar address=${activity.address} />
+            <ens-avatar address=${activity.identity} />
           </div>
           <div>
             <p>
               <strong>
-                <a href="/upvotes?address=${activity.address}">
+                <a href="/upvotes?address=${activity.identity}">
                   ${activity.displayName}
                 </a>
                 <span> </span>
@@ -100,11 +101,11 @@ function generateRow(activity, i) {
   `;
 }
 
-export default async function (trie, theme, address) {
-  if (!address) {
+export default async function (trie, theme, identity) {
+  if (!identity) {
     return html`Address has to be a query parameter`;
   }
-  if (!utils.isAddress(address)) {
+  if (!utils.isAddress(identity)) {
     return html`Not a valid address`;
   }
 
@@ -112,23 +113,34 @@ export default async function (trie, theme, address) {
   const cutoff = sub(new Date(), {
     weeks: 2,
   });
-  const cutoffUnixtime = Math.floor(cutoff.getTime() / 1000);
   const from = null;
   const amount = null;
   const parser = JSON.parse;
-  let leaves = await store.leaves(trie, from, amount, parser, cutoffUnixtime);
+  const cutoffUnixtime = Math.floor(cutoff.getTime() / 1000);
+  const allowlist = await registry.allowlist();
+  const delegations = await registry.delegations();
+  let leaves = await store.posts(
+    trie,
+    from,
+    amount,
+    parser,
+    cutoffUnixtime,
+    allowlist,
+    delegations
+  );
   leaves = moderation.moderate(leaves, config);
 
   const activities = generateFeed(leaves);
   const filteredActivities = activities.filter(
     (activity) =>
       activity.verb === "upvoted" &&
-      activity.towards.toLowerCase() === address.toLowerCase()
+      // TODO: Should start using ethers.utils.getAddress
+      activity.towards.toLowerCase() === identity.toLowerCase()
   );
 
   let notifications = [];
   for await (let activity of filteredActivities) {
-    const ensData = await ens.resolve(activity.address);
+    const ensData = await ens.resolve(activity.identity);
     notifications.push({
       ...activity,
       displayName: ensData.displayName,

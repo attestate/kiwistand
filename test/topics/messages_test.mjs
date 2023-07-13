@@ -9,6 +9,7 @@ import { sign, create } from "../../src/id.mjs";
 import { handlers, name } from "../../src/topics/messages.mjs";
 import * as store from "../../src/store.mjs";
 import { toDigest } from "../../src/id.mjs";
+import { EIP712_MESSAGE } from "../../src/constants.mjs";
 
 test("return upon false topic name", async (t) => {
   const evt = {
@@ -88,7 +89,7 @@ test.serial("adding valid message to trie", async (t) => {
   const type = "amplify";
   const timestamp = 1676559616;
   const message = create(text, href, type, timestamp);
-  const signedMessage = await sign(signer, message);
+  const signedMessage = await sign(signer, message, EIP712_MESSAGE);
   t.deepEqual(signedMessage, {
     ...message,
     signature:

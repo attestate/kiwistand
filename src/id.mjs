@@ -14,7 +14,7 @@ import addFormats from "ajv-formats";
 import { utils } from "ethers";
 import canonicalize from "canonicalize";
 
-import { SCHEMATA, EIP712_DOMAIN, EIP712_TYPES } from "./constants.mjs";
+import { SCHEMATA, EIP712_DOMAIN, EIP712_MESSAGE } from "./constants.mjs";
 
 import log from "./logger.mjs";
 
@@ -72,12 +72,8 @@ export function create(title, href, type, timestamp) {
   return message;
 }
 
-export async function sign(signer, message) {
-  const signature = await signer._signTypedData(
-    EIP712_DOMAIN,
-    EIP712_TYPES,
-    message
-  );
+export async function sign(signer, message, types) {
+  const signature = await signer._signTypedData(EIP712_DOMAIN, types, message);
   return {
     ...message,
     signature,
@@ -97,12 +93,12 @@ function cacheResult(cacheKey, computeFunc) {
   return result;
 }
 
-export function ecrecover(message, enableCache = false) {
+export function ecrecover(message, types, enableCache = false) {
   const copy = { ...message };
   delete copy["signature"];
 
   const computeFunc = () =>
-    utils.verifyTypedData(EIP712_DOMAIN, EIP712_TYPES, copy, message.signature);
+    utils.verifyTypedData(EIP712_DOMAIN, types, copy, message.signature);
 
   if (enableCache) {
     const cacheKey = JSON.stringify(copy) + message.signature;
@@ -110,6 +106,22 @@ export function ecrecover(message, enableCache = false) {
   }
 
   return computeFunc();
+}
+
+// NOTE: registry.allowlist guarantees checksummed addresses and so does
+// @attestate/delegator2.
+export function eligible(allowlist, delegations, address) {
+  address = utils.getAddress(address);
+  const allowed0 = allowlist.includes(address);
+  if (allowed0) return address;
+
+  const from = delegations[address];
+  if (!from) return false;
+
+  const allowed1 = allowlist.includes(from);
+  if (allowed1) return from;
+
+  return false;
 }
 
 const messageValidator = ajv.compile(SCHEMATA.message);
@@ -123,5 +135,5 @@ export function verify(message) {
     throw new Error(errMessage);
   }
 
-  return ecrecover(message);
+  return ecrecover(message, EIP712_MESSAGE);
 }

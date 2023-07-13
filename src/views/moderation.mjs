@@ -4,6 +4,7 @@ import normalizeUrl from "normalize-url";
 
 import * as id from "../id.mjs";
 import log from "../logger.mjs";
+import { EIP712_MESSAGE } from "../constants.mjs";
 
 const fetch = fetchBuilder.withCache(
   new MemoryCache({
@@ -36,6 +37,7 @@ export async function getLists() {
     log(`banlist_addresses: Couldn't get config: ${err.toString()}`);
     return defaultObj;
   }
+  // TODO: Should start using ethers.utils.getAddress
   const addresses = addrResponse.map(({ address }) => address.toLowerCase());
 
   let linkResponse;
@@ -66,18 +68,22 @@ export async function getLists() {
 }
 
 export function moderate(leaves, config) {
-  return leaves
-    .map((leaf) => {
-      const alternativeTitle = config.titles[normalizeUrl(leaf.href)];
-      const nextTitle = alternativeTitle ? alternativeTitle : leaf.title;
+  return (
+    leaves
+      .map((leaf) => {
+        const alternativeTitle = config.titles[normalizeUrl(leaf.href)];
+        const nextTitle = alternativeTitle ? alternativeTitle : leaf.title;
 
-      const cacheEnabled = true;
-      return {
-        ...leaf,
-        address: id.ecrecover(leaf, cacheEnabled),
-        title: nextTitle,
-      };
-    })
-    .filter(({ address }) => !config.addresses.includes(address.toLowerCase()))
-    .filter(({ href }) => !config.links.includes(normalizeUrl(href)));
+        const cacheEnabled = true;
+        return {
+          ...leaf,
+          title: nextTitle,
+        };
+      })
+      // TODO: Should start using ethers.utils.getAddress
+      .filter(
+        ({ identity }) => !config.addresses.includes(identity.toLowerCase())
+      )
+      .filter(({ href }) => !config.links.includes(normalizeUrl(href)))
+  );
 }

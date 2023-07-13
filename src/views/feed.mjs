@@ -17,7 +17,9 @@ import Head from "./components/head.mjs";
 import * as store from "../store.mjs";
 import * as id from "../id.mjs";
 import * as moderation from "./moderation.mjs";
+import * as registry from "../chainstate/registry.mjs";
 import log from "../logger.mjs";
+import { EIP712_MESSAGE } from "../constants.mjs";
 
 const html = htm.bind(vhtml);
 const fetch = fetchBuilder.withCache(
@@ -50,7 +52,7 @@ export function count(leaves) {
         title: leaf.title,
         timestamp: leaf.timestamp,
         href: leaf.href,
-        address: leaf.address,
+        identity: leaf.identity,
         displayName: leaf.displayName,
         upvotes: 1,
       };
@@ -89,14 +91,10 @@ async function editors(leaves) {
 
   function editorPicks(leaves, config, links) {
     const cacheEnabled = true;
-    const editorStories = leaves
-      .map((leaf) => ({
-        address: id.ecrecover(leaf, cacheEnabled),
-        ...leaf,
-      }))
-      .filter(
-        ({ address }) => address.toLowerCase() === config.address.toLowerCase()
-      );
+    const editorStories = leaves.filter(
+      // TODO: Should start using ethers.utils.getAddress
+      ({ identity }) => identity.toLowerCase() === config.address.toLowerCase()
+    );
 
     if (links && Array.isArray(links) && links.length > 0) {
       return editorStories.filter(({ href }) =>
@@ -158,11 +156,22 @@ export default async function index(trie, theme, page) {
   const aWeekAgo = sub(new Date(), {
     weeks: 1,
   });
-  const aWeekAgoUnixTime = Math.floor(aWeekAgo.getTime() / 1000);
   const from = null;
   const amount = null;
   const parser = JSON.parse;
-  let leaves = await store.leaves(trie, from, amount, parser, aWeekAgoUnixTime);
+  const aWeekAgoUnixTime = Math.floor(aWeekAgo.getTime() / 1000);
+  const allowlist = await registry.allowlist();
+  const delegations = await registry.delegations();
+
+  let leaves = await store.posts(
+    trie,
+    from,
+    amount,
+    parser,
+    aWeekAgoUnixTime,
+    allowlist,
+    delegations
+  );
   const policy = await moderation.getLists();
   leaves = moderation.moderate(leaves, policy);
 
@@ -178,7 +187,7 @@ export default async function index(trie, theme, page) {
 
   let stories = [];
   for await (let story of storyPromises) {
-    const ensData = await ens.resolve(story.address);
+    const ensData = await ens.resolve(story.identity);
     stories.push({
       ...story,
       displayName: ensData.displayName,
@@ -333,7 +342,7 @@ export default async function index(trie, theme, page) {
                               ${story.upvotes}
                               <span> upvotes by </span>
                               <a
-                                href="/upvotes?address=${story.address}"
+                                href="/upvotes?address=${story.identity}"
                                 class="meta-link"
                               >
                                 ${story.displayName}
