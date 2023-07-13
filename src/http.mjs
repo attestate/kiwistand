@@ -21,6 +21,7 @@ import activity from "./views/activity.mjs";
 import about from "./views/about.mjs";
 import why from "./views/why.mjs";
 import submit from "./views/submit.mjs";
+import settings from "./views/settings.mjs";
 
 const app = express();
 
@@ -86,6 +87,10 @@ export async function launch(trie, libp2p) {
     const content = await about(reply.locals.theme);
     return reply.status(200).type("text/html").send(content);
   });
+  app.get("/settings", async (request, reply) => {
+    const content = await settings(reply.locals.theme);
+    return reply.status(200).type("text/html").send(content);
+  });
   app.get("/why", async (request, reply) => {
     const content = await why(reply.locals.theme);
     return reply.status(200).type("text/html").send(content);
@@ -135,7 +140,7 @@ export async function launch(trie, libp2p) {
     const content = await submit(reply.locals.theme, url, title);
     return reply.status(200).type("text/html").send(content);
   });
-  
+
   app.listen(env.HTTP_PORT, () =>
     log(`Launched HTTP server at port "${env.HTTP_PORT}"`)
   );

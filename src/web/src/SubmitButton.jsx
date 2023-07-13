@@ -1,6 +1,7 @@
 import React from "react";
 import { useEffect, useState } from "react";
-import { useSigner, useAccount, WagmiConfig } from "wagmi";
+import { Wallet } from "ethers";
+import { useProvider, useSigner, useAccount, WagmiConfig } from "wagmi";
 import { ConnectKitProvider, ConnectKitButton } from "connectkit";
 
 import * as API from "./API.mjs";
@@ -11,7 +12,19 @@ const SubmitButton = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [title, setTitle] = useState("");
   const [url, setUrl] = useState("");
-  const { data: signer, isError } = useSigner();
+  const account = useAccount();
+
+  const localKey = localStorage.getItem(`-kiwi-news-${account.address}-key`);
+  const provider = useProvider();
+  const result = useSigner();
+
+  let signer, isError;
+  if (localKey) {
+    signer = new Wallet(localKey, provider);
+  } else {
+    signer = result.data;
+    isError = result.isError;
+  }
   useEffect(() => {
     const urlInput = document.getElementById("urlInput");
     const titleInput = document.getElementById("titleInput");

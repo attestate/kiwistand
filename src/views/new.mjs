@@ -181,10 +181,11 @@ export default async function (trie, theme) {
                     </div>
                   </td>
                 </tr>
+                <tr class="spacer" style="height:15px"></tr>
               `
             )}
           </table>
-          ${Footer(theme)}
+          ${Footer(theme, "/new")}
         </center>
       </body>
     </html>

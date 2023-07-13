@@ -1,5 +1,6 @@
 // @format
-import { useSignTypedData, useAccount, WagmiConfig } from "wagmi";
+import { useSigner, useAccount, WagmiConfig, useProvider } from "wagmi";
+import { Wallet } from "ethers";
 import { ConnectKitProvider, ConnectKitButton } from "connectkit";
 
 import * as API from "./API.mjs";
@@ -18,16 +19,26 @@ const Container = (props) => {
 
 const Vote = (props) => {
   const value = API.messageFab(props.title, props.href);
-  const { data, signTypedDataAsync } = useSignTypedData({
-    domain: API.EIP712_DOMAIN,
-    types: API.EIP712_TYPES,
-    value,
-  });
+  const account = useAccount();
+  const localKey = localStorage.getItem(`-kiwi-news-${account.address}-key`);
+  const provider = useProvider();
+  const result = useSigner();
+  let signer, isError;
+  if (localKey) {
+    signer = new Wallet(localKey, provider);
+  } else {
+    signer = result.data;
+    isError = result.isError;
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     showMessage("Please sign the message in your wallet");
-    const signature = await signTypedDataAsync();
+    const signature = await signer._signTypedData(
+      API.EIP712_DOMAIN,
+      API.EIP712_TYPES,
+      value
+    );
     const response = await API.send(value, signature);
 
     console.log(response);

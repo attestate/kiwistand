@@ -12,6 +12,7 @@ import {
   ConnectedConnectButton,
 } from "./Navigation.jsx";
 import SubmitButton from "./SubmitButton.jsx";
+import DelegateButton from "./DelegateButton.jsx";
 import Vote from "./Vote.jsx";
 import Bell from "./Bell.jsx";
 import NFTPrice from "./NFTPrice.jsx";
@@ -77,6 +78,15 @@ function toggleSidebar() {
 }
 
 document.addEventListener("click", handleClick);
+
+const delegateButtonContainer = document.querySelector("delegate-button");
+if (delegateButtonContainer) {
+  ReactDOM.createRoot(delegateButtonContainer).render(
+    <React.StrictMode>
+      <DelegateButton />
+    </React.StrictMode>
+  );
+}
 
 const profileLink = document.querySelector("nav-profile");
 ReactDOM.createRoot(profileLink).render(
