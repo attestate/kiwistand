@@ -5,6 +5,20 @@
 - We are versioning according to [semver.org](https://semver.org)
 - We are currently in the ["Initial development phase"](https://semver.org/#spec-item-4)
 
+## 0.4.0
+
+- Require new environment variable `OPTIMISM_RPC_HTTP_HOST`
+- Website: Minor stylistic changes
+- Protocol:
+  - All semantic version identifiers have been upgraded as a major version to
+    avoid name collisions with nodes running older versions of this software.
+- API
+  - POST /api/v1/list endpoint now adds two new properties to a message
+    `identity` and `signer`.
+  - POST /api/v1/messages now accepts messages signed from a delegate address.
+- Docs
+  - Document difference in ports between API and frontend
+
 ## 0.3.0
 
 - Environment Variables
