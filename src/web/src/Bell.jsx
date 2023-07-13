@@ -1,10 +1,8 @@
 // @format
 import { useEffect, useState } from "react";
-import { WagmiConfig, useAccount } from "wagmi";
-import { ConnectKitProvider } from "connectkit";
+import { useAccount } from "wagmi";
 
 import { fetchNotifications } from "./API.mjs";
-import client from "./client.mjs";
 
 const Bell = ({ to, children }) => {
   const { address } = useAccount();

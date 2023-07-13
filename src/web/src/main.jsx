@@ -1,9 +1,15 @@
 import "./polyfills";
-import React from "react";
+import "@rainbow-me/rainbowkit/styles.css";
+import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
-import { getAccount, watchAccount } from "@wagmi/core";
+import {
+  getAccount,
+  watchAccount,
+  fetchEnsAvatar,
+  fetchEnsName,
+} from "@wagmi/core";
 import { WagmiConfig } from "wagmi";
-import { Avatar, ConnectKitProvider } from "connectkit";
+import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 
 import {
   ConnectedProfile,
@@ -19,7 +25,7 @@ import NFTPrice from "./NFTPrice.jsx";
 import OnboardingModal from "./OnboardingModal.jsx";
 import { showMessage } from "./message.mjs";
 import { fetchAllowList } from "./API.mjs";
-import client from "./client.mjs";
+import { client, chains } from "./client.mjs";
 
 async function updateLink(account) {
   const allowList = await fetchAllowList();
@@ -157,24 +163,6 @@ if (nftPriceElements && nftPriceElements.length > 0) {
       </React.StrictMode>
     );
   });
-}
-
-const avatars = document.querySelectorAll("ens-avatar");
-if (avatars) {
-  for (let elem of avatars) {
-    const address = elem.getAttribute("address");
-    const isLeaderboard = elem.hasAttribute("leaderboard");
-    const size = isLeaderboard ? 35 : 15;
-    ReactDOM.createRoot(elem).render(
-      <React.StrictMode>
-        <WagmiConfig client={client}>
-          <ConnectKitProvider>
-            <Avatar name={address} size={size} radius={0} />
-          </ConnectKitProvider>
-        </WagmiConfig>
-      </React.StrictMode>
-    );
-  }
 }
 
 let url = new URL(window.location.href);

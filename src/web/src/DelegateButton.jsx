@@ -3,32 +3,18 @@ import {
   useContractWrite,
   WagmiConfig,
   useAccount,
-  useContractRead,
   useProvider,
 } from "wagmi";
 import { useEffect, useState } from "react";
-import { ConnectKitProvider, ConnectKitButton } from "connectkit";
 import { utils, Wallet } from "ethers";
 import { optimism } from "wagmi/chains";
 import { create } from "@attestate/delegator2";
+import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 
-import client from "./client.mjs";
+import { client, chains } from "./client.mjs";
 import { showMessage } from "./message.mjs";
 
 const abi = [
-  {
-    inputs: [
-      {
-        internalType: "bytes32[3]",
-        name: "data",
-        type: "bytes32[3]",
-      },
-    ],
-    name: "etch",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
   {
     anonymous: false,
     inputs: [
@@ -41,6 +27,13 @@ const abi = [
     ],
     name: "Delegate",
     type: "event",
+  },
+  {
+    inputs: [{ internalType: "bytes32[3]", name: "data", type: "bytes32[3]" }],
+    name: "etch",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
   },
 ];
 
@@ -141,30 +134,13 @@ const DelegateButton = () => {
   );
 };
 
-const CenteredConnectKitButton = () => {
-  return (
-    <div className="connect-kit-wrapper">
-      <h3>You're almost there!</h3>
-      <p>
-        To submit links to the p2p network you'll need to:
-        <br />
-        <br />
-        🥝 connect your wallet
-        <br />
-        🥝 mint our News Access NFT.
-      </p>
-      <ConnectKitButton />
-    </div>
-  );
-};
-
 const Form = () => {
   const { isConnected } = useAccount();
   return (
     <WagmiConfig client={client}>
-      <ConnectKitProvider>
-        {isConnected ? <DelegateButton /> : <CenteredConnectKitButton />}
-      </ConnectKitProvider>
+      <RainbowKitProvider chains={chains}>
+        <DelegateButton />
+      </RainbowKitProvider>
     </WagmiConfig>
   );
 };

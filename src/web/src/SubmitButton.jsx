@@ -2,10 +2,10 @@ import React from "react";
 import { useEffect, useState } from "react";
 import { Wallet } from "ethers";
 import { useProvider, useSigner, useAccount, WagmiConfig } from "wagmi";
-import { ConnectKitProvider, ConnectKitButton } from "connectkit";
+import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 
 import * as API from "./API.mjs";
-import client from "./client.mjs";
+import { client, chains } from "./client.mjs";
 import { showMessage } from "./message.mjs";
 
 const SubmitButton = () => {
@@ -123,30 +123,13 @@ const SubmitButton = () => {
   );
 };
 
-const CenteredConnectKitButton = () => {
-  return (
-    <div className="connect-kit-wrapper">
-      <h3>You're almost there!</h3>
-      <p>
-        To submit links to the p2p network you'll need to:
-        <br />
-        <br />
-        🥝 connect your wallet
-        <br />
-        🥝 mint our News Access NFT.
-      </p>
-      <ConnectKitButton />
-    </div>
-  );
-};
-
 const Form = () => {
   const { isConnected } = useAccount();
   return (
     <WagmiConfig client={client}>
-      <ConnectKitProvider>
-        {isConnected ? <SubmitButton /> : <CenteredConnectKitButton />}
-      </ConnectKitProvider>
+      <RainbowKitProvider chains={chains}>
+        <SubmitButton />
+      </RainbowKitProvider>
     </WagmiConfig>
   );
 };

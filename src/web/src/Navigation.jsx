@@ -1,6 +1,6 @@
 import { WagmiConfig, createClient, useAccount } from "wagmi";
-import { Avatar, ConnectKitProvider, ConnectKitButton } from "connectkit";
-import client from "./client.mjs";
+import { RainbowKitProvider, ConnectButton } from "@rainbow-me/rainbowkit";
+import { client, chains } from "./client.mjs";
 import { useEffect, useState } from "react";
 
 import Bell from "./Bell.jsx";
@@ -117,11 +117,12 @@ const DisconnectSVG = () => (
 );
 const DisconnectButton = () => {
   return (
-    <ConnectKitButton.Custom>
-      {({ isConnected, show }) => {
-        if (isConnected) {
+    <ConnectButton.Custom>
+      {({ account, chain, mounted, openConnectModal, openAccountModal }) => {
+        const connected = account && chain && mounted;
+        if (connected) {
           return (
-            <div onClick={show} className="sidebar-div">
+            <div onClick={openAccountModal} className="sidebar-div">
               <div style={{ display: "flex", alignItems: "center" }}>
                 <div className="svg-container">
                   <DisconnectSVG />
@@ -134,11 +135,11 @@ const DisconnectButton = () => {
           return null;
         }
       }}
-    </ConnectKitButton.Custom>
+    </ConnectButton.Custom>
   );
 };
 
-const ConnectButton = () => {
+const CustomConnectButton = () => {
   const buttonStyle = {
     borderRadius: "2px",
     padding: "5px 15px 5px 15px",
@@ -152,9 +153,10 @@ const ConnectButton = () => {
   };
 
   return (
-    <ConnectKitButton.Custom>
-      {({ isConnected, show, address }) => {
-        if (isConnected) {
+    <ConnectButton.Custom>
+      {({ account, chain, mounted, openConnectModal }) => {
+        const connected = account && chain && mounted;
+        if (connected) {
           return (
             <Bell to="/activity">
               <i class="icon">
@@ -186,8 +188,8 @@ const ConnectButton = () => {
           );
         } else {
           return (
-            <a style={buttonStyle} onClick={show}>
-              {isConnected ? (
+            <a style={buttonStyle} onClick={openConnectModal}>
+              {connected ? (
                 <span style={{ color: "#828282" }}>
                   <span
                     style={{
@@ -195,27 +197,25 @@ const ConnectButton = () => {
                       marginRight: "5px",
                       display: "inline-block",
                     }}
-                  >
-                    <Avatar name={address} size={8} radius={0} />
-                  </span>
+                  ></span>
                 </span>
               ) : (
                 ""
               )}
 
-              {isConnected ? shorten(address) : "Connect"}
+              {connected ? shorten(account) : "Connect"}
             </a>
           );
         }
       }}
-    </ConnectKitButton.Custom>
+    </ConnectButton.Custom>
   );
 };
 
 const Connector = ({ children }) => {
   return (
     <WagmiConfig client={client}>
-      <ConnectKitProvider>{children}</ConnectKitProvider>
+      <RainbowKitProvider chains={chains}>{children}</RainbowKitProvider>
     </WagmiConfig>
   );
 };
@@ -232,7 +232,7 @@ export const ConnectedDisconnectButton = () => (
 );
 export const ConnectedConnectButton = () => (
   <Connector>
-    <ConnectButton />
+    <CustomConnectButton />
   </Connector>
 );
 export const ConnectedLearnMore = () => (

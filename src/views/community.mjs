@@ -97,6 +97,7 @@ export default async function (trie, theme) {
   return html`
     <html lang="en" op="news">
       <head>
+        <script src="https://unpkg.com/@zoralabs/zorb@^0.0/dist/zorb-web-component.umd.js"></script>
         ${Head}
         <meta name="description" content="Meet the Kiwi News community, which curates our feed. You can also check out our leaderboard to see who's most active." />
       </head>
@@ -149,12 +150,12 @@ export default async function (trie, theme) {
             >
               <div style="width: 8%; text-align: left;">${i + 1}.</div>
               <div style="display: flex; align-items: center; width: 60%;">
-                <div style="width: 40px; height: 40px; box-sizing: border-box;">
-                  <ens-avatar
+                <div style="width: 20px; height: 20px; box-sizing: border-box;">
+                  <zora-zorb
+                    style="margin-right: 15px;"
+                    size="20px"
                     address="${user.identity}"
-                    leaderboard
-                    style="width: 40px; height: 40px;"
-                  />
+                  ></zora-zorb>
                 </div>
                 <div style="margin-left: 10px; flex-grow: 1;">
                   ${user.displayName}

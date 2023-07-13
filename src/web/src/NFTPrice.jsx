@@ -1,8 +1,8 @@
 import { useContractRead, WagmiConfig } from "wagmi";
-import { ConnectKitProvider } from "connectkit";
+import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { utils } from "ethers";
 
-import client from "./client.mjs";
+import { client, chains } from "./client.mjs";
 
 const abi = [
   {
@@ -103,6 +103,7 @@ const PriceComponent = () => {
     address,
     abi,
     functionName: "saleDetails",
+    chainId: 1,
   });
 
   const salesPrice = salesDetails?.data?.publicSalePrice || 0;
@@ -113,9 +114,9 @@ const PriceComponent = () => {
 const WrappedPriceComponent = () => {
   return (
     <WagmiConfig client={client}>
-      <ConnectKitProvider>
+      <RainbowKitProvider chains={chains}>
         <PriceComponent />
-      </ConnectKitProvider>
+      </RainbowKitProvider>
     </WagmiConfig>
   );
 };

@@ -1,18 +1,18 @@
 // @format
 import { useSigner, useAccount, WagmiConfig, useProvider } from "wagmi";
 import { Wallet } from "ethers";
-import { ConnectKitProvider, ConnectKitButton } from "connectkit";
+import { RainbowKitProvider, ConnectButton } from "@rainbow-me/rainbowkit";
 
 import * as API from "./API.mjs";
-import client from "./client.mjs";
+import { client, chains } from "./client.mjs";
 import { showMessage } from "./message.mjs";
 
 const Container = (props) => {
   return (
     <WagmiConfig client={client}>
-      <ConnectKitProvider>
+      <RainbowKitProvider chains={chains}>
         <Vote {...props} />
-      </ConnectKitProvider>
+      </RainbowKitProvider>
     </WagmiConfig>
   );
 };
@@ -23,9 +23,10 @@ const Vote = (props) => {
   const localKey = localStorage.getItem(`-kiwi-news-${account.address}-key`);
   const provider = useProvider();
   const result = useSigner();
-  let signer, isError;
+  let signer, isError, isLocal;
   if (localKey) {
     signer = new Wallet(localKey, provider);
+    isLocal = true;
   } else {
     signer = result.data;
     isError = result.isError;
@@ -33,7 +34,7 @@ const Vote = (props) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    showMessage("Please sign the message in your wallet");
+    if (!isLocal) showMessage("Please sign the message in your wallet");
     const signature = await signer._signTypedData(
       API.EIP712_DOMAIN,
       API.EIP712_TYPES,
@@ -46,7 +47,8 @@ const Vote = (props) => {
     if (response.status === "success") {
       message = "Thanks for your upvote! Have a 🥝";
     } else if (response.status === "error") {
-      message = `Sad Kiwi :( "${response.details}"`;
+      showMessage(`Sad Kiwi :( "${response.details}"`);
+      return;
     }
     let url = new URL(window.location.href);
     url.searchParams.set("bpc", "1");
@@ -55,13 +57,14 @@ const Vote = (props) => {
   };
 
   return (
-    <ConnectKitButton.Custom>
-      {({ show, isConnected }) => {
+    <ConnectButton.Custom>
+      {({ account, chain, mounted, openConnectModal }) => {
+        const connected = account && chain && mounted;
         return (
           <div
             onClick={(e) => {
-              if (!isConnected) {
-                show();
+              if (!connected) {
+                openConnectModal();
               }
               handleSubmit(e);
             }}
@@ -70,7 +73,7 @@ const Vote = (props) => {
           ></div>
         );
       }}
-    </ConnectKitButton.Custom>
+    </ConnectButton.Custom>
   );
 };
 
