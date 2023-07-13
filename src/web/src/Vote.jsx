@@ -16,15 +16,13 @@ const Container = (props) => {
   );
 };
 
-
 const Vote = (props) => {
   const value = API.messageFab(props.title, props.href);
-  const { data, signTypedDataAsync } =
-    useSignTypedData({
-      domain: API.EIP712_DOMAIN,
-      types: API.EIP712_TYPES,
-      value,
-    });
+  const { data, signTypedDataAsync } = useSignTypedData({
+    domain: API.EIP712_DOMAIN,
+    types: API.EIP712_TYPES,
+    value,
+  });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -36,12 +34,12 @@ const Vote = (props) => {
     let message;
     if (response.status === "success") {
       message = "Thanks for your upvote! Have a 🥝";
-    } else if(response.status === "error") {
+    } else if (response.status === "error") {
       message = `Sad Kiwi :( "${response.details}"`;
     }
     let url = new URL(window.location.href);
-    url.searchParams.set('bpc', '1');
-    url.searchParams.set('message', message);
+    url.searchParams.set("bpc", "1");
+    url.searchParams.set("message", message);
     window.location.href = url.href;
   };
 
@@ -52,13 +50,13 @@ const Vote = (props) => {
           <div
             onClick={(e) => {
               if (!isConnected) {
-                show()
+                show();
               }
-              handleSubmit(e)
+              handleSubmit(e);
             }}
             className="votearrow"
-            title="upvote">
-          </div>
+            title="upvote"
+          ></div>
         );
       }}
     </ConnectKitButton.Custom>

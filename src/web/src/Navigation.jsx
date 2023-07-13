@@ -1,23 +1,29 @@
 import { WagmiConfig, createClient, useAccount } from "wagmi";
 import { Avatar, ConnectKitProvider, ConnectKitButton } from "connectkit";
 import client from "./client.mjs";
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 
-import Bell from './Bell.jsx'
+import Bell from "./Bell.jsx";
 
-const shorten = address => address.slice(0,6)+"..."+address.slice(address.length-4, address.length);
+const shorten = (address) =>
+  address.slice(0, 6) +
+  "..." +
+  address.slice(address.length - 4, address.length);
 
 const LearnMore = () => {
   const { isConnected } = useAccount();
   const [display, setDisplay] = useState(false);
-  
+
   useEffect(() => {
     setDisplay(!isConnected);
   }, [isConnected]);
 
   return display ? (
-    <div style={{textAlign: "center", paddingRight: "4px"}}>
-      <a href="/welcome" style={{textDecoration: "underline", color: "black"}}>
+    <div style={{ textAlign: "center", paddingRight: "4px" }}>
+      <a
+        href="/welcome"
+        style={{ textDecoration: "underline", color: "black" }}
+      >
         Learn more <br />
         about 🥝
       </a>
@@ -27,7 +33,7 @@ const LearnMore = () => {
 
 const ProfileSVG = () => (
   <svg
-    style={{paddingLeft: "8px", width: "1.5rem"}}
+    style={{ paddingLeft: "8px", width: "1.5rem" }}
     className="icon-svg"
     xmlns="http://www.w3.org/2000/svg"
     xmlns:xlink="http://www.w3.org/1999/xlink"
@@ -62,7 +68,7 @@ const ProfileSVG = () => (
 const Profile = () => {
   const { address, isConnected } = useAccount();
   const [display, setDisplay] = useState(false);
-  
+
   useEffect(() => {
     if (address && isConnected) {
       setDisplay(true);
@@ -72,11 +78,11 @@ const Profile = () => {
   }, [address, isConnected]);
 
   return display ? (
-    <a 
-      href={"/upvotes?address=" + address} 
-      style={{color: "black", textDecoration: "none", display: "block"}}
+    <a
+      href={"/upvotes?address=" + address}
+      style={{ color: "black", textDecoration: "none", display: "block" }}
     >
-      <div style={{display: "flex", alignItems: "center"}}>
+      <div style={{ display: "flex", alignItems: "center" }}>
         <div className="svg-container">
           <ProfileSVG />
         </div>
@@ -88,7 +94,7 @@ const Profile = () => {
 
 const DisconnectSVG = () => (
   <svg
-    style={{paddingTop: "5px", width: "1.8rem"}}
+    style={{ paddingTop: "5px", width: "1.8rem" }}
     className="icon-svg"
     xmlns="http://www.w3.org/2000/svg"
     xmlns:xlink="http://www.w3.org/1999/xlink"
@@ -112,14 +118,11 @@ const DisconnectSVG = () => (
 const DisconnectButton = () => {
   return (
     <ConnectKitButton.Custom>
-      {({ isConnected, show}) => {
+      {({ isConnected, show }) => {
         if (isConnected) {
           return (
-            <div 
-              onClick={show} 
-              className="sidebar-div"
-            >
-              <div style={{display: "flex", alignItems: "center"}}>
+            <div onClick={show} className="sidebar-div">
+              <div style={{ display: "flex", alignItems: "center" }}>
                 <div className="svg-container">
                   <DisconnectSVG />
                 </div>
@@ -134,7 +137,6 @@ const DisconnectButton = () => {
     </ConnectKitButton.Custom>
   );
 };
-
 
 const ConnectButton = () => {
   const buttonStyle = {
@@ -152,66 +154,89 @@ const ConnectButton = () => {
   return (
     <ConnectKitButton.Custom>
       {({ isConnected, show, address }) => {
-
         if (isConnected) {
           return (
-      <Bell to="/activity">
-        <i class="icon">
-          <svg style={{width:"25px"}} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path
-              d="M18.9,11.2s0-8.7-6.9-8.7-6.9,8.7-6.9,8.7v3.9L2.5,17.5h19l-2.6-2.4Z"
-              fill="none"
-              stroke="#000000"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-            />
+            <Bell to="/activity">
+              <i class="icon">
+                <svg
+                  style={{ width: "25px" }}
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M18.9,11.2s0-8.7-6.9-8.7-6.9,8.7-6.9,8.7v3.9L2.5,17.5h19l-2.6-2.4Z"
+                    fill="none"
+                    stroke="#000000"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                  />
 
-            <path
-              d="M14.5,20.5s-.5,1-2.5,1-2.5-1-2.5-1"
-              fill="none"
-              stroke="#000000"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-            />
-          </svg> </i>
-      </Bell>
-
+                  <path
+                    d="M14.5,20.5s-.5,1-2.5,1-2.5-1-2.5-1"
+                    fill="none"
+                    stroke="#000000"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                  />
+                </svg>{" "}
+              </i>
+            </Bell>
           );
-
         } else {
           return (
             <a style={buttonStyle} onClick={show}>
               {isConnected ? (
-                <span style={{color: "#828282"}}>
-                  <span style={{color: "black", marginRight: "5px", display: "inline-block"}}>
-                    <Avatar name={address} size={8} radius={0} /> 
+                <span style={{ color: "#828282" }}>
+                  <span
+                    style={{
+                      color: "black",
+                      marginRight: "5px",
+                      display: "inline-block",
+                    }}
+                  >
+                    <Avatar name={address} size={8} radius={0} />
                   </span>
                 </span>
-              ) : ""}
+              ) : (
+                ""
+              )}
 
-              {isConnected ? shorten(address) : "Connect" }
+              {isConnected ? shorten(address) : "Connect"}
             </a>
           );
-        }}
-      }
+        }
+      }}
     </ConnectKitButton.Custom>
   );
 };
 
-const Connector = ({children}) => {
+const Connector = ({ children }) => {
   return (
     <WagmiConfig client={client}>
-      <ConnectKitProvider>
-        {children}
-      </ConnectKitProvider>
+      <ConnectKitProvider>{children}</ConnectKitProvider>
     </WagmiConfig>
   );
 };
 
-export const ConnectedProfile = () => <Connector><Profile /></Connector>;
-export const ConnectedDisconnectButton = () => <Connector><DisconnectButton/></Connector>;
-export const ConnectedConnectButton = () => <Connector><ConnectButton /></Connector>;
-export const ConnectedLearnMore = () => <Connector><LearnMore/></Connector>;
-
+export const ConnectedProfile = () => (
+  <Connector>
+    <Profile />
+  </Connector>
+);
+export const ConnectedDisconnectButton = () => (
+  <Connector>
+    <DisconnectButton />
+  </Connector>
+);
+export const ConnectedConnectButton = () => (
+  <Connector>
+    <ConnectButton />
+  </Connector>
+);
+export const ConnectedLearnMore = () => (
+  <Connector>
+    <LearnMore />
+  </Connector>
+);
