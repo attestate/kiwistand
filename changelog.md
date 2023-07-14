@@ -5,6 +5,12 @@
 - We are versioning according to [semver.org](https://semver.org)
 - We are currently in the ["Initial development phase"](https://semver.org/#spec-item-4)
 
+## 0.5.0
+
+- Deactivate revocations temporarily until we're properly implementing them in
+  the set reconciliation algorithm. [Details](https://github.com/attestate/kiwistand/commit/71899f89d53809e9d17929c70d0935b08c3e21dc#diff-a769d9b90a5ba7d598420c1d02fc67325bd17e2d193747d5033fa52ee1e7d28eR15-R30).
+- Upgrade all protocol major versions.
+
 ## 0.4.0
 
 - Require new environment variable `OPTIMISM_RPC_HTTP_HOST`
