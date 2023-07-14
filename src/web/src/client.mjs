@@ -2,10 +2,10 @@
 import { getDefaultWallets } from "@rainbow-me/rainbowkit";
 import { createClient, configureChains, WagmiConfig } from "wagmi";
 import { alchemyProvider } from "wagmi/providers/alchemy";
-import { mainnet, optimism } from "wagmi/chains";
+import { optimism, mainnet } from "wagmi/chains";
 
 const config = configureChains(
-  [mainnet, optimism],
+  [optimism, mainnet],
   [alchemyProvider({ apiKey: "3ZBBnBhNn0nMmNcdgXFpqWqC981hd1Z2" })]
 );
 

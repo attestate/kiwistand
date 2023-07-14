@@ -76,7 +76,7 @@ const SubmitButton = () => {
     }
 
     setIsLoading(true);
-    showMessage("Please sign the message in your wallet!");
+    if (!localKey) showMessage("Please sign the message in your wallet!");
 
     let signature;
     try {

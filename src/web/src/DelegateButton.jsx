@@ -4,12 +4,15 @@ import {
   WagmiConfig,
   useAccount,
   useProvider,
+  useNetwork,
+  useSwitchNetwork,
 } from "wagmi";
-import { useEffect, useState } from "react";
+import { useMemo, useEffect, useState } from "react";
 import { utils, Wallet } from "ethers";
 import { optimism } from "wagmi/chains";
 import { create } from "@attestate/delegator2";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
+import useLocalStorageState from "use-local-storage-state";
 
 import { client, chains } from "./client.mjs";
 import { showMessage } from "./message.mjs";
@@ -40,37 +43,33 @@ const abi = [
 const address = "0x08b7ECFac2c5754ABafb789c84F8fa37c9f088B0";
 const newKey = Wallet.createRandom();
 const DelegateButton = () => {
-  const [payload, setPayload] = useState(null);
-  const [confirmation, setConfirmation] = useState(null);
+  const { chain } = useNetwork();
   const from = useAccount();
-  const keyName = `-kiwi-news-${from.address}-key`;
-  const [key, setKey] = useState(localStorage.getItem(keyName));
+  const { switchNetwork } = useSwitchNetwork();
+  const [keyName, setKeyName] = useState(null);
+
+  useEffect(() => {
+    if (from.address) {
+      setKeyName(`-kiwi-news-${from.address}-key`);
+    }
+  }, [from.address]);
+
+  const [key, setKey, { removeItem, isPersistent }] = useLocalStorageState(
+    keyName,
+    {
+      serializer: {
+        stringify: (val) => val,
+        parse: (val) => val,
+      },
+    }
+  );
+
+  const [confirmation, setConfirmation] = useState(null);
   const provider = useProvider();
 
-  const { config, error } = usePrepareContractWrite({
-    address,
-    abi,
-    functionName: "etch",
-    args: [payload],
-    chainId: optimism.id,
-  });
-
-  const { data, write, isLoading, isSuccess } = useContractWrite(config);
-  if (isSuccess) {
-    console.log("Saving your new key with address", newKey.address);
-    localStorage.setItem(keyName, newKey.privateKey);
-  }
-
-  const handleClick = () => {
-    localStorage.removeItem(keyName);
-    setKey(null);
-    return;
-  };
-
-  let wallet;
-  if (key) {
-    wallet = new Wallet(key, provider);
-  }
+  const [config, setConfig] = useState({});
+  const [isError, setIsError] = useState(false);
+  const [payload, setPayload] = useState(null);
 
   useEffect(() => {
     const generate = async () => {
@@ -83,13 +82,66 @@ const DelegateButton = () => {
       );
       setPayload(payload);
     };
-    generate();
-  }, []);
+    if (from.address) generate();
+  }, [from.address]);
 
+  const prepArgs = useMemo(
+    () => ({
+      address,
+      abi,
+      functionName: "etch",
+      args: [payload],
+      chainId: optimism.id,
+    }),
+    [payload]
+  );
+
+  const {
+    config: configData,
+    error,
+    isError: isPrepError,
+  } = usePrepareContractWrite(prepArgs);
+
+  useEffect(() => {
+    if (configData) {
+      setConfig(configData);
+      setIsError(isPrepError);
+      if (error) console.log("error in contract write prepare", error);
+    }
+  }, [configData, error, isPrepError]);
+
+  const writeArgs = useMemo(() => config || {}, [config]);
+
+  const { data, write, isLoading, isSuccess } = useContractWrite(config);
+  if (isSuccess) setKey(newKey.privateKey);
+
+  const handleClick = () => {
+    removeItem();
+    return;
+  };
+
+  let wallet;
+  if (key) {
+    wallet = new Wallet(key, provider);
+  }
+
+  if (!from.address) return <b>Please connect your wallet</b>;
   if (key && wallet) {
     const disabled = confirmation !== "delete key";
     return (
       <div>
+        <p>
+          <b>You're set!</b>
+        </p>
+        <p>
+          We've now stored your delegation key on Optimism for this device. You
+          should be able to upvote and submit links without needing to confirm
+          these actions in your wallet!
+        </p>
+        <p>
+          <b>PLEASE NOTE: </b>
+          It might take up to 5 minutes for your key to enter the system!
+        </p>
         <p>
           <b>Key storage</b>
         </p>
@@ -108,6 +160,8 @@ const DelegateButton = () => {
             value={confirmation}
             onChange={(e) => setConfirmation(e.target.value)}
           />
+          <br />
+          <br />
           <button
             className="buy-button"
             disabled={disabled}
@@ -119,17 +173,36 @@ const DelegateButton = () => {
       </div>
     );
   }
-  return (
-    <div>
-      <button
-        className="buy-button"
-        disabled={!write || isLoading || isSuccess}
-        onClick={() => write?.()}
-      >
+  if (!write && !isError) {
+    return <p>Loading from local storage...</p>;
+  }
+  let content;
+  let activity;
+  let handler;
+  if (chain.id === 10) {
+    content = (
+      <span>
         {!isLoading && !isSuccess && <div>Delegate on Optimism</div>}
         {isLoading && <div>Please sign transaction</div>}
         {isSuccess && <div>Delegation successful, please reload</div>}
-      </button>
+      </span>
+    );
+    activity = !write || isLoading || isSuccess;
+    handler = () => write?.();
+  } else {
+    content = <span>Switch to Optimism</span>;
+    activity = false;
+    handler = () => switchNetwork?.(10);
+  }
+  return (
+    <div>
+      {isPersistent ? (
+        <button className="buy-button" disabled={activity} onClick={handler}>
+          {content}
+        </button>
+      ) : (
+        <p>Your browser isn't supporting key storage.</p>
+      )}
     </div>
   );
 };

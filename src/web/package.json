@@ -17,6 +17,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-modal": "3.16.1",
+    "use-local-storage-state": "18.3.3",
     "wagmi": "0.12.13"
   },
   "devDependencies": {
