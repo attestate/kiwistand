@@ -35,9 +35,9 @@ function loadTheme(req, res, next) {
 
   const theme = savedTheme || {
     id: 14,
-    emoji: "🥝",
+    emoji: "💧",
     name: "Kiwi News",
-    color: "limegreen",
+    color: "deepskyblue",
   };
 
   res.locals.theme = theme;
@@ -46,12 +46,6 @@ function loadTheme(req, res, next) {
 }
 
 app.use(loadTheme);
-
-if (!env.THEME_COLOR || !env.THEME_EMOJI || !env.THEME_NAME) {
-  throw new Error(
-    "The environment variables THEME_COLOR, THEME_EMOJI and THEME_NAME must be defined"
-  );
-}
 
 export async function launch(trie, libp2p) {
   app.get("/", async (request, reply) => {

@@ -53,7 +53,6 @@ export default function (theme) {
             max-width: 100%;
             height: auto;
             border-radius: 3px;
-            box-shadow: 0 0 10px #f7b074, 0 0 20px #f7b074; /* Add inner glow effect */
           }
           .image-meta {
             font-size: 0.9rem;
@@ -73,7 +72,7 @@ export default function (theme) {
             padding-right: 10px;
           }
           .bullet-point strong {
-            color: #f7b074;
+            color: ${theme.color};
           }
           .buy-button {
             background-color: black;
@@ -86,7 +85,6 @@ export default function (theme) {
             font-size: 0.9rem;
             cursor: pointer;
             border-radius: 3px;
-            box-shadow: 0 0 10px #f7b074, 0 0 20px #f7b074; /* Add inner glow effect */
             font-family: 'Helvetica', 'Arial', sans-serif;
           }
 
@@ -138,7 +136,7 @@ export default function (theme) {
                     <div class="image-and-text">
                       <div class="image-container">
                         <img
-                          src="https://ipfs.decentralized-content.com/ipfs/bafkreierdgazvr3olgitxjhhspmb2dsyzaqti5nqegxb5rjoixzs6y6sc4"
+                          src="animation.gif"
                           alt="Kiwi News NFT"
                           class="kiwi-nft"
                         />
@@ -151,7 +149,9 @@ export default function (theme) {
                           <span> | </span>
                           <a
                             href="https://etherscan.io/address/0xebb15487787cbf8ae2ffe1a6cca5a50e63003786"
-                            style="color: #f7b074; text-decoration: none;"
+                            style="color: ${
+                              theme.color
+                            }; text-decoration: none;"
                             >View on Etherscan</a
                           >
                         </div>
@@ -184,29 +184,28 @@ export default function (theme) {
                           <a
                             target="_blank"
                             href="https://warpcast.com/timdaub"
-                            style="color: #f7b074; text-decoration: none;"
+                            style="color: ${
+                              theme.color
+                            }; text-decoration: none;"
                             >@timdaub</a
                           >
                           <span>, </span>
                           <a
                             target="_blank"
                             href="https://warpcast.com/macbudkowski"
-                            style="color: #f7b074; text-decoration: none;"
+                            style="color: ${
+                              theme.color
+                            }; text-decoration: none;"
                             >@macbudkowski</a
                           >
                           <span>, </span>
                           <a
                             target="_blank"
                             href="https://warpcast.com/freeatnet"
-                            style="color: #f7b074; text-decoration: none;"
+                            style="color: ${
+                              theme.color
+                            }; text-decoration: none;"
                             >@freeatnet</a
-                          >
-                          <span>, </span>
-                          <a
-                            target="_blank"
-                            href="https://warpcast.com/chrsmaral"
-                            style="color: #f7b074; text-decoration: none;"
-                            >@chrsmaral</a
                           >
                           <span> and others!</span>
                         </p>
