@@ -211,7 +211,7 @@ export default function (theme) {
                         </p>
                         <a
                           style="color:black;"
-                          href="https://zora.co/collect/0xebb15487787cbf8ae2ffe1a6cca5a50e63003786"
+                          href="https://zora.co/collect/eth:0xebb15487787cbf8ae2ffe1a6cca5a50e63003786/mint"
                           target="_blank"
                         >
                           <button class="buy-button" style="display: flex; align-items: center;">
