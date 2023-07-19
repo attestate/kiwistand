@@ -73,8 +73,8 @@ function generateRow(activity, i) {
               />
             </svg>
           </div>
-          <div style="width: 15px; height: 15px; margin-right: 15px;">
-            <ens-avatar address=${activity.identity} />
+          <div style="width: 25px; height: 25px; margin-right: 15px;">
+            <zora-zorb size="25px" address="${activity.identity}"></zora-zorb>
           </div>
           <div>
             <p>
@@ -184,6 +184,7 @@ export default async function (trie, theme, identity) {
   const content = html`
     <html lang="en" op="news">
       <head>
+        <script src="https://unpkg.com/@zoralabs/zorb@^0.0/dist/zorb-web-component.umd.js"></script>
         ${Head}
       </head>
       <body>

@@ -21,6 +21,7 @@ import activity from "./views/activity.mjs";
 import about from "./views/about.mjs";
 import why from "./views/why.mjs";
 import submit from "./views/submit.mjs";
+import settings from "./views/settings.mjs";
 
 const app = express();
 
@@ -34,9 +35,9 @@ function loadTheme(req, res, next) {
 
   const theme = savedTheme || {
     id: 14,
-    emoji: "🥝",
+    emoji: "💧",
     name: "Kiwi News",
-    color: "limegreen",
+    color: "deepskyblue",
   };
 
   res.locals.theme = theme;
@@ -45,12 +46,6 @@ function loadTheme(req, res, next) {
 }
 
 app.use(loadTheme);
-
-if (!env.THEME_COLOR || !env.THEME_EMOJI || !env.THEME_NAME) {
-  throw new Error(
-    "The environment variables THEME_COLOR, THEME_EMOJI and THEME_NAME must be defined"
-  );
-}
 
 export async function launch(trie, libp2p) {
   app.get("/", async (request, reply) => {
@@ -84,6 +79,10 @@ export async function launch(trie, libp2p) {
   });
   app.get("/about", async (request, reply) => {
     const content = await about(reply.locals.theme);
+    return reply.status(200).type("text/html").send(content);
+  });
+  app.get("/settings", async (request, reply) => {
+    const content = await settings(reply.locals.theme);
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/why", async (request, reply) => {
@@ -135,7 +134,7 @@ export async function launch(trie, libp2p) {
     const content = await submit(reply.locals.theme, url, title);
     return reply.status(200).type("text/html").send(content);
   });
-  
+
   app.listen(env.HTTP_PORT, () =>
     log(`Launched HTTP server at port "${env.HTTP_PORT}"`)
   );

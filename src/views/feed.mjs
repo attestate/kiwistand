@@ -422,7 +422,7 @@ export default async function index(trie, theme, page) {
               </td>
             </tr>
           </table>
-          ${Footer(theme)}
+          ${Footer(theme, "/")}
         </center>
       </body>
     </html>
