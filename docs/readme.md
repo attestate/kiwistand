@@ -4,7 +4,7 @@
 alter the output of `make html`!
 
 ```bash
-# Create a virtual environment with python3 [1]
+# Create a virtual environment with python3 [1] 
 python3 -m venv .venv
 
 # Activate the virtual environment in your shell [1]
