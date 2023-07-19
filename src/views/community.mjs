@@ -1,5 +1,6 @@
 //@format
 import url from "url";
+import fetch from 'node-fetch';  // Import fetch
 
 import htm from "htm";
 import vhtml from "vhtml";
@@ -16,6 +17,19 @@ import * as registry from "../chainstate/registry.mjs";
 import { EIP712_MESSAGE } from "../constants.mjs";
 
 const html = htm.bind(vhtml);
+
+let cache = {};
+
+async function fetchProfile(address) {
+  if (cache[address]) {
+    return cache[address];
+  }
+
+  const response = await fetch(`https://searchcaster.xyz/api/profiles?q=${address}`);
+  const data = await response.json();
+  cache[address] = data;
+  return data;
+}
 
 const countPoints = (messages) => {
   messages = messages.sort((a, b) => a.timestamp - b.timestamp);
@@ -77,22 +91,26 @@ export default async function (trie, theme) {
 
   const allowList = await registry.allowlist();
   let combinedUsers = [];
-  for await (let address of allowList) {
-    const foundUser = users.find(
-      // TODO: Should start using ethers.utils.getAddress
-      (user) => user.identity.toLowerCase() === address.toLowerCase()
-    );
-    const karma = foundUser ? foundUser.karma : "0";
+for await (let address of allowList) {
+  const foundUser = users.find(
+    // TODO: Should start using ethers.utils.getAddress
+    (user) => user.identity.toLowerCase() === address.toLowerCase()
+  );
+  const karma = foundUser ? foundUser.karma : "0";
 
-    const ensData = await ens.resolve(address);
+  const ensData = await ens.resolve(address);
 
-    combinedUsers.push({
-      identity: address,
-      karma,
-      displayName: ensData.displayName,
-    });
-  }
-  combinedUsers.sort((a, b) => parseInt(b.karma) - parseInt(a.karma));
+// Fetch the profile data
+const profileData = await fetchProfile(address);
+
+  combinedUsers.push({
+    identity: address,
+    karma,
+    displayName: ensData.displayName,
+    profileData, 
+  });
+}
+combinedUsers.sort((a, b) => parseInt(b.karma) - parseInt(a.karma));
 
   return html`
     <html lang="en" op="news">
@@ -145,29 +163,36 @@ export default async function (trie, theme) {
             href="/upvotes?address=${user.identity}"
             style="color: inherit; text-decoration: none;"
           >
-            <div
-              style="display: flex; justify-content: space-between; align-items: center; padding: 8px; box-sizing: border-box;"
-            >
-              <div style="width: 8%; text-align: left;">${i + 1}.</div>
-              <div style="display: flex; align-items: center; width: 60%;">
-                <div style="width: 20px; height: 20px; box-sizing: border-box;">
-                  <zora-zorb
-                    style="margin-right: 15px;"
-                    size="20px"
-                    address="${user.identity}"
-                  ></zora-zorb>
-                </div>
-                <div style="margin-left: 10px; flex-grow: 1;">
-                  ${user.displayName}
-                </div>
-              </div>
-              <div
-                style="width: 32%; min-width: 100px; padding-right: 15px; text-align: right; font-size: 1.2em;"
-              >
-                ${user.karma} ${theme.emoji}
-              </div>
-            </div>
-          </a>
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; box-sizing: border-box;">
+  <div style="width: 30px; text-align: left;">${i + 1}.</div>
+  <div style="display: flex; align-items: center; width: 60%;">
+    <div style="display: flex; align-items: center;">
+      <div style="width: 20px; height: 20px; box-sizing: border-box;">
+        <zora-zorb
+          style="margin-right: 15px;"
+          size="20px"
+          address="${user.identity}"
+        ></zora-zorb>
+      </div>
+      <div style="margin-left: 10px; margin-right: 5px; flex-grow: 1;">
+        ${user.displayName}
+      </div>
+    </div>
+    <div style="width: 20px; height: 20px; box-sizing: border-box;">
+      ${user.profileData.some(profile => profile.body) ? html`
+      <a href="https://warpcast.com/${user.profileData[0].body.username}" target="_blank">
+      <img src="/Farcaster.png" width="15" height="15"/>  <!-- Add the user's icon -->
+      </a>
+      ` : ''}
+    </div>
+  </div>
+  <div
+    style="width: 32%; min-width: 100px; padding-right: 15px; text-align: right; font-size: 1.2em;"
+  >
+    ${user.karma} ${theme.emoji}
+  </div>
+</div>    
+            </a>
         `
       )}
      </div>
