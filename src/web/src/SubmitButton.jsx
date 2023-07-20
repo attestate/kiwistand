@@ -85,26 +85,32 @@ const SubmitButton = () => {
         API.EIP712_TYPES,
         value
       );
+      console.log("Signature: ", signature);  // Add this
     } catch (err) {
       console.log(err);
       showMessage(`Error! Sad Kiwi! "${err.message}"`);
       setIsLoading(false);
       return;
     }
-    const response = await API.send(value, signature);
-
-    let message;
-    if (response.status === "success") {
-      message = "Thanks for your submission, have a 🥝";
-    } else {
-      message = `Error! Sad Kiwi! "${response.details}"`;
+    let response;
+    try {
+      response = await API.send(value, signature);
+      console.log("Response: ", response); // Add this
+    } catch (err) {
+      console.log("Error in sending: ", err); // Add this
+      setIsLoading(false);
+      return;
     }
-    const nextPage = new URL(window.location.origin + "/new");
-    nextPage.searchParams.set("bpc", "1");
-    nextPage.searchParams.set("message", message);
-    window.location.href = nextPage.href;
-  };
 
+    if (response.status === "success") {
+      let urlObj = new URL(window.location.origin + "/new");
+      urlObj.searchParams.set("bpc", "1");
+      urlObj.searchParams.set("success", "true");
+      console.log(url);
+      urlObj.searchParams.set("submittedLink", url);
+      window.location.href = urlObj.href;
+    }
+  };
   const buttonStyles = {
     width: "100%",
     padding: "5px",

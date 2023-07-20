@@ -43,18 +43,17 @@ const Vote = (props) => {
     const response = await API.send(value, signature);
 
     console.log(response);
-    let message;
     if (response.status === "success") {
-      message = "Thanks for your upvote! Have a 🥝";
+      let url = new URL(window.location.origin + "/new");
+      url.searchParams.set("bpc", "1");
+      url.searchParams.set("success", "true");
+      window.location.href = url.href;
     } else if (response.status === "error") {
-      showMessage(`Sad Kiwi :( "${response.details}"`);
+      showMessage(`You have already submitted or upvoted this link before :(`);
       return;
     }
-    let url = new URL(window.location.href);
-    url.searchParams.set("bpc", "1");
-    url.searchParams.set("message", message);
-    window.location.href = url.href;
-  };
+};
+
 
   return (
     <ConnectButton.Custom>
