@@ -273,7 +273,8 @@ export default async function index(trie, theme, page) {
                             >
                               ${story.title}
                             </a>
-                            <span style="padding-left: 5px"
+                            <span
+                              style="padding-left: 5px; word-break: break-all;"
                               >(${extractDomain(story.href)})</span
                             >
                           </span>
@@ -333,7 +334,8 @@ export default async function index(trie, theme, page) {
                             >
                               ${story.title}
                             </a>
-                            <span style="padding-left: 5px"
+                            <span
+                              style="padding-left: 5px; word-break: break-all;"
                               >(${extractDomain(story.href)})</span
                             >
                           </span>
