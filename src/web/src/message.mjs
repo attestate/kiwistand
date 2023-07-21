@@ -1,7 +1,12 @@
-export function showMessage(message, duration = 3000) {
-  console.log(message);
+export function showMessage(message, duration = 3000, isHTML = false) {
   const messageElement = document.createElement("div");
-  messageElement.innerText = message;
+  
+  if (isHTML) {
+    messageElement.innerHTML = message;
+  } else {
+    messageElement.innerText = message;
+  }
+
   messageElement.style.position = "fixed";
   messageElement.style.top = "50%";
   messageElement.style.left = "50%";

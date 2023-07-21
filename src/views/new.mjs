@@ -15,6 +15,8 @@ import Head from "./components/head.mjs";
 import * as store from "../store.mjs";
 import * as moderation from "./moderation.mjs";
 import * as registry from "../chainstate/registry.mjs";
+import { showMessage } from '../web/src/message.mjs';
+
 
 const html = htm.bind(vhtml);
 
@@ -87,10 +89,19 @@ export default async function (trie, theme, queryParams) {
   }
 
   let farcasterLink = "";
-  if (queryParams.success === "true") {
-    let submittedLink = decodeURIComponent(queryParams.submittedLink); // Use queryParams instead of request.query
-    farcasterLink = `https://warpcast.com/~/compose?embeds[]=${encodeURIComponent(submittedLink)}&text=(found%20on%20Kiwi%20News)&embeds[]=https://news.kiwistand.com`;
-  }
+let popupMessage = "";
+
+if (queryParams.success === "true") {
+  let submittedLink = decodeURIComponent(queryParams.submittedLink);
+  farcasterLink = `https://warpcast.com/~/compose?embeds[]=${encodeURIComponent(submittedLink)}&text=(submitted%20to%20%kiwi)&embeds[]=https://news.kiwistand.com`;
+  
+  popupMessage = `
+  <p>Thanks for your submission. Your Kiwi Score increased by one 🥝! It’d be great if you shared the link on Farcaster, too.</p>
+  <a href="${farcasterLink}" target="_blank">
+    <img src="/Farcaster.png" alt="Farcaster icon" />
+  </a>
+  `;
+}
 
 
   return html`
@@ -101,6 +112,10 @@ export default async function (trie, theme, queryParams) {
           name="description"
           content="Explore the latest news in the decentralized world on Kiwi News. Stay updated with fresh content handpicked by crypto veterans."
         />
+        <script>
+        // Define global variable for the popup message
+        window.popupMessage = ${JSON.stringify(popupMessage)};
+        </script>
       </head>
       <body>
         ${Sidebar}
@@ -119,20 +134,6 @@ export default async function (trie, theme, queryParams) {
             <tr>
               ${SecondHeader(theme, "new")}
             </tr>
-            <tr>
-            <td>
-        ${queryParams.success === "true"  // Use queryParams instead of window.location.search
-          ? html`
-            <div id="successPopup">
-              <p>Thanks for your submission. Your Kiwi Score increased by one 🥝! It’d be great if you shared the link on Farcaster, too.</p>
-              <a href="${farcasterLink}" target="_blank">
-                <img src="/Farcaster.png" alt="Farcaster icon" />
-              </a>
-            </div>
-          `
-          : null}
-      </td>
-          </tr>
             ${stories.map(
               (story, i) => html`
                 <tr>
@@ -207,6 +208,39 @@ export default async function (trie, theme, queryParams) {
           </table>
           ${Footer(theme, "/new")}
         </center>
+        <script>
+function showMessage(message, duration = 3000, isHTML = false) {
+  const messageElement = document.createElement("div");
+
+  if (isHTML) {
+    messageElement.innerHTML = message;
+  } else {
+    messageElement.innerText = message;
+  }
+
+  messageElement.style.position = "fixed";
+  messageElement.style.top = "50%";
+  messageElement.style.left = "50%";
+  messageElement.style.transform = "translate(-50%, -50%)";
+  messageElement.style.backgroundColor = "rgba(0, 0, 0, 0.8)";
+  messageElement.style.color = "white";
+  messageElement.style.padding = "8px 16px";
+  messageElement.style.borderRadius = "3px";
+  messageElement.style.textAlign = "center";
+  messageElement.style.maxWidth = "80%";
+  messageElement.style.zIndex = "9999";
+
+  document.body.appendChild(messageElement);
+
+  setTimeout(() => {
+    document.body.removeChild(messageElement);
+  }, duration);
+}
+// Then use the function to display the popup message
+if (window.popupMessage) {
+  showMessage(window.popupMessage, 5000, true);
+}
+</script>
       </body>
     </html>
   `;
