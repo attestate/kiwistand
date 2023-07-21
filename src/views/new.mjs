@@ -50,7 +50,7 @@ export function count(leaves) {
   return Object.values(stories);
 }
 
-export default async function (trie, theme) {
+export default async function (trie, theme, queryParams) {
   const config = await moderation.getLists();
 
   const aWeekAgo = sub(new Date(), {
@@ -87,10 +87,10 @@ export default async function (trie, theme) {
   }
 
   let farcasterLink = "";
-  if (request.query.success === "true") {
-    let submittedLink = decodeURIComponent(request.query.submittedLink);
+  if (queryParams.success === "true") {
+    let submittedLink = decodeURIComponent(queryParams.submittedLink); // Use queryParams instead of request.query
     farcasterLink = `https://warpcast.com/~/compose?embeds[]=${encodeURIComponent(submittedLink)}&text=(found%20on%20Kiwi%20News)&embeds[]=https://news.kiwistand.com`;
-}
+  }
 
 
   return html`
@@ -121,17 +121,17 @@ export default async function (trie, theme) {
             </tr>
             <tr>
             <td>
-              ${window.location.search.includes("success=true")
-                ? html`
-                  <div id="successPopup">
-                    <p>Thanks for your submission. Your Kiwi Score increased by one 🥝! It’d be great if you shared the link on Farcaster, too.</p>
-                    <a href="${farcasterLink}" target="_blank">
-                      <img src="/Farcaster.png" alt="Farcaster icon" />
-                    </a>
-                  </div>
-                `
-                : null}
-            </td>
+        ${queryParams.success === "true"  // Use queryParams instead of window.location.search
+          ? html`
+            <div id="successPopup">
+              <p>Thanks for your submission. Your Kiwi Score increased by one 🥝! It’d be great if you shared the link on Farcaster, too.</p>
+              <a href="${farcasterLink}" target="_blank">
+                <img src="/Farcaster.png" alt="Farcaster icon" />
+              </a>
+            </div>
+          `
+          : null}
+      </td>
           </tr>
             ${stories.map(
               (story, i) => html`

@@ -66,7 +66,7 @@ export async function launch(trie, libp2p) {
     res.redirect(301, "/stats");
   });
   app.get("/new", async (request, reply) => {
-    const content = await newest(trie, reply.locals.theme, request);
+    const content = await newest(trie, reply.locals.theme, request.query);  // Pass the query params here
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/community", async (request, reply) => {
