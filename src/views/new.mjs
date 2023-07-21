@@ -1,4 +1,3 @@
-//@format
 import { env } from "process";
 import url from "url";
 
@@ -87,6 +86,13 @@ export default async function (trie, theme) {
     });
   }
 
+  let farcasterLink = "";
+  if (window.location.search.includes("success=true")) {
+    var urlParams = new URLSearchParams(window.location.search);
+    var submittedLink = decodeURIComponent(urlParams.get('submittedLink'));
+    farcasterLink = `https://warpcast.com/~/compose?embeds[]=${encodeURIComponent(submittedLink)}&text=(found%20on%20Kiwi%20News)&embeds[]=https://news.kiwistand.com`;
+  }
+
   return html`
     <html lang="en" op="news">
       <head>
@@ -95,40 +101,6 @@ export default async function (trie, theme) {
           name="description"
           content="Explore the latest news in the decentralized world on Kiwi News. Stay updated with fresh content handpicked by crypto veterans."
         />
-        <script>
-document.addEventListener('DOMContentLoaded', function() {
-  var urlParams = new URLSearchParams(window.location.search);
-  var success = urlParams.get('success');
-  if (success === 'true') {
-    var successMessageContainer = document.getElementById('successMessage');
-    var successMessage = "Thanks for your submission. Your Kiwi Score increased by one 🥝! It’d be great if you shared the link on Farcaster, too.";
-    var submittedLink = urlParams.get('submittedLink');
-    var farcasterLink = "https://warpcast.com/~/compose?embeds[]=" + encodeURIComponent(submittedLink) + "&text=(found%20on%20Kiwi%20News)&embeds[]=https://news.kiwistand.com";
-
-    // Create text node for the success message
-    var successTextNode = document.createTextNode(successMessage);
-    successMessageContainer.appendChild(successTextNode);
-
-    // Create a new line
-    successMessageContainer.appendChild(document.createElement('br'));
-
-    // Create an anchor tag for the Farcaster link
-    var farcasterLinkTag = document.createElement('a');
-    farcasterLinkTag.href = farcasterLink;
-
-    // Create an image tag for the Farcaster logo
-    var farcasterLogo = document.createElement('img');
-    farcasterLogo.src = "/Farcaster.png";
-
-    // Add the logo to the anchor tag
-    farcasterLinkTag.appendChild(farcasterLogo);
-
-    // Add the anchor tag to the container
-    successMessageContainer.appendChild(farcasterLinkTag);
-  }
-});
-</script>
-
       </head>
       <body>
         ${Sidebar}
@@ -147,6 +119,20 @@ document.addEventListener('DOMContentLoaded', function() {
             <tr>
               ${SecondHeader(theme, "new")}
             </tr>
+            <tr>
+            <td>
+              ${window.location.search.includes("success=true")
+                ? html`
+                  <div id="successPopup">
+                    <p>Thanks for your submission. Your Kiwi Score increased by one 🥝! It’d be great if you shared the link on Farcaster, too.</p>
+                    <a href="${farcasterLink}" target="_blank">
+                      <img src="/Farcaster.png" alt="Farcaster icon" />
+                    </a>
+                  </div>
+                `
+                : null}
+            </td>
+          </tr>
             ${stories.map(
               (story, i) => html`
                 <tr>
@@ -201,7 +187,7 @@ document.addEventListener('DOMContentLoaded', function() {
                               <a
                                 target="_blank"
                                 data-free="https://warpcast.com/~/compose?embeds[]=${story.href}&text=${encodeURIComponent(
-                                  `Find on Kiwi News: "${story.title}"`
+                                  `(found on Kiwi News"${story.title}")`
                                 )}&embeds[]=https://news.kiwistand.com"
                                 data-premium="https://warpcast.com/~/compose?embeds[]=${story.href}"
                                 class="caster-link"
