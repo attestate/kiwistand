@@ -16,6 +16,6 @@ async function networkFirst(request) {
   } catch (e) {
     const cache = await caches.open(name);
     const cached = await cache.match(request);
-    return cached;
+    return cached || new Response('Sorry, not available.', { status: 503 });
   }
 }

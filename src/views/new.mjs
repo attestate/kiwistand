@@ -87,11 +87,11 @@ export default async function (trie, theme) {
   }
 
   let farcasterLink = "";
-  if (window.location.search.includes("success=true")) {
-    var urlParams = new URLSearchParams(window.location.search);
-    var submittedLink = decodeURIComponent(urlParams.get('submittedLink'));
+  if (request.query.success === "true") {
+    let submittedLink = decodeURIComponent(request.query.submittedLink);
     farcasterLink = `https://warpcast.com/~/compose?embeds[]=${encodeURIComponent(submittedLink)}&text=(found%20on%20Kiwi%20News)&embeds[]=https://news.kiwistand.com`;
-  }
+}
+
 
   return html`
     <html lang="en" op="news">
