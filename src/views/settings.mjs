@@ -44,7 +44,7 @@ export default function index(theme) {
                 You just need to click the button below and delegate posting authority. It's safe and works like magic. 
                 <br />
                 <br />
-                If you want to learn how it works under the hood, check <a href="https://www.loom.com/share/244e444db3444cc3b50376d38e72bd69" target="_blank">Tim's Loom video.</a>
+                If you want to learn how it works under the hood, check <u><a href="https://www.loom.com/share/244e444db3444cc3b50376d38e72bd69" target="_blank">Tim's Loom video.</a></u>
                   <br />
                   <br />
                   PS: Don’t worry if you have enough ETH on Optimism - we
