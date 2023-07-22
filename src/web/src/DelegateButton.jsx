@@ -8,7 +8,7 @@ import {
   useSwitchNetwork,
 } from "wagmi";
 import { useMemo, useEffect, useState } from "react";
-import { utils, Wallet } from "ethers";
+import { Wallet } from "@ethersproject/wallet";
 import { optimism } from "wagmi/chains";
 import { create } from "@attestate/delegator2";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";

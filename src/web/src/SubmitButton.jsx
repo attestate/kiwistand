@@ -1,6 +1,5 @@
-import React from "react";
 import { useEffect, useState } from "react";
-import { Wallet } from "ethers";
+import { Wallet } from "@ethersproject/wallet";
 import { useProvider, useSigner, useAccount, WagmiConfig } from "wagmi";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 

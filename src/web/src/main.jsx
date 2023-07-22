@@ -1,7 +1,7 @@
 import "./polyfills";
 import "@rainbow-me/rainbowkit/styles.css";
-import React, { useEffect, useState } from "react";
-import ReactDOM from "react-dom/client";
+import { StrictMode, useEffect, useState } from "react";
+import { createRoot } from "react-dom/client";
 import {
   getAccount,
   watchAccount,
@@ -87,56 +87,65 @@ document.addEventListener("click", handleClick);
 
 const delegateButtonContainer = document.querySelector("delegate-button");
 if (delegateButtonContainer) {
-  ReactDOM.createRoot(delegateButtonContainer).render(
-    <React.StrictMode>
+  createRoot(delegateButtonContainer).render(
+    <StrictMode>
       <DelegateButton />
-    </React.StrictMode>
+    </StrictMode>
   );
 }
 
 const profileLink = document.querySelector("nav-profile");
-ReactDOM.createRoot(profileLink).render(
-  <React.StrictMode>
+createRoot(profileLink).render(
+  <StrictMode>
     <ConnectedProfile />
-  </React.StrictMode>
+  </StrictMode>
 );
 const learnMore = document.querySelector("nav-learn-more");
 if (learnMore) {
-  ReactDOM.createRoot(learnMore).render(
-    <React.StrictMode>
+  createRoot(learnMore).render(
+    <StrictMode>
       <ConnectedLearnMore />
-    </React.StrictMode>
+    </StrictMode>
   );
 }
 const disconnect = document.querySelector("nav-disconnect");
-ReactDOM.createRoot(disconnect).render(
-  <React.StrictMode>
+createRoot(disconnect).render(
+  <StrictMode>
     <ConnectedDisconnectButton />
-  </React.StrictMode>
+  </StrictMode>
 );
 const onboarding = document.querySelector("nav-onboarding-modal");
 if (onboarding) {
-  ReactDOM.createRoot(onboarding).render(
-    <React.StrictMode>
+  createRoot(onboarding).render(
+    <StrictMode>
       <OnboardingModal />
-    </React.StrictMode>
+    </StrictMode>
+  );
+}
+
+const nftmodal = document.querySelector("nav-nft-modal");
+if (nftmodal) {
+  createRoot(nftmodal).render(
+    <StrictMode>
+      <NFTModal />
+    </StrictMode>
   );
 }
 
 const connectButton = document.querySelector("#connectButton");
 connectButton.style = "";
-ReactDOM.createRoot(connectButton).render(
-  <React.StrictMode>
+createRoot(connectButton).render(
+  <StrictMode>
     <ConnectedConnectButton />
-  </React.StrictMode>
+  </StrictMode>
 );
 
 const submitButtonContainer = document.getElementById("submit-button");
 if (submitButtonContainer) {
-  ReactDOM.createRoot(submitButtonContainer).render(
-    <React.StrictMode>
+  createRoot(submitButtonContainer).render(
+    <StrictMode>
       <SubmitButton />
-    </React.StrictMode>
+    </StrictMode>
   );
 }
 
@@ -145,10 +154,10 @@ if (voteArrows && voteArrows.length > 0) {
   voteArrows.forEach((arrow) => {
     const title = arrow.getAttribute("data-title");
     const href = arrow.getAttribute("data-href");
-    ReactDOM.createRoot(arrow).render(
-      <React.StrictMode>
+    createRoot(arrow).render(
+      <StrictMode>
         <Vote title={title} href={href} />
-      </React.StrictMode>
+      </StrictMode>
     );
   });
 }
@@ -157,10 +166,10 @@ const nftPriceElements = document.querySelectorAll("nft-price");
 
 if (nftPriceElements && nftPriceElements.length > 0) {
   nftPriceElements.forEach((element) => {
-    ReactDOM.createRoot(element).render(
-      <React.StrictMode>
+    createRoot(element).render(
+      <StrictMode>
         <NFTPrice />
-      </React.StrictMode>
+      </StrictMode>
     );
   });
 }
