@@ -1,6 +1,7 @@
 export function showMessage(message, duration = 3000, isHTML = false) {
+  console.log("showMessage");
   const messageElement = document.createElement("div");
-  
+
   if (isHTML) {
     messageElement.innerHTML = message;
   } else {

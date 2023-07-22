@@ -79,37 +79,38 @@ const SubmitButton = () => {
     if (!localKey) showMessage("Please sign the message in your wallet!");
 
     let signature;
-    try {
-      signature = await signer._signTypedData(
-        API.EIP712_DOMAIN,
-        API.EIP712_TYPES,
-        value
-      );
-      console.log("Signature: ", signature);  // Add this
-    } catch (err) {
-      console.log(err);
-      showMessage(`Error! Sad Kiwi! "${err.message}"`);
-      setIsLoading(false);
-      return;
-    }
-    let response;
-    try {
-      response = await API.send(value, signature);
-      console.log("Response: ", response); // Add this
-    } catch (err) {
-      console.log("Error in sending: ", err); // Add this
-      setIsLoading(false);
-      return;
-    }
 
-    if (response.status === "success") {
-      let urlObj = new URL(window.location.origin + "/new");
-      urlObj.searchParams.set("bpc", "1");
-      urlObj.searchParams.set("success", "true");
-      console.log(url);
-      urlObj.searchParams.set("submittedLink", url);
-      window.location.href = urlObj.href;
-    }
+    // try {
+    //   signature = await signer._signTypedData(
+    //     API.EIP712_DOMAIN,
+    //     API.EIP712_TYPES,
+    //     value
+    //   );
+    //   console.log("Signature: ", signature);  // Add this
+    // } catch (err) {
+    //   console.log(err);
+    //   showMessage(`Error! Sad Kiwi! "${err.message}"`);
+    //   setIsLoading(false);
+    //   return;
+    // }
+    // let response;
+    // try {
+    //   response = await API.send(value, signature);
+    //   console.log("Response: ", response); // Add this
+    // } catch (err) {
+    //   console.log("Error in sending: ", err); // Add this
+    //   setIsLoading(false);
+    //   return;
+    // }
+
+    // if (response.status === "success") {
+    let urlObj = new URL(window.location.origin + "/new");
+    urlObj.searchParams.set("bpc", "1");
+    urlObj.searchParams.set("success", "true");
+    console.log(url);
+    urlObj.searchParams.set("submittedLink", url);
+    window.location.href = urlObj.href;
+    // }
   };
   const buttonStyles = {
     width: "100%",
