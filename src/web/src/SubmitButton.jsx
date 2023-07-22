@@ -86,7 +86,7 @@ const SubmitButton = () => {
         API.EIP712_TYPES,
         value
       );
-      console.log("Signature: ", signature);  // Add this
+      console.log("Signature: ", signature);  
     } catch (err) {
       console.log(err);
       showMessage(`Error! Sad Kiwi! "${err.message}"`);
@@ -96,9 +96,9 @@ const SubmitButton = () => {
     let response;
     try {
       response = await API.send(value, signature);
-      console.log("Response: ", response); // Add this
+      console.log("Response: ", response); 
     } catch (err) {
-      console.log("Error in sending: ", err); // Add this
+      console.log("Error in sending: ", err); 
       setIsLoading(false);
       return;
     }

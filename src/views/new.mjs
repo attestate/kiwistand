@@ -87,26 +87,21 @@ export default async function (trie, theme, queryParams) {
     });
   }
 
-  function generatePopupMessage(submittedLink) {
-    const farcasterLink = `https://warpcast.com/~/compose?embeds[]=${encodeURIComponent(
+  let farcasterLink = "";
+  let popupHtml = "";
+  if (queryParams.success === "true") {
+    let submittedLink = decodeURIComponent(queryParams.submittedLink);
+    farcasterLink = `https://warpcast.com/~/compose?embeds[]=${encodeURIComponent(
       submittedLink
     )}&text=(submitted%20to%20%40kiwi)&embeds[]=https://news.kiwistand.com`;
-    return `
-      <p>Thanks for your submission. Your Kiwi Score increased by one 🥝! It’d be great if you shared the link on Farcaster, too.</p>
+
+    popupHtml = `
+      <p>Thanks for your submission. Your Kiwi Score increased by one 🥝!</p>
+      <p>It’d be great if you shared your link on Farcaster, too.</p>
       <a href="${farcasterLink}" target="_blank">
         <img src="/Farcaster.png" alt="Farcaster icon" />
       </a>
     `;
-  }
-
-  let popupMessage = "";
-  let farcasterLink = "";
-  if (queryParams.success === "true") {
-    let submittedLink = decodeURIComponent(queryParams.submittedLink);
-    popupMessage = generatePopupMessage(submittedLink);
-    farcasterLink = `https://warpcast.com/~/compose?embeds[]=${encodeURIComponent(
-      submittedLink
-    )}&text=(submitted%20to%20%40kiwi)&embeds[]=https://news.kiwistand.com`;
   }
 
   return html`
@@ -210,15 +205,8 @@ export default async function (trie, theme, queryParams) {
           ${Footer(theme, "/new")}
         </center>
         <div style="display: none" id="html-message">
-          <p>
-            Thanks for your submission. Your Kiwi Score increased by one 🥝!
-            It’d be great if you shared the link on Farcaster, too.
-          </p>
-          <a href="${farcasterLink}" target="_blank">
-            <img src="/Farcaster.png" alt="Farcaster icon" />
-          </a>
+        ${html([popupHtml])}
         </div>
-
         <script>
           function addFarcasterLinkToUrlParams() {
             const farcasterLink = document.querySelector(".caster-link");
