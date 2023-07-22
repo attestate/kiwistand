@@ -88,20 +88,22 @@ export default async function (trie, theme, queryParams) {
     });
   }
 
-  let farcasterLink = "";
-let popupMessage = "";
+function generatePopupMessage(submittedLink) {
+    const farcasterLink = `https://warpcast.com/~/compose?embeds[]=${encodeURIComponent(submittedLink)}&text=(submitted%20to%20%40kiwi)&embeds[]=https://news.kiwistand.com`;
+    return `
+      <p>Thanks for your submission. Your Kiwi Score increased by one 🥝! It’d be great if you shared the link on Farcaster, too.</p>
+      <a href="${farcasterLink}" target="_blank">
+        <img src="/Farcaster.png" alt="Farcaster icon" />
+      </a>
+    `;
+  }
 
-if (queryParams.success === "true") {
-  let submittedLink = decodeURIComponent(queryParams.submittedLink);
-  farcasterLink = `https://warpcast.com/~/compose?embeds[]=${encodeURIComponent(submittedLink)}&text=(submitted%20to%20%40kiwi)&embeds[]=https://news.kiwistand.com`;
+  let popupMessage = "";
   
-  popupMessage = `
-  <p>Thanks for your submission. Your Kiwi Score increased by one 🥝! It’d be great if you shared the link on Farcaster, too.</p>
-  <a href="${farcasterLink}" target="_blank">
-    <img src="/Farcaster.png" alt="Farcaster icon" />
-  </a>
-  `;
-}
+  if (queryParams.success === "true") {
+    let submittedLink = decodeURIComponent(queryParams.submittedLink);
+    popupMessage = generatePopupMessage(submittedLink);
+  }
 
 
   return html`
@@ -112,10 +114,6 @@ if (queryParams.success === "true") {
           name="description"
           content="Explore the latest news in the decentralized world on Kiwi News. Stay updated with fresh content handpicked by crypto veterans."
         />
-        <script>
-        // Define global variable for the popup message
-        window.popupMessage = ${JSON.stringify(popupMessage)};
-        </script>
       </head>
       <body>
         ${Sidebar}
@@ -208,35 +206,8 @@ if (queryParams.success === "true") {
           </table>
           ${Footer(theme, "/new")}
         </center>
+        window.popupMessage = ${JSON.stringify(popupMessage)};
         <script>
-function showMessage(message, duration = 3000, isHTML = false) {
-  const messageElement = document.createElement("div");
-
-  if (isHTML) {
-    messageElement.innerHTML = message;
-  } else {
-    messageElement.innerText = message;
-  }
-
-  messageElement.style.position = "fixed";
-  messageElement.style.top = "50%";
-  messageElement.style.left = "50%";
-  messageElement.style.transform = "translate(-50%, -50%)";
-  messageElement.style.backgroundColor = "rgba(0, 0, 0, 0.8)";
-  messageElement.style.color = "white";
-  messageElement.style.padding = "8px 16px";
-  messageElement.style.borderRadius = "3px";
-  messageElement.style.textAlign = "center";
-  messageElement.style.maxWidth = "80%";
-  messageElement.style.zIndex = "9999";
-
-  document.body.appendChild(messageElement);
-
-  setTimeout(() => {
-    document.body.removeChild(messageElement);
-  }, duration);
-}
-// Then use the function to display the popup message
 if (window.popupMessage) {
   showMessage(window.popupMessage, 5000, true);
 }
