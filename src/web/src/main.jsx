@@ -16,6 +16,7 @@ import {
   ConnectedLearnMore,
   ConnectedDisconnectButton,
   ConnectedConnectButton,
+  ConnectedSettings,
 } from "./Navigation.jsx";
 import SubmitButton from "./SubmitButton.jsx";
 import DelegateButton from "./DelegateButton.jsx";
@@ -94,6 +95,12 @@ if (delegateButtonContainer) {
   );
 }
 
+const settings = document.querySelector("nav-settings");
+createRoot(settings).render(
+  <StrictMode>
+    <ConnectedSettings />
+  </StrictMode>
+);
 const profileLink = document.querySelector("nav-profile");
 createRoot(profileLink).render(
   <StrictMode>
