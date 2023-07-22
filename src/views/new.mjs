@@ -15,8 +15,7 @@ import Head from "./components/head.mjs";
 import * as store from "../store.mjs";
 import * as moderation from "./moderation.mjs";
 import * as registry from "../chainstate/registry.mjs";
-import { showMessage } from '../web/src/message.mjs';
-
+import { showMessage } from "../web/src/message.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -88,8 +87,10 @@ export default async function (trie, theme, queryParams) {
     });
   }
 
-function generatePopupMessage(submittedLink) {
-    const farcasterLink = `https://warpcast.com/~/compose?embeds[]=${encodeURIComponent(submittedLink)}&text=(submitted%20to%20%40kiwi)&embeds[]=https://news.kiwistand.com`;
+  function generatePopupMessage(submittedLink) {
+    const farcasterLink = `https://warpcast.com/~/compose?embeds[]=${encodeURIComponent(
+      submittedLink
+    )}&text=(submitted%20to%20%40kiwi)&embeds[]=https://news.kiwistand.com`;
     return `
       <p>Thanks for your submission. Your Kiwi Score increased by one 🥝! It’d be great if you shared the link on Farcaster, too.</p>
       <a href="${farcasterLink}" target="_blank">
@@ -99,12 +100,14 @@ function generatePopupMessage(submittedLink) {
   }
 
   let popupMessage = "";
-  
+  let farcasterLink = "";
   if (queryParams.success === "true") {
     let submittedLink = decodeURIComponent(queryParams.submittedLink);
     popupMessage = generatePopupMessage(submittedLink);
+    farcasterLink = `https://warpcast.com/~/compose?embeds[]=${encodeURIComponent(
+      submittedLink
+    )}&text=(submitted%20to%20%40kiwi)&embeds[]=https://news.kiwistand.com`;
   }
-
 
   return html`
     <html lang="en" op="news">
@@ -206,12 +209,21 @@ function generatePopupMessage(submittedLink) {
           </table>
           ${Footer(theme, "/new")}
         </center>
-        window.popupMessage = ${JSON.stringify(popupMessage)};
+        <div style="display: none" id="html-message">
+          <p>
+            Thanks for your submission. Your Kiwi Score increased by one 🥝!
+            It’d be great if you shared the link on Farcaster, too.
+          </p>
+          <a href="${farcasterLink}" target="_blank">
+            <img src="/Farcaster.png" alt="Farcaster icon" />
+          </a>
+        </div>
+
         <script>
-if (window.popupMessage) {
-  showMessage(window.popupMessage, 5000, true);
-}
-</script>
+          function addFarcasterLinkToUrlParams() {
+            const farcasterLink = document.querySelector(".caster-link");
+          }
+        </script>
       </body>
     </html>
   `;

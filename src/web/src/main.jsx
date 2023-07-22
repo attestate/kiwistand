@@ -167,11 +167,17 @@ if (nftPriceElements && nftPriceElements.length > 0) {
 
 let url = new URL(window.location.href);
 let messageParam = url.searchParams.get("message");
+let htmlMessage = document.getElementById("html-message");
+console.log("html", htmlMessage.innerHTML);
 
 if (messageParam) {
   showMessage(messageParam);
   url.searchParams.delete("message");
   window.history.replaceState({}, "", url.href);
+}
+
+if (htmlMessage) {
+  showMessage(htmlMessage.innerHTML, 5000, true);
 }
 
 if ("serviceWorker" in navigator) {
