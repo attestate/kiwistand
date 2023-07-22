@@ -93,7 +93,7 @@ let popupMessage = "";
 
 if (queryParams.success === "true") {
   let submittedLink = decodeURIComponent(queryParams.submittedLink);
-  farcasterLink = `https://warpcast.com/~/compose?embeds[]=${encodeURIComponent(submittedLink)}&text=(submitted%20to%20%kiwi)&embeds[]=https://news.kiwistand.com`;
+  farcasterLink = `https://warpcast.com/~/compose?embeds[]=${encodeURIComponent(submittedLink)}&text=(submitted%20to%20%40kiwi)&embeds[]=https://news.kiwistand.com`;
   
   popupMessage = `
   <p>Thanks for your submission. Your Kiwi Score increased by one 🥝! It’d be great if you shared the link on Farcaster, too.</p>
