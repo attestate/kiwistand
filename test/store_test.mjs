@@ -707,7 +707,9 @@ test("trying to add a message to store that isn't on allowlist but was delegated
     hasCheckpoints: () => false,
   };
   const libp2p = null;
-  const allowlist = ["0xee324c588cef1bf1c1360883e4318834af66366d"];
+  const allowlist = [
+    utils.getAddress("0xee324c588cef1bf1c1360883e4318834af66366d"),
+  ];
   const delegations = {
     [address]: allowlist[0],
   };

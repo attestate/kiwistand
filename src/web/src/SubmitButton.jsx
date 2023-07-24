@@ -2,18 +2,35 @@ import { useEffect, useState } from "react";
 import { Wallet } from "@ethersproject/wallet";
 import { useProvider, useSigner, useAccount, WagmiConfig } from "wagmi";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
+import { eligible } from "@attestate/delegator2";
 
 import * as API from "./API.mjs";
 import { client, chains } from "./client.mjs";
 import { showMessage } from "./message.mjs";
+import NFTModal from "./NFTModal.jsx";
 
-const SubmitButton = () => {
+const SubmitButton = (props) => {
   const [isLoading, setIsLoading] = useState(false);
   const [title, setTitle] = useState("");
   const [url, setUrl] = useState("");
-  const account = useAccount();
+  const { isConnected, address } = useAccount();
+  const [openedOnce, setOpenedOnce] = useState(false);
 
-  const localKey = localStorage.getItem(`-kiwi-news-${account.address}-key`);
+  if (!isConnected && !openedOnce) {
+    props.setIsOpen(true);
+    setOpenedOnce(true);
+  }
+
+  if (isConnected && !openedOnce) {
+    const { allowlist, delegations } = props;
+    const isEligible = eligible(allowlist, delegations, address);
+    if (!isEligible) {
+      props.setIsOpen(true);
+      setOpenedOnce(true);
+    }
+  }
+
+  const localKey = localStorage.getItem(`-kiwi-news-${address}-key`);
   const provider = useProvider();
   const result = useSigner();
 
@@ -122,12 +139,21 @@ const SubmitButton = () => {
   );
 };
 
-const Form = () => {
+const Form = (props) => {
   const { isConnected } = useAccount();
+  const [modalIsOpen, setIsOpen] = useState(false);
+
   return (
     <WagmiConfig client={client}>
       <RainbowKitProvider chains={chains}>
-        <SubmitButton />
+        <SubmitButton {...props} setIsOpen={setIsOpen} />
+        <NFTModal
+          modalIsOpen={modalIsOpen}
+          setIsOpen={setIsOpen}
+          headline="Wait a minute!"
+          text="To submit links to Kiwi, you need to own our NFT. 👇"
+          closeText="OK, but let me browse more first!"
+        />
       </RainbowKitProvider>
     </WagmiConfig>
   );

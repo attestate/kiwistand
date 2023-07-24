@@ -184,7 +184,6 @@ export default async function (trie, theme, identity) {
   const content = html`
     <html lang="en" op="news">
       <head>
-        <script src="https://unpkg.com/@zoralabs/zorb@^0.0/dist/zorb-web-component.umd.js"></script>
         ${Head}
       </head>
       <body>

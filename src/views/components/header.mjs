@@ -6,6 +6,7 @@ import vhtml from "vhtml";
 const html = htm.bind(vhtml);
 const header = (theme) => html` <td bgcolor="${theme.color}">
   <nav-onboarding-modal />
+  <nav-nft-modal />
   <table
     style="padding:10px 15px 10px 15px;"
     width="100%"
