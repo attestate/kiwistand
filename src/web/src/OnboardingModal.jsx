@@ -1,11 +1,11 @@
-import React from "react";
+import { Component } from "react";
 import Modal from "react-modal";
 import { getAccount } from "@wagmi/core";
-import { debounce } from "lodash";
+import debounce from "lodash.debounce";
 
 Modal.setAppElement("nav-onboarding-modal");
 
-class SimpleModal extends React.Component {
+class SimpleModal extends Component {
   constructor() {
     super();
     this.state = {

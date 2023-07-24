@@ -224,7 +224,9 @@ export default async function (trie, theme, identity) {
                         <td class="title">
                           <span class="titleline">
                             <a href="${story.href}">${story.title}</a>
-                            <span style="padding-left: 5px">
+                            <span
+                              style="padding-left: 5px; word-break: break-all;"
+                            >
                               (${extractDomain(story.href)})
                             </span>
                           </span>

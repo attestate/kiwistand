@@ -1,6 +1,6 @@
 // @format
 import { useSigner, useAccount, WagmiConfig, useProvider } from "wagmi";
-import { Wallet } from "ethers";
+import { Wallet } from "@ethersproject/wallet";
 import { RainbowKitProvider, ConnectButton } from "@rainbow-me/rainbowkit";
 
 import * as API from "./API.mjs";

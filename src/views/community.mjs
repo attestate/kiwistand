@@ -1,6 +1,5 @@
 //@format
 import url from "url";
-import fetch from "node-fetch"; // Import fetch
 
 import htm from "htm";
 import vhtml from "vhtml";
@@ -17,21 +16,6 @@ import * as registry from "../chainstate/registry.mjs";
 import { EIP712_MESSAGE } from "../constants.mjs";
 
 const html = htm.bind(vhtml);
-
-let cache = {};
-
-async function fetchProfile(address) {
-  if (cache[address]) {
-    return cache[address];
-  }
-
-  const response = await fetch(
-    `https://searchcaster.xyz/api/profiles?q=${address}`
-  );
-  const data = await response.json();
-  cache[address] = data;
-  return data;
-}
 
 const countPoints = (messages) => {
   messages = messages.sort((a, b) => a.timestamp - b.timestamp);
@@ -102,14 +86,10 @@ for await (let address of allowList) {
 
   const ensData = await ens.resolve(address);
 
-    // Fetch the profile data
-    const profileData = await fetchProfile(address);
-
     combinedUsers.push({
       identity: address,
       karma,
       displayName: ensData.displayName,
-      profileData,
     });
   }
   combinedUsers.sort((a, b) => parseInt(b.karma) - parseInt(a.karma));
@@ -168,36 +148,17 @@ for await (let address of allowList) {
             <div
               style="display: flex; justify-content: space-between; align-items: center; padding: 8px; box-sizing: border-box;"
             >
-              <div style="width: 30px; text-align: left;">${i + 1}.</div>
+              <div style="width: 8%; text-align: left;">${i + 1}.</div>
               <div style="display: flex; align-items: center; width: 60%;">
-                <div style="display: flex; align-items: center;">
-                  <div style="width: 40px; box-sizing: border-box;">
-                    ${user.profileData.some((profile) => profile.body)
-                      ? html`
-                          <a
-                            href="https://warpcast.com/${user.profileData[0]
-                              .body.username}"
-                            target="_blank"
-                          >
-                            <img src="/Farcaster.png" width="20" height="20" />
-                          </a>
-                        `
-                      : ""}
-                  </div>
-                  <div
-                    style="width: 20px; height: 20px; box-sizing: border-box;"
-                  >
-                    <zora-zorb
-                      style="margin-right: 15px;"
-                      size="20px"
-                      address="${user.identity}"
-                    ></zora-zorb>
-                  </div>
-                  <div
-                    style="margin-left: 10px; margin-right: 5px; flex-grow: 1;"
-                  >
-                    ${user.displayName}
-                  </div>
+                <div style="width: 20px; height: 20px; box-sizing: border-box;">
+                  <zora-zorb
+                    style="margin-right: 15px;"
+                    size="20px"
+                    address="${user.identity}"
+                  ></zora-zorb>
+                </div>
+                <div style="margin-left: 10px; flex-grow: 1;">
+                  ${user.displayName}
                 </div>
               </div>
               <div

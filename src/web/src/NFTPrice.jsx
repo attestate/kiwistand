@@ -1,5 +1,5 @@
 import { useContractRead, WagmiConfig } from "wagmi";
-import { utils } from "ethers";
+import { formatEther } from "@ethersproject/units";
 
 import { client, chains } from "./client.mjs";
 
@@ -107,7 +107,7 @@ const PriceComponent = () => {
 
   const salesPrice = salesDetails?.data?.publicSalePrice || 0;
 
-  return <span>{utils.formatEther(salesPrice)}</span>;
+  return <span>{formatEther(salesPrice)}</span>;
 };
 
 const WrappedPriceComponent = () => {
