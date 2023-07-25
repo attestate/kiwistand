@@ -10,6 +10,7 @@ import {
 } from "@wagmi/core";
 import { WagmiConfig } from "wagmi";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
+import { eligible } from "@attestate/delegator2";
 
 import {
   ConnectedProfile,
@@ -24,26 +25,75 @@ import Vote from "./Vote.jsx";
 import Bell from "./Bell.jsx";
 import NFTPrice from "./NFTPrice.jsx";
 import OnboardingModal from "./OnboardingModal.jsx";
+import NFTModal from "./NFTModal.jsx";
 import { showMessage } from "./message.mjs";
-import { fetchAllowList } from "./API.mjs";
+import { fetchAllowList, fetchDelegations } from "./API.mjs";
 import { client, chains } from "./client.mjs";
 
-async function updateLink(account) {
-  const allowList = await fetchAllowList();
-  const { address, isConnected } = account;
+function updateLink(allowlist) {
+  return (account) => {
+    const { address, isConnected } = account;
 
-  const links = document.querySelectorAll("[data-premium], [data-free]");
-  links.forEach((link) => {
-    const premiumLink = link.getAttribute("data-premium");
-    const freeLink = link.getAttribute("data-free");
-    const targetLink =
-      isConnected && allowList.includes(address) ? premiumLink : freeLink;
+    const links = document.querySelectorAll("[data-premium], [data-free]");
+    links.forEach((link) => {
+      const premiumLink = link.getAttribute("data-premium");
+      const freeLink = link.getAttribute("data-free");
+      const targetLink =
+        isConnected && allowlist.includes(address) ? premiumLink : freeLink;
 
-    link.setAttribute("href", targetLink);
-  });
+      link.setAttribute("href", targetLink);
+    });
+  };
 }
 
-const unwatch = watchAccount(updateLink);
+async function start() {
+  const allowlist = await fetchAllowList();
+  const unwatch = watchAccount(updateLink(allowlist));
+
+  const delegations = await fetchDelegations();
+  addVotes(allowlist, delegations);
+  addSubmitButton(allowlist, delegations);
+}
+
+function addSubmitButton(allowlist, delegations) {
+  const submitButtonContainer = document.getElementById("submit-button");
+  if (submitButtonContainer) {
+    createRoot(submitButtonContainer).render(
+      <StrictMode>
+        <SubmitButton allowlist={allowlist} delegations={delegations} />
+      </StrictMode>
+    );
+  }
+}
+
+function addVotes(allowlist, delegations) {
+  const voteArrows = document.querySelectorAll(".votearrowcontainer");
+  if (voteArrows && voteArrows.length > 0) {
+    voteArrows.forEach((arrow) => {
+      const title = arrow.getAttribute("data-title");
+      const href = arrow.getAttribute("data-href");
+      let upvoters;
+      try {
+        upvoters = JSON.parse(arrow.getAttribute("data-upvoters"));
+      } catch (err) {
+        console.log("Couldn't parse upvoters", err);
+      }
+      createRoot(arrow).render(
+        <StrictMode>
+          <Vote
+            title={title}
+            href={href}
+            allowlist={allowlist}
+            delegations={delegations}
+            upvoters={upvoters}
+          />
+        </StrictMode>
+      );
+    });
+  }
+}
+
+start();
 
 function handleClick(event) {
   const sidebar = document.querySelector(".sidebar");
@@ -121,20 +171,19 @@ createRoot(disconnect).render(
     <ConnectedDisconnectButton />
   </StrictMode>
 );
-const onboarding = document.querySelector("nav-onboarding-modal");
-if (onboarding) {
-  createRoot(onboarding).render(
-    <StrictMode>
-      <OnboardingModal />
-    </StrictMode>
-  );
-}
-
 const nftmodal = document.querySelector("nav-nft-modal");
 if (nftmodal) {
   createRoot(nftmodal).render(
     <StrictMode>
       <NFTModal />
+    </StrictMode>
+  );
+}
+const onboarding = document.querySelector("nav-onboarding-modal");
+if (onboarding) {
+  createRoot(onboarding).render(
+    <StrictMode>
+      <OnboardingModal />
     </StrictMode>
   );
 }
@@ -146,28 +195,6 @@ createRoot(connectButton).render(
     <ConnectedConnectButton />
   </StrictMode>
 );
-
-const submitButtonContainer = document.getElementById("submit-button");
-if (submitButtonContainer) {
-  createRoot(submitButtonContainer).render(
-    <StrictMode>
-      <SubmitButton />
-    </StrictMode>
-  );
-}
-
-const voteArrows = document.querySelectorAll(".votearrowcontainer");
-if (voteArrows && voteArrows.length > 0) {
-  voteArrows.forEach((arrow) => {
-    const title = arrow.getAttribute("data-title");
-    const href = arrow.getAttribute("data-href");
-    createRoot(arrow).render(
-      <StrictMode>
-        <Vote title={title} href={href} />
-      </StrictMode>
-    );
-  });
-}
 
 const nftPriceElements = document.querySelectorAll("nft-price");
 

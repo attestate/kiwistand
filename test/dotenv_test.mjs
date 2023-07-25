@@ -34,9 +34,6 @@ test("that repo contains a .env-copy file with all possible configuration option
     "ROOT_ADVERTISEMENT_TIMEOUT",
     "MIN_TIMESTAMP_SECS",
     "TIMESTAMP_TOLERANCE_SECS",
-    "THEME_COLOR",
-    "THEME_EMOJI",
-    "THEME_NAME",
     "DEBUG",
   ];
   await access(envPath, constants.F_OK);

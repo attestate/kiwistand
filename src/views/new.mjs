@@ -15,7 +15,7 @@ import Head from "./components/head.mjs";
 import * as store from "../store.mjs";
 import * as moderation from "./moderation.mjs";
 import * as registry from "../chainstate/registry.mjs";
-import { showMessage } from "../web/src/message.mjs";
+import { count } from "./feed.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -24,34 +24,7 @@ function extractDomain(link) {
   return parsedUrl.hostname;
 }
 
-export function count(leaves) {
-  const stories = {};
-
-  leaves = leaves.sort((a, b) => a.timestamp - b.timestamp);
-  for (const leaf of leaves) {
-    const key = `${normalizeUrl(leaf.href)}`;
-    let story = stories[key];
-
-    if (!story) {
-      story = {
-        title: leaf.title,
-        timestamp: leaf.timestamp,
-        href: leaf.href,
-        identity: leaf.identity,
-        upvotes: 1,
-      };
-      stories[key] = story;
-    } else {
-      if (leaf.type === "amplify") {
-        story.upvotes += 1;
-        if (!story.title && leaf.title) story.title = leaf.title;
-      }
-    }
-  }
-  return Object.values(stories);
-}
-
-export default async function (trie, theme, queryParams) {
+export default async function (trie, theme) {
   const config = await moderation.getLists();
 
   const aWeekAgo = sub(new Date(), {
@@ -149,6 +122,7 @@ export default async function (trie, theme, queryParams) {
                               class="votearrowcontainer"
                               data-title="${story.title}"
                               data-href="${story.href}"
+                              data-upvoters="${JSON.stringify(story.upvoters)}"
                             ></div>
                           </a>
                         </div>

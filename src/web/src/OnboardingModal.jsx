@@ -93,6 +93,7 @@ class SimpleModal extends Component {
         isOpen={this.state.showModal}
         onRequestClose={this.closeModal}
         contentLabel="Kiwi News Modal"
+        shouldCloseOnOverlayClick={true}
         style={customStyles}
       >
         <div style={{ padding: "0 5vw" }}>

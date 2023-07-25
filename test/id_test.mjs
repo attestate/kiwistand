@@ -14,7 +14,6 @@ import {
   bootstrap,
   load,
   store,
-  eligible,
 } from "../src/id.mjs";
 import config from "../src/config.mjs";
 import { appdir } from "../src/utils.mjs";
@@ -31,47 +30,6 @@ async function teardown(t) {
 
   await unlink(idPath);
 }
-
-test("should return valid delegation's from", (t) => {
-  const address = "0x0000000000000000000000000000000000000001";
-  const to = "0x0000000000000000000000000000000000001337";
-  const allowlist = [address];
-  const delegations = {
-    [to]: address,
-  };
-
-  t.is(address, eligible(allowlist, delegations, to));
-});
-
-test("is not in allowlist and not in delegations", (t) => {
-  const allowlist = [];
-  const address = "0x0000000000000000000000000000000000000001";
-  const delegations = {
-    "0x0000000000000000000000000000000000001337":
-      "0x0000000000000000000000000000000000000666",
-  };
-
-  t.false(eligible(allowlist, delegations, address));
-});
-
-test("is delegated to address but from isn't in allowlist", (t) => {
-  const allowlist = [];
-  const address = "0x0000000000000000000000000000000000001337";
-  const delegations = {
-    [address]: "0x0000000000000000000000000000000000000666",
-  };
-
-  t.false(eligible(allowlist, delegations, address));
-});
-
-test("eligible should return the address (case-independent) if it is in the allowlist", (t) => {
-  const allowlist = ["0x0f6A79A579658E401E0B81c6dde1F2cd51d97176"];
-  const delegations = {};
-
-  const result = eligible(allowlist, delegations, allowlist[0].toLowerCase());
-
-  t.is(result, allowlist[0]);
-});
 
 test("if digest is canonical for various messages", (t) => {
   const message0 = {

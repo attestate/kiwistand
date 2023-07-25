@@ -81,6 +81,20 @@ export async function fetchNotifications(address) {
   return lastUpdate !== nextLastUpdate;
 }
 
+export async function fetchDelegations() {
+  const url = getApiUrl("/api/v1/delegations", 8000);
+
+  let response;
+  try {
+    response = await fetch(url);
+    const data = await response.json();
+    return data.data;
+  } catch (err) {
+    console.error(err);
+    return null;
+  }
+}
+
 export async function fetchAllowList() {
   const url = getApiUrl("/api/v1/allowlist", 8000);
 

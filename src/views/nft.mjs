@@ -17,7 +17,6 @@ export default function (theme) {
       <head>
         ${Head}
         <meta name="description" content="Learn about Kiwi News, the prime feed for hacker engineers building a decentralized future. Our content is handpicked and curated by a crypto-savvy community. Join us by minting the Kiwi NFT." />
-        <script src="https://unpkg.com/@zoralabs/zorb@^0.0/dist/zorb-web-component.umd.js"></script>
         <style>
           body {
             font-family: Arial, sans-serif;
@@ -215,7 +214,7 @@ export default function (theme) {
                           target="_blank"
                         >
                           <button class="buy-button" style="display: flex; align-items: center;">
-                            <zora-zorb style="margin-right: 15px;" size="20px" address="0xf7b2c2eb58a5f801119df7e9bf9f9b66c62bb011"></zora-zorb>
+                            <zora-zorb style="margin-right: 15px;" size="20px" address="0xebb15487787cbf8ae2ffe1a6cca5a50e63003786"></zora-zorb>
                             <span> Buy on <b>ZORA</b> for <nft-price /> ETH</span>
                           </button>
                         </a>

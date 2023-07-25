@@ -15,10 +15,11 @@ import rlp from "@ethereumjs/rlp";
 import { keccak256 } from "ethereum-cryptography/keccak.js";
 import { encode, decode } from "cbor-x";
 import { open } from "lmdb";
+import { eligible } from "@attestate/delegator2";
 
 import log from "./logger.mjs";
 import LMDB from "./lmdb.mjs";
-import { verify, ecrecover, toDigest, eligible } from "./id.mjs";
+import { verify, ecrecover, toDigest } from "./id.mjs";
 import { EIP712_MESSAGE } from "./constants.mjs";
 import { elog } from "./utils.mjs";
 import * as messages from "./topics/messages.mjs";
