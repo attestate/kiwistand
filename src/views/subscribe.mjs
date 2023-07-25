@@ -31,41 +31,29 @@ export default function index(theme) {
             </tr>
             <tr>
               <td style="padding: 10px; font-size: 16px;">
-                <b>Kiwi News Daily Newsletter</b>
-                <p>
-                  Just discovered this site and want to stay informed about
-                  updates?
-                </p>
-                <p>
-                  <b>Here's our deal for you:</b>
-                  <br />
-
-                  - 1 Email a day (USA morning) with link to Kiwi News
-                  <br />
-                  - Get latest Editor's Picks from the Kiwi community
-                  <br />
-                  - No spam and your email is safe.
-                </p>
-                <form
-                  action="https://buttondown.email/api/emails/embed-subscribe/kiwinews"
-                  method="post"
-                  target="popupwindow"
-                  onsubmit="window.open('https://buttondown.email/kiwinews', 'popupwindow')"
-                  class="embeddable-buttondown-form"
-                >
-                  <input
-                    style="min-width: 20rem; font-size: 16px"
-                    placeholder="your email"
-                    type="email"
-                    name="email"
-                    id="bd-email"
-                  />
-                  <input
-                    style="font-size: 17px"
-                    type="submit"
-                    value="Subscribe"
-                  />
-                </form>
+              <p>
+                There are a few ways to stay up to date with Kiwi. Feel free to choose whatever method you prefer.
+              </p>
+              <br />
+              <p>
+                <b>Kiwi Weekly (TOP10 most upvoted links of the week)</b>
+              </p>
+                <div style="text-align: left;">
+                <iframe src="https://paragraph.xyz/@kiwi-weekly/embed?minimal=true" width="480" height="80" frameborder="0" scrolling="no"></iframe>
+                </div>
+              <p>
+              <b>Kiwi Daily (Editor's Picks, Monday to Friday)</b>
+              </p>
+              <div style="text-align: left;">
+              <iframe src="https://paragraph.xyz/@kiwi-daily/embed?minimal=true" width="480" height="80" frameborder="0" scrolling="no"></iframe>
+              </div>
+              <p> 
+              <b>Real-Time RSS Feeds (maintained by our community member: <a href="warpcast.com/freeatnet" target="_blank">@freeatnet</a>):</b>
+              </p>
+              <div>
+              <p>Top Links feed: <a href="https://kiwinews.lol/api/feed/top" target="_blank">https://kiwinews.lol/api/feed/top</a></p>
+              <p>New Links feed: <a href="https://kiwinews.lol/api/feed/new" target="_blank">https://kiwinews.lol/api/feed/new</a></p>
+              </div>
               </td>
             </tr>
           </table>
