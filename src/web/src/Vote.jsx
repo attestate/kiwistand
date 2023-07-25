@@ -9,6 +9,7 @@ import * as API from "./API.mjs";
 import { client, chains } from "./client.mjs";
 import { showMessage } from "./message.mjs";
 import NFTModal from "./NFTModal.jsx";
+import theme from "./theme.mjs";
 
 const Container = (props) => {
   const [modalIsOpen, setIsOpen] = useState(false);
@@ -35,6 +36,9 @@ const Vote = (props) => {
   const localKey = localStorage.getItem(`-kiwi-news-${account.address}-key`);
   const provider = useProvider();
   const result = useSigner();
+  const [hasUpvoted, setHasUpvoted] = useState(
+    props.upvoters.includes(account.address)
+  );
 
   let signer, isError, isLocal;
   if (localKey) {
@@ -47,6 +51,7 @@ const Vote = (props) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setHasUpvoted(true);
 
     if (!isLocal) showMessage("Please sign the message in your wallet");
     const signature = await signer._signTypedData(
@@ -64,8 +69,10 @@ const Vote = (props) => {
       // NOTE: This should technically never happen, but if it does we pop open
       // the modal to buy the NFT.
       props.setIsOpen(true);
+      setHasUpvoted(false);
       return;
     } else if (response.status === "error") {
+      setHasUpvoted(false);
       showMessage(`Sad Kiwi :( "${response.details}"`);
       return;
     }
@@ -82,6 +89,7 @@ const Vote = (props) => {
         return (
           <div
             onClick={async (e) => {
+              if (hasUpvoted) return;
               if (!connected) {
                 openConnectModal();
                 return;
@@ -100,8 +108,14 @@ const Vote = (props) => {
               handleSubmit(e);
             }}
             className="votearrow"
+            style={{
+              color: hasUpvoted ? theme.color : "#828282",
+              cursor: hasUpvoted ? "not-allowed" : "pointer",
+            }}
             title="upvote"
-          ></div>
+          >
+            ▲
+          </div>
         );
       }}
     </ConnectButton.Custom>

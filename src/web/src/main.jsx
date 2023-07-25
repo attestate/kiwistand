@@ -72,6 +72,12 @@ function addVotes(allowlist, delegations) {
     voteArrows.forEach((arrow) => {
       const title = arrow.getAttribute("data-title");
       const href = arrow.getAttribute("data-href");
+      let upvoters;
+      try {
+        upvoters = JSON.parse(arrow.getAttribute("data-upvoters"));
+      } catch (err) {
+        console.log("Couldn't parse upvoters", err);
+      }
       createRoot(arrow).render(
         <StrictMode>
           <Vote
@@ -79,6 +85,7 @@ function addVotes(allowlist, delegations) {
             href={href}
             allowlist={allowlist}
             delegations={delegations}
+            upvoters={upvoters}
           />
         </StrictMode>
       );
