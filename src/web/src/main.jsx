@@ -212,7 +212,7 @@ async function start() {
   await addDelegateButton();
   await addConnectedComponents();
   await addModals();
-  await addNFTPrice;
+  await addNFTPrice();
 
   const { fetchAllowList, fetchDelegations } = await import("./API.mjs");
   const allowlist = await fetchAllowList();
