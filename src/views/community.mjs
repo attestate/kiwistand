@@ -97,7 +97,6 @@ for await (let address of allowList) {
   return html`
     <html lang="en" op="news">
       <head>
-        <script src="https://unpkg.com/@zoralabs/zorb@^0.0/dist/zorb-web-component.umd.js"></script>
         ${Head}
         <meta name="description" content="Meet the Kiwi News community, which curates our feed. You can also check out our leaderboard to see who's most active." />
       </head>

@@ -55,11 +55,13 @@ export function count(leaves) {
         identity: leaf.identity,
         displayName: leaf.displayName,
         upvotes: 1,
+        upvoters: [leaf.identity],
       };
       stories[key] = story;
     } else {
       if (leaf.type === "amplify") {
         story.upvotes += 1;
+        story.upvoters.push(leaf.identity);
         if (!story.title && leaf.title) story.title = leaf.title;
       }
     }
@@ -260,6 +262,7 @@ export default async function index(trie, theme, page) {
                               class="votearrowcontainer"
                               data-title="${story.title}"
                               data-href="${story.href}"
+                              data-upvoters="${JSON.stringify(story.upvoters)}"
                             ></div>
                           </a>
                         </div>
@@ -321,6 +324,7 @@ export default async function index(trie, theme, page) {
                               class="votearrowcontainer"
                               data-title="${story.title}"
                               data-href="${story.href}"
+                              data-upvoters="${JSON.stringify(story.upvoters)}"
                             ></div>
                           </a>
                         </div>

@@ -97,7 +97,7 @@ const abi = [
 
 const address = "0xebb15487787cbf8ae2ffe1a6cca5a50e63003786";
 
-const PriceComponent = () => {
+export const PriceComponent = () => {
   const salesDetails = useContractRead({
     address,
     abi,
