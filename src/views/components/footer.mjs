@@ -1,9 +1,44 @@
 //@format
 import { env } from "process";
+import { readFileSync } from "fs";
+import { fileURLToPath } from "url";
+import path from "path";
+
 import htm from "htm";
 import vhtml from "vhtml";
 
 const html = htm.bind(vhtml);
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+function loadManifest() {
+  try {
+    const manifestPath = path.resolve(__dirname, "../../public/manifest.json");
+    const manifestJSON = readFileSync(manifestPath, "utf-8");
+    const manifest = JSON.parse(manifestJSON);
+    return manifest;
+  } catch (err) {
+    console.error(err);
+    throw err;
+  }
+}
+
+const manifest = loadManifest();
+let scripts;
+if (env.NODE_ENV === "production") {
+  scripts = html`
+    <link rel="stylesheet" href="${manifest["src/main.css"].css}" />
+    <script type="module" src="${manifest["src/main.jsx"].file}"></script>
+  `;
+} else {
+  scripts = html`
+    <script type="module" src="./refresh-react.mjs"></script>
+    <script type="module" src="http://localhost:5173/@vite/client"></script>
+    <script type="module" src="http://localhost:5173/src/main.jsx"></script>
+  `;
+}
+
 const footer = (theme, path) => html`
   ${["/", "/new", "/community"].includes(path)
     ? html`
@@ -48,7 +83,7 @@ const footer = (theme, path) => html`
   >
   <span> | </span>
   <a href="/why">Why?</a>
-  <script defer src="bundle.js"></script>
+  ${scripts}
   <script
     async
     src="https://www.googletagmanager.com/gtag/js?id=G-21BKTD0NKN"
