@@ -361,7 +361,7 @@ export default async function index(trie, theme, page) {
                               <a
                                 target="_blank"
                                 data-free="https://warpcast.com/~/compose?embeds[]=${story.href}&text=${encodeURIComponent(
-                                  `Find on Kiwi News: "${story.title}"`
+                                  `(found on @kiwi)`
                                 )}&embeds[]=https://news.kiwistand.com"
                                 data-premium="https://warpcast.com/~/compose?embeds[]=${story.href}"
                                 class="caster-link"

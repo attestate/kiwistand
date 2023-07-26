@@ -159,7 +159,7 @@ export default async function (trie, theme) {
                               <a
                                 target="_blank"
                                 data-free="https://warpcast.com/~/compose?embeds[]=${story.href}&text=${encodeURIComponent(
-                                  `(found on Kiwi News "${story.title}")`
+                                  `(found on @kiwi)`
                                 )}&embeds[]=https://news.kiwistand.com"
                                 data-premium="https://warpcast.com/~/compose?embeds[]=${story.href}"
                                 class="caster-link"
