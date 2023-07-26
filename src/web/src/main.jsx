@@ -1,4 +1,4 @@
-import "./polyfills";
+import "vite/modulepreload-polyfill";
 import "@rainbow-me/rainbowkit/styles.css";
 import { StrictMode, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
@@ -22,7 +22,6 @@ import {
 import SubmitButton from "./SubmitButton.jsx";
 import DelegateButton from "./DelegateButton.jsx";
 import Vote from "./Vote.jsx";
-import Bell from "./Bell.jsx";
 import NFTPrice from "./NFTPrice.jsx";
 import OnboardingModal from "./OnboardingModal.jsx";
 import NFTModal from "./NFTModal.jsx";
@@ -215,10 +214,4 @@ if (messageParam) {
   showMessage(messageParam);
   url.searchParams.delete("message");
   window.history.replaceState({}, "", url.href);
-}
-
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", async () => {
-    await navigator.serviceWorker.register("/serviceWorker.js");
-  });
 }

@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --cors",
     "build": "vite build",
     "preview": "vite preview"
   },
@@ -21,9 +21,11 @@
     "wagmi": "0.12.13"
   },
   "devDependencies": {
+    "@rollup/plugin-commonjs": "25.0.3",
     "@types/react": "^18.0.28",
     "@types/react-dom": "^18.0.11",
     "@vitejs/plugin-react-swc": "^3.0.0",
+    "rollup-plugin-node-polyfills": "0.2.1",
     "vite": "^4.3.0"
   }
 }
