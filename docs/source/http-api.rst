@@ -124,15 +124,22 @@ Response body
 - ``details`` (string): A more detailed description of the response.
 - ``data`` (array): An array of objects, each representing a post. Each post
   object has the following properties:
-  - ``href`` (string): The URL of the post.
-  - ``signature`` (string): The signature of the post.
-  - ``timestamp`` (integer): The timestamp of the post.
-  - ``title`` (string): The title of the post.
-  - ``type`` (string): The type of the post.
-  - ``signer`` (string): The Ethereum address that signed the message. Can be a
+
+  * ``href`` (string): The URL of the post.
+  * ``signature`` (string): The signature of the post.
+  * ``timestamp`` (integer): The timestamp of the post.
+  * ``title`` (string): The title of the post.
+  * ``type`` (string): The type of the post.
+  * ``signer`` (string): The Ethereum address that signed the message. Can be a
     delegated address or the address that represents the user's identity.
-  - ``identity`` (string): The Ethereum address of the identity (the wallet
+  * ``identity`` (string): The Ethereum address of the identity (the wallet
     with which the user minted the NFT).
+
+.. note::
+
+    The list endpoint returns messages slightly different then when you sent
+    them to the network, as ``signer`` and ``identity`` represent the
+    delegation mapping between custody key and temporary signing key.
 
 
 **POST /api/v1/messages**
