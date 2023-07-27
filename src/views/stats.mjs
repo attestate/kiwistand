@@ -14,6 +14,7 @@ import Sidebar from "./components/sidebar.mjs";
 import Head from "./components/head.mjs";
 import * as store from "../store.mjs";
 import * as registry from "../chainstate/registry.mjs";
+import * as ens from "../ens.mjs";
 import { classify } from "./upvotes.mjs";
 
 const html = htm.bind(vhtml);
@@ -21,6 +22,29 @@ const html = htm.bind(vhtml);
 function timestampToDate(ts) {
   const date = new Date(ts * 1000);
   return date.toISOString().split("T")[0];
+}
+
+async function countDelegations() {
+  const delegationLogs = await registry.delegations();
+  const delegateCounts = {};
+
+  // Count the number of times each delegate address appears
+  for (const delegate of Object.values(delegationLogs)) {
+    if (!delegateCounts[delegate]) {
+      delegateCounts[delegate] = 0;
+    }
+    delegateCounts[delegate]++;
+  }
+
+  // Get the ENS name for each delegate address
+  const delegates = Object.keys(delegateCounts);
+  for (const delegate of delegates) {
+    const ensData = await ens.resolve(delegate);
+    delegateCounts[ensData.displayName] = delegateCounts[delegate];
+    delete delegateCounts[delegate];
+  }
+
+  return delegateCounts;
 }
 
 // Generate array of dates between start and end
@@ -298,6 +322,7 @@ export default async function (trie, theme) {
     y: behavior.upvotes,
   };
   const upvotesChart = plot(html)(upvotesData, options);
+  const delegationCounts = await countDelegations();
 
   return html`
     <html lang="en" op="news">
@@ -414,6 +439,23 @@ export default async function (trie, theme) {
                   - Any upvote to Kiwi News
                 </p>
                 ${upvotesChart}
+                <div>
+                  <b>Delegation Counts</b>
+                  <p>
+                    - This list shows the number of times each delegate address
+                    appears in the delegation logs.<br />
+                    - The delegate addresses are represented by their ENS names
+                    or truncated addresses if no EN name is available.<br />
+                    _ Each item in the list represents a custody address and the
+                    number of times they've delegated to a local key.
+                  </p>
+                  <ul>
+                    ${Object.entries(delegationCounts).map(
+                      ([delegate, count]) =>
+                        html`<li>${delegate}: ${count}</li>`
+                    )}
+                  </ul>
+                </div>
               </td>
             </tr>
           </table>
