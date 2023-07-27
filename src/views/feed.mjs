@@ -5,7 +5,7 @@ import url from "url";
 import htm from "htm";
 import vhtml from "vhtml";
 import normalizeUrl from "normalize-url";
-import { sub, formatDistanceToNow, differenceInMinutes } from "date-fns";
+import { sub, formatDistanceToNowStrict, differenceInMinutes } from "date-fns";
 import { fetchBuilder, MemoryCache } from "node-fetch-cache";
 
 import * as ens from "../ens.mjs";
@@ -190,11 +190,24 @@ export default async function index(trie, theme, page) {
   let stories = [];
   for await (let story of storyPromises) {
     const ensData = await ens.resolve(story.identity);
+    let avatars = [];
+    for await (let upvoter of story.upvoters) {
+      const upvoterEnsData = await ens.resolve(upvoter);
+      let avatarUrl = upvoterEnsData.avatar;
+      if (avatarUrl && !avatarUrl.startsWith("https")) {
+        avatarUrl = upvoterEnsData.avatar_url;
+      }
+      if (avatarUrl) {
+        avatars.push(avatarUrl);
+      }
+    }
     stories.push({
       ...story,
       displayName: ensData.displayName,
+      avatars: avatars,
     });
   }
+  const size = 12;
 
   return html`
     <html lang="en" op="news">
@@ -312,12 +325,7 @@ export default async function index(trie, theme, page) {
                     <div style="padding: 10px 5px 0 10px;">
                       <div style="display: flex; align-items: flex-start;">
                         <div
-                          style="font-size: 13pt; display: flex; align-items: center; min-width: 35px;"
-                        >
-                          <span>${start + i + 1}.</span>
-                        </div>
-                        <div
-                          style="display: flex; align-items: center; min-width: 30px;"
+                          style="display: flex; align-items: center; justify-content: center; min-width: 40px; margin-right: 6px;"
                         >
                           <a href="#">
                             <div
@@ -330,6 +338,10 @@ export default async function index(trie, theme, page) {
                         </div>
                         <div style="flex-grow: 1;">
                           <span>
+                            <span style="line-height: 13pt; font-size: 13pt;">
+                              ${start + i + 1}.
+                            </span>
+                            <span> </span>
                             <a
                               href="${story.href}"
                               target="_blank"
@@ -345,19 +357,38 @@ export default async function index(trie, theme, page) {
                           </span>
                           <div style="margin-top: 2px; font-size: 10pt;">
                             <span>
+                              <span>▲</span>
                               ${story.upvotes}
-                              <span> upvotes by </span>
+                              <span> </span>
+                              ${story.avatars.length > 1 &&
+                              html`<div
+                                style="margin-left: ${size /
+                                2}; top: 2px; display: inline-block; position:relative;"
+                              >
+                                ${story.avatars.slice(0, 5).map(
+                                  (avatar, index) => html`
+                                    <img
+                                      src="${avatar}"
+                                      alt="avatar"
+                                      style="z-index: ${index}; width: ${size}px; height:
+ ${size}px; border: 1px solid #828282; border-radius: 50%; margin-left: -${size /
+                                      2}px;"
+                                    />
+                                  `
+                                )}
+                              </div>`}
+                              <span> • </span>
+                              ${formatDistanceToNowStrict(
+                                new Date(story.timestamp * 1000)
+                              )}
+                              <span> ago by </span>
                               <a
                                 href="/upvotes?address=${story.identity}"
                                 class="meta-link"
                               >
                                 ${story.displayName}
                               </a>
-                              <span> </span>
-                              ${formatDistanceToNow(
-                                new Date(story.timestamp * 1000)
-                              )}
-                              <span> ago | </span>
+                              <span> • </span>
                               <a
                                 target="_blank"
                                 data-free="https://warpcast.com/~/compose?embeds[]=${story.href}&text=${encodeURIComponent(
