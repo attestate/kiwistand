@@ -24,9 +24,9 @@ function loadManifest() {
   }
 }
 
-const manifest = loadManifest();
 let scripts;
 if (env.NODE_ENV === "production") {
+  const manifest = loadManifest();
   scripts = html`
     <link rel="stylesheet" href="${manifest["src/main.css"].css}" />
     <script type="module" src="${manifest["src/main.jsx"].file}"></script>
