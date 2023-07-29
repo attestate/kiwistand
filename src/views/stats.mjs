@@ -60,48 +60,86 @@ function generateDateRange(start, end) {
   return dates;
 }
 
+function calculateWAU(messagesWithAddresses) {
+  const wauMap = new Map();
+  const sortedMessages = [...messagesWithAddresses].sort(
+    (a, b) => a.timestamp - b.timestamp
+  );
+  const startDate = new Date(sortedMessages[0].timestamp * 1000);
+  const endDate = new Date(
+    sortedMessages[sortedMessages.length - 1].timestamp * 1000
+  );
+  const allDates = generateDateRange(startDate, endDate);
+
+  allDates.forEach((date) => {
+    const weekStart = sub(new Date(date), { days: 7 });
+    const weekUsers = new Set();
+
+    sortedMessages.forEach((message) => {
+      const messageDate = new Date(message.timestamp * 1000);
+      if (messageDate >= weekStart && messageDate <= new Date(date)) {
+        weekUsers.add(message.identity);
+      }
+    });
+
+    wauMap.set(date, weekUsers.size);
+  });
+
+  const dates = Array.from(wauMap.keys()).sort();
+  const waus = dates.map((date) => wauMap.get(date));
+
+  return { dates, waus };
+}
+
 function calculateMAU(messagesWithAddresses) {
+  const sortedMessages = [...messagesWithAddresses].sort(
+    (a, b) => a.timestamp - b.timestamp
+  );
+  const startDate = new Date(sortedMessages[0].timestamp * 1000);
+  const endDate = new Date();
   const mauMap = new Map();
 
-  for (const msg of messagesWithAddresses) {
-    const date = new Date(msg.timestamp * 1000);
-    const month = `${date.getFullYear()}-${date.getMonth() + 1}`;
-    const identity = msg.identity;
+  for (let day = startDate; day <= endDate; day.setDate(day.getDate() + 1)) {
+    const dayStart = sub(day, { days: 30 });
+    const users = new Set();
 
-    if (!mauMap.has(month)) {
-      mauMap.set(month, new Set());
+    for (const msg of sortedMessages) {
+      const msgDate = new Date(msg.timestamp * 1000);
+      if (msgDate >= dayStart && msgDate <= day) {
+        users.add(msg.identity);
+      }
     }
 
-    mauMap.get(month).add(identity);
+    mauMap.set(day.toISOString().split("T")[0], users.size);
   }
 
-  const sortedMonths = Array.from(mauMap.keys()).sort();
-  const maus = sortedMonths.map((month) => mauMap.get(month).size);
+  const dates = Array.from(mauMap.keys());
+  const maus = Array.from(mauMap.values());
 
-  return { months: sortedMonths, maus };
+  return { dates, maus };
 }
 
 function calculateDAU(messagesWithAddresses) {
   const dauMap = new Map();
+  const dates = generateDateRange(
+    Math.min(
+      ...messagesWithAddresses.map((msg) => new Date(msg.timestamp * 1000))
+    ),
+    Math.max(
+      ...messagesWithAddresses.map((msg) => new Date(msg.timestamp * 1000))
+    )
+  );
 
-  for (const msg of messagesWithAddresses) {
-    const date = timestampToDate(msg.timestamp);
-    const identity = msg.identity;
-
-    if (!dauMap.has(date)) {
-      dauMap.set(date, new Set());
-    }
-
-    dauMap.get(date).add(identity);
+  for (const date of dates) {
+    dauMap.set(date, new Set());
   }
 
-  const dates = generateDateRange(
-    Math.min(...Array.from(dauMap.keys(), (key) => new Date(key))),
-    Math.max(...Array.from(dauMap.keys(), (key) => new Date(key)))
-  );
-  for (const date of dates) {
-    if (!dauMap.has(date)) {
-      dauMap.set(date, new Set());
+  for (const msg of messagesWithAddresses) {
+    const date = new Date(msg.timestamp * 1000).toISOString().split("T")[0];
+    const identity = msg.identity;
+
+    if (dauMap.has(date)) {
+      dauMap.get(date).add(identity);
     }
   }
 
@@ -148,39 +186,15 @@ function calculateDAUMAUratio(dauData, mauData) {
 
   for (let i = 0; i < dauData.dates.length; i++) {
     const dau = dauData.daus[i];
-    const date = new Date(dauData.dates[i]);
-    const month = `${date.getFullYear()}-${date.getMonth() + 1}`;
+    const mau = mauData.maus[i];
 
-    const mauIndex = mauData.months.indexOf(month);
-    const mau = mauIndex !== -1 ? mauData.maus[mauIndex] : 0;
+    let ratio = dau / mau;
+    ratio = Math.min(ratio, 1);
 
-    const ratio = mau !== 0 ? dau / mau : 0;
     ratioData.ratios.push(ratio);
   }
 
   return ratioData;
-}
-
-function calculateWAU(messagesWithAddresses) {
-  const wauMap = new Map();
-
-  for (const msg of messagesWithAddresses) {
-    const date = new Date(msg.timestamp * 1000);
-    // Use date's year and week number as key
-    const week = `${date.getFullYear()}-${getWeekNumber(date)}`;
-    const identity = msg.identity;
-
-    if (!wauMap.has(week)) {
-      wauMap.set(week, new Set());
-    }
-
-    wauMap.get(week).add(identity);
-  }
-
-  const sortedWeeks = Array.from(wauMap.keys()).sort();
-  const waus = sortedWeeks.map((week) => wauMap.get(week).size);
-
-  return { weeks: sortedWeeks, waus };
 }
 
 function getWeekNumber(date) {
@@ -282,9 +296,10 @@ export default async function (trie, theme) {
     { x: dauData.dates.map((date) => new Date(date)), y: dauData.daus },
     options
   );
+  console.log(mauData);
   const mauChart = plot(html)(
     {
-      x: mauData.months.map((month) => new Date(month)),
+      x: mauData.dates.map((date) => new Date(date)),
       y: mauData.maus,
     },
     options
@@ -300,10 +315,7 @@ export default async function (trie, theme) {
 
   const wauChart = plot(html)(
     {
-      x: wauData.weeks.map((week) => {
-        const [year, weekNo] = week.split("-");
-        return getFirstDayOfWeek(Number(year), Number(weekNo));
-      }),
+      x: wauData.dates.map((date) => new Date(date)),
       y: wauData.waus,
     },
     options
@@ -369,14 +381,14 @@ export default async function (trie, theme) {
                 </p>
                 ${dauChart}
                 <p>
-                  <b>Weekly Active Users (WAU) DEFINITION:</b>
+                  <b>7-day Active Users (WAU) DEFINITION:</b>
                   <br />
                   - To calculate the values on this chart, we're analyzing all
                   messages that have occurred in the p2p network.
                   <br />
-                  - We consider someone a Weekly Active User if, for a given
-                  week, they've, at least, interacted on the site once by either
-                  upvoting or submitting a new link.
+                  - We consider someone a 7-day Active User if, for a given
+                  period of 7 days, they've, at least, interacted on the site
+                  once by either upvoting or submitting a new link.
                   <br />
                   - As the protocol doesn't track individual users, we consider
                   each Ethereum address as individual users.
@@ -391,15 +403,15 @@ export default async function (trie, theme) {
                 </p>
                 ${wauChart}
                 <p>
-                  <b>Monthly Active Users DEFINITION:</b>
+                  <b>30-day Active Users DEFINITION:</b>
                   <br />
                   - To calculate the values on this chart we're getting all
                   messages that have occurred in the p2p network and analyze
                   them.
                   <br />
-                  - We consider someone a Monthly Active User if, for a given
-                  month, they've, at least, interacted on the site once by
-                  either upvoting or submitting a new link.
+                  - We consider someone a 30-day Active User if, for the last 30
+                  days, they've, at least, interacted on the site once by either
+                  upvoting or submitting a new link.
                   <br />
                   - As the protocol doesn't track individual users, we consider
                   each Ethereum address as individual users.
