@@ -51,13 +51,7 @@ const ProfileSVG = () => (
     <title>profile_round [#1342]</title>
     <desc>Created with Sketch.</desc>
     <defs></defs>
-    <g
-      id="Page-1"
-      stroke="none"
-      stroke-width="1"
-      fill="none"
-      fill-rule="evenodd"
-    >
+    <g id="Page-1" stroke="none" strokeWidth="1" fill="none" fillRule="evenodd">
       <g
         id="Dribbble-Light-Preview"
         transform="translate(-140.000000, -2159.000000)"
@@ -136,14 +130,8 @@ const DisconnectSVG = () => (
     viewBox="0 0 512 512"
   >
     <g>
-      <path
-        class="st0"
-        d="M210.287,176.988h-57.062c-36.544,0-67.206,24.836-76.238,58.53H0v40.973h76.987   c9.04,33.686,39.702,58.522,76.238,58.522h57.062v-38.588h43.025v-80.84h-43.025V176.988z"
-      />
-      <path
-        class="st0"
-        d="M435.005,235.517c-9.032-33.694-39.686-58.53-76.23-58.53h-57.062v158.024h57.062   c36.544,0,67.191-24.836,76.23-58.522H512v-40.973H435.005z"
-      />
+      <path d="M210.287,176.988h-57.062c-36.544,0-67.206,24.836-76.238,58.53H0v40.973h76.987   c9.04,33.686,39.702,58.522,76.238,58.522h57.062v-38.588h43.025v-80.84h-43.025V176.988z" />
+      <path d="M435.005,235.517c-9.032-33.694-39.686-58.53-76.23-58.53h-57.062v158.024h57.062   c36.544,0,67.191-24.836,76.23-58.522H512v-40.973H435.005z" />
     </g>
   </svg>
 );
@@ -191,24 +179,24 @@ const CustomConnectButton = () => {
         if (connected) {
           return (
             <Bell to="/activity">
-              <i class="icon">
+              <i className="icon">
                 <svg style={{ width: "25px" }} viewBox="0 0 24 24">
                   <path
                     d="M18.9,11.2s0-8.7-6.9-8.7-6.9,8.7-6.9,8.7v3.9L2.5,17.5h19l-2.6-2.4Z"
                     fill="none"
                     stroke="#000000"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
                   />
 
                   <path
                     d="M14.5,20.5s-.5,1-2.5,1-2.5-1-2.5-1"
                     fill="none"
                     stroke="#000000"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
                   />
                 </svg>{" "}
               </i>
