@@ -20,9 +20,7 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node-version }}
-    - run: 'echo "$ENV" > .env'
-      shell: bash
-      env:
-        ENV: ${{ secrets.env }}
     - run: npm ci
-    - run: npm test
+    - run: npm run test
+      env: 
+        HTTP_MESSAGES_MAX_PAGE_SIZE: "500"
