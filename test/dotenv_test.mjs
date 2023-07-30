@@ -1,5 +1,6 @@
 //@format
 import test from "ava";
+import { env } from "process";
 import { readFile, access } from "fs/promises";
 import { constants } from "fs";
 import { resolve } from "path";
@@ -7,6 +8,13 @@ import { resolve } from "path";
 import { appdir } from "../src/utils.mjs";
 
 test("that repo contains a .env-copy file with all possible configuration options", async (t) => {
+  // NOTE: https://docs.github.com/en/actions/learn-github-actions/variables
+  if (env.GITHUB_ACTIONS) {
+    t.log("Skipping .env-copy test on GitHub Actions CI");
+    t.pass();
+    return;
+  }
+
   const copyName = ".env-copy";
   const copyPath = resolve(appdir(), copyName);
   const content = (await readFile(copyPath)).toString();

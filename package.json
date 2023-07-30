@@ -89,7 +89,8 @@
       "**/*_test.mjs"
     ],
     "environmentArguments": {
-      "DEBUG": "attestate*"
+      "DEBUG": "attestate*",
+      "HTTP_MESSAGES_MAX_PAGE_SIZE": "500"
     },
     "nodeArguments": [
       "--no-warnings"
