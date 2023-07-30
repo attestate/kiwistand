@@ -105,7 +105,7 @@ test.serial("adding valid message to trie", async (t) => {
   process.env.DATA_DIR = "dbtestA";
   const trie = await store.create();
   const emptyRoot = trie.root();
-  const allowlistFn = () => [address];
+  const allowlistFn = () => new Set([address]);
   const result = await handlers.message(trie, allowlistFn)(evt);
   t.true(result);
   await rm("dbtestA", { recursive: true });

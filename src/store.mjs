@@ -335,12 +335,9 @@ export async function leaves(trie, from, amount, parser, startDatetime) {
 
     if (node instanceof LeafNode) {
       pointer += 1;
-
-      const fragments = [key, node.key()].map(nibblesToBuffer);
-      key = Buffer.concat(fragments);
-      const value = decode(node.value());
-
       if (Number.isInteger(from) && pointer <= from) return;
+
+      const value = decode(node.value());
       if (parser) {
         const parsed = parser(value);
         if (parsed.timestamp < startDatetime) return;

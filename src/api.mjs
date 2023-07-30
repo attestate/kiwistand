@@ -75,7 +75,13 @@ export function listAllowed(getAllowlist) {
     const code = 200;
     const httpMessage = "OK";
     const details = "Returning allow list";
-    return sendStatus(reply, code, httpMessage, details, await getAllowlist());
+    return sendStatus(
+      reply,
+      code,
+      httpMessage,
+      details,
+      Array.from(await getAllowlist())
+    );
   };
 }
 

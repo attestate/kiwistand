@@ -14,6 +14,7 @@ import * as http from "./http.mjs";
 import * as store from "./store.mjs";
 import mintCrawlPath from "./chainstate/mint.config.crawler.mjs";
 import delegateCrawlPath from "./chainstate/delegate.config.crawler.mjs";
+import * as registry from "./chainstate/registry.mjs";
 
 (async () => {
   const trie = await store.create();
@@ -37,4 +38,22 @@ import delegateCrawlPath from "./chainstate/delegate.config.crawler.mjs";
   );
   await api.launch(trie, node);
   await http.launch(trie, node);
+
+  // NOTE: This request queries all messages in the database to enable caching
+  // when calling ecrecover on messages' signatures
+  const from = null;
+  const amount = null;
+  const startDatetime = null;
+  const parser = JSON.parse;
+  const allowlist = await registry.allowlist();
+  const delegations = await registry.delegations();
+  await store.posts(
+    trie,
+    from,
+    amount,
+    parser,
+    startDatetime,
+    allowlist,
+    delegations
+  );
 })();

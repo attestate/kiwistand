@@ -51,7 +51,7 @@ export async function resolve(address) {
 }
 
 async function initializeCache() {
-  let addresses = await allowlist();
+  let addresses = Array.from(await allowlist());
   while (addresses.length === 0) {
     await new Promise((r) => setTimeout(r, 5000)); // wait for 5 seconds
     addresses = await allowlist();

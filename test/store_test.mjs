@@ -108,7 +108,7 @@ test("getting leaves", async (t) => {
   env.DATA_DIR = "dbtestA";
   const trieA = await store.create();
   const libp2p = null;
-  const allowlist = [address];
+  const allowlist = new Set([address]);
   await store.add(trieA, signedMessage, libp2p, allowlist);
 
   const from = null;
@@ -143,7 +143,7 @@ test("descend levels with actual data ", async (t) => {
   env.DATA_DIR = "dbtestA";
   const trieA = await store.create();
   const libp2p = null;
-  const allowlist = [address];
+  const allowlist = new Set([address]);
   await store.add(trieA, signedMessage, libp2p, allowlist);
 
   const [root] = await store.descend(trieA, 0);
@@ -530,7 +530,7 @@ test("try adding message with invalid href", async (t) => {
       },
     },
   };
-  const allowlist = [address];
+  const allowlist = new Set([address]);
   await t.throwsAsync(
     async () => await store.add(trie, signedMessage, libp2p, allowlist)
   );
@@ -564,7 +564,7 @@ test("try to add invalidly formatted message to store", async (t) => {
       },
     },
   };
-  const allowlist = [address];
+  const allowlist = new Set([address]);
   await t.throwsAsync(
     async () => await store.add(trie, signedMessage, libp2p, allowlist)
   );
@@ -597,7 +597,7 @@ test("try to add invalidly signed message to store", async (t) => {
       },
     },
   };
-  const allowlist = [address];
+  const allowlist = new Set([address]);
   await t.throwsAsync(
     async () => await store.add(trie, message, libp2p, allowlist)
   );
@@ -627,9 +627,10 @@ test("add with delegated address but from isn't on allow list", async (t) => {
     hasCheckpoints: () => false,
   };
   const libp2p = null;
-  const allowlist = [];
+  const list = ["0x0000000000000000000000000000000000000000"];
+  const allowlist = new Set(list);
   const delegations = {
-    [address]: allowlist[0],
+    [address]: "0x0000000000000000000000000000000000000001",
   };
 
   await t.throwsAsync(
@@ -671,7 +672,7 @@ test("attempting to upvote twice, once with custody and delegate address", async
     hasCheckpoints: () => false,
   };
   const libp2p = null;
-  const allowlist = [address0];
+  const allowlist = new Set([address0]);
   const delegations = {
     [address1]: address0,
   };
@@ -707,11 +708,10 @@ test("trying to add a message to store that isn't on allowlist but was delegated
     hasCheckpoints: () => false,
   };
   const libp2p = null;
-  const allowlist = [
-    utils.getAddress("0xee324c588cef1bf1c1360883e4318834af66366d"),
-  ];
+  const list = [utils.getAddress("0xee324c588cef1bf1c1360883e4318834af66366d")];
+  const allowlist = new Set(list);
   const delegations = {
-    [address]: allowlist[0],
+    [address]: list[0],
   };
   await store.add(trie, signedMessage, libp2p, allowlist, delegations);
   await rm("dbtestA", { recursive: true });
@@ -744,7 +744,7 @@ test("trying to add message to store that isn't on allowlist", async (t) => {
       },
     },
   };
-  const allowlist = [];
+  const allowlist = new Set();
   await t.throwsAsync(
     async () => await store.add(trie, signedMessage, libp2p, allowlist)
   );
@@ -778,7 +778,7 @@ test("adding message from too far into the future", async (t) => {
       },
     },
   };
-  const allowlist = [address];
+  const allowlist = new Set([address]);
   await t.throwsAsync(
     async () => await store.add(trie, signedMessage, libp2p, allowlist)
   );
@@ -811,7 +811,7 @@ test("adding message from before minimum timestamp", async (t) => {
       },
     },
   };
-  const allowlist = [address];
+  const allowlist = new Set([address]);
   env.MIN_TIMESTAMP_SECS = 1;
   await t.throwsAsync(
     async () => await store.add(trie, signedMessage, libp2p, allowlist)
@@ -850,7 +850,7 @@ test.serial("adding message to the store", async (t) => {
       },
     },
   };
-  const allowlist = [address];
+  const allowlist = new Set([address]);
   await store.add(trie, signedMessage, libp2p, allowlist);
   await rm("dbtestA", { recursive: true });
 });
@@ -888,7 +888,7 @@ test.serial(
         },
       },
     };
-    const allowlist = [address];
+    const allowlist = new Set([address]);
     await store.add(trie, signedMessage0, libp2p, allowlist);
 
     const timestamp1 = timestamp0 + 1;

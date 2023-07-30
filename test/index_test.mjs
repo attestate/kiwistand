@@ -118,7 +118,7 @@ test("if sync of signed messages work over the network", async (t) => {
 
   const trieA = await store.create();
   const libp2p = null;
-  const allowlist = [address];
+  const allowlist = new Set([address]);
   await store.add(trieA, signedMessage, libp2p, allowlist);
 
   const node1 = await start(config1);

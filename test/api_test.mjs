@@ -62,14 +62,15 @@ test("list allowed addresses", async (t) => {
   };
 
   const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
-  const allowlist = () => [address];
+  const list = [address];
+  const allowlist = () => new Set(list);
   const response = await listAllowed(allowlist)(mockRequest, mockReply);
 
   t.is(response.status, "success");
   t.is(response.code, 200);
   t.is(response.message, "OK");
   t.is(response.data.length, 1);
-  t.deepEqual(response.data, allowlist());
+  t.deepEqual(response.data, list);
 });
 
 test("listMessages success", async (t) => {
@@ -106,7 +107,7 @@ test("listMessages success", async (t) => {
   env.DATA_DIR = "dbtestA";
   const trie = await store.create();
   const libp2p = null;
-  const allowlist = [address];
+  const allowlist = new Set([address]);
   await store.add(trie, signedMessage, libp2p, allowlist);
 
   const getAllowlist = () => allowlist;
@@ -161,7 +162,7 @@ test("handleMessage should send back an error upon invalid address signer", asyn
   const trie = await store.create();
   const libp2p = null;
   const zeroAddr = "0x0000000000000000000000000000000000000000";
-  const allowlist = () => [zeroAddr];
+  const allowlist = () => new Set([zeroAddr]);
   const delegations = () => ({});
   const handler = handleMessage(trie, libp2p, allowlist, delegations);
 
@@ -201,7 +202,7 @@ test("handleMessage should handle a valid message and return 200 OK", async (t) 
   env.DATA_DIR = "dbtestA";
   const trie = await store.create();
   const libp2p = null;
-  const allowlist = () => [address];
+  const allowlist = () => new Set([address]);
   const delegations = () => ({});
   const handler = handleMessage(trie, libp2p, allowlist, delegations);
 

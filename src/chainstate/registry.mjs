@@ -43,6 +43,5 @@ export async function allowlist() {
   const subdb = db.openDB(name);
   const all = await database.all(subdb, "");
   const addresses = all.map(({ value }) => utils.getAddress(value));
-  const uniqueAddresses = Array.from(new Set(addresses));
-  return uniqueAddresses;
+  return new Set(addresses);
 }

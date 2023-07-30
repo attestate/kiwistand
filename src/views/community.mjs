@@ -75,9 +75,8 @@ export default async function (trie, theme) {
   leaves = moderation.moderate(leaves, config);
   const users = countPoints(leaves);
 
-  const allowList = await registry.allowlist();
   let combinedUsers = [];
-  for await (let address of allowList) {
+  for await (let address of allowlist.values()) {
     const foundUser = users.find(
       // TODO: Should start using ethers.utils.getAddress
       (user) => user.identity.toLowerCase() === address.toLowerCase()
