@@ -15,7 +15,6 @@ import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import useLocalStorageState from "use-local-storage-state";
 
 import { client, chains } from "./client.mjs";
-import { showMessage } from "./message.mjs";
 
 const abi = [
   {

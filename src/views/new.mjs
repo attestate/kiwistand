@@ -17,6 +17,7 @@ import * as store from "../store.mjs";
 import * as moderation from "./moderation.mjs";
 import * as registry from "../chainstate/registry.mjs";
 import { count } from "./feed.mjs";
+import FCIcon from "./components/farcastericon.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -174,12 +175,13 @@ export default async function (trie, theme) {
                               <span> • </span>
                               <a
                                 target="_blank"
-                                data-free="https://warpcast.com/~/compose?embeds[]=${story.href}&text=${encodeURIComponent(
-                                  `Find on Kiwi News: "${story.title}"`
+                                href="https://warpcast.com/~/compose?embeds[]=${story.href}&text=${encodeURIComponent(
+                                  `Found on Kiwi News: "${story.title}"`
                                 )}&embeds[]=https://news.kiwistand.com"
-                                data-premium="https://warpcast.com/~/compose?embeds[]=${story.href}"
                                 class="caster-link"
                               >
+                                ${FCIcon("height: 10px; width: 10px;")}
+                                <span> </span>
                                 Cast
                               </a>
                             </span>

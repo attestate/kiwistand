@@ -7,7 +7,6 @@ import { eligible } from "@attestate/delegator2";
 
 import * as API from "./API.mjs";
 import { client, chains } from "./client.mjs";
-import { showMessage } from "./message.mjs";
 import NFTModal from "./NFTModal.jsx";
 import theme from "./theme.mjs";
 
@@ -31,6 +30,7 @@ const Container = (props) => {
 };
 
 const Vote = (props) => {
+  const { toast } = props;
   const value = API.messageFab(props.title, props.href);
   const account = useAccount();
   const localKey = localStorage.getItem(`-kiwi-news-${account.address}-key`);
@@ -53,7 +53,7 @@ const Vote = (props) => {
     e.preventDefault();
     setHasUpvoted(true);
 
-    if (!isLocal) showMessage("Please sign the message in your wallet");
+    if (!isLocal) toast("Please sign the message in your wallet");
     const signature = await signer._signTypedData(
       API.EIP712_DOMAIN,
       API.EIP712_TYPES,
@@ -64,7 +64,7 @@ const Vote = (props) => {
     console.log(response);
     let message;
     if (response.status === "success") {
-      message = "Thanks for your upvote! Have a 🥝";
+      toast.success("Thanks for your upvote! Have a 🥝");
     } else if (response.details.includes("You must mint")) {
       // NOTE: This should technically never happen, but if it does we pop open
       // the modal to buy the NFT.
@@ -73,13 +73,9 @@ const Vote = (props) => {
       return;
     } else if (response.status === "error") {
       setHasUpvoted(false);
-      showMessage(`Sad Kiwi :( "${response.details}"`);
+      toast.error(`Sad Kiwi :( "${response.details}"`);
       return;
     }
-    let url = new URL(window.location.href);
-    url.searchParams.set("bpc", "1");
-    url.searchParams.set("message", message);
-    window.location.href = url.href;
   };
 
   return (

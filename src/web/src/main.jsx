@@ -2,8 +2,6 @@ import "vite/modulepreload-polyfill";
 import "@rainbow-me/rainbowkit/styles.css";
 import { watchAccount } from "@wagmi/core";
 
-import { showMessage } from "./message.mjs";
-
 function handleClick(event) {
   const sidebar = document.querySelector(".sidebar");
   const overlay = document.querySelector("#overlay");
@@ -45,23 +43,7 @@ function toggleSidebar() {
 
 document.addEventListener("click", handleClick);
 
-function updateLink(allowlist) {
-  return (account) => {
-    const { address, isConnected } = account;
-
-    const links = document.querySelectorAll("[data-premium], [data-free]");
-    links.forEach((link) => {
-      const premiumLink = link.getAttribute("data-premium");
-      const freeLink = link.getAttribute("data-free");
-      const targetLink =
-        isConnected && allowlist.includes(address) ? premiumLink : freeLink;
-
-      link.setAttribute("href", targetLink);
-    });
-  };
-}
-
-async function addSubmitButton(allowlist, delegations) {
+async function addSubmitButton(allowlist, delegations, toast) {
   const submitButtonContainer = document.getElementById("submit-button");
   if (submitButtonContainer) {
     const { createRoot } = await import("react-dom/client");
@@ -69,18 +51,23 @@ async function addSubmitButton(allowlist, delegations) {
     const SubmitButton = (await import("./SubmitButton.jsx")).default;
     createRoot(submitButtonContainer).render(
       <StrictMode>
-        <SubmitButton allowlist={allowlist} delegations={delegations} />
+        <SubmitButton
+          toast={toast}
+          allowlist={allowlist}
+          delegations={delegations}
+        />
       </StrictMode>
     );
   }
 }
 
-async function addVotes(allowlist, delegations) {
+async function addVotes(allowlist, delegations, toast) {
   const voteArrows = document.querySelectorAll(".votearrowcontainer");
   if (voteArrows && voteArrows.length > 0) {
     const { createRoot } = await import("react-dom/client");
     const { StrictMode } = await import("react");
     const Vote = (await import("./Vote.jsx")).default;
+
     voteArrows.forEach((arrow) => {
       const title = arrow.getAttribute("data-title");
       const href = arrow.getAttribute("data-href");
@@ -98,6 +85,7 @@ async function addVotes(allowlist, delegations) {
             allowlist={allowlist}
             delegations={delegations}
             upvoters={upvoters}
+            toast={toast}
           />
         </StrictMode>
       );
@@ -192,6 +180,23 @@ async function addModals() {
   }
 }
 
+async function addToaster() {
+  const newElement = document.createElement("div");
+  newElement.id = "new-element";
+  document.body.appendChild(newElement);
+
+  const { createRoot } = await import("react-dom/client");
+  const { StrictMode } = await import("react");
+  const { Toaster, toast } = await import("react-hot-toast");
+
+  createRoot(newElement).render(
+    <StrictMode>
+      <Toaster />
+    </StrictMode>
+  );
+  return toast;
+}
+
 async function addNFTPrice() {
   const nftPriceElements = document.querySelectorAll("nft-price");
   if (nftPriceElements && nftPriceElements.length > 0) {
@@ -208,31 +213,60 @@ async function addNFTPrice() {
   }
 }
 
+async function share(toast, link) {
+  const FCIcon = (await import("./fcicon.jsx")).default;
+  toast(
+    <a
+      style={{ display: "flex", alignItems: "center" }}
+      href={`https://warpcast.com/~/compose?embeds[]=${link}&embeds[]=https://news.kiwistand.com`}
+      target="_blank"
+    >
+      <FCIcon style={{ height: "15px", color: "white" }} />
+      <span> </span>
+      <span
+        style={{
+          marginLeft: "10px",
+          textDecoration: "underline",
+          color: "white",
+        }}
+      >
+        Share to Warpcast
+      </span>
+    </a>,
+    {
+      duration: 10000,
+      style: {
+        backgroundColor: "#472a91",
+      },
+    }
+  );
+}
+
 async function start() {
   await addDelegateButton();
   await addConnectedComponents();
   await addModals();
   await addNFTPrice();
+  const toast = await addToaster();
 
   const { fetchAllowList, fetchDelegations } = await import("./API.mjs");
   const allowlist = await fetchAllowList();
-  const unwatch = watchAccount(updateLink(allowlist));
 
   const delegations = await fetchDelegations();
-  await addVotes(allowlist, delegations);
-  await addSubmitButton(allowlist, delegations);
+  await addVotes(allowlist, delegations, toast);
+  await addSubmitButton(allowlist, delegations, toast);
+
+  let url = new URL(window.location.href);
+  let link = url.searchParams.get("link");
+
+  if (link) {
+    share(toast, link);
+    url.searchParams.delete("link");
+    window.history.replaceState({}, "", url.href);
+  }
 }
 
 start();
-
-let url = new URL(window.location.href);
-let messageParam = url.searchParams.get("message");
-
-if (messageParam) {
-  showMessage(messageParam);
-  url.searchParams.delete("message");
-  window.history.replaceState({}, "", url.href);
-}
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", async () => {

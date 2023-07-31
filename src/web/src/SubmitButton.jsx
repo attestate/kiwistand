@@ -6,10 +6,10 @@ import { eligible } from "@attestate/delegator2";
 
 import * as API from "./API.mjs";
 import { client, chains } from "./client.mjs";
-import { showMessage } from "./message.mjs";
 import NFTModal from "./NFTModal.jsx";
 
 const SubmitButton = (props) => {
+  const { toast } = props;
   const [isLoading, setIsLoading] = useState(false);
   const [title, setTitle] = useState("");
   const [url, setUrl] = useState("");
@@ -74,25 +74,25 @@ const SubmitButton = (props) => {
     const value = API.messageFab(title.replace(/(\r\n|\n|\r)/gm, " "), url);
 
     if (title.length > 80 || url.length > 2048) {
-      showMessage(
+      toast.error(
         "The title should be no more than 80 characters, and the URL should be no more than 2048 characters."
       );
       setIsLoading(false);
       return;
     }
     if (title.length === 0) {
-      showMessage("Please add a title.");
+      toast.error("Please add a title.");
       setIsLoading(false);
       return;
     }
     if (url.length === 0) {
-      showMessage("Please add a link.");
+      toast.error("Please add a link.");
       setIsLoading(false);
       return;
     }
 
     setIsLoading(true);
-    if (!localKey) showMessage("Please sign the message in your wallet!");
+    if (!localKey) toast("Please sign the message in your wallet!");
 
     let signature;
     try {
@@ -103,7 +103,7 @@ const SubmitButton = (props) => {
       );
     } catch (err) {
       console.log(err);
-      showMessage(`Error! Sad Kiwi! "${err.message}"`);
+      toast.error(`Error! Sad Kiwi! "${err.message}"`);
       setIsLoading(false);
       return;
     }
@@ -117,7 +117,7 @@ const SubmitButton = (props) => {
     }
     const nextPage = new URL(window.location.origin + "/new");
     nextPage.searchParams.set("bpc", "1");
-    nextPage.searchParams.set("message", message);
+    nextPage.searchParams.set("link", encodeURIComponent(url));
     window.location.href = nextPage.href;
   };
 
