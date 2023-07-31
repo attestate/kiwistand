@@ -35,9 +35,9 @@ function loadTheme(req, res, next) {
 
   const theme = savedTheme || {
     id: 14,
-    emoji: "💧",
+    emoji: "🥝",
     name: "Kiwi News",
-    color: "deepskyblue",
+    color: "limegreen",
   };
 
   res.locals.theme = theme;
