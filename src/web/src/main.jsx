@@ -71,6 +71,7 @@ async function addVotes(allowlist, delegations, toast) {
     voteArrows.forEach((arrow) => {
       const title = arrow.getAttribute("data-title");
       const href = arrow.getAttribute("data-href");
+      const editorPicks = arrow.getAttribute("data-editorpicks");
       let upvoters;
       try {
         upvoters = JSON.parse(arrow.getAttribute("data-upvoters"));
@@ -86,6 +87,7 @@ async function addVotes(allowlist, delegations, toast) {
             delegations={delegations}
             upvoters={upvoters}
             toast={toast}
+            editorPicks={editorPicks}
           />
         </StrictMode>
       );

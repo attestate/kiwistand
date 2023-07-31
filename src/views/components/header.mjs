@@ -4,7 +4,10 @@ import htm from "htm";
 import vhtml from "vhtml";
 
 const html = htm.bind(vhtml);
-const header = (theme) => html` <td bgcolor="${theme.color}">
+const header = (theme) => html` <td
+  style="min-height: 63px;"
+  bgcolor="${theme.color}"
+>
   <nav-onboarding-modal />
   <nav-nft-modal />
   <table

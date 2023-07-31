@@ -39,6 +39,7 @@ const Vote = (props) => {
   const [hasUpvoted, setHasUpvoted] = useState(
     props.upvoters.includes(account.address)
   );
+  const [upvotes, setUpvotes] = useState(props.upvoters.length);
 
   let signer, isError, isLocal;
   if (localKey) {
@@ -65,6 +66,7 @@ const Vote = (props) => {
     let message;
     if (response.status === "success") {
       toast.success("Thanks for your upvote! Have a 🥝");
+      setUpvotes(upvotes + 1);
     } else if (response.details.includes("You must mint")) {
       // NOTE: This should technically never happen, but if it does we pop open
       // the modal to buy the NFT.
@@ -83,34 +85,46 @@ const Vote = (props) => {
       {({ account, chain, mounted, openConnectModal }) => {
         const connected = account && chain && mounted;
         return (
-          <div
-            onClick={async (e) => {
-              if (hasUpvoted) return;
-              if (!connected) {
-                openConnectModal();
-                return;
-              }
+          <div>
+            <div
+              onClick={async (e) => {
+                if (hasUpvoted) return;
+                if (!connected) {
+                  openConnectModal();
+                  return;
+                }
 
-              const { allowlist, delegations } = props;
-              const isEligible = eligible(
-                allowlist,
-                delegations,
-                await signer.getAddress()
-              );
-              if (!isEligible) {
-                props.setIsOpen(true);
-                return;
-              }
-              handleSubmit(e);
-            }}
-            className="votearrow"
-            style={{
-              color: hasUpvoted ? theme.color : "#828282",
-              cursor: hasUpvoted ? "not-allowed" : "pointer",
-            }}
-            title="upvote"
-          >
-            ▲
+                const { allowlist, delegations } = props;
+                const isEligible = eligible(
+                  allowlist,
+                  delegations,
+                  await signer.getAddress()
+                );
+                if (!isEligible) {
+                  props.setIsOpen(true);
+                  return;
+                }
+                handleSubmit(e);
+              }}
+              className="votearrow"
+              style={{
+                color: hasUpvoted ? theme.color : "#828282",
+                cursor: hasUpvoted ? "not-allowed" : "pointer",
+              }}
+              title="upvote"
+            >
+              ▲
+            </div>
+            {props.editorPicks !== "true" ? (
+              <div
+                style={{
+                  fontSize: "8pt",
+                  textAlign: "center",
+                }}
+              >
+                {upvotes}
+              </div>
+            ) : null}
           </div>
         );
       }}
