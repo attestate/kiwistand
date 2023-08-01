@@ -3,7 +3,6 @@ import { env } from "process";
 import { resolve } from "path";
 
 import { utils } from "ethers";
-import normalizeUrl from "normalize-url";
 import {
   Trie,
   BranchNode,
@@ -13,7 +12,7 @@ import {
 } from "@ethereumjs/trie";
 import rlp from "@ethereumjs/rlp";
 import { keccak256 } from "ethereum-cryptography/keccak.js";
-import { encode, decode } from "cbor-x";
+import { decode } from "cbor-x";
 import { open } from "lmdb";
 import { eligible } from "@attestate/delegator2";
 
@@ -328,38 +327,62 @@ export async function posts(
 }
 
 export async function leaves(trie, from, amount, parser, startDatetime) {
-  let pointer = 0;
   const nodes = [];
-  const onFound = (_, node, key, walkController) => {
-    if (Number.isInteger(amount) && nodes.length >= amount) return;
 
-    if (node instanceof LeafNode) {
-      pointer += 1;
-      if (Number.isInteger(from) && pointer <= from) return;
-
-      const value = decode(node.value());
-      if (parser) {
-        const parsed = parser(value);
-        if (parsed.timestamp < startDatetime) return;
-
-        nodes.push(parsed);
-      } else {
-        nodes.push(value);
-      }
-    } else if (node instanceof BranchNode || node instanceof ExtensionNode) {
-      walkController.allChildren(node, key);
+  let pointer = 0;
+  for await (const [node] of walkTrieDfs(trie, trie.root(), [])) {
+    if (Number.isInteger(amount) && nodes.length >= amount) {
+      break;
     }
-  };
 
-  try {
-    await trie.walkTrie(trie.root(), onFound);
-  } catch (err) {
-    if (err.toString().includes("Missing node in DB")) {
-      log("leaves: Didn't find any nodes");
-      return nodes;
+    pointer++;
+    if (Number.isInteger(from) && pointer <= from) {
+      continue;
+    }
+
+    const value = decode(node.value());
+    if (parser) {
+      const parsed = parser(value);
+      if (parsed.timestamp < startDatetime) {
+        continue;
+      }
+
+      nodes.push(parsed);
     } else {
-      throw err;
+      nodes.push(value);
     }
   }
+
   return nodes;
+}
+
+/**
+ * @param {Trie} trie
+ * @param {Buffer} nodeRef
+ * @param {number[]} key
+ */
+async function* walkTrieDfs(trie, nodeRef, key) {
+  const node = await trie.lookupNode(nodeRef);
+
+  if (node instanceof LeafNode) {
+    yield [node, key];
+    return;
+  }
+
+  if (node instanceof ExtensionNode) {
+    const keyExtension = node.key();
+    const childKey = key.concat(keyExtension);
+    const childRef = node.value();
+    yield* walkTrieDfs(trie, childRef, childKey);
+  } else if (node instanceof BranchNode) {
+    for (let i = 0; i < 16; i++) {
+      const childRef = node.getBranch(i);
+      if (childRef) {
+        const childKey = key.concat([i]);
+        yield* walkTrieDfs(trie, childRef, childKey);
+      }
+    }
+  } else {
+    throw new TypeError("Unknown node type");
+  }
 }
