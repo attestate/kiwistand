@@ -10,6 +10,7 @@ export default {
     // by the @attestate/crawler but since kiwistand will never use them for
     // anything.
     rpcHttpHost: env.OPTIMISM_RPC_HTTP_HOST,
+    rpcApiKey: "",
     ipfsHttpsGateway: "https://",
     arweaveHttpsGateway: "https://",
   },
