@@ -10,6 +10,10 @@ export default {
     // by the @attestate/crawler but since kiwistand will never use them for
     // anything.
     rpcHttpHost: env.OPTIMISM_RPC_HTTP_HOST,
+    // NOTE: We found that Infura's v3 endpoints don't like when we send
+    // "Authorization: Bearer undefined" and so to make "environment.rpcApiKey"
+    // in crawler-call-block-logs.state to not set an Authorization header,
+    // we're submitting the empty string that evaluates to false.
     rpcApiKey: "",
     ipfsHttpsGateway: "https://",
     arweaveHttpsGateway: "https://",
