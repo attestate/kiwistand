@@ -1,3 +1,4 @@
+
 //@format
 import { env } from "process";
 
@@ -10,6 +11,7 @@ import themes from "./themes.mjs";
 
 import feed from "./views/feed.mjs";
 import newest from "./views/new.mjs";
+import alltime from "./views/alltime.mjs";
 import privacy from "./views/privacy.mjs";
 import nft from "./views/nft.mjs";
 import subscribe from "./views/subscribe.mjs";
@@ -22,6 +24,7 @@ import about from "./views/about.mjs";
 import why from "./views/why.mjs";
 import submit from "./views/submit.mjs";
 import settings from "./views/settings.mjs";
+
 
 const app = express();
 
@@ -67,6 +70,14 @@ export async function launch(trie, libp2p) {
   });
   app.get("/new", async (request, reply) => {
     const content = await newest(trie, reply.locals.theme);
+    return reply.status(200).type("text/html").send(content);
+  });
+  app.get("/alltime", async (request, reply) => {
+    let page = parseInt(request.query.page);
+    if (isNaN(page) || page < 1) {
+      page = 0;
+    }
+    const content = await alltime(trie, reply.locals.theme, page);
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/community", async (request, reply) => {
