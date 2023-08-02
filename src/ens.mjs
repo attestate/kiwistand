@@ -60,4 +60,4 @@ async function initializeCache() {
   await Promise.all(addresses.map(resolve));
 }
 
-initializeCache();
+setTimeout(initializeCache, 10000);
