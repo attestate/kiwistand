@@ -54,7 +54,7 @@ export function toDigest(value) {
   const copy = canonicalize({ ...value });
   const canonical = encode(copy);
   const digest = toHex(keccak256(canonical));
-  const index = `${value.timestamp.toString(16).padStart(8, "0")}${digest}`;
+  const index = `${value.timestamp.toString(16)}${digest}`;
   return {
     digest,
     canonical,
