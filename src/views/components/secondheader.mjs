@@ -27,6 +27,15 @@ const secondheader = (theme, site) => html`
             New
           </button>
         </a>
+        <a href="/alltime">
+          <button
+            style=${`font-size: 1.01rem; margin-left: 10px; cursor: pointer; border-radius: 2px; padding: 5px 15px 5px 15px; background-color: transparent; border: 1px solid ${
+              site === "alltime" ? theme.color : "#7f8c8d"
+            }; color: ${site === "alltime" ? theme.color : "#7f8c8d"};`}
+          >
+            All-Time
+          </button>
+        </a>
       </div>
       <nav-learn-more />
     </div>
