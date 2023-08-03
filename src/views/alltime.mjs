@@ -70,7 +70,6 @@ export function count(leaves) {
   return Object.values(stories);
 }
 
-
 async function topstories(leaves, start, end) {
   return count(leaves)
     .sort((a, b) => b.upvotes - a.upvotes) // Sort by upvotes, not considering time
@@ -146,10 +145,16 @@ export default async function index(trie, theme, page) {
               ${Header(theme)}
             </tr>
             <tr>
-              ${SecondHeader(theme, "new")}
+              ${SecondHeader(theme, "alltime")}
             </tr>
             <tr class="spacer" style="height:15px"></tr>
             ${stories.map(Row())}
+            <tr class="spacer" style="height:15px"></tr>
+            <tr
+              style="display: block; padding: 10px; background-color: ${theme.color}"
+            >
+              <td></td>
+            </tr>
           </table>
           ${Footer(theme, "/alltime")}
         </center>
