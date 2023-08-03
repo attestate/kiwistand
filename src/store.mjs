@@ -358,10 +358,18 @@ export async function leaves(trie, from, amount, parser, startDatetime) {
 
 /**
  * @param {Trie} trie
- * @param {Buffer} nodeRef
+ * @param {Buffer | Buffer[]} nodeRef
  * @param {number[]} key
  */
 async function* walkTrieDfs(trie, nodeRef, key) {
+  if (
+    // nodeRefs derived from BranchNode.getChildren can be arrays of buffers, but the root ref is always a single buffer
+    Buffer.isBuffer(nodeRef) &&
+    nodeRef.equals(trie.EMPTY_TRIE_ROOT)
+  ) {
+    return;
+  }
+
   const node = await trie.lookupNode(nodeRef);
 
   if (node instanceof LeafNode) {
