@@ -217,32 +217,56 @@ async function addNFTPrice() {
 
 async function share(toast, link) {
   const FCIcon = (await import("./fcicon.jsx")).default;
-  toast(
-    <a
-      style={{ display: "flex", alignItems: "center" }}
-      href={`https://warpcast.com/~/compose?embeds[]=${link}&embeds[]=https://news.kiwistand.com`}
-      target="_blank"
-    >
-      <FCIcon style={{ height: "15px", color: "white" }} />
-      <span> </span>
-      <span
-        style={{
-          marginLeft: "10px",
-          textDecoration: "underline",
-          color: "white",
-        }}
+  const toastContent = (
+    <div style={{ display: "flex", alignItems: "center" }}>
+      <a
+        style={{ display: "flex", alignItems: "center" }}
+        href={`https://warpcast.com/~/compose?embeds[]=${link}&embeds[]=https://news.kiwistand.com`}
+        target="_blank"
       >
-        Share to Warpcast
-      </span>
-    </a>,
-    {
-      duration: 10000,
-      style: {
-        backgroundColor: "#472a91",
-      },
-    }
+        <FCIcon style={{ height: "15px", color: "white" }} />
+        <span> </span>
+        <span
+          style={{
+            marginLeft: "10px",
+            textDecoration: "underline",
+            color: "white",
+          }}
+        >
+          Share your link on Warpcast
+        </span>
+      </a>
+      <button
+        onClick={() => toast.dismiss(toastId)}
+        style={{ 
+        marginLeft: "10px",
+        fontSize: "8px", // Decreases the font size
+        padding: "2", // Removes padding
+        color: "341B81",
+        backgroundColor: "white",
+        border: "none", // Removes the border
+       }}
+      >
+        X
+      </button>
+    </div>
   );
+
+  const toastId = toast(toastContent, {
+    duration: 10000,
+    style: {
+      position: "relative",
+      top: `60px`,
+      transform: "translate(-50%, -50%)", // You may need to adjust this
+      backgroundColor: "#472a91",
+    },
+  });
 }
+
+
+
+
+
 
 async function start() {
   await addDelegateButton();
