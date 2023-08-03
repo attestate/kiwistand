@@ -38,6 +38,16 @@ test("if message passes constraint", async (t) => {
   await rm("dbtestA", { recursive: true });
 });
 
+test("returns an empty array when the trie is empty", async (t) => {
+  env.DATA_DIR = "dbtestA";
+  const trieA = await store.create();
+
+  const leaves = await store.leaves(trieA);
+  t.is(leaves.length, 0);
+
+  await rm("dbtestA", { recursive: true });
+});
+
 test("returns leaves in ascending key order, small set", async (t) => {
   env.DATA_DIR = "dbtestA";
   const trieA = await store.create();
