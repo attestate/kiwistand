@@ -6,7 +6,7 @@ module.exports = {
       name: "kiwinews",
       script: "npm run start",
       env: {
-        THEME_COLOR:"limegreen",
+        THEME_COLOR: "limegreen",
         THEME_EMOJI: "🥝",
         THEME_NAME: "Kiwi News",
         DEBUG: "*attestate*",
@@ -19,9 +19,9 @@ module.exports = {
         IS_BOOTSTRAP_NODE: true,
         USE_EPHEMERAL_ID: false,
         SSL_CERT_PATH: "/etc/letsencrypt/live/news.kiwistand.com/fullchain.pem",
-        SSL_KEY_PATH: "/etc/letsencrypt/live/news.kiwistand.com/privkey.pem"
+        SSL_KEY_PATH: "/etc/letsencrypt/live/news.kiwistand.com/privkey.pem",
       },
-      time: true
+      time: true,
     },
-  ]
+  ],
 };
