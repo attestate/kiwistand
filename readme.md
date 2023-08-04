@@ -25,10 +25,36 @@ requirements, consider adding the `@attestate/crawler` `RPC_API_KEY`
 environment variable
 ([details](https://attestate.com/crawler/main/configuration.html#environment-variables)).
 
+It's highly-likely that you'll need either a paid Alchemy account to make the
+node work as it is downloading a lot of block data, or you'll have to
+rate-limit the speed at which the node tries to download event logs. Please
+reach out to us if you don't have access to an Alchemy account and we'll figure
+something out!
+
+## debugging
+
+Once you're up and running, you might want to submit new links to the network.
+However, we encourage you to NOT do that on the main net. Instead, if you must
+test submitting new links then run the node in bootstrap mode (no mainnet data)
+or in the "anon:local" mode that doesn't send data to the p2p network.
+
+```
+npm run dev:bootstrap
+
+# or
+
+npm run dev:anon:local
+```
+
 ## docs
 
 We document the code base in Sphinx, see ./docs. We host the documentation at
 [attestate.com/kiwistand/main](https://attestate.com/kiwistand/main/).
+Generally speaking, the code base isn't well documented at this point. Please
+don't be discouraged by that. We work as a tightly-knit team and so asking
+others for help is highly encouraged when you work on code. We're more than
+happy to get your stuff merged without much gate-keeping - please just reach
+out and we'll get you started.
 
 ## tech stack details
 
@@ -47,11 +73,6 @@ eventual upgrade announcements as the protocol is far from being complete.
 ## changelog
 
 See changelog.md file.
-
-## roadmap
-
-Here is the [Roadmap file](https://hackmd.io/GtcGsKrlS_-vIFjhxQVw8w) we try to
-keep updated weekly. If not message @timdaub (e.g. on Telegram).
 
 ## license
 
