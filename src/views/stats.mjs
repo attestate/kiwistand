@@ -296,7 +296,6 @@ export default async function (trie, theme) {
     { x: dauData.dates.map((date) => new Date(date)), y: dauData.daus },
     options
   );
-  console.log(mauData);
   const mauChart = plot(html)(
     {
       x: mauData.dates.map((date) => new Date(date)),
@@ -342,137 +341,133 @@ export default async function (trie, theme) {
         ${Head}
       </head>
       <body>
-        ${Sidebar}
-        <center>
-          <table
-            id="hnmain"
-            border="0"
-            cellpadding="0"
-            cellspacing="0"
-            width="85%"
-            bgcolor="#f6f6ef"
-          >
-            <tr>
-              ${Header(theme)}
-            </tr>
-            <tr>
-              <td style="padding: 20px;">
-                <p>
-                  <b>Daily Active Users DEFINITION:</b>
-                  <br />
-                  - To calculate the values on this chart we're getting all
-                  messages that have occurred in the p2p network and analyze
-                  them.
-                  <br />
-                  - We consider someone a Daily Active User if, for a given day,
-                  they've, at least, interacted on the site once by either
-                  upvoting or submitting a new link.
-                  <br />
-                  - As the protocol doesn't track individual users, we consider
-                  each Ethereum address as individual users.
-                  <br />
-                  - To learn more about the metrics we want to track at Kiwi
-                  News, <span>visit </span>
-                  <a
-                    style="color:black;"
-                    href="https://hackmd.io/oF8S12EnTpSp8CtkigJosQ"
-                    >Key Metrics for Growth of Kiwi News</a
-                  >
-                </p>
-                ${dauChart}
-                <p>
-                  <b>7-day Active Users (WAU) DEFINITION:</b>
-                  <br />
-                  - To calculate the values on this chart, we're analyzing all
-                  messages that have occurred in the p2p network.
-                  <br />
-                  - We consider someone a 7-day Active User if, for a given
-                  period of 7 days, they've, at least, interacted on the site
-                  once by either upvoting or submitting a new link.
-                  <br />
-                  - As the protocol doesn't track individual users, we consider
-                  each Ethereum address as individual users.
-                  <br />
-                  - To learn more about the metrics we want to track at Kiwi
-                  News, <span>visit </span>
-                  <a
-                    style="color:black;"
-                    href="https://hackmd.io/oF8S12EnTpSp8CtkigJosQ"
-                    >Key Metrics for Growth of Kiwi News</a
-                  >
-                </p>
-                ${wauChart}
-                <p>
-                  <b>30-day Active Users DEFINITION:</b>
-                  <br />
-                  - To calculate the values on this chart we're getting all
-                  messages that have occurred in the p2p network and analyze
-                  them.
-                  <br />
-                  - We consider someone a 30-day Active User if, for the last 30
-                  days, they've, at least, interacted on the site once by either
-                  upvoting or submitting a new link.
-                  <br />
-                  - As the protocol doesn't track individual users, we consider
-                  each Ethereum address as individual users.
-                  <br />
-                  - To learn more about the metrics we want to track at Kiwi
-                  News, <span>visit </span>
-                  <a
-                    style="color:black;"
-                    href="https://hackmd.io/oF8S12EnTpSp8CtkigJosQ"
-                    >Key Metrics for Growth of Kiwi News</a
-                  >
-                </p>
-                ${mauChart}
-                <p>
-                  <b>DAU/MAU Ratio DEFINITION:</b>
-                  <br />
-                  - This ratio is calculated by dividing the Daily Active Users
-                  (DAU) by the Monthly Active Users (MAU) for each day.
-                  <br />
-                  - It gives us a measure of "stickiness" of our user base,
-                  i.e., how often users come back to the site.
-                  <br />
-                  Precisely, it measures the precentage of MAUs being DAUs.
-                  <br />
-                  - A higher DAU/MAU ratio indicates a more engaged user base.
-                </p>
-                ${ratioChart}
-                <p>
-                  <b>Submissions DEFINITION:</b>
-                  <br />
-                  - Any new link submitted to Kiwi News
-                </p>
-                ${submissionsChart}
-                <p>
-                  <b>Upvotes DEFINITION:</b>
-                  <br />
-                  - Any upvote to Kiwi News
-                </p>
-                ${upvotesChart}
-                <div>
-                  <b>Delegation Counts</b>
+        <div class="container">
+          ${Sidebar}
+          <div id="hnmain">
+            <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
+              <tr>
+                ${Header(theme)}
+              </tr>
+              <tr>
+                <td style="padding: 20px;">
                   <p>
-                    - This list shows the number of times each delegate address
-                    appears in the delegation logs.<br />
-                    - The delegate addresses are represented by their ENS names
-                    or truncated addresses if no EN name is available.<br />
-                    _ Each item in the list represents a custody address and the
-                    number of times they've delegated to a local key.
+                    <b>Daily Active Users DEFINITION:</b>
+                    <br />
+                    - To calculate the values on this chart we're getting all
+                    messages that have occurred in the p2p network and analyze
+                    them.
+                    <br />
+                    - We consider someone a Daily Active User if, for a given
+                    day, they've, at least, interacted on the site once by
+                    either upvoting or submitting a new link.
+                    <br />
+                    - As the protocol doesn't track individual users, we
+                    consider each Ethereum address as individual users.
+                    <br />
+                    - To learn more about the metrics we want to track at Kiwi
+                    News, <span>visit </span>
+                    <a
+                      style="color:black;"
+                      href="https://hackmd.io/oF8S12EnTpSp8CtkigJosQ"
+                      >Key Metrics for Growth of Kiwi News</a
+                    >
                   </p>
-                  <ul>
-                    ${Object.entries(delegationCounts).map(
-                      ([delegate, count]) =>
-                        html`<li>${delegate}: ${count}</li>`
-                    )}
-                  </ul>
-                </div>
-              </td>
-            </tr>
-          </table>
-          ${Footer(theme)}
-        </center>
+                  ${dauChart}
+                  <p>
+                    <b>7-day Active Users (WAU) DEFINITION:</b>
+                    <br />
+                    - To calculate the values on this chart, we're analyzing all
+                    messages that have occurred in the p2p network.
+                    <br />
+                    - We consider someone a 7-day Active User if, for a given
+                    period of 7 days, they've, at least, interacted on the site
+                    once by either upvoting or submitting a new link.
+                    <br />
+                    - As the protocol doesn't track individual users, we
+                    consider each Ethereum address as individual users.
+                    <br />
+                    - To learn more about the metrics we want to track at Kiwi
+                    News, <span>visit </span>
+                    <a
+                      style="color:black;"
+                      href="https://hackmd.io/oF8S12EnTpSp8CtkigJosQ"
+                      >Key Metrics for Growth of Kiwi News</a
+                    >
+                  </p>
+                  ${wauChart}
+                  <p>
+                    <b>30-day Active Users DEFINITION:</b>
+                    <br />
+                    - To calculate the values on this chart we're getting all
+                    messages that have occurred in the p2p network and analyze
+                    them.
+                    <br />
+                    - We consider someone a 30-day Active User if, for the last
+                    30 days, they've, at least, interacted on the site once by
+                    either upvoting or submitting a new link.
+                    <br />
+                    - As the protocol doesn't track individual users, we
+                    consider each Ethereum address as individual users.
+                    <br />
+                    - To learn more about the metrics we want to track at Kiwi
+                    News, <span>visit </span>
+                    <a
+                      style="color:black;"
+                      href="https://hackmd.io/oF8S12EnTpSp8CtkigJosQ"
+                      >Key Metrics for Growth of Kiwi News</a
+                    >
+                  </p>
+                  ${mauChart}
+                  <p>
+                    <b>DAU/MAU Ratio DEFINITION:</b>
+                    <br />
+                    - This ratio is calculated by dividing the Daily Active
+                    Users (DAU) by the Monthly Active Users (MAU) for each day.
+                    <br />
+                    - It gives us a measure of "stickiness" of our user base,
+                    i.e., how often users come back to the site.
+                    <br />
+                    Precisely, it measures the precentage of MAUs being DAUs.
+                    <br />
+                    - A higher DAU/MAU ratio indicates a more engaged user base.
+                  </p>
+                  ${ratioChart}
+                  <p>
+                    <b>Submissions DEFINITION:</b>
+                    <br />
+                    - Any new link submitted to Kiwi News
+                  </p>
+                  ${submissionsChart}
+                  <p>
+                    <b>Upvotes DEFINITION:</b>
+                    <br />
+                    - Any upvote to Kiwi News
+                  </p>
+                  ${upvotesChart}
+                  <div>
+                    <b>Delegation Counts</b>
+                    <p>
+                      - This list shows the number of times each delegate
+                      address appears in the delegation logs.<br />
+                      - The delegate addresses are represented by their ENS
+                      names or truncated addresses if no EN name is
+                      available.<br />
+                      _ Each item in the list represents a custody address and
+                      the number of times they've delegated to a local key.
+                    </p>
+                    <ul>
+                      ${Object.entries(delegationCounts).map(
+                        ([delegate, count]) =>
+                          html`<li>${delegate}: ${count}</li>`
+                      )}
+                    </ul>
+                  </div>
+                </td>
+              </tr>
+            </table>
+          </div>
+        </div>
+        ${Footer(theme)}
       </body>
     </html>
   `;

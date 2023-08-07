@@ -7,9 +7,11 @@ import FCIcon from "./farcastericon.mjs";
 
 const html = htm.bind(vhtml);
 
-function extractDomain(link) {
+export function extractDomain(link) {
   const parsedUrl = new URL(link);
-  return parsedUrl.hostname;
+  const parts = parsedUrl.hostname.split(".");
+  const tld = parts.slice(-2).join(".");
+  return tld;
 }
 
 const row = (start = 0) => {
@@ -35,10 +37,6 @@ const row = (start = 0) => {
               style="display:flex; justify-content: center; flex-direction: column; flex-grow: 1;"
             >
               <span>
-                <span style="line-height: 13pt; font-size: 13pt;">
-                  ${start + i + 1}.
-                </span>
-                <span> </span>
                 <a
                   href="${story.href}"
                   target="_blank"
@@ -47,7 +45,7 @@ const row = (start = 0) => {
                 >
                   ${story.title}
                 </a>
-                <span style="padding-left: 5px; word-break: break-all;"
+                <span style="padding-left: 5px; white-space: nowrap;"
                   >(${extractDomain(story.href)})</span
                 >
               </span>

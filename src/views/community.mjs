@@ -100,14 +100,13 @@ export default async function (trie, theme) {
         <meta name="description" content="Meet the Kiwi News community, which curates our feed. You can also check out our leaderboard to see who's most active." />
       </head>
       <body>
-        ${Sidebar}
-        <center>
+        <div class="container">
+          ${Sidebar}
+          <div id="hnmain">
           <table
-            id="hnmain"
             border="0"
             cellpadding="0"
             cellspacing="0"
-            width="85%"
             bgcolor="#f6f6ef"
           >
             <tr>
@@ -172,8 +171,8 @@ export default async function (trie, theme) {
   </td>
 </tr>
         </table>
+        </div></div>
         ${Footer(theme, "/community")}
-      </center>
     </body>
   </html>
 `;

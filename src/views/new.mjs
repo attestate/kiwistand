@@ -78,33 +78,28 @@ export default async function (trie, theme) {
         />
       </head>
       <body>
-        ${Sidebar}
-        <center>
-          <table
-            id="hnmain"
-            border="0"
-            cellpadding="0"
-            cellspacing="0"
-            width="85%"
-            bgcolor="#f6f6ef"
-          >
-            <tr>
-              ${Header(theme)}
-            </tr>
-            <tr>
-              ${SecondHeader(theme, "new")}
-            </tr>
-            <tr class="spacer" style="height:15px"></tr>
-            ${stories.map(Row())}
-            <tr class="spacer" style="height:15px"></tr>
-            <tr
-              style="display: block; padding: 10px; background-color: ${theme.color}"
-            >
-              <td></td>
-            </tr>
-          </table>
-          ${Footer(theme, "/new")}
-        </center>
+        <div class="container">
+          ${Sidebar}
+          <div id="hnmain">
+            <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
+              <tr>
+                ${Header(theme)}
+              </tr>
+              <tr>
+                ${SecondHeader(theme, "new")}
+              </tr>
+              <tr class="spacer" style="height:15px"></tr>
+              ${stories.map(Row())}
+              <tr class="spacer" style="height:15px"></tr>
+              <tr
+                style="display: block; padding: 10px; background-color: ${theme.color}"
+              >
+                <td></td>
+              </tr>
+            </table>
+          </div>
+        </div>
+        ${Footer(theme, "/new")}
       </body>
     </html>
   `;

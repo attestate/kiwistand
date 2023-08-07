@@ -128,13 +128,13 @@ async function addConnectedComponents() {
     </StrictMode>
   );
 
-  const settings = document.querySelector("nav-settings");
+  const settings = document.querySelector("#nav-settings");
   createRoot(settings).render(
     <StrictMode>
       <ConnectedSettings />
     </StrictMode>
   );
-  const profileLink = document.querySelector("nav-profile");
+  const profileLink = document.querySelector("#nav-profile");
   createRoot(profileLink).render(
     <StrictMode>
       <ConnectedProfile />
@@ -148,7 +148,7 @@ async function addConnectedComponents() {
       </StrictMode>
     );
   }
-  const disconnect = document.querySelector("nav-disconnect");
+  const disconnect = document.querySelector("#nav-disconnect");
   createRoot(disconnect).render(
     <StrictMode>
       <ConnectedDisconnectButton />

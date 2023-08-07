@@ -187,23 +187,18 @@ export default async function (trie, theme, identity) {
         ${Head}
       </head>
       <body>
-        ${Sidebar}
-        <center>
-          <table
-            id="hnmain"
-            border="0"
-            cellpadding="0"
-            cellspacing="0"
-            width="85%"
-            bgcolor="#f6f6ef"
-          >
-            <tr>
-              ${Header(theme)}
-            </tr>
-            ${feed}
-          </table>
-          ${Footer(theme)}
-        </center>
+        <div class="container">
+          ${Sidebar}
+          <div id="hnmain">
+            <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
+              <tr>
+                ${Header(theme)}
+              </tr>
+              ${feed}
+            </table>
+          </div>
+        </div>
+        ${Footer(theme)}
       </body>
     </html>
   `;

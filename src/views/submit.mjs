@@ -15,69 +15,67 @@ export default function submit(theme, url = "", title = "") {
         ${Head}
       </head>
       <body>
-        ${Sidebar}
-        <center>
-          <table
-            id="hnmain"
-            border="0"
-            cellpadding="0"
-            cellspacing="0"
-            width="85%"
-            bgcolor="#f6f6ef"
-          >
-            <tr>
-              ${Header(theme)}
-            </tr>
-            <tr>
-              <td>
-                <form style="${formContainerStyle}">
-                  <div style="${labelInputContainerStyle}">
-                    <label for="title" style="${labelStyle}">Title:</label
-                    ><br />
-                    <textarea
-                      id="titleInput"
-                      name="title"
-                      rows="4"
-                      cols="50"
-                      maxlength="80"
-                      required
-                      style="${inputStyle}"
-                      wrap="soft"
-                    >
+        <div class="container">
+          ${Sidebar}
+          <div id="hnmain">
+            <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
+              <tr>
+                ${Header(theme)}
+              </tr>
+              <tr>
+                <td>
+                  <form style="${formContainerStyle}">
+                    <div style="${labelInputContainerStyle}">
+                      <label for="title" style="${labelStyle}">Title:</label
+                      ><br />
+                      <textarea
+                        id="titleInput"
+                        name="title"
+                        rows="4"
+                        cols="50"
+                        maxlength="80"
+                        required
+                        style="${inputStyle}"
+                        wrap="soft"
+                      >
 ${title}</textarea
-                    >
-                  </div>
-                  <div style="${labelInputContainerStyle}">
-                    <label for="link" style="${labelStyle}">Link:</label><br />
-                    <input
-                      id="urlInput"
-                      type="text"
-                      name="link"
-                      size="50"
-                      maxlength="2048"
-                      required
-                      style="${inputStyle}"
-                      value="${url}"
-                    />
-                  </div>
-                  <div id="submit-button">
-                    <button type="submit" style="${buttonStyle}">Submit</button>
-                  </div>
-                </form>
-                <p style="${noteStyle}">
-                  <span>Please be mindful of our </span>
-                  <a
-                    style="color:black;"
-                    target="_blank"
-                    href="https://hackmd.io/a-r--DX2T5uEEKX0Z8PRlQ?view"
-                    >Guidelines</a
-                  >.
-                </p>
-              </td>
-            </tr>
-          </table>
-          ${Footer(theme)}
-        </center>
+                      >
+                    </div>
+                    <div style="${labelInputContainerStyle}">
+                      <label for="link" style="${labelStyle}">Link:</label
+                      ><br />
+                      <input
+                        id="urlInput"
+                        type="text"
+                        name="link"
+                        size="50"
+                        maxlength="2048"
+                        required
+                        style="${inputStyle}"
+                        value="${url}"
+                      />
+                    </div>
+                    <div id="submit-button">
+                      <button type="submit" style="${buttonStyle}">
+                        Submit
+                      </button>
+                    </div>
+                  </form>
+                  <p style="${noteStyle}">
+                    <span>Please be mindful of our </span>
+                    <a
+                      style="color:black;"
+                      target="_blank"
+                      href="https://hackmd.io/a-r--DX2T5uEEKX0Z8PRlQ?view"
+                      >Guidelines</a
+                    >.
+                  </p>
+                </td>
+              </tr>
+            </table>
+          </div>
+        </div>
+        ${Footer(theme)}
       </body>
     </html>
   `;
