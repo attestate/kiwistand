@@ -60,4 +60,9 @@ async function initializeCache() {
   await Promise.all(addresses.map(resolve));
 }
 
-setTimeout(initializeCache, 10000);
+// NOTE: For nodes that have never downloaded and committed all addresses into
+// LMDB during their first crawl, it may be that this function is launched and
+// then initializeCache's `let addresses = Array.from(await allowlist());` will
+// unexpectedly throw because it should wait for allowlist to be crawled at
+// least onceit should wait for allowlist to be crawled at least once
+setTimeout(initializeCache, 60000);

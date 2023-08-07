@@ -96,6 +96,12 @@ export default async function (trie, theme) {
             </tr>
             <tr class="spacer" style="height:15px"></tr>
             ${stories.map(Row())}
+            <tr class="spacer" style="height:15px"></tr>
+            <tr
+              style="display: block; padding: 10px; background-color: ${theme.color}"
+            >
+              <td></td>
+            </tr>
           </table>
           ${Footer(theme, "/new")}
         </center>

@@ -236,19 +236,6 @@ async function share(toast, link) {
           Share your link on Warpcast
         </span>
       </a>
-      <button
-        onClick={() => toast.dismiss(toastId)}
-        style={{ 
-        marginLeft: "10px",
-        fontSize: "8px", // Decreases the font size
-        padding: "2", // Removes padding
-        color: "341B81",
-        backgroundColor: "white",
-        border: "none", // Removes the border
-       }}
-      >
-        X
-      </button>
     </div>
   );
 

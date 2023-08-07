@@ -32,10 +32,14 @@ if (env.NODE_ENV === "production") {
     <script type="module" src="${manifest["src/main.jsx"].file}"></script>
   `;
 } else {
+  // NOTE: There can be cases where you want to test the development build with
+  // vite hot reloading and then it's best to define your machine's host name
+  // as the CUSTOM_HOST_NAME here - and not have it be localhost.
+  const host = env.CUSTOM_HOST_NAME ? env.CUSTOM_HOST_NAME : "localhost:5173";
   scripts = html`
-    <script type="module" src="./refresh-react.mjs"></script>
-    <script type="module" src="http://localhost:5173/@vite/client"></script>
-    <script type="module" src="http://localhost:5173/src/main.jsx"></script>
+    <script type="module" src="refresh-react.js"></script>
+    <script type="module" src="http://${host}/@vite/client"></script>
+    <script type="module" src="http://${host}/src/main.jsx"></script>
   `;
 }
 

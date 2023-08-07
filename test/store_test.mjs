@@ -38,34 +38,69 @@ test("if message passes constraint", async (t) => {
   await rm("dbtestA", { recursive: true });
 });
 
+test("returns an empty array when the trie is empty", async (t) => {
+  env.DATA_DIR = "dbtestA";
+  const trieA = await store.create();
+
+  const leaves = await store.leaves(trieA);
+  t.is(leaves.length, 0);
+
+  await rm("dbtestA", { recursive: true });
+});
+
+test("returns leaves in ascending key order, small set", async (t) => {
+  env.DATA_DIR = "dbtestA";
+  const trieA = await store.create();
+  await trieA.put(Buffer.from("0c", "hex"), encode({ num: 0xc }));
+  await trieA.put(Buffer.from("05", "hex"), encode({ num: 0x5 }));
+  await trieA.put(Buffer.from("0a", "hex"), encode({ num: 0xa }));
+
+  const leaves = await store.leaves(trieA);
+  t.is(leaves.length, 3);
+  t.deepEqual([{ num: 0x5 }, { num: 0xa }, { num: 0xc }], leaves);
+
+  await rm("dbtestA", { recursive: true });
+});
+
+test("returns leaves in ascending key order, large set", async (t) => {
+  env.DATA_DIR = "dbtestA";
+  const trieA = await store.create();
+
+  const minTimestamp = 1681486433; // "Kiwistand is live" story submitted
+  const timestamps = Array.from(
+    { length: 100 },
+    (_, i) => minTimestamp + 82800 * i
+  );
+
+  for (const timestamp of [...timestamps].sort(() => Math.random() - 0.5)) {
+    await trieA.put(
+      Buffer.from(timestamp.toString(16).padStart(8, "0"), "hex"),
+      encode({ timestamp })
+    );
+  }
+
+  const leaves = await store.leaves(trieA);
+  t.is(leaves.length, timestamps.length);
+  t.deepEqual(
+    timestamps.map((timestamp) => ({ timestamp })),
+    leaves
+  );
+
+  await rm("dbtestA", { recursive: true });
+});
+
 test("amount limiting factor", async (t) => {
   env.DATA_DIR = "dbtestA";
   const trieA = await store.create();
-  await trieA.put(Buffer.from("0101", "hex"), encode({ num: 0 }));
-  await trieA.put(Buffer.from("1010", "hex"), encode({ num: 1 }));
-  await trieA.put(Buffer.from("1100", "hex"), encode({ num: 2 }));
+  await trieA.put(Buffer.from("0c", "hex"), encode({ num: 0xc }));
+  await trieA.put(Buffer.from("05", "hex"), encode({ num: 0x5 }));
+  await trieA.put(Buffer.from("0a", "hex"), encode({ num: 0xa }));
 
   const from = 0;
   const amount = 2;
   const leaves = await store.leaves(trieA, from, amount);
   t.is(leaves.length, 2);
-  t.deepEqual([{ num: 0 }, { num: 1 }], leaves);
-
-  await rm("dbtestA", { recursive: true });
-});
-
-test("getting more paginated leaves than exist but only return existing", async (t) => {
-  env.DATA_DIR = "dbtestA";
-  const trieA = await store.create();
-  await trieA.put(Buffer.from("0101", "hex"), encode({ num: 0 }));
-  await trieA.put(Buffer.from("1010", "hex"), encode({ num: 1 }));
-  await trieA.put(Buffer.from("1100", "hex"), encode({ num: 2 }));
-
-  const from = 1;
-  const amount = 50;
-  const leaves = await store.leaves(trieA, from, amount);
-  t.is(leaves.length, 2);
-  t.deepEqual([{ num: 1 }, { num: 2 }], leaves);
+  t.deepEqual([{ num: 0x5 }, { num: 0xa }], leaves);
 
   await rm("dbtestA", { recursive: true });
 });
@@ -73,15 +108,31 @@ test("getting more paginated leaves than exist but only return existing", async 
 test("getting paginated leaves", async (t) => {
   env.DATA_DIR = "dbtestA";
   const trieA = await store.create();
-  await trieA.put(Buffer.from("0101", "hex"), encode({ num: 0 }));
-  await trieA.put(Buffer.from("1010", "hex"), encode({ num: 1 }));
-  await trieA.put(Buffer.from("1100", "hex"), encode({ num: 2 }));
+  await trieA.put(Buffer.from("0c", "hex"), encode({ num: 0xc }));
+  await trieA.put(Buffer.from("05", "hex"), encode({ num: 0x5 }));
+  await trieA.put(Buffer.from("0a", "hex"), encode({ num: 0xa }));
 
   const from = 1;
   const amount = 2;
   const leaves = await store.leaves(trieA, from, amount);
   t.is(leaves.length, amount);
-  t.deepEqual([{ num: 1 }, { num: 2 }], leaves);
+  t.deepEqual([{ num: 0xa }, { num: 0xc }], leaves);
+
+  await rm("dbtestA", { recursive: true });
+});
+
+test("getting more paginated leaves than exist but only return existing", async (t) => {
+  env.DATA_DIR = "dbtestA";
+  const trieA = await store.create();
+  await trieA.put(Buffer.from("0c", "hex"), encode({ num: 0xc }));
+  await trieA.put(Buffer.from("05", "hex"), encode({ num: 0x5 }));
+  await trieA.put(Buffer.from("0a", "hex"), encode({ num: 0xa }));
+
+  const from = 1;
+  const amount = 50;
+  const leaves = await store.leaves(trieA, from, amount);
+  t.is(leaves.length, 2);
+  t.deepEqual([{ num: 0xa }, { num: 0xc }], leaves);
 
   await rm("dbtestA", { recursive: true });
 });
