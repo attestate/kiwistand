@@ -318,6 +318,8 @@ body {
          margin: 14px 14px 14px 10px;
     }
      .sidebar {
+
+         z-index: 6;
          overflow: hidden;
          background-color: rgb(246, 246, 239);
          min-width: 75px;
