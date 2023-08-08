@@ -65,4 +65,4 @@ async function initializeCache() {
 // then initializeCache's `let addresses = Array.from(await allowlist());` will
 // unexpectedly throw because it should wait for allowlist to be crawled at
 // least onceit should wait for allowlist to be crawled at least once
-setTimeout(initializeCache, 60000);
+setTimeout(initializeCache, 30000);
