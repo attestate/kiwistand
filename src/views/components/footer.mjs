@@ -52,7 +52,7 @@ const footer = (theme, path) => html`
             style="align-items: center; justify-content: center; height: 50px; width: 50px; background-color: ${theme.color}; border-radius: 2px; box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);"
           >
             <svg
-              style="width: 1.75rem;"
+              style="color: black; width: 1.75rem;"
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 256 256"
             >
