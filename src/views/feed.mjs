@@ -305,42 +305,14 @@ export default async function index(trie, theme, page) {
                 </td>
               </tr>
               ${stories.map(Row(start))}
-              <tr>
+              <tr style="height: 50px">
                 <td>
-                  <table
-                    style="padding: 5px;"
-                    border="0"
-                    cellpadding="0"
-                    cellspacing="0"
+                  <a
+                    style="padding: 20px 0 0 20px; font-size: 1.1rem;"
+                    href="?page=${page + 1}"
                   >
-                    <tr class="athing" id="35233479">
-                      <td align="right" valign="top" class="title"></td>
-                      <td valign="top" class="votelinks">
-                        <center>
-                          <a id="up_35233479" class="clicky" href="#"> </a>
-                        </center>
-                      </td>
-                      <td class="title">
-                        <span style="margin-left: 10px;" class="titleline">
-                          <a href="?page=${page + 1}"> More </a>
-                        </span>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td colspan="2"></td>
-                      <td class="subtext">
-                        <span class="subline">
-                          <span
-                            style="display: inline-block; height: auto;"
-                            class="score"
-                            id="score_35233479"
-                          >
-                          </span>
-                        </span>
-                      </td>
-                    </tr>
-                    <tr class="spacer" style="height:5px"></tr>
-                  </table>
+                    More
+                  </a>
                 </td>
               </tr>
               <tr
