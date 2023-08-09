@@ -40,17 +40,17 @@ const SettingsSVG = () => (
       r="40"
       fill="none"
       stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="16"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="16"
     />
     <path
       d="M130.05,206.11c-1.34,0-2.69,0-4,0L94,224a104.61,104.61,0,0,1-34.11-19.2l-.12-36c-.71-1.12-1.38-2.25-2-3.41L25.9,147.24a99.15,99.15,0,0,1,0-38.46l31.84-18.1c.65-1.15,1.32-2.29,2-3.41l.16-36A104.58,104.58,0,0,1,94,32l32,17.89c1.34,0,2.69,0,4,0L162,32a104.61,104.61,0,0,1,34.11,19.2l.12,36c.71,1.12,1.38,2.25,2,3.41l31.85,18.14a99.15,99.15,0,0,1,0,38.46l-31.84,18.1c-.65,1.15-1.32,2.29-2,3.41l-.16,36A104.58,104.58,0,0,1,162,224Z"
       fill="none"
       stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="16"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="16"
     />
   </svg>
 );
@@ -64,9 +64,9 @@ const ProfileSVG = () => (
       r="40"
       fill="none"
       stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="16"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="16"
     />
     <rect
       x="40"
@@ -76,17 +76,17 @@ const ProfileSVG = () => (
       rx="8"
       fill="none"
       stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="16"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="16"
     />
     <path
       d="M57.78,216a72,72,0,0,1,140.44,0"
       fill="none"
       stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="16"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="16"
     />
   </svg>
 );
@@ -154,9 +154,9 @@ const DisconnectSVG = () => (
       y2="168"
       fill="none"
       stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="16"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="16"
     />
     <line x1="144" y1="144" x2="120" y2="168" fill="#231f20" />
     <line
@@ -166,9 +166,9 @@ const DisconnectSVG = () => (
       y2="136"
       fill="none"
       stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="16"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="16"
     />
     <line x1="112" y1="112" x2="88" y2="136" fill="#231f20" />
     <line
@@ -178,9 +178,9 @@ const DisconnectSVG = () => (
       y2="192"
       fill="none"
       stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="16"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="16"
     />
     <line
       x1="58.06"
@@ -189,17 +189,17 @@ const DisconnectSVG = () => (
       y2="232"
       fill="none"
       stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="16"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="16"
     />
     <path
       d="M132,180l-29,29a24,24,0,0,1-33.94,0L47,186.91A24,24,0,0,1,47,153l29-29"
       fill="none"
       stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="16"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="16"
     />
     <line
       x1="112"
@@ -208,9 +208,9 @@ const DisconnectSVG = () => (
       y2="144"
       fill="none"
       stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="16"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="16"
     />
     <line
       x1="197.94"
@@ -219,17 +219,17 @@ const DisconnectSVG = () => (
       y2="24"
       fill="none"
       stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="16"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="16"
     />
     <path
       d="M180,132l29-29a24,24,0,0,0,0-33.94L186.91,47A24,24,0,0,0,153,47L124,76"
       fill="none"
       stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="16"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="16"
     />
   </svg>
 );

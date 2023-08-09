@@ -36,17 +36,17 @@ const Bell = ({ to, children }) => {
             d="M96,192a32,32,0,0,0,64,0"
             fill="none"
             stroke="currentColor"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="16"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="16"
           />
           <path
             d="M56,104a72,72,0,0,1,144,0c0,35.82,8.3,64.6,14.9,76A8,8,0,0,1,208,192H48a8,8,0,0,1-6.88-12C47.71,168.6,56,139.81,56,104Z"
             fill="none"
             stroke="currentColor"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="16"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="16"
           />
         </svg>
       </i>
