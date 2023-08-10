@@ -4,7 +4,7 @@
 
 Kiwistand is a P2P node client for a web3-friendly Hacker News that nobody controls but everybody co-owns.
 
-It stores links and upvotes on the protocol level. Thanks to that, users can create their own UIs and permissionlessly create apps on top of it (see: (awesome-kiwi for the list)[https://github.com/attestate/awesome-kiwinews]).
+It stores links and upvotes on the protocol level. Thanks to that, users can create their own UIs and permissionlessly create apps on top of it (see: [awesome-kiwi for the list](https://github.com/attestate/awesome-kiwinews).
 
 
 You can learn the story behind the project in this [4 min video by Tim Daubenschutz](https://www.youtube.com/watch?v=WujtU15yAyk).
