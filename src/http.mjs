@@ -7,11 +7,11 @@ import cookieParser from "cookie-parser";
 import log from "./logger.mjs";
 import { SCHEMATA } from "./constants.mjs";
 import themes from "./themes.mjs";
-
 import feed from "./views/feed.mjs";
 import newest from "./views/new.mjs";
 import alltime from "./views/alltime.mjs";
 import privacy from "./views/privacy.mjs";
+import guidelines from "./views/guidelines.mjs";
 import nft from "./views/nft.mjs";
 import subscribe from "./views/subscribe.mjs";
 import upvotes from "./views/upvotes.mjs";
@@ -121,6 +121,12 @@ export async function launch(trie, libp2p) {
       .type("text/html")
       .send(privacy(reply.locals.theme));
   });
+  app.get("/guidelines", async (request, reply) => {
+    return reply
+      .status(200)
+      .type("text/html")
+      .send(guidelines(reply.locals.theme));
+  });
   app.get("/welcome", async (request, reply) => {
     return reply.status(200).type("text/html").send(nft(reply.locals.theme));
   });
@@ -143,3 +149,4 @@ export async function launch(trie, libp2p) {
     log(`Launched HTTP server at port "${env.HTTP_PORT}"`)
   );
 }
+

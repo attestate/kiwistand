@@ -66,7 +66,7 @@ ${title}</textarea
                     <a
                       style="color:black;"
                       target="_blank"
-                      href="https://hackmd.io/a-r--DX2T5uEEKX0Z8PRlQ?view"
+                      href="/guidelines"
                       >Guidelines</a
                     >.
                   </p>
