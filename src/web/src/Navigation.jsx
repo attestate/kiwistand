@@ -118,6 +118,7 @@ const Settings = () => {
 
   return display ? (
     <a
+      title="Settings"
       href="/settings"
       style={{ color: "black", textDecoration: "none", display: "block" }}
     >
@@ -149,6 +150,7 @@ const Profile = () => {
 
   return display ? (
     <a
+      title="Profile"
       href={"/upvotes?address=" + address}
       style={{ color: "black", textDecoration: "none", display: "block" }}
     >
@@ -262,7 +264,11 @@ const DisconnectButton = () => {
         const connected = account && chain && mounted;
         if (connected) {
           return (
-            <div onClick={openAccountModal} className="sidebar-div">
+            <div
+              title="Disconnect Wallet"
+              onClick={openAccountModal}
+              className="sidebar-div"
+            >
               <div style={{ display: "flex", alignItems: "center" }}>
                 <div className="svg-container">
                   <DisconnectSVG />
@@ -300,7 +306,11 @@ const CustomConnectButton = () => {
           return <Bell to="/activity"></Bell>;
         } else {
           return (
-            <a style={buttonStyle} onClick={openConnectModal}>
+            <a
+              title="Connect Wallet"
+              style={buttonStyle}
+              onClick={openConnectModal}
+            >
               {connected ? (
                 <span style={{ color: "#828282" }}>
                   <span

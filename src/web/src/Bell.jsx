@@ -63,7 +63,7 @@ const Bell = ({ to, children }) => {
   }, [address]);
 
   return (
-    <a href={link} style={{ position: "relative" }}>
+    <a title="Notifications" href={link} style={{ position: "relative" }}>
       <i className="icon">
         {window.location.pathname === "/activity" ? (
           <BellSVGFull />
