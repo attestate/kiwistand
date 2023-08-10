@@ -250,6 +250,11 @@ async function share(toast, link) {
   });
 }
 
+
+
+
+
+
 async function start() {
   await addDelegateButton();
   await addConnectedComponents();
