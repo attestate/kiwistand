@@ -4,10 +4,12 @@
 
 Kiwistand is a P2P node client for a web3-friendly Hacker News that nobody controls but everybody co-owns.
 
-It stores links and upvotes on the protocol level. Thanks to that, users can create their own UIs and permissionlessly create apps on top of it (see: [awesome-kiwi for the list of apps and contributors](https://github.com/attestate/awesome-kiwinews)).
+<img width="933" alt="Screenshot 2023-08-10 at 15 33 03" src="https://github.com/MacBudkowski/kiwistand/assets/26045794/4b614f8a-d053-4822-9433-68337205dd26">
 
+Kiwi stores links and upvotes on the protocol level. Thanks to that, users can create their own UIs and permissionlessly create apps on top of it (see: [awesome-kiwi for the list of apps and contributors](https://github.com/attestate/awesome-kiwinews)).
 
 You can learn the story behind the project in this [4 min video by Tim Daubenschutz](https://www.youtube.com/watch?v=WujtU15yAyk).
+
 ## Requirements
 
 #### Basic requirements:
@@ -63,12 +65,14 @@ Since [https://news.kiwistand.com](https://news.kiwistand.com ) is now running l
 
 However, please consider to join a chat like the [attestate dev chat](https://t.me/attestate) to stay in touch for eventual upgrade announcements as the protocol is far from being complete.
 
+## API
+
+Kiwi API:
+- [API](https://attestate.com/kiwistand/main/)
 
 ## Changelog
 
 See changelog.md file.
-
-
 
 ## License
 
@@ -76,7 +80,7 @@ GPL-3.0-only, see LICENSE file
 
 ## Getting in Touch
 
-Our Telegram chat:
+Kiwi Devs Telegram chat:
 
 - [Kiwi Devs Chat](https://t.me/kiwinewsdevs)
 
