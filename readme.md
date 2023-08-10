@@ -13,16 +13,15 @@ You can learn the story behind the project in this [4 min video by Tim Daubensch
 ## Requirements
 
 #### Basic requirements:
+
 - node >= 16
 - RPC nodes on Ethereum Mainnet & Optimism
 
-It's highly-likely that you'll need either a paid Alchemy account to make the node work because it is downloading a lot of block data. You might also try rate-limiting the speed at which the node tries to download event logs. 
+It's highly-likely that you'll need either a paid Alchemy account to make the node work because it is downloading a lot of block data. You might also try rate-limiting the speed at which the node tries to download event logs.
 
 Please reach out to us if you don't have access to an Alchemy account and we'll figure something out!
 
-
 ## Getting started
-
 
 ```bash
 git clone git@github.com:attestate/kiwistand.git
@@ -38,10 +37,9 @@ If your Ethereum RPC node is behind a reverse proxy with Authorization requireme
 
 You can also watch the video explaining [how to get started editing the Kiwi News frontend](https://www.loom.com/share/e0e8866450d54c52b161e77907d1ccb9).
 
-
 ## Debugging
 
-Once you're up and running, you might want to submit new links to the network. However, we encourage you to NOT do that on the main net. 
+Once you're up and running, you might want to submit new links to the network. However, we encourage you to NOT do that on the main net.
 
 Instead, if you must test submitting new links then run the node in bootstrap mode (no mainnet data) or in the "anon:local" mode that doesn't send data to the p2p network.
 
@@ -71,11 +69,12 @@ Placeholder for Tim's input
 ## API
 
 Kiwi API:
+
 - [API](https://attestate.com/kiwistand/main/)
 
 ## Node operators
 
-Since [https://news.kiwistand.com](https://news.kiwistand.com ) is now running live as a p2p node, you're invited to run your own nodes and frontends. 
+Since [https://news.kiwistand.com](https://news.kiwistand.com) is now running live as a p2p node, you're invited to run your own nodes and frontends.
 
 However, please consider joining a chat like the [attestate dev chat](https://t.me/kiwinewsdevs) to stay in touch for eventual upgrade announcements, as the protocol is far from being complete.
 
@@ -92,4 +91,3 @@ GPL-3.0-only, see LICENSE file
 Kiwi Devs Telegram chat:
 
 - [Kiwi Devs Chat](https://t.me/kiwinewsdevs)
-
