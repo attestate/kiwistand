@@ -4,7 +4,7 @@
 
 Kiwistand is a P2P node client for a web3-friendly Hacker News that nobody controls but everybody co-owns.
 
-<img width="933" alt="Screenshot 2023-08-10 at 15 33 03" src="https://github.com/MacBudkowski/kiwistand/assets/26045794/4b614f8a-d053-4822-9433-68337205dd26">
+<img width="680" alt="Screenshot 2023-08-10 at 15 53 46" src="https://github.com/attestate/kiwistand/assets/2758453/d741ca3b-67a2-4356-822c-0c32df0dadc3">
 
 Kiwi stores links and upvotes on the protocol level. Thanks to that, users can create their own UIs and permissionlessly create apps on top of it (see: [awesome-kiwi for the list of apps and contributors](https://github.com/attestate/awesome-kiwinews)).
 
@@ -60,17 +60,14 @@ npm run dev:anon:local
 
 ## Key features
 
-Placeholder for Tim's input
-
-## Known issues
-
-Placeholder for Tim's input
+1. **Sybil Protection**: NFT ownership is required for posting and voting, reducing spam and duplicate accounts.
+2. **Public Goods Infrastructure**: Data is shared across all nodes using a set reconciliation algorithm, preventing single-entity control.
+3. **Complete Open Source Package**: Kiwi News includes frontend, backend, and protocol code, all under GPL3.
+4. **Streamlined User Interaction**: Kiwi News supports key delegation, which allows automatic signing of user actions. This means users don't have to manually confirm each action via wallet connect or similar methods, making the user experience smoother.
 
 ## API
 
-Kiwi API:
-
-- [API](https://attestate.com/kiwistand/main/)
+- [HTTP API](https://attestate.com/kiwistand/main/)
 
 ## Node operators
 
