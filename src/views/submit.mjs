@@ -9,6 +9,7 @@ import Head from "./components/head.mjs";
 const html = htm.bind(vhtml);
 
 export default function submit(theme, url = "", title = "") {
+  const path = "/submit";
   return html`
     <html lang="en" op="news">
       <head>
@@ -16,7 +17,7 @@ export default function submit(theme, url = "", title = "") {
       </head>
       <body>
         <div class="container">
-          ${Sidebar}
+          ${Sidebar(path)}
           <div id="hnmain">
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
               <tr>

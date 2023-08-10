@@ -99,7 +99,7 @@ export default function (theme) {
       </head>
       <body>
         <div class="container">
-          ${Sidebar}
+          ${Sidebar()}
           <div id="hnmain">
           <table
             border="0"

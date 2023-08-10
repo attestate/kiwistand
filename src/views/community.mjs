@@ -93,6 +93,7 @@ export default async function (trie, theme) {
   }
   combinedUsers.sort((a, b) => parseInt(b.karma) - parseInt(a.karma));
 
+  const path = "/community";
   return html`
     <html lang="en" op="news">
       <head>
@@ -101,7 +102,7 @@ export default async function (trie, theme) {
       </head>
       <body>
         <div class="container">
-          ${Sidebar}
+          ${Sidebar(path)}
           <div id="hnmain">
           <table
             border="0"
