@@ -301,7 +301,8 @@ const CustomConnectButton = () => {
   return (
     <ConnectButton.Custom>
       {({ account, chain, mounted, openConnectModal }) => {
-        const connected = account && chain && mounted;
+        if (!mounted) return;
+        const connected = account && chain;
         if (connected) {
           return <Bell to="/activity"></Bell>;
         } else {
