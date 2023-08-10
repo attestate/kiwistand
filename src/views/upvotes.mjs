@@ -127,7 +127,7 @@ export default async function (trie, theme, identity) {
       </head>
       <body>
         <div class="container">
-          ${Sidebar}
+          ${Sidebar()}
           <div id="hnmain">
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
               <tr>

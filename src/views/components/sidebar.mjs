@@ -4,6 +4,15 @@ import htm from "htm";
 import vhtml from "vhtml";
 
 const html = htm.bind(vhtml);
+const communityfull = html`<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 256 256"
+>
+  <rect width="256" height="256" fill="none" />
+  <path
+    d="M64.12,147.8a4,4,0,0,1-4,4.2H16a8,8,0,0,1-7.8-6.17,8.35,8.35,0,0,1,1.62-6.93A67.79,67.79,0,0,1,37,117.51a40,40,0,1,1,66.46-35.8,3.94,3.94,0,0,1-2.27,4.18A64.08,64.08,0,0,0,64,144C64,145.28,64,146.54,64.12,147.8Zm182-8.91A67.76,67.76,0,0,0,219,117.51a40,40,0,1,0-66.46-35.8,3.94,3.94,0,0,0,2.27,4.18A64.08,64.08,0,0,1,192,144c0,1.28,0,2.54-.12,3.8a4,4,0,0,0,4,4.2H240a8,8,0,0,0,7.8-6.17A8.33,8.33,0,0,0,246.17,138.89Zm-89,43.18a48,48,0,1,0-58.37,0A72.13,72.13,0,0,0,65.07,212,8,8,0,0,0,72,224H184a8,8,0,0,0,6.93-12A72.15,72.15,0,0,0,157.19,182.07Z"
+  />
+</svg>`;
 const community = html`
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
     <rect width="256" height="256" fill="none" />
@@ -152,6 +161,22 @@ const home = html`
     />
   </svg>
 `;
+const homefull = html`
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+    <rect width="256" height="256" fill="none" />
+    <path
+      d="M224,115.55V208a16,16,0,0,1-16,16H168a16,16,0,0,1-16-16V168a8,8,0,0,0-8-8H112a8,8,0,0,0-8,8v40a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V115.55a16,16,0,0,1,5.17-11.78l80-75.48.11-.11a16,16,0,0,1,21.53,0,1.14,1.14,0,0,0,.11.11l80,75.48A16,16,0,0,1,224,115.55Z"
+    />
+  </svg>
+`;
+const submitfull = html`
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+    <rect width="256" height="256" fill="none" />
+    <path
+      d="M227.31,73.37,182.63,28.68a16,16,0,0,0-22.63,0L36.69,152A15.86,15.86,0,0,0,32,163.31V208a16,16,0,0,0,16,16H92.69A15.86,15.86,0,0,0,104,219.31L227.31,96a16,16,0,0,0,0-22.63ZM51.31,160l90.35-90.35,16.68,16.69L68,176.68ZM48,179.31,76.69,208H48Zm48,25.38L79.31,188l90.35-90.35h0l16.68,16.69Z"
+    />
+  </svg>
+`;
 const submit = html`
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
     <rect width="256" height="256" fill="none" />
@@ -198,18 +223,20 @@ const submit = html`
     />
   </svg>
 `;
-const sidebar = html`
+const sidebar = (path) => html`
   <div class="sidebar" id="mySidebar" style="color: black;">
     <a class="kiwi-logo" href="/">🥝</a>
     <a href="/" style="color: black; text-decoration: none; display: block;">
       <div style="display: flex; align-items: center;">
-        <div class="svg-container">${home}</div>
+        <div class="svg-container">${path === "/" ? homefull : home}</div>
         <span>Home</span>
       </div>
     </a>
     <a href="/submit" style="color: black; text-decoration: none;">
       <div style="display: flex; align-items: center;">
-        <div class="svg-container">${submit}</div>
+        <div class="svg-container">
+          ${path === "/submit" ? submitfull : submit}
+        </div>
       </div>
     </a>
     <a
@@ -217,7 +244,9 @@ const sidebar = html`
       style="color: black; text-decoration: none; display: block;"
     >
       <div style="display: flex; align-items: center;">
-        <div class="svg-container">${community}</div>
+        <div class="svg-container">
+          ${path === "/community" ? communityfull : community}
+        </div>
         <span>Community</span>
       </div>
     </a>
