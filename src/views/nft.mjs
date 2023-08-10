@@ -24,7 +24,7 @@ export default function (theme) {
             margin: 0;
             padding: 0;
           }
-          .container {
+          .inner-container {
             max-width: 800px;
             margin: 0 auto;
             padding: 20px;
@@ -98,14 +98,13 @@ export default function (theme) {
         </style>
       </head>
       <body>
-        ${Sidebar}
-        <center>
+        <div class="container">
+          ${Sidebar}
+          <div id="hnmain">
           <table
-            id="hnmain"
             border="0"
             cellpadding="0"
             cellspacing="0"
-            width="85%"
             bgcolor="#f6f6ef"
           >
             <tr>
@@ -113,7 +112,7 @@ export default function (theme) {
             </tr>
             <tr>
               <td>
-                <div class="container">
+                <div class="inner-container">
                   <header class="header">
                     <h1>Welcome to Kiwi News</h1>
                   </header>
@@ -251,8 +250,8 @@ export default function (theme) {
               </td>
             </tr>
           </table>
+          </div></div>
           ${Footer(theme)}
-        </center>
       </body>
     </html>
   `;

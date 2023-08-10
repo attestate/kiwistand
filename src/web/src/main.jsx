@@ -61,7 +61,7 @@ async function addSubmitButton(allowlist, delegations, toast) {
   }
 }
 
-async function addVotes(allowlist, delegations, toast) {
+async function addVotes(allowlistPromise, delegationsPromise, toast) {
   const voteArrows = document.querySelectorAll(".votearrowcontainer");
   if (voteArrows && voteArrows.length > 0) {
     const { createRoot } = await import("react-dom/client");
@@ -83,8 +83,8 @@ async function addVotes(allowlist, delegations, toast) {
           <Vote
             title={title}
             href={href}
-            allowlist={allowlist}
-            delegations={delegations}
+            allowlistPromise={allowlistPromise}
+            delegationsPromise={delegationsPromise}
             upvoters={upvoters}
             toast={toast}
             editorPicks={editorPicks}
@@ -128,13 +128,13 @@ async function addConnectedComponents() {
     </StrictMode>
   );
 
-  const settings = document.querySelector("nav-settings");
+  const settings = document.querySelector("#nav-settings");
   createRoot(settings).render(
     <StrictMode>
       <ConnectedSettings />
     </StrictMode>
   );
-  const profileLink = document.querySelector("nav-profile");
+  const profileLink = document.querySelector("#nav-profile");
   createRoot(profileLink).render(
     <StrictMode>
       <ConnectedProfile />
@@ -148,7 +148,7 @@ async function addConnectedComponents() {
       </StrictMode>
     );
   }
-  const disconnect = document.querySelector("nav-disconnect");
+  const disconnect = document.querySelector("#nav-disconnect");
   createRoot(disconnect).render(
     <StrictMode>
       <ConnectedDisconnectButton />
@@ -263,11 +263,15 @@ async function start() {
   const toast = await addToaster();
 
   const { fetchAllowList, fetchDelegations } = await import("./API.mjs");
-  const allowlist = await fetchAllowList();
+  const allowlistPromise = fetchAllowList();
+  const delegationsPromise = fetchDelegations();
 
-  const delegations = await fetchDelegations();
-  await addVotes(allowlist, delegations, toast);
-  await addSubmitButton(allowlist, delegations, toast);
+  await addVotes(allowlistPromise, delegationsPromise, toast);
+  await addSubmitButton(
+    await allowlistPromise,
+    await delegationsPromise,
+    toast
+  );
 
   let url = new URL(window.location.href);
   let link = url.searchParams.get("link");

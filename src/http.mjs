@@ -1,4 +1,3 @@
-
 //@format
 import { env } from "process";
 
@@ -15,7 +14,6 @@ import alltime from "./views/alltime.mjs";
 import privacy from "./views/privacy.mjs";
 import nft from "./views/nft.mjs";
 import subscribe from "./views/subscribe.mjs";
-import guidelines from "./views/guidelines.mjs";
 import upvotes from "./views/upvotes.mjs";
 import community from "./views/community.mjs";
 import stats from "./views/stats.mjs";
@@ -24,7 +22,6 @@ import about from "./views/about.mjs";
 import why from "./views/why.mjs";
 import submit from "./views/submit.mjs";
 import settings from "./views/settings.mjs";
-
 
 const app = express();
 
@@ -98,10 +95,6 @@ export async function launch(trie, libp2p) {
   });
   app.get("/why", async (request, reply) => {
     const content = await why(reply.locals.theme);
-    return reply.status(200).type("text/html").send(content);
-  });
-  app.get("/guidelines", async (request, reply) => {
-    const content = await guidelines(reply.locals.theme);
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/activity", async (request, reply) => {

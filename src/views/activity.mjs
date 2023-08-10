@@ -21,79 +21,99 @@ import * as moderation from "./moderation.mjs";
 const html = htm.bind(vhtml);
 
 const generateFeed = (messages) => {
-  const firstAmplify = {};
+  const groupedMessages = {};
 
-  return messages
+  messages
     .sort((a, b) => a.timestamp - b.timestamp)
-    .map((message) => {
-      const cacheEnabled = true;
+    .forEach((message) => {
       const href = normalizeUrl(!!message.href && message.href);
 
-      if (message.type === "amplify" && !firstAmplify[href]) {
-        firstAmplify[href] = message;
-        return { identity: message.identity, verb: "submitted", message };
-      } else {
-        const submission = firstAmplify[href];
-        return {
-          identity: message.identity,
-          verb: "upvoted",
+      if (!groupedMessages[href]) {
+        groupedMessages[href] = {
+          identities: [],
+          verb: "submitted",
           message,
-          towards: submission.identity,
+          towards: message.identity,
         };
+      } else {
+        groupedMessages[href].identities.push(message.identity);
+        groupedMessages[href].verb = "upvoted";
       }
-    })
-    .sort((a, b) => b.message.timestamp - a.message.timestamp);
+    });
+
+  return Object.values(groupedMessages).sort(
+    (a, b) => b.message.timestamp - a.message.timestamp
+  );
 };
 
 function generateRow(activity, i) {
-  let title;
-  if (activity.message.title === "") {
-    title = activity.message.href;
-  } else {
-    title = activity.message.title;
-  }
-  let borderColor = i % 2 === 0 ? "rgba(0,0,0,0.05)" : "rgba(0,0,0,0.10)";
+  const title = activity.message.title || activity.message.href;
+  const borderColor = i % 2 === 0 ? "rgba(0,0,0,0.05)" : "rgba(0,0,0,0.10)";
+  const identity = activity.identities[activity.identities.length - 1];
+  const size = 28;
+  const identities = activity.identities
+    .reverse()
+    .filter((identity) => identity.avatarUrl)
+    .slice(0, 5);
 
   return html`
     <tr>
       <td>
-        <div
-          style="display: flex; align-items: center; border-bottom: 1px solid ${borderColor}; padding: 5px;"
-        >
-          <div style="width: 15px; margin-right: 15px;">
-            <svg
-              fill="#000000"
-              width="15px"
-              height="15px"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M4 14h4v7a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-7h4a1.001 1.001 0 0 0 .781-1.625l-8-10c-.381-.475-1.181-.475-1.562 0l-8 10A1.001 1.001 0 0 0 4 14z"
-              />
-            </svg>
+        <div style="display: flex; border-bottom: 1px solid ${borderColor};">
+          <div
+            class="votearrow"
+            style="font-size: 1.75rem; flex: 0.2; display: flex; align-items: center; justify-content: center; color: limegreen;"
+            title="upvote"
+          >
+            ▲
           </div>
-          <div style="width: 25px; height: 25px; margin-right: 15px;">
-            <zora-zorb size="25px" address="${activity.identity}"></zora-zorb>
-          </div>
-          <div>
-            <p>
-              <strong>
-                <a href="/upvotes?address=${activity.identity}">
-                  ${activity.displayName}
+          <div
+            style="padding-top: 10px; flex: 0.8; display: flex; flex-direction: column;"
+          >
+            ${identities.length > 0 &&
+            identities[0].address === identity.address
+              ? html`<div
+                  style="padding-left: ${size /
+                  4}px; display: flex; align-items: center;"
+                >
+                  ${identities.map(
+                    (identity, index) => html`
+                      <img
+                        src="${identity.avatarUrl}"
+                        alt="avatar"
+                        style="z-index: ${index}; width: ${size}px; height: ${size}px; border: 1p
+ solid #828282; border-radius: 50%; margin-left: -${size / 4}px;"
+                      />
+                    `
+                  )}
+                </div>`
+              : ""}
+            <div>
+              <p style="margin-bottom: 2px;">
+                <strong>
+                  <a href="/upvotes?address=${identity.address}">
+                    ${identity.displayName}
+                  </a>
+                  <span> </span>
+                  ${activity.identities.length > 1
+                    ? html`
+                        <span>and </span>
+                        ${activity.identities.length - 1}
+                        <span> others </span>
+                      `
+                    : ""}
+                  ${activity.verb} your submission</strong
+                >
+              </p>
+              <p style="margin-top: 0;">
+                <a
+                  href="${activity.message.href}"
+                  style="color: gray; word-break: break-word;"
+                >
+                  ${title.substring(0, 80)}
                 </a>
-                <span> </span>
-                ${activity.verb} your submission</strong
-              >
-            </p>
-            <p>
-              <a
-                href="${activity.message.href}"
-                style="color: gray; word-break: break-all;"
-              >
-                "${title.substring(0, 80)}"
-              </a>
-            </p>
+              </p>
+            </div>
           </div>
         </div>
       </td>
@@ -140,10 +160,24 @@ export default async function (trie, theme, identity) {
 
   let notifications = [];
   for await (let activity of filteredActivities) {
-    const ensData = await ens.resolve(activity.identity);
+    const identities = [];
+    for await (let identity of activity.identities) {
+      const ensData = await ens.resolve(identity);
+
+      let avatarUrl = ensData.avatar;
+      if (avatarUrl && !avatarUrl.startsWith("https")) {
+        avatarUrl = ensData.avatar_url;
+      }
+
+      identities.push({
+        address: identity,
+        avatarUrl,
+        displayName: ensData.displayName,
+      });
+    }
     notifications.push({
       ...activity,
-      displayName: ensData.displayName,
+      identities,
     });
   }
 
@@ -187,23 +221,18 @@ export default async function (trie, theme, identity) {
         ${Head}
       </head>
       <body>
-        ${Sidebar}
-        <center>
-          <table
-            id="hnmain"
-            border="0"
-            cellpadding="0"
-            cellspacing="0"
-            width="85%"
-            bgcolor="#f6f6ef"
-          >
-            <tr>
-              ${Header(theme)}
-            </tr>
-            ${feed}
-          </table>
-          ${Footer(theme)}
-        </center>
+        <div class="container">
+          ${Sidebar}
+          <div id="hnmain">
+            <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
+              <tr>
+                ${Header(theme)}
+              </tr>
+              ${feed}
+            </table>
+          </div>
+        </div>
+        ${Footer(theme)}
       </body>
     </html>
   `;

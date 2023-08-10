@@ -20,7 +20,7 @@ import * as moderation from "./moderation.mjs";
 import * as registry from "../chainstate/registry.mjs";
 import log from "../logger.mjs";
 import { EIP712_MESSAGE } from "../constants.mjs";
-import Row from "./components/row.mjs";
+import Row, { extractDomain } from "./components/row.mjs";
 
 const html = htm.bind(vhtml);
 const fetch = fetchBuilder.withCache(
@@ -28,11 +28,6 @@ const fetch = fetchBuilder.withCache(
     ttl: 60000 * 5, //5mins
   })
 );
-
-function extractDomain(link) {
-  const parsedUrl = new URL(link);
-  return parsedUrl.hostname;
-}
 
 const itemAge = (timestamp) => {
   const now = new Date();
@@ -219,159 +214,122 @@ export default async function index(trie, theme, page) {
         />
       </head>
       <body>
-        ${Sidebar}
-        <center>
-          <table
-            id="hnmain"
-            border="0"
-            cellpadding="0"
-            cellspacing="0"
-            width="85%"
-            bgcolor="#f6f6ef"
-          >
-            <tr>
-              ${Header(theme)}
-            </tr>
-            <tr>
-              ${SecondHeader(theme, "top")}
-            </tr>
-            ${page === 0 && editorPicks.length > 0
-              ? html` <tr style="background-color: #e6e6df;">
-                  <td>
-                    <p
-                      style="color: black; padding: 0 10px 0 10px; font-size: 12pt; font-weight: bold;"
-                    >
-                      <a
-                        style="font-size: 16pt; color: ${theme.color}"
-                        href="/subscribe"
-                        >✉</a
+        <div class="container">
+          ${Sidebar}
+          <div id="hnmain">
+            <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
+              <tr>
+                ${Header(theme)}
+              </tr>
+              <tr>
+                ${SecondHeader(theme, "top")}
+              </tr>
+              ${page === 0 && editorPicks.length > 0
+                ? html` <tr style="background-color: #e6e6df;">
+                    <td>
+                      <p
+                        style="color: black; padding: 0 10px 0 10px; font-size: 12pt; font-weight: bold;"
                       >
-                      <span> </span>
-                      <span>Today's Editor's Picks by </span>
-                      <a style="color:black;" href="${config.link}">
-                        ${config.name}</a
-                      >!
-                    </p>
-                  </td>
-                </tr>`
-              : ""}
-            ${page === 0 &&
-            editorPicks.map(
-              (story, i) => html`
-                <tr style="background-color: #e6e6df;">
-                  <td>
-                    <div style="padding: 10px 5px 0 10px;">
-                      <div style="display: flex; align-items: stretch;">
-                        <div
-                          style="display: flex; align-items: center; justify-content: center; min-width: 40px;"
-                        >
-                          <a
-                            href="#"
-                            style="display: flex; align-items: center; min-height: 30px;"
+                        <span>Today's Editor's Picks by </span>
+                        <a style="color:black;" href="${config.link}">
+                          ${config.name}</a
+                        >!
+                      </p>
+                    </td>
+                  </tr>`
+                : ""}
+              ${page === 0 &&
+              editorPicks.map(
+                (story, i) => html`
+                  <tr style="background-color: #e6e6df;">
+                    <td>
+                      <div style="padding: 10px 5px 0 10px;">
+                        <div style="display: flex; align-items: stretch;">
+                          <div
+                            style="display: flex; align-items: center; justify-content: center; min-width: 40px;"
                           >
-                            <div
-                              class="votearrowcontainer"
-                              data-title="${story.title}"
-                              data-href="${story.href}"
-                              data-upvoters="${JSON.stringify(story.upvoters)}"
-                              data-editorpicks="true"
-                            ></div>
-                          </a>
-                        </div>
-                        <div
-                          style="display:flex; align-items: center; flex-grow: 1;"
-                        >
-                          <span>
                             <a
-                              href="${story.href}"
-                              target="_blank"
-                              class="story-link"
-                              style="line-height: 13pt; font-size: 13pt;"
+                              href="#"
+                              style="display: flex; align-items: center; min-height: 30px;"
                             >
-                              ${start + i + 1}. ${story.title}
+                              <div
+                                class="votearrowcontainer"
+                                data-title="${story.title}"
+                                data-href="${story.href}"
+                                data-upvoters="${JSON.stringify(
+                                  story.upvoters
+                                )}"
+                                data-editorpicks="true"
+                              ></div>
                             </a>
-                            <span
-                              style="padding-left: 5px; word-break: break-all;"
-                              >(${extractDomain(story.href)})</span
-                            >
-                          </span>
+                          </div>
+                          <div
+                            style="display:flex; align-items: center; flex-grow: 1;"
+                          >
+                            <span>
+                              <a
+                                href="${story.href}"
+                                target="_blank"
+                                class="story-link"
+                                style="line-height: 13pt; font-size: 13pt;"
+                              >
+                                ${story.title}
+                              </a>
+                              <span
+                                style="padding-left: 5px; white-space: nowrap;"
+                                >(${extractDomain(story.href)})</span
+                              >
+                            </span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </td>
-                </tr>
-              `
-            )}
-            ${page === 0 && editorPicks.length > 0
-              ? html` <tr style="height: 13px; background-color: #e6e6df;">
-                  <td></td>
-                </tr>`
-              : ""}
-            <tr>
-              <td>
-                <p
-                  style="color: black; padding: 10px 10px 0 10px; font-size: 12pt; font-weight: bold;"
-                >
-                  <span
-                    >Community's Picks
-                    ${page !== 0 ? html`(page: ${page})` : ""}</span
+                    </td>
+                  </tr>
+                `
+              )}
+              ${page === 0 && editorPicks.length > 0
+                ? html` <tr style="height: 13px; background-color: #e6e6df;">
+                    <td></td>
+                  </tr>`
+                : ""}
+              <tr>
+                <td>
+                  <p
+                    style="color: black; padding: 10px 10px 0 10px; font-size: 12pt; font-weight: bold;"
                   >
-                </p>
-              </td>
-            </tr>
-            ${stories.map(Row(start))}
-            <tr>
-              <td>
-                <table
-                  style="padding: 5px;"
-                  border="0"
-                  cellpadding="0"
-                  cellspacing="0"
-                >
-                  <tr class="athing" id="35233479">
-                    <td align="right" valign="top" class="title"></td>
-                    <td valign="top" class="votelinks">
-                      <center>
-                        <a id="up_35233479" class="clicky" href="#"> </a>
-                      </center>
-                    </td>
-                    <td class="title">
-                      <span style="margin-left: 10px;" class="titleline">
-                        <a href="?page=${page + 1}"> More </a>
-                      </span>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td colspan="2"></td>
-                    <td class="subtext">
-                      <span class="subline">
-                        <span
-                          style="display: inline-block; height: auto;"
-                          class="score"
-                          id="score_35233479"
-                        >
-                        </span>
-                      </span>
-                    </td>
-                  </tr>
-                  <tr class="spacer" style="height:5px"></tr>
-                </table>
-              </td>
-            </tr>
-            <tr
-              style="display: block; padding: 10px; background-color: ${theme.color}"
-            >
-              <td>
-                <span style="color: black;"
-                  >Hungry for more links? Check out the
-                </span>
-                <span> </span>
-                <a href="/new" style="color: black;"><u>New Links Tab</u></a>
-              </td>
-            </tr>
-          </table>
-          ${Footer(theme, "/")}
-        </center>
+                    <span
+                      >Community's Picks
+                      ${page !== 0 ? html`(page: ${page})` : ""}</span
+                    >
+                  </p>
+                </td>
+              </tr>
+              ${stories.map(Row(start))}
+              <tr style="height: 50px">
+                <td>
+                  <a
+                    style="padding: 20px 0 0 20px; font-size: 1.1rem;"
+                    href="?page=${page + 1}"
+                  >
+                    More
+                  </a>
+                </td>
+              </tr>
+              <tr
+                style="display: block; padding: 10px; background-color: ${theme.color}"
+              >
+                <td>
+                  <span style="color: black;"
+                    >Hungry for more links? Check out the
+                  </span>
+                  <span> </span>
+                  <a href="/new" style="color: black;"><u>New Links Tab</u></a>
+                </td>
+              </tr>
+            </table>
+          </div>
+        </div>
+        ${Footer(theme, "/")}
       </body>
     </html>
   `;

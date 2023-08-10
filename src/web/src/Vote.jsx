@@ -1,5 +1,5 @@
 // @format
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSigner, useAccount, WagmiConfig, useProvider } from "wagmi";
 import { Wallet } from "@ethersproject/wallet";
 import { RainbowKitProvider, ConnectButton } from "@rainbow-me/rainbowkit";
@@ -40,6 +40,21 @@ const Vote = (props) => {
     props.upvoters.includes(account.address)
   );
   const [upvotes, setUpvotes] = useState(props.upvoters.length);
+  const [allowlist, setAllowlist] = useState(null);
+  const [delegations, setDelegations] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadData = async () => {
+      const list = await props.allowlistPromise;
+      const delegates = await props.delegationsPromise;
+      setAllowlist(list);
+      setDelegations(delegates);
+      setIsLoading(false);
+    };
+
+    loadData();
+  });
 
   let signer, isError, isLocal;
   if (localKey) {
@@ -88,13 +103,12 @@ const Vote = (props) => {
           <div>
             <div
               onClick={async (e) => {
-                if (hasUpvoted) return;
+                if (hasUpvoted || isLoading) return;
                 if (!connected) {
                   openConnectModal();
                   return;
                 }
 
-                const { allowlist, delegations } = props;
                 const isEligible = eligible(
                   allowlist,
                   delegations,
@@ -106,7 +120,7 @@ const Vote = (props) => {
                 }
                 handleSubmit(e);
               }}
-              className="votearrow"
+              className={`votearrow ${isLoading ? "pulsate" : ""}`}
               style={{
                 color: hasUpvoted ? theme.color : "#828282",
                 cursor: hasUpvoted ? "not-allowed" : "pointer",

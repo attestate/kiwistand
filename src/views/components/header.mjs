@@ -4,10 +4,7 @@ import htm from "htm";
 import vhtml from "vhtml";
 
 const html = htm.bind(vhtml);
-const header = (theme) => html` <td
-  style="min-height: 63px;"
-  bgcolor="${theme.color}"
->
+const header = (theme) => html` <td style="height: 62px;">
   <nav-onboarding-modal />
   <nav-nft-modal />
   <table
@@ -23,9 +20,10 @@ const header = (theme) => html` <td
           <div
             style="display: flex; flex-wrap: nowrap; justify-content: space-between; align-items: center;"
           >
+            <div class="kn-banner-desk">Kiwi News</div>
             <div
               class="sidebar-toggle"
-              style="padding: 7px; cursor: pointer; display: flex; align-items: center; justify-content: center;"
+              style="padding: 7px; cursor: pointer; align-items: center; justify-content: center;"
             >
               <svg
                 style="padding-top: 2px;"
