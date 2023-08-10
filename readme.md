@@ -59,16 +59,25 @@ npm run dev:anon:local
 
 - [Loom: Set Reconciliation demo (40 secs)](https://www.loom.com/share/abf43323b00547689bf11520f565f4bc)
 - [Loom: Set Reconciliation algorithm explained (9 mins)](https://www.loom.com/share/2a68f5e22d9843ab99edad2deaed9281)
-## Node operators
 
-Since [https://news.kiwistand.com](https://news.kiwistand.com ) is now running live as a p2p node, you're invited to run your own nodes and frontends. 
+## Key features
 
-However, please consider to join a chat like the [attestate dev chat](https://t.me/attestate) to stay in touch for eventual upgrade announcements as the protocol is far from being complete.
+Placeholder for Tim's input
+
+## Known issues
+
+Placeholder for Tim's input
 
 ## API
 
 Kiwi API:
 - [API](https://attestate.com/kiwistand/main/)
+
+## Node operators
+
+Since [https://news.kiwistand.com](https://news.kiwistand.com ) is now running live as a p2p node, you're invited to run your own nodes and frontends. 
+
+However, please consider joining a chat like the [attestate dev chat](https://t.me/kiwinewsdevs) to stay in touch for eventual upgrade announcements, as the protocol is far from being complete.
 
 ## Changelog
 
