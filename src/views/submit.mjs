@@ -64,12 +64,7 @@ ${title}</textarea
                   </form>
                   <p style="${noteStyle}">
                     <span>Please be mindful of our </span>
-                    <a
-                      style="color:black;"
-                      target="_blank"
-                      href="/guidelines"
-                      >Guidelines</a
-                    >.
+                    <a style="color:black;" href="/guidelines">Guidelines</a>.
                   </p>
                 </td>
               </tr>

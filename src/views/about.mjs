@@ -42,11 +42,8 @@ export default function (theme) {
                     <p>
                       <b>Submission guidelines:</b>
                       <br />
-                      <a
-                        style="color: black;"
-                        target="_blank"
-                        href="https://hackmd.io/a-r--DX2T5uEEKX0Z8PRlQ?view"
-                        ><u>https://hackmd.io/a-r--DX2T5uEEKX0Z8PRlQ?view</u></a
+                      <a style="color: black;" href="/guidelines"
+                        ><u>/guidelines</u></a
                       >
                     </p>
                     <p>

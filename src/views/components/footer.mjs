@@ -120,9 +120,7 @@ const footer = (theme, path) => html`
       >Request Feature</a
     >
     <span> | </span>
-    <a target="_blank" href="https://hackmd.io/a-r--DX2T5uEEKX0Z8PRlQ?view"
-      >Guidelines</a
-    >
+    <a href="/guidelines">Guidelines</a>
     <span> | </span>
     <a href="/why">Why?</a>
     <br />
