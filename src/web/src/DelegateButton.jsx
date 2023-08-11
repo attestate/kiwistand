@@ -125,52 +125,24 @@ const DelegateButton = () => {
   }
 
   if (!from.address) return <b>Please connect your wallet</b>;
+
   if (key && wallet) {
-    const disabled = confirmation !== "delete key";
     return (
       <div>
-        <p>
-          <b>You're set!</b>
-        </p>
-        <p>
-          We've now stored your delegation key on Optimism for this device. You
-          should be able to upvote and submit links without needing to confirm
-          these actions in your wallet!
-        </p>
-        <p>
-          <b>PLEASE NOTE: </b>
-          It might take up to 5 minutes for your key to enter the system!
-        </p>
-        <p>
-          <b>Key storage</b>
-        </p>
-        <p style={{ wordBreak: "break-all" }}>
-          Your delegate address: {wallet.address}
-        </p>
-        <p>
-          <b>Delete key</b>
-          <p>
-            You can delete your key from the browser, however, please consider
-            that you'll not be able to recover it. Please type <b>delete key</b>{" "}
-            to confirm.
-          </p>
-          <input
-            type="text"
-            value={confirmation}
-            onChange={(e) => setConfirmation(e.target.value)}
-          />
-          <br />
-          <br />
-          <button
-            className="buy-button"
-            disabled={disabled}
-            onClick={handleClick}
-          >
-            Delete key
-          </button>
-        </p>
+        <button
+          className="buy-button"
+          onClick={handleClick} // Assuming handleClick is the function that deletes the key
+        >
+          Turn off
+        </button>
+        <br/>
+        <br/>
+       <p style={{ margin: '0', padding: '0' }}>
+        You can now upvote and submit stories without signing each action! Please remember that if you clean your browser’s cookies, you might have to turn it on again.
+      </p>
       </div>
     );
+  
   }
   if (!write && !isError) {
     return <p>Loading from local storage...</p>;
@@ -181,7 +153,7 @@ const DelegateButton = () => {
   if (chain.id === 10) {
     content = (
       <span>
-        {!isLoading && !isSuccess && <div>Delegate on Optimism</div>}
+        {!isLoading && !isSuccess && <div>Turn On</div>}
         {isLoading && <div>Please sign transaction</div>}
         {isSuccess && <div>Delegation successful, please reload</div>}
       </span>
