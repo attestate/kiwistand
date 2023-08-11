@@ -59,7 +59,7 @@ export default function index(theme) {
                     <b
                       >Real-Time RSS Feeds (maintained by our community member:
                       <span> </span>
-                      <a href="warpcast.com/freeatnet" target="_blank"
+                      <a href="https://warpcast.com/freeatnet" target="_blank"
                         >@freeatnet</a
                       >):</b
                     >
