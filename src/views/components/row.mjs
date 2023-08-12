@@ -84,7 +84,9 @@ const row = (start = 0) => {
                   <span> • </span>
                   <a
                     target="_blank"
-                    href="https://warpcast.com/~/compose?embeds[]=${story.href}&text=${encodeURIComponent(
+                    href="https://warpcast.com/~/compose?embeds[]=${encodeURIComponent(
+                      story.href
+                    )}&text=${encodeURIComponent(
                       `Found on Kiwi News: "${story.title}"`
                     )}&embeds[]=https://news.kiwistand.com"
                     class="caster-link"

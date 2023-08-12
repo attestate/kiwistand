@@ -221,7 +221,9 @@ async function share(toast, link) {
     <div style={{ display: "flex", alignItems: "center" }}>
       <a
         style={{ display: "flex", alignItems: "center" }}
-        href={`https://warpcast.com/~/compose?embeds[]=${link}&embeds[]=https://news.kiwistand.com`}
+        href={`https://warpcast.com/~/compose?embeds[]=${encodeURIComponent(
+          link
+        )}&embeds[]=https://news.kiwistand.com`}
         target="_blank"
       >
         <FCIcon style={{ height: "15px", color: "white" }} />
@@ -249,11 +251,6 @@ async function share(toast, link) {
     },
   });
 }
-
-
-
-
-
 
 async function start() {
   await addDelegateButton();
