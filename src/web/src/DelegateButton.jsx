@@ -57,17 +57,15 @@ const DelegateButton = () => {
     keyName,
     {
       serializer: {
-        stringify: (val) => val,
-        parse: (val) => val,
+        stringify: val => val,
+        parse: val => val,
       },
-    }
+    },
   );
 
-  const [confirmation, setConfirmation] = useState(null);
+  const [confirmation, setConfirmation] = useState("");
   const provider = useProvider();
 
-  const [config, setConfig] = useState({});
-  const [isError, setIsError] = useState(false);
   const [payload, setPayload] = useState(null);
 
   useEffect(() => {
@@ -77,39 +75,22 @@ const DelegateButton = () => {
         newKey,
         from.address,
         newKey.address,
-        authorize
+        authorize,
       );
       setPayload(payload);
     };
     if (from.address) generate();
   }, [from.address]);
 
-  const prepArgs = useMemo(
-    () => ({
-      address,
-      abi,
-      functionName: "etch",
-      args: [payload],
-      chainId: optimism.id,
-    }),
-    [payload]
-  );
+  const prepArgs = {
+    address,
+    abi,
+    functionName: "etch",
+    args: [payload],
+    chainId: optimism.id,
+  };
 
-  const {
-    config: configData,
-    error,
-    isError: isPrepError,
-  } = usePrepareContractWrite(prepArgs);
-
-  useEffect(() => {
-    if (configData) {
-      setConfig(configData);
-      setIsError(isPrepError);
-      if (error) console.log("error in contract write prepare", error);
-    }
-  }, [configData, error, isPrepError]);
-
-  const writeArgs = useMemo(() => config || {}, [config]);
+  const { config, error, isError } = usePrepareContractWrite(prepArgs);
 
   const { data, write, isLoading, isSuccess } = useContractWrite(config);
   if (isSuccess) setKey(newKey.privateKey);
@@ -149,15 +130,17 @@ const DelegateButton = () => {
         </p>
         <p>
           <b>Delete key</b>
-          <p>
+          <br />
+          <span>
             You can delete your key from the browser, however, please consider
             that you'll not be able to recover it. Please type <b>delete key</b>{" "}
             to confirm.
-          </p>
+          </span>
+          <br />
           <input
             type="text"
             value={confirmation}
-            onChange={(e) => setConfirmation(e.target.value)}
+            onChange={e => setConfirmation(e.target.value)}
           />
           <br />
           <br />
