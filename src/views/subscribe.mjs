@@ -10,67 +10,84 @@ import Head from "./components/head.mjs";
 const html = htm.bind(vhtml);
 
 export default function index(theme) {
+  const path = "/subscribe";
   return html`
     <html lang="en" op="news">
       <head>
         ${Head}
       </head>
       <body>
-        ${Sidebar}
-        <center>
-          <table
-            id="hnmain"
-            border="0"
-            cellpadding="0"
-            cellspacing="0"
-            width="85%"
-            bgcolor="#f6f6ef"
-          >
-            <tr>
-              ${Header(theme)}
-            </tr>
-            <tr>
-              <td style="padding: 10px; font-size: 16px;">
-                <b>Kiwi News Daily Newsletter</b>
-                <p>
-                  Just discovered this site and want to stay informed about
-                  updates?
-                </p>
-                <p>
-                  <b>Here's our deal for you:</b>
+        <div class="container">
+          ${Sidebar(path)}
+          <div id="hnmain">
+            <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
+              <tr>
+                ${Header(theme)}
+              </tr>
+              <tr>
+                <td style="padding: 10px; font-size: 16px;">
+                  <p>
+                    There are a few ways to stay up to date with Kiwi. Feel free
+                    to choose whatever method you prefer.
+                  </p>
                   <br />
-
-                  - 1 Email a day (USA morning) with link to Kiwi News
-                  <br />
-                  - Get latest Editor's Picks from the Kiwi community
-                  <br />
-                  - No spam and your email is safe.
-                </p>
-                <form
-                  action="https://buttondown.email/api/emails/embed-subscribe/kiwinews"
-                  method="post"
-                  target="popupwindow"
-                  onsubmit="window.open('https://buttondown.email/kiwinews', 'popupwindow')"
-                  class="embeddable-buttondown-form"
-                >
-                  <input
-                    style="min-width: 20rem; font-size: 16px"
-                    placeholder="your email"
-                    type="email"
-                    name="email"
-                    id="bd-email"
-                  />
-                  <input
-                    style="font-size: 17px"
-                    type="submit"
-                    value="Subscribe"
-                  />
-                </form>
-              </td>
-            </tr>
-          </table>
-          ${Footer(theme)}
-        </center>
+                  <p>
+                    <b>Kiwi Weekly (TOP10 most upvoted links of the week)</b>
+                  </p>
+                  <div style="text-align: left;">
+                    <iframe
+                      src="https://paragraph.xyz/@kiwi-weekly/embed?minimal=true"
+                      width="360"
+                      height="80"
+                      frameborder="0"
+                      scrolling="no"
+                    ></iframe>
+                  </div>
+                  <p>
+                    <b>Kiwi Daily (Editor's Picks, Monday to Friday)</b>
+                  </p>
+                  <div style="text-align: left;">
+                    <iframe
+                      src="https://paragraph.xyz/@kiwi-daily/embed?minimal=true"
+                      width="360"
+                      height="80"
+                      frameborder="0"
+                      scrolling="no"
+                    ></iframe>
+                  </div>
+                  <p>
+                    <b
+                      >Real-Time RSS Feeds (maintained by our community member:
+                      <span> </span>
+                      <a href="https://warpcast.com/freeatnet" target="_blank"
+                        >@freeatnet</a
+                      >):</b
+                    >
+                  </p>
+                  <div>
+                    <p>
+                      <span>Top Links feed: </span>
+                      <a
+                        href="https://kiwinews.lol/api/feed/top"
+                        target="_blank"
+                        >https://kiwinews.lol/api/feed/top</a
+                      >
+                    </p>
+                    <p>
+                      <span>New Links feed: </span>
+                      <a
+                        href="https://kiwinews.lol/api/feed/new"
+                        target="_blank"
+                        >https://kiwinews.lol/api/feed/new</a
+                      >
+                    </p>
+                  </div>
+                </td>
+              </tr>
+            </table>
+          </div>
+        </div>
+        ${Footer(theme)}
       </body>
     </html>
   `;
