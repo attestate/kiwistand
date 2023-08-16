@@ -9,7 +9,7 @@ class SimpleModal extends Component {
   constructor() {
     super();
     this.state = {
-      showModal: true, // Always show the modal during testing
+      showModal: false, 
       hasCheckedAccount: false,
     };
     this.checkAccountDebounced = debounce(this.checkAccount, 1000); // Debounce for 1000ms = 1s
@@ -20,11 +20,10 @@ class SimpleModal extends Component {
   }
 
   checkAccount = () => {
-    // const account = getAccount();
-    // const hasVisited =
-    //   localStorage.getItem("-kiwi-news-has-visited") || account.isConnected;
-      this.setState({ showModal: true, hasCheckedAccount: true }); // for testing purposed
-    // this.setState({ showModal: !hasVisited, hasCheckedAccount: true });
+    const account = getAccount();
+    const hasVisited =
+      localStorage.getItem("-kiwi-news-has-visited") || account.isConnected;
+    this.setState({ showModal: !hasVisited, hasCheckedAccount: true });
   };
 
   closeModal = () => {
