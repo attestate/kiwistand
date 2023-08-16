@@ -106,7 +106,7 @@ class SimpleModal extends Component {
             </i>
             <br />
             <br />
-            Click any link in the feed to see what we find interesting!
+            Click any link in the feed to see what we find interesting.
             <br />
             <br />
             Have fun!
