@@ -9,8 +9,8 @@ export default html`
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta property="og:image" content="preview.jpeg" />
   <meta property="twitter:image" content="preview.jpeg" />
-  <meta property="twitter:card" content="summary_large_image">
-  <meta property="og:title" content="Kiwi News - handpicked web3 alpha">
+  <meta property="twitter:card" content="summary_large_image" />
+  <meta property="og:title" content="Kiwi News - handpicked web3 alpha" />
   <link rel="apple-touch-icon" sizes="152x152" href="apple-touch-icon.png" />
   <link rel="stylesheet" type="text/css" href="news.css" />
   <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
