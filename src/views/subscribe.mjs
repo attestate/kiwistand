@@ -37,7 +37,7 @@ export default function index(theme) {
                   <div style="text-align: left;">
                     <iframe
                       src="https://paragraph.xyz/@kiwi-weekly/embed?minimal=true"
-                      width="480"
+                      width="360"
                       height="80"
                       frameborder="0"
                       scrolling="no"
@@ -49,7 +49,7 @@ export default function index(theme) {
                   <div style="text-align: left;">
                     <iframe
                       src="https://paragraph.xyz/@kiwi-daily/embed?minimal=true"
-                      width="480"
+                      width="360"
                       height="80"
                       frameborder="0"
                       scrolling="no"
