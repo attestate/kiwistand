@@ -9,7 +9,7 @@ class SimpleModal extends Component {
   constructor() {
     super();
     this.state = {
-      showModal: false,
+      showModal: true, // Always show the modal during testing
       hasCheckedAccount: false,
     };
     this.checkAccountDebounced = debounce(this.checkAccount, 1000); // Debounce for 1000ms = 1s
@@ -20,10 +20,11 @@ class SimpleModal extends Component {
   }
 
   checkAccount = () => {
-    const account = getAccount();
-    const hasVisited =
-      localStorage.getItem("-kiwi-news-has-visited") || account.isConnected;
-    this.setState({ showModal: !hasVisited, hasCheckedAccount: true });
+    // const account = getAccount();
+    // const hasVisited =
+    //   localStorage.getItem("-kiwi-news-has-visited") || account.isConnected;
+      this.setState({ showModal: true, hasCheckedAccount: true }); // for testing purposed
+    // this.setState({ showModal: !hasVisited, hasCheckedAccount: true });
   };
 
   closeModal = () => {
@@ -99,41 +100,62 @@ class SimpleModal extends Component {
         <div style={{ padding: "0 5vw" }}>
           <h2>gm!</h2>
           <p>
-            <i>
-              Kiwi News is <b> the frontpage of web3!</b> Here a community of
-              crypto veterans shares and curates crypto-related stories from
-              around the Internet.
-            </i>
+              Kiwi News is <b> a source of noise-free content for crypto builders. </b>
+              <br />
+              <br />
+              Our community of
+              crypto veterans curates hundreds of links per month. Some of them are big news and mainstream Vitalik essays. And some of them are niche essays found at the edges of the Internet. 
             <br />
             <br />
-            Click any link in the feed to see what we find interesting.
+            Check links in the feed to see what we find interesting!
             <br />
             <br />
             Have fun!
             <br />
             <br />
-            🥝
           </p>
         </div>
         <button
-          onClick={this.closeModal}
-          style={{
-            borderRadius: "2px",
-            padding: "10px 15px",
-            backgroundColor: "black",
-            border: "1px solid black",
-            color: "white",
-            textAlign: "center",
-            textDecoration: "none",
-            cursor: "pointer",
-            width: "90%",
-            margin: "20px auto",
-            display: "block",
-            fontSize: "1.1rem",
-          }}
-        >
-          Got it!
-        </button>
+  onClick={this.closeModal}
+  style={{
+    boxSizing: "border-box",
+    borderRadius: "2px",
+    padding: "10px 15px",
+    backgroundColor: "black",
+    border: "1px solid black",
+    color: "white",
+    textAlign: "center",
+    textDecoration: "none",
+    cursor: "pointer",
+    width: "90%",
+    margin: "20px auto",
+    display: "block",
+    fontSize: "1.1rem",
+  }}
+>
+  Got it!
+</button>
+<a href="/welcome">
+  <button
+    style={{
+      boxSizing: "border-box",
+      borderRadius: "2px",
+      padding: "10px 15px",
+      backgroundColor: "transparent",
+      border: "1px solid black",
+      color: "black",
+      textAlign: "center",
+      textDecoration: "none",
+      cursor: "pointer",
+      width: "90%",
+      margin: "20px auto",
+      display: "block",
+      fontSize: "1.1rem",
+    }}
+  >
+    Learn more about 🥝
+  </button>
+</a>
       </Modal>
     );
   }
