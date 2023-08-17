@@ -1,6 +1,8 @@
 import "vite/modulepreload-polyfill";
 import "@rainbow-me/rainbowkit/styles.css";
 import { watchAccount } from "@wagmi/core";
+import TopBar from './TopBar.jsx';
+
 
 function handleClick(event) {
   const sidebar = document.querySelector(".sidebar");
@@ -270,6 +272,15 @@ async function share(toast, link) {
 }
 
 async function start() {
+  const topBarElement = document.createElement('div');
+  document.body.prepend(topBarElement);
+  const { createRoot } = await import("react-dom/client");
+  const { StrictMode } = await import("react");
+  createRoot(topBarElement).render(
+    <StrictMode>
+      <TopBar />
+    </StrictMode>
+  );
   await addDelegateButton();
   await addConnectedComponents();
   await addModals();
