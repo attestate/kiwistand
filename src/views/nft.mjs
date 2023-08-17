@@ -1,4 +1,4 @@
-//@format
+// @format
 import htm from "htm";
 import vhtml from "vhtml";
 
@@ -41,12 +41,38 @@ export default function (theme) {
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
-            align-items: center;
+            align-items: stretch;
           }
           .image-container,
           .text-container {
             flex: 1;
-            padding: 0 20px 20px 20px;
+						width: 100%;
+          }
+
+          @media (min-width: 768px) {
+          	.image-container,
+            .text-container {
+							padding: 0 20px 20px 20px;
+            }
+						.text-content {
+							font-size: 1rem;
+						}
+          }
+          .text-content {
+            display: flex;
+            Flex-direction: column;
+            width: 100%;
+						font-size: 1rem;
+          }
+          .text-row {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid #000;
+						padding: 15px 5px 15px 5px;
+          }
+          .text-content button {
+            width: 100%;
+						margin-top: 15px;
           }
           .kiwi-nft {
             max-width: 100%;
@@ -87,6 +113,11 @@ export default function (theme) {
             font-family: 'Helvetica', 'Arial', sans-serif;
           }
 
+          .buy-button:disabled {
+            background-color: grey;
+            cursor: not-allowed;
+          }
+
           @media screen and (max-width: 768px) {
             .image-and-text {
               flex-direction: column;
@@ -101,60 +132,36 @@ export default function (theme) {
         <div class="container">
           ${Sidebar()}
           <div id="hnmain">
-          <table
-            border="0"
-            cellpadding="0"
-            cellspacing="0"
-            bgcolor="#f6f6ef"
-          >
-            <tr>
-              ${Header(theme)}
-            </tr>
-            <tr>
-              <td>
-                <div class="inner-container">
-                  <header class="header">
-                    <h1>Welcome to Kiwi News</h1>
-                  </header>
-                  <div class="text-container">
-                      <p style="font-size: 0.9rem;">
-                        Kiwi News is the prime feed for hacker engineers building a decentralized future.
-                      </p>
-                      <p style="font-size: 0.9rem;">
-                        You don’t need to scroll Twitter anymore - all our content is handpicked and curated by the crypto-savvy <a href="/community">Community</a>. 
-                      </p>
-                      <p style="font-size: 0.9rem;">
-                        We all follow <u><a href="/guidelines">Submission Guidelines</a></u> to protect the feed from mid and off-topic content.
-                      </p>
-                      <p style="font-size: 0.9rem;">
-                        We are also credibly neutral - Kiwi News is built on top of the <u><a target="_blank" href="https://github.com/attestate/kiwistand/">Kiwistand P2P network</a></u>.
-                      </p>
-                  </div>
-                  <section>
-                    <div class="image-and-text">
-                      <div class="image-container">
-                        <img
-                          src="animation.gif"
-                          alt="Kiwi News NFT"
-                          class="kiwi-nft"
-                        />
-                        <div class="image-meta">
-                          <span
-                            >Minting Price:
-                            <span> </span>
-                            <strong><nft-price /> ETH</strong></span
-                          >
-                          <span> | </span>
-                          <a
-                            href="https://etherscan.io/address/0xebb15487787cbf8ae2ffe1a6cca5a50e63003786"
-                            style="color: ${
-                              theme.color
-                            }; text-decoration: none;"
-                            >View on Etherscan</a
-                          >
-                        </div>
-                      </div>
-                      <div class="text-container">
+            <table
+              border="0"
+              cellpadding="0"
+              cellspacing="0"
+              bgcolor="#f6f6ef"
+            >
+              <tr>
+                ${Header(theme)}
+              </tr>
+              <tr>
+                <td>
+                  <div class="inner-container">
+                    <header class="header">
+                      <h1>Welcome to Kiwi News</h1>
+                    </header>
+                    <div class="text-container">
+                        <p style="font-size: 0.9rem;">
+                          Kiwi News is the prime feed for hacker engineers building a decentralized future.
+                        </p>
+                        <p style="font-size: 0.9rem;">
+                          You don’t need to scroll Twitter anymore - all our content is handpicked and curated by the crypto-savvy <a href="/community">Community</a>. 
+                        </p>
+                        <p style="font-size: 0.9rem;">
+                          We all follow <u><a href="/guidelines">Submission Guidelines</a></u> to protect the feed from mid and off-topic content.
+                        </p>
+                        <p style="font-size: 0.9rem;">
+                          We are also credibly neutral - Kiwi News is built on top of the <u><a target="_blank" href="https://github.com/attestate/kiwistand/">Kiwistand P2P network</a></u>.
+                        </p>
+                    </div>
+										<div class="text-container">
                       <p style="font-size: 0.9rem;">
                         <b>If you want to join our community, mint the Kiwi NFT to:</b>
                       </p>
@@ -175,83 +182,99 @@ export default function (theme) {
                           <strong>•</strong> Gain access to the exclusive "Kiwi News NFT Holder" Telegram channel.
                         </li>
                       </ul>
-                        <p>
-                          Your contribution supports the project's growth and
-                          its creator team, including
-                          <span> </span>
-                          <a
-                            target="_blank"
-                            href="https://warpcast.com/timdaub"
-                            style="color: ${
-                              theme.color
-                            }; text-decoration: none;"
-                            >@timdaub</a
-                          >
-                          <span>, </span>
-                          <a
-                            target="_blank"
-                            href="https://warpcast.com/macbudkowski"
-                            style="color: ${
-                              theme.color
-                            }; text-decoration: none;"
-                            >@macbudkowski</a
-                          >
-                          <span>, </span>
-                          <a
-                            target="_blank"
-                            href="https://warpcast.com/freeatnet"
-                            style="color: ${
-                              theme.color
-                            }; text-decoration: none;"
-                            >@freeatnet</a
-                          >
-                          <span> and others!</span>
-                        </p>
+                      <p>
+                        Your contribution supports the project's growth and
+                        its creator team, including
+                        <span> </span>
                         <a
-                          style="color:black;"
-                          href="https://zora.co/collect/eth:0xebb15487787cbf8ae2ffe1a6cca5a50e63003786"
                           target="_blank"
+                          href="https://warpcast.com/timdaub"
+                          style="color: ${theme.color}; text-decoration: none;"
+                          >@timdaub</a
                         >
-                          <button class="buy-button" style="display: flex; align-items: center;">
-                            <zora-zorb style="margin-right: 15px;" size="20px" address="0xebb15487787cbf8ae2ffe1a6cca5a50e63003786"></zora-zorb>
-                            <span> Buy on <b>ZORA</b> for <nft-price /> ETH</span>
-                          </button>
-                        </a>
-                        <br />
-                        <span>alternatives: </span>
+                        <span>, </span>
                         <a
-                          style="color:black;"
-                          href="https://mint.fun/0xebb15487787cbf8ae2ffe1a6cca5a50e63003786"
                           target="_blank"
-                          >mint.fun</a
+                          href="https://warpcast.com/macbudkowski"
+                          style="color: ${theme.color}; text-decoration: none;"
+                          >@macbudkowski</a
                         >
-                      </div>
+                        <span>, </span>
+                        <a
+                          target="_blank"
+                          href="https://warpcast.com/freeatnet"
+                          style="color: ${theme.color}; text-decoration: none;"
+                          >@freeatnet</a
+                        >
+                        <span> and others!</span>
+                      </p>
                     </div>
-                  </section>
-                  <div class="text-container">
-                  <p style="font-size: 0.9rem;"><strong>FAQ:</strong></p>
+                    <section>
+                      <div class="image-and-text">
+                        <div class="image-container">
+                          <img
+                            src="animation.gif"
+                            alt="Kiwi News NFT"
+                            class="kiwi-nft"
+                          />
+                        </div>
+                        <div class="text-container" style="display: flex; flex-direction: column; justify-content:end;">
+                          <div class="text-content">
+                            <div class="text-row">
+                              <div>1 NFT</div>
+                              <div>
+																<nft-price /> 
+																<span> ETH</span>
+															</div>
+                            </div>
+                            <div class="text-row">
+                              <div><b>ZORA</b> mint fee</div>
+                              <div>0.000777 ETH</div>
+                            </div>
+                            <div class="text-row">
+                              <div>Total</div>
+                              <div>
+																<nft-price data-fee="0.000777" /> 
+																<span> ETH</span>
+															</div>
+                            </div>
+														<div id="buy-button-container">
+                            	<button class="buy-button" disabled>
+            										Loading...
+      												</button>
+                            </div>
+                          </div>
+                          <br />
+                          <span style="margin-top: 5px;">Want to buy another NFT to support us? 
+                              Buy it directly on <u><a target="_blank" href="https://zora.co/collect/eth:0xebb15487787cbf8ae2ffe1a6cca5a50e63003786">ZORA.co</a></u></span>
+                        </div>
+                      </div>
+                    </section>
+                    <div class="text-container">
+                      <p style="font-size: 0.9rem;"><strong>FAQ:</strong></p>
 
-                  <p style="font-size: 0.9rem;"><strong>Who is picking these links?</strong></p>
-                  <p style="font-size: 0.9rem;">We are a community of 80+ crypto-savvy people who submit and upvote links to create a newsfeed we all want to use. You can learn more about the community <a href="/community"><u>here</a></u>.</p>
+                      <p style="font-size: 0.9rem;"><strong>Who is picking these links?</strong></p>
+                      <p style="font-size: 0.9rem;">We are a community of 80+ crypto-savvy people who submit and upvote links to create a newsfeed we all want to use. You can learn more about the community <a href="/community"><u>here</a></u>.</p>
 
-                  <p style="font-size: 0.9rem;"><strong>Why do we build this?</strong></p>
-                  <p style="font-size: 0.9rem;">We want to create a space where crypto content can thrive. Where creators can reach new audiences and readers can find inspiring texts, podcasts and videos. You can read more about our vision <a href="/why"><u>here</a></u>.</p>
+                      <p style="font-size: 0.9rem;"><strong>Why do we build this?</strong></p>
+                      <p style="font-size: 0.9rem;">We want to create a space where crypto content can thrive. Where creators can reach new audiences and readers can find inspiring texts, podcasts and videos. You can read more about our vision <a href="/why"><u>here</a></u>.</p>
 
-                  <p style="font-size: 0.9rem;"><strong>What is your current roadmap?</strong></p>
-                  <p style="font-size: 0.9rem;">We are working to make the web app experience more seamless. We also plan to ship the mobile app. You can read more about our plans here <a target="_blank" href="https://hackmd.io/egIZnDStR8-zUtQuTUrxyw"><u>here</a></u>.</p>
+                      <p style="font-size: 0.9rem;"><strong>What is your current roadmap?</strong></p>
+                      <p style="font-size: 0.9rem;">We are working to make the web app experience more seamless. We also plan to ship the mobile app. You can read more about our plans here <a target="_blank" href="https://hackmd.io/egIZnDStR8-zUtQuTUrxyw"><u>here</a></u>.</p>
 
-                  <p style="font-size: 0.9rem;"><strong>Where can I share my feature requests?</strong></p>
-                  <p style="font-size: 0.9rem;">If you’re our NFT holder, you can reach out to @timdaub or @macbudkowski to get added to the holders-only Telegram Chat. If you don’t hold our NFT, you can always add your requests <a target="_blank" href="https://kiwinews.sleekplan.app/"><u>here</a></u>.</p>
+                      <p style="font-size: 0.9rem;"><strong>Where can I share my feature requests?</strong></p>
+                      <p style="font-size: 0.9rem;">If you’re our NFT holder, you can reach out to @timdaub or @macbudkowski to get added to the holders-only Telegram Chat. If you don’t hold our NFT, you can always add your requests <a target="_blank" href="https://kiwinews.sleekplan.app/"><u>here</a></u>.</p>
 
-                  <p style="font-size: 0.9rem;"><strong>How do you determine the price of the NFT?</strong></p>
-                  <p style="font-size: 0.9rem;">We have a simple algorithm for price discovery. You can learn more about it <a target="_blanK" href="https://hackmd.io/zmZsDW-XTsizJzChl1n3WA?view"><u>here</a></u>.</p>
+                      <p style="font-size: 0.9rem;"><strong>How do you determine the price of the NFT?</strong></p>
+                      <p style="font-size: 0.9rem;">We have a simple algorithm for price discovery. You can learn more about it <a target="_blanK" href="https://hackmd.io/zmZsDW-XTsizJzChl1n3WA?view"><u>here</a></u>.</p>
+                    </div>
                   </div>
-                </div>
-              </td>
-            </tr>
-          </table>
-          </div></div>
-          ${Footer(theme)}
+                </td>
+              </tr>
+            </table>
+          </div>
+          </div>
+        ${Footer(theme)}
       </body>
     </html>
   `;

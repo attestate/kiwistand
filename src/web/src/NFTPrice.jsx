@@ -1,5 +1,5 @@
 import { useContractRead, WagmiConfig } from "wagmi";
-import { formatEther } from "@ethersproject/units";
+import { parseEther, formatEther } from "@ethersproject/units";
 
 import { client, chains } from "./client.mjs";
 
@@ -97,7 +97,7 @@ const abi = [
 
 const address = "0xebb15487787cbf8ae2ffe1a6cca5a50e63003786";
 
-export const PriceComponent = () => {
+export const PriceComponent = (props) => {
   const salesDetails = useContractRead({
     address,
     abi,
@@ -106,14 +106,18 @@ export const PriceComponent = () => {
   });
 
   const salesPrice = salesDetails?.data?.publicSalePrice || 0;
+  let total = salesPrice;
+  if (props.fee) {
+    total = total.add(parseEther(props.fee));
+  }
 
-  return <span>{formatEther(salesPrice)}</span>;
+  return <span>{formatEther(total)}</span>;
 };
 
-const WrappedPriceComponent = () => {
+const WrappedPriceComponent = (props) => {
   return (
     <WagmiConfig client={client}>
-      <PriceComponent />
+      <PriceComponent {...props} />
     </WagmiConfig>
   );
 };

@@ -56,7 +56,7 @@ async function addSubmitButton(allowlist, delegations, toast) {
           allowlist={allowlist}
           delegations={delegations}
         />
-      </StrictMode>
+      </StrictMode>,
     );
   }
 }
@@ -89,9 +89,23 @@ async function addVotes(allowlistPromise, delegationsPromise, toast) {
             toast={toast}
             editorPicks={editorPicks}
           />
-        </StrictMode>
+        </StrictMode>,
       );
     });
+  }
+}
+
+async function addBuyButton(toast) {
+  const buyButtonContainer = document.querySelector("#buy-button-container");
+  if (buyButtonContainer) {
+    const { createRoot } = await import("react-dom/client");
+    const { StrictMode } = await import("react");
+    const BuyButton = (await import("./BuyButton.jsx")).default;
+    createRoot(buyButtonContainer).render(
+      <StrictMode>
+        <BuyButton toast={toast} />
+      </StrictMode>,
+    );
   }
 }
 
@@ -104,7 +118,7 @@ async function addDelegateButton() {
     createRoot(delegateButtonContainer).render(
       <StrictMode>
         <DelegateButton />
-      </StrictMode>
+      </StrictMode>,
     );
   }
 }
@@ -125,34 +139,34 @@ async function addConnectedComponents() {
   createRoot(connectButton).render(
     <StrictMode>
       <ConnectedConnectButton />
-    </StrictMode>
+    </StrictMode>,
   );
 
   const settings = document.querySelector("#nav-settings");
   createRoot(settings).render(
     <StrictMode>
       <ConnectedSettings />
-    </StrictMode>
+    </StrictMode>,
   );
   const profileLink = document.querySelector("#nav-profile");
   createRoot(profileLink).render(
     <StrictMode>
       <ConnectedProfile />
-    </StrictMode>
+    </StrictMode>,
   );
   const learnMore = document.querySelector("nav-learn-more");
   if (learnMore) {
     createRoot(learnMore).render(
       <StrictMode>
         <ConnectedLearnMore />
-      </StrictMode>
+      </StrictMode>,
     );
   }
   const disconnect = document.querySelector("#nav-disconnect");
   createRoot(disconnect).render(
     <StrictMode>
       <ConnectedDisconnectButton />
-    </StrictMode>
+    </StrictMode>,
   );
 }
 
@@ -165,7 +179,7 @@ async function addModals() {
     createRoot(nftmodal).render(
       <StrictMode>
         <NFTModal />
-      </StrictMode>
+      </StrictMode>,
     );
   }
 
@@ -177,7 +191,7 @@ async function addModals() {
     createRoot(onboarding).render(
       <StrictMode>
         <OnboardingModal />
-      </StrictMode>
+      </StrictMode>,
     );
   }
 }
@@ -194,7 +208,7 @@ async function addToaster() {
   createRoot(newElement).render(
     <StrictMode>
       <Toaster />
-    </StrictMode>
+    </StrictMode>,
   );
   return toast;
 }
@@ -206,10 +220,11 @@ async function addNFTPrice() {
     const { StrictMode } = await import("react");
     const NFTPrice = (await import("./NFTPrice.jsx")).default;
     nftPriceElements.forEach((element) => {
+      const fee = element.getAttribute("data-fee");
       createRoot(element).render(
         <StrictMode>
-          <NFTPrice />
-        </StrictMode>
+          <NFTPrice fee={fee} />
+        </StrictMode>,
       );
     });
   }
@@ -222,7 +237,7 @@ async function share(toast, link) {
       <a
         style={{ display: "flex", alignItems: "center" }}
         href={`https://warpcast.com/~/compose?embeds[]=${encodeURIComponent(
-          link
+          link,
         )}&embeds[]=https://news.kiwistand.com`}
         target="_blank"
       >
@@ -259,6 +274,7 @@ async function start() {
   await addNFTPrice();
   const toast = await addToaster();
 
+  await addBuyButton(toast);
   const { fetchAllowList, fetchDelegations } = await import("./API.mjs");
   const allowlistPromise = fetchAllowList();
   const delegationsPromise = fetchDelegations();
@@ -267,7 +283,7 @@ async function start() {
   await addSubmitButton(
     await allowlistPromise,
     await delegationsPromise,
-    toast
+    toast,
   );
 
   let url = new URL(window.location.href);
