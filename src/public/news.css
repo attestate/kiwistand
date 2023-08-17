@@ -151,6 +151,70 @@ body {
     /* IE8 and below */
      -ms-filter: "progid:DXImageTransform.Microsoft.Matrix(M11=-1, M12=0, M21=0, M22=-1, DX=0, DY=0, SizingMethod='auto expand')";
 }
+
+/* Onoarding page styles */
+
+.section {
+    max-width: 800px; /* Adjust this to set the maximum width of the text */
+    margin: 0 auto;
+  }
+  
+  .flex-container {
+    display: flex;
+    align-items: flex-start; /* Align the top edges of the child elements */
+  }
+  
+  .text-left,
+  .text-right,
+  .image {
+    width: 50%;
+  }
+  
+  .text-left {
+    margin-right: 20px; /* Add right margin to create space between the text and image */
+    text-align: left; 
+  }
+
+  .text-right {
+    margin-left: 20px; /* Add right margin to create space between the text and image */
+    text-align: right; 
+  }
+
+  .text-left h2, .text-right h2 {
+    margin-top: 0;
+    padding: 0;
+    line-height: 1; /* Adjust as needed; this can bring the text closer to the top of the container */
+}
+  
+  .image img {
+    width: 100%;
+    margin: 0;
+  }
+
+  .image-right img {
+    width: 100%;
+    margin: 0;
+    text-align: right;  
+  }
+
+  .image-left img {
+    width: 100%;
+    margin: 0;
+    text-align: left;  
+  }
+  
+  #button-onboarding {
+    border-radius: 2px;
+    padding: 10px 15px;
+    background-color: black;
+    border: 1px solid black;
+    color: white;
+    cursor: pointer;
+    width: 50%;
+    display: inline-block;
+}
+
+  
 /* mobile device */
  @media only screen and (min-width : 300px) and (max-width : 750px) {
      #hnmain {
