@@ -95,15 +95,17 @@ async function addVotes(allowlistPromise, delegationsPromise, toast) {
   }
 }
 
-async function addBuyButton(toast) {
+async function addBuyButton(allowlistPromise, delegationsPromise, toast) {
   const buyButtonContainer = document.querySelector("#buy-button-container");
   if (buyButtonContainer) {
+    const allowlist = await allowlistPromise;
+    const delegations = await delegationsPromise;
     const { createRoot } = await import("react-dom/client");
     const { StrictMode } = await import("react");
     const BuyButton = (await import("./BuyButton.jsx")).default;
     createRoot(buyButtonContainer).render(
       <StrictMode>
-        <BuyButton toast={toast} />
+        <BuyButton allowlist={allowlist} delegations={delegations} toast={toast} />
       </StrictMode>,
     );
   }
@@ -274,11 +276,11 @@ async function start() {
   await addNFTPrice();
   const toast = await addToaster();
 
-  await addBuyButton(toast);
   const { fetchAllowList, fetchDelegations } = await import("./API.mjs");
   const allowlistPromise = fetchAllowList();
   const delegationsPromise = fetchDelegations();
 
+  await addBuyButton(allowlistPromise, delegationsPromise, toast);
   await addVotes(allowlistPromise, delegationsPromise, toast);
   await addSubmitButton(
     await allowlistPromise,

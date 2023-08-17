@@ -9,7 +9,7 @@ import {
 import { utils } from "ethers";
 import { mainnet } from "wagmi/chains";
 import { Wallet } from "@ethersproject/wallet";
-import { create } from "@attestate/delegator2";
+import { eligible, create } from "@attestate/delegator2";
 import { useState, useEffect } from "react";
 import useLocalStorageState from "use-local-storage-state";
 import { RainbowKitProvider, ConnectButton } from "@rainbow-me/rainbowkit";
@@ -135,13 +135,13 @@ const ZORA_MINT_FEE = utils.parseEther("0.000777");
 
 const newKey = Wallet.createRandom();
 const BuyButton = (props) => {
-  const { toast } = props;
+  const { allowlist, delegations, toast } = props;
   const from = useAccount();
   const provider = useProvider();
   const [key, setKey] = useState(null);
   const [payload, setPayload] = useState(null);
   const [keyName, setKeyName] = useState(null);
-  const [minted, setMinted] = useState(false);
+  const [delegated, setDelegated] = useState(false);
   const [localStorageKey, setLocalStorageKey, { removeItem, isPersistent }] =
     useLocalStorageState(keyName, {
       serializer: {
@@ -149,6 +149,11 @@ const BuyButton = (props) => {
         parse: (val) => val,
       },
     });
+  const isEligible = eligible(
+    allowlist,
+    delegations,
+    from.address
+  );
 
   useEffect(() => {
     if (from.address) {
@@ -161,7 +166,7 @@ const BuyButton = (props) => {
       setKey(newKey);
     } else if (localStorageKey) {
       const existingKey = new Wallet(localStorageKey, provider);
-      setMinted(true);
+      setDelegated(true);
     }
   }, [from.address, localStorageKey, provider]);
 
@@ -210,6 +215,13 @@ const BuyButton = (props) => {
       setLocalStorageKey(key.privateKey);
     }
   }, [isSuccess]);
+  if(error && error.toString().includes("insufficient funds")) {
+    return (
+      <button className="buy-button" disabled>
+        Insufficient funds...
+      </button>
+    );
+  }
   if (isSuccess) {
     return (
       <a target="_blank" href={`https://etherscan.io/tx/${data.hash}`}>
@@ -219,7 +231,8 @@ const BuyButton = (props) => {
       </a>
     );
   }
-  if (minted) {
+  const fullySetup = delegated && isEligible;
+  if (fullySetup || isEligible || delegated) {
     return (
       <button className="buy-button" disabled>
         Thanks for minting!
@@ -231,10 +244,10 @@ const BuyButton = (props) => {
     <div>
       <button
         className="buy-button"
-        disabled={minted || !write || isLoading}
+        disabled={!write || isLoading}
         onClick={() => write?.()}
       >
-        {!minted && !isLoading && !isSuccess && <div>Buy Kiwi News Pass</div>}
+        {fullySetup && !isLoading && !isSuccess && <div>Buy Kiwi News Pass</div>}
         {isLoading && <div>Please sign transaction</div>}
       </button>
     </div>
