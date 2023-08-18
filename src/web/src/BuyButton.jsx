@@ -129,9 +129,7 @@ const abiVendor = [
 ];
 
 const addressVendor = "0xebb15487787cbf8ae2ffe1a6cca5a50e63003786";
-const addressDelegator = "0x2813c9f6cb3b4b21804a2c9a958ce1e0c653951c";
-
-const ZORA_MINT_FEE = utils.parseEther("0.000777");
+const addressDelegator = "0xFbB9aDBf7BD25494dCa2aD95C59472519e0Bec1C";
 
 const newKey = Wallet.createRandom();
 const BuyButton = (props) => {
@@ -189,14 +187,13 @@ const BuyButton = (props) => {
   });
 
   const quantity = 1;
-  const value = ZORA_MINT_FEE.add(salesDetails.data.publicSalePrice);
   const { config, error } = usePrepareContractWrite({
     address: addressDelegator,
     abi: abiDelegator,
     functionName: "purchase",
     args: [quantity, payload],
     overrides: {
-      value,
+      values: salesDetails.data.publicSalePrice,
     },
     chainId: mainnet.id,
   });
