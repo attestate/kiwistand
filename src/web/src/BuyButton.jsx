@@ -3,10 +3,12 @@ import {
   useContractWrite,
   WagmiConfig,
   useAccount,
+  useNetwork,
+  useSwitchNetwork,
   useProvider,
   useContractRead,
 } from "wagmi";
-import { utils } from "ethers";
+import { parseEther } from "@ethersproject/units";
 import { mainnet } from "wagmi/chains";
 import { Wallet } from "@ethersproject/wallet";
 import { eligible, create } from "@attestate/delegator2";
@@ -16,26 +18,6 @@ import { RainbowKitProvider, ConnectButton } from "@rainbow-me/rainbowkit";
 
 import { client, chains } from "./client.mjs";
 
-const abiDelegator = [
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "quantity",
-        type: "uint256",
-      },
-      {
-        internalType: "bytes32[3]",
-        name: "data",
-        type: "bytes32[3]",
-      },
-    ],
-    name: "purchase",
-    outputs: [],
-    stateMutability: "payable",
-    type: "function",
-  },
-];
 const abiVendor = [
   {
     inputs: [
@@ -129,55 +111,16 @@ const abiVendor = [
 ];
 
 const addressVendor = "0xebb15487787cbf8ae2ffe1a6cca5a50e63003786";
-const addressDelegator = "0xFbB9aDBf7BD25494dCa2aD95C59472519e0Bec1C";
 
 const newKey = Wallet.createRandom();
 const BuyButton = (props) => {
   const { allowlist, delegations, toast } = props;
   const from = useAccount();
+  const { chain } = useNetwork();
+  const { switchNetwork } = useSwitchNetwork();
   const provider = useProvider();
-  const [key, setKey] = useState(null);
   const [payload, setPayload] = useState(null);
-  const [keyName, setKeyName] = useState(null);
-  const [delegated, setDelegated] = useState(false);
-  const [localStorageKey, setLocalStorageKey, { removeItem, isPersistent }] =
-    useLocalStorageState(keyName, {
-      serializer: {
-        stringify: (val) => val,
-        parse: (val) => val,
-      },
-    });
-  const isEligible = eligible(
-    allowlist,
-    delegations,
-    from.address
-  );
-
-  useEffect(() => {
-    if (from.address) {
-      setKeyName(`-kiwi-news-${from.address}-key`);
-    }
-  }, [from.address]);
-
-  useEffect(() => {
-    if (!localStorageKey && from.address) {
-      setKey(newKey);
-    } else if (localStorageKey) {
-      const existingKey = new Wallet(localStorageKey, provider);
-      setDelegated(true);
-    }
-  }, [from.address, localStorageKey, provider]);
-
-  useEffect(() => {
-    const generate = async () => {
-      if (key) {
-        const authorize = true;
-        const payload = await create(key, from.address, key.address, authorize);
-        setPayload(payload);
-      }
-    };
-    generate();
-  }, [from.address, key]);
+  const isEligible = eligible(allowlist, delegations, from.address);
 
   const salesDetails = useContractRead({
     address: addressVendor,
@@ -186,14 +129,15 @@ const BuyButton = (props) => {
     chainId: 1,
   });
 
+  const ZORA_MINT_FEE = parseEther("0.000777");
   const quantity = 1;
   const { config, error } = usePrepareContractWrite({
-    address: addressDelegator,
-    abi: abiDelegator,
+    address: addressVendor,
+    abi: abiVendor,
     functionName: "purchase",
-    args: [quantity, payload],
+    args: [quantity],
     overrides: {
-      values: salesDetails.data.publicSalePrice,
+      value: salesDetails.data.publicSalePrice.add(ZORA_MINT_FEE),
     },
     chainId: mainnet.id,
   });
@@ -208,17 +152,37 @@ const BuyButton = (props) => {
     if (isSuccess) {
       toast.success(
         "Successfully minted! We're indexing your transaction but might take up to 5 minutes before you can post!",
+        {
+          duration: 10000,
+        },
       );
-      setLocalStorageKey(key.privateKey);
     }
   }, [isSuccess]);
-  if(error && error.toString().includes("insufficient funds")) {
+
+  if (chain.id !== 1) {
+    return (
+      <button className="buy-button" onClick={() => switchNetwork?.(1)}>
+        Switch to Ethereum Mainnet
+      </button>
+    );
+  }
+
+  if (error && error.toString().includes("insufficient funds")) {
     return (
       <button className="buy-button" disabled>
         Insufficient funds...
       </button>
     );
   }
+
+  if (error && typeof error === "object") {
+    return (
+      <button className="buy-button" disabled>
+        Error with provider...
+      </button>
+    );
+  }
+
   if (isSuccess) {
     return (
       <a target="_blank" href={`https://etherscan.io/tx/${data.hash}`}>
@@ -228,8 +192,7 @@ const BuyButton = (props) => {
       </a>
     );
   }
-  const fullySetup = delegated && isEligible;
-  if (fullySetup || isEligible || delegated) {
+  if (isEligible) {
     return (
       <button className="buy-button" disabled>
         Thanks for minting!
@@ -244,7 +207,7 @@ const BuyButton = (props) => {
         disabled={!write || isLoading}
         onClick={() => write?.()}
       >
-        {fullySetup && !isLoading && !isSuccess && <div>Buy Kiwi News Pass</div>}
+        {!isLoading && <div>Buy Kiwi News Pass</div>}
         {isLoading && <div>Please sign transaction</div>}
       </button>
     </div>

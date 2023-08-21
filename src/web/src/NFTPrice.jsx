@@ -107,7 +107,7 @@ export const PriceComponent = (props) => {
 
   const salesPrice = salesDetails?.data?.publicSalePrice || 0;
   let total = salesPrice;
-  if (props.fee) {
+  if (total && props.fee) {
     total = total.add(parseEther(props.fee));
   }
 
