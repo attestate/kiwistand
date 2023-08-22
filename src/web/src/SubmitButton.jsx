@@ -62,7 +62,7 @@ const SubmitButton = (props) => {
       }
       if (titleInput) {
         titleInput.removeEventListener("input", () =>
-          setTitle(titleInput.value)
+          setTitle(titleInput.value),
         );
       }
     };
@@ -75,7 +75,7 @@ const SubmitButton = (props) => {
 
     if (title.length > 80 || url.length > 2048) {
       toast.error(
-        "The title should be no more than 80 characters, and the URL should be no more than 2048 characters."
+        "The title should be no more than 80 characters, and the URL should be no more than 2048 characters.",
       );
       setIsLoading(false);
       return;
@@ -99,7 +99,7 @@ const SubmitButton = (props) => {
       signature = await signer._signTypedData(
         API.EIP712_DOMAIN,
         API.EIP712_TYPES,
-        value
+        value,
       );
     } catch (err) {
       console.log(err);
