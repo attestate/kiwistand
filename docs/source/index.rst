@@ -11,4 +11,5 @@ Table of Contents
 .. toctree::
   :caption: Reference  
 
+  protocol
   http-api
