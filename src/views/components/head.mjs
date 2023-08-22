@@ -12,6 +12,7 @@ export default html`
   <meta property="twitter:card" content="summary_large_image" />
   <meta property="og:title" content="Kiwi News - handpicked web3 alpha" />
   <link rel="apple-touch-icon" sizes="152x152" href="apple-touch-icon.png" />
+  <link rel="manifest" href="pwa.json" />
   <link rel="stylesheet" type="text/css" href="news.css" />
   <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
   <script
