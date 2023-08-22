@@ -15,6 +15,7 @@ const SubmitButton = (props) => {
   const [url, setUrl] = useState("");
   const { isConnected, address } = useAccount();
   const [openedOnce, setOpenedOnce] = useState(false);
+  const [remainingChars, setRemainingChars] = useState(80);
 
   if (!isConnected && !openedOnce) {
     props.setIsOpen(true);
@@ -51,8 +52,12 @@ const SubmitButton = (props) => {
     }
 
     if (titleInput) {
-      setTitle(titleInput.value);
-      titleInput.addEventListener("input", () => setTitle(titleInput.value));
+      setTitle(titleInput.textContent);
+      titleInput.addEventListener("input", () => {
+        setTitle(titleInput.textContent);
+        const remaining = 80 - titleInput.textContent.length;
+        document.querySelector(".remaining").textContent = remaining;
+      });
     }
 
     // Clean up the event listeners
@@ -62,7 +67,7 @@ const SubmitButton = (props) => {
       }
       if (titleInput) {
         titleInput.removeEventListener("input", () =>
-          setTitle(titleInput.value),
+          setTitle(titleInput.textContent),
         );
       }
     };

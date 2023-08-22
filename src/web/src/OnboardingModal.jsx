@@ -117,7 +117,9 @@ function isChromeOnAndroid() {
 
 function isRunningPWA() {
   return (
-    window.navigator.standalone || document.referrer.includes("android-app://")
+    window.matchMedia("(display-mode: standalone)").matches ||
+    window.navigator.standalone ||
+    document.referrer.includes("android-app://")
   );
 }
 
