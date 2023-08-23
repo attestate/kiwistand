@@ -99,7 +99,7 @@ const ShareSVG = () => (
   </svg>
 );
 
-function isSafariOnIOS() {
+export function isSafariOnIOS() {
   const ua = navigator.userAgent;
   const iOS = !!ua.match(/iPad/i) || !!ua.match(/iPhone/i);
   const webkit = !!ua.match(/WebKit/i);
@@ -108,14 +108,14 @@ function isSafariOnIOS() {
   return iOS && webkit && notChrome && notEdge;
 }
 
-function isChromeOnAndroid() {
+export function isChromeOnAndroid() {
   const ua = navigator.userAgent;
   const android = !!ua.match(/Android/i);
   const chrome = !!ua.match(/Chrome/i);
   return android && chrome;
 }
 
-function isRunningPWA() {
+export function isRunningPWA() {
   return (
     window.matchMedia("(display-mode: standalone)").matches ||
     window.navigator.standalone ||
@@ -131,12 +131,20 @@ class SimpleModal extends Component {
       hasCheckedAccount: false,
     };
     this.checkAccountDebounced = debounce(this.checkAccount, 1000); // Debounce for 1000ms = 1s
+    this.openModal = this.openModal.bind(this);
+  }
+  openModal() {
+    this.setState({ showModal: true });
   }
 
   componentDidMount() {
     this.checkAccountDebounced();
+    window.addEventListener("openModal", this.openModal);
   }
 
+  componentWillUnmount() {
+    window.removeEventListener("openModal", this.openModal);
+  }
   checkAccount = () => {
     const account = getAccount();
     const hasVisited =
@@ -153,7 +161,7 @@ class SimpleModal extends Component {
 
   render() {
     if (!this.state.hasCheckedAccount) {
-      return null; // or replace with a loading spinner or similar
+      return null;
     }
 
     const customStyles = {

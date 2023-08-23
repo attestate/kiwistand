@@ -4,6 +4,11 @@ import { useEffect, useState } from "react";
 
 import { client, chains } from "./client.mjs";
 import Bell from "./Bell.jsx";
+import {
+  isSafariOnIOS,
+  isChromeOnAndroid,
+  isRunningPWA,
+} from "./OnboardingModal.jsx";
 
 const shorten = (address) =>
   address.slice(0, 6) +
@@ -14,9 +19,31 @@ const LearnMore = () => {
   const { isConnected } = useAccount();
   const [display, setDisplay] = useState(false);
 
+  const openModal = () => {
+    window.dispatchEvent(new CustomEvent("openModal"));
+  };
+
   useEffect(() => {
     setDisplay(!isConnected);
   }, [isConnected]);
+
+  if (!display && !isRunningPWA() && (isChromeOnAndroid() || isSafariOnIOS())) {
+    return (
+      <div style={{ textAlign: "center", paddingRight: "4px" }}>
+        <span
+          onClick={openModal}
+          style={{
+            cursor: "pointer",
+            textDecoration: "underline",
+            color: "black",
+          }}
+        >
+          Install our <br />
+          app 📲
+        </span>
+      </div>
+    );
+  }
 
   return display ? (
     <div style={{ textAlign: "center", paddingRight: "4px" }}>
