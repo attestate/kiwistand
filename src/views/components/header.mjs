@@ -4,60 +4,71 @@ import htm from "htm";
 import vhtml from "vhtml";
 
 const html = htm.bind(vhtml);
-const header = (theme) => html` <td style="height: 62px;">
-  <nav-onboarding-modal />
-  <nav-nft-modal />
-  <table
-    style="padding:10px 15px 10px 15px;"
-    width="100%"
-    cellspacing="0"
-    cellpadding="0"
-    border="0"
-  >
-    <tbody>
-      <tr>
-        <td style="line-height:12pt; height:10px;">
-          <div
-            style="display: flex; flex-wrap: nowrap; justify-content: space-between; align-items: center;"
-          >
-            <div class="kn-banner-desk">Kiwi News</div>
+const header = (theme) => html` <div id="top-bar">
+    <div id="center-content">
+      <p>We are raising funds via Gitcoin Grants. Check it out.</p>
+      <a
+        href="https://explorer.gitcoin.co/#/round/10/0x8de918f0163b2021839a8d84954dd7e8e151326d/0x8de918f0163b2021839a8d84954dd7e8e151326d-53"
+        target="_blank"
+      >
+        <button>Go to Gitcoin</button>
+      </a>
+    </div>
+  </div>
+  <td style="height: 62px;">
+    <nav-onboarding-modal />
+    <nav-nft-modal />
+    <table
+      style="padding:10px 15px 10px 15px;"
+      width="100%"
+      cellspacing="0"
+      cellpadding="0"
+      border="0"
+    >
+      <tbody>
+        <tr>
+          <td style="line-height:12pt; height:10px;">
             <div
-              class="sidebar-toggle"
-              style="padding: 7px; cursor: pointer; align-items: center; justify-content: center;"
+              style="display: flex; flex-wrap: nowrap; justify-content: space-between; align-items: center;"
             >
-              <svg
-                style="padding-top: 2px;"
-                viewBox="0 0 100 80"
-                width="20"
-                height="20"
+              <div class="kn-banner-desk">Kiwi News</div>
+              <div
+                class="sidebar-toggle"
+                style="padding: 7px; cursor: pointer; align-items: center; justify-content: center;"
               >
-                <rect width="100" height="10"></rect>
-                <rect y="30" width="100" height="10"></rect>
-                <rect y="60" width="100" height="10"></rect>
-              </svg>
-              <span style="color: black; margin-left: 10px;">Menu</span>
-            </div>
+                <svg
+                  style="padding-top: 2px;"
+                  viewBox="0 0 100 80"
+                  width="20"
+                  height="20"
+                >
+                  <rect width="100" height="10"></rect>
+                  <rect y="30" width="100" height="10"></rect>
+                  <rect y="60" width="100" height="10"></rect>
+                </svg>
+                <span style="color: black; margin-left: 10px;">Menu</span>
+              </div>
 
-            <a
-              href="/"
-              style="width: 100%; display: flex; justify-content: center;"
-            >
-              <span style="padding: 0 20px 0 20px" ; class="pagetop">
-                <b class="hnname">
-                  <span>${theme.emoji}</span>
-                </b>
-              </span>
-            </a>
+              <a
+                href="/"
+                style="width: 100%; display: flex; justify-content: center;"
+              >
+                <span style="padding: 0 20px 0 20px" ; class="pagetop">
+                  <b class="hnname">
+                    <span>${theme.emoji}</span>
+                  </b>
+                </span>
+              </a>
 
-            <div
-              style="padding: 7px; display: flex; justify-content: flex-end; width: 100px;"
-            >
-              <div id="connectButton"></div>
+              <div
+                style="padding: 7px; display: flex; justify-content: flex-end; width: 100px;"
+              >
+                <div id="connectButton"></div>
+              </div>
             </div>
-          </div>
-        </td>
-      </tr>
-    </tbody>
-  </table>
-</td>`;
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </td>`;
 export default header;
