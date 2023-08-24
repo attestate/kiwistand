@@ -81,7 +81,7 @@ export default function (theme) {
                     This is how to get 100% from it.
                   </h1>
                   <img
-                    src="kiwi-website.png"
+                    src="kiwiwebsite.png"
                     alt="Kiwi News NFT"
                     style="height: 200px; width: auto;"
                   />
