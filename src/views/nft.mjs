@@ -17,6 +17,34 @@ export default function (theme) {
       <head>
         ${Head}
         <meta name="description" content="Learn about Kiwi News, the prime feed for hacker engineers building a decentralized future. Our content is handpicked and curated by a crypto-savvy community. Join us by minting the Kiwi NFT." />
+        <meta 
+	        property="eth:nft:collection" 
+	        content="Kiwi News Mint Pass"
+        />
+        <meta 
+	        property="eth:nft:contract_address" 
+	        content="0xebb15487787cbf8ae2ffe1a6cca5a50e63003786"
+        />
+        <meta 
+	        property="eth:nft:creator_address" 
+	        content="0xee324c588cef1bf1c1360883e4318834af66366d"
+        />
+        <meta 
+	        property="eth:nft:schema" 
+	        content="erc721"
+        />
+        <meta 
+	        property="eth:nft:media_url" 
+	        content="https://news.kiwistand.com/animation.gif"
+        />
+        <meta 
+	        property="eth:nft:mint_status" 
+	        content="live"
+        />
+        <meta 
+	        property="eth:nft:chain" 
+	        content="ethereum"
+        />
         <style>
           body {
             font-family: Arial, sans-serif;
