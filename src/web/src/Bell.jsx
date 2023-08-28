@@ -1,8 +1,67 @@
 // @format
 import { useEffect, useState } from "react";
-import { useAccount } from "wagmi";
+import { WagmiConfig, useAccount } from "wagmi";
+import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
+import { eligible } from "@attestate/delegator2";
 
 import { fetchNotifications } from "./API.mjs";
+import { getLocalAccount } from "./session.mjs";
+import { client, chains } from "./client.mjs";
+
+const Bell = (props) => {
+  let address;
+  const account = useAccount();
+  const localAccount = getLocalAccount(account.address);
+  if (account.isConnected) {
+    address = account.address;
+  }
+  if (localAccount) {
+    address = localAccount.identity;
+  }
+  const isEligible =
+    address && eligible(props.allowlist, props.delegations, address);
+  const link = `/activity?address=${address}`;
+
+  const [hasNewNotifications, setHasNewNotifications] = useState(false);
+
+  useEffect(() => {
+    if (address) {
+      const fetchAndUpdateNotifications = async () => {
+        const isNew = await fetchNotifications(address);
+        setHasNewNotifications(isNew);
+      };
+      fetchAndUpdateNotifications();
+    }
+  }, [address]);
+
+  if (!isEligible) {
+    return null;
+  }
+
+  return (
+    <a title="Notifications" href={link} style={{ position: "relative" }}>
+      <i className="icon">
+        {window.location.pathname === "/activity" ? (
+          <BellSVGFull />
+        ) : (
+          <BellSVG />
+        )}
+      </i>
+    </a>
+  );
+};
+
+const Form = (props) => {
+  return (
+    <WagmiConfig client={client}>
+      <RainbowKitProvider chains={chains}>
+        <Bell {...props} />
+      </RainbowKitProvider>
+    </WagmiConfig>
+  );
+};
+
+export default Form;
 
 const BellSVGFull = () => (
   <svg
@@ -45,34 +104,3 @@ const BellSVG = () => (
     />
   </svg>
 );
-
-const Bell = ({ to, children }) => {
-  const { address } = useAccount();
-  const link = `${to}?address=${address}`;
-
-  const [hasNewNotifications, setHasNewNotifications] = useState(false);
-
-  useEffect(() => {
-    if (address) {
-      const fetchAndUpdateNotifications = async () => {
-        const isNew = await fetchNotifications(address);
-        setHasNewNotifications(isNew);
-      };
-      fetchAndUpdateNotifications();
-    }
-  }, [address]);
-
-  return (
-    <a title="Notifications" href={link} style={{ position: "relative" }}>
-      <i className="icon">
-        {window.location.pathname === "/activity" ? (
-          <BellSVGFull />
-        ) : (
-          <BellSVG />
-        )}
-      </i>
-    </a>
-  );
-};
-
-export default Bell;

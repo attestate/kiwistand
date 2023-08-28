@@ -15,7 +15,7 @@
     "watch": "nodemon --watch src/views --exec 'npm run dev:anon'",
     "watch:web": "cd src/web && npm run dev",
     "dev:bootstrap": "API_PORT=8000 HTTP_PORT=80 DATA_DIR=bootstrap BIND_ADDRESS_V4=\"127.0.0.1\" IS_BOOTSTRAP_NODE=true USE_EPHEMERAL_ID=false npm run dev",
-    "dev:anon:local": "API_PORT=8000 HTTP_PORT=4000 DATA_DIR=anonlocal BIND_ADDRESS_V4=\"127.0.0.1\" PORT=0 IS_BOOTSTRAP_NODE=false USE_EPHEMERAL_ID=true npm run dev",
+    "dev:anon:local": "API_PORT=8000 HTTP_PORT=4001 DATA_DIR=anonlocal BIND_ADDRESS_V4=\"127.0.0.1\" PORT=0 IS_BOOTSTRAP_NODE=false USE_EPHEMERAL_ID=true npm run dev",
     "dev:anon": "API_PORT=8000 HTTP_PORT=4000 DATA_DIR=anon BIND_ADDRESS_V4=\"0.0.0.0\" PORT=0 IS_BOOTSTRAP_NODE=false USE_EPHEMERAL_ID=true npm run dev",
     "migration:1": "node -r dotenv/config scripts/migration1.mjs"
   },

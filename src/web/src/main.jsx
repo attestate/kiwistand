@@ -115,7 +115,7 @@ async function addBuyButton(allowlistPromise, delegationsPromise, toast) {
   }
 }
 
-async function addDelegateButton() {
+async function addDelegateButton(allowlist, delegations) {
   const delegateButtonContainer = document.querySelector("delegate-button");
   if (delegateButtonContainer) {
     const { createRoot } = await import("react-dom/client");
@@ -123,13 +123,13 @@ async function addDelegateButton() {
     const DelegateButton = (await import("./DelegateButton.jsx")).default;
     createRoot(delegateButtonContainer).render(
       <StrictMode>
-        <DelegateButton />
+        <DelegateButton allowlist={allowlist} delegations={delegations} />
       </StrictMode>,
     );
   }
 }
 
-async function addConnectedComponents() {
+async function addConnectedComponents(allowlist, delegations) {
   const { createRoot } = await import("react-dom/client");
   const { StrictMode } = await import("react");
   const {
@@ -140,25 +140,27 @@ async function addConnectedComponents() {
     ConnectedConnectButton,
     RefreshButton,
   } = await import("./Navigation.jsx");
+  const Bell = (await import("./Bell.jsx")).default;
 
   const connectButton = document.querySelector("#connectButton");
   connectButton.style = "";
   createRoot(connectButton).render(
     <StrictMode>
-      <ConnectedConnectButton />
+      <Bell allowlist={allowlist} delegations={delegations} />
+      <ConnectedConnectButton allowlist={allowlist} delegations={delegations} />
     </StrictMode>,
   );
 
   const settings = document.querySelector("#nav-settings");
   createRoot(settings).render(
     <StrictMode>
-      <ConnectedSettings />
+      <ConnectedSettings allowlist={allowlist} delegations={delegations} />
     </StrictMode>,
   );
   const profileLink = document.querySelector("#nav-profile");
   createRoot(profileLink).render(
     <StrictMode>
-      <ConnectedProfile />
+      <ConnectedProfile allowlist={allowlist} delegations={delegations} />
     </StrictMode>,
   );
   const refreshButton = document.querySelector("a.nav-refresh-button");
@@ -173,7 +175,7 @@ async function addConnectedComponents() {
   if (learnMore) {
     createRoot(learnMore).render(
       <StrictMode>
-        <ConnectedLearnMore />
+        <ConnectedLearnMore allowlist={allowlist} delegations={delegations} />
       </StrictMode>,
     );
   }
@@ -283,8 +285,6 @@ async function share(toast, link) {
 }
 
 async function start() {
-  await addDelegateButton();
-  await addConnectedComponents();
   await addModals();
   await addNFTPrice();
   const toast = await addToaster();
@@ -293,8 +293,13 @@ async function start() {
   const allowlistPromise = fetchAllowList();
   const delegationsPromise = fetchDelegations();
 
+  await addDelegateButton(await allowlistPromise, await delegationsPromise);
   await addBuyButton(allowlistPromise, delegationsPromise, toast);
   await addVotes(allowlistPromise, delegationsPromise, toast);
+  await addConnectedComponents(
+    await allowlistPromise,
+    await delegationsPromise,
+  );
   await addSubmitButton(
     await allowlistPromise,
     await delegationsPromise,

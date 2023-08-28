@@ -1,9 +1,10 @@
 import { WagmiConfig, createClient, useAccount } from "wagmi";
 import { RainbowKitProvider, ConnectButton } from "@rainbow-me/rainbowkit";
 import { useEffect, useState } from "react";
+import { eligible } from "@attestate/delegator2";
 
 import { client, chains } from "./client.mjs";
-import Bell from "./Bell.jsx";
+import { getLocalAccount } from "./session.mjs";
 import {
   isSafariOnIOS,
   isChromeOnAndroid,
@@ -15,8 +16,6 @@ const shorten = (address) =>
   "..." +
   address.slice(address.length - 4, address.length);
 
-// NOTE: &#8203; This weird character is added there on purpose as to trick the
-// component into thinking that it also has text in it.
 export const RefreshButton = () => {
   if (isRunningPWA()) {
     return (
@@ -65,18 +64,25 @@ export const RefreshButton = () => {
 };
 
 const LearnMore = () => {
-  const { isConnected } = useAccount();
-  const [display, setDisplay] = useState(false);
-
   const openModal = () => {
     window.dispatchEvent(new CustomEvent("openModal"));
   };
 
-  useEffect(() => {
-    setDisplay(!isConnected && !isRunningPWA());
-  }, [isConnected]);
+  let address;
+  const account = useAccount();
+  const localAccount = getLocalAccount(account.address);
+  if (account.isConnected) {
+    address = account.address;
+  }
+  if (localAccount) {
+    address = localAccount.identity;
+  }
+  const isEligible =
+    address && eligible(props.allowlist, props.delegations, address);
+  const pwaCandidate =
+    !isRunningPWA() && (isChromeOnAndroid() || isSafariOnIOS());
 
-  if (!display && !isRunningPWA() && (isChromeOnAndroid() || isSafariOnIOS())) {
+  if (isEligible && pwaCandidate) {
     return (
       <div style={{ textAlign: "center", paddingRight: "4px" }}>
         <span
@@ -93,8 +99,9 @@ const LearnMore = () => {
       </div>
     );
   }
+  if (isEligible && !pwaCandidate) return;
 
-  return display ? (
+  return (
     <div style={{ textAlign: "center", paddingRight: "4px" }}>
       <a
         href="/welcome"
@@ -104,7 +111,7 @@ const LearnMore = () => {
         about 🥝
       </a>
     </div>
-  ) : null;
+  );
 };
 
 const SettingsSVGFull = () => (
@@ -180,68 +187,82 @@ const ProfileSVG = () => (
     />
   </svg>
 );
-const Settings = () => {
-  const { address, isConnected } = useAccount();
-  const [display, setDisplay] = useState(false);
+const Settings = (props) => {
+  let address;
+  const account = useAccount();
+  const localAccount = getLocalAccount(account.address);
+  if (account.isConnected) {
+    address = account.address;
+  }
+  if (localAccount) {
+    address = localAccount.identity;
+  }
+  const isEligible =
+    address && eligible(props.allowlist, props.delegations, address);
 
-  useEffect(() => {
-    if (address && isConnected) {
-      setDisplay(true);
-    } else {
-      setDisplay(false);
-    }
-  }, [address, isConnected]);
-
-  return display ? (
-    <a
-      title="Settings"
-      href="/settings"
-      style={{ color: "black", textDecoration: "none", display: "block" }}
-    >
-      <div style={{ display: "flex", alignItems: "center" }}>
-        <div className="svg-container">
-          {window.location.pathname === "/settings" ? (
-            <SettingsSVGFull />
-          ) : (
-            <SettingsSVG />
-          )}
+  if (isEligible || account.isConnected) {
+    return (
+      <a
+        title="Settings"
+        href="/settings"
+        onClick={(e) => !isEligible && e.preventDefault()}
+        style={{
+          color: isEligible ? "black" : "grey",
+          cursor: isEligible ? "pointer" : "not-allowed",
+          textDecoration: "none",
+          display: "block",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <div className="svg-container">
+            {window.location.pathname === "/settings" ? (
+              <SettingsSVGFull />
+            ) : (
+              <SettingsSVG />
+            )}
+          </div>
+          <span>Settings</span>
         </div>
-        <span>Settings</span>
-      </div>
-    </a>
-  ) : null;
+      </a>
+    );
+  }
+  return null;
 };
 
-const Profile = () => {
-  const { address, isConnected } = useAccount();
-  const [display, setDisplay] = useState(false);
+const Profile = (props) => {
+  let address;
+  const account = useAccount();
+  const localAccount = getLocalAccount(account.address);
+  if (account.isConnected) {
+    address = account.address;
+  }
+  if (localAccount) {
+    address = localAccount.identity;
+  }
+  const isEligible =
+    address && eligible(props.allowlist, props.delegations, address);
 
-  useEffect(() => {
-    if (address && isConnected) {
-      setDisplay(true);
-    } else {
-      setDisplay(false);
-    }
-  }, [address, isConnected]);
-
-  return display ? (
-    <a
-      title="Profile"
-      href={"/upvotes?address=" + address}
-      style={{ color: "black", textDecoration: "none", display: "block" }}
-    >
-      <div style={{ display: "flex", alignItems: "center" }}>
-        <div className="svg-container">
-          {window.location.pathname.includes("/upvotes") ? (
-            <ProfileSVGFull />
-          ) : (
-            <ProfileSVG />
-          )}
+  if (isEligible || account.isConnected) {
+    return (
+      <a
+        title="Profile"
+        href={"/upvotes?address=" + address}
+        style={{ color: "black", textDecoration: "none", display: "block" }}
+      >
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <div className="svg-container">
+            {window.location.pathname.includes("/upvotes") ? (
+              <ProfileSVGFull />
+            ) : (
+              <ProfileSVG />
+            )}
+          </div>
+          <span>Profile</span>
         </div>
-        <span>Profile</span>
-      </div>
-    </a>
-  ) : null;
+      </a>
+    );
+  }
+  return null;
 };
 
 const DisconnectSVG = () => (
@@ -361,7 +382,7 @@ const DisconnectButton = () => {
   );
 };
 
-const CustomConnectButton = () => {
+const CustomConnectButton = (props) => {
   const buttonStyle = {
     borderRadius: "2px",
     padding: "5px 15px 5px 15px",
@@ -379,30 +400,26 @@ const CustomConnectButton = () => {
       {({ account, chain, mounted, openConnectModal }) => {
         if (!mounted) return;
         const connected = account && chain;
+        const localAccount = getLocalAccount(account && account.address);
+
+        let address;
         if (connected) {
-          return <Bell to="/activity"></Bell>;
-        } else {
+          address = account.address;
+        }
+        if (localAccount) {
+          address = localAccount.identity;
+        }
+        const isEligible =
+          address && eligible(props.allowlist, props.delegations, address);
+
+        if ((props.required && !connected) || (!connected && !isEligible)) {
           return (
             <a
               title="Connect Wallet"
               style={buttonStyle}
               onClick={openConnectModal}
             >
-              {connected ? (
-                <span style={{ color: "#828282" }}>
-                  <span
-                    style={{
-                      color: "black",
-                      marginRight: "5px",
-                      display: "inline-block",
-                    }}
-                  ></span>
-                </span>
-              ) : (
-                ""
-              )}
-
-              {connected ? shorten(account) : "Connect"}
+              Connect
             </a>
           );
         }
@@ -419,28 +436,28 @@ const Connector = ({ children }) => {
   );
 };
 
-export const ConnectedProfile = () => (
+export const ConnectedProfile = (props) => (
   <Connector>
-    <Profile />
+    <Profile {...props} />
   </Connector>
 );
-export const ConnectedDisconnectButton = () => (
+export const ConnectedDisconnectButton = (props) => (
   <Connector>
-    <DisconnectButton />
+    <DisconnectButton {...props} />
   </Connector>
 );
-export const ConnectedConnectButton = () => (
+export const ConnectedConnectButton = (props) => (
   <Connector>
-    <CustomConnectButton />
+    <CustomConnectButton {...props} />
   </Connector>
 );
-export const ConnectedSettings = () => (
+export const ConnectedSettings = (props) => (
   <Connector>
-    <Settings />
+    <Settings {...props} />
   </Connector>
 );
-export const ConnectedLearnMore = () => (
+export const ConnectedLearnMore = (props) => (
   <Connector>
-    <LearnMore />
+    <LearnMore {...props} />
   </Connector>
 );

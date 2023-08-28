@@ -20,9 +20,9 @@ const PlusSVG = () => (
       rx="8"
       fill="none"
       stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="16"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="16"
     />
     <line
       x1="88"
@@ -31,9 +31,9 @@ const PlusSVG = () => (
       y2="128"
       fill="none"
       stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="16"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="16"
     />
     <line
       x1="128"
@@ -42,9 +42,9 @@ const PlusSVG = () => (
       y2="168"
       fill="none"
       stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="16"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="16"
     />
   </svg>
 );
@@ -73,17 +73,17 @@ const ShareSVG = () => (
       d="M176,104h24a8,8,0,0,1,8,8v96a8,8,0,0,1-8,8H56a8,8,0,0,1-8-8V112a8,8,0,0,1,8-8H80"
       fill="none"
       stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="16"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="16"
     />
     <polyline
       points="88 64 128 24 168 64"
       fill="none"
       stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="16"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="16"
     />
     <line
       x1="128"
@@ -92,9 +92,9 @@ const ShareSVG = () => (
       y2="136"
       fill="none"
       stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="16"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="16"
     />
   </svg>
 );
@@ -149,7 +149,7 @@ class SimpleModal extends Component {
     const account = getAccount();
     const hasVisited =
       localStorage.getItem("-kiwi-news-has-visited") ||
-      account.isConnected ||
+      (account && account.isConnected) ||
       isRunningPWA();
     this.setState({ showModal: !hasVisited, hasCheckedAccount: true });
   };

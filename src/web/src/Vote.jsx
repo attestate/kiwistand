@@ -9,6 +9,7 @@ import * as API from "./API.mjs";
 import { client, chains } from "./client.mjs";
 import NFTModal from "./NFTModal.jsx";
 import theme from "./theme.mjs";
+import { getLocalAccount } from "./session.mjs";
 
 const Container = (props) => {
   const [modalIsOpen, setIsOpen] = useState(false);
@@ -32,12 +33,21 @@ const Container = (props) => {
 const Vote = (props) => {
   const { toast } = props;
   const value = API.messageFab(props.title, props.href);
+
+  let address;
   const account = useAccount();
-  const localKey = localStorage.getItem(`-kiwi-news-${account.address}-key`);
+  const localAccount = getLocalAccount(account.address);
+  if (account.isConnected) {
+    address = account.address;
+  }
+  if (localAccount) {
+    address = localAccount.identity;
+  }
+
   const provider = useProvider();
   const result = useSigner();
   const [hasUpvoted, setHasUpvoted] = useState(
-    props.upvoters.includes(account.address)
+    props.upvoters.includes(address),
   );
   const [upvotes, setUpvotes] = useState(props.upvoters.length);
   const [allowlist, setAllowlist] = useState(null);
@@ -57,8 +67,8 @@ const Vote = (props) => {
   });
 
   let signer, isError, isLocal;
-  if (localKey) {
-    signer = new Wallet(localKey, provider);
+  if (localAccount && localAccount.privateKey) {
+    signer = new Wallet(localAccount.privateKey, provider);
     isLocal = true;
   } else {
     signer = result.data;
@@ -73,7 +83,7 @@ const Vote = (props) => {
     const signature = await signer._signTypedData(
       API.EIP712_DOMAIN,
       API.EIP712_TYPES,
-      value
+      value,
     );
     const response = await API.send(value, signature);
 
@@ -104,20 +114,20 @@ const Vote = (props) => {
             <div
               onClick={async (e) => {
                 if (hasUpvoted || isLoading) return;
-                if (!connected) {
+
+                const isEligible =
+                  signer &&
+                  eligible(allowlist, delegations, await signer.getAddress());
+
+                if (!connected && !isEligible) {
                   openConnectModal();
                   return;
                 }
-
-                const isEligible = eligible(
-                  allowlist,
-                  delegations,
-                  await signer.getAddress()
-                );
-                if (!isEligible) {
+                if (connected && !isEligible) {
                   props.setIsOpen(true);
                   return;
                 }
+
                 handleSubmit(e);
               }}
               className={`votearrow ${isLoading ? "pulsate" : ""}`}

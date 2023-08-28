@@ -15,6 +15,7 @@ import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import useLocalStorageState from "use-local-storage-state";
 
 import { client, chains } from "./client.mjs";
+import { ConnectedConnectButton } from "./Navigation.jsx";
 
 const abi = [
   {
@@ -41,7 +42,7 @@ const abi = [
 
 const address = "0x08b7ECFac2c5754ABafb789c84F8fa37c9f088B0";
 const newKey = Wallet.createRandom();
-const DelegateButton = () => {
+const DelegateButton = (props) => {
   const { chain } = useNetwork();
   const from = useAccount();
   const { switchNetwork } = useSwitchNetwork();
@@ -57,8 +58,8 @@ const DelegateButton = () => {
     keyName,
     {
       serializer: {
-        stringify: val => val,
-        parse: val => val,
+        stringify: (val) => val,
+        parse: (val) => val,
       },
     },
   );
@@ -105,7 +106,15 @@ const DelegateButton = () => {
     wallet = new Wallet(key, provider);
   }
 
-  if (!from.address) return <b>Please connect your wallet</b>;
+  if (!from.address) {
+    return (
+      <ConnectedConnectButton
+        required
+        allowlist={props.allowlist}
+        delegations={props.delegations}
+      />
+    );
+  }
   if (key && wallet) {
     const disabled = confirmation !== "delete key";
     return (
@@ -140,7 +149,7 @@ const DelegateButton = () => {
           <input
             type="text"
             value={confirmation}
-            onChange={e => setConfirmation(e.target.value)}
+            onChange={(e) => setConfirmation(e.target.value)}
           />
           <br />
           <br />
@@ -189,12 +198,12 @@ const DelegateButton = () => {
   );
 };
 
-const Form = () => {
+const Form = (props) => {
   const { isConnected } = useAccount();
   return (
     <WagmiConfig client={client}>
       <RainbowKitProvider chains={chains}>
-        <DelegateButton />
+        <DelegateButton {...props} />
       </RainbowKitProvider>
     </WagmiConfig>
   );

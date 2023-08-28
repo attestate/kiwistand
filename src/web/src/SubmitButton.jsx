@@ -7,37 +7,40 @@ import { eligible } from "@attestate/delegator2";
 import * as API from "./API.mjs";
 import { client, chains } from "./client.mjs";
 import NFTModal from "./NFTModal.jsx";
+import { getLocalAccount } from "./session.mjs";
+import { ConnectedConnectButton } from "./Navigation.jsx";
 
 const SubmitButton = (props) => {
   const { toast } = props;
   const [isLoading, setIsLoading] = useState(false);
   const [title, setTitle] = useState("");
   const [url, setUrl] = useState("");
-  const { isConnected, address } = useAccount();
   const [openedOnce, setOpenedOnce] = useState(false);
   const [remainingChars, setRemainingChars] = useState(80);
 
-  if (!isConnected && !openedOnce) {
+  let address;
+  const account = useAccount();
+  const localAccount = getLocalAccount(account.address);
+  if (account.isConnected) {
+    address = account.address;
+  }
+  if (localAccount) {
+    address = localAccount.identity;
+  }
+  const isEligible =
+    address && eligible(props.allowlist, props.delegations, address);
+
+  if (!isEligible && !openedOnce) {
     props.setIsOpen(true);
     setOpenedOnce(true);
   }
 
-  if (isConnected && !openedOnce) {
-    const { allowlist, delegations } = props;
-    const isEligible = eligible(allowlist, delegations, address);
-    if (!isEligible) {
-      props.setIsOpen(true);
-      setOpenedOnce(true);
-    }
-  }
-
-  const localKey = localStorage.getItem(`-kiwi-news-${address}-key`);
   const provider = useProvider();
   const result = useSigner();
 
   let signer, isError;
-  if (localKey) {
-    signer = new Wallet(localKey, provider);
+  if (localAccount && localAccount.privateKey) {
+    signer = new Wallet(localAccount.privateKey, provider);
   } else {
     signer = result.data;
     isError = result.isError;
@@ -60,7 +63,6 @@ const SubmitButton = (props) => {
       });
     }
 
-    // Clean up the event listeners
     return () => {
       if (urlInput) {
         urlInput.removeEventListener("input", () => setUrl(urlInput.value));
@@ -97,7 +99,7 @@ const SubmitButton = (props) => {
     }
 
     setIsLoading(true);
-    if (!localKey) toast("Please sign the message in your wallet!");
+    if (!localAccount) toast("Please sign the message in your wallet!");
 
     let signature;
     try {
@@ -133,19 +135,30 @@ const SubmitButton = (props) => {
     cursor: "pointer",
   };
 
+  if (!account.isConnected && !isEligible) {
+    return (
+      <ConnectedConnectButton
+        allowlist={props.allowlist}
+        delegations={props.delegations}
+      />
+    );
+  }
+
   return (
-    <button
-      style={buttonStyles}
-      onClick={handleClick}
-      disabled={isLoading && !isError}
-    >
-      {isLoading && !isError ? "Please confirm signature..." : "Submit"}
-    </button>
+    <div>
+      {!isEligible && "You need to buy our NFT to submit and upvote..."}
+      <button
+        style={buttonStyles}
+        onClick={handleClick}
+        disabled={(isLoading && !isError) || !isEligible}
+      >
+        {isLoading && !isError ? "Please confirm signature..." : "Submit"}
+      </button>
+    </div>
   );
 };
 
 const Form = (props) => {
-  const { isConnected } = useAccount();
   const [modalIsOpen, setIsOpen] = useState(false);
 
   return (
