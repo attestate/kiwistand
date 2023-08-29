@@ -96,37 +96,96 @@ In step 1, as outlined already in :ref:`set-recon-schema`:
 
 Steps: 
 
-1. The algorithm starts with one node kicking of the process in step 1 (:ref:`set-recon-algo`) by "Node A" sending over their initial bitmap to "Node B." "Node B" then compares the received bitmap with its own local bitmap and finds that messages "E" and "F" are missing from "Node A"'s database.
+1. The algorithm starts with one node kicking off the process in step 1 (:ref:`set-recon-algo`) by "Node A" sending over their initial bitmap to "Node B." "Node B" then compares the received bitmap with its own local bitmap and finds that messages "E" and "F" are missing from "Node A"'s database.
 2. In step 2, "Node B" therefore sends "E" and "F" to "Node A."
 3. And "Node B" then also sends its own Bitmap in step 3 to "Node A," where it essentially does the same comparison to find that messages "A", "B", "C" and "D" are missing from "Node B".
 4. So "Node A" now sends the missing messages to "Node B".
-5. The process is then likely repeated, but but "Node A" and "Node B" will find that their bitmaps match, and so no further synchronization of messages is deemed necessary.
+5. After some timeout, the process is then repeated, but "Node A" and "Node B" will find that their bitmaps match, and so no further synchronization of messages is deemed necessary.
 
 Now, considering this algorithm's simplicity, it naturally comes with rather significant drawbacks. And going through them in the following paragraphs will help us understand why using bitmaps to synchronize nodes over networks isn't a great idea.
 
 Drawbacks of bitmaps
 ....................
 
-- Modern hash functions like keccak-256 produce an output between 0 and 2^256 - 1 which would make a bitmap of their size incredbily huge and impractical to share between nodes over a network. In fact, it would be significantly more bandwidth efficient to re-download each node's entire database on each re-synchronization.
-- Even for more storage-efficient implementations of bitmaps, for example, bloom filters, their complexity for a large number of messages will grow linearly as for each synchronization a node has to hash and compare their local bloom filter (and hence all its messages) with that of the foreign node's.
+- Message sets are usually user-defined, meaning we cannot predict the set's size when constructing the algorithm, so assuming a fixed-length set size isn't practical.
+- Modern hash functions like keccak-256 produce an output between 0 and :math:`2^{256} - 1` which would make a bitmap of their size incredbily huge and impractical to share between nodes over a network. In fact, it would be significantly more bandwidth efficient to re-download each node's entire database on each re-synchronization.
+- But even more storage-efficient implementations of bitmaps, as for example, bloom filters don't work well as they are probabilistic (they can have false positives) and since they potentially require the remote node to re-validate its entire database upon synchronization.
+
+Hence, for set reconciliation, we favor a data structure that is deterministic and doesn't have over-linear complexity growth: Merkle trees.
 
 Using Merkle Trees for Set Reconciliation
 _________________________________________
 
+Let's now consider an example that models the Kiwi News Protocol set reconciliation algorithm as close as possible.
+
+We assume that there is a set of 8 or more messages, with the initial ones being "A", "B", ... "H". We also consider there to be the above-introduced hash function ``hash("A") == 0x0``, ``hash("B") == 0x1`` etc.
+
+However, the data structure we're now using is a Merkle trie where a message is inserted at a leaf's location based on its identity, with "A" being the left most leaf as its identity is ``0x0``, "B" being the second left most leaf (``0x1``) and so on.
+
 .. mermaid::
 
-   graph TD
-      A_0[A<sub>0</sub><br>0xabc] --> A_1,1[A<sub>1,1</sub><br>0xdef]
-      A_0 --> A_1,2[A<sub>1,2</sub><br>0xghi]
-      A_1,1 --> A_2,1[A<sub>2,1</sub><br>0xjkl]
-      A_1,1 --> A_2,2[A<sub>2,2</sub><br>0xlmn]
-      A_1,2 --> A_2,3[A<sub>2,3</sub><br>0xopq]
-      A_1,2 --> A_2,4[A<sub>2,4</sub><br>0x123]
-      A_2,1 --> A_3,1[A<sub>3,1</sub><br>0x456]
-      A_2,1 --> A_3,2[A<sub>3,2</sub><br>0x789]
-      A_2,2 --> A_3,3[A<sub>3,3</sub><br>0x890]
-      A_2,2 --> A_3,4[A<sub>3,4</sub><br>0x901]
-      A_2,3 --> A_3,5[A<sub>3,5</sub><br>0x012]
-      A_2,3 --> A_3,6[A<sub>3,6</sub><br>0x234]
-      A_2,4 --> A_3,7[A<sub>3,7</sub><br>0x567]
-      A_2,4 --> A_3,8[A<sub>3,8</sub><br>0x890]
+    graph TD
+     A_0[A<sub>0</sub><br>0xabc] --> A_1,1[A<sub>1,1</sub><br>0xdef]
+     A_0 --> A_1,2[A<sub>1,2</sub><br>0xghi]
+     A_1,1 --> A_2,1[A<sub>2,1</sub><br>0xjkl]
+     A_1,1 --> A_2,2[A<sub>2,2</sub><br>0xlmn]
+     A_1,2 --> A_2,3[A<sub>2,3</sub><br>0xopq]
+     A_1,2 --> A_2,4[A<sub>2,4</sub><br>0xprs]
+     A_2,1 --> A("A"<br>0x0)
+     A_2,1 --> B("B"<br>0x1)
+     A_2,2 --> C("C"<br>0x2)
+     A_2,2 --> D("D"<br>0x3)
+     A_2,3 --> E("E"<br>0x4)
+     A_2,3 --> F("F"<br>0x5)
+     A_2,4 --> G("G"<br>0x6)
+     A_2,4 --> H("H"<br>0x7)
+
+Then, let's assume that this "Tree A" is on "Node A" and that there is a different "Tree B" on "Node B". "Node B"'s tree has only messages from "A" to F", so it is behind and needs to synchronize. Below is a visualization "Node B"'s tree.
+
+.. mermaid::
+   
+ graph TD
+     B_0[B<sub>0</sub><br>0xuvw] --> B_1,1[B<sub>1,1</sub><br>0xdef]
+     B_0 --> B_2,3[B<sub>2,3</sub><br>0x123]
+     B_1,1 --> B_2,1[B<sub>2,1</sub><br>0xjkl]
+     B_1,1 --> B_2,2[B<sub>2,2</sub><br>0xlmn]
+     B_2,1 --> A("A"<br>0x0)
+     B_2,1 --> B("B"<br>0x1)
+     B_2,2 --> C("C"<br>0x2)
+     B_2,2 --> D("D"<br>0x3)
+     B_2,3 --> E("E"<br>0x4)
+     B_2,3 --> F("F"<br>0x5)
+
+     style B_0 fill:#FF3399
+     style B_1,1 fill:#FF3399
+     style B_2,1 fill:#FF3399
+     style B_2,2 fill:#FF3399
+     style B_2,3 fill:#FF3399
+     style A fill:#FF3399
+     style B fill:#FF3399
+     style C fill:#FF3399
+     style D fill:#FF3399
+     style E fill:#FF3399
+     style F fill:#FF3399
+
+To visualize the process within a peer to peer network, it is now useful to consider a mesh of nodes where "Node A" (but also all other nodes) periodically broadcast their latest tree root hash to all other nodes (:ref:`set-recon-broadcast`).
+
+.. figure:: _static/set-recon-broadcast.svg
+   :name: set-recon-broadcast
+
+   Figure 5
+
+As can be seen on the right of :ref:`set-recon-broadcast`, each node will then internally compare the received tree root hash with the local tree hash, but in our example only "Node B" will find that it's tree root hash is different from "Node A".
+
+So then let's actually dive into the reconciliation algorithm as a sequence of events. Below (:ref:`set-recon-merkle-1-2`) we can see in step 1 how "Node A" broadcasts its Merkle tree root and how "Node B" internally compares it to its root hash.
+
+.. figure:: _static/set-recon-merkle-1-2.svg
+   :name: set-recon-merkle-1-2
+
+   Figure 6
+
+Through observing the payload that "Node B" sends to "Node A", we can also understand the actual practical functionality of the algorithm: Namely that upon comparing the root nodes (A\ :sub:`0` and B\ :sub:`0`), the receiving node then "dives" a level deeper in the trie and sends out the level 1 nodes B\ :sub:`1,1` and B\ :sub:`1,2` for "Node A" to search them in its tree.
+
+.. note::
+
+   These docs are a work in progress and to be continued...
