@@ -7,8 +7,11 @@ export default html`
   <meta charset="utf-8" />
   <meta name="referrer" content="origin" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta property="og:image" content="preview.jpeg" />
-  <meta property="twitter:image" content="preview.jpeg" />
+  <meta property="og:image" content="https://news.kiwistand.com/preview.jpeg" />
+  <meta
+    property="twitter:image"
+    content="https://news.kiwistand.com/preview.jpeg"
+  />
   <meta property="twitter:card" content="summary_large_image" />
   <meta property="og:title" content="Kiwi News - handpicked web3 alpha" />
   <link rel="apple-touch-icon" sizes="152x152" href="apple-touch-icon.png" />
