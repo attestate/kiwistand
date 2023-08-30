@@ -4,7 +4,7 @@ import vhtml from "vhtml";
 
 const html = htm.bind(vhtml);
 
-const style = "width: 1rem; position: relative; top: 0.2rem;";
+const style = "width: 1rem; position: relative; top: 0.15rem;";
 
 const broadcastSVG = html`
   <svg
@@ -149,7 +149,7 @@ const secondheader = (theme, site) => html`
         ${site === "top" || site === "new" || site === "alltime"
           ? html` <a href="/">
               <button
-                style=${`font-size: 1.01rem; border-radius: 2px; cursor: pointer; padding: 5px 10px 5px 10px; background-color: transparent; border: 1px solid ${
+                style=${`font-size: 1.01rem; border-radius: 2px; cursor: pointer; padding: 5px 15px; background-color: transparent; border: 1px solid ${
                   site === "top" ? theme.color : "#7f8c8d"
                 }; color: ${site === "top" ? theme.color : "#7f8c8d"};`}
               >
@@ -167,7 +167,7 @@ const secondheader = (theme, site) => html`
                 : "/nfts"}"
             >
               <button
-                style=${`font-size: 1.01rem; margin-left: 10px; cursor: pointer; border-radius: 2px; padding: 5px 7px; background-color: transparent; border: 1px solid ${
+                style=${`font-size: 1.01rem; margin-left: 10px; cursor: pointer; border-radius: 2px; padding: 5px 15px; background-color: transparent; border: 1px solid ${
                   site === "new" || site === "nfts" ? theme.color : "#7f8c8d"
                 }; color: ${
                   site === "new" || site === "nfts" ? theme.color : "#7f8c8d"
@@ -180,7 +180,7 @@ const secondheader = (theme, site) => html`
         ${site === "top" || site === "new" || site === "alltime"
           ? html` <a href="/alltime">
               <button
-                style=${`font-size: 1.01rem; margin-left: 10px; cursor: pointer; border-radius: 2px; padding: 5px 7px; background-color: transparent; border: 1px solid ${
+                style=${`font-size: 1.01rem; margin-left: 10px; cursor: pointer; border-radius: 2px; padding: 5px 15px; background-color: transparent; border: 1px solid ${
                   site === "alltime" ? theme.color : "#7f8c8d"
                 }; color: ${site === "alltime" ? theme.color : "#7f8c8d"};`}
               >
@@ -188,6 +188,7 @@ const secondheader = (theme, site) => html`
               </button>
             </a>`
           : ""}
+        <a class="nav-refresh-button"></a>
       </div>
       <nav-learn-more />
     </div>

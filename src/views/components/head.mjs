@@ -6,7 +6,11 @@ const html = htm.bind(vhtml);
 export default html`
   <meta charset="utf-8" />
   <meta name="referrer" content="origin" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, maximum-scale=1,
+ user-scalable=0"
+  />
   <meta property="og:image" content="https://news.kiwistand.com/preview.jpeg" />
   <meta
     property="twitter:image"

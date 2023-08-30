@@ -105,7 +105,11 @@ async function addBuyButton(allowlistPromise, delegationsPromise, toast) {
     const BuyButton = (await import("./BuyButton.jsx")).default;
     createRoot(buyButtonContainer).render(
       <StrictMode>
-        <BuyButton allowlist={allowlist} delegations={delegations} toast={toast} />
+        <BuyButton
+          allowlist={allowlist}
+          delegations={delegations}
+          toast={toast}
+        />
       </StrictMode>,
     );
   }
@@ -134,6 +138,7 @@ async function addConnectedComponents() {
     ConnectedLearnMore,
     ConnectedDisconnectButton,
     ConnectedConnectButton,
+    RefreshButton,
   } = await import("./Navigation.jsx");
 
   const connectButton = document.querySelector("#connectButton");
@@ -156,6 +161,14 @@ async function addConnectedComponents() {
       <ConnectedProfile />
     </StrictMode>,
   );
+  const refreshButton = document.querySelector("a.nav-refresh-button");
+  if (refreshButton) {
+    createRoot(refreshButton).render(
+      <StrictMode>
+        <RefreshButton />
+      </StrictMode>,
+    );
+  }
   const learnMore = document.querySelector("nav-learn-more");
   if (learnMore) {
     createRoot(learnMore).render(
