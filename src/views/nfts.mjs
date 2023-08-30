@@ -46,6 +46,7 @@ export default async function (trie, theme) {
 
   let counts = count(leaves);
   let sortedCounts = counts.sort((a, b) => b.timestamp - a.timestamp);
+  sortedCounts = sortedCounts.filter((item) => item.title.startsWith("NFT:"));
   let slicedCounts = sortedCounts.slice(0, 40);
 
   let stories = [];
@@ -69,14 +70,14 @@ export default async function (trie, theme) {
     });
   }
 
-  const path = "/new";
+  const path = "/nfts";
   return html`
     <html lang="en" op="news">
       <head>
         ${Head}
         <meta
           name="description"
-          content="Explore the latest news in the decentralized world on Kiwi News. Stay updated with fresh content handpicked by crypto veterans."
+          content="Explore the latest curated NFTS on Kiwi News. Stay updated with fresh content handpicked by crypto veterans."
         />
       </head>
       <body>
@@ -88,12 +89,23 @@ export default async function (trie, theme) {
                 ${Header(theme)}
               </tr>
               <tr>
-                ${ThirdHeader(theme, "new")}
+                ${ThirdHeader(theme, "nfts")}
               </tr>
               <tr>
-                ${SecondHeader(theme, "new")}
+                ${SecondHeader(theme, "nfts")}
               </tr>
               <tr class="spacer" style="height:15px"></tr>
+              <tr>
+                <td>
+                  <p
+                    style="color: black; padding: 0 10px 0 10px; font-size: 12pt;"
+                  >
+                    <span
+                      >Post to this feed by starting your title with "NFT:"
+                    </span>
+                  </p>
+                </td>
+              </tr>
               ${stories.map(Row())}
               <tr class="spacer" style="height:15px"></tr>
               <tr

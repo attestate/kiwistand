@@ -14,6 +14,7 @@ import privacy from "./views/privacy.mjs";
 import guidelines from "./views/guidelines.mjs";
 import onboarding from "./views/onboarding.mjs";
 import nft from "./views/nft.mjs";
+import nfts from "./views/nfts.mjs";
 import subscribe from "./views/subscribe.mjs";
 import upvotes from "./views/upvotes.mjs";
 import community from "./views/community.mjs";
@@ -70,6 +71,10 @@ export async function launch(trie, libp2p) {
     const content = await newest(trie, reply.locals.theme);
     return reply.status(200).type("text/html").send(content);
   });
+  app.get("/nfts", async (request, reply) => {
+    const content = await nfts(trie, reply.locals.theme);
+    return reply.status(200).type("text/html").send(content);
+  });
   app.get("/alltime", async (request, reply) => {
     let page = parseInt(request.query.page);
     if (isNaN(page) || page < 1) {
@@ -102,7 +107,7 @@ export async function launch(trie, libp2p) {
     const { content, lastUpdate } = await activity(
       trie,
       reply.locals.theme,
-      request.query.address
+      request.query.address,
     );
     if (lastUpdate) {
       reply.setHeader("X-LAST-UPDATE", lastUpdate);
@@ -141,7 +146,7 @@ export async function launch(trie, libp2p) {
     const content = await upvotes(
       trie,
       reply.locals.theme,
-      request.query.address
+      request.query.address,
     );
     return reply.status(200).type("text/html").send(content);
   });
@@ -153,7 +158,6 @@ export async function launch(trie, libp2p) {
   });
 
   app.listen(env.HTTP_PORT, () =>
-    log(`Launched HTTP server at port "${env.HTTP_PORT}"`)
+    log(`Launched HTTP server at port "${env.HTTP_PORT}"`),
   );
 }
-

@@ -578,3 +578,7 @@ body {
   padding: 5px;
   color: white;
 }
+
+.filter-tab:hover {
+  background-color: rgba(0,0,0,0.035);
+}
