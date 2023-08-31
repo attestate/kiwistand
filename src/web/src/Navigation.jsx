@@ -63,7 +63,7 @@ export const RefreshButton = () => {
   }
 };
 
-const LearnMore = () => {
+const LearnMore = (props) => {
   const openModal = () => {
     window.dispatchEvent(new CustomEvent("openModal"));
   };
@@ -82,7 +82,7 @@ const LearnMore = () => {
   const pwaCandidate =
     !isRunningPWA() && (isChromeOnAndroid() || isSafariOnIOS());
 
-  if (isEligible && pwaCandidate) {
+  if (pwaCandidate) {
     return (
       <div style={{ textAlign: "center", paddingRight: "4px" }}>
         <span
@@ -99,7 +99,8 @@ const LearnMore = () => {
       </div>
     );
   }
-  if (isEligible && !pwaCandidate) return;
+
+  if (isRunningPWA() || isEligible) return;
 
   return (
     <div style={{ textAlign: "center", paddingRight: "4px" }}>
