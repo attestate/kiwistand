@@ -13,7 +13,9 @@ gtag("config", key, {
 });
 
 const schema = /^-kiwi-news-(0x[a-fA-F0-9]{40})-key$/;
-const usesDelegation = Object.keys(localStorage).some(key => schema.test(key));
+const usesDelegation = Object.keys(localStorage).some((key) =>
+  schema.test(key),
+);
 gtag("config", key, {
   uses_delegation: usesDelegations ? "Delegation" : "Wallet Connection",
 });
