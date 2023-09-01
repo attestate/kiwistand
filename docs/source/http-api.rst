@@ -1,5 +1,5 @@
 HTTP API
-===========================
+========
 
 This documentation outlines the HTTP API for the Kiwistand P2P node.
 
@@ -20,7 +20,8 @@ For news.kiwistand.com it is at 8000.
 JSON Schemas
 ------------
 
-**Pagination**
+Pagination
+..........
 
 .. code-block:: javascript
 
@@ -41,7 +42,11 @@ JSON Schemas
     "required": ["from", "amount"]
   }
 
-**Message**
+.. _message-schema:
+
+Message
+.......
+
 
 .. code-block:: javascript
 
@@ -165,9 +170,8 @@ Acceptance Criteria for Messages
    defined in the `.env file <https://github.com/attestate/kiwistand/blob/main/.env-copy>`_.
 3. The timestamp must be accurate according to the amount of seconds defined in
    HTTP_MESSAGES_MAX_PAGE_SIZE (50), as defined in the `.env file <https://github.com/attestate/kiwistand/blob/main/.env-copy>`_.
-4. The sender's address must be in the allowlist, which consists of all NFT
-   minters of the contract on Ethereum mainnet at address
-   `0xebb15487787cbf8ae2ffe1a6cca5a50e63003786 <https://etherscan.io/address/0xebb15487787cbf8ae2ffe1a6cca5a50e63003786>`_. Refer to Etherscan for more information.
+4. The message signer's address must be in the allowlist or in the list of
+   delegated addresses.
 5. When running ecrecover on the signature, it must reproduce an address on the
    allowlist. EIP712 is used as the signing method
    (https://eips.ethereum.org/EIPS/eip-712).
