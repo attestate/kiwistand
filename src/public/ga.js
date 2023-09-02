@@ -17,5 +17,5 @@ const usesDelegation = Object.keys(localStorage).some((key) =>
   schema.test(key),
 );
 gtag("config", key, {
-  uses_delegation: usesDelegations ? "Delegation" : "Wallet Connection",
+  uses_delegation: usesDelegation ? "Delegation" : "Wallet Connection",
 });

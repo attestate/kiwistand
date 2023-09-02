@@ -139,6 +139,7 @@ async function addConnectedComponents(allowlist, delegations) {
     ConnectedDisconnectButton,
     ConnectedConnectButton,
     RefreshButton,
+    ConnectedBuyAdvert,
   } = await import("./Navigation.jsx");
   const Bell = (await import("./Bell.jsx")).default;
 
@@ -146,6 +147,7 @@ async function addConnectedComponents(allowlist, delegations) {
   connectButton.style = "";
   createRoot(connectButton).render(
     <StrictMode>
+      <ConnectedBuyAdvert allowlist={allowlist} delegations={delegations} />
       <Bell allowlist={allowlist} delegations={delegations} />
       <ConnectedConnectButton allowlist={allowlist} delegations={delegations} />
     </StrictMode>,

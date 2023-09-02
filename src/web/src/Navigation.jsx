@@ -63,6 +63,24 @@ export const RefreshButton = () => {
   }
 };
 
+const BuyAdvert = (props) => {
+  let address;
+  const account = useAccount();
+  const localAccount = getLocalAccount(account.address);
+  if (account.isConnected) {
+    address = account.address;
+  }
+  if (localAccount) {
+    address = localAccount.identity;
+  }
+  const isEligible =
+    address && eligible(props.allowlist, props.delegations, address);
+  if (!isEligible && account.isConnected) {
+    return <PrimaryActionButton text="Join" href="/welcome" />;
+  }
+  return null;
+};
+
 const LearnMore = (props) => {
   const openModal = () => {
     window.dispatchEvent(new CustomEvent("openModal"));
@@ -100,7 +118,8 @@ const LearnMore = (props) => {
     );
   }
 
-  if (isRunningPWA() || isEligible) return;
+  if (isRunningPWA() || isEligible || (!isEligible && account.isConnected))
+    return;
 
   return (
     <div style={{ textAlign: "center", paddingRight: "4px" }}>
@@ -383,6 +402,31 @@ const DisconnectButton = () => {
   );
 };
 
+export const PrimaryActionButton = (props) => {
+  const buttonStyle = {
+    borderRadius: "2px",
+    padding: "5px 15px 5px 15px",
+    backgroundColor: "black",
+    border: "1px solid black",
+    color: "white",
+    textAlign: "center",
+    textDecoration: "none",
+    cursor: "pointer",
+    width: "100px",
+  };
+
+  return (
+    <a
+      href={props.href}
+      title={props.text}
+      style={buttonStyle}
+      onClick={props.onClick}
+    >
+      {props.text}
+    </a>
+  );
+};
+
 const CustomConnectButton = (props) => {
   const buttonStyle = {
     borderRadius: "2px",
@@ -415,13 +459,7 @@ const CustomConnectButton = (props) => {
 
         if ((props.required && !connected) || (!connected && !isEligible)) {
           return (
-            <a
-              title="Connect Wallet"
-              style={buttonStyle}
-              onClick={openConnectModal}
-            >
-              Connect
-            </a>
+            <PrimaryActionButton text="Connect" onClick={openConnectModal} />
           );
         }
       }}
@@ -460,5 +498,10 @@ export const ConnectedSettings = (props) => (
 export const ConnectedLearnMore = (props) => (
   <Connector>
     <LearnMore {...props} />
+  </Connector>
+);
+export const ConnectedBuyAdvert = (props) => (
+  <Connector>
+    <BuyAdvert {...props} />
   </Connector>
 );
