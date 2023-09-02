@@ -41,11 +41,17 @@ export default function index(theme) {
                     like magic.
                     <br />
                     <br />
-                    <span>If you want to learn how it works under the hood, check </span>
-                    <a
-                      href="https://www.loom.com/share/244e444db3444cc3b50376d38e72bd69"
-                      target="_blank"
-                      >Tim's Loom video.</a
+                    <span
+                      >If you want to learn how it works under the hood, check
+                    </span>
+                    <span> </span>
+                    <u
+                      ><a
+                        href="https://www.loom.com/share/244e444db3444cc3b50376d38e72bd69"
+                        target="_blank"
+                      >
+                        Tim's Loom video.</a
+                      ></u
                     >
                     <br />
                     <br />
