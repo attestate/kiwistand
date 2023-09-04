@@ -29,17 +29,26 @@ export default function submit(theme, url = "", title = "") {
                     <div style="${labelInputContainerStyle}">
                       <label for="title" style="${labelStyle}">Title:</label
                       ><br />
-                      <textarea
+                      <div
+                        contenteditable="true"
+                        role="textbox"
+                        aria-multiline="true"
                         id="titleInput"
                         name="title"
-                        rows="4"
-                        cols="50"
                         maxlength="80"
                         required
-                        style="${inputStyle}"
+                        style="${editableContent}"
                         wrap="soft"
+                        onpaste="
+                          event.preventDefault();
+                          const text = event.clipboardData.getData('text/plain');
+                          document.execCommand('insertText', false, text);"
                       >
-${title}</textarea
+                        ${title}
+                      </div>
+                      <span>
+                        <span>Characters remaining: </span>
+                        <span class="remaining">80</span></span
                       >
                     </div>
                     <div style="${labelInputContainerStyle}">
@@ -102,6 +111,22 @@ const inputStyle = `
   font-size: 16px;
   box-sizing: border-box;
 `;
+
+const editableContent = `
+   overflow-wrap: anywhere;
+   width: 100%;
+   height: 100px;
+   padding: 5px 10px;
+   font-size: 16px;
+   box-sizing: border-box;
+   border: 1px solid #8f8f9d;
+   overflow: auto;
+   resize: both;
+   white-space: pre-wrap;
+   background-color: white;
+   color: black;
+   border-radius: 3px;
+ `;
 
 const buttonStyle = `
   width: 100%;

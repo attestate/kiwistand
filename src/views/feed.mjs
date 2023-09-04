@@ -11,6 +11,7 @@ import { fetchBuilder, MemoryCache } from "node-fetch-cache";
 import * as ens from "../ens.mjs";
 import Header from "./components/header.mjs";
 import SecondHeader from "./components/secondheader.mjs";
+import ThirdHeader from "./components/thirdheader.mjs";
 import Sidebar from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
 import Head from "./components/head.mjs";
@@ -26,7 +27,7 @@ const html = htm.bind(vhtml);
 const fetch = fetchBuilder.withCache(
   new MemoryCache({
     ttl: 60000 * 5, //5mins
-  })
+  }),
 );
 
 const itemAge = (timestamp) => {
@@ -91,12 +92,12 @@ async function editors(leaves) {
     const cacheEnabled = true;
     const editorStories = leaves.filter(
       // TODO: Should start using ethers.utils.getAddress
-      ({ identity }) => identity.toLowerCase() === config.address.toLowerCase()
+      ({ identity }) => identity.toLowerCase() === config.address.toLowerCase(),
     );
 
     if (links && Array.isArray(links) && links.length > 0) {
       return editorStories.filter(({ href }) =>
-        links.includes(!!href && normalizeUrl(href))
+        links.includes(!!href && normalizeUrl(href)),
       );
     }
     return editorStories;
@@ -168,14 +169,14 @@ export default async function index(trie, theme, page) {
     parser,
     aWeekAgoUnixTime,
     allowlist,
-    delegations
+    delegations,
   );
   const policy = await moderation.getLists();
   leaves = moderation.moderate(leaves, policy);
 
   const { editorPicks, config } = await editors(leaves);
   const editorLinks = editorPicks.map(
-    ({ href }) => !!href && normalizeUrl(href)
+    ({ href }) => !!href && normalizeUrl(href),
   );
 
   const totalStories = parseInt(env.TOTAL_STORIES, 10);
@@ -223,6 +224,9 @@ export default async function index(trie, theme, page) {
                 ${Header(theme)}
               </tr>
               <tr>
+                ${ThirdHeader(theme, "top")}
+              </tr>
+              <tr>
                 ${SecondHeader(theme, "top")}
               </tr>
               ${page === 0 && editorPicks.length > 0
@@ -258,7 +262,7 @@ export default async function index(trie, theme, page) {
                                 data-title="${story.title}"
                                 data-href="${story.href}"
                                 data-upvoters="${JSON.stringify(
-                                  story.upvoters
+                                  story.upvoters,
                                 )}"
                                 data-editorpicks="true"
                               ></div>
@@ -286,7 +290,7 @@ export default async function index(trie, theme, page) {
                       </div>
                     </td>
                   </tr>
-                `
+                `,
               )}
               ${page === 0 && editorPicks.length > 0
                 ? html` <tr style="height: 13px; background-color: #e6e6df;">

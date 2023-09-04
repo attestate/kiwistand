@@ -56,7 +56,7 @@ async function addSubmitButton(allowlist, delegations, toast) {
           allowlist={allowlist}
           delegations={delegations}
         />
-      </StrictMode>
+      </StrictMode>,
     );
   }
 }
@@ -89,13 +89,33 @@ async function addVotes(allowlistPromise, delegationsPromise, toast) {
             toast={toast}
             editorPicks={editorPicks}
           />
-        </StrictMode>
+        </StrictMode>,
       );
     });
   }
 }
 
-async function addDelegateButton() {
+async function addBuyButton(allowlistPromise, delegationsPromise, toast) {
+  const buyButtonContainer = document.querySelector("#buy-button-container");
+  if (buyButtonContainer) {
+    const allowlist = await allowlistPromise;
+    const delegations = await delegationsPromise;
+    const { createRoot } = await import("react-dom/client");
+    const { StrictMode } = await import("react");
+    const BuyButton = (await import("./BuyButton.jsx")).default;
+    createRoot(buyButtonContainer).render(
+      <StrictMode>
+        <BuyButton
+          allowlist={allowlist}
+          delegations={delegations}
+          toast={toast}
+        />
+      </StrictMode>,
+    );
+  }
+}
+
+async function addDelegateButton(allowlist, delegations) {
   const delegateButtonContainer = document.querySelector("delegate-button");
   if (delegateButtonContainer) {
     const { createRoot } = await import("react-dom/client");
@@ -103,13 +123,13 @@ async function addDelegateButton() {
     const DelegateButton = (await import("./DelegateButton.jsx")).default;
     createRoot(delegateButtonContainer).render(
       <StrictMode>
-        <DelegateButton />
-      </StrictMode>
+        <DelegateButton allowlist={allowlist} delegations={delegations} />
+      </StrictMode>,
     );
   }
 }
 
-async function addConnectedComponents() {
+async function addConnectedComponents(allowlist, delegations) {
   const { createRoot } = await import("react-dom/client");
   const { StrictMode } = await import("react");
   const {
@@ -118,41 +138,54 @@ async function addConnectedComponents() {
     ConnectedLearnMore,
     ConnectedDisconnectButton,
     ConnectedConnectButton,
+    RefreshButton,
+    ConnectedBuyAdvert,
   } = await import("./Navigation.jsx");
+  const Bell = (await import("./Bell.jsx")).default;
 
   const connectButton = document.querySelector("#connectButton");
   connectButton.style = "";
   createRoot(connectButton).render(
     <StrictMode>
-      <ConnectedConnectButton />
-    </StrictMode>
+      <ConnectedBuyAdvert allowlist={allowlist} delegations={delegations} />
+      <Bell allowlist={allowlist} delegations={delegations} />
+      <ConnectedConnectButton allowlist={allowlist} delegations={delegations} />
+    </StrictMode>,
   );
 
   const settings = document.querySelector("#nav-settings");
   createRoot(settings).render(
     <StrictMode>
-      <ConnectedSettings />
-    </StrictMode>
+      <ConnectedSettings allowlist={allowlist} delegations={delegations} />
+    </StrictMode>,
   );
   const profileLink = document.querySelector("#nav-profile");
   createRoot(profileLink).render(
     <StrictMode>
-      <ConnectedProfile />
-    </StrictMode>
+      <ConnectedProfile allowlist={allowlist} delegations={delegations} />
+    </StrictMode>,
   );
+  const refreshButton = document.querySelector("a.nav-refresh-button");
+  if (refreshButton) {
+    createRoot(refreshButton).render(
+      <StrictMode>
+        <RefreshButton />
+      </StrictMode>,
+    );
+  }
   const learnMore = document.querySelector("nav-learn-more");
   if (learnMore) {
     createRoot(learnMore).render(
       <StrictMode>
-        <ConnectedLearnMore />
-      </StrictMode>
+        <ConnectedLearnMore allowlist={allowlist} delegations={delegations} />
+      </StrictMode>,
     );
   }
   const disconnect = document.querySelector("#nav-disconnect");
   createRoot(disconnect).render(
     <StrictMode>
       <ConnectedDisconnectButton />
-    </StrictMode>
+    </StrictMode>,
   );
 }
 
@@ -165,7 +198,7 @@ async function addModals() {
     createRoot(nftmodal).render(
       <StrictMode>
         <NFTModal />
-      </StrictMode>
+      </StrictMode>,
     );
   }
 
@@ -177,7 +210,7 @@ async function addModals() {
     createRoot(onboarding).render(
       <StrictMode>
         <OnboardingModal />
-      </StrictMode>
+      </StrictMode>,
     );
   }
 }
@@ -194,7 +227,7 @@ async function addToaster() {
   createRoot(newElement).render(
     <StrictMode>
       <Toaster />
-    </StrictMode>
+    </StrictMode>,
   );
   return toast;
 }
@@ -206,10 +239,11 @@ async function addNFTPrice() {
     const { StrictMode } = await import("react");
     const NFTPrice = (await import("./NFTPrice.jsx")).default;
     nftPriceElements.forEach((element) => {
+      const fee = element.getAttribute("data-fee");
       createRoot(element).render(
         <StrictMode>
-          <NFTPrice />
-        </StrictMode>
+          <NFTPrice fee={fee} />
+        </StrictMode>,
       );
     });
   }
@@ -221,7 +255,9 @@ async function share(toast, link) {
     <div style={{ display: "flex", alignItems: "center" }}>
       <a
         style={{ display: "flex", alignItems: "center" }}
-        href={`https://warpcast.com/~/compose?embeds[]=${link}&embeds[]=https://news.kiwistand.com`}
+        href={`https://warpcast.com/~/compose?embeds[]=${encodeURIComponent(
+          link,
+        )}&embeds[]=https://news.kiwistand.com`}
         target="_blank"
       >
         <FCIcon style={{ height: "15px", color: "white" }} />
@@ -250,14 +286,7 @@ async function share(toast, link) {
   });
 }
 
-
-
-
-
-
 async function start() {
-  await addDelegateButton();
-  await addConnectedComponents();
   await addModals();
   await addNFTPrice();
   const toast = await addToaster();
@@ -266,11 +295,17 @@ async function start() {
   const allowlistPromise = fetchAllowList();
   const delegationsPromise = fetchDelegations();
 
+  await addDelegateButton(await allowlistPromise, await delegationsPromise);
+  await addBuyButton(allowlistPromise, delegationsPromise, toast);
   await addVotes(allowlistPromise, delegationsPromise, toast);
+  await addConnectedComponents(
+    await allowlistPromise,
+    await delegationsPromise,
+  );
   await addSubmitButton(
     await allowlistPromise,
     await delegationsPromise,
-    toast
+    toast,
   );
 
   let url = new URL(window.location.href);

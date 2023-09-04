@@ -15,6 +15,7 @@ import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import useLocalStorageState from "use-local-storage-state";
 
 import { client, chains } from "./client.mjs";
+import { ConnectedConnectButton } from "./Navigation.jsx";
 
 const abi = [
   {
@@ -41,7 +42,7 @@ const abi = [
 
 const address = "0x08b7ECFac2c5754ABafb789c84F8fa37c9f088B0";
 const newKey = Wallet.createRandom();
-const DelegateButton = () => {
+const DelegateButton = (props) => {
   const { chain } = useNetwork();
   const from = useAccount();
   const { switchNetwork } = useSwitchNetwork();
@@ -60,14 +61,12 @@ const DelegateButton = () => {
         stringify: (val) => val,
         parse: (val) => val,
       },
-    }
+    },
   );
 
-  const [confirmation, setConfirmation] = useState(null);
+  const [confirmation, setConfirmation] = useState("");
   const provider = useProvider();
 
-  const [config, setConfig] = useState({});
-  const [isError, setIsError] = useState(false);
   const [payload, setPayload] = useState(null);
 
   useEffect(() => {
@@ -77,39 +76,22 @@ const DelegateButton = () => {
         newKey,
         from.address,
         newKey.address,
-        authorize
+        authorize,
       );
       setPayload(payload);
     };
     if (from.address) generate();
   }, [from.address]);
 
-  const prepArgs = useMemo(
-    () => ({
-      address,
-      abi,
-      functionName: "etch",
-      args: [payload],
-      chainId: optimism.id,
-    }),
-    [payload]
-  );
+  const prepArgs = {
+    address,
+    abi,
+    functionName: "etch",
+    args: [payload],
+    chainId: optimism.id,
+  };
 
-  const {
-    config: configData,
-    error,
-    isError: isPrepError,
-  } = usePrepareContractWrite(prepArgs);
-
-  useEffect(() => {
-    if (configData) {
-      setConfig(configData);
-      setIsError(isPrepError);
-      if (error) console.log("error in contract write prepare", error);
-    }
-  }, [configData, error, isPrepError]);
-
-  const writeArgs = useMemo(() => config || {}, [config]);
+  const { config, error, isError } = usePrepareContractWrite(prepArgs);
 
   const { data, write, isLoading, isSuccess } = useContractWrite(config);
   if (isSuccess) setKey(newKey.privateKey);
@@ -124,25 +106,63 @@ const DelegateButton = () => {
     wallet = new Wallet(key, provider);
   }
 
-  if (!from.address) return <b>Please connect your wallet</b>;
-
+  if (!from.address) {
+    return (
+      <ConnectedConnectButton
+        required
+        allowlist={props.allowlist}
+        delegations={props.delegations}
+      />
+    );
+  }
   if (key && wallet) {
+    const disabled = confirmation !== "delete key";
     return (
       <div>
-        <button
-          className="buy-button"
-          onClick={handleClick} // Assuming handleClick is the function that deletes the key
-        >
-          Turn off
-        </button>
-        <br/>
-        <br/>
-       <p style={{ margin: '0', padding: '0' }}>
-        You can now upvote and submit stories without signing each action! Please remember that if you clean your browser’s cookies, you might have to turn it on again.
-      </p>
+        <p>
+          <b>You're set!</b>
+        </p>
+        <p>
+          We've now stored your delegation key on Optimism for this device. You
+          should be able to upvote and submit links without needing to confirm
+          these actions in your wallet!
+        </p>
+        <p>
+          <b>PLEASE NOTE: </b>
+          It might take up to 5 minutes for your key to enter the system!
+        </p>
+        <p>
+          <b>Key storage</b>
+        </p>
+        <p style={{ wordBreak: "break-all" }}>
+          Your delegate address: {wallet.address}
+        </p>
+        <p>
+          <b>Delete key</b>
+          <br />
+          <span>
+            You can delete your key from the browser, however, please consider
+            that you'll not be able to recover it. Please type <b>delete key</b>{" "}
+            to confirm.
+          </span>
+          <br />
+          <input
+            type="text"
+            value={confirmation}
+            onChange={(e) => setConfirmation(e.target.value)}
+          />
+          <br />
+          <br />
+          <button
+            className="buy-button"
+            disabled={disabled}
+            onClick={handleClick}
+          >
+            Delete key
+          </button>
+        </p>
       </div>
     );
-  
   }
   if (!write && !isError) {
     return <p>Loading from local storage...</p>;
@@ -178,12 +198,12 @@ const DelegateButton = () => {
   );
 };
 
-const Form = () => {
+const Form = (props) => {
   const { isConnected } = useAccount();
   return (
     <WagmiConfig client={client}>
       <RainbowKitProvider chains={chains}>
-        <DelegateButton />
+        <DelegateButton {...props} />
       </RainbowKitProvider>
     </WagmiConfig>
   );

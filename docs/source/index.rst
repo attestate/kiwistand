@@ -9,6 +9,13 @@ Table of Contents
 -----------------
 
 .. toctree::
+  :caption: Guides 
+
+  protocol-guide
+
+.. toctree::
   :caption: Reference  
 
+  protocol
+  delegation
   http-api

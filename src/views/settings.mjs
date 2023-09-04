@@ -31,16 +31,35 @@ export default function index(theme) {
                   <p
                     style="color: black; padding: 7px 7px 15px 7px; font-size: 12pt;"
                   >
-                    You can turn on “Signless Kiwi Experience” to submit and upvote stories without needing to sign every action. You can set it up on your mobile and desktop.
+                    From now on you can submit and upvote links without
+                    confirming them in your wallet.
                     <br />
                     <br />
-                    After you click "Turn on", it might take up to 5 minutes to make it work. If you'd like to learn how it works check <u><a href="https://www.loom.com/share/244e444db3444cc3b50376d38e72bd69" target="_blank">Tim's Loom video</a></u>.
+                    Thanks to that using Kiwi is going to feel like using
+                    Warpcast or a web2 app. You just need to click the button
+                    below and delegate posting authority. It's safe and works
+                    like magic.
+                    <br />
+                    <br />
+                    <span
+                      >If you want to learn how it works under the hood, check
+                    </span>
+                    <span> </span>
+                    <u
+                      ><a
+                        href="https://www.loom.com/share/244e444db3444cc3b50376d38e72bd69"
+                        target="_blank"
+                      >
+                        Tim's Loom video.</a
+                      ></u
+                    >
+                    <br />
+                    <br />
+                    PS: Don’t worry if you have enough ETH on Optimism - we
+                    airdropped you some so you can do it easily.
                     <br />
                     <br />
                     <delegate-button />
-                    <br />
-                    <br />
-                    
                   </p>
                 </td>
               </tr>

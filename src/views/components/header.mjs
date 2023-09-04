@@ -1,9 +1,11 @@
 //@format
 import { env } from "process";
+
 import htm from "htm";
 import vhtml from "vhtml";
 
 const html = htm.bind(vhtml);
+
 const header = (theme) => html` <td style="height: 62px;">
   <nav-onboarding-modal />
   <nav-nft-modal />

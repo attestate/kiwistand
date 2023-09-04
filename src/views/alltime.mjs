@@ -11,6 +11,7 @@ import { fetchBuilder, MemoryCache } from "node-fetch-cache";
 import * as ens from "../ens.mjs";
 import Header from "./components/header.mjs";
 import SecondHeader from "./components/secondheader.mjs";
+import ThirdHeader from "./components/thirdheader.mjs";
 import Sidebar from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
 import Head from "./components/head.mjs";
@@ -26,7 +27,7 @@ const html = htm.bind(vhtml);
 const fetch = fetchBuilder.withCache(
   new MemoryCache({
     ttl: 60000 * 5, //5mins
-  })
+  }),
 );
 
 function extractDomain(link) {
@@ -90,7 +91,7 @@ export default async function index(trie, theme, page) {
     parser,
     null,
     allowlist,
-    delegations
+    delegations,
   );
   const policy = await moderation.getLists();
   leaves = moderation.moderate(leaves, policy);
@@ -137,6 +138,9 @@ export default async function index(trie, theme, page) {
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
               <tr>
                 ${Header(theme)}
+              </tr>
+              <tr>
+                ${ThirdHeader(theme, "top")}
               </tr>
               <tr>
                 ${SecondHeader(theme, "alltime")}
