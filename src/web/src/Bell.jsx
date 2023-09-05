@@ -39,7 +39,11 @@ const Bell = (props) => {
   }
 
   return (
-    <a title="Notifications" href={link} style={{ position: "relative" }}>
+    <a
+      title="Notifications"
+      href={link}
+      style={{ display: "inline-flex", position: "relative" }}
+    >
       <i className="icon">
         {window.location.pathname === "/activity" ? (
           <BellSVGFull />

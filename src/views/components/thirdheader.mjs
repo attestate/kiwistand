@@ -12,7 +12,7 @@ const secondheader = (theme, site) => html`
     >
       <a
         href="/"
-        style="padding: 0 0 0.1rem 0; flex: 1; text-decoration: none; color: inherit;"
+        style="display: flex; padding: 0 0 0.1rem 0; flex: 1; text-decoration: none; color: inherit;"
       >
         <div
           class="filter-tab"
