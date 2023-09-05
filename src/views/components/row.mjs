@@ -45,7 +45,8 @@ const row = (start = 0) => {
                 >
                   ${story.title}
                 </a>
-                <span style="padding-left: 5px; white-space: nowrap;"
+                <span> </span>
+                <span style="white-space: nowrap;"
                   >(${extractDomain(story.href)})</span
                 >
               </span>
@@ -67,7 +68,7 @@ const row = (start = 0) => {
  ${size}px; border: 1px solid #828282; border-radius: 50%; margin-left: -${size /
                               2}px;"
                             />
-                          `
+                          `,
                         )}
                       </div>
                       <span> • </span>
@@ -85,9 +86,9 @@ const row = (start = 0) => {
                   <a
                     target="_blank"
                     href="https://warpcast.com/~/compose?embeds[]=${encodeURIComponent(
-                      story.href
+                      story.href,
                     )}&text=${encodeURIComponent(
-                      `Found on Kiwi News: "${story.title}"`
+                      `Found on Kiwi News: "${story.title}"`,
                     )}&embeds[]=https://news.kiwistand.com"
                     class="caster-link"
                   >
