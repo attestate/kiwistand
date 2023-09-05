@@ -19,10 +19,6 @@ body {
      opacity: 1;
    }
  }
-
-
- .votearrow.pulsate {
-   animation: pulsate 2s infinite ease-in-out;
  }
 
  td {

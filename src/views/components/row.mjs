@@ -30,7 +30,18 @@ const row = (start = 0) => {
                   data-title="${story.title}"
                   data-href="${story.href}"
                   data-upvoters="${JSON.stringify(story.upvoters)}"
-                ></div>
+                >
+                  <div>
+                    <div
+                      class="votearrow pulsate"
+                      style="color: rgb(130, 130, 130); cursor: pointer;"
+                      title="upvote"
+                    >
+                      ▲
+                    </div>
+                    <div style="font-size: 8pt; text-align: center;">...</div>
+                  </div>
+                </div>
               </a>
             </div>
             <div
