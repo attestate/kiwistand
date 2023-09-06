@@ -162,21 +162,21 @@ Then, let's assume that this "Tree A" is on "Node A" and that there is a differe
    
  graph TD
      B_0[B<sub>0</sub><br>0xuvw] --> B_1,1[B<sub>1,1</sub><br>0xdef]
-     B_0 --> B_2,3[B<sub>2,3</sub><br>0x123]
+     B_0 --> B_1,2[B<sub>1,2</sub><br>0xopq]
      B_1,1 --> B_2,1[B<sub>2,1</sub><br>0xjkl]
      B_1,1 --> B_2,2[B<sub>2,2</sub><br>0xlmn]
      B_2,1 --> A("A"<br>0x0)
      B_2,1 --> B("B"<br>0x1)
      B_2,2 --> C("C"<br>0x2)
      B_2,2 --> D("D"<br>0x3)
-     B_2,3 --> E("E"<br>0x4)
-     B_2,3 --> F("F"<br>0x5)
+     B_1,2 --> E("E"<br>0x4)
+     B_1,2 --> F("F"<br>0x5)
 
      style B_0 fill:#FF3399
      style B_1,1 fill:#FF3399
      style B_2,1 fill:#FF3399
      style B_2,2 fill:#FF3399
-     style B_2,3 fill:#FF3399
+     style B_1,2 fill:#FF3399
      style A fill:#FF3399
      style B fill:#FF3399
      style C fill:#FF3399
@@ -200,4 +200,34 @@ So then let's actually dive into the reconciliation algorithm as a sequence of e
 
    Figure 7
 
-Through carefully observing the payload that "Node B" then sends to "Node A", we can also understand the algorithm: Namely that upon comparing the root nodes (A\ :sub:`0` and B\ :sub:`0`), "Node B" then "dives" a level deeper in the trie and sends the level 1 nodes B\ :sub:`1,1` and B\ :sub:`1,2` to "Node A" for comparison. As can be seen in step 2, "Node A" then compares the level 1 nodes of "Node B", and it finds that A\ :sub:`1,2` and B\ :sub:`1,2` are have different hashes, while A\ :sub:`1,1` and B\ :sub:`1,1` are the same.
+Through carefully observing the payload that "Node B" then sends to "Node A", we can also understand the algorithm: Namely that upon comparing the root nodes (A\ :sub:`0` and B\ :sub:`0`), "Node B" then "dives" a level deeper in the trie and sends the level 1 nodes B\ :sub:`1,1` and B\ :sub:`1,2` to "Node A" for comparison. As can be seen in step 2, "Node A" then compares the level 1 nodes of "Node B", and it finds that A\ :sub:`1,2` (``0xghi``) and B\ :sub:`1,2` (``0xopq``) have different hashes, while A\ :sub:`1,1` (``0xdef``) and B\ :sub:`1,1` are the same.
+
+In step 3, "Node A" then sends the comparison information back and both nodes mark the subtree with root A\ :sub:`1,1` or B\ :sub:`1,1` as finalized. See below:
+
+.. mermaid::
+   
+ graph TD
+     B_0[B<sub>0</sub><br>0xuvw] --> B_1,1[B<sub>1,1</sub><br>0xdef]
+     B_0 --> B_1,2[B<sub>1,2</sub><br>0xopq]
+     B_1,1 --> B_2,1[B<sub>2,1</sub><br>0xjkl]
+     B_1,1 --> B_2,2[B<sub>2,2</sub><br>0xlmn]
+     B_2,1 --> A("A"<br>0x0)
+     B_2,1 --> B("B"<br>0x1)
+     B_2,2 --> C("C"<br>0x2)
+     B_2,2 --> D("D"<br>0x3)
+     B_1,2 --> E("E"<br>0x4)
+     B_1,2 --> F("F"<br>0x5)
+
+     style B_0 fill:#FF3399
+     style B_1,1 fill:#33FF99
+     style B_2,1 fill:#33FF99
+     style B_2,2 fill:#33FF99
+     style B_1,2 fill:#FF3399
+     style A fill:#33FF99
+     style B fill:#33FF99
+     style C fill:#33FF99
+     style D fill:#33FF99
+     style E fill:#FF3399
+     style F fill:#FF3399
+
+It's noteworthy that this creates an efficiency where now most of the tree doesn't have to be verified anymore by both nodes. Hence less messages are required to be sent over the network and less compute is used on comparing leaves that are anyways already synchronized. That's important, because if we think back to our naive bitmap example, then saving bandwidth and keeping payloads small where its main drawbacks.
