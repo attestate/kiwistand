@@ -36,11 +36,27 @@ And in this "perfect internet connection" scenario, where every node has a perfe
 
 However, the reality is far from this with nodes regularly losing internet connections, crashing due to bugs and so on. Hence, while we can leverage the above-mentioned gossip subscription mechanism to keep nodes synchronized - when something goes wrong, we want to fall back on a strategy that allows offline nodes to catch up.
 
-Because consider this: If one of our nodes goes offline for just five minutes, then comes back online, it means that it'll never manage to catch up to the network again, as network nodes generally don't re-send old messages.
+Consider the situation depicted in :ref:`network-message-0`, step 1. "Node A" (blue) has transitioned from `state: 0` to `state: 1` and is now broadcasting the transition as a message (blue envelope) to all other nodes.
 
-For that reason, crypto currencies, for example, all implement a widely-used mechanism to synchronize nodes back to the current state when having been offline. We refer to this algorithm as "set reconciliation" and Kiwi News Protocol specifically implements it using a Merkle Patricia Trie.
+.. figure:: _static/network-message-0.svg
+   :name: network-message-0
 
-However, for the sake of explaining the algorithm, we'll now first demonstrate it using a small set and a bitmap to keep track of entities. In a following section, we'll then explain set reconciliation using Merkle trees.
+   Figure 1
+
+But, as we can see in step 2, "Node B" is currently offline and so it will not transition to `state: 1`, while all other nodes do. For the network, and "Node B" this starts to become a problem as past messages aren't rebroadcast and since it can therefore not catch up to its peers.
+
+.. figure:: _static/network-message-1.svg
+   :name: network-message-1
+
+   Figure 2
+
+:ref:`network-message-1` shows this problematic. "Node A" does a transition from `state: 1` to `state: 2`, and in step 3, again sends out a transition message (pink envelope). But this time (step 4), while "Node B" can receive the message now (has come back online), it cannot transition directly from `state: 0` to `state: 2` as `state: 1` is missing.
+
+That's why we don't consider just broadcasting messages a sufficient strategy for building a peer-to-peer network keeping data available.
+
+For example, crypto currencies, for that reason, all implement a widely-used mechanism to synchronize nodes back to the current state when having been offline. We refer to this algorithm as "set reconciliation." We're introducing it here as Kiwi News Protocol integrates one using a Merkle Patricia Tree.
+
+However, for the sake of explaining it, we'll now first run through a set reconciliation using a bitmap for keeping track of messages. In a following section, we'll then explain set reconciliation using Merkle trees.
 
 A Naive Set Reconciliation algorithm
 ____________________________________
@@ -57,7 +73,7 @@ and so on.
 .. figure:: _static/set-recon-hash.svg
    :name: set-recon-hash
 
-   Figure 1
+   Figure 2
 
 Hence, a set consists of messages "A", "B", ... "F" and their hexa-decimal identities ``0x0``, ``0x1``, ... ``0x5``. For the sake of demonstration, we assume that there cannot be any other identities or messages.
 
@@ -68,14 +84,14 @@ In our scenario (:ref:`set-recon-schema`), we have two nodes ("Node A," and "Nod
 .. figure:: _static/set-recon-schema.svg
    :name: set-recon-schema
 
-   Figure 2
+   Figure 3
 
 In :ref:`set-recon-schema`, we also see the idea of mapping all messages' identities flags in a bitmap. This bitmap works by setting a flag at the respective location in the bitmap such as to indicate a message's existence in the node's database (:ref:`set-recon-bitmap`). 
 
 .. figure:: _static/set-recon-bitmap.svg
    :name: set-recon-bitmap
 
-   Figure 3
+   Figure 4
 
 Step-by-step walk-through
 .........................
@@ -91,7 +107,7 @@ In step 1, as outlined already in :ref:`set-recon-schema`:
 .. figure:: _static/set-recon-algo.svg
    :name: set-recon-algo
 
-   Figure 4
+   Figure 5
 
 
 Steps: 
@@ -114,7 +130,7 @@ Drawbacks of bitmaps
 Hence, for set reconciliation, we favor a data structure that is deterministic and doesn't have over-linear complexity growth: Merkle trees.
 
 Using Merkle Trees for Set Reconciliation
-_________________________________________
+-----------------------------------------
 
 Let's now consider an example that models the Kiwi News Protocol set reconciliation algorithm as close as possible.
 
@@ -173,19 +189,15 @@ To visualize the process within a peer to peer network, it is now useful to cons
 .. figure:: _static/set-recon-broadcast.svg
    :name: set-recon-broadcast
 
-   Figure 5
+   Figure 6
 
 As can be seen on the right of :ref:`set-recon-broadcast`, each node will then internally compare the received tree root hash with the local tree hash, but in our example only "Node B" will find that it's tree root hash is different from "Node A".
 
-So then let's actually dive into the reconciliation algorithm as a sequence of events. Below (:ref:`set-recon-merkle-1-2`) we can see in step 1 how "Node A" broadcasts its Merkle tree root and how "Node B" internally compares it to its root hash.
+So then let's actually dive into the reconciliation algorithm as a sequence of events. Below (:ref:`set-recon-merkle-1-2`) we can see in step 1 how "Node A" broadcasts its Merkle tree root and how "Node B" internally compares it to its root hash (a repetition of what we've just seen).
 
 .. figure:: _static/set-recon-merkle-1-2.svg
    :name: set-recon-merkle-1-2
 
-   Figure 6
+   Figure 7
 
-Through observing the payload that "Node B" sends to "Node A", we can also understand the actual practical functionality of the algorithm: Namely that upon comparing the root nodes (A\ :sub:`0` and B\ :sub:`0`), the receiving node then "dives" a level deeper in the trie and sends out the level 1 nodes B\ :sub:`1,1` and B\ :sub:`1,2` for "Node A" to search them in its tree.
-
-.. note::
-
-   These docs are a work in progress and to be continued...
+Through carefully observing the payload that "Node B" then sends to "Node A", we can also understand the algorithm: Namely that upon comparing the root nodes (A\ :sub:`0` and B\ :sub:`0`), "Node B" then "dives" a level deeper in the trie and sends the level 1 nodes B\ :sub:`1,1` and B\ :sub:`1,2` to "Node A" for comparison. As can be seen in step 2, "Node A" then compares the level 1 nodes of "Node B", and it finds that A\ :sub:`1,2` and B\ :sub:`1,2` are have different hashes, while A\ :sub:`1,1` and B\ :sub:`1,1` are the same.
