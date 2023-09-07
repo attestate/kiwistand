@@ -134,9 +134,15 @@ Using Merkle Trees for Set Reconciliation
 
 Let's now consider an example that models the Kiwi News Protocol set reconciliation algorithm as close as possible.
 
+.. note::
+  To not use the term "node" twice, we refer to a Merkle tree's nodes as "nodes" whereas we refer to a peer-to-peer node as a "peer".
+
 We assume that there is a set of 8 or more messages, with the initial ones being "A", "B", ... "H". We also consider there to be the above-introduced hash function ``hash("A") == 0x0``, ``hash("B") == 0x1`` etc.
 
 However, the data structure we're now using is a Merkle trie where a message is inserted at a leaf's location based on its identity, with "A" being the left most leaf as its identity is ``0x0``, "B" being the second left most leaf (``0x1``) and so on.
+
+.. note::
+  We call the highest node in the tree the "root." We may refer to any node as a "node," but we only refer to the lowest nodes as "leaves."
 
 .. mermaid::
 
@@ -156,7 +162,7 @@ However, the data structure we're now using is a Merkle trie where a message is 
      A_2,4 --> G("G"<br>0x6)
      A_2,4 --> H("H"<br>0x7)
 
-Then, let's assume that this "Tree A" is on "Node A" and that there is a different "Tree B" on "Node B". "Node B"'s tree has only messages from "A" to F", so it is behind and needs to synchronize. Below is a visualization "Node B"'s tree.
+Then, let's assume that this "Tree A" is on "Peer A" and that there is a different "Tree B" on "Peer B". "Peer B"'s tree has only messages from "A" to F", so it is behind and needs to synchronize. Below is a visualization "Peer B"'s tree.
 
 .. mermaid::
    
@@ -184,25 +190,30 @@ Then, let's assume that this "Tree A" is on "Node A" and that there is a differe
      style E fill:#FF3399
      style F fill:#FF3399
 
-To visualize the process within a peer to peer network, it is now useful to consider a mesh of nodes where "Node A" (but also all other nodes) periodically broadcast their latest tree root hash to all other nodes (:ref:`set-recon-broadcast`).
+To visualize the process within a peer to peer network, it is now useful to consider a mesh of nodes where "Peer A" (but also all other peers) periodically broadcast their latest tree root hash to all other peers (:ref:`set-recon-broadcast`).
 
 .. figure:: _static/set-recon-broadcast.svg
    :name: set-recon-broadcast
 
    Figure 6
 
-As can be seen on the right of :ref:`set-recon-broadcast`, each node will then internally compare the received tree root hash with the local tree hash, but in our example only "Node B" will find that it's tree root hash is different from "Node A".
+As can be seen on the right of :ref:`set-recon-broadcast`, each peer will then internally compare the received tree root hash with the local tree hash, but in our example only "Peer B" will find that its tree root hash is different from "Peer A".
 
-So then let's actually dive into the reconciliation algorithm as a sequence of events. Below (:ref:`set-recon-merkle-1-2`) we can see in step 1 how "Node A" broadcasts its Merkle tree root and how "Node B" internally compares it to its root hash (a repetition of what we've just seen).
+Comparing trees level by level
+______________________________
+
+We're now ready to go into the details of the reconciliation algorithm as a sequence of events.
+
+Below (:ref:`set-recon-merkle-1-2`) we can see in step 1 how "Peer A" broadcasts its Merkle tree root and how "Peer B" internally compares it to its root hash (a repetition of what we just saw).
 
 .. figure:: _static/set-recon-merkle-1-2.svg
    :name: set-recon-merkle-1-2
 
    Figure 7
 
-Through carefully observing the payload that "Node B" then sends to "Node A", we can also understand the algorithm: Namely that upon comparing the root nodes (A\ :sub:`0` and B\ :sub:`0`), "Node B" then "dives" a level deeper in the trie and sends the level 1 nodes B\ :sub:`1,1` and B\ :sub:`1,2` to "Node A" for comparison. As can be seen in step 2, "Node A" then compares the level 1 nodes of "Node B", and it finds that A\ :sub:`1,2` (``0xghi``) and B\ :sub:`1,2` (``0xopq``) have different hashes, while A\ :sub:`1,1` (``0xdef``) and B\ :sub:`1,1` are the same.
+Through carefully observing the payload that "Peer B" then sends to "Peer A", we can also understand the algorithm: Namely that upon comparing the root nodes (A\ :sub:`0` and B\ :sub:`0`), "Peer B" then descends a level deeper in the trie and sends the level 1 nodes B\ :sub:`1,1` and B\ :sub:`1,2` to "Peer A" for comparison. As can be seen in step 2, "Peer A" then compares the level 1 nodes of "Peer B", and it finds that A\ :sub:`1,2` (``0xghi``) and B\ :sub:`1,2` (``0xopq``) have different hashes, while A\ :sub:`1,1` (``0xdef``) and B\ :sub:`1,1` are the same.
 
-In step 3, "Node A" then sends the comparison information back and both nodes mark the subtree with root A\ :sub:`1,1` or B\ :sub:`1,1` as finalized. See below:
+In step 3, "Peer A" then sends the comparison information back and both nodes mark the subtree with root A\ :sub:`1,1` or B\ :sub:`1,1` as finalized. See below:
 
 .. mermaid::
    
@@ -230,4 +241,29 @@ In step 3, "Node A" then sends the comparison information back and both nodes ma
      style E fill:#FF3399
      style F fill:#FF3399
 
-It's noteworthy that this creates an efficiency where now most of the tree doesn't have to be verified anymore by both nodes. Hence less messages are required to be sent over the network and less compute is used on comparing leaves that are anyways already synchronized. That's important, because if we think back to our naive bitmap example, then saving bandwidth and keeping payloads small where its main drawbacks.
+It's noteworthy that this creates an efficiency where now most of the tree doesn't have to be verified anymore by both peers. Hence less messages are required to be sent over the network and less compute is used on comparing leaves that are anyways already synchronized. It's important, because if we think back to the section of the "naive" bitmap example, then saving bandwidth and keeping payloads small were its main drawbacks.
+
+But let's dive deeper into the actual comparison algorithm as it'll become more important to fully understand process, because in step 3 of :ref:`set-recon-merkle-1-2` we introduced a complex situation where the B\ :sub:`1,2` subtree mismatches (its hash: ``0xopq``) with A\ :sub:`2,3` (same hash: ``0xopq``). So the hashes are the same, but the respective locations of the nodes are different.
+
+Resolving conflicting subtrees
+______________________________
+
+To resolve conflicting subtrees, we categorize three different types of comparisons. In all cases nodes arrive from "Peer B" (the remote peer) to "Peer A" (the local peer) (step 2 of :ref:`set-recon-merkle-1-2`). Here's how "Peer A" handles incoming nodes (:ref:`set-recon-resolving`):
+
+1. We look up the node's hash in the local tree. If it exists, we label it a "match". We also inform the remote peer of the match. We won't descend into that part of the sub tree anymore since we know that all leaves are equal.
+2. If we don't find the node's hash in the local tree, but in its place there exists a different node, we label it a "mismatch" but we don't act on this finding.
+3. Finally, if we neither find a node via its hash or in its place, then we consider it "missing". In case that missing node is a leaf, as the local peer, we report the missing node to the remote peer and it'll send us back the leaf (which will restructure our tree upon adding it).
+
+.. figure:: _static/set-recon-resolving.svg
+   :name: set-recon-resolving
+
+   Figure 8
+
+.. note::
+   The above section appears to be rather complex but it really isn't if we mentally consider a few principles:
+  
+  1. A matching node always means that both remote and local tree are in sync for a sub-tree.
+  2. The tree library is very poweful and can re-order the tree deterministically such that we will arrive at the same root hash if we just manage to insert all the missing leaves.
+
+Finalizing the synchronization
+______________________________
