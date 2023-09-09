@@ -250,9 +250,9 @@ In step 3, "Peer A" then sends the comparison information back and both nodes ma
      style B fill:#33FF99
      style C fill:#33FF99
      style D fill:#33FF99
-     style E fill:#FF3399
-     style F fill:#FF3399
-     style B_2,3 fill:#FF3399
+     style E fill:#33FF99
+     style F fill:#33FF99
+     style B_2,3 fill:#33FF99
      style B_2,4 fill:#FF3399
      style G fill:#FF3399
      style H fill:#FF3399
