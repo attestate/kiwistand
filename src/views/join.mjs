@@ -466,7 +466,7 @@ export default function (theme) {
                       </a>
                     </div>
                     <div class="image-right">
-                      <img src="LP_decentralized.png" alt="Kiwi Upvote" />
+                      <img src="LP_Decentralized.png" alt="Kiwi Upvote" />
                     </div>
                   </div>
                   <br />
