@@ -344,7 +344,7 @@ export default function (theme) {
                         you'd find some valuable content. If it really matters,
                         you can find it on Kiwi.
                       </p>
-                      <a style="display: block;" href="/submit" target="_blank">
+                      <a style="display: block;" href="/" target="_blank">
                         <button
                           class="button-secondary"
                           id="button-onboarding"
