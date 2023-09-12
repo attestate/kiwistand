@@ -93,11 +93,19 @@ export default function (theme) {
             }
 
             .avatar-row {
-              flex-direction: column;
+              flex-direction: row;
+              flex-wrap: wrap;
+              justify-content: space-around;
+            }
+
+            .avatar-container {
+              flex: 0 0 auto;
+              width: 50px;
+              margin: 30px;
             }
 
             .text-right button {
-              text-align: center; /* Aligns buttons to the center within .text-right class */
+              text-align: center;
               margin-left: auto;
               margin-right: auto;
               display: block;
@@ -122,7 +130,132 @@ export default function (theme) {
               order: 1; /* Place the text after the image */
             }
           }
+
+          body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+          }
+          .inner-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+          }
+          .header {
+            text-align: center;
+            margin-bottom: 20px;
+          }
+          .header h1 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+          }
+          .image-and-text {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: stretch;
+          }
+          .image-container,
+          .text-container {
+            flex: 1;
+            width: 100%;
+          }
+
+          @media (min-width: 768px) {
+            .image-container,
+            .text-container {
+              padding: 0 20px 20px 20px;
+            }
+            .text-content {
+              font-size: 1rem;
+            }
+          }
+          .text-content {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            font-size: 1rem;
+          }
+          .text-row {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid #000;
+            padding: 15px 5px 15px 5px;
+          }
+          .text-content button {
+            width: 100%;
+            margin-top: 15px;
+          }
+          .kiwi-nft {
+            max-width: 100%;
+            height: auto;
+            border-radius: 3px;
+          }
+          .image-meta {
+            font-size: 0.9rem;
+            margin-top: 5px;
+            text-align: center;
+          }
+          .selling-points {
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+          }
+          .list-unstyled {
+            list-style-type: none;
+            padding: 10px;
+          }
+          .bullet-point {
+            margin-bottom: 10px;
+            padding-right: 10px;
+          }
+          .bullet-point strong {
+            color: ${theme.color};
+          }
+          .buy-button {
+            background-color: black;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 0.9rem;
+            cursor: pointer;
+            border-radius: 3px;
+            font-family: "Helvetica", "Arial", sans-serif;
+          }
+
+          .buy-button:disabled {
+            background-color: grey;
+            cursor: not-allowed;
+          }
+
+          @media screen and (max-width: 768px) {
+            .image-and-text {
+              flex-direction: column;
+            }
+            .list-unstyled {
+              padding: 0 10px 0 10px;
+            }
+          }
         </style>
+        <meta property="eth:nft:collection" content="Kiwi News Mint Pass" />
+        <meta
+          property="eth:nft:contract_address"
+          content="0xebb15487787cbf8ae2ffe1a6cca5a50e63003786"
+        />
+        <meta
+          property="eth:nft:creator_address"
+          content="0xee324c588cef1bf1c1360883e4318834af66366d"
+        />
+        <meta property="eth:nft:schema" content="erc721" />
+        <meta
+          property="eth:nft:media_url"
+          content="https://news.kiwistand.com/animation.gif"
+        />
+        <meta property="eth:nft:mint_status" content="live" />
+        <meta property="eth:nft:chain" content="ethereum" />
       </head>
       <body>
         <div class="container">
@@ -145,7 +278,7 @@ export default function (theme) {
                           veterans pick & upvote web3-related stories for
                           reading, listening, and watching.
                         </h3>
-                        <a href="/welcome" target="_blank">
+                        <a href="#mint-dialogue">
                           <button
                             id="button-onboarding"
                             style="margin-right: 0;"
@@ -176,7 +309,15 @@ export default function (theme) {
                             </div>
                           `,
                         )}
-                        <div>& 150+ more</div>
+                        <div>
+                          <a
+                            style="text-decoration: underline;"
+                            href="/community"
+                            target="_blank"
+                          >
+                            & 150+ more
+                          </a>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -204,7 +345,11 @@ export default function (theme) {
                         you can find it on Kiwi.
                       </p>
                       <a style="display: block;" href="/submit" target="_blank">
-                        <button id="button-onboarding" style="margin-right: 0;">
+                        <button
+                          class="button-secondary"
+                          id="button-onboarding"
+                          style="margin-right: 0;"
+                        >
                           Check our feed
                         </button>
                       </a>
@@ -228,6 +373,7 @@ export default function (theme) {
                       </p>
                       <a href="/guidelines" target="_blank">
                         <button
+                          class="button-secondary"
                           id="button-onboarding"
                           style="margin-left: 0; width: 40%;"
                         >
@@ -257,9 +403,16 @@ export default function (theme) {
                         whether it’s doing a Pull Request to a project we like
                         or sharing an honest feedback with its founder.
                       </p>
-                      <a href="/settings" target="_blank">
-                        <button id="button-onboarding" style="margin-right: 0;">
-                          Read about our community
+                      <a
+                        href="https://warpcast.com/~/channel/kiwi-news"
+                        target="_blank"
+                      >
+                        <button
+                          class="button-secondary"
+                          id="button-onboarding"
+                          style="color: #7c65c1; border: 1px solid #7c65c1; margin-right: 0;"
+                        >
+                          Check our channel on Farcaster!
                         </button>
                       </a>
                     </div>
@@ -278,15 +431,36 @@ export default function (theme) {
                         <br />
                         <br />
                         We already seen that happening with freeatnet’s
-                        kiwinews.lol and matallo’s kiwisearch. We also share
-                        parts of our treasury to the most active contributors -
-                        in the last round we distributed over 3.5 ETH.
+                        <span> </span>
+                        <a
+                          style="text-decoration: underline; "
+                          href="https://kiwinews.lol"
+                          target="_blank"
+                        >
+                          kiwinews.lol
+                        </a>
+                        <span> and matallo's </span>
+                        <a
+                          style="text-decoration: underline; "
+                          href="https://kiwinews.phyles.app/search"
+                          target="_blank"
+                        >
+                          Kiwi Search
+                        </a>
+                        <span> </span>
+                        We also share parts of our treasury to the most active
+                        contributors - in the last round we distributed over 3.5
+                        ETH.
                       </p>
                       <a
                         href="https://github.com/attestate/kiwistand"
                         target="_blank"
                       >
-                        <button id="button-onboarding" style="margin-left: 0;">
+                        <button
+                          class="button-secondary"
+                          id="button-onboarding"
+                          style="margin-left: 0;"
+                        >
                           Check our GitHub
                         </button>
                       </a>
@@ -299,19 +473,69 @@ export default function (theme) {
                   <br />
                   <br />
                   <br />
+                  <section>
+                    <h2
+                      id="mint-dialogue"
+                      style="text-align: center; margin-bottom: 1rem;"
+                    >
+                      Mint our NFT to join the Kiwi curators!
+                    </h2>
+                    <div class="image-and-text">
+                      <div class="image-container">
+                        <img
+                          src="animation.gif"
+                          alt="Kiwi News NFT"
+                          class="kiwi-nft"
+                        />
+                      </div>
+                      <div
+                        class="text-container"
+                        style="display: flex; flex-direction: column; justify-content:end;"
+                      >
+                        <div class="text-content">
+                          <div class="text-row">
+                            <div>1 NFT</div>
+                            <div>
+                              <nft-price />
+                              <span> ETH</span>
+                            </div>
+                          </div>
+                          <div class="text-row">
+                            <div><b>ZORA</b> mint fee</div>
+                            <div>0.000777 ETH</div>
+                          </div>
+                          <div class="text-row">
+                            <div>Total</div>
+                            <div>
+                              <nft-price data-fee="0.000777" />
+                              <span> ETH</span>
+                            </div>
+                          </div>
+                          <div id="buy-button-container">
+                            <button class="buy-button" disabled>
+                              Loading...
+                            </button>
+                          </div>
+                        </div>
+                        <br />
+                        <span style="margin-top: 5px;"
+                          >Want to buy another NFT to support us? Buy it
+                          directly on
+                          <span> </span>
+                          <u
+                            ><a
+                              target="_blank"
+                              href="https://zora.co/collect/eth:0xebb15487787cbf8ae2ffe1a6cca5a50e63003786"
+                              >ZORA.co</a
+                            ></u
+                          ></span
+                        >
+                      </div>
+                    </div>
+                  </section>
                   <div
                     style="display: flex; flex-direction: column; align-items: center;"
                   >
-                    <a
-                      href="/welcome"
-                      target="_blank"
-                      style="margin-bottom: 1rem; display: flex; justify-content: center;"
-                    >
-                      <button id="button-onboarding">
-                        Join the community by minting Kiwi NFT
-                      </button>
-                    </a>
-
                     <h2 style="margin-bottom: 1rem;">
                       What people say about Kiwi:
                     </h2>
@@ -326,11 +550,13 @@ export default function (theme) {
                     <p>
                       It's a long story that started with a meme on Farcaster.
                       You can learn more about it on
+                      <span> </span>
                       <u
                         ><a href="https://howtoeat.kiwi" target="_blank"
                           >howtoeat.kiwi</a
                         ></u
                       >
+                      <span> </span>
                       and mint a free Kiwi NFT.
                     </p>
 
@@ -364,18 +590,11 @@ export default function (theme) {
                       Chat. If you don’t hold our NFT, you can always add your
                       requests here.
                     </p>
-
-                    <b>How do you determine the price of the NFT?</b>
-                    <p>
-                      We have a simple algorithm for price discovery. You can
-                      learn more about it here.
-                    </p>
                   </div>
                   <br />
                   <br />
                   <a
-                    href="/welcome"
-                    target="_blank"
+                    href="#mint-dialogue"
                     style="margin-bottom: 1rem; display: flex; justify-content: center;"
                   >
                     <button id="button-onboarding">
@@ -396,62 +615,65 @@ export default function (theme) {
                     <br />
                     Few people believed it, many ridiculed it. But thanks to
                     those who had enough intellectual courage to rethink the
-                    world they live in, the world has changed. Years gone by and
-                    in the meantime, crypto helped to make many people rich. Big
-                    money brought many scammers and the last few years were
-                    dominated by exploits, stolen money, and scams.
+                    world they live in, the world has changed. Years have gone
+                    by and in the meantime, crypto helped to make many people
+                    rich. Big money brought many scammers and the last few years
+                    were dominated by exploits, stolen money, and scams.
                     <br />
                     <br />
                     But as we started learning more about tokens, some people
                     also learned that crypto might be a tool to create a fairer
                     version of many other areas of our life. We could rethink
                     not only finance but also art markets, gaming, and social
-                    media. Just like Bitcoin creators, this avant-garde also has
-                    been ridiculed. And there’s a fair point that rebuilding the
-                    whole industries is an extremely hard thing to do.
+                    media. But just like Bitcoin's creators, these crypto-native
+                    entrepreneurs are ridiculed too. And it's a fair point:
+                    rebuilding whole industries is hard and unlikely to succeed.
                     <br />
                     <br />To have any chance of succeeding, we need a space
-                    where builders can exchange their ideas. A place where they
-                    can clash whole areas of thought: from game theory and
-                    economics, through psychology and arts up to governance and
-                    tech. But this content is hard to find. Distribution is
-                    centralized among a few big Twitter accounts and
-                    newsletters.
+                    where builders can exchange their ideas. A place where
+                    thoughts can clash: from game theory and economics, through
+                    psychology and arts up to governance and tech. But this
+                    content is hard to find. Distribution is centralized among a
+                    few big Twitter accounts and newsletters.
                     <br />
-                    <br />And although they provide a lot of great ideas - who
-                    doesn’t read Vitalik’s essays - a lot of fresh insights can
-                    be found at the edges. Among people who are less known since
-                    they spend their days doing research and coding and don’t
-                    have time to build their audiences. So the idea behind Kiwi
-                    is to go back to the roots. Promote content close to the
-                    crypto values that make us rethink the world we live in. And
-                    create an arena where this content can compete and the best
-                    ideas can win.
+                    <br />
+                    And although we can find many great ideas in those
+                    centralized communities, the freshest insights can usually
+                    be found at the edges, among people who are less popular
+                    since they spend their days doing research and coding - not
+                    dedicating every minute to grow their audience. So the idea
+                    behind Kiwi is to go back to the roots. Promote content
+                    close to the crypto values that make us rethink the world we
+                    live in. And create an arena where this content can compete
+                    and the best ideas can win.
                     <br />
                     <br />In web2, we once had a tool for that. But as years
-                    went by HackerNews transformed into a very pessimistic and
-                    anti-new-tech space. So we want to rebuild it from scratch.
-                    Just like Uniswap rethinks Coinbase and Farcaster rethinks
-                    Twitter, Kiwi wants to rethink HackerNews and content
+                    went by HackerNews transformed into a pessimistic and
+                    progress-skeptical space. So we want to rebuild it from
+                    scratch. Just like Uniswap rethought Coinbase and Farcaster
+                    rethinks Twitter, Kiwi rethinks HackerNews and content
                     distribution in general. We believe you shouldn’t doom
                     scroll Twitter for 3 hours to find good content.
                     <br />
-                    <br />You should be able to access it easily and smoothly
-                    without overloading your cognitive abilities with noise.
-                    That’s why it's time to start builders-first media.
-                    <br />
-                    <br />This media can’t be just an app, though. We need to
-                    give builders freedom. The freedom to access the same
-                    content across different apps, the freedom to have their own
-                    content focus and the freedom to choose their own moderation
-                    rules. We don’t need just an app. We need a whole protocol.
-                    And that’s what we’ve been building at Kiwi.
-                    <br />
-                    <br />As David Hoffman says: “Crypto wasn’t made to make you
-                    rich. Crypto was to set you free”.
+                    <br />You should be able stumble upon content
+                    serendipitously, without bringing your dopamine levels out
+                    of balance. That’s why it's time to rethink news aggregation
+                    from the ground up.
                     <br />
                     <br />
-                    Tim Daub & Mac Budkowski
+
+                    Not by building yet another app: But by giving our users the
+                    freedom to access the same content across different clients
+                    and by allowing everyone to choose their moderation rules.
+                    By building Kiwi primarily as a protocol, and then as an
+                    app, we're enabling anyone to fork us, hence bootstrapping
+                    credible neutrality.
+                    <br />
+                    <br />Because as David Hoffman says: “Crypto wasn’t made to
+                    make you rich. Crypto was to set you free”.
+                    <br />
+                    <br />
+                    Tim Daubenschütz & Mac Budkowski
                   </p>
 
                   <br />

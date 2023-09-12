@@ -14,7 +14,6 @@ import privacy from "./views/privacy.mjs";
 import guidelines from "./views/guidelines.mjs";
 import onboarding from "./views/onboarding.mjs";
 import join from "./views/join.mjs";
-import nft from "./views/nft.mjs";
 import nfts from "./views/nfts.mjs";
 import subscribe from "./views/subscribe.mjs";
 import upvotes from "./views/upvotes.mjs";
@@ -140,11 +139,8 @@ export async function launch(trie, libp2p) {
       .type("text/html")
       .send(onboarding(reply.locals.theme));
   });
-  app.get("/join", async (request, reply) => {
-    return reply.status(200).type("text/html").send(join(reply.locals.theme));
-  });
   app.get("/welcome", async (request, reply) => {
-    return reply.status(200).type("text/html").send(nft(reply.locals.theme));
+    return reply.status(200).type("text/html").send(join(reply.locals.theme));
   });
   app.get("/upvotes", async (request, reply) => {
     const content = await upvotes(

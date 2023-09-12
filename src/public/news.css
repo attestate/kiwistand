@@ -211,6 +211,11 @@ body {
     display: inline-block;
 }
 
+  #button-onboarding.button-secondary{
+    background-color: rgba(0,0,0,0);
+    color: black;
+}
+
   
 /* mobile device */
  @media only screen and (min-width : 300px) and (max-width : 750px) {
