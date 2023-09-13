@@ -143,10 +143,19 @@ export async function launch(trie, libp2p) {
     return reply.status(200).type("text/html").send(join(reply.locals.theme));
   });
   app.get("/upvotes", async (request, reply) => {
+    let mode = "top";
+    if (request.query.mode === "new") mode = "new";
+
+    let page = parseInt(request.query.page);
+    if (isNaN(page) || page < 1) {
+      page = 0;
+    }
     const content = await upvotes(
       trie,
       reply.locals.theme,
       request.query.address,
+      page,
+      mode,
     );
     return reply.status(200).type("text/html").send(content);
   });

@@ -70,16 +70,15 @@ const calculateScore = (votes, itemHourAge, gravity = 1.8) => {
   return (votes - 1) / Math.pow(itemHourAge + 2, gravity);
 };
 
-async function topstories(leaves, start, end) {
+export async function topstories(leaves, minimalUpvotes = 2) {
   return count(leaves)
-    .filter((story) => story.upvotes > 2)
+    .filter((story) => story.upvotes > minimalUpvotes)
     .map((story) => {
       const score = calculateScore(story.upvotes, itemAge(story.timestamp));
       story.score = score;
       return story;
     })
-    .sort((a, b) => b.score - a.score)
-    .slice(start, end);
+    .sort((a, b) => b.score - a.score);
 }
 
 async function editors(leaves) {
@@ -153,13 +152,13 @@ async function editors(leaves) {
 }
 
 export default async function index(trie, theme, page) {
-  const aWeekAgo = sub(new Date(), {
-    weeks: 1,
+  const lookBack = sub(new Date(), {
+    weeks: 3,
   });
   const from = null;
   const amount = null;
   const parser = JSON.parse;
-  const aWeekAgoUnixTime = Math.floor(aWeekAgo.getTime() / 1000);
+  const lookBackUnixTime = Math.floor(lookBack.getTime() / 1000);
   const allowlist = await registry.allowlist();
   const delegations = await registry.delegations();
 
@@ -168,7 +167,7 @@ export default async function index(trie, theme, page) {
     from,
     amount,
     parser,
-    aWeekAgoUnixTime,
+    lookBackUnixTime,
     allowlist,
     delegations,
   );
@@ -183,7 +182,7 @@ export default async function index(trie, theme, page) {
   const totalStories = parseInt(env.TOTAL_STORIES, 10);
   const start = totalStories * page;
   const end = totalStories * (page + 1);
-  const storyPromises = await topstories(leaves, start, end);
+  const storyPromises = (await topstories(leaves)).slice(start, end);
 
   let stories = [];
   for await (let story of storyPromises) {
