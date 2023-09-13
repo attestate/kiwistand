@@ -109,6 +109,7 @@ const LearnMore = (props) => {
             cursor: "pointer",
             textDecoration: "underline",
             color: "black",
+            fontSize: "0.9rem",
           }}
         >
           Install our <br />
@@ -125,7 +126,11 @@ const LearnMore = (props) => {
     <div style={{ textAlign: "center", paddingRight: "4px" }}>
       <a
         href="/welcome"
-        style={{ textDecoration: "underline", color: "black" }}
+        style={{
+          fontSize: "0.9rem",
+          textDecoration: "underline",
+          color: "black",
+        }}
       >
         Learn more <br />
         about 🥝
