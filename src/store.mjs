@@ -314,17 +314,21 @@ export async function posts(
   const nodes = await leaves(trie, from, amount, parser, startDateTime);
 
   const cacheEnabled = true;
-  return nodes.map((node) => {
-    const signer = ecrecover(node, EIP712_MESSAGE, cacheEnabled);
-    const identity = eligible(allowlist, delegations, signer);
-    if (!identity)
-      throw new Error(`Found in-eligible message in storage: ${signer}`);
-    return {
-      ...node,
-      signer,
-      identity,
-    };
-  });
+  return nodes
+    .map((node) => {
+      const signer = ecrecover(node, EIP712_MESSAGE, cacheEnabled);
+      const identity = eligible(allowlist, delegations, signer);
+      if (!identity) {
+        log(`Identity not found: ${signer}`);
+        return null;
+      }
+      return {
+        ...node,
+        signer,
+        identity,
+      };
+    })
+    .filter((node) => node !== null);
 }
 
 export async function leaves(trie, from, amount, parser, startDatetime) {
