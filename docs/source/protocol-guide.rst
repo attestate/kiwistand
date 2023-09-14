@@ -23,7 +23,7 @@ __________________________
 
 Kiwi News Protocol implements sybil-resistance by causing costs during a user's
 sign-up. Technically, any user can send signed EIP-712 messages to a Kiwi node, however,
-all messages are signed and a node will only consider messages valid where the message's signer is an Ethereum address who had previously minted the "Hyperkiwification" NFT at `eth:0xebb15487787cbf8ae2ffe1a6cca5a50e63003786 <https://etherscan.io/address/0xebb15487787cbf8ae2ffe1a6cca5a50e63003786>`_.
+all messages are signed and a node will only consider messages valid where the message's signer is an Ethereum address who had previously minted the "Hyperkiwification" NFT at `oeth:0x66747bdC903d17C586fA09eE5D6b54CC85bBEA45 <https://optimistic.etherscan.io/address/0x66747bdc903d17c586fa09ee5d6b54cc85bbea45>`_.
 
 Introducing Set Reconciliation
 ------------------------------

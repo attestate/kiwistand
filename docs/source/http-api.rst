@@ -91,8 +91,8 @@ Endpoints
 **GET /api/v1/allowlist**
 
 Retrieves the allow list, which includes all Ethereum addresses that have
-minted the NFT at the contract located at
-`0xebb15487787cbf8ae2ffe1a6cca5a50e63003786 <https://etherscan.io/address/0xebb15487787cbf8ae2ffe1a6cca5a50e63003786>`_.
+minted the NFT on Optimism at the contract located at
+`0x66747bdc903d17c586fa09ee5d6b54cc85bbea45 <https://optimistic.etherscan.io/address/0x66747bdc903d17c586fa09ee5d6b54cc85bbea45>`_.
 Please note that it may take some time for the indexer to pick up a new mint
 (usually around 1-2 minutes).
 
