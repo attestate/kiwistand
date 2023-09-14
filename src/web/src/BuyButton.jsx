@@ -15,6 +15,7 @@ import { eligible, create } from "@attestate/delegator2";
 import { useState, useEffect } from "react";
 import useLocalStorageState from "use-local-storage-state";
 import { RainbowKitProvider, ConnectButton } from "@rainbow-me/rainbowkit";
+import { getLocalAccount } from "./session.mjs";
 
 import { client, chains } from "./client.mjs";
 
@@ -109,7 +110,17 @@ const BuyButton = (props) => {
         parse: (val) => val,
       },
     });
-  const isEligible = eligible(allowlist, delegations, from.address);
+
+  let address;
+  const localAccount = getLocalAccount(from.address);
+  if (from.isConnected) {
+    address = from.address;
+  }
+  if (localAccount) {
+    address = localAccount.identity;
+  }
+
+  const isEligible = eligible(allowlist, delegations, address);
 
   useEffect(() => {
     if (from.address) {
