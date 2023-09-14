@@ -32,6 +32,11 @@ const abiDelegator = [
         name: "data",
         type: "bytes32[3]",
       },
+      {
+        internalType: "string",
+        name: "comment",
+        type: "string",
+      },
     ],
     name: "setup",
     outputs: [],
@@ -84,7 +89,7 @@ const abiVendor = [
 ];
 
 const addressVendor = "0x66747bdc903d17c586fa09ee5d6b54cc85bbea45";
-const addressDelegator = "0xD685Bf34D8A843315143eC3c6DCD9CEedD763088";
+const addressDelegator = "0x636620Bcf1168e1b06757f26d0891D7B374827ff";
 
 const newKey = Wallet.createRandom();
 const BuyButton = (props) => {
@@ -140,11 +145,12 @@ const BuyButton = (props) => {
   });
 
   const quantity = 1;
+  const comment = "";
   const { config, error } = usePrepareContractWrite({
     address: addressDelegator,
     abi: abiDelegator,
     functionName: "setup",
-    args: [quantity, payload],
+    args: [quantity, payload, comment],
     overrides: {
       value: saleDetails.data.publicSalePrice.add(ZORA_MINT_FEE),
     },

@@ -483,7 +483,7 @@ export default function (theme) {
                     <div class="image-and-text">
                       <div class="image-container">
                         <img
-                          src="animation.gif"
+                          src="pass.jpeg"
                           alt="Kiwi News NFT"
                           class="kiwi-nft"
                         />
