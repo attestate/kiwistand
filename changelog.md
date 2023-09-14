@@ -5,6 +5,20 @@
 - We are versioning according to [semver.org](https://semver.org)
 - We are currently in the ["Initial development phase"](https://semver.org/#spec-item-4)
 
+## 0.6.0
+
+- Upgrade all libp2p version identifiers
+- Move all eligible-defining NFTs to `oeth:0x66747bdc903d17c586fa09ee5d6b54cc85bbea45`
+- Deprecate `RPC_HTTP_HOST`
+- Fix bugs with indexing logs. attestate/crawler `order` function was ordering
+  logs based on blockIndex and transactionIndex, but logIndex was necessary
+  too.
+  - We've essentially created two new indexing strategies
+    ("list-delegations-2", and "op-call-block-logs").
+- store.posts now tolerates finding "in-eligible" messages
+- Added docs that explain how Kiwi News Protocol's set reconciliation works
+- Use a DFS to traverse the tree for posts (thank you to @freeatnet!)
+
 ## 0.5.0
 
 - Deactivate revocations temporarily until we're properly implementing them in
