@@ -34,7 +34,7 @@ import * as registry from "./chainstate/registry.mjs";
     handlers.connection,
     handlers.protocol,
     [messages, roots],
-    trie
+    trie,
   );
   await api.launch(trie, node);
   await http.launch(trie, node);
@@ -47,13 +47,13 @@ import * as registry from "./chainstate/registry.mjs";
   const parser = JSON.parse;
   const allowlist = await registry.allowlist();
   const delegations = await registry.delegations();
-  await store.posts(
-    trie,
-    from,
-    amount,
-    parser,
-    startDatetime,
-    allowlist,
-    delegations
-  );
+  //await store.posts(
+  //  trie,
+  //  from,
+  //  amount,
+  //  parser,
+  //  startDatetime,
+  //  allowlist,
+  //  delegations
+  //);
 })();

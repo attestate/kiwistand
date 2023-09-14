@@ -20,7 +20,7 @@ export default {
   },
   path: [
     {
-      name: "list-delegations",
+      name: "list-delegations-2",
       coordinator: {
         archive: false,
         module: blockLogs.state,
@@ -41,7 +41,7 @@ export default {
           blockspan: 5000,
         },
         output: {
-          name: "list-delegations-extraction",
+          name: "list-delegations-extraction-2",
         },
       },
       transformer: {
@@ -56,10 +56,10 @@ export default {
           ],
         },
         input: {
-          name: "list-delegations-extraction",
+          name: "list-delegations-extraction-2",
         },
         output: {
-          name: "list-delegations-transformation",
+          name: "list-delegations-transformation-2",
         },
       },
       loader: {
@@ -68,10 +68,10 @@ export default {
           order: delegations.order,
         },
         input: {
-          name: "list-delegations-transformation",
+          name: "list-delegations-transformation-2",
         },
         output: {
-          name: "list-delegations-load",
+          name: "list-delegations-load-2",
         },
       },
     },
@@ -82,7 +82,7 @@ export default {
     },
   },
   endpoints: {
-    [process.env.RPC_HTTP_HOST]: {
+    [process.env.OPTIMISM_RPC_HTTP_HOST]: {
       timeout: 10_000,
     },
   },

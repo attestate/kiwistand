@@ -25,7 +25,6 @@ test("that repo contains a .env-copy file with all possible configuration option
 
   const expr = new RegExp(".*=.*", "gm");
   const allOptions = [
-    "RPC_HTTP_HOST",
     "OPTIMISM_RPC_HTTP_HOST",
     "LOG_LEVEL",
     "NODE_ENV",
@@ -51,11 +50,11 @@ test("that repo contains a .env-copy file with all possible configuration option
   t.is(
     envMatches.length,
     copyMatches.length,
-    ".env-copy and .env aren't matching"
+    ".env-copy and .env aren't matching",
   );
   t.is(
     copyMatches.length,
     allOptions.length,
-    ".env-copy and required `allOptions` mismatch"
+    ".env-copy and required `allOptions` mismatch",
   );
 });

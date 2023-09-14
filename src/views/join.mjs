@@ -252,7 +252,7 @@ export default function (theme) {
         <meta property="eth:nft:schema" content="erc721" />
         <meta
           property="eth:nft:media_url"
-          content="https://news.kiwistand.com/animation.gif"
+          content="https://news.kiwistand.com/pass.jpeg"
         />
         <meta property="eth:nft:mint_status" content="live" />
         <meta property="eth:nft:chain" content="ethereum" />
@@ -525,7 +525,7 @@ export default function (theme) {
                           <u
                             ><a
                               target="_blank"
-                              href="https://zora.co/collect/eth:0xebb15487787cbf8ae2ffe1a6cca5a50e63003786"
+                              href="https://zora.co/collect/oeth:0x66747bdc903d17c586fa09ee5d6b54cc85bbea45"
                               >ZORA.co</a
                             ></u
                           ></span

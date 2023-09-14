@@ -3,13 +3,13 @@ import {
   useContractWrite,
   WagmiConfig,
   useAccount,
-  useNetwork,
-  useSwitchNetwork,
   useProvider,
   useContractRead,
+  useNetwork,
+  useSwitchNetwork,
 } from "wagmi";
 import { parseEther } from "@ethersproject/units";
-import { mainnet } from "wagmi/chains";
+import { optimism } from "wagmi/chains";
 import { Wallet } from "@ethersproject/wallet";
 import { eligible, create } from "@attestate/delegator2";
 import { useState, useEffect } from "react";
@@ -18,7 +18,8 @@ import { RainbowKitProvider, ConnectButton } from "@rainbow-me/rainbowkit";
 
 import { client, chains } from "./client.mjs";
 
-const abiVendor = [
+const ZORA_MINT_FEE = parseEther("0.000777");
+const abiDelegator = [
   {
     inputs: [
       {
@@ -26,15 +27,23 @@ const abiVendor = [
         name: "quantity",
         type: "uint256",
       },
-    ],
-    name: "purchase",
-    outputs: [
       {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
+        internalType: "bytes32[3]",
+        name: "data",
+        type: "bytes32[3]",
       },
     ],
+    name: "setup",
+    outputs: [],
+    stateMutability: "payable",
+    type: "function",
+  },
+];
+const abiVendor = [
+  {
+    inputs: [{ internalType: "uint256", name: "quantity", type: "uint256" }],
+    name: "purchase",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
     stateMutability: "payable",
     type: "function",
   },
@@ -44,41 +53,13 @@ const abiVendor = [
     outputs: [
       {
         components: [
-          {
-            internalType: "bool",
-            name: "publicSaleActive",
-            type: "bool",
-          },
-          {
-            internalType: "bool",
-            name: "presaleActive",
-            type: "bool",
-          },
-          {
-            internalType: "uint256",
-            name: "publicSalePrice",
-            type: "uint256",
-          },
-          {
-            internalType: "uint64",
-            name: "publicSaleStart",
-            type: "uint64",
-          },
-          {
-            internalType: "uint64",
-            name: "publicSaleEnd",
-            type: "uint64",
-          },
-          {
-            internalType: "uint64",
-            name: "presaleStart",
-            type: "uint64",
-          },
-          {
-            internalType: "uint64",
-            name: "presaleEnd",
-            type: "uint64",
-          },
+          { internalType: "bool", name: "publicSaleActive", type: "bool" },
+          { internalType: "bool", name: "presaleActive", type: "bool" },
+          { internalType: "uint256", name: "publicSalePrice", type: "uint256" },
+          { internalType: "uint64", name: "publicSaleStart", type: "uint64" },
+          { internalType: "uint64", name: "publicSaleEnd", type: "uint64" },
+          { internalType: "uint64", name: "presaleStart", type: "uint64" },
+          { internalType: "uint64", name: "presaleEnd", type: "uint64" },
           {
             internalType: "bytes32",
             name: "presaleMerkleRoot",
@@ -89,16 +70,8 @@ const abiVendor = [
             name: "maxSalePurchasePerAddress",
             type: "uint256",
           },
-          {
-            internalType: "uint256",
-            name: "totalMinted",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "maxSupply",
-            type: "uint256",
-          },
+          { internalType: "uint256", name: "totalMinted", type: "uint256" },
+          { internalType: "uint256", name: "maxSupply", type: "uint256" },
         ],
         internalType: "struct IERC721Drop.SaleDetails",
         name: "",
@@ -110,36 +83,72 @@ const abiVendor = [
   },
 ];
 
-const addressVendor = "0xebb15487787cbf8ae2ffe1a6cca5a50e63003786";
+const addressVendor = "0x66747bdc903d17c586fa09ee5d6b54cc85bbea45";
+const addressDelegator = "0xD685Bf34D8A843315143eC3c6DCD9CEedD763088";
 
 const newKey = Wallet.createRandom();
 const BuyButton = (props) => {
-  const { allowlist, delegations, toast } = props;
-  const from = useAccount();
   const { chain } = useNetwork();
   const { switchNetwork } = useSwitchNetwork();
+  const { allowlist, delegations, toast } = props;
+  const from = useAccount();
   const provider = useProvider();
+  const [key, setKey] = useState(null);
   const [payload, setPayload] = useState(null);
+  const [keyName, setKeyName] = useState(null);
+  const [delegated, setDelegated] = useState(false);
+  const [localStorageKey, setLocalStorageKey, { removeItem, isPersistent }] =
+    useLocalStorageState(keyName, {
+      serializer: {
+        stringify: (val) => val,
+        parse: (val) => val,
+      },
+    });
   const isEligible = eligible(allowlist, delegations, from.address);
 
-  const salesDetails = useContractRead({
+  useEffect(() => {
+    if (from.address) {
+      setKeyName(`-kiwi-news-${from.address}-key`);
+    }
+  }, [from.address]);
+
+  useEffect(() => {
+    if (!localStorageKey && from.address) {
+      setKey(newKey);
+    } else if (localStorageKey) {
+      const existingKey = new Wallet(localStorageKey, provider);
+      setDelegated(true);
+    }
+  }, [from.address, localStorageKey, provider]);
+
+  useEffect(() => {
+    const generate = async () => {
+      if (key) {
+        const authorize = true;
+        const payload = await create(key, from.address, key.address, authorize);
+        setPayload(payload);
+      }
+    };
+    generate();
+  }, [from.address, key]);
+
+  const saleDetails = useContractRead({
     address: addressVendor,
     abi: abiVendor,
     functionName: "saleDetails",
-    chainId: 1,
+    chainId: optimism.id,
   });
 
-  const ZORA_MINT_FEE = parseEther("0.000777");
   const quantity = 1;
   const { config, error } = usePrepareContractWrite({
-    address: addressVendor,
-    abi: abiVendor,
-    functionName: "purchase",
-    args: [quantity],
+    address: addressDelegator,
+    abi: abiDelegator,
+    functionName: "setup",
+    args: [quantity, payload],
     overrides: {
-      value: salesDetails.data.publicSalePrice.add(ZORA_MINT_FEE),
+      value: saleDetails.data.publicSalePrice.add(ZORA_MINT_FEE),
     },
-    chainId: mainnet.id,
+    chainId: optimism.id,
   });
 
   if (error) {
@@ -156,13 +165,17 @@ const BuyButton = (props) => {
           duration: 10000,
         },
       );
+      setLocalStorageKey(key.privateKey);
     }
   }, [isSuccess]);
 
-  if (chain.id !== 1) {
+  if (chain.id !== optimism.id) {
     return (
-      <button className="buy-button" onClick={() => switchNetwork?.(1)}>
-        Switch to Ethereum Mainnet
+      <button
+        className="buy-button"
+        onClick={() => switchNetwork?.(optimism.id)}
+      >
+        Switch to Optimism
       </button>
     );
   }
@@ -185,7 +198,10 @@ const BuyButton = (props) => {
 
   if (isSuccess) {
     return (
-      <a target="_blank" href={`https://etherscan.io/tx/${data.hash}`}>
+      <a
+        target="_blank"
+        href={`https://optimistic.etherscan.io/tx/${data.hash}`}
+      >
         <button className="buy-button">
           Thanks for minting! (view on Etherscan)
         </button>

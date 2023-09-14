@@ -1,4 +1,6 @@
 // @format
+import { env } from "process";
+
 import * as blockLogs from "@attestate/crawler-call-block-logs";
 import * as transferLoader from "./transfer-loader.mjs";
 import * as delegations from "./delegations.mjs";
@@ -8,12 +10,16 @@ export default {
     // NOTE: We're hard-coding these values here as they're mandated (falsely)
     // by the @attestate/crawler but since kiwistand will never use them for
     // anything.
+    rpcHttpHost: env.OPTIMISM_RPC_HTTP_HOST,
+    // NOTE: We're hard-coding these values here as they're mandated (falsely)
+    // by the @attestate/crawler but since kiwistand will never use them for
+    // anything.
     ipfsHttpsGateway: "https://",
     arweaveHttpsGateway: "https://",
   },
   path: [
     {
-      name: "call-block-logs",
+      name: "op-call-block-logs",
       coordinator: {
         archive: false,
         module: blockLogs.state,
@@ -22,8 +28,8 @@ export default {
       extractor: {
         module: blockLogs.extractor,
         args: {
-          start: 16873658,
-          address: "0xebB15487787cBF8Ae2ffe1a6Cca5a50E63003786",
+          start: 109542336,
+          address: "0x66747bdC903d17C586fA09eE5D6b54CC85bBEA45",
           topics: [
             "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
             "0x0000000000000000000000000000000000000000000000000000000000000000",
@@ -31,17 +37,17 @@ export default {
           blockspan: 5000,
         },
         output: {
-          name: "call-block-logs-extraction",
+          name: "op-call-block-logs-extraction",
         },
       },
       transformer: {
         module: blockLogs.transformer,
         args: {},
         input: {
-          name: "call-block-logs-extraction",
+          name: "op-call-block-logs-extraction",
         },
         output: {
-          name: "call-block-logs-transformation",
+          name: "op-call-block-logs-transformation",
         },
       },
       loader: {
@@ -50,10 +56,10 @@ export default {
           order: transferLoader.order,
         },
         input: {
-          name: "call-block-logs-transformation",
+          name: "op-call-block-logs-transformation",
         },
         output: {
-          name: "call-block-logs-load",
+          name: "op-call-block-logs-load",
         },
       },
     },
@@ -64,7 +70,7 @@ export default {
     },
   },
   endpoints: {
-    [process.env.RPC_HTTP_HOST]: {
+    [process.env.OPTIMISM_RPC_HTTP_HOST]: {
       timeout: 10_000,
     },
   },

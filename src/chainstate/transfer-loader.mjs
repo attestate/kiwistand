@@ -32,7 +32,10 @@ export function* order({ state: { line } }) {
   }
 
   for (let log of logs) {
-    const key = serialize([log.blockNumber, log.transactionIndex], 16);
+    const key = serialize(
+      [log.blockNumber, log.transactionIndex, log.logIndex],
+      16,
+    );
     const { topics } = log;
     topics.shift();
     const parsedLog = decodeLog(inputs, log.data, topics);
