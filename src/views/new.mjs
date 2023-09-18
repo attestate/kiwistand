@@ -24,21 +24,19 @@ const html = htm.bind(vhtml);
 export default async function (trie, theme) {
   const config = await moderation.getLists();
 
-  const aWeekAgo = sub(new Date(), {
-    weeks: 1,
-  });
   const from = null;
   const amount = null;
   const parser = JSON.parse;
-  const aWeekAgoUnixTime = Math.floor(aWeekAgo.getTime() / 1000);
   const allowlist = await registry.allowlist();
   const delegations = await registry.delegations();
+  const startDateTime = null;
+
   let leaves = await store.posts(
     trie,
     from,
     amount,
     parser,
-    aWeekAgoUnixTime,
+    startDateTime,
     allowlist,
     delegations,
   );
