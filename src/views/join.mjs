@@ -501,7 +501,16 @@ export default function (theme) {
                             </div>
                           </div>
                           <div class="text-row">
-                            <div><b>ZORA</b> mint fee</div>
+                            <div>
+                              <b>ZORA</b> mint fee*
+                              <span> </span>
+                              (<a
+                                style="font-size: 0.8rem; text-decoration: underline;"
+                                href="https://support.zora.co/en/articles/8192123-understanding-protocol-rewards-on-zora"
+                                target="_blank"
+                                >Learn more</a
+                              >)
+                            </div>
                             <div>0.000777 ETH</div>
                           </div>
                           <div class="text-row">
@@ -533,6 +542,21 @@ export default function (theme) {
                       </div>
                     </div>
                   </section>
+                  <div
+                    style="display: flex; flex-direction: column; align-items: center;"
+                  >
+                    <h2 style="margin-bottom: 1rem;">
+                      Kiwi-pilled?
+                    </h2>
+                    <p style="width: 80%;">
+                      You receive 0.000222 ETH from <b>ZORA</b> in mint referral rewards by adding
+                      your address to our link when others mint:
+                      <p style="font-family: Courier New, monospace; margin-top: 0;">
+                      "news.kiwistand.com/welcome?referral=your-address"
+                      </p>
+                    </p>
+                  </div>
+                  <br />
                   <div
                     style="display: flex; flex-direction: column; align-items: center;"
                   >

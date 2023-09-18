@@ -11,6 +11,7 @@ import {
 import { parseEther } from "@ethersproject/units";
 import { optimism } from "wagmi/chains";
 import { Wallet } from "@ethersproject/wallet";
+import { getAddress } from "@ethersproject/address";
 import { eligible, create } from "@attestate/delegator2";
 import { useState, useEffect } from "react";
 import useLocalStorageState from "use-local-storage-state";
@@ -38,6 +39,7 @@ const abiDelegator = [
         name: "comment",
         type: "string",
       },
+      { internalType: "address", name: "referral", type: "address" },
     ],
     name: "setup",
     outputs: [],
@@ -89,8 +91,8 @@ const abiVendor = [
   },
 ];
 
-const addressVendor = "0x66747bdc903d17c586fa09ee5d6b54cc85bbea45";
-const addressDelegator = "0x636620Bcf1168e1b06757f26d0891D7B374827ff";
+const collectionProxy = "0x66747bdc903d17c586fa09ee5d6b54cc85bbea45";
+const addressDelegator = "0xea3b341b1f189f8e56b00c8e387b770acae121cf";
 
 const newKey = Wallet.createRandom();
 const BuyButton = (props) => {
@@ -149,7 +151,7 @@ const BuyButton = (props) => {
   }, [from.address, key]);
 
   const saleDetails = useContractRead({
-    address: addressVendor,
+    address: collectionProxy,
     abi: abiVendor,
     functionName: "saleDetails",
     chainId: optimism.id,
@@ -157,11 +159,43 @@ const BuyButton = (props) => {
 
   const quantity = 1;
   const comment = "";
+
+  const zeroAddress = "0x0000000000000000000000000000000000000000";
+  let referral = zeroAddress;
+  const queryReferral = new URLSearchParams(window.location.search).get(
+    "referral",
+  );
+  try {
+    referral = getAddress(queryReferral);
+  } catch (err) {
+    //noop
+  }
+
+  let referralComponent;
+  if (referral !== zeroAddress) {
+    referralComponent = (
+      <span
+        style={{ display: "block", fontSize: "0.75rem", marginTop: "10px" }}
+      >
+        *You have been referred by the Ethereum address{" "}
+        <a
+          style={{ textDecoration: "underline" }}
+          href={"https://etherscan.io/address/" + referral}
+          target="_blank"
+        >
+          {referral}
+        </a>
+        . If you proceed with minting, they will receive a referral reward of
+        0.000222 ETH.
+      </span>
+    );
+  }
+
   const { config, error } = usePrepareContractWrite({
     address: addressDelegator,
     abi: abiDelegator,
     functionName: "setup",
-    args: [quantity, payload, comment],
+    args: [quantity, payload, comment, referral],
     overrides: {
       value: saleDetails.data.publicSalePrice.add(ZORA_MINT_FEE),
     },
@@ -188,12 +222,15 @@ const BuyButton = (props) => {
 
   if (chain.id !== optimism.id) {
     return (
-      <button
-        className="buy-button"
-        onClick={() => switchNetwork?.(optimism.id)}
-      >
-        Switch to Optimism
-      </button>
+      <div>
+        {referralComponent}
+        <button
+          className="buy-button"
+          onClick={() => switchNetwork?.(optimism.id)}
+        >
+          Switch to Optimism
+        </button>
+      </div>
     );
   }
 
@@ -202,9 +239,12 @@ const BuyButton = (props) => {
     (error.toString().includes("insufficient funds") || error.code === -32603)
   ) {
     return (
-      <button className="buy-button" disabled>
-        Insufficient funds...
-      </button>
+      <div>
+        {referralComponent}
+        <button className="buy-button" disabled>
+          Insufficient funds...
+        </button>
+      </div>
     );
   }
 
@@ -218,26 +258,33 @@ const BuyButton = (props) => {
 
   if (isSuccess) {
     return (
-      <a
-        target="_blank"
-        href={`https://optimistic.etherscan.io/tx/${data.hash}`}
-      >
-        <button className="buy-button">
-          Thanks for minting! (view on Etherscan)
-        </button>
-      </a>
+      <div>
+        {referralComponent}
+        <a
+          target="_blank"
+          href={`https://optimistic.etherscan.io/tx/${data.hash}`}
+        >
+          <button className="buy-button">
+            Thanks for minting! (view on Etherscan)
+          </button>
+        </a>
+      </div>
     );
   }
   if (isEligible) {
     return (
-      <button className="buy-button" disabled>
-        Thanks for minting!
-      </button>
+      <div>
+        {referralComponent}
+        <button className="buy-button" disabled>
+          Thanks for minting!
+        </button>
+      </div>
     );
   }
 
   return (
     <div>
+      {referralComponent}
       <button
         className="buy-button"
         disabled={!write || isLoading}
