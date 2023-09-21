@@ -6,7 +6,7 @@ import vhtml from "vhtml";
 import normalizeUrl from "normalize-url";
 import { formatDistanceToNow } from "date-fns";
 import { utils } from "ethers";
-
+import fetch from "node-fetch";
 import Header from "./components/header.mjs";
 import { trophySVG, broadcastSVG } from "./components/secondheader.mjs";
 import Footer from "./components/footer.mjs";
@@ -18,8 +18,51 @@ import { count, topstories } from "./feed.mjs";
 import * as ens from "../ens.mjs";
 import * as registry from "../chainstate/registry.mjs";
 import Row from "./components/row.mjs";
+import fs from "fs";
+import path from "path";
+
+let cache = {};
+
+async function fetchProfile(address) {
+  if (cache[address]) {
+    return cache[address];
+  }
+
+  const response = await fetch(
+    `https://searchcaster.xyz/api/profiles?q=${address}`,
+  );
+  const data = await response.json();
+  cache[address] = data;
+  return data;
+}
 
 const html = htm.bind(vhtml);
+
+const warpcastIcon = html`
+  <svg
+    width="25"
+    height="25"
+    viewBox="0 0 1260 1260"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <g clip-path="url(#clip0_1_2)">
+      <path
+        d="M947.747 1259.61H311.861C139.901 1259.61 0 1119.72 0 947.752V311.871C0 139.907 139.901 0.00541362 311.861 0.00541362H947.747C1119.71 0.00541362 1259.61 139.907 1259.61 311.871V947.752C1259.61 1119.72 1119.71 1259.61 947.747 1259.61Z"
+        fill="#472A91"
+      ></path>
+      <path
+        d="M826.513 398.633L764.404 631.889L702.093 398.633H558.697L495.789 633.607L433.087 398.633H269.764L421.528 914.36H562.431L629.807 674.876L697.181 914.36H838.388L989.819 398.633H826.513Z"
+        fill="white"
+      ></path>
+    </g>
+    <defs>
+      <clipPath id="clip0_1_2">
+        <rect width="1259.61" height="1259.61" fill="white"></rect>
+      </clipPath>
+    </defs>
+  </svg>
+`;
 
 function extractDomain(link) {
   const parsedUrl = new url.URL(link);
@@ -49,6 +92,7 @@ export default async function (trie, theme, identity, page, mode) {
     return html`Not a valid address`;
   }
   const ensData = await ens.resolve(identity);
+  const profileData = await fetchProfile(identity);
   const from = null;
   const amount = null;
   const parser = JSON.parse;
@@ -167,6 +211,18 @@ export default async function (trie, theme, identity, page, mode) {
                       : ""}
                     ${ensData.discord
                       ? html`<span>Discord: </span> ${ensData.discord}<br />`
+                      : ""}
+                    ${profileData.some((profile) => profile.body)
+                      ? html`
+                          <a
+                            href="https://warpcast.com/${profileData[0].body
+                              .username}"
+                            target="_blank"
+                          >
+                            <div style="margin-top: 4px;">${warpcastIcon}</div>
+                          </a>
+                          <br />
+                        `
                       : ""}
                     <hr />
                     ${stories.length > 0
