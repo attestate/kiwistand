@@ -108,77 +108,40 @@ const DelegateButton = (props) => {
 
   if (!from.address) {
     return (
-      <ConnectedConnectButton
-        required
-        allowlist={props.allowlist}
-        delegations={props.delegations}
-      />
+      <div>
+        <br />
+        <ConnectedConnectButton
+          required
+          allowlist={props.allowlist}
+          delegations={props.delegations}
+        />
+      </div>
     );
   }
   if (key && wallet) {
     const disabled = confirmation !== "delete key";
     return (
       <div>
-        <p>
-          <b>You're set!</b>
-        </p>
-        <p>
-          We've now stored your delegation key on Optimism for this device. You
-          should be able to upvote and submit links without needing to confirm
-          these actions in your wallet!
-        </p>
-        <p>
-          <b>PLEASE NOTE: </b>
-          It might take up to 5 minutes for your key to enter the system!
-        </p>
-        <p>
-          <b>Key storage</b>
-        </p>
         <p style={{ wordBreak: "break-all" }}>
-          Your delegate address: {wallet.address}
-        </p>
-        <p>
-          <b>Delete key</b>
-          <br />
-          <span>
-            You can delete your key from the browser, however, please consider
-            that you'll not be able to recover it. Please type <b>delete key</b>{" "}
-            to confirm.
-          </span>
-          <br />
-          <input
-            type="text"
-            value={confirmation}
-            onChange={(e) => setConfirmation(e.target.value)}
-          />
-          <br />
-          <br />
-          <button
-            className="buy-button"
-            disabled={disabled}
-            onClick={handleClick}
-          >
-            Delete key
-          </button>
+          <b>Enabled</b> with: {wallet.address}
         </p>
       </div>
     );
   }
-  if (!write && !isError) {
-    return <p>Loading from local storage...</p>;
-  }
   let content;
   let activity;
   let handler;
+  let message;
+  if (isLoading) {
+    message = "Please sign transaction";
+  }
+  if (isSuccess) {
+    message =
+      "Success! We're updating our database... (this can take 5 minutes)";
+  }
   if (chain.id === 10) {
-    content = (
-      <span>
-        {!isLoading && !isSuccess && <div>Delegate on Optimism</div>}
-        {isLoading && <div>Please sign transaction</div>}
-        {isSuccess && <div>Delegation successful, please reload</div>}
-      </span>
-    );
-    activity = !write || isLoading || isSuccess;
+    content = <span>Enable</span>;
+    activity = !write || (!write && !isError) || isLoading || isSuccess;
     handler = () => write?.();
   } else {
     content = <span>Switch to Optimism</span>;
@@ -188,9 +151,20 @@ const DelegateButton = (props) => {
   return (
     <div>
       {isPersistent ? (
-        <button className="buy-button" disabled={activity} onClick={handler}>
-          {content}
-        </button>
+        <div>
+          <br />
+          <button
+            style={{ width: "auto" }}
+            className="buy-button"
+            id="button-onboarding"
+            disabled={activity}
+            onClick={handler}
+          >
+            {content}
+          </button>
+          <br />
+          <span>{message}</span>
+        </div>
       ) : (
         <p>Your browser isn't supporting key storage.</p>
       )}

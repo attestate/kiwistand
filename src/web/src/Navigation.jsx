@@ -127,7 +127,7 @@ const LearnMore = (props) => {
       <a
         href="/welcome"
         style={{
-          fontSize: "0.9rem",
+          fontSize: "0.7rem",
           textDecoration: "underline",
           color: "black",
         }}
@@ -443,6 +443,7 @@ const CustomConnectButton = (props) => {
     textDecoration: "none",
     cursor: "pointer",
     width: "100px",
+    display: "inline-block",
   };
 
   return (
