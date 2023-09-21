@@ -9,22 +9,22 @@ export const PROTOCOL = {
     topics: {
       roots: {
         id: "roots",
-        version: "2.0.0",
+        version: "3.0.0",
       },
       messages: {
         id: "messages",
-        version: "2.0.0",
+        version: "3.0.0",
       },
     },
   },
   protocols: {
     leaves: {
       id: "leaves",
-      version: "5.0.0",
+      version: "6.0.0",
     },
     levels: {
       id: "levels",
-      version: "4.0.0",
+      version: "5.0.0",
     },
   },
 };

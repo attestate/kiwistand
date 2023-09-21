@@ -24,13 +24,13 @@ const html = htm.bind(vhtml);
 export default async function (trie, theme) {
   const config = await moderation.getLists();
 
-  const aWeekAgo = sub(new Date(), {
-    weeks: 1,
+  const threeMonthsAgo = sub(new Date(), {
+    months: 3,
   });
   const from = null;
   const amount = null;
   const parser = JSON.parse;
-  const aWeekAgoUnixTime = Math.floor(aWeekAgo.getTime() / 1000);
+  const threeMonthsAgoUnixTime = Math.floor(threeMonthsAgo.getTime() / 1000);
   const allowlist = await registry.allowlist();
   const delegations = await registry.delegations();
   let leaves = await store.posts(
@@ -38,7 +38,7 @@ export default async function (trie, theme) {
     from,
     amount,
     parser,
-    aWeekAgoUnixTime,
+    threeMonthsAgoUnixTime,
     allowlist,
     delegations,
   );

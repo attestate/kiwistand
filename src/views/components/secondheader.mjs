@@ -6,7 +6,7 @@ const html = htm.bind(vhtml);
 
 const style = "width: 1rem; position: relative; top: 0.15rem;";
 
-const broadcastSVG = html`
+export const broadcastSVG = html`
   <svg
     style="${style}"
     xmlns="http://www.w3.org/2000/svg"
@@ -58,7 +58,7 @@ const broadcastSVG = html`
   </svg>
 `;
 
-const trophySVG = html`
+export const trophySVG = html`
   <svg
     style="${style}"
     xmlns="http://www.w3.org/2000/svg"
@@ -114,7 +114,7 @@ const trophySVG = html`
   </svg>
 `;
 
-const fireSVG = html`
+export const fireSVG = html`
   <svg
     style="${style}"
     xmlns="http://www.w3.org/2000/svg"

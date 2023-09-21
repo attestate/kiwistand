@@ -34,7 +34,7 @@ import * as registry from "./chainstate/registry.mjs";
     handlers.connection,
     handlers.protocol,
     [messages, roots],
-    trie
+    trie,
   );
   await api.launch(trie, node);
   await http.launch(trie, node);
@@ -54,6 +54,6 @@ import * as registry from "./chainstate/registry.mjs";
     parser,
     startDatetime,
     allowlist,
-    delegations
+    delegations,
   );
 })();

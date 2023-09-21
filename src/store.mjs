@@ -146,7 +146,7 @@ export async function compare(localTrie, remotes) {
     const { node, type } = await lookup(
       localTrie,
       remoteNode.hash,
-      remoteNode.key
+      remoteNode.key,
     );
     if (type === "match" && node) {
       match.push(remoteNode);
@@ -166,7 +166,7 @@ export async function compare(localTrie, remotes) {
 export async function descend(trie, level, exclude = []) {
   const emptyRoot = Buffer.from(
     "56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
-    "hex"
+    "hex",
   );
   if (level === 0 && isEqual(emptyRoot, trie.root())) {
     return [
@@ -247,13 +247,13 @@ export async function add(
   allowlist,
   delegations,
   synching = false,
-  metadb = metadata()
+  metadb = metadata(),
 ) {
   const address = verify(message);
   const identity = eligible(allowlist, delegations, address);
   if (!identity) {
     const err = `Address "${address}" wasn't found in the allow list or delegations list. Dropping message "${JSON.stringify(
-      message
+      message,
     )}".`;
     log(err);
     throw new Error("You must mint the Kiwi NFT to upvote and submit!");
@@ -278,7 +278,7 @@ export async function add(
   const legit = await passes(metadb, message, identity);
   if (!legit) {
     const err = `Message "${JSON.stringify(
-      message
+      message,
     )}" with address "${identity}" doesn't pass legitimacy criteria (duplicate). It was probably submitted and accepted before.`;
     log(err);
     throw new Error(err);
@@ -293,7 +293,7 @@ export async function add(
 
   if (!libp2p) {
     log(
-      "Didn't distribute message after ingestion because libp2p instance isn't defined"
+      "Didn't distribute message after ingestion because libp2p instance isn't defined",
     );
     return;
   }
@@ -309,21 +309,26 @@ export async function posts(
   parser,
   startDateTime,
   allowlist,
-  delegations
+  delegations,
 ) {
   const nodes = await leaves(trie, from, amount, parser, startDateTime);
 
   const cacheEnabled = true;
-  return nodes.map((node) => {
-    const signer = ecrecover(node, EIP712_MESSAGE, cacheEnabled);
-    const identity = eligible(allowlist, delegations, signer);
-    if (!identity) throw new Error("Found in-eligible message in storage");
-    return {
-      ...node,
-      signer,
-      identity,
-    };
-  });
+  return nodes
+    .map((node) => {
+      const signer = ecrecover(node, EIP712_MESSAGE, cacheEnabled);
+      const identity = eligible(allowlist, delegations, signer);
+      if (!identity) {
+        log(`Identity not found: ${signer}`);
+        return null;
+      }
+      return {
+        ...node,
+        signer,
+        identity,
+      };
+    })
+    .filter((node) => node !== null);
 }
 
 export async function leaves(trie, from, amount, parser, startDatetime) {

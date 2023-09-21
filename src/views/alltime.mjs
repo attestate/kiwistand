@@ -83,13 +83,14 @@ export default async function index(trie, theme, page) {
   const parser = JSON.parse;
   const allowlist = await registry.allowlist();
   const delegations = await registry.delegations();
+  const startDateTime = null;
 
   let leaves = await store.posts(
     trie,
     from,
     amount,
     parser,
-    null,
+    startDateTime,
     allowlist,
     delegations,
   );

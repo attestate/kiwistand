@@ -19,10 +19,6 @@ body {
      opacity: 1;
    }
  }
-
-
- .votearrow.pulsate {
-   animation: pulsate 2s infinite ease-in-out;
  }
 
  td {
@@ -203,6 +199,11 @@ body {
     margin: 0;
     text-align: left;  
   }
+@media (max-width: 768px) {
+  #button-onboarding {
+    font-size: 1rem;
+  }
+}
   
   #button-onboarding {
     border-radius: 2px;
@@ -213,6 +214,11 @@ body {
     cursor: pointer;
     width: 50%;
     display: inline-block;
+}
+
+  #button-onboarding.button-secondary{
+    background-color: rgba(0,0,0,0);
+    color: black;
 }
 
   

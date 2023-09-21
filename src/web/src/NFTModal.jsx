@@ -66,7 +66,7 @@ const NFTModal = ({ modalIsOpen, setIsOpen, headline, text, closeText }) => {
           </div>
           <div style={{ display: "flex", justifyContent: "center" }}>
             <img
-              src="animation.gif"
+              src="pass.jpeg"
               alt="Kiwi News NFT"
               style={{
                 width: "100%",
@@ -76,11 +76,7 @@ const NFTModal = ({ modalIsOpen, setIsOpen, headline, text, closeText }) => {
             />
           </div>
         </div>
-        <a
-          href="https://zora.co/collect/eth:0xebb15487787cbf8ae2ffe1a6cca5a50e63003786"
-          target="_blank"
-          style={{ margin: "0px auto" }}
-        >
+        <a href="/welcome" target="_blank" style={{ margin: "0px auto" }}>
           <button
             style={{
               backgroundColor: "black",

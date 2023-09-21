@@ -8,14 +8,16 @@ import { formatDistanceToNow } from "date-fns";
 import { utils } from "ethers";
 
 import Header from "./components/header.mjs";
+import { trophySVG, broadcastSVG } from "./components/secondheader.mjs";
 import Footer from "./components/footer.mjs";
 import Sidebar from "./components/sidebar.mjs";
 import Head from "./components/head.mjs";
 import * as store from "../store.mjs";
 import { EIP712_MESSAGE } from "../constants.mjs";
-import { count } from "./feed.mjs";
+import { count, topstories } from "./feed.mjs";
 import * as ens from "../ens.mjs";
 import * as registry from "../chainstate/registry.mjs";
+import Row from "./components/row.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -42,7 +44,7 @@ export const classify = (messages) => {
     .sort((a, b) => b.message.timestamp - a.message.timestamp);
 };
 
-export default async function (trie, theme, identity) {
+export default async function (trie, theme, identity, page, mode) {
   if (!utils.isAddress(identity)) {
     return html`Not a valid address`;
   }
@@ -60,65 +62,47 @@ export default async function (trie, theme, identity) {
     parser,
     startDatetime,
     allowlist,
-    delegations
+    delegations,
   );
   const cacheEnabled = true;
-  leaves = await Promise.all(
-    leaves.map(async (leaf) => {
+  const totalStories = 10;
+  const start = totalStories * page;
+  const end = totalStories * (page + 1);
+  let storyPromises = await count(leaves);
+
+  if (mode === "top") {
+    storyPromises = storyPromises.sort((a, b) => b.upvotes - a.upvotes);
+  } else if (mode === "new") {
+    storyPromises = storyPromises.sort((a, b) => b.timestamp - a.timestamp);
+  }
+
+  let stories = storyPromises
+    .filter(
+      (story) =>
+        utils.getAddress(story.identity) === utils.getAddress(identity),
+    )
+    .slice(start, end);
+  stories = await Promise.all(
+    stories.map(async (leaf) => {
       const ensData = await ens.resolve(leaf.identity);
+      let avatars = [];
+      for await (let upvoter of leaf.upvoters) {
+        const upvoterEnsData = await ens.resolve(upvoter);
+        let avatarUrl = upvoterEnsData.avatar;
+        if (avatarUrl && !avatarUrl.startsWith("https")) {
+          avatarUrl = upvoterEnsData.avatar_url;
+        }
+        if (avatarUrl) {
+          avatars.push(avatarUrl);
+        }
+      }
       return {
         ...leaf,
         displayName: ensData.displayName,
+        avatars: avatars,
       };
-    })
+    }),
   );
-  const actions = classify(leaves);
-  const taintedSubmissions = actions
-    .filter(
-      (action) =>
-        // TODO: Should start using ethers.utils.getAddress
-        identity.toLowerCase() === action.message.identity.toLowerCase() &&
-        action.verb === "submit"
-    )
-    .map((action) => normalizeUrl(action.message.href));
-  const taintedUpvotes = actions
-    .filter(
-      (action) =>
-        // TODO: Should start using ethers.utils.getAddress
-        identity.toLowerCase() === action.message.identity.toLowerCase() &&
-        action.verb === "upvote"
-    )
-    .map((action) => normalizeUrl(action.message.href));
-  const submissions = count(leaves)
-    .filter((story) => taintedSubmissions.includes(normalizeUrl(story.href)))
-    .sort((a, b) => {
-      const timestampA = new Date(a.timestamp);
-      const timestampB = new Date(b.timestamp);
-
-      if (timestampA < timestampB) {
-        return 1;
-      }
-      if (timestampA > timestampB) {
-        return -1;
-      }
-      return 0;
-    })
-    .slice(0, 10);
-  const upvotes = count(leaves)
-    .filter((story) => taintedUpvotes.includes(normalizeUrl(story.href)))
-    .sort((a, b) => {
-      const timestampA = new Date(a.timestamp);
-      const timestampB = new Date(b.timestamp);
-
-      if (timestampA < timestampB) {
-        return 1;
-      }
-      if (timestampA > timestampB) {
-        return -1;
-      }
-      return 0;
-    })
-    .slice(0, 10);
 
   return html`
     <html lang="en" op="news">
@@ -144,7 +128,6 @@ export default async function (trie, theme, identity) {
                       href="https://etherscan.io/address/${ensData.address}"
                     >
                       ${ensData.displayName}
-                      ${String.fromCharCode(0x2934, 0xfe0e)}
                     </a>
                     ${ensData.description
                       ? html`<span> </span>"${ensData.description}"<br />`
@@ -152,8 +135,7 @@ export default async function (trie, theme, identity) {
                     ${ensData.url
                       ? html`<span>Website: </span>
                           <a target="_blank" href="${ensData.url}"
-                            >${ensData.url}
-                            ${String.fromCharCode(0x2934, 0xfe0e)} </a
+                            >${ensData.url}</a
                           ><br />`
                       : ""}
                     ${ensData.twitter
@@ -162,8 +144,7 @@ export default async function (trie, theme, identity) {
                             href="https://twitter.com/${ensData.twitter}"
                             target="_blank"
                             rel="noopener noreferrer"
-                            >@${ensData.twitter}
-                            ${String.fromCharCode(0x2934, 0xfe0e)} </a
+                            >@${ensData.twitter}</a
                           ><br />`
                       : ""}
                     ${ensData.github
@@ -172,8 +153,7 @@ export default async function (trie, theme, identity) {
                             href="https://github.com/${ensData.github}"
                             target="_blank"
                             rel="noopener noreferrer"
-                            >${ensData.github}
-                            ${String.fromCharCode(0x2934, 0xfe0e)} </a
+                            >${ensData.github}</a
                           ><br />`
                       : ""}
                     ${ensData.telegram
@@ -182,143 +162,71 @@ export default async function (trie, theme, identity) {
                             href="https://t.me/${ensData.telegram}"
                             target="_blank"
                             rel="noopener noreferrer"
-                            >${ensData.telegram}
-                            ${String.fromCharCode(0x2934, 0xfe0e)} </a
+                            >${ensData.telegram}</a
                           ><br />`
                       : ""}
                     ${ensData.discord
                       ? html`<span>Discord: </span> ${ensData.discord}<br />`
                       : ""}
                     <hr />
-                    ${submissions.length > 0
-                      ? html`<b>LAST 10 SUBMISSIONS: </b>`
+                    ${stories.length > 0
+                      ? html`<b>
+                          <span>SUBMISSIONS </span>
+                          ${page !== 0 ? html`(page: ${page})` : ""}
+                        </b>`
                       : ""}
                   </div>
                 </td>
               </tr>
-              ${submissions.length === 0 && upvotes.length === 0
+              <tr>
+                <td>
+                  <div
+                    style="min-height: 40px; display: flex; align-items: center; padding: 10px 15px 10px 15px; color: white;"
+                  >
+                    <a href="?mode=top&address=${ensData.address}&page=0">
+                      <button
+                        style=${`margin-right: 10px; font-size: 1.01rem; border-radius: 2px; cursor: pointer; padding: 5px 15px; background-color: transparent; border: 1px solid ${
+                          mode === "top" ? theme.color : "#7f8c8d"
+                        }; color: ${mode === "top" ? theme.color : "#7f8c8d"};`}
+                      >
+                        <span>${trophySVG} Top</span>
+                      </button>
+                    </a>
+                    <a href="?mode=new&address=${ensData.address}&page=0">
+                      <button
+                        style=${`font-size: 1.01rem; border-radius: 2px; cursor: pointer; padding: 5px 15px; background-color: transparent; border: 1px solid ${
+                          mode === "new" ? theme.color : "#7f8c8d"
+                        }; color: ${mode === "new" ? theme.color : "#7f8c8d"};`}
+                      >
+                        <span>${broadcastSVG} New</span>
+                      </button>
+                    </a>
+                  </div>
+                </td>
+              </tr>
+              ${stories.length === 0
                 ? html` <tr>
                     <td>No activity yet...</td>
                   </tr>`
                 : ""}
-              ${submissions.map(
-                (story, i) => html`
-                  <tr style="font-size: 12pt;">
-                    <td>
-                      <table
-                        style="padding: 5px 5px 0 15px;"
-                        border="0"
-                        cellpadding="0"
-                        cellspacing="0"
-                      >
-                        <tr class="athing" id="35233479">
-                          <td align="right" valign="top" class="title"></td>
-                          <td valign="top" class="votelinks">
-                            <center></center>
-                          </td>
-                          <td class="title">
-                            <span class="titleline">
-                              <a href="${story.href}">${story.title}</a>
-                              <span
-                                style="padding-left: 5px; word-break: break-all;"
-                              >
-                                (${extractDomain(story.href)})
-                              </span>
-                            </span>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td colspan="2"></td>
-                          <td class="subtext">
-                            <span class="subline">
-                              <span
-                                style="display: inline-block; height: auto;"
-                                class="score"
-                                id="score_35233479"
-                              >
-                                ${story.upvotes}
-                                <span> points </span>
-                                <span> submitted </span>
-                                ${formatDistanceToNow(
-                                  new Date(story.timestamp * 1000)
-                                )}
-                                <span> ago</span>
-                              </span>
-                            </span>
-                          </td>
-                        </tr>
-                      </table>
-                    </td>
-                  </tr>
-                `
-              )}
-              ${upvotes.length > 0
-                ? html` <tr>
-                    <td>
-                      <div
-                        style="padding: 10px 10px 0 10px; color: black; font-size: 16px"
-                      >
-                        <hr />
-                        <b>LAST 10 UPVOTES: </b>
-                      </div>
-                    </td>
-                  </tr>`
-                : ""}
-              ${upvotes.map(
-                (story, i) => html`
-                  <tr style="font-size: 12pt;">
-                    <td>
-                      <table
-                        style="padding: 5px 5px 0 15px;"
-                        border="0"
-                        cellpadding="0"
-                        cellspacing="0"
-                      >
-                        <tr class="athing" id="35233479">
-                          <td align="right" valign="top" class="title"></td>
-                          <td valign="top" class="votelinks">
-                            <center></center>
-                          </td>
-                          <td class="title">
-                            <span class="titleline">
-                              <a href="${story.href}">${story.title}</a>
-                              <span style="padding-left: 5px">
-                                (${extractDomain(story.href)})
-                              </span>
-                            </span>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td colspan="2"></td>
-                          <td class="subtext">
-                            <span class="subline">
-                              <span
-                                style="display: inline-block; height: auto;"
-                                class="score"
-                                id="score_35233479"
-                              >
-                                ${story.upvotes}
-                                <span> points by </span>
-                                <a href="/upvotes?address=${story.identity}">
-                                  ${story.displayName}
-                                </a>
-                                <span> submitted </span>
-                                ${formatDistanceToNow(
-                                  new Date(story.timestamp * 1000)
-                                )}
-                                <span> ago</span>
-                              </span>
-                            </span>
-                          </td>
-                        </tr>
-                      </table>
-                    </td>
-                  </tr>
-                `
-              )}
-              <tr style="height: 13px;">
-                <td></td>
-              </tr>
+              ${stories.map(Row())}
+              ${stories.length === totalStories
+                ? html`
+                    <tr style="height: 50px">
+                      <td>
+                        <a
+                          style="padding: 20px 0 0 20px; font-size: 1.1rem;"
+                          href="?mode=${mode}&address=${ensData.address}&page=${page +
+                          1}"
+                        >
+                          More
+                        </a>
+                      </td>
+                    </tr>
+                  `
+                : html`<tr style="height: 13px;">
+                    <td></td>
+                  </tr>`}
             </table>
           </div>
         </div>
