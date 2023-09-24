@@ -5,7 +5,7 @@ import url from "url";
 import htm from "htm";
 import vhtml from "vhtml";
 import normalizeUrl from "normalize-url";
-import { formatDistanceToNow, sub, add } from "date-fns";
+import { isSameDay, formatDistanceToNow, sub, add } from "date-fns";
 import { plot } from "svg-line-chart";
 
 import Header from "./components/header.mjs";
@@ -22,6 +22,53 @@ const html = htm.bind(vhtml);
 function timestampToDate(ts) {
   const date = new Date(ts * 1000);
   return date.toISOString().split("T")[0];
+}
+
+async function calculateRetention(mauData, messagesWithAddresses) {
+  const { activeUsers30DaysAgo } = mauData;
+  const thirtyDaysAgo = sub(new Date(), { days: 30 });
+
+  const userActivity = new Map();
+
+  for (const user of activeUsers30DaysAgo) {
+    const activity = {};
+    const userMessages = messagesWithAddresses.filter(
+      (msg) => msg.identity === user,
+    );
+
+    for (let day = 0; day <= 30; day++) {
+      const dayStart = add(thirtyDaysAgo, { days: day });
+      const dayEnd = add(dayStart, { days: 1 });
+      activity[day] = userMessages.some((msg) => {
+        const msgDate = new Date(msg.timestamp * 1000);
+        return msgDate >= dayStart && msgDate < dayEnd;
+      });
+    }
+
+    userActivity.set(user, activity);
+  }
+
+  const retention = {};
+  for (let day = 0; day <= 30; day++) {
+    let activeUsers = 0;
+    for (const activity of userActivity.values()) {
+      if (activity[day]) {
+        activeUsers++;
+      }
+    }
+    retention[day] = (activeUsers / userActivity.size) * 100;
+  }
+
+  const baseDate = sub(new Date(), { days: 31 });
+  const dates = [
+    sub(baseDate, { days: 1 }),
+    ...Array.from({ length: 31 }, (_, i) => add(baseDate, { days: i })),
+  ];
+  const retentions = [
+    retention[0],
+    ...dates.map((date, i) => retention[i - 1]).slice(1),
+  ];
+  return { dates, retentions };
 }
 
 async function countDelegations() {
@@ -63,11 +110,11 @@ function generateDateRange(start, end) {
 function calculateWAU(messagesWithAddresses) {
   const wauMap = new Map();
   const sortedMessages = [...messagesWithAddresses].sort(
-    (a, b) => a.timestamp - b.timestamp
+    (a, b) => a.timestamp - b.timestamp,
   );
   const startDate = new Date(sortedMessages[0].timestamp * 1000);
   const endDate = new Date(
-    sortedMessages[sortedMessages.length - 1].timestamp * 1000
+    sortedMessages[sortedMessages.length - 1].timestamp * 1000,
   );
   const allDates = generateDateRange(startDate, endDate);
 
@@ -93,11 +140,12 @@ function calculateWAU(messagesWithAddresses) {
 
 function calculateMAU(messagesWithAddresses) {
   const sortedMessages = [...messagesWithAddresses].sort(
-    (a, b) => a.timestamp - b.timestamp
+    (a, b) => a.timestamp - b.timestamp,
   );
   const startDate = new Date(sortedMessages[0].timestamp * 1000);
   const endDate = new Date();
   const mauMap = new Map();
+  let activeUsers30DaysAgo;
 
   for (let day = startDate; day <= endDate; day.setDate(day.getDate() + 1)) {
     const dayStart = sub(day, { days: 30 });
@@ -111,23 +159,27 @@ function calculateMAU(messagesWithAddresses) {
     }
 
     mauMap.set(day.toISOString().split("T")[0], users.size);
+
+    if (isSameDay(day, sub(new Date(), { days: 30 }))) {
+      activeUsers30DaysAgo = users;
+    }
   }
 
   const dates = Array.from(mauMap.keys());
   const maus = Array.from(mauMap.values());
 
-  return { dates, maus };
+  return { dates, maus, activeUsers30DaysAgo };
 }
 
 function calculateDAU(messagesWithAddresses) {
   const dauMap = new Map();
   const dates = generateDateRange(
     Math.min(
-      ...messagesWithAddresses.map((msg) => new Date(msg.timestamp * 1000))
+      ...messagesWithAddresses.map((msg) => new Date(msg.timestamp * 1000)),
     ),
     Math.max(
-      ...messagesWithAddresses.map((msg) => new Date(msg.timestamp * 1000))
-    )
+      ...messagesWithAddresses.map((msg) => new Date(msg.timestamp * 1000)),
+    ),
   );
 
   for (const date of dates) {
@@ -166,7 +218,7 @@ function calculateActions(messages) {
 
   const dates = generateDateRange(
     Math.min(...Array.from(actionMap.keys(), (key) => new Date(key))),
-    Math.max(...Array.from(actionMap.keys(), (key) => new Date(key)))
+    Math.max(...Array.from(actionMap.keys(), (key) => new Date(key))),
   );
   for (const date of dates) {
     if (!actionMap.has(date)) {
@@ -225,7 +277,7 @@ export default async function (trie, theme) {
     parser,
     startDatetime,
     allowlist,
-    delegations
+    delegations,
   );
 
   const cacheEnabled = true;
@@ -234,7 +286,7 @@ export default async function (trie, theme) {
       const messageDate = new Date(msg.timestamp * 1000);
       const cutOffDate = new Date(2023, 3); // months are 0-indexed in JS, so 3 is April
       return messageDate >= cutOffDate;
-    })
+    }),
   );
 
   const dauData = calculateDAU(messagesWithAddresses);
@@ -291,17 +343,26 @@ export default async function (trie, theme) {
     },
     yNumLabels: 10,
   };
+  const retentionData = await calculateRetention(
+    mauData,
+    messagesWithAddresses,
+  );
+
+  const retentionChart = plot(html)(
+    { x: retentionData.dates, y: retentionData.retentions },
+    options,
+  );
 
   const dauChart = plot(html)(
     { x: dauData.dates.map((date) => new Date(date)), y: dauData.daus },
-    options
+    options,
   );
   const mauChart = plot(html)(
     {
       x: mauData.dates.map((date) => new Date(date)),
       y: mauData.maus,
     },
-    options
+    options,
   );
   const ratioData = calculateDAUMAUratio(dauData, mauData);
   const optionsCopy = { ...options };
@@ -309,7 +370,7 @@ export default async function (trie, theme) {
 
   const ratioChart = plot(html)(
     { x: ratioData.dates.map((date) => new Date(date)), y: ratioData.ratios },
-    optionsCopy
+    optionsCopy,
   );
 
   const wauChart = plot(html)(
@@ -317,7 +378,7 @@ export default async function (trie, theme) {
       x: wauData.dates.map((date) => new Date(date)),
       y: wauData.waus,
     },
-    options
+    options,
   );
 
   const submissionsChart = plot(html)(
@@ -325,7 +386,7 @@ export default async function (trie, theme) {
       x: behavior.dates.map((date) => new Date(date)),
       y: behavior.submissions,
     },
-    options
+    options,
   );
 
   const upvotesData = {
@@ -458,10 +519,25 @@ export default async function (trie, theme) {
                     <ul>
                       ${Object.entries(delegationCounts).map(
                         ([delegate, count]) =>
-                          html`<li>${delegate}: ${count}</li>`
+                          html`<li>${delegate}: ${count}</li>`,
                       )}
                     </ul>
                   </div>
+                  <p>
+                    <b>30-day Retention DEFINITION:</b>
+                    <br />
+                    - This chart shows the likelihood of a user who was active
+                    30 days ago being active on each subsequent day after the
+                    measurement.
+                    <br />
+                    - A user is considered active on a day if they performed an
+                    action on that day.
+                    <br />
+                    - The likelihood is calculated as the number of active users
+                    divided by the total number of users who were active 30 days
+                    ago.
+                  </p>
+                  ${retentionChart}
                 </td>
               </tr>
             </table>
