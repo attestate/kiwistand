@@ -22,6 +22,37 @@ const inputs = [
   },
 ];
 
+function parse(log) {
+  const { topics } = log;
+  topics.shift();
+  return decodeLog(inputs, log.data, topics);
+}
+
+export function* direct({ state: { line } }) {
+  let logs;
+  try {
+    logs = JSON.parse(line);
+  } catch (err) {
+    log(err.toString());
+    return;
+  }
+
+  for (let log of logs) {
+    const parsedLog = parse(log);
+    const key = serialize(
+      [log.blockNumber, log.transactionIndex, log.logIndex],
+      16,
+    );
+    yield {
+      key,
+      value: {
+        to: parsedLog.to,
+        timestamp: log.block.timestamp,
+      },
+    };
+  }
+}
+
 export function* order({ state: { line } }) {
   let logs;
   try {
@@ -36,9 +67,7 @@ export function* order({ state: { line } }) {
       [log.blockNumber, log.transactionIndex, log.logIndex],
       16,
     );
-    const { topics } = log;
-    topics.shift();
-    const parsedLog = decodeLog(inputs, log.data, topics);
+    const parsedLog = parse(log);
     yield {
       key,
       value: parsedLog.to,

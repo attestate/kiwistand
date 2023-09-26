@@ -95,7 +95,8 @@ async function initializeCache() {
     addresses = await allowlist();
   }
 
-  await Promise.all(addresses.map(resolve));
+  if (addresses && Array.isArray(addresses))
+    await Promise.all(addresses.map(resolve));
 }
 
 // NOTE: For nodes that have never downloaded and committed all addresses into

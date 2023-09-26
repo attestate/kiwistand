@@ -24,51 +24,46 @@ function timestampToDate(ts) {
   return date.toISOString().split("T")[0];
 }
 
-async function calculateRetention(mauData, messagesWithAddresses) {
-  const { activeUsers30DaysAgo } = mauData;
-  const thirtyDaysAgo = sub(new Date(), { days: 30 });
+async function calculateRetention(
+  messagesWithAddresses,
+  mintStart,
+  mintEnd,
+  trackingPeriod,
+) {
+  const mints = await registry.mints();
+  const sixtyDaysAgo = sub(new Date(), { days: mintStart });
+  const thirtyDaysAgo = sub(new Date(), { days: mintEnd });
 
-  const userActivity = new Map();
+  const usersAcquired = mints.filter((mint) => {
+    const mintDate = new Date(parseInt(mint.timestamp, 16) * 1000);
+    return mintDate >= sixtyDaysAgo && mintDate < thirtyDaysAgo;
+  });
 
-  for (const user of activeUsers30DaysAgo) {
-    const activity = {};
-    const userMessages = messagesWithAddresses.filter(
-      (msg) => msg.identity === user,
-    );
+  const retention = [];
+  const dates = [];
+  for (let day = 0; day <= trackingPeriod; day++) {
+    // TODO: It'd be nice if we could connect the mint date as the start date
+    // here so that e.g. we can also ask: From all user mints, how many were
+    // active the last 30 days?
+    const dayStart = add(thirtyDaysAgo, { days: day });
+    const dayEnd = add(dayStart, { days: 1 });
+    dates.push(dayStart);
 
-    for (let day = 0; day <= 30; day++) {
-      const dayStart = add(thirtyDaysAgo, { days: day });
-      const dayEnd = add(dayStart, { days: 1 });
-      activity[day] = userMessages.some((msg) => {
+    const activeUsers = usersAcquired.filter((user) => {
+      const userMessages = messagesWithAddresses.filter(
+        (msg) => msg.identity === user.to,
+      );
+      const active = userMessages.some((msg) => {
         const msgDate = new Date(msg.timestamp * 1000);
         return msgDate >= dayStart && msgDate < dayEnd;
       });
-    }
+      return active;
+    });
 
-    userActivity.set(user, activity);
+    retention.push((activeUsers.length / usersAcquired.length) * 100);
   }
 
-  const retention = {};
-  for (let day = 0; day <= 30; day++) {
-    let activeUsers = 0;
-    for (const activity of userActivity.values()) {
-      if (activity[day]) {
-        activeUsers++;
-      }
-    }
-    retention[day] = (activeUsers / userActivity.size) * 100;
-  }
-
-  const baseDate = sub(new Date(), { days: 31 });
-  const dates = [
-    sub(baseDate, { days: 1 }),
-    ...Array.from({ length: 31 }, (_, i) => add(baseDate, { days: i })),
-  ];
-  const retentions = [
-    retention[0],
-    ...dates.map((date, i) => retention[i - 1]).slice(1),
-  ];
-  return { dates, retentions };
+  return { usersAcquired, retention, dates };
 }
 
 async function countDelegations() {
@@ -334,7 +329,7 @@ export default async function (trie, theme) {
       fontSize: 1,
     },
     xGrid: {
-      strokeWidth: 0.05,
+      strokeWidth: 0,
       stroke: "lightgrey",
     },
     yGrid: {
@@ -343,13 +338,25 @@ export default async function (trie, theme) {
     },
     yNumLabels: 10,
   };
-  const retentionData = await calculateRetention(
-    mauData,
+  const retentionData60 = await calculateRetention(
     messagesWithAddresses,
+    60,
+    30,
+    30,
+  );
+  const retentionChart60 = plot(html)(
+    { x: retentionData60.dates, y: retentionData60.retention },
+    options,
   );
 
-  const retentionChart = plot(html)(
-    { x: retentionData.dates, y: retentionData.retentions },
+  const retentionData90 = await calculateRetention(
+    messagesWithAddresses,
+    90,
+    60,
+    30,
+  );
+  const retentionChart90 = plot(html)(
+    { x: retentionData90.dates, y: retentionData90.retention },
     options,
   );
 
@@ -505,6 +512,34 @@ export default async function (trie, theme) {
                     - Any upvote to Kiwi News
                   </p>
                   ${upvotesChart}
+                  <p>
+                    <b>Retention after acquisition DEFINITION:</b>
+                    <br />
+                    - Find all minters from 60 to 30 days ago (amount:
+                    ${retentionData60.usersAcquired.length})
+                    <br />
+                    - This chart shows the likelyhood (as a percentage) of how
+                    many of these minters end up being active on their 31st day
+                    to day 40 after minting.
+                    <br />
+                    - A user is considered active on a day if they performed an
+                    action on that day.
+                  </p>
+                  ${retentionChart60}
+                  <p>
+                    <b>Retention after acquisition DEFINITION:</b>
+                    <br />
+                    - Find all minters from day 90 to 60 days ago (amount:
+                    ${retentionData90.usersAcquired.length})
+                    <br />
+                    - This chart shows the likelyhood (as a percentage) of how
+                    many of these minters end up being active on their 31st day
+                    to day 60 after minting.
+                    <br />
+                    - A user is considered active on a day if they performed an
+                    action on that day.
+                  </p>
+                  ${retentionChart90}
                   <div>
                     <b>Delegation Counts</b>
                     <p>
@@ -523,21 +558,6 @@ export default async function (trie, theme) {
                       )}
                     </ul>
                   </div>
-                  <p>
-                    <b>30-day Retention DEFINITION:</b>
-                    <br />
-                    - This chart shows the likelihood of a user who was active
-                    30 days ago being active on each subsequent day after the
-                    measurement.
-                    <br />
-                    - A user is considered active on a day if they performed an
-                    action on that day.
-                    <br />
-                    - The likelihood is calculated as the number of active users
-                    divided by the total number of users who were active 30 days
-                    ago.
-                  </p>
-                  ${retentionChart}
                 </td>
               </tr>
             </table>
