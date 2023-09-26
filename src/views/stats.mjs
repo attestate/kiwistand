@@ -24,6 +24,53 @@ function timestampToDate(ts) {
   return date.toISOString().split("T")[0];
 }
 
+async function calculateMAURetention(mauData, messagesWithAddresses) {
+  const { activeUsers30DaysAgo } = mauData;
+  const thirtyDaysAgo = sub(new Date(), { days: 30 });
+
+  const userActivity = new Map();
+
+  for (const user of activeUsers30DaysAgo) {
+    const activity = {};
+    const userMessages = messagesWithAddresses.filter(
+      (msg) => msg.identity === user,
+    );
+
+    for (let day = 0; day <= 30; day++) {
+      const dayStart = add(thirtyDaysAgo, { days: day });
+      const dayEnd = add(dayStart, { days: 1 });
+      activity[day] = userMessages.some((msg) => {
+        const msgDate = new Date(msg.timestamp * 1000);
+        return msgDate >= dayStart && msgDate < dayEnd;
+      });
+    }
+
+    userActivity.set(user, activity);
+  }
+
+  const retention = {};
+  for (let day = 0; day <= 30; day++) {
+    let activeUsers = 0;
+    for (const activity of userActivity.values()) {
+      if (activity[day]) {
+        activeUsers++;
+      }
+    }
+    retention[day] = (activeUsers / userActivity.size) * 100;
+  }
+
+  const baseDate = sub(new Date(), { days: 31 });
+  const dates = [
+    sub(baseDate, { days: 1 }),
+    ...Array.from({ length: 31 }, (_, i) => add(baseDate, { days: i })),
+  ];
+  const retentions = [
+    retention[0],
+    ...dates.map((date, i) => retention[i - 1]).slice(1),
+  ];
+  return { dates, retentions };
+}
+
 async function calculateRetention(
   messagesWithAddresses,
   mintStart,
@@ -338,6 +385,17 @@ export default async function (trie, theme) {
     },
     yNumLabels: 10,
   };
+
+  const retentionData = await calculateMAURetention(
+    mauData,
+    messagesWithAddresses,
+  );
+
+  const retentionChart = plot(html)(
+    { x: retentionData.dates, y: retentionData.retentions },
+    options,
+  );
+
   const retentionData60 = await calculateRetention(
     messagesWithAddresses,
     60,
@@ -540,6 +598,21 @@ export default async function (trie, theme) {
                     action on that day.
                   </p>
                   ${retentionChart90}
+                  <p>
+                    <b>30-day Retention DEFINITION:</b>
+                    <br />
+                    - This chart shows the likelihood of a user who was active
+                    30 days ago being active on each subsequent day after the
+                    measurement.
+                    <br />
+                    - A user is considered active on a day if they performed an
+                    action on that day.
+                    <br />
+                    - The likelihood is calculated as the number of active users
+                    divided by the total number of users who were active 30 days
+                    ago.
+                  </p>
+                  ${retentionChart}
                   <div>
                     <b>Delegation Counts</b>
                     <p>
