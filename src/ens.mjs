@@ -1,3 +1,5 @@
+import { env } from "process";
+
 import { fetchBuilder, MemoryCache } from "node-fetch-cache";
 import { allowlist } from "./chainstate/registry.mjs";
 import { utils } from "ethers";
@@ -104,4 +106,6 @@ async function initializeCache() {
 // then initializeCache's `let addresses = Array.from(await allowlist());` will
 // unexpectedly throw because it should wait for allowlist to be crawled at
 // least onceit should wait for allowlist to be crawled at least once
-setTimeout(initializeCache, 30000);
+if (env.NODE_ENV === "production") {
+  setTimeout(initializeCache, 30000);
+}

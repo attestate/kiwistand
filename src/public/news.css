@@ -589,3 +589,8 @@ body {
 .filter-tab:hover {
   background-color: rgba(0,0,0,0.035);
 }
+
+[contenteditable=true]:empty:before {
+   content: attr(data-placeholder);
+   color: #999;
+}
