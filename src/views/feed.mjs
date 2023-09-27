@@ -5,7 +5,7 @@ import { URL } from "url";
 import htm from "htm";
 import vhtml from "vhtml";
 import normalizeUrl from "normalize-url";
-import { sub, differenceInMinutes } from "date-fns";
+import { sub, differenceInMinutes, isBefore } from "date-fns";
 import { fetchBuilder, MemoryCache } from "node-fetch-cache";
 
 import * as ens from "../ens.mjs";
@@ -182,7 +182,27 @@ export default async function index(trie, theme, page) {
   const totalStories = parseInt(env.TOTAL_STORIES, 10);
   const start = totalStories * page;
   const end = totalStories * (page + 1);
-  const storyPromises = (await topstories(leaves)).slice(start, end);
+  let minimalUpvotes = 2;
+  let storyPromises = (await topstories(leaves, minimalUpvotes)).slice(
+    start,
+    end,
+  );
+
+  // NOTE: The feed's quality threshold is 3 upvotes on a story. But there are cases
+  // where people don't upvote much and the front page goes stale. In these cases
+  // we want to lower our quality requirements to two upvotes only in case the story
+  // is already more than 6 hours old.
+  if (storyPromises.length > 0) {
+    const dayAgo = sub(new Date(), { hours: 6 });
+    const { timestamp, upvotes } = storyPromises[0];
+    if (upvotes > 2 && isBefore(new Date(timestamp * 1000), dayAgo)) {
+      minimalUpvotes -= 1;
+      storyPromises = (await topstories(leaves, minimalUpvotes)).slice(
+        start,
+        end,
+      );
+    }
+  }
 
   let stories = [];
   for await (let story of storyPromises) {
