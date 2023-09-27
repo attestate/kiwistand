@@ -22,7 +22,7 @@ export default function submit(theme, url = "", title = "") {
   };
   const rowNumber = 0;
   const rowStyle =
-    "min-height: 90px; max-width: 600px; padding: 1rem 1rem 0 1rem;";
+    "overflow: hidden; max-width: 600px; min-height: 65px; padding: 1rem 1rem 0 1rem;";
   const interactive = true;
   return html`
     <html lang="en" op="news">
@@ -108,14 +108,13 @@ export default function submit(theme, url = "", title = "") {
                       </button>
                     </div>
                   </form>
-                  <p style="${noteStyle}">
-                    <span
-                      >Unsure about your submission? Contact us or check
-                      our</span
-                    >
-                    <span> </span>
-                    <a style="color:black;" href="/guidelines">Guidelines</a>.
-                  </p>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <div style="${previewContainerStyle}">
+                    <div style="${previewStyle}" id="embed-preview"></div>
+                  </div>
                 </td>
               </tr>
             </table>
@@ -130,7 +129,7 @@ export default function submit(theme, url = "", title = "") {
 const formContainerStyle = `
   display: flex;
   flex-direction: column;
-  gap: 25px;
+  gap: 15px;
   margin: 0 auto;
   padding: 1rem 1rem;
 `;
@@ -145,6 +144,21 @@ const labelStyle = `
   font-size: 16px;
 `;
 
+const previewContainerStyle = `
+  display: flex;
+  flex-direction: column;
+  margin: 0 auto;
+  padding: 1rem 1rem;
+`;
+
+const previewStyle = `
+  width: 100%;
+  max-width: 600px;
+  min-height: 600px;
+  font-size: 16px;
+  box-sizing: border-box;
+`;
+
 const inputStyle = `
   width: 100%;
   max-width: 600px;
@@ -157,7 +171,7 @@ const editableContent = `
    overflow-wrap: anywhere;
    width: 100%;
    max-width: 600px;
-   height: 100px;
+   height: 55px;
    padding: 5px 10px;
    font-size: 16px;
    box-sizing: border-box;
@@ -173,15 +187,8 @@ const editableContent = `
 const buttonStyle = `
   width: 100%;
   max-width: 600px;
+  margin-top: 0.5rem;
   padding: 5px;
   font-size: 16px;
   cursor: pointer;
-`;
-
-const noteStyle = `
-  font-size: 14px;
-  text-align: left;
-  line-height: 1.5;
-  color: #777;
-  padding: 0 1rem 1rem 1rem;
 `;

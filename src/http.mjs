@@ -24,6 +24,7 @@ import about from "./views/about.mjs";
 import why from "./views/why.mjs";
 import submit from "./views/submit.mjs";
 import settings from "./views/settings.mjs";
+import { parse } from "./parser.mjs";
 
 const app = express();
 
@@ -50,6 +51,10 @@ function loadTheme(req, res, next) {
 app.use(loadTheme);
 
 export async function launch(trie, libp2p) {
+  app.get("/api/v1/parse", async (request, reply) => {
+    const embed = await parse(request.query.url);
+    return reply.status(200).type("text/html").send(embed);
+  });
   app.get("/", async (request, reply) => {
     let page = parseInt(request.query.page);
     if (isNaN(page) || page < 1) {

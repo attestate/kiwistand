@@ -32,6 +32,28 @@ const SubmitButton = (props) => {
   const [remainingChars, setRemainingChars] = useState(80);
 
   useEffect(() => {
+    const embedPreview = document.getElementById("embed-preview");
+
+    if (url) {
+      fetch(`/api/v1/parse?url=${encodeURIComponent(url)}`)
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.text();
+        })
+        .then((data) => {
+          embedPreview.innerHTML = data;
+        })
+        .catch((error) => {
+          console.log("Fetch error: ", error);
+        });
+    } else {
+      embedPreview.innerHTML = "";
+    }
+  }, [url]);
+
+  useEffect(() => {
     const previewLink = document.querySelector(".story-link");
     const previewDomain = document.querySelector(".story-domain");
 
@@ -174,6 +196,7 @@ const SubmitButton = (props) => {
   const buttonStyles = {
     width: "100%",
     maxWidth: "600px",
+    marginTop: "0.5rem",
     padding: "5px",
     fontSize: "16px",
     cursor: "pointer",
