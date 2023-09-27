@@ -29,12 +29,12 @@ async function getENSAvatars(addresses) {
 }
 
 const addresses = [
-  "dwr.eth",
+  "web3d3v.eth",
   "fredwilson.eth",
-  "pedrouid.eth",
-  "levy.eth",
+  "uncledavo.eth",
+  "m-j-r.eth",
+  "mishaderidder.eth",
   "ccarella.eth",
-  "pugson.eth",
 ]; // Replace with the actual Ethereum addresses
 const avatarData = await getENSAvatars(addresses);
 

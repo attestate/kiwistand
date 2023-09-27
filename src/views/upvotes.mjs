@@ -134,7 +134,7 @@ export default async function (trie, theme, identity, page, mode) {
                         ? html`<br />${ensData.description}<br />`
                         : ensData.farcaster && ensData.farcaster.bio
                         ? html`<br />${ensData.farcaster.bio}<br />`
-                        : html`<br />`}
+                        : html`<span><br /></span>`}
                     </span>
                     <div style="display: flex; gap: 15px; margin-top: 10px;">
                       ${ensData.url
