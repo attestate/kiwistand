@@ -197,7 +197,11 @@ const SubmitButton = (props) => {
         onClick={handleClick}
         disabled={(isLoading && !isError) || !isEligible}
       >
-        {isLoading && !isError ? "Please confirm signature..." : "Submit"}
+        {isLoading && !isError
+          ? !localAccount
+            ? "Please confirm signature..."
+            : "Submitting..."
+          : "Submit"}
       </button>
     </div>
   );
