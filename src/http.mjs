@@ -9,7 +9,7 @@ import { SCHEMATA } from "./constants.mjs";
 import themes from "./themes.mjs";
 import feed from "./views/feed.mjs";
 import newest from "./views/new.mjs";
-import alltime from "./views/alltime.mjs";
+import best from "./views/best.mjs";
 import privacy from "./views/privacy.mjs";
 import guidelines from "./views/guidelines.mjs";
 import onboarding from "./views/onboarding.mjs";
@@ -80,12 +80,22 @@ export async function launch(trie, libp2p) {
     const content = await nfts(trie, reply.locals.theme);
     return reply.status(200).type("text/html").send(content);
   });
-  app.get("/alltime", async (request, reply) => {
+  app.get("/alltime", function (req, res) {
+    return res.redirect(301, "/best?period=all");
+  });
+  app.get("/best", async (request, reply) => {
     let page = parseInt(request.query.page);
     if (isNaN(page) || page < 1) {
       page = 0;
     }
-    const content = await alltime(trie, reply.locals.theme, page);
+
+    const periodValues = ["all", "month", "week", "day"];
+    let { period } = request.query;
+    if (!period || !periodValues.includes(period)) {
+      period = "week";
+    }
+
+    const content = await best(trie, reply.locals.theme, page, period);
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/community", async (request, reply) => {

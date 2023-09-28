@@ -302,16 +302,18 @@ export async function add(
   libp2p.pubsub.publish(messages.name, canonical);
 }
 
+// TODO: It'd be better to accept a JavaScript Date here and not expect a unix
+// timestamp integer value.
 export async function posts(
   trie,
   from,
   amount,
   parser,
-  startDateTime,
+  startDatetime,
   allowlist,
   delegations,
 ) {
-  const nodes = await leaves(trie, from, amount, parser, startDateTime);
+  const nodes = await leaves(trie, from, amount, parser, startDatetime);
 
   const cacheEnabled = true;
   return nodes

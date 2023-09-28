@@ -20,7 +20,7 @@ const secondheader = (theme, site) => html`
  center;"
         >
           <div
-            style="${site === "top" || site === "new" || site === "alltime"
+            style="${site === "top" || site === "new" || site === "best"
               ? "border-bottom: 3px solid limegreen; padding: 0.75rem 1.5rem 0.3rem 1.5rem;"
               : "padding-top: 0.75rem;"}"
           >

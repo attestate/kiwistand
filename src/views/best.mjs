@@ -77,20 +77,30 @@ async function topstories(leaves, start, end) {
     .slice(start, end);
 }
 
-export default async function index(trie, theme, page) {
+export default async function index(trie, theme, page, period) {
   const from = null;
   const amount = null;
   const parser = JSON.parse;
   const allowlist = await registry.allowlist();
   const delegations = await registry.delegations();
-  const startDateTime = null;
+
+  let startDatetime = null;
+  const unix = (date) => Math.floor(date.getTime() / 1000);
+  const now = new Date();
+  if (period === "month") {
+    startDatetime = unix(sub(now, { months: 1 }));
+  } else if (period === "week") {
+    startDatetime = unix(sub(now, { weeks: 1 }));
+  } else if (period === "day") {
+    startDatetime = unix(sub(now, { days: 1 }));
+  }
 
   let leaves = await store.posts(
     trie,
     from,
     amount,
     parser,
-    startDateTime,
+    startDatetime,
     allowlist,
     delegations,
   );
@@ -144,7 +154,7 @@ export default async function index(trie, theme, page) {
                 ${ThirdHeader(theme, "top")}
               </tr>
               <tr>
-                ${SecondHeader(theme, "alltime")}
+                ${SecondHeader(theme, "best", period)}
               </tr>
               <tr>
                 <td>
@@ -166,15 +176,11 @@ export default async function index(trie, theme, page) {
                     cellspacing="0"
                   >
                     <tr class="athing" id="35233479">
-                      <td align="right" valign="top" class="title"></td>
-                      <td valign="top" class="votelinks">
-                        <center>
-                          <a id="up_35233479" class="clicky" href="#"> </a>
-                        </center>
-                      </td>
                       <td class="title">
                         <span style="margin-left: 10px;" class="titleline">
-                          <a href="?page=${page + 1}"> More </a>
+                          <a href="?period=${period}&page=${page + 1}">
+                            More
+                          </a>
                         </span>
                       </td>
                     </tr>
@@ -203,7 +209,7 @@ export default async function index(trie, theme, page) {
             </table>
           </div>
         </div>
-        ${Footer(theme, "/alltime")}
+        ${Footer(theme, "/best")}
       </body>
     </html>
   `;
