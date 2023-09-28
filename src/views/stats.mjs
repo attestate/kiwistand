@@ -24,6 +24,80 @@ function timestampToDate(ts) {
   return date.toISOString().split("T")[0];
 }
 
+async function calculateRetention31Days(messagesWithAddresses) {
+  const mints = await registry.mints();
+  const retention = Array(32).fill(0);
+  const mintMap = new Map();
+
+  for (const mint of mints) {
+    mintMap.set(mint.to, {
+      mintTime: parseInt(mint.timestamp, 16),
+      activity: Array(32).fill(false),
+    });
+  }
+
+  for (const msg of messagesWithAddresses) {
+    const mintData = mintMap.get(msg.identity);
+    if (!mintData) continue;
+
+    const msgTime = msg.timestamp;
+    const daysAfterMint = Math.floor(
+      (msgTime - mintData.mintTime) / (24 * 60 * 60),
+    );
+
+    if (daysAfterMint >= 0 && daysAfterMint <= 31) {
+      for (let i = daysAfterMint; i < mintData.activity.length; i++) {
+        mintData.activity[i] = true;
+      }
+    }
+  }
+
+  for (const { activity } of mintMap.values()) {
+    for (let i = 0; i < activity.length; i++) {
+      if (activity[i]) {
+        retention[i]++;
+      }
+    }
+  }
+
+  const totalMinters = mints.length;
+  for (let i = 0; i < retention.length; i++) {
+    retention[i] = (retention[i] / totalMinters) * 100;
+  }
+
+  return retention;
+}
+
+async function calculateMintersPerDay() {
+  const mints = await registry.mints();
+  const mintMap = new Map();
+
+  for (const mint of mints) {
+    const date = timestampToDate(parseInt(mint.timestamp, 16));
+
+    if (!mintMap.has(date)) {
+      mintMap.set(date, 0);
+    }
+
+    mintMap.set(date, mintMap.get(date) + 1);
+  }
+
+  const dates = generateDateRange(
+    Math.min(...Array.from(mintMap.keys(), (key) => new Date(key))),
+    Math.max(...Array.from(mintMap.keys(), (key) => new Date(key))),
+  );
+  for (const date of dates) {
+    if (!mintMap.has(date)) {
+      mintMap.set(date, 0);
+    }
+  }
+
+  const sortedDates = dates.sort();
+  const minters = sortedDates.map((date) => mintMap.get(date));
+
+  return { dates: sortedDates, minters };
+}
+
 async function calculateMAURetention(mauData, messagesWithAddresses) {
   const { activeUsers30DaysAgo } = mauData;
   const thirtyDaysAgo = sub(new Date(), { days: 30 });
@@ -285,7 +359,7 @@ function calculateDAUMAUratio(dauData, mauData) {
     let ratio = dau / mau;
     ratio = Math.min(ratio, 1);
 
-    ratioData.ratios.push(ratio);
+    ratioData.ratios.push(ratio * 100);
   }
 
   return ratioData;
@@ -376,7 +450,7 @@ export default async function (trie, theme) {
       fontSize: 1,
     },
     xGrid: {
-      strokeWidth: 0,
+      strokeWidth: 0.05,
       stroke: "lightgrey",
     },
     yGrid: {
@@ -385,12 +459,34 @@ export default async function (trie, theme) {
     },
     yNumLabels: 10,
   };
+  const retention31Days = await calculateRetention31Days(messagesWithAddresses);
+  options.yLabel.name = "% (minters active in first 31 days)";
+  options.xLabel.name = "days since acquisition";
+  const retentionChart31Days = plot(html)(
+    {
+      x: Array.from({ length: 32 }, (_, i) => i),
+      y: retention31Days,
+    },
+    options,
+  );
+
+  const mintersData = await calculateMintersPerDay();
+  options.yLabel.name = "minters";
+  options.xLabel.name = "";
+  const mintersChart = plot(html)(
+    {
+      x: mintersData.dates.map((date) => new Date(date)),
+      y: mintersData.minters,
+    },
+    options,
+  );
 
   const retentionData = await calculateMAURetention(
     mauData,
     messagesWithAddresses,
   );
-
+  options.yLabel.name = "% (MAU 30 days ago)";
+  options.xLabel.name = "";
   const retentionChart = plot(html)(
     { x: retentionData.dates, y: retentionData.retentions },
     options,
@@ -402,6 +498,8 @@ export default async function (trie, theme) {
     30,
     30,
   );
+  options.yLabel.name = "% (minters, 60 to 30 days ago)";
+  options.xLabel.name = "";
   const retentionChart60 = plot(html)(
     { x: retentionData60.dates, y: retentionData60.retention },
     options,
@@ -413,15 +511,22 @@ export default async function (trie, theme) {
     60,
     30,
   );
+  options.yLabel.name = "% (minters, 90 to 30 days ago)";
+  options.xLabel.name = "";
   const retentionChart90 = plot(html)(
     { x: retentionData90.dates, y: retentionData90.retention },
     options,
   );
 
+  options.yLabel.name = "Daily active users";
+  options.xLabel.name = "";
   const dauChart = plot(html)(
     { x: dauData.dates.map((date) => new Date(date)), y: dauData.daus },
     options,
   );
+
+  options.yLabel.name = "Monthly active users";
+  options.xLabel.name = "";
   const mauChart = plot(html)(
     {
       x: mauData.dates.map((date) => new Date(date)),
@@ -429,15 +534,17 @@ export default async function (trie, theme) {
     },
     options,
   );
-  const ratioData = calculateDAUMAUratio(dauData, mauData);
-  const optionsCopy = { ...options };
-  optionsCopy.margin = 0;
 
+  const ratioData = calculateDAUMAUratio(dauData, mauData);
+  options.yLabel.name = "% ( DAU/MAU )";
+  options.xLabel.name = "";
   const ratioChart = plot(html)(
     { x: ratioData.dates.map((date) => new Date(date)), y: ratioData.ratios },
-    optionsCopy,
+    options,
   );
 
+  options.yLabel.name = "Weekly active users";
+  options.xLabel.name = "";
   const wauChart = plot(html)(
     {
       x: wauData.dates.map((date) => new Date(date)),
@@ -446,6 +553,8 @@ export default async function (trie, theme) {
     options,
   );
 
+  options.yLabel.name = "Submissions";
+  options.xLabel.name = "";
   const submissionsChart = plot(html)(
     {
       x: behavior.dates.map((date) => new Date(date)),
@@ -454,6 +563,8 @@ export default async function (trie, theme) {
     options,
   );
 
+  options.yLabel.name = "Upvotes";
+  options.xLabel.name = "";
   const upvotesData = {
     x: behavior.dates.map((date) => new Date(date)),
     y: behavior.upvotes,
@@ -571,6 +682,26 @@ export default async function (trie, theme) {
                   </p>
                   ${upvotesChart}
                   <p>
+                    <b>31 day retention after minting DEFINITION:</b>
+                    <br />
+                    - This chart shows the likelihood of a user posting a
+                    message within 31 days after minting their NFT.
+                    <br />
+                    - The likelihood is calculated as the percentage of users
+                    who posted at least once within the 31-day period after
+                    their minting day.
+                    <br />
+                    - For example, if the chart shows a value of 50% on day 31,
+                    this means that 50% of users who minted an NFT posted a
+                    message at least once within the 31 days after their minting
+                    day.
+                    <br />
+                    - This metric helps us understand user engagement after
+                    purchasing the NFT. It tells us what proportion of users
+                    remain active on the platform after minting their NFT.
+                  </p>
+                  ${retentionChart31Days}
+                  <p>
                     <b>Retention after acquisition DEFINITION:</b>
                     <br />
                     - Find all minters from 60 to 30 days ago (amount:
@@ -613,6 +744,13 @@ export default async function (trie, theme) {
                     ago.
                   </p>
                   ${retentionChart}
+                  <p>
+                    <b>Minters per day DEFINITION:</b>
+                    <br />
+                    - This chart shows how many addresses have minted the Kiwi
+                    News Pass per day.
+                  </p>
+                  ${mintersChart}
                   <div>
                     <b>Delegation Counts</b>
                     <p>
