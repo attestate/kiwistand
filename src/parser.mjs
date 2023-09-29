@@ -62,6 +62,13 @@ export const parse = async (url) => {
       style="cursor:pointer; display: flex; flex-direction: column; border: 1px solid #ccc;
   border-radius: 3px; overflow: hidden;"
     >
+      <div style="background-color: #e6e6df; padding: 1rem; color: #777;">
+        <div style="font-size: 0.7rem; margin-bottom: 0.5rem;">${domain}</div>
+        <div style="font-size: 0.9rem; color: #000; margin-bottom: 0.5rem;">
+          ${ogTitle}
+        </div>
+        <div style="font-size: 0.7rem;">${ogDescription}</div>
+      </div>
       ${image
         ? html`<div
             style="width: 100%; height: 0; padding-bottom: 50%; position: relative;"
@@ -73,13 +80,6 @@ export const parse = async (url) => {
             />
           </div>`
         : null}
-      <div style="background-color: #e6e6df; padding: 1rem; color: #777;">
-        <div style="font-size: 0.7rem; margin-bottom: 0.5rem;">${domain}</div>
-        <div style="font-size: 0.9rem; color: #000; margin-bottom: 0.5rem;">
-          ${ogTitle}
-        </div>
-        <div style="font-size: 0.7rem;">${ogDescription}</div>
-      </div>
     </div>
   `;
 };
