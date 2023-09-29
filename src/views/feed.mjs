@@ -66,13 +66,12 @@ export function count(leaves) {
   return Object.values(stories);
 }
 
-const calculateScore = (votes, itemHourAge, gravity = 1.8) => {
-  return (votes - 1) / Math.pow(itemHourAge + 2, gravity);
+const calculateScore = (votes, itemHourAge, gravity = 1.3) => {
+  return (votes - 1) / Math.pow(itemHourAge, gravity);
 };
 
-export async function topstories(leaves, minimalUpvotes = 2) {
+export async function topstories(leaves) {
   return count(leaves)
-    .filter((story) => story.upvotes > minimalUpvotes)
     .map((story) => {
       const score = calculateScore(story.upvotes, itemAge(story.timestamp));
       story.score = score;
@@ -182,27 +181,35 @@ export default async function index(trie, theme, page) {
   const totalStories = parseInt(env.TOTAL_STORIES, 10);
   const start = totalStories * page;
   const end = totalStories * (page + 1);
-  let minimalUpvotes = 2;
-  let storyPromises = (await topstories(leaves, minimalUpvotes)).slice(
-    start,
-    end,
-  );
+  let storyPromises = (await topstories(leaves)).slice(start, end);
 
-  // NOTE: The feed's quality threshold is 3 upvotes on a story. But there are cases
-  // where people don't upvote much and the front page goes stale. In these cases
-  // we want to lower our quality requirements to two upvotes only in case the story
-  // is already more than 6 hours old.
-  if (storyPromises.length > 0) {
-    const dayAgo = sub(new Date(), { hours: 6 });
-    const { timestamp, upvotes } = storyPromises[0];
-    if (upvotes > 2 && isBefore(new Date(timestamp * 1000), dayAgo)) {
-      minimalUpvotes -= 1;
-      storyPromises = (await topstories(leaves, minimalUpvotes)).slice(
-        start,
-        end,
-      );
+  let threshold = 1;
+  let pill = true;
+  const now = new Date();
+  const old = sub(now, { days: 2 });
+  const oldInMinutes = differenceInMinutes(now, old);
+  const fold = 10;
+  do {
+    const sample = storyPromises.filter(({ upvotes }) => upvotes > threshold);
+    if (sample.length < totalStories) {
+      threshold--;
+      pill = false;
+      continue;
     }
-  }
+
+    const sum = sample.slice(0, fold).reduce((acc, { timestamp }) => {
+      const submissionTime = new Date(timestamp * 1000);
+      const diff = differenceInMinutes(now, submissionTime);
+      return acc + diff;
+    }, 0);
+    const averageAgeInMinutes = sum / fold;
+    if (averageAgeInMinutes > oldInMinutes) {
+      pill = false;
+    } else {
+      threshold++;
+    }
+  } while (pill);
+  storyPromises = storyPromises.filter(({ upvotes }) => upvotes > threshold);
 
   let stories = [];
   for await (let story of storyPromises) {
