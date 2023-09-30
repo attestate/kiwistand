@@ -210,13 +210,8 @@ const BuyButton = (props) => {
 
   useEffect(() => {
     if (isSuccess) {
-      toast.success(
-        "Successfully minted! We're indexing your transaction but might take up to 5 minutes before you can post!",
-        {
-          duration: 10000,
-        },
-      );
       setLocalStorageKey(key.privateKey);
+      window.location.href = `/indexing?address=${from.address}&transactionHash=${data.hash}`;
     }
   }, [isSuccess]);
 

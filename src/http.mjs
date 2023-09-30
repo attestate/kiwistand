@@ -3,6 +3,7 @@ import { env } from "process";
 
 import express from "express";
 import cookieParser from "cookie-parser";
+import { utils } from "ethers";
 
 import log from "./logger.mjs";
 import { SCHEMATA } from "./constants.mjs";
@@ -24,6 +25,8 @@ import about from "./views/about.mjs";
 import why from "./views/why.mjs";
 import submit from "./views/submit.mjs";
 import settings from "./views/settings.mjs";
+import indexing from "./views/indexing.mjs";
+import demonstration from "./views/demonstration.mjs";
 import { parse } from "./parser.mjs";
 
 const app = express();
@@ -108,6 +111,41 @@ export async function launch(trie, libp2p) {
   });
   app.get("/about", async (request, reply) => {
     const content = await about(reply.locals.theme);
+    return reply.status(200).type("text/html").send(content);
+  });
+  app.get("/demonstration", async (request, reply) => {
+    const content = await demonstration(reply.locals.theme);
+    return reply.status(200).type("text/html").send(content);
+  });
+  app.get("/indexing", async (request, reply) => {
+    let address;
+    try {
+      address = utils.isAddress(request.query.address);
+    } catch (err) {
+      console.log(request.query.address);
+      return reply
+        .status(404)
+        .type("text/plain")
+        .send("No valid Ethereum address");
+    }
+
+    const { transactionHash } = request.query;
+    if (
+      !transactionHash ||
+      !utils.isHexString(transactionHash) ||
+      transactionHash.length !== 66
+    ) {
+      return reply
+        .status(404)
+        .type("text/plain")
+        .send("Not valid Ethereum transaction hash");
+    }
+
+    const content = await indexing(
+      reply.locals.theme,
+      address,
+      transactionHash,
+    );
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/settings", async (request, reply) => {

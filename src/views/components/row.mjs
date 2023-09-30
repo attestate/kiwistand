@@ -14,7 +14,12 @@ export function extractDomain(link) {
   return tld;
 }
 
-const row = (start = 0, style = "padding: 10px 5px 0 10px;", interactive) => {
+const row = (
+  start = 0,
+  style = "padding: 10px 5px 0 10px;",
+  interactive,
+  hideCast,
+) => {
   const size = 12;
   return (story, i) => html`
     <tr>
@@ -95,7 +100,7 @@ const row = (start = 0, style = "padding: 10px 5px 0 10px;", interactive) => {
                   >
                     ${story.displayName}
                   </a>
-                  ${interactive
+                  ${interactive || hideCast
                     ? null
                     : html`
                         <span> • </span>

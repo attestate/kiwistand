@@ -108,3 +108,32 @@ export async function fetchAllowList() {
     return null;
   }
 }
+
+function checkMintStatus() {
+  // Get the current URL
+  const url = new URL(window.location.href);
+
+  // Check if we're on the '/indexing' page
+  if (url.pathname === "/indexing") {
+    // Get the 'address' parameter from the URL
+    const address = url.searchParams.get("address");
+
+    // Start the interval to check the allow list and delegations
+    const intervalId = setInterval(async () => {
+      const allowList = await fetchAllowlist();
+      const delegations = await fetchDelegations();
+
+      if (
+        allowList.includes(address) ||
+        Object.values(delegations).includes(address)
+      ) {
+        console.log("Mint has been picked up by the node.");
+        clearInterval(intervalId);
+        // Redirect to the '/demonstration' page
+        window.location.href = "/demonstration";
+      } else {
+        console.log("Waiting for mint to be picked up...");
+      }
+    }, 5000); // Check every 5 seconds
+  }
+}

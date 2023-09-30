@@ -286,12 +286,38 @@ async function share(toast, link) {
   });
 }
 
+function checkMintStatus(fetchAllowList, fetchDelegations) {
+  const url = new URL(window.location.href);
+  if (url.pathname !== "/indexing") return;
+
+  const address = url.searchParams.get("address");
+  // NOTE: For debugging
+  if (url.searchParams.get("stop")) return;
+  const intervalId = setInterval(async () => {
+    const allowList = await fetchAllowList();
+    const delegations = await fetchDelegations();
+
+    if (
+      !allowList.includes(address) &&
+      !Object.values(delegations).includes(address)
+    ) {
+      console.log("Waiting for mint to be picked up...");
+      return;
+    }
+
+    console.log("Mint has been picked up by the node.");
+    clearInterval(intervalId);
+    window.location.href = "/demonstration";
+  }, 5000);
+}
+
 async function start() {
   await addModals();
   await addNFTPrice();
   const toast = await addToaster();
 
   const { fetchAllowList, fetchDelegations } = await import("./API.mjs");
+  checkMintStatus(fetchAllowList, fetchDelegations);
   const allowlistPromise = fetchAllowList();
   const delegationsPromise = fetchDelegations();
 
