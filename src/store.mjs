@@ -2,6 +2,7 @@
 import { env } from "process";
 import { resolve } from "path";
 
+import normalizeUrl from "normalize-url";
 import { utils } from "ethers";
 import {
   Trie,
@@ -38,8 +39,54 @@ export async function create(options) {
   });
 }
 
+export async function migrateMetadata(db, posts) {
+  const all = Array.from(await db.getRange());
+  const migrated = all.every((obj) => obj.value === true);
+  log(`Was metadb migrated from 2023-10-01 onwards? ${migrated}`);
+  if (!migrated) {
+    await db.transaction(async () => {
+      for await (let { key } of all) {
+        const parts = key.match(/([^:]*):(.+):([^:]*)/);
+        if (parts && parts.length !== 4) {
+          throw new Error(
+            "Panic, migration cannot continue due to falsely detected constraint parts.",
+          );
+        }
+        const address = parts[1];
+        const url = parts[2];
+        const type = parts[3];
+        if (
+          !posts.find(
+            (obj) =>
+              obj.identity === address &&
+              obj.type === type &&
+              normalizeUrl(url) === normalizeUrl(obj.href),
+          )
+        ) {
+          console.log(
+            "Cannot find post for constraint, just removing constraint",
+            key,
+          );
+
+          await db.remove(key);
+          continue;
+        }
+
+        const newKey = upvoteID(address, url, type);
+        console.log(`migrating: ${newKey}`);
+        await db.put(newKey, true);
+        await db.remove(key);
+      }
+      return true;
+    });
+    console.log("Migration done");
+    console.log("Migration done");
+    console.log("Migration done");
+  }
+}
+
 export function metadata(options) {
-  return open({
+  const db = open({
     compression: true,
     name: "constraints",
     encoding: "cbor",
@@ -48,6 +95,7 @@ export function metadata(options) {
     maxReaders,
     ...options,
   });
+  return db;
 }
 
 // NOTE: https://ethereum.github.io/execution-specs/diffs/frontier_homestead/trie/index.html#ethereum.frontier.trie.encode_internal_node
@@ -222,6 +270,12 @@ export async function descend(trie, level, exclude = []) {
   return nodes;
 }
 
+// NOTE: We use `utils.getAddress` from ethers here to make sure we hash a
+// canonical key into the database.
+export function upvoteID(identity, link, type) {
+  return `${utils.getAddress(identity)}|${normalizeUrl(link)}|${type}`;
+}
+
 // TODO: The current synchronization algorithm makes use of checkpoints,
 // commits and reverts, but this function is used in sync.put and store.add,
 // but it isn't checkpointing or reverting, it just writes directly - even upon
@@ -229,15 +283,14 @@ export async function descend(trie, level, exclude = []) {
 // most writes are soft-written, the sync fails, but the actual constraints are
 // then written to the database.
 export async function passes(db, message, identity) {
-  // TODO: We should/must consider adding normalizeUrl here as otherwise a user
-  // might be able to sneakily upvote twice by manipulating the URLs in such
-  // way that the frontend normalizes them into two URLs.
-  // NOTE: We use `utils.getAddress` from ethers here to make sure we hash a
-  // canonical key into the database.
-  const key = `${utils.getAddress(identity)}:${message.href}:${message.type}`;
-  const seenBefore = await db.doesExist(key);
-  await db.put(key);
-  return !seenBefore;
+  const key = upvoteID(identity, message.href, message.type);
+  // NOTE: db.doesExist seemed to have lead in some cases to a greedy match of
+  // the identifier hence returning true negatives. Meaning, it blocked users
+  // from upvoting although they had never upvoted that link.
+  // See: https://github.com/kriszyp/lmdbx-js/issues/17
+  const notFound = (await db.get(key)) === undefined;
+  await db.put(key, true);
+  return notFound;
 }
 
 export async function add(
