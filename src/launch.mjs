@@ -19,27 +19,6 @@ import * as registry from "./chainstate/registry.mjs";
 (async () => {
   const trie = await store.create();
 
-  // NOTE: This request queries all messages in the database to enable caching
-  // when calling ecrecover on messages' signatures
-  const from = null;
-  const amount = null;
-  const startDatetime = null;
-  const parser = JSON.parse;
-  const allowlist = await registry.allowlist();
-  const delegations = await registry.delegations();
-  const posts = await store.posts(
-    trie,
-    from,
-    amount,
-    parser,
-    startDatetime,
-    allowlist,
-    delegations,
-  );
-
-  const metadb = store.metadata();
-  store.migrateMetadata(metadb, posts);
-
   crawl(mintCrawlPath);
   crawl(delegateCrawlPath);
   const node = await start(config);
@@ -59,4 +38,22 @@ import * as registry from "./chainstate/registry.mjs";
   );
   await api.launch(trie, node);
   await http.launch(trie, node);
+
+  // NOTE: This request queries all messages in the database to enable caching
+  // when calling ecrecover on messages' signatures
+  const from = null;
+  const amount = null;
+  const startDatetime = null;
+  const parser = JSON.parse;
+  const allowlist = await registry.allowlist();
+  const delegations = await registry.delegations();
+  const posts = await store.posts(
+    trie,
+    from,
+    amount,
+    parser,
+    startDatetime,
+    allowlist,
+    delegations,
+  );
 })();

@@ -39,52 +39,6 @@ export async function create(options) {
   });
 }
 
-export async function migrateMetadata(db, posts) {
-  const all = Array.from(await db.getRange());
-  const migrated = all.every((obj) => obj.value === true);
-  log(`Was metadb migrated from 2023-10-01 onwards? ${migrated}`);
-  if (!migrated) {
-    await db.transaction(async () => {
-      for await (let { key } of all) {
-        const parts = key.match(/([^:]*):(.+):([^:]*)/);
-        if (parts && parts.length !== 4) {
-          throw new Error(
-            "Panic, migration cannot continue due to falsely detected constraint parts.",
-          );
-        }
-        const address = parts[1];
-        const url = parts[2];
-        const type = parts[3];
-        if (
-          !posts.find(
-            (obj) =>
-              obj.identity === address &&
-              obj.type === type &&
-              normalizeUrl(url) === normalizeUrl(obj.href),
-          )
-        ) {
-          console.log(
-            "Cannot find post for constraint, just removing constraint",
-            key,
-          );
-
-          await db.remove(key);
-          continue;
-        }
-
-        const newKey = upvoteID(address, url, type);
-        console.log(`migrating: ${newKey}`);
-        await db.put(newKey, true);
-        await db.remove(key);
-      }
-      return true;
-    });
-    console.log("Migration done");
-    console.log("Migration done");
-    console.log("Migration done");
-  }
-}
-
 export function metadata(options) {
   const db = open({
     compression: true,
