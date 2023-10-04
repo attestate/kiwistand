@@ -10,76 +10,21 @@ import Header from "./components/header.mjs";
 import Footer from "./components/footer.mjs";
 import Sidebar from "./components/sidebar.mjs";
 import Head from "./components/head.mjs";
-import * as store from "../store.mjs";
-import * as moderation from "./moderation.mjs";
+import * as karma from "../karma.mjs";
 import * as registry from "../chainstate/registry.mjs";
 import { EIP712_MESSAGE } from "../constants.mjs";
 
 const html = htm.bind(vhtml);
 
-const countPoints = (messages) => {
-  messages = messages.sort((a, b) => a.timestamp - b.timestamp);
-  const submissions = new Map();
-  const points = {};
+export default async function (trie, theme, identity) {
+  const users = karma.ranking();
 
-  function add(points, identity) {
-    if (
-      typeof points[identity] !== undefined &&
-      Number.isInteger(points[identity])
-    ) {
-      points[identity] += 1;
-    } else {
-      points[identity] = 1;
-    }
-  }
-
-  messages.forEach((message) => {
-    const normalizedUrl = normalizeUrl(message.href);
-    const cacheEnabled = true;
-
-    if (!submissions.has(normalizedUrl)) {
-      submissions.set(normalizedUrl, message.identity);
-      add(points, message.identity);
-    } else {
-      const submitter = submissions.get(normalizedUrl);
-      add(points, submitter);
-    }
-  });
-
-  const list = [];
-  for (const identity of Object.keys(points)) {
-    const karma = points[identity];
-    list.push({ identity, karma });
-  }
-
-  return list.sort((a, b) => b.karma - a.karma);
-};
-
-export default async function (trie, theme) {
-  const config = await moderation.getLists();
-  const from = null;
-  const amount = null;
-  const parser = JSON.parse;
-  const startDatetime = null;
   const allowlist = await registry.allowlist();
-  const delegations = await registry.delegations();
-  let leaves = await store.posts(
-    trie,
-    from,
-    amount,
-    parser,
-    startDatetime,
-    allowlist,
-    delegations
-  );
-  leaves = moderation.moderate(leaves, config);
-  const users = countPoints(leaves);
-
   let combinedUsers = [];
   for await (let address of allowlist.values()) {
     const foundUser = users.find(
       // TODO: Should start using ethers.utils.getAddress
-      (user) => user.identity.toLowerCase() === address.toLowerCase()
+      (user) => user.identity.toLowerCase() === address.toLowerCase(),
     );
     const karma = foundUser ? foundUser.karma : "0";
 
@@ -88,6 +33,7 @@ export default async function (trie, theme) {
     combinedUsers.push({
       identity: address,
       karma,
+      safeAvatar: ensData.safeAvatar,
       displayName: ensData.displayName,
     });
   }
@@ -111,7 +57,7 @@ export default async function (trie, theme) {
             bgcolor="#f6f6ef"
           >
             <tr>
-              ${Header(theme)}
+              ${await Header(theme, identity)}
             </tr>
             <tr>
               <td>
@@ -149,11 +95,18 @@ export default async function (trie, theme) {
               <div style="width: 8%; text-align: left;">${i + 1}.</div>
               <div style="display: flex; align-items: center; width: 60%;">
                 <div style="width: 20px; height: 20px; box-sizing: border-box;">
-                  <zora-zorb
-                    style="margin-right: 15px;"
-                    size="20px"
-                    address="${user.identity}"
-                  ></zora-zorb>
+                  ${user.safeAvatar
+                    ? html`<img
+                        src="${user.safeAvatar}"
+                        style="width: 20px; height: 20px; border-radius: 100%; margin-right: 15px;"
+                      />`
+                    : html`
+                        <zora-zorb
+                          style="margin-right: 15px;"
+                          size="20px"
+                          address="${user.identity}"
+                        ></zora-zorb>
+                      `}
                 </div>
                 <div style="margin-left: 10px; flex-grow: 1;">
                   ${user.displayName}
@@ -166,7 +119,7 @@ export default async function (trie, theme) {
               </div>
             </div>
           </a>
-        `
+        `,
       )}
      </div>
   </td>

@@ -9,7 +9,7 @@ import Row, { extractDomain } from "./components/row.mjs";
 
 const html = htm.bind(vhtml);
 
-export default function submit(theme, url = "", title = "") {
+export default async function submit(theme, url = "", title = "", identity) {
   const path = "/submit";
   const story = {
     title: "Bitcoin: A Peer-to-Peer Electronic Cash System",
@@ -35,7 +35,7 @@ export default function submit(theme, url = "", title = "") {
           <div id="hnmain">
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
               <tr>
-                ${Header(theme)}
+                ${await Header(theme, identity)}
               </tr>
               <tr>
                 <td>

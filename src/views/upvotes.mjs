@@ -16,6 +16,7 @@ import * as store from "../store.mjs";
 import { EIP712_MESSAGE } from "../constants.mjs";
 import { count, topstories } from "./feed.mjs";
 import * as ens from "../ens.mjs";
+import * as karma from "../karma.mjs";
 import * as registry from "../chainstate/registry.mjs";
 import Row from "./components/row.mjs";
 
@@ -44,7 +45,14 @@ export const classify = (messages) => {
     .sort((a, b) => b.message.timestamp - a.message.timestamp);
 };
 
-export default async function (trie, theme, identity, page, mode) {
+export default async function (
+  trie,
+  theme,
+  identity,
+  page,
+  mode,
+  activeIdentity,
+) {
   if (!utils.isAddress(identity)) {
     return html`Not a valid address`;
   }
@@ -104,6 +112,7 @@ export default async function (trie, theme, identity, page, mode) {
     }),
   );
 
+  const points = karma.resolve(identity);
   return html`
     <html lang="en" op="news">
       <head>
@@ -115,7 +124,7 @@ export default async function (trie, theme, identity, page, mode) {
           <div id="hnmain">
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
               <tr>
-                ${Header(theme)}
+                ${await Header(theme, activeIdentity)}
               </tr>
               <tr>
                 <td>
@@ -128,6 +137,7 @@ export default async function (trie, theme, identity, page, mode) {
                       href="https://etherscan.io/address/${ensData.address}"
                     >
                       ${ensData.displayName}
+                      <span> (${points.toString()} 🥝)</span>
                     </a>
                     <span style="font-size: 0.8rem;">
                       ${ensData.description

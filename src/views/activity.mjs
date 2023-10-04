@@ -42,7 +42,7 @@ const generateFeed = (messages) => {
     });
 
   return Object.values(groupedMessages).sort(
-    (a, b) => b.message.timestamp - a.message.timestamp
+    (a, b) => b.message.timestamp - a.message.timestamp,
   );
 };
 
@@ -84,7 +84,7 @@ function generateRow(activity, i) {
                         style="z-index: ${index}; width: ${size}px; height: ${size}px; border: 1p
  solid #828282; border-radius: 50%; margin-left: -${size / 4}px;"
                       />
-                    `
+                    `,
                   )}
                 </div>`
               : ""}
@@ -146,7 +146,7 @@ export default async function (trie, theme, identity) {
     parser,
     cutoffUnixtime,
     allowlist,
-    delegations
+    delegations,
   );
   leaves = moderation.moderate(leaves, config);
 
@@ -155,7 +155,7 @@ export default async function (trie, theme, identity) {
     (activity) =>
       activity.verb === "upvoted" &&
       // TODO: Should start using ethers.utils.getAddress
-      activity.towards.toLowerCase() === identity.toLowerCase()
+      activity.towards.toLowerCase() === identity.toLowerCase(),
   );
 
   let notifications = [];
@@ -226,7 +226,7 @@ export default async function (trie, theme, identity) {
           <div id="hnmain">
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
               <tr>
-                ${Header(theme)}
+                ${await Header(theme, identity)}
               </tr>
               ${feed}
             </table>

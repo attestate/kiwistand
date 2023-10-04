@@ -150,7 +150,7 @@ async function editors(leaves) {
   };
 }
 
-export default async function index(trie, theme, page) {
+export default async function index(trie, theme, page, identity) {
   const lookBack = sub(new Date(), {
     weeks: 3,
   });
@@ -248,7 +248,7 @@ export default async function index(trie, theme, page) {
           <div id="hnmain">
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
               <tr>
-                ${Header(theme)}
+                ${await Header(theme, identity)}
               </tr>
               <tr>
                 ${ThirdHeader(theme, "top")}

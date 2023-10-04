@@ -26,10 +26,15 @@ export function getLocalAccount(identity) {
 
   if (Object.keys(keys).length === 1) {
     const [[key, value]] = Object.entries(keys);
+    setCookie("identity", key);
     return { identity: key, privateKey: value };
   }
   if (Object.keys(keys).length > 1 && identity && keys[identity]) {
     return { identity, privateKey: keys[identity] };
+  }
+
+  if (Object.keys(keys).length === 0 && identity) {
+    setCookie("identity", identity);
   }
   return null;
 }

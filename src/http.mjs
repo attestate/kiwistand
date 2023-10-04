@@ -63,7 +63,12 @@ export async function launch(trie, libp2p) {
     if (isNaN(page) || page < 1) {
       page = 0;
     }
-    const content = await feed(trie, reply.locals.theme, page);
+    const content = await feed(
+      trie,
+      reply.locals.theme,
+      page,
+      request.cookies.identity,
+    );
     return reply.status(200).type("text/html").send(content);
   });
   // NOTE: During the process of combining the feed and the editor's picks, we
@@ -76,11 +81,19 @@ export async function launch(trie, libp2p) {
     res.redirect(301, "/stats");
   });
   app.get("/new", async (request, reply) => {
-    const content = await newest(trie, reply.locals.theme);
+    const content = await newest(
+      trie,
+      reply.locals.theme,
+      request.cookies.identity,
+    );
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/nfts", async (request, reply) => {
-    const content = await nfts(trie, reply.locals.theme);
+    const content = await nfts(
+      trie,
+      reply.locals.theme,
+      request.cookies.identity,
+    );
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/alltime", function (req, res) {
@@ -98,11 +111,21 @@ export async function launch(trie, libp2p) {
       period = "week";
     }
 
-    const content = await best(trie, reply.locals.theme, page, period);
+    const content = await best(
+      trie,
+      reply.locals.theme,
+      page,
+      period,
+      request.cookies.identity,
+    );
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/community", async (request, reply) => {
-    const content = await community(trie, reply.locals.theme);
+    const content = await community(
+      trie,
+      reply.locals.theme,
+      request.cookies.identity,
+    );
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/stats", async (request, reply) => {
@@ -110,11 +133,14 @@ export async function launch(trie, libp2p) {
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/about", async (request, reply) => {
-    const content = await about(reply.locals.theme);
+    const content = await about(reply.locals.theme, request.cookies.identity);
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/demonstration", async (request, reply) => {
-    const content = await demonstration(reply.locals.theme);
+    const content = await demonstration(
+      reply.locals.theme,
+      request.cookies.identity,
+    );
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/indexing", async (request, reply) => {
@@ -149,11 +175,14 @@ export async function launch(trie, libp2p) {
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/settings", async (request, reply) => {
-    const content = await settings(reply.locals.theme);
+    const content = await settings(
+      reply.locals.theme,
+      request.cookies.identity,
+    );
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/why", async (request, reply) => {
-    const content = await why(reply.locals.theme);
+    const content = await why(reply.locals.theme, request.cookies.identity);
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/activity", async (request, reply) => {
@@ -161,6 +190,7 @@ export async function launch(trie, libp2p) {
       trie,
       reply.locals.theme,
       request.query.address,
+      request.cookies.identity,
     );
     if (lastUpdate) {
       reply.setHeader("X-LAST-UPDATE", lastUpdate);
@@ -172,28 +202,31 @@ export async function launch(trie, libp2p) {
     return reply
       .status(200)
       .type("text/html")
-      .send(subscribe(reply.locals.theme));
+      .send(await subscribe(reply.locals.theme, request.cookies.identity));
   });
   app.get("/privacy-policy", async (request, reply) => {
     return reply
       .status(200)
       .type("text/html")
-      .send(privacy(reply.locals.theme));
+      .send(await privacy(reply.locals.theme, request.cookies.identity));
   });
   app.get("/guidelines", async (request, reply) => {
     return reply
       .status(200)
       .type("text/html")
-      .send(guidelines(reply.locals.theme));
+      .send(await guidelines(reply.locals.theme, request.cookies.identity));
   });
   app.get("/onboarding", async (request, reply) => {
     return reply
       .status(200)
       .type("text/html")
-      .send(onboarding(reply.locals.theme));
+      .send(await onboarding(reply.locals.theme, request.cookies.identity));
   });
   app.get("/welcome", async (request, reply) => {
-    return reply.status(200).type("text/html").send(join(reply.locals.theme));
+    return reply
+      .status(200)
+      .type("text/html")
+      .send(await join(reply.locals.theme, request.cookies.identity));
   });
   app.get("/upvotes", async (request, reply) => {
     let mode = "top";
@@ -209,13 +242,19 @@ export async function launch(trie, libp2p) {
       request.query.address,
       page,
       mode,
+      request.cookies.identity,
     );
     return reply.status(200).type("text/html").send(content);
   });
 
   app.get("/submit", async (request, reply) => {
     const { url, title } = request.query;
-    const content = await submit(reply.locals.theme, url, title);
+    const content = await submit(
+      reply.locals.theme,
+      url,
+      title,
+      request.cookies.identity,
+    );
     return reply.status(200).type("text/html").send(content);
   });
 

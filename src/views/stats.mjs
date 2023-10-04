@@ -583,7 +583,7 @@ export default async function (trie, theme) {
           <div id="hnmain">
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
               <tr>
-                ${Header(theme)}
+                ${await Header(theme)}
               </tr>
               <tr>
                 <td style="padding: 20px;">

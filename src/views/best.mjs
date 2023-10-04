@@ -77,7 +77,7 @@ async function topstories(leaves, start, end) {
     .slice(start, end);
 }
 
-export default async function index(trie, theme, page, period) {
+export default async function index(trie, theme, page, period, identity) {
   const from = null;
   const amount = null;
   const parser = JSON.parse;
@@ -148,7 +148,7 @@ export default async function index(trie, theme, page, period) {
           <div id="hnmain">
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
               <tr>
-                ${Header(theme)}
+                ${await Header(theme, identity)}
               </tr>
               <tr>
                 ${ThirdHeader(theme, "top")}

@@ -9,7 +9,7 @@ import Head from "./components/head.mjs";
 
 const html = htm.bind(vhtml);
 
-export default function (theme, userAddress, transactionHash) {
+export default async function (theme, userAddress, transactionHash) {
   return html`
     <html lang="en" op="news">
       <head>
@@ -31,7 +31,7 @@ export default function (theme, userAddress, transactionHash) {
           <div id="hnmain">
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
               <tr>
-                ${Header(theme)}
+                ${await Header(theme)}
               </tr>
               <tr>
                 <td>

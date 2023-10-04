@@ -323,7 +323,7 @@ export async function posts(
   const nodes = await leaves(trie, from, amount, parser, startDatetime);
 
   const cacheEnabled = true;
-  return nodes
+  const posts = nodes
     .map((node) => {
       const signer = ecrecover(node, EIP712_MESSAGE, cacheEnabled);
       const identity = eligible(allowlist, delegations, signer);
@@ -338,6 +338,7 @@ export async function posts(
       };
     })
     .filter((node) => node !== null);
+  return posts;
 }
 
 export async function leaves(trie, from, amount, parser, startDatetime) {
