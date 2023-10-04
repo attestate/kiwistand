@@ -66,7 +66,7 @@ export function count(leaves) {
   return Object.values(stories);
 }
 
-const calculateScore = (votes, itemHourAge, gravity = 1.3) => {
+const calculateScore = (votes, itemHourAge, gravity = 1.6) => {
   return (votes - 1) / Math.pow(itemHourAge, gravity);
 };
 
