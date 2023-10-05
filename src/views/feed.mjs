@@ -150,7 +150,7 @@ async function editors(leaves) {
   };
 }
 
-export default async function index(trie, theme, page, identity) {
+export async function index(trie, page) {
   const lookBack = sub(new Date(), {
     weeks: 3,
   });
@@ -228,11 +228,22 @@ export default async function index(trie, theme, page, identity) {
     stories.push({
       ...story,
       displayName: ensData.displayName,
+      submitter: ensData,
       avatars: avatars,
     });
   }
 
+  return {
+    editorPicks,
+    config,
+    stories,
+    start,
+  };
+}
+
+export default async function (trie, theme, page, identity) {
   const path = "/";
+  const { editorPicks, config, stories, start } = await index(trie, page);
   return html`
     <html lang="en" op="news">
       <head>
@@ -371,7 +382,7 @@ export default async function index(trie, theme, page, identity) {
             </table>
           </div>
         </div>
-        ${Footer(theme, "/")}
+        ${Footer(theme, path)}
       </body>
     </html>
   `;

@@ -8,7 +8,7 @@ import { utils } from "ethers";
 import log from "./logger.mjs";
 import { SCHEMATA } from "./constants.mjs";
 import themes from "./themes.mjs";
-import feed from "./views/feed.mjs";
+import feed, { index } from "./views/feed.mjs";
 import newest from "./views/new.mjs";
 import best from "./views/best.mjs";
 import privacy from "./views/privacy.mjs";
@@ -53,10 +53,54 @@ function loadTheme(req, res, next) {
 
 app.use(loadTheme);
 
+// NOTE: sendError and sendStatus are duplicated here (compare with
+// /src/api.mjs) because eventually we wanna rip apart the Kiwi News website
+// from the node software.
+function sendError(reply, code, message, details) {
+  log(`http error: "${code}", "${message}", "${details}"`);
+  return reply.status(code).json({
+    status: "error",
+    code,
+    message,
+    details,
+  });
+}
+
+function sendStatus(reply, code, message, details, data) {
+  const obj = {
+    status: "success",
+    code,
+    message,
+    details,
+  };
+  if (data) obj.data = data;
+  return reply.status(code).json(obj);
+}
+
 export async function launch(trie, libp2p) {
   app.get("/api/v1/parse", async (request, reply) => {
     const embed = await parse(request.query.url);
     return reply.status(200).type("text/html").send(embed);
+  });
+  app.get("/api/v1/feeds/:name", async (request, reply) => {
+    if (request.params.name !== "hot") {
+      const code = 501;
+      const httpMessage = "Not Implemented";
+      const details =
+        "We currently don't implement any other endpoint but 'hot'";
+      return sendError(reply, code, httpMessage, details);
+    }
+
+    let page = parseInt(request.query.page);
+    if (isNaN(page) || page < 1) {
+      page = 0;
+    }
+    const { stories } = await index(trie, page);
+
+    const code = 200;
+    const httpMessage = "OK";
+    const details = "Hot feed";
+    return sendStatus(reply, code, httpMessage, details, { stories });
   });
   app.get("/", async (request, reply) => {
     let page = parseInt(request.query.page);
@@ -148,7 +192,6 @@ export async function launch(trie, libp2p) {
     try {
       address = utils.isAddress(request.query.address);
     } catch (err) {
-      console.log(request.query.address);
       return reply
         .status(404)
         .type("text/plain")
