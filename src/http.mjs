@@ -28,6 +28,7 @@ import settings from "./views/settings.mjs";
 import indexing from "./views/indexing.mjs";
 import demonstration from "./views/demonstration.mjs";
 import { parse } from "./parser.mjs";
+import { toAddress, resolve } from "./ens.mjs";
 
 const app = express();
 
@@ -271,20 +272,43 @@ export async function launch(trie, libp2p) {
       .type("text/html")
       .send(await join(reply.locals.theme, request.cookies.identity));
   });
-  app.get("/upvotes", async (request, reply) => {
-    let mode = "top";
-    if (request.query.mode === "new") mode = "new";
 
-    let page = parseInt(request.query.page);
+  async function getProfile(trie, theme, address, page, mode, identity) {
+    let activeMode = "top";
+    if (mode === "new") activeMode = "new";
+
+    page = parseInt(page);
     if (isNaN(page) || page < 1) {
       page = 0;
     }
     const content = await upvotes(
       trie,
+      theme,
+      address,
+      page,
+      activeMode,
+      identity,
+    );
+    return content;
+  }
+  app.get("/upvotes", async (request, reply) => {
+    if (!utils.isAddress(request.query.address)) {
+      return reply
+        .status(404)
+        .type("text/plain")
+        .send("No valid Ethereum address");
+    }
+    const profile = await resolve(request.query.address);
+    if (profile && profile.ens) {
+      return reply.redirect(301, `/${profile.ens}`);
+    }
+
+    const content = await getProfile(
+      trie,
       reply.locals.theme,
       request.query.address,
-      page,
-      mode,
+      request.query.page,
+      request.query.mode,
       request.cookies.identity,
     );
     return reply.status(200).type("text/html").send(content);
@@ -296,6 +320,27 @@ export async function launch(trie, libp2p) {
       reply.locals.theme,
       url,
       title,
+      request.cookies.identity,
+    );
+    return reply.status(200).type("text/html").send(content);
+  });
+  app.get("/*", async (request, reply, next) => {
+    const name = request.params[0];
+    if (!name.endsWith(".eth")) {
+      return next();
+    }
+    let address;
+    try {
+      address = await toAddress(name);
+    } catch (err) {
+      return next();
+    }
+    const content = await getProfile(
+      trie,
+      reply.locals.theme,
+      address,
+      request.query.page,
+      request.query.mode,
       request.cookies.identity,
     );
     return reply.status(200).type("text/html").send(content);

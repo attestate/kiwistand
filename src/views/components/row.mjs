@@ -95,6 +95,8 @@ const row = (
                   <a
                     href="${interactive
                       ? ""
+                      : story.submitter && story.submitter.ens
+                      ? `/${story.submitter.ens}`
                       : `/upvotes?address=${story.identity}`}"
                     class="meta-link"
                   >

@@ -36,6 +36,13 @@ async function fetchFCData(address) {
   };
 }
 
+export async function toAddress(name) {
+  const response = await fetch(`https://ensdata.net/${name}`);
+  const data = await response.json();
+  if (data && data.address) return data.address;
+  throw new Error("Couldn't convert to address");
+}
+
 async function fetchENSData(address) {
   try {
     const response = await fetch(`https://ensdata.net/${address}`);
@@ -106,8 +113,16 @@ async function initializeCache() {
     addresses = await allowlist();
   }
 
-  if (addresses && Array.isArray(addresses))
-    await Promise.all(addresses.map(resolve));
+  if (addresses && Array.isArray(addresses)) {
+    for await (const address of addresses) {
+      const profile = await resolve(address);
+      if (profile && profile.ens) {
+        try {
+          await toAddress(profile.ens);
+        } catch (err) {}
+      }
+    }
+  }
 }
 
 // NOTE: For nodes that have never downloaded and committed all addresses into
