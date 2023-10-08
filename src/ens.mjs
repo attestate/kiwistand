@@ -19,7 +19,12 @@ async function fetchFCData(address) {
   } catch (err) {
     return;
   }
-  const data = await response.json();
+  let data;
+  try 
+    data = await response.json();
+  } catch(err) {
+    return
+  }
   if (
     data.error === "User not found" ||
     (data.users && Array.isArray(data.users) && data.users.length !== 1)
