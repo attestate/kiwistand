@@ -86,6 +86,14 @@ export default async function (theme, identity) {
             width: 100%;
           }
 
+          .desktop-image {
+            display: block;
+          }
+          .mobile-image {
+            display: none;
+          }
+          
+
           /* Mobile styles */
           @media (max-width: 768px) {
             .flex-container {
@@ -129,6 +137,14 @@ export default async function (theme, identity) {
             .flex-image-right .text-left {
               order: 1; /* Place the text after the image */
             }
+
+            .desktop-image {
+              display: none;
+            }
+            .mobile-image {
+              display: block;
+            }
+
           }
 
           body {
@@ -564,8 +580,9 @@ export default async function (theme, identity) {
                       What people say about Kiwi:
                     </h2>
                     <div class="image" style="margin-bottom: 1rem;">
-                      <img src="LP_referrals.png" alt="Kiwi Referrals" />
-                    </div>
+                    <img class="desktop-image" src="LP_referrals.png" alt="Kiwi Referrals" />
+                    <img class="mobile-image" src="LP_referrals_mobile.png" alt="Kiwi Referrals" />
+                  </div>
                   </div>
                   <br />
                   <div style="max-width: 70%; margin: auto;">
