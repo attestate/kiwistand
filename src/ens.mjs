@@ -20,10 +20,10 @@ async function fetchFCData(address) {
     return;
   }
   let data;
-  try 
+  try {
     data = await response.json();
-  } catch(err) {
-    return
+  } catch (err) {
+    return;
   }
   if (
     data.error === "User not found" ||
