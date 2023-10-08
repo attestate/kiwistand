@@ -603,9 +603,9 @@ export default async function (theme, identity) {
 
                     <b>Who is picking these links?</b>
                     <p>
-                      We are a community of 140+ crypto-savvy people who submit
+                      We are a community of 20+ crypto-savvy people who submit
                       and upvote links to create a newsfeed we all want to use.
-                      You can learn more about the community here.
+                      You can learn more about the community <u><a href="/community" target="_blank">here</a></u>.
                     </p>
 
                     <b>Why do you build this?</b>
@@ -613,23 +613,19 @@ export default async function (theme, identity) {
                       We want to create a space where crypto content can thrive.
                       Where creators can reach new audiences and readers can
                       find inspiring texts, podcasts and videos. You can read
-                      more about our vision here.
+                      more about our vision <u><a href="#note-from-founders">here</a></u>.
                     </p>
 
                     <b>What is your current roadmap?</b>
 
                     <p>
                       We are working to make the web app experience more
-                      seamless. We also plan to ship the mobile app. You can
-                      read more about our plans here.
+                      seamless. We also want to add comments. You can learn more about it <u><a href="https://telegra.ph/My-short-term-roadmap-proposal-for-Kiwi-News-09-02" target="_blank">here</a></u>.
                     </p>
 
                     <b>Where can I share my feature requests?</b>
                     <p>
-                      If you’re our NFT holder, you can reach out to @timdaub or
-                      @macbudkowski to get added to the holders-only Telegram
-                      Chat. If you don’t hold our NFT, you can always add your
-                      requests here.
+                      Please reach out to @timdaub or @macbudkowski on Telegram.
                     </p>
                   </div>
                   <br />
@@ -645,7 +641,7 @@ export default async function (theme, identity) {
                   <br />
                   <br />
                   <br />
-                  <h2 style="text-align: center;">Note from founders</h2>
+                  <h2 id="note-from-founders" style="text-align: center;">Note from founders</h2>
                   <p style="max-width: 70%; margin: auto;">
                     We know how it all started. Satoshi created Bitcoin because
                     people were being screwed by the financial system. And the
