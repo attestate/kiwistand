@@ -14,19 +14,24 @@ export function extractDomain(link) {
   return tld;
 }
 
-const row = (start = 0) => {
+const row = (
+  start = 0,
+  style = "padding: 10px 5px 0 10px;",
+  interactive,
+  hideCast,
+) => {
   const size = 12;
   return (story, i) => html`
     <tr>
       <td>
-        <div style="padding: 10px 5px 0 10px;">
+        <div style="${style}">
           <div style="display: flex; align-items: stretch;">
             <div
               style="display: flex; align-items: center; justify-content: center; min-width: 40px; margin-right: 6px;"
             >
               <a href="#" style="min-height: 40px; display:block;">
                 <div
-                  class="votearrowcontainer"
+                  class="${interactive ? "" : "votearrowcontainer"}"
                   data-title="${story.title}"
                   data-href="${story.href}"
                   data-upvoters="${JSON.stringify(story.upvoters)}"
@@ -49,7 +54,7 @@ const row = (start = 0) => {
             >
               <span>
                 <a
-                  href="${story.href}"
+                  href="${interactive ? "" : story.href}"
                   target="_blank"
                   class="story-link"
                   style="line-height: 13pt; font-size: 13pt;"
@@ -57,7 +62,7 @@ const row = (start = 0) => {
                   ${story.title}
                 </a>
                 <span> </span>
-                <span style="white-space: nowrap;"
+                <span class="story-domain" style="white-space: nowrap;"
                   >(${extractDomain(story.href)})</span
                 >
               </span>
@@ -88,25 +93,33 @@ const row = (start = 0) => {
                   ${formatDistanceToNowStrict(new Date(story.timestamp * 1000))}
                   <span> ago by </span>
                   <a
-                    href="/upvotes?address=${story.identity}"
+                    href="${interactive
+                      ? ""
+                      : story.submitter && story.submitter.ens
+                      ? `/${story.submitter.ens}`
+                      : `/upvotes?address=${story.identity}`}"
                     class="meta-link"
                   >
                     ${story.displayName}
                   </a>
-                  <span> • </span>
-                  <a
-                    target="_blank"
-                    href="https://warpcast.com/~/compose?embeds[]=${encodeURIComponent(
-                      story.href,
-                    )}&text=${encodeURIComponent(
-                      `Found on Kiwi News: "${story.title}"`,
-                    )}&embeds[]=https://news.kiwistand.com"
-                    class="caster-link"
-                  >
-                    ${FCIcon("height: 10px; width: 10px;")}
-                    <span> </span>
-                    Cast
-                  </a>
+                  ${interactive || hideCast
+                    ? null
+                    : html`
+                        <span> • </span>
+                        <a
+                          target="_blank"
+                          href="https://warpcast.com/~/compose?embeds[]=${encodeURIComponent(
+                            story.href,
+                          )}&text=${encodeURIComponent(
+                            `Found on Kiwi News: "${story.title}"`,
+                          )}&embeds[]=https://news.kiwistand.com"
+                          class="caster-link"
+                        >
+                          ${FCIcon("height: 10px; width: 10px;")}
+                          <span> </span>
+                          Cast
+                        </a>
+                      `}
                 </span>
               </div>
             </div>

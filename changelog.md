@@ -5,6 +5,17 @@
 - We are versioning according to [semver.org](https://semver.org)
 - We are currently in the ["Initial development phase"](https://semver.org/#spec-item-4)
 
+## 0.7.0
+
+- (breaking) Fixed a bug in the constraints metadata db. Details:
+  https://github.com/attestate/kiwistand/commit/37ba938a811b39ec6e88887eaa278d393b72ff6b
+  **Caution:** If you're running a node, read this carefully and potentially
+  get in touch!
+- Hardcode mainnet mints to preserve mainnet timestamps of minting
+- Optimism mint crawler records timestamps of mints
+- Mints can now be tracked separately
+- Many frontend updates
+
 ## 0.6.0
 
 - Upgrade all libp2p version identifiers

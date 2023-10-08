@@ -1,6 +1,6 @@
 {
   "name": "kiwistand",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "kiwistand is the p2p node client for kiwinews.xyz, a web3 writer friendly Hacker News that nobody controls but everybody co-owns",
   "main": "./src/index.mjs",
   "scripts": {
@@ -40,7 +40,7 @@
   "homepage": "https://github.com/attestate/kiwistand#readme",
   "dependencies": {
     "@attestate/crawler": "0.6.0",
-    "@attestate/crawler-call-block-logs": "0.4.1",
+    "@attestate/crawler-call-block-logs": "0.4.2",
     "@attestate/delegator2": "0.2.0",
     "@chainsafe/libp2p-gossipsub": "5.2.1",
     "@chainsafe/libp2p-noise": "10.2.0",
@@ -70,12 +70,13 @@
     "it-map": "2.0.0",
     "libp2p": "0.40.0",
     "lmdb": "2.7.9",
-    "node-fetch": "^3.3.2",
+    "node-cache": "5.1.2",
     "node-fetch-cache": "3.1.2",
     "nodemon": "2.0.21",
     "normalize-url": "8.0.0",
+    "open-graph-scraper": "6.2.2",
     "pm2": "5.3.0",
-    "svg-line-chart": "0.4.0",
+    "svg-line-chart": "0.4.1",
     "vhtml": "2.2.0"
   },
   "devDependencies": {

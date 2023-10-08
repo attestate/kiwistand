@@ -5,7 +5,7 @@ import { URL } from "url";
 import htm from "htm";
 import vhtml from "vhtml";
 import normalizeUrl from "normalize-url";
-import { sub, differenceInMinutes } from "date-fns";
+import { sub, differenceInMinutes, isBefore } from "date-fns";
 import { fetchBuilder, MemoryCache } from "node-fetch-cache";
 
 import * as ens from "../ens.mjs";
@@ -66,13 +66,12 @@ export function count(leaves) {
   return Object.values(stories);
 }
 
-const calculateScore = (votes, itemHourAge, gravity = 1.8) => {
-  return (votes - 1) / Math.pow(itemHourAge + 2, gravity);
+const calculateScore = (votes, itemHourAge, gravity = 1.6) => {
+  return (votes - 1) / Math.pow(itemHourAge, gravity);
 };
 
-export async function topstories(leaves, minimalUpvotes = 2) {
+export async function topstories(leaves) {
   return count(leaves)
-    .filter((story) => story.upvotes > minimalUpvotes)
     .map((story) => {
       const score = calculateScore(story.upvotes, itemAge(story.timestamp));
       story.score = score;
@@ -151,7 +150,7 @@ async function editors(leaves) {
   };
 }
 
-export default async function index(trie, theme, page) {
+export async function index(trie, page) {
   const lookBack = sub(new Date(), {
     weeks: 3,
   });
@@ -182,7 +181,35 @@ export default async function index(trie, theme, page) {
   const totalStories = parseInt(env.TOTAL_STORIES, 10);
   const start = totalStories * page;
   const end = totalStories * (page + 1);
-  const storyPromises = (await topstories(leaves)).slice(start, end);
+  let storyPromises = (await topstories(leaves)).slice(start, end);
+
+  let threshold = 1;
+  let pill = true;
+  const now = new Date();
+  const old = sub(now, { days: 2 });
+  const oldInMinutes = differenceInMinutes(now, old);
+  const fold = 10;
+  do {
+    const sample = storyPromises.filter(({ upvotes }) => upvotes > threshold);
+    if (sample.length < totalStories) {
+      threshold--;
+      pill = false;
+      continue;
+    }
+
+    const sum = sample.slice(0, fold).reduce((acc, { timestamp }) => {
+      const submissionTime = new Date(timestamp * 1000);
+      const diff = differenceInMinutes(now, submissionTime);
+      return acc + diff;
+    }, 0);
+    const averageAgeInMinutes = sum / fold;
+    if (averageAgeInMinutes > oldInMinutes) {
+      pill = false;
+    } else {
+      threshold++;
+    }
+  } while (pill);
+  storyPromises = storyPromises.filter(({ upvotes }) => upvotes > threshold);
 
   let stories = [];
   for await (let story of storyPromises) {
@@ -201,11 +228,22 @@ export default async function index(trie, theme, page) {
     stories.push({
       ...story,
       displayName: ensData.displayName,
+      submitter: ensData,
       avatars: avatars,
     });
   }
 
+  return {
+    editorPicks,
+    config,
+    stories,
+    start,
+  };
+}
+
+export default async function (trie, theme, page, identity) {
   const path = "/";
+  const { editorPicks, config, stories, start } = await index(trie, page);
   return html`
     <html lang="en" op="news">
       <head>
@@ -221,7 +259,7 @@ export default async function index(trie, theme, page) {
           <div id="hnmain">
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
               <tr>
-                ${Header(theme)}
+                ${await Header(theme, identity)}
               </tr>
               <tr>
                 ${ThirdHeader(theme, "top")}
@@ -344,7 +382,7 @@ export default async function index(trie, theme, page) {
             </table>
           </div>
         </div>
-        ${Footer(theme, "/")}
+        ${Footer(theme, path)}
       </body>
     </html>
   `;

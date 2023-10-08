@@ -10,7 +10,7 @@ import Head from "./components/head.mjs";
 
 const html = htm.bind(vhtml);
 
-export default function (theme) {
+export default async function (theme, identity) {
   return html`
     <html lang="en" op="news">
       <head>
@@ -72,7 +72,7 @@ export default function (theme) {
           <div id="hnmain">
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
               <tr>
-                ${Header(theme)}
+                ${await Header(theme, identity)}
               </tr>
               <tr>
                 <td style="padding: 1rem; text-align: center; color: black;">
@@ -81,7 +81,7 @@ export default function (theme) {
                     This is how to get 100% from it.
                   </h1>
                   <img
-                    src="kiwiwebsite.png"
+                    src="kiwi-website.png"
                     alt="Kiwi News NFT"
                     style="height: 200px; width: auto;"
                   />
@@ -119,47 +119,6 @@ export default function (theme) {
                     </div>
                     <div class="image-right">
                       <img src="Telegram.png" />
-                    </div>
-                  </div>
-                  <br />
-                  <br />
-                  <br />
-                  <div class="flex-container flex-image-left">
-                    <div class="image-left">
-                      <img src="kiwi_signless.gif" alt="Kiwi signless" />
-                    </div>
-                    <div class="text-right">
-                      <h2>Turn on Signless Kiwi Experience.</h2>
-                      <p>
-                        You will be able to submit and upvote stories without
-                        signing each action with your wallet. It feels like
-                        magic.
-                      </p>
-                      <a href="/settings" target="_blank">
-                        <button id="button-onboarding" style="margin-right: 0;">
-                          Turn on
-                        </button>
-                      </a>
-                    </div>
-                  </div>
-                  <br />
-                  <br />
-                  <br />
-                  <div class="flex-container flex-image-right">
-                    <div class="text-left">
-                      <h2>Upvote your first link</h2>
-                      <p>
-                        Become a curator by upvoting your first link. Probably
-                        the best bet is something from the "Hot" tab.
-                      </p>
-                      <a href="/" target="_blank">
-                        <button id="button-onboarding" style="margin-left: 0;">
-                          Check "Hot" Tab
-                        </button>
-                      </a>
-                    </div>
-                    <div class="image-right">
-                      <img src="kiwi_upvote.gif" alt="Kiwi Upvote" />
                     </div>
                   </div>
                   <br />
@@ -254,7 +213,7 @@ export default function (theme) {
                         target="_blank"
                       >
                         <button id="button-onboarding" style="margin-left: 0;">
-                          Book you Kiwi Editor's slot
+                          Book your Kiwi Editor's slot
                         </button>
                       </a>
                     </div>

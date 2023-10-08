@@ -15,6 +15,7 @@ import * as store from "./store.mjs";
 import mintCrawlPath from "./chainstate/mint.config.crawler.mjs";
 import delegateCrawlPath from "./chainstate/delegate.config.crawler.mjs";
 import * as registry from "./chainstate/registry.mjs";
+import * as karma from "./karma.mjs";
 
 (async () => {
   const trie = await store.create();
@@ -47,7 +48,7 @@ import * as registry from "./chainstate/registry.mjs";
   const parser = JSON.parse;
   const allowlist = await registry.allowlist();
   const delegations = await registry.delegations();
-  await store.posts(
+  const posts = await store.posts(
     trie,
     from,
     amount,
@@ -56,4 +57,5 @@ import * as registry from "./chainstate/registry.mjs";
     allowlist,
     delegations,
   );
+  karma.count(posts);
 })();

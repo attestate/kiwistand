@@ -3,13 +3,14 @@ import { env } from "process";
 
 import express from "express";
 import cookieParser from "cookie-parser";
+import { utils } from "ethers";
 
 import log from "./logger.mjs";
 import { SCHEMATA } from "./constants.mjs";
 import themes from "./themes.mjs";
-import feed from "./views/feed.mjs";
+import feed, { index } from "./views/feed.mjs";
 import newest from "./views/new.mjs";
-import alltime from "./views/alltime.mjs";
+import best from "./views/best.mjs";
 import privacy from "./views/privacy.mjs";
 import guidelines from "./views/guidelines.mjs";
 import onboarding from "./views/onboarding.mjs";
@@ -24,6 +25,10 @@ import about from "./views/about.mjs";
 import why from "./views/why.mjs";
 import submit from "./views/submit.mjs";
 import settings from "./views/settings.mjs";
+import indexing from "./views/indexing.mjs";
+import demonstration from "./views/demonstration.mjs";
+import { parse } from "./parser.mjs";
+import { toAddress, resolve } from "./ens.mjs";
 
 const app = express();
 
@@ -49,13 +54,66 @@ function loadTheme(req, res, next) {
 
 app.use(loadTheme);
 
+// NOTE: sendError and sendStatus are duplicated here (compare with
+// /src/api.mjs) because eventually we wanna rip apart the Kiwi News website
+// from the node software.
+function sendError(reply, code, message, details) {
+  log(`http error: "${code}", "${message}", "${details}"`);
+  return reply.status(code).json({
+    status: "error",
+    code,
+    message,
+    details,
+  });
+}
+
+function sendStatus(reply, code, message, details, data) {
+  const obj = {
+    status: "success",
+    code,
+    message,
+    details,
+  };
+  if (data) obj.data = data;
+  return reply.status(code).json(obj);
+}
+
 export async function launch(trie, libp2p) {
+  app.get("/api/v1/parse", async (request, reply) => {
+    const embed = await parse(request.query.url);
+    return reply.status(200).type("text/html").send(embed);
+  });
+  app.get("/api/v1/feeds/:name", async (request, reply) => {
+    if (request.params.name !== "hot") {
+      const code = 501;
+      const httpMessage = "Not Implemented";
+      const details =
+        "We currently don't implement any other endpoint but 'hot'";
+      return sendError(reply, code, httpMessage, details);
+    }
+
+    let page = parseInt(request.query.page);
+    if (isNaN(page) || page < 1) {
+      page = 0;
+    }
+    const { stories } = await index(trie, page);
+
+    const code = 200;
+    const httpMessage = "OK";
+    const details = "Hot feed";
+    return sendStatus(reply, code, httpMessage, details, { stories });
+  });
   app.get("/", async (request, reply) => {
     let page = parseInt(request.query.page);
     if (isNaN(page) || page < 1) {
       page = 0;
     }
-    const content = await feed(trie, reply.locals.theme, page);
+    const content = await feed(
+      trie,
+      reply.locals.theme,
+      page,
+      request.cookies.identity,
+    );
     return reply.status(200).type("text/html").send(content);
   });
   // NOTE: During the process of combining the feed and the editor's picks, we
@@ -68,23 +126,51 @@ export async function launch(trie, libp2p) {
     res.redirect(301, "/stats");
   });
   app.get("/new", async (request, reply) => {
-    const content = await newest(trie, reply.locals.theme);
+    const content = await newest(
+      trie,
+      reply.locals.theme,
+      request.cookies.identity,
+    );
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/nfts", async (request, reply) => {
-    const content = await nfts(trie, reply.locals.theme);
+    const content = await nfts(
+      trie,
+      reply.locals.theme,
+      request.cookies.identity,
+    );
     return reply.status(200).type("text/html").send(content);
   });
-  app.get("/alltime", async (request, reply) => {
+  app.get("/alltime", function (req, res) {
+    return res.redirect(301, "/best?period=all");
+  });
+  app.get("/best", async (request, reply) => {
     let page = parseInt(request.query.page);
     if (isNaN(page) || page < 1) {
       page = 0;
     }
-    const content = await alltime(trie, reply.locals.theme, page);
+
+    const periodValues = ["all", "month", "week", "day"];
+    let { period } = request.query;
+    if (!period || !periodValues.includes(period)) {
+      period = "week";
+    }
+
+    const content = await best(
+      trie,
+      reply.locals.theme,
+      page,
+      period,
+      request.cookies.identity,
+    );
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/community", async (request, reply) => {
-    const content = await community(trie, reply.locals.theme);
+    const content = await community(
+      trie,
+      reply.locals.theme,
+      request.cookies.identity,
+    );
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/stats", async (request, reply) => {
@@ -92,15 +178,55 @@ export async function launch(trie, libp2p) {
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/about", async (request, reply) => {
-    const content = await about(reply.locals.theme);
+    const content = await about(reply.locals.theme, request.cookies.identity);
+    return reply.status(200).type("text/html").send(content);
+  });
+  app.get("/demonstration", async (request, reply) => {
+    const content = await demonstration(
+      reply.locals.theme,
+      request.cookies.identity,
+    );
+    return reply.status(200).type("text/html").send(content);
+  });
+  app.get("/indexing", async (request, reply) => {
+    let address;
+    try {
+      address = utils.isAddress(request.query.address);
+    } catch (err) {
+      return reply
+        .status(404)
+        .type("text/plain")
+        .send("No valid Ethereum address");
+    }
+
+    const { transactionHash } = request.query;
+    if (
+      !transactionHash ||
+      !utils.isHexString(transactionHash) ||
+      transactionHash.length !== 66
+    ) {
+      return reply
+        .status(404)
+        .type("text/plain")
+        .send("Not valid Ethereum transaction hash");
+    }
+
+    const content = await indexing(
+      reply.locals.theme,
+      address,
+      transactionHash,
+    );
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/settings", async (request, reply) => {
-    const content = await settings(reply.locals.theme);
+    const content = await settings(
+      reply.locals.theme,
+      request.cookies.identity,
+    );
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/why", async (request, reply) => {
-    const content = await why(reply.locals.theme);
+    const content = await why(reply.locals.theme, request.cookies.identity);
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/activity", async (request, reply) => {
@@ -108,6 +234,7 @@ export async function launch(trie, libp2p) {
       trie,
       reply.locals.theme,
       request.query.address,
+      request.cookies.identity,
     );
     if (lastUpdate) {
       reply.setHeader("X-LAST-UPDATE", lastUpdate);
@@ -119,50 +246,103 @@ export async function launch(trie, libp2p) {
     return reply
       .status(200)
       .type("text/html")
-      .send(subscribe(reply.locals.theme));
+      .send(await subscribe(reply.locals.theme, request.cookies.identity));
   });
   app.get("/privacy-policy", async (request, reply) => {
     return reply
       .status(200)
       .type("text/html")
-      .send(privacy(reply.locals.theme));
+      .send(await privacy(reply.locals.theme, request.cookies.identity));
   });
   app.get("/guidelines", async (request, reply) => {
     return reply
       .status(200)
       .type("text/html")
-      .send(guidelines(reply.locals.theme));
+      .send(await guidelines(reply.locals.theme, request.cookies.identity));
   });
   app.get("/onboarding", async (request, reply) => {
     return reply
       .status(200)
       .type("text/html")
-      .send(onboarding(reply.locals.theme));
+      .send(await onboarding(reply.locals.theme, request.cookies.identity));
   });
   app.get("/welcome", async (request, reply) => {
-    return reply.status(200).type("text/html").send(join(reply.locals.theme));
+    return reply
+      .status(200)
+      .type("text/html")
+      .send(await join(reply.locals.theme, request.cookies.identity));
   });
-  app.get("/upvotes", async (request, reply) => {
-    let mode = "top";
-    if (request.query.mode === "new") mode = "new";
 
-    let page = parseInt(request.query.page);
+  async function getProfile(trie, theme, address, page, mode, identity) {
+    let activeMode = "top";
+    if (mode === "new") activeMode = "new";
+
+    page = parseInt(page);
     if (isNaN(page) || page < 1) {
       page = 0;
     }
     const content = await upvotes(
       trie,
+      theme,
+      address,
+      page,
+      activeMode,
+      identity,
+    );
+    return content;
+  }
+  app.get("/upvotes", async (request, reply) => {
+    if (!utils.isAddress(request.query.address)) {
+      return reply
+        .status(404)
+        .type("text/plain")
+        .send("No valid Ethereum address");
+    }
+    const profile = await resolve(request.query.address);
+    if (profile && profile.ens) {
+      return reply.redirect(301, `/${profile.ens}`);
+    }
+
+    const content = await getProfile(
+      trie,
       reply.locals.theme,
       request.query.address,
-      page,
-      mode,
+      request.query.page,
+      request.query.mode,
+      request.cookies.identity,
     );
     return reply.status(200).type("text/html").send(content);
   });
 
   app.get("/submit", async (request, reply) => {
     const { url, title } = request.query;
-    const content = await submit(reply.locals.theme, url, title);
+    const content = await submit(
+      reply.locals.theme,
+      url,
+      title,
+      request.cookies.identity,
+    );
+    return reply.status(200).type("text/html").send(content);
+  });
+  app.get("/*", async (request, reply, next) => {
+    const name = request.params[0];
+    if (!name.endsWith(".eth")) {
+      return next();
+    }
+    let address;
+    try {
+      address = await toAddress(name);
+    } catch (err) {
+      return next();
+    }
+    const content = await getProfile(
+      trie,
+      reply.locals.theme,
+      address,
+      request.query.page,
+      request.query.mode,
+      request.cookies.identity,
+    );
     return reply.status(200).type("text/html").send(content);
   });
 

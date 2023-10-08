@@ -10,7 +10,7 @@ import Head from "./components/head.mjs";
 
 const html = htm.bind(vhtml);
 
-export default function (theme) {
+export default async function (theme, identity) {
   return html`
     <html lang="en" op="news">
       <head>
@@ -22,7 +22,7 @@ export default function (theme) {
           <div id="hnmain">
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
               <tr>
-                ${Header(theme)}
+                ${await Header(theme, identity)}
               </tr>
               <tr>
                 <td style="padding: 1rem;">

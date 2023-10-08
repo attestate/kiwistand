@@ -17,6 +17,15 @@
    "background_color": "limegreen",
    "display": "standalone",
    "scope": "/",
-   "theme_color": "black"
- }
+   "theme_color": "black",
+   "share_target": {
+      "action": "/submit",
+      "method": "GET",
+      "params": {
+        "title": "title",
+        "text": "url",
+        "url": "url"
+      }
+   }
+}
 

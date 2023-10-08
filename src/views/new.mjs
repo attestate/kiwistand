@@ -21,7 +21,7 @@ import Row from "./components/row.mjs";
 
 const html = htm.bind(vhtml);
 
-export default async function (trie, theme) {
+export default async function (trie, theme, identity) {
   const config = await moderation.getLists();
 
   const from = null;
@@ -83,7 +83,7 @@ export default async function (trie, theme) {
           <div id="hnmain">
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
               <tr>
-                ${Header(theme)}
+                ${await Header(theme, identity)}
               </tr>
               <tr>
                 ${ThirdHeader(theme, "new")}

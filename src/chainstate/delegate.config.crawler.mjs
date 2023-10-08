@@ -39,6 +39,7 @@ export default {
             "0x9fcbf2ac7d9825115ae81812d10efa7fce04fcc9ca46f1d416aba53cdea8483e",
           ],
           blockspan: 5000,
+          includeTimestamp: false,
         },
         output: {
           name: "list-delegations-extraction-2",

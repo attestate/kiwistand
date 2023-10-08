@@ -1,26 +1,68 @@
+import { env } from "process";
+
 import { fetchBuilder, MemoryCache } from "node-fetch-cache";
 import { allowlist } from "./chainstate/registry.mjs";
+import { utils } from "ethers";
 
 const fetch = fetchBuilder.withCache(
   new MemoryCache({
     ttl: 86400000, // 24 hours
-  })
+  }),
 );
+
+async function fetchFCData(address) {
+  let response;
+  try {
+    response = await fetch(
+      `https://api.phyles.xyz/v0/farcaster/users?address=${address.toLowerCase()}`,
+    );
+  } catch (err) {
+    return;
+  }
+  const data = await response.json();
+  if (
+    data.error === "User not found" ||
+    (data.users && Array.isArray(data.users) && data.users.length !== 1)
+  )
+    return;
+
+  const { bio, display_name, pfp, username } = data.users[0];
+
+  return {
+    bio,
+    displayName: display_name,
+    avatar: pfp,
+    username,
+  };
+}
+
+export async function toAddress(name) {
+  const response = await fetch(`https://ensdata.net/${name}`);
+  const data = await response.json();
+  if (data && data.address) return data.address;
+  throw new Error("Couldn't convert to address");
+}
 
 async function fetchENSData(address) {
   try {
     const response = await fetch(`https://ensdata.net/${address}`);
     const data = await response.json();
 
+    try {
+      utils.getAddress(address);
+    } catch (err) {
+      if (data && data.address) {
+        address = data.address;
+      }
+    }
+
     const truncatedAddress =
       address.slice(0, 6) +
       "..." +
       address.slice(address.length - 4, address.length);
 
-    // If ENS name exists, use it, otherwise use the truncated address
     const displayName = data.ens ? data.ens : truncatedAddress;
 
-    // Add displayName and the original address to the returned object
     return {
       ...data,
       address,
@@ -46,8 +88,22 @@ async function fetchENSData(address) {
 }
 
 export async function resolve(address) {
-  // fetchENSData will return the cached data if it exists, or fetch it if it doesn't
-  return await fetchENSData(address);
+  const ensProfile = await fetchENSData(address);
+  const fcProfile = await fetchFCData(ensProfile.address);
+
+  let safeAvatar = ensProfile.avatar;
+  if (safeAvatar && !safeAvatar.startsWith("https")) {
+    safeAvatar = ensProfile.avatar_url;
+  }
+  if (!safeAvatar && fcProfile && fcProfile.avatar) {
+    safeAvatar = fcProfile.avatar;
+  }
+  const profile = {
+    safeAvatar,
+    ...ensProfile,
+    farcaster: fcProfile,
+  };
+  return profile;
 }
 
 async function initializeCache() {
@@ -57,7 +113,16 @@ async function initializeCache() {
     addresses = await allowlist();
   }
 
-  await Promise.all(addresses.map(resolve));
+  if (addresses && Array.isArray(addresses)) {
+    for await (const address of addresses) {
+      const profile = await resolve(address);
+      if (profile && profile.ens) {
+        try {
+          await toAddress(profile.ens);
+        } catch (err) {}
+      }
+    }
+  }
 }
 
 // NOTE: For nodes that have never downloaded and committed all addresses into
@@ -65,4 +130,6 @@ async function initializeCache() {
 // then initializeCache's `let addresses = Array.from(await allowlist());` will
 // unexpectedly throw because it should wait for allowlist to be crawled at
 // least onceit should wait for allowlist to be crawled at least once
-setTimeout(initializeCache, 30000);
+if (env.NODE_ENV === "production") {
+  setTimeout(initializeCache, 30000);
+}

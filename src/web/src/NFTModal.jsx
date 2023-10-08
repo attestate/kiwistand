@@ -94,14 +94,8 @@ const NFTModal = ({ modalIsOpen, setIsOpen, headline, text, closeText }) => {
               marginBottom: "20px",
             }}
           >
-            <zora-zorb
-              style={{ marginRight: "15px" }}
-              size="20px"
-              address="0xebb15487787cbf8ae2ffe1a6cca5a50e63003786"
-            ></zora-zorb>
             <span>
-              {" "}
-              Buy on <b>ZORA</b> for <PriceComponent /> ETH
+              Buy for <PriceComponent /> ETH
             </span>
           </button>
         </a>

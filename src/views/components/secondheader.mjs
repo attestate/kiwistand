@@ -140,13 +140,18 @@ export const fireSVG = html`
   </svg>
 `;
 
-const secondheader = (theme, site) => html`
+const periodIconStyle = (theme, period, category) =>
+  `${period === category ? theme.color : "#7f8c8d"}; color: ${
+    period === category ? theme.color : "#7f8c8d"
+  }; font-weight: bold; border: none; text-decoration: underline; font-size: 1.01rem; border-radius: 2px; cursor: pointer; padding: 5px 15px; background-color: transparent;;`;
+
+const secondheader = (theme, site, period) => html`
   <td>
     <div
       style="background-color: #e6e6df; min-height: 40px; display: flex; justify-content: space-between; align-items: center; padding: 10px 15px 10px 15px; color: white;"
     >
       <div>
-        ${site === "top" || site === "new" || site === "alltime"
+        ${site === "top" || site === "new" || site === "best"
           ? html` <a href="/">
               <button
                 style=${`font-size: 1.01rem; border-radius: 2px; cursor: pointer; padding: 5px 15px; background-color: transparent; border: 1px solid ${
@@ -157,12 +162,9 @@ const secondheader = (theme, site) => html`
               </button>
             </a>`
           : ""}
-        ${site === "top" ||
-        site === "new" ||
-        site === "alltime" ||
-        site === "nfts"
+        ${site === "top" || site === "new" || site === "best" || site === "nfts"
           ? html` <a
-              href="${site === "new" || site === "top" || site === "alltime"
+              href="${site === "new" || site === "top" || site === "best"
                 ? "/new"
                 : "/nfts"}"
             >
@@ -177,12 +179,12 @@ const secondheader = (theme, site) => html`
               </button>
             </a>`
           : ""}
-        ${site === "top" || site === "new" || site === "alltime"
-          ? html` <a href="/alltime">
+        ${site === "top" || site === "new" || site === "best"
+          ? html` <a href="/best">
               <button
                 style=${`font-size: 1.01rem; margin-left: 10px; cursor: pointer; border-radius: 2px; padding: 5px 15px; background-color: transparent; border: 1px solid ${
-                  site === "alltime" ? theme.color : "#7f8c8d"
-                }; color: ${site === "alltime" ? theme.color : "#7f8c8d"};`}
+                  site === "best" ? theme.color : "#7f8c8d"
+                }; color: ${site === "best" ? theme.color : "#7f8c8d"};`}
               >
                 <span> ${trophySVG} Top</span>
               </button>
@@ -192,6 +194,35 @@ const secondheader = (theme, site) => html`
       </div>
       <nav-learn-more />
     </div>
+
+    ${site === "best"
+      ? html` <div
+          style="background-color: #e6e6df; min-height: 40px; display: flex; justify-content: space-between; align-items: center; padding: 0 15px 10px 15px; color: white;"
+        >
+          <div>
+            <a href="/best?period=all">
+              <button style="${periodIconStyle(theme, period, "all")}">
+                <span>All</span>
+              </button>
+            </a>
+            <a href="/best?period=month">
+              <button style="${periodIconStyle(theme, period, "month")}">
+                <span>Month</span>
+              </button>
+            </a>
+            <a href="/best?period=week">
+              <button style="${periodIconStyle(theme, period, "week")}">
+                <span>Week</span>
+              </button>
+            </a>
+            <a href="/best?period=day">
+              <button style="${periodIconStyle(theme, period, "day")}">
+                <span>Day</span>
+              </button>
+            </a>
+          </div>
+        </div>`
+      : null}
   </td>
 `;
 

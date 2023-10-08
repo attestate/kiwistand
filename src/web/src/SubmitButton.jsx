@@ -10,6 +10,19 @@ import NFTModal from "./NFTModal.jsx";
 import { getLocalAccount } from "./session.mjs";
 import { ConnectedConnectButton } from "./Navigation.jsx";
 
+function safeExtractDomain(link) {
+  let parsedUrl;
+  try {
+    parsedUrl = new URL(link);
+  } catch (err) {
+    return "";
+  }
+
+  const parts = parsedUrl.hostname.split(".");
+  const tld = parts.slice(-2).join(".");
+  return tld;
+}
+
 const SubmitButton = (props) => {
   const { toast } = props;
   const [isLoading, setIsLoading] = useState(false);
@@ -17,6 +30,55 @@ const SubmitButton = (props) => {
   const [url, setUrl] = useState("");
   const [openedOnce, setOpenedOnce] = useState(false);
   const [remainingChars, setRemainingChars] = useState(80);
+
+  useEffect(() => {
+    const embedPreview = document.getElementById("embed-preview");
+
+    if (url) {
+      fetch(`/api/v1/parse?url=${encodeURIComponent(url)}`)
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.text();
+        })
+        .then((data) => {
+          embedPreview.innerHTML = data;
+        })
+        .catch((error) => {
+          console.log("Fetch error: ", error);
+        });
+    } else {
+      embedPreview.innerHTML = "";
+    }
+  }, [url]);
+
+  useEffect(() => {
+    const previewLink = document.querySelector(".story-link");
+    const previewDomain = document.querySelector(".story-domain");
+
+    const placeholderTitle = document
+      .querySelector("#titleInput")
+      .getAttribute("data-placeholder");
+    const placeholderUrl = document.querySelector("#urlInput").placeholder;
+    const placeholderDomain = `(${safeExtractDomain(placeholderUrl)})`;
+
+    if (previewLink) {
+      previewLink.textContent = title || placeholderTitle;
+    }
+
+    if (previewLink && url) {
+      previewLink.href = url;
+    } else if (previewLink) {
+      previewLink.href = placeholderUrl;
+    }
+
+    if (previewDomain) {
+      previewDomain.textContent = url
+        ? `(${safeExtractDomain(url)})`
+        : placeholderDomain;
+    }
+  }, [title, url]);
 
   let address;
   const account = useAccount();
@@ -92,8 +154,11 @@ const SubmitButton = (props) => {
       setIsLoading(false);
       return;
     }
-    if (url.length === 0) {
-      toast.error("Please add a link.");
+    if (
+      url.length === 0 ||
+      (!url.startsWith("https://") && !url.startsWith("http://"))
+    ) {
+      toast.error("Please add a valid link.");
       setIsLoading(false);
       return;
     }
@@ -130,6 +195,8 @@ const SubmitButton = (props) => {
 
   const buttonStyles = {
     width: "100%",
+    maxWidth: "600px",
+    marginTop: "0.5rem",
     padding: "5px",
     fontSize: "16px",
     cursor: "pointer",
@@ -148,11 +215,16 @@ const SubmitButton = (props) => {
     <div>
       {!isEligible && "You need to buy our NFT to submit and upvote..."}
       <button
+        id="button-onboarding"
         style={buttonStyles}
         onClick={handleClick}
         disabled={(isLoading && !isError) || !isEligible}
       >
-        {isLoading && !isError ? "Please confirm signature..." : "Submit"}
+        {isLoading && !isError
+          ? !localAccount
+            ? "Please confirm signature..."
+            : "Submitting..."
+          : "Submit"}
       </button>
     </div>
   );
