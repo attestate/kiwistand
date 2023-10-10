@@ -237,7 +237,7 @@ const BuyButton = (props) => {
       <div>
         {referralComponent}
         <button className="buy-button" disabled>
-          Insufficient funds...
+          Insufficient funds on Optimism...
         </button>
       </div>
     );

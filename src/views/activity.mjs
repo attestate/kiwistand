@@ -192,7 +192,6 @@ export async function data(trie, identity, lastRemoteValue) {
 
   const userKey = `--last-updated-${identity}`;
   let latestValue = cache.get(userKey);
-  console.log("latest", latestValue, lastRemoteValue);
   if (!latestValue || latestValue < lastRemoteValue) {
     latestValue = lastRemoteValue;
     cache.set(userKey, latestValue);
