@@ -145,6 +145,44 @@ async function calculateMAURetention(mauData, messagesWithAddresses) {
   return { dates, retentions };
 }
 
+function calculateDelegationPercentages(messagesWithAddresses) {
+  const delegationMap = new Map();
+
+  for (const msg of messagesWithAddresses) {
+    const date = new Date(msg.timestamp * 1000).toISOString().split("T")[0];
+    const isDelegated = msg.signer !== msg.identity;
+
+    if (!delegationMap.has(date)) {
+      delegationMap.set(date, { total: 0, delegated: 0 });
+    }
+
+    const currentEntry = delegationMap.get(date);
+    currentEntry.total++;
+    if (isDelegated) {
+      currentEntry.delegated++;
+    }
+    delegationMap.set(date, currentEntry);
+  }
+
+  const dates = generateDateRange(
+    Math.min(...Array.from(delegationMap.keys(), (key) => new Date(key))),
+    Math.max(...Array.from(delegationMap.keys(), (key) => new Date(key))),
+  );
+  for (const date of dates) {
+    if (!delegationMap.has(date)) {
+      delegationMap.set(date, { total: 0, delegated: 0 });
+    }
+  }
+
+  const sortedDates = dates.sort();
+  const percentages = sortedDates.map((date) => {
+    const data = delegationMap.get(date);
+    return data.total !== 0 ? (data.delegated / data.total) * 100 : 0;
+  });
+
+  return { dates: sortedDates, percentages };
+}
+
 async function calculateRetention(
   messagesWithAddresses,
   mintStart,
@@ -210,7 +248,6 @@ async function countDelegations() {
   return delegateCounts;
 }
 
-// Generate array of dates between start and end
 function generateDateRange(start, end) {
   const dates = [];
   let currentDate = new Date(start);
@@ -459,6 +496,18 @@ export default async function (trie, theme) {
     },
     yNumLabels: 10,
   };
+
+  const delegationData = calculateDelegationPercentages(messagesWithAddresses);
+  options.yLabel.name = "% (delegated addresses)";
+  options.xLabel.name = "";
+  const delegationChart = plot(html)(
+    {
+      x: delegationData.dates.map((date) => new Date(date)),
+      y: delegationData.percentages,
+    },
+    options,
+  );
+
   const retention31Days = await calculateRetention31Days(messagesWithAddresses);
   options.yLabel.name = "% (minters active in first 31 days)";
   options.xLabel.name = "days since acquisition";
@@ -751,6 +800,13 @@ export default async function (trie, theme) {
                     News Pass per day.
                   </p>
                   ${mintersChart}
+                  <p>
+                    <b>Delegation over time DEFINITION</b>
+                    <br />
+                    - Percentage of messages posted per day using delegated keys
+                    vs. manually signing messages
+                  </p>
+                  ${delegationChart}
                   <div>
                     <b>Delegation Counts</b>
                     <p>
