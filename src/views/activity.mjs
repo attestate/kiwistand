@@ -34,16 +34,18 @@ const generateFeed = (messages) => {
           identities: [],
           verb: "submitted",
           message,
+          timestamp: message.timestamp,
           towards: message.identity,
         };
       } else {
+        groupedMessages[href].timestamp = message.timestamp;
         groupedMessages[href].identities.push(message.identity);
         groupedMessages[href].verb = "upvoted";
       }
     });
 
   return Object.values(groupedMessages).sort(
-    (a, b) => b.message.timestamp - a.message.timestamp,
+    (a, b) => b.timestamp - a.timestamp,
   );
 };
 
@@ -58,9 +60,7 @@ function generateRow(lastUpdate) {
       .filter((identity) => identity.safeAvatar)
       .slice(0, 5);
     const rowStyle =
-      lastUpdate < activity.message.timestamp
-        ? "background-color: #e6e6df"
-        : "";
+      lastUpdate < activity.timestamp ? "background-color: #e6e6dfbf" : "";
 
     return html`
       <tr style="${rowStyle}">
@@ -245,7 +245,7 @@ export async function data(trie, identity, lastRemoteValue) {
 
   let lastUpdate = "0";
   if (notifications.length > 0) {
-    lastUpdate = notifications[0].message.timestamp;
+    lastUpdate = notifications[0].timestamp;
   }
   return {
     notifications,

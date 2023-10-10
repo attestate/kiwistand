@@ -31,7 +31,7 @@ const Bell = (props) => {
         const lastUpdate = getCookie("lastUpdate");
 
         const count = notifications.reduce((acc, notification) => {
-          return notification.message.timestamp > lastUpdate ? acc + 1 : acc;
+          return notification.timestamp > lastUpdate ? acc + 1 : acc;
         }, 0);
         setNotificationCount(count);
       };
