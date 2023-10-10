@@ -20,7 +20,7 @@ import subscribe from "./views/subscribe.mjs";
 import upvotes from "./views/upvotes.mjs";
 import community from "./views/community.mjs";
 import stats from "./views/stats.mjs";
-import activity from "./views/activity.mjs";
+import * as activity from "./views/activity.mjs";
 import about from "./views/about.mjs";
 import why from "./views/why.mjs";
 import submit from "./views/submit.mjs";
@@ -230,11 +230,15 @@ export async function launch(trie, libp2p) {
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/activity", async (request, reply) => {
-    const { content, lastUpdate } = await activity(
+    const { notifications, lastUpdate } = await activity.data(
       trie,
-      reply.locals.theme,
       request.query.address,
       request.cookies.identity,
+    );
+    const content = await activity.page(
+      reply.locals.theme,
+      request.cookies.identity,
+      notifications,
     );
     if (lastUpdate) {
       reply.setHeader("X-LAST-UPDATE", lastUpdate);
