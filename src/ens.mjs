@@ -72,6 +72,7 @@ async function fetchENSData(address) {
       ...data,
       address,
       displayName,
+      truncatedAddress,
     };
   } catch (error) {
     console.error(`Failed to fetch ENS data for address: ${address}`, error);
@@ -103,10 +104,14 @@ export async function resolve(address) {
   if (!safeAvatar && fcProfile && fcProfile.avatar) {
     safeAvatar = fcProfile.avatar;
   }
-  let displayName =
-    ensProfile.ens ||
-    (fcProfile && fcProfile.username && `@${fcProfile.username}`) ||
-    ensProfile.truncatedAddress;
+
+  let displayName = ensProfile.ens;
+  if (!displayName && fcProfile && fcProfile.username) {
+    displayName = `@${fcProfile.username}`;
+  }
+  if (!displayName) {
+    displayName = ensProfile.truncatedAddress;
+  }
   const profile = {
     safeAvatar,
     ...ensProfile,
