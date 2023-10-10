@@ -103,10 +103,15 @@ export async function resolve(address) {
   if (!safeAvatar && fcProfile && fcProfile.avatar) {
     safeAvatar = fcProfile.avatar;
   }
+  let displayName =
+    ensProfile.ens ||
+    (fcProfile && fcProfile.username && `@${fcProfile.username}`) ||
+    ensProfile.truncatedAddress;
   const profile = {
     safeAvatar,
     ...ensProfile,
     farcaster: fcProfile,
+    displayName,
   };
   return profile;
 }

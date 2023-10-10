@@ -225,6 +225,7 @@ export async function index(trie, page) {
         avatars.push(avatarUrl);
       }
     }
+
     stories.push({
       ...story,
       displayName: ensData.displayName,
