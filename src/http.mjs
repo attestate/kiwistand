@@ -229,20 +229,48 @@ export async function launch(trie, libp2p) {
     const content = await why(reply.locals.theme, request.cookies.identity);
     return reply.status(200).type("text/html").send(content);
   });
+  app.get("/api/v1/activity", async (request, reply) => {
+    let data;
+
+    try {
+      data = await activity.data(
+        trie,
+        request.cookies.identity || request.query.address,
+        request.cookies.lastUpdate,
+      );
+    } catch (err) {
+      const code = 400;
+      const httpMessage = "Bad Request";
+      return sendError(reply, code, httpMessage, "Valid query parameters");
+    }
+    const code = 200;
+    const httpMessage = "OK";
+    const details = "Notifications feed";
+    return sendStatus(reply, code, httpMessage, details, {
+      notifications: data.notifications,
+      lastServerValue: data.latestValue,
+    });
+  });
   app.get("/activity", async (request, reply) => {
-    const { notifications, lastUpdate } = await activity.data(
-      trie,
-      request.query.address,
-      request.cookies.identity,
-    );
+    let data;
+    try {
+      data = await activity.data(
+        trie,
+        request.cookies.identity || request.query.address,
+        request.cookies.lastUpdate,
+      );
+    } catch (err) {
+      return reply.status(400).type("text/plain").send(err.toString());
+    }
     const content = await activity.page(
       reply.locals.theme,
       request.cookies.identity,
-      notifications,
+      data.notifications,
+      request.cookies.lastUpdate,
     );
-    if (lastUpdate) {
-      reply.setHeader("X-LAST-UPDATE", lastUpdate);
-      reply.cookie("lastUpdate", lastUpdate);
+    if (data && data.lastUpdate) {
+      reply.setHeader("X-LAST-UPDATE", data.lastUpdate);
+      reply.cookie("lastUpdate", data.lastUpdate);
     }
     return reply.status(200).type("text/html").send(content);
   });

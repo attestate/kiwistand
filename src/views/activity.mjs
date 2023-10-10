@@ -17,6 +17,7 @@ import * as store from "../store.mjs";
 import * as registry from "../chainstate/registry.mjs";
 import * as id from "../id.mjs";
 import * as moderation from "./moderation.mjs";
+import cache from "../cache.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -46,82 +47,88 @@ const generateFeed = (messages) => {
   );
 };
 
-function generateRow(activity, i) {
-  const title = activity.message.title || activity.message.href;
-  const borderColor = i % 2 === 0 ? "rgba(0,0,0,0.05)" : "rgba(0,0,0,0.10)";
-  const identity = activity.identities[activity.identities.length - 1];
-  const size = 28;
-  const identities = activity.identities
-    .reverse()
-    .filter((identity) => identity.avatarUrl)
-    .slice(0, 5);
+function generateRow(lastUpdate) {
+  return (activity, i) => {
+    const title = activity.message.title || activity.message.href;
+    const borderColor = i % 2 === 0 ? "rgba(0,0,0,0.05)" : "rgba(0,0,0,0.10)";
+    const identity = activity.identities[activity.identities.length - 1];
+    const size = 28;
+    const identities = activity.identities
+      .reverse()
+      .filter((identity) => identity.safeAvatar)
+      .slice(0, 5);
+    const rowStyle =
+      lastUpdate < activity.message.timestamp
+        ? "background-color: #e6e6df"
+        : "";
 
-  return html`
-    <tr>
-      <td>
-        <div style="display: flex; border-bottom: 1px solid ${borderColor};">
-          <div
-            class="votearrow"
-            style="font-size: 1.75rem; flex: 0.2; display: flex; align-items: center; justify-content: center; color: limegreen;"
-            title="upvote"
-          >
-            ▲
-          </div>
-          <div
-            style="padding-top: 10px; flex: 0.8; display: flex; flex-direction: column;"
-          >
-            ${identities.length > 0 &&
-            identities[0].address === identity.address
-              ? html`<div
-                  style="padding-left: ${size /
-                  4}px; display: flex; align-items: center;"
-                >
-                  ${identities.map(
-                    (identity, index) => html`
-                      <img
-                        src="${identity.avatarUrl}"
-                        alt="avatar"
-                        style="z-index: ${index}; width: ${size}px; height: ${size}px; border: 1p
+    return html`
+      <tr style="${rowStyle}">
+        <td>
+          <div style="display: flex; border-bottom: 1px solid ${borderColor};">
+            <div
+              class="votearrow"
+              style="font-size: 1.5rem; flex: 0.2; display: flex; align-items: center; justify-content: center; color: limegreen;"
+              title="upvote"
+            >
+              ▲
+            </div>
+            <div
+              style="padding-top: 10px; flex: 0.8; display: flex; flex-direction: column;"
+            >
+              ${identities.length > 0 &&
+              identities[0].address === identity.address
+                ? html`<div
+                    style="padding-left: ${size /
+                    4}px; display: flex; align-items: center;"
+                  >
+                    ${identities.map(
+                      (identity, index) => html`
+                        <img
+                          src="${identity.safeAvatar}"
+                          alt="avatar"
+                          style="z-index: ${index}; width: ${size}px; height: ${size}px; border: 1p
  solid #828282; border-radius: 50%; margin-left: -${size / 4}px;"
-                      />
-                    `,
-                  )}
-                </div>`
-              : ""}
-            <div>
-              <p style="margin-bottom: 2px;">
-                <strong>
-                  <a href="/upvotes?address=${identity.address}">
-                    ${identity.displayName}
+                        />
+                      `,
+                    )}
+                  </div>`
+                : ""}
+              <div style="font-size: 0.9rem;">
+                <p style="margin-top: 8px; margin-bottom: 2px;">
+                  <strong>
+                    <a href="/upvotes?address=${identity.address}">
+                      ${identity.displayName}
+                    </a>
+                    <span> </span>
+                    ${activity.identities.length > 1
+                      ? html`
+                          <span>and </span>
+                          ${activity.identities.length - 1}
+                          <span> others </span>
+                        `
+                      : ""}
+                    ${activity.verb} your submission</strong
+                  >
+                </p>
+                <p style="margin-top: 0;">
+                  <a
+                    href="${activity.message.href}"
+                    style="color: gray; word-break: break-word;"
+                  >
+                    ${title.substring(0, 80)}
                   </a>
-                  <span> </span>
-                  ${activity.identities.length > 1
-                    ? html`
-                        <span>and </span>
-                        ${activity.identities.length - 1}
-                        <span> others </span>
-                      `
-                    : ""}
-                  ${activity.verb} your submission</strong
-                >
-              </p>
-              <p style="margin-top: 0;">
-                <a
-                  href="${activity.message.href}"
-                  style="color: gray; word-break: break-word;"
-                >
-                  ${title.substring(0, 80)}
-                </a>
-              </p>
+                </p>
+              </div>
             </div>
           </div>
-        </div>
-      </td>
-    </tr>
-  `;
+        </td>
+      </tr>
+    `;
+  };
 }
 
-export async function page(theme, identity, notifications) {
+export async function page(theme, identity, notifications, lastUpdate) {
   let feed = html`
     <tr>
       <td
@@ -150,7 +157,7 @@ export async function page(theme, identity, notifications) {
       </td>
     </tr>
   `;
-  feed = notifications.map(generateRow);
+  feed = notifications.map(generateRow(lastUpdate));
   const content = html`
     <html lang="en" op="news">
       <head>
@@ -175,12 +182,20 @@ export async function page(theme, identity, notifications) {
   return content;
 }
 
-export async function data(trie, identity) {
+export async function data(trie, identity, lastRemoteValue) {
   if (!identity) {
-    return html`Address has to be a query parameter`;
+    throw new Error("Address has to be a query parameter");
   }
   if (!utils.isAddress(identity)) {
-    return html`Not a valid address`;
+    throw new Error("Not a valid address");
+  }
+
+  const userKey = `--last-updated-${identity}`;
+  let latestValue = cache.get(userKey);
+  console.log("latest", latestValue, lastRemoteValue);
+  if (!latestValue || latestValue < lastRemoteValue) {
+    latestValue = lastRemoteValue;
+    cache.set(userKey, latestValue);
   }
 
   const config = await moderation.getLists();
@@ -218,15 +233,9 @@ export async function data(trie, identity) {
     for await (let identity of activity.identities) {
       const ensData = await ens.resolve(identity);
 
-      let avatarUrl = ensData.avatar;
-      if (avatarUrl && !avatarUrl.startsWith("https")) {
-        avatarUrl = ensData.avatar_url;
-      }
-
       identities.push({
         address: identity,
-        avatarUrl,
-        displayName: ensData.displayName,
+        ...ensData,
       });
     }
     notifications.push({
@@ -242,5 +251,6 @@ export async function data(trie, identity) {
   return {
     notifications,
     lastUpdate,
+    latestValue,
   };
 }

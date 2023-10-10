@@ -68,17 +68,31 @@ export async function send(message, signature) {
 }
 
 export async function fetchNotifications(address) {
-  const url = getApiUrl(`/activity?address=${address}`);
+  const url = getApiUrl(`/api/v1/activity?address=${address}`);
 
   const response = await fetch(url, {
     method: "GET",
-    credentials: "omit",
   });
 
-  const nextLastUpdate = response.headers.get("X-LAST-UPDATE");
-  const lastUpdate = getCookie("lastUpdate");
+  let data;
+  try {
+    data = await response.json();
+  } catch (err) {
+    console.log(err);
+    return [];
+  }
 
-  return lastUpdate !== nextLastUpdate;
+  const lastUpdate = getCookie("lastUpdate");
+  if (
+    data &&
+    data.data &&
+    data.data.lastServerValue &&
+    lastUpdate < parseInt(data.data.lastServerValue, 10)
+  ) {
+    setCookie("lastUpdate", parseInt(data.data.lastServerValue, 10));
+  }
+
+  return data.data.notifications;
 }
 
 export async function fetchDelegations() {

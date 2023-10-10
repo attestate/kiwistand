@@ -1,4 +1,3 @@
-import NodeCache from "node-cache";
 import normalizeUrl from "normalize-url";
 
 import cache from "./cache.mjs";
