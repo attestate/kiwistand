@@ -251,13 +251,14 @@ async function addNFTPrice() {
 
 async function share(toast, link) {
   const FCIcon = (await import("./fcicon.jsx")).default;
+  // NOTE: Regarding the embeds encoding of the link, here we don not have to
+  // call encodeURIComponent as we've been taking this link already from the
+  // browser's URL so that it is already encoded.
   const toastContent = (
     <div style={{ display: "flex", alignItems: "center" }}>
       <a
         style={{ display: "flex", alignItems: "center" }}
-        href={`https://warpcast.com/~/compose?embeds[]=${encodeURIComponent(
-          link,
-        )}&embeds[]=https://news.kiwistand.com`}
+        href={`https://warpcast.com/~/compose?embeds[]=${link}&embeds[]=https://news.kiwistand.com`}
         target="_blank"
       >
         <FCIcon style={{ height: "15px", color: "white" }} />
