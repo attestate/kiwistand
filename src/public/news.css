@@ -5,7 +5,11 @@ body {
      color:#828282;
      overscroll-behavior: none;
 }
- @keyframes pulsate {
+.container {
+  display: flex;
+  justify-content: center;
+}
+@keyframes pulsate {
    0% {
      transform: scale(1);
      opacity: 1;
@@ -19,7 +23,7 @@ body {
      opacity: 1;
    }
  }
- }
+}
 
  td {
      font-family:Verdana, Geneva, sans-serif;
@@ -373,7 +377,7 @@ body {
      width: 100%;
 }
 /* Media query for larger screens */
- @media (min-width: 1200px) {
+ @media (min-width: 900px) {
      #hnmain > table:first-of-type > tbody > tr:first-of-type {
          background-color: #e6e6df;
     }
@@ -444,6 +448,27 @@ body {
      .svg-container svg:hover{
          color: #36454F;
     }
+     .svg-container {
+         width: auto;
+    }
+     .svg-container + span {
+         display: none;
+    }
+     .sidebar a {
+         font-size: 2em;
+        /* Adjust to preferred size */
+    }
+     #nav-profile, #nav-settings, #nav-disconnect {
+         height: 32px;
+    }
+     .sidebar .icon-svg {
+         width: 36px;
+         height: 36px;
+    }
+     .sidebar-div {
+         font-size: 2em;
+        /* Adjust to preferred size */
+    }
 }
  .sidebar a {
      margin: 1.25rem 10px 10px 10px;
@@ -457,14 +482,6 @@ body {
  .svg-container svg {
      width: 2rem;
 }
- @media (min-width: 1200px) {
-     .svg-container {
-         width: auto;
-    }
-     .svg-container + span {
-         display: none;
-    }
-}
  .sidebar .icon-svg {
      padding: 0 20px 0 5px;
 }
@@ -472,19 +489,6 @@ body {
      .sidebar a {
          font-size: 2em;
         /* Adjust to preferred size */
-    }
-     .sidebar .icon-svg {
-         width: 36px;
-         height: 36px;
-    }
-}
- @media (min-width: 1200px) {
-     .sidebar a {
-         font-size: 2em;
-        /* Adjust to preferred size */
-    }
-     #nav-profile, #nav-settings, #nav-disconnect {
-         height: 32px;
     }
      .sidebar .icon-svg {
          width: 36px;
@@ -501,12 +505,6 @@ body {
      cursor: pointer;
 }
  @media (min-width: 768px) {
-     .sidebar-div {
-         font-size: 2em;
-        /* Adjust to preferred size */
-    }
-}
- @media (min-width: 1200px) {
      .sidebar-div {
          font-size: 2em;
         /* Adjust to preferred size */
