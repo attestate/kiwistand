@@ -154,7 +154,7 @@ const previewContainerStyle = `
 const previewStyle = `
   width: 100%;
   max-width: 600px;
-  min-height: 600px;
+  min-height: 450px;
   font-size: 16px;
   box-sizing: border-box;
 `;
