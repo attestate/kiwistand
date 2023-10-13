@@ -231,7 +231,9 @@ const BuyButton = (props) => {
 
   if (
     error &&
-    (error.toString().includes("insufficient funds") || error.code === -32603)
+    (error.toString().includes("insufficient funds") ||
+      error.code === -32603 ||
+      error.code === "INSUFFICIENT_FUNDS")
   ) {
     return (
       <div>
