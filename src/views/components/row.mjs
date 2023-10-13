@@ -14,7 +14,7 @@ export function extractDomain(link) {
   return tld;
 }
 
-const truncateLongWords = (text, maxLength = 40) => {
+const truncateLongWords = (text, maxLength = 20) => {
   const words = text.split(" ");
   const truncatedWords = words.map((word) =>
     word.length > maxLength ? `${word.substring(0, maxLength)}...` : word,
