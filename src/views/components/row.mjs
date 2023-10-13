@@ -14,6 +14,14 @@ export function extractDomain(link) {
   return tld;
 }
 
+const truncateLongWords = (text, maxLength = 40) => {
+  const words = text.split(" ");
+  const truncatedWords = words.map((word) =>
+    word.length > maxLength ? `${word.substring(0, maxLength)}...` : word,
+  );
+  return truncatedWords.join(" ");
+};
+
 const row = (
   start = 0,
   style = "padding: 10px 5px 0 10px;",
@@ -59,7 +67,7 @@ const row = (
                   class="story-link"
                   style="line-height: 13pt; font-size: 13pt;"
                 >
-                  ${story.title}
+                  ${truncateLongWords(story.title)}
                 </a>
                 <span> </span>
                 <span class="story-domain" style="white-space: nowrap;"
