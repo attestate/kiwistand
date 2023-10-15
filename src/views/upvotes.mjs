@@ -14,7 +14,7 @@ import Sidebar from "./components/sidebar.mjs";
 import Head from "./components/head.mjs";
 import * as store from "../store.mjs";
 import { EIP712_MESSAGE } from "../constants.mjs";
-import { count, topstories } from "./feed.mjs";
+import { count } from "./feed.mjs";
 import * as ens from "../ens.mjs";
 import * as karma from "../karma.mjs";
 import * as registry from "../chainstate/registry.mjs";

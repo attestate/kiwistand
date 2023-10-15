@@ -22,6 +22,7 @@ import * as registry from "../chainstate/registry.mjs";
 import log from "../logger.mjs";
 import { EIP712_MESSAGE } from "../constants.mjs";
 import Row, { extractDomain } from "./components/row.mjs";
+import * as karma from "../karma.mjs";
 
 const html = htm.bind(vhtml);
 const fetch = fetchBuilder.withCache(
@@ -50,7 +51,6 @@ export function count(leaves) {
         timestamp: leaf.timestamp,
         href: leaf.href,
         identity: leaf.identity,
-        displayName: leaf.displayName,
         upvotes: 1,
         upvoters: [leaf.identity],
       };
@@ -71,7 +71,7 @@ const calculateScore = (votes, itemHourAge, gravity = 1.6) => {
 };
 
 export async function topstories(leaves) {
-  return count(leaves)
+  return leaves
     .map((story) => {
       const score = calculateScore(story.upvotes, itemAge(story.timestamp));
       story.score = score;
@@ -181,12 +181,13 @@ export async function index(trie, page) {
   const totalStories = parseInt(env.TOTAL_STORIES, 10);
   const start = totalStories * page;
   const end = totalStories * (page + 1);
-  let storyPromises = (await topstories(leaves)).slice(start, end);
+  const countedStories = count(leaves);
+  let storyPromises = (await topstories(countedStories)).slice(start, end);
 
   let threshold = 1;
   let pill = true;
   const now = new Date();
-  const old = sub(now, { days: 2 });
+  const old = sub(now, { days: 1 });
   const oldInMinutes = differenceInMinutes(now, old);
   const fold = 10;
   do {
@@ -209,7 +210,30 @@ export async function index(trie, page) {
       threshold++;
     }
   } while (pill);
-  storyPromises = storyPromises.filter(({ upvotes }) => upvotes > threshold);
+
+  if (threshold === 1) {
+    const newStories = countedStories
+      .filter(({ upvotes }) => upvotes === 1)
+      .sort((a, b) => b.timestamp - a.timestamp)
+      .slice(0, 20)
+      .map((story) => ({ ...story, userScore: karma.score(story.identity) }))
+      .filter(({ timestamp }) => !isBefore(new Date(timestamp * 1000), old))
+      .sort((a, b) => b.userScore - a.userScore);
+    if (newStories.length > 4) {
+      const oldStories = storyPromises
+        .slice(0, 10)
+        .sort((a, b) => a.timestamp - b.timestamp)
+        .slice(0, 4);
+      for (let i = 0; i < oldStories.length; i++) {
+        const index = storyPromises.indexOf(oldStories[i]);
+        if (index !== -1) {
+          storyPromises[index] = newStories[i];
+        }
+      }
+    }
+  } else {
+    storyPromises = storyPromises.filter(({ upvotes }) => upvotes > threshold);
+  }
 
   let stories = [];
   for await (let story of storyPromises) {
