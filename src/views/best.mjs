@@ -72,9 +72,7 @@ export function count(leaves) {
 }
 
 async function topstories(leaves, start, end) {
-  return count(leaves)
-    .sort((a, b) => b.upvotes - a.upvotes)
-    .slice(start, end);
+  return count(leaves).sort((a, b) => b.upvotes - a.upvotes);
 }
 
 export default async function index(trie, theme, page, period, identity) {
@@ -85,14 +83,18 @@ export default async function index(trie, theme, page, period, identity) {
   const delegations = await registry.delegations();
 
   let startDatetime = null;
+  let tolerance = null;
   const unix = (date) => Math.floor(date.getTime() / 1000);
   const now = new Date();
   if (period === "month") {
     startDatetime = unix(sub(now, { months: 1 }));
+    tolerance = unix(sub(now, { months: 5 }));
   } else if (period === "week") {
     startDatetime = unix(sub(now, { weeks: 1 }));
+    tolerance = unix(sub(now, { weeks: 14 }));
   } else if (period === "day") {
     startDatetime = unix(sub(now, { days: 1 }));
+    tolerance = unix(sub(now, { weeks: 2 }));
   }
 
   let leaves = await store.posts(
@@ -100,7 +102,7 @@ export default async function index(trie, theme, page, period, identity) {
     from,
     amount,
     parser,
-    startDatetime,
+    tolerance,
     allowlist,
     delegations,
   );
@@ -110,7 +112,9 @@ export default async function index(trie, theme, page, period, identity) {
   const totalStories = parseInt(env.TOTAL_STORIES, 10);
   const start = totalStories * page;
   const end = totalStories * (page + 1);
-  const storyPromises = await topstories(leaves, start, end);
+  const storyPromises = (await topstories(leaves, start, end))
+    .filter((story) => story.timestamp >= startDatetime)
+    .slice(start, end);
 
   let stories = [];
   for await (let story of storyPromises) {
