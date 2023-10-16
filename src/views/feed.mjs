@@ -206,6 +206,10 @@ export async function index(trie, page) {
   } while (pill);
 
   if (threshold === 1) {
+    // NOTE: The replacementFactor is the number of old stories that we are
+    // going to replace with super new stories (ones that haven't gained any
+    // upvotes yet).
+    const replacementFactor = 2;
     const newStories = countedStories
       .filter(({ upvotes }) => upvotes === 1)
       .sort((a, b) => b.timestamp - a.timestamp)
@@ -213,11 +217,11 @@ export async function index(trie, page) {
       .map((story) => ({ ...story, userScore: karma.score(story.identity) }))
       .filter(({ timestamp }) => !isBefore(new Date(timestamp * 1000), old))
       .sort((a, b) => b.userScore - a.userScore);
-    if (newStories.length > 4) {
+    if (newStories.length > replacementFactor) {
       const oldStories = storyPromises
         .slice(0, 10)
         .sort((a, b) => a.timestamp - b.timestamp)
-        .slice(0, 4);
+        .slice(0, replacementFactor);
       for (let i = 0; i < oldStories.length; i++) {
         const index = storyPromises.indexOf(oldStories[i]);
         if (index !== -1) {
