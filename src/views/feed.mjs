@@ -179,25 +179,17 @@ export async function index(trie, page) {
   );
 
   const totalStories = parseInt(env.TOTAL_STORIES, 10);
-  const start = totalStories * page;
-  const end = totalStories * (page + 1);
   const countedStories = count(leaves);
-  let storyPromises = (await topstories(countedStories)).slice(start, end);
+  let storyPromises = await topstories(countedStories);
 
   let threshold = 1;
   let pill = true;
   const now = new Date();
-  const old = sub(now, { days: 1 });
+  const old = sub(now, { days: 1, hours: 12 });
   const oldInMinutes = differenceInMinutes(now, old);
   const fold = 10;
   do {
     const sample = storyPromises.filter(({ upvotes }) => upvotes > threshold);
-    if (sample.length < totalStories) {
-      threshold--;
-      pill = false;
-      continue;
-    }
-
     const sum = sample.slice(0, fold).reduce((acc, { timestamp }) => {
       const submissionTime = new Date(timestamp * 1000);
       const diff = differenceInMinutes(now, submissionTime);
@@ -205,7 +197,9 @@ export async function index(trie, page) {
     }, 0);
     const averageAgeInMinutes = sum / fold;
     if (averageAgeInMinutes > oldInMinutes) {
+      threshold--;
       pill = false;
+      continue;
     } else {
       threshold++;
     }
@@ -230,10 +224,15 @@ export async function index(trie, page) {
           storyPromises[index] = newStories[i];
         }
       }
+      storyPromises.splice(10, 0, ...oldStories);
     }
   } else {
     storyPromises = storyPromises.filter(({ upvotes }) => upvotes > threshold);
   }
+
+  const start = totalStories * page;
+  const end = totalStories * (page + 1);
+  storyPromises.slice(start, end);
 
   let stories = [];
   for await (let story of storyPromises) {
