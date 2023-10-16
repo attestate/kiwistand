@@ -4,6 +4,7 @@ import cache from "./cache.mjs";
 
 export function getBaselineSubmissions() {
   const submissions = Object.values(all())
+    .filter((user) => user)
     .map((user) => user.submissions)
     .sort((a, b) => a - b);
   const middle = Math.floor(submissions.length / 2);
@@ -14,6 +15,7 @@ export function getBaselineSubmissions() {
 
 export function getBaselineUpvotes() {
   const upvotes = Object.values(all())
+    .filter((user) => user)
     .map((user) => user.points)
     .sort((a, b) => a - b);
   const middle = Math.floor(upvotes.length / 2);
