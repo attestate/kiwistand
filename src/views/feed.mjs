@@ -236,7 +236,7 @@ export async function index(trie, page) {
 
   const start = totalStories * page;
   const end = totalStories * (page + 1);
-  storyPromises.slice(start, end);
+  storyPromises = storyPromises.slice(start, end);
 
   let stories = [];
   for await (let story of storyPromises) {
@@ -404,7 +404,9 @@ export default async function (trie, theme, page, identity) {
                     >Hungry for more links? Check out the
                   </span>
                   <span> </span>
-                  <a href="/new" style="color: black;"><u>New Links Tab</u></a>
+                  <a href="/best" style="color: black;"
+                    ><u>Best links of the week!</u></a
+                  >
                 </td>
               </tr>
             </table>
