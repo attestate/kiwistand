@@ -385,7 +385,13 @@ async function* walkTrieDfs(trie, nodeRef, key) {
     return;
   }
 
-  const node = await trie.lookupNode(nodeRef);
+  let node;
+  try {
+    node = await trie.lookupNode(nodeRef);
+  } catch (err) {
+    log(`walkTrieDfs: ${err.toString()}`);
+    return;
+  }
 
   if (node instanceof LeafNode) {
     yield [node, key];
