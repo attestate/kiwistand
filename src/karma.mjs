@@ -102,7 +102,9 @@ export function count(messages) {
 export function ranking() {
   const list = [];
   for (const [identity, data] of Object.entries(all())) {
-    list.push({ identity, karma: data.points });
+    if (data && data.points) {
+      list.push({ identity, karma: data.points });
+    }
   }
 
   return list.sort((a, b) => b.karma - a.karma);
