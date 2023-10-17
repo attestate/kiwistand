@@ -112,13 +112,14 @@ async function calculateMintersPerDay() {
     Math.min(...Array.from(mintMap.keys(), (key) => new Date(key))),
     Math.max(...Array.from(mintMap.keys(), (key) => new Date(key))),
   );
+
+  const sortedDates = dates.sort();
   for (const date of dates) {
     if (!mintMap.has(date)) {
       mintMap.set(date, 0);
     }
   }
 
-  const sortedDates = dates.sort();
   const minters = sortedDates.map((date) => mintMap.get(date));
 
   return { dates: sortedDates, minters };
