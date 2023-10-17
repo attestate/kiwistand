@@ -24,6 +24,32 @@ function timestampToDate(ts) {
   return date.toISOString().split("T")[0];
 }
 
+function calculateCumulativeMessages(messagesWithAddresses) {
+  const messageMap = new Map();
+  let cumulativeTotal = 0;
+
+  // Sort messages by date
+  const sortedMessages = [...messagesWithAddresses].sort(
+    (a, b) => a.timestamp - b.timestamp,
+  );
+
+  for (const msg of sortedMessages) {
+    const date = new Date(msg.timestamp * 1000).toISOString().split("T")[0];
+
+    if (!messageMap.has(date)) {
+      messageMap.set(date, cumulativeTotal);
+    }
+
+    cumulativeTotal++;
+    messageMap.set(date, cumulativeTotal);
+  }
+
+  const dates = Array.from(messageMap.keys()).sort();
+  const messages = dates.map((date) => messageMap.get(date));
+
+  return { dates, messages };
+}
+
 async function calculateRetention31Days(messagesWithAddresses) {
   const mints = await registry.mints();
   const retention = Array(32).fill(0);
@@ -497,6 +523,19 @@ export default async function (trie, theme) {
     yNumLabels: 10,
   };
 
+  const cumulativeMessagesData = calculateCumulativeMessages(
+    messagesWithAddresses,
+  );
+  options.yLabel.name = "Cumulative Messages";
+  options.xLabel.name = "";
+  const cumulativeMessagesChart = plot(html)(
+    {
+      x: cumulativeMessagesData.dates.map((date) => new Date(date)),
+      y: cumulativeMessagesData.messages,
+    },
+    options,
+  );
+
   const delegationData = calculateDelegationPercentages(messagesWithAddresses);
   options.yLabel.name = "% (delegated addresses)";
   options.xLabel.name = "";
@@ -705,6 +744,38 @@ export default async function (trie, theme) {
                   </p>
                   ${mauChart}
                   <p>
+                    <b>Submissions DEFINITION:</b>
+                    <br />
+                    - Any new link submitted to Kiwi News
+                  </p>
+                  ${submissionsChart}
+                  <p>
+                    <b>Upvotes DEFINITION:</b>
+                    <br />
+                    - Any upvote to Kiwi News
+                  </p>
+                  ${upvotesChart}
+                  <p>
+                    <b>Delegation over time DEFINITION</b>
+                    <br />
+                    - Percentage of messages posted per day using delegated keys
+                    vs. manually signing messages
+                  </p>
+                  ${delegationChart}
+                  <p>
+                    <b
+                      >Cumulative Total Messages Over Time Per Day
+                      DEFINITION:</b
+                    >
+                    <br />
+                    - This chart shows the cumulative total number of messages
+                    posted on the platform over time
+                    <br />
+                    - Each point on the chart represents the total number of
+                    messages posted up to and including that day.
+                  </p>
+                  ${cumulativeMessagesChart}
+                  <p>
                     <b>DAU/MAU Ratio DEFINITION:</b>
                     <br />
                     - This ratio is calculated by dividing the Daily Active
@@ -718,18 +789,6 @@ export default async function (trie, theme) {
                     - A higher DAU/MAU ratio indicates a more engaged user base.
                   </p>
                   ${ratioChart}
-                  <p>
-                    <b>Submissions DEFINITION:</b>
-                    <br />
-                    - Any new link submitted to Kiwi News
-                  </p>
-                  ${submissionsChart}
-                  <p>
-                    <b>Upvotes DEFINITION:</b>
-                    <br />
-                    - Any upvote to Kiwi News
-                  </p>
-                  ${upvotesChart}
                   <p>
                     <b>31 day retention after minting DEFINITION:</b>
                     <br />
@@ -800,13 +859,6 @@ export default async function (trie, theme) {
                     News Pass per day.
                   </p>
                   ${mintersChart}
-                  <p>
-                    <b>Delegation over time DEFINITION</b>
-                    <br />
-                    - Percentage of messages posted per day using delegated keys
-                    vs. manually signing messages
-                  </p>
-                  ${delegationChart}
                   <div>
                     <b>Delegation Counts</b>
                     <p>
