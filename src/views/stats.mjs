@@ -676,74 +676,73 @@ export default async function (trie, theme) {
               </tr>
               <tr>
                 <td style="padding: 20px;">
+                  <h2>PROTOCOL CHARTS</h2>
                   <p>
-                    <b>Daily Active Users DEFINITION:</b>
+                    The protocol charts are focused on curators - people who
+                    submit and upvote links on our Kiwi P2P network, which are
+                    later displayed via apps. We call them active users to
+                    highlight that they curate the feed, contrary to passive
+                    users who just read the content on the website.
+                  </p>
+
+                  <p />
+                  <p>
+                    <b>Daily Active Users (DAU)</b>
                     <br />
-                    - To calculate the values on this chart we're getting all
-                    messages that have occurred in the p2p network and analyze
-                    them.
                     <br />
-                    - We consider someone a Daily Active User if, for a given
-                    day, they've, at least, interacted on the site once by
-                    either upvoting or submitting a new link.
-                    <br />
-                    - As the protocol doesn't track individual users, we
-                    consider each Ethereum address as individual users.
-                    <br />
-                    - To learn more about the metrics we want to track at Kiwi
-                    News, <span>visit </span>
-                    <a
-                      style="color:black;"
-                      href="https://hackmd.io/oF8S12EnTpSp8CtkigJosQ"
-                      >Key Metrics for Growth of Kiwi News</a
-                    >
+                    <b>Definition:</b> We consider someone a Daily Active User
+                    if, for a given day, they've at least, interacted on the
+                    site once by either upvoting or submitting a new link.
                   </p>
                   ${dauChart}
                   <p>
-                    <b>7-day Active Users (WAU) DEFINITION:</b>
+                    <b>7-day Active Users (WAU)</b>
                     <br />
-                    - To calculate the values on this chart, we're analyzing all
-                    messages that have occurred in the p2p network.
                     <br />
-                    - We consider someone a 7-day Active User if, for a given
-                    period of 7 days, they've, at least, interacted on the site
-                    once by either upvoting or submitting a new link.
-                    <br />
-                    - As the protocol doesn't track individual users, we
-                    consider each Ethereum address as individual users.
-                    <br />
-                    - To learn more about the metrics we want to track at Kiwi
-                    News, <span>visit </span>
-                    <a
-                      style="color:black;"
-                      href="https://hackmd.io/oF8S12EnTpSp8CtkigJosQ"
-                      >Key Metrics for Growth of Kiwi News</a
-                    >
+                    <b>Definition: </b>We consider someone a 7-day Active User
+                    if, for a given period of 7 days, they've, at least,
+                    interacted on the site once by either upvoting or submitting
+                    a new link.
                   </p>
                   ${wauChart}
                   <p>
-                    <b>30-day Active Users DEFINITION:</b>
+                    <b>30-day Active Users (MAU)</b>
                     <br />
-                    - To calculate the values on this chart we're getting all
-                    messages that have occurred in the p2p network and analyze
-                    them.
                     <br />
-                    - We consider someone a 30-day Active User if, for the last
-                    30 days, they've, at least, interacted on the site once by
-                    either upvoting or submitting a new link.
-                    <br />
-                    - As the protocol doesn't track individual users, we
-                    consider each Ethereum address as individual users.
-                    <br />
-                    - To learn more about the metrics we want to track at Kiwi
-                    News, <span>visit </span>
-                    <a
-                      style="color:black;"
-                      href="https://hackmd.io/oF8S12EnTpSp8CtkigJosQ"
-                      >Key Metrics for Growth of Kiwi News</a
-                    >
+                    <b>Definition: </b>We consider someone a 30-day Active User
+                    if, for the last 30 days, they've, at least, interacted on
+                    the site once by either upvoting or submitting a new link.
                   </p>
                   ${mauChart}
+                  <p>
+                    <b>Cumulative Total Messages</b>
+                    <br />
+                    <br />
+                    <b>Definition: </b>This chart shows the cumulative total
+                    number of messages posted on Kiwi P2P network over time.
+                    Each point on the chart represents the total number of
+                    messages posted up to and including that day.
+                  </p>
+                  ${cumulativeMessagesChart}
+                  <p>
+                    <b>% of messages signed with delegation key </b>
+                    <br />
+                    <br />
+                    <b>Definition: </b>This chart shows the percentage of users
+                    who used our OP contract to delegate their keys so that they
+                    can use Kiwi without confirming every signature to upvote
+                    and submit.
+                  </p>
+                  ${delegationChart}
+                  <p>
+                    <b>NFT Minters</b>
+                    <br />
+                    <br />
+                    <b>Definition: </b>Shows how many addresses mint the Kiwi
+                    News Pass per day.
+                  </p>
+                  ${mintersChart}
+                  <h2>ADVANCED CHARTS</h2>
                   <p>
                     <b>Submissions DEFINITION:</b>
                     <br />
@@ -756,26 +755,6 @@ export default async function (trie, theme) {
                     - Any upvote to Kiwi News
                   </p>
                   ${upvotesChart}
-                  <p>
-                    <b>Delegation over time DEFINITION</b>
-                    <br />
-                    - Percentage of messages posted per day using delegated keys
-                    vs. manually signing messages
-                  </p>
-                  ${delegationChart}
-                  <p>
-                    <b
-                      >Cumulative Total Messages Over Time Per Day
-                      DEFINITION:</b
-                    >
-                    <br />
-                    - This chart shows the cumulative total number of messages
-                    posted on the platform over time
-                    <br />
-                    - Each point on the chart represents the total number of
-                    messages posted up to and including that day.
-                  </p>
-                  ${cumulativeMessagesChart}
                   <p>
                     <b>DAU/MAU Ratio DEFINITION:</b>
                     <br />
@@ -853,13 +832,6 @@ export default async function (trie, theme) {
                     ago.
                   </p>
                   ${retentionChart}
-                  <p>
-                    <b>Minters per day DEFINITION:</b>
-                    <br />
-                    - This chart shows how many addresses have minted the Kiwi
-                    News Pass per day.
-                  </p>
-                  ${mintersChart}
                   <div>
                     <b>Delegation Counts</b>
                     <p>
