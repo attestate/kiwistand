@@ -205,7 +205,7 @@ export async function index(trie, page) {
     }
   } while (pill);
 
-  if (threshold === 1) {
+  if (threshold <= 1) {
     // NOTE: The replacementFactor is the number of old stories that we are
     // going to replace with super new stories (ones that haven't gained any
     // upvotes yet).
