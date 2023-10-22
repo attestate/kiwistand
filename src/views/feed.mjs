@@ -209,7 +209,7 @@ export async function index(trie, page) {
     // NOTE: The replacementFactor is the number of old stories that we are
     // going to replace with super new stories (ones that haven't gained any
     // upvotes yet).
-    const replacementFactor = 2;
+    const replacementFactor = 5;
     const newStories = countedStories
       .filter(({ upvotes }) => upvotes === 1)
       .sort((a, b) => b.timestamp - a.timestamp)
