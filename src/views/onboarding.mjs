@@ -201,34 +201,9 @@ export default async function (theme, identity) {
                   <br />
                   <br />
                   <br />
+                  <br />
                   <div class="flex-container flex-image-right">
                     <div class="text-left">
-                      <h2>Become a Kiwi Editor</h2>
-                      <p>
-                        From Monday to Friday we highlight 2-3 links handpicked
-                        by our Editors. Get discovered by other people.
-                      </p>
-                      <a
-                        href="https://calendly.com/kiwi-news/30min?back=1"
-                        target="_blank"
-                      >
-                        <button id="button-onboarding" style="margin-left: 0;">
-                          Book your Kiwi Editor's slot
-                        </button>
-                      </a>
-                    </div>
-                    <div class="image-right">
-                      <img src="kiwi_editors.png" alt="Kiwi Newsletter" />
-                    </div>
-                  </div>
-                  <br />
-                  <br />
-                  <br />
-                  <div class="flex-container flex-image-left">
-                    <div class="image-left">
-                      <img src="kiwi_chrome.gif" alt="Kiwi Chrome" />
-                    </div>
-                    <div class="text-right">
                       <h2>Get Kiwi Chrome Extension</h2>
                       <p>
                         Submit links in one click with our Chrome Extension.
@@ -242,12 +217,18 @@ export default async function (theme, identity) {
                         </button>
                       </a>
                     </div>
+                    <div class="image-right">
+                      <img src="kiwi_chrome.gif" alt="Kiwi Chrome" />
+                    </div>
                   </div>
                   <br />
                   <br />
                   <br />
-                  <div class="flex-container flex-image-right">
-                    <div class="text-left">
+                  <div class="flex-container flex-image-left">
+                    <div class="image-left">
+                      <img src="Leaderboard.png" alt="Kiwi News NFT" />
+                    </div>
+                    <div class="text-right">
                       <h2>Grow your Kiwi Score</h2>
                       <p>
                         Every submission and every upvote your links receive
@@ -260,9 +241,6 @@ export default async function (theme, identity) {
                           Check Kiwi leaderboard
                         </button>
                       </a>
-                    </div>
-                    <div class="image-right">
-                      <img src="Leaderboard.png" alt="Kiwi News NFT" />
                     </div>
                   </div>
                   <br />

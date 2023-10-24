@@ -93,6 +93,30 @@ const about = html`
   </svg>
 `;
 
+const onboarding = html` <svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="32"
+  height="32"
+  fill="#000000"
+  viewBox="0 0 256 256"
+>
+  <path
+    d="M248,56a8,8,0,0,1-8,8H192v40a8,8,0,0,1-8,8H136v40a8,8,0,0,1-8,8H80v40a8,8,0,0,1-8,8H16a8,8,0,0,1,0-16H64V152a8,8,0,0,1,8-8h48V104a8,8,0,0,1,8-8h48V56a8,8,0,0,1,8-8h56A8,8,0,0,1,248,56Z"
+  />
+</svg>`;
+
+const onboardingfull = html` <svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="32"
+  height="32"
+  fill="#000000"
+  viewBox="0 0 256 256"
+>
+  <path
+    d="M240,56V200a8,8,0,0,1-8,8H8a8,8,0,0,1,0-16H56V152a8,8,0,0,1,8-8h48V104a8,8,0,0,1,8-8h48V56a8,8,0,0,1,8-8h56A8,8,0,0,1,240,56Z"
+  ></path>
+</svg>`;
+
 const newsletter = html`
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
     <rect width="256" height="256" fill="none" />
@@ -320,6 +344,18 @@ const sidebar = (path) => html`
           ${path === "/subscribe" ? envelopefull : envelope}
         </div>
         <span>Newsletter</span>
+      </div>
+    </a>
+    <a
+      title="Explore"
+      href="/onboarding"
+      style="color: black; text-decoration: none; display: block;"
+    >
+      <div style="display: flex; align-items: center;">
+        <div class="svg-container">
+          ${path === "/onboarding" ? onboardingfull : onboarding}
+        </div>
+        <span>Explore</span>
       </div>
     </a>
     <div id="nav-profile"><a></a></div>
