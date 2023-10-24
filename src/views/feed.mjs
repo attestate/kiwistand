@@ -185,7 +185,7 @@ export async function index(trie, page) {
   let threshold = 1;
   let pill = true;
   const now = new Date();
-  const old = sub(now, { hours: 20 });
+  const old = sub(now, { hours: 26 });
   const oldInMinutes = differenceInMinutes(now, old);
   const fold = 10;
   do {
