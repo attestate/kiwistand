@@ -5,7 +5,7 @@ import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { eligible } from "@attestate/delegator2";
 
 import { fetchNotifications } from "./API.mjs";
-import { getLocalAccount } from "./session.mjs";
+import { getLocalAccount, getCookie } from "./session.mjs";
 import { client, chains } from "./client.mjs";
 
 const Bell = (props) => {
@@ -22,13 +22,18 @@ const Bell = (props) => {
     address && eligible(props.allowlist, props.delegations, address);
   const link = `/activity?address=${address}`;
 
-  const [hasNewNotifications, setHasNewNotifications] = useState(false);
+  const [notificationCount, setNotificationCount] = useState(0);
 
   useEffect(() => {
     if (address) {
       const fetchAndUpdateNotifications = async () => {
-        const isNew = await fetchNotifications(address);
-        setHasNewNotifications(isNew);
+        const notifications = await fetchNotifications(address);
+        const lastUpdate = getCookie("lastUpdate");
+
+        const count = notifications.reduce((acc, notification) => {
+          return notification.timestamp > lastUpdate ? acc + 1 : acc;
+        }, 0);
+        setNotificationCount(count);
       };
       fetchAndUpdateNotifications();
     }
@@ -51,6 +56,28 @@ const Bell = (props) => {
           <BellSVG />
         )}
       </i>
+      {notificationCount > 0 && (
+        <span
+          style={{
+            position: "absolute",
+            top: "-5px",
+            right: "0",
+            backgroundColor: "red",
+            borderRadius: "50%",
+            color: "white",
+            padding: "1px",
+            fontSize: "8px",
+            fontWeight: "bold",
+            minWidth: "15px",
+            height: "15px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          {notificationCount}
+        </span>
+      )}
     </a>
   );
 };

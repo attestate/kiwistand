@@ -251,6 +251,9 @@ async function addNFTPrice() {
 
 async function share(toast, link) {
   const FCIcon = (await import("./fcicon.jsx")).default;
+  // NOTE: Regarding the embeds encoding of the link, here we don not have to
+  // call encodeURIComponent as we've been taking this link already from the
+  // browser's URL so that it is already encoded.
   const toastContent = (
     <div style={{ display: "flex", alignItems: "center" }}>
       <a

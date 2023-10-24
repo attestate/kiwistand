@@ -50,7 +50,11 @@ export const parse = async (url) => {
   const { ogTitle } = result;
   let { ogDescription } = result;
 
-  if (!ogTitle || (!ogDescription && !image) || !image.startsWith("https://"))
+  if (
+    !ogTitle ||
+    (!ogDescription && !image) ||
+    (image && !image.startsWith("https://"))
+  )
     return empty;
   if (ogDescription) {
     ogDescription = `${ogDescription.substring(0, 150)}...`;

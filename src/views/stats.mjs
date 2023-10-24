@@ -24,6 +24,32 @@ function timestampToDate(ts) {
   return date.toISOString().split("T")[0];
 }
 
+function calculateCumulativeMessages(messagesWithAddresses) {
+  const messageMap = new Map();
+  let cumulativeTotal = 0;
+
+  // Sort messages by date
+  const sortedMessages = [...messagesWithAddresses].sort(
+    (a, b) => a.timestamp - b.timestamp,
+  );
+
+  for (const msg of sortedMessages) {
+    const date = new Date(msg.timestamp * 1000).toISOString().split("T")[0];
+
+    if (!messageMap.has(date)) {
+      messageMap.set(date, cumulativeTotal);
+    }
+
+    cumulativeTotal++;
+    messageMap.set(date, cumulativeTotal);
+  }
+
+  const dates = Array.from(messageMap.keys()).sort();
+  const messages = dates.map((date) => messageMap.get(date));
+
+  return { dates, messages };
+}
+
 async function calculateRetention31Days(messagesWithAddresses) {
   const mints = await registry.mints();
   const retention = Array(32).fill(0);
@@ -86,13 +112,14 @@ async function calculateMintersPerDay() {
     Math.min(...Array.from(mintMap.keys(), (key) => new Date(key))),
     Math.max(...Array.from(mintMap.keys(), (key) => new Date(key))),
   );
+
+  const sortedDates = dates.sort();
   for (const date of dates) {
     if (!mintMap.has(date)) {
       mintMap.set(date, 0);
     }
   }
 
-  const sortedDates = dates.sort();
   const minters = sortedDates.map((date) => mintMap.get(date));
 
   return { dates: sortedDates, minters };
@@ -143,6 +170,44 @@ async function calculateMAURetention(mauData, messagesWithAddresses) {
     ...dates.map((date, i) => retention[i - 1]).slice(1),
   ];
   return { dates, retentions };
+}
+
+function calculateDelegationPercentages(messagesWithAddresses) {
+  const delegationMap = new Map();
+
+  for (const msg of messagesWithAddresses) {
+    const date = new Date(msg.timestamp * 1000).toISOString().split("T")[0];
+    const isDelegated = msg.signer !== msg.identity;
+
+    if (!delegationMap.has(date)) {
+      delegationMap.set(date, { total: 0, delegated: 0 });
+    }
+
+    const currentEntry = delegationMap.get(date);
+    currentEntry.total++;
+    if (isDelegated) {
+      currentEntry.delegated++;
+    }
+    delegationMap.set(date, currentEntry);
+  }
+
+  const dates = generateDateRange(
+    Math.min(...Array.from(delegationMap.keys(), (key) => new Date(key))),
+    Math.max(...Array.from(delegationMap.keys(), (key) => new Date(key))),
+  );
+  for (const date of dates) {
+    if (!delegationMap.has(date)) {
+      delegationMap.set(date, { total: 0, delegated: 0 });
+    }
+  }
+
+  const sortedDates = dates.sort();
+  const percentages = sortedDates.map((date) => {
+    const data = delegationMap.get(date);
+    return data.total !== 0 ? (data.delegated / data.total) * 100 : 0;
+  });
+
+  return { dates: sortedDates, percentages };
 }
 
 async function calculateRetention(
@@ -210,7 +275,6 @@ async function countDelegations() {
   return delegateCounts;
 }
 
-// Generate array of dates between start and end
 function generateDateRange(start, end) {
   const dates = [];
   let currentDate = new Date(start);
@@ -459,6 +523,31 @@ export default async function (trie, theme) {
     },
     yNumLabels: 10,
   };
+
+  const cumulativeMessagesData = calculateCumulativeMessages(
+    messagesWithAddresses,
+  );
+  options.yLabel.name = "Cumulative Messages";
+  options.xLabel.name = "";
+  const cumulativeMessagesChart = plot(html)(
+    {
+      x: cumulativeMessagesData.dates.map((date) => new Date(date)),
+      y: cumulativeMessagesData.messages,
+    },
+    options,
+  );
+
+  const delegationData = calculateDelegationPercentages(messagesWithAddresses);
+  options.yLabel.name = "% (delegated addresses)";
+  options.xLabel.name = "";
+  const delegationChart = plot(html)(
+    {
+      x: delegationData.dates.map((date) => new Date(date)),
+      y: delegationData.percentages,
+    },
+    options,
+  );
+
   const retention31Days = await calculateRetention31Days(messagesWithAddresses);
   options.yLabel.name = "% (minters active in first 31 days)";
   options.xLabel.name = "days since acquisition";
@@ -587,74 +676,85 @@ export default async function (trie, theme) {
               </tr>
               <tr>
                 <td style="padding: 20px;">
+                  <h2>PROTOCOL CHARTS</h2>
                   <p>
-                    <b>Daily Active Users DEFINITION:</b>
+                    The protocol charts are focused on curators - people who
+                    submit and upvote links on our Kiwi P2P network, which are
+                    later displayed via apps. We call them active users to
+                    highlight that they curate the feed, contrary to passive
+                    users who just read the content on the website.
+                  </p>
+
+                  <p />
+                  <p>
+                    <b>Daily Active Users (DAU)</b>
                     <br />
-                    - To calculate the values on this chart we're getting all
-                    messages that have occurred in the p2p network and analyze
-                    them.
                     <br />
-                    - We consider someone a Daily Active User if, for a given
-                    day, they've, at least, interacted on the site once by
-                    either upvoting or submitting a new link.
-                    <br />
-                    - As the protocol doesn't track individual users, we
-                    consider each Ethereum address as individual users.
-                    <br />
-                    - To learn more about the metrics we want to track at Kiwi
-                    News, <span>visit </span>
-                    <a
-                      style="color:black;"
-                      href="https://hackmd.io/oF8S12EnTpSp8CtkigJosQ"
-                      >Key Metrics for Growth of Kiwi News</a
-                    >
+                    <b>Definition:</b> We consider someone a Daily Active User
+                    if, for a given day, they've at least, interacted on the
+                    site once by either upvoting or submitting a new link.
                   </p>
                   ${dauChart}
                   <p>
-                    <b>7-day Active Users (WAU) DEFINITION:</b>
+                    <b>7-day Active Users (WAU)</b>
                     <br />
-                    - To calculate the values on this chart, we're analyzing all
-                    messages that have occurred in the p2p network.
                     <br />
-                    - We consider someone a 7-day Active User if, for a given
-                    period of 7 days, they've, at least, interacted on the site
-                    once by either upvoting or submitting a new link.
-                    <br />
-                    - As the protocol doesn't track individual users, we
-                    consider each Ethereum address as individual users.
-                    <br />
-                    - To learn more about the metrics we want to track at Kiwi
-                    News, <span>visit </span>
-                    <a
-                      style="color:black;"
-                      href="https://hackmd.io/oF8S12EnTpSp8CtkigJosQ"
-                      >Key Metrics for Growth of Kiwi News</a
-                    >
+                    <b>Definition: </b>We consider someone a 7-day Active User
+                    if, for a given period of 7 days, they've, at least,
+                    interacted on the site once by either upvoting or submitting
+                    a new link.
                   </p>
                   ${wauChart}
                   <p>
-                    <b>30-day Active Users DEFINITION:</b>
+                    <b>30-day Active Users (MAU)</b>
                     <br />
-                    - To calculate the values on this chart we're getting all
-                    messages that have occurred in the p2p network and analyze
-                    them.
                     <br />
-                    - We consider someone a 30-day Active User if, for the last
-                    30 days, they've, at least, interacted on the site once by
-                    either upvoting or submitting a new link.
-                    <br />
-                    - As the protocol doesn't track individual users, we
-                    consider each Ethereum address as individual users.
-                    <br />
-                    - To learn more about the metrics we want to track at Kiwi
-                    News, <span>visit </span>
-                    <a
-                      style="color:black;"
-                      href="https://hackmd.io/oF8S12EnTpSp8CtkigJosQ"
-                      >Key Metrics for Growth of Kiwi News</a
-                    >
+                    <b>Definition: </b>We consider someone a 30-day Active User
+                    if, for the last 30 days, they've, at least, interacted on
+                    the site once by either upvoting or submitting a new link.
                   </p>
                   ${mauChart}
+                  <p>
+                    <b>Cumulative Total Messages</b>
+                    <br />
+                    <br />
+                    <b>Definition: </b>This chart shows the cumulative total
+                    number of messages posted on Kiwi P2P network over time.
+                    Each point on the chart represents the total number of
+                    messages posted up to and including that day.
+                  </p>
+                  ${cumulativeMessagesChart}
+                  <p>
+                    <b>% of messages signed with delegation key </b>
+                    <br />
+                    <br />
+                    <b>Definition: </b>This chart shows the percentage of users
+                    who used our OP contract to delegate their keys so that they
+                    can use Kiwi without confirming every signature to upvote
+                    and submit.
+                  </p>
+                  ${delegationChart}
+                  <p>
+                    <b>NFT Minters</b>
+                    <br />
+                    <br />
+                    <b>Definition: </b>Shows how many addresses mint the Kiwi
+                    News Pass per day.
+                  </p>
+                  ${mintersChart}
+                  <h2>ADVANCED CHARTS</h2>
+                  <p>
+                    <b>Submissions DEFINITION:</b>
+                    <br />
+                    - Any new link submitted to Kiwi News
+                  </p>
+                  ${submissionsChart}
+                  <p>
+                    <b>Upvotes DEFINITION:</b>
+                    <br />
+                    - Any upvote to Kiwi News
+                  </p>
+                  ${upvotesChart}
                   <p>
                     <b>DAU/MAU Ratio DEFINITION:</b>
                     <br />
@@ -669,18 +769,6 @@ export default async function (trie, theme) {
                     - A higher DAU/MAU ratio indicates a more engaged user base.
                   </p>
                   ${ratioChart}
-                  <p>
-                    <b>Submissions DEFINITION:</b>
-                    <br />
-                    - Any new link submitted to Kiwi News
-                  </p>
-                  ${submissionsChart}
-                  <p>
-                    <b>Upvotes DEFINITION:</b>
-                    <br />
-                    - Any upvote to Kiwi News
-                  </p>
-                  ${upvotesChart}
                   <p>
                     <b>31 day retention after minting DEFINITION:</b>
                     <br />
@@ -744,13 +832,6 @@ export default async function (trie, theme) {
                     ago.
                   </p>
                   ${retentionChart}
-                  <p>
-                    <b>Minters per day DEFINITION:</b>
-                    <br />
-                    - This chart shows how many addresses have minted the Kiwi
-                    News Pass per day.
-                  </p>
-                  ${mintersChart}
                   <div>
                     <b>Delegation Counts</b>
                     <p>

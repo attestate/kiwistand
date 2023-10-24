@@ -19,7 +19,12 @@ async function fetchFCData(address) {
   } catch (err) {
     return;
   }
-  const data = await response.json();
+  let data;
+  try {
+    data = await response.json();
+  } catch (err) {
+    return;
+  }
   if (
     data.error === "User not found" ||
     (data.users && Array.isArray(data.users) && data.users.length !== 1)
@@ -67,6 +72,7 @@ async function fetchENSData(address) {
       ...data,
       address,
       displayName,
+      truncatedAddress,
     };
   } catch (error) {
     console.error(`Failed to fetch ENS data for address: ${address}`, error);
@@ -98,10 +104,19 @@ export async function resolve(address) {
   if (!safeAvatar && fcProfile && fcProfile.avatar) {
     safeAvatar = fcProfile.avatar;
   }
+
+  let displayName = ensProfile.ens;
+  if (!displayName && fcProfile && fcProfile.username) {
+    displayName = `@${fcProfile.username}`;
+  }
+  if (!displayName) {
+    displayName = ensProfile.truncatedAddress;
+  }
   const profile = {
     safeAvatar,
     ...ensProfile,
     farcaster: fcProfile,
+    displayName,
   };
   return profile;
 }

@@ -20,7 +20,7 @@ import subscribe from "./views/subscribe.mjs";
 import upvotes from "./views/upvotes.mjs";
 import community from "./views/community.mjs";
 import stats from "./views/stats.mjs";
-import activity from "./views/activity.mjs";
+import * as activity from "./views/activity.mjs";
 import about from "./views/about.mjs";
 import why from "./views/why.mjs";
 import submit from "./views/submit.mjs";
@@ -229,16 +229,48 @@ export async function launch(trie, libp2p) {
     const content = await why(reply.locals.theme, request.cookies.identity);
     return reply.status(200).type("text/html").send(content);
   });
+  app.get("/api/v1/activity", async (request, reply) => {
+    let data;
+
+    try {
+      data = await activity.data(
+        trie,
+        request.cookies.identity || request.query.address,
+        request.cookies.lastUpdate,
+      );
+    } catch (err) {
+      const code = 400;
+      const httpMessage = "Bad Request";
+      return sendError(reply, code, httpMessage, "Valid query parameters");
+    }
+    const code = 200;
+    const httpMessage = "OK";
+    const details = "Notifications feed";
+    return sendStatus(reply, code, httpMessage, details, {
+      notifications: data.notifications,
+      lastServerValue: data.latestValue,
+    });
+  });
   app.get("/activity", async (request, reply) => {
-    const { content, lastUpdate } = await activity(
-      trie,
+    let data;
+    try {
+      data = await activity.data(
+        trie,
+        request.cookies.identity || request.query.address,
+        request.cookies.lastUpdate,
+      );
+    } catch (err) {
+      return reply.status(400).type("text/plain").send(err.toString());
+    }
+    const content = await activity.page(
       reply.locals.theme,
-      request.query.address,
       request.cookies.identity,
+      data.notifications,
+      request.cookies.lastUpdate,
     );
-    if (lastUpdate) {
-      reply.setHeader("X-LAST-UPDATE", lastUpdate);
-      reply.cookie("lastUpdate", lastUpdate);
+    if (data && data.lastUpdate) {
+      reply.setHeader("X-LAST-UPDATE", data.lastUpdate);
+      reply.cookie("lastUpdate", data.lastUpdate);
     }
     return reply.status(200).type("text/html").send(content);
   });
