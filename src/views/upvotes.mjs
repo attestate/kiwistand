@@ -95,13 +95,9 @@ export default async function (
       const ensData = await ens.resolve(leaf.identity);
       let avatars = [];
       for await (let upvoter of leaf.upvoters) {
-        const upvoterEnsData = await ens.resolve(upvoter);
-        let avatarUrl = upvoterEnsData.avatar;
-        if (avatarUrl && !avatarUrl.startsWith("https")) {
-          avatarUrl = upvoterEnsData.avatar_url;
-        }
-        if (avatarUrl) {
-          avatars.push(avatarUrl);
+        const profile = await ens.resolve(upvoter);
+        if (profile.safeAvatar) {
+          avatars.push(profile.safeAvatar);
         }
       }
       return {

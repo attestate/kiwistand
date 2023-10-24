@@ -54,13 +54,9 @@ export default async function (trie, theme, identity) {
     const ensData = await ens.resolve(story.identity);
     let avatars = [];
     for await (let upvoter of story.upvoters) {
-      const upvoterEnsData = await ens.resolve(upvoter);
-      let avatarUrl = upvoterEnsData.avatar;
-      if (avatarUrl && !avatarUrl.startsWith("https")) {
-        avatarUrl = upvoterEnsData.avatar_url;
-      }
-      if (avatarUrl) {
-        avatars.push(avatarUrl);
+      const profile = await ens.resolve(upvoter);
+      if (profile.safeAvatar) {
+        avatars.push(profile.safeAvatar);
       }
     }
     stories.push({
