@@ -112,13 +112,12 @@ const footer = (theme, path) => html`
     <span> | </span>
     <a href="https://attestate.com/kiwistand/main/">API</a>
     <span> | </span>
-    <a target="_blank" href="https://kiwinews.sleekplan.app/"
-      >Request Feature</a
-    >
-    <span> | </span>
     <a href="/guidelines">Guidelines</a>
     <span> | </span>
-    <a href="https://drive.google.com/drive/folders/1vH5vEcXCsbbrYfCpTIvimLSzDMgq1eIa?usp=drive_link">Brand Assets</a>
+    <a
+      href="https://drive.google.com/drive/folders/1vH5vEcXCsbbrYfCpTIvimLSzDMgq1eIa?usp=drive_link"
+      >Brand Assets</a
+    >
     <br />
     <br />
     <form
