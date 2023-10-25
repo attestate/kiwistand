@@ -55,7 +55,7 @@ class SimpleModal extends Component {
       localStorage.getItem("-kiwi-news-has-visited") ||
       (account && account.isConnected) ||
       isRunningPWA();
-    this.setState({ showModal: !hasVisited, hasCheckedAccount: true });
+    this.setState({ showModal: !hasVisited, hasCheckedAccount: true }); // Changed to true to keep the modal open
   };
 
   closeModal = () => {
@@ -216,24 +216,32 @@ class SimpleModal extends Component {
             </>
           )}
         </div>
-        <button
-          onClick={this.closeModal}
-          style={{
-            borderRadius: "2px",
-            padding: "5px 15px",
-            border: "1px solid black",
-            color: "black",
-            textAlign: "center",
-            textDecoration: "none",
-            cursor: "pointer",
-            width: "90%",
-            margin: "20px auto",
-            display: "block",
-            fontSize: "1.1rem",
-          }}
-        >
-          Got it 🥝
-        </button>
+        <div style={{ padding: "0 5vw" }}>
+          <a href="/welcome" target="_blank">
+            <button
+              style={{
+                borderRadius: "2px",
+                padding: "5px 15px",
+                border: "1px solid black",
+                color: "black",
+                textAlign: "center",
+                textDecoration: "none",
+                cursor: "pointer",
+                width: "100%",
+                margin: "20px auto",
+                display: "block",
+                fontSize: "1.1rem",
+              }}
+            >
+              Learn more about 🥝
+            </button>
+          </a>
+        </div>
+        <p style={{ textAlign: "center" }}>
+          <u style={{ cursor: "pointer" }} onClick={this.closeModal}>
+            Take me back to the feed
+          </u>
+        </p>
       </Modal>
     );
   }
