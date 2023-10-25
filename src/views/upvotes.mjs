@@ -151,7 +151,7 @@ export default async function (
                         : html`<span><br /></span>`}
                     </span>
                     <div style="display: flex; gap: 15px; margin-top: 10px;">
-                      ${ensData.url
+                      ${ensData.url && ensData.url.startsWith("https://")
                         ? html` <a target="_blank" href="${ensData.url}"
                             >${website}</a
                           >`
