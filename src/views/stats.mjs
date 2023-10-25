@@ -452,6 +452,18 @@ function getWeekNumber(date) {
   return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
 }
 
+function objectToCSV(data, headers) {
+  const csvRows = [];
+  csvRows.push(headers);
+
+  if (data.x.length !== data.y.length) return csvRows.join("\n");
+  for (let i = 0; i < data.x.length; i++) {
+    csvRows.push(`${data.x[i]},${data.y[i]}`);
+  }
+
+  return csvRows.join("\n");
+}
+
 function getFirstDayOfWeek(year, week) {
   var date = new Date(year, 0, 1 + (week - 1) * 7);
   var day = date.getDay();
@@ -626,10 +638,11 @@ export default async function (trie, theme) {
 
   options.yLabel.name = "Daily active users";
   options.xLabel.name = "";
-  const dauChart = plot(html)(
-    { x: dauData.dates.map((date) => new Date(date)), y: dauData.daus },
-    options,
-  );
+  const dauChartData = {
+    x: dauData.dates.map((date) => new Date(date)),
+    y: dauData.daus,
+  };
+  const dauChart = plot(html)(dauChartData, options);
 
   options.yLabel.name = "Monthly active users";
   options.xLabel.name = "";
@@ -710,6 +723,15 @@ export default async function (trie, theme) {
                     <b>Definition:</b> We consider someone a Daily Active User
                     if, for a given day, they've at least, interacted on the
                     site once by either upvoting or submitting a new link.
+                    <br />
+                    <button
+                      onclick="window.open('data:text/csv;charset=utf-8,' +
+ encodeURIComponent(decodeURIComponent('${encodeURIComponent(
+                        objectToCSV(dauChartData, "DAUs,Dates"),
+                      )}')))"
+                    >
+                      download
+                    </button>
                   </p>
                   ${dauChart}
                   <p>
