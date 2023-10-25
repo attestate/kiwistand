@@ -27,7 +27,9 @@ const generateFeed = (messages) => {
   messages
     .sort((a, b) => a.timestamp - b.timestamp)
     .forEach((message) => {
-      const href = normalizeUrl(!!message.href && message.href);
+      const href = normalizeUrl(!!message.href && message.href, {
+        stripWWW: false,
+      });
 
       if (!groupedMessages[href]) {
         groupedMessages[href] = {

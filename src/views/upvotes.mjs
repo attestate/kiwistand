@@ -28,24 +28,6 @@ function extractDomain(link) {
   return parsedUrl.hostname;
 }
 
-export const classify = (messages) => {
-  const firstAmplify = {};
-
-  return messages
-    .sort((a, b) => a.timestamp - b.timestamp)
-    .map((message) => {
-      const href = normalizeUrl(!!message.href && message.href);
-
-      if (message.type === "amplify" && !firstAmplify[href]) {
-        firstAmplify[href] = true;
-        return { verb: "submit", message };
-      } else {
-        return { verb: "upvote", message };
-      }
-    })
-    .sort((a, b) => b.message.timestamp - a.message.timestamp);
-};
-
 export default async function (
   trie,
   theme,

@@ -3,7 +3,6 @@ import { env } from "process";
 
 import htm from "htm";
 import vhtml from "vhtml";
-import normalizeUrl from "normalize-url";
 import { sub } from "date-fns";
 
 import * as ens from "../ens.mjs";

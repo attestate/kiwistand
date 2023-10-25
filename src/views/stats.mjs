@@ -15,9 +15,26 @@ import Head from "./components/head.mjs";
 import * as store from "../store.mjs";
 import * as registry from "../chainstate/registry.mjs";
 import * as ens from "../ens.mjs";
-import { classify } from "./upvotes.mjs";
 
 const html = htm.bind(vhtml);
+
+const classify = (messages) => {
+  const firstAmplify = {};
+
+  return messages
+    .sort((a, b) => a.timestamp - b.timestamp)
+    .map((message) => {
+      const href = normalizeUrl(!!message.href && message.href);
+
+      if (message.type === "amplify" && !firstAmplify[href]) {
+        firstAmplify[href] = true;
+        return { verb: "submit", message };
+      } else {
+        return { verb: "upvote", message };
+      }
+    })
+    .sort((a, b) => b.message.timestamp - a.message.timestamp);
+};
 
 function timestampToDate(ts) {
   const date = new Date(ts * 1000);
