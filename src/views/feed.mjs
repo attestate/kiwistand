@@ -238,6 +238,8 @@ export async function index(trie, page) {
   const end = totalStories * (page + 1);
   storyPromises = storyPromises.slice(start, end);
 
+  const writers = await moderation.getWriters();
+
   let stories = [];
   for await (let story of storyPromises) {
     const ensData = await ens.resolve(story.identity);
@@ -249,11 +251,17 @@ export async function index(trie, page) {
       }
     }
 
+    const isOriginal = Object.keys(writers).some(
+      (domain) =>
+        story.href.startsWith(domain) && writers[domain] === story.identity,
+    );
+
     stories.push({
       ...story,
       displayName: ensData.displayName,
       submitter: ensData,
       avatars: avatars,
+      isOriginal,
     });
   }
 

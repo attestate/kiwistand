@@ -9,7 +9,7 @@ import { EIP712_MESSAGE } from "../constants.mjs";
 const fetch = fetchBuilder.withCache(
   new MemoryCache({
     ttl: 60000, // 1min
-  })
+  }),
 );
 
 const url =
@@ -21,6 +21,15 @@ export async function getConfig(sheet) {
   } else {
     throw new Error("Couldn't convert to JSON");
   }
+}
+
+export async function getWriters() {
+  const response = await getConfig("writers");
+  const writers = {};
+  response.forEach(({ domain, address }) => {
+    writers[normalizeUrl(domain)] = address;
+  });
+  return writers;
 }
 
 export async function getLists() {
@@ -82,7 +91,7 @@ export function moderate(leaves, config) {
       })
       // TODO: Should start using ethers.utils.getAddress
       .filter(
-        ({ identity }) => !config.addresses.includes(identity.toLowerCase())
+        ({ identity }) => !config.addresses.includes(identity.toLowerCase()),
       )
       .filter(({ href }) => !config.links.includes(normalizeUrl(href)))
   );

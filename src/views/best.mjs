@@ -115,6 +115,7 @@ export default async function index(trie, theme, page, period, identity) {
   const storyPromises = (await topstories(leaves, start, end))
     .filter((story) => story.timestamp >= startDatetime)
     .slice(start, end);
+  const writers = await moderation.getWriters();
 
   let stories = [];
   for await (let story of storyPromises) {
@@ -126,10 +127,15 @@ export default async function index(trie, theme, page, period, identity) {
         avatars.push(profile.safeAvatar);
       }
     }
+    const isOriginal = Object.keys(writers).some(
+      (domain) =>
+        story.href.startsWith(domain) && writers[domain] === story.identity,
+    );
     stories.push({
       ...story,
       displayName: ensData.displayName,
       avatars: avatars,
+      isOriginal,
     });
   }
 

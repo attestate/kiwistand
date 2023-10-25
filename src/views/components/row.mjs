@@ -67,7 +67,13 @@ const row = (
                   class="story-link"
                   style="line-height: 13pt; font-size: 13pt;"
                 >
-                  ${truncateLongWords(story.title)}
+                  ${story.isOriginal
+                    ? html`<mark
+                        style="background-color: rgba(255,255,0, 0.05); padding: 0px 2px;"
+                        >${truncateLongWords(story.title)}</mark
+                      >`
+                    : truncateLongWords(story.title)}
+                  <span> </span>
                 </a>
                 <span> </span>
                 <span class="story-domain" style="white-space: nowrap;"

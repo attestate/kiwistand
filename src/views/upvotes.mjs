@@ -16,6 +16,7 @@ import * as store from "../store.mjs";
 import { EIP712_MESSAGE } from "../constants.mjs";
 import { count } from "./feed.mjs";
 import * as ens from "../ens.mjs";
+import * as moderation from "./moderation.mjs";
 import * as karma from "../karma.mjs";
 import * as registry from "../chainstate/registry.mjs";
 import Row from "./components/row.mjs";
@@ -84,6 +85,8 @@ export default async function (
     storyPromises = storyPromises.sort((a, b) => b.timestamp - a.timestamp);
   }
 
+  const writers = await moderation.getWriters();
+
   let stories = storyPromises
     .filter(
       (story) =>
@@ -100,10 +103,15 @@ export default async function (
           avatars.push(profile.safeAvatar);
         }
       }
+      const isOriginal = Object.keys(writers).some(
+        (domain) =>
+          leaf.href.startsWith(domain) && writers[domain] === leaf.identity,
+      );
       return {
         ...leaf,
         displayName: ensData.displayName,
         avatars: avatars,
+        isOriginal,
       };
     }),
   );

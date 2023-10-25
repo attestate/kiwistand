@@ -46,6 +46,8 @@ export default async function (trie, theme, identity) {
   let sortedCounts = counts.sort((a, b) => b.timestamp - a.timestamp);
   let slicedCounts = sortedCounts.slice(0, 40);
 
+  const writers = await moderation.getWriters();
+
   let stories = [];
   for await (let story of slicedCounts) {
     const ensData = await ens.resolve(story.identity);
@@ -56,10 +58,15 @@ export default async function (trie, theme, identity) {
         avatars.push(profile.safeAvatar);
       }
     }
+    const isOriginal = Object.keys(writers).some(
+      (domain) =>
+        story.href.startsWith(domain) && writers[domain] === story.identity,
+    );
     stories.push({
       ...story,
       displayName: ensData.displayName,
       avatars: avatars,
+      isOriginal,
     });
   }
 
