@@ -29,7 +29,7 @@ const donate = html`
         <span> </span>
         <a
           style="color: #7bc1ff; text-decoration: underline; font-weight: bold;"
-          href="/welcome"
+          href="/welcome?referral=0xD89F78F542B520BF228Bc75C021F9397b9F2c4A9"
           >buying our NFT.</a
         >
       </p>
