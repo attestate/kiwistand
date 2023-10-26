@@ -157,7 +157,7 @@ export default async function index(trie, theme, page, period, identity) {
                 ${await Header(theme, identity)}
               </tr>
               <tr>
-                ${ThirdHeader(theme, "top")}
+                ${ThirdHeader(theme, "top", identity)}
               </tr>
               <tr>
                 ${SecondHeader(theme, "best", period)}

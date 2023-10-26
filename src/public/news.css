@@ -228,6 +228,12 @@ body {
   
 /* mobile device */
  @media only screen and (min-width : 300px) and (max-width : 750px) {
+    .donate-desktop {
+      display: none;
+    }
+    .donate-mobile {
+      display: block;
+    }
      #hnmain {
          width: 100%;
          min-width: 0;
@@ -378,6 +384,9 @@ body {
 }
 /* Media query for larger screens */
  @media (min-width: 900px) {
+    #button-onboarding.donate-mobile {
+      display: none;
+    }
      #hnmain > table:first-of-type > tbody > tr:first-of-type {
          background-color: #e6e6df;
     }

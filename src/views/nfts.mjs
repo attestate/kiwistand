@@ -90,7 +90,7 @@ export default async function (trie, theme, identity) {
                 ${await Header(theme, identity)}
               </tr>
               <tr>
-                ${ThirdHeader(theme, "nfts")}
+                ${ThirdHeader(theme, "nfts", identity)}
               </tr>
               <tr>
                 ${SecondHeader(theme, "nfts")}

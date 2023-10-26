@@ -88,7 +88,7 @@ export default async function (trie, theme, identity) {
                 ${await Header(theme, identity)}
               </tr>
               <tr>
-                ${ThirdHeader(theme, "new")}
+                ${ThirdHeader(theme, "new", identity)}
               </tr>
               <tr>
                 ${SecondHeader(theme, "new")}
