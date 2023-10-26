@@ -185,9 +185,10 @@ export async function index(trie, page) {
   let threshold = 1;
   let pill = true;
   const now = new Date();
-  const old = sub(now, { hours: 18 });
+  const parameters = await moderation.getFeedParameters();
+  const old = sub(now, { hours: parameters.oldHours });
   const oldInMinutes = differenceInMinutes(now, old);
-  const fold = 10;
+  const { fold } = parameters;
   do {
     const sample = storyPromises.filter(({ upvotes }) => upvotes > threshold);
     const sum = sample.slice(0, fold).reduce((acc, { timestamp }) => {
@@ -209,7 +210,7 @@ export async function index(trie, page) {
     // NOTE: The replacementFactor is the number of old stories that we are
     // going to replace with super new stories (ones that haven't gained any
     // upvotes yet).
-    const replacementFactor = 2;
+    const { replacementFactor } = parameters;
     const newStories = countedStories
       .filter(({ upvotes }) => upvotes === 1)
       .sort((a, b) => b.timestamp - a.timestamp)
