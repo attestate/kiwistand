@@ -217,12 +217,16 @@ export async function index(trie, page) {
       .slice(0, 20)
       .map((story) => ({ ...story, userScore: karma.score(story.identity) }))
       .filter(({ timestamp }) => !isBefore(new Date(timestamp * 1000), old))
-      .sort((a, b) => b.userScore - a.userScore);
+      .sort(
+        (a, b) =>
+          0.4 * (b.userScore - a.userScore) + 0.6 * (b.timestamp - a.timestamp),
+      );
     if (newStories.length > replacementFactor) {
       const oldStories = storyPromises
         .slice(0, 10)
         .sort((a, b) => a.timestamp - b.timestamp)
-        .slice(0, replacementFactor);
+        .slice(0, replacementFactor)
+        .reverse();
       for (let i = 0; i < oldStories.length; i++) {
         const index = storyPromises.indexOf(oldStories[i]);
         if (index !== -1) {
