@@ -4,19 +4,6 @@ import vhtml from "vhtml";
 
 const html = htm.bind(vhtml);
 
-function safeExtractDomain(link) {
-  let parsedUrl;
-  try {
-    parsedUrl = new URL(link);
-  } catch (err) {
-    return "";
-  }
-
-  const parts = parsedUrl.hostname.split(".");
-  const tld = parts.slice(-2).join(".");
-  return tld;
-}
-
 const filtered = [
   "kiwistand.com",
   "kiwinews.xyz",
@@ -26,19 +13,14 @@ const filtered = [
   "twitter.com",
   "x.com",
 ];
-const empty = html``;
-
-export const parse = async (url) => {
-  let response;
-  try {
-    response = await ogs({ url });
-  } catch (err) {
-    return empty;
-  }
+export const metadata = async (url) => {
+  const response = await ogs({ url });
 
   const { result } = response;
   const domain = safeExtractDomain(url);
-  if (filtered.includes(domain) || (result && !result.success)) return empty;
+  if (filtered.includes(domain) || (result && !result.success)) {
+    throw new Error("Link from excluded domain");
+  }
 
   let image;
   if (result.ogImage && result.ogImage.length >= 1) {
@@ -55,11 +37,40 @@ export const parse = async (url) => {
     (!ogDescription && !image) ||
     (image && !image.startsWith("https://"))
   )
-    return empty;
+    throw new Error("Insufficient metadata");
   if (ogDescription) {
     ogDescription = `${ogDescription.substring(0, 150)}...`;
   }
 
+  return {
+    ogTitle,
+    domain,
+    ogDescription,
+    image,
+  };
+};
+
+function safeExtractDomain(link) {
+  let parsedUrl;
+  try {
+    parsedUrl = new URL(link);
+  } catch (err) {
+    return "";
+  }
+
+  const parts = parsedUrl.hostname.split(".");
+  const tld = parts.slice(-2).join(".");
+  return tld;
+}
+const empty = html``;
+export const parse = async (url) => {
+  let data;
+  try {
+    data = await metadata(url);
+  } catch (err) {
+    return empty;
+  }
+  const { ogTitle, domain, ogDescription, image } = data;
   return html`
     <div
       onclick="navigator.clipboard.writeText('${ogTitle}')"

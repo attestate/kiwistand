@@ -6,10 +6,22 @@ import Footer from "./components/footer.mjs";
 import Sidebar from "./components/sidebar.mjs";
 import Head from "./components/head.mjs";
 import Row, { extractDomain } from "./components/row.mjs";
+import * as parser from "../parser.mjs";
 
 const html = htm.bind(vhtml);
 
 export default async function submit(theme, url = "", title = "", identity) {
+  if (url && !title) {
+    let data;
+    try {
+      data = await parser.metadata(url);
+    } catch (err) {
+      // noop, if the request fails we just continue as though nothing ever happened.
+    }
+    if (data && data.ogTitle) {
+      title = data.ogTitle;
+    }
+  }
   const path = "/submit";
   const story = {
     title: "Bitcoin: A Peer-to-Peer Electronic Cash System",
