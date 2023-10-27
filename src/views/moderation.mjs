@@ -30,13 +30,16 @@ export async function getFeedParameters() {
       replacementFactor: 3,
       oldHours: 22,
       fold: 10,
+      replacementThreshold: 1,
     };
   }
-  const { replacementFactor, oldHours, fold } = response[0];
+  const { replacementFactor, replacementThreshold, oldHours, fold } =
+    response[0];
   return {
     replacementFactor: parseInt(replacementFactor, 10),
     oldHours: parseInt(oldHours, 10),
     fold: parseInt(fold, 10),
+    replacementThreshold: parseInt(replacementThreshold, 10),
   };
 }
 
