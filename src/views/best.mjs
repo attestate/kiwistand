@@ -129,7 +129,8 @@ export default async function index(trie, theme, page, period, identity) {
     }
     const isOriginal = Object.keys(writers).some(
       (domain) =>
-        story.href.startsWith(domain) && writers[domain] === story.identity,
+        normalizeUrl(story.href).startsWith(domain) &&
+        writers[domain] === story.identity,
     );
     stories.push({
       ...story,

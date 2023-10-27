@@ -258,7 +258,8 @@ export async function index(trie, page) {
 
     const isOriginal = Object.keys(writers).some(
       (domain) =>
-        story.href.startsWith(domain) && writers[domain] === story.identity,
+        normalizeUrl(story.href).startsWith(domain) &&
+        writers[domain] === story.identity,
     );
 
     stories.push({

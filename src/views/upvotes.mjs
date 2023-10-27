@@ -68,6 +68,7 @@ export default async function (
   }
 
   const writers = await moderation.getWriters();
+  console.log(writers);
 
   let stories = storyPromises
     .filter(
@@ -87,7 +88,8 @@ export default async function (
       }
       const isOriginal = Object.keys(writers).some(
         (domain) =>
-          leaf.href.startsWith(domain) && writers[domain] === leaf.identity,
+          normalizeUrl(leaf.href).startsWith(domain) &&
+          writers[domain] === leaf.identity,
       );
       return {
         ...leaf,

@@ -4,6 +4,7 @@ import { env } from "process";
 import htm from "htm";
 import vhtml from "vhtml";
 import { sub } from "date-fns";
+import normalizeUrl from "normalize-url";
 
 import * as ens from "../ens.mjs";
 import Header from "./components/header.mjs";
@@ -61,7 +62,8 @@ export default async function (trie, theme, identity) {
     }
     const isOriginal = Object.keys(writers).some(
       (domain) =>
-        story.href.startsWith(domain) && writers[domain] === story.identity,
+        normalizeUrl(story.href).startsWith(domain) &&
+        writers[domain] === story.identity,
     );
     stories.push({
       ...story,
