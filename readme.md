@@ -33,7 +33,14 @@ npm run dev:anon
 # might error when trying to create the data dir, that's a bug right now, just run it again
 ```
 
-If your Ethereum RPC node is behind a reverse proxy with Authorization requirements, consider adding the @attestate/crawler RPC_API_KEY environment variable ([details](https://attestate.com/crawler/main/configuration.html#environment-variables)).
+To set up the Kiwi node correctly, make sure to generate a valid Alchemy or Infura key (ideally paid because we're going to make a lot of requests).
+In your `.env` file, replace the value of `OPTIMISM_RPC_HTTP_HOST` with your full Alchemy key "https://opt-mainnet.g.alchemy.com/v2/abcd". Then run the node using `npm run dev:anon`.
+
+**NOTE:** The `dev:anon` npm script overwrites several environment variables. And so do other `dev:...` commands. This is done to test the software in different situations. E.g. `dev:bootstrap` is not connecting the node to the online p2p network, meaning that its data won't be shared with the Kiwi News mainnet. But e.g. `dev:anon` runs directly on mainnet and synchronizes the node.
+
+**NOTE2:** When the node is fully synchronized, it can take a while to load the feed pages like `/`, `/new` or `/best` when using e.g. `dev:anon`. This is because the server is caching all signature validations for the first time. To not have to wait for the server to cache all the signatures, you can also load e.g. `/welcome` or a page that doesn't require the database and hence doesn't need to validate signatures.
+
+**FINALLY:** If you don't use Alchemy or Infura and if your Ethereum RPC node is behind a custom reverse proxy with Authorization requirements, consider adding the @attestate/crawler RPC_API_KEY environment variable ([details](https://attestate.com/crawler/main/configuration.html#environment-variables)).
 
 You can also watch the video explaining [how to get started editing the Kiwi News frontend](https://www.loom.com/share/e0e8866450d54c52b161e77907d1ccb9).
 
