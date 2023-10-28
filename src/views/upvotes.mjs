@@ -120,10 +120,15 @@ export default async function (
                     style="padding: 10px 10px 0 10px; color: black; font-size: 16px; line-height: 1.5;"
                   >
                     <a
-                      style="font-weight: bold;"
+                      style="font-weight: bold; display: flex; align-items: center; gap: 10px;"
                       target="_blank"
                       href="https://etherscan.io/address/${ensData.address}"
                     >
+                      ${ensData.safeAvatar &&
+                      html`<img
+                        src="${ensData.safeAvatar}"
+                        style="width: 30px; height: 30px; border-radius: 50%;"
+                      />`}
                       ${ensData.displayName}
                       <span> (${points.toString()} 🥝)</span>
                     </a>
