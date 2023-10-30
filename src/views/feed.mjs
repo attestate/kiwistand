@@ -6,7 +6,6 @@ import htm from "htm";
 import vhtml from "vhtml";
 import normalizeUrl from "normalize-url";
 import { sub, differenceInMinutes, isBefore } from "date-fns";
-import { fetchBuilder, MemoryCache } from "node-fetch-cache";
 
 import * as ens from "../ens.mjs";
 import Header from "./components/header.mjs";
@@ -25,11 +24,6 @@ import Row, { extractDomain } from "./components/row.mjs";
 import * as karma from "../karma.mjs";
 
 const html = htm.bind(vhtml);
-const fetch = fetchBuilder.withCache(
-  new MemoryCache({
-    ttl: 60000 * 5, //5mins
-  }),
-);
 
 const itemAge = (timestamp) => {
   const now = new Date();

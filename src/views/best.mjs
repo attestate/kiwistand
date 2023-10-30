@@ -6,7 +6,6 @@ import htm from "htm";
 import vhtml from "vhtml";
 import normalizeUrl from "normalize-url";
 import { sub, differenceInMinutes } from "date-fns";
-import { fetchBuilder, MemoryCache } from "node-fetch-cache";
 
 import * as ens from "../ens.mjs";
 import Header from "./components/header.mjs";
@@ -24,11 +23,6 @@ import { EIP712_MESSAGE } from "../constants.mjs";
 import Row from "./components/row.mjs";
 
 const html = htm.bind(vhtml);
-const fetch = fetchBuilder.withCache(
-  new MemoryCache({
-    ttl: 60000 * 5, //5mins
-  }),
-);
 
 function extractDomain(link) {
   const parsedUrl = new URL(link);
