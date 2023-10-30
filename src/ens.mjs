@@ -131,14 +131,18 @@ async function initializeCache() {
   }
 
   if (addresses && Array.isArray(addresses)) {
-    for await (const address of addresses) {
+    const promises = addresses.map(async (address) => {
       const profile = await resolve(address);
       if (profile && profile.ens) {
         try {
           await toAddress(profile.ens);
-        } catch (err) {}
+        } catch (err) {
+          // ignore error
+        }
       }
-    }
+    });
+
+    await Promise.allSettled(promises);
   }
 }
 
