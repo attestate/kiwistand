@@ -37,6 +37,7 @@ test("that repo contains a .env-copy file with all possible configuration option
     "API_PORT",
     "HTTP_MESSAGES_MAX_PAGE_SIZE",
     "DATA_DIR",
+    "CACHE_DIR",
     "AUTO_SYNC",
     "ROOT_ADVERTISEMENT_TIMEOUT",
     "MIN_TIMESTAMP_SECS",
