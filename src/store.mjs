@@ -389,7 +389,11 @@ async function* walkTrieDfs(trie, nodeRef, key) {
   try {
     node = await trie.lookupNode(nodeRef);
   } catch (err) {
-    log(`walkTrieDfs: ${err.toString()}`);
+    log(
+      `walkTrieDfs: ref: "${nodeRef.toString(
+        "hex",
+      )}" and error "${err.toString()}"`,
+    );
     return;
   }
 
