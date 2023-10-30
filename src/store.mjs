@@ -309,6 +309,49 @@ export async function add(
   libp2p.pubsub.publish(messages.name, canonical);
 }
 
+export async function post(trie, index, parser, allowlist, delegations) {
+  let node;
+
+  const throwIfMissing = true;
+  try {
+    const path = await trie.findPath(index, throwIfMissing);
+    node = path.node;
+  } catch (err) {
+    throw new Error(
+      `Didn't find node for index ${index.toString(
+        "hex",
+      )}, "${err.toString()}"`,
+    );
+  }
+
+  if (!(node instanceof LeafNode)) {
+    throw new Error(
+      `Found a node but it wasn't of type LeafNode for index "${index}"`,
+    );
+  }
+
+  let message = decode(node.value());
+  if (parser) {
+    message = parser(message);
+  }
+
+  const cacheEnabled = true;
+  const signer = ecrecover(message, EIP712_MESSAGE, cacheEnabled);
+  const identity = eligible(allowlist, delegations, signer);
+  if (!identity) {
+    throw new Error(`Identity not found: ${signer}`);
+    return null;
+  }
+  return {
+    key: index.toString("hex"),
+    signer,
+    identity,
+    value: {
+      ...message,
+    },
+  };
+}
+
 // TODO: It'd be better to accept a JavaScript Date here and not expect a unix
 // timestamp integer value.
 export async function posts(

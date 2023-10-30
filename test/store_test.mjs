@@ -69,13 +69,13 @@ test("returns leaves in ascending key order, large set", async (t) => {
   const minTimestamp = 1681486433; // "Kiwistand is live" story submitted
   const timestamps = Array.from(
     { length: 100 },
-    (_, i) => minTimestamp + 82800 * i
+    (_, i) => minTimestamp + 82800 * i,
   );
 
   for (const timestamp of [...timestamps].sort(() => Math.random() - 0.5)) {
     await trieA.put(
       Buffer.from(timestamp.toString(16).padStart(8, "0"), "hex"),
-      encode({ timestamp })
+      encode({ timestamp }),
     );
   }
 
@@ -83,7 +83,7 @@ test("returns leaves in ascending key order, large set", async (t) => {
   t.is(leaves.length, timestamps.length);
   t.deepEqual(
     timestamps.map((timestamp) => ({ timestamp })),
-    leaves
+    leaves,
   );
 
   await rm("dbtestA", { recursive: true });
@@ -133,6 +133,151 @@ test("getting more paginated leaves than exist but only return existing", async 
   const leaves = await store.leaves(trieA, from, amount);
   t.is(leaves.length, 2);
   t.deepEqual([{ num: 0xa }, { num: 0xc }], leaves);
+
+  await rm("dbtestA", { recursive: true });
+});
+
+test("getting a non-existing path", async (t) => {
+  env.DATA_DIR = "dbtestA";
+  const trieA = await store.create();
+
+  const parser = JSON.parse;
+  const allowlist = [];
+  const error = await t.throwsAsync(
+    async () =>
+      await store.post(trieA, Buffer.from("abc", "hex"), parser, allowlist),
+  );
+  t.truthy(error);
+  t.truthy(error.message);
+  t.true(error.message.startsWith("Didn't find node for"));
+
+  await rm("dbtestA", { recursive: true });
+});
+
+test("getting a leaf with an non-eligible signer", async (t) => {
+  const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
+  const privateKey =
+    "0xad54bdeade5537fb0a553190159783e45d02d316a992db05cbed606d3ca36b39";
+  const signer = new Wallet(privateKey);
+  t.is(signer.address, address);
+
+  const title = "hello world";
+  const href = "https://example.com";
+  const type = "amplify";
+  const timestamp = 1676559616;
+  const message = id.create(title, href, type, timestamp);
+  const signedMessage = await id.sign(signer, message, EIP712_MESSAGE);
+  t.deepEqual(signedMessage, {
+    ...message,
+    signature:
+      "0x1df128dfe1f86df4e20ecc6ebbd586e0ab56e3fc8d0db9210422c3c765633ad8793af68aa232cf39cc3f75ea18f03260258f7276c2e0d555f98e1cf16672dd201c",
+  });
+
+  env.DATA_DIR = "dbtestA";
+  const trieA = await store.create();
+  const libp2p = null;
+  const allowlist = new Set([address]);
+  await store.add(trieA, signedMessage, libp2p, allowlist);
+
+  const { index } = id.toDigest(signedMessage);
+  const parser = JSON.parse;
+  const newAllowlist = new Set([]);
+  const delegations = {};
+  const err = await t.throwsAsync(
+    async () =>
+      await store.post(
+        trieA,
+        Buffer.from(index, "hex"),
+        parser,
+        newAllowlist,
+        delegations,
+      ),
+  );
+  t.truthy(err && err.message);
+  t.true(err.message.startsWith("Identity not found"));
+
+  await rm("dbtestA", { recursive: true });
+});
+
+test("getting a non-leaf", async (t) => {
+  const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
+  const privateKey =
+    "0xad54bdeade5537fb0a553190159783e45d02d316a992db05cbed606d3ca36b39";
+  const signer = new Wallet(privateKey);
+  t.is(signer.address, address);
+
+  const title = "hello world";
+  const href = "https://example.com";
+  const type = "amplify";
+  const timestamp = 1676559616;
+  const message = id.create(title, href, type, timestamp);
+  const signedMessage = await id.sign(signer, message, EIP712_MESSAGE);
+  t.deepEqual(signedMessage, {
+    ...message,
+    signature:
+      "0x1df128dfe1f86df4e20ecc6ebbd586e0ab56e3fc8d0db9210422c3c765633ad8793af68aa232cf39cc3f75ea18f03260258f7276c2e0d555f98e1cf16672dd201c",
+  });
+
+  env.DATA_DIR = "dbtestA";
+  const trieA = await store.create();
+  const libp2p = null;
+  const allowlist = new Set([address]);
+  await store.add(trieA, signedMessage, libp2p, allowlist);
+
+  const { index } = id.toDigest(signedMessage);
+  const parser = JSON.parse;
+  const err = await t.throwsAsync(
+    async () =>
+      await store.post(
+        trieA,
+        Buffer.from(index.slice(0, 10), "hex"),
+        parser,
+        allowlist,
+      ),
+  );
+  t.truthy(err && err.message);
+  t.true(err.message.startsWith("Found a node but"));
+
+  await rm("dbtestA", { recursive: true });
+});
+
+test("getting a leaf", async (t) => {
+  const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
+  const privateKey =
+    "0xad54bdeade5537fb0a553190159783e45d02d316a992db05cbed606d3ca36b39";
+  const signer = new Wallet(privateKey);
+  t.is(signer.address, address);
+
+  const title = "hello world";
+  const href = "https://example.com";
+  const type = "amplify";
+  const timestamp = 1676559616;
+  const message = id.create(title, href, type, timestamp);
+  const signedMessage = await id.sign(signer, message, EIP712_MESSAGE);
+  t.deepEqual(signedMessage, {
+    ...message,
+    signature:
+      "0x1df128dfe1f86df4e20ecc6ebbd586e0ab56e3fc8d0db9210422c3c765633ad8793af68aa232cf39cc3f75ea18f03260258f7276c2e0d555f98e1cf16672dd201c",
+  });
+
+  env.DATA_DIR = "dbtestA";
+  const trieA = await store.create();
+  const libp2p = null;
+  const allowlist = new Set([address]);
+  await store.add(trieA, signedMessage, libp2p, allowlist);
+
+  const { index } = id.toDigest(signedMessage);
+  const parser = JSON.parse;
+  const post = await store.post(
+    trieA,
+    Buffer.from(index, "hex"),
+    parser,
+    allowlist,
+  );
+  t.is(post.key, index);
+  t.deepEqual(post.value, signedMessage);
+  t.is(post.signer, address);
+  t.is(post.identity, address);
 
   await rm("dbtestA", { recursive: true });
 });
@@ -321,24 +466,25 @@ test("hashing on all nodes", async (t) => {
   const [root] = await store.descend(trieA, 0);
   t.true(
     (await store.lookup(trieA, root.hash, root.key)).node instanceof
-      ExtensionNode
+      ExtensionNode,
   );
 
   const [branch] = await store.descend(trieA, 1);
   t.true(rlp.encode(branch.node.raw()).length > 32);
   t.true(
     (await store.lookup(trieA, branch.hash, branch.key)).node instanceof
-      BranchNode
+      BranchNode,
   );
 
   const [ext, leaf] = await store.descend(trieA, 2);
   t.true(rlp.encode(ext.node.raw()).length < 32);
   t.true(
-    (await store.lookup(trieA, ext.hash, ext.key)).node instanceof ExtensionNode
+    (await store.lookup(trieA, ext.hash, ext.key)).node instanceof
+      ExtensionNode,
   );
   t.true(rlp.encode(leaf.node.raw()).length < 32);
   t.true(
-    (await store.lookup(trieA, leaf.hash, leaf.key)).node instanceof LeafNode
+    (await store.lookup(trieA, leaf.hash, leaf.key)).node instanceof LeafNode,
   );
 
   env.DATA_DIR = "dbtestB";
@@ -351,14 +497,14 @@ test("hashing on all nodes", async (t) => {
   const [branchB] = await store.descend(trieB, 1);
   t.true(
     (await store.lookup(trieB, branchB.hash, branchB.key)).node instanceof
-      BranchNode
+      BranchNode,
   );
 
   const [extB] = await store.descend(trieB, 2);
   t.true(rlp.encode(extB.node.raw()).length > 32);
   t.true(
     (await store.lookup(trieB, extB.hash, extB.key)).node instanceof
-      ExtensionNode
+      ExtensionNode,
   );
 
   await rm("dbtestA", { recursive: true });
@@ -583,7 +729,7 @@ test("try adding message with invalid href", async (t) => {
   };
   const allowlist = new Set([address]);
   await t.throwsAsync(
-    async () => await store.add(trie, signedMessage, libp2p, allowlist)
+    async () => await store.add(trie, signedMessage, libp2p, allowlist),
   );
 });
 
@@ -617,7 +763,7 @@ test("try to add invalidly formatted message to store", async (t) => {
   };
   const allowlist = new Set([address]);
   await t.throwsAsync(
-    async () => await store.add(trie, signedMessage, libp2p, allowlist)
+    async () => await store.add(trie, signedMessage, libp2p, allowlist),
   );
 });
 
@@ -650,7 +796,7 @@ test("try to add invalidly signed message to store", async (t) => {
   };
   const allowlist = new Set([address]);
   await t.throwsAsync(
-    async () => await store.add(trie, message, libp2p, allowlist)
+    async () => await store.add(trie, message, libp2p, allowlist),
   );
 });
 
@@ -686,7 +832,7 @@ test("add with delegated address but from isn't on allow list", async (t) => {
 
   await t.throwsAsync(
     async () =>
-      await store.add(trie, signedMessage, libp2p, allowlist, delegations)
+      await store.add(trie, signedMessage, libp2p, allowlist, delegations),
   );
   await rm("dbtestA", { recursive: true });
 });
@@ -730,7 +876,7 @@ test("attempting to upvote twice, once with custody and delegate address", async
   await store.add(trie, signedMessage0, libp2p, allowlist, delegations);
   await t.throwsAsync(
     async () =>
-      await store.add(trie, signedMessage1, libp2p, allowlist, delegations)
+      await store.add(trie, signedMessage1, libp2p, allowlist, delegations),
   );
   await rm("dbtestA", { recursive: true });
 });
@@ -797,7 +943,7 @@ test("trying to add message to store that isn't on allowlist", async (t) => {
   };
   const allowlist = new Set();
   await t.throwsAsync(
-    async () => await store.add(trie, signedMessage, libp2p, allowlist)
+    async () => await store.add(trie, signedMessage, libp2p, allowlist),
   );
 });
 
@@ -831,7 +977,7 @@ test("adding message from too far into the future", async (t) => {
   };
   const allowlist = new Set([address]);
   await t.throwsAsync(
-    async () => await store.add(trie, signedMessage, libp2p, allowlist)
+    async () => await store.add(trie, signedMessage, libp2p, allowlist),
   );
 });
 
@@ -865,7 +1011,7 @@ test("adding message from before minimum timestamp", async (t) => {
   const allowlist = new Set([address]);
   env.MIN_TIMESTAMP_SECS = 1;
   await t.throwsAsync(
-    async () => await store.add(trie, signedMessage, libp2p, allowlist)
+    async () => await store.add(trie, signedMessage, libp2p, allowlist),
   );
 });
 
@@ -947,8 +1093,8 @@ test.serial(
     const signedMessage1 = await id.sign(signer, message1, EIP712_MESSAGE);
 
     await t.throwsAsync(
-      async () => await store.add(trie, signedMessage1, libp2p, allowlist)
+      async () => await store.add(trie, signedMessage1, libp2p, allowlist),
     );
     await rm("dbtestA", { recursive: true });
-  }
+  },
 );
