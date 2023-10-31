@@ -47,6 +47,7 @@ export function count(leaves) {
         identity: leaf.identity,
         upvotes: 1,
         upvoters: [leaf.identity],
+        index: leaf.index,
       };
       stories[key] = story;
     } else {

@@ -104,8 +104,25 @@ const row = (
                       <span> • </span>
                     </span>
                   `}
-                  ${formatDistanceToNowStrict(new Date(story.timestamp * 1000))}
-                  <span> ago by </span>
+                  ${story.index
+                    ? html`
+                        <a
+                          class="meta-link"
+                          href="/stories?index=0x${story.index}"
+                        >
+                          ${formatDistanceToNowStrict(
+                            new Date(story.timestamp * 1000),
+                          )}
+                          <span> ago</span>
+                        </a>
+                      `
+                    : html`
+                        ${formatDistanceToNowStrict(
+                          new Date(story.timestamp * 1000),
+                        )}
+                        <span> ago</span>
+                      `}
+                  <span> by </span>
                   <a
                     href="${interactive
                       ? ""

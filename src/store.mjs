@@ -310,8 +310,11 @@ export async function add(
 }
 
 export async function post(trie, index, parser, allowlist, delegations) {
-  let node;
+  if (!(index instanceof Buffer)) {
+    throw new Error("index parameter must be of type Buffer");
+  }
 
+  let node;
   const throwIfMissing = true;
   try {
     const path = await trie.findPath(index, throwIfMissing);
@@ -324,9 +327,9 @@ export async function post(trie, index, parser, allowlist, delegations) {
     );
   }
 
-  if (!(node instanceof LeafNode)) {
+  if (!node || !(node instanceof LeafNode)) {
     throw new Error(
-      `Found a node but it wasn't of type LeafNode for index "${index}"`,
+      `Didn't find a node or found a node but it wasn't of type LeafNode for index "${index}"`,
     );
   }
 
@@ -342,12 +345,34 @@ export async function post(trie, index, parser, allowlist, delegations) {
     throw new Error(`Identity not found: ${signer}`);
     return null;
   }
+
+  let upvoters = [];
+  if (parser) {
+    const from = null;
+    const amount = null;
+    const startDatetime = null;
+    const upvotes = await posts(
+      trie,
+      from,
+      amount,
+      parser,
+      startDatetime,
+      allowlist,
+      delegations,
+      message.href,
+    );
+    upvotes.shift();
+    upvoters = upvotes.map(({ identity }) => identity);
+  }
+
   return {
     key: index.toString("hex"),
-    signer,
-    identity,
     value: {
+      signer,
+      identity,
       ...message,
+      upvoters,
+      upvotes: upvoters.length,
     },
   };
 }
@@ -362,8 +387,9 @@ export async function posts(
   startDatetime,
   allowlist,
   delegations,
+  href,
 ) {
-  const nodes = await leaves(trie, from, amount, parser, startDatetime);
+  const nodes = await leaves(trie, from, amount, parser, startDatetime, href);
 
   const cacheEnabled = true;
   const posts = nodes
@@ -374,7 +400,11 @@ export async function posts(
         log(`Identity not found: ${signer}`);
         return null;
       }
+
+      const { index } = toDigest(node);
+
       return {
+        index,
         ...node,
         signer,
         identity,
@@ -384,7 +414,7 @@ export async function posts(
   return posts;
 }
 
-export async function leaves(trie, from, amount, parser, startDatetime) {
+export async function leaves(trie, from, amount, parser, startDatetime, href) {
   const nodes = [];
 
   let pointer = 0;
@@ -402,6 +432,9 @@ export async function leaves(trie, from, amount, parser, startDatetime) {
     if (parser) {
       const parsed = parser(value);
       if (parsed.timestamp < startDatetime) {
+        continue;
+      }
+      if (href && normalizeUrl(parsed.href) !== normalizeUrl(href)) {
         continue;
       }
 

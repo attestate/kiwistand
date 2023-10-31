@@ -236,7 +236,96 @@ test("getting a non-leaf", async (t) => {
       ),
   );
   t.truthy(err && err.message);
-  t.true(err.message.startsWith("Found a node but"));
+  t.true(err.message.startsWith("Didn't find a node or found"));
+
+  await rm("dbtestA", { recursive: true });
+});
+
+test("getting leaves of a particular href", async (t) => {
+  const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
+  const privateKey =
+    "0xad54bdeade5537fb0a553190159783e45d02d316a992db05cbed606d3ca36b39";
+  const signer = new Wallet(privateKey);
+  t.is(signer.address, address);
+
+  const title = "hello world";
+  const href = "https://example.com";
+  const type = "amplify";
+  const timestamp = 1676559616;
+  const message = id.create(title, href, type, timestamp);
+  const signedMessage = await id.sign(signer, message, EIP712_MESSAGE);
+  t.deepEqual(signedMessage, {
+    ...message,
+    signature:
+      "0x1df128dfe1f86df4e20ecc6ebbd586e0ab56e3fc8d0db9210422c3c765633ad8793af68aa232cf39cc3f75ea18f03260258f7276c2e0d555f98e1cf16672dd201c",
+  });
+
+  env.DATA_DIR = "dbtestA";
+  const trieA = await store.create();
+  const libp2p = null;
+  const allowlist = new Set([address]);
+  await store.add(trieA, signedMessage, libp2p, allowlist);
+
+  const message2 = id.create(title, "https://otherlink.com", type, timestamp);
+  const signedMessage2 = await id.sign(signer, message2, EIP712_MESSAGE);
+  await store.add(trieA, signedMessage2, libp2p, allowlist);
+
+  const from = null;
+  const amount = null;
+  const parser = JSON.parse;
+  const startDatetime = null;
+  const leaves = await store.leaves(
+    trieA,
+    from,
+    amount,
+    parser,
+    startDatetime,
+    href,
+  );
+  t.is(leaves.length, 1);
+  t.is(leaves[0].href, signedMessage.href);
+
+  await rm("dbtestA", { recursive: true });
+});
+
+test("getting a leaf where index parameter isn't of type Buffer", async (t) => {
+  const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
+  const privateKey =
+    "0xad54bdeade5537fb0a553190159783e45d02d316a992db05cbed606d3ca36b39";
+  const signer = new Wallet(privateKey);
+  t.is(signer.address, address);
+
+  const title = "hello world";
+  const href = "https://example.com";
+  const type = "amplify";
+  const timestamp = 1676559616;
+  const message = id.create(title, href, type, timestamp);
+  const signedMessage = await id.sign(signer, message, EIP712_MESSAGE);
+  t.deepEqual(signedMessage, {
+    ...message,
+    signature:
+      "0x1df128dfe1f86df4e20ecc6ebbd586e0ab56e3fc8d0db9210422c3c765633ad8793af68aa232cf39cc3f75ea18f03260258f7276c2e0d555f98e1cf16672dd201c",
+  });
+
+  env.DATA_DIR = "dbtestA";
+  const trieA = await store.create();
+  const libp2p = null;
+  const allowlist = new Set([address]);
+  await store.add(trieA, signedMessage, libp2p, allowlist);
+
+  const { index } = id.toDigest(signedMessage);
+  const parser = JSON.parse;
+  const err = await t.throwsAsync(
+    async () =>
+      await store.post(
+        trieA,
+        "this is a string parameter for index",
+        parser,
+        allowlist,
+      ),
+  );
+  t.truthy(err && err.message);
+  t.true(err.message.startsWith("index parameter must be"));
 
   await rm("dbtestA", { recursive: true });
 });
@@ -275,9 +364,15 @@ test("getting a leaf", async (t) => {
     allowlist,
   );
   t.is(post.key, index);
-  t.deepEqual(post.value, signedMessage);
-  t.is(post.signer, address);
-  t.is(post.identity, address);
+  t.deepEqual(post.value, {
+    signer: address,
+    identity: address,
+    ...signedMessage,
+    upvoters: [],
+    upvotes: 0,
+  });
+  t.is(post.value.signer, address);
+  t.is(post.value.identity, address);
 
   await rm("dbtestA", { recursive: true });
 });

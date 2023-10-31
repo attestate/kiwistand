@@ -52,6 +52,7 @@ export function count(leaves) {
         displayName: leaf.displayName,
         upvotes: 1,
         upvoters: [leaf.identity],
+        index: leaf.index,
       };
       stories[key] = story;
     } else {
