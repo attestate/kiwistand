@@ -5,7 +5,6 @@ import { readFile } from "fs/promises";
 import express from "express";
 import cookieParser from "cookie-parser";
 import { utils } from "ethers";
-import isbot from "isbot";
 import htm from "htm";
 
 import log from "./logger.mjs";
