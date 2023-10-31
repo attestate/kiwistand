@@ -2,6 +2,7 @@ import { readFile, writeFile, access } from "fs/promises";
 import { resolve } from "path";
 
 import satori from "satori";
+import sharp from "sharp";
 import htm from "htm";
 
 const html = htm.bind(h);
@@ -37,7 +38,7 @@ function content(title, submitter) {
 }
 
 export async function generate(index, title, submitter) {
-  const filePath = resolve(`./src/public/previews/${index}.svg`);
+  const filePath = resolve(`./src/public/previews/${index}.jpg`);
 
   try {
     await access(filePath);
@@ -60,5 +61,5 @@ export async function generate(index, title, submitter) {
     fonts: [arial],
   });
 
-  await writeFile(filePath, svgData);
+  sharp(Buffer.from(svgData)).jpeg().toFile(filePath);
 }

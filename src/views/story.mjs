@@ -54,7 +54,7 @@ export default async function (trie, theme, index, value, identity) {
 
   const start = 0;
   const style = "padding: 1rem 5px 0.75rem 10px;";
-  const ogImage = `https://news.kiwistand.com/previews/${index}.svg`;
+  const ogImage = `https://news.kiwistand.com/previews/${index}.jpg`;
   return html`
     <html lang="en" op="news">
       <head>
