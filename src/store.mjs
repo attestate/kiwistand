@@ -361,7 +361,6 @@ export async function post(trie, index, parser, allowlist, delegations) {
       delegations,
       message.href,
     );
-    upvotes.shift();
     upvoters = upvotes.map(({ identity }) => identity);
   }
 
