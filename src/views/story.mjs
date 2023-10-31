@@ -13,7 +13,7 @@ import SecondHeader from "./components/secondheader.mjs";
 import ThirdHeader from "./components/thirdheader.mjs";
 import Sidebar from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
-import Head from "./components/head.mjs";
+import * as head from "./components/head.mjs";
 import * as store from "../store.mjs";
 import * as id from "../id.mjs";
 import * as moderation from "./moderation.mjs";
@@ -34,7 +34,6 @@ export default async function (trie, theme, index, value, identity) {
   try {
     preview = await parse(value.href);
   } catch (err) {}
-  const ensData = await ens.resolve(value.identity);
   const isOriginal = Object.keys(writers).some(
     (domain) =>
       normalizeUrl(value.href).startsWith(domain) &&
@@ -42,8 +41,6 @@ export default async function (trie, theme, index, value, identity) {
   );
   const story = {
     ...value,
-    displayName: ensData.displayName,
-    submitter: ensData,
     isOriginal,
   };
   let avatars = [];
@@ -57,10 +54,11 @@ export default async function (trie, theme, index, value, identity) {
 
   const start = 0;
   const style = "padding: 1rem 5px 0.75rem 10px;";
+  const ogImage = `https://news.kiwistand.com/previews/${index}.svg`;
   return html`
     <html lang="en" op="news">
       <head>
-        ${Head}
+        ${head.custom(ogImage)}
         <meta
           name="description"
           content="Kiwi News is the prime feed for hacker engineers building a decentralized future. All our content is handpicked and curated by crypto veterans."

@@ -3,28 +3,30 @@ import vhtml from "vhtml";
 
 const html = htm.bind(vhtml);
 
-export default html`
-  <meta charset="utf-8" />
-  <meta name="referrer" content="origin" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1, maximum-scale=1,
+export function custom(ogImage = "https://news.kiwistand.com/preview.jpeg") {
+  return html`
+    <meta charset="utf-8" />
+    <meta name="referrer" content="origin" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1,
  user-scalable=0"
-  />
-  <meta property="og:image" content="https://news.kiwistand.com/preview.jpeg" />
-  <meta
-    property="twitter:image"
-    content="https://news.kiwistand.com/preview.jpeg"
-  />
-  <meta property="twitter:card" content="summary_large_image" />
-  <meta property="og:title" content="Kiwi News - handpicked web3 alpha" />
-  <link rel="apple-touch-icon" sizes="152x152" href="apple-touch-icon.png" />
-  <link rel="manifest" href="pwa.json" />
-  <link rel="stylesheet" type="text/css" href="news.css" />
-  <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
-  <script
-    defer
-    src="https://unpkg.com/@zoralabs/zorb@^0.0/dist/zorb-web-component.umd.js"
-  ></script>
-  <title>Kiwi News</title>
-`;
+    />
+    <meta property="og:image" content="${ogImage}" />
+    <meta property="twitter:image" content="${ogImage}" />
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="og:title" content="Kiwi News - handpicked web3 alpha" />
+    <link rel="apple-touch-icon" sizes="152x152" href="apple-touch-icon.png" />
+    <link rel="manifest" href="pwa.json" />
+    <link rel="stylesheet" type="text/css" href="news.css" />
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
+    <script
+      defer
+      src="https://unpkg.com/@zoralabs/zorb@^0.0/dist/zorb-web-component.umd.js"
+    ></script>
+    <title>Kiwi News</title>
+  `;
+}
+const regular = custom();
+
+export default regular;

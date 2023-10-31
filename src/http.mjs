@@ -35,6 +35,8 @@ import { parse } from "./parser.mjs";
 import { toAddress, resolve } from "./ens.mjs";
 import * as registry from "./chainstate/registry.mjs";
 import * as store from "./store.mjs";
+import { generate } from "./preview.mjs";
+import * as ens from "./ens.mjs";
 
 const app = express();
 
@@ -149,6 +151,15 @@ export async function launch(trie, libp2p) {
       );
       return reply.status(404).type("text/plain").send("index wasn't found");
     }
+
+    const ensData = await ens.resolve(post.value.identity);
+    const value = {
+      ...post.value,
+      displayName: ensData.displayName,
+      submitter: ensData,
+    };
+    // NOTE: We aren't awaiting here because this can run in parallel
+    generate(hexIndex, value.title, value.submitter);
 
     const content = await story(
       trie,
