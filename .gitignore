@@ -1,4 +1,5 @@
 node_modules
+cache
 dbtest
 src/web/node_modules
 src/public/assets/*
@@ -17,3 +18,4 @@ dbtestA
 dbtestB
 backup
 src/public/bundle.js.map
+anon-corrupt

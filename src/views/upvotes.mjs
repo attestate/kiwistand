@@ -28,24 +28,6 @@ function extractDomain(link) {
   return parsedUrl.hostname;
 }
 
-export const classify = (messages) => {
-  const firstAmplify = {};
-
-  return messages
-    .sort((a, b) => a.timestamp - b.timestamp)
-    .map((message) => {
-      const href = normalizeUrl(!!message.href && message.href);
-
-      if (message.type === "amplify" && !firstAmplify[href]) {
-        firstAmplify[href] = true;
-        return { verb: "submit", message };
-      } else {
-        return { verb: "upvote", message };
-      }
-    })
-    .sort((a, b) => b.message.timestamp - a.message.timestamp);
-};
-
 export default async function (
   trie,
   theme,
@@ -86,6 +68,7 @@ export default async function (
   }
 
   const writers = await moderation.getWriters();
+  console.log(writers);
 
   let stories = storyPromises
     .filter(
@@ -105,7 +88,8 @@ export default async function (
       }
       const isOriginal = Object.keys(writers).some(
         (domain) =>
-          leaf.href.startsWith(domain) && writers[domain] === leaf.identity,
+          normalizeUrl(leaf.href).startsWith(domain) &&
+          writers[domain] === leaf.identity,
       );
       return {
         ...leaf,
@@ -136,10 +120,15 @@ export default async function (
                     style="padding: 10px 10px 0 10px; color: black; font-size: 16px; line-height: 1.5;"
                   >
                     <a
-                      style="font-weight: bold;"
+                      style="font-weight: bold; display: flex; align-items: center; gap: 10px;"
                       target="_blank"
                       href="https://etherscan.io/address/${ensData.address}"
                     >
+                      ${ensData.safeAvatar &&
+                      html`<img
+                        src="${ensData.safeAvatar}"
+                        style="width: 30px; height: 30px; border-radius: 50%;"
+                      />`}
                       ${ensData.displayName}
                       <span> (${points.toString()} 🥝)</span>
                     </a>

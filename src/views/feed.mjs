@@ -6,7 +6,6 @@ import htm from "htm";
 import vhtml from "vhtml";
 import normalizeUrl from "normalize-url";
 import { sub, differenceInMinutes, isBefore } from "date-fns";
-import { fetchBuilder, MemoryCache } from "node-fetch-cache";
 
 import * as ens from "../ens.mjs";
 import Header from "./components/header.mjs";
@@ -25,11 +24,6 @@ import Row, { extractDomain } from "./components/row.mjs";
 import * as karma from "../karma.mjs";
 
 const html = htm.bind(vhtml);
-const fetch = fetchBuilder.withCache(
-  new MemoryCache({
-    ttl: 60000 * 5, //5mins
-  }),
-);
 
 const itemAge = (timestamp) => {
   const now = new Date();
@@ -53,6 +47,7 @@ export function count(leaves) {
         identity: leaf.identity,
         upvotes: 1,
         upvoters: [leaf.identity],
+        index: leaf.index,
       };
       stories[key] = story;
     } else {
@@ -185,9 +180,10 @@ export async function index(trie, page) {
   let threshold = 1;
   let pill = true;
   const now = new Date();
-  const old = sub(now, { hours: 26 });
+  const parameters = await moderation.getFeedParameters();
+  const old = sub(now, { hours: parameters.oldHours });
   const oldInMinutes = differenceInMinutes(now, old);
-  const fold = 10;
+  const { fold } = parameters;
   do {
     const sample = storyPromises.filter(({ upvotes }) => upvotes > threshold);
     const sum = sample.slice(0, fold).reduce((acc, { timestamp }) => {
@@ -205,31 +201,40 @@ export async function index(trie, page) {
     }
   } while (pill);
 
-  if (threshold <= 1) {
+  log(`Feed threshold for upvotes ${threshold}`);
+  if (threshold <= parameters.replacementThreshold) {
     // NOTE: The replacementFactor is the number of old stories that we are
     // going to replace with super new stories (ones that haven't gained any
     // upvotes yet).
-    const replacementFactor = 2;
+    let { replacementFactor } = parameters;
     const newStories = countedStories
       .filter(({ upvotes }) => upvotes === 1)
       .sort((a, b) => b.timestamp - a.timestamp)
       .slice(0, 20)
       .map((story) => ({ ...story, userScore: karma.score(story.identity) }))
       .filter(({ timestamp }) => !isBefore(new Date(timestamp * 1000), old))
-      .sort((a, b) => b.userScore - a.userScore);
-    if (newStories.length > replacementFactor) {
-      const oldStories = storyPromises
-        .slice(0, 10)
-        .sort((a, b) => a.timestamp - b.timestamp)
-        .slice(0, replacementFactor);
-      for (let i = 0; i < oldStories.length; i++) {
-        const index = storyPromises.indexOf(oldStories[i]);
-        if (index !== -1) {
-          storyPromises[index] = newStories[i];
-        }
-      }
-      storyPromises.splice(10, 0, ...oldStories);
+      .sort(
+        (a, b) =>
+          0.4 * (b.userScore - a.userScore) + 0.6 * (b.timestamp - a.timestamp),
+      );
+    if (replacementFactor > newStories.length) {
+      log(
+        `Downgrading replacementFactor of "${replacementFactor}" to new story length "${newStories.length}"`,
+      );
+      replacementFactor = newStories.length;
     }
+    const oldStories = storyPromises
+      .slice(0, 10)
+      .sort((a, b) => a.timestamp - b.timestamp)
+      .slice(0, replacementFactor)
+      .reverse();
+    for (let i = 0; i < oldStories.length; i++) {
+      const index = storyPromises.indexOf(oldStories[i]);
+      if (index !== -1) {
+        storyPromises[index] = newStories[i];
+      }
+    }
+    storyPromises.splice(10, 0, ...oldStories);
   } else {
     storyPromises = storyPromises.filter(({ upvotes }) => upvotes > threshold);
   }
@@ -253,7 +258,8 @@ export async function index(trie, page) {
 
     const isOriginal = Object.keys(writers).some(
       (domain) =>
-        story.href.startsWith(domain) && writers[domain] === story.identity,
+        normalizeUrl(story.href).startsWith(domain) &&
+        writers[domain] === story.identity,
     );
 
     stories.push({

@@ -3,7 +3,6 @@ import url from "url";
 
 import htm from "htm";
 import vhtml from "vhtml";
-import normalizeUrl from "normalize-url";
 
 import * as ens from "../ens.mjs";
 import Header from "./components/header.mjs";

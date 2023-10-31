@@ -44,65 +44,67 @@ if (env.NODE_ENV === "production") {
 }
 
 const footer = (theme, path) => html`
-  ${["/", "/new", "/community"].includes(path)
-    ? html`
-        <div style="position: fixed; bottom: 3rem; right: 2rem; z-index: 5;">
-          <a
-            href="/submit"
-            style="align-items: center; justify-content: center; height: 50px; width: 50px; background-color: ${theme.color}; border-radius: 2px; box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);"
-          >
-            <svg
-              style="color: black; width: 1.75rem;"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 256 256"
+  ${
+    ["/", "/new", "/community"].includes(path)
+      ? html`
+          <div style="position: fixed; bottom: 3rem; right: 2rem; z-index: 5;">
+            <a
+              href="/submit"
+              style="align-items: center; justify-content: center; height: 50px; width: 50px; background-color: ${theme.color}; border-radius: 2px; box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);"
             >
-              <rect width="256" height="256" fill="none" />
-              <path
-                d="M92.69,216H48a8,8,0,0,1-8-8V163.31a8,8,0,0,1,2.34-5.65L165.66,34.34a8,8,0,0,1,11.31,0L221.66,79a8,8,0,0,1,0,11.31L98.34,213.66A8,8,0,0,1,92.69,216Z"
-                fill="none"
-                stroke="currentColor"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="16"
-              />
-              <line
-                x1="136"
-                y1="64"
-                x2="192"
-                y2="120"
-                fill="none"
-                stroke="currentColor"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="16"
-              />
-              <line
-                x1="164"
-                y1="92"
-                x2="68"
-                y2="188"
-                fill="none"
-                stroke="currentColor"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="16"
-              />
-              <line
-                x1="95.49"
-                y1="215.49"
-                x2="40.51"
-                y2="160.51"
-                fill="none"
-                stroke="currentColor"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="16"
-              />
-            </svg>
-          </a>
-        </div>
-      `
-    : null}
+              <svg
+                style="color: black; width: 1.75rem;"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 256 256"
+              >
+                <rect width="256" height="256" fill="none" />
+                <path
+                  d="M92.69,216H48a8,8,0,0,1-8-8V163.31a8,8,0,0,1,2.34-5.65L165.66,34.34a8,8,0,0,1,11.31,0L221.66,79a8,8,0,0,1,0,11.31L98.34,213.66A8,8,0,0,1,92.69,216Z"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="16"
+                />
+                <line
+                  x1="136"
+                  y1="64"
+                  x2="192"
+                  y2="120"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="16"
+                />
+                <line
+                  x1="164"
+                  y1="92"
+                  x2="68"
+                  y2="188"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="16"
+                />
+                <line
+                  x1="95.49"
+                  y1="215.49"
+                  x2="40.51"
+                  y2="160.51"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="16"
+                />
+              </svg>
+            </a>
+          </div>
+        `
+      : null
+  }
 
   <center>
     <br />
@@ -113,6 +115,8 @@ const footer = (theme, path) => html`
     <a href="https://attestate.com/kiwistand/main/">API</a>
     <span> | </span>
     <a href="/guidelines">Guidelines</a>
+    <span> | </span>
+    <a href="https://stats.uptimerobot.com/3gg0Lu79y8" target"_blank">Status</a>
     <span> | </span>
     <a
       href="https://drive.google.com/drive/folders/1vH5vEcXCsbbrYfCpTIvimLSzDMgq1eIa?usp=drive_link"

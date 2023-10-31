@@ -9,6 +9,7 @@ import log from "./logger.mjs";
 import { SCHEMATA } from "./constants.mjs";
 import themes from "./themes.mjs";
 import feed, { index } from "./views/feed.mjs";
+import story from "./views/story.mjs";
 import newest from "./views/new.mjs";
 import best from "./views/best.mjs";
 import privacy from "./views/privacy.mjs";
@@ -29,6 +30,8 @@ import indexing from "./views/indexing.mjs";
 import demonstration from "./views/demonstration.mjs";
 import { parse } from "./parser.mjs";
 import { toAddress, resolve } from "./ens.mjs";
+import * as registry from "./chainstate/registry.mjs";
+import * as store from "./store.mjs";
 
 const app = express();
 
@@ -112,6 +115,43 @@ export async function launch(trie, libp2p) {
       trie,
       reply.locals.theme,
       page,
+      request.cookies.identity,
+    );
+    return reply.status(200).type("text/html").send(content);
+  });
+  app.get("/stories", async (request, reply) => {
+    const index = request.query.index;
+    const hexRegex = /^0x[a-fA-F0-9]{72}$/;
+
+    if (!hexRegex.test(index)) {
+      return reply.status(404).type("text/plain").send("index wasn't found");
+    }
+
+    const hexIndex = index.substring(2);
+    const parser = JSON.parse;
+    const allowlist = await registry.allowlist();
+    const delegations = await registry.delegations();
+    let post;
+    try {
+      post = await store.post(
+        trie,
+        Buffer.from(hexIndex, "hex"),
+        parser,
+        allowlist,
+        delegations,
+      );
+    } catch (err) {
+      log(
+        `Requested index "${index}" but didn't find because of error "${err.toString()}"`,
+      );
+      return reply.status(404).type("text/plain").send("index wasn't found");
+    }
+
+    const content = await story(
+      trie,
+      reply.locals.theme,
+      hexIndex,
+      post.value,
       request.cookies.identity,
     );
     return reply.status(200).type("text/html").send(content);

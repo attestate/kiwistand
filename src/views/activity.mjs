@@ -27,7 +27,9 @@ const generateFeed = (messages) => {
   messages
     .sort((a, b) => a.timestamp - b.timestamp)
     .forEach((message) => {
-      const href = normalizeUrl(!!message.href && message.href);
+      const href = normalizeUrl(!!message.href && message.href, {
+        stripWWW: false,
+      });
 
       if (!groupedMessages[href]) {
         groupedMessages[href] = {
@@ -79,17 +81,19 @@ function generateRow(lastUpdate) {
               ${identities.length > 0 &&
               identities[0].address === identity.address
                 ? html`<div
-                    style="padding-left: ${size /
-                    4}px; display: flex; align-items: center;"
+                    style="margin-left: -15px; display: flex; align-items: center;"
                   >
                     ${identities.map(
                       (identity, index) => html`
-                        <img
-                          src="${identity.safeAvatar}"
-                          alt="avatar"
-                          style="z-index: ${index}; width: ${size}px; height: ${size}px; border: 1p
- solid #828282; border-radius: 50%; margin-left: -${size / 4}px;"
-                        />
+                        <a
+                          href="https://news.kiwistand.com/upvotes?address=${identity.address}"
+                        >
+                          <img
+                            src="${identity.safeAvatar}"
+                            alt="avatar"
+                            style="z-index: ${index}; width: ${size}px; height: ${size}px; border: 1px solid #828282; border-radius: 50%; margin-left: 15px;"
+                          />
+                        </a>
                       `,
                     )}
                   </div>`
@@ -111,7 +115,7 @@ function generateRow(lastUpdate) {
                     ${activity.verb} your submission</strong
                   >
                 </p>
-                <p style="margin-top: 0;">
+                <p style="margin-top: 5px;">
                   <a
                     href="${activity.message.href}"
                     style="color: gray; word-break: break-word;"

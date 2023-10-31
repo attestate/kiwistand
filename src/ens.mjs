@@ -1,11 +1,13 @@
 import { env } from "process";
+import path from "path";
 
-import { fetchBuilder, MemoryCache } from "node-fetch-cache";
+import { fetchBuilder, FileSystemCache } from "node-fetch-cache";
 import { allowlist } from "./chainstate/registry.mjs";
 import { utils } from "ethers";
 
 const fetch = fetchBuilder.withCache(
-  new MemoryCache({
+  new FileSystemCache({
+    cacheDirectory: path.resolve(env.CACHE_DIR),
     ttl: 86400000, // 24 hours
   }),
 );
@@ -129,14 +131,18 @@ async function initializeCache() {
   }
 
   if (addresses && Array.isArray(addresses)) {
-    for await (const address of addresses) {
+    const promises = addresses.map(async (address) => {
       const profile = await resolve(address);
       if (profile && profile.ens) {
         try {
           await toAddress(profile.ens);
-        } catch (err) {}
+        } catch (err) {
+          // ignore error
+        }
       }
-    }
+    });
+
+    await Promise.allSettled(promises);
   }
 }
 

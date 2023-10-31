@@ -23,6 +23,26 @@ export async function getConfig(sheet) {
   }
 }
 
+export async function getFeedParameters() {
+  const response = await getConfig("feed_parameters");
+  if (response.length === 0) {
+    return {
+      replacementFactor: 3,
+      oldHours: 22,
+      fold: 10,
+      replacementThreshold: 1,
+    };
+  }
+  const { replacementFactor, replacementThreshold, oldHours, fold } =
+    response[0];
+  return {
+    replacementFactor: parseInt(replacementFactor, 10),
+    oldHours: parseInt(oldHours, 10),
+    fold: parseInt(fold, 10),
+    replacementThreshold: parseInt(replacementThreshold, 10),
+  };
+}
+
 export async function getWriters() {
   const response = await getConfig("writers");
   const writers = {};
