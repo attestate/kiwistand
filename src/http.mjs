@@ -6,7 +6,6 @@ import express from "express";
 import cookieParser from "cookie-parser";
 import { utils } from "ethers";
 import isbot from "isbot";
-import satori from "satori";
 import htm from "htm";
 
 import log from "./logger.mjs";
@@ -343,27 +342,6 @@ export async function launch(trie, libp2p) {
       .send(await onboarding(reply.locals.theme, request.cookies.identity));
   });
   app.get("/welcome", async (request, reply) => {
-    //if (isbot(request.get("user-agent"))) {
-    function h(type, props, ...children) {
-      return { type, props: { ...props, children: children.pop() } };
-    }
-    const fontData = await readFile("./Arial.ttf");
-    const arial = {
-      name: "Arial",
-      data: fontData,
-      weight: 400,
-      style: "normal",
-    };
-    const html = htm.bind(h);
-    const content = html`<div style=${{ color: "black" }}>👋 Hello</div>`;
-    console.log(content);
-    const response = await satori(content, {
-      width: 1200,
-      height: 630,
-      fonts: [arial],
-    });
-    console.log("response", response);
-    //}
     return reply
       .status(200)
       .type("text/html")
