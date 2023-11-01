@@ -38,6 +38,7 @@ const generateFeed = (messages) => {
           message,
           timestamp: message.timestamp,
           towards: message.identity,
+          index: message.index,
         };
       } else {
         groupedMessages[href].timestamp = message.timestamp;
@@ -117,7 +118,7 @@ function generateRow(lastUpdate) {
                 </p>
                 <p style="margin-top: 5px;">
                   <a
-                    href="${activity.message.href}"
+                    href="/stories?index=0x${activity.message.index}"
                     style="color: gray; word-break: break-word;"
                   >
                     ${title.substring(0, 80)}
