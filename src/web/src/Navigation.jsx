@@ -20,6 +20,7 @@ export const RefreshButton = () => {
   if (isRunningPWA()) {
     return (
       <button
+        className="feed-button"
         onClick={() => location.reload()}
         style={{
           fontSize: "1.01rem",
@@ -422,6 +423,7 @@ export const PrimaryActionButton = (props) => {
 
   return (
     <a
+      className="primary-action-button"
       href={props.href}
       title={props.text}
       style={buttonStyle}
