@@ -231,7 +231,7 @@ export default async function (theme, identity) {
                       <img src="kiwi_chrome.gif" alt="Kiwi Chrome" />
                     </div>
                     <div class="text-right">
-                      <h2>Get Kiwi Chrome Extension</h2>
+                      <h2>Get the Kiwi Chrome Extension</h2>
                       <p>
                         Submit links in one click with our Chrome Extension.
                       </p>

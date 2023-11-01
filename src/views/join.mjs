@@ -92,7 +92,6 @@ export default async function (theme, identity) {
           .mobile-image {
             display: none;
           }
-          
 
           /* Mobile styles */
           @media (max-width: 768px) {
@@ -144,7 +143,6 @@ export default async function (theme, identity) {
             .mobile-image {
               display: block;
             }
-
           }
 
           body {
@@ -567,20 +565,35 @@ export default async function (theme, identity) {
                       </div>
                     </div>
                   </section>
-                  <div
-                    style="display: flex; flex-direction: column; align-items: center;"
-                  >
-                    <h2 style="margin-bottom: 1rem;">
-                      Kiwi-pilled?
-                    </h2>
-                    <p style="width: 80%;">
-                      You receive 0.000222 ETH from <b>ZORA</b> in mint referral rewards by adding
-                      your address to our link when others mint:
-                      <p style="font-family: Courier New, monospace; margin-top: 0;">
-                      "news.kiwistand.com/welcome?referral=your-address"
-                      </p>
-                    </p>
-                  </div>
+                  ${identity
+                    ? html`<br /><br />
+                        <div style="text-align: left;">
+                          <h2>Already a member? Earn Protocol Rewards!</h2>
+                          <p>
+                            Reading together is more fun than alone! So invite
+                            your friends and earn Zora's Protocol Rewards!
+                            0.000222 ETH per referred mint!
+                          </p>
+                          <div style="display: flex; align-items: center;">
+                            <button
+                              onclick="document.getElementById('invitelink').select(); document.execCommand('copy');"
+                              id="button-onboarding"
+                              style="border-radius: 2px; padding: 10px 15px; background-color: black; border: 1px
+ solid black; color: white; cursor: pointer; width: 50%; margin-right: 10px;"
+                            >
+                              Copy invite link
+                            </button>
+                            <input
+                              id="invitelink"
+                              type="text"
+                              value="https://news.kiwistand.com/welcome?referral=${identity}"
+                              readonly
+                              style="width: 70%; padding: 10px 15px; border: 1px solid #ccc; border-radius: 2px;"
+                            />
+                          </div>
+                        </div>
+                        <br />`
+                    : ""}
                   <br />
                   <div
                     style="display: flex; flex-direction: column; align-items: center;"
@@ -589,9 +602,17 @@ export default async function (theme, identity) {
                       What people say about Kiwi:
                     </h2>
                     <div class="image" style="margin-bottom: 1rem;">
-                    <img class="desktop-image" src="LP_referrals.png" alt="Kiwi Referrals" />
-                    <img class="mobile-image" src="LP_referrals_mobile.png" alt="Kiwi Referrals" />
-                  </div>
+                      <img
+                        class="desktop-image"
+                        src="LP_referrals.png"
+                        alt="Kiwi Referrals"
+                      />
+                      <img
+                        class="mobile-image"
+                        src="LP_referrals_mobile.png"
+                        alt="Kiwi Referrals"
+                      />
+                    </div>
                   </div>
                   <br />
                   <div style="max-width: 70%; margin: auto;">
