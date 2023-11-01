@@ -3,7 +3,10 @@ import vhtml from "vhtml";
 
 const html = htm.bind(vhtml);
 
-export function custom(ogImage = "https://news.kiwistand.com/preview.jpeg") {
+export function custom(
+  ogImage = "https://news.kiwistand.com/preview.jpeg",
+  ogTitle = "Kiwi News - handpicked web3 alpha",
+) {
   return html`
     <meta charset="utf-8" />
     <meta name="referrer" content="origin" />
@@ -15,7 +18,7 @@ export function custom(ogImage = "https://news.kiwistand.com/preview.jpeg") {
     <meta property="og:image" content="${ogImage}" />
     <meta property="twitter:image" content="${ogImage}" />
     <meta property="twitter:card" content="summary_large_image" />
-    <meta property="og:title" content="Kiwi News - handpicked web3 alpha" />
+    <meta property="og:title" content="${ogTitle}" />
     <link rel="apple-touch-icon" sizes="152x152" href="apple-touch-icon.png" />
     <link rel="manifest" href="pwa.json" />
     <link rel="stylesheet" type="text/css" href="news.css" />
@@ -24,7 +27,7 @@ export function custom(ogImage = "https://news.kiwistand.com/preview.jpeg") {
       defer
       src="https://unpkg.com/@zoralabs/zorb@^0.0/dist/zorb-web-component.umd.js"
     ></script>
-    <title>Kiwi News</title>
+    <title>${ogTitle}</title>
   `;
 }
 const regular = custom();

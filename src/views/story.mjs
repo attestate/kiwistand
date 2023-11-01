@@ -22,7 +22,7 @@ import log from "../logger.mjs";
 import { EIP712_MESSAGE } from "../constants.mjs";
 import Row, { extractDomain } from "./components/row.mjs";
 import * as karma from "../karma.mjs";
-import { parse } from "../parser.mjs";
+import { metadata, render } from "../parser.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -30,10 +30,15 @@ export default async function (trie, theme, index, value, identity) {
   const writers = await moderation.getWriters();
   const path = "/";
 
-  let preview;
+  let data;
+  let preview = "";
   try {
-    preview = await parse(value.href);
+    data = await metadata(value.href);
   } catch (err) {}
+  if (data) {
+    const { ogTitle, domain, ogDescription, image } = data;
+    preview = render(ogTitle, domain, ogDescription, image);
+  }
   const isOriginal = Object.keys(writers).some(
     (domain) =>
       normalizeUrl(value.href).startsWith(domain) &&
@@ -55,14 +60,15 @@ export default async function (trie, theme, index, value, identity) {
   const start = 0;
   const style = "padding: 1rem 5px 0.75rem 10px;";
   const ogImage = `https://news.kiwistand.com/previews/${index}.jpg`;
+  const ogDescription =
+    data && data.ogDescription
+      ? data.ogDescription
+      : "Kiwi News is the prime feed for hacker engineers building a decentralized future. All our content is handpicked and curated by crypto veterans.";
   return html`
     <html lang="en" op="news">
       <head>
-        ${head.custom(ogImage)}
-        <meta
-          name="description"
-          content="Kiwi News is the prime feed for hacker engineers building a decentralized future. All our content is handpicked and curated by crypto veterans."
-        />
+        ${head.custom(ogImage, value.title)}
+        <meta name="description" content="${ogDescription}" />
       </head>
       <body>
         <div class="container">
