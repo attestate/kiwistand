@@ -460,17 +460,7 @@ async function* walkTrieDfs(trie, nodeRef, key) {
     return;
   }
 
-  let node;
-  try {
-    node = await trie.lookupNode(nodeRef);
-  } catch (err) {
-    log(
-      `walkTrieDfs: ref: "${nodeRef.toString(
-        "hex",
-      )}" and error "${err.toString()}"`,
-    );
-    return;
-  }
+  const node = await trie.lookupNode(nodeRef);
 
   if (node instanceof LeafNode) {
     yield [node, key];
