@@ -9,30 +9,39 @@ const html = htm.bind(h);
 
 function h(type, props, ...children) {
   if (props) {
-    return { type, props: { ...props, children: children.pop() } };
+    return { type, props: { ...props, children } };
   } else {
-    return { type, props: { children: children.pop() } };
+    return { type, props: { children } };
   }
 }
 
 function content(title, submitter) {
-  const text = `"${title}" submitted by ${submitter.displayName}`;
+  const text = `submitted by ${submitter.displayName}`;
   return html`
     <div
       style=${{
         height: "100%",
         width: "100%",
         display: "flex",
-        alignItems: "center",
+        flexDirection: "column",
         justifyContent: "center",
         backgroundColor: "#0F3106",
         color: "white",
-        fontSize: "5rem",
         fontWeight: "bold",
-        padding: "0 0.5rem 0 0.5rem",
+        padding: "0 5vw 0 5vw",
       }}
     >
-      ${text}
+      <p
+        style=${{
+          fontSize: "6rem",
+          color: "#38C910",
+          padding: 0,
+          margin: 0,
+        }}
+      >
+        ${title}
+      </p>
+      <p style=${{ fontSize: "3rem" }}>${text}</p>
     </div>
   `;
 }
@@ -47,12 +56,12 @@ export async function generate(index, title, submitter) {
     // File doesn't exist, we continue with the generation
   }
 
-  const fontData = await readFile("./Verdana.ttf");
+  const fontData = await readFile("./Verdana-Bold.ttf");
   const arial = {
     name: "Verdana",
     data: fontData,
-    weight: 400,
-    style: "normal",
+    weight: 700,
+    style: "bold",
   };
   const body = content(title, submitter);
   const svgData = await satori(body, {
