@@ -109,7 +109,7 @@ const footer = (theme, path) => html`
 
   <center>
     <br />
-    <a href="/welcome">Access NFT</a>
+    <a href="/welcome?referral=0x60A86D7eE7b8F3E536CF8D109A8F600B742ef8A7">Access NFT</a>
     <span> | </span>
     <a href="/privacy-policy">Privacy Policy</a>
     <span> | </span>

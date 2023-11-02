@@ -352,6 +352,7 @@ export async function launch(trie, libp2p) {
       .send(await onboarding(reply.locals.theme, request.cookies.identity));
   });
   app.get("/welcome", async (request, reply) => {
+    log(`/welcome with referral "${request.query.referral}"`);
     return reply
       .status(200)
       .type("text/html")
