@@ -58,9 +58,13 @@ class SimpleModal extends Component {
     this.setState({ showModal: !hasVisited, hasCheckedAccount: true }); // Changed to true to keep the modal open
   };
 
+  setVisited = () => {
+    localStorage.setItem("-kiwi-news-has-visited", "true");
+  };
+
   closeModal = () => {
     this.setState({ showModal: false });
-    localStorage.setItem("-kiwi-news-has-visited", "true");
+    this.setVisited();
   };
 
   render() {
@@ -222,6 +226,7 @@ class SimpleModal extends Component {
             target="_blank"
           >
             <button
+              onClick={this.setVisited}
               style={{
                 borderRadius: "2px",
                 padding: "5px 15px",
