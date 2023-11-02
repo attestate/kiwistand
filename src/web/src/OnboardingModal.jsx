@@ -217,7 +217,10 @@ class SimpleModal extends Component {
           )}
         </div>
         <div style={{ padding: "0 5vw" }}>
-          <a href="/welcome" target="_blank">
+          <a
+            href="/welcome?referral=0x3699BFc793e87195Be610748e2AdBdb462941C3d"
+            target="_blank"
+          >
             <button
               style={{
                 borderRadius: "2px",
