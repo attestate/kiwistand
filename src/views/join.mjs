@@ -297,9 +297,18 @@ export default async function (theme, identity) {
                         <a href="#mint-dialogue">
                           <button
                             id="button-onboarding"
-                            style="margin-right: 0;"
+                            style="margin-right: 0; width: 40%"
                           >
-                            Join the community by minting Kiwi NFT
+                            Join the community by minting Kiwi Pass
+                          </button>
+                        </a>
+                        <a href="/KiwiPass">
+                          <button
+                            class="button-secondary"
+                            id="button-onboarding"
+                            style="margin-left: 1rem; width: 40%"
+                          >
+                            Learn more about the Kiwi Pass
                           </button>
                         </a>
                       </div>
