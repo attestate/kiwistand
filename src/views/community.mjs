@@ -64,15 +64,13 @@ export default async function (trie, theme, identity) {
               <b>COMMUNITY</b>
               </p>
               <p style="color: black; padding: 3px; font-size: 12pt;">
-              Kiwi News is curated by the crypto community.
+              Kiwi News is curated by the crypto community. You can join it by minting the <u><a href=/KiwiPass target="_blank">Kiwi Pass</a></u>.
               <br />
               <br />
               The links you see in the Top and New feeds have been submitted and upvoted by the Kiwi NFT holders.
               They earn Kiwi points for every link they share and every upvote their link receives.
               You can check each community member's profiles and link contributions by clicking on their names.
               <br />
-              <br />
-              If you want to join our community and earn Kiwi points, <a href=https://news.kiwistand.com/welcome>mint the Kiwi NFT</a>.
               </p>
               <p style="color: black; padding: 5px; font-size: 14pt;">
               <b>LEADERBOARD</b>
