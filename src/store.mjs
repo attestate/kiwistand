@@ -293,6 +293,10 @@ export async function add(
 
   const { canonical, index } = toDigest(message);
   // TODO: We should check if checkpointing is off here.
+  log(`Before storage, has checkpoints ${trie.hasCheckpoints()}`);
+  log(
+    `Attempting to store message with index "${index}" and message: "${canonical}"`,
+  );
   await trie.put(Buffer.from(index, "hex"), canonical);
   log(`During storage, has checkpoints ${trie.hasCheckpoints()}`);
   log(`Stored message with index "${index}" and message: "${canonical}"`);
@@ -417,6 +421,8 @@ export async function leaves(trie, from, amount, parser, startDatetime, href) {
   const nodes = [];
 
   let pointer = 0;
+  log(`leaves: Does trie have checkpoints? "${trie.hasCheckpoints()}"`);
+  log(`leaves: Trie root "${trie.root().toString("hex")}"`);
   for await (const [node] of walkTrieDfs(trie, trie.root(), [])) {
     if (Number.isInteger(amount) && nodes.length >= amount) {
       break;
