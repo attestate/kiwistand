@@ -19,6 +19,7 @@ import privacy from "./views/privacy.mjs";
 import guidelines from "./views/guidelines.mjs";
 import onboarding from "./views/onboarding.mjs";
 import join from "./views/join.mjs";
+import kiwipass from "./views/kiwipass.mjs";
 import nfts from "./views/nfts.mjs";
 import subscribe from "./views/subscribe.mjs";
 import upvotes from "./views/upvotes.mjs";
@@ -367,6 +368,12 @@ export async function launch(trie, libp2p) {
       .status(200)
       .type("text/html")
       .send(await join(reply.locals.theme, request.cookies.identity));
+  });
+  app.get("/kiwipass", async (request, reply) => {
+    return reply
+      .status(200)
+      .type("text/html")
+      .send(await kiwipass(reply.locals.theme, request.cookies.identity));
   });
 
   async function getProfile(trie, theme, address, page, mode, identity) {
