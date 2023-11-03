@@ -368,8 +368,8 @@ test("getting a leaf", async (t) => {
     signer: address,
     identity: address,
     ...signedMessage,
-    upvoters: [],
-    upvotes: 0,
+    upvoters: ["0x0f6A79A579658E401E0B81c6dde1F2cd51d97176"],
+    upvotes: 1,
   });
   t.is(post.value.signer, address);
   t.is(post.value.identity, address);
