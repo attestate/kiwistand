@@ -140,10 +140,8 @@ const row = (
                         <a
                           target="_blank"
                           href="https://warpcast.com/~/compose?embeds[]=${encodeURIComponent(
-                            story.href,
-                          )}&text=${encodeURIComponent(
-                            `Found on Kiwi News: "${story.title}"`,
-                          )}&embeds[]=https://news.kiwistand.com"
+                            `https://news.kiwistand.com/stories?index=0x${story.index}`,
+                          )}"
                           class="caster-link"
                         >
                           ${FCIcon("height: 10px; width: 10px;")}
