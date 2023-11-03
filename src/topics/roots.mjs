@@ -19,7 +19,6 @@ export const handlers = {
   message: (trie, node) => {
     return async (evt) => {
       if (evt.detail.topic !== name) {
-        log(`Topic name "${evt.detail.topic}" didn't match`);
         return;
       }
 
