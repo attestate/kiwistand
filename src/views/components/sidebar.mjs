@@ -363,7 +363,7 @@ const sidebar = (path) => html`
     </a>
     <a
       title="About"
-      href="/welcome"
+      href="/welcome?referral=0x6804CC5a697eEDF020E6588Fb75b5844d8041298"
       style="color: black; text-decoration: none; display: block;"
     >
       <div style="display: flex; align-items: center;">

@@ -14,14 +14,10 @@ async function getENSAvatars(addresses) {
 
   for (const address of addresses) {
     const ensData = await ens.resolve(address);
-    let avatarUrl = ensData.avatar;
-    if (avatarUrl && !avatarUrl.startsWith("https")) {
-      avatarUrl = ensData.avatar_url;
-    }
 
     avatarData.push({
       address,
-      avatarUrl,
+      avatarUrl: ensData.safeAvatar,
     });
   }
 
@@ -35,7 +31,7 @@ const addresses = [
   "m-j-r.eth",
   "mishaderidder.eth",
   "ccarella.eth",
-]; // Replace with the actual Ethereum addresses
+];
 const avatarData = await getENSAvatars(addresses);
 
 const html = htm.bind(vhtml);
@@ -292,28 +288,31 @@ export default async function (theme, identity) {
                           veterans pick & upvote web3-related stories for
                           reading, listening, and watching.
                         </h3>
-                        <a href="#mint-dialogue">
-                          <button
-                            id="button-onboarding"
-                            style="margin-right: 0; width: 40%"
-                          >
-                            Join the community by minting Kiwi Pass
-                          </button>
-                        </a>
-                        <a href="/KiwiPass">
-                          <button
-                            class="button-secondary"
-                            id="button-onboarding"
-                            style="margin-left: 1rem; width: 40%"
-                          >
-                            Learn more about the Kiwi Pass
-                          </button>
-                        </a>
                       </div>
                       <div class="image-right">
                         <img src="LP_links.png" />
                       </div>
                     </div>
+                    <p><b>Price:</b> <nft-price data-fee="0.000777" /></p>
+                    <a href="#mint-dialogue">
+                      <button
+                        id="button-onboarding"
+                        style="margin-right: 0; width: auto;"
+                      >
+                        Mint Kiwi Pass
+                      </button>
+                    </a>
+                    <a
+                      href="/kiwipass?referral=0xa98a63A8447668e2e445fe070dC306ce8799C1d0"
+                    >
+                      <button
+                        class="button-secondary"
+                        id="button-onboarding"
+                        style="margin-left: 1rem; width: auto"
+                      >
+                        Learn more
+                      </button>
+                    </a>
                     <div class="full-width-container">
                       <p>Already minted by:</p>
                       <div class="avatar-row">
@@ -520,12 +519,11 @@ export default async function (theme, identity) {
                             <div>1 NFT</div>
                             <div>
                               <nft-price />
-                              <span> ETH</span>
                             </div>
                           </div>
                           <div class="text-row">
                             <div>
-                              <b>ZORA</b> mint fee*
+                              <b>ZORA</b> mint fee
                               <span> </span>
                               (<a
                                 style="font-size: 0.8rem; text-decoration: underline;"
@@ -540,7 +538,6 @@ export default async function (theme, identity) {
                             <div>Total</div>
                             <div>
                               <nft-price data-fee="0.000777" />
-                              <span> ETH</span>
                             </div>
                           </div>
                           <div id="buy-button-container">
@@ -669,7 +666,7 @@ export default async function (theme, identity) {
                     style="margin-bottom: 1rem; display: flex; justify-content: center;"
                   >
                     <button id="button-onboarding">
-                      Join the community by minting Kiwi NFT
+                      Join the community by minting Kiwi Pass
                     </button>
                   </a>
                   <br />

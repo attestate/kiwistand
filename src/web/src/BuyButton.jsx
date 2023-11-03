@@ -262,7 +262,7 @@ const BuyButton = (props) => {
         disabled={!write || isLoading}
         onClick={() => write?.()}
       >
-        {!isLoading && <div>Buy Kiwi News Pass</div>}
+        {!isLoading && <div>(OP) Buy Kiwi Pass</div>}
         {isLoading && <div>Please sign transaction</div>}
       </button>
     </div>
@@ -287,7 +287,7 @@ const Form = (props) => {
                 }}
                 className="buy-button"
               >
-                Connect Wallet
+                Connect Wallet to Mint
               </button>
             );
           }}

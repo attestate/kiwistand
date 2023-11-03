@@ -97,15 +97,17 @@ export default async function (theme, identity) {
                       <h2>Mint Kiwi Pass to join the Kiwi community</h2>
                       <p>
                         Shape the kiwi feed, get discovered by 1,200+ monthly
-                        readers & meet 150+ other crypto connoisseurs. Get all
-                        that for an early adopter price - just $10.
+                        readers & meet 150+ other crypto connoisseurs.
                       </p>
-                      <a href="/KiwiPass" target="_blank">
+                      <a
+                        href="/kiwipass?referral=0x9fa714F170E9488F70536d947003308eBd1A2bbD"
+                        target="_blank"
+                      >
                         <button
                           id="button-onboarding"
                           style="margin-left: 0; width: 40%;"
                         >
-                          Mint Kiwi Pass for around $10 (0.0007 ETH)
+                          Mint Kiwi Pass
                         </button>
                       </a>
                     </div>

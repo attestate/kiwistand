@@ -14,14 +14,10 @@ async function getENSAvatars(addresses) {
 
   for (const address of addresses) {
     const ensData = await ens.resolve(address);
-    let avatarUrl = ensData.avatar;
-    if (avatarUrl && !avatarUrl.startsWith("https")) {
-      avatarUrl = ensData.avatar_url;
-    }
 
     avatarData.push({
       address,
-      avatarUrl,
+      avatarUrl: ensData.safeAvatar,
     });
   }
 
@@ -35,7 +31,7 @@ const addresses = [
   "x0r.eth",
   "mishaderidder.eth",
   "pugson.eth",
-]; // Replace with the actual Ethereum addresses
+];
 
 const avatarData = await getENSAvatars(addresses);
 
@@ -283,26 +279,34 @@ export default async function (theme, identity) {
               <tr>
                 <td style="padding: 1rem; color: black;">
                   <div class="parent-container">
-                    <div class="flex-container flex-image-right">
+                    <div
+                      class="flex-container flex-image-right"
+                      style="align-items: center;"
+                    >
                       <div class="text-left">
                         <h2>Don’t just read Kiwi, join our community.</h2>
                         <h4>
                           Shape the kiwi feed, get discovered by 1,200+ monthly
                           readers & meet 150+ other crypto connoisseurs. Get all
-                          that for an early adopter price - just $10.
+                          that for an early adopter price.
                         </h4>
-                        <a href="#mint-dialogue">
-                          <button
-                            id="button-onboarding"
-                            style="margin-right: 0;"
-                          >
-                            Buy Kiwi Pass for $10 (0.007ETH)
-                          </button>
-                        </a>
                       </div>
                       <div class="image-right">
                         <img src="KiwiPass.png" />
                       </div>
+                    </div>
+                    <div class="full-width-container">
+                      <a href="#mint-dialogue">
+                        <button
+                          id="button-onboarding"
+                          style="margin-right: 0; width: auto;"
+                        >
+                          Mint Kiwi Pass
+                        </button>
+                      </a>
+                      <span style="margin-left: 5px;"
+                        ><b>Price:</b> <nft-price data-fee="0.000777"
+                      /></span>
                     </div>
                     <div class="full-width-container">
                       <p>Already minted by:</p>
@@ -350,11 +354,6 @@ export default async function (theme, identity) {
                         Pass holders. You can shape our feed by submitting and
                         upvoting content you find interesting.
                       </p>
-                      <a href="#mint-dialogue">
-                        <button id="button-onboarding" style="margin-right: 0;">
-                          Mint Kiwi Pass
-                        </button>
-                      </a>
                     </div>
                   </div>
                   <br />
@@ -369,11 +368,6 @@ export default async function (theme, identity) {
                         people learn more about your projects or reach out to
                         you.
                       </p>
-                      <a href="#mint-dialogue">
-                        <button id="button-onboarding" style="margin-right: 0;">
-                          Mint Kiwi Pass
-                        </button>
-                      </a>
                     </div>
                     <div class="image-right">
                       <img src="Kiwi_Profile.png" />
@@ -396,11 +390,6 @@ export default async function (theme, identity) {
                         creators. Discuss the crypto content, ask questions and
                         meet new, smart people on our curator-only channel.
                       </p>
-                      <a href="#mint-dialogue">
-                        <button id="button-onboarding" style="margin-right: 0;">
-                          Mint Kiwi Pass
-                        </button>
-                      </a>
                     </div>
                   </div>
 
@@ -415,11 +404,6 @@ export default async function (theme, identity) {
                         contributors. Our community decide who gets the money -
                         so far we distributed over $2,000 to 10+ people.
                       </p>
-                      <a href="#mint-dialogue">
-                        <button id="button-onboarding" style="margin-right: 0;">
-                          Mint Kiwi Pass
-                        </button>
-                      </a>
                     </div>
                     <div class="image-right">
                       <img src="Kiwi_Sales.png" alt="Kiwi Revenue Split" />
@@ -438,11 +422,6 @@ export default async function (theme, identity) {
                         ensure that we build something they want. You can join
                         us and help us build the future of decentralized tech.
                       </p>
-                      <a href="#mint-dialogue">
-                        <button id="button-onboarding" style="margin-right: 0;">
-                          Mint Kiwi Pass
-                        </button>
-                      </a>
                     </div>
                   </div>
                   <br />
@@ -468,15 +447,14 @@ export default async function (theme, identity) {
                       >
                         <div class="text-content">
                           <div class="text-row">
-                            <div>1 NFT</div>
+                            <div>Lifetime membership</div>
                             <div>
                               <nft-price />
-                              <span> ETH</span>
                             </div>
                           </div>
                           <div class="text-row">
                             <div>
-                              <b>ZORA</b> mint fee*
+                              <b>ZORA</b> mint fee
                               <span> </span>
                               (<a
                                 style="font-size: 0.8rem; text-decoration: underline;"
@@ -491,7 +469,6 @@ export default async function (theme, identity) {
                             <div>Total</div>
                             <div>
                               <nft-price data-fee="0.000777" />
-                              <span> ETH</span>
                             </div>
                           </div>
                           <div id="buy-button-container">
