@@ -1,31 +1,38 @@
- {
-   "short_name": "Kiwi News",
-   "name": "Kiwi News: The Frontpage of Web3",
-   "icons": [
-     {
-       "src": "apple-touch-icon.png",
-       "sizes": "192x192",
-       "type": "image/png"
-     },
-     {
-       "src": "apple-touch-icon.png",
-       "sizes": "512x512",
-       "type": "image/png"
-     }
-   ],
-   "start_url": "/",
-   "background_color": "limegreen",
-   "display": "standalone",
-   "scope": "/",
-   "theme_color": "black",
-   "share_target": {
-      "action": "/submit",
-      "method": "GET",
-      "params": {
-        "title": "title",
-        "text": "url",
-        "url": "url"
-      }
-   }
+{
+  "short_name": "Kiwi News",
+  "name": "Kiwi News",
+  "icons": [
+    {
+      "src": "pwa_icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "pwa_icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "pwa_maskable_icon.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#0F3106",
+  "display": "standalone",
+  "scope": "/",
+  "theme_color": "black",
+  "share_target": {
+    "action": "/submit",
+    "method": "GET",
+    "params": {
+      "title": "title",
+      "text": "url",
+      "url": "url"
+    }
+  }
 }
-
