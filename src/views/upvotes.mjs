@@ -68,7 +68,6 @@ export default async function (
   }
 
   const writers = await moderation.getWriters();
-  console.log(writers);
 
   let stories = storyPromises
     .filter(
