@@ -1,5 +1,6 @@
 import htm from "htm";
 import vhtml from "vhtml";
+import PwaLinks from "./pwaLinks.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -19,10 +20,9 @@ export function custom(
     <meta property="twitter:image" content="${ogImage}" />
     <meta property="twitter:card" content="summary_large_image" />
     <meta property="og:title" content="${ogTitle}" />
-    <link rel="apple-touch-icon" sizes="152x152" href="apple-touch-icon.png" />
-    <link rel="manifest" href="pwa.json" />
     <link rel="stylesheet" type="text/css" href="news.css" />
     <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
+    ${PwaLinks()}
     <script
       defer
       src="https://unpkg.com/@zoralabs/zorb@^0.0/dist/zorb-web-component.umd.js"
