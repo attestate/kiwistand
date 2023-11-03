@@ -25,13 +25,14 @@ async function getENSAvatars(addresses) {
 }
 
 const addresses = [
-  "web3d3v.eth",
-  "fredwilson.eth",
-  "uncledavo.eth",
-  "m-j-r.eth",
-  "mishaderidder.eth",
+  "yashbora.eth",
   "ccarella.eth",
+  "realcameron.eth",
+  "x0r.eth",
+  "mishaderidder.eth",
+  "pugson.eth",
 ];
+
 const avatarData = await getENSAvatars(addresses);
 
 const html = htm.bind(vhtml);
@@ -279,41 +280,35 @@ export default async function (theme, identity) {
               <tr>
                 <td style="padding: 1rem; color: black;">
                   <div class="parent-container">
-                    <div class="flex-container flex-image-right">
+                    <div
+                      class="flex-container flex-image-right"
+                      style="align-items: center;"
+                    >
                       <div class="text-left">
-                        <h1>
-                          Handpicked, noise-free content for crypto builders.
-                        </h1>
-                        <h3>
-                          Kiwi News is a community-curated media where crypto
-                          veterans pick & upvote web3-related stories for
-                          reading, listening, and watching.
-                        </h3>
+                        <h2>Don’t just read Kiwi, join our community.</h2>
+                        <h4>
+                          Shape the kiwi feed, get discovered by 1,200+ monthly
+                          readers & meet 150+ other crypto connoisseurs. Get all
+                          that for an early adopter price.
+                        </h4>
                       </div>
                       <div class="image-right">
-                        <img src="LP_links.png" />
+                        <img src="KiwiPass.png" />
                       </div>
                     </div>
-                    <p><b>Price:</b> <nft-price data-fee="0.000777" /></p>
-                    <a href="#mint-dialogue">
-                      <button
-                        id="button-onboarding"
-                        style="margin-right: 0; width: auto;"
-                      >
-                        Mint Kiwi Pass
-                      </button>
-                    </a>
-                    <a
-                      href="/kiwipass?referral=0xa98a63A8447668e2e445fe070dC306ce8799C1d0"
-                    >
-                      <button
-                        class="button-secondary"
-                        id="button-onboarding"
-                        style="margin-left: 1rem; width: auto"
-                      >
-                        Learn more
-                      </button>
-                    </a>
+                    <div class="full-width-container">
+                      <a href="#mint-dialogue">
+                        <button
+                          id="button-onboarding"
+                          style="margin-right: 0; width: auto;"
+                        >
+                          Mint Kiwi Pass
+                        </button>
+                      </a>
+                      <span style="margin-left: 5px;"
+                        ><b>Price:</b> <nft-price data-fee="0.000777"
+                      /></span>
+                    </div>
                     <div class="full-width-container">
                       <p>Already minted by:</p>
                       <div class="avatar-row">
@@ -338,13 +333,12 @@ export default async function (theme, identity) {
                             href="/community"
                             target="_blank"
                           >
-                            & 150+ more
+                            & 200+ more
                           </a>
                         </div>
                       </div>
                     </div>
                   </div>
-
                   <br />
                   <br />
                   <br />
@@ -352,30 +346,15 @@ export default async function (theme, identity) {
                   <br />
                   <div class="flex-container flex-image-left">
                     <div class="image-left">
-                      <img src="LP_sources.png" alt="Kiwi Submit" />
+                      <img src="Kiwi_Notifications.png" alt="Kiwi Posts" />
                     </div>
                     <div class="text-right">
-                      <h2>All content in one place</h2>
+                      <h2>Shape the kiwi feed</h2>
                       <p>
-                        Our community reads hundreds of sources per month. Some
-                        of them are big news and mainstream Vitalik essays. But
-                        some of them are fresh, niche essays found at the edges
-                        of the Internet. 
-                        <br />
-                        <br />
-                        So you don't need to scroll Twitter for hours, hoping
-                        you'd find some valuable content. If it really matters,
-                        you can find it on Kiwi.
+                        All links on Kiwi are curated by our community of Kiwi
+                        Pass holders. You can shape our feed by submitting and
+                        upvoting content you find interesting.
                       </p>
-                      <a style="display: block;" href="/" target="_blank">
-                        <button
-                          class="button-secondary"
-                          id="button-onboarding"
-                          style="margin-right: 0;"
-                        >
-                          Check our feed
-                        </button>
-                      </a>
                     </div>
                   </div>
                   <br />
@@ -383,29 +362,16 @@ export default async function (theme, identity) {
                   <br />
                   <div class="flex-container flex-image-right">
                     <div class="text-left">
-                      <h2>Truly interdisciplinary perspective</h2>
+                      <h2>Get discovered by 1,200+ readers & curators</h2>
                       <p>
-                        “Kiwi is a feed for the builder’s mind” as Les Greys
-                        once said.
-                        <br />
-                        <br />
-                        So we cover all crypto-adjacent subjects that a smart
-                        curious engineer might find interesting - from tech,
-                        through economics, game theory, and sociology, up to
-                        culture and growth.
+                        You will get a profile that shows all your submissions.
+                        You can link your personal website & socials to help
+                        people learn more about your projects or reach out to
+                        you.
                       </p>
-                      <a href="/guidelines" target="_blank">
-                        <button
-                          class="button-secondary"
-                          id="button-onboarding"
-                          style="margin-left: 0; width: 40%;"
-                        >
-                          Read our content guidelines
-                        </button>
-                      </a>
                     </div>
                     <div class="image-right">
-                      <img src="LP_inter.png" />
+                      <img src="Kiwi_Profile.png" />
                     </div>
                   </div>
                   <br />
@@ -416,28 +382,15 @@ export default async function (theme, identity) {
                       <img src="LP_community.png" alt="Kiwi signless" />
                     </div>
                     <div class="text-right">
-                      <h2>Positive-sum games community</h2>
+                      <h2>
+                        Meet 150+ crypto connoisseurs via our Telegram Channel
+                      </h2>
                       <p>
                         We are people building the decentralized future -
-                        primarily web3 founders, developers, and creators.
-                        <br />
-                        <br />
-                        We believe in a constructive dialogue and co-creation -
-                        whether it’s doing a Pull Request to a project we like
-                        or sharing an honest feedback with its founder.
+                        primarily web3 founders, developers, investors and
+                        creators. Discuss the crypto content, ask questions and
+                        meet new, smart people on our curator-only channel.
                       </p>
-                      <a
-                        href="https://warpcast.com/~/channel/kiwi-news"
-                        target="_blank"
-                      >
-                        <button
-                          class="button-secondary"
-                          id="button-onboarding"
-                          style="color: #7c65c1; border: 1px solid #7c65c1; margin-right: 0;"
-                        >
-                          Check our channel on Farcaster!
-                        </button>
-                      </a>
                     </div>
                   </div>
 
@@ -446,54 +399,32 @@ export default async function (theme, identity) {
                   <br />
                   <div class="flex-container flex-image-right">
                     <div class="text-left">
-                      <h2>Decentralized & Open Source from Day 1</h2>
+                      <h2>Decide who gets ETH from Kiwi grants</h2>
                       <p>
-                        Kiwi has been built on a Kiwi P2P Protocol. It means
-                        that everyone can run a node and permissionlessly create
-                        their own Kiwi app.
-                        <br />
-                        <br />
-                        We already seen that happening with freeatnet’s
-                        <span> </span>
-                        <a
-                          style="text-decoration: underline; "
-                          href="https://kiwinews.lol"
-                          target="_blank"
-                        >
-                          kiwinews.lol
-                        </a>
-                        <span> and matallo's </span>
-                        <a
-                          style="text-decoration: underline; "
-                          href="https://kiwinews.phyles.app/search"
-                          target="_blank"
-                        >
-                          Kiwi Search
-                        </a>
-                        <span> </span>
-                        We also share parts of our treasury to the most active
-                        contributors - in the last round we distributed over 3.5
-                        ETH.
+                        We share part of our NFT revenue with the most active
+                        contributors. Our community decide who gets the money -
+                        so far we distributed over $2,000 to 10+ people.
                       </p>
-                      <a
-                        href="https://github.com/attestate/kiwistand"
-                        target="_blank"
-                      >
-                        <button
-                          class="button-secondary"
-                          id="button-onboarding"
-                          style="margin-left: 0;"
-                        >
-                          Check our GitHub
-                        </button>
-                      </a>
                     </div>
                     <div class="image-right">
-                      <img src="LP_Decentralized.png" alt="Kiwi Upvote" />
+                      <img src="Kiwi_Sales.png" alt="Kiwi Revenue Split" />
                     </div>
                   </div>
                   <br />
                   <br />
+                  <div class="flex-container flex-image-left">
+                    <div class="image-left">
+                      <img src="Kiwi_Telegram.png" alt="Kiwi signless" />
+                    </div>
+                    <div class="text-right">
+                      <h2>Take part in building the product you use</h2>
+                      <p>
+                        We discuss our feature ideas with the community, to
+                        ensure that we build something they want. You can join
+                        us and help us build the future of decentralized tech.
+                      </p>
+                    </div>
+                  </div>
                   <br />
                   <br />
                   <section>
@@ -501,7 +432,7 @@ export default async function (theme, identity) {
                       id="mint-dialogue"
                       style="text-align: center; margin-bottom: 1rem;"
                     >
-                      Mint our NFT to join the Kiwi curators!
+                      Mint Kiwi Pass to join the community of Kiwi curators!
                     </h2>
                     <div class="image-and-text">
                       <div class="image-container">
@@ -517,7 +448,7 @@ export default async function (theme, identity) {
                       >
                         <div class="text-content">
                           <div class="text-row">
-                            <div>1 NFT</div>
+                            <div>Lifetime membership</div>
                             <div>
                               <nft-price />
                             </div>
@@ -563,35 +494,6 @@ export default async function (theme, identity) {
                       </div>
                     </div>
                   </section>
-                  ${identity
-                    ? html`<br /><br />
-                        <div style="text-align: left;">
-                          <h2>Already a member? Earn Protocol Rewards!</h2>
-                          <p>
-                            Reading together is more fun than alone! So invite
-                            your friends and earn Zora's Protocol Rewards!
-                            0.000222 ETH per referred mint!
-                          </p>
-                          <div style="display: flex; align-items: center;">
-                            <button
-                              onclick="document.getElementById('invitelink').select(); document.execCommand('copy');"
-                              id="button-onboarding"
-                              style="border-radius: 2px; padding: 10px 15px; background-color: black; border: 1px
- solid black; color: white; cursor: pointer; width: 50%; margin-right: 10px;"
-                            >
-                              Copy invite link
-                            </button>
-                            <input
-                              id="invitelink"
-                              type="text"
-                              value="https://news.kiwistand.com/welcome?referral=${identity}"
-                              readonly
-                              style="width: 70%; padding: 10px 15px; border: 1px solid #ccc; border-radius: 2px;"
-                            />
-                          </div>
-                        </div>
-                        <br />`
-                    : ""}
                   <br />
                   <div
                     style="display: flex; flex-direction: column; align-items: center;"
@@ -629,128 +531,67 @@ export default async function (theme, identity) {
                       and mint a free Kiwi NFT.
                     </p>
 
-                    <b>Who is picking these links?</b>
+                    <b>Which chain is the Kiwi Pass on?</b>
+                    <!-- prettier-ignore -->
                     <p>
-                      We are a community of 140+ crypto-savvy people who submit
-                      and upvote links to create a newsfeed we all want to use.
-                      You can learn more about the community here.
+                      Our NFTs are on Optimism. If you need to bridge your ETH,
+                      we suggest using <u><a href="https://app.optimism.io/bridge">Optimism Bridge</a></u>.
                     </p>
 
-                    <b>Why do you build this?</b>
+                    <b>Is it lifetime access?</b>
                     <p>
-                      We want to create a space where crypto content can thrive.
-                      Where creators can reach new audiences and readers can
-                      find inspiring texts, podcasts and videos. You can read
-                      more about our vision here.
+                      At this point buying an NFT gives you unlimited access. In
+                      the future it might change but if we do change it, we ‘ll
+                      definitely reward our early contributors.
                     </p>
 
-                    <b>What is your current roadmap?</b>
-
+                    <b>Can I sell this NFT?</b>
                     <p>
-                      We are working to make the web app experience more
-                      seamless. We also plan to ship the mobile app. You can
-                      read more about our plans here.
+                      Theoretically yes. But the utility is tied to your
+                      profile, so only you can post links with it. Otherwise
+                      someone could buy (or steal) an NFT and submit links on
+                      your behalf.
                     </p>
 
-                    <b>Where can I share my feature requests?</b>
+                    <b>Are my submissions and upvotes public?</b>
+
                     <p>
-                      If you’re our NFT holder, you can reach out to @timdaub or
-                      @macbudkowski to get added to the holders-only Telegram
-                      Chat. If you don’t hold our NFT, you can always add your
-                      requests here.
+                      Yes, at this point all of them are. Thanks to that, you
+                      can check other people’s submissions on their profile page
+                      and learn more about them.
+                    </p>
+
+                    <b>What if I don’t use Telegram?</b>
+                    <p>
+                      You can reach out to Tim and Mac on Farcaster or Twitter.
+                      We are also working on comments to give our users other
+                      ways to connect.
+                    </p>
+
+                    <b>How do I fill in my profile?</b>
+                    <p>
+                      We fetch the data from ENS. So the best way is to set up
+                      your ENS avatar and add links there and we will
+                      automatically fetch it.
+                    </p>
+
+                    <b>How the contributor rewards work?</b>
+                    <p>
+                      Everyone who has at least 1 karma can propose a person for
+                      a PropHouse. Then our curators vote and decide who is
+                      going to get money. You can learn more about the process
+                      looking at our last PropHouse <link />.
+                    </p>
+                    <br />
+                    <br />
+                    <p>***</p>
+                    <p>
+                      Have more questions? Reach out to @macbudkowski or
+                      @timdaub on Farcaster and Twitter. We use the same handles
+                      on both networks.
+                      <br />
                     </p>
                   </div>
-                  <br />
-                  <br />
-                  <a
-                    href="#mint-dialogue"
-                    style="margin-bottom: 1rem; display: flex; justify-content: center;"
-                  >
-                    <button id="button-onboarding">
-                      Join the community by minting Kiwi Pass
-                    </button>
-                  </a>
-                  <br />
-                  <br />
-                  <br />
-                  <h2 style="text-align: center;">Note from founders</h2>
-                  <p style="max-width: 70%; margin: auto;">
-                    We know how it all started. Satoshi created Bitcoin because
-                    people were being screwed by the financial system. And the
-                    Bitcoin community wanted to create a more fair financial
-                    system where people - not the FED - are in power. It seemed
-                    like a crazy idea back then.
-                    <br />
-                    <br />
-                    Few people believed it, many ridiculed it. But thanks to
-                    those who had enough intellectual courage to rethink the
-                    world they live in, the world has changed. Years have gone
-                    by and in the meantime, crypto helped to make many people
-                    rich. Big money brought many scammers and the last few years
-                    were dominated by exploits, stolen money, and scams.
-                    <br />
-                    <br />
-                    But as we started learning more about tokens, some people
-                    also learned that crypto might be a tool to create a fairer
-                    version of many other areas of our life. We could rethink
-                    not only finance but also art markets, gaming, and social
-                    media. But just like Bitcoin's creators, these crypto-native
-                    entrepreneurs are ridiculed too. And it's a fair point:
-                    rebuilding whole industries is hard and unlikely to succeed.
-                    <br />
-                    <br />To have any chance of succeeding, we need a space
-                    where builders can exchange their ideas. A place where
-                    thoughts can clash: from game theory and economics, through
-                    psychology and arts up to governance and tech. But this
-                    content is hard to find. Distribution is centralized among a
-                    few big Twitter accounts and newsletters.
-                    <br />
-                    <br />
-                    And although we can find many great ideas in those
-                    centralized communities, the freshest insights can usually
-                    be found at the edges, among people who are less popular
-                    since they spend their days doing research and coding - not
-                    dedicating every minute to grow their audience. So the idea
-                    behind Kiwi is to go back to the roots. Promote content
-                    close to the crypto values that make us rethink the world we
-                    live in. And create an arena where this content can compete
-                    and the best ideas can win.
-                    <br />
-                    <br />In web2, we once had a tool for that. But as years
-                    went by HackerNews transformed into a pessimistic and
-                    progress-skeptical space. So we want to rebuild it from
-                    scratch. Just like Uniswap rethought Coinbase and Farcaster
-                    rethinks Twitter, Kiwi rethinks HackerNews and content
-                    distribution in general. We believe you shouldn’t doom
-                    scroll Twitter for 3 hours to find good content.
-                    <br />
-                    <br />You should be able stumble upon content
-                    serendipitously, without bringing your dopamine levels out
-                    of balance. That’s why it's time to rethink news aggregation
-                    from the ground up.
-                    <br />
-                    <br />
-
-                    Not by building yet another app: But by giving our users the
-                    freedom to access the same content across different clients
-                    and by allowing everyone to choose their moderation rules.
-                    By building Kiwi primarily as a protocol, and then as an
-                    app, we're enabling anyone to fork us, hence bootstrapping
-                    credible neutrality.
-                    <br />
-                    <br />Because as David Hoffman says: “Crypto wasn’t made to
-                    make you rich. Crypto was to set you free”.
-                    <br />
-                    <br />
-                    Tim Daubenschütz & Mac Budkowski
-                  </p>
-
-                  <br />
-                  <br />
-                  <br />
-                  <br />
-
-                  <br />
                 </td>
               </tr>
             </table>

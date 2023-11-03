@@ -5,6 +5,36 @@ body {
      color:#828282;
      overscroll-behavior: none;
 }
+.hnname span:active, .votearrow:active {
+  transform: scale(0.80);
+  display: inline-block;
+}
+.submit-button {
+  box-sizing: border-box;
+}
+.submit-button:hover {
+  outline: 2px solid black;
+}
+.submit-button:active {
+  transform: scale(0.95);
+  outline: 2px solid black;
+}
+.feed-button {
+  box-sizing: border-box;
+  cursor: pointer;
+}
+.feed-button:hover {
+  outline: 1px solid #228B22;
+  border-color: #228B22 !important;
+  color: #228B22 !important;
+}
+.feed-button:active {
+  transform: scale(0.95);
+  outline: 1px solid #228B22;
+  border-color: #228B22 !important;
+  color: #228B22 !important;
+  box-shadow: 0 0 5px #228B22;
+}
 .container {
   display: flex;
   justify-content: center;
@@ -218,7 +248,21 @@ body {
     cursor: pointer;
     width: 50%;
     display: inline-block;
-}
+  }
+  .primary-action-button:hover, #button-onboarding:hover, .buy-button:hover {
+    outline: 1px solid black;
+    color: black !important;
+    border-color: black !important;
+    background-color: white !important;
+  }
+  .primary-action-button:active, #button-onboarding:active, .buy-button:active {
+    transform: scale(0.96);
+    outline: 1px solid black;
+    color: black !important;
+    background-color: white !important;
+    border-color: black !important;
+    box-shadow: 0 0 5px black;
+  }
 
   #button-onboarding.button-secondary{
     background-color: rgba(0,0,0,0);

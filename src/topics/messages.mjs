@@ -19,7 +19,6 @@ export const handlers = {
   message: (trie, allowlistFn = registry.allowlist) => {
     return async (evt) => {
       if (evt.detail.topic !== name) {
-        log(`message handler: Topic name "${evt.detail.topic}" didn't match`);
         return false;
       }
 

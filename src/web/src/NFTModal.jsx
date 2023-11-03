@@ -76,7 +76,11 @@ const NFTModal = ({ modalIsOpen, setIsOpen, headline, text, closeText }) => {
             />
           </div>
         </div>
-        <a href="/welcome" target="_blank" style={{ margin: "0px auto" }}>
+        <a
+          href="/welcome?referral=0xf6a650E5B0f7A741347c0D78fdda8a5c86855F33"
+          target="_blank"
+          style={{ margin: "0px auto" }}
+        >
           <button
             style={{
               backgroundColor: "black",

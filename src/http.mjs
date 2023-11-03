@@ -1,9 +1,13 @@
 //@format
 import { env } from "process";
+import { readFile } from "fs/promises";
 
+import morgan from "morgan";
 import express from "express";
 import cookieParser from "cookie-parser";
 import { utils } from "ethers";
+import htm from "htm";
+import "express-async-errors";
 
 import log from "./logger.mjs";
 import { SCHEMATA } from "./constants.mjs";
@@ -16,6 +20,7 @@ import privacy from "./views/privacy.mjs";
 import guidelines from "./views/guidelines.mjs";
 import onboarding from "./views/onboarding.mjs";
 import join from "./views/join.mjs";
+import kiwipass from "./views/kiwipass.mjs";
 import nfts from "./views/nfts.mjs";
 import subscribe from "./views/subscribe.mjs";
 import upvotes from "./views/upvotes.mjs";
@@ -32,9 +37,16 @@ import { parse } from "./parser.mjs";
 import { toAddress, resolve } from "./ens.mjs";
 import * as registry from "./chainstate/registry.mjs";
 import * as store from "./store.mjs";
+import { generate } from "./preview.mjs";
+import * as ens from "./ens.mjs";
 
 const app = express();
 
+app.use(
+  morgan(
+    ':remote-addr - :remote-user ":method :url" :status ":referrer" ":user-agent"',
+  ),
+);
 app.use(express.static("src/public"));
 app.use(express.json());
 app.use(cookieParser());
@@ -82,6 +94,11 @@ function sendStatus(reply, code, message, details, data) {
 }
 
 export async function launch(trie, libp2p) {
+  app.use((err, req, res, next) => {
+    log(`Express error: "${err.message}", "${err.stack}"`);
+    res.status(500).send("Internal Server Error");
+  });
+
   app.get("/api/v1/parse", async (request, reply) => {
     const embed = await parse(request.query.url);
     return reply.status(200).type("text/html").send(embed);
@@ -146,6 +163,15 @@ export async function launch(trie, libp2p) {
       );
       return reply.status(404).type("text/plain").send("index wasn't found");
     }
+
+    const ensData = await ens.resolve(post.value.identity);
+    const value = {
+      ...post.value,
+      displayName: ensData.displayName,
+      submitter: ensData,
+    };
+    // NOTE: We aren't awaiting here because this can run in parallel
+    generate(hexIndex, value.title, value.submitter);
 
     const content = await story(
       trie,
@@ -343,6 +369,12 @@ export async function launch(trie, libp2p) {
       .status(200)
       .type("text/html")
       .send(await join(reply.locals.theme, request.cookies.identity));
+  });
+  app.get("/kiwipass", async (request, reply) => {
+    return reply
+      .status(200)
+      .type("text/html")
+      .send(await kiwipass(reply.locals.theme, request.cookies.identity));
   });
 
   async function getProfile(trie, theme, address, page, mode, identity) {

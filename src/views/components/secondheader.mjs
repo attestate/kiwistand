@@ -145,6 +145,17 @@ const periodIconStyle = (theme, period, category) =>
     period === category ? theme.color : "#7f8c8d"
   }; font-weight: bold; border: none; text-decoration: underline; font-size: 1.01rem; border-radius: 2px; cursor: pointer; padding: 5px 15px; background-color: transparent;;`;
 
+const animation = `
+  var initialWidth = this.offsetWidth;
+  this.style.width = initialWidth + 'px';
+  var dots = ['\u25CF', '\u25CB'];
+  var i = 0;
+  var animate = function() { dots.unshift(dots.pop()); this.textContent = dots.join(' '); i++
+  if (i > 5) clearInterval(intervalId); }.bind(this);
+  animate();
+  var intervalId = setInterval(animate, 500);
+ `;
+
 const secondheader = (theme, site, period) => html`
   <td>
     <div
@@ -154,6 +165,8 @@ const secondheader = (theme, site, period) => html`
         ${site === "top" || site === "new" || site === "best"
           ? html` <a href="/">
               <button
+                onclick="${animation}"
+                class="feed-button"
                 style=${`font-size: 1.01rem; border-radius: 2px; cursor: pointer; padding: 5px 15px; background-color: transparent; border: 1px solid ${
                   site === "top" ? theme.color : "#7f8c8d"
                 }; color: ${site === "top" ? theme.color : "#7f8c8d"};`}
@@ -169,6 +182,8 @@ const secondheader = (theme, site, period) => html`
                 : "/nfts"}"
             >
               <button
+                onclick="${animation}"
+                class="feed-button"
                 style=${`font-size: 1.01rem; margin-left: 10px; cursor: pointer; border-radius: 2px; padding: 5px 15px; background-color: transparent; border: 1px solid ${
                   site === "new" || site === "nfts" ? theme.color : "#7f8c8d"
                 }; color: ${
@@ -182,6 +197,8 @@ const secondheader = (theme, site, period) => html`
         ${site === "top" || site === "new" || site === "best"
           ? html` <a href="/best">
               <button
+                onclick="${animation}"
+                class="feed-button"
                 style=${`font-size: 1.01rem; margin-left: 10px; cursor: pointer; border-radius: 2px; padding: 5px 15px; background-color: transparent; border: 1px solid ${
                   site === "best" ? theme.color : "#7f8c8d"
                 }; color: ${site === "best" ? theme.color : "#7f8c8d"};`}

@@ -20,6 +20,7 @@ export const RefreshButton = () => {
   if (isRunningPWA()) {
     return (
       <button
+        className="feed-button"
         onClick={() => location.reload()}
         style={{
           fontSize: "1.01rem",
@@ -76,7 +77,12 @@ const BuyAdvert = (props) => {
   const isEligible =
     address && eligible(props.allowlist, props.delegations, address);
   if (!isEligible && account.isConnected) {
-    return <PrimaryActionButton text="Join" href="/welcome" />;
+    return (
+      <PrimaryActionButton
+        text="Join"
+        href="/welcome?referral=0xb68D42FcDA11d84d626E42Ac01B67bC6a40DEcC9"
+      />
+    );
   }
   return null;
 };
@@ -125,7 +131,7 @@ const LearnMore = (props) => {
   return (
     <div style={{ textAlign: "center", paddingRight: "4px" }}>
       <a
-        href="/welcome"
+        href="/welcome?referral=0xE2D2d8f175De9cfd35023BBcB13592703fE9CCe2"
         style={{
           fontSize: "0.7rem",
           textDecoration: "underline",
@@ -422,6 +428,7 @@ export const PrimaryActionButton = (props) => {
 
   return (
     <a
+      className="primary-action-button"
       href={props.href}
       title={props.text}
       style={buttonStyle}

@@ -171,26 +171,6 @@ const BuyButton = (props) => {
     //noop
   }
 
-  let referralComponent;
-  if (referral !== zeroAddress) {
-    referralComponent = (
-      <span
-        style={{ display: "block", fontSize: "0.75rem", marginTop: "10px" }}
-      >
-        *You have been referred by the Ethereum address{" "}
-        <a
-          style={{ textDecoration: "underline" }}
-          href={"https://etherscan.io/address/" + referral}
-          target="_blank"
-        >
-          {referral}
-        </a>
-        . If you proceed with minting, they will receive a referral reward of
-        0.000222 ETH.
-      </span>
-    );
-  }
-
   const { config, error } = usePrepareContractWrite({
     address: addressDelegator,
     abi: abiDelegator,
@@ -218,7 +198,6 @@ const BuyButton = (props) => {
   if (chain.id !== optimism.id) {
     return (
       <div>
-        {referralComponent}
         <button
           className="buy-button"
           onClick={() => switchNetwork?.(optimism.id)}
@@ -237,7 +216,6 @@ const BuyButton = (props) => {
   ) {
     return (
       <div>
-        {referralComponent}
         <button className="buy-button" disabled>
           Insufficient funds on Optimism...
         </button>
@@ -256,7 +234,6 @@ const BuyButton = (props) => {
   if (isSuccess) {
     return (
       <div>
-        {referralComponent}
         <a
           target="_blank"
           href={`https://optimistic.etherscan.io/tx/${data.hash}`}
@@ -271,7 +248,6 @@ const BuyButton = (props) => {
   if (isEligible) {
     return (
       <div>
-        {referralComponent}
         <button className="buy-button" disabled>
           Thanks for minting!
         </button>
@@ -281,13 +257,12 @@ const BuyButton = (props) => {
 
   return (
     <div>
-      {referralComponent}
       <button
         className="buy-button"
         disabled={!write || isLoading}
         onClick={() => write?.()}
       >
-        {!isLoading && <div>Buy Kiwi News Pass</div>}
+        {!isLoading && <div>(OP) Buy Kiwi Pass</div>}
         {isLoading && <div>Please sign transaction</div>}
       </button>
     </div>
@@ -312,7 +287,7 @@ const Form = (props) => {
                 }}
                 className="buy-button"
               >
-                Connect Wallet
+                Connect Wallet to Mint
               </button>
             );
           }}

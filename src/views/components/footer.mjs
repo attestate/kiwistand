@@ -49,6 +49,7 @@ const footer = (theme, path) => html`
       ? html`
           <div style="position: fixed; bottom: 3rem; right: 2rem; z-index: 5;">
             <a
+              class="submit-button"
               href="/submit"
               style="align-items: center; justify-content: center; height: 50px; width: 50px; background-color: ${theme.color}; border-radius: 2px; box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);"
             >
@@ -108,7 +109,7 @@ const footer = (theme, path) => html`
 
   <center>
     <br />
-    <a href="/welcome">Access NFT</a>
+    <a href="/welcome?referral=0x60A86D7eE7b8F3E536CF8D109A8F600B742ef8A7">Access NFT</a>
     <span> | </span>
     <a href="/privacy-policy">Privacy Policy</a>
     <span> | </span>

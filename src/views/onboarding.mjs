@@ -94,6 +94,35 @@ export default async function (theme, identity) {
                   <br />
                   <div class="flex-container flex-image-right">
                     <div class="text-left">
+                      <h2>Mint Kiwi Pass to join the Kiwi community</h2>
+                      <p>
+                        Shape the kiwi feed, get discovered by 1,200+ monthly
+                        readers & meet 150+ other crypto connoisseurs.
+                      </p>
+                      <a
+                        href="/kiwipass?referral=0x9fa714F170E9488F70536d947003308eBd1A2bbD"
+                        target="_blank"
+                      >
+                        <button
+                          id="button-onboarding"
+                          style="margin-left: 0; width: 40%;"
+                        >
+                          Mint Kiwi Pass
+                        </button>
+                      </a>
+                    </div>
+                    <div class="image-right">
+                      <img src="KiwiPass.png" />
+                    </div>
+                  </div>
+                  <br />
+                  <br />
+                  <br />
+                  <div class="flex-container flex-image-left">
+                    <div class="image-left">
+                      <img src="Telegram.png" />
+                    </div>
+                    <div class="text-right">
                       <h2>Join our Kiwi holders Telegram channel.</h2>
                       <p>
                         Discuss the project, links and anything you’d like to
@@ -117,9 +146,6 @@ export default async function (theme, identity) {
                         </button>
                       </a>
                     </div>
-                    <div class="image-right">
-                      <img src="Telegram.png" />
-                    </div>
                   </div>
                   <br />
                   <br />
@@ -128,11 +154,8 @@ export default async function (theme, identity) {
                   <br />
                   <br />
                   <br />
-                  <div class="flex-container flex-image-left">
-                    <div class="image-left">
-                      <img src="kiwi_submit.gif" alt="Kiwi Submit" />
-                    </div>
-                    <div class="text-right">
+                  <div class="flex-container flex-image-right">
+                    <div class="text-left">
                       <h2>Submit your first link</h2>
                       <p>
                         Share your findings and let everyone know what kind of
@@ -144,12 +167,22 @@ export default async function (theme, identity) {
                         </button></a
                       >
                     </div>
+                    <div class="image-right">
+                      <img src="kiwi_submit.gif" alt="Kiwi Submit" />
+                    </div>
                   </div>
                   <br />
                   <br />
                   <br />
-                  <div class="flex-container flex-image-right">
-                    <div class="text-left">
+                  <div class="flex-container flex-image-left">
+                    <div class="image">
+                      <img
+                        src="kiwi_bookmark.gif"
+                        alt="Kiwi Bookmark"
+                        style="height: 300px; width: auto;"
+                      />
+                    </div>
+                    <div class="text-right">
                       <h2>Install our progressive web app!</h2>
                       <p>
                         On iPhone (Safari) and Android (Chrome) we're offering
@@ -165,23 +198,13 @@ export default async function (theme, identity) {
                         (Chrome))
                       </button>
                     </div>
-                    <div class="image">
-                      <img
-                        src="kiwi_bookmark.gif"
-                        alt="Kiwi Bookmark"
-                        style="height: 300px; width: auto;"
-                      />
-                    </div>
                   </div>
 
                   <br />
                   <br />
                   <br />
-                  <div class="flex-container flex-image-left">
-                    <div class="image-left">
-                      <img src="Newsletter.png" alt="Kiwi Newsletter" />
-                    </div>
-                    <div class="text-right">
+                  <div class="flex-container flex-image-right">
+                    <div class="text-left">
                       <h2>Subscribe to our newsletters or RSS</h2>
                       <p>
                         If you don’t want to miss the best links of the day or
@@ -193,6 +216,9 @@ export default async function (theme, identity) {
                         </button>
                       </a>
                     </div>
+                    <div class="image-right">
+                      <img src="Newsletter.png" alt="Kiwi Newsletter" />
+                    </div>
                   </div>
                   <br />
                   <br />
@@ -202,9 +228,12 @@ export default async function (theme, identity) {
                   <br />
                   <br />
                   <br />
-                  <div class="flex-container flex-image-right">
-                    <div class="text-left">
-                      <h2>Get Kiwi Chrome Extension</h2>
+                  <div class="flex-container flex-image-left">
+                    <div class="image-left">
+                      <img src="kiwi_chrome.gif" alt="Kiwi Chrome" />
+                    </div>
+                    <div class="text-right">
+                      <h2>Get the Kiwi Chrome Extension</h2>
                       <p>
                         Submit links in one click with our Chrome Extension.
                       </p>
@@ -217,18 +246,12 @@ export default async function (theme, identity) {
                         </button>
                       </a>
                     </div>
-                    <div class="image-right">
-                      <img src="kiwi_chrome.gif" alt="Kiwi Chrome" />
-                    </div>
                   </div>
                   <br />
                   <br />
                   <br />
-                  <div class="flex-container flex-image-left">
-                    <div class="image-left">
-                      <img src="Leaderboard.png" alt="Kiwi News NFT" />
-                    </div>
-                    <div class="text-right">
+                  <div class="flex-container flex-image-right">
+                    <div class="text-left">
                       <h2>Grow your Kiwi Score</h2>
                       <p>
                         Every submission and every upvote your links receive
@@ -242,10 +265,43 @@ export default async function (theme, identity) {
                         </button>
                       </a>
                     </div>
+                    <div class="image-right">
+                      <img src="Leaderboard.png" alt="Kiwi News NFT" />
+                    </div>
                   </div>
                   <br />
                   <br />
                   <br />
+                  ${identity
+                    ? html`<div style="text-align: left;">
+                          <h2>Earn Protocol Rewards!</h2>
+                          <p>
+                            Reading together is more fun than alone! So invite
+                            your friends and earn Zora's Protocol Rewards!
+                            0.000222 ETH per referred mint!
+                          </p>
+                          <div style="display: flex; align-items: center;">
+                            <button
+                              onclick="document.getElementById('invitelink').select(); document.execCommand('copy');"
+                              id="button-onboarding"
+                              style="border-radius: 2px; padding: 10px 15px; background-color: black; border: 1px
+ solid black; color: white; cursor: pointer; width: 50%; margin-right: 10px;"
+                            >
+                              Copy invite link
+                            </button>
+                            <input
+                              id="invitelink"
+                              type="text"
+                              value="https://news.kiwistand.com/welcome?referral=${identity}"
+                              readonly
+                              style="width: 70%; padding: 10px 15px; border: 1px solid #ccc; border-radius: 2px;"
+                            />
+                          </div>
+                        </div>
+                        <br />
+                        <br />
+                        <br />`
+                    : ""}
                   <p>
                     If you had any questions, feel free to reach out to
                     @macbudkowski or @timdaub on Telegram!

@@ -1,6 +1,7 @@
 import { useContractRead, WagmiConfig } from "wagmi";
 import { parseEther, formatEther } from "@ethersproject/units";
 import { optimism } from "wagmi/chains";
+import { useEffect, useState } from "react";
 
 import { client, chains } from "./client.mjs";
 
@@ -44,6 +45,7 @@ const abi = [
 const address = "0x66747bdc903d17c586fa09ee5d6b54cc85bbea45";
 
 export const PriceComponent = (props) => {
+  const [ethPrice, setEthPrice] = useState(null);
   const salesDetails = useContractRead({
     address,
     abi,
@@ -51,13 +53,37 @@ export const PriceComponent = (props) => {
     chainId: optimism.id,
   });
 
+  useEffect(() => {
+    (async () => {
+      const response = await fetch(
+        "https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd",
+      );
+
+      const data = await response.json();
+      setEthPrice(data.ethereum.usd);
+    })();
+  }, []);
+
   const salesPrice = salesDetails?.data?.publicSalePrice || 0;
   let total = salesPrice;
   if (total && props.fee) {
     total = total.add(parseEther(props.fee));
   }
 
-  return <span>{formatEther(total)}</span>;
+  const usdPrice = ethPrice
+    ? `$${(formatEther(total) * ethPrice).toFixed(2)}`
+    : null;
+
+  if (!usdPrice || !total) {
+    return "...loading";
+  }
+
+  return (
+    <span>
+      <span>({usdPrice}) </span>
+      <span>{formatEther(total)} ETH</span>
+    </span>
+  );
 };
 
 const WrappedPriceComponent = (props) => {

@@ -17,45 +17,43 @@ import delegateCrawlPath from "./chainstate/delegate.config.crawler.mjs";
 import * as registry from "./chainstate/registry.mjs";
 import * as karma from "./karma.mjs";
 
-(async () => {
-  const trie = await store.create();
+const trie = await store.create();
 
-  crawl(mintCrawlPath);
-  crawl(delegateCrawlPath);
-  const node = await start(config);
+crawl(mintCrawlPath);
+crawl(delegateCrawlPath);
+const node = await start(config);
 
-  // NOTE: We're passing in the trie here as we don't want to make it globally
-  // available to run more than one node in the tests
-  messages.handlers.message = messages.handlers.message(trie);
-  roots.handlers.message = roots.handlers.message(trie, node);
+// NOTE: We're passing in the trie here as we don't want to make it globally
+// available to run more than one node in the tests
+messages.handlers.message = messages.handlers.message(trie);
+roots.handlers.message = roots.handlers.message(trie, node);
 
-  await subscribe(
-    node,
-    handlers.node,
-    handlers.connection,
-    handlers.protocol,
-    [messages, roots],
-    trie,
-  );
-  await api.launch(trie, node);
-  await http.launch(trie, node);
+await subscribe(
+  node,
+  handlers.node,
+  handlers.connection,
+  handlers.protocol,
+  [messages, roots],
+  trie,
+);
+await api.launch(trie, node);
+await http.launch(trie, node);
 
-  // NOTE: This request queries all messages in the database to enable caching
-  // when calling ecrecover on messages' signatures
-  const from = null;
-  const amount = null;
-  const startDatetime = null;
-  const parser = JSON.parse;
-  const allowlist = await registry.allowlist();
-  const delegations = await registry.delegations();
-  const posts = await store.posts(
-    trie,
-    from,
-    amount,
-    parser,
-    startDatetime,
-    allowlist,
-    delegations,
-  );
-  karma.count(posts);
-})();
+// NOTE: This request queries all messages in the database to enable caching
+// when calling ecrecover on messages' signatures
+const from = null;
+const amount = null;
+const startDatetime = null;
+const parser = JSON.parse;
+const allowlist = await registry.allowlist();
+const delegations = await registry.delegations();
+const posts = await store.posts(
+  trie,
+  from,
+  amount,
+  parser,
+  startDatetime,
+  allowlist,
+  delegations,
+);
+karma.count(posts);
