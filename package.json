@@ -11,7 +11,7 @@
     "deploy": "npm run build && npm run rsync",
     "rsync": "rsync -avz . root@91.107.210.214:./kiwistand --exclude=cache --exclude=docs --exclude=anon --exclude \"node_modules\" --exclude=\".git\" --exclude=bootstrap --exclude=data",
     "dev": "DEBUG=\"*@attestate/*,-@attestate/delegator2*\" concurrently \"npm run watch:web\" \"npm run start\"",
-    "start": "node -r dotenv/config --no-warnings ./src/launch.mjs",
+    "start": "node -r dotenv/config ./src/launch.mjs",
     "watch": "nodemon --watch src/views --exec 'npm run dev:anon'",
     "watch:web": "cd src/web && npm run dev",
     "dev:bootstrap": "API_PORT=8000 HTTP_PORT=80 DATA_DIR=bootstrap BIND_ADDRESS_V4=\"127.0.0.1\" IS_BOOTSTRAP_NODE=true USE_EPHEMERAL_ID=false npm run dev",
