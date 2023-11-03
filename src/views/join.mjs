@@ -6,7 +6,7 @@ import vhtml from "vhtml";
 import Header from "./components/header.mjs";
 import Sidebar from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
-import Head from "./components/head.mjs";
+import { custom } from "./components/head.mjs";
 import * as ens from "../ens.mjs";
 
 async function getENSAvatars(addresses) {
@@ -37,10 +37,11 @@ const avatarData = await getENSAvatars(addresses);
 const html = htm.bind(vhtml);
 
 export default async function (theme, identity) {
+  const ogImage = "https://news.kiwistand.com/pass_preview.jpeg";
   return html`
     <html lang="en" op="news">
       <head>
-        ${Head}
+        ${custom(ogImage)}
         <style>
           .flex-container {
             display: flex;
