@@ -4,6 +4,7 @@ import fs from "fs";
 import https from "https";
 
 import express from "express";
+import "express-async-errors";
 import cors from "cors";
 import Ajv from "ajv";
 import addFormats from "ajv-formats";
