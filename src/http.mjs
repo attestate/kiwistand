@@ -2,6 +2,7 @@
 import { env } from "process";
 import { readFile } from "fs/promises";
 
+import morgan from "morgan";
 import express from "express";
 import cookieParser from "cookie-parser";
 import { utils } from "ethers";
@@ -39,6 +40,11 @@ import * as ens from "./ens.mjs";
 
 const app = express();
 
+app.use(
+  morgan(
+    ':remote-addr - :remote-user ":method :url" :status ":referrer" ":user-agent"',
+  ),
+);
 app.use(express.static("src/public"));
 app.use(express.json());
 app.use(cookieParser());
@@ -357,7 +363,6 @@ export async function launch(trie, libp2p) {
       .send(await onboarding(reply.locals.theme, request.cookies.identity));
   });
   app.get("/welcome", async (request, reply) => {
-    log(`/welcome with referral "${request.query.referral}"`);
     return reply
       .status(200)
       .type("text/html")
