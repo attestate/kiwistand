@@ -15,6 +15,60 @@ import config from "../src/config.mjs";
 import { EIP712_MESSAGE } from "../src/constants.mjs";
 import * as store from "../src/store.mjs";
 
+test("simulate dirty read", async (t) => {
+  const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
+  const privateKey =
+    "0xad54bdeade5537fb0a553190159783e45d02d316a992db05cbed606d3ca36b39";
+  const signer = new Wallet(privateKey);
+  t.is(signer.address, address);
+
+  env.DATA_DIR = "dbtestA";
+  const trieA = await store.create();
+  const libp2p = null;
+  const allowlist = new Set([address]);
+
+  const title = `hello world `;
+  const href = `https://example.com`;
+  const type = "amplify";
+  const timestamp = 1676559616;
+  const message = id.create(title, href, type, timestamp);
+  const signedMessage = await id.sign(signer, message, EIP712_MESSAGE);
+  await store.add(trieA, signedMessage, libp2p, allowlist);
+
+  const originalRoot = trieA.root();
+
+  const newTitle = "new hello world";
+  const newHref = "https://newexample.com";
+  const newType = "amplify";
+  const newTimestamp = 1676559616 + 101;
+  const newMessage = id.create(newTitle, newHref, newType, newTimestamp);
+  const newSignedMessage = await id.sign(signer, newMessage, EIP712_MESSAGE);
+  await store.add(trieA, newSignedMessage, libp2p, allowlist);
+
+  try {
+    const from = null;
+    const amount = null;
+    const startDatetime = null;
+    const href = null;
+    const leavesPromise = await store.leaves(
+      trieA,
+      from,
+      amount,
+      JSON.parse,
+      startDatetime,
+      href,
+      originalRoot,
+    );
+    t.pass("Traversal was successful despite concurrent write to trie");
+  } catch (err) {
+    t.true(err.toString().includes("Missing node in DB"));
+    t.fail(`Traversal failed with error "${err.toString()}"`);
+    t.log(err);
+  }
+
+  await rm("dbtestA", { recursive: true });
+});
+
 test("if message passes constraint", async (t) => {
   env.DATA_DIR = "dbtestA";
   const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";

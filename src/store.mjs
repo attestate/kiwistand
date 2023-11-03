@@ -32,9 +32,19 @@ export async function create(options) {
     // resolve.
     db: new LMDB({ path: env.DATA_DIR, maxReaders }),
     useRootPersistence: true,
-    // NOTE: We enable nodePruning so that the ethereumjs/trie library reliably
-    // deletes content in the database for us (it doesn't by default).
-    useNodePruning: true,
+    // UPDATE 2023-11-03: Previously we had set "useNodePruning" to "true" as
+    // it would delete non-reachable nodes in the db and hence clear up storage
+    // space. However, when "useNodePruning" is true and a trie.put(key, value)
+    // write happens at the same time as someone retrieving the trie's leaves,
+    // then the leaves retrieval will fail if its branch had changes in its
+    // pointers to other nodes. Hence, "useNodePruning" must be turned off as
+    // it is immediately getting rid of older versions of a trie upon
+    // restructuring triggered by trie.put. We now wrote a unit test that also
+    // covers this scenario. Setting it to false may increase local database
+    // size temporarily, however, it'll also guarantee concurrency and old
+    // nodes could still be pruned occasionally (e.g. upon startup of the
+    // node).
+    useNodePruning: false,
     ...options,
   });
 }
@@ -417,13 +427,21 @@ export async function posts(
   return posts;
 }
 
-export async function leaves(trie, from, amount, parser, startDatetime, href) {
+export async function leaves(
+  trie,
+  from,
+  amount,
+  parser,
+  startDatetime,
+  href,
+  root = trie.root(),
+) {
   const nodes = [];
 
   let pointer = 0;
   log(`leaves: Does trie have checkpoints? "${trie.hasCheckpoints()}"`);
-  log(`leaves: Trie root "${trie.root().toString("hex")}"`);
-  for await (const [node] of walkTrieDfs(trie, trie.root(), [])) {
+  log(`leaves: Trie root "${root.toString("hex")}"`);
+  for await (const [node] of walkTrieDfs(trie, root, [])) {
     if (Number.isInteger(amount) && nodes.length >= amount) {
       break;
     }
