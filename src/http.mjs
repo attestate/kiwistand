@@ -86,6 +86,11 @@ function sendStatus(reply, code, message, details, data) {
 }
 
 export async function launch(trie, libp2p) {
+  app.use((err, req, res, next) => {
+    log(`Express error: "${err.message}", "${err.stack}"`);
+    res.status(500).send("Internal Server Error");
+  });
+
   app.get("/api/v1/parse", async (request, reply) => {
     const embed = await parse(request.query.url);
     return reply.status(200).type("text/html").send(embed);

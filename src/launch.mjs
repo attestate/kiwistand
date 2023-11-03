@@ -58,4 +58,13 @@ import * as karma from "./karma.mjs";
     delegations,
   );
   karma.count(posts);
+
+  process.on("uncaughtException", (err) => {
+    console.error("There was an uncaught error", err);
+    process.exit(1);
+  });
+  process.on("unhandledRejection", (reason, promise) => {
+    log("Unhandled Rejection at:", promise, "reason:", reason);
+    process.exit(1);
+  });
 })();
