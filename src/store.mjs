@@ -246,8 +246,7 @@ export function upvoteID(identity, link, type) {
 // soft writes into the trie. This is an issue as we e.g. could do a sync where
 // most writes are soft-written, the sync fails, but the actual constraints are
 // then written to the database.
-export async function passes(db, message, identity) {
-  const key = upvoteID(identity, message.href, message.type);
+export async function passes(db, key, identity) {
   // NOTE: db.doesExist seemed to have lead in some cases to a greedy match of
   // the identifier hence returning true negatives. Meaning, it blocked users
   // from upvoting although they had never upvoted that link.
@@ -292,7 +291,8 @@ export async function add(
     throw new Error(err);
   }
 
-  const legit = await passes(metadb, message, identity);
+  const key = upvoteID(identity, message.href, message.type);
+  const legit = await passes(metadb, key, identity);
   if (!legit) {
     const err = `Message "${JSON.stringify(
       message,
@@ -302,13 +302,39 @@ export async function add(
   }
 
   const { canonical, index } = toDigest(message);
-  // TODO: We should check if checkpointing is off here.
-  log(`Before storage, has checkpoints ${trie.hasCheckpoints()}`);
   log(
     `Attempting to store message with index "${index}" and message: "${canonical}"`,
   );
-  await trie.put(Buffer.from(index, "hex"), canonical);
-  log(`During storage, has checkpoints ${trie.hasCheckpoints()}`);
+  try {
+    await trie.put(Buffer.from(index, "hex"), canonical);
+  } catch (err) {
+    // NOTE/TODO: Additionally, between this function and store.add (in which
+    // we use trie.put), there is no proper atomicity of storage. The trie.put
+    // function could technically crash the entire program with a fatal error
+    // and that would not be caught and hence the metadb.remove(...) statement
+    // below wouldn't be called. This can lead to real problems where the two
+    // databases, the trie and metadb, can get out of synchronization.
+    //
+    // Although lmdb-js has a method for atomically storing an entry in two
+    // sub- databases directly, it's not recommended making the transaction
+    // callback asynchronous, and so since trie.put implements a complex set of
+    // steps, it seems fragile or outright impossible to write these two values
+    // into the trie at the same time.
+    //
+    // Potentially, however, the above may also apply too high standards, as
+    // it's also unclear what lmdb-js does upon node.js panicing at a certain
+    // point in the program's execution. It may similarly corrupt the file or
+    // write without atomicity...
+    const result = await metadb.remove(key);
+
+    let message = `trie.put failed with "${err.toString()}". Successfully rolled back constraint`;
+    if (!result) {
+      message = `trie.put failed with "${err.toString()}". Tried to roll back constraint but failed`;
+    }
+
+    log(message);
+    throw new Error(message);
+  }
   log(`Stored message with index "${index}" and message: "${canonical}"`);
   log(`New root: "${trie.root().toString("hex")}"`);
 

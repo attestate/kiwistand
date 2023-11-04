@@ -15,6 +15,51 @@ import config from "../src/config.mjs";
 import { EIP712_MESSAGE } from "../src/constants.mjs";
 import * as store from "../src/store.mjs";
 
+test.serial("adding message to the store with trie.put error", async (t) => {
+  env.DATA_DIR = "dbtestA";
+  t.plan(6);
+  const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
+  const privateKey =
+    "0xad54bdeade5537fb0a553190159783e45d02d316a992db05cbed606d3ca36b39";
+  const signer = new Wallet(privateKey);
+  t.is(signer.address, address);
+
+  const text = "hello world";
+  const href = "https://example.com";
+  const type = "amplify";
+  const timestamp = 1676559616;
+  const message = id.create(text, href, type, timestamp);
+  const signedMessage = await id.sign(signer, message, EIP712_MESSAGE);
+
+  const metadb = store.metadata();
+  const key = store.upvoteID(signer.address, message.href, message.type);
+  const initialDbValue = await metadb.get(key);
+  t.falsy(initialDbValue);
+
+  const trie = {
+    put: (key, value) => {
+      t.truthy(key);
+      t.truthy(value);
+      throw new Error("trie.put error");
+    },
+    root: () => Buffer.from("abc", "hex"),
+    hasCheckpoints: () => false,
+  };
+  const libp2p = null;
+  const allowlist = new Set([address]);
+
+  try {
+    await store.add(trie, signedMessage, libp2p, allowlist);
+  } catch (error) {
+    t.true(error.toString().includes("Successfully rolled back"));
+  }
+
+  const finalDbValue = await metadb.get(key);
+  t.falsy(finalDbValue);
+
+  await rm("dbtestA", { recursive: true });
+});
+
 test("simulate dirty read", async (t) => {
   const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
   const privateKey =
@@ -81,12 +126,13 @@ test("if message passes constraint", async (t) => {
     type: "amplify",
   };
   const metadb = store.metadata();
-  const result0 = await store.passes(metadb, message, address);
+  const key = store.upvoteID(address, message.href, message.type);
+  const result0 = await store.passes(metadb, key, address);
   t.true(result0);
-  const result1 = await store.passes(metadb, message, address);
+  const result1 = await store.passes(metadb, key, address);
   t.false(result1);
 
-  const result2 = await store.passes(metadb, message, address);
+  const result2 = await store.passes(metadb, key, address);
   t.false(result2);
 
   await rm("dbtestA", { recursive: true });
