@@ -61,15 +61,12 @@ export function count(leaves) {
   return Object.values(stories);
 }
 
-const calculateScore = (votes, itemHourAge, gravity = 1.6) => {
-  return (votes - 1) / Math.pow(itemHourAge, gravity);
-};
-
-export async function topstories(leaves) {
+export async function topstories(leaves, decayStrength) {
   return leaves
     .map((story) => {
-      const score = calculateScore(story.upvotes, itemAge(story.timestamp));
-      story.score = score;
+      const score = Math.log(story.upvotes);
+      const decay = Math.sqrt(itemAge(story.timestamp)) * decayStrength;
+      story.score = score / decay;
       return story;
     })
     .sort((a, b) => b.score - a.score);
@@ -175,12 +172,15 @@ export async function index(trie, page) {
 
   const totalStories = parseInt(env.TOTAL_STORIES, 10);
   const countedStories = count(leaves);
-  let storyPromises = await topstories(countedStories);
+  const parameters = await moderation.getFeedParameters();
+  let storyPromises = await topstories(
+    countedStories,
+    parameters.decayStrength,
+  );
 
   let threshold = 1;
   let pill = true;
   const now = new Date();
-  const parameters = await moderation.getFeedParameters();
   const old = sub(now, { hours: parameters.oldHours });
   const oldInMinutes = differenceInMinutes(now, old);
   const { fold } = parameters;
