@@ -1,5 +1,6 @@
 //@format
 import url from "url";
+import { env } from "process";
 
 import htm from "htm";
 import vhtml from "vhtml";
@@ -11,32 +12,49 @@ import Sidebar from "./components/sidebar.mjs";
 import Head from "./components/head.mjs";
 import * as karma from "../karma.mjs";
 import * as registry from "../chainstate/registry.mjs";
-import { EIP712_MESSAGE } from "../constants.mjs";
 
 const html = htm.bind(vhtml);
 
-export default async function (trie, theme, identity) {
+async function paginate(users, allowlist, page) {
+  const pageSize = env.TOTAL_USERS;
+  const start = pageSize * page;
+  const end = pageSize * (page + 1);
+  const allowlistedUsers = users.filter((user) =>
+    allowlist.find(
+      (address) => address.toLowerCase() === user.identity.toLowerCase(),
+    ),
+  );
+  const sortedByKarmaUsers = allowlistedUsers.sort(
+    (a, b) => parseInt(b.karma) - parseInt(a.karma),
+  );
+  const currentPageUsers = sortedByKarmaUsers.slice(start, end);
+  const usersData = await Promise.all(
+    currentPageUsers.map(async (user) => {
+      const { safeAvatar, displayName } = await ens.resolve(user.identity);
+      return {
+        identity: user.identity,
+        karma: user.karma ?? "0",
+        safeAvatar,
+        displayName,
+      };
+    }),
+  );
+  return {
+    usersData,
+    totalPages: Math.ceil(allowlistedUsers.length / pageSize),
+    pageSize,
+  };
+}
+
+export default async function (trie, theme, page = 0, identity) {
   const users = karma.ranking();
+  const allowlist = Array.from(await registry.allowlist());
 
-  const allowlist = await registry.allowlist();
-  let combinedUsers = [];
-  for await (let address of allowlist.values()) {
-    const foundUser = users.find(
-      // TODO: Should start using ethers.utils.getAddress
-      (user) => user.identity.toLowerCase() === address.toLowerCase(),
-    );
-    const karma = foundUser ? foundUser.karma : "0";
-
-    const ensData = await ens.resolve(address);
-
-    combinedUsers.push({
-      identity: address,
-      karma,
-      safeAvatar: ensData.safeAvatar,
-      displayName: ensData.displayName,
-    });
-  }
-  combinedUsers.sort((a, b) => parseInt(b.karma) - parseInt(a.karma));
+  const { usersData, totalPages, pageSize } = await paginate(
+    users,
+    allowlist,
+    page,
+  );
 
   const path = "/community";
   return html`
@@ -86,7 +104,8 @@ export default async function (trie, theme, identity) {
               <tr>
                 <td>
                   <div style="padding-top: 5px; width: 100%;">
-                    ${combinedUsers.map(
+                    ${usersData &&
+                    usersData.map(
                       (user, i) => html`
                         <a
                           href="/upvotes?address=${user.identity}"
@@ -96,7 +115,7 @@ export default async function (trie, theme, identity) {
                             style="display: flex; justify-content: space-between; align-items: center; padding: 8px; box-sizing: border-box;"
                           >
                             <div style="width: 8%; text-align: left;">
-                              ${i + 1}.
+                              ${i + 1 + page * pageSize}.
                             </div>
                             <div
                               style="display: flex; align-items: center; width: 60%;"
@@ -130,6 +149,18 @@ export default async function (trie, theme, identity) {
                         </a>
                       `,
                     )}
+                  </div>
+                </td>
+              </tr>
+              <tr style="height: 50px">
+                <td>
+                  <div
+                    style="display: flex; flex-direction: row; gap: 20px; padding: 0 20px 0 20px; font-size: 1.1rem;"
+                  >
+                    ${page > 0 &&
+                    html` <a href="?page=${page - 1}"> Previous </a> `}
+                    ${page + 1 < totalPages &&
+                    html` <a href="?page=${page + 1}"> Next </a> `}
                   </div>
                 </td>
               </tr>
