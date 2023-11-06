@@ -15,33 +15,31 @@ import * as registry from "../chainstate/registry.mjs";
 
 const html = htm.bind(vhtml);
 
-async function paginate(users, allowlist, page) {
+export async function paginate(users, allowlist, page) {
+  const combinedUsers = allowlist.map((address) => {
+    const user = users.find(
+      (u) => u.identity.toLowerCase() === address.toLowerCase(),
+    );
+    const karma = user ? user.karma : "0";
+    return { identity: address, karma };
+  });
+
+  combinedUsers.sort((a, b) => parseInt(b.karma) - parseInt(a.karma));
+
   const pageSize = env.TOTAL_USERS;
   const start = pageSize * page;
   const end = pageSize * (page + 1);
-  const allowlistedUsers = users.filter((user) =>
-    allowlist.find(
-      (address) => address.toLowerCase() === user.identity.toLowerCase(),
-    ),
-  );
-  const sortedByKarmaUsers = allowlistedUsers.sort(
-    (a, b) => parseInt(b.karma) - parseInt(a.karma),
-  );
-  const currentPageUsers = sortedByKarmaUsers.slice(start, end);
-  const usersData = await Promise.all(
-    currentPageUsers.map(async (user) => {
-      const { safeAvatar, displayName } = await ens.resolve(user.identity);
-      return {
-        identity: user.identity,
-        karma: user.karma ?? "0",
-        safeAvatar,
-        displayName,
-      };
-    }),
-  );
+  const pageUsers = combinedUsers.slice(start, end);
+
+  for await (const user of pageUsers) {
+    const ensData = await ens.resolve(user.identity);
+    user.safeAvatar = ensData.safeAvatar;
+    user.displayName = ensData.displayName;
+  }
+
   return {
-    usersData,
-    totalPages: Math.ceil(allowlistedUsers.length / pageSize),
+    usersData: pageUsers,
+    totalPages: Math.ceil(combinedUsers.length / pageSize),
     pageSize,
   };
 }
