@@ -36,6 +36,7 @@ function content(title, submitter) {
           fontSize: "6rem",
           color: "#38C910",
           padding: 0,
+          lineHeight: 0.9,
           margin: 0,
         }}
       >
