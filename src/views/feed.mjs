@@ -27,7 +27,7 @@ import * as karma from "../karma.mjs";
 const html = htm.bind(vhtml);
 
 function CanonRow(sheets) {
-  sheets = sheets.sort((a, b) => 0.5 - Math.random());
+  sheets = sheets.sort((a, b) => 0.5 - Math.random()).slice(0, 3);
   return html`
     <tr>
       <td>
