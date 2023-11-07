@@ -35,6 +35,7 @@ import settings from "./views/settings.mjs";
 import indexing from "./views/indexing.mjs";
 import demonstration from "./views/demonstration.mjs";
 import * as curation from "./views/curation.mjs";
+import * as moderation from "./views/moderation.mjs";
 import { parse } from "./parser.mjs";
 import { toAddress, resolve } from "./ens.mjs";
 import * as registry from "./chainstate/registry.mjs";
@@ -140,7 +141,8 @@ export async function launch(trie, libp2p) {
   });
   app.get("/canons", async (request, reply) => {
     const name = request.query.name;
-    const sheets = await curation.getSheets();
+    const activeSheets = await moderation.getActiveCanons();
+    const sheets = await curation.getSheets(activeSheets);
     const sheet = sheets.find((element) => element.name === name);
     if (!sheet) {
       return reply.status(404).type("text/plain").send("canon wasn't found");
