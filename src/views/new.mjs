@@ -29,17 +29,14 @@ export default async function (trie, theme, identity) {
   const parser = JSON.parse;
   const allowlist = await registry.allowlist();
   const delegations = await registry.delegations();
-  const lookBack = sub(new Date(), {
-    weeks: 1,
-  });
-  const lookBackUnixTime = Math.floor(lookBack.getTime() / 1000);
+  const startDateTime = null;
 
   let leaves = await store.posts(
     trie,
     from,
     amount,
     parser,
-    lookBackUnixTime,
+    startDateTime,
     allowlist,
     delegations,
   );
