@@ -32,13 +32,14 @@ function getApiUrl(endpoint, port = window.location.port) {
   }${endpoint}`;
 }
 
+const API_PORT = 8443;
 export async function send(message, signature) {
   const body = JSON.stringify({
     ...message,
     signature,
   });
 
-  const url = getApiUrl("/api/v1/messages", 8000);
+  const url = getApiUrl("/api/v1/messages", API_PORT);
 
   let response;
   try {
@@ -96,7 +97,7 @@ export async function fetchNotifications(address) {
 }
 
 export async function fetchDelegations() {
-  const url = getApiUrl("/api/v1/delegations", 8000);
+  const url = getApiUrl("/api/v1/delegations", API_PORT);
 
   let response;
   try {
@@ -110,7 +111,7 @@ export async function fetchDelegations() {
 }
 
 export async function fetchAllowList() {
-  const url = getApiUrl("/api/v1/allowlist", 8000);
+  const url = getApiUrl("/api/v1/allowlist", API_PORT);
 
   let response;
   try {
