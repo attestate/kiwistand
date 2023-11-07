@@ -17,6 +17,7 @@ import Head from "./components/head.mjs";
 import * as store from "../store.mjs";
 import * as id from "../id.mjs";
 import * as moderation from "./moderation.mjs";
+import * as curation from "./curation.mjs";
 import * as registry from "../chainstate/registry.mjs";
 import log from "../logger.mjs";
 import { EIP712_MESSAGE } from "../constants.mjs";
@@ -24,6 +25,28 @@ import Row, { extractDomain } from "./components/row.mjs";
 import * as karma from "../karma.mjs";
 
 const html = htm.bind(vhtml);
+
+function CanonRow(sheets) {
+  return html`
+    <tr>
+      <td>
+        <div
+          style="justify-content: space-evenly; scroll-snap-type: x mandatory; border-radius: 5px; margin-bottom: -10px; padding: 20px 0; gap: 15px; display: flex; overflow-x: auto; width: 100%;"
+        >
+          ${sheets.map(
+            ({ preview, name }) => html`
+              <div style="flex: 0 0 30%; scroll-snap-align: center;">
+                <a href="/canons?name=${name}">
+                  <img src="${preview}" style="width: 100%; height: auto;" />
+                </a>
+              </div>
+            `,
+          )}
+        </div>
+      </td>
+    </tr>
+  `;
+}
 
 const itemAge = (timestamp) => {
   const now = new Date();
@@ -61,15 +84,12 @@ export function count(leaves) {
   return Object.values(stories);
 }
 
-const calculateScore = (votes, itemHourAge, gravity = 1.6) => {
-  return (votes - 1) / Math.pow(itemHourAge, gravity);
-};
-
-export async function topstories(leaves) {
+export async function topstories(leaves, decayStrength) {
   return leaves
     .map((story) => {
-      const score = calculateScore(story.upvotes, itemAge(story.timestamp));
-      story.score = score;
+      const score = Math.log(story.upvotes);
+      const decay = Math.sqrt(itemAge(story.timestamp));
+      story.score = score / Math.pow(decay, decayStrength);
       return story;
     })
     .sort((a, b) => b.score - a.score);
@@ -175,12 +195,15 @@ export async function index(trie, page) {
 
   const totalStories = parseInt(env.TOTAL_STORIES, 10);
   const countedStories = count(leaves);
-  let storyPromises = await topstories(countedStories);
+  const parameters = await moderation.getFeedParameters();
+  let storyPromises = await topstories(
+    countedStories,
+    parameters.decayStrength,
+  );
 
   let threshold = 1;
   let pill = true;
   const now = new Date();
-  const parameters = await moderation.getFeedParameters();
   const old = sub(now, { hours: parameters.oldHours });
   const oldInMinutes = differenceInMinutes(now, old);
   const { fold } = parameters;
@@ -282,6 +305,7 @@ export async function index(trie, page) {
 export default async function (trie, theme, page, identity) {
   const path = "/";
   const { editorPicks, config, stories, start } = await index(trie, page);
+  const sheets = await curation.getSheets();
   return html`
     <html lang="en" op="news">
       <head>
@@ -395,7 +419,8 @@ export default async function (trie, theme, page, identity) {
                   </p>
                 </td>
               </tr>
-              ${stories.map(Row(start))}
+              ${stories.slice(0, 6).map(Row(start))} ${CanonRow(sheets)}
+              ${stories.slice(6).map(Row(start))}
               <tr style="height: 50px">
                 <td>
                   <a

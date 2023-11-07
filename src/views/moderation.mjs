@@ -31,15 +31,22 @@ export async function getFeedParameters() {
       oldHours: 22,
       fold: 10,
       replacementThreshold: 1,
+      decayStrength: 1,
     };
   }
-  const { replacementFactor, replacementThreshold, oldHours, fold } =
-    response[0];
+  const {
+    replacementFactor,
+    replacementThreshold,
+    oldHours,
+    fold,
+    decayStrength,
+  } = response[0];
   return {
     replacementFactor: parseInt(replacementFactor, 10),
     oldHours: parseInt(oldHours, 10),
     fold: parseInt(fold, 10),
     replacementThreshold: parseInt(replacementThreshold, 10),
+    decayStrength: parseFloat(decayStrength),
   };
 }
 

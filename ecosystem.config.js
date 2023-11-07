@@ -13,7 +13,7 @@ module.exports = {
         NODE_ENV: "production",
         THEME: "kiwi",
         HTTP_PORT: 3000,
-        API_PORT: 8000,
+        API_PORT: 8443,
         DATA_DIR: "bootstrap",
         BIND_ADDRESS_V4: "0.0.0.0",
         IS_BOOTSTRAP_NODE: true,

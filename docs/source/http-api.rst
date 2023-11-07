@@ -15,7 +15,7 @@ Ports
 Kiwistand used to ship with running both the frontend and the node REST API on
 the same port (``HTTP_PORT``). To more easily code-split the node code and
 frontend code, we're now, however, running the node's REST API on ``API_PORT``.
-For news.kiwistand.com it is at 8000.
+For news.kiwistand.com it is at 8443.
 
 JSON Schemas
 ------------

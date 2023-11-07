@@ -16,6 +16,7 @@ import feed, { index } from "./views/feed.mjs";
 import story from "./views/story.mjs";
 import newest from "./views/new.mjs";
 import best from "./views/best.mjs";
+import canon from "./views/canon.mjs";
 import privacy from "./views/privacy.mjs";
 import guidelines from "./views/guidelines.mjs";
 import onboarding from "./views/onboarding.mjs";
@@ -33,6 +34,7 @@ import submit from "./views/submit.mjs";
 import settings from "./views/settings.mjs";
 import indexing from "./views/indexing.mjs";
 import demonstration from "./views/demonstration.mjs";
+import * as curation from "./views/curation.mjs";
 import { parse } from "./parser.mjs";
 import { toAddress, resolve } from "./ens.mjs";
 import * as registry from "./chainstate/registry.mjs";
@@ -136,6 +138,21 @@ export async function launch(trie, libp2p) {
     );
     return reply.status(200).type("text/html").send(content);
   });
+  app.get("/canons", async (request, reply) => {
+    const name = request.query.name;
+    const sheets = await curation.getSheets();
+    const sheet = sheets.find((element) => element.name === name);
+    if (!sheet) {
+      return reply.status(404).type("text/plain").send("canon wasn't found");
+    }
+    const content = await canon(
+      trie,
+      reply.locals.theme,
+      request.cookies.identity,
+      sheet,
+    );
+    return reply.status(200).type("text/html").send(content);
+  });
   app.get("/stories", async (request, reply) => {
     const index = request.query.index;
     const hexRegex = /^0x[a-fA-F0-9]{72}$/;
@@ -232,9 +249,14 @@ export async function launch(trie, libp2p) {
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/community", async (request, reply) => {
+    let page = parseInt(request.query.page);
+    if (isNaN(page) || page < 1) {
+      page = 0;
+    }
     const content = await community(
       trie,
       reply.locals.theme,
+      page,
       request.cookies.identity,
     );
     return reply.status(200).type("text/html").send(content);

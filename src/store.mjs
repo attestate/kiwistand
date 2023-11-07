@@ -32,9 +32,19 @@ export async function create(options) {
     // resolve.
     db: new LMDB({ path: env.DATA_DIR, maxReaders }),
     useRootPersistence: true,
-    // NOTE: We enable nodePruning so that the ethereumjs/trie library reliably
-    // deletes content in the database for us (it doesn't by default).
-    useNodePruning: true,
+    // UPDATE 2023-11-03: Previously we had set "useNodePruning" to "true" as
+    // it would delete non-reachable nodes in the db and hence clear up storage
+    // space. However, when "useNodePruning" is true and a trie.put(key, value)
+    // write happens at the same time as someone retrieving the trie's leaves,
+    // then the leaves retrieval will fail if its branch had changes in its
+    // pointers to other nodes. Hence, "useNodePruning" must be turned off as
+    // it is immediately getting rid of older versions of a trie upon
+    // restructuring triggered by trie.put. We now wrote a unit test that also
+    // covers this scenario. Setting it to false may increase local database
+    // size temporarily, however, it'll also guarantee concurrency and old
+    // nodes could still be pruned occasionally (e.g. upon startup of the
+    // node).
+    useNodePruning: false,
     ...options,
   });
 }
@@ -236,8 +246,7 @@ export function upvoteID(identity, link, type) {
 // soft writes into the trie. This is an issue as we e.g. could do a sync where
 // most writes are soft-written, the sync fails, but the actual constraints are
 // then written to the database.
-export async function passes(db, message, identity) {
-  const key = upvoteID(identity, message.href, message.type);
+export async function passes(db, key, identity) {
   // NOTE: db.doesExist seemed to have lead in some cases to a greedy match of
   // the identifier hence returning true negatives. Meaning, it blocked users
   // from upvoting although they had never upvoted that link.
@@ -282,7 +291,8 @@ export async function add(
     throw new Error(err);
   }
 
-  const legit = await passes(metadb, message, identity);
+  const key = upvoteID(identity, message.href, message.type);
+  const legit = await passes(metadb, key, identity);
   if (!legit) {
     const err = `Message "${JSON.stringify(
       message,
@@ -292,13 +302,39 @@ export async function add(
   }
 
   const { canonical, index } = toDigest(message);
-  // TODO: We should check if checkpointing is off here.
-  log(`Before storage, has checkpoints ${trie.hasCheckpoints()}`);
   log(
     `Attempting to store message with index "${index}" and message: "${canonical}"`,
   );
-  await trie.put(Buffer.from(index, "hex"), canonical);
-  log(`During storage, has checkpoints ${trie.hasCheckpoints()}`);
+  try {
+    await trie.put(Buffer.from(index, "hex"), canonical);
+  } catch (err) {
+    // NOTE/TODO: Additionally, between this function and store.add (in which
+    // we use trie.put), there is no proper atomicity of storage. The trie.put
+    // function could technically crash the entire program with a fatal error
+    // and that would not be caught and hence the metadb.remove(...) statement
+    // below wouldn't be called. This can lead to real problems where the two
+    // databases, the trie and metadb, can get out of synchronization.
+    //
+    // Although lmdb-js has a method for atomically storing an entry in two
+    // sub- databases directly, it's not recommended making the transaction
+    // callback asynchronous, and so since trie.put implements a complex set of
+    // steps, it seems fragile or outright impossible to write these two values
+    // into the trie at the same time.
+    //
+    // Potentially, however, the above may also apply too high standards, as
+    // it's also unclear what lmdb-js does upon node.js panicing at a certain
+    // point in the program's execution. It may similarly corrupt the file or
+    // write without atomicity...
+    const result = await metadb.remove(key);
+
+    let message = `trie.put failed with "${err.toString()}". Successfully rolled back constraint`;
+    if (!result) {
+      message = `trie.put failed with "${err.toString()}". Tried to roll back constraint but failed`;
+    }
+
+    log(message);
+    throw new Error(message);
+  }
   log(`Stored message with index "${index}" and message: "${canonical}"`);
   log(`New root: "${trie.root().toString("hex")}"`);
 
@@ -417,13 +453,21 @@ export async function posts(
   return posts;
 }
 
-export async function leaves(trie, from, amount, parser, startDatetime, href) {
+export async function leaves(
+  trie,
+  from,
+  amount,
+  parser,
+  startDatetime,
+  href,
+  root = trie.root(),
+) {
   const nodes = [];
 
   let pointer = 0;
   log(`leaves: Does trie have checkpoints? "${trie.hasCheckpoints()}"`);
-  log(`leaves: Trie root "${trie.root().toString("hex")}"`);
-  for await (const [node] of walkTrieDfs(trie, trie.root(), [])) {
+  log(`leaves: Trie root "${root.toString("hex")}"`);
+  for await (const [node] of walkTrieDfs(trie, root, [])) {
     if (Number.isInteger(amount) && nodes.length >= amount) {
       break;
     }
