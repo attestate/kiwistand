@@ -1,9 +1,10 @@
 // @format
 import { fetchBuilder, MemoryCache } from "node-fetch-cache";
 
+const minuteInMs = 60000;
 const fetch = fetchBuilder.withCache(
   new MemoryCache({
-    ttl: 60000, // 1min
+    ttl: minuteInMs * 30,
   }),
 );
 
@@ -16,7 +17,7 @@ export async function getSheet(sheetName) {
     throw new Error("Couldn't fetch the sheet");
   }
   const data = await response.json();
-  const { preview, displayName, description, curator } = data[0];
+  const { largePreview, preview, displayName, description, curator } = data[0];
   const links = data.map(({ link }) => link);
   return {
     name: sheetName,
@@ -25,6 +26,7 @@ export async function getSheet(sheetName) {
     preview,
     description,
     curator,
+    largePreview,
   };
 }
 

@@ -7,6 +7,7 @@ const html = htm.bind(vhtml);
 export function custom(
   ogImage = "https://news.kiwistand.com/preview.jpeg",
   ogTitle = "Kiwi News - handpicked web3 alpha",
+  ogDescription = "",
 ) {
   return html`
     <meta charset="utf-8" />
@@ -20,6 +21,9 @@ export function custom(
     <meta property="twitter:image" content="${ogImage}" />
     <meta property="twitter:card" content="summary_large_image" />
     <meta property="og:title" content="${ogTitle}" />
+    ${ogDescription
+      ? html`<meta property="og:description" content="${ogDescription}" />`
+      : ""}
     <link rel="stylesheet" type="text/css" href="news.css" />
     <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
     ${PwaLinks()}
