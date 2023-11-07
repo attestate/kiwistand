@@ -23,6 +23,18 @@ export async function getConfig(sheet) {
   }
 }
 
+export async function getActiveCanons() {
+  let response;
+  try {
+    response = await getConfig("active_canons");
+  } catch (err) {
+    log(`active_canons: Couldn't get config: ${err.toString()}`);
+    return ["publicgoods", "protocols", "farcaster"];
+  }
+  const links = response.map(({ canon }) => canon);
+  return links;
+}
+
 export async function getFeedParameters() {
   const response = await getConfig("feed_parameters");
   if (response.length === 0) {

@@ -30,8 +30,7 @@ export async function getSheet(sheetName) {
   };
 }
 
-export async function getSheets() {
-  const sheets = ["publicgoods", "farcaster", "protocols"];
+export async function getSheets(sheets) {
   const results = [];
   for (const sheet of sheets) {
     results.push(await getSheet(sheet));

@@ -27,6 +27,7 @@ import * as karma from "../karma.mjs";
 const html = htm.bind(vhtml);
 
 function CanonRow(sheets) {
+  sheets = sheets.sort((a, b) => 0.5 - Math.random());
   return html`
     <tr>
       <td>
@@ -305,7 +306,9 @@ export async function index(trie, page) {
 export default async function (trie, theme, page, identity) {
   const path = "/";
   const { editorPicks, config, stories, start } = await index(trie, page);
-  const sheets = await curation.getSheets();
+  const activeSheets = await moderation.getActiveCanons();
+  const sheets = await curation.getSheets(activeSheets);
+
   return html`
     <html lang="en" op="news">
       <head>
