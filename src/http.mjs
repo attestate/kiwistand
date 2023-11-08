@@ -50,7 +50,24 @@ app.use(
     ':remote-addr - :remote-user ":method :url" :status ":referrer" ":user-agent"',
   ),
 );
-app.use(express.static("src/public"));
+app.use(
+  "/assets",
+  express.static("src/public/assets", {
+    setHeaders: (res, pathName) => {
+      res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+    },
+  }),
+);
+
+app.use(
+  express.static("src/public", {
+    setHeaders: (res, pathName) => {
+      if (!/\/assets\//.test(pathName)) {
+        res.setHeader("Cache-Control", "public, max-age=3600");
+      }
+    },
+  }),
+);
 app.use(express.json());
 app.use(cookieParser());
 
