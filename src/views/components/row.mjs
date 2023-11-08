@@ -37,7 +37,7 @@ const row = (
             <div
               style="display: flex; align-items: center; justify-content: center; min-width: 40px; margin-right: 6px;"
             >
-              <a href="#" style="min-height: 40px; display:block;">
+              <div style="min-height: 40px; display:block;">
                 <div
                   class="${interactive ? "" : "votearrowcontainer"}"
                   data-title="${story.title}"
@@ -52,10 +52,12 @@ const row = (
                     >
                       ▲
                     </div>
-                    <div style="font-size: 8pt; text-align: center;">...</div>
+                    <div style="font-size: 8pt; text-align: center;">
+                      ${story.upvotes ? story.upvotes : "..."}
+                    </div>
                   </div>
                 </div>
-              </a>
+              </div>
             </div>
             <div
               style="display:flex; justify-content: center; flex-direction: column; flex-grow: 1;"
