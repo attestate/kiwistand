@@ -117,6 +117,12 @@ const footer = (theme, path) => html`
     <span> | </span>
     <a href="/guidelines">Guidelines</a>
     <span> | </span>
+    <a href="/onboarding">Onboarding</a>
+    <span> | </span>
+    <a href="/shortcut">iOS Shortcut</a>
+    <span> | </span>
+    <a href="/kiwipass">Kiwi Pass</a>
+    <span> | </span>
     <a href="https://stats.uptimerobot.com/3gg0Lu79y8" target"_blank">Status</a>
     <span> | </span>
     <a
