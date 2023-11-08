@@ -46,7 +46,7 @@ const row = (
                 >
                   <div>
                     <div
-                      class="votearrow pulsate"
+                      class="${interactive ? "votearrow" : "votearrow pulsate"}"
                       style="color: rgb(130, 130, 130); cursor: pointer;"
                       title="upvote"
                     >
