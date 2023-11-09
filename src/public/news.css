@@ -5,6 +5,14 @@ body {
      color:#828282;
      overscroll-behavior: none;
 }
+.share-container {
+   display: none;
+ }
+@media screen and (max-width: 768px) {
+  .share-container {
+    display: inline;
+  }
+}
 .hnname span:active, .votearrow:active {
   transform: scale(0.80);
   display: inline-block;
