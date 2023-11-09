@@ -161,11 +161,7 @@ const row = (
                             href="#"
                             class="caster-link share-link"
                             title="Share"
-                            onclick="event.preventDefault(); navigator.share({ text: '#${story.index.slice(
-                              2,
-                              19,
-                            )}', url:
- 'https://news.kiwistand.com/stories?index=0x${story.index}' });"
+                            onclick="event.preventDefault(); navigator.share({url: 'https://news.kiwistand.com/stories?index=0x${story.index}' });"
                           >
                             ${ShareIcon(
                               "padding: 0 3px 1px 0; vertical-align: bottom; height: 13px; width: 13px;",
