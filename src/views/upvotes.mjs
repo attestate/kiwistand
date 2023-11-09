@@ -67,7 +67,12 @@ export default async function (
     storyPromises = storyPromises.sort((a, b) => b.timestamp - a.timestamp);
   }
 
-  const writers = await moderation.getWriters();
+  let writers = [];
+  try {
+    writers = await moderation.getWriters();
+  } catch (err) {
+    // noop
+  }
 
   let stories = storyPromises
     .filter(

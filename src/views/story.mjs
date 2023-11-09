@@ -27,7 +27,12 @@ import { metadata, render } from "../parser.mjs";
 const html = htm.bind(vhtml);
 
 export default async function (trie, theme, index, value, identity) {
-  const writers = await moderation.getWriters();
+  let writers = [];
+  try {
+    writers = await moderation.getWriters();
+  } catch (err) {
+    // noop
+  }
   const path = "/";
 
   let data;

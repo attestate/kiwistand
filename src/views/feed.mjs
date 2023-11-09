@@ -267,7 +267,12 @@ export async function index(trie, page) {
   const end = totalStories * (page + 1);
   storyPromises = storyPromises.slice(start, end);
 
-  const writers = await moderation.getWriters();
+  let writers = [];
+  try {
+    writers = await moderation.getWriters();
+  } catch (err) {
+    // noop
+  }
 
   let stories = [];
   for await (let story of storyPromises) {

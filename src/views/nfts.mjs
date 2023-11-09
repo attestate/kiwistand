@@ -49,7 +49,12 @@ export default async function (trie, theme, identity) {
   sortedCounts = sortedCounts.filter((item) => item.title.startsWith("NFT:"));
   let slicedCounts = sortedCounts.slice(0, 40);
 
-  const writers = await moderation.getWriters();
+  let writers = [];
+  try {
+    writers = await moderation.getWriters();
+  } catch (err) {
+    // noop
+  }
   let stories = [];
   for await (let story of slicedCounts) {
     const ensData = await ens.resolve(story.identity);

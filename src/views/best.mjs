@@ -110,7 +110,12 @@ export default async function index(trie, theme, page, period, identity) {
   const storyPromises = (await topstories(leaves, start, end))
     .filter((story) => story.timestamp >= startDatetime)
     .slice(start, end);
-  const writers = await moderation.getWriters();
+  let writers = [];
+  try {
+    writers = await moderation.getWriters();
+  } catch (err) {
+    // noop
+  }
 
   let stories = [];
   for await (let story of storyPromises) {

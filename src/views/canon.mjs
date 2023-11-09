@@ -98,7 +98,12 @@ export default async function index(trie, theme, identity, canon) {
   const storyPromises = (await topstories(leaves)).filter(
     (story) => story.timestamp >= startDatetime,
   );
-  const writers = await moderation.getWriters();
+  let writers = [];
+  try {
+    writers = await moderation.getWriters();
+  } catch (err) {
+    // noop
+  }
 
   let stories = [];
   for await (let story of storyPromises) {

@@ -46,7 +46,12 @@ export default async function (trie, theme, identity) {
   let sortedCounts = counts.sort((a, b) => b.timestamp - a.timestamp);
   let slicedCounts = sortedCounts.slice(0, 40);
 
-  const writers = await moderation.getWriters();
+  let writers = [];
+  try {
+    writers = await moderation.getWriters();
+  } catch (err) {
+    // noop
+  }
 
   let stories = [];
   for await (let story of slicedCounts) {
