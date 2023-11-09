@@ -306,8 +306,13 @@ export async function index(trie, page) {
 export default async function (trie, theme, page, identity) {
   const path = "/";
   const { editorPicks, config, stories, start } = await index(trie, page);
-  const activeSheets = await moderation.getActiveCanons();
-  const sheets = await curation.getSheets(activeSheets);
+  let sheets;
+  try {
+    const activeSheets = await moderation.getActiveCanons();
+    sheets = await curation.getSheets(activeSheets);
+  } catch (err) {
+    //noop
+  }
 
   return html`
     <html lang="en" op="news">
@@ -422,7 +427,8 @@ export default async function (trie, theme, page, identity) {
                   </p>
                 </td>
               </tr>
-              ${stories.slice(0, 6).map(Row(start))} ${CanonRow(sheets)}
+              ${stories.slice(0, 6).map(Row(start))}
+              ${sheets ? CanonRow(sheets) : ""}
               ${stories.slice(6).map(Row(start))}
               <tr style="height: 50px">
                 <td>
