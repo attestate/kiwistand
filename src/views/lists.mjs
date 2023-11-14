@@ -70,9 +70,10 @@ export default async function displayCanonRow(theme, identity) {
                 <td style="padding: 10px; font-size: 16px;">
                   <h2>Kiwi Lists</h2>
                   <p>
-                    Lists let you dive into specific subjects. Kiwi curators -
-                    like Spotify DJs - collect the top content from one genre
-                    and lead you into an educational journey. Click one of the
+                    Lists let you dive into specific subjects. Just like Spotify
+                    DJs collect songs from one genre to take on a musical
+                    journey, Kiwi curators collect top content from one subject
+                    to take you on an educational journey. Click one of the
                     lists below to check what we prepared for you.
                   </p>
                 </td>
