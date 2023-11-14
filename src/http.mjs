@@ -17,6 +17,7 @@ import story from "./views/story.mjs";
 import newest from "./views/new.mjs";
 import best from "./views/best.mjs";
 import canon from "./views/canon.mjs";
+import lists from "./views/lists.mjs";
 import privacy from "./views/privacy.mjs";
 import guidelines from "./views/guidelines.mjs";
 import onboarding from "./views/onboarding.mjs";
@@ -292,6 +293,10 @@ export async function launch(trie, libp2p) {
   });
   app.get("/stats", async (request, reply) => {
     const content = await stats(trie, reply.locals.theme);
+    return reply.status(200).type("text/html").send(content);
+  });
+  app.get("/lists", async (request, reply) => {
+    const content = await lists(trie, reply.locals.theme);
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/about", async (request, reply) => {
