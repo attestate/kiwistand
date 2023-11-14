@@ -494,16 +494,21 @@ export async function launch(trie, libp2p) {
     try {
       address = await toAddress(name);
     } catch (err) {
-      return next();
+      return next(err);
     }
-    const content = await getProfile(
-      trie,
-      reply.locals.theme,
-      address,
-      request.query.page,
-      request.query.mode,
-      request.cookies.identity,
-    );
+    let content;
+    try {
+      content = await getProfile(
+        trie,
+        reply.locals.theme,
+        address,
+        request.query.page,
+        request.query.mode,
+        request.cookies.identity,
+      );
+    } catch (err) {
+      return next(err);
+    }
     return reply.status(200).type("text/html").send(content);
   });
 
