@@ -282,10 +282,12 @@ export async function launch(trie, libp2p) {
     if (isNaN(page) || page < 1) {
       page = 0;
     }
+    const search = request.query.search;
     const content = await community(
       trie,
       reply.locals.theme,
       page,
+      search,
       request.cookies.identity,
     );
     return reply.status(200).type("text/html").send(content);

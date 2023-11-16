@@ -25,7 +25,16 @@ const html = htm.bind(vhtml);
 
 const iconsStyles = "color: black; width: 17px;";
 
-export async function paginate(users, allowlist, page) {
+async function resolveUsers(users) {
+  return await Promise.all(
+    users.map(async (user) => ({
+      ...user,
+      ensData: await ens.resolve(user.identity),
+    })),
+  );
+}
+
+export async function paginate(users, allowlist, page, search) {
   const combinedUsers = allowlist.map((address) => {
     const user = users.find(
       (u) => u.identity.toLowerCase() === address.toLowerCase(),
@@ -34,15 +43,26 @@ export async function paginate(users, allowlist, page) {
     return { identity: address, karma };
   });
 
-  combinedUsers.sort((a, b) => parseInt(b.karma) - parseInt(a.karma));
-
   const pageSize = env.TOTAL_USERS;
   const start = pageSize * page;
   const end = pageSize * (page + 1);
-  const pageUsers = combinedUsers.slice(start, end);
 
-  for await (const user of pageUsers) {
-    user.ensData = await ens.resolve(user.identity);
+  let pageUsers;
+
+  if (search && !!search.length) {
+    const combinedUsersWithEns = await resolveUsers(combinedUsers);
+    const result = combinedUsersWithEns.filter(
+      (user) =>
+        user.ensData.displayName &&
+        user.ensData.displayName.split(".")[0].match(search.toLowerCase()),
+    );
+    const sorted = result.sort((a, b) => parseInt(b.karma) - parseInt(a.karma));
+    pageUsers = sorted.slice(start, end);
+  } else {
+    const sorted = combinedUsers.sort(
+      (a, b) => parseInt(b.karma) - parseInt(a.karma),
+    );
+    pageUsers = await resolveUsers(sorted.slice(start, end));
   }
 
   return {
@@ -52,7 +72,7 @@ export async function paginate(users, allowlist, page) {
   };
 }
 
-export default async function (trie, theme, page = 0, identity) {
+export default async function (trie, theme, page = 0, search, identity) {
   const users = karma.ranking();
   const allowlist = Array.from(await registry.allowlist());
 
@@ -60,6 +80,7 @@ export default async function (trie, theme, page = 0, identity) {
     users,
     allowlist,
     page,
+    search,
   );
 
   const path = "/community";
