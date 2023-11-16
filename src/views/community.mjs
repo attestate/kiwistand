@@ -56,7 +56,9 @@ export async function paginate(users, allowlist, page, search) {
     totalUsers = combinedUsersWithEns.filter(
       (user) =>
         user.ensData.displayName &&
-        user.ensData.displayName.split(".")[0].match(search.toLowerCase()),
+        user.ensData.displayName
+          .split(".")[0]
+          .match(search.toLowerCase().trim()),
     );
     const sorted = totalUsers.sort(
       (a, b) => parseInt(b.karma) - parseInt(a.karma),
