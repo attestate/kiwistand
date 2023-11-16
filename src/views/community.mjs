@@ -1,6 +1,7 @@
 //@format
 import url from "url";
 import { env } from "process";
+import qs from "qs";
 
 import htm from "htm";
 import vhtml from "vhtml";
@@ -48,18 +49,22 @@ export async function paginate(users, allowlist, page, search) {
   const end = pageSize * (page + 1);
 
   let pageUsers;
+  let totalUsers;
 
   if (search && !!search.length) {
     const combinedUsersWithEns = await resolveUsers(combinedUsers);
-    const result = combinedUsersWithEns.filter(
+    totalUsers = combinedUsersWithEns.filter(
       (user) =>
         user.ensData.displayName &&
         user.ensData.displayName.split(".")[0].match(search.toLowerCase()),
     );
-    const sorted = result.sort((a, b) => parseInt(b.karma) - parseInt(a.karma));
+    const sorted = totalUsers.sort(
+      (a, b) => parseInt(b.karma) - parseInt(a.karma),
+    );
     pageUsers = sorted.slice(start, end);
   } else {
-    const sorted = combinedUsers.sort(
+    totalUsers = combinedUsers;
+    const sorted = totalUsers.sort(
       (a, b) => parseInt(b.karma) - parseInt(a.karma),
     );
     pageUsers = await resolveUsers(sorted.slice(start, end));
@@ -67,12 +72,20 @@ export async function paginate(users, allowlist, page, search) {
 
   return {
     usersData: pageUsers,
-    totalPages: Math.ceil(combinedUsers.length / pageSize),
+    totalPages: Math.ceil(totalUsers.length / pageSize),
     pageSize,
   };
 }
 
-export default async function (trie, theme, page = 0, search, identity) {
+export default async function (trie, theme, query, identity) {
+  let page = parseInt(query.page);
+  if (isNaN(page) || page < 1) {
+    page = 0;
+  }
+  const search = query.search;
+
+  console.log("search", search);
+
   const users = karma.ranking();
   const allowlist = Array.from(await registry.allowlist());
 
@@ -175,6 +188,16 @@ export default async function (trie, theme, page = 0, search, identity) {
                   <p style="color: black; padding: 5px; font-size: 14pt;">
                     <b>LEADERBOARD</b>
                   </p>
+                  <form>
+                    <input
+                      name="search"
+                      id="search"
+                      placeholder="search users by name"
+                    />
+                    <button type="submit">Search</button>
+                  </form>
+                  ${search &&
+                  html`<div><p>Search by: ${search}</p><a href="/community">Reset</button></a>`}
                 </td>
               </tr>
               <tr>
@@ -278,9 +301,17 @@ export default async function (trie, theme, page = 0, search, identity) {
                     style="display: flex; flex-direction: row; gap: 20px; padding: 0 20px 0 20px; font-size: 1.1rem;"
                   >
                     ${page > 0 &&
-                    html` <a href="?page=${page - 1}"> Previous </a> `}
+                    html`
+                      <a href="?${qs.stringify({ ...query, page: page - 1 })}">
+                        Previous
+                      </a>
+                    `}
                     ${page + 1 < totalPages &&
-                    html` <a href="?page=${page + 1}"> Next </a> `}
+                    html`
+                      <a href="?${qs.stringify({ ...query, page: page + 1 })}">
+                        Next
+                      </a>
+                    `}
                   </div>
                 </td>
               </tr>
