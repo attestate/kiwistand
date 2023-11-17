@@ -142,7 +142,6 @@ export default async function (trie, theme, query, identity) {
           }
           .user-karma {
             flex: none;
-            min-width: 100px;
             padding-right: 15px;
             text-align: right;
           }
