@@ -1,7 +1,6 @@
 //@format
 import url from "url";
 import { env } from "process";
-import qs from "qs";
 
 import htm from "htm";
 import vhtml from "vhtml";
@@ -24,15 +23,21 @@ import {
 
 const html = htm.bind(vhtml);
 
-const iconsStyles = "color: black; width: 17px;";
+const iconsStyles = "color: black; width: 20px;";
 
 async function resolveUsers(users) {
-  return await Promise.all(
-    users.map(async (user) => ({
-      ...user,
-      ensData: await ens.resolve(user.identity),
-    })),
+  const resolvedUsers = await Promise.allSettled(
+    users.map((user) =>
+      ens.resolve(user.identity).then((ensData) => ({
+        ...user,
+        ensData,
+      })),
+    ),
   );
+
+  return resolvedUsers
+    .filter((result) => result.status === "fulfilled")
+    .map((result) => result.value);
 }
 
 export async function paginate(users, allowlist, page, search) {
@@ -86,8 +91,6 @@ export default async function (trie, theme, query, identity) {
   }
   const search = query.search;
 
-  console.log("search", search);
-
   const users = karma.ranking();
   const allowlist = Array.from(await registry.allowlist());
 
@@ -112,9 +115,12 @@ export default async function (trie, theme, query, identity) {
             display: flex;
             justify-content: space-between;
             align-items: start;
-            padding: 8px;
+            padding: 12px 8px;
             box-sizing: border-box;
-            margin-bottom: 10px;
+            font-size: 1.05rem;
+          }
+          .user-row:nth-child(odd) {
+            background-color: rgba(0, 0, 0, 0.05);
           }
           .user-data {
             display: flex;
@@ -130,8 +136,9 @@ export default async function (trie, theme, query, identity) {
           }
           .user-social-links {
             display: flex;
-            gap: 15px;
-            margin-left: 40px;
+            gap: 24px;
+            margin-left: 50px;
+            padding: 10px 0 5px 0;
           }
           .user-karma {
             flex: none;
@@ -155,6 +162,37 @@ export default async function (trie, theme, query, identity) {
               font-size: 1.2em;
             }
           }
+          .search-container {
+            display: flex;
+          }
+
+          .search-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 10px 1rem;
+          }
+
+          .search-input {
+            flex-grow: 1;
+            height: 40px;
+            font-size: 1.05rem;
+            border-radius: 0;
+            border: 1px solid black;
+          }
+          .search-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.25);
+          }
+
+          @media (min-width: 601px) {
+            .search-container {
+              justify-content: start;
+            }
+            .search-input {
+              width: calc(100% - 120px); /* Adjust based on the button width */
+            }
+          }
         </style>
       </head>
       <body>
@@ -167,44 +205,38 @@ export default async function (trie, theme, query, identity) {
               </tr>
               <tr>
                 <td>
-                  <p style="color: black; padding: 5px; font-size: 14pt;">
+                  <p style="color: black; padding: 5px 10px; font-size: 14pt;">
                     <b>COMMUNITY</b>
                   </p>
-                  <p style="color: black; padding: 3px; font-size: 12pt;">
-                    Kiwi News is curated by the crypto community.
-                    <br />
-                    <br />
-                    The links you see in the Top and New feeds have been
-                    submitted and upvoted by the Kiwi NFT holders. They earn
-                    Kiwi points for every link they share and every upvote their
-                    link receives. You can check each community member's
-                    profiles and link contributions by clicking on their names.
-                    <br />
-                    <br />
-                    If you want to join our community and earn Kiwi points,
-                    <a
-                      href="https://news.kiwistand.com/welcome?referral=0x6BF29B7bF810eB40312E539026E5319A10b31735"
-                      >mint the Kiwi NFT</a
-                    >.
-                  </p>
-                  <p style="color: black; padding: 5px; font-size: 14pt;">
-                    <b>LEADERBOARD</b>
-                  </p>
-                  <form>
+                  <form class="search-container">
                     <input
+                      class="search-input"
                       name="search"
                       id="search"
                       placeholder="search users by name"
                     />
-                    <button type="submit">Search</button>
+                    <button
+                      type="submit"
+                      style="font-size: 1.05rem; border-radius: 0; border: 1px solid black; height: 40px; width: auto; padding: 6px 15px;"
+                      id="button-onboarding"
+                    >
+                      Search
+                    </button>
                   </form>
-                  ${search &&
-                  html`<div><p>Search by: ${search}</p><a href="/community">Reset</button></a>`}
+                  <div
+                    style="justify-content: space-between; margin: 10px 1rem; font-size: 1.05rem; display:flex;"
+                  >
+                    ${search &&
+                    html`<span>Searched by: ${search} </span>
+                      <a style="padding-right: 5px;" href="/community"
+                        >Reset</a
+                      > `}
+                  </div>
                 </td>
               </tr>
               <tr>
                 <td>
-                  <div style="padding-top: 5px; width: 100%;">
+                  <div style="padding-top: 25px; width: 100%;">
                     ${usersData &&
                     usersData.map(
                       ({ identity, ensData, karma }, i) => html`
@@ -214,7 +246,7 @@ export default async function (trie, theme, query, identity) {
                               href="/upvotes?address=${identity}"
                               class="user-upvote-link"
                             >
-                              <div style="min-width:40px">
+                              <div style="min-width:50px">
                                 ${i + 1 + page * pageSize}.
                               </div>
                               <div style="display: flex; align-items: center;">
@@ -304,13 +336,23 @@ export default async function (trie, theme, query, identity) {
                   >
                     ${page > 0 &&
                     html`
-                      <a href="?${qs.stringify({ ...query, page: page - 1 })}">
+                      <a
+                        href="?${new URLSearchParams({
+                          ...query,
+                          page: page - 1,
+                        }).toString()}"
+                      >
                         Previous
                       </a>
                     `}
                     ${page + 1 < totalPages &&
                     html`
-                      <a href="?${qs.stringify({ ...query, page: page + 1 })}">
+                      <a
+                        href="?${new URLSearchParams({
+                          ...query,
+                          page: page + 1,
+                        }).toString()}"
+                      >
                         Next
                       </a>
                     `}
