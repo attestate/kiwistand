@@ -15,6 +15,7 @@ export default async function index(theme, identity) {
     <html lang="en" op="news">
       <head>
         ${Head}
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>
       <body>
         <div class="container">
@@ -32,36 +33,42 @@ export default async function index(theme, identity) {
                   </p>
                   <br />
                   <p>
-                    <b>Kiwi Weekly (TOP10 most upvoted links of the week)</b>
+                    <h3>Kiwi Weekly (TOP10 most upvoted links of the week)</h3>
                   </p>
                   <div style="text-align: left;">
                     <iframe
                       src="https://paragraph.xyz/@kiwi-weekly/embed?minimal=true"
-                      width="480"
+                      width="100%"
                       height="80"
                       frameborder="0"
                       scrolling="no"
                     ></iframe>
                   </div>
-                  <p>
-                    <b>Kiwi Daily (Editor's Picks, Monday to Friday)</b>
-                  </p>
-                  <div style="text-align: left;">
-                    <iframe
-                      src="https://paragraph.xyz/@kiwi-daily/embed?minimal=true"
-                      width="480"
-                      height="80"
-                      frameborder="0"
-                      scrolling="no"
-                    ></iframe>
+                  <div>
+                    <p>
+                      <h3>Kiwi mobile app</h3>
+                    </p>
+                    <p>
+                      On iPhone (Safari) and Android (Chrome) you can install
+                      our progressive web app. This will make Kiwi News look
+                      like any other app on your phone!
+                    </p>
+                    <button
+                      id="button-onboarding"
+                      style="margin-right: 0;"
+                      onclick="window.dispatchEvent(new CustomEvent('openModal'));"
+                      >
+                      Install app - only on iPhone (Safari) or Android (Chrome)
+                    </button>
                   </div>
+                  <br />
                   <p>
-                    <b
+                    <h3
                       >Real-Time RSS Feeds (maintained by our community member:
                       <span> </span>
                       <a href="https://warpcast.com/freeatnet" target="_blank"
                         >@freeatnet</a
-                      >):</b
+                      >):</h3
                     >
                   </p>
                   <div>
@@ -88,6 +95,21 @@ export default async function index(theme, identity) {
           </div>
         </div>
         ${Footer(theme)}
+        <div
+          id="bookmark-modal"
+          style="display: none; position: fixed; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4);"
+        >
+          <div
+            style="background-color: #fefefe; margin: 15% auto; padding: 20px; border: 1px solid #888; width: 80%;"
+          >
+            <span
+              id="close-modal"
+              style="color: #aaa; float: right; font-size: 28px; font-weight: bold;"
+              >&times;</span
+            >
+            <p id="bookmark-instructions"></p>
+          </div>
+        </div>
       </body>
     </html>
   `;
