@@ -82,6 +82,7 @@ export function listAllowed(getAllowlist) {
     const code = 200;
     const httpMessage = "OK";
     const details = "Returning allow list";
+    reply.set("Cache-Control", "public, max-age=10, stale-while-revalidate=5");
     return sendStatus(
       reply,
       code,
@@ -97,6 +98,7 @@ export function listDelegations(getDelegations) {
     const code = 200;
     const httpMessage = "OK";
     const details = "Returning delegations list";
+    reply.set("Cache-Control", "public, max-age=10, stale-while-revalidate=5");
     return sendStatus(
       reply,
       code,
