@@ -313,18 +313,19 @@ function checkMintStatus(fetchAllowList, fetchDelegations) {
 }
 
 async function start() {
-  await addModals();
-  await addNFTPrice();
   const toast = await addToaster();
 
   const { fetchAllowList, fetchDelegations } = await import("./API.mjs");
   checkMintStatus(fetchAllowList, fetchDelegations);
   const allowlistPromise = fetchAllowList();
   const delegationsPromise = fetchDelegations();
+  await addVotes(allowlistPromise, delegationsPromise, toast);
+
+  await addModals();
+  await addNFTPrice();
 
   await addDelegateButton(await allowlistPromise, await delegationsPromise);
   await addBuyButton(allowlistPromise, delegationsPromise, toast);
-  await addVotes(allowlistPromise, delegationsPromise, toast);
   await addConnectedComponents(
     await allowlistPromise,
     await delegationsPromise,

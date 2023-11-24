@@ -13,6 +13,7 @@ import Ajv from "ajv";
 import addFormats from "ajv-formats";
 import { utils } from "ethers";
 import canonicalize from "canonicalize";
+import cache from "./cache.mjs";
 
 import { SCHEMATA, EIP712_DOMAIN, EIP712_MESSAGE } from "./constants.mjs";
 
@@ -80,8 +81,6 @@ export async function sign(signer, message, types) {
   };
 }
 
-let cache = new Map();
-
 function cacheResult(cacheKey, computeFunc) {
   if (cache.has(cacheKey)) {
     return cache.get(cacheKey);
@@ -113,7 +112,7 @@ export function verify(message) {
   const result = messageValidator(message);
   if (!result) {
     const errMessage = `Wrongly formatted message: ${JSON.stringify(
-      messageValidator.errors
+      messageValidator.errors,
     )}`;
     log(errMessage);
     throw new Error(errMessage);

@@ -278,14 +278,10 @@ export async function launch(trie, libp2p) {
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/community", async (request, reply) => {
-    let page = parseInt(request.query.page);
-    if (isNaN(page) || page < 1) {
-      page = 0;
-    }
     const content = await community(
       trie,
       reply.locals.theme,
-      page,
+      request.query,
       request.cookies.identity,
     );
     return reply.status(200).type("text/html").send(content);
@@ -494,16 +490,21 @@ export async function launch(trie, libp2p) {
     try {
       address = await toAddress(name);
     } catch (err) {
-      return next();
+      return next(err);
     }
-    const content = await getProfile(
-      trie,
-      reply.locals.theme,
-      address,
-      request.query.page,
-      request.query.mode,
-      request.cookies.identity,
-    );
+    let content;
+    try {
+      content = await getProfile(
+        trie,
+        reply.locals.theme,
+        address,
+        request.query.page,
+        request.query.mode,
+        request.cookies.identity,
+      );
+    } catch (err) {
+      return next(err);
+    }
     return reply.status(200).type("text/html").send(content);
   });
 
