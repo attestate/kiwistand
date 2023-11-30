@@ -41,7 +41,9 @@ const generateFeed = (messages) => {
           index: message.index,
         };
       } else {
-        groupedMessages[href].timestamp = message.timestamp;
+        if (message.timestamp > groupedMessages[href].timestamp) {
+          groupedMessages[href].timestamp = message.timestamp;
+        }
         groupedMessages[href].identities.push(message.identity);
         groupedMessages[href].verb = "upvoted";
       }
