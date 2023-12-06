@@ -70,6 +70,7 @@ export default async function index(theme, identity) {
               ${mockStories.map((story, index) =>
                 Row(
                   index,
+                  null,
                   "padding: 1rem 2rem; background-color: #e6e6df;",
                   false,
                   true,

@@ -101,7 +101,7 @@ export default async function (trie, theme, identity) {
                 ${SecondHeader(theme, "new")}
               </tr>
               <tr class="spacer" style="height:15px"></tr>
-              ${stories.map(Row())}
+              ${stories.map(Row(null, "/best"))}
               <tr class="spacer" style="height:15px"></tr>
               <tr
                 style="display: block; padding: 10px; background-color: ${theme.color}"

@@ -87,7 +87,7 @@ export default async function (trie, theme, index, value, identity) {
               <tr>
                 ${await Header(theme, identity)}
               </tr>
-              ${Row(start, style)({ ...story, index })}
+              ${Row(start, "/best", style)({ ...story, index })}
               ${preview
                 ? html`
                     <tr>

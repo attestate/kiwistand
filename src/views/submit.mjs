@@ -58,7 +58,7 @@ export default async function submit(theme, url = "", title = "", identity) {
                   </p>
                 </td>
               </tr>
-              ${Row(rowNumber, rowStyle, interactive)(story)}
+              ${Row(rowNumber, null, rowStyle, interactive)(story)}
               <tr>
                 <td>
                   <p

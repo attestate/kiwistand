@@ -278,6 +278,7 @@ export async function launch(trie, libp2p) {
       page,
       period,
       request.cookies.identity,
+      request.query.domain,
     );
     reply.header("Cache-Control", "public, max-age=300, must-revalidate");
     return reply.status(200).type("text/html").send(content);

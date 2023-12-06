@@ -25,6 +25,7 @@ const truncateLongWords = (text, maxLength = 20) => {
 
 const row = (
   start = 0,
+  path,
   style = "padding: 10px 5px 0 10px;",
   interactive,
   hideCast,
@@ -80,7 +81,14 @@ const row = (
                 </a>
                 <span> </span>
                 <span class="story-domain" style="white-space: nowrap;"
-                  >(${extractDomain(story.href)})</span
+                  >(${interactive && path
+                    ? extractDomain(story.href)
+                    : html`<a
+                        href="${path}?period=month&domain=${extractDomain(
+                          story.href,
+                        )}"
+                        >${extractDomain(story.href)}</a
+                      >`})</span
                 >
               </span>
               <div style="margin-top: auto; font-size: 10pt;">

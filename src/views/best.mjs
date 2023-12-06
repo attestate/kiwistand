@@ -20,14 +20,9 @@ import * as moderation from "./moderation.mjs";
 import * as registry from "../chainstate/registry.mjs";
 import log from "../logger.mjs";
 import { EIP712_MESSAGE } from "../constants.mjs";
-import Row from "./components/row.mjs";
+import Row, { extractDomain } from "./components/row.mjs";
 
 const html = htm.bind(vhtml);
-
-function extractDomain(link) {
-  const parsedUrl = new URL(link);
-  return parsedUrl.hostname;
-}
 
 const itemAge = (timestamp) => {
   const now = new Date();
@@ -70,7 +65,14 @@ async function topstories(leaves, start, end) {
   return count(leaves).sort((a, b) => b.upvotes - a.upvotes);
 }
 
-export default async function index(trie, theme, page, period, identity) {
+export default async function index(
+  trie,
+  theme,
+  page,
+  period,
+  identity,
+  domain,
+) {
   const from = null;
   const amount = null;
   const parser = JSON.parse;
@@ -107,9 +109,16 @@ export default async function index(trie, theme, page, period, identity) {
   const totalStories = parseInt(env.TOTAL_STORIES, 10);
   const start = totalStories * page;
   const end = totalStories * (page + 1);
-  const storyPromises = (await topstories(leaves, start, end))
-    .filter((story) => story.timestamp >= startDatetime)
-    .slice(start, end);
+  let storyPromises = (await topstories(leaves, start, end)).filter(
+    (story) => story.timestamp >= startDatetime,
+  );
+
+  if (domain)
+    storyPromises = storyPromises.filter(
+      ({ href }) => extractDomain(href) === domain,
+    );
+
+  storyPromises = storyPromises.slice(start, end);
   let writers = [];
   try {
     writers = await moderation.getWriters();
@@ -172,7 +181,7 @@ export default async function index(trie, theme, page, period, identity) {
                   </p>
                 </td>
               </tr>
-              ${stories.map(Row())}
+              ${stories.map(Row(null, "/best"))}
               <tr class="spacer" style="height:15px"></tr>
               <tr>
                 <td>

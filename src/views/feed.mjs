@@ -418,7 +418,9 @@ export default async function (trie, theme, page, identity, domain) {
                               </a>
                               <span
                                 style="padding-left: 5px; white-space: nowrap;"
-                                >(${extractDomain(story.href)})</span
+                                >(<a href="?domain=${extractDomain(story.href)}"
+                                  >${extractDomain(story.href)}</a
+                                >)</span
                               >
                             </span>
                           </div>
@@ -445,9 +447,9 @@ export default async function (trie, theme, page, identity, domain) {
                   </p>
                 </td>
               </tr>
-              ${stories.slice(0, 6).map(Row(start))}
+              ${stories.slice(0, 6).map(Row(start, "/"))}
               ${sheets && !domain ? CanonRow(sheets) : ""}
-              ${stories.slice(6).map(Row(start))}
+              ${stories.slice(6).map(Row(start, "/"))}
               <tr style="height: 50px">
                 <td>
                   <a

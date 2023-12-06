@@ -240,7 +240,7 @@ export default async function (
                     <td>No activity yet...</td>
                   </tr>`
                 : ""}
-              ${stories.map(Row())}
+              ${stories.map(Row(null, "/best"))}
               ${stories.length === totalStories
                 ? html`
                     <tr style="height: 50px">

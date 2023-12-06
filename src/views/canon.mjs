@@ -167,7 +167,7 @@ export default async function index(trie, theme, identity, canon) {
                   />
                 </td>
               </tr>
-              ${stories.map(Row())}
+              ${stories.map(Row(null, "/best"))}
               <tr class="spacer" style="height:15px"></tr>
               <tr
                 style="display: block; padding: 10px; background-color: ${theme.color}"
