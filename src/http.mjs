@@ -157,6 +157,7 @@ export async function launch(trie, libp2p) {
       reply.locals.theme,
       page,
       request.cookies.identity,
+      request.query.domain,
     );
     return reply.status(200).type("text/html").send(content);
   });

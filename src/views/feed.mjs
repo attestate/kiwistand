@@ -166,7 +166,7 @@ async function editors(leaves) {
   };
 }
 
-export async function index(trie, page) {
+export async function index(trie, page, domain) {
   const lookBack = sub(new Date(), {
     weeks: 3,
   });
@@ -262,6 +262,10 @@ export async function index(trie, page) {
   } else {
     storyPromises = storyPromises.filter(({ upvotes }) => upvotes > threshold);
   }
+  if (domain)
+    storyPromises = storyPromises.filter(
+      ({ href }) => extractDomain(href) === domain,
+    );
 
   const start = totalStories * page;
   const end = totalStories * (page + 1);
@@ -308,15 +312,24 @@ export async function index(trie, page) {
   };
 }
 
-export default async function (trie, theme, page, identity) {
+export default async function (trie, theme, page, identity, domain) {
   const path = "/";
-  const { editorPicks, config, stories, start } = await index(trie, page);
+  const { editorPicks, config, stories, start } = await index(
+    trie,
+    page,
+    domain,
+  );
   let sheets;
   try {
     const activeSheets = await moderation.getActiveCanons();
     sheets = await curation.getSheets(activeSheets);
   } catch (err) {
     //noop
+  }
+
+  let query = `?page=${page + 1}`;
+  if (domain) {
+    query += `&domain=${domain}`;
   }
 
   return html`
@@ -433,13 +446,13 @@ export default async function (trie, theme, page, identity) {
                 </td>
               </tr>
               ${stories.slice(0, 6).map(Row(start))}
-              ${sheets ? CanonRow(sheets) : ""}
+              ${sheets && !domain ? CanonRow(sheets) : ""}
               ${stories.slice(6).map(Row(start))}
               <tr style="height: 50px">
                 <td>
                   <a
                     style="padding: 20px 0 0 20px; font-size: 1.1rem;"
-                    href="?page=${page + 1}"
+                    href="${query}"
                   >
                     More
                   </a>
