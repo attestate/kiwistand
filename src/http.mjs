@@ -159,6 +159,7 @@ export async function launch(trie, libp2p) {
       request.cookies.identity,
       request.query.domain,
     );
+    reply.header("Cache-Control", "public, max-age=10, must-revalidate");
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/canons", async (request, reply) => {
@@ -181,6 +182,7 @@ export async function launch(trie, libp2p) {
       request.cookies.identity,
       sheet,
     );
+    reply.header("Cache-Control", "public, max-age=21600, must-revalidate");
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/stories", async (request, reply) => {
@@ -227,6 +229,7 @@ export async function launch(trie, libp2p) {
       post.value,
       request.cookies.identity,
     );
+    reply.header("Cache-Control", "public, max-age=1800, must-revalidate");
     return reply.status(200).type("text/html").send(content);
   });
   // NOTE: During the process of combining the feed and the editor's picks, we
@@ -276,6 +279,7 @@ export async function launch(trie, libp2p) {
       period,
       request.cookies.identity,
     );
+    reply.header("Cache-Control", "public, max-age=300, must-revalidate");
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/community", async (request, reply) => {
@@ -285,14 +289,17 @@ export async function launch(trie, libp2p) {
       request.query,
       request.cookies.identity,
     );
+    reply.header("Cache-Control", "public, max-age=86400, must-revalidate");
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/stats", async (request, reply) => {
     const content = await stats(trie, reply.locals.theme);
+    reply.header("Cache-Control", "public, max-age=86400");
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/about", async (request, reply) => {
     const content = await about(reply.locals.theme, request.cookies.identity);
+    reply.header("Cache-Control", "public, max-age=86400");
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/demonstration", async (request, reply) => {
@@ -337,6 +344,7 @@ export async function launch(trie, libp2p) {
       reply.locals.theme,
       request.cookies.identity,
     );
+    reply.header("Cache-Control", "public, max-age=86400");
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/why", async (request, reply) => {
@@ -386,21 +394,25 @@ export async function launch(trie, libp2p) {
       reply.setHeader("X-LAST-UPDATE", data.lastUpdate);
       reply.cookie("lastUpdate", data.lastUpdate);
     }
+    reply.header("Cache-Control", "public, max-age=300, must-revalidate");
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/subscribe", async (request, reply) => {
+    reply.header("Cache-Control", "public, max-age=86400");
     return reply
       .status(200)
       .type("text/html")
       .send(await subscribe(reply.locals.theme, request.cookies.identity));
   });
   app.get("/privacy-policy", async (request, reply) => {
+    reply.header("Cache-Control", "public, max-age=86400");
     return reply
       .status(200)
       .type("text/html")
       .send(await privacy(reply.locals.theme, request.cookies.identity));
   });
   app.get("/guidelines", async (request, reply) => {
+    reply.header("Cache-Control", "public, max-age=86400");
     return reply
       .status(200)
       .type("text/html")
@@ -413,18 +425,21 @@ export async function launch(trie, libp2p) {
       .send(await onboarding(reply.locals.theme, request.cookies.identity));
   });
   app.get("/welcome", async (request, reply) => {
+    reply.header("Cache-Control", "public, max-age=300, must-revalidate");
     return reply
       .status(200)
       .type("text/html")
       .send(await join(reply.locals.theme, request.cookies.identity));
   });
   app.get("/kiwipass", async (request, reply) => {
+    reply.header("Cache-Control", "public, max-age=300, must-revalidate");
     return reply
       .status(200)
       .type("text/html")
       .send(await kiwipass(reply.locals.theme, request.cookies.identity));
   });
   app.get("/shortcut", async (request, reply) => {
+    reply.header("Cache-Control", "public, max-age=86400");
     return reply
       .status(200)
       .type("text/html")
@@ -469,6 +484,7 @@ export async function launch(trie, libp2p) {
       request.query.mode,
       request.cookies.identity,
     );
+    reply.header("Cache-Control", "public, max-age=300, must-revalidate");
     return reply.status(200).type("text/html").send(content);
   });
 
@@ -506,6 +522,7 @@ export async function launch(trie, libp2p) {
     } catch (err) {
       return next(err);
     }
+    reply.header("Cache-Control", "public, max-age=300, must-revalidate");
     return reply.status(200).type("text/html").send(content);
   });
 
