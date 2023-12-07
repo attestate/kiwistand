@@ -17,7 +17,9 @@ You can learn the story behind the project in this [4 min video by Tim Daubensch
 - node >= 16
 - RPC nodes on Ethereum Mainnet & Optimism
 
-It's highly-likely that you'll need either a paid Alchemy account to make the node work because it is downloading a lot of block data. You might also try rate-limiting the speed at which the node tries to download event logs.
+It's highly likely that you'll need either a paid Alchemy account to make the node work because it is downloading a lot of block data. You might also try rate-limiting the speed at which the node tries to download event logs.
+
+There's an option where you can just download one of the latest database backups manually and rename it to the right directory. For that visit [attestate/kiwinews-backups](https://github.com/attestate/kiwinews-backups) and please reach out if you need an up-to-date backup.
 
 Please reach out to us if you don't have access to an Alchemy account and we'll figure something out!
 
