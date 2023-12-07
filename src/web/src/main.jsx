@@ -61,6 +61,24 @@ async function addSubmitButton(allowlist, delegations, toast) {
   }
 }
 
+async function addTips() {
+  const tipsButton = document.querySelectorAll(".tipsbuttoncontainer");
+  if (tipsButton && tipsButton.length > 0) {
+    const { createRoot } = await import("react-dom/client");
+    const { StrictMode } = await import("react");
+    const Tip = (await import("./Tip.jsx")).default;
+
+    tipsButton.forEach((tip) => {
+      const address = tip.getAttribute("data-address");
+      createRoot(tip).render(
+        <StrictMode>
+          <Tip address={address} />
+        </StrictMode>,
+      );
+    });
+  }
+}
+
 async function addVotes(allowlistPromise, delegationsPromise, toast) {
   const voteArrows = document.querySelectorAll(".votearrowcontainer");
   if (voteArrows && voteArrows.length > 0) {
@@ -320,6 +338,7 @@ async function start() {
   const allowlistPromise = fetchAllowList();
   const delegationsPromise = fetchDelegations();
   await addVotes(allowlistPromise, delegationsPromise, toast);
+  await addTips();
 
   await addModals();
   await addNFTPrice();

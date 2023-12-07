@@ -170,6 +170,14 @@ const row = (
                           </a>
                         </span>
                       `}
+                    ${html`
+                        <span> • </span>
+                        <span
+                          class="tipsbuttoncontainer"
+                          data-address="${story.identity}"
+                        >
+                        </span>
+                    `}
                 </span>
               </div>
             </div>
