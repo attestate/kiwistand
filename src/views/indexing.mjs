@@ -59,8 +59,8 @@ export default async function (theme, userAddress, transactionHash) {
                     </h3>
                     <p style="color: black; text-align: left; padding: 0 2rem;">
                       <b
-                        >This can take 5 or 10 minutes, so maybe grab a coffee
-                        or kiwi in the meantime :D
+                        >This can take 3 or 5 minutes, so maybe grab a coffee or
+                        kiwi in the meantime :D
                       </b>
                       <span> </span>
                       This page automatically redirects...
