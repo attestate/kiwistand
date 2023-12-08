@@ -39,7 +39,7 @@ const Bell = (props) => {
     }
   }, [address]);
 
-  if (!isEligible) {
+  if (!isEligible || window.location.pathname === "/indexing") {
     return null;
   }
 
