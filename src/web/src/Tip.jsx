@@ -14,15 +14,7 @@ const Tip = (props) => {
   const { pay } = useDawnPay();
 
   const handlePayClick = async () => {
-    const { success, receipt, error } = await pay(props.address);
-
-    if (success) {
-        console.log("Transaction Success: ", receipt)
-    }
-
-    if (!success) {
-        console.log("Transaction Error: ", error)
-    }
+    await pay(props.address);
   };
 
   return (
