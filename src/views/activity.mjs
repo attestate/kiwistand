@@ -18,6 +18,7 @@ import * as registry from "../chainstate/registry.mjs";
 import * as id from "../id.mjs";
 import * as moderation from "./moderation.mjs";
 import cache from "../cache.mjs";
+import { getTips } from "../tips.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -64,7 +65,7 @@ function generateRow(lastUpdate) {
       .reverse()
       .filter((identity) => identity.safeAvatar)
       .slice(0, 5);
-    const rowStyle =
+    const rowStyle = activity.verb === "tipped" ? "background-color: #E7FFE1;" :
       lastUpdate < activity.timestamp ? "background-color: #e6e6dfbf" : "";
 
     return html`
@@ -76,7 +77,7 @@ function generateRow(lastUpdate) {
               style="font-size: 1.5rem; flex: 0.2; display: flex; align-items: center; justify-content: center; color: limegreen;"
               title="upvote"
             >
-              ▲
+              ${activity.verb === "upvoted" ? html`▲` : html`$`}
             </div>
             <div
               style="padding-top: 10px; flex: 0.8; display: flex; flex-direction: column;"
@@ -119,12 +120,17 @@ function generateRow(lastUpdate) {
                   >
                 </p>
                 <p style="margin-top: 5px;">
+                ${activity.verb === "tipped" ? 
+                html`${activity.message.title}` : 
+                html`
                   <a
                     href="/stories?index=0x${activity.message.index}"
                     style="color: gray; word-break: break-word;"
                   >
                     ${title.substring(0, 80)}
                   </a>
+                `
+                }
                 </p>
               </div>
             </div>
@@ -225,6 +231,8 @@ export async function data(trie, identity, lastRemoteValue) {
   );
   leaves = moderation.moderate(leaves, config);
 
+  let tips = await getTips(identity);
+
   const activities = generateFeed(leaves);
   const filteredActivities = activities.filter(
     (activity) =>
@@ -232,6 +240,25 @@ export async function data(trie, identity, lastRemoteValue) {
       // TODO: Should start using ethers.utils.getAddress
       activity.towards.toLowerCase() === identity.toLowerCase(),
   );
+
+  if (tips && tips.length > 0) {
+    tips.forEach((tip) => {
+      filteredActivities.push({
+        identities: [tip.to],
+        verb: "tipped",
+        message: {
+          title: tip.message,
+          timestamp: tip.timestamp,
+          identity: tip.from,
+        },
+        timestamp: tip.timestamp,
+        towards: tip.from
+      });
+    })
+  }
+
+  // sort by timestamp
+  filteredActivities.sort((a, b) => b.timestamp - a.timestamp);
 
   let notifications = [];
   for await (let activity of filteredActivities) {
