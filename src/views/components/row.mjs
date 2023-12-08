@@ -178,7 +178,9 @@ const row = (
                           </a>
                         </span>
                       `}
-                    ${html`
+                    ${interactive
+                      ? null
+                      : html`
                         <span> • </span>
                         <span
                           class="tipsbuttoncontainer"
