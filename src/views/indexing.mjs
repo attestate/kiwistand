@@ -55,18 +55,25 @@ export default async function (theme, userAddress, transactionHash) {
                     <h3
                       style="color: black; align-self: center; margin-top: 2rem;"
                     >
-                      Please give us a moment...
+                      We're looking for your Kiwi onchain!
                     </h3>
                     <p style="color: black; text-align: left; padding: 0 2rem;">
-                      We're looking for your Kiwi Pass onchain! As soon as we
-                      find it, this page will redirect...
+                      <b
+                        >This can take 5 or 10 minutes, so maybe grab a coffee
+                        or kiwi in the meantime :D
+                      </b>
+                      <span> </span>
+                      This page automatically redirects...
                       <br />
                       <br />
-                      <a
-                        href="https://optimistic.etherscan.io/tx/${transactionHash}"
-                        target="_blank"
-                        >Your transaction on Etherscan</a
-                      >
+                      In the mean time, check what you can do here!
+                      <br />
+                      <br />
+                      <a href="/onboarding" target="_blank">
+                        <button style="width:auto;" id="button-onboarding">
+                          Explore Kiwi News
+                        </button>
+                      </a>
                     </p>
                   </div>
                 </td>
