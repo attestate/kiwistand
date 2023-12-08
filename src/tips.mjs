@@ -15,23 +15,23 @@ const TIP_API_KEY = "73yZ9m4JJccccsm0L6HNPanQm";
 
 export async function getTips(address) {
     try {
+      // 1. Fetch tips from the API
       const response = await fetch(`${TIP_GET_ENDPOINT}${address}`, {
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${TIP_API_KEY}`
         },
       });
-  
+
+      // 2. Get the data from the response
       const data = await response.json();
   
-      console.log("tips1", data);
-
+      // 3. Check if the response is valid
       if (!data || !data.success || !data.data) {
         return [];
       }
-
-      console.log("tips2", data.data);
   
+      // 4. Return the formatted tips
       return data.data.map(({ from, to, usdAmount, timestamp }) => ({
           from,
           to,
