@@ -39,7 +39,11 @@ const Bell = (props) => {
     }
   }, [address]);
 
-  if (!isEligible || window.location.pathname === "/indexing") {
+  if (
+    !isEligible ||
+    !getCookie("lastUpdate") ||
+    window.location.pathname === "/indexing"
+  ) {
     return null;
   }
 
