@@ -337,23 +337,18 @@ async function start() {
   checkMintStatus(fetchAllowList, fetchDelegations);
   const allowlistPromise = fetchAllowList();
   const delegationsPromise = fetchDelegations();
-  await addVotes(allowlistPromise, delegationsPromise, toast);
-  await addTips();
 
-  await addModals();
-  await addNFTPrice();
-
-  await addDelegateButton(await allowlistPromise, await delegationsPromise);
-  await addBuyButton(allowlistPromise, delegationsPromise, toast);
-  await addConnectedComponents(
-    await allowlistPromise,
-    await delegationsPromise,
-  );
-  await addSubmitButton(
-    await allowlistPromise,
-    await delegationsPromise,
-    toast,
-  );
+  // We're parallelizing all additions into the DOM
+  await Promise.allSettled([
+    addVotes(allowlistPromise, delegationsPromise, toast),
+    addTips(),
+    addModals(),
+    addNFTPrice(),
+    addDelegateButton(await allowlistPromise, await delegationsPromise),
+    addBuyButton(allowlistPromise, delegationsPromise, toast),
+    addConnectedComponents(await allowlistPromise, await delegationsPromise),
+    addSubmitButton(await allowlistPromise, await delegationsPromise, toast),
+  ]);
 
   let url = new URL(window.location.href);
   let link = url.searchParams.get("link");
