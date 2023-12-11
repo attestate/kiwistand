@@ -65,8 +65,12 @@ function generateRow(lastUpdate) {
       .reverse()
       .filter((identity) => identity.safeAvatar)
       .slice(0, 5);
-    const rowStyle = activity.verb === "tipped" ? "background-color: #E7FFE1;" :
-      lastUpdate < activity.timestamp ? "background-color: #e6e6dfbf" : "";
+    const rowStyle =
+      activity.verb === "tipped"
+        ? "background-color: #E7FFE1;"
+        : lastUpdate < activity.timestamp
+        ? "background-color: #e6e6dfbf"
+        : "";
 
     return html`
       <tr style="${rowStyle}">
@@ -120,17 +124,16 @@ function generateRow(lastUpdate) {
                   >
                 </p>
                 <p style="margin-top: 5px;">
-                ${activity.verb === "tipped" ? 
-                html`${activity.message.title}` : 
-                html`
-                  <a
-                    href="/stories?index=0x${activity.message.index}"
-                    style="color: gray; word-break: break-word;"
-                  >
-                    ${title.substring(0, 80)}
-                  </a>
-                `
-                }
+                  ${activity.verb === "tipped"
+                    ? html`${activity.message.title}`
+                    : html`
+                        <a
+                          href="/stories?index=0x${activity.message.index}"
+                          style="color: gray; word-break: break-word;"
+                        >
+                          ${title.substring(0, 80)}
+                        </a>
+                      `}
                 </p>
               </div>
             </div>
@@ -252,9 +255,9 @@ export async function data(trie, identity, lastRemoteValue) {
           identity: tip.from,
         },
         timestamp: tip.timestamp,
-        towards: tip.from
+        towards: tip.from,
       });
-    })
+    });
   }
 
   // sort by timestamp

@@ -395,7 +395,7 @@ export async function launch(trie, libp2p) {
       reply.setHeader("X-LAST-UPDATE", data.lastUpdate);
       reply.cookie("lastUpdate", data.lastUpdate);
     }
-    reply.header("Cache-Control", "public, max-age=300, must-revalidate");
+    reply.header("Cache-Control", "public, max-age=60, must-revalidate");
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/subscribe", async (request, reply) => {
