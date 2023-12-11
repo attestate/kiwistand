@@ -178,16 +178,15 @@ const row = (
                           </a>
                         </span>
                       `}
-                    ${interactive
-                      ? null
-                      : html`
-                        <span> • </span>
+                  ${interactive
+                    ? null
+                    : html`
                         <span
                           class="tipsbuttoncontainer"
                           data-address="${story.identity}"
                         >
                         </span>
-                    `}
+                      `}
                 </span>
               </div>
             </div>
