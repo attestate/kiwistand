@@ -1,16 +1,17 @@
 // @format
-import { PayKitProvider } from "@dawnpay/kit"
+import { PayKitProvider } from "@dawnpay/kit";
 import { useDawnPay } from "@dawnpay/kit";
 
 const Container = (props) => {
   return (
     <PayKitProvider>
-        <Tip {...props} />
+      <Tip {...props} />
     </PayKitProvider>
   );
 };
 
 const Tip = (props) => {
+  if (!window.ethereum) return null;
   const { pay } = useDawnPay();
 
   const handlePayClick = async () => {
@@ -18,9 +19,12 @@ const Tip = (props) => {
   };
 
   return (
-    <a onClick={handlePayClick} class="caster-link">
-      $ Tip
-    </a>
+    <span>
+      <span> • </span>
+      <a onClick={handlePayClick} class="caster-link">
+        $ Tip
+      </a>
+    </span>
   );
 };
 
