@@ -23,12 +23,14 @@ const Bell = (props) => {
   const link = `/activity?address=${address}`;
 
   const [notificationCount, setNotificationCount] = useState(0);
+  const [readNotifications, setReadNotifications] = useState(0);
 
   useEffect(() => {
     if (address) {
       const fetchAndUpdateNotifications = async () => {
         const notifications = await fetchNotifications(address);
         const lastUpdate = getCookie("lastUpdate");
+        setReadNotifications(notifications.length);
 
         const count = notifications.reduce((acc, notification) => {
           return notification.timestamp > lastUpdate ? acc + 1 : acc;
@@ -41,7 +43,7 @@ const Bell = (props) => {
 
   if (
     !isEligible ||
-    !getCookie("lastUpdate") ||
+    (!getCookie("lastUpdate") && readNotifications === 0) ||
     window.location.pathname === "/indexing"
   ) {
     return null;

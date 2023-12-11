@@ -379,7 +379,7 @@ export async function launch(trie, libp2p) {
     try {
       data = await activity.data(
         trie,
-        request.cookies.identity || request.query.address,
+        request.query.address,
         request.cookies.lastUpdate,
       );
     } catch (err) {

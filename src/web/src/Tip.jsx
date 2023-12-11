@@ -21,7 +21,7 @@ const Tip = (props) => {
   return (
     <span>
       <span> • </span>
-      <a onClick={handlePayClick} class="caster-link">
+      <a onClick={handlePayClick} className="caster-link">
         $ Tip
       </a>
     </span>
