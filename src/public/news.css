@@ -595,6 +595,7 @@ body {
 }
  a.caster-link:hover {
      color: #472a91;
+     cursor: pointer;
 }
  
 #top-bar {
