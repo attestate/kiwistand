@@ -6,7 +6,7 @@ import { fetchBuilder, FileSystemCache } from "node-fetch-cache";
 const fetch = fetchBuilder.withCache(
   new FileSystemCache({
     cacheDirectory: path.resolve(env.CACHE_DIR),
-    ttl: 86400000, // 24 hours
+    ttl: 60, // 1 min
   }),
 );
 
