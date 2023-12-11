@@ -8,18 +8,133 @@ import {
   useNetwork,
   useSwitchNetwork,
 } from "wagmi";
+import { Contract } from "@ethersproject/contracts";
+import { Provider } from "@ethersproject/providers";
 import { parseEther } from "@ethersproject/units";
-import { optimism } from "wagmi/chains";
+import { mainnet, optimism } from "wagmi/chains";
 import { Wallet } from "@ethersproject/wallet";
 import { getAddress } from "@ethersproject/address";
 import { eligible, create } from "@attestate/delegator2";
 import { useState, useEffect } from "react";
 import useLocalStorageState from "use-local-storage-state";
 import { RainbowKitProvider, ConnectButton } from "@rainbow-me/rainbowkit";
+import {
+  getProvider,
+  prepareWriteContract,
+  writeContract,
+  getAccount,
+  fetchBalance,
+  readContract,
+} from "@wagmi/core";
+
 import { getLocalAccount } from "./session.mjs";
 
 import { client, chains } from "./client.mjs";
 
+export async function prepare(key) {
+  const { address } = getAccount();
+  if (!address) {
+    throw new Error("Account not available");
+  }
+
+  const provider = getProvider();
+
+  const balance = {
+    mainnet: (await fetchBalance({ address, chainId: mainnet.id })).value,
+    optimism: (await fetchBalance({ address, chainId: optimism.id })).value,
+  };
+  const saleDetails = await readContract({
+    address: collectionProxy,
+    abi: abiVendor,
+    functionName: "saleDetails",
+    chainId: optimism.id,
+  });
+  if (!saleDetails || !saleDetails.publicSalePrice) {
+    throw new Error("Couldn't get price");
+  }
+  const price = saleDetails.publicSalePrice.add(ZORA_MINT_FEE);
+
+  let preferredChainId = null;
+  if (balance.optimism.gt(price)) {
+    preferredChainId = optimism.id;
+  } else if (balance.mainnet.gt(price)) {
+    preferredChainId = mainnet.id;
+  }
+  if (!preferredChainId) {
+    throw new Error("Insufficient ETH");
+  }
+
+  const quantity = 1;
+  const authorize = true;
+  const payload = await create(key, address, key.address, authorize);
+  const comment = "";
+  const zeroAddress = "0x0000000000000000000000000000000000000000";
+  let referral = zeroAddress;
+  const queryReferral = new URLSearchParams(window.location.search).get(
+    "referral",
+  );
+  try {
+    referral = getAddress(queryReferral);
+  } catch (err) {
+    //noop
+  }
+
+  let config;
+  if (preferredChainId === mainnet.id) {
+    const isCreation = false;
+    const gasLimit = 170000;
+    const opProvider = getProvider({ chainId: optimism.id });
+    const contract = new Contract(addressDelegator, abiDelegator, opProvider);
+    const data = contract.interface.encodeFunctionData("setup", [
+      quantity,
+      payload,
+      comment,
+      referral,
+    ]);
+
+    config = await prepareWriteContract({
+      address: optimismPortal,
+      abi: abiOptimismPortal,
+      functionName: "depositTransaction",
+      args: [addressDelegator, price, gasLimit, isCreation, data],
+      overrides: {
+        value: price,
+      },
+      chainId: mainnet.id,
+    });
+  } else if (preferredChainId === optimism.id) {
+    config = await prepareWriteContract({
+      address: addressDelegator,
+      abi: abiDelegator,
+      functionName: "setup",
+      args: [quantity, payload, comment, referral],
+      overrides: {
+        value: price,
+      },
+      chainId: optimism.id,
+    });
+  } else {
+    throw new Error("Selected unsupported chainId");
+  }
+  return config;
+}
+
+const optimismPortal = "0xbEb5Fc579115071764c7423A4f12eDde41f106Ed";
+const abiOptimismPortal = [
+  {
+    inputs: [
+      { internalType: "address", name: "_to", type: "address" },
+      { internalType: "uint256", name: "_value", type: "uint256" },
+      { internalType: "uint64", name: "_gasLimit", type: "uint64" },
+      { internalType: "bool", name: "_isCreation", type: "bool" },
+      { internalType: "bytes", name: "_data", type: "bytes" },
+    ],
+    name: "depositTransaction",
+    outputs: [],
+    stateMutability: "payable",
+    type: "function",
+  },
+];
 const ZORA_MINT_FEE = parseEther("0.000777");
 const abiDelegator = [
   {
@@ -121,8 +236,29 @@ const BuyButton = (props) => {
   if (localAccount) {
     address = localAccount.identity;
   }
-
   const isEligible = eligible(allowlist, delegations, address);
+
+  const [config, setConfig] = useState(null);
+  const [error, setError] = useState(null);
+  const isSuccess = false;
+  useEffect(() => {
+    const generate = async () => {
+      if (!key || !isEligible) {
+        return;
+      }
+
+      let config;
+      try {
+        config = await prepare(key);
+      } catch (err) {
+        setError(err);
+      }
+      if (!config) return;
+
+      setConfig(config);
+    };
+    generate();
+  }, [key]);
 
   useEffect(() => {
     if (from.address) {
@@ -140,62 +276,13 @@ const BuyButton = (props) => {
   }, [from.address, localStorageKey, provider]);
 
   useEffect(() => {
-    const generate = async () => {
-      if (key) {
-        const authorize = true;
-        const payload = await create(key, from.address, key.address, authorize);
-        setPayload(payload);
-      }
-    };
-    generate();
-  }, [from.address, key]);
-
-  const saleDetails = useContractRead({
-    address: collectionProxy,
-    abi: abiVendor,
-    functionName: "saleDetails",
-    chainId: optimism.id,
-  });
-
-  const quantity = 1;
-  const comment = "";
-
-  const zeroAddress = "0x0000000000000000000000000000000000000000";
-  let referral = zeroAddress;
-  const queryReferral = new URLSearchParams(window.location.search).get(
-    "referral",
-  );
-  try {
-    referral = getAddress(queryReferral);
-  } catch (err) {
-    //noop
-  }
-
-  const { config, error } = usePrepareContractWrite({
-    address: addressDelegator,
-    abi: abiDelegator,
-    functionName: "setup",
-    args: [quantity, payload, comment, referral],
-    overrides: {
-      value: saleDetails.data.publicSalePrice.add(ZORA_MINT_FEE),
-    },
-    chainId: optimism.id,
-  });
-
-  if (error) {
-    console.error(error);
-  }
-
-  const { data, write, isLoading, isSuccess } = useContractWrite(config);
-
-  useEffect(() => {
     if (isSuccess) {
       setLocalStorageKey(key.privateKey);
       window.location.href = `/indexing?address=${from.address}&transactionHash=${data.hash}`;
     }
   }, [isSuccess]);
 
-  if (chain.id !== optimism.id) {
+  if (config && config.chainId === optimism.id && chain.id !== optimism.id) {
     return (
       <div>
         <button
@@ -259,11 +346,10 @@ const BuyButton = (props) => {
     <div>
       <button
         className="buy-button"
-        disabled={!write || isLoading}
-        onClick={() => write?.()}
+        disabled={!config || error}
+        onClick={async () => await writeContract(config)}
       >
-        {!isLoading && <div>(OP) Buy Kiwi Pass</div>}
-        {isLoading && <div>Please sign transaction</div>}
+        {<div>(OP) Buy Kiwi Pass</div>}
       </button>
     </div>
   );
