@@ -247,7 +247,7 @@ export async function data(trie, identity, lastRemoteValue) {
   if (tips && tips.length > 0) {
     tips.forEach((tip) => {
       filteredActivities.push({
-        identities: [tip.to],
+        identities: [tip.from],
         verb: "tipped",
         message: {
           title: tip.message,
@@ -255,7 +255,7 @@ export async function data(trie, identity, lastRemoteValue) {
           identity: tip.from,
         },
         timestamp: tip.timestamp,
-        towards: tip.from,
+        towards: tip.to,
       });
     });
   }
