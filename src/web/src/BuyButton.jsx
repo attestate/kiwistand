@@ -240,7 +240,6 @@ const BuyButton = (props) => {
 
   const [config, setConfig] = useState(null);
   const [error, setError] = useState(null);
-  const isSuccess = false;
   useEffect(() => {
     const generate = async () => {
       if (!key || !isEligible) {
@@ -259,6 +258,26 @@ const BuyButton = (props) => {
     };
     generate();
   }, [key]);
+
+  if (error) {
+    return (
+      <div>
+        <button className="buy-button" disabled>
+          Error...
+        </button>
+      </div>
+    );
+  }
+  if (!config) {
+    return (
+      <div>
+        <button className="buy-button" disabled>
+          Loading...
+        </button>
+      </div>
+    );
+  }
+  const { data, write, isLoading, isSuccess } = useContractWrite(config);
 
   useEffect(() => {
     if (from.address) {
@@ -346,10 +365,11 @@ const BuyButton = (props) => {
     <div>
       <button
         className="buy-button"
-        disabled={!config || error}
-        onClick={async () => await writeContract(config)}
+        disabled={!write || isLoading}
+        onClick={() => write?.()}
       >
-        {<div>(OP) Buy Kiwi Pass</div>}
+        {!isLoading && <div>(OP) Buy Kiwi Pass</div>}
+        {isLoading && <div>Please sign transaction</div>}
       </button>
     </div>
   );
