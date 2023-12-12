@@ -123,7 +123,7 @@ const footer = (theme, path) => html`
     <span> | </span>
     <a href="/kiwipass">Kiwi Pass</a>
     <span> | </span>
-    <a href="https://stats.uptimerobot.com/3gg0Lu79y8" target"_blank">Status</a>
+    <a href="https://dune.com/rvolz/kiwi-news" target"_blank">Dune Dashboard</a>
     <span> | </span>
     <a
       href="https://drive.google.com/drive/folders/1vH5vEcXCsbbrYfCpTIvimLSzDMgq1eIa?usp=drive_link"
