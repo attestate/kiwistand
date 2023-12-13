@@ -70,9 +70,17 @@ async function addTips() {
 
     tipsButton.forEach((tip) => {
       const address = tip.getAttribute("data-address");
+      const index = tip.getAttribute("data-index");
+      const title = tip.getAttribute("data-title");
+
+      const metadata = {
+        index: index,
+        title: title,
+      }
+
       createRoot(tip).render(
         <StrictMode>
-          <Tip address={address} />
+          <Tip address={address} metadata={metadata} />
         </StrictMode>,
       );
     });

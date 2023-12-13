@@ -32,12 +32,15 @@ export async function getTips(address) {
     }
 
     // 4. Return the formatted tips
-    return data.data.map(({ from, to, usdAmount, timestamp }) => ({
+    return data.data.map(({ from, to, usdAmount, timestamp, blockExplorerUrl, metadata }) => ({
       from,
       to,
       timestamp: timestamp._seconds,
       amount: usdAmount,
       message: `You have been tipped with $${usdAmount} USD`,
+      blockExplorerUrl,
+      index: metadata.index,
+      title: metadata.title,
     }));
   } catch (error) {
     console.error("Fetching tips failed:", error);
