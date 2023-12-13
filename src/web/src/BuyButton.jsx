@@ -38,6 +38,8 @@ export async function prepare(key) {
   }
 
   const provider = getProvider();
+  const code = await provider.getCode(address);
+  if (code !== "0x") throw new Error("Smart accounts aren't supported");
 
   const balance = {
     mainnet: (await fetchBalance({ address, chainId: mainnet.id })).value,
