@@ -76,6 +76,7 @@ export async function prepare(key) {
   try {
     referral = getAddress(queryReferral);
   } catch (err) {
+    console.log("Couldn't find referral address in URL bar");
     //noop
   }
 
@@ -238,11 +239,23 @@ const BuyButton = (props) => {
   }
   const isEligible = eligible(allowlist, delegations, address);
 
+  useEffect(() => {
+    if (from.address) {
+      setKeyName(`-kiwi-news-${from.address}-key`);
+    }
+
+    if (!localStorageKey && from.address) {
+      setKey(newKey);
+    } else if (localStorageKey) {
+      setDelegated(true);
+    }
+  }, [from.address, localStorageKey, provider]);
+
   const [config, setConfig] = useState(null);
   const [error, setError] = useState(null);
   useEffect(() => {
     const generate = async () => {
-      if (!key || !isEligible) {
+      if (!key || isEligible) {
         return;
       }
 
@@ -250,6 +263,7 @@ const BuyButton = (props) => {
       try {
         config = await prepare(key);
       } catch (err) {
+        console.log(err);
         setError(err);
       }
       if (!config) return;
@@ -258,6 +272,16 @@ const BuyButton = (props) => {
     };
     generate();
   }, [key]);
+
+  if (isEligible) {
+    return (
+      <div>
+        <button className="buy-button" disabled>
+          Thanks for minting!
+        </button>
+      </div>
+    );
+  }
 
   if (error) {
     return (
@@ -277,38 +301,23 @@ const BuyButton = (props) => {
       </div>
     );
   }
-  const { data, write, isLoading, isSuccess } = useContractWrite(config);
 
-  useEffect(() => {
-    if (from.address) {
-      setKeyName(`-kiwi-news-${from.address}-key`);
+  if (config && config.chainId !== chain.id) {
+    let name;
+    if (config.chainId === mainnet.id) {
+      name = "Mainnet";
     }
-  }, [from.address]);
-
-  useEffect(() => {
-    if (!localStorageKey && from.address) {
-      setKey(newKey);
-    } else if (localStorageKey) {
-      const existingKey = new Wallet(localStorageKey, provider);
-      setDelegated(true);
+    if (config.chainId === optimism.id) {
+      name = "Optimism";
     }
-  }, [from.address, localStorageKey, provider]);
 
-  useEffect(() => {
-    if (isSuccess) {
-      setLocalStorageKey(key.privateKey);
-      window.location.href = `/indexing?address=${from.address}&transactionHash=${data.hash}`;
-    }
-  }, [isSuccess]);
-
-  if (config && config.chainId === optimism.id && chain.id !== optimism.id) {
     return (
       <div>
         <button
           className="buy-button"
-          onClick={() => switchNetwork?.(optimism.id)}
+          onClick={() => switchNetwork?.(config.chainId)}
         >
-          Switch to Optimism
+          Switch to {name}
         </button>
       </div>
     );
@@ -337,26 +346,41 @@ const BuyButton = (props) => {
     );
   }
 
-  if (isSuccess) {
+  return (
+    <Button
+      setLocalStorageKey={setLocalStorageKey}
+      config={config}
+      signer={key}
+      from={from}
+      chainId={config.chainId}
+    />
+  );
+};
+
+const Button = (props) => {
+  const { config, signer, from, setLocalStorageKey, chainId } = props;
+  const { data, write, isLoading, isSuccess } = useContractWrite(config);
+
+  useEffect(() => {
+    // NOTE: wagmi returns data.hash === "null" (a string) when the transaction
+    // is canceled by the user.
+    if (isSuccess && data.hash !== "null") {
+      console.log("issuccess", isSuccess, error, data);
+      setLocalStorageKey(signer.privateKey);
+      window.location.href = `/indexing?address=${from.address}&transactionHash=${data.hash}`;
+    }
+  }, [isSuccess]);
+
+  if (isSuccess && data.hash !== "null") {
+    const etherscan =
+      chainId === mainnet.id ? "etherscan.io" : "optimistic.etherscan.io";
     return (
       <div>
-        <a
-          target="_blank"
-          href={`https://optimistic.etherscan.io/tx/${data.hash}`}
-        >
+        <a target="_blank" href={`https://${etherscan}/tx/${data.hash}`}>
           <button className="buy-button">
             Thanks for minting! (view on Etherscan)
           </button>
         </a>
-      </div>
-    );
-  }
-  if (isEligible) {
-    return (
-      <div>
-        <button className="buy-button" disabled>
-          Thanks for minting!
-        </button>
       </div>
     );
   }
