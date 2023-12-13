@@ -50,7 +50,7 @@ export async function prepare(key) {
     chainId: optimism.id,
   });
   if (!saleDetails || !saleDetails.publicSalePrice) {
-    throw new Error("Couldn't get price");
+    throw new Error("Error getting the price");
   }
   const price = saleDetails.publicSalePrice.add(ZORA_MINT_FEE);
 
@@ -61,7 +61,7 @@ export async function prepare(key) {
     preferredChainId = mainnet.id;
   }
   if (!preferredChainId) {
-    throw new Error("Insufficient ETH");
+    throw new Error("Not enough ETH on Mainnet and OP");
   }
 
   const quantity = 1;
@@ -265,13 +265,15 @@ const BuyButton = (props) => {
       } catch (err) {
         console.log(err);
         setError(err);
+        setConfig(null);
       }
       if (!config) return;
 
       setConfig(config);
+      setError(null);
     };
     generate();
-  }, [key]);
+  }, [key, chain.id]);
 
   if (isEligible) {
     return (
@@ -282,17 +284,7 @@ const BuyButton = (props) => {
       </div>
     );
   }
-
-  if (error) {
-    return (
-      <div>
-        <button className="buy-button" disabled>
-          Error...
-        </button>
-      </div>
-    );
-  }
-  if (!config) {
+  if (!config && !error) {
     return (
       <div>
         <button className="buy-button" disabled>
@@ -301,22 +293,30 @@ const BuyButton = (props) => {
       </div>
     );
   }
+  let name;
+  if (config && config.chainId === mainnet.id) {
+    name = "Mainnet";
+  }
+  if (config && config.chainId === optimism.id) {
+    name = "Optimism";
+  }
 
-  if (config && config.chainId !== chain.id) {
-    let name;
-    if (config.chainId === mainnet.id) {
+  if (
+    (config && config.chainId !== chain.id) ||
+    (error && error.message.includes("Chain mismatch"))
+  ) {
+    let chainId = config ? config.chainId : null;
+    if (error && error.message.includes('Expected "Mainnet"')) {
       name = "Mainnet";
+      chainId = mainnet.id;
     }
-    if (config.chainId === optimism.id) {
+    if (error && error.message.includes('Expected "Optimism"')) {
       name = "Optimism";
+      chainId = optimism.id;
     }
-
     return (
       <div>
-        <button
-          className="buy-button"
-          onClick={() => switchNetwork?.(config.chainId)}
-        >
+        <button className="buy-button" onClick={() => switchNetwork?.(chainId)}>
           Switch to {name}
         </button>
       </div>
@@ -332,7 +332,16 @@ const BuyButton = (props) => {
     return (
       <div>
         <button className="buy-button" disabled>
-          Insufficient funds on Optimism...
+          Insufficient funds on {name}...
+        </button>
+      </div>
+    );
+  }
+  if (error) {
+    return (
+      <div>
+        <button className="buy-button" disabled>
+          {error.message}
         </button>
       </div>
     );
@@ -353,12 +362,13 @@ const BuyButton = (props) => {
       signer={key}
       from={from}
       chainId={config.chainId}
+      name={name}
     />
   );
 };
 
 const Button = (props) => {
-  const { config, signer, from, setLocalStorageKey, chainId } = props;
+  const { name, config, signer, from, setLocalStorageKey, chainId } = props;
   const { data, write, isLoading, isSuccess } = useContractWrite(config);
 
   useEffect(() => {
@@ -392,7 +402,7 @@ const Button = (props) => {
         disabled={!write || isLoading}
         onClick={() => write?.()}
       >
-        {!isLoading && <div>(OP) Buy Kiwi Pass</div>}
+        {!isLoading && <div>Buy Kiwi Pass on {name}</div>}
         {isLoading && <div>Please sign transaction</div>}
       </button>
     </div>
