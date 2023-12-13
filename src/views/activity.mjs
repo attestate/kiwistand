@@ -125,7 +125,18 @@ function generateRow(lastUpdate) {
                 </p>
                 <p style="margin-top: 5px;">
                   ${activity.verb === "tipped"
-                    ? html`${activity.message.title}`
+                    ? html`
+                        ${activity.message.href ? html`<a
+                          href="${activity.message.href}"
+                          target="_blank"
+                          style="color: gray; word-break: break-word;"
+                        >
+                          ${activity.message.title}
+                        </a>`
+                        : html`
+                            ${activity.message.title}
+                        `}
+                    `
                     : html`
                         <a
                           href="/stories?index=0x${activity.message.index}"
@@ -135,6 +146,18 @@ function generateRow(lastUpdate) {
                         </a>
                       `}
                 </p>
+                <p>
+                ${activity.metadata?.index && activity.metadata?.title
+                  ? html`
+                      <a
+                        href="/stories?index=0x${activity.metadata.index}"
+                        style="color: gray; word-break: break-word;"
+                      >
+                        ${activity.metadata.title}
+                      </a>`
+                  : ''
+                }
+              </p>
               </div>
             </div>
           </div>
@@ -253,6 +276,11 @@ export async function data(trie, identity, lastRemoteValue) {
           title: tip.message,
           timestamp: tip.timestamp,
           identity: tip.from,
+          href: tip.blockExplorerUrl,
+        },
+        metadata: {
+          index: tip.index,
+          title: tip.title,
         },
         timestamp: tip.timestamp,
         towards: tip.to,
