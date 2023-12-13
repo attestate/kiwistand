@@ -375,7 +375,6 @@ const Button = (props) => {
     // NOTE: wagmi returns data.hash === "null" (a string) when the transaction
     // is canceled by the user.
     if (isSuccess && data.hash !== "null") {
-      console.log("issuccess", isSuccess, error, data);
       setLocalStorageKey(signer.privateKey);
       window.location.href = `/indexing?address=${from.address}&transactionHash=${data.hash}`;
     }
