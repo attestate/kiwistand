@@ -184,6 +184,8 @@ const row = (
                         <span
                           class="tipsbuttoncontainer"
                           data-address="${story.identity}"
+                          data-index="${story.index}"
+                          data-title="${story.title}"
                         >
                         </span>
                       `}

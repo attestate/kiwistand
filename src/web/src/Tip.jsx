@@ -15,7 +15,7 @@ const Tip = (props) => {
   const { pay } = useDawnPay();
 
   const handlePayClick = async () => {
-    await pay(props.address);
+    await pay(props.address, props.metadata);
   };
 
   return (
