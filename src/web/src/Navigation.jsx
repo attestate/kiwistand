@@ -76,10 +76,11 @@ const BuyAdvert = (props) => {
   }
   const isEligible =
     address && eligible(props.allowlist, props.delegations, address);
+
   if (
     !isEligible &&
     account.isConnected &&
-    window.location.pathname === "/indexing"
+    window.location.pathname !== "/indexing"
   ) {
     return (
       <PrimaryActionButton
