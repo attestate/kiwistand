@@ -61,7 +61,7 @@ export async function prepare(key) {
     preferredChainId = mainnet.id;
   }
   if (!preferredChainId) {
-    throw new Error("Not enough ETH on Mainnet and OP");
+    throw new Error("Not enough ETH on Ethereum and OP");
   }
 
   const quantity = 1;
@@ -295,7 +295,7 @@ const BuyButton = (props) => {
   }
   let name;
   if (config && config.chainId === mainnet.id) {
-    name = "Mainnet";
+    name = "Ethereum";
   }
   if (config && config.chainId === optimism.id) {
     name = "Optimism";
@@ -306,8 +306,8 @@ const BuyButton = (props) => {
     (error && error.message.includes("Chain mismatch"))
   ) {
     let chainId = config ? config.chainId : null;
-    if (error && error.message.includes('Expected "Mainnet"')) {
-      name = "Mainnet";
+    if (error && error.message.includes('Expected "Ethereum"')) {
+      name = "Ethereum";
       chainId = mainnet.id;
     }
     if (error && error.message.includes('Expected "Optimism"')) {
