@@ -76,7 +76,7 @@ async function addTips() {
       const metadata = {
         index: index,
         title: title,
-      }
+      };
 
       createRoot(tip).render(
         <StrictMode>
@@ -352,8 +352,8 @@ async function start() {
     addTips(),
     addModals(),
     addNFTPrice(),
-    addDelegateButton(await allowlistPromise, await delegationsPromise),
-    addBuyButton(allowlistPromise, delegationsPromise, toast),
+    //addDelegateButton(await allowlistPromise, await delegationsPromise),
+    //addBuyButton(allowlistPromise, delegationsPromise, toast),
     addConnectedComponents(await allowlistPromise, await delegationsPromise),
     addSubmitButton(await allowlistPromise, await delegationsPromise, toast),
   ]);
