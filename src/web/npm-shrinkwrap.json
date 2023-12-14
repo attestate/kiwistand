@@ -1356,11 +1356,6 @@
         "@pedrouid/environment": "^1.0.1"
       }
     },
-    "node_modules/@ledgerhq/connect-kit-loader": {
-      "version": "1.1.2",
-      "resolved": "https://registry.npmjs.org/@ledgerhq/connect-kit-loader/-/connect-kit-loader-1.1.2.tgz",
-      "integrity": "sha512-mscwGroSJQrCTjtNGBu+18FQbZYA4+q6Tyx6K7CXHl6AwgZKbWfZYdgP2F+fyZcRUdGRsMX8QtvU61VcGGtO1A=="
-    },
     "node_modules/@lit-labs/ssr-dom-shim": {
       "version": "1.1.2",
       "resolved": "https://registry.npmjs.org/@lit-labs/ssr-dom-shim/-/ssr-dom-shim-1.1.2.tgz",
@@ -3106,7 +3101,6 @@
       ],
       "dependencies": {
         "@coinbase/wallet-sdk": "^3.6.6",
-        "@ledgerhq/connect-kit-loader": "^1.0.1",
         "@safe-global/safe-apps-provider": "^0.15.2",
         "@safe-global/safe-apps-sdk": "^7.9.0",
         "@walletconnect/ethereum-provider": "2.7.2",

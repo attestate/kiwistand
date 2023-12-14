@@ -352,9 +352,9 @@ async function start() {
     addTips(),
     addModals(),
     addNFTPrice(),
-    //addDelegateButton(await allowlistPromise, await delegationsPromise),
-    //addBuyButton(allowlistPromise, delegationsPromise, toast),
-    //addConnectedComponents(await allowlistPromise, await delegationsPromise),
+    addDelegateButton(await allowlistPromise, await delegationsPromise),
+    addBuyButton(allowlistPromise, delegationsPromise, toast),
+    addConnectedComponents(await allowlistPromise, await delegationsPromise),
     addSubmitButton(await allowlistPromise, await delegationsPromise, toast),
   ]);
 
