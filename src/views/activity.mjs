@@ -18,7 +18,7 @@ import * as registry from "../chainstate/registry.mjs";
 import * as id from "../id.mjs";
 import * as moderation from "./moderation.mjs";
 import cache from "../cache.mjs";
-import { getTips } from "../tips.mjs";
+import { getUserTips } from "../tips.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -257,7 +257,7 @@ export async function data(trie, identity, lastRemoteValue) {
   );
   leaves = moderation.moderate(leaves, config);
 
-  let tips = await getTips(identity);
+  let tips = await getUserTips(identity);
 
   const activities = generateFeed(leaves);
   const filteredActivities = activities.filter(

@@ -186,6 +186,7 @@ const row = (
                           data-address="${story.identity}"
                           data-index="${story.index}"
                           data-title="${story.title}"
+                          data-tip="${story.tipValue}"
                         >
                         </span>
                       `}

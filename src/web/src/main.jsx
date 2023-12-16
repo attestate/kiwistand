@@ -72,6 +72,7 @@ async function addTips() {
       const address = tip.getAttribute("data-address");
       const index = tip.getAttribute("data-index");
       const title = tip.getAttribute("data-title");
+      const tipValue = tip.getAttribute("data-tip");
 
       const metadata = {
         index: index,
@@ -80,7 +81,7 @@ async function addTips() {
 
       createRoot(tip).render(
         <StrictMode>
-          <Tip address={address} metadata={metadata} />
+          <Tip address={address} metadata={metadata} tipValue={tipValue} />
         </StrictMode>,
       );
     });
