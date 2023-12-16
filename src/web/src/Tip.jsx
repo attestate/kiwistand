@@ -22,7 +22,7 @@ const Tip = (props) => {
     <span>
       <span> • </span>
       <a onClick={handlePayClick} className="caster-link">
-        $ Tip {props.totalValue > 0 ? `($${parseFloat(props.tipValue).toFixed(2)} received)` : "(Be the first to tip)"}
+        $ Tip{" "}
       </a>
     </span>
   );

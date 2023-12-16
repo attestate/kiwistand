@@ -181,13 +181,21 @@ const row = (
                   ${interactive
                     ? null
                     : html`
-                        <span
-                          class="tipsbuttoncontainer"
-                          data-address="${story.identity}"
-                          data-index="${story.index}"
-                          data-title="${story.title}"
-                          data-tip="${story.tipValue}"
-                        >
+                        <span>
+                          ${story.tipValue
+                            ? html` <span> • </span>
+                                $${parseFloat(story.tipValue).toFixed(2)}
+                                <span> </span>
+                                received`
+                            : ""}
+                          <span
+                            class="tipsbuttoncontainer"
+                            data-address="${story.identity}"
+                            data-index="${story.index}"
+                            data-title="${story.title}"
+                            data-tip="${story.tipValue}"
+                          >
+                          </span>
                         </span>
                       `}
                 </span>
