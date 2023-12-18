@@ -84,6 +84,74 @@ export async function paginate(users, allowlist, page, search) {
   };
 }
 
+async function points(identity) {
+  const points = await karma.resolve(identity);
+  let rank = await karma.rank(identity);
+  if (rank === 0) {
+    const allowlist = Array.from(await registry.allowlist());
+    rank = allowlist.length;
+  }
+  return html`
+    <div
+      style="margin: 1rem; border: 1px solid rgba(0,0,0,0.05); border-radius: 5px; background-color: rgba(0,0,0,0.05);"
+    >
+      <div
+        style="display: flex; justify-content: space-between; align-items: center; padding:
+ 1rem 2rem 0 1rem;"
+      >
+        <span
+          style="padding: 0 0 1rem 0; border: 1px solid rgba(0,0,0,0.05); border-radius: 5px; background-color: rgba(0,0,0,0.05);"
+        >
+          <span
+            style="padding: 1rem 1rem 0 1rem; font-weight: bold; font-size: 2rem;"
+            class="kiwi-number"
+            >${points.toLocaleString("en-US")}</span
+          >
+          <br />
+          <span style="font-family: monospace; padding: 0 1rem 1rem 1rem;"
+            >Your points</span
+          >
+        </span>
+        <span style="font-size: 3rem;">🥝</span>
+      </div>
+      <div
+        style="font-family: monospace; border: 1px solid rgba(0,0,0,0.05); border-radius: 5px; background-color: rgba(0,0,0,0.05);display: flex; justify-content: space-between; align-items: center; margin: 1rem; padding: 1rem;"
+      >
+        <span style="font-weight: bold; font-size: 1.25rem; color:black;"
+          >Your Rank</span
+        >
+        <span style="font-size: 2rem;">#${rank.toLocaleString("en-US")}</span>
+      </div>
+    </div>
+    ${identity
+      ? html`<div style="margin: 1rem; text-align: left;">
+          <h2 style="color: black;">Earn Protocol Rewards!</h2>
+          <p>
+            Reading together is more fun than alone! So invite your friends and
+            earn Zora's Protocol Rewards! <b>0.000222 ETH per referred mint!</b>
+          </p>
+          <div style="display: flex; align-items: center;">
+            <button
+              onclick="document.getElementById('invitelink').select(); document.execCommand('copy');"
+              id="button-onboarding"
+              style="border-radius: 2px; padding: 10px 15px; background-color: black; border: 1px
+ solid black; color: white; cursor: pointer; width: 50%; margin-right: 10px;"
+            >
+              Copy invite link
+            </button>
+            <input
+              id="invitelink"
+              type="text"
+              value="https://news.kiwistand.com/welcome?referral=${identity}"
+              readonly
+              style="width: 70%; padding: 10px 15px; border: 1px solid #ccc; border-radius: 2px;"
+            />
+          </div>
+        </div>`
+      : ""}
+  `;
+}
+
 export default async function (trie, theme, query, identity) {
   let page = parseInt(query.page);
   if (isNaN(page) || page < 1) {
@@ -111,6 +179,21 @@ export default async function (trie, theme, query, identity) {
           content="Meet the Kiwi News community, which curates our feed. You can also check out our leaderboard to see who's most active."
         />
         <style>
+          .kiwi-number {
+            background: linear-gradient(
+              145deg,
+              #4d6002,
+              #5a7003,
+              #657f04,
+              #709005,
+              #7ca006,
+              #88b007
+            );
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            display: inline-block;
+          }
           .user-row {
             display: flex;
             justify-content: space-between;
@@ -204,6 +287,7 @@ export default async function (trie, theme, query, identity) {
               </tr>
               <tr>
                 <td>
+                  ${identity ? await points(identity) : null}
                   <p style="color: black; padding: 5px 10px; font-size: 14pt;">
                     <b>COMMUNITY</b>
                   </p>

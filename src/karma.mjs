@@ -99,6 +99,11 @@ export function count(messages) {
   });
 }
 
+export function rank(identity) {
+  const ranks = ranking();
+  return ranks.findIndex((r) => r.identity === identity) + 1;
+}
+
 export function ranking() {
   const list = [];
   for (const [identity, data] of Object.entries(all())) {

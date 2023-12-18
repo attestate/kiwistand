@@ -281,7 +281,7 @@ const BuyButton = (props) => {
     return (
       <div>
         <button className="buy-button" disabled>
-          Thanks for minting!
+          Bite the Kiwi!
         </button>
       </div>
     );

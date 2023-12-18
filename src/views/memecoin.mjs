@@ -65,7 +65,14 @@ export default async function (theme, identity) {
                   </p>
                   <h2>Want $KIWI?</h2>
                   <p>• $KIWI are 0.00256Ξ for 1 token. Locked NFT.</p>
-                  <p>• All proceeds fund Kiwi News (public good).</p>
+                  <p>
+                    • All proceeds fund
+                    <span> </span>
+                    <a href="/" target="_blank">Kiwi News</a>
+                    <span> </span>
+
+                    (public good).
+                  </p>
                   <p>
                     • $KIWI are not listed on Uniswap or any other exchange.
                   </p>
