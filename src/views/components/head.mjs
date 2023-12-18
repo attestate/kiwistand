@@ -17,8 +17,10 @@ export function custom(
       content="width=device-width, initial-scale=1, maximum-scale=1,
  user-scalable=0"
     />
-    <meta property="og:image" content="${ogImage}" />
-    <meta property="twitter:image" content="${ogImage}" />
+    ${ogImage ? html`<meta property="og:image" content="${ogImage}" />` : null}
+    ${ogImage
+      ? html`<meta property="twitter:image" content="${ogImage}" />`
+      : null}
     <meta property="twitter:card" content="summary_large_image" />
     <meta property="og:title" content="${ogTitle}" />
     ${ogDescription
