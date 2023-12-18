@@ -516,6 +516,7 @@ export async function launch(trie, libp2p) {
     try {
       address = await toAddress(name);
     } catch (err) {
+      log(err.toString());
       return next(err);
     }
     let content;
