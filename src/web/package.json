@@ -8,7 +8,7 @@
     "build": "vite build"
   },
   "dependencies": {
-    "@dawnpay/kit": "0.0.6",
+    "@dawnpay/kit": "0.0.9",
     "@attestate/delegator2": "0.1.2",
     "@ethersproject/units": "5.7.0",
     "@ethersproject/wallet": "5.7.0",

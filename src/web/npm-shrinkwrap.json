@@ -9,7 +9,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@attestate/delegator2": "0.1.2",
-        "@dawnpay/kit": "0.0.6",
+        "@dawnpay/kit": "0.0.9",
         "@ethersproject/units": "5.7.0",
         "@ethersproject/wallet": "5.7.0",
         "@rainbow-me/rainbowkit": "0.12.15",
@@ -93,11 +93,11 @@
       }
     },
     "node_modules/@dawnpay/kit": {
-      "version": "0.0.6",
-      "resolved": "https://registry.npmjs.org/@dawnpay/kit/-/kit-0.0.6.tgz",
-      "integrity": "sha512-I6cFeBz2d4egXIHyDfqoBOYyjuSQi5G3c6JTLNy4r4VLgl81Lj1pP7T3MJQhNTju4f+QARqpCd3rSGUnivKDDQ==",
+      "version": "0.0.9",
+      "resolved": "https://registry.npmjs.org/@dawnpay/kit/-/kit-0.0.9.tgz",
+      "integrity": "sha512-gvV5obzumMjBmh+kTjcM3b9MjEb1oYuEJH4Kkz0lUrPLb851L5qCum7GRYqr7UCsVbSsx5ey90IujBYZYpqesw==",
       "dependencies": {
-        "@dawnpay/sdk": "^0.0.7",
+        "@dawnpay/sdk": "0.0.9",
         "@mui/material": "^5.14.18",
         "@radix-ui/react-dialog": "^1.0.5",
         "@types/node": "^20.8.10",
@@ -107,9 +107,9 @@
       }
     },
     "node_modules/@dawnpay/sdk": {
-      "version": "0.0.7",
-      "resolved": "https://registry.npmjs.org/@dawnpay/sdk/-/sdk-0.0.7.tgz",
-      "integrity": "sha512-2MUYbkQbBz9Jnd7gSv55q3cwnZcmFwYD0VgTYKpGpm7oWVvtZhp5M+LL23fU1dASW4w1m3nQbMNgXlnFaTYoWA==",
+      "version": "0.0.9",
+      "resolved": "https://registry.npmjs.org/@dawnpay/sdk/-/sdk-0.0.9.tgz",
+      "integrity": "sha512-67mGdDC3QbcHR/rJ4QDraSpSS86w00y9VCHHcLeiRCSzaKIs3sfNs0LDmH+yrUciP4m2T0aafwdJQ7vgZZ+ydg==",
       "dependencies": {
         "@types/node": "^20.8.10",
         "ethers": "^6.8.1",
