@@ -10,8 +10,10 @@ const fetch = fetchBuilder.withCache(
   }),
 );
 
-const USER_TIP_GET_ENDPOINT = "https://getusertips-zl7caqyemq-uc.a.run.app?user=";
-const TOTAL_TIP_GET_ENDPOINT = "https://getalldapppayments-zl7caqyemq-uc.a.run.app?dapp=kiwi";
+const USER_TIP_GET_ENDPOINT =
+  "https://getusertips-zl7caqyemq-uc.a.run.app?user=";
+const TOTAL_TIP_GET_ENDPOINT =
+  "https://getalldapppayments-zl7caqyemq-uc.a.run.app?dapp=kiwi";
 const TIP_API_KEY = "73yZ9m4JJccccsm0L6HNPanQm";
 
 export async function getUserTips(address) {
@@ -33,16 +35,18 @@ export async function getUserTips(address) {
     }
 
     // 4. Return the formatted tips
-    return data.data.map(({ from, to, usdAmount, timestamp, blockExplorerUrl, metadata }) => ({
-      from,
-      to,
-      timestamp: timestamp._seconds,
-      amount: usdAmount,
-      message: `You have been tipped with $${usdAmount} USD`,
-      blockExplorerUrl,
-      index: metadata.index,
-      title: metadata.title,
-    }));
+    return data.data.map(
+      ({ from, to, usdAmount, timestamp, blockExplorerUrl, metadata }) => ({
+        from,
+        to,
+        timestamp: timestamp._seconds,
+        amount: usdAmount,
+        message: `You have been tipped with $${usdAmount} USD`,
+        blockExplorerUrl,
+        index: metadata.index,
+        title: metadata.title,
+      }),
+    );
   } catch (error) {
     console.error("Fetching tips failed:", error);
     return [];
@@ -55,7 +59,13 @@ export function getTipsValue(tips, storyIndex) {
     if (!tip.metadata) {
       return false;
     }
-    const metadata = JSON.parse(tip.metadata);
+
+    let metadata;
+    try {
+      metadata = JSON.parse(tip.metadata);
+    } catch (err) {
+      return false;
+    }
     return metadata.index === storyIndex;
   });
 
