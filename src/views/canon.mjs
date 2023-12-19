@@ -7,6 +7,7 @@ import vhtml from "vhtml";
 import normalizeUrl from "normalize-url";
 import { sub, differenceInMinutes } from "date-fns";
 
+import { getTips, getTipsValue } from "../tips.mjs";
 import * as ens from "../ens.mjs";
 import Header from "./components/header.mjs";
 import SecondHeader from "./components/secondheader.mjs";
@@ -105,9 +106,15 @@ export default async function index(trie, theme, identity, canon) {
     // noop
   }
 
+  const tips = await getTips();
+
   let stories = [];
   for await (let story of storyPromises) {
     const ensData = await ens.resolve(story.identity);
+
+    const tipValue = getTipsValue(tips, story.index);
+    story.tipValue = tipValue;
+
     let avatars = [];
     for await (let upvoter of story.upvoters) {
       const profile = await ens.resolve(upvoter);

@@ -6,6 +6,7 @@ import vhtml from "vhtml";
 import { sub } from "date-fns";
 import normalizeUrl from "normalize-url";
 
+import { getTips, getTipsValue } from "../tips.mjs";
 import * as ens from "../ens.mjs";
 import Header from "./components/header.mjs";
 import SecondHeader from "./components/secondheader.mjs";
@@ -55,9 +56,16 @@ export default async function (trie, theme, identity) {
   } catch (err) {
     // noop
   }
+
+  const tips = await getTips();
+
   let stories = [];
   for await (let story of slicedCounts) {
     const ensData = await ens.resolve(story.identity);
+
+    const tipValue = getTipsValue(tips, story.index);
+    story.tipValue = tipValue;
+
     let avatars = [];
     for await (let upvoter of story.upvoters) {
       const profile = await ens.resolve(upvoter);

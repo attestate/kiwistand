@@ -7,6 +7,7 @@ import vhtml from "vhtml";
 import normalizeUrl from "normalize-url";
 import { sub, differenceInMinutes, isBefore } from "date-fns";
 
+import { getTips, getTipsValue } from "../tips.mjs";
 import * as ens from "../ens.mjs";
 import Header from "./components/header.mjs";
 import SecondHeader from "./components/secondheader.mjs";
@@ -65,6 +66,10 @@ export default async function (trie, theme, index, value, identity) {
   const ensData = await ens.resolve(story.identity);
   story.submitter = ensData;
   story.displayName = ensData.displayName;
+
+  const tips = await getTips();
+  const tipValue = getTipsValue(tips, index);
+  story.tipValue = tipValue;
 
   const start = 0;
   const style = "padding: 1rem 5px 0.75rem 10px;";

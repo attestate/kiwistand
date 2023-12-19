@@ -6,8 +6,8 @@ import htm from "htm";
 import vhtml from "vhtml";
 import normalizeUrl from "normalize-url";
 import { sub, differenceInMinutes, isBefore } from "date-fns";
-import { getTips, getTipsValue } from "../tips.mjs";
 
+import { getTips, getTipsValue } from "../tips.mjs";
 import * as ens from "../ens.mjs";
 import Header from "./components/header.mjs";
 import SecondHeader from "./components/secondheader.mjs";
@@ -279,11 +279,10 @@ export async function index(trie, page, domain) {
     // noop
   }
 
-  let stories = [];
-
   // 1. Fetch tips from the API
-  let tips = await getTips();
-  
+  const tips = await getTips();
+
+  let stories = [];
   for await (let story of storyPromises) {
     const ensData = await ens.resolve(story.identity);
 

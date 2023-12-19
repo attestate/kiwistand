@@ -7,6 +7,7 @@ import normalizeUrl from "normalize-url";
 import { formatDistanceToNow } from "date-fns";
 import { utils } from "ethers";
 
+import { getTips, getTipsValue } from "../tips.mjs";
 import Header from "./components/header.mjs";
 import { trophySVG, broadcastSVG } from "./components/secondheader.mjs";
 import Footer from "./components/footer.mjs";
@@ -82,6 +83,8 @@ export default async function (
     // noop
   }
 
+  const tips = await getTips();
+
   let stories = storyPromises
     .filter(
       (story) =>
@@ -91,6 +94,10 @@ export default async function (
   stories = await Promise.all(
     stories.map(async (leaf) => {
       const ensData = await ens.resolve(leaf.identity);
+
+      const tipValue = getTipsValue(tips, leaf.index);
+      leaf.tipValue = tipValue;
+
       let avatars = [];
       for await (let upvoter of leaf.upvoters) {
         const profile = await ens.resolve(upvoter);
