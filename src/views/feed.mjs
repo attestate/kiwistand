@@ -6,7 +6,7 @@ import htm from "htm";
 import vhtml from "vhtml";
 import normalizeUrl from "normalize-url";
 import { sub, differenceInMinutes, isBefore } from "date-fns";
-import { getTips } from "../tips.mjs";
+import { getTips, getTipsValue } from "../tips.mjs";
 
 import * as ens from "../ens.mjs";
 import Header from "./components/header.mjs";
@@ -287,11 +287,8 @@ export async function index(trie, page, domain) {
   for await (let story of storyPromises) {
     const ensData = await ens.resolve(story.identity);
 
-    // 1. Get the tips for the story submitter
-    let userTips = tips[story.identity.toLowerCase()]
-    // 2. Get the total value of the tips, if any
-    const tipValue = userTips ? userTips.totalValue : 0;
-    // 3. Add the total value to the tipValue property of the story
+    // 1. Add the total value to the tipValue property of the story
+    const tipValue = getTipsValue(tips, story.index);
     story.tipValue = tipValue;
 
     let avatars = [];

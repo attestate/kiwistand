@@ -11,7 +11,7 @@ const fetch = fetchBuilder.withCache(
 );
 
 const USER_TIP_GET_ENDPOINT = "https://getusertips-zl7caqyemq-uc.a.run.app?user=";
-const TOTAL_TIP_GET_ENDPOINT = "https://gettips-zl7caqyemq-uc.a.run.app";
+const TOTAL_TIP_GET_ENDPOINT = "https://getalldapppayments-zl7caqyemq-uc.a.run.app?dapp=kiwi";
 const TIP_API_KEY = "73yZ9m4JJccccsm0L6HNPanQm";
 
 export async function getUserTips(address) {
@@ -49,6 +49,20 @@ export async function getUserTips(address) {
   }
 }
 
+export function getTipsValue(tips, storyIndex) {
+  // 1. Retrieve all items from data that have the same index as the storyIndex
+  const filteredTips = tips.filter((tip) => {
+    if (!tip.metadata) {
+      return false;
+    }
+    const metadata = JSON.parse(tip.metadata);
+    return metadata.index === storyIndex;
+  });
+
+  // 2. Sum all usdAmounts from the filteredTips
+  return filteredTips.reduce((total, tip) => total + tip.usdAmount, 0);
+}
+
 export async function getTips() {
   try {
     // 1. Fetch tips from the API
@@ -67,8 +81,7 @@ export async function getTips() {
       return [];
     }
 
-    const receiver = data.data.receivers;
-    return receiver ? receiver : 0;
+    return data.data;
   } catch (error) {
     console.error("Fetching tips failed:", error);
     return [];
