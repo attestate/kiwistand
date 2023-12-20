@@ -15,6 +15,15 @@ export function extractDomain(link) {
   return tld;
 }
 
+export function addOrUpdateReferrer(link) {
+  const address = "0x513026450b9d050E87D638553DAe024623136AF6";
+  const url = new URL(link);
+  if (url.hostname.endsWith("mirror.xyz")) {
+    url.searchParams.set("referrerAddress", address);
+  }
+  return url.toString();
+}
+
 const truncateLongWords = (text, maxLength = 20) => {
   const words = text.split(" ");
   const truncatedWords = words.map((word) =>
@@ -66,7 +75,7 @@ const row = (
             >
               <span>
                 <a
-                  href="${interactive ? "" : story.href}"
+                  href="${interactive ? "" : addOrUpdateReferrer(story.href)}"
                   target="_blank"
                   class="story-link"
                   style="line-height: 13pt; font-size: 13pt;"
