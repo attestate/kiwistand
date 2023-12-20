@@ -19,6 +19,11 @@ export function addOrUpdateReferrer(link, address) {
   const url = new URL(link);
   if (url.hostname.endsWith("mirror.xyz")) {
     url.searchParams.set("referrerAddress", address);
+  } else if (
+    url.hostname.endsWith("paragraph.xyz") ||
+    url.hostname.endsWith("zora.co")
+  ) {
+    url.searchParams.set("referrer", address);
   }
   return url.toString();
 }
