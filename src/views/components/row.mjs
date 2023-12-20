@@ -25,6 +25,8 @@ export function addOrUpdateReferrer(link, address) {
     url.hostname.endsWith("manifold.xyz")
   ) {
     url.searchParams.set("referrer", address);
+  } else if (url.hostname.endsWith("foundation.app")) {
+    url.searchParams.set("ref", address);
   }
   return url.toString();
 }
