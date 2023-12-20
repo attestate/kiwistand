@@ -15,8 +15,7 @@ export function extractDomain(link) {
   return tld;
 }
 
-export function addOrUpdateReferrer(link) {
-  const address = "0x513026450b9d050E87D638553DAe024623136AF6";
+export function addOrUpdateReferrer(link, address) {
   const url = new URL(link);
   if (url.hostname.endsWith("mirror.xyz")) {
     url.searchParams.set("referrerAddress", address);
@@ -75,7 +74,9 @@ const row = (
             >
               <span>
                 <a
-                  href="${interactive ? "" : addOrUpdateReferrer(story.href)}"
+                  href="${interactive
+                    ? ""
+                    : addOrUpdateReferrer(story.href, story.identity)}"
                   target="_blank"
                   class="story-link"
                   style="line-height: 13pt; font-size: 13pt;"
