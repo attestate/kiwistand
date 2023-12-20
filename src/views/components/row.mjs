@@ -21,7 +21,8 @@ export function addOrUpdateReferrer(link, address) {
     url.searchParams.set("referrerAddress", address);
   } else if (
     url.hostname.endsWith("paragraph.xyz") ||
-    url.hostname.endsWith("zora.co")
+    url.hostname.endsWith("zora.co") ||
+    url.hostname.endsWith("manifold.xyz")
   ) {
     url.searchParams.set("referrer", address);
   }
