@@ -3,10 +3,10 @@ import path from "path";
 
 import { fetchBuilder, FileSystemCache } from "node-fetch-cache";
 
-const fetchWithCache = fetchBuilder.withCache(
+const fetch = fetchBuilder.withCache(
   new FileSystemCache({
     cacheDirectory: path.resolve(env.CACHE_DIR),
-    ttl: 60, // 1 min
+    ttl: 60_000, // 1 min
   }),
 );
 
@@ -19,15 +19,12 @@ const TIP_API_KEY = "73yZ9m4JJccccsm0L6HNPanQm";
 export async function getUserTips(address) {
   try {
     // 1. Fetch tips from the API
-    const response = await fetchWithCache(
-      `${USER_TIP_GET_ENDPOINT}${address}`,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${TIP_API_KEY}`,
-        },
+    const response = await fetch(`${USER_TIP_GET_ENDPOINT}${address}`, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${TIP_API_KEY}`,
       },
-    );
+    });
 
     // 2. Get the data from the response
     const data = await response.json();
