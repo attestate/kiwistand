@@ -109,7 +109,6 @@ const DelegateButton = (props) => {
   if (!from.address) {
     return (
       <div>
-        <br />
         <ConnectedConnectButton
           required
           allowlist={props.allowlist}
@@ -140,7 +139,7 @@ const DelegateButton = (props) => {
       "Success! We're updating our database... (this can take 5 minutes)";
   }
   if (chain.id === 10) {
-    content = <span>Enable</span>;
+    content = <span>Enable on Optimism</span>;
     activity = !write || (!write && !isError) || isLoading || isSuccess;
     handler = () => write?.();
   } else {
@@ -152,7 +151,6 @@ const DelegateButton = (props) => {
     <div>
       {isPersistent ? (
         <div>
-          <br />
           <button
             style={{ width: "auto" }}
             className="buy-button"

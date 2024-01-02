@@ -143,7 +143,7 @@ async function addBuyButton(allowlistPromise, delegationsPromise, toast) {
 }
 
 async function addDelegateButton(allowlist, delegations) {
-  const delegateButtonContainer = document.querySelector("delegate-button");
+  const delegateButtonContainer = document.querySelector(".delegate-button");
   if (delegateButtonContainer) {
     const { createRoot } = await import("react-dom/client");
     const { StrictMode } = await import("react");
