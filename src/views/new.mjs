@@ -23,7 +23,11 @@ import Row from "./components/row.mjs";
 const html = htm.bind(vhtml);
 
 let stories = [];
+let inProgress = false;
 export async function recompute(trie) {
+  if (inProgress) return;
+  inProgress = true;
+
   stories = [];
 
   const config = await moderation.getLists();
@@ -83,6 +87,7 @@ export async function recompute(trie) {
       isOriginal,
     });
   }
+  inProgress = false;
 }
 
 export default async function (trie, theme, identity) {
