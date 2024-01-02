@@ -179,7 +179,9 @@ const SubmitButton = (props) => {
       setIsLoading(false);
       return;
     }
-    const response = await API.send(value, signature);
+
+    const wait = true;
+    const response = await API.send(value, signature, wait);
 
     let message;
     if (response.status === "success") {

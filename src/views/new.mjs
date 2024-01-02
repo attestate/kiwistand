@@ -22,9 +22,11 @@ import Row from "./components/row.mjs";
 
 const html = htm.bind(vhtml);
 
-export default async function (trie, theme, identity) {
-  const config = await moderation.getLists();
+let stories = [];
+export async function recompute(trie) {
+  stories = [];
 
+  const config = await moderation.getLists();
   const from = null;
   const amount = null;
   const parser = JSON.parse;
@@ -56,7 +58,6 @@ export default async function (trie, theme, identity) {
 
   const tips = await getTips();
 
-  let stories = [];
   for await (let story of slicedCounts) {
     const ensData = await ens.resolve(story.identity);
 
@@ -82,7 +83,9 @@ export default async function (trie, theme, identity) {
       isOriginal,
     });
   }
+}
 
+export default async function (trie, theme, identity) {
   const path = "/new";
   return html`
     <html lang="en" op="news">

@@ -33,13 +33,13 @@ function getApiUrl(endpoint, port = window.location.port) {
 }
 
 const API_PORT = 8443;
-export async function send(message, signature) {
+export async function send(message, signature, wait = false) {
   const body = JSON.stringify({
     ...message,
     signature,
   });
 
-  const url = getApiUrl("/api/v1/messages", API_PORT);
+  const url = getApiUrl(`/api/v1/messages?wait=${wait}`, API_PORT);
 
   let response;
   try {

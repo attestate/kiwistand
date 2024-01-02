@@ -14,6 +14,7 @@ import log from "./logger.mjs";
 import * as store from "./store.mjs";
 import { SCHEMATA } from "./constants.mjs";
 import * as registry from "./chainstate/registry.mjs";
+import { recompute } from "./views/new.mjs";
 
 const ajv = new Ajv();
 addFormats(ajv);
@@ -68,6 +69,12 @@ export function handleMessage(trie, libp2p, getAllowlist, getDelegations) {
       const code = 400;
       const httpMessage = "Bad Request";
       return sendError(reply, code, httpMessage, err.toString());
+    }
+
+    if (request.query.wait && request.query.wait === "true") {
+      await recompute(trie);
+    } else {
+      recompute(trie);
     }
 
     const code = 200;

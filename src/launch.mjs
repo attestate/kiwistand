@@ -16,6 +16,7 @@ import mintCrawlPath from "./chainstate/mint.config.crawler.mjs";
 import delegateCrawlPath from "./chainstate/delegate.config.crawler.mjs";
 import * as registry from "./chainstate/registry.mjs";
 import * as karma from "./karma.mjs";
+import { recompute } from "./views/new.mjs";
 
 const trie = await store.create();
 
@@ -56,4 +57,5 @@ const posts = await store.posts(
   allowlist,
   delegations,
 );
+await recompute(trie);
 karma.count(posts);
