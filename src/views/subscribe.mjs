@@ -44,18 +44,6 @@ export default async function index(theme, identity) {
                     ></iframe>
                   </div>
                   <p>
-                    <b>Kiwi Daily (Editor's Picks, Monday to Friday)</b>
-                  </p>
-                  <div style="text-align: left;">
-                    <iframe
-                      src="https://paragraph.xyz/@kiwi-daily/embed?minimal=true"
-                      width="480"
-                      height="80"
-                      frameborder="0"
-                      scrolling="no"
-                    ></iframe>
-                  </div>
-                  <p>
                     <b
                       >Real-Time RSS Feeds (maintained by our community member:
                       <span> </span>
