@@ -28,8 +28,6 @@ export async function recompute(trie) {
   if (inProgress) return;
   inProgress = true;
 
-  stories = [];
-
   const config = await moderation.getLists();
   const from = null;
   const amount = null;
@@ -62,6 +60,7 @@ export async function recompute(trie) {
 
   const tips = await getTips();
 
+  let nextStories = [];
   for await (let story of slicedCounts) {
     const ensData = await ens.resolve(story.identity);
 
@@ -80,13 +79,14 @@ export async function recompute(trie) {
         normalizeUrl(story.href).startsWith(domain) &&
         writers[domain] === story.identity,
     );
-    stories.push({
+    nextStories.push({
       ...story,
       displayName: ensData.displayName,
       avatars: avatars,
       isOriginal,
     });
   }
+  stories = nextStories;
   inProgress = false;
 }
 
