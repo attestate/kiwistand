@@ -335,6 +335,7 @@ const sidebar = (path) => html`
         <div class="svg-container">
           ${path === "/submit" ? submitfull : submit}
         </div>
+        <span>Submit</span>
       </div>
     </a>
     <a

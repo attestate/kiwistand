@@ -431,7 +431,7 @@ body {
      width: 100%;
 }
 /* Media query for larger screens */
- @media (min-width: 900px) {
+ @media (min-width: 1024px) {
      #hnmain > table:first-of-type > tbody > tr:first-of-type {
          background-color: #e6e6df;
     }
@@ -461,13 +461,11 @@ body {
     }
      .sidebar .kiwi-logo {
          display: flex;
-         justify-content: center;
          align-items: center;
          font-size: 1.9rem;
-         margin: 14px 14px 14px 10px;
+         margin: 14px 14px 14px 20px;
     }
      .sidebar {
-
          z-index: 6;
          overflow: hidden;
          background-color: rgb(246, 246, 239);
@@ -506,28 +504,31 @@ body {
          width: auto;
     }
      .svg-container + span {
-         display: none;
+       margin: 0 0.25rem 0 0.75rem;
+       font-size: 1rem;
     }
      .sidebar a {
          font-size: 2em;
         /* Adjust to preferred size */
     }
-     #nav-profile, #nav-settings, #nav-disconnect {
-         height: 32px;
+     .sidebar a:not(.kiwi-logo):hover{
+       background-color: rgba(0,0,0,0.1);
+       border-radius: 5px;
     }
      .sidebar .icon-svg {
          width: 36px;
          height: 36px;
     }
      .sidebar-div {
-         font-size: 2em;
-        /* Adjust to preferred size */
+       /* This has to have same font-size as sidebar a */
+         font-size: 1.7em;
     }
 }
  .sidebar a {
-     margin: 1.25rem 10px 10px 10px;
-     font-size: 1.7rem;
-     font-weight: bold;
+    padding: 0.3rem 0 0.3rem 0;
+    margin: 0.5rem 10px 0.2rem 10px;
+    font-size: 1.7rem;
+    font-weight: bold;
 }
  .svg-container {
      width: 19%;
@@ -553,15 +554,15 @@ body {
      color: black;
      text-decoration: none;
      display: block;
-     margin: 1.25rem 10px 10px 10px;
+     padding: 0.3rem 0 0.3rem 0;
+     margin: 0.5rem 10px 0.2rem 10px;
      font-size: 1.7rem;
      font-weight: bold;
      cursor: pointer;
 }
  @media (min-width: 768px) {
      .sidebar-div {
-         font-size: 2em;
-        /* Adjust to preferred size */
+         font-size: 1.7em;
     }
 }
  #overlay {

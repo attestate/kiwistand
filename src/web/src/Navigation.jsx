@@ -250,11 +250,26 @@ const Settings = (props) => {
         }}
       >
         <div style={{ display: "flex", alignItems: "center" }}>
-          <div className="svg-container">
+          <div className="svg-container" style={{ position: "relative" }}>
             {window.location.pathname === "/settings" ? (
               <SettingsSVGFull />
             ) : (
-              <SettingsSVG />
+              <>
+                <SettingsSVG />
+                {!localAccount && (
+                  <span
+                    style={{
+                      position: "absolute",
+                      top: "0",
+                      left: "10px",
+                      backgroundColor: "red",
+                      borderRadius: "50%",
+                      minWidth: "12px",
+                      height: "12px",
+                    }}
+                  />
+                )}
+              </>
             )}
           </div>
           <span>Settings</span>

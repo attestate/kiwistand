@@ -82,7 +82,7 @@ export default async function index(theme, identity) {
                       style="color: black; font-style: italic; margin-bottom: 10px;"
                     >
                       Cost:
-                      <span style="font-weight: bold;"> 0.1 USD</span> (Optimism
+                      <span style="font-weight: bold;"> $0.4</span> (Optimism
                       gas fees)
                     </p>
                     <div
