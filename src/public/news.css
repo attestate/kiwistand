@@ -431,7 +431,7 @@ body {
      width: 100%;
 }
 /* Media query for larger screens */
- @media (min-width: 1024px) {
+ @media (min-width: 1150px) {
      #hnmain > table:first-of-type > tbody > tr:first-of-type {
          background-color: #e6e6df;
     }
@@ -483,6 +483,9 @@ body {
     }
      .sidebar-toggle {
          display: none;
+    }
+    #mySidebar {
+      padding-right: 1.75rem;
     }
      #mySidebar > hr {
          display: none;
