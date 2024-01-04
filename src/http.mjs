@@ -15,6 +15,7 @@ import themes from "./themes.mjs";
 import feed, { index } from "./views/feed.mjs";
 import story from "./views/story.mjs";
 import newest from "./views/new.mjs";
+import images from "./views/images.mjs";
 import best from "./views/best.mjs";
 import canon from "./views/canon.mjs";
 import privacy from "./views/privacy.mjs";
@@ -244,6 +245,14 @@ export async function launch(trie, libp2p) {
   });
   app.get("/new", async (request, reply) => {
     const content = await newest(
+      trie,
+      reply.locals.theme,
+      request.cookies.identity,
+    );
+    return reply.status(200).type("text/html").send(content);
+  });
+  app.get("/images", async (request, reply) => {
+    const content = await images(
       trie,
       reply.locals.theme,
       request.cookies.identity,

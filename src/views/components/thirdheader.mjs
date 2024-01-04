@@ -46,6 +46,24 @@ const secondheader = (theme, site) => html`
           </div>
         </div>
       </a>
+      <a
+        href="/images"
+        style="padding: 0 0 0.1rem 0; flex: 1; text-decoration: none; color: inherit;"
+      >
+        <div
+          class="filter-tab"
+          style="width: 100%; height: 100%; display: flex; justify-content: center; justify-conten
+ center;"
+        >
+          <div
+            style="${site === "images"
+              ? "border-bottom: 3px solid limegreen; padding: 0.75rem 1.5rem 0.3rem 1.5rem;"
+              : "padding-top: 0.65rem"}"
+          >
+            Images
+          </div>
+        </div>
+      </a>
     </div>
 
     <div

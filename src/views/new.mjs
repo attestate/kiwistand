@@ -18,7 +18,7 @@ import * as store from "../store.mjs";
 import * as moderation from "./moderation.mjs";
 import * as registry from "../chainstate/registry.mjs";
 import { count } from "./feed.mjs";
-import Row from "./components/row.mjs";
+import Row, { extractDomain } from "./components/row.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -45,6 +45,7 @@ export async function recompute(trie) {
     allowlist,
     delegations,
   );
+  leaves = leaves.filter(({ href }) => extractDomain(href) !== "imgur.com");
   leaves = moderation.moderate(leaves, config);
 
   let counts = count(leaves);

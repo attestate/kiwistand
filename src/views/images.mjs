@@ -1,5 +1,6 @@
 //@format
 import { env } from "process";
+import path from "path";
 
 import htm from "htm";
 import vhtml from "vhtml";
@@ -19,37 +20,40 @@ import * as moderation from "./moderation.mjs";
 import * as registry from "../chainstate/registry.mjs";
 import { count } from "./feed.mjs";
 import Row, { extractDomain } from "./components/row.mjs";
+import * as ogParser from "../parser.mjs";
+import log from "../logger.mjs";
 
 const html = htm.bind(vhtml);
 
-export default async function (trie, theme, identity) {
-  const config = await moderation.getLists();
+let stories = [];
+let inProgress = false;
+export async function recompute(trie) {
+  if (inProgress) return;
+  inProgress = true;
 
-  const threeMonthsAgo = sub(new Date(), {
-    months: 3,
-  });
+  const config = await moderation.getLists();
   const from = null;
   const amount = null;
   const parser = JSON.parse;
-  const threeMonthsAgoUnixTime = Math.floor(threeMonthsAgo.getTime() / 1000);
   const allowlist = await registry.allowlist();
   const delegations = await registry.delegations();
+  const startDateTime = null;
+
   let leaves = await store.posts(
     trie,
     from,
     amount,
     parser,
-    threeMonthsAgoUnixTime,
+    startDateTime,
     allowlist,
     delegations,
   );
+  leaves = leaves.filter(({ href }) => extractDomain(href) === "imgur.com");
   leaves = moderation.moderate(leaves, config);
 
   let counts = count(leaves);
-  let sortedCounts = counts.sort((a, b) => b.timestamp - a.timestamp);
-  sortedCounts = sortedCounts.filter(
-    (item) =>
-      extractDomain(item.href) !== "imgur.com" && item.title.startsWith("NFT:"),
+  let sortedCounts = counts.sort(
+    (a, b) => b.lastInteraction - a.lastInteraction,
   );
   let slicedCounts = sortedCounts.slice(0, 40);
 
@@ -62,9 +66,21 @@ export default async function (trie, theme, identity) {
 
   const tips = await getTips();
 
-  let stories = [];
+  let nextStories = [];
   for await (let story of slicedCounts) {
     const ensData = await ens.resolve(story.identity);
+
+    const extension = path.extname(story.href);
+    if (extension === ".png" || extension === ".jpg") {
+      story.image = story.href;
+    } else {
+      try {
+        const metadata = await ogParser.metadata(story.href);
+        story.image = metadata.image;
+      } catch (err) {
+        log(`Failed to parse "${story.href}"`);
+      }
+    }
 
     const tipValue = getTipsValue(tips, story.index);
     story.tipValue = tipValue;
@@ -81,22 +97,27 @@ export default async function (trie, theme, identity) {
         normalizeUrl(story.href).startsWith(domain) &&
         writers[domain] === story.identity,
     );
-    stories.push({
+    nextStories.push({
       ...story,
       displayName: ensData.displayName,
       avatars: avatars,
       isOriginal,
     });
   }
+  stories = nextStories;
+  inProgress = false;
+}
 
-  const path = "/nfts";
+export default async function (trie, theme, identity) {
+  const name = "images";
+  const path = `/${name}`;
   return html`
     <html lang="en" op="news">
       <head>
         ${Head}
         <meta
           name="description"
-          content="Explore the latest curated NFTS on Kiwi News. Stay updated with fresh content handpicked by crypto veterans."
+          content="Explore the latest news in the decentralized world on Kiwi News. Stay updated with fresh content handpicked by crypto veterans."
         />
       </head>
       <body>
@@ -108,25 +129,13 @@ export default async function (trie, theme, identity) {
                 ${await Header(theme, identity)}
               </tr>
               <tr>
-                ${ThirdHeader(theme, "nfts")}
+                ${ThirdHeader(theme, name)}
               </tr>
-              <tr>
-                ${SecondHeader(theme, "nfts")}
-              </tr>
-              <tr class="spacer" style="height:15px"></tr>
-              <tr>
-                <td>
-                  <p
-                    style="color: black; padding: 0 10px 0 10px; font-size: 12pt;"
-                  >
-                    <span
-                      >Post to this feed by starting your title with "NFT:"
-                    </span>
-                  </p>
-                </td>
-              </tr>
-              ${stories.map(Row())}
-              <tr class="spacer" style="height:15px"></tr>
+              <tr
+                class="spacer"
+                style="display:block; height:10px; background-color: #e6e6df;"
+              ></tr>
+              ${stories.map(Row(null, path))}
               <tr
                 style="display: block; padding: 10px; background-color: ${theme.color}"
               >
@@ -135,7 +144,7 @@ export default async function (trie, theme, identity) {
             </table>
           </div>
         </div>
-        ${Footer(theme, "/new")}
+        ${Footer(theme, path)}
       </body>
     </html>
   `;

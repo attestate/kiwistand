@@ -73,12 +73,14 @@ export function count(leaves) {
         upvotes: 1,
         upvoters: [leaf.identity],
         index: leaf.index,
+        lastInteraction: leaf.timestamp,
       };
       stories[key] = story;
     } else {
       if (leaf.type === "amplify") {
         story.upvotes += 1;
         story.upvoters.push(leaf.identity);
+        story.lastInteraction = leaf.timestamp;
         if (!story.title && leaf.title) story.title = leaf.title;
       }
     }
@@ -187,6 +189,7 @@ export async function index(trie, page, domain) {
     allowlist,
     delegations,
   );
+  leaves = leaves.filter(({ href }) => extractDomain(href) !== "imgur.com");
   const policy = await moderation.getLists();
   leaves = moderation.moderate(leaves, policy);
 

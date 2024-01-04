@@ -189,7 +189,13 @@ const SubmitButton = (props) => {
     } else {
       message = `Error! Sad Kiwi! "${response.details}"`;
     }
-    const nextPage = new URL(window.location.origin + "/new");
+
+    let redirectTo = "/new";
+    if (safeExtractDomain(url) === "imgur.com") {
+      redirectTo = "/images";
+    }
+
+    const nextPage = new URL(window.location.origin + redirectTo);
     nextPage.searchParams.set("bpc", "1");
     nextPage.searchParams.set("link", encodeURIComponent(url));
     window.location.href = nextPage.href;

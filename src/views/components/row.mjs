@@ -53,7 +53,9 @@ const row = (
         <div style="${style}">
           <div style="display: flex; align-items: stretch;">
             <div
-              style="display: flex; align-items: center; justify-content: center; min-width: 40px; margin-right: 6px;"
+              style="display: flex; align-items: ${story.image
+                ? "start"
+                : "center"}; justify-content: center; min-width: 40px; margin-right: 6px;"
             >
               <div style="min-height: 40px; display:block;">
                 <div
@@ -82,12 +84,14 @@ const row = (
             >
               <span>
                 <a
-                  href="${interactive
+                  href="${interactive || story.image
                     ? ""
                     : addOrUpdateReferrer(story.href, story.identity)}"
                   target="_blank"
                   class="story-link"
-                  style="line-height: 13pt; font-size: 13pt;"
+                  style="line-height: 13pt; ${story.image
+                    ? "font-size: 14pt; font-weight: bold;"
+                    : "font-size: 13pt;"}"
                 >
                   ${story.isOriginal
                     ? html`<mark
@@ -97,17 +101,28 @@ const row = (
                     : truncateLongWords(story.title)}
                   <span> </span>
                 </a>
+                ${story.image
+                  ? html`<br /><a target="_blank" href="${story.href}"
+                        ><img
+                          style="max-width: 80vw; padding: 0.75rem 1rem 0 0; max-height: 30vh"
+                          src="${story.image}"
+                      /></a>`
+                  : ""}
                 <span> </span>
-                <span class="story-domain" style="white-space: nowrap;"
-                  >(${interactive && path
-                    ? extractDomain(story.href)
-                    : html`<a
-                        href="${path}?period=month&domain=${extractDomain(
-                          story.href,
-                        )}"
-                        >${extractDomain(story.href)}</a
-                      >`})</span
-                >
+                ${story.image
+                  ? ""
+                  : html` <span
+                      class="story-domain"
+                      style="white-space: nowrap;"
+                      >(${interactive && path
+                        ? extractDomain(story.href)
+                        : html`<a
+                            href="${path}?period=month&domain=${extractDomain(
+                              story.href,
+                            )}"
+                            >${extractDomain(story.href)}</a
+                          >`})</span
+                    >`}
               </span>
               <div style="margin-top: auto; font-size: 10pt;">
                 <span>
@@ -221,6 +236,11 @@ const row = (
             </div>
           </div>
         </div>
+        ${story.image
+          ? html`<hr
+              style="border-top: 1px solid rgba(0,0,0,0.2); border-bottom: none; margin: 5px 0 0 0;"
+            />`
+          : ""}
       </td>
     </tr>
   `;

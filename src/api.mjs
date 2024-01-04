@@ -14,7 +14,8 @@ import log from "./logger.mjs";
 import * as store from "./store.mjs";
 import { SCHEMATA } from "./constants.mjs";
 import * as registry from "./chainstate/registry.mjs";
-import { recompute } from "./views/new.mjs";
+import * as newest from "./views/new.mjs";
+import * as images from "./views/images.mjs";
 
 const ajv = new Ajv();
 addFormats(ajv);
@@ -72,9 +73,11 @@ export function handleMessage(trie, libp2p, getAllowlist, getDelegations) {
     }
 
     if (request.query.wait && request.query.wait === "true") {
-      await recompute(trie);
+      await newest.recompute(trie);
+      await images.recompute(trie);
     } else {
-      recompute(trie);
+      newest.recompute(trie);
+      images.recompute(trie);
     }
 
     const code = 200;

@@ -104,6 +104,7 @@ export default async function index(
     allowlist,
     delegations,
   );
+  leaves = leaves.filter(({ href }) => extractDomain(href) !== "imgur.com");
   const policy = await moderation.getLists();
   leaves = moderation.moderate(leaves, policy);
 
