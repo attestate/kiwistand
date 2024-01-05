@@ -360,7 +360,9 @@ const SubmitButton = (props) => {
 const Form = (props) => {
   const [modalIsOpen, setIsOpen] = useState(false);
   const [imageURL, setImageURL] = useState("");
-  const [url, setURL] = useState("");
+
+  const urlInput = document.getElementById("urlInput");
+  const [url, setURL] = useState(urlInput.value);
 
   return (
     <WagmiConfig client={client}>
