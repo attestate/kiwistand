@@ -84,11 +84,11 @@ const UploadButton = (props) => {
         <label>
           <input
             type="file"
+            accept="image/png, image/jpeg, image/gif, image/jpg"
             style={{
               display: "none",
             }}
             onChange={handleFileSelect}
-            accept="image/*"
           />
           <div
             style={{

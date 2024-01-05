@@ -75,7 +75,12 @@ export async function recompute(trie) {
     const ensData = await ens.resolve(story.identity);
 
     const extension = path.extname(story.href);
-    if (extension === ".png" || extension === ".jpg") {
+    if (
+      extension === ".gif" ||
+      extension === ".png" ||
+      extension === ".jpg" ||
+      extension === ".jpeg"
+    ) {
       story.image = story.href;
     } else {
       try {
