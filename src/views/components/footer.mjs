@@ -45,7 +45,7 @@ if (env.NODE_ENV === "production") {
 
 const footer = (theme, path) => html`
   ${
-    ["/", "/new", "/community"].includes(path)
+    ["/", "/images", "/new", "/community"].includes(path)
       ? html`
           <div style="position: fixed; bottom: 3rem; right: 2rem; z-index: 5;">
             <a

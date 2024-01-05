@@ -48,7 +48,11 @@ export async function recompute(trie) {
     allowlist,
     delegations,
   );
-  leaves = leaves.filter(({ href }) => extractDomain(href) === "imgur.com");
+  leaves = leaves.filter(
+    ({ href }) =>
+      extractDomain(href) === "imgur.com" ||
+      extractDomain(href) === "catbox.moe",
+  );
   leaves = moderation.moderate(leaves, config);
 
   let counts = count(leaves);

@@ -49,7 +49,9 @@ export default async function (trie, theme, identity) {
   let sortedCounts = counts.sort((a, b) => b.timestamp - a.timestamp);
   sortedCounts = sortedCounts.filter(
     (item) =>
-      extractDomain(item.href) !== "imgur.com" && item.title.startsWith("NFT:"),
+      extractDomain(item.href) !== "imgur.com" &&
+      extractDomain(item.href) !== "catbox.moe" &&
+      item.title.startsWith("NFT:"),
   );
   let slicedCounts = sortedCounts.slice(0, 40);
 

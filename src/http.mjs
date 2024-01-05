@@ -1,6 +1,7 @@
 //@format
 import { env } from "process";
 import { readFile } from "fs/promises";
+import { basename } from "path";
 
 import morgan from "morgan";
 import express from "express";
@@ -8,6 +9,7 @@ import cookieParser from "cookie-parser";
 import { utils } from "ethers";
 import htm from "htm";
 import "express-async-errors";
+import multer from "multer";
 
 import log from "./logger.mjs";
 import { SCHEMATA } from "./constants.mjs";
@@ -125,6 +127,44 @@ export async function launch(trie, libp2p) {
     res.status(500).send("Internal Server Error");
   });
 
+  const upload = multer({ storage: multer.memoryStorage() });
+
+  app.post(
+    "/api/v1/images",
+    upload.single("fileToUpload"),
+    async (req, res) => {
+      if (!req.file) {
+        return res.status(400).send("No file uploaded.");
+      }
+
+      const form = new FormData();
+      form.set("reqtype", "fileupload");
+      form.set(
+        "fileToUpload",
+        new Blob([req.file.buffer]),
+        basename(req.file.originalname),
+      );
+
+      try {
+        const catboxResponse = await fetch("https://catbox.moe/user/api.php", {
+          method: "POST",
+          body: form,
+        });
+
+        if (!catboxResponse.ok) {
+          throw new Error(
+            `Catbox responded with status: ${catboxResponse.status}`,
+          );
+        }
+
+        const catboxUrl = await catboxResponse.text();
+        res.send(catboxUrl);
+      } catch (error) {
+        console.error(`Error during upload: ${error}`);
+        res.status(500).send("Error uploading to Catbox");
+      }
+    },
+  );
   app.get("/api/v1/parse", async (request, reply) => {
     const embed = await parse(request.query.url);
     return reply.status(200).type("text/html").send(embed);

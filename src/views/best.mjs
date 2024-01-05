@@ -104,7 +104,11 @@ export default async function index(
     allowlist,
     delegations,
   );
-  leaves = leaves.filter(({ href }) => extractDomain(href) !== "imgur.com");
+  leaves = leaves.filter(
+    ({ href }) =>
+      extractDomain(href) !== "imgur.com" &&
+      extractDomain(href) !== "catbox.moe",
+  );
   const policy = await moderation.getLists();
   leaves = moderation.moderate(leaves, policy);
 

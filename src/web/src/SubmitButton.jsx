@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Wallet } from "@ethersproject/wallet";
 import { useProvider, useSigner, useAccount, WagmiConfig } from "wagmi";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
@@ -23,19 +23,139 @@ function safeExtractDomain(link) {
   return tld;
 }
 
+const UploadButton = (props) => {
+  const { imageURL, setImageURL, url, setURL } = props;
+  const [loading, setLoading] = useState(false);
+
+  const uploadToCatbox = async (file) => {
+    setLoading(true);
+    const formData = new FormData();
+    formData.append("reqtype", "fileupload");
+    formData.append("fileToUpload", file);
+
+    try {
+      const response = await fetch("/api/v1/images", {
+        method: "POST",
+        body: formData,
+      });
+      const responseURL = await response.text();
+      setImageURL(responseURL);
+      setLoading(false);
+    } catch (error) {
+      setLoading(false);
+      console.error(error);
+    }
+  };
+
+  const handleFileSelect = useCallback((event) => {
+    const file = event.target.files[0];
+    if (file) {
+      uploadToCatbox(file);
+    }
+  }, []);
+
+  return (
+    <div style={{ maxWidth: "600px" }}>
+      <label
+        style={{ marginBottom: "5px", display: "block", fontSize: "16px" }}
+      >
+        Link:
+      </label>
+      <div style={{ display: "flex", alignItems: "center" }}>
+        <input
+          placeholder="https://bitcoin.org/bitcoin.pdf"
+          id="urlInput"
+          type="text"
+          name="link"
+          size="50"
+          maxLength="2048"
+          required
+          style={{
+            flexGrow: 8,
+            padding: "5px 10px",
+            fontSize: "16px",
+            boxSizing: "border-box",
+            marginRight: "20px",
+          }}
+          disabled={imageURL}
+          value={imageURL || url}
+          onChange={(e) => setURL(e.target.value)}
+        />
+        <label>
+          <input
+            type="file"
+            style={{
+              display: "none",
+            }}
+            onChange={handleFileSelect}
+            accept="image/*"
+          />
+          <div
+            style={{
+              width: "33px",
+              height: "33px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: "#f0f0f0",
+              cursor: "pointer",
+              backgroundColor: "black",
+              color: "white",
+              borderRadius: "3px",
+            }}
+          >
+            {loading ? "..." : <ImageSVG />}
+          </div>
+        </label>
+      </div>
+    </div>
+  );
+};
+
+const ImageSVG = () => (
+  <svg
+    style={{ width: "1.25rem", height: "1.25rem" }}
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 256 256"
+  >
+    <rect width="256" height="256" fill="none" />
+    <rect
+      x="40"
+      y="40"
+      width="176"
+      height="176"
+      rx="8"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="24"
+    />
+    <circle cx="96" cy="96" r="20" />
+    <path
+      d="M56.69,216,166.34,106.34a8,8,0,0,1,11.32,0L216,144.69"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="24"
+    />
+  </svg>
+);
+
 const SubmitButton = (props) => {
-  const { toast } = props;
+  const { toast, imageURL, url } = props;
   const [isLoading, setIsLoading] = useState(false);
   const [title, setTitle] = useState("");
-  const [url, setUrl] = useState("");
   const [openedOnce, setOpenedOnce] = useState(false);
   const [remainingChars, setRemainingChars] = useState(80);
 
   useEffect(() => {
     const embedPreview = document.getElementById("embed-preview");
 
-    if (url) {
-      fetch(`/api/v1/parse?url=${encodeURIComponent(url)}`)
+    const canonicalURL = imageURL ? imageURL : url;
+    if (canonicalURL) {
+      fetch(`/api/v1/parse?url=${encodeURIComponent(canonicalURL)}`)
         .then((response) => {
           if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -51,7 +171,7 @@ const SubmitButton = (props) => {
     } else {
       embedPreview.innerHTML = "";
     }
-  }, [url]);
+  }, [url, imageURL]);
 
   useEffect(() => {
     const previewLink = document.querySelector(".story-link");
@@ -67,18 +187,19 @@ const SubmitButton = (props) => {
       previewLink.textContent = title || placeholderTitle;
     }
 
-    if (previewLink && url) {
-      previewLink.href = url;
+    const canonicalURL = imageURL ? imageURL : url;
+    if (previewLink && canonicalURL) {
+      previewLink.href = canonicalURL;
     } else if (previewLink) {
       previewLink.href = placeholderUrl;
     }
 
     if (previewDomain) {
-      previewDomain.textContent = url
-        ? `(${safeExtractDomain(url)})`
+      previewDomain.textContent = canonicalURL
+        ? `(${safeExtractDomain(canonicalURL)})`
         : placeholderDomain;
     }
-  }, [title, url]);
+  }, [title, url, imageURL]);
 
   let address;
   const account = useAccount();
@@ -107,14 +228,9 @@ const SubmitButton = (props) => {
     signer = result.data;
     isError = result.isError;
   }
-  useEffect(() => {
-    const urlInput = document.getElementById("urlInput");
-    const titleInput = document.getElementById("titleInput");
 
-    if (urlInput) {
-      setUrl(urlInput.value);
-      urlInput.addEventListener("input", () => setUrl(urlInput.value));
-    }
+  useEffect(() => {
+    const titleInput = document.getElementById("titleInput");
 
     if (titleInput) {
       setTitle(titleInput.textContent);
@@ -126,9 +242,6 @@ const SubmitButton = (props) => {
     }
 
     return () => {
-      if (urlInput) {
-        urlInput.removeEventListener("input", () => setUrl(urlInput.value));
-      }
       if (titleInput) {
         titleInput.removeEventListener("input", () =>
           setTitle(titleInput.textContent),
@@ -140,9 +253,13 @@ const SubmitButton = (props) => {
   const handleClick = async (e) => {
     e.preventDefault();
 
-    const value = API.messageFab(title.replace(/(\r\n|\n|\r)/gm, " "), url);
+    const canonicalURL = imageURL ? imageURL : url;
+    const value = API.messageFab(
+      title.replace(/(\r\n|\n|\r)/gm, " "),
+      canonicalURL,
+    );
 
-    if (title.length > 80 || url.length > 2048) {
+    if (title.length > 80 || canonicalURL.length > 2048) {
       toast.error(
         "The title should be no more than 80 characters, and the URL should be no more than 2048 characters.",
       );
@@ -155,8 +272,9 @@ const SubmitButton = (props) => {
       return;
     }
     if (
-      url.length === 0 ||
-      (!url.startsWith("https://") && !url.startsWith("http://"))
+      canonicalURL.length === 0 ||
+      (!canonicalURL.startsWith("https://") &&
+        !canonicalURL.startsWith("http://"))
     ) {
       toast.error("Please add a valid link.");
       setIsLoading(false);
@@ -191,20 +309,21 @@ const SubmitButton = (props) => {
     }
 
     let redirectTo = "/new";
-    if (safeExtractDomain(url) === "imgur.com") {
+    const domain = safeExtractDomain(canonicalURL);
+    if (domain === "imgur.com" || domain === "catbox.moe") {
       redirectTo = "/images";
     }
 
     const nextPage = new URL(window.location.origin + redirectTo);
     nextPage.searchParams.set("bpc", "1");
-    nextPage.searchParams.set("link", encodeURIComponent(url));
+    nextPage.searchParams.set("link", encodeURIComponent(canonicalURL));
     window.location.href = nextPage.href;
   };
 
   const buttonStyles = {
     width: "100%",
     maxWidth: "600px",
-    marginTop: "0.5rem",
+    marginTop: "1rem",
     padding: "5px",
     fontSize: "16px",
     cursor: "pointer",
@@ -240,11 +359,24 @@ const SubmitButton = (props) => {
 
 const Form = (props) => {
   const [modalIsOpen, setIsOpen] = useState(false);
+  const [imageURL, setImageURL] = useState("");
+  const [url, setURL] = useState("");
 
   return (
     <WagmiConfig client={client}>
       <RainbowKitProvider chains={chains}>
-        <SubmitButton {...props} setIsOpen={setIsOpen} />
+        <UploadButton
+          url={url}
+          setURL={setURL}
+          imageURL={imageURL}
+          setImageURL={setImageURL}
+        />
+        <SubmitButton
+          {...props}
+          setIsOpen={setIsOpen}
+          url={url}
+          imageURL={imageURL}
+        />
         <NFTModal
           modalIsOpen={modalIsOpen}
           setIsOpen={setIsOpen}
