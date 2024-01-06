@@ -146,8 +146,8 @@ export default async function submit(theme, url = "", title = "", identity) {
                             <input
                               type="file"
                               style="${fileInputStyle}"
-                              onChange="{handleFileSelect}"
                               accept="image/*"
+                              disabled
                             />
                             <${ImageSVG} />
                           </label>
@@ -232,7 +232,7 @@ const fileInputLabelStyle = `
    display: flex;
    align-items: center;
    justify-content: center;
-   background: #000;
+   background: grey;
    color: #fff;
    border-radius: 3px;
    cursor: pointer;
