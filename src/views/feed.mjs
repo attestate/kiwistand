@@ -5,7 +5,12 @@ import { URL } from "url";
 import htm from "htm";
 import vhtml from "vhtml";
 import normalizeUrl from "normalize-url";
-import { sub, differenceInMinutes, isBefore } from "date-fns";
+import {
+  sub,
+  differenceInSeconds,
+  differenceInMinutes,
+  isBefore,
+} from "date-fns";
 
 import { getTips, getTipsValue } from "../tips.mjs";
 import * as ens from "../ens.mjs";
@@ -328,13 +333,34 @@ export async function index(trie, page, domain) {
   };
 }
 
+const pages = {};
+
 export default async function (trie, theme, page, identity, domain) {
   const path = "/";
-  const { editorPicks, config, stories, start } = await index(
-    trie,
-    page,
-    domain,
-  );
+
+  const key = `${page}-${domain}`;
+  let cacheRes = pages[key];
+  let content;
+
+  let maxAgeInSeconds = 60 * 60 * 24;
+  if (page === 0 && !domain) maxAgeInSeconds = 25;
+  if (page > 0 && page < 5 && !domain) maxAgeInSeconds = 60 * 5;
+
+  if (
+    !cacheRes ||
+    (cacheRes &&
+      differenceInSeconds(new Date(), cacheRes.age) > maxAgeInSeconds)
+  ) {
+    content = await index(trie, page, domain);
+    pages[key] = {
+      content,
+      age: new Date(),
+    };
+  } else {
+    content = cacheRes.content;
+  }
+  const { editorPicks, config, stories, start } = content;
+
   let sheets;
   try {
     const activeSheets = await moderation.getActiveCanons();
