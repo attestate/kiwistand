@@ -5,7 +5,7 @@ import { URL } from "url";
 import htm from "htm";
 import vhtml from "vhtml";
 import normalizeUrl from "normalize-url";
-import { sub, differenceInMinutes } from "date-fns";
+import { sub, differenceInMinutes, differenceInSeconds } from "date-fns";
 
 import { getTips, getTipsValue } from "../tips.mjs";
 import * as ens from "../ens.mjs";
@@ -66,14 +66,7 @@ async function topstories(leaves, start, end) {
   return count(leaves).sort((a, b) => b.upvotes - a.upvotes);
 }
 
-export default async function index(
-  trie,
-  theme,
-  page,
-  period,
-  identity,
-  domain,
-) {
+async function recompute(trie, page, period, domain) {
   const from = null;
   const amount = null;
   const parser = JSON.parse;
@@ -160,7 +153,52 @@ export default async function index(
       isOriginal,
     });
   }
+  return stories;
+}
 
+const pages = {};
+export default async function index(
+  trie,
+  theme,
+  page,
+  period,
+  identity,
+  domain,
+) {
+  const key = `${page}-${period}-${domain}`;
+  let cacheRes = pages[key];
+  let stories;
+
+  let maxAgeInSeconds = 60 * 60 * 24;
+  if (period === "day" && page === 0 && !domain) maxAgeInSeconds = 60 * 60 * 6;
+  if (period === "day" && page > 0 && page < 5 && !domain)
+    maxAgeInSeconds = 60 * 60 * 10;
+  if (period === "week" && page === 0 && !domain)
+    maxAgeInSeconds = 60 * 60 * 24;
+  if (period === "week" && page > 0 && page < 5 && !domain)
+    maxAgeInSeconds = 60 * 60 * 24 * 2;
+  if (period === "month" && page === 0 && !domain)
+    maxAgeInSeconds = 60 * 60 * 24 * 3;
+  if (period === "month" && page > 0 && page < 5 && !domain)
+    maxAgeInSeconds = 60 * 60 * 24 * 5;
+  if (period === "all" && page === 0 && !domain)
+    maxAgeInSeconds = 60 * 60 * 24 * 7;
+  if (period === "all" && page > 0 && page < 5 && !domain)
+    maxAgeInSeconds = 60 * 60 * 24 * 7;
+
+  if (
+    !cacheRes ||
+    (cacheRes &&
+      differenceInSeconds(new Date(), cacheRes.age) > maxAgeInSeconds)
+  ) {
+    stories = await recompute(trie, page, period, domain);
+    pages[key] = {
+      stories,
+      age: new Date(),
+    };
+  } else {
+    stories = cacheRes.stories;
+  }
   return html`
     <html lang="en" op="news">
       <head>
