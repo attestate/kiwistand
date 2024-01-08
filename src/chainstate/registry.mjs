@@ -1,5 +1,6 @@
 // @format
 import { resolve } from "path";
+import { createHash } from "crypto";
 
 import { utils } from "ethers";
 import { database } from "@attestate/crawler";
@@ -7,6 +8,13 @@ import { organize } from "@attestate/delegator2";
 
 import mainnet from "./mainnet-mints.mjs";
 
+function hash(obj) {
+  const str = JSON.stringify(obj);
+  return createHash("sha256").update(str).digest("hex");
+}
+
+let cachedDelegations = null;
+let logsHash = null;
 export async function delegations() {
   const path = resolve(process.env.DATA_DIR, "list-delegations-load-2");
   const maxReaders = 500;
@@ -30,7 +38,13 @@ export async function delegations() {
   const logs = all
     .map(({ value }) => ({ ...value, data: value.data.data }))
     .filter(({ data }) => BigInt(data[2]) % 2n !== 0n);
-  return organize(logs);
+
+  if (logsHash !== hash(logs) || !cachedDelegations) {
+    cachedDelegations = organize(logs);
+    logsHash = hash(logs);
+  }
+
+  return cachedDelegations;
 }
 
 export async function allowlist() {
