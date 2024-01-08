@@ -476,21 +476,21 @@ export async function launch(trie, libp2p) {
       .send(await onboarding(reply.locals.theme, request.cookies.identity));
   });
   app.get("/welcome", async (request, reply) => {
-    reply.header("Cache-Control", "public, max-age=300, must-revalidate");
+    reply.header("Cache-Control", "public, max-age=3600, must-revalidate");
     return reply
       .status(200)
       .type("text/html")
       .send(await join(reply.locals.theme, request.cookies.identity));
   });
   app.get("/kiwipass", async (request, reply) => {
-    reply.header("Cache-Control", "public, max-age=300, must-revalidate");
+    reply.header("Cache-Control", "public, max-age=3600, must-revalidate");
     return reply
       .status(200)
       .type("text/html")
       .send(await kiwipass(reply.locals.theme, request.cookies.identity));
   });
   app.get("/memecoin", async (request, reply) => {
-    reply.header("Cache-Control", "public, max-age=300, must-revalidate");
+    reply.header("Cache-Control", "public, max-age=3600, must-revalidate");
     return reply
       .status(200)
       .type("text/html")
@@ -542,7 +542,7 @@ export async function launch(trie, libp2p) {
       request.query.mode,
       request.cookies.identity,
     );
-    reply.header("Cache-Control", "public, max-age=300, must-revalidate");
+    reply.header("Cache-Control", "public, max-age=3600, must-revalidate");
     return reply.status(200).type("text/html").send(content);
   });
 
@@ -554,6 +554,7 @@ export async function launch(trie, libp2p) {
       title,
       request.cookies.identity,
     );
+    reply.header("Cache-Control", "public, max-age=18000, must-revalidate");
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/*", async (request, reply, next) => {
@@ -581,7 +582,7 @@ export async function launch(trie, libp2p) {
     } catch (err) {
       return next(err);
     }
-    reply.header("Cache-Control", "public, max-age=300, must-revalidate");
+    reply.header("Cache-Control", "public, max-age=3600, must-revalidate");
     return reply.status(200).type("text/html").send(content);
   });
 
