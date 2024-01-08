@@ -2,6 +2,8 @@ import ogs from "open-graph-scraper";
 import htm from "htm";
 import vhtml from "vhtml";
 
+import cache from "./cache.mjs";
+
 const html = htm.bind(vhtml);
 
 const filtered = [
@@ -13,10 +15,17 @@ const filtered = [
   "twitter.com",
   "x.com",
 ];
-export const metadata = async (url) => {
-  const response = await ogs({ url });
 
-  const { result } = response;
+export const metadata = async (url) => {
+  let result;
+  if (cache.has(url)) {
+    result = cache.get(url);
+  } else {
+    const response = await ogs({ url });
+    result = response.result;
+  }
+  cache.set(url, result);
+
   const domain = safeExtractDomain(url);
   if (filtered.includes(domain) || (result && !result.success)) {
     throw new Error("Link from excluded domain");
