@@ -32,7 +32,7 @@ export default async function index(theme, identity) {
                   </p>
                   <br />
                   <p>
-                    <b>Kiwi Weekly (TOP10 most upvoted links of the week)</b>
+                    <b>Kiwi Weekly (Most upvoted links of the week)</b>
                   </p>
                   <div style="text-align: left;">
                     <iframe
@@ -43,6 +43,24 @@ export default async function index(theme, identity) {
                       scrolling="no"
                     ></iframe>
                   </div>
+                  <p>
+                    <b>Kiwi Daily bots (6 most upvoted links of the day)</b>
+                  </p>
+                  <div>
+                    <p>
+                      <span>Farcaster bot: </span>
+                      <a href="https://warpcast.com/kiwi" target="_blank"
+                        ><u>warpcast.com/kiwi</u></a
+                      >
+                    </p>
+                    <p>
+                      <span>Twitter Bot: </span>
+                      <a href="https://twitter.com/KiwiNewsHQ" target="_blank"
+                        ><u>twitter.com/KiwiNewsHQ</u></a
+                      >
+                    </p>
+                  </div>
+                  <br />
                   <p>
                     <b
                       >Real-Time RSS Feeds (maintained by our community member:
@@ -58,7 +76,7 @@ export default async function index(theme, identity) {
                       <a
                         href="https://kiwinews.lol/api/feed/top"
                         target="_blank"
-                        >https://kiwinews.lol/api/feed/top</a
+                        ><u>kiwinews.lol/api/feed/top</u></a
                       >
                     </p>
                     <p>
@@ -66,7 +84,7 @@ export default async function index(theme, identity) {
                       <a
                         href="https://kiwinews.lol/api/feed/new"
                         target="_blank"
-                        >https://kiwinews.lol/api/feed/new</a
+                        ><u>kiwinews.lol/api/feed/new</u></a
                       >
                     </p>
                   </div>
