@@ -401,7 +401,7 @@ async function start() {
     addConnectedComponents(await allowlistPromise, await delegationsPromise),
     addSubmitButton(await allowlistPromise, await delegationsPromise, toast),
     checkNewStories(),
-    checkImages(),
+    //checkImages(),
   ]);
 
   let url = new URL(window.location.href);
