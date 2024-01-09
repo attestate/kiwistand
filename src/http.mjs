@@ -28,6 +28,7 @@ import kiwipass from "./views/kiwipass.mjs";
 import memecoin from "./views/memecoin.mjs";
 import onboardingReader from "./views/onboarding-reader.mjs";
 import onboardingCurator from "./views/onboarding-curator.mjs";
+import onboardingSubmitter from "./views/onboarding-submitter.mjs";
 import shortcut from "./views/shortcut.mjs";
 import nfts from "./views/nfts.mjs";
 import subscribe from "./views/subscribe.mjs";
@@ -515,6 +516,14 @@ export async function launch(trie, libp2p) {
       .type("text/html")
       .send(
         await onboardingCurator(reply.locals.theme, request.cookies.identity),
+      );
+  });
+  app.get("/onboarding-submitter", async (request, reply) => {
+    return reply
+      .status(200)
+      .type("text/html")
+      .send(
+        await onboardingSubmitter(reply.locals.theme, request.cookies.identity),
       );
   });
 

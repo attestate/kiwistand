@@ -1,18 +1,13 @@
 //@format
-
 import htm from "htm";
 import vhtml from "vhtml";
-
 import Header from "./components/header.mjs";
 import Sidebar from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
 import Head from "./components/head.mjs";
-import * as ens from "../ens.mjs";
-
 const html = htm.bind(vhtml);
 
 export default async function (theme, identity) {
-  const ensData = await ens.resolve(identity);
   return html`
     <html lang="en" op="news">
       <head>
@@ -77,110 +72,41 @@ export default async function (theme, identity) {
                 ${await Header(theme, identity)}
               </tr>
               <tr>
-                <td style="padding: 1rem; text-align: center; color: black;">
+                <td style="padding: 1rem; text-align: center; color: black">
                   <br />
                   <p>
                     <a href="/onboarding-reader"><u>Level I: Reader</u></a>
                   </p>
-                  <h1>Level II: Curator</h1>
                   <p>
-                    <a href="/onboarding-submitter"
-                      ><u>Level III: Submitter</u></a
-                    >
+                    <a href="/onboarding-curator"><u>Level II: Curator</u></a>
                   </p>
+                  <h1>Level III: Submitter</h1>
                   <br />
                   <br />
                   <br />
                   <div class="flex-container flex-image-right">
                     <div class="text-left">
-                      <h2>Mint Kiwi Pass to join the Kiwi community</h2>
-                      <p>
-                        Shape the kiwi feed, get discovered by 1,500+ monthly
-                        readers & meet 800+ other crypto connoisseurs.
-                      </p>
-                      <a
-                        href="/kiwipass?referral=0x9fa714F170E9488F70536d947003308eBd1A2bbD"
-                        target="_blank"
-                      >
-                        <button
-                          id="button-onboarding"
-                          style="margin-left: 0; width: 40%;"
-                        >
-                          Mint Kiwi Pass
-                        </button>
-                      </a>
-                    </div>
-                    <div class="image-right">
-                      <img src="KiwiPass.png" />
-                    </div>
-                  </div>
-                  <br />
-                  <br />
-                  <br />
-                  <div class="flex-container flex-image-left">
-                    <div class="image-left">
-                      <img src="Telegram.png" />
-                    </div>
-                    <div class="text-right">
                       <h2>
-                        Share and discuss content with fellow crypto builders
+                        Submit your first link and start collecting kiwi karma
                       </h2>
                       <p>
-                        Discuss the project, content and anything you’d like to
-                        chat about on our Telegram Channel. Join us and say gm!
-                      </p>
-                      <p>
-                        Message @timdaub or @macbudkowski to get invited!
-                        <br />
-                        (You need to hold Kiwipass to join the chat)
-                      </p>
-                      <a href="https://t.me/macbudkowski" target="_blank">
-                        <button
-                          id="button-onboarding"
-                          style="margin-left: 0; width: 40%;"
-                        >
-                          @macbudkowski
-                        </button>
-                      </a>
-                      <a href="https://t.me/timdaub" target="_blank">
-                        <button
-                          id="button-onboarding"
-                          style="margin-left: 1rem; width: 40%;"
-                        >
-                          @timdaub
-                        </button>
-                      </a>
-                    </div>
-                  </div>
-                  <br />
-                  <br />
-                  <br />
-                  <div class="flex-container flex-image-right">
-                    <div class="text-left">
-                      <h2>Test your Kiwi superpowers</h2>
-                      <p>
-                        Use your Kiwipass superpowers to upvote links. Check the
-                        most popular links of the last month and upvote the ones
-                        you find interesting.
-                        <br />
-                        <br />While upvoting, please be mindful of our<a
+                        Share your findings and let everyone know what kind of
+                        readings, videos or podcasts you find interesting. Both
+                        new & evergreen content is much welcome.
+                        <br />While submitting, please be mindful of our<a
                           href="/guidelines"
                           target="_blank"
                           >${" "}<u>Guidelines</u></a
                         >.
                       </p>
-                      <a
-                        style="display: block;"
-                        href="/best?period=month"
-                        target="_blank"
-                      >
+                      <a style="display: block;" href="/submit" target="_blank">
                         <button id="button-onboarding" style="margin-right: 0;">
-                          Upvote your first link
+                          Go to Submission page
                         </button></a
                       >
                     </div>
                     <div class="image-right">
-                      <img src="Top-links.png" alt="Kiwi Top links" />
+                      <img src="kiwi_submit.gif" alt="Kiwi Submit" />
                     </div>
                   </div>
                   <br />
@@ -188,43 +114,70 @@ export default async function (theme, identity) {
                   <br />
                   <div class="flex-container flex-image-left">
                     <div class="image-left">
-                      <img src="kiwi-profile.png" />
+                      <img src="kiwi_chrome.gif" alt="Kiwi Chrome" />
                     </div>
                     <div class="text-right">
-                      <h2>Check your Kiwi profile</h2>
+                      <h2>Get the Kiwi Chrome Extension</h2>
                       <p>
-                        We pull the data, links & avatar from your ENS and
-                        Farcaster so that people can get to know you. When you
-                        submit your first links, they'll show up on your
-                        profile.
+                        Submit links in two clicks with our Chrome Extension.
                       </p>
-                      <a href="/${ensData.displayName}" target="_blank">
-                        <button
-                          id="button-onboarding"
-                          style="margin-left: 0; width: 40%;"
-                        >
-                          Check your Kiwi profile
+                      <a
+                        href="https://chrome.google.com/webstore/detail/kiwi-news-chrome-extensio/ifchjojjeocdanjhhmbihapfjokljllc"
+                        target="_blank"
+                      >
+                        <button id="button-onboarding" style="margin-right: 0;">
+                          Get Extension from Chrome Web Store
                         </button>
                       </a>
+                    </div>
+                  </div>
+                  <br />
+                  <br />
+                  <br />
+                  <div class="flex-container flex-image-right">
+                    <div class="text-left">
+                      <h2>Grow your Kiwi Score</h2>
+                      <p>
+                        Every submission and every upvote your links receive
+                        give you one Kiwi point. Stand out in our community and
+                        become a beloved curator of everyday and evergreen
+                        content.
+                      </p>
+                      <a href="/community" target="_blank">
+                        <button id="button-onboarding" style="margin-left: 0;">
+                          Check Kiwi leaderboard
+                        </button>
+                      </a>
+                    </div>
+                    <div class="image-right">
+                      <img src="Leaderboard.png" alt="Kiwi News NFT" />
                     </div>
                   </div>
                   <br />
                   <br />
                   <br />
                   ${identity
-                    ? html`<div style="text-align: left;">
+                    ? html` <div style="text-align: left">
                           <h2>Earn Protocol Rewards!</h2>
                           <p>
                             Reading together is more fun than alone! So invite
                             your friends and earn Zora's Protocol Rewards!
                             0.000222 ETH per referred mint!
                           </p>
-                          <div style="display: flex; align-items: center;">
+                          <div style="display: flex; align-items: center">
                             <button
                               onclick="document.getElementById('invitelink').select(); document.execCommand('copy');"
                               id="button-onboarding"
-                              style="border-radius: 2px; padding: 10px 15px; background-color: black; border: 1px
- solid black; color: white; cursor: pointer; width: 50%; margin-right: 10px;"
+                              style="
+                      border-radius: 2px;
+                      padding: 10px 15px;
+                      background-color: black;
+                      border: 1px solid black;
+                      color: white;
+                      cursor: pointer;
+                      width: 50%;
+                      margin-right: 10px;
+                    "
                             >
                               Copy invite link
                             </button>
@@ -233,7 +186,12 @@ export default async function (theme, identity) {
                               type="text"
                               value="https://news.kiwistand.com/welcome?referral=${identity}"
                               readonly
-                              style="width: 70%; padding: 10px 15px; border: 1px solid #ccc; border-radius: 2px;"
+                              style="
+                      width: 70%;
+                      padding: 10px 15px;
+                      border: 1px solid #ccc;
+                      border-radius: 2px;
+                    "
                             />
                           </div>
                         </div>
@@ -254,14 +212,29 @@ export default async function (theme, identity) {
         ${Footer(theme)}
         <div
           id="bookmark-modal"
-          style="display: none; position: fixed; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4);"
+          style="
+        display: none;
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.4);
+      "
         >
           <div
-            style="background-color: #fefefe; margin: 15% auto; padding: 20px; border: 1px solid #888; width: 80%;"
+            style="
+          background-color: #fefefe;
+          margin: 15% auto;
+          padding: 20px;
+          border: 1px solid #888;
+          width: 80%;
+        "
           >
             <span
               id="close-modal"
-              style="color: #aaa; float: right; font-size: 28px; font-weight: bold;"
+              style="color: #aaa; float: right; font-size: 28px; font-weight: bold"
               >&times;</span
             >
             <p id="bookmark-instructions"></p>
