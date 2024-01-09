@@ -1,6 +1,28 @@
 import "vite/modulepreload-polyfill";
 import "@rainbow-me/rainbowkit/styles.css";
 import { watchAccount } from "@wagmi/core";
+import { getCookie } from "./session.mjs";
+
+async function checkNewStories() {
+  let data;
+  try {
+    const response = await fetch("/api/v1/feeds/new");
+    data = await response.json();
+  } catch (error) {
+    console.error("Error fetching new stories:", error);
+    return;
+  }
+
+  if (data.status === "success" && data.data.stories.length > 0) {
+    const latestTimestamp = data.data.stories[0].timestamp;
+    const localTimestamp = getCookie("newTimestamp");
+    const redDotElement = document.getElementById("new-red-dot");
+
+    if (!localTimestamp || latestTimestamp > Number(localTimestamp)) {
+      redDotElement.style.display = "block";
+    }
+  }
+}
 
 function handleClick(event) {
   const sidebar = document.querySelector(".sidebar");
@@ -357,6 +379,7 @@ async function start() {
     addBuyButton(allowlistPromise, delegationsPromise, toast),
     addConnectedComponents(await allowlistPromise, await delegationsPromise),
     addSubmitButton(await allowlistPromise, await delegationsPromise, toast),
+    checkNewStories(),
   ]);
 
   let url = new URL(window.location.href);

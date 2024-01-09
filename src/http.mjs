@@ -16,7 +16,7 @@ import { SCHEMATA } from "./constants.mjs";
 import themes from "./themes.mjs";
 import feed, { index } from "./views/feed.mjs";
 import story from "./views/story.mjs";
-import newest from "./views/new.mjs";
+import newest, { getStories, getLatestTimestamp } from "./views/new.mjs";
 import images from "./views/images.mjs";
 import best from "./views/best.mjs";
 import canon from "./views/canon.mjs";
@@ -170,23 +170,27 @@ export async function launch(trie, libp2p) {
     return reply.status(200).type("text/html").send(embed);
   });
   app.get("/api/v1/feeds/:name", async (request, reply) => {
-    if (request.params.name !== "hot") {
+    let stories = [];
+    if (request.params.name === "hot") {
+      let page = parseInt(request.query.page);
+      if (isNaN(page) || page < 1) {
+        page = 0;
+      }
+      const results = await index(trie, page);
+      stories = results.stories;
+    } else if (request.params.name === "new") {
+      stories = getStories();
+    } else {
       const code = 501;
       const httpMessage = "Not Implemented";
       const details =
-        "We currently don't implement any other endpoint but 'hot'";
+        "We currently don't implement any other endpoint but 'hot' and 'new'";
       return sendError(reply, code, httpMessage, details);
     }
 
-    let page = parseInt(request.query.page);
-    if (isNaN(page) || page < 1) {
-      page = 0;
-    }
-    const { stories } = await index(trie, page);
-
     const code = 200;
     const httpMessage = "OK";
-    const details = "Hot feed";
+    const details = `${request.params.name} feed`;
     return sendStatus(reply, code, httpMessage, details, { stories });
   });
   app.get("/", async (request, reply) => {
@@ -289,6 +293,14 @@ export async function launch(trie, libp2p) {
       reply.locals.theme,
       request.cookies.identity,
     );
+    let timestamp;
+    try {
+      timestamp = getLatestTimestamp();
+      reply.cookie("newTimestamp", timestamp);
+    } catch (err) {
+      //noop
+    }
+
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/images", async (request, reply) => {
