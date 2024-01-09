@@ -92,6 +92,14 @@ export default async function (theme, identity) {
                   <br />
                   <br />
                   <h1>Level I: Reader</h1>
+                  <p>
+                    <a href="/onboarding-curator"><u>Level II: Curator</u></a>
+                  </p>
+                  <p>
+                    <a href="/onboarding-submitter"
+                      ><u>Level III: Submitter</u></a
+                    >
+                  </p>
                   <br />
                   <br />
                   <br />
