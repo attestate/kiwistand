@@ -79,6 +79,9 @@ export default async function (theme, identity) {
               <tr>
                 <td style="padding: 1rem; text-align: center; color: black;">
                   <br />
+                  <p>
+                    <a href="/onboarding-reader"><u>Level I: Reader</u></a>
+                  </p>
                   <h1>Level II: Curator</h1>
                   <br />
                   <br />

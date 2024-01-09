@@ -190,6 +190,12 @@ export default async function (theme, identity) {
                   <br />
                   <br />
                   <br />
+                  <h1>Ready to explore Kiwi Level II?</h1>
+                  <a href="/onboarding-curator">
+                    <button id="button-onboarding" style="margin-left: 0;">
+                      Check Kiwi Level II: Curator
+                    </button>
+                  </a>
 
                   <br />
                   <br />
