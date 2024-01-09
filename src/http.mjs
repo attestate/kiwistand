@@ -26,6 +26,8 @@ import onboarding from "./views/onboarding.mjs";
 import join from "./views/join.mjs";
 import kiwipass from "./views/kiwipass.mjs";
 import memecoin from "./views/memecoin.mjs";
+import onboardingReader from "./views/onboarding-reader.mjs";
+import onboardingCurator from "./views/onboarding-curator.mjs";
 import shortcut from "./views/shortcut.mjs";
 import nfts from "./views/nfts.mjs";
 import subscribe from "./views/subscribe.mjs";
@@ -475,6 +477,23 @@ export async function launch(trie, libp2p) {
       .type("text/html")
       .send(await onboarding(reply.locals.theme, request.cookies.identity));
   });
+  app.get("/onboarding-reader", async (request, reply) => {
+    return reply
+      .status(200)
+      .type("text/html")
+      .send(
+        await onboardingReader(reply.locals.theme, request.cookies.identity),
+      );
+  });
+  app.get("/onboarding-curator", async (request, reply) => {
+    return reply
+      .status(200)
+      .type("text/html")
+      .send(
+        await onboardingCurator(reply.locals.theme, request.cookies.identity),
+      );
+  });
+
   app.get("/welcome", async (request, reply) => {
     reply.header("Cache-Control", "public, max-age=300, must-revalidate");
     return reply
