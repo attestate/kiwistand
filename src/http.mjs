@@ -16,8 +16,8 @@ import { SCHEMATA } from "./constants.mjs";
 import themes from "./themes.mjs";
 import feed, { index } from "./views/feed.mjs";
 import story from "./views/story.mjs";
-import newest, { getStories, getLatestTimestamp } from "./views/new.mjs";
-import images from "./views/images.mjs";
+import newest, * as newAPI from "./views/new.mjs";
+import images, * as imagesAPI from "./views/images.mjs";
 import best from "./views/best.mjs";
 import canon from "./views/canon.mjs";
 import privacy from "./views/privacy.mjs";
@@ -179,7 +179,9 @@ export async function launch(trie, libp2p) {
       const results = await index(trie, page);
       stories = results.stories;
     } else if (request.params.name === "new") {
-      stories = getStories();
+      stories = newAPI.getStories();
+    } else if (request.params.name === "images") {
+      stories = imagesAPI.getStories();
     } else {
       const code = 501;
       const httpMessage = "Not Implemented";
@@ -295,7 +297,7 @@ export async function launch(trie, libp2p) {
     );
     let timestamp;
     try {
-      timestamp = getLatestTimestamp();
+      timestamp = newAPI.getLatestTimestamp();
       reply.cookie("newTimestamp", timestamp);
     } catch (err) {
       //noop
@@ -309,6 +311,14 @@ export async function launch(trie, libp2p) {
       reply.locals.theme,
       request.cookies.identity,
     );
+
+    let timestamp;
+    try {
+      timestamp = imagesAPI.getLatestTimestamp();
+      reply.cookie("imagesTimestamp", timestamp);
+    } catch (err) {
+      //noop
+    }
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/nfts", async (request, reply) => {

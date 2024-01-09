@@ -26,6 +26,17 @@ import log from "../logger.mjs";
 const html = htm.bind(vhtml);
 
 let stories = [];
+export function getStories() {
+  return stories;
+}
+
+export function getLatestTimestamp() {
+  if (stories.length === 0) {
+    throw new Error("No stories available");
+  }
+  return stories[0].timestamp;
+}
+
 let inProgress = false;
 export async function recompute(trie) {
   if (inProgress) return;

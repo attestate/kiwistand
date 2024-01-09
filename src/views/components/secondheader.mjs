@@ -191,8 +191,8 @@ const secondheader = (theme, site, period) => html`
                 };`}
               >
                 <span
-                  id="new-red-dot"
-                  style="display: none; position: absolute; top: -5px; right: -5px; width: 8px; height: 8px; border-radius: 50%; background-color: red;"
+                  id="new-dot"
+                  style="display: none; position: absolute; top: -5px; right: -5px; width: 8px; height: 8px; border-radius: 50%; background-color: #228B22;"
                 ></span>
                 <span> ${broadcastSVG} New</span>
               </button>
