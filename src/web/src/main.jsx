@@ -400,7 +400,7 @@ async function start() {
     addBuyButton(allowlistPromise, delegationsPromise, toast),
     addConnectedComponents(await allowlistPromise, await delegationsPromise),
     addSubmitButton(await allowlistPromise, await delegationsPromise, toast),
-    checkNewStories(),
+    //checkNewStories(),
     //checkImages(),
   ]);
 
