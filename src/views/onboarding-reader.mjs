@@ -97,7 +97,7 @@ export default async function (theme, identity) {
                   </p>
                   <p>
                     <a href="/onboarding-submitter"
-                      ><u>Level III: Submitter</u></a
+                      ><u>Level III: Link Hunter</u></a
                     >
                   </p>
                   <br />
@@ -201,7 +201,7 @@ export default async function (theme, identity) {
                   <h1>Ready to explore Kiwi Level II?</h1>
                   <a href="/onboarding-curator">
                     <button id="button-onboarding" style="margin-left: 0;">
-                      Check Kiwi Level II: Curator
+                      Check Level II: Curator
                     </button>
                   </a>
 
