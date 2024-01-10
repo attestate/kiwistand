@@ -400,8 +400,8 @@ async function start() {
     addBuyButton(allowlistPromise, delegationsPromise, toast),
     addConnectedComponents(await allowlistPromise, await delegationsPromise),
     addSubmitButton(await allowlistPromise, await delegationsPromise, toast),
-    //checkNewStories(),
-    //checkImages(),
+    checkNewStories(),
+    checkImages(),
   ]);
 
   let url = new URL(window.location.href);
