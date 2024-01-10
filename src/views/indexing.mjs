@@ -36,45 +36,53 @@ export default async function (theme, userAddress, transactionHash) {
               <tr>
                 <td>
                   <div
-                    style="flex-direction: column; height: 100vh; display: flex; align-items: center;"
+                    style="display: flex; flex-direction: column; align-items: center; justify-content: start; height: 100vh; text-align: center;"
                   >
-                    <h1
-                      style="color: black; align-self: center; margin-top: 2rem;"
-                    >
-                      Thanks for minting!
+                    <h1 style="color: limegreen; margin-bottom: 1rem;">
+                      Minting in Progress
                     </h1>
                     <div
-                      style="border: 16px solid #e6e6df;
-      border-top: 16px solid limegreen;
-      border-radius: 50%;
-      width: 25vmin;
-      height: 25vmin;
-      animation: spin 2s linear infinite;
-  "
+                      style="border: 16px solid #e6e6df; border-top: 16px solid limegreen; border-radius: 50%; width: 25vmin; height: 25vmin; animation: spin 2s linear infinite;"
                     ></div>
-                    <h3
-                      style="color: black; align-self: center; margin-top: 2rem;"
+                    <h2 style="color: limegreen; margin: 2rem 0;">
+                      Please keep this page open while we confirm your
+                      transaction.
+                    </h2>
+                    <p
+                      style="color: black; max-width: 600px; margin-bottom: 2rem;"
                     >
-                      We're looking for your Kiwi onchain!
-                    </h3>
-                    <p style="color: black; text-align: left; padding: 0 2rem;">
-                      <b
-                        >This can take 3 or 5 minutes, so maybe grab a coffee or
-                        kiwi in the meantime :D
-                      </b>
-                      <span> </span>
-                      This page automatically redirects...
+                      <strong>Confirmation usually takes a few minutes.</strong>
                       <br />
-                      <br />
-                      In the mean time, check what you can do here!
-                      <br />
-                      <br />
-                      <a href="/onboarding" target="_blank">
-                        <button style="width:auto;" id="button-onboarding">
-                          Explore Kiwi News
-                        </button>
-                      </a>
+                      Meanwhile, you can explore additional content or share
+                      your action with the community.
                     </p>
+                    <a
+                      href="https://warpcast.com/~/compose?text=I+just+minted+a+kiwi&embeds[]=https://news.kiwistand.com/welcome"
+                      target="_blank"
+                    >
+                      <button
+                        style="background-color: #472a91; color: white; border: none; padding: 10px 20px; margin-bottom: 1rem;"
+                      >
+                        Share on Warpcast
+                      </button>
+                    </a>
+                    <a
+                      href="https://twitter.com/intent/tweet?url=https%3A%2F%2Fnews.kiwistand.com%2Fkiwipass&text=I%20just%20minted%20a%20kiwi%21"
+                      target="_blank"
+                    >
+                      <button
+                        style="background-color: black; color: white; border: none; padding: 10px
+ 20px;"
+                      >
+                        Tweet on X
+                      </button>
+                    </a>
+                    <a
+                      href="/onboarding"
+                      style="margin-top: 10px; color: #472a91; text-decoration: underline; margin-bottom:
+ 1rem;"
+                      >Explore More Content</a
+                    >
                   </div>
                 </td>
               </tr>
