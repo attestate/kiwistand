@@ -80,7 +80,7 @@ export default async function (theme, identity) {
                   <p>
                     <a href="/onboarding-curator"><u>Level II: Curator</u></a>
                   </p>
-                  <h1>Level III: Submitter</h1>
+                  <h1>Level III: Link Hunter</h1>
                   <br />
                   <br />
                   <br />
