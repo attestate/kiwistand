@@ -61,11 +61,13 @@ const secondheader = (theme, site) => html`
               : "padding-top: 0.65rem"}"
           >
             <span>Images </span>
-            <span
-              id="images-dot"
-              style="visibility: hidden; color: #228B22; font-size: smaller;"
-              >•</span
-            >
+            ${site === "images"
+              ? ""
+              : html` <span
+                  id="images-dot"
+                  style="visibility: hidden; color: #228B22; font-size: smaller;"
+                  >•</span
+                >`}
           </div>
         </div>
       </a>

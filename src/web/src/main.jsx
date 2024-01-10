@@ -18,7 +18,7 @@ async function checkNewStories() {
     const localTimestamp = getCookie("newTimestamp");
     const elem = document.getElementById("new-dot");
 
-    if (!localTimestamp || latestTimestamp > Number(localTimestamp)) {
+    if (elem && (!localTimestamp || latestTimestamp > Number(localTimestamp))) {
       elem.style.display = "block";
     }
   }
@@ -39,7 +39,7 @@ async function checkImages() {
     const localTimestamp = getCookie("imagesTimestamp");
     const elem = document.getElementById("images-dot");
 
-    if (!localTimestamp || latestTimestamp > Number(localTimestamp)) {
+    if (elem && (!localTimestamp || latestTimestamp > Number(localTimestamp))) {
       elem.style.visibility = "visible";
     }
   }
