@@ -299,7 +299,7 @@ export async function launch(trie, libp2p) {
     try {
       timestamp = newAPI.getLatestTimestamp();
       reply.cookie("newTimestamp", timestamp, { maxAge: 1000 * 60 * 60 * 6 });
-    } catch (err) 
+    } catch (err) {
       //noop
     }
 
@@ -315,7 +315,9 @@ export async function launch(trie, libp2p) {
     let timestamp;
     try {
       timestamp = imagesAPI.getLatestTimestamp();
-      reply.cookie("imagesTimestamp", timestamp, { maxAge: 1000 * 60 * 60 * 6 });
+      reply.cookie("imagesTimestamp", timestamp, {
+        maxAge: 1000 * 60 * 60 * 6,
+      });
     } catch (err) {
       //noop
     }
