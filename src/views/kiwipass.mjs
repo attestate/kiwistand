@@ -287,8 +287,8 @@ export default async function (theme, identity) {
                       <div class="text-left">
                         <h2>Don’t just read Kiwi, join our community.</h2>
                         <h4>
-                          Shape the kiwi feed, get discovered by 1,200+ monthly
-                          readers & meet 150+ other crypto connoisseurs. Get all
+                          Shape the kiwi feed, get discovered by 1,500+ monthly
+                          readers & meet 800+ other crypto connoisseurs. Get all
                           that for an early adopter price.
                         </h4>
                       </div>
@@ -333,7 +333,7 @@ export default async function (theme, identity) {
                             href="/community"
                             target="_blank"
                           >
-                            & 200+ more
+                            & 800+ more
                           </a>
                         </div>
                       </div>
@@ -362,7 +362,7 @@ export default async function (theme, identity) {
                   <br />
                   <div class="flex-container flex-image-right">
                     <div class="text-left">
-                      <h2>Get discovered by 1,200+ readers & curators</h2>
+                      <h2>Get discovered by 1,500+ readers & curators</h2>
                       <p>
                         You will get a profile that shows all your submissions.
                         You can link your personal website & socials to help

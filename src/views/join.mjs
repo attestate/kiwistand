@@ -338,7 +338,7 @@ export default async function (theme, identity) {
                             href="/community"
                             target="_blank"
                           >
-                            & 150+ more
+                            & 800+ more
                           </a>
                         </div>
                       </div>
