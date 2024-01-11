@@ -114,7 +114,7 @@ const row = (
                   : html` <span
                       class="story-domain"
                       style="white-space: nowrap;"
-                      >(${interactive && path
+                      >(${interactive && (path === "/" || path === "/best")
                         ? extractDomain(story.href)
                         : html`<a
                             href="${path}?period=month&domain=${extractDomain(
@@ -126,7 +126,8 @@ const row = (
               </span>
               <div style="margin-top: auto; font-size: 10pt;">
                 <span>
-                  ${story.avatars.length > 1 &&
+                  ${path !== "/stories" &&
+                  story.avatars.length > 1 &&
                   html`
                     <span>
                       <div
