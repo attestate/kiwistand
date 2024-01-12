@@ -376,12 +376,12 @@ const sidebar = (path) => html`
     </a>
     <a
       title="Explore"
-      href="/onboarding"
+      href="/onboarding-reader"
       style="color: black; text-decoration: none; display: block;"
     >
       <div style="display: flex; align-items: center;">
         <div class="svg-container">
-          ${path === "/onboarding" ? onboardingfull : onboarding}
+          ${path === "/onboarding-reader" ? onboardingfull : onboarding}
         </div>
         <span>Explore</span>
       </div>
