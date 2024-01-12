@@ -139,7 +139,7 @@ export default async function (theme, identity) {
                         Share and discuss content with fellow crypto builders
                       </h2>
                       <p>
-                        Discuss the project, content and anything you’d like to
+                        Discuss the content, project and anything you’d like to
                         chat about on our Telegram Channel. Join us and say gm!
                       </p>
                       <p>
@@ -193,6 +193,32 @@ export default async function (theme, identity) {
                     </div>
                     <div class="image-right">
                       <img src="Newsletter.png" alt="Kiwi Newsletter" />
+                    </div>
+                  </div>
+                  <br />
+                  <br />
+                  <br />
+                  <div class="flex-container flex-image-left">
+                    <div class="image-left">
+                      <img src="Kiwi_lists.png" />
+                    </div>
+                    <div class="text-right">
+                      <h2>Dive deeper into one subject</h2>
+                      <p>
+                        If you want to learn more about a specific subject, Kiwi
+                        Canons are here to help. Kiwi curators - like Spotify
+                        DJs - collect the top materials about one subject and
+                        compose them into a list.
+                      </p>
+
+                      <a href="/lists" target="_blank">
+                        <button
+                          id="button-onboarding"
+                          style="margin-left: 0; width: 40%;"
+                        >
+                          Check Kiwi Canons
+                        </button>
+                      </a>
                     </div>
                   </div>
                   <br />
