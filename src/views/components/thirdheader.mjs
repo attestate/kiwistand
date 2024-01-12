@@ -60,7 +60,14 @@ const secondheader = (theme, site) => html`
               ? "border-bottom: 3px solid limegreen; padding: 0.75rem 1.5rem 0.3rem 1.5rem;"
               : "padding-top: 0.65rem"}"
           >
-            Images
+            <span>Images </span>
+            ${site === "images"
+              ? ""
+              : html` <span
+                  id="images-dot"
+                  style="visibility: hidden; color: #228B22; font-size: smaller;"
+                  >•</span
+                >`}
           </div>
         </div>
       </a>

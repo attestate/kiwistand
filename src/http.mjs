@@ -16,8 +16,8 @@ import { SCHEMATA } from "./constants.mjs";
 import themes from "./themes.mjs";
 import feed, { index } from "./views/feed.mjs";
 import story from "./views/story.mjs";
-import newest from "./views/new.mjs";
-import images from "./views/images.mjs";
+import newest, * as newAPI from "./views/new.mjs";
+import images, * as imagesAPI from "./views/images.mjs";
 import best from "./views/best.mjs";
 import canon from "./views/canon.mjs";
 import privacy from "./views/privacy.mjs";
@@ -173,23 +173,29 @@ export async function launch(trie, libp2p) {
     return reply.status(200).type("text/html").send(embed);
   });
   app.get("/api/v1/feeds/:name", async (request, reply) => {
-    if (request.params.name !== "hot") {
+    let stories = [];
+    if (request.params.name === "hot") {
+      let page = parseInt(request.query.page);
+      if (isNaN(page) || page < 1) {
+        page = 0;
+      }
+      const results = await index(trie, page);
+      stories = results.stories;
+    } else if (request.params.name === "new") {
+      stories = newAPI.getStories();
+    } else if (request.params.name === "images") {
+      stories = imagesAPI.getStories();
+    } else {
       const code = 501;
       const httpMessage = "Not Implemented";
       const details =
-        "We currently don't implement any other endpoint but 'hot'";
+        "We currently don't implement any other endpoint but 'hot' and 'new'";
       return sendError(reply, code, httpMessage, details);
     }
 
-    let page = parseInt(request.query.page);
-    if (isNaN(page) || page < 1) {
-      page = 0;
-    }
-    const { stories } = await index(trie, page);
-
     const code = 200;
     const httpMessage = "OK";
-    const details = "Hot feed";
+    const details = `${request.params.name} feed`;
     return sendStatus(reply, code, httpMessage, details, { stories });
   });
   app.get("/", async (request, reply) => {
@@ -292,6 +298,14 @@ export async function launch(trie, libp2p) {
       reply.locals.theme,
       request.cookies.identity,
     );
+    let timestamp;
+    try {
+      timestamp = newAPI.getLatestTimestamp();
+      reply.cookie("newTimestamp", timestamp, { maxAge: 1000 * 60 * 60 * 6 });
+    } catch (err) {
+      //noop
+    }
+
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/images", async (request, reply) => {
@@ -300,6 +314,16 @@ export async function launch(trie, libp2p) {
       reply.locals.theme,
       request.cookies.identity,
     );
+
+    let timestamp;
+    try {
+      timestamp = imagesAPI.getLatestTimestamp();
+      reply.cookie("imagesTimestamp", timestamp, {
+        maxAge: 1000 * 60 * 60 * 6,
+      });
+    } catch (err) {
+      //noop
+    }
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/nfts", async (request, reply) => {
@@ -504,21 +528,21 @@ export async function launch(trie, libp2p) {
   });
 
   app.get("/welcome", async (request, reply) => {
-    reply.header("Cache-Control", "public, max-age=300, must-revalidate");
+    reply.header("Cache-Control", "public, max-age=3600, must-revalidate");
     return reply
       .status(200)
       .type("text/html")
       .send(await join(reply.locals.theme, request.cookies.identity));
   });
   app.get("/kiwipass", async (request, reply) => {
-    reply.header("Cache-Control", "public, max-age=300, must-revalidate");
+    reply.header("Cache-Control", "public, max-age=3600, must-revalidate");
     return reply
       .status(200)
       .type("text/html")
       .send(await kiwipass(reply.locals.theme, request.cookies.identity));
   });
   app.get("/memecoin", async (request, reply) => {
-    reply.header("Cache-Control", "public, max-age=300, must-revalidate");
+    reply.header("Cache-Control", "public, max-age=3600, must-revalidate");
     return reply
       .status(200)
       .type("text/html")
@@ -570,7 +594,7 @@ export async function launch(trie, libp2p) {
       request.query.mode,
       request.cookies.identity,
     );
-    reply.header("Cache-Control", "public, max-age=300, must-revalidate");
+    reply.header("Cache-Control", "public, max-age=3600, must-revalidate");
     return reply.status(200).type("text/html").send(content);
   });
 
@@ -582,6 +606,7 @@ export async function launch(trie, libp2p) {
       title,
       request.cookies.identity,
     );
+    reply.header("Cache-Control", "public, max-age=18000, must-revalidate");
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/*", async (request, reply, next) => {
@@ -609,7 +634,7 @@ export async function launch(trie, libp2p) {
     } catch (err) {
       return next(err);
     }
-    reply.header("Cache-Control", "public, max-age=300, must-revalidate");
+    reply.header("Cache-Control", "public, max-age=3600, must-revalidate");
     return reply.status(200).type("text/html").send(content);
   });
 

@@ -1,6 +1,49 @@
 import "vite/modulepreload-polyfill";
 import "@rainbow-me/rainbowkit/styles.css";
 import { watchAccount } from "@wagmi/core";
+import { getCookie } from "./session.mjs";
+
+async function checkNewStories() {
+  let data;
+  try {
+    const response = await fetch("/api/v1/feeds/new");
+    data = await response.json();
+  } catch (error) {
+    console.error("Error fetching new stories:", error);
+    return;
+  }
+
+  if (data.status === "success" && data.data.stories.length > 0) {
+    const latestTimestamp = data.data.stories[0].timestamp;
+    const localTimestamp = getCookie("newTimestamp");
+    const elem = document.getElementById("new-dot");
+
+    if (elem && (!localTimestamp || latestTimestamp > Number(localTimestamp))) {
+      elem.style.display = "block";
+    }
+  }
+}
+
+async function checkImages() {
+  let data;
+  try {
+    const response = await fetch("/api/v1/feeds/images");
+    data = await response.json();
+  } catch (error) {
+    console.error("Error fetching new stories:", error);
+    return;
+  }
+
+  if (data.status === "success" && data.data.stories.length > 0) {
+    const latestTimestamp = data.data.stories[0].timestamp;
+    const localTimestamp = getCookie("imagesTimestamp");
+    const elem = document.getElementById("images-dot");
+
+    if (elem && (!localTimestamp || latestTimestamp > Number(localTimestamp))) {
+      elem.style.visibility = "visible";
+    }
+  }
+}
 
 function handleClick(event) {
   const sidebar = document.querySelector(".sidebar");
@@ -357,6 +400,8 @@ async function start() {
     addBuyButton(allowlistPromise, delegationsPromise, toast),
     addConnectedComponents(await allowlistPromise, await delegationsPromise),
     addSubmitButton(await allowlistPromise, await delegationsPromise, toast),
+    checkNewStories(),
+    checkImages(),
   ]);
 
   let url = new URL(window.location.href);

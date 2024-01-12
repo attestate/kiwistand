@@ -184,12 +184,16 @@ const secondheader = (theme, site, period) => html`
               <button
                 onclick="${animation}"
                 class="feed-button"
-                style=${`font-size: 1.01rem; margin-left: 10px; cursor: pointer; border-radius: 2px; padding: 5px 15px; background-color: transparent; border: 1px solid ${
+                style=${`position: relative; font-size: 1.01rem; margin-left: 10px; cursor: pointer; border-radius: 2px; padding: 5px 15px; background-color: transparent; border: 1px solid ${
                   site === "new" || site === "nfts" ? theme.color : "#7f8c8d"
                 }; color: ${
                   site === "new" || site === "nfts" ? theme.color : "#7f8c8d"
                 };`}
               >
+                <span
+                  id="new-dot"
+                  style="display: none; position: absolute; top: -5px; right: -5px; width: 8px; height: 8px; border-radius: 50%; background-color: #228B22;"
+                ></span>
                 <span> ${broadcastSVG} New</span>
               </button>
             </a>`

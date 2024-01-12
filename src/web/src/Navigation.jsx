@@ -256,7 +256,7 @@ const Settings = (props) => {
             ) : (
               <>
                 <SettingsSVG />
-                {!localAccount && (
+                {isEligible && !localAccount && (
                   <span
                     style={{
                       position: "absolute",

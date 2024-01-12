@@ -27,6 +27,34 @@ import { metadata, render } from "../parser.mjs";
 
 const html = htm.bind(vhtml);
 
+export function generateList(profiles) {
+  // NOTE: Remove submitter
+  profiles.shift();
+  return html`
+    <ul style="padding: 0.3rem 0 0.65rem 56px; list-style: none; margin: 0;">
+      ${profiles.map(
+        (profile, i) => html`
+          <li style="position: relative;">
+            <p
+              style="display: flex; align-items: center; gap: 3px; flex: 1; margin: 0; padding: 2px 0; font-size: 14px; color: #6b7280;"
+            >
+              <img
+                src="${profile.avatar}"
+                alt="avatar"
+                style="width: 15px; height: 15px; border: 1px solid #828282; border-radius: 50%;"
+              />
+              <span> </span>
+              <a href="/${profile.name}">${profile.name}</a>
+              <span> </span>
+              <span>upvoted</span>
+            </p>
+          </li>
+        `,
+      )}
+    </ul>
+  `;
+}
+
 export default async function (trie, theme, index, value, identity) {
   let writers = [];
   try {
@@ -54,11 +82,21 @@ export default async function (trie, theme, index, value, identity) {
     ...value,
     isOriginal,
   };
+
+  let profiles = [];
   let avatars = [];
   for await (let upvoter of story.upvoters) {
     const profile = await ens.resolve(upvoter);
     if (profile.safeAvatar) {
       avatars.push(profile.safeAvatar);
+
+      if (profile.displayName) {
+        profiles.push({
+          name: profile.displayName,
+          avatar: profile.safeAvatar,
+          address: profile.address,
+        });
+      }
     }
   }
   story.avatars = avatars;
@@ -72,7 +110,7 @@ export default async function (trie, theme, index, value, identity) {
   story.tipValue = tipValue;
 
   const start = 0;
-  const style = "padding: 1rem 5px 0.75rem 10px;";
+  const style = "padding: 1rem 5px 0 10px;";
   const ogImage = `https://news.kiwistand.com/previews/${index}.jpg`;
   const ogDescription =
     data && data.ogDescription
@@ -92,7 +130,10 @@ export default async function (trie, theme, index, value, identity) {
               <tr>
                 ${await Header(theme, identity)}
               </tr>
-              ${Row(start, "/best", style)({ ...story, index })}
+              ${Row(start, "/stories", style)({ ...story, index })}
+              <tr>
+                <td>${generateList(profiles)}</td>
+              </tr>
               ${!identity
                 ? html` <tr>
                     <td>
