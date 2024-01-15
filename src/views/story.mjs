@@ -1,6 +1,7 @@
 //@format
 import { env } from "process";
 import { URL } from "url";
+import { extname } from "path";
 
 import htm from "htm";
 import vhtml from "vhtml";
@@ -111,7 +112,20 @@ export default async function (trie, theme, index, value, identity) {
 
   const start = 0;
   const style = "padding: 1rem 5px 0 10px;";
-  const ogImage = `https://news.kiwistand.com/previews/${index}.jpg`;
+
+  let ogImage = `https://news.kiwistand.com/previews/${index}.jpg`;
+  const extension = extname(story.href);
+  if (
+    (extractDomain(story.href) === "imgur.com" ||
+      extractDomain(story.href) === "catbox.moe") &&
+    (extension === ".gif" ||
+      extension === ".png" ||
+      extension === ".jpg" ||
+      extension === ".jpeg")
+  ) {
+    ogImage = story.href;
+    story.image = story.href;
+  }
   const ogDescription =
     data && data.ogDescription
       ? data.ogDescription
