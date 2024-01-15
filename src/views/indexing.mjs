@@ -57,7 +57,7 @@ export default async function (theme, userAddress, transactionHash) {
                       your action with the community.
                     </p>
                     <a
-                      href="https://warpcast.com/~/compose?text=I+just+minted+a+kiwi&embeds[]=https://news.kiwistand.com/welcome"
+                      href="https://warpcast.com/~/compose?text=I+just+minted+a+@kiwi&embeds[]=https://news.kiwistand.com/kiwipass"
                       target="_blank"
                     >
                       <button

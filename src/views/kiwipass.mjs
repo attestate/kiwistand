@@ -252,7 +252,7 @@ export default async function (theme, identity) {
             }
           }
         </style>
-        <meta property="eth:nft:collection" content="Kiwi News Mint Pass" />
+        <meta property="eth:nft:collection" content="Kiwi Curator's Pass" />
         <meta
           property="eth:nft:contract_address"
           content="0xebb15487787cbf8ae2ffe1a6cca5a50e63003786"
