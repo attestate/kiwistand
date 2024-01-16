@@ -36,7 +36,7 @@ npm run dev:anon
 ```
 
 To set up the Kiwi node correctly, make sure to generate a valid Alchemy or Infura key (ideally paid because we're going to make a lot of requests).
-In your `.env` file, replace the value of `OPTIMISM_RPC_HTTP_HOST` with your full Alchemy key "https://opt-mainnet.g.alchemy.com/v2/abcd". Then run the node using `npm run dev:anon`.
+In your `.env` file, replace the value of `OPTIMISM_RPC_HTTP_HOST` with your full Alchemy key "https://opt-mainnet.g.alchemy.com/v2/abcd". Then run the node using `npm run dev:anon`. Please also add a `RPC_HTTP_HOST`, we need it to resolve ENS names.
 
 **NOTE:** The `dev:anon` npm script overwrites several environment variables. And so do other `dev:...` commands. This is done to test the software in different situations. E.g. `dev:bootstrap` is not connecting the node to the online p2p network, meaning that its data won't be shared with the Kiwi News mainnet. But e.g. `dev:anon` runs directly on mainnet and synchronizes the node.
 
