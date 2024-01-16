@@ -29,6 +29,7 @@ const UploadButton = (props) => {
 
   const uploadToCatbox = async (file) => {
     setLoading(true);
+    setImageURL("");
     const formData = new FormData();
     formData.append("reqtype", "fileupload");
     formData.append("fileToUpload", file);
@@ -99,18 +100,46 @@ const UploadButton = (props) => {
               justifyContent: "center",
               background: "#f0f0f0",
               cursor: "pointer",
-              backgroundColor: "black",
+              backgroundColor: imageURL ? "limegreen" : "black",
               color: "white",
               borderRadius: "3px",
             }}
           >
-            {loading ? "..." : <ImageSVG />}
+            {loading ? "..." : imageURL ? <CheckmarkSVG /> : <ImageSVG />}
           </div>
         </label>
       </div>
     </div>
   );
 };
+
+const CheckmarkSVG = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 256 256"
+    style={{ width: "1.25rem", height: "1.25rem" }}
+  >
+    <rect width="256" height="256" fill="none" />
+    <polyline
+      points="88 136 112 160 168 104"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="24"
+    />
+    <circle
+      cx="128"
+      cy="128"
+      r="96"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="24"
+    />
+  </svg>
+);
 
 const ImageSVG = () => (
   <svg
