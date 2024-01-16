@@ -618,6 +618,12 @@ export async function launch(trie, libp2p) {
     try {
       address = await toAddress(name);
     } catch (err) {
+      if (err.toString().includes("Couldn't convert to address")) {
+        return reply
+          .status(404)
+          .type("text/plain")
+          .send("ENS address wasn't found.");
+      }
       log(err.toString());
       return next(err);
     }

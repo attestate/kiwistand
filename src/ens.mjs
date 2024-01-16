@@ -3,7 +3,9 @@ import path from "path";
 
 import { fetchBuilder, FileSystemCache } from "node-fetch-cache";
 import { allowlist } from "./chainstate/registry.mjs";
-import { utils } from "ethers";
+import { providers, utils } from "ethers";
+
+const provider = new providers.JsonRpcProvider(env.RPC_HTTP_HOST);
 
 const fetch = fetchBuilder.withCache(
   new FileSystemCache({
@@ -44,9 +46,8 @@ async function fetchFCData(address) {
 }
 
 export async function toAddress(name) {
-  const response = await fetch(`https://ensdata.net/${name}`);
-  const data = await response.json();
-  if (data && data.address) return data.address;
+  const address = await provider.resolveName(name);
+  if (address) return address;
   throw new Error("Couldn't convert to address");
 }
 
