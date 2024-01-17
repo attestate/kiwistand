@@ -44,7 +44,11 @@ function CanonRow(sheets) {
             ({ preview, name }) => html`
               <div style="flex: 0 0 30%; scroll-snap-align: center;">
                 <a href="/canons?name=${name}">
-                  <img src="${preview}" style="width: 100%; height: auto;" />
+                  <img
+                    loading="lazy"
+                    src="${preview}"
+                    style="width: 100%; height: auto;"
+                  />
                 </a>
               </div>
             `,

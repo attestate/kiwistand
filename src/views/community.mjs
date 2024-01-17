@@ -338,6 +338,7 @@ export default async function (trie, theme, query, identity) {
                                 >
                                   ${ensData.safeAvatar
                                     ? html`<img
+                                        loading="lazy"
                                         src="${ensData.safeAvatar}"
                                         style="width: 20px; height: 20px; border-radius: 100%; margin-right: 15px;"
                                       />`

@@ -104,6 +104,7 @@ const row = (
                 ${story.image
                   ? html`<br /><a target="_blank" href="${story.href}"
                         ><img
+                          loading="lazy"
                           style="max-width: 80vw; padding: 0.75rem 1rem 0 0; max-height: 30vh"
                           src="${story.image}"
                       /></a>`
@@ -137,6 +138,7 @@ const row = (
                         ${story.avatars.slice(0, 5).map(
                           (avatar, index) => html`
                             <img
+                              loading="lazy"
                               src="${avatar}"
                               alt="avatar"
                               style="z-index: ${index}; width: ${size}px; height:
