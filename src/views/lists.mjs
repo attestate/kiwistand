@@ -26,6 +26,7 @@ function CanonRow(sheets) {
                   <div style="flex: 0 0 30%; scroll-snap-align: center;">
                     <a href="/canons?name=${name}" target="_blank">
                       <img
+                        loading="lazy"
                         src="${preview}"
                         style="width: 100%; height: auto;"
                       />
