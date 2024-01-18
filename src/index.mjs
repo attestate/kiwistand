@@ -9,6 +9,7 @@ import { bootstrap } from "./id.mjs";
 import * as sync from "./sync.mjs";
 import * as store from "./store.mjs";
 import { PROTOCOL } from "./constants.mjs";
+import { elog } from "./utils.mjs";
 
 const { leaves, levels } = PROTOCOL.protocols;
 
@@ -39,7 +40,7 @@ export async function subscribe(
   connectionHandlers = {},
   protocolHandlers = {},
   topics = [],
-  trie
+  trie,
 ) {
   const peerFab = sync.syncPeerFactory();
 
@@ -52,7 +53,7 @@ export async function subscribe(
       protocolHandlerCopy[`/${leaves.id}/${leaves.version}`](trie, peerFab);
   } catch (err) {
     log(
-      `Error setting up protocol handler (expected during testing): "${err.toString()}"`
+      `Error setting up protocol handler (expected during testing): "${err.toString()}"`,
     );
   }
 
@@ -90,11 +91,15 @@ export async function subscribe(
       exclude,
       level,
       sync.send(node),
-      peerFab
+      peerFab,
     );
   };
 
-  sync.advertise(trie, node, env.ROOT_ADVERTISEMENT_TIMEOUT);
+  try {
+    sync.advertise(trie, node, env.ROOT_ADVERTISEMENT_TIMEOUT);
+  } catch (err) {
+    elog(err, "subscribe: Error when advertising");
+  }
 
   node.getMultiaddrs().forEach((addr) => {
     log(`listening: ${addr.toString()}`);

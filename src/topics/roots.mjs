@@ -7,6 +7,7 @@ import { decode } from "cbor-x";
 import log from "../logger.mjs";
 import { initiate } from "../sync.mjs";
 import { PROTOCOL } from "../constants.mjs";
+import { elog } from "../utils.mjs";
 
 const { prefix } = PROTOCOL.pubsub;
 const { version, id } = PROTOCOL.pubsub.topics.roots;
@@ -40,7 +41,12 @@ export const handlers = {
         log(`AUTO_SYNC is set to "false". Aborting "initiate" sync attempt.`);
         return;
       }
-      await node.goblin.initiate(evt.detail.from);
+
+      try {
+        await node.goblin.initiate(evt.detail.from);
+      } catch (err) {
+        elog(err, "roots handler: Uncaught error from initiate");
+      }
     };
   },
 };
