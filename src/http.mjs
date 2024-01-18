@@ -321,7 +321,7 @@ export async function launch(trie, libp2p) {
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/images", async (request, reply) => {
-    const content = await images(trie, reply.locals.theme);
+    const content = await images(reply.locals.theme);
 
     let timestamp;
     try {

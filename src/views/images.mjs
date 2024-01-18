@@ -128,7 +128,7 @@ export async function recompute(trie) {
   inProgress = false;
 }
 
-export default async function (trie, theme) {
+export default async function (theme) {
   const name = "images";
   const path = `/${name}`;
   return html`
