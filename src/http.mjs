@@ -296,7 +296,7 @@ export async function launch(trie, libp2p) {
       post.value,
       request.cookies.identity,
     );
-    reply.header("Cache-Control", "public, max-age=1800, must-revalidate");
+    reply.header("Cache-Control", "private, max-age=1800, must-revalidate");
     return reply.status(200).type("text/html").send(content);
   });
   // NOTE: During the process of combining the feed and the editor's picks, we
@@ -370,7 +370,7 @@ export async function launch(trie, libp2p) {
       request.query,
       request.cookies.identity,
     );
-    reply.header("Cache-Control", "public, max-age=86400, must-revalidate");
+    reply.header("Cache-Control", "private, max-age=86400, must-revalidate");
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/stats", async (request, reply) => {
@@ -422,7 +422,7 @@ export async function launch(trie, libp2p) {
       reply.locals.theme,
       request.cookies.identity,
     );
-    reply.header("Cache-Control", "public, max-age=86400");
+    reply.header("Cache-Control", "private, max-age=86400");
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/why", async (request, reply) => {
@@ -472,7 +472,7 @@ export async function launch(trie, libp2p) {
       reply.setHeader("X-LAST-UPDATE", data.lastUpdate);
       reply.cookie("lastUpdate", data.lastUpdate);
     }
-    reply.header("Cache-Control", "public, max-age=60, must-revalidate");
+    reply.header("Cache-Control", "private, max-age=60, must-revalidate");
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/subscribe", async (request, reply) => {
@@ -497,12 +497,14 @@ export async function launch(trie, libp2p) {
       .send(await guidelines(reply.locals.theme));
   });
   app.get("/onboarding", async (request, reply) => {
+    reply.header("Cache-Control", "private, max-age=86400");
     return reply
       .status(200)
       .type("text/html")
       .send(await onboarding(reply.locals.theme, request.cookies.identity));
   });
   app.get("/onboarding-reader", async (request, reply) => {
+    reply.header("Cache-Control", "private, max-age=86400");
     return reply
       .status(200)
       .type("text/html")
@@ -511,6 +513,7 @@ export async function launch(trie, libp2p) {
       );
   });
   app.get("/onboarding-curator", async (request, reply) => {
+    reply.header("Cache-Control", "private, max-age=86400");
     return reply
       .status(200)
       .type("text/html")
@@ -519,6 +522,7 @@ export async function launch(trie, libp2p) {
       );
   });
   app.get("/onboarding-submitter", async (request, reply) => {
+    reply.header("Cache-Control", "private, max-age=86400");
     return reply
       .status(200)
       .type("text/html")
@@ -599,7 +603,7 @@ export async function launch(trie, libp2p) {
       request.query.mode,
       request.cookies.identity,
     );
-    reply.header("Cache-Control", "public, max-age=3600, must-revalidate");
+    reply.header("Cache-Control", "private, max-age=3600, must-revalidate");
     return reply.status(200).type("text/html").send(content);
   });
 
