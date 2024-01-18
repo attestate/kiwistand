@@ -41,7 +41,7 @@ const ImageSVG = () => html`
   </svg>
 `;
 
-export default async function submit(theme, url = "", title = "", identity) {
+export default async function submit(theme, url = "", title = "") {
   if (url && !title) {
     let data;
     try {
@@ -78,7 +78,7 @@ export default async function submit(theme, url = "", title = "", identity) {
           <div id="hnmain">
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
               <tr>
-                ${await Header(theme, identity)}
+                ${await Header(theme)}
               </tr>
               <tr>
                 <td>

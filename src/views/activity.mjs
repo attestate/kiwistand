@@ -126,17 +126,16 @@ function generateRow(lastUpdate) {
                 <p style="margin-top: 5px;">
                   ${activity.verb === "tipped"
                     ? html`
-                        ${activity.message.href ? html`<a
-                          href="${activity.message.href}"
-                          target="_blank"
-                          style="color: gray; word-break: break-word;"
-                        >
-                          ${activity.message.title}
-                        </a>`
-                        : html`
-                            ${activity.message.title}
-                        `}
-                    `
+                        ${activity.message.href
+                          ? html`<a
+                              href="${activity.message.href}"
+                              target="_blank"
+                              style="color: gray; word-break: break-word;"
+                            >
+                              ${activity.message.title}
+                            </a>`
+                          : html` ${activity.message.title} `}
+                      `
                     : html`
                         <a
                           href="/stories?index=0x${activity.message.index}"
@@ -147,17 +146,15 @@ function generateRow(lastUpdate) {
                       `}
                 </p>
                 <p>
-                ${activity.metadata?.index && activity.metadata?.title
-                  ? html`
-                      <a
+                  ${activity.metadata?.index && activity.metadata?.title
+                    ? html` <a
                         href="/stories?index=0x${activity.metadata.index}"
                         style="color: gray; word-break: break-word;"
                       >
                         ${activity.metadata.title}
                       </a>`
-                  : ''
-                }
-              </p>
+                    : ""}
+                </p>
               </div>
             </div>
           </div>
@@ -208,7 +205,7 @@ export async function page(theme, identity, notifications, lastUpdate) {
           <div id="hnmain">
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
               <tr>
-                ${await Header(theme, identity)}
+                ${await Header(theme)}
               </tr>
               ${feed}
             </table>

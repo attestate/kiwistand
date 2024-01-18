@@ -302,6 +302,22 @@ async function addToaster() {
   return toast;
 }
 
+async function addAvatar() {
+  const avatarElem = document.querySelectorAll("nav-header-avatar");
+  if (avatarElem && avatarElem.length > 0) {
+    const { createRoot } = await import("react-dom/client");
+    const { StrictMode } = await import("react");
+    const Avatar = (await import("./Avatar.jsx")).default;
+    avatarElem.forEach((element) => {
+      createRoot(element).render(
+        <StrictMode>
+          <Avatar />
+        </StrictMode>,
+      );
+    });
+  }
+}
+
 async function addNFTPrice() {
   const nftPriceElements = document.querySelectorAll("nft-price");
   if (nftPriceElements && nftPriceElements.length > 0) {
@@ -394,6 +410,7 @@ async function start() {
   await Promise.allSettled([
     addVotes(allowlistPromise, delegationsPromise, toast),
     addTips(),
+    addAvatar(),
     addModals(),
     addNFTPrice(),
     addDelegateButton(await allowlistPromise, await delegationsPromise),

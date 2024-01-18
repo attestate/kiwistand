@@ -339,7 +339,7 @@ export async function index(trie, page, domain) {
 
 const pages = {};
 
-export default async function (trie, theme, page, identity, domain) {
+export default async function (trie, theme, page, domain) {
   const path = "/";
 
   const key = `${page}-${domain}`;
@@ -393,7 +393,7 @@ export default async function (trie, theme, page, identity, domain) {
           <div id="hnmain">
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
               <tr>
-                ${await Header(theme, identity)}
+                ${await Header(theme)}
               </tr>
               <tr>
                 ${ThirdHeader(theme, "top")}

@@ -22,7 +22,7 @@ import Row, { extractDomain } from "./components/row.mjs";
 
 const html = htm.bind(vhtml);
 
-export default async function (trie, theme, identity) {
+export default async function (trie, theme) {
   const config = await moderation.getLists();
 
   const threeMonthsAgo = sub(new Date(), {
@@ -107,7 +107,7 @@ export default async function (trie, theme, identity) {
           <div id="hnmain">
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
               <tr>
-                ${await Header(theme, identity)}
+                ${await Header(theme)}
               </tr>
               <tr>
                 ${ThirdHeader(theme, "nfts")}

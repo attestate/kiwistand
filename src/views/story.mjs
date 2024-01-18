@@ -142,7 +142,7 @@ export default async function (trie, theme, index, value, identity) {
           <div id="hnmain">
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
               <tr>
-                ${await Header(theme, identity)}
+                ${await Header(theme)}
               </tr>
               ${Row(start, "/stories", style)({ ...story, index })}
               <tr>

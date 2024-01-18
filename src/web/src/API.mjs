@@ -96,6 +96,18 @@ export async function fetchNotifications(address) {
   return data.data.notifications;
 }
 
+export async function fetchKarma(identity) {
+  let response;
+  try {
+    response = await fetch(`/api/v1/karma/${identity}`);
+    const data = await response.json();
+    return data.data;
+  } catch (err) {
+    console.error(err);
+    return null;
+  }
+}
+
 export async function fetchDelegations() {
   const url = getApiUrl("/api/v1/delegations", API_PORT);
 

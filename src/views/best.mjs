@@ -157,14 +157,7 @@ async function recompute(trie, page, period, domain) {
 }
 
 const pages = {};
-export default async function index(
-  trie,
-  theme,
-  page,
-  period,
-  identity,
-  domain,
-) {
+export default async function index(trie, theme, page, period, domain) {
   const key = `${page}-${period}-${domain}`;
   let cacheRes = pages[key];
   let stories;
@@ -214,7 +207,7 @@ export default async function index(
           <div id="hnmain">
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
               <tr>
-                ${await Header(theme, identity)}
+                ${await Header(theme)}
               </tr>
               <tr>
                 ${ThirdHeader(theme, "top")}

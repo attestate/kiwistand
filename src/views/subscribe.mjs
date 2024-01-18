@@ -9,7 +9,7 @@ import Head from "./components/head.mjs";
 
 const html = htm.bind(vhtml);
 
-export default async function index(theme, identity) {
+export default async function index(theme) {
   const path = "/subscribe";
   return html`
     <html lang="en" op="news">
@@ -22,7 +22,7 @@ export default async function index(theme, identity) {
           <div id="hnmain">
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
               <tr>
-                ${await Header(theme, identity)}
+                ${await Header(theme)}
               </tr>
               <tr>
                 <td style="padding: 10px; font-size: 16px;">
