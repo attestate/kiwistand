@@ -98,7 +98,7 @@ export default async function (trie, theme, index, value, identity) {
     tips,
     index,
   )) {
-    const profile = await ens.resolve(identity);
+    const profile = await ens.resolve(from);
     if (profile.safeAvatar && profile.displayName) {
       tipActions.push({
         blockExplorerUrl,
