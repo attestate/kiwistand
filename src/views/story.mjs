@@ -8,7 +8,7 @@ import vhtml from "vhtml";
 import normalizeUrl from "normalize-url";
 import { sub, differenceInMinutes, isBefore } from "date-fns";
 
-import { getTips, getTipsValue } from "../tips.mjs";
+import { getTips, getTipsValue, filterTips } from "../tips.mjs";
 import * as ens from "../ens.mjs";
 import Header from "./components/header.mjs";
 import SecondHeader from "./components/secondheader.mjs";
@@ -47,7 +47,13 @@ export function generateList(profiles) {
               <span> </span>
               <a href="/${profile.name}">${profile.name}</a>
               <span> </span>
-              <span>upvoted</span>
+              <span
+                >${profile.usdAmount
+                  ? html`<a href="${profile.blockExplorerUrl}" target="_blank"
+                      >tipped $${profile.usdAmount.toFixed(2)}</a
+                    >`
+                  : "upvoted"}</span
+              >
             </p>
           </li>
         `,
@@ -83,16 +89,38 @@ export default async function (trie, theme, index, value, identity) {
     ...value,
     isOriginal,
   };
+  const tips = await getTips();
+  const tipValue = getTipsValue(tips, index);
+  story.tipValue = tipValue;
+
+  let tipActions = [];
+  for await (let { blockExplorerUrl, usdAmount, from, timestamp } of filterTips(
+    tips,
+    index,
+  )) {
+    const profile = await ens.resolve(identity);
+    if (profile.safeAvatar && profile.displayName) {
+      tipActions.push({
+        blockExplorerUrl,
+        timestamp: timestamp._seconds,
+        name: profile.displayName,
+        avatar: profile.safeAvatar,
+        address: profile.address,
+        usdAmount,
+      });
+    }
+  }
 
   let profiles = [];
   let avatars = [];
-  for await (let upvoter of story.upvoters) {
-    const profile = await ens.resolve(upvoter);
+  for await (let { identity, timestamp } of story.upvoters) {
+    const profile = await ens.resolve(identity);
     if (profile.safeAvatar) {
       avatars.push(profile.safeAvatar);
 
       if (profile.displayName) {
         profiles.push({
+          timestamp,
           name: profile.displayName,
           avatar: profile.safeAvatar,
           address: profile.address,
@@ -100,15 +128,14 @@ export default async function (trie, theme, index, value, identity) {
       }
     }
   }
+  const actions = [...profiles, ...tipActions].sort(
+    (a, b) => a.timestamp - b.timestamp,
+  );
   story.avatars = avatars;
 
   const ensData = await ens.resolve(story.identity);
   story.submitter = ensData;
   story.displayName = ensData.displayName;
-
-  const tips = await getTips();
-  const tipValue = getTipsValue(tips, index);
-  story.tipValue = tipValue;
 
   const start = 0;
   const style = "padding: 1rem 5px 0 10px;";
@@ -146,7 +173,7 @@ export default async function (trie, theme, index, value, identity) {
               </tr>
               ${Row(start, "/stories", style)({ ...story, index })}
               <tr>
-                <td>${generateList(profiles)}</td>
+                <td>${generateList(actions)}</td>
               </tr>
               ${!identity
                 ? html` <tr>

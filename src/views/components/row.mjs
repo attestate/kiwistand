@@ -220,9 +220,14 @@ const row = (
                         <span>
                           ${story.tipValue
                             ? html` <span> • </span>
-                                $${parseFloat(story.tipValue).toFixed(2)}
-                                <span> </span>
-                                received`
+                                <a
+                                  class="meta-link"
+                                  href="/stories?index=0x${story.index}"
+                                >
+                                  $${parseFloat(story.tipValue).toFixed(2)}
+                                  <span> </span>
+                                  received</a
+                                >`
                             : ""}
                           <span
                             class="tipsbuttoncontainer"

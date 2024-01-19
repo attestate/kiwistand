@@ -401,7 +401,10 @@ export async function post(trie, index, parser, allowlist, delegations) {
       delegations,
       message.href,
     );
-    upvoters = upvotes.map(({ identity }) => identity);
+    upvoters = upvotes.map(({ identity, timestamp }) => ({
+      identity,
+      timestamp,
+    }));
   }
 
   return {
