@@ -471,7 +471,7 @@ export async function launch(trie, libp2p) {
     const httpMessage = "OK";
     const details = "Notifications feed";
 
-    reply.header("Cache-Control", "private, max-age=60, must-revalidate");
+    reply.header("Cache-Control", "no-cache");
     return sendStatus(reply, code, httpMessage, details, {
       notifications: data.notifications,
       lastServerValue: data.latestValue,
@@ -498,7 +498,7 @@ export async function launch(trie, libp2p) {
       reply.setHeader("X-LAST-UPDATE", data.lastUpdate);
       reply.cookie("lastUpdate", data.lastUpdate);
     }
-    reply.header("Cache-Control", "private, max-age=60, must-revalidate");
+    reply.header("Cache-Control", "no-cache");
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/subscribe", async (request, reply) => {
