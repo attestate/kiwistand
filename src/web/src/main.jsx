@@ -1,7 +1,6 @@
 import "vite/modulepreload-polyfill";
 import "@rainbow-me/rainbowkit/styles.css";
-import { watchAccount } from "@wagmi/core";
-import { getCookie } from "./session.mjs";
+import { getCookie, getLocalAccount } from "./session.mjs";
 
 async function checkNewStories() {
   let data;
@@ -14,11 +13,19 @@ async function checkNewStories() {
   }
 
   if (data.status === "success" && data.data.stories.length > 0) {
-    const latestTimestamp = data.data.stories[0].timestamp;
+    const account = getLocalAccount();
+    const story = data.data.stories[0];
+    const identity = story.identity;
+    const latestTimestamp = story.timestamp;
     const localTimestamp = getCookie("newTimestamp");
     const elem = document.getElementById("new-dot");
 
-    if (elem && (!localTimestamp || latestTimestamp > Number(localTimestamp))) {
+    if (
+      elem &&
+      (!localTimestamp || latestTimestamp > Number(localTimestamp)) &&
+      account &&
+      account.identity !== identity
+    ) {
       elem.style.display = "block";
     }
   }
@@ -35,11 +42,19 @@ async function checkImages() {
   }
 
   if (data.status === "success" && data.data.stories.length > 0) {
-    const latestTimestamp = data.data.stories[0].timestamp;
+    const account = getLocalAccount();
+    const story = data.data.stories[0];
+    const identity = story.identity;
+    const latestTimestamp = story.timestamp;
     const localTimestamp = getCookie("imagesTimestamp");
     const elem = document.getElementById("images-dot");
 
-    if (elem && (!localTimestamp || latestTimestamp > Number(localTimestamp))) {
+    if (
+      elem &&
+      (!localTimestamp || latestTimestamp > Number(localTimestamp)) &&
+      account &&
+      account.identity !== identity
+    ) {
       elem.style.visibility = "visible";
     }
   }
@@ -407,7 +422,7 @@ async function start() {
   const delegationsPromise = fetchDelegations();
 
   // We're parallelizing all additions into the DOM
-  await Promise.allSettled([
+  const results = await Promise.allSettled([
     addVotes(allowlistPromise, delegationsPromise, toast),
     addTips(),
     addModals(),
@@ -420,6 +435,11 @@ async function start() {
     checkNewStories(),
     checkImages(),
   ]);
+  results.forEach((result, index) => {
+    if (result.status === "rejected") {
+      console.error(`Error in promise at index ${index}:`, result.reason);
+    }
+  });
 
   let url = new URL(window.location.href);
   let link = url.searchParams.get("link");
