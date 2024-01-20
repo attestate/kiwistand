@@ -302,7 +302,7 @@ async function addToaster() {
   return toast;
 }
 
-async function addAvatar() {
+async function addAvatar(allowlist, delegations) {
   const avatarElem = document.querySelectorAll("nav-header-avatar");
   if (avatarElem && avatarElem.length > 0) {
     const { createRoot } = await import("react-dom/client");
@@ -311,7 +311,7 @@ async function addAvatar() {
     avatarElem.forEach((element) => {
       createRoot(element).render(
         <StrictMode>
-          <Avatar />
+          <Avatar allowlist={allowlist} delegations={delegations} />
         </StrictMode>,
       );
     });
@@ -410,9 +410,9 @@ async function start() {
   await Promise.allSettled([
     addVotes(allowlistPromise, delegationsPromise, toast),
     addTips(),
-    addAvatar(),
     addModals(),
     addNFTPrice(),
+    addAvatar(await allowlistPromise, await delegationsPromise),
     addDelegateButton(await allowlistPromise, await delegationsPromise),
     addBuyButton(allowlistPromise, delegationsPromise, toast),
     addConnectedComponents(await allowlistPromise, await delegationsPromise),

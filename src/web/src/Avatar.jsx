@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { WagmiConfig, useAccount, useProvider } from "wagmi";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
-import { ethers } from "ethers";
+import { eligible } from "@attestate/delegator2";
 
 import { getLocalAccount } from "./session.mjs";
 import { client, chains } from "./client.mjs";
 import { fetchKarma } from "./API.mjs";
 
-const Avatar = () => {
+const Avatar = (props) => {
   let address;
   const account = useAccount();
   const localAccount = getLocalAccount(account.address);
@@ -17,6 +17,8 @@ const Avatar = () => {
   if (localAccount) {
     address = localAccount.identity;
   }
+  const isEligible =
+    address && eligible(props.allowlist, props.delegations, address);
 
   const [avatar, setAvatar] = useState("");
   const [points, setPoints] = useState(0);
@@ -69,8 +71,22 @@ const Avatar = () => {
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
+              position: "relative",
             }}
           >
+            {isEligible && !localAccount && (
+              <span
+                style={{
+                  position: "absolute",
+                  top: "0",
+                  right: "0px",
+                  backgroundColor: "red",
+                  borderRadius: "50%",
+                  minWidth: "8px",
+                  height: "8px",
+                }}
+              />
+            )}
             <img
               src={avatar}
               style={{
@@ -109,8 +125,22 @@ const Avatar = () => {
             alignItems: "center",
             justifyContent: "left",
             padding: "7px 0 7px 7px",
+            position: "relative",
           }}
         >
+          {isEligible && !localAccount && (
+            <span
+              style={{
+                position: "absolute",
+                top: "5px",
+                left: "5px",
+                backgroundColor: "red",
+                borderRadius: "50%",
+                minWidth: "8px",
+                height: "8px",
+              }}
+            />
+          )}
           <svg
             xmlns="http://www.w3.org/2000/svg"
             style={{ paddingTop: "2px" }}
@@ -133,7 +163,7 @@ const Form = (props) => {
   return (
     <WagmiConfig client={client}>
       <RainbowKitProvider chains={chains}>
-        <Avatar />
+        <Avatar {...props} />
       </RainbowKitProvider>
     </WagmiConfig>
   );
