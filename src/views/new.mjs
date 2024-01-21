@@ -106,7 +106,45 @@ export async function recompute(trie) {
   inProgress = false;
 }
 
-export default async function (trie, theme) {
+async function getPost(trie, index) {
+  const hexRegex = /^0x[a-fA-F0-9]{72}$/;
+
+  if (!hexRegex.test(index)) {
+    throw new Error("getPost: index fails regex test");
+  }
+
+  const hexIndex = index.substring(2);
+  const parser = JSON.parse;
+  const allowlist = await registry.allowlist();
+  const delegations = await registry.delegations();
+
+  // NOTE: This call will throw and has to be caught
+  const post = await store.post(
+    trie,
+    Buffer.from(hexIndex, "hex"),
+    parser,
+    allowlist,
+    delegations,
+  );
+
+  const ensData = await ens.resolve(post.value.identity);
+  return {
+    ...post.value,
+    displayName: ensData.displayName,
+    submitter: ensData,
+    avatars: [],
+  };
+}
+
+export default async function (trie, theme, index) {
+  let items = stories;
+  try {
+    const post = await getPost(trie, index);
+    items = [post, ...items];
+  } catch (err) {
+    // NOTE: If we cannot find the post, we just pretend like nothing happened.
+  }
+
   const path = "/new";
   return html`
     <html lang="en" op="news">
@@ -132,7 +170,7 @@ export default async function (trie, theme) {
                 ${SecondHeader(theme, "new")}
               </tr>
               <tr class="spacer" style="height:15px"></tr>
-              ${stories.map(Row(null, "/best"))}
+              ${items.map(Row(null, "/best"))}
               <tr class="spacer" style="height:15px"></tr>
               <tr
                 style="display: block; padding: 10px; background-color: ${theme.color}"

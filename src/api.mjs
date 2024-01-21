@@ -64,8 +64,10 @@ export function handleMessage(trie, libp2p, getAllowlist, getDelegations) {
     const message = request.body;
     const allowlist = await getAllowlist();
     const delegations = await getDelegations();
+
+    let index;
     try {
-      await store.add(trie, message, libp2p, allowlist, delegations);
+      index = await store.add(trie, message, libp2p, allowlist, delegations);
     } catch (err) {
       const code = 400;
       const httpMessage = "Bad Request";
@@ -83,7 +85,9 @@ export function handleMessage(trie, libp2p, getAllowlist, getDelegations) {
     const code = 200;
     const httpMessage = "OK";
     const details = "Message included";
-    return sendStatus(reply, code, httpMessage, details);
+    return sendStatus(reply, code, httpMessage, details, {
+      index: `0x${index}`,
+    });
   };
 }
 

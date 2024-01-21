@@ -318,7 +318,7 @@ export async function launch(trie, libp2p) {
     res.redirect(301, "/stats");
   });
   app.get("/new", async (request, reply) => {
-    const content = await newest(trie, reply.locals.theme);
+    const content = await newest(trie, reply.locals.theme, request.query.index);
     let timestamp;
     try {
       timestamp = newAPI.getLatestTimestamp();

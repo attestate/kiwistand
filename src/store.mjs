@@ -342,11 +342,12 @@ export async function add(
     log(
       "Didn't distribute message after ingestion because libp2p instance isn't defined",
     );
-    return;
+    return index;
   }
 
   log(`Sending message to peers: "${messages.name}" and index: "${index}"`);
   libp2p.pubsub.publish(messages.name, canonical);
+  return index;
 }
 
 export async function post(trie, index, parser, allowlist, delegations) {

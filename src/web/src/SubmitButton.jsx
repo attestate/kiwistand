@@ -327,7 +327,7 @@ const SubmitButton = (props) => {
       return;
     }
 
-    const wait = true;
+    const wait = false;
     const response = await API.send(value, signature, wait);
 
     let message;
@@ -344,8 +344,9 @@ const SubmitButton = (props) => {
     }
 
     const nextPage = new URL(window.location.origin + redirectTo);
-    nextPage.searchParams.set("bpc", "1");
-    nextPage.searchParams.set("link", encodeURIComponent(canonicalURL));
+    if (redirectTo === "/new" && response?.data?.index) {
+      nextPage.searchParams.set("index", response.data.index);
+    }
     window.location.href = nextPage.href;
   };
 

@@ -350,16 +350,13 @@ async function addNFTPrice() {
   }
 }
 
-async function share(toast, link) {
+async function share(toast, index) {
   const FCIcon = (await import("./fcicon.jsx")).default;
-  // NOTE: Regarding the embeds encoding of the link, here we don not have to
-  // call encodeURIComponent as we've been taking this link already from the
-  // browser's URL so that it is already encoded.
   const toastContent = (
     <div style={{ display: "flex", alignItems: "center" }}>
       <a
         style={{ display: "flex", alignItems: "center" }}
-        href={`https://warpcast.com/~/compose?embeds[]=${link}&embeds[]=https://news.kiwistand.com`}
+        href={`https://warpcast.com/~/compose?embeds[]=https://news.kiwistand.com/stories?index=${index}`}
         target="_blank"
       >
         <FCIcon style={{ height: "15px", color: "white" }} />
@@ -442,11 +439,11 @@ async function start() {
   });
 
   let url = new URL(window.location.href);
-  let link = url.searchParams.get("link");
+  let index = url.searchParams.get("index");
 
-  if (link) {
-    share(toast, link);
-    url.searchParams.delete("link");
+  if (index) {
+    share(toast, index);
+    url.searchParams.delete("index");
     window.history.replaceState({}, "", url.href);
   }
 }
