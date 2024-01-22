@@ -49,6 +49,8 @@ export async function recompute(trie) {
   const allowlist = await registry.allowlist();
   const delegations = await registry.delegations();
   const startDateTime = null;
+  const href = null;
+  const type = "amplify";
 
   let leaves = await store.posts(
     trie,
@@ -58,6 +60,8 @@ export async function recompute(trie) {
     startDateTime,
     allowlist,
     delegations,
+    href,
+    type,
   );
   leaves = leaves.filter(
     ({ href }) =>

@@ -49,6 +49,8 @@ const startDatetime = null;
 const parser = JSON.parse;
 const allowlist = await registry.allowlist();
 const delegations = await registry.delegations();
+const href = null;
+const type = "amplify";
 const posts = await store.posts(
   trie,
   from,
@@ -57,6 +59,8 @@ const posts = await store.posts(
   startDatetime,
   allowlist,
   delegations,
+  href,
+  type,
 );
 try {
   store.cache(posts);

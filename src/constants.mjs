@@ -9,22 +9,22 @@ export const PROTOCOL = {
     topics: {
       roots: {
         id: "roots",
-        version: "4.0.0",
+        version: "5.0.0",
       },
       messages: {
         id: "messages",
-        version: "4.0.0",
+        version: "5.0.0",
       },
     },
   },
   protocols: {
     leaves: {
       id: "leaves",
-      version: "7.0.0",
+      version: "8.0.0",
     },
     levels: {
       id: "levels",
-      version: "6.0.0",
+      version: "7.0.0",
     },
   },
 };
@@ -75,6 +75,67 @@ const nodes = {
   },
 };
 
+const comment = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    timestamp: {
+      $comment: "unix timestamp",
+      type: "integer",
+    },
+    type: {
+      const: "comment",
+    },
+    title: {
+      type: "string",
+      maxLength: 10_000,
+    },
+    href: {
+      type: "string",
+      format: "uri",
+      pattern: "^kiwi:0x[a-fA-F0-9]{72}$",
+      maxLength: 81,
+    },
+    signature: {
+      type: "string",
+      pattern: "0x[a-fA-F0-9]+",
+    },
+  },
+  required: ["timestamp", "type", "title", "href", "signature"],
+};
+
+const upvote = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    timestamp: {
+      $comment: "unix timestamp",
+      type: "integer",
+    },
+    type: {
+      const: "amplify",
+    },
+    title: {
+      type: "string",
+      // NOTE: We want to have a title with at least a length of 1 in the
+      // future, but I think for now this is causing a synchronization bug
+      //minLength: 1,
+      maxLength: 80,
+    },
+    href: {
+      type: "string",
+      format: "uri",
+      pattern: "^https?://",
+      maxLength: 2048,
+    },
+    signature: {
+      type: "string",
+      pattern: "0x[a-fA-F0-9]+",
+    },
+  },
+  required: ["timestamp", "type", "title", "href", "signature"],
+};
+
 export const SCHEMATA = {
   comparison: {
     type: "object",
@@ -92,7 +153,7 @@ export const SCHEMATA = {
       },
     },
   },
-  pagination: {
+  listMessages: {
     type: "object",
     additionalProperties: false,
     properties: {
@@ -108,39 +169,16 @@ export const SCHEMATA = {
         minimum: 0,
         maximum: parseInt(env.HTTP_MESSAGES_MAX_PAGE_SIZE, 10),
       },
+      type: {
+        $comment:
+          "The type of message that we should filter by in the request.",
+        type: "string",
+        enum: ["amplify", "comment"],
+      },
     },
     required: ["from", "amount"],
   },
   message: {
-    type: "object",
-    additionalProperties: false,
-    properties: {
-      timestamp: {
-        $comment: "unix timestamp",
-        type: "integer",
-      },
-      type: {
-        type: "string",
-        enum: ["amplify"],
-      },
-      title: {
-        type: "string",
-        // NOTE: We want to have a title with at least a length of 1 in the
-        // future, but I think for now this is causing a synchronization bug
-        //minLength: 1,
-        maxLength: 80,
-      },
-      href: {
-        type: "string",
-        format: "uri",
-        pattern: "^https?://",
-        maxLength: 2048,
-      },
-      signature: {
-        type: "string",
-        pattern: "0x[a-fA-F0-9]+",
-      },
-    },
-    required: ["timestamp", "type", "title", "href", "signature"],
+    oneOf: [upvote, comment],
   },
 };

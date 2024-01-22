@@ -188,6 +188,8 @@ export async function index(trie, page, domain) {
   const lookBackUnixTime = Math.floor(lookBack.getTime() / 1000);
   const allowlist = await registry.allowlist();
   const delegations = await registry.delegations();
+  const href = null;
+  const type = "amplify";
 
   let leaves = await store.posts(
     trie,
@@ -197,6 +199,8 @@ export async function index(trie, page, domain) {
     lookBackUnixTime,
     allowlist,
     delegations,
+    href,
+    type,
   );
   leaves = leaves.filter(
     ({ href }) =>

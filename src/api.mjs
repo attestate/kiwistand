@@ -122,7 +122,7 @@ export function listDelegations(getDelegations) {
 }
 
 export function listMessages(trie, getAllowlist, getDelegations) {
-  const requestValidator = ajv.compile(SCHEMATA.pagination);
+  const requestValidator = ajv.compile(SCHEMATA.listMessages);
   return async (request, reply) => {
     const result = requestValidator(request.body);
     if (!result) {
@@ -139,6 +139,8 @@ export function listMessages(trie, getAllowlist, getDelegations) {
     const startDatetime = null;
     const allowlist = await getAllowlist();
     const delegations = await getDelegations();
+    const href = null;
+    const type = request.body.type || "amplify";
     const leaves = await store.posts(
       trie,
       from,
@@ -147,6 +149,8 @@ export function listMessages(trie, getAllowlist, getDelegations) {
       startDatetime,
       allowlist,
       delegations,
+      href,
+      type,
     );
     const code = 200;
     const message = "OK";

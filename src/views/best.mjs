@@ -88,6 +88,8 @@ async function recompute(trie, page, period, domain) {
     tolerance = unix(sub(now, { weeks: 2 }));
   }
 
+  const href = null;
+  const type = "amplify";
   let leaves = await store.posts(
     trie,
     from,
@@ -96,6 +98,8 @@ async function recompute(trie, page, period, domain) {
     tolerance,
     allowlist,
     delegations,
+    href,
+    type,
   );
   leaves = leaves.filter(
     ({ href }) =>
