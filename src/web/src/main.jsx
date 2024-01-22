@@ -438,13 +438,15 @@ async function start() {
     }
   });
 
-  let url = new URL(window.location.href);
-  let index = url.searchParams.get("index");
+  if (window.location.path === "/new") {
+    let url = new URL(window.location.href);
+    let index = url.searchParams.get("index");
 
-  if (index) {
-    share(toast, index);
-    url.searchParams.delete("index");
-    window.history.replaceState({}, "", url.href);
+    if (index) {
+      share(toast, index);
+      url.searchParams.delete("index");
+      window.history.replaceState({}, "", url.href);
+    }
   }
 }
 

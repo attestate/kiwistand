@@ -327,7 +327,14 @@ const SubmitButton = (props) => {
       return;
     }
 
-    const wait = false;
+    let redirectTo = "/new";
+    let wait = false;
+    const domain = safeExtractDomain(canonicalURL);
+    if (domain === "imgur.com" || domain === "catbox.moe") {
+      redirectTo = "/images";
+      wait = true;
+    }
+
     const response = await API.send(value, signature, wait);
 
     let message;
@@ -335,12 +342,6 @@ const SubmitButton = (props) => {
       message = "Thanks for your submission, have a 🥝";
     } else {
       message = `Error! Sad Kiwi! "${response.details}"`;
-    }
-
-    let redirectTo = "/new";
-    const domain = safeExtractDomain(canonicalURL);
-    if (domain === "imgur.com" || domain === "catbox.moe") {
-      redirectTo = "/images";
     }
 
     const nextPage = new URL(window.location.origin + redirectTo);
