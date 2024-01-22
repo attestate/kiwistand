@@ -301,6 +301,31 @@ export async function add(
     throw new Error(err);
   }
 
+  if (message.type === "comment") {
+    const pattern = /kiwi:\/\/0x([a-fA-F0-9]{72})/;
+    const match = message.href.match(pattern);
+
+    if (!match || match.length < 1) {
+      throw new Error("add: failed to extract hash from kiwi link");
+    }
+
+    const [_, hash] = match;
+    const parser = JSON.parse;
+
+    let root;
+    try {
+      root = await leaf(trie, Buffer.from(hash, "hex"), parser);
+    } catch (err) {
+      throw new Error(`add: Didn't find root message of comment`);
+    }
+
+    if (root.timestamp >= message.timestamp) {
+      throw new Error(
+        "add: child timestamp must be greater than parent timestamp",
+      );
+    }
+  }
+
   const { canonical, index } = toDigest(message);
   log(
     `Attempting to store message with index "${index}" and message: "${canonical}"`,
@@ -350,7 +375,7 @@ export async function add(
   return index;
 }
 
-export async function post(trie, index, parser, allowlist, delegations) {
+export async function leaf(trie, index, parser) {
   if (!(index instanceof Buffer)) {
     throw new Error("index parameter must be of type Buffer");
   }
@@ -378,7 +403,11 @@ export async function post(trie, index, parser, allowlist, delegations) {
   if (parser) {
     message = parser(message);
   }
+  return message;
+}
 
+export async function post(trie, index, parser, allowlist, delegations) {
+  const message = await leaf(trie, index, parser);
   const cacheEnabled = true;
   const signer = ecrecover(message, EIP712_MESSAGE, cacheEnabled);
   const identity = eligible(allowlist, delegations, signer);

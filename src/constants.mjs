@@ -75,6 +75,67 @@ const nodes = {
   },
 };
 
+const comment = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    timestamp: {
+      $comment: "unix timestamp",
+      type: "integer",
+    },
+    type: {
+      const: "comment",
+    },
+    title: {
+      type: "string",
+      maxLength: 10_000,
+    },
+    href: {
+      type: "string",
+      format: "uri",
+      pattern: "^kiwi://0x[a-fA-F0-9]{72}$",
+      maxLength: 81,
+    },
+    signature: {
+      type: "string",
+      pattern: "0x[a-fA-F0-9]+",
+    },
+  },
+  required: ["timestamp", "type", "title", "href", "signature"],
+};
+
+const upvote = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    timestamp: {
+      $comment: "unix timestamp",
+      type: "integer",
+    },
+    type: {
+      const: "amplify",
+    },
+    title: {
+      type: "string",
+      // NOTE: We want to have a title with at least a length of 1 in the
+      // future, but I think for now this is causing a synchronization bug
+      //minLength: 1,
+      maxLength: 80,
+    },
+    href: {
+      type: "string",
+      format: "uri",
+      pattern: "^https?://",
+      maxLength: 2048,
+    },
+    signature: {
+      type: "string",
+      pattern: "0x[a-fA-F0-9]+",
+    },
+  },
+  required: ["timestamp", "type", "title", "href", "signature"],
+};
+
 export const SCHEMATA = {
   comparison: {
     type: "object",
@@ -112,35 +173,6 @@ export const SCHEMATA = {
     required: ["from", "amount"],
   },
   message: {
-    type: "object",
-    additionalProperties: false,
-    properties: {
-      timestamp: {
-        $comment: "unix timestamp",
-        type: "integer",
-      },
-      type: {
-        type: "string",
-        enum: ["amplify"],
-      },
-      title: {
-        type: "string",
-        // NOTE: We want to have a title with at least a length of 1 in the
-        // future, but I think for now this is causing a synchronization bug
-        //minLength: 1,
-        maxLength: 80,
-      },
-      href: {
-        type: "string",
-        format: "uri",
-        pattern: "^https?://",
-        maxLength: 2048,
-      },
-      signature: {
-        type: "string",
-        pattern: "0x[a-fA-F0-9]+",
-      },
-    },
-    required: ["timestamp", "type", "title", "href", "signature"],
+    oneOf: [upvote, comment],
   },
 };
