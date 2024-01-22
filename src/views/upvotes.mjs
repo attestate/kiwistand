@@ -55,6 +55,8 @@ export default async function (
   const startDatetime = null;
   const allowlist = await registry.allowlist();
   const delegations = await registry.delegations();
+  const href = null;
+  const type = "amplify";
   let leaves = await store.posts(
     trie,
     from,
@@ -63,6 +65,8 @@ export default async function (
     startDatetime,
     allowlist,
     delegations,
+    href,
+    type,
   );
   const cacheEnabled = true;
   const totalStories = 10;

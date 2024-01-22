@@ -34,6 +34,8 @@ export default async function (trie, theme) {
   const threeMonthsAgoUnixTime = Math.floor(threeMonthsAgo.getTime() / 1000);
   const allowlist = await registry.allowlist();
   const delegations = await registry.delegations();
+  const href = null;
+  const type = "amplify";
   let leaves = await store.posts(
     trie,
     from,
@@ -42,6 +44,8 @@ export default async function (trie, theme) {
     threeMonthsAgoUnixTime,
     allowlist,
     delegations,
+    href,
+    type,
   );
   leaves = moderation.moderate(leaves, config);
 
