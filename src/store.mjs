@@ -246,7 +246,7 @@ export function upvoteID(identity, link, type) {
 // soft writes into the trie. This is an issue as we e.g. could do a sync where
 // most writes are soft-written, the sync fails, but the actual constraints are
 // then written to the database.
-export async function passes(db, key, identity) {
+export async function passes(db, key) {
   // NOTE: db.doesExist seemed to have lead in some cases to a greedy match of
   // the identifier hence returning true negatives. Meaning, it blocked users
   // from upvoting although they had never upvoted that link.
@@ -292,7 +292,7 @@ export async function add(
   }
 
   const key = upvoteID(identity, message.href, message.type);
-  const legit = await passes(metadb, key, identity);
+  const legit = await passes(metadb, key);
   if (!legit) {
     const err = `Message "${JSON.stringify(
       message,
