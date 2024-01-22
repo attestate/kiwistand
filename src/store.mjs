@@ -28,6 +28,9 @@ import { newWalk } from "./WalkController.mjs";
 const maxReaders = 500;
 
 export const upvotes = new Set();
+// TODO: This function would benefit from constraining operation only to
+// markers of the type "amplify" as to not accidentially store other types of
+// markers.
 export function passes(marker) {
   const exists = upvotes.has(marker);
   if (!exists) {
@@ -244,6 +247,56 @@ export function upvoteID(identity, link, type) {
   return `${utils.getAddress(identity)}|${normalizeUrl(link)}|${type}`;
 }
 
+export async function atomicPut(trie, message, identity) {
+  const marker = upvoteID(identity, message.href, message.type);
+  const { canonical, index } = toDigest(message);
+  log(
+    `Attempting to store message with index "${index}" and message: "${JSON.stringify(
+      message,
+    )}"`,
+  );
+
+  if (message.type === "amplify") {
+    const legit = await passes(marker);
+    if (!legit) {
+      const err = `Message with marker "${marker}" doesn't pass legitimacy criteria (duplicate). It was probably submitted and accepted before.`;
+      log(err);
+      throw new Error(err);
+    }
+  }
+
+  try {
+    await trie.put(Buffer.from(index, "hex"), canonical);
+  } catch (err) {
+    if (message.type !== "amplify") {
+      throw new Error(
+        `atomicPut: putting to trie failed with error "${err.toString()}" for message "${JSON.stringify(
+          message,
+        )}"`,
+      );
+    }
+
+    // NOTE: If trie.put crashes the program and upvotes.delete is hence not
+    // rolled back, this is not a problem as "upvotes" is only a memory-stored
+    // cached data structure that gets recomputed upon every restart of the
+    // application.
+    const result = upvotes.delete(marker);
+    let reason = `trie.put failed with "${err.toString()}". Successfully rolled back constraint`;
+    if (!result) {
+      reason = `trie.put failed with "${err.toString()}". Tried to roll back constraint but failed`;
+    }
+    log(reason);
+    throw new Error(reason);
+  }
+  log(`Stored message with index "${index}"`);
+  log(`New root: "${trie.root().toString("hex")}"`);
+
+  return {
+    index,
+    canonical,
+  };
+}
+
 export async function add(
   trie,
   message,
@@ -279,39 +332,30 @@ export async function add(
     throw new Error(err);
   }
 
-  const key = upvoteID(identity, message.href, message.type);
-  const legit = await passes(key);
-  if (!legit) {
-    const err = `Message "${JSON.stringify(
-      message,
-    )}" with address "${identity}" doesn't pass legitimacy criteria (duplicate). It was probably submitted and accepted before.`;
-    log(err);
-    throw new Error(err);
-  }
+  if (message.type === "comment") {
+    let [_, hash] = message.href.split(":");
+    if (!hash) {
+      throw new Error("add: failed to extract hash from kiwi link");
+    }
+    hash = hash.substring(2);
 
-  const { canonical, index } = toDigest(message);
-  log(
-    `Attempting to store message with index "${index}" and message: "${canonical}"`,
-  );
-  try {
-    await trie.put(Buffer.from(index, "hex"), canonical);
-  } catch (err) {
-    // NOTE: If trie.put crashes the program and upvotes.delete is hence not
-    // rolled back, this is not a problem as "upvotes" is only a memory-stored
-    // cached data structure that gets recomputed upon every restart of the
-    // application.
-    const result = upvotes.delete(key);
+    const parser = JSON.parse;
 
-    let message = `trie.put failed with "${err.toString()}". Successfully rolled back constraint`;
-    if (!result) {
-      message = `trie.put failed with "${err.toString()}". Tried to roll back constraint but failed`;
+    let root;
+    try {
+      root = await leaf(trie, Buffer.from(hash, "hex"), parser);
+    } catch (err) {
+      throw new Error(`add: Didn't find root message of comment`);
     }
 
-    log(message);
-    throw new Error(message);
+    if (root.timestamp >= message.timestamp) {
+      throw new Error(
+        "add: child timestamp must be greater than parent timestamp",
+      );
+    }
   }
-  log(`Stored message with index "${index}" and message: "${canonical}"`);
-  log(`New root: "${trie.root().toString("hex")}"`);
+
+  const { index, canonical } = await atomicPut(trie, message, identity);
 
   if (!libp2p) {
     log(
@@ -325,7 +369,7 @@ export async function add(
   return index;
 }
 
-export async function post(trie, index, parser, allowlist, delegations) {
+export async function leaf(trie, index, parser) {
   if (!(index instanceof Buffer)) {
     throw new Error("index parameter must be of type Buffer");
   }
@@ -353,7 +397,11 @@ export async function post(trie, index, parser, allowlist, delegations) {
   if (parser) {
     message = parser(message);
   }
+  return message;
+}
 
+export async function post(trie, index, parser, allowlist, delegations) {
+  const message = await leaf(trie, index, parser);
   const cacheEnabled = true;
   const signer = ecrecover(message, EIP712_MESSAGE, cacheEnabled);
   const identity = eligible(allowlist, delegations, signer);
@@ -367,6 +415,7 @@ export async function post(trie, index, parser, allowlist, delegations) {
     const from = null;
     const amount = null;
     const startDatetime = null;
+    const type = "amplify";
     const upvotes = await posts(
       trie,
       from,
@@ -376,6 +425,7 @@ export async function post(trie, index, parser, allowlist, delegations) {
       allowlist,
       delegations,
       message.href,
+      type,
     );
     upvoters = upvotes.map(({ identity, timestamp }) => ({
       identity,
@@ -406,8 +456,17 @@ export async function posts(
   allowlist,
   delegations,
   href,
+  type,
 ) {
-  const nodes = await leaves(trie, from, amount, parser, startDatetime, href);
+  const nodes = await leaves(
+    trie,
+    from,
+    amount,
+    parser,
+    startDatetime,
+    href,
+    type,
+  );
 
   const cacheEnabled = true;
   const posts = nodes
@@ -439,6 +498,7 @@ export async function leaves(
   parser,
   startDatetime,
   href,
+  type,
   root = trie.root(),
 ) {
   const nodes = [];
@@ -462,7 +522,10 @@ export async function leaves(
       if (parsed.timestamp < startDatetime) {
         continue;
       }
-      if (href && normalizeUrl(parsed.href) !== normalizeUrl(href)) {
+      if (
+        (href && normalizeUrl(parsed.href) !== normalizeUrl(href)) ||
+        (type && type !== parsed.type)
+      ) {
         continue;
       }
 

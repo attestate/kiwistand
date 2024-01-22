@@ -80,6 +80,8 @@ export default async function index(trie, theme, canon) {
 
   let startDatetime = null;
   let tolerance = null;
+  const href = null;
+  const type = "amplify";
 
   let leaves = await store.posts(
     trie,
@@ -89,6 +91,8 @@ export default async function index(trie, theme, canon) {
     tolerance,
     allowlist,
     delegations,
+    href,
+    type,
   );
   const links = canon.links.map(normalizeUrl);
   leaves = leaves.filter(({ href }) => links.includes(normalizeUrl(href)));

@@ -243,6 +243,8 @@ export async function data(trie, identity, lastRemoteValue) {
   const cutoffUnixtime = Math.floor(cutoff.getTime() / 1000);
   const allowlist = await registry.allowlist();
   const delegations = await registry.delegations();
+  const href = null;
+  const type = "amplify";
   let leaves = await store.posts(
     trie,
     from,
@@ -251,6 +253,8 @@ export async function data(trie, identity, lastRemoteValue) {
     cutoffUnixtime,
     allowlist,
     delegations,
+    href,
+    type,
   );
   leaves = moderation.moderate(leaves, config);
 
