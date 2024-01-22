@@ -105,7 +105,7 @@ const row = (
                   ? html`<br /><a target="_blank" href="${story.href}"
                         ><img
                           loading="lazy"
-                          style="max-width: 80vw; padding: 0.75rem 1rem 0 0; max-height: 30vh"
+                          style="max-width: 80vw; padding: 0.75rem 1rem 0 0; max-height: 20vh"
                           src="${story.image}"
                       /></a>`
                   : ""}
