@@ -406,7 +406,6 @@ export async function post(trie, index, parser, allowlist, delegations) {
   const identity = eligible(allowlist, delegations, signer);
   if (!identity) {
     throw new Error(`Identity not found: ${signer}`);
-    return null;
   }
 
   let upvoters = [];
