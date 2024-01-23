@@ -92,6 +92,7 @@ export default async function (trie, theme) {
   }
 
   const path = "/nfts";
+  const ogImage = "https://news.kiwistand.com/kiwi_nft_feed_page.png";
   return html`
     <html lang="en" op="news">
       <head>

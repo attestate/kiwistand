@@ -146,6 +146,7 @@ export default async function (trie, theme, index) {
   }
 
   const path = "/new";
+  const ogImage = "https://news.kiwistand.com/kiwi_new_feed_page.png";
   return html`
     <html lang="en" op="news">
       <head>
