@@ -375,7 +375,6 @@ export async function leaf(trie, index, parser) {
   }
 
   let node;
-  const throwIfMissing = true;
   try {
     const path = await trie.findPath(index, throwIfMissing);
     node = path.node;
