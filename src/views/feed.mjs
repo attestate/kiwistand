@@ -381,7 +381,7 @@ export default async function (trie, theme, page, domain) {
   if (domain) {
     query += `&domain=${domain}`;
   }
-
+  const ogImage = "https://news.kiwistand.com/kiwi_hot_feed_page.png";
   return html`
     <html lang="en" op="news">
       <head>

@@ -196,6 +196,7 @@ export default async function index(trie, theme, page, period, domain) {
   } else {
     stories = cacheRes.stories;
   }
+  const ogImage = "https://news.kiwistand.com/kiwi_top_feed_page.png";
   return html`
     <html lang="en" op="news">
       <head>
