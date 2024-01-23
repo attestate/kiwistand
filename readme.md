@@ -14,7 +14,7 @@ You can learn the story behind the project in this [4 min video by Tim Daubensch
 
 #### Basic requirements:
 
-- node >= 16
+- node >= 19 (best to check package.json value though)
 - RPC nodes on Ethereum Mainnet & Optimism
 
 It's highly likely that you'll need either a paid Alchemy account to make the node work because it is downloading a lot of block data. You might also try rate-limiting the speed at which the node tries to download event logs.
