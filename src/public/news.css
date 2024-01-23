@@ -485,7 +485,11 @@ body {
          display: none;
     }
     #mySidebar {
-      padding-right: 1.75rem;
+      padding-right: 1.25rem;
+      border-left: 1px solid #ccc;
+      border-bottom: 1px solid #ccc;
+      border-top: 1px solid #ccc;
+      background-color: rgba(0,0,0,0.1);
     }
      #mySidebar > hr {
          display: none;

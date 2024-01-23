@@ -1,7 +1,6 @@
 import "vite/modulepreload-polyfill";
 import "@rainbow-me/rainbowkit/styles.css";
-import { watchAccount } from "@wagmi/core";
-import { getCookie } from "./session.mjs";
+import { getCookie, getLocalAccount } from "./session.mjs";
 
 async function checkNewStories() {
   let data;
@@ -14,11 +13,19 @@ async function checkNewStories() {
   }
 
   if (data.status === "success" && data.data.stories.length > 0) {
-    const latestTimestamp = data.data.stories[0].timestamp;
+    const account = getLocalAccount();
+    const story = data.data.stories[0];
+    const identity = story.identity;
+    const latestTimestamp = story.timestamp;
     const localTimestamp = getCookie("newTimestamp");
     const elem = document.getElementById("new-dot");
 
-    if (elem && (!localTimestamp || latestTimestamp > Number(localTimestamp))) {
+    if (
+      elem &&
+      (!localTimestamp || latestTimestamp > Number(localTimestamp)) &&
+      account &&
+      account.identity !== identity
+    ) {
       elem.style.display = "block";
     }
   }
@@ -35,11 +42,19 @@ async function checkImages() {
   }
 
   if (data.status === "success" && data.data.stories.length > 0) {
-    const latestTimestamp = data.data.stories[0].timestamp;
+    const account = getLocalAccount();
+    const story = data.data.stories[0];
+    const identity = story.identity;
+    const latestTimestamp = story.timestamp;
     const localTimestamp = getCookie("imagesTimestamp");
     const elem = document.getElementById("images-dot");
 
-    if (elem && (!localTimestamp || latestTimestamp > Number(localTimestamp))) {
+    if (
+      elem &&
+      (!localTimestamp || latestTimestamp > Number(localTimestamp)) &&
+      account &&
+      account.identity !== identity
+    ) {
       elem.style.visibility = "visible";
     }
   }
@@ -302,6 +317,22 @@ async function addToaster() {
   return toast;
 }
 
+async function addAvatar(allowlist, delegations) {
+  const avatarElem = document.querySelectorAll("nav-header-avatar");
+  if (avatarElem && avatarElem.length > 0) {
+    const { createRoot } = await import("react-dom/client");
+    const { StrictMode } = await import("react");
+    const Avatar = (await import("./Avatar.jsx")).default;
+    avatarElem.forEach((element) => {
+      createRoot(element).render(
+        <StrictMode>
+          <Avatar allowlist={allowlist} delegations={delegations} />
+        </StrictMode>,
+      );
+    });
+  }
+}
+
 async function addNFTPrice() {
   const nftPriceElements = document.querySelectorAll("nft-price");
   if (nftPriceElements && nftPriceElements.length > 0) {
@@ -319,16 +350,13 @@ async function addNFTPrice() {
   }
 }
 
-async function share(toast, link) {
+async function share(toast, index) {
   const FCIcon = (await import("./fcicon.jsx")).default;
-  // NOTE: Regarding the embeds encoding of the link, here we don not have to
-  // call encodeURIComponent as we've been taking this link already from the
-  // browser's URL so that it is already encoded.
   const toastContent = (
     <div style={{ display: "flex", alignItems: "center" }}>
       <a
         style={{ display: "flex", alignItems: "center" }}
-        href={`https://warpcast.com/~/compose?embeds[]=${link}&embeds[]=https://news.kiwistand.com`}
+        href={`https://warpcast.com/~/compose?embeds[]=https://news.kiwistand.com/stories?index=${index}`}
         target="_blank"
       >
         <FCIcon style={{ height: "15px", color: "white" }} />
@@ -391,11 +419,12 @@ async function start() {
   const delegationsPromise = fetchDelegations();
 
   // We're parallelizing all additions into the DOM
-  await Promise.allSettled([
+  const results = await Promise.allSettled([
     addVotes(allowlistPromise, delegationsPromise, toast),
     addTips(),
     addModals(),
     addNFTPrice(),
+    addAvatar(await allowlistPromise, await delegationsPromise),
     addDelegateButton(await allowlistPromise, await delegationsPromise),
     addBuyButton(allowlistPromise, delegationsPromise, toast),
     addConnectedComponents(await allowlistPromise, await delegationsPromise),
@@ -403,14 +432,21 @@ async function start() {
     checkNewStories(),
     checkImages(),
   ]);
+  results.forEach((result, index) => {
+    if (result.status === "rejected") {
+      console.error(`Error in promise at index ${index}:`, result.reason);
+    }
+  });
 
-  let url = new URL(window.location.href);
-  let link = url.searchParams.get("link");
+  if (window.location.path === "/new") {
+    let url = new URL(window.location.href);
+    let index = url.searchParams.get("index");
 
-  if (link) {
-    share(toast, link);
-    url.searchParams.delete("link");
-    window.history.replaceState({}, "", url.href);
+    if (index) {
+      share(toast, index);
+      url.searchParams.delete("index");
+      window.history.replaceState({}, "", url.href);
+    }
   }
 }
 

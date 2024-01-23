@@ -104,6 +104,7 @@ const row = (
                 ${story.image
                   ? html`<br /><a target="_blank" href="${story.href}"
                         ><img
+                          loading="lazy"
                           style="max-width: 80vw; padding: 0.75rem 1rem 0 0; max-height: 30vh"
                           src="${story.image}"
                       /></a>`
@@ -114,14 +115,14 @@ const row = (
                   : html` <span
                       class="story-domain"
                       style="white-space: nowrap;"
-                      >(${interactive && (path === "/" || path === "/best")
-                        ? extractDomain(story.href)
-                        : html`<a
+                      >(${!interactive && (path === "/" || path === "/best")
+                        ? html`<a
                             href="${path}?period=month&domain=${extractDomain(
                               story.href,
                             )}"
                             >${extractDomain(story.href)}</a
-                          >`})</span
+                          >`
+                        : extractDomain(story.href)})</span
                     >`}
               </span>
               <div style="margin-top: auto; font-size: 10pt;">
@@ -137,6 +138,7 @@ const row = (
                         ${story.avatars.slice(0, 5).map(
                           (avatar, index) => html`
                             <img
+                              loading="lazy"
                               src="${avatar}"
                               alt="avatar"
                               style="z-index: ${index}; width: ${size}px; height:
@@ -218,9 +220,14 @@ const row = (
                         <span>
                           ${story.tipValue
                             ? html` <span> • </span>
-                                $${parseFloat(story.tipValue).toFixed(2)}
-                                <span> </span>
-                                received`
+                                <a
+                                  class="meta-link"
+                                  href="/stories?index=0x${story.index}"
+                                >
+                                  $${parseFloat(story.tipValue).toFixed(2)}
+                                  <span> </span>
+                                  received</a
+                                >`
                             : ""}
                           <span
                             class="tipsbuttoncontainer"

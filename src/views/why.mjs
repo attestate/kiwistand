@@ -9,8 +9,6 @@ import Head from "./components/head.mjs";
 
 const html = htm.bind(vhtml);
 
-const price = "0.01";
-
 export default async function (theme) {
   return html`
     <html lang="en" op="news">

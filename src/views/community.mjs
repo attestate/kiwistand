@@ -283,7 +283,7 @@ export default async function (trie, theme, query, identity) {
           <div id="hnmain">
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
               <tr>
-                ${await Header(theme, identity)}
+                ${await Header(theme)}
               </tr>
               <tr>
                 <td>
@@ -338,6 +338,7 @@ export default async function (trie, theme, query, identity) {
                                 >
                                   ${ensData.safeAvatar
                                     ? html`<img
+                                        loading="lazy"
                                         src="${ensData.safeAvatar}"
                                         style="width: 20px; height: 20px; border-radius: 100%; margin-right: 15px;"
                                       />`

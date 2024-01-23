@@ -53,9 +53,8 @@ export async function getUserTips(address) {
   }
 }
 
-export function getTipsValue(tips, storyIndex) {
-  // 1. Retrieve all items from data that have the same index as the storyIndex
-  const filteredTips = tips.filter((tip) => {
+export function filterTips(tips, storyIndex) {
+  return tips.filter((tip) => {
     if (!tip.metadata) {
       return false;
     }
@@ -68,6 +67,11 @@ export function getTipsValue(tips, storyIndex) {
     }
     return metadata.index === storyIndex;
   });
+}
+
+export function getTipsValue(tips, storyIndex) {
+  // 1. Retrieve all items from data that have the same index as the storyIndex
+  const filteredTips = filterTips(tips, storyIndex);
 
   // 2. Sum all usdAmounts from the filteredTips
   return filteredTips.reduce((total, tip) => total + tip.usdAmount, 0);

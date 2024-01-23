@@ -26,6 +26,7 @@ function CanonRow(sheets) {
                   <div style="flex: 0 0 30%; scroll-snap-align: center;">
                     <a href="/canons?name=${name}" target="_blank">
                       <img
+                        loading="lazy"
                         src="${preview}"
                         style="width: 100%; height: auto;"
                       />
@@ -42,7 +43,7 @@ function CanonRow(sheets) {
   return rows;
 }
 
-export default async function displayCanonRow(theme, identity) {
+export default async function displayCanonRow(theme) {
   const path = "/canonrow";
   let sheets;
   try {
@@ -64,7 +65,7 @@ export default async function displayCanonRow(theme, identity) {
           <div id="hnmain">
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
               <tr>
-                ${await Header(theme, identity)}
+                ${await Header(theme)}
               </tr>
               <tr>
                 <td style="padding: 10px; font-size: 16px;">

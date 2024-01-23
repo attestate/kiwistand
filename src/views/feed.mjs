@@ -44,7 +44,11 @@ function CanonRow(sheets) {
             ({ preview, name }) => html`
               <div style="flex: 0 0 30%; scroll-snap-align: center;">
                 <a href="/canons?name=${name}">
-                  <img src="${preview}" style="width: 100%; height: auto;" />
+                  <img
+                    loading="lazy"
+                    src="${preview}"
+                    style="width: 100%; height: auto;"
+                  />
                 </a>
               </div>
             `,
@@ -335,7 +339,7 @@ export async function index(trie, page, domain) {
 
 const pages = {};
 
-export default async function (trie, theme, page, identity, domain) {
+export default async function (trie, theme, page, domain) {
   const path = "/";
 
   const key = `${page}-${domain}`;
@@ -389,7 +393,7 @@ export default async function (trie, theme, page, identity, domain) {
           <div id="hnmain">
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
               <tr>
-                ${await Header(theme, identity)}
+                ${await Header(theme)}
               </tr>
               <tr>
                 ${ThirdHeader(theme, "top")}

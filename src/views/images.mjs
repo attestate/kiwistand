@@ -128,7 +128,7 @@ export async function recompute(trie) {
   inProgress = false;
 }
 
-export default async function (trie, theme, identity) {
+export default async function (theme) {
   const name = "images";
   const path = `/${name}`;
   return html`
@@ -146,7 +146,7 @@ export default async function (trie, theme, identity) {
           <div id="hnmain">
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
               <tr>
-                ${await Header(theme, identity)}
+                ${await Header(theme)}
               </tr>
               <tr>
                 ${ThirdHeader(theme, name)}

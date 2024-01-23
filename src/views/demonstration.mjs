@@ -11,7 +11,7 @@ import Row from "./components/row.mjs";
 
 const html = htm.bind(vhtml);
 
-export default async function index(theme, identity) {
+export default async function index(theme) {
   const mockStories = [
     {
       title: "Bitcoin: A Peer-to-Peer Electronic Cash System",
@@ -46,7 +46,7 @@ export default async function index(theme, identity) {
           <div id="hnmain">
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
               <tr>
-                ${await Header(theme, identity)}
+                ${await Header(theme)}
               </tr>
               <tr>
                 <td

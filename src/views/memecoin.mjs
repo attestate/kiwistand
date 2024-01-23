@@ -11,7 +11,7 @@ import * as ens from "../ens.mjs";
 
 const html = htm.bind(vhtml);
 
-export default async function (theme, identity) {
+export default async function (theme) {
   return html`
     <html lang="en" op="news">
       <head>

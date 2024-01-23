@@ -110,7 +110,7 @@ export function advertise(trie, node, timeout) {
     //} else {
     const rootMsg = encode({ root: trie.root().toString("hex") });
     log(
-      `Advertising new root to peers: "${roots.name}" and message: "${rootMsg}"`
+      `Advertising new root to peers: "${roots.name}" and message: "${rootMsg}"`,
     );
     node.pubsub.publish(roots.name, rootMsg);
     //}
@@ -166,7 +166,7 @@ export async function initiate(
   exclude = [],
   level = 0,
   innerSend,
-  peerFab
+  peerFab,
 ) {
   const lastSyncPeer = peerFab.get();
   if (lastSyncPeer && lastSyncPeer.equals(peerId) && level === 0) {
@@ -174,14 +174,14 @@ export async function initiate(
     // trigger a second sync between two nodes. This case, we are catching
     // and ending here.
     log(
-      "initiate: Caught the two same nodes attempting to start a second sync on level=0 and shutting it down."
+      "initiate: Caught the two same nodes attempting to start a second sync on level=0 and shutting it down.",
     );
     return;
   }
   const { result, syncPeer, newPeer } = peerFab.isValid(peerId);
   if (!result) {
     log(
-      `initiate: Currently syncing with "${syncPeer}" but tried initiating with "${newPeer}". Aborting`
+      `initiate: Currently syncing with "${syncPeer}" but tried initiating with "${newPeer}". Aborting`,
     );
     // NOTE: We are NOT unsetting the peerFab syncPeer here as that'd overwrite
     // the current peer (which crucially must not be overwritten for the
@@ -192,7 +192,7 @@ export async function initiate(
   log(
     `Initiating sync for peerId: "${peerId}" and level "${level}" and root "${trie
       .root()
-      .toString("hex")}"`
+      .toString("hex")}"`,
   );
 
   let remotes;
@@ -209,7 +209,7 @@ export async function initiate(
     response = await innerSend(
       peerId,
       `/${levels.id}/${levels.version}`,
-      serialize(remotes)
+      serialize(remotes),
     );
   } catch (err) {
     elog(err, "initiate: error when sending levels");
@@ -221,7 +221,7 @@ export async function initiate(
     log(
       `Ending initiate on level: "${level}" with root: "${trie
         .root()
-        .toString("hex")}"`
+        .toString("hex")}"`,
     );
     peerFab.set();
     return;
@@ -233,7 +233,7 @@ export async function initiate(
   } catch (err) {
     elog(
       err,
-      "initiate: response of received levels comparison was schema-invalid"
+      "initiate: response of received levels comparison was schema-invalid",
     );
     peerFab.set();
     return;
@@ -242,8 +242,8 @@ export async function initiate(
   if (!isValidResponse) {
     log(
       `Wrongly formatted comparison message: ${JSON.stringify(
-        comparisonValidator.errors
-      )}. Instead got "${JSON.stringify(response)}". Aborting initiate.`
+        comparisonValidator.errors,
+      )}. Instead got "${JSON.stringify(response)}". Aborting initiate.`,
     );
     peerFab.set();
     return;
@@ -266,7 +266,7 @@ export async function initiate(
         peerId,
         `/${leaves.id}/${leaves.version}`,
         // TODO: This might go wrong and we might wanna try catch it separately.
-        serialize(missing)
+        serialize(missing),
       );
     } catch (err) {
       elog(err, "initiate: Failed while sending leaves");
@@ -293,7 +293,7 @@ export async function initiate(
     allMatches,
     level + 1,
     innerSend,
-    peerFab
+    peerFab,
   );
 }
 
@@ -336,7 +336,7 @@ export async function put(trie, message, metadb, allowlist, delegations) {
         allowlist,
         delegations,
         synching,
-        metadb
+        metadb,
       );
       log(`Adding to database value (as JSON)`);
     } catch (err) {
@@ -357,7 +357,7 @@ export async function compare(trie, message) {
     remotes = deserialize(message);
   } catch (err) {
     log(
-      `compare: error deserializing message: "${message}", ${err.toString()}`
+      `compare: error deserializing message: "${message}", ${err.toString()}`,
     );
     throw err;
   }
@@ -386,8 +386,8 @@ export function receive(peerFab, trie, expectResponse, handler) {
       elog(
         err,
         `receive: unexpected error in handler with message "${JSON.stringify(
-          message
-        )}"`
+          message,
+        )}"`,
       );
       peerFab.set();
       return stream.close();
@@ -395,7 +395,7 @@ export function receive(peerFab, trie, expectResponse, handler) {
 
     if (expectResponse && !response) {
       log(
-        "Failed to handle response from remote. Can't generate answer, closing stream."
+        "Failed to handle response from remote. Can't generate answer, closing stream.",
       );
       peerFab.set();
       return stream.close();
@@ -410,7 +410,7 @@ export function handleLevels(trie, peerFab) {
     const { result, syncPeer, newPeer } = peerFab.isValid(peer);
     if (!result) {
       log(
-        `handle levels: Currently syncing with "${syncPeer}" but received levels from "${newPeer}". Aborting`
+        `handle levels: Currently syncing with "${syncPeer}" but received levels from "${newPeer}". Aborting`,
       );
       return;
     }
@@ -435,7 +435,7 @@ export function handleLeaves(trie, peerFab) {
     const { result, syncPeer, newPeer } = peerFab.isValid(peer);
     if (!result) {
       log(
-        `handle leaves: Currently syncing with "${syncPeer}" but received leaves from "${newPeer}". Aborting`
+        `handle leaves: Currently syncing with "${syncPeer}" but received leaves from "${newPeer}". Aborting`,
       );
       return;
     }

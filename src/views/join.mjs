@@ -36,7 +36,7 @@ const avatarData = await getENSAvatars(addresses);
 
 const html = htm.bind(vhtml);
 
-export default async function (theme, identity) {
+export default async function (theme) {
   const ogImage = "https://news.kiwistand.com/pass_preview.jpeg";
   return html`
     <html lang="en" op="news">
@@ -274,7 +274,7 @@ export default async function (theme, identity) {
           <div id="hnmain">
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
               <tr>
-                ${await Header(theme, identity)}
+                ${await Header(theme)}
               </tr>
               <tr>
                 <td style="padding: 1rem; color: black;">
@@ -563,35 +563,6 @@ export default async function (theme, identity) {
                       </div>
                     </div>
                   </section>
-                  ${identity
-                    ? html`<br /><br />
-                        <div style="text-align: left;">
-                          <h2>Already a member? Earn Protocol Rewards!</h2>
-                          <p>
-                            Reading together is more fun than alone! So invite
-                            your friends and earn Zora's Protocol Rewards!
-                            0.000222 ETH per referred mint!
-                          </p>
-                          <div style="display: flex; align-items: center;">
-                            <button
-                              onclick="document.getElementById('invitelink').select(); document.execCommand('copy');"
-                              id="button-onboarding"
-                              style="border-radius: 2px; padding: 10px 15px; background-color: black; border: 1px
- solid black; color: white; cursor: pointer; width: 50%; margin-right: 10px;"
-                            >
-                              Copy invite link
-                            </button>
-                            <input
-                              id="invitelink"
-                              type="text"
-                              value="https://news.kiwistand.com/welcome?referral=${identity}"
-                              readonly
-                              style="width: 70%; padding: 10px 15px; border: 1px solid #ccc; border-radius: 2px;"
-                            />
-                          </div>
-                        </div>
-                        <br />`
-                    : ""}
                   <br />
                   <div
                     style="display: flex; flex-direction: column; align-items: center;"

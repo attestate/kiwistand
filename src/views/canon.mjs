@@ -71,7 +71,7 @@ async function topstories(leaves) {
   return count(leaves).sort((a, b) => b.upvotes - a.upvotes);
 }
 
-export default async function index(trie, theme, identity, canon) {
+export default async function index(trie, theme, canon) {
   const from = null;
   const amount = null;
   const parser = JSON.parse;
@@ -146,7 +146,7 @@ export default async function index(trie, theme, identity, canon) {
           <div id="hnmain">
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
               <tr>
-                ${await Header(theme, identity)}
+                ${await Header(theme)}
               </tr>
               <tr>
                 <td>
