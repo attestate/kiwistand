@@ -74,7 +74,7 @@ export function handleMessage(trie, libp2p, getAllowlist, getDelegations) {
       return sendError(reply, code, httpMessage, err.toString());
     }
 
-    if (request.query.wait && request.query.wait === "true") {
+    if (request.query && request.query.wait && request.query.wait === "true") {
       await newest.recompute(trie);
       await images.recompute(trie);
     } else {

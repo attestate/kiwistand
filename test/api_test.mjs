@@ -115,7 +115,7 @@ test("listMessages success", async (t) => {
   const response = await listMessages(
     trie,
     getAllowlist,
-    getDelegations
+    getDelegations,
   )(mockRequest, mockReply);
 
   console.log(response);
@@ -187,6 +187,9 @@ test("handleMessage should handle a valid message and return 200 OK", async (t) 
 
   const request = {
     body: signedMessage,
+    query: {
+      wait: false,
+    },
   };
 
   const reply = {
