@@ -132,6 +132,10 @@ export default async function (trie, theme, index, value, identity) {
     (a, b) => a.timestamp - b.timestamp,
   );
   story.avatars = avatars;
+  // NOTE: store.post returns upvoters as objects of "identity" and "timestamp"
+  // property so that we can zip them with tipping actions. But the row component
+  // expects upvoters to be a string array of Ethereum addresses.
+  story.upvoters = story.upvoters.map(({ identity }) => identity);
 
   const ensData = await ens.resolve(story.identity);
   story.submitter = ensData;
