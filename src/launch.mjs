@@ -1,5 +1,5 @@
 // @format
-import { env } from "process";
+import { env, exit } from "process";
 
 import { boot as crawl } from "@attestate/crawler";
 
@@ -58,6 +58,14 @@ const posts = await store.posts(
   allowlist,
   delegations,
 );
+try {
+  store.cache(posts);
+} catch (err) {
+  log(
+    `launch: An irrecoverable error during upvote caching occurred. "${err.toString()}`,
+  );
+  exit(1);
+}
 await newest.recompute(trie);
 await images.recompute(trie);
 karma.count(posts);

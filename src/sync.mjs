@@ -297,7 +297,7 @@ export async function initiate(
   );
 }
 
-export async function put(trie, message, metadb, allowlist, delegations) {
+export async function put(trie, message, allowlist, delegations) {
   let missing;
   try {
     missing = deserialize(message);
@@ -329,15 +329,7 @@ export async function put(trie, message, metadb, allowlist, delegations) {
     const libp2p = null;
     const synching = true;
     try {
-      await store.add(
-        trie,
-        obj,
-        libp2p,
-        allowlist,
-        delegations,
-        synching,
-        metadb,
-      );
+      await store.add(trie, obj, libp2p, allowlist, delegations, synching);
       log(`Adding to database value (as JSON)`);
     } catch (err) {
       // NOTE: We're not bubbling the error up here because we want to be
@@ -444,25 +436,16 @@ export function handleLeaves(trie, peerFab) {
     log("handleLeaves: Received leaves and storing them in db");
 
     try {
-      const metadb = store.metadata();
-      await metadb.transaction(async () => {
-        try {
-          // NOTE: We're adding multiple statements here to the try catch
-          // because in each of their failure, we want to abort writing into
-          // the databases.
-          const allowlist = await registry.allowlist();
-          const delegations = await registry.delegations();
-          await put(trie, message, metadb, allowlist, delegations);
-          return true;
-        } catch (err) {
-          elog(err, "handleLeaves: Unexpected error");
-          await trie.revert();
-          peerFab.set();
-          return false;
-        }
-      });
+      // NOTE: We're adding multiple statements here to the try catch
+      // because in each of their failure, we want to abort writing into
+      // the databases.
+      const allowlist = await registry.allowlist();
+      const delegations = await registry.delegations();
+      await put(trie, message, allowlist, delegations);
     } catch (err) {
-      elog(err, "error in metadb callback");
+      elog(err, "handleLeaves: Unexpected error");
+      await trie.revert();
+      peerFab.set();
     }
 
     // NOTE: While there could be a strategy where we continuously stay in a
