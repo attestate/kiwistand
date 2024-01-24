@@ -91,7 +91,6 @@ async function points(identity) {
     const allowlist = Array.from(await registry.allowlist());
     rank = allowlist.length;
   }
-  const ogImage = "https://news.kiwistand.com/kiwi_community_page.png";
   return html`
     <div
       style="margin: 1rem; border: 1px solid rgba(0,0,0,0.05); border-radius: 5px; background-color: rgba(0,0,0,0.05);"
