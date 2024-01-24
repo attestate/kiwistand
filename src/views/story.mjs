@@ -197,8 +197,9 @@ export default async function (trie, theme, index, value, identity) {
                       ${story.comments.map(
                         (comment) =>
                           html`<span
-                            ><b>${comment.displayName}:</b> ${comment.title}
-                          </span>`,
+                              ><b>${comment.displayName}: </b>
+                              ${comment.title} </span
+                            ><br />`,
                       )}
                     </div>
                   </div>

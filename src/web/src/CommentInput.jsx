@@ -31,13 +31,16 @@ const CommentInput = (props) => {
   }
 
   const [text, setText] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const handleSubmit = async (e) => {
+    setIsLoading(true);
     e.preventDefault();
     const urlParams = new URLSearchParams(window.location.search);
     const index = urlParams.get("index");
 
     if (text.length < 15 || text.length > 10_000) {
       toast.error("Comment must be between 15 and 10000 characters.");
+      setIsLoading(false);
       return;
     }
     const type = "comment";
@@ -53,15 +56,16 @@ const CommentInput = (props) => {
     } catch (err) {
       console.log(err);
       toast.error(`Error! Sad Kiwi! "${err.message}"`);
+      setIsLoading(false);
       return;
     }
 
     const wait = false;
     const response = await API.send(value, signature, wait);
+    toast.success("Thanks for submitting your comment. Reloading...");
     location.reload();
   };
 
-  console.log(address);
   if (!address) return null;
   return (
     <div
@@ -75,7 +79,9 @@ const CommentInput = (props) => {
       ></textarea>
       <br />
       <br />
-      <button onClick={handleSubmit}>Add comment</button>
+      <button disabled={isLoading} onClick={handleSubmit}>
+        {isLoading ? "Submitting..." : "Add comment"}
+      </button>
     </div>
   );
 };
