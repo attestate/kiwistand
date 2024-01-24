@@ -1,14 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { WagmiConfig, useAccount, useSigner, useProvider } from "wagmi";
 import { Wallet } from "@ethersproject/wallet";
+import { eligible } from "@attestate/delegator2";
 
 import * as API from "./API.mjs";
 import { getLocalAccount } from "./session.mjs";
 import { client, chains } from "./client.mjs";
 
 const CommentInput = (props) => {
-  const { toast } = props;
+  const { toast, allowlist, delegations } = props;
 
   let address;
   const account = useAccount();
@@ -22,6 +23,19 @@ const CommentInput = (props) => {
 
   const provider = useProvider();
   const result = useSigner();
+
+  const [isEligible, setIsEligible] = useState(null);
+
+  useEffect(() => {
+    const loadData = async () => {
+      const result =
+        signer &&
+        eligible(await allowlist, await delegations, await signer.getAddress());
+      setIsEligible(result);
+    };
+    loadData();
+  });
+
   let signer, isError;
   if (localAccount && localAccount.privateKey) {
     signer = new Wallet(localAccount.privateKey, provider);
@@ -66,7 +80,7 @@ const CommentInput = (props) => {
     location.reload();
   };
 
-  if (!address) return null;
+  if (!address || !isEligible) return null;
   return (
     <div
       style={{

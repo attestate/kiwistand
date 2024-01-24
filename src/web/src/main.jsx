@@ -200,7 +200,7 @@ async function addBuyButton(allowlistPromise, delegationsPromise, toast) {
   }
 }
 
-async function addCommentInput(toast) {
+async function addCommentInput(toast, allowlist, delegations) {
   const commentInput = document.querySelector("nav-comment-input");
   if (commentInput) {
     const { createRoot } = await import("react-dom/client");
@@ -208,7 +208,11 @@ async function addCommentInput(toast) {
     const CommentInputComponent = (await import("./CommentInput.jsx")).default;
     createRoot(commentInput).render(
       <StrictMode>
-        <CommentInputComponent toast={toast} />
+        <CommentInputComponent
+          toast={toast}
+          allowlist={allowlist}
+          delegations={delegations}
+        />
       </StrictMode>,
     );
   }
@@ -435,7 +439,7 @@ async function start() {
   // We're parallelizing all additions into the DOM
   const results = await Promise.allSettled([
     addVotes(allowlistPromise, delegationsPromise, toast),
-    addCommentInput(toast),
+    addCommentInput(toast, allowlistPromise, delegationsPromise),
     addTips(),
     addModals(),
     addNFTPrice(),
