@@ -32,3 +32,6 @@ html_context = {
     "github_version": "main",
     "conf_py_path": "/docs/source/",
 }
+
+smv_tag_whitelist = r'^.*$'        # Include all tags
+smv_branch_whitelist = r'^(main)$' # Include only the main branch
