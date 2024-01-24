@@ -26,6 +26,23 @@ import * as messages from "./topics/messages.mjs";
 import { newWalk } from "./WalkController.mjs";
 
 const maxReaders = 500;
+
+export const upvotes = new Set();
+export function passes(marker) {
+  const exists = upvotes.has(marker);
+  if (!exists) {
+    upvotes.add(marker);
+  }
+  return !exists;
+}
+export function cache(posts) {
+  log("Caching upvote ids of posts, this can take a minute...");
+  for (const { identity, href, type } of posts) {
+    const marker = upvoteID(identity, href, type);
+    passes(marker);
+  }
+}
+
 export async function create(options) {
   return await Trie.create({
     // TODO: Understand if this should this use "resolve"? The metadata db uses
@@ -47,19 +64,6 @@ export async function create(options) {
     useNodePruning: false,
     ...options,
   });
-}
-
-export function metadata(options) {
-  const db = open({
-    compression: true,
-    name: "constraints",
-    encoding: "cbor",
-    keyEncoding: "ordered-binary",
-    path: resolve(env.DATA_DIR),
-    maxReaders,
-    ...options,
-  });
-  return db;
 }
 
 // NOTE: https://ethereum.github.io/execution-specs/diffs/frontier_homestead/trie/index.html#ethereum.frontier.trie.encode_internal_node
@@ -240,22 +244,6 @@ export function upvoteID(identity, link, type) {
   return `${utils.getAddress(identity)}|${normalizeUrl(link)}|${type}`;
 }
 
-// TODO: The current synchronization algorithm makes use of checkpoints,
-// commits and reverts, but this function is used in sync.put and store.add,
-// but it isn't checkpointing or reverting, it just writes directly - even upon
-// soft writes into the trie. This is an issue as we e.g. could do a sync where
-// most writes are soft-written, the sync fails, but the actual constraints are
-// then written to the database.
-export async function passes(db, key, identity) {
-  // NOTE: db.doesExist seemed to have lead in some cases to a greedy match of
-  // the identifier hence returning true negatives. Meaning, it blocked users
-  // from upvoting although they had never upvoted that link.
-  // See: https://github.com/kriszyp/lmdbx-js/issues/17
-  const notFound = (await db.get(key)) === undefined;
-  await db.put(key, true);
-  return notFound;
-}
-
 export async function add(
   trie,
   message,
@@ -263,7 +251,7 @@ export async function add(
   allowlist,
   delegations,
   synching = false,
-  metadb = metadata(),
+  metadb = upvotes,
 ) {
   const address = verify(message);
   const identity = eligible(allowlist, delegations, address);
@@ -292,7 +280,7 @@ export async function add(
   }
 
   const key = upvoteID(identity, message.href, message.type);
-  const legit = await passes(metadb, key, identity);
+  const legit = await passes(key);
   if (!legit) {
     const err = `Message "${JSON.stringify(
       message,
@@ -308,24 +296,11 @@ export async function add(
   try {
     await trie.put(Buffer.from(index, "hex"), canonical);
   } catch (err) {
-    // NOTE/TODO: Additionally, between this function and store.add (in which
-    // we use trie.put), there is no proper atomicity of storage. The trie.put
-    // function could technically crash the entire program with a fatal error
-    // and that would not be caught and hence the metadb.remove(...) statement
-    // below wouldn't be called. This can lead to real problems where the two
-    // databases, the trie and metadb, can get out of synchronization.
-    //
-    // Although lmdb-js has a method for atomically storing an entry in two
-    // sub- databases directly, it's not recommended making the transaction
-    // callback asynchronous, and so since trie.put implements a complex set of
-    // steps, it seems fragile or outright impossible to write these two values
-    // into the trie at the same time.
-    //
-    // Potentially, however, the above may also apply too high standards, as
-    // it's also unclear what lmdb-js does upon node.js panicing at a certain
-    // point in the program's execution. It may similarly corrupt the file or
-    // write without atomicity...
-    const result = await metadb.remove(key);
+    // NOTE: If trie.put crashes the program and upvotes.delete is hence not
+    // rolled back, this is not a problem as "upvotes" is only a memory-stored
+    // cached data structure that gets recomputed upon every restart of the
+    // application.
+    const result = upvotes.delete(key);
 
     let message = `trie.put failed with "${err.toString()}". Successfully rolled back constraint`;
     if (!result) {

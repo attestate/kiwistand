@@ -31,9 +31,9 @@ test.serial("adding message to the store with trie.put error", async (t) => {
   const message = id.create(text, href, type, timestamp);
   const signedMessage = await id.sign(signer, message, EIP712_MESSAGE);
 
-  const metadb = store.metadata();
+  const metadb = store.upvotes;
   const key = store.upvoteID(signer.address, message.href, message.type);
-  const initialDbValue = await metadb.get(key);
+  const initialDbValue = await metadb.has(key);
   t.falsy(initialDbValue);
 
   const trie = {
@@ -54,13 +54,12 @@ test.serial("adding message to the store with trie.put error", async (t) => {
     t.true(error.toString().includes("Successfully rolled back"));
   }
 
-  const finalDbValue = await metadb.get(key);
+  const finalDbValue = await metadb.has(key);
   t.falsy(finalDbValue);
-
-  await rm("dbtestA", { recursive: true });
 });
 
 test("simulate dirty read", async (t) => {
+  store.upvotes.clear();
   const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
   const privateKey =
     "0xad54bdeade5537fb0a553190159783e45d02d316a992db05cbed606d3ca36b39";
@@ -114,8 +113,30 @@ test("simulate dirty read", async (t) => {
   await rm("dbtestA", { recursive: true });
 });
 
+test("if cache inserts upvote IDs reliably", async (t) => {
+  store.upvotes.clear();
+  const message = {
+    href: "https://example.com",
+    signature:
+      "0x1df128dfe1f86df4e20ecc6ebbd586e0ab56e3fc8d0db9210422c3c765633ad8793af68aa232cf39cc3f75ea18f03260258f7276c2e0d555f98e1cf16672dd201c",
+    timestamp: 1676559616,
+    title: "hello world",
+    type: "amplify",
+    identity: "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176",
+  };
+  store.cache([message]);
+  const metadb = store.upvotes;
+  const marker = store.upvoteID(message.identity, message.href, message.type);
+  t.true(store.upvotes.has(marker));
+  t.is(store.upvotes.size, 1);
+
+  store.cache([message]);
+  t.true(store.upvotes.has(marker));
+  t.is(store.upvotes.size, 1);
+});
+
 test("if message passes constraint", async (t) => {
-  env.DATA_DIR = "dbtestA";
+  store.upvotes.clear();
   const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
   const message = {
     href: "https://example.com",
@@ -125,17 +146,15 @@ test("if message passes constraint", async (t) => {
     title: "hello world",
     type: "amplify",
   };
-  const metadb = store.metadata();
+  const metadb = store.upvotes;
   const key = store.upvoteID(address, message.href, message.type);
-  const result0 = await store.passes(metadb, key, address);
+  const result0 = await store.passes(key);
   t.true(result0);
-  const result1 = await store.passes(metadb, key, address);
+  const result1 = await store.passes(key);
   t.false(result1);
 
-  const result2 = await store.passes(metadb, key, address);
+  const result2 = await store.passes(key);
   t.false(result2);
-
-  await rm("dbtestA", { recursive: true });
 });
 
 test("returns an empty array when the trie is empty", async (t) => {
@@ -255,6 +274,7 @@ test("getting a non-existing path", async (t) => {
 });
 
 test("getting a leaf with an non-eligible signer", async (t) => {
+  store.upvotes.clear();
   const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
   const privateKey =
     "0xad54bdeade5537fb0a553190159783e45d02d316a992db05cbed606d3ca36b39";
@@ -300,6 +320,7 @@ test("getting a leaf with an non-eligible signer", async (t) => {
 });
 
 test("getting a non-leaf", async (t) => {
+  store.upvotes.clear();
   const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
   const privateKey =
     "0xad54bdeade5537fb0a553190159783e45d02d316a992db05cbed606d3ca36b39";
@@ -342,6 +363,7 @@ test("getting a non-leaf", async (t) => {
 });
 
 test("getting leaves of a particular href", async (t) => {
+  store.upvotes.clear();
   const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
   const privateKey =
     "0xad54bdeade5537fb0a553190159783e45d02d316a992db05cbed606d3ca36b39";
@@ -389,6 +411,7 @@ test("getting leaves of a particular href", async (t) => {
 });
 
 test("getting a leaf where index parameter isn't of type Buffer", async (t) => {
+  store.upvotes.clear();
   const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
   const privateKey =
     "0xad54bdeade5537fb0a553190159783e45d02d316a992db05cbed606d3ca36b39";
@@ -431,6 +454,7 @@ test("getting a leaf where index parameter isn't of type Buffer", async (t) => {
 });
 
 test("getting a leaf", async (t) => {
+  store.upvotes.clear();
   const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
   const privateKey =
     "0xad54bdeade5537fb0a553190159783e45d02d316a992db05cbed606d3ca36b39";
@@ -468,7 +492,9 @@ test("getting a leaf", async (t) => {
     signer: address,
     identity: address,
     ...signedMessage,
-    upvoters: ["0x0f6A79A579658E401E0B81c6dde1F2cd51d97176"],
+    upvoters: [
+      { identity: "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176", timestamp },
+    ],
     upvotes: 1,
   });
   t.is(post.value.signer, address);
@@ -478,6 +504,7 @@ test("getting a leaf", async (t) => {
 });
 
 test("getting leaves", async (t) => {
+  store.upvotes.clear();
   const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
   const privateKey =
     "0xad54bdeade5537fb0a553190159783e45d02d316a992db05cbed606d3ca36b39";
@@ -513,6 +540,7 @@ test("getting leaves", async (t) => {
 });
 
 test("descend levels with actual data ", async (t) => {
+  store.upvotes.clear();
   const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
   const privateKey =
     "0xad54bdeade5537fb0a553190159783e45d02d316a992db05cbed606d3ca36b39";
@@ -1029,11 +1057,10 @@ test("add with delegated address but from isn't on allow list", async (t) => {
     async () =>
       await store.add(trie, signedMessage, libp2p, allowlist, delegations),
   );
-  await rm("dbtestA", { recursive: true });
 });
 
 test("attempting to upvote twice, once with custody and delegate address", async (t) => {
-  env.DATA_DIR = "dbtestA";
+  store.upvotes.clear();
   const address0 = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
   const privateKey0 =
     "0xad54bdeade5537fb0a553190159783e45d02d316a992db05cbed606d3ca36b39";
@@ -1073,7 +1100,6 @@ test("attempting to upvote twice, once with custody and delegate address", async
     async () =>
       await store.add(trie, signedMessage1, libp2p, allowlist, delegations),
   );
-  await rm("dbtestA", { recursive: true });
 });
 
 test("trying to add a message to store that isn't on allowlist but was delegated", async (t) => {
@@ -1106,7 +1132,6 @@ test("trying to add a message to store that isn't on allowlist but was delegated
     [address]: list[0],
   };
   await store.add(trie, signedMessage, libp2p, allowlist, delegations);
-  await rm("dbtestA", { recursive: true });
 });
 
 test("trying to add message to store that isn't on allowlist", async (t) => {
@@ -1211,7 +1236,7 @@ test("adding message from before minimum timestamp", async (t) => {
 });
 
 test.serial("adding message to the store", async (t) => {
-  env.DATA_DIR = "dbtestA";
+  store.upvotes.clear();
   t.plan(5);
   const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
   const privateKey =
@@ -1244,13 +1269,12 @@ test.serial("adding message to the store", async (t) => {
   };
   const allowlist = new Set([address]);
   await store.add(trie, signedMessage, libp2p, allowlist);
-  await rm("dbtestA", { recursive: true });
 });
 
 test.serial(
   "adding message twice to the store (e.g. with slightly different timestamp)",
   async (t) => {
-    env.DATA_DIR = "dbtestA";
+    store.upvotes.clear();
     const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
     const privateKey =
       "0xad54bdeade5537fb0a553190159783e45d02d316a992db05cbed606d3ca36b39";
@@ -1290,6 +1314,5 @@ test.serial(
     await t.throwsAsync(
       async () => await store.add(trie, signedMessage1, libp2p, allowlist),
     );
-    await rm("dbtestA", { recursive: true });
   },
 );

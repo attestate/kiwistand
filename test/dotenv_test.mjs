@@ -26,23 +26,25 @@ test("that repo contains a .env-copy file with all possible configuration option
   const expr = new RegExp(".*=.*", "gm");
   const allOptions = [
     "OPTIMISM_RPC_HTTP_HOST",
-    "LOG_LEVEL",
+    "RPC_HTTP_HOST",
+    "DEBUG",
     "NODE_ENV",
     "BIND_ADDRESS_V4",
     "PORT",
     "IS_BOOTSTRAP_NODE",
     "USE_EPHEMERAL_ID",
     "IPV4",
-    "HTTP_PORT",
-    "API_PORT",
     "HTTP_MESSAGES_MAX_PAGE_SIZE",
     "DATA_DIR",
     "CACHE_DIR",
     "AUTO_SYNC",
     "ROOT_ADVERTISEMENT_TIMEOUT",
     "MIN_TIMESTAMP_SECS",
-    "TIMESTAMP_TOLERANCE_SECS",
-    "DEBUG",
+    "MAX_TIMESTAMP_DELTA_SECS",
+    "HTTP_PORT",
+    "API_PORT",
+    "TOTAL_STORIES",
+    "TOTAL_USERS",
   ];
   await access(envPath, constants.F_OK);
   const envContent = (await readFile(envPath)).toString();
@@ -56,6 +58,6 @@ test("that repo contains a .env-copy file with all possible configuration option
   t.is(
     copyMatches.length,
     allOptions.length,
-    ".env-copy and required `allOptions` mismatch",
+    `.env-copy and required "allOptions" mismatch, copyMatches: "${copyMatches}" and allOptions: "${allOptions}"`,
   );
 });
