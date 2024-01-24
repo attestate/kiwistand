@@ -16,11 +16,11 @@ export const EIP712_TYPES = {
   ],
 };
 
-export function messageFab(title, href) {
+export function messageFab(title, href, type = "amplify") {
   return {
     title,
     href,
-    type: "amplify",
+    type,
     timestamp: Math.floor(Date.now() / 1000),
   };
 }

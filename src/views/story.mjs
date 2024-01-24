@@ -128,6 +128,14 @@ export default async function (trie, theme, index, value, identity) {
       }
     }
   }
+  for await (let comment of story.comments) {
+    const profile = await ens.resolve(comment.identity);
+    if (profile && profile.displayName) {
+      comment.displayName = profile.displayName;
+    } else {
+      comment.displayName = comment.identity;
+    }
+  }
   const actions = [...profiles, ...tipActions].sort(
     (a, b) => a.timestamp - b.timestamp,
   );
@@ -178,6 +186,28 @@ export default async function (trie, theme, index, value, identity) {
               ${Row(start, "/stories", style)({ ...story, index })}
               <tr>
                 <td>${generateList(actions)}</td>
+              </tr>
+              <tr>
+                <td>
+                  <div style="padding-left: 1rem; margin-bottom: 1rem;">
+                    <b style="font-size: 1rem;">Comments:</b>
+                    <br />
+                    <br />
+                    <div style="padding-left: 1rem;">
+                      ${story.comments.map(
+                        (comment) =>
+                          html`<span
+                            ><b>${comment.displayName}:</b> ${comment.title}
+                          </span>`,
+                      )}
+                    </div>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <nav-comment-input style="padding-left: 1rem;" />
+                </td>
               </tr>
               ${!identity
                 ? html` <tr>

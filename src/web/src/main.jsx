@@ -200,6 +200,20 @@ async function addBuyButton(allowlistPromise, delegationsPromise, toast) {
   }
 }
 
+async function addCommentInput(toast) {
+  const commentInput = document.querySelector("nav-comment-input");
+  if (commentInput) {
+    const { createRoot } = await import("react-dom/client");
+    const { StrictMode } = await import("react");
+    const CommentInputComponent = (await import("./CommentInput.jsx")).default;
+    createRoot(commentInput).render(
+      <StrictMode>
+        <CommentInputComponent toast={toast} />
+      </StrictMode>,
+    );
+  }
+}
+
 async function addDelegateButton(allowlist, delegations) {
   const delegateButtonContainer = document.querySelector(".delegate-button");
   if (delegateButtonContainer) {
@@ -421,6 +435,7 @@ async function start() {
   // We're parallelizing all additions into the DOM
   const results = await Promise.allSettled([
     addVotes(allowlistPromise, delegationsPromise, toast),
+    addCommentInput(toast),
     addTips(),
     addModals(),
     addNFTPrice(),
