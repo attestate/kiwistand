@@ -19,7 +19,7 @@ import SecondHeader from "./components/secondheader.mjs";
 import ThirdHeader from "./components/thirdheader.mjs";
 import Sidebar from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
-import Head from "./components/head.mjs";
+import { custom } from "./components/head.mjs";
 import * as store from "../store.mjs";
 import * as id from "../id.mjs";
 import * as moderation from "./moderation.mjs";
@@ -385,7 +385,7 @@ export default async function (trie, theme, page, domain) {
   return html`
     <html lang="en" op="news">
       <head>
-        ${Head}
+        ${custom(ogImage)}
         <meta
           name="description"
           content="Kiwi News is the prime feed for hacker engineers building a decentralized future. All our content is handpicked and curated by crypto veterans."
