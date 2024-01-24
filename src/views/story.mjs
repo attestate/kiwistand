@@ -189,15 +189,20 @@ export default async function (trie, theme, index, value, identity) {
               </tr>
               <tr>
                 <td>
-                  <div style="padding-left: 1rem; margin-bottom: 1rem;">
+                  <div style="padding: 0 1rem 0 1rem; margin-bottom: 1rem;">
                     <b style="font-size: 1rem;">Comments:</b>
                     <br />
                     <br />
-                    <div style="padding-left: 1rem;">
+                    <div style="padding: 0 1rem 0 1rem;">
                       ${story.comments.map(
                         (comment) =>
                           html`<span
-                              ><b>${comment.displayName}: </b>
+                              style="line-height: 1.4; word-break: break-all; overflow-wrap: break-word;"
+                              ><b
+                                ><a href="/upvotes?address=${comment.identity}"
+                                  >${comment.displayName}</a
+                                ><span>: </span>
+                              </b>
                               ${comment.title} </span
                             ><br />`,
                       )}
@@ -207,7 +212,7 @@ export default async function (trie, theme, index, value, identity) {
               </tr>
               <tr>
                 <td>
-                  <nav-comment-input style="padding-left: 1rem;" />
+                  <nav-comment-input style="padding-left: 2rem;" />
                 </td>
               </tr>
               ${!identity
