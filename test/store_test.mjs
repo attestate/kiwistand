@@ -37,7 +37,7 @@ test.serial("adding message to the store with trie.put error", async (t) => {
   t.falsy(initialDbValue);
 
   const trie = {
-    put: (key, value) => {
+    put: async (key, value) => {
       t.truthy(key);
       t.truthy(value);
       throw new Error("trie.put error");
@@ -54,7 +54,7 @@ test.serial("adding message to the store with trie.put error", async (t) => {
     t.true(error.toString().includes("Successfully rolled back"));
   }
 
-  const finalDbValue = await metadb.has(key);
+  const finalDbValue = store.upvotes.has(key);
   t.falsy(finalDbValue);
 });
 
@@ -1233,6 +1233,208 @@ test("adding message from before minimum timestamp", async (t) => {
   await t.throwsAsync(
     async () => await store.add(trie, signedMessage, libp2p, allowlist),
   );
+});
+
+test.serial("adding a comment to the store with missing parent", async (t) => {
+  store.upvotes.clear();
+  t.plan(2);
+  const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
+  const privateKey =
+    "0xad54bdeade5537fb0a553190159783e45d02d316a992db05cbed606d3ca36b39";
+  const signer = new Wallet(privateKey);
+  t.is(signer.address, address);
+
+  const trie = {
+    put: (key, value) => {
+      t.fail("comment with missing parent must not be persistet");
+    },
+    root: () => Buffer.from("abc", "hex"),
+  };
+  const libp2p = {
+    pubsub: {
+      publish: (name, message) => {
+        t.truthy(name);
+        t.truthy(message);
+      },
+    },
+  };
+  const allowlist = new Set([address]);
+
+  const text0 = "this is a short comment";
+  const href0 = `kiwi:0x000000000000000000000000000000000000000000000000000000000000000000000000`;
+  const type0 = "comment";
+  const timestamp0 = 1676559617;
+  const message0 = id.create(text0, href0, type0, timestamp0);
+  const signedMessage0 = await id.sign(signer, message0, EIP712_MESSAGE);
+
+  await t.throwsAsync(
+    async () => await store.add(trie, signedMessage0, libp2p, allowlist),
+    { message: "add: Didn't find root message of comment" },
+  );
+});
+
+test.serial(
+  "adding a comment with earlier timestamp than parent to the store",
+  async (t) => {
+    store.upvotes.clear();
+    env.DATA_DIR = "dbtestA";
+    t.plan(4);
+    const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
+    const privateKey =
+      "0xad54bdeade5537fb0a553190159783e45d02d316a992db05cbed606d3ca36b39";
+    const signer = new Wallet(privateKey);
+    t.is(signer.address, address);
+
+    const text0 = "hello world";
+    const href0 = "https://example.com";
+    const type0 = "amplify";
+    const timestamp0 = 1676559617;
+    const message0 = id.create(text0, href0, type0, timestamp0);
+    const signedMessage0 = await id.sign(signer, message0, EIP712_MESSAGE);
+
+    const trie = await store.create();
+    const libp2p = {
+      pubsub: {
+        publish: (name, message) => {
+          t.truthy(name);
+          t.truthy(message);
+        },
+      },
+    };
+    const allowlist = new Set([address]);
+    const index0 = await store.add(trie, signedMessage0, libp2p, allowlist);
+
+    const text1 = "this is a short comment";
+    const href1 = `kiwi:0x${index0}`;
+    const type1 = "comment";
+    const timestamp1 = 1676559616; // NOTE: This is 1s earlier than the parent
+    const message1 = id.create(text1, href1, type1, timestamp1);
+    const signedMessage1 = await id.sign(signer, message1, EIP712_MESSAGE);
+
+    await t.throwsAsync(
+      async () => await store.add(trie, signedMessage1, libp2p, allowlist),
+      { message: "add: child timestamp must be greater than parent timestamp" },
+    );
+
+    await rm("dbtestA", { recursive: true });
+  },
+);
+
+test.serial("retrieving leaves selectively", async (t) => {
+  store.upvotes.clear();
+  env.DATA_DIR = "dbtestA";
+  t.plan(9);
+  const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
+  const privateKey =
+    "0xad54bdeade5537fb0a553190159783e45d02d316a992db05cbed606d3ca36b39";
+  const signer = new Wallet(privateKey);
+  t.is(signer.address, address);
+
+  const text0 = "hello world";
+  const href0 = "https://example.com";
+  const type0 = "amplify";
+  const timestamp0 = 1676559616;
+  const message0 = id.create(text0, href0, type0, timestamp0);
+  const signedMessage0 = await id.sign(signer, message0, EIP712_MESSAGE);
+
+  const trie = await store.create();
+  const libp2p = {
+    pubsub: {
+      publish: (name, message) => {
+        t.truthy(name);
+        t.truthy(message);
+      },
+    },
+  };
+  const allowlist = new Set([address]);
+  const index0 = await store.add(trie, signedMessage0, libp2p, allowlist);
+
+  const text1 = "this is a short comment";
+  const href1 = `kiwi:0x${index0}`;
+  const type1 = "comment";
+  const timestamp1 = 1676559617;
+  const message1 = id.create(text1, href1, type1, timestamp1);
+  const signedMessage1 = await id.sign(signer, message1, EIP712_MESSAGE);
+
+  await store.add(trie, signedMessage1, libp2p, allowlist);
+
+  const from = null;
+  const amount = null;
+  const parser = JSON.parse;
+  const startDatetime = null;
+  const href = null;
+  const result0 = await store.leaves(
+    trie,
+    from,
+    amount,
+    parser,
+    startDatetime,
+    href,
+    type0,
+    trie.root(),
+  );
+  t.is(result0.length, 1);
+  t.is(result0[0].type, type0);
+
+  const result1 = await store.leaves(
+    trie,
+    from,
+    amount,
+    parser,
+    startDatetime,
+    href,
+    type1,
+    trie.root(),
+  );
+  t.is(result1.length, 1);
+  t.is(result1[0].type, type1);
+});
+
+test.serial("adding a comment to the store", async (t) => {
+  store.upvotes.clear();
+  env.DATA_DIR = "dbtestA";
+  t.plan(7);
+  const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
+  const privateKey =
+    "0xad54bdeade5537fb0a553190159783e45d02d316a992db05cbed606d3ca36b39";
+  const signer = new Wallet(privateKey);
+  t.is(signer.address, address);
+
+  const text0 = "hello world";
+  const href0 = "https://example.com";
+  const type0 = "amplify";
+  const timestamp0 = 1676559616;
+  const message0 = id.create(text0, href0, type0, timestamp0);
+  const signedMessage0 = await id.sign(signer, message0, EIP712_MESSAGE);
+
+  const trie = await store.create();
+  const libp2p = {
+    pubsub: {
+      publish: (name, message) => {
+        t.truthy(name);
+        t.truthy(message);
+      },
+    },
+  };
+  const allowlist = new Set([address]);
+  const index0 = await store.add(trie, signedMessage0, libp2p, allowlist);
+  t.is(store.upvotes.size, 1);
+
+  const text1 = "this is a short comment";
+  const href1 = `kiwi:0x${index0}`;
+  const type1 = "comment";
+  const timestamp1 = 1676559617;
+  const message1 = id.create(text1, href1, type1, timestamp1);
+  const signedMessage1 = await id.sign(signer, message1, EIP712_MESSAGE);
+
+  await store.add(trie, signedMessage1, libp2p, allowlist);
+  t.is(
+    store.upvotes.size,
+    1,
+    "Only upvotes must be added as constraints to metadata db",
+  );
+
+  await rm("dbtestA", { recursive: true });
 });
 
 test.serial("adding message to the store", async (t) => {

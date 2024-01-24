@@ -9,7 +9,7 @@ import * as ens from "../ens.mjs";
 import Header from "./components/header.mjs";
 import Footer from "./components/footer.mjs";
 import Sidebar from "./components/sidebar.mjs";
-import Head from "./components/head.mjs";
+import { custom } from "./components/head.mjs";
 import * as karma from "../karma.mjs";
 import * as registry from "../chainstate/registry.mjs";
 import {
@@ -170,11 +170,12 @@ export default async function (trie, theme, query, identity) {
     search,
   );
 
+  const ogImage = "https://news.kiwistand.com/kiwi_community_page.png";
   const path = "/community";
   return html`
     <html lang="en" op="news">
       <head>
-        ${Head}
+        ${custom(ogImage)}
         <meta
           name="description"
           content="Meet the Kiwi News community, which curates our feed. You can also check out our leaderboard to see who's most active."

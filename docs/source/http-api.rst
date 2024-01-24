@@ -119,6 +119,8 @@ Request body:
 - ``amount`` (integer): The number of entries that the request should contain.
   Must be between 0 and HTTP_MESSAGES_MAX_PAGE_SIZE, as defined in the `.env
   file <https://github.com/attestate/kiwistand/blob/main/.env-copy>`_.
+- ``type`` (enum: ``["amplify", "comment"]``, defaults to: "amplify" if the
+  parameter is omitted): The type of the message.
 
 Response body
 

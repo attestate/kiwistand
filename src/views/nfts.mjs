@@ -13,7 +13,7 @@ import SecondHeader from "./components/secondheader.mjs";
 import ThirdHeader from "./components/thirdheader.mjs";
 import Sidebar from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
-import Head from "./components/head.mjs";
+import { custom } from "./components/head.mjs";
 import * as store from "../store.mjs";
 import * as moderation from "./moderation.mjs";
 import * as registry from "../chainstate/registry.mjs";
@@ -34,6 +34,8 @@ export default async function (trie, theme) {
   const threeMonthsAgoUnixTime = Math.floor(threeMonthsAgo.getTime() / 1000);
   const allowlist = await registry.allowlist();
   const delegations = await registry.delegations();
+  const href = null;
+  const type = "amplify";
   let leaves = await store.posts(
     trie,
     from,
@@ -42,6 +44,8 @@ export default async function (trie, theme) {
     threeMonthsAgoUnixTime,
     allowlist,
     delegations,
+    href,
+    type,
   );
   leaves = moderation.moderate(leaves, config);
 
@@ -96,7 +100,7 @@ export default async function (trie, theme) {
   return html`
     <html lang="en" op="news">
       <head>
-        ${Head}
+        ${custom(ogImage)}
         <meta
           name="description"
           content="Explore the latest curated NFTS on Kiwi News. Stay updated with fresh content handpicked by crypto veterans."

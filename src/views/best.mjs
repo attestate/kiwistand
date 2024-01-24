@@ -14,7 +14,7 @@ import SecondHeader from "./components/secondheader.mjs";
 import ThirdHeader from "./components/thirdheader.mjs";
 import Sidebar from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
-import Head from "./components/head.mjs";
+import { custom } from "./components/head.mjs";
 import * as store from "../store.mjs";
 import * as id from "../id.mjs";
 import * as moderation from "./moderation.mjs";
@@ -88,6 +88,8 @@ async function recompute(trie, page, period, domain) {
     tolerance = unix(sub(now, { weeks: 2 }));
   }
 
+  const href = null;
+  const type = "amplify";
   let leaves = await store.posts(
     trie,
     from,
@@ -96,6 +98,8 @@ async function recompute(trie, page, period, domain) {
     tolerance,
     allowlist,
     delegations,
+    href,
+    type,
   );
   leaves = leaves.filter(
     ({ href }) =>
@@ -196,7 +200,7 @@ export default async function index(trie, theme, page, period, domain) {
   return html`
     <html lang="en" op="news">
       <head>
-        ${Head}
+        ${custom(ogImage)}
         <meta
           name="description"
           content="Explore the latest news in the decentralized world on Kiwi News. Stay updated with fresh content handpicked by crypto veterans."
