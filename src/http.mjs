@@ -55,6 +55,12 @@ import * as karma from "./karma.mjs";
 
 const app = express();
 
+app.set("etag", "strong");
+app.use((req, res, next) => {
+  res.setHeader("Last-Modified", new Date().toUTCString());
+  next();
+});
+
 app.use(
   morgan(
     ':remote-addr - :remote-user ":method :url" :status ":referrer" ":user-agent"',
