@@ -62,7 +62,7 @@ export function generateList(profiles) {
   `;
 }
 
-export default async function (trie, theme, index, value, identity) {
+export default async function (trie, theme, index, value) {
   let writers = [];
   try {
     writers = await moderation.getWriters();
@@ -215,37 +215,6 @@ export default async function (trie, theme, index, value, identity) {
                   <nav-comment-input style="padding-left: 2rem;" />
                 </td>
               </tr>
-              ${!identity
-                ? html` <tr>
-                    <td>
-                      <p
-                        style="margin: 0 15px 15px 15px; background-color: rgba(0,0,0,0.1); padding: 10px 15px 15px 15px; border-radius: 5px; color: black;"
-                      >
-                        <b
-                          ><i>
-                            Don't understand what this website is about?
-                          </i></b
-                        >
-                        <br />
-                        <br />
-                        🥝 Kiwi News is handpicked, noise-free content for
-                        crypto builders. You can become part of our community by
-                        minting our NFT.
-                        <br />
-                        <a
-                          href="/welcome?referral=0xdD52f911eFC02b57cE4f1eB26b65e4CFA1D30C1E"
-                        >
-                          <button
-                            style="margin-top: 1rem; font-size: 0.8rem; padding: 7px 10px; width: auto;"
-                            id="button-onboarding"
-                          >
-                            Learn more
-                          </button>
-                        </a>
-                      </p>
-                    </td>
-                  </tr>`
-                : ""}
               ${preview
                 ? html`
                     <tr>

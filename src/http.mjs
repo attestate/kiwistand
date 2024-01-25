@@ -305,7 +305,7 @@ export async function launch(trie, libp2p) {
 
     const content = await story(trie, reply.locals.theme, hexIndex, post.value);
 
-    reply.header("Cache-Control", "private, max-age=1800, must-revalidate");
+    reply.header("Cache-Control", "public, max-age=1800, must-revalidate");
     return reply.status(200).type("text/html").send(content);
   });
   // NOTE: During the process of combining the feed and the editor's picks, we
