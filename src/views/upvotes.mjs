@@ -37,14 +37,7 @@ function extractDomain(link) {
   return parsedUrl.hostname;
 }
 
-export default async function (
-  trie,
-  theme,
-  identity,
-  page,
-  mode,
-  activeIdentity,
-) {
+export default async function (trie, theme, identity, page, mode) {
   if (!utils.isAddress(identity)) {
     return html`Not a valid address`;
   }
@@ -135,7 +128,7 @@ export default async function (
           <div id="hnmain">
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
               <tr>
-                ${await Header(theme, activeIdentity)}
+                ${await Header(theme)}
               </tr>
               <tr>
                 <td>
