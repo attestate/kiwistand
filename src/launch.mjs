@@ -50,8 +50,7 @@ const parser = JSON.parse;
 const allowlist = await registry.allowlist();
 const delegations = await registry.delegations();
 const href = null;
-const type = "amplify";
-const posts = await store.posts(
+const upvotes = await store.posts(
   trie,
   from,
   amount,
@@ -60,10 +59,21 @@ const posts = await store.posts(
   allowlist,
   delegations,
   href,
-  type,
+  "amplify",
+);
+const comments = await store.posts(
+  trie,
+  from,
+  amount,
+  parser,
+  startDatetime,
+  allowlist,
+  delegations,
+  href,
+  "comment",
 );
 try {
-  store.cache(posts);
+  store.cache(upvotes, comments);
 } catch (err) {
   log(
     `launch: An irrecoverable error during upvote caching occurred. "${err.toString()}`,
@@ -72,4 +82,4 @@ try {
 }
 await newest.recompute(trie);
 await images.recompute(trie);
-karma.count(posts);
+karma.count(upvotes);

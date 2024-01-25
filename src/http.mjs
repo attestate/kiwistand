@@ -297,13 +297,7 @@ export async function launch(trie, libp2p) {
     // NOTE: We aren't awaiting here because this can run in parallel
     generate(hexIndex, value.title, value.submitter);
 
-    const content = await story(
-      trie,
-      reply.locals.theme,
-      hexIndex,
-      post.value,
-      request.cookies.identity,
-    );
+    const content = await story(trie, reply.locals.theme, hexIndex, post.value);
 
     reply.header("Cache-Control", "private, max-age=1800, must-revalidate");
     return reply.status(200).type("text/html").send(content);

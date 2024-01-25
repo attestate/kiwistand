@@ -28,6 +28,13 @@ import { newWalk } from "./WalkController.mjs";
 const maxReaders = 500;
 
 export const upvotes = new Set();
+export const commentCounts = new Map();
+
+export function addComment(storyId) {
+  const count = commentCounts.get(storyId) || 0;
+  commentCounts.set(storyId, count + 1);
+}
+//
 // TODO: This function would benefit from constraining operation only to
 // markers of the type "amplify" as to not accidentially store other types of
 // markers.
@@ -38,11 +45,14 @@ export function passes(marker) {
   }
   return !exists;
 }
-export function cache(posts) {
-  log("Caching upvote ids of posts, this can take a minute...");
-  for (const { identity, href, type } of posts) {
+export function cache(upvotes, comments) {
+  log("Caching upvote ids of upvotes, this can take a minute...");
+  for (const { identity, href, type } of upvotes) {
     const marker = upvoteID(identity, href, type);
     passes(marker);
+  }
+  for (const { href } of comments) {
+    addComment(href);
   }
 }
 
@@ -353,6 +363,7 @@ export async function add(
         "add: child timestamp must be greater than parent timestamp",
       );
     }
+    addComment(message.href);
   }
 
   const { index, canonical } = await atomicPut(trie, message, identity);
