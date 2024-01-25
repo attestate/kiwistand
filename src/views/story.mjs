@@ -197,7 +197,7 @@ export default async function (trie, theme, index, value, identity) {
                       ${story.comments.map(
                         (comment) =>
                           html`<span
-                              style="line-height: 1.4; word-break: break-all; overflow-wrap: break-word;"
+                              style="line-height: 1.4; word-break: break-word; overflow-wrap: break-word;"
                               ><b
                                 ><a href="/upvotes?address=${comment.identity}"
                                   >${comment.displayName}</a
