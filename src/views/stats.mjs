@@ -23,10 +23,11 @@ const classify = (messages) => {
 
   return messages
     .sort((a, b) => a.timestamp - b.timestamp)
+    .filter((message) => message.type === "amplify")
     .map((message) => {
       const href = normalizeUrl(!!message.href && message.href);
 
-      if (message.type === "amplify" && !firstAmplify[href]) {
+      if (!firstAmplify[href]) {
         firstAmplify[href] = true;
         return { verb: "submit", message };
       } else {
@@ -480,7 +481,6 @@ export default async function (trie, theme) {
   const allowlist = await registry.allowlist();
   const delegations = await registry.delegations();
   const href = null;
-  const type = "amplify";
   const messages = await store.posts(
     trie,
     from,
@@ -490,12 +490,23 @@ export default async function (trie, theme) {
     allowlist,
     delegations,
     href,
-    type,
+    "amplify",
+  );
+  const comments = await store.posts(
+    trie,
+    from,
+    amount,
+    parser,
+    startDatetime,
+    allowlist,
+    delegations,
+    href,
+    "comment",
   );
 
   const cacheEnabled = true;
   const messagesWithAddresses = await Promise.all(
-    messages.filter((msg) => {
+    [...messages, ...comments].filter((msg) => {
       const messageDate = new Date(msg.timestamp * 1000);
       const cutOffDate = new Date(2023, 3); // months are 0-indexed in JS, so 3 is April
       return messageDate >= cutOffDate;
@@ -503,10 +514,10 @@ export default async function (trie, theme) {
   );
 
   const dauData = calculateDAU(messagesWithAddresses);
-  const actions = classify(messagesWithAddresses);
-  const behavior = calculateActions(actions);
   const mauData = calculateMAU(messagesWithAddresses);
   const wauData = calculateWAU(messagesWithAddresses);
+  const actions = classify(messagesWithAddresses);
+  const behavior = calculateActions(actions);
 
   const options = {
     props: {
