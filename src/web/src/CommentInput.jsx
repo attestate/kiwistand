@@ -88,6 +88,8 @@ const CommentInput = (props) => {
       }}
     >
       <textarea
+        rows="8"
+        cols="80"
         value={text}
         onChange={(e) => setText(e.target.value)}
       ></textarea>
