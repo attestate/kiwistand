@@ -189,7 +189,7 @@ export async function launch(trie, libp2p) {
       const code = 400;
       const httpMessage = "Bad Request";
       const details = "Please only submit valid Ethereum addresses.";
-      reply.header("Cache-Control", "public, must-revalidate");
+      reply.header("Cache-Control", "public, no-transform, must-revalidate");
       return sendError(reply, code, httpMessage, details);
     }
 
@@ -197,7 +197,7 @@ export async function launch(trie, libp2p) {
     const code = 200;
     const httpMessage = "OK";
     const details = `Karma`;
-    reply.header("Cache-Control", "public, must-revalidate");
+    reply.header("Cache-Control", "public, no-transform, must-revalidate");
     return sendStatus(reply, code, httpMessage, details, {
       address,
       karma: points,
@@ -211,7 +211,7 @@ export async function launch(trie, libp2p) {
         page = 0;
       }
       const results = await index(trie, page);
-      reply.header("Cache-Control", "public, must-revalidate");
+      reply.header("Cache-Control", "public, no-transform, must-revalidate");
       stories = results.stories;
     } else if (request.params.name === "new") {
       reply.header("Cache-Control", "no-cache");
@@ -224,7 +224,7 @@ export async function launch(trie, libp2p) {
       const httpMessage = "Not Implemented";
       const details =
         "We currently don't implement any other endpoint but 'hot' and 'new'";
-      reply.header("Cache-Control", "public, must-revalidate");
+      reply.header("Cache-Control", "public, no-transform, must-revalidate");
       return sendError(reply, code, httpMessage, details);
     }
 
@@ -244,7 +244,7 @@ export async function launch(trie, libp2p) {
       page,
       request.query.domain,
     );
-    reply.header("Cache-Control", "public, must-revalidate");
+    reply.header("Cache-Control", "public, no-transform, must-revalidate");
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/canons", async (request, reply) => {
@@ -263,7 +263,7 @@ export async function launch(trie, libp2p) {
     }
     const content = await canon(trie, reply.locals.theme, sheet);
 
-    reply.header("Cache-Control", "public, must-revalidate");
+    reply.header("Cache-Control", "public, no-transform, must-revalidate");
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/stories", async (request, reply) => {
@@ -305,7 +305,7 @@ export async function launch(trie, libp2p) {
 
     const content = await story(trie, reply.locals.theme, hexIndex, post.value);
 
-    reply.header("Cache-Control", "public, must-revalidate");
+    reply.header("Cache-Control", "public, no-transform, must-revalidate");
     return reply.status(200).type("text/html").send(content);
   });
   // NOTE: During the process of combining the feed and the editor's picks, we
@@ -349,7 +349,7 @@ export async function launch(trie, libp2p) {
   app.get("/nfts", async (request, reply) => {
     const content = await nfts(trie, reply.locals.theme);
 
-    reply.header("Cache-Control", "public, must-revalidate");
+    reply.header("Cache-Control", "public, no-transform, must-revalidate");
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/alltime", function (req, res) {
@@ -375,7 +375,7 @@ export async function launch(trie, libp2p) {
       request.query.domain,
     );
 
-    reply.header("Cache-Control", "public, must-revalidate");
+    reply.header("Cache-Control", "public, no-transform, must-revalidate");
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/community", async (request, reply) => {
@@ -675,7 +675,7 @@ export async function launch(trie, libp2p) {
       return next(err);
     }
 
-    reply.header("Cache-Control", "public, must-revalidate");
+    reply.header("Cache-Control", "public, no-transform, must-revalidate");
     return reply.status(200).type("text/html").send(content);
   });
 
