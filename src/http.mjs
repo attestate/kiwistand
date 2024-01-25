@@ -385,7 +385,7 @@ export async function launch(trie, libp2p) {
   });
   app.get("/stats", async (request, reply) => {
     const content = await stats(trie, reply.locals.theme);
-    reply.header("Cache-Control", "public, max-age=86400");
+    reply.header("Cache-Control", "public, max-age=21600");
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/about", async (request, reply) => {
