@@ -202,7 +202,7 @@ export async function launch(trie, libp2p) {
     const details = `Karma`;
     reply.header(
       "Cache-Control",
-      "public, max-age=0, no-transform, must-revalidate",
+      "public, max-age=0, no-transform, must-revalidate, stale-while-revalidate=300",
     );
     return sendStatus(reply, code, httpMessage, details, {
       address,
@@ -219,7 +219,7 @@ export async function launch(trie, libp2p) {
       const results = await index(trie, page);
       reply.header(
         "Cache-Control",
-        "public, max-age=0, no-transform, must-revalidate",
+        "public, max-age=0, no-transform, must-revalidate, stale-while-revalidate=30",
       );
       stories = results.stories;
     } else if (request.params.name === "new") {
@@ -258,7 +258,7 @@ export async function launch(trie, libp2p) {
     );
     reply.header(
       "Cache-Control",
-      "public, max-age=0, no-transform, must-revalidate",
+      "public, max-age=0, no-transform, must-revalidate, stale-while-revalidate=30",
     );
     return reply.status(200).type("text/html").send(content);
   });
@@ -280,7 +280,7 @@ export async function launch(trie, libp2p) {
 
     reply.header(
       "Cache-Control",
-      "public, max-age=0, no-transform, must-revalidate",
+      "public, max-age=0, no-transform, must-revalidate, stale-while-revalidate=60",
     );
     return reply.status(200).type("text/html").send(content);
   });
@@ -325,7 +325,7 @@ export async function launch(trie, libp2p) {
 
     reply.header(
       "Cache-Control",
-      "public, max-age=0, no-transform, must-revalidate",
+      "public, max-age=0, no-transform, must-revalidate, stale-while-revalidate=5",
     );
     return reply.status(200).type("text/html").send(content);
   });
@@ -372,7 +372,7 @@ export async function launch(trie, libp2p) {
 
     reply.header(
       "Cache-Control",
-      "public, max-age=0, no-transform, must-revalidate",
+      "public, max-age=0, no-transform, must-revalidate, stale-while-revalidate=5",
     );
     return reply.status(200).type("text/html").send(content);
   });
@@ -401,7 +401,7 @@ export async function launch(trie, libp2p) {
 
     reply.header(
       "Cache-Control",
-      "public, max-age=0, no-transform, must-revalidate",
+      "public, max-age=0, no-transform, must-revalidate, stale-while-revalidate=30",
     );
     return reply.status(200).type("text/html").send(content);
   });
@@ -704,7 +704,7 @@ export async function launch(trie, libp2p) {
 
     reply.header(
       "Cache-Control",
-      "public, max-age=0, no-transform, must-revalidate",
+      "public, max-age=0, no-transform, must-revalidate, stale-while-revalidate=60",
     );
     return reply.status(200).type("text/html").send(content);
   });
