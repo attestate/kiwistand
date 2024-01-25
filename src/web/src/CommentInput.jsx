@@ -83,7 +83,7 @@ const CommentInput = (props) => {
   return (
     <div
       style={{
-        margin: "0 0 1rem 1rem",
+        margin: "0 0 1rem 2rem",
       }}
     >
       <textarea

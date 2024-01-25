@@ -192,22 +192,10 @@ export default async function (trie, theme, index, value) {
               <tr>
                 <td>${generateList(actions)}</td>
               </tr>
-              <tr>
-                <td>
-                  <nav-comment-input style="padding-left: 2rem;">
-                    <div style="margin: 0 0 1rem 1rem;">
-                      <textarea rows="8" cols="80" disabled></textarea>
-                      <br />
-                      <br />
-                      <button disabled>Loading...</button>
-                    </div>
-                  </nav-comment-input>
-                </td>
-              </tr>
               ${story.comments.length > 0
                 ? html`<tr>
                     <td>
-                      <div style="padding: 0 1rem 0 1rem; margin-bottom: 1rem;">
+                      <div style="padding: 0 1rem 0 1rem;">
                         <b style="font-size: 1rem;">Comments:</b>
                         <br />
                         <br />
@@ -250,6 +238,19 @@ export default async function (trie, theme, index, value) {
                     </td>
                   </tr>`
                 : null}
+              <tr>
+                <td>
+                  <nav-comment-input>
+                    <div style="margin: 0 0 1rem 2rem;">
+                      <textarea rows="8" cols="80" disabled></textarea>
+                      <br />
+                      <br />
+                      <button disabled>Loading...</button>
+                    </div>
+                  </nav-comment-input>
+                </td>
+              </tr>
+              <tr style="height: 20px;"></tr>
             </table>
           </div>
         </div>
