@@ -144,7 +144,7 @@ export default async function (trie, theme, index) {
   let items = stories;
   try {
     const post = await getPost(trie, index);
-    items = [post, ...items];
+    items = [{ ...post, index: index.substring(2) }, ...items];
   } catch (err) {
     // NOTE: If we cannot find the post, we just pretend like nothing happened.
   }
