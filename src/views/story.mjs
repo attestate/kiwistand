@@ -74,7 +74,7 @@ export default async function (trie, theme, index, value) {
   } catch (err) {
     // noop
   }
-  const path = "/";
+  const path = "/stories";
 
   let data;
   try {
