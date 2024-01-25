@@ -185,13 +185,16 @@ const row = (
                     >
                       ${story.displayName}
                     </a>
-                    ${story.index && commentCount > 0
+                    ${story.index
                       ? html` <span> • </span>
                           <a
                             class="meta-link"
                             href="/stories?index=0x${story.index}"
-                            >${commentCount}
-                            ${commentCount === 1 ? " comment" : " comments"}</a
+                            >${commentCount === 0
+                              ? "discuss"
+                              : commentCount === 1
+                              ? "1 comment"
+                              : `${commentCount} comments`}</a
                           >`
                       : null}
                     ${interactive || hideCast
@@ -249,7 +252,8 @@ const row = (
                               data-index="${story.index}"
                               data-title="${story.title}"
                               data-tip="${story.tipValue}"
-                            >
+                              ><span> • </span>
+                              $ Tip
                             </span>
                           </span>
                         `}

@@ -80,7 +80,6 @@ const CommentInput = (props) => {
     location.reload();
   };
 
-  if (!address || !isEligible) return null;
   return (
     <div
       style={{
@@ -92,10 +91,14 @@ const CommentInput = (props) => {
         cols="80"
         value={text}
         onChange={(e) => setText(e.target.value)}
+        disabled={isLoading || !address || !isEligible}
       ></textarea>
       <br />
       <br />
-      <button disabled={isLoading} onClick={handleSubmit}>
+      <button
+        disabled={isLoading || !address || !isEligible}
+        onClick={handleSubmit}
+      >
         {isLoading ? "Submitting..." : "Add comment"}
       </button>
     </div>

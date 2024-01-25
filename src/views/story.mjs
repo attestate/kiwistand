@@ -6,7 +6,12 @@ import { extname } from "path";
 import htm from "htm";
 import vhtml from "vhtml";
 import normalizeUrl from "normalize-url";
-import { sub, differenceInMinutes, isBefore } from "date-fns";
+import {
+  formatDistanceToNowStrict,
+  sub,
+  differenceInMinutes,
+  isBefore,
+} from "date-fns";
 
 import { getTips, getTipsValue, filterTips } from "../tips.mjs";
 import * as ens from "../ens.mjs";
@@ -72,14 +77,10 @@ export default async function (trie, theme, index, value) {
   const path = "/";
 
   let data;
-  let preview = "";
   try {
     data = await metadata(value.href);
   } catch (err) {}
-  if (data) {
-    const { ogTitle, domain, ogDescription, image } = data;
-    preview = render(ogTitle, domain, ogDescription, image);
-  }
+
   const isOriginal = Object.keys(writers).some(
     (domain) =>
       normalizeUrl(value.href).startsWith(domain) &&
@@ -128,12 +129,16 @@ export default async function (trie, theme, index, value) {
       }
     }
   }
+
   for await (let comment of story.comments) {
     const profile = await ens.resolve(comment.identity);
     if (profile && profile.displayName) {
       comment.displayName = profile.displayName;
     } else {
       comment.displayName = comment.identity;
+    }
+    if (profile && profile.safeAvatar) {
+      comment.avatar = profile.safeAvatar;
     }
   }
   const actions = [...profiles, ...tipActions].sort(
@@ -189,47 +194,62 @@ export default async function (trie, theme, index, value) {
               </tr>
               <tr>
                 <td>
-                  <div style="padding: 0 1rem 0 1rem; margin-bottom: 1rem;">
-                    <b style="font-size: 1rem;">Comments:</b>
-                    <br />
-                    <br />
-                    <div style="padding: 0 1rem 0 1rem;">
-                      ${story.comments.map(
-                        (comment) =>
-                          html`<span
-                              style="line-height: 1.4; word-break: break-word; overflow-wrap: break-word;"
-                              ><b
-                                ><a href="/upvotes?address=${comment.identity}"
-                                  >${comment.displayName}</a
-                                ><span>: </span>
-                              </b>
-                              ${comment.title} </span
-                            ><br />`,
-                      )}
+                  <nav-comment-input style="padding-left: 2rem;">
+                    <div style="margin: 0 0 1rem 1rem;">
+                      <textarea rows="8" cols="80" disabled></textarea>
+                      <br />
+                      <br />
+                      <button disabled>Loading...</button>
                     </div>
-                  </div>
+                  </nav-comment-input>
                 </td>
               </tr>
-              <tr>
-                <td>
-                  <nav-comment-input style="padding-left: 2rem;" />
-                </td>
-              </tr>
-              ${preview
-                ? html`
-                    <tr>
-                      <td>
-                        <a
-                          target="_blank"
-                          href="${story.href}"
-                          style="display: block; margin: 0 15px 15px 15px;"
-                        >
-                          ${preview}
-                        </a>
-                      </td>
-                    </tr>
-                  `
-                : ""}
+              ${story.comments.length > 0
+                ? html`<tr>
+                    <td>
+                      <div style="padding: 0 1rem 0 1rem; margin-bottom: 1rem;">
+                        <b style="font-size: 1rem;">Comments:</b>
+                        <br />
+                        <br />
+                        <div style="padding: 0 1rem 0 1rem;">
+                          ${story.comments.map(
+                            (comment) =>
+                              html`<span
+                                  style="color: black; background-color: rgba(0,0,0,0.075); padding: 0.55rem 0.75rem; border-radius: 5px;display: inline-block; margin-bottom: 8px; white-space: pre-wrap; line-height: 1.4; word-break: break-word; overflow-wrap: break-word;"
+                                >
+                                  <div
+                                    style="display: inline-flex; align-items: center;"
+                                  >
+                                    <img
+                                      loading="lazy"
+                                      src="${comment.avatar}"
+                                      alt="avatar"
+                                      style="margin-right: 5px; width: 12px; height:12px; border: 1px solid #828282; border-radius: 50%;"
+                                    />
+                                    <b
+                                      ><a
+                                        style="color: black;"
+                                        href="/upvotes?address=${comment.identity}"
+                                        >${comment.displayName}</a
+                                      ></b
+                                    >
+                                    <span> • </span>
+                                    <span>
+                                      ${formatDistanceToNowStrict(
+                                        new Date(comment.timestamp * 1000),
+                                      )}
+                                    </span>
+                                    <span> ago</span>
+                                  </div>
+                                  <br />
+                                  ${comment.title} </span
+                                ><br />`,
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                  </tr>`
+                : null}
             </table>
           </div>
         </div>
