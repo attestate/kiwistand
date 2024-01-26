@@ -77,7 +77,12 @@ const CommentInput = (props) => {
     const wait = false;
     const response = await API.send(value, signature, wait);
     toast.success("Thanks for submitting your comment. Reloading...");
-    location.reload();
+
+    const nextPage = new URL(window.location.href);
+    if (response?.data?.index) {
+      nextPage.searchParams.set("cachebuster", response.data.index);
+    }
+    window.location.href = nextPage.href;
   };
 
   return (
