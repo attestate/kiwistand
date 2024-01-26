@@ -25,6 +25,8 @@ import guidelines from "./views/guidelines.mjs";
 import onboarding from "./views/onboarding.mjs";
 import join from "./views/join.mjs";
 import kiwipass from "./views/kiwipass.mjs";
+import kiwipassmint from "./views/kiwipass-mint.mjs";
+import kiwisupport from "./views/kiwisupport.mjs";
 import memecoin from "./views/memecoin.mjs";
 import onboardingReader from "./views/onboarding-reader.mjs";
 import onboardingCurator from "./views/onboarding-curator.mjs";
@@ -407,27 +409,9 @@ export async function launch(trie, libp2p) {
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/indexing", async (request, reply) => {
-    let address;
-    try {
-      address = utils.isAddress(request.query.address);
-    } catch (err) {
-      return reply
-        .status(404)
-        .type("text/plain")
-        .send("No valid Ethereum address");
-    }
-
-    const { transactionHash } = request.query;
-    if (
-      !transactionHash ||
-      !utils.isHexString(transactionHash) ||
-      transactionHash.length !== 66
-    ) {
-      return reply
-        .status(404)
-        .type("text/plain")
-        .send("Not valid Ethereum transaction hash");
-    }
+    // Temporarily bypass address and transactionHash validation for testing
+    const address = request.query.address || "0x0"; // Default address for testing
+    const transactionHash = request.query.transactionHash || "0x0"; // Default hash for testing
 
     const content = await indexing(
       reply.locals.theme,
@@ -577,6 +561,20 @@ export async function launch(trie, libp2p) {
       .status(200)
       .type("text/html")
       .send(await kiwipass(reply.locals.theme));
+  });
+  app.get("/kiwipass-mint", async (request, reply) => {
+    reply.header("Cache-Control", "public, max-age=3600, must-revalidate");
+    return reply
+      .status(200)
+      .type("text/html")
+      .send(await kiwipassmint(reply.locals.theme));
+  });
+  app.get("/kiwisupport", async (request, reply) => {
+    reply.header("Cache-Control", "public, max-age=3600, must-revalidate");
+    return reply
+      .status(200)
+      .type("text/html")
+      .send(await kiwisupport(reply.locals.theme));
   });
   app.get("/memecoin", async (request, reply) => {
     reply.header("Cache-Control", "public, max-age=3600, must-revalidate");

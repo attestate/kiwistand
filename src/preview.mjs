@@ -4,6 +4,8 @@ import { resolve } from "path";
 import satori from "satori";
 import sharp from "sharp";
 import htm from "htm";
+import fetch from "node-fetch";
+global.fetch = fetch;
 
 const html = htm.bind(h);
 
@@ -47,6 +49,13 @@ function content(title, submitter, domain) {
       >
         ${title}
       </p>
+      <img
+        src="https://news.kiwistand.com/KiwiPass.png"
+        style=${{
+          width: "200",
+          height: "300",
+        }}
+      />,
       <p
         style=${{
           fontSize: "3rem",
