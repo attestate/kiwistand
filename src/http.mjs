@@ -25,6 +25,8 @@ import guidelines from "./views/guidelines.mjs";
 import onboarding from "./views/onboarding.mjs";
 import join from "./views/join.mjs";
 import kiwipass from "./views/kiwipass.mjs";
+import kiwipassmint from "./views/kiwipass-mint.mjs";
+import kiwisupport from "./views/kiwisupport.mjs";
 import memecoin from "./views/memecoin.mjs";
 import onboardingReader from "./views/onboarding-reader.mjs";
 import onboardingCurator from "./views/onboarding-curator.mjs";
@@ -577,6 +579,20 @@ export async function launch(trie, libp2p) {
       .status(200)
       .type("text/html")
       .send(await kiwipass(reply.locals.theme));
+  });
+  app.get("/kiwipass-mint", async (request, reply) => {
+    reply.header("Cache-Control", "public, max-age=3600, must-revalidate");
+    return reply
+      .status(200)
+      .type("text/html")
+      .send(await kiwipassmint(reply.locals.theme));
+  });
+  app.get("/kiwisupport", async (request, reply) => {
+    reply.header("Cache-Control", "public, max-age=3600, must-revalidate");
+    return reply
+      .status(200)
+      .type("text/html")
+      .send(await kiwisupport(reply.locals.theme));
   });
   app.get("/memecoin", async (request, reply) => {
     reply.header("Cache-Control", "public, max-age=3600, must-revalidate");

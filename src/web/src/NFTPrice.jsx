@@ -80,8 +80,8 @@ export const PriceComponent = (props) => {
 
   return (
     <span>
-      <span>({usdPrice}) </span>
       <span>{formatEther(total)} ETH</span>
+      <span>&nbsp;({usdPrice}) </span>
     </span>
   );
 };
