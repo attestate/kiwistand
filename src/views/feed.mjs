@@ -100,7 +100,9 @@ export function count(leaves) {
 export async function topstories(leaves, decayStrength) {
   return leaves
     .map((story) => {
-      const score = Math.log(story.upvotes);
+      const commentCount =
+        store.commentCounts.get(`kiwi:0x${story.index}`) || 0;
+      const score = Math.log(story.upvotes + commentCount * 0.5);
       const decay = Math.sqrt(itemAge(story.timestamp));
       story.score = score / Math.pow(decay, decayStrength);
       return story;
