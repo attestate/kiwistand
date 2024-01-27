@@ -55,8 +55,68 @@ const generateFeed = (messages) => {
   );
 };
 
+function truncateComment(comment, maxLength = 260) {
+  if (comment.length <= maxLength) return comment;
+  return comment.slice(0, comment.lastIndexOf(" ", maxLength)) + "...";
+}
+
+function generateCommentRow(activity, identity, borderColor) {
+  const comment = truncateComment(activity.message.title);
+  const avatar = identity.safeAvatar
+    ? html`<img
+        src="${identity.safeAvatar}"
+        alt="avatar"
+        style="width: 28px; height: 28px; border-radius: 50%;"
+      />`
+    : "";
+
+  const [_, index] = activity.message.href.split(":");
+  const link = `/stories?index=${index}#0x${activity.message.index}`;
+
+  return html`
+    <tr>
+      <td>
+        <div style="display: flex; border-bottom: 1px solid ${borderColor};">
+          <div
+            style="flex: 0.2; display: flex; align-items: center; justify-content:
+ center;"
+          >
+            ${avatar}
+          </div>
+          <div
+            style="padding-top: 10px; flex: 0.8; display: flex; flex-direction: column;"
+          >
+            <div style="font-size: 0.9rem;">
+              <p style="margin-top: 8px; margin-bottom: 2px;">
+                <strong>
+                  <a style="color: gray;" href="${link}">
+                    ${identity.displayName}
+                    <span> </span>
+                    commented on your submission
+                  </a>
+                </strong>
+              </p>
+              <p
+                style="white-space: pre-wrap; margin: 5px 3rem 1rem 0; color: gray; word-break: break-word;"
+              >
+                <a style="color: gray;" href="${link}">${comment}</a>
+              </p>
+            </div>
+          </div>
+        </div>
+      </td>
+    </tr>
+  `;
+}
+
 function generateRow(lastUpdate) {
   return (activity, i) => {
+    if (activity.verb === "commented") {
+      const identity = activity.identities[0];
+      const borderColor = i % 2 === 0 ? "rgba(0,0,0,0.05)" : "rgba(0,0,0,0.10)";
+      return generateCommentRow(activity, identity, borderColor);
+    }
+
     const title = activity.message.title || activity.message.href;
     const borderColor = i % 2 === 0 ? "rgba(0,0,0,0.05)" : "rgba(0,0,0,0.10)";
     const identity = activity.identities[activity.identities.length - 1];
@@ -244,7 +304,6 @@ export async function data(trie, identity, lastRemoteValue) {
   const allowlist = await registry.allowlist();
   const delegations = await registry.delegations();
   const href = null;
-  const type = "amplify";
   let leaves = await store.posts(
     trie,
     from,
@@ -254,7 +313,18 @@ export async function data(trie, identity, lastRemoteValue) {
     allowlist,
     delegations,
     href,
-    type,
+    "amplify",
+  );
+  const comments = await store.posts(
+    trie,
+    from,
+    amount,
+    parser,
+    cutoffUnixtime,
+    allowlist,
+    delegations,
+    href,
+    "comment",
   );
   leaves = moderation.moderate(leaves, config);
 
@@ -267,6 +337,30 @@ export async function data(trie, identity, lastRemoteValue) {
       // TODO: Should start using ethers.utils.getAddress
       activity.towards.toLowerCase() === identity.toLowerCase(),
   );
+  const submittedPosts = new Set(
+    activities
+      .filter(
+        (activity) =>
+          activity.verb === "submitted" &&
+          activity.towards.toLowerCase() === identity.toLowerCase(),
+      )
+      .map((post) => `kiwi:0x${post.message.index}`),
+  );
+
+  const userComments = comments
+    .filter(
+      (comment) =>
+        comment.identity.toLowerCase() !== identity.toLowerCase() &&
+        !submittedPosts.has(comment.href),
+    )
+    .map((comment) => {
+      filteredActivities.push({
+        verb: "commented",
+        message: comment,
+        timestamp: comment.timestamp,
+        identities: [comment.identity],
+      });
+    });
 
   if (tips && tips.length > 0) {
     tips.forEach((tip) => {

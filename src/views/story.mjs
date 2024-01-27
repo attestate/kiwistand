@@ -203,6 +203,7 @@ export default async function (trie, theme, index, value) {
                           ${story.comments.map(
                             (comment) =>
                               html`<span
+                                  id="0x${comment.index}"
                                   style="color: black; background-color: rgba(0,0,0,0.075); padding: 0.55rem 0.75rem; border-radius: 5px;display: inline-block; margin-bottom: 8px; white-space: pre-wrap; line-height: 1.4; word-break: break-word; overflow-wrap: break-word;"
                                 >
                                   <div
@@ -222,12 +223,17 @@ export default async function (trie, theme, index, value) {
                                       ></b
                                     >
                                     <span> • </span>
-                                    <span>
-                                      ${formatDistanceToNowStrict(
-                                        new Date(comment.timestamp * 1000),
-                                      )}
-                                    </span>
-                                    <span> ago</span>
+                                    <a
+                                      class="meta-link"
+                                      href="/stories?index=0x${index}#0x${comment.index}"
+                                    >
+                                      <span>
+                                        ${formatDistanceToNowStrict(
+                                          new Date(comment.timestamp * 1000),
+                                        )}
+                                      </span>
+                                      <span> ago</span>
+                                    </a>
                                   </div>
                                   <br />
                                   ${comment.title} </span
