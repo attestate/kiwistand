@@ -408,7 +408,7 @@ export async function data(trie, identity, lastRemoteValue) {
     lastUpdate = notifications[0].timestamp;
   }
   return {
-    notifications,
+    notifications: notifications.slice(0, 20),
     lastUpdate,
     latestValue,
   };
