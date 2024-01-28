@@ -76,6 +76,10 @@ const CommentInput = (props) => {
 
     const wait = false;
     const response = await API.send(value, signature, wait);
+    // NOTE: We fetch the current page here in JavaScript to (hopefully)
+    // produce a cache revalidation that then makes the new comment fastly
+    // available to all other users.
+    fetch(window.location.href);
     toast.success("Thanks for submitting your comment. Reloading...");
 
     const nextPage = new URL(window.location.href);
