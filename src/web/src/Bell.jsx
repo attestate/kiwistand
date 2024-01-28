@@ -24,6 +24,7 @@ const Bell = (props) => {
 
   const [notificationCount, setNotificationCount] = useState(0);
   const [readNotifications, setReadNotifications] = useState(0);
+  const [documentTitle] = useState(document.title);
 
   useEffect(() => {
     if (address) {
@@ -47,6 +48,10 @@ const Bell = (props) => {
     window.location.pathname === "/indexing"
   ) {
     return null;
+  }
+
+  if (notificationCount > 0 && documentTitle === document.title) {
+    document.title = `(${notificationCount}) ${documentTitle}`;
   }
 
   return (
