@@ -97,7 +97,7 @@ export async function recompute(trie) {
       extension === ".jpeg"
     ) {
       story.image = story.href;
-    } else {
+    } else if (extractDomain(story.href) === "imgur.com") {
       try {
         const metadata = await ogParser.metadata(story.href);
         story.image = metadata.image;
@@ -105,6 +105,8 @@ export async function recompute(trie) {
         log(`Failed to parse "${story.href}"`);
       }
     }
+
+    if (!story.image) continue;
 
     const tipValue = getTipsValue(tips, story.index);
     story.tipValue = tipValue;
