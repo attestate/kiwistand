@@ -1,5 +1,8 @@
 import "vite/modulepreload-polyfill";
 import "@rainbow-me/rainbowkit/styles.css";
+import PullToRefresh from "pulltorefreshjs";
+
+import { isRunningPWA } from "./OnboardingModal.jsx";
 import { getCookie, getLocalAccount } from "./session.mjs";
 
 async function checkNewStories() {
@@ -429,6 +432,15 @@ function checkMintStatus(fetchAllowList, fetchDelegations) {
 }
 
 async function start() {
+  if (isRunningPWA()) {
+    PullToRefresh.init({
+      mainElement: "body",
+      onRefresh() {
+        window.location.reload();
+      },
+    });
+  }
+
   const toast = await addToaster();
 
   const { fetchAllowList, fetchDelegations } = await import("./API.mjs");

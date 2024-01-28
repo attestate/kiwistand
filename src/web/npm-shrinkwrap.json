@@ -26,6 +26,7 @@
         "@types/react": "^18.0.28",
         "@types/react-dom": "^18.0.11",
         "@vitejs/plugin-react-swc": "^3.0.0",
+        "pulltorefreshjs": "0.1.22",
         "vite": "^4.3.0",
         "vite-plugin-node-polyfills": "0.9.0"
       }
@@ -6576,6 +6577,12 @@
       "version": "4.12.0",
       "resolved": "https://registry.npmjs.org/bn.js/-/bn.js-4.12.0.tgz",
       "integrity": "sha512-c98Bf3tPniI+scsdk237ku1Dc3ujXQTSgyiPUDEOe7tRkhrqridvh8klBv0HCEso1OLOYcHuCv/cS6DNxKH+ZA==",
+      "dev": true
+    },
+    "node_modules/pulltorefreshjs": {
+      "version": "0.1.22",
+      "resolved": "https://registry.npmjs.org/pulltorefreshjs/-/pulltorefreshjs-0.1.22.tgz",
+      "integrity": "sha512-haxNVEHnS4NCQA7NeG7TSV69z4uqy/N7nfPRuc4dPWe8H6ygUrMjdNeohE+6v0lVVX/ukSjbLYwPUGUYtFKfvQ==",
       "dev": true
     },
     "node_modules/punycode": {
