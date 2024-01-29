@@ -312,6 +312,10 @@ export async function launch(trie, libp2p) {
       return reply.status(404).type("text/plain").send("index wasn't found");
     }
 
+    if (post && post.value && post.value.type === "comment") {
+      return reply.status(404).type("text/plain").send("index wasn't found");
+    }
+
     const ensData = await ens.resolve(post.value.identity);
     const value = {
       ...post.value,
