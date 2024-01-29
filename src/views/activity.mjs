@@ -92,7 +92,9 @@ function generateCommentRow(activity, identity, borderColor) {
                   <a style="color: gray;" href="${link}">
                     ${identity.displayName}
                     <span> </span>
-                    commented on your submission
+                    ${activity.verb === "commented"
+                      ? "commented on your submission"
+                      : "replied to one of your conversations"}
                   </a>
                 </strong>
               </p>
@@ -111,7 +113,7 @@ function generateCommentRow(activity, identity, borderColor) {
 
 function generateRow(lastUpdate) {
   return (activity, i) => {
-    if (activity.verb === "commented") {
+    if (activity.verb === "commented" || activity.verb === "involved") {
       const identity = activity.identities[0];
       const borderColor = i % 2 === 0 ? "rgba(0,0,0,0.05)" : "rgba(0,0,0,0.10)";
       return generateCommentRow(activity, identity, borderColor);
@@ -345,6 +347,30 @@ export async function data(trie, identity, lastRemoteValue) {
       )
       .map((post) => `kiwi:0x${post.message.index}`),
   );
+
+  const submittedComments = new Set(
+    comments
+      .filter(
+        (comment) => comment.identity.toLowerCase() === identity.toLowerCase(),
+      )
+      .map(({ href }) => href),
+  );
+
+  comments
+    .filter(
+      (comment) =>
+        comment.identity.toLowerCase() !== identity.toLowerCase() &&
+        submittedComments.has(comment.href) &&
+        !submittedPosts.has(comment.href),
+    )
+    .map((comment) => {
+      filteredActivities.push({
+        verb: "involved",
+        message: comment,
+        timestamp: comment.timestamp,
+        identities: [comment.identity],
+      });
+    });
 
   comments
     .filter(
