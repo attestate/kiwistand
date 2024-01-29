@@ -337,21 +337,20 @@ export async function data(trie, identity, lastRemoteValue) {
       // TODO: Should start using ethers.utils.getAddress
       activity.towards.toLowerCase() === identity.toLowerCase(),
   );
+
   const submittedPosts = new Set(
     activities
       .filter(
-        (activity) =>
-          activity.verb === "submitted" &&
-          activity.towards.toLowerCase() === identity.toLowerCase(),
+        (activity) => activity.towards.toLowerCase() === identity.toLowerCase(),
       )
       .map((post) => `kiwi:0x${post.message.index}`),
   );
 
-  const userComments = comments
+  comments
     .filter(
       (comment) =>
         comment.identity.toLowerCase() !== identity.toLowerCase() &&
-        !submittedPosts.has(comment.href),
+        submittedPosts.has(comment.href),
     )
     .map((comment) => {
       filteredActivities.push({
