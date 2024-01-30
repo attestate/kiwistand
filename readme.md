@@ -62,6 +62,8 @@ npm run dev:anon:local
 
 ## How does the protocol work
 
+- [Building decentralized social networks | Tim Daubenschütz at zusocial in Istanbul](https://www.youtube.com/watch?v=Rys5UEi2SWg)
+
 #### Demos:
 
 - [Loom: Set Reconciliation demo (40 secs)](https://www.loom.com/share/abf43323b00547689bf11520f565f4bc)
