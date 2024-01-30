@@ -277,6 +277,9 @@ export async function atomicPut(trie, message, identity) {
 
   try {
     await trie.put(Buffer.from(index, "hex"), canonical);
+    if (message.type === "comment") {
+      addComment(message.href);
+    }
   } catch (err) {
     if (message.type !== "amplify") {
       throw new Error(
@@ -363,7 +366,6 @@ export async function add(
         "add: child timestamp must be greater than parent timestamp",
       );
     }
-    addComment(message.href);
   }
 
   const { index, canonical } = await atomicPut(trie, message, identity);
