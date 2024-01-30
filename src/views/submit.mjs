@@ -10,37 +10,6 @@ import * as parser from "../parser.mjs";
 
 const html = htm.bind(vhtml);
 
-const ImageSVG = () => html`
-  <svg
-    style="width: 1.25rem; height: 1.25rem;"
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 256 256"
-  >
-    <rect width="256" height="256" fill="none" />
-    <rect
-      x="40"
-      y="40"
-      width="176"
-      height="176"
-      rx="8"
-      fill="none"
-      stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="24"
-    />
-    <circle cx="96" cy="96" r="20" />
-    <path
-      d="M56.69,216,166.34,106.34a8,8,0,0,1,11.32,0L216,144.69"
-      fill="none"
-      stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="24"
-    />
-  </svg>
-`;
-
 export default async function submit(theme, url = "", title = "") {
   if (url && !title) {
     let data;
@@ -142,15 +111,6 @@ export default async function submit(theme, url = "", title = "") {
                             style="${inputStyle}"
                             value="${url}"
                           />
-                          <label style="${fileInputLabelStyle}">
-                            <input
-                              type="file"
-                              style="${fileInputStyle}"
-                              accept="image/*"
-                              disabled
-                            />
-                            <${ImageSVG} />
-                          </label>
                         </div>
                       </div>
                       <button
@@ -210,7 +170,6 @@ const inputStyle = `
    padding: 5px 10px;
    font-size: 16px;
    box-sizing: border-box;
-   margin-right: 20px;
  `;
 
 const buttonStyle = `
