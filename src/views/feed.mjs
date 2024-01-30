@@ -37,7 +37,7 @@ function CanonRow(sheets) {
     <tr>
       <td>
         <div
-          style="justify-content: space-evenly; scroll-snap-type: x mandatory; border-radius: 5px; margin-bottom: -10px; padding: 20px 0; gap: 15px; display: flex; overflow-x: auto; width: 100%;"
+          style="justify-content: space-evenly; scroll-snap-type: x mandatory; border-radius: 5px; padding: 15px 0 10px 0; gap: 15px; display: flex; overflow-x: auto; width: 100%;"
         >
           ${sheets.map(
             ({ preview, name }) => html`
@@ -405,7 +405,7 @@ export default async function (trie, theme, page, domain) {
                 ? html` <tr style="background-color: #e6e6df;">
                     <td>
                       <p
-                        style="color: black; padding: 0 10px 0 10px; font-size: 12pt; font-weight: bold;"
+                        style="padding-left: 10px; color: black; font-size: 12pt; font-weight: bold;"
                       >
                         <span>Today's Editor's Picks by </span>
                         <a style="color:black;" href="${config.link}">
@@ -420,10 +420,10 @@ export default async function (trie, theme, page, domain) {
                 (story, i) => html`
                   <tr style="background-color: #e6e6df;">
                     <td>
-                      <div style="padding: 10px 5px 0 10px;">
+                      <div style="padding: 10px 0 0 5px;">
                         <div style="display: flex; align-items: stretch;">
                           <div
-                            style="display: flex; align-items: center; justify-content: center; min-width: 40px;"
+                            style="display: flex; align-items: center; justify-content: center; min-width: 40px; margin-right: 6px;"
                           >
                             <a
                               href="#"
@@ -481,18 +481,6 @@ export default async function (trie, theme, page, domain) {
                     <td></td>
                   </tr>`
                 : ""}
-              <tr>
-                <td>
-                  <p
-                    style="color: black; padding: 10px 10px 0 10px; font-size: 12pt; font-weight: bold;"
-                  >
-                    <span
-                      >Community's Picks
-                      ${page !== 0 ? html`(page: ${page})` : ""}</span
-                    >
-                  </p>
-                </td>
-              </tr>
               ${stories.slice(0, 6).map(Row(start, "/"))}
               ${sheets && !domain ? CanonRow(sheets) : ""}
               ${stories.slice(6).map(Row(start, "/"))}

@@ -259,9 +259,7 @@ export default async function (trie, theme, identity, page, mode) {
                       </td>
                     </tr>
                   `
-                : html`<tr style="height: 13px;">
-                    <td></td>
-                  </tr>`}
+                : ""}
             </table>
           </div>
         </div>

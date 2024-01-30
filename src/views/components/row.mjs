@@ -43,7 +43,7 @@ const truncateLongWords = (text, maxLength = 20) => {
 const row = (
   start = 0,
   path,
-  style = "padding: 10px 5px 0 10px;",
+  style = "border-bottom: 1px solid rgba(0,0,0,0.1);",
   interactive,
   hideCast,
 ) => {
@@ -53,12 +53,16 @@ const row = (
     return html`
       <tr>
         <td>
-          <div style="${style}">
-            <div style="display: flex; align-items: stretch;">
+          <div
+            style="${style}${i === 0
+              ? "border-top: 1px solid rgba(0,0,0,0.1);"
+              : ""}"
+          >
+            <div style="display: flex; align-items: center;">
               <div
                 style="display: flex; align-items: ${story.image
                   ? "start"
-                  : "center"}; justify-content: center; min-width: 40px; margin-right: 6px;"
+                  : "center"}; justify-content: center; min-width: 40px; margin: 0 6px 0 6px;"
               >
                 <div style="min-height: 40px; display:block;">
                   <div
@@ -85,7 +89,7 @@ const row = (
                 </div>
               </div>
               <div
-                style="display:flex; justify-content: center; flex-direction: column; flex-grow: 1;"
+                style="display:flex; justify-content: center; flex-direction: column; flex-grow: 1; line-height: 1.3; padding: 8px 3px 5px 0;"
               >
                 <span>
                   <a
@@ -185,18 +189,6 @@ const row = (
                     >
                       ${story.displayName}
                     </a>
-                    ${story.index
-                      ? html` <span> • </span>
-                          <a
-                            class="meta-link"
-                            href="/stories?index=0x${story.index}"
-                            >${commentCount === 0
-                              ? "discuss"
-                              : commentCount === 1
-                              ? "1 comment"
-                              : `${commentCount} comments`}</a
-                          >`
-                      : null}
                     ${interactive || hideCast
                       ? null
                       : html`
@@ -206,6 +198,7 @@ const row = (
                             href="https://warpcast.com/~/compose?embeds[]=${encodeURIComponent(
                               `https://news.kiwistand.com/stories?index=0x${story.index}`,
                             )}"
+                            style="white-space: nowrap;"
                             class="caster-link"
                           >
                             ${FCIcon("height: 10px; width: 10px;")}
@@ -222,6 +215,7 @@ const row = (
                               href="#"
                               class="caster-link share-link"
                               title="Share"
+                              style="white-space: nowrap;"
                               onclick="event.preventDefault(); navigator.share({url: 'https://news.kiwistand.com/stories?index=0x${story.index}' });"
                             >
                               ${ShareIcon(
@@ -240,6 +234,7 @@ const row = (
                                   <a
                                     class="meta-link"
                                     href="/stories?index=0x${story.index}"
+                                    style="white-space: nowrap;"
                                   >
                                     $${parseFloat(story.tipValue).toFixed(2)}
                                     <span> </span>
@@ -252,6 +247,7 @@ const row = (
                               data-index="${story.index}"
                               data-title="${story.title}"
                               data-tip="${story.tipValue}"
+                              style="white-space: nowrap;"
                               ><span> • </span>
                               $ Tip
                             </span>
@@ -260,6 +256,18 @@ const row = (
                   </span>
                 </div>
               </div>
+              ${story.index && path !== "/stories"
+                ? html`<a
+                    class="chat-bubble"
+                    href="/stories?index=0x${story.index}"
+                    style="display: flex; align-self: stretch; justify-content: center; min-width: 40px; align-items: center; flex-direction: column;"
+                  >
+                    <${ChatsSVG} />
+                    <span style="color: rgba(0,0,0,0.65); font-size: 8pt;"
+                      >${commentCount}</span
+                    >
+                  </a>`
+                : ""}
             </div>
           </div>
           ${story.image
@@ -272,4 +280,30 @@ const row = (
     `;
   };
 };
+
+const ChatsSVG = () => html`
+  <svg
+    style="color: rgba(0,0,0,0.65); width: 25px;"
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 256 256"
+  >
+    <rect width="256" height="256" fill="none" />
+    <path
+      d="M71.58,144,32,176V48a8,8,0,0,1,8-8H168a8,8,0,0,1,8,8v88a8,8,0,0,1-8,8Z"
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="16"
+    />
+    <path
+      d="M80,144v40a8,8,0,0,0,8,8h96.42L224,224V96a8,8,0,0,0-8-8H176"
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="16"
+    />
+  </svg>
+`;
 export default row;

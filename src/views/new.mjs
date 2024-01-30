@@ -170,9 +170,7 @@ export default async function (trie, theme, index) {
               <tr>
                 ${SecondHeader(theme, "new")}
               </tr>
-              <tr class="spacer" style="height:15px"></tr>
               ${items.map(Row(null, "/best"))}
-              <tr class="spacer" style="height:15px"></tr>
               <tr
                 style="display: block; padding: 10px; background-color: ${theme.color}"
               >

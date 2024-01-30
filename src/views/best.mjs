@@ -219,7 +219,11 @@ export default async function index(trie, theme, page, period, domain) {
               <tr>
                 <td>
                   <p
-                    style="color: black; padding: 5px 10px 0 10px; font-size: 12pt; font-weight: bold;"
+                    style="color: black; padding: ${page === 0
+                      ? "0"
+                      : "5px"} 10px ${page === 0
+                      ? "0"
+                      : "5px"} 10px; font-size: 12pt; font-weight: bold;"
                   >
                     <span> ${page !== 0 ? html`Page: ${page}` : ""}</span>
                   </p>
