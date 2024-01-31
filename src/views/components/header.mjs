@@ -75,8 +75,9 @@ const header = async (theme, path) => {
           <tr>
             <td style="line-height:12pt; height:10px;">
               <div
-                style="display: flex; flex-wrap: nowrap; justify-content: space-between; align-items: center;"
+                style="width: 33%; padding: 7px 7px 7px 0; display: flex; justify-content: flex-end;"
               >
+                <div id="connectButton"></div>
                 <div class="kn-banner-desk">Kiwi News</div>
                 <nav-header-avatar class="sidebar-toggle" style="width: 33%;">
                   <div style="display: flex; align-items: center;">
