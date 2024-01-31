@@ -256,14 +256,19 @@ const row = (
                   </span>
                 </div>
               </div>
-              ${story.index && path !== "/stories"
+              ${story.index
                 ? html`<a
                     class="chat-bubble"
+                    id="chat-bubble-${story.index}"
                     href="/stories?index=0x${story.index}"
-                    style="display: flex; align-self: stretch; justify-content: center; min-width: 40px; align-items: center; flex-direction: column;"
+                    style="display: ${path === "/stories"
+                      ? "none"
+                      : "flex"}; align-self: stretch; justify-content: center; min-width: 40px; align-items: center; flex-direction: column;"
                   >
                     <${ChatsSVG} />
-                    <span style="color: rgba(0,0,0,0.65); font-size: 8pt;"
+                    <span
+                      id="comment-count-${story.index}"
+                      style="color: rgba(0,0,0,0.65); font-size: 8pt;"
                       >${commentCount}</span
                     >
                   </a>`
