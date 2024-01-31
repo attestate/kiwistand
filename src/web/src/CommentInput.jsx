@@ -92,12 +92,17 @@ const CommentInput = (props) => {
   return (
     <div
       style={{
-        margin: "0 0 1rem 2rem",
+        margin: "0 2rem 1rem 2rem",
       }}
     >
       <textarea
-        rows="8"
+        rows="12"
         cols="80"
+        style="display:block;width:100%;"
+        style={{
+          display: "block",
+          width: "100%",
+        }}
         value={text}
         onChange={(e) => setText(e.target.value)}
         disabled={isLoading || !address || !isEligible}

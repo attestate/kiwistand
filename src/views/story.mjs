@@ -203,41 +203,41 @@ export default async function (trie, theme, index, value) {
                           ${story.comments.map(
                             (comment) =>
                               html`<span
-                                  id="0x${comment.index}"
-                                  style="color: black; background-color: rgba(0,0,0,0.075); padding: 0.55rem 0.75rem; border-radius: 5px;display: inline-block; margin-bottom: 8px; white-space: pre-wrap; line-height: 1.4; word-break: break-word; overflow-wrap: break-word;"
+                                id="0x${comment.index}"
+                                style="color: black; background-color: rgba(0,0,0,0.075); padding: 0.55rem 0.75rem; border-radius: 5px;display: block; margin-bottom: 8px; white-space: pre-wrap; line-height: 1.4; word-break: break-word; overflow-wrap: break-word;"
+                              >
+                                <div
+                                  style="display: inline-flex; align-items: center;"
                                 >
-                                  <div
-                                    style="display: inline-flex; align-items: center;"
+                                  <img
+                                    loading="lazy"
+                                    src="${comment.avatar}"
+                                    alt="avatar"
+                                    style="margin-right: 5px; width: 12px; height:12px; border: 1px solid #828282; border-radius: 50%;"
+                                  />
+                                  <b
+                                    ><a
+                                      style="color: black;"
+                                      href="/upvotes?address=${comment.identity}"
+                                      >${comment.displayName}</a
+                                    ></b
                                   >
-                                    <img
-                                      loading="lazy"
-                                      src="${comment.avatar}"
-                                      alt="avatar"
-                                      style="margin-right: 5px; width: 12px; height:12px; border: 1px solid #828282; border-radius: 50%;"
-                                    />
-                                    <b
-                                      ><a
-                                        style="color: black;"
-                                        href="/upvotes?address=${comment.identity}"
-                                        >${comment.displayName}</a
-                                      ></b
-                                    >
-                                    <span> • </span>
-                                    <a
-                                      class="meta-link"
-                                      href="/stories?index=0x${index}#0x${comment.index}"
-                                    >
-                                      <span>
-                                        ${formatDistanceToNowStrict(
-                                          new Date(comment.timestamp * 1000),
-                                        )}
-                                      </span>
-                                      <span> ago</span>
-                                    </a>
-                                  </div>
-                                  <br />
-                                  ${comment.title} </span
-                                ><br />`,
+                                  <span> • </span>
+                                  <a
+                                    class="meta-link"
+                                    href="/stories?index=0x${index}#0x${comment.index}"
+                                  >
+                                    <span>
+                                      ${formatDistanceToNowStrict(
+                                        new Date(comment.timestamp * 1000),
+                                      )}
+                                    </span>
+                                    <span> ago</span>
+                                  </a>
+                                </div>
+                                <br />
+                                ${comment.title}
+                              </span>`,
                           )}
                         </div>
                       </div>
@@ -247,8 +247,13 @@ export default async function (trie, theme, index, value) {
               <tr>
                 <td>
                   <nav-comment-input>
-                    <div style="margin: 0 0 1rem 2rem;">
-                      <textarea rows="8" cols="80" disabled></textarea>
+                    <div style="margin: 0 2rem 1rem 2rem;">
+                      <textarea
+                        style="display:block;width:100%;"
+                        rows="12"
+                        cols="80"
+                        disabled
+                      ></textarea>
                       <br />
                       <br />
                       <button disabled>Loading...</button>
