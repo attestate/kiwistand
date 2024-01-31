@@ -4,8 +4,6 @@ import { resolve } from "path";
 import satori from "satori";
 import sharp from "sharp";
 import htm from "htm";
-import fetch from "node-fetch";
-global.fetch = fetch;
 
 const html = htm.bind(h);
 
@@ -17,17 +15,13 @@ function h(type, props, ...children) {
   }
 }
 
-function content(title, submitter, domain) {
-  const text = `submitted by `;
-  const submitterStyle = {
-    textDecoration: "underline",
-    color: "red",
-  };
+function content(title, submitter) {
+  const text = `submitted by ${submitter.displayName}`;
   return html`
     <div
       style=${{
-        width: "1200px",
-        height: "630px",
+        height: "100%",
+        width: "100%",
         display: "flex",
         flexDirection: "column",
         justifyContent: "center",
@@ -39,71 +33,38 @@ function content(title, submitter, domain) {
     >
       <p
         style=${{
-          fontSize: "4rem",
+          fontSize: "6rem",
           color: "#38C910",
           padding: 0,
           lineHeight: 0.9,
-          margin: "2rem 0 1rem 0",
-          textShadow: "0px 0.15rem 0.15rem black",
+          margin: 0,
         }}
       >
         ${title}
       </p>
-      <img
-        src="https://news.kiwistand.com/KiwiPass.png"
-        style=${{
-          width: "200",
-          height: "300",
-        }}
-      />,
-      <p
-        style=${{
-          fontSize: "3rem",
-          margin: "0 0 3rem 0",
-          textShadow: "0px 0.1rem 0.1rem black",
-        }}
-      >
-        (${domain})
-      </p>
-      <p>***</p>
-      <p
-        style=${{
-          fontSize: "2rem",
-          margin: "0 0 3rem 0",
-          fontWeight: "normal",
-        }}
-      >
-        ${text}
-        <span
-          style=${{
-            textDecorationLine: "underline",
-            textDecorationColor: "#3DC617",
-          }}
-          >${submitter}</span
-        >
-      </p>
+      <p style=${{ fontSize: "3rem" }}>${text}</p>
     </div>
   `;
 }
 
-export async function generate(index, title, submitter, domain) {
+export async function generate(index, title, submitter) {
   const filePath = resolve(`./src/public/previews/${index}.jpg`);
 
-  // try {
-  //   await access(filePath);
-  //   return; // File exists, so we just return
-  // } catch (err) {
-  //   // File doesn't exist, we continue with the generation
-  // }
+  try {
+    await access(filePath);
+    return; // File exists, so we just return
+  } catch (err) {
+    // File doesn't exist, we continue with the generation
+  }
 
   const fontData = await readFile("./Verdana-Bold.ttf");
   const arial = {
     name: "Verdana",
     data: fontData,
-    weight: 400,
-    style: "normal",
+    weight: 700,
+    style: "bold",
   };
-  const body = content(title, submitter, domain);
+  const body = content(title, submitter);
   const svgData = await satori(body, {
     width: 1200,
     height: 630,
@@ -112,26 +73,3 @@ export async function generate(index, title, submitter, domain) {
 
   sharp(Buffer.from(svgData)).jpeg().toFile(filePath);
 }
-
-// Test function
-async function test() {
-  // Test different titles and submitters
-  console.log("started generation");
-  await generate(
-    1,
-    "This is a test title that has eighty characters to see how Kiwi renders OG:Image",
-    "Test Submitter 1",
-    "testdomain1.com",
-  );
-  await generate(2, "Short title test", "Test Submitter 2", "domain2.com");
-  await generate(
-    3,
-    "Medium length title test about 30 chars",
-    "Test Submitter 2 longname",
-    "veryverylongdomain2.com",
-  );
-  // Add more tests as needed
-}
-
-// Run the test function
-test().catch(console.error);
