@@ -408,9 +408,27 @@ export async function launch(trie, libp2p) {
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/indexing", async (request, reply) => {
-    // Temporarily bypass address and transactionHash validation for testing
-    const address = request.query.address || "0x0"; // Default address for testing
-    const transactionHash = request.query.transactionHash || "0x0"; // Default hash for testing
+    let address;
+    try {
+      address = utils.isAddress(request.query.address);
+    } catch (err) {
+      return reply
+        .status(404)
+        .type("text/plain")
+        .send("No valid Ethereum address");
+    }
+
+    const { transactionHash } = request.query;
+    if (
+      !transactionHash ||
+      !utils.isHexString(transactionHash) ||
+      transactionHash.length !== 66
+    ) {
+      return reply
+        .status(404)
+        .type("text/plain")
+        .send("Not valid Ethereum transaction hash");
+    }
 
     const content = await indexing(
       reply.locals.theme,
