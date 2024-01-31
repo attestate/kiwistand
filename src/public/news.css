@@ -8,6 +8,9 @@ body {
 .chat-bubble:hover {
   background-color: rgba(0,0,0,0.05);
 }
+.chat-bubble svg:hover {
+  color: black !important;
+}
 .share-container {
    display: none;
  }
