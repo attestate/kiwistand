@@ -129,6 +129,7 @@ const row = (
                               href="${path}?period=month&domain=${extractDomain(
                                 story.href,
                               )}"
+                              style="color: #828282;"
                               >${extractDomain(story.href)}</a
                             >`
                           : extractDomain(story.href)})</span

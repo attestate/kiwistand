@@ -11,6 +11,9 @@ body {
 .chat-bubble svg:hover {
   color: black !important;
 }
+.story-domain a:hover {
+  text-decoration: underline;
+}
 .share-container {
    display: none;
  }
