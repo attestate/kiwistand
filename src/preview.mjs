@@ -4,8 +4,6 @@ import { resolve } from "path";
 import satori from "satori";
 import sharp from "sharp";
 import htm from "htm";
-import fetch from "node-fetch";
-global.fetch = fetch;
 
 const html = htm.bind(h);
 
