@@ -60,7 +60,11 @@ export const PriceComponent = (props) => {
       );
 
       const data = await response.json();
-      setEthPrice(data.ethereum.usd);
+      if (data?.ethereum?.usd) {
+        setEthPrice(data.ethereum.usd);
+      } else {
+        console.error("Couldn't get coingecko ETH/USD price");
+      }
     })();
   }, []);
 

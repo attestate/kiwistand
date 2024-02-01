@@ -13,6 +13,7 @@ import {
   isBefore,
 } from "date-fns";
 
+import PWALine from "./components/iospwaline.mjs";
 import { getTips, getTipsValue, filterTips } from "../tips.mjs";
 import * as ens from "../ens.mjs";
 import Header from "./components/header.mjs";
@@ -181,6 +182,7 @@ export default async function (trie, theme, index, value) {
         <meta name="description" content="${ogDescription}" />
       </head>
       <body>
+        ${PWALine}
         <div class="container">
           ${Sidebar(path)}
           <div id="hnmain">

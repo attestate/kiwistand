@@ -4,12 +4,12 @@ import { useEffect, useState } from "react";
 import { eligible } from "@attestate/delegator2";
 
 import { client, chains } from "./client.mjs";
-import { getLocalAccount } from "./session.mjs";
 import {
+  getLocalAccount,
   isSafariOnIOS,
   isChromeOnAndroid,
   isRunningPWA,
-} from "./OnboardingModal.jsx";
+} from "./session.mjs";
 
 const shorten = (address) =>
   address.slice(0, 6) +

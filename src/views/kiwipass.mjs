@@ -1,9 +1,9 @@
 //@format
-
 import htm from "htm";
 import vhtml from "vhtml";
 
 import Header from "./components/header.mjs";
+import PWALine from "./components/iospwaline.mjs";
 import Sidebar from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
 import { custom } from "./components/head.mjs";
@@ -269,6 +269,7 @@ export default async function (theme) {
         <meta property="eth:nft:chain" content="ethereum" />
       </head>
       <body>
+        ${PWALine}
         <div class="container">
           ${Sidebar()}
           <div id="hnmain">

@@ -38,3 +38,25 @@ export function getLocalAccount(identity) {
   }
   return null;
 }
+
+export function isSafariOnIOS() {
+  const ua = navigator.userAgent;
+  const iOS = !!ua.match(/iPad/i) || !!ua.match(/iPhone/i);
+  const webkit = !!ua.match(/WebKit/i);
+  return iOS && webkit;
+}
+
+export function isChromeOnAndroid() {
+  const ua = navigator.userAgent;
+  const android = !!ua.match(/Android/i);
+  const chrome = !!ua.match(/Chrome/i);
+  return android && chrome;
+}
+
+export function isRunningPWA() {
+  return (
+    window.matchMedia("(display-mode: standalone)").matches ||
+    window.navigator.standalone ||
+    document.referrer.includes("android-app://")
+  );
+}

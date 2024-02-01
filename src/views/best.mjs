@@ -8,6 +8,7 @@ import normalizeUrl from "normalize-url";
 import { sub, differenceInMinutes, differenceInSeconds } from "date-fns";
 
 import { getTips, getTipsValue } from "../tips.mjs";
+import PWALine from "./components/iospwaline.mjs";
 import * as ens from "../ens.mjs";
 import Header from "./components/header.mjs";
 import SecondHeader from "./components/secondheader.mjs";
@@ -206,6 +207,7 @@ export default async function index(trie, theme, page, period, domain) {
         />
       </head>
       <body>
+        ${PWALine}
         <div class="container">
           ${Sidebar()}
           <div id="hnmain">

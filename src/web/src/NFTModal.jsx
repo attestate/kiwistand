@@ -99,7 +99,7 @@ const NFTModal = ({ modalIsOpen, setIsOpen, headline, text, closeText }) => {
             }}
           >
             <span>
-              Buy for <PriceComponent /> ETH
+              Buy for <PriceComponent />
             </span>
           </button>
         </a>

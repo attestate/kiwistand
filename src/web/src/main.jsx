@@ -2,8 +2,7 @@ import "vite/modulepreload-polyfill";
 import "@rainbow-me/rainbowkit/styles.css";
 import PullToRefresh from "pulltorefreshjs";
 
-import { isRunningPWA } from "./OnboardingModal.jsx";
-import { getCookie, getLocalAccount } from "./session.mjs";
+import { isRunningPWA, getCookie, getLocalAccount } from "./session.mjs";
 
 function commentCountSignifier() {
   const isStoriesPage = window.location.pathname === "/stories";
@@ -348,7 +347,7 @@ async function addModals() {
     );
   }
 
-  const onboarding = document.querySelector("nav-onboarding-modal");
+  const onboarding = document.querySelector(".nav-onboarding-modal");
   if (onboarding) {
     const { createRoot } = await import("react-dom/client");
     const { StrictMode } = await import("react");
@@ -486,6 +485,7 @@ async function start() {
 
   const { fetchAllowList, fetchDelegations } = await import("./API.mjs");
   checkMintStatus(fetchAllowList, fetchDelegations);
+
   const allowlistPromise = fetchAllowList();
   const delegationsPromise = fetchDelegations();
 
