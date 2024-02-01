@@ -53,8 +53,84 @@ test("list delegation addresses", async (t) => {
   t.deepEqual(response.data, delegations());
 });
 
+test("list allowed addresses with invalid Ethereum address", async (t) => {
+  const notAnAddress = "this is not an address";
+  const mockRequest = {
+    query: {
+      address: notAnAddress,
+    },
+  };
+  const mockReply = {
+    status: (code) => ({
+      json: (response) => response,
+    }),
+    setHeader: () => {},
+  };
+
+  const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
+  const list = [address];
+  const allowlist = () => new Set(list);
+  const response = await listAllowed(allowlist)(mockRequest, mockReply);
+
+  t.is(response.status, "error");
+  t.is(response.code, 400);
+  t.is(response.message, "Bad Request");
+  t.truthy(response.details);
+});
+
+test("list allowed addresses with empty response", async (t) => {
+  const zeroAddress = "0x0000000000000000000000000000000000000000";
+  const mockRequest = {
+    query: {
+      address: zeroAddress,
+    },
+  };
+  const mockReply = {
+    status: (code) => ({
+      json: (response) => response,
+    }),
+    setHeader: () => {},
+  };
+
+  const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
+  const list = [address];
+  const allowlist = () => new Set(list);
+  const response = await listAllowed(allowlist)(mockRequest, mockReply);
+
+  t.is(response.status, "success");
+  t.is(response.code, 200);
+  t.is(response.message, "OK");
+  t.is(response.data.length, 0);
+  t.deepEqual(response.data, []);
+});
+
+test("list allowed addresses through query", async (t) => {
+  const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
+  const mockRequest = {
+    query: {
+      address,
+    },
+  };
+  const mockReply = {
+    status: (code) => ({
+      json: (response) => response,
+    }),
+    setHeader: () => {},
+  };
+
+  const list = [address];
+  const allowlist = () => new Set(list);
+  const response = await listAllowed(allowlist)(mockRequest, mockReply);
+
+  t.is(response.status, "success");
+  t.is(response.code, 200);
+  t.is(response.message, "OK");
+  t.is(response.data.length, 1);
+  t.deepEqual(response.data, list);
+});
+
 test("list allowed addresses", async (t) => {
-  const mockRequest = {};
+  const mockRequest = { query: {} };
   const mockReply = {
     status: (code) => ({
       json: (response) => response,
@@ -118,7 +194,6 @@ test("listMessages success", async (t) => {
     getDelegations,
   )(mockRequest, mockReply);
 
-  console.log(response);
   t.is(response.status, "success");
   t.is(response.code, 200);
   t.is(response.message, "OK");
