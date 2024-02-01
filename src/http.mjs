@@ -56,6 +56,12 @@ import * as karma from "./karma.mjs";
 
 const app = express();
 
+app.set("etag", "strong");
+app.use((req, res, next) => {
+  res.setHeader("Last-Modified", new Date().toUTCString());
+  next();
+});
+
 app.use(
   morgan(
     ':remote-addr - :remote-user ":method :url" :status ":referrer" ":user-agent"',
@@ -184,7 +190,10 @@ export async function launch(trie, libp2p) {
       const code = 400;
       const httpMessage = "Bad Request";
       const details = "Please only submit valid Ethereum addresses.";
-      reply.header("Cache-Control", "public, max-age=1800, must-revalidate");
+      reply.header(
+        "Cache-Control",
+        "public, max-age=0, no-transform, must-revalidate",
+      );
       return sendError(reply, code, httpMessage, details);
     }
 
@@ -192,7 +201,10 @@ export async function launch(trie, libp2p) {
     const code = 200;
     const httpMessage = "OK";
     const details = `Karma`;
-    reply.header("Cache-Control", "public, max-age=1800, must-revalidate");
+    reply.header(
+      "Cache-Control",
+      "public, max-age=300, no-transform, must-revalidate, stale-while-revalidate=300",
+    );
     return sendStatus(reply, code, httpMessage, details, {
       address,
       karma: points,
@@ -206,7 +218,10 @@ export async function launch(trie, libp2p) {
         page = 0;
       }
       const results = await index(trie, page);
-      reply.header("Cache-Control", "public, max-age=60, must-revalidate");
+      reply.header(
+        "Cache-Control",
+        "public, max-age=300, no-transform, must-revalidate, stale-while-revalidate=30",
+      );
       stories = results.stories;
     } else if (request.params.name === "new") {
       reply.header("Cache-Control", "no-cache");
@@ -219,7 +234,10 @@ export async function launch(trie, libp2p) {
       const httpMessage = "Not Implemented";
       const details =
         "We currently don't implement any other endpoint but 'hot' and 'new'";
-      reply.header("Cache-Control", "public, max-age=60, must-revalidate");
+      reply.header(
+        "Cache-Control",
+        "public, max-age=0, no-transform, must-revalidate",
+      );
       return sendError(reply, code, httpMessage, details);
     }
 
@@ -239,7 +257,10 @@ export async function launch(trie, libp2p) {
       page,
       request.query.domain,
     );
-    reply.header("Cache-Control", "public, max-age=30, must-revalidate");
+    reply.header(
+      "Cache-Control",
+      "public, max-age=60, no-transform, must-revalidate, stale-while-revalidate=3600",
+    );
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/canons", async (request, reply) => {
@@ -258,7 +279,10 @@ export async function launch(trie, libp2p) {
     }
     const content = await canon(trie, reply.locals.theme, sheet);
 
-    reply.header("Cache-Control", "public, max-age=21600, must-revalidate");
+    reply.header(
+      "Cache-Control",
+      "public, max-age=300, no-transform, must-revalidate, stale-while-revalidate=86400",
+    );
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/stories", async (request, reply) => {
@@ -289,6 +313,10 @@ export async function launch(trie, libp2p) {
       return reply.status(404).type("text/plain").send("index wasn't found");
     }
 
+    if (post && post.value && post.value.type === "comment") {
+      return reply.status(404).type("text/plain").send("index wasn't found");
+    }
+
     const ensData = await ens.resolve(post.value.identity);
     const value = {
       ...post.value,
@@ -298,15 +326,12 @@ export async function launch(trie, libp2p) {
     // NOTE: We aren't awaiting here because this can run in parallel
     generate(hexIndex, value.title, value.submitter);
 
-    const content = await story(
-      trie,
-      reply.locals.theme,
-      hexIndex,
-      post.value,
-      request.cookies.identity,
-    );
+    const content = await story(trie, reply.locals.theme, hexIndex, post.value);
 
-    reply.header("Cache-Control", "private, max-age=1800, must-revalidate");
+    reply.header(
+      "Cache-Control",
+      "public, max-age=10, no-transform, must-revalidate, stale-while-revalidate=600",
+    );
     return reply.status(200).type("text/html").send(content);
   });
   // NOTE: During the process of combining the feed and the editor's picks, we
@@ -350,7 +375,10 @@ export async function launch(trie, libp2p) {
   app.get("/nfts", async (request, reply) => {
     const content = await nfts(trie, reply.locals.theme);
 
-    reply.header("Cache-Control", "public, max-age=30, must-revalidate");
+    reply.header(
+      "Cache-Control",
+      "public, max-age=0, no-transform, must-revalidate, stale-while-revalidate=86400",
+    );
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/alltime", function (req, res) {
@@ -376,7 +404,10 @@ export async function launch(trie, libp2p) {
       request.query.domain,
     );
 
-    reply.header("Cache-Control", "public, max-age=3600, must-revalidate");
+    reply.header(
+      "Cache-Control",
+      "public, max-age=3600, no-transform, must-revalidate, stale-while-revalidate=86400",
+    );
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/community", async (request, reply) => {
@@ -387,12 +418,15 @@ export async function launch(trie, libp2p) {
       request.cookies.identity,
     );
 
-    reply.header("Cache-Control", "private, max-age=86400, must-revalidate");
+    reply.header("Cache-Control", "private, must-revalidate");
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/stats", async (request, reply) => {
     const content = await stats(trie, reply.locals.theme);
-    reply.header("Cache-Control", "public, max-age=86400");
+    reply.header(
+      "Cache-Control",
+      "public, max-age=3600, no-transform, must-revalidate, stale-while-revalidate=120",
+    );
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/about", async (request, reply) => {
@@ -561,19 +595,19 @@ export async function launch(trie, libp2p) {
   app.get("/lists", async (request, reply) => {
     const content = await lists(reply.locals.theme);
 
-    reply.header("Cache-Control", "public, max-age=86400, must-revalidate");
+    reply.header("Cache-Control", "public, max-age=60, must-revalidate");
     return reply.status(200).type("text/html").send(content);
   });
 
   app.get("/welcome", async (request, reply) => {
-    reply.header("Cache-Control", "public, max-age=3600, must-revalidate");
+    reply.header("Cache-Control", "public, must-revalidate");
     return reply
       .status(200)
       .type("text/html")
       .send(await join(reply.locals.theme));
   });
   app.get("/kiwipass", async (request, reply) => {
-    reply.header("Cache-Control", "public, max-age=3600, must-revalidate");
+    reply.header("Cache-Control", "public, must-revalidate");
     return reply
       .status(200)
       .type("text/html")
@@ -587,7 +621,7 @@ export async function launch(trie, libp2p) {
       .send(await kiwipassmint(reply.locals.theme));
   });
   app.get("/memecoin", async (request, reply) => {
-    reply.header("Cache-Control", "public, max-age=3600, must-revalidate");
+    reply.header("Cache-Control", "public, must-revalidate");
     return reply
       .status(200)
       .type("text/html")
@@ -601,7 +635,7 @@ export async function launch(trie, libp2p) {
       .send(await shortcut(reply.locals.theme));
   });
 
-  async function getProfile(trie, theme, address, page, mode, identity) {
+  async function getProfile(trie, theme, address, page, mode) {
     let activeMode = "top";
     if (mode === "new") activeMode = "new";
 
@@ -609,14 +643,7 @@ export async function launch(trie, libp2p) {
     if (isNaN(page) || page < 1) {
       page = 0;
     }
-    const content = await upvotes(
-      trie,
-      theme,
-      address,
-      page,
-      activeMode,
-      identity,
-    );
+    const content = await upvotes(trie, theme, address, page, activeMode);
     return content;
   }
   app.get("/upvotes", async (request, reply) => {
@@ -637,10 +664,25 @@ export async function launch(trie, libp2p) {
       request.query.address,
       request.query.page,
       request.query.mode,
-      request.cookies.identity,
     );
 
-    reply.header("Cache-Control", "private, max-age=3600, must-revalidate");
+    if (request.query.mode === "new") {
+      reply.header(
+        "Cache-Control",
+        "public, max-age=3600, no-transform, must-revalidate, stale-while-revalidate=86400",
+      );
+    } else if (!request.query.mode || request.query.mode == "top") {
+      reply.header(
+        "Cache-Control",
+        "public, max-age=86400, no-transform, must-revalidate, stale-while-revalidate=86400",
+      );
+    } else {
+      reply.header(
+        "Cache-Control",
+        "public, max-age=3600, no-transform, must-revalidate, stale-while-revalidate=60",
+      );
+    }
+
     return reply.status(200).type("text/html").send(content);
   });
 
@@ -677,13 +719,15 @@ export async function launch(trie, libp2p) {
         address,
         request.query.page,
         request.query.mode,
-        request.cookies.identity,
       );
     } catch (err) {
       return next(err);
     }
 
-    reply.header("Cache-Control", "public, max-age=3600, must-revalidate");
+    reply.header(
+      "Cache-Control",
+      "public, max-age=86400, no-transform, must-revalidate, stale-while-revalidate=3600",
+    );
     return reply.status(200).type("text/html").send(content);
   });
 

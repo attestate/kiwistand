@@ -11,7 +11,6 @@ import { getTips, getTipsValue } from "../tips.mjs";
 import * as ens from "../ens.mjs";
 import Header from "./components/header.mjs";
 import SecondHeader from "./components/secondheader.mjs";
-import ThirdHeader from "./components/thirdheader.mjs";
 import Sidebar from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
 import { custom } from "./components/head.mjs";
@@ -215,15 +214,16 @@ export default async function index(trie, theme, page, period, domain) {
                 ${await Header(theme)}
               </tr>
               <tr>
-                ${ThirdHeader(theme, "top")}
-              </tr>
-              <tr>
                 ${SecondHeader(theme, "best", period)}
               </tr>
               <tr>
                 <td>
                   <p
-                    style="color: black; padding: 5px 10px 0 10px; font-size: 12pt; font-weight: bold;"
+                    style="color: black; padding: ${page === 0
+                      ? "0"
+                      : "5px"} 10px ${page === 0
+                      ? "0"
+                      : "5px"} 10px; font-size: 12pt; font-weight: bold;"
                   >
                     <span> ${page !== 0 ? html`Page: ${page}` : ""}</span>
                   </p>

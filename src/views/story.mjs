@@ -6,7 +6,12 @@ import { extname } from "path";
 import htm from "htm";
 import vhtml from "vhtml";
 import normalizeUrl from "normalize-url";
-import { sub, differenceInMinutes, isBefore } from "date-fns";
+import {
+  formatDistanceToNowStrict,
+  sub,
+  differenceInMinutes,
+  isBefore,
+} from "date-fns";
 
 import { getTips, getTipsValue, filterTips } from "../tips.mjs";
 import * as ens from "../ens.mjs";
@@ -62,24 +67,20 @@ export function generateList(profiles) {
   `;
 }
 
-export default async function (trie, theme, index, value, identity) {
+export default async function (trie, theme, index, value) {
   let writers = [];
   try {
     writers = await moderation.getWriters();
   } catch (err) {
     // noop
   }
-  const path = "/";
+  const path = "/stories";
 
   let data;
-  let preview = "";
   try {
     data = await metadata(value.href);
   } catch (err) {}
-  if (data) {
-    const { ogTitle, domain, ogDescription, image } = data;
-    preview = render(ogTitle, domain, ogDescription, image);
-  }
+
   const isOriginal = Object.keys(writers).some(
     (domain) =>
       normalizeUrl(value.href).startsWith(domain) &&
@@ -126,6 +127,18 @@ export default async function (trie, theme, index, value, identity) {
           address: profile.address,
         });
       }
+    }
+  }
+
+  for await (let comment of story.comments) {
+    const profile = await ens.resolve(comment.identity);
+    if (profile && profile.displayName) {
+      comment.displayName = profile.displayName;
+    } else {
+      comment.displayName = comment.identity;
+    }
+    if (profile && profile.safeAvatar) {
+      comment.avatar = profile.safeAvatar;
     }
   }
   const actions = [...profiles, ...tipActions].sort(
@@ -179,52 +192,76 @@ export default async function (trie, theme, index, value, identity) {
               <tr>
                 <td>${generateList(actions)}</td>
               </tr>
-              ${!identity
-                ? html` <tr>
+              ${story.comments.length > 0
+                ? html`<tr>
                     <td>
-                      <p
-                        style="margin: 0 15px 15px 15px; background-color: rgba(0,0,0,0.1); padding: 10px 15px 15px 15px; border-radius: 5px; color: black;"
-                      >
-                        <b
-                          ><i>
-                            Don't understand what this website is about?
-                          </i></b
-                        >
+                      <div style="padding: 0 1rem 0 1rem;">
+                        <b style="font-size: 1rem;">Comments:</b>
                         <br />
                         <br />
-                        🥝 Kiwi News is handpicked, noise-free content for
-                        crypto builders. You can become part of our community by
-                        minting our NFT.
-                        <br />
-                        <a
-                          href="/welcome?referral=0xdD52f911eFC02b57cE4f1eB26b65e4CFA1D30C1E"
-                        >
-                          <button
-                            style="margin-top: 1rem; font-size: 0.8rem; padding: 7px 10px; width: auto;"
-                            id="button-onboarding"
-                          >
-                            Learn more
-                          </button>
-                        </a>
-                      </p>
+                        <div style="padding: 0 1rem 0 1rem;">
+                          ${story.comments.map(
+                            (comment) =>
+                              html`<span
+                                id="0x${comment.index}"
+                                style="color: black; background-color: rgba(0,0,0,0.075); padding: 0.55rem 0.75rem; border-radius: 5px;display: block; margin-bottom: 8px; white-space: pre-wrap; line-height: 1.4; word-break: break-word; overflow-wrap: break-word;"
+                              >
+                                <div
+                                  style="display: inline-flex; align-items: center;"
+                                >
+                                  <img
+                                    loading="lazy"
+                                    src="${comment.avatar}"
+                                    alt="avatar"
+                                    style="margin-right: 5px; width: 12px; height:12px; border: 1px solid #828282; border-radius: 50%;"
+                                  />
+                                  <b
+                                    ><a
+                                      style="color: black;"
+                                      href="/upvotes?address=${comment.identity}"
+                                      >${comment.displayName}</a
+                                    ></b
+                                  >
+                                  <span> • </span>
+                                  <a
+                                    class="meta-link"
+                                    href="/stories?index=0x${index}#0x${comment.index}"
+                                  >
+                                    <span>
+                                      ${formatDistanceToNowStrict(
+                                        new Date(comment.timestamp * 1000),
+                                      )}
+                                    </span>
+                                    <span> ago</span>
+                                  </a>
+                                </div>
+                                <br />
+                                ${comment.title}
+                              </span>`,
+                          )}
+                        </div>
+                      </div>
                     </td>
                   </tr>`
-                : ""}
-              ${preview
-                ? html`
-                    <tr>
-                      <td>
-                        <a
-                          target="_blank"
-                          href="${story.href}"
-                          style="display: block; margin: 0 15px 15px 15px;"
-                        >
-                          ${preview}
-                        </a>
-                      </td>
-                    </tr>
-                  `
-                : ""}
+                : null}
+              <tr>
+                <td>
+                  <nav-comment-input>
+                    <div style="margin: 0 2rem 1rem 2rem;">
+                      <textarea
+                        style="display:block;width:100%;"
+                        rows="12"
+                        cols="80"
+                        disabled
+                      ></textarea>
+                      <br />
+                      <br />
+                      <button disabled>Loading...</button>
+                    </div>
+                  </nav-comment-input>
+                </td>
+              </tr>
+              <tr style="height: 20px;"></tr>
             </table>
           </div>
         </div>

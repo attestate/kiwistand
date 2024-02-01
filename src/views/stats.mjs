@@ -26,11 +26,17 @@ const classify = (messages) => {
     .map((message) => {
       const href = normalizeUrl(!!message.href && message.href);
 
-      if (message.type === "amplify" && !firstAmplify[href]) {
-        firstAmplify[href] = true;
-        return { verb: "submit", message };
-      } else {
-        return { verb: "upvote", message };
+      if (message.type === "amplify") {
+        if (!firstAmplify[href]) {
+          firstAmplify[href] = true;
+          return { verb: "submit", message };
+        } else {
+          return { verb: "upvote", message };
+        }
+      }
+
+      if (message.type === "comment") {
+        return { verb: "comment", message };
       }
     })
     .sort((a, b) => b.message.timestamp - a.message.timestamp);
@@ -405,7 +411,7 @@ function calculateActions(messages) {
     const date = timestampToDate(action.message.timestamp);
 
     if (!actionMap.has(date)) {
-      actionMap.set(date, { submit: 0, upvote: 0 });
+      actionMap.set(date, { submit: 0, upvote: 0, comment: 0 });
     }
 
     const currentEntry = actionMap.get(date);
@@ -419,15 +425,16 @@ function calculateActions(messages) {
   );
   for (const date of dates) {
     if (!actionMap.has(date)) {
-      actionMap.set(date, { submit: 0, upvote: 0 });
+      actionMap.set(date, { submit: 0, upvote: 0, comment: 0 });
     }
   }
 
   const sortedDates = dates.sort();
   const submissions = sortedDates.map((date) => actionMap.get(date).submit);
   const upvotes = sortedDates.map((date) => actionMap.get(date).upvote);
+  const comments = sortedDates.map((date) => actionMap.get(date).comment);
 
-  return { dates: sortedDates, submissions, upvotes };
+  return { dates: sortedDates, submissions, upvotes, comments };
 }
 
 function calculateDAUMAUratio(dauData, mauData) {
@@ -480,7 +487,6 @@ export default async function (trie, theme) {
   const allowlist = await registry.allowlist();
   const delegations = await registry.delegations();
   const href = null;
-  const type = "amplify";
   const messages = await store.posts(
     trie,
     from,
@@ -490,12 +496,23 @@ export default async function (trie, theme) {
     allowlist,
     delegations,
     href,
-    type,
+    "amplify",
+  );
+  const comments = await store.posts(
+    trie,
+    from,
+    amount,
+    parser,
+    startDatetime,
+    allowlist,
+    delegations,
+    href,
+    "comment",
   );
 
   const cacheEnabled = true;
   const messagesWithAddresses = await Promise.all(
-    messages.filter((msg) => {
+    [...messages, ...comments].filter((msg) => {
       const messageDate = new Date(msg.timestamp * 1000);
       const cutOffDate = new Date(2023, 3); // months are 0-indexed in JS, so 3 is April
       return messageDate >= cutOffDate;
@@ -503,10 +520,10 @@ export default async function (trie, theme) {
   );
 
   const dauData = calculateDAU(messagesWithAddresses);
-  const actions = classify(messagesWithAddresses);
-  const behavior = calculateActions(actions);
   const mauData = calculateMAU(messagesWithAddresses);
   const wauData = calculateWAU(messagesWithAddresses);
+  const actions = classify(messagesWithAddresses);
+  const behavior = calculateActions(actions);
 
   const options = {
     props: {
@@ -693,6 +710,15 @@ export default async function (trie, theme) {
     y: behavior.upvotes,
   };
   const upvotesChart = plot(html)(upvotesData, options);
+
+  options.yLabel.name = "Comments";
+  options.xLabel.name = "";
+  const commentsData = {
+    x: behavior.dates.map((date) => new Date(date)),
+    y: behavior.comments,
+  };
+  const commentsChart = plot(html)(commentsData, options);
+
   const delegationCounts = await countDelegations();
 
   return html`
@@ -798,6 +824,12 @@ export default async function (trie, theme) {
                     - Any upvote to Kiwi News
                   </p>
                   ${upvotesChart}
+                  <p>
+                    <b>Comments DEFINITION:</b>
+                    <br />
+                    - Any comment on Kiwi News
+                  </p>
+                  ${commentsChart}
                   <p>
                     <b>DAU/MAU Ratio DEFINITION:</b>
                     <br />

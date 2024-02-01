@@ -5,6 +5,15 @@ body {
      color:#828282;
      overscroll-behavior: none;
 }
+.chat-bubble:hover {
+  background-color: rgba(0,0,0,0.05);
+}
+.chat-bubble svg:hover {
+  color: black !important;
+}
+.story-domain a:hover {
+  text-decoration: underline;
+}
 .share-container {
    display: none;
  }
@@ -282,6 +291,10 @@ body {
     color: black;
 }
 
+    #hnmain table {
+      border-left: 1px solid rgba(0,0,0,0.05);
+      border-right: 1px solid rgba(0,0,0,0.05);
+    }
   
 /* mobile device */
  @media only screen and (min-width : 300px) and (max-width : 750px) {
@@ -289,11 +302,14 @@ body {
          width: 100%;
          min-width: 0;
     }
-     #boxmain {
+    #boxmain {
          width: 100%;
          min-width: 0;
     }
-     body {
+    body::-webkit-scrollbar {
+      -webkit-appearance: none;
+    }
+    body {
          padding: 0;
          margin: 0;
          width: 100%;
@@ -435,10 +451,14 @@ body {
 }
 /* Media query for larger screens */
  @media (min-width: 1150px) {
-     #hnmain > table:first-of-type > tbody > tr:first-of-type {
+    #hnmain > table:first-of-type > tbody > tr:first-of-type {
          background-color: #e6e6df;
     }
-     body {
+    #hnmain table {
+      border-left: none;
+      border-right: none;
+    }
+    body {
          background-color: rgb(246, 246, 239);
     }
      a[href="/submit"] {

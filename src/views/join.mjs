@@ -25,12 +25,12 @@ async function getENSAvatars(addresses) {
 }
 
 const addresses = [
-  "web3d3v.eth",
-  "fredwilson.eth",
-  "uncledavo.eth",
-  "m-j-r.eth",
   "mishaderidder.eth",
   "ccarella.eth",
+  "thatalexpalmer.eth",
+  "freeatnet.eth",
+  "destiner.eth",
+  "cerv1.eth",
 ];
 const avatarData = await getENSAvatars(addresses);
 

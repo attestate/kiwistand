@@ -10,7 +10,6 @@ import { getTips, getTipsValue } from "../tips.mjs";
 import * as ens from "../ens.mjs";
 import Header from "./components/header.mjs";
 import SecondHeader from "./components/secondheader.mjs";
-import ThirdHeader from "./components/thirdheader.mjs";
 import Sidebar from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
 import { custom } from "./components/head.mjs";
@@ -144,7 +143,7 @@ export default async function (trie, theme, index) {
   let items = stories;
   try {
     const post = await getPost(trie, index);
-    items = [post, ...items];
+    items = [{ ...post, index: index.substring(2) }, ...items];
   } catch (err) {
     // NOTE: If we cannot find the post, we just pretend like nothing happened.
   }
@@ -169,14 +168,9 @@ export default async function (trie, theme, index) {
                 ${await Header(theme)}
               </tr>
               <tr>
-                ${ThirdHeader(theme, "new")}
-              </tr>
-              <tr>
                 ${SecondHeader(theme, "new")}
               </tr>
-              <tr class="spacer" style="height:15px"></tr>
               ${items.map(Row(null, "/best"))}
-              <tr class="spacer" style="height:15px"></tr>
               <tr
                 style="display: block; padding: 10px; background-color: ${theme.color}"
               >

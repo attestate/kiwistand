@@ -28,6 +28,13 @@ import { newWalk } from "./WalkController.mjs";
 const maxReaders = 500;
 
 export const upvotes = new Set();
+export const commentCounts = new Map();
+
+export function addComment(storyId) {
+  const count = commentCounts.get(storyId) || 0;
+  commentCounts.set(storyId, count + 1);
+}
+//
 // TODO: This function would benefit from constraining operation only to
 // markers of the type "amplify" as to not accidentially store other types of
 // markers.
@@ -38,11 +45,14 @@ export function passes(marker) {
   }
   return !exists;
 }
-export function cache(posts) {
-  log("Caching upvote ids of posts, this can take a minute...");
-  for (const { identity, href, type } of posts) {
+export function cache(upvotes, comments) {
+  log("Caching upvote ids of upvotes, this can take a minute...");
+  for (const { identity, href, type } of upvotes) {
     const marker = upvoteID(identity, href, type);
     passes(marker);
+  }
+  for (const { href } of comments) {
+    addComment(href);
   }
 }
 
@@ -267,6 +277,9 @@ export async function atomicPut(trie, message, identity) {
 
   try {
     await trie.put(Buffer.from(index, "hex"), canonical);
+    if (message.type === "comment") {
+      addComment(message.href);
+    }
   } catch (err) {
     if (message.type !== "amplify") {
       throw new Error(
@@ -409,11 +422,11 @@ export async function post(trie, index, parser, allowlist, delegations) {
   }
 
   let upvoters = [];
+  let comments = [];
   if (parser) {
     const from = null;
     const amount = null;
     const startDatetime = null;
-    const type = "amplify";
     const upvotes = await posts(
       trie,
       from,
@@ -423,12 +436,24 @@ export async function post(trie, index, parser, allowlist, delegations) {
       allowlist,
       delegations,
       message.href,
-      type,
+      "amplify",
     );
     upvoters = upvotes.map(({ identity, timestamp }) => ({
       identity,
       timestamp,
     }));
+
+    comments = await posts(
+      trie,
+      from,
+      amount,
+      parser,
+      startDatetime,
+      allowlist,
+      delegations,
+      `kiwi:0x${index.toString("hex")}`,
+      "comment",
+    );
   }
 
   return {
@@ -439,6 +464,7 @@ export async function post(trie, index, parser, allowlist, delegations) {
       ...message,
       upvoters,
       upvotes: upvoters.length,
+      comments,
     },
   };
 }

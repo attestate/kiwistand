@@ -1,6 +1,49 @@
 import "vite/modulepreload-polyfill";
 import "@rainbow-me/rainbowkit/styles.css";
+import PullToRefresh from "pulltorefreshjs";
+
+import { isRunningPWA } from "./OnboardingModal.jsx";
 import { getCookie, getLocalAccount } from "./session.mjs";
+
+function commentCountSignifier() {
+  const isStoriesPage = window.location.pathname === "/stories";
+  const indexQueryParam = new URLSearchParams(window.location.search).get(
+    "index",
+  );
+
+  if (isStoriesPage && indexQueryParam) {
+    const index = indexQueryParam.substring(2);
+    // Update localStorage for a specific comment page
+    const commentCountElement = document.querySelector(
+      `[id^='comment-count-']`,
+    );
+    if (commentCountElement) {
+      const currentCount = parseInt(commentCountElement.textContent, 10);
+      localStorage.setItem(`commentCount-${index}`, currentCount.toString());
+    }
+    return;
+  }
+
+  document.querySelectorAll("[id^='chat-bubble-']").forEach((story) => {
+    const index = story.id.split("-")[2];
+    const commentCountElement = document.getElementById(
+      `comment-count-${index}`,
+    );
+    const currentCount = parseInt(commentCountElement.textContent, 10);
+    const storedCountKey = `commentCount-${index}`;
+    const storedCount = parseInt(localStorage.getItem(storedCountKey), 10);
+
+    if (isNaN(storedCount)) {
+      localStorage.setItem(
+        storedCountKey,
+        isNaN(currentCount) ? "0" : currentCount.toString(),
+      );
+    } else if (currentCount > storedCount) {
+      const svgElement = story.querySelector("svg");
+      svgElement.style.color = "limegreen";
+    }
+  });
+}
 
 async function checkNewStories() {
   let data;
@@ -194,6 +237,24 @@ async function addBuyButton(allowlistPromise, delegationsPromise, toast) {
           allowlist={allowlist}
           delegations={delegations}
           toast={toast}
+        />
+      </StrictMode>,
+    );
+  }
+}
+
+async function addCommentInput(toast, allowlist, delegations) {
+  const commentInput = document.querySelector("nav-comment-input");
+  if (commentInput) {
+    const { createRoot } = await import("react-dom/client");
+    const { StrictMode } = await import("react");
+    const CommentInputComponent = (await import("./CommentInput.jsx")).default;
+    createRoot(commentInput).render(
+      <StrictMode>
+        <CommentInputComponent
+          toast={toast}
+          allowlist={allowlist}
+          delegations={delegations}
         />
       </StrictMode>,
     );
@@ -411,6 +472,16 @@ function checkMintStatus(fetchAllowList, fetchDelegations) {
 }
 
 async function start() {
+  if (isRunningPWA()) {
+    PullToRefresh.init({
+      mainElement: "body",
+      onRefresh() {
+        window.location.reload();
+      },
+    });
+  }
+  commentCountSignifier();
+
   const toast = await addToaster();
 
   const { fetchAllowList, fetchDelegations } = await import("./API.mjs");
@@ -421,6 +492,7 @@ async function start() {
   // We're parallelizing all additions into the DOM
   const results = await Promise.allSettled([
     addVotes(allowlistPromise, delegationsPromise, toast),
+    addCommentInput(toast, allowlistPromise, delegationsPromise),
     addTips(),
     addModals(),
     addNFTPrice(),

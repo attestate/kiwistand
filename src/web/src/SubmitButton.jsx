@@ -23,37 +23,8 @@ function safeExtractDomain(link) {
   return tld;
 }
 
-const UploadButton = (props) => {
-  const { imageURL, setImageURL, url, setURL } = props;
-  const [loading, setLoading] = useState(false);
-
-  const uploadToCatbox = async (file) => {
-    setLoading(true);
-    setImageURL("");
-    const formData = new FormData();
-    formData.append("reqtype", "fileupload");
-    formData.append("fileToUpload", file);
-
-    try {
-      const response = await fetch("/api/v1/images", {
-        method: "POST",
-        body: formData,
-      });
-      const responseURL = await response.text();
-      setImageURL(responseURL);
-      setLoading(false);
-    } catch (error) {
-      setLoading(false);
-      console.error(error);
-    }
-  };
-
-  const handleFileSelect = useCallback((event) => {
-    const file = event.target.files[0];
-    if (file) {
-      uploadToCatbox(file);
-    }
-  }, []);
+const UrlInput = (props) => {
+  const { url, setURL } = props;
 
   return (
     <div style={{ maxWidth: "600px" }}>
@@ -76,104 +47,17 @@ const UploadButton = (props) => {
             padding: "5px 10px",
             fontSize: "16px",
             boxSizing: "border-box",
-            marginRight: "20px",
           }}
-          disabled={imageURL}
-          value={imageURL || url}
+          value={url}
           onChange={(e) => setURL(e.target.value)}
         />
-        <label>
-          <input
-            type="file"
-            accept="image/png, image/jpeg, image/gif, image/jpg"
-            style={{
-              display: "none",
-            }}
-            onChange={handleFileSelect}
-          />
-          <div
-            style={{
-              width: "33px",
-              height: "33px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              background: "#f0f0f0",
-              cursor: "pointer",
-              backgroundColor: imageURL ? "limegreen" : "black",
-              color: "white",
-              borderRadius: "3px",
-            }}
-          >
-            {loading ? "..." : imageURL ? <CheckmarkSVG /> : <ImageSVG />}
-          </div>
-        </label>
       </div>
     </div>
   );
 };
 
-const CheckmarkSVG = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 256 256"
-    style={{ width: "1.25rem", height: "1.25rem" }}
-  >
-    <rect width="256" height="256" fill="none" />
-    <polyline
-      points="88 136 112 160 168 104"
-      fill="none"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="24"
-    />
-    <circle
-      cx="128"
-      cy="128"
-      r="96"
-      fill="none"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="24"
-    />
-  </svg>
-);
-
-const ImageSVG = () => (
-  <svg
-    style={{ width: "1.25rem", height: "1.25rem" }}
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 256 256"
-  >
-    <rect width="256" height="256" fill="none" />
-    <rect
-      x="40"
-      y="40"
-      width="176"
-      height="176"
-      rx="8"
-      fill="none"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="24"
-    />
-    <circle cx="96" cy="96" r="20" />
-    <path
-      d="M56.69,216,166.34,106.34a8,8,0,0,1,11.32,0L216,144.69"
-      fill="none"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="24"
-    />
-  </svg>
-);
-
 const SubmitButton = (props) => {
-  const { toast, imageURL, url } = props;
+  const { toast, url } = props;
   const [isLoading, setIsLoading] = useState(false);
   const [title, setTitle] = useState("");
   const [openedOnce, setOpenedOnce] = useState(false);
@@ -182,7 +66,7 @@ const SubmitButton = (props) => {
   useEffect(() => {
     const embedPreview = document.getElementById("embed-preview");
 
-    const canonicalURL = imageURL ? imageURL : url;
+    const canonicalURL = url;
     if (canonicalURL) {
       fetch(`/api/v1/parse?url=${encodeURIComponent(canonicalURL)}`)
         .then((response) => {
@@ -200,7 +84,7 @@ const SubmitButton = (props) => {
     } else {
       embedPreview.innerHTML = "";
     }
-  }, [url, imageURL]);
+  }, [url]);
 
   useEffect(() => {
     const previewLink = document.querySelector(".story-link");
@@ -216,7 +100,7 @@ const SubmitButton = (props) => {
       previewLink.textContent = title || placeholderTitle;
     }
 
-    const canonicalURL = imageURL ? imageURL : url;
+    const canonicalURL = url;
     if (previewLink && canonicalURL) {
       previewLink.href = canonicalURL;
     } else if (previewLink) {
@@ -228,7 +112,7 @@ const SubmitButton = (props) => {
         ? `(${safeExtractDomain(canonicalURL)})`
         : placeholderDomain;
     }
-  }, [title, url, imageURL]);
+  }, [title, url]);
 
   let address;
   const account = useAccount();
@@ -282,7 +166,7 @@ const SubmitButton = (props) => {
   const handleClick = async (e) => {
     e.preventDefault();
 
-    const canonicalURL = imageURL ? imageURL : url;
+    const canonicalURL = url;
     const value = API.messageFab(
       title.replace(/(\r\n|\n|\r)/gm, " "),
       canonicalURL,
@@ -390,7 +274,6 @@ const SubmitButton = (props) => {
 
 const Form = (props) => {
   const [modalIsOpen, setIsOpen] = useState(false);
-  const [imageURL, setImageURL] = useState("");
 
   const urlInput = document.getElementById("urlInput");
   const [url, setURL] = useState(urlInput.value);
@@ -398,18 +281,8 @@ const Form = (props) => {
   return (
     <WagmiConfig client={client}>
       <RainbowKitProvider chains={chains}>
-        <UploadButton
-          url={url}
-          setURL={setURL}
-          imageURL={imageURL}
-          setImageURL={setImageURL}
-        />
-        <SubmitButton
-          {...props}
-          setIsOpen={setIsOpen}
-          url={url}
-          imageURL={imageURL}
-        />
+        <UrlInput url={url} setURL={setURL} />
+        <SubmitButton {...props} setIsOpen={setIsOpen} url={url} />
         <NFTModal
           modalIsOpen={modalIsOpen}
           setIsOpen={setIsOpen}
