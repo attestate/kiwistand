@@ -98,7 +98,6 @@ const CommentInput = (props) => {
       <textarea
         rows="12"
         cols="80"
-        style="display:block;width:100%;"
         style={{
           display: "block",
           width: "100%",
