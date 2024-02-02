@@ -285,6 +285,7 @@ async function addConnectedComponents(allowlist, delegations) {
     ConnectedConnectButton,
     RefreshButton,
     ConnectedBuyAdvert,
+    ConnectedSimpleDisconnectButton,
   } = await import("./Navigation.jsx");
   const Bell = (await import("./Bell.jsx")).default;
 
@@ -332,6 +333,17 @@ async function addConnectedComponents(allowlist, delegations) {
       <ConnectedDisconnectButton />
     </StrictMode>,
   );
+
+  const simpledisconnect = document.querySelector(
+    "nav-simple-disconnect-button",
+  );
+  if (simpledisconnect) {
+    createRoot(simpledisconnect).render(
+      <StrictMode>
+        <ConnectedSimpleDisconnectButton />
+      </StrictMode>,
+    );
+  }
 }
 
 async function addModals() {

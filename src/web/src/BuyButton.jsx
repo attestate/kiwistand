@@ -10,7 +10,7 @@ import {
 } from "wagmi";
 import { Contract } from "@ethersproject/contracts";
 import { Provider } from "@ethersproject/providers";
-import { parseEther } from "@ethersproject/units";
+import { parseEther, formatEther } from "@ethersproject/units";
 import { mainnet, optimism } from "wagmi/chains";
 import { Wallet } from "@ethersproject/wallet";
 import { getAddress } from "@ethersproject/address";
@@ -63,7 +63,9 @@ export async function prepare(key) {
     preferredChainId = mainnet.id;
   }
   if (!preferredChainId) {
-    throw new Error("Not enough ETH on Ethereum and OP");
+    throw new Error(
+      `Need at least ${formatEther(price)} on Mainnet or Optimism`,
+    );
   }
 
   const quantity = 1;

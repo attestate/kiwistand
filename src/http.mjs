@@ -11,6 +11,7 @@ import htm from "htm";
 import "express-async-errors";
 import multer from "multer";
 
+import kiwipassmint from "./views/kiwipass-mint.mjs";
 import log from "./logger.mjs";
 import { SCHEMATA } from "./constants.mjs";
 import themes from "./themes.mjs";
@@ -176,6 +177,13 @@ export async function launch(trie, libp2p) {
       }
     },
   );
+  app.get("/kiwipass-mint", async (request, reply) => {
+    reply.header("Cache-Control", "public, max-age=3600, must-revalidate");
+    return reply
+      .status(200)
+      .type("text/html")
+      .send(await kiwipassmint(reply.locals.theme));
+  });
   app.get("/api/v1/parse", async (request, reply) => {
     const embed = await parse(request.query.url);
     reply.header("Cache-Control", "no-cache");

@@ -10,7 +10,7 @@ import * as karma from "../../karma.mjs";
 
 const html = htm.bind(vhtml);
 
-const header = async (theme) => {
+const header = async (theme, path) => {
   return html` <td style="height: 62px;">
     <nav-nft-modal />
     <table
@@ -28,7 +28,11 @@ const header = async (theme) => {
             >
               <div class="kn-banner-desk">Kiwi News</div>
               <nav-header-avatar class="sidebar-toggle" style="width: 33%;">
-                <div style="display: flex; align-items: center;">
+                <div
+                  style="display: ${path === "/kiwipass-mint"
+                    ? "none"
+                    : "flex"}; align-items: center;"
+                >
                   <div
                     style="display: flex; cursor: pointer; align-items: center; justify-content: left; padding: 7px 0 7px 7px;"
                   >
