@@ -306,10 +306,7 @@ export default async function (theme) {
       <body class="kiwipass-mint-page">
         <div class="container">
           <div class="sidebar">${Sidebar()}</div>
-          <div
-            id="hnmain"
-            style="${path === "/kiwipass-mint" ? "width: 100%;" : ""}"
-          >
+          <div id="hnmain" style="width: 100%;">
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
               <tr>
                 ${await Header(theme, path)}
@@ -331,6 +328,10 @@ export default async function (theme) {
                           <span> <nft-price data-fee="0.000777" /></span>
                         </button>
                       </div>
+                      <br />
+                      <nav-simple-disconnect-button
+                        style="text-align: center; min-height: 16.5px; display: block;"
+                      />
                       <p class="text-below-button">
                         on <img src="OP-logo.svg" alt="OP Logo" /> powered
                         by<span> </span>

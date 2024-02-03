@@ -9,6 +9,7 @@ import cors from "cors";
 import Ajv from "ajv";
 import addFormats from "ajv-formats";
 import morgan from "morgan";
+import { utils } from "ethers";
 
 import log from "./logger.mjs";
 import * as store from "./store.mjs";
@@ -93,16 +94,32 @@ export function handleMessage(trie, libp2p, getAllowlist, getDelegations) {
 
 export function listAllowed(getAllowlist) {
   return async (request, reply) => {
+    let result = Array.from(await getAllowlist());
+    if (request.query.address) {
+      let address;
+      try {
+        address = utils.getAddress(request.query.address);
+      } catch (err) {
+        const code = 400;
+        const message = "Bad Request";
+        const details = "address query string must be an Ethereum address";
+        return sendError(reply, code, message, details);
+      }
+
+      const find = result.find((element) => element === address);
+
+      if (find) {
+        reply.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+        result = [find];
+      } else {
+        result = [];
+      }
+    }
+
     const code = 200;
     const httpMessage = "OK";
     const details = "Returning allow list";
-    return sendStatus(
-      reply,
-      code,
-      httpMessage,
-      details,
-      Array.from(await getAllowlist()),
-    );
+    return sendStatus(reply, code, httpMessage, details, result);
   };
 }
 

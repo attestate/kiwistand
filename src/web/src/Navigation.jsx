@@ -4,12 +4,12 @@ import { useEffect, useState } from "react";
 import { eligible } from "@attestate/delegator2";
 
 import { client, chains } from "./client.mjs";
-import { getLocalAccount } from "./session.mjs";
 import {
+  getLocalAccount,
   isSafariOnIOS,
   isChromeOnAndroid,
   isRunningPWA,
-} from "./OnboardingModal.jsx";
+} from "./session.mjs";
 
 const shorten = (address) =>
   address.slice(0, 6) +
@@ -80,7 +80,8 @@ const BuyAdvert = (props) => {
   if (
     !isEligible &&
     account.isConnected &&
-    window.location.pathname !== "/indexing"
+    window.location.pathname !== "/indexing" &&
+    window.location.pathname !== "/kiwipass-mint"
   ) {
     return (
       <PrimaryActionButton
@@ -405,6 +406,20 @@ const DisconnectSVG = () => (
     />
   </svg>
 );
+const SimpleDisconnectButton = () => {
+  return (
+    <ConnectButton.Custom>
+      {({ account, chain, mounted, openAccountModal }) => {
+        const connected = account && chain && mounted;
+        if (connected) {
+          return <span onClick={openAccountModal}>Disconnect</span>;
+        } else {
+          return null;
+        }
+      }}
+    </ConnectButton.Custom>
+  );
+};
 const DisconnectButton = () => {
   return (
     <ConnectButton.Custom>
@@ -516,6 +531,11 @@ export const ConnectedProfile = (props) => (
 export const ConnectedDisconnectButton = (props) => (
   <Connector>
     <DisconnectButton {...props} />
+  </Connector>
+);
+export const ConnectedSimpleDisconnectButton = (props) => (
+  <Connector>
+    <SimpleDisconnectButton {...props} />
   </Connector>
 );
 export const ConnectedConnectButton = (props) => (

@@ -3,6 +3,7 @@
 import htm from "htm";
 import vhtml from "vhtml";
 
+import PWALine from "./components/iospwaline.mjs";
 import Header from "./components/header.mjs";
 import Sidebar from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
@@ -143,7 +144,6 @@ export default async function (theme) {
           }
 
           body {
-            font-family: Arial, sans-serif;
             line-height: 1.6;
             margin: 0;
             padding: 0;
@@ -269,6 +269,7 @@ export default async function (theme) {
         <meta property="eth:nft:chain" content="ethereum" />
       </head>
       <body>
+        ${PWALine}
         <div class="container">
           ${Sidebar()}
           <div id="hnmain">

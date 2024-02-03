@@ -3,28 +3,10 @@ import Modal from "react-modal";
 import { getAccount } from "@wagmi/core";
 import debounce from "lodash.debounce";
 
-Modal.setAppElement("nav-onboarding-modal");
+import { isSafariOnIOS, isChromeOnAndroid, isRunningPWA } from "./session.mjs";
 
-export function isSafariOnIOS() {
-  const ua = navigator.userAgent;
-  const iOS = !!ua.match(/iPad/i) || !!ua.match(/iPhone/i);
-  const webkit = !!ua.match(/WebKit/i);
-  return iOS && webkit;
-}
-
-export function isChromeOnAndroid() {
-  const ua = navigator.userAgent;
-  const android = !!ua.match(/Android/i);
-  const chrome = !!ua.match(/Chrome/i);
-  return android && chrome;
-}
-
-export function isRunningPWA() {
-  return (
-    window.matchMedia("(display-mode: standalone)").matches ||
-    window.navigator.standalone ||
-    document.referrer.includes("android-app://")
-  );
+if (document.querySelector("nav-onboarding-modal")) {
+  Modal.setAppElement("nav-onboarding-modal");
 }
 
 class SimpleModal extends Component {
@@ -52,10 +34,18 @@ class SimpleModal extends Component {
   checkAccount = () => {
     const account = getAccount();
     const hasVisited =
-      localStorage.getItem("-kiwi-news-has-visited") ||
+      localStorage.getItem("-kiwi-news-has-visited") === "true" ||
       (account && account.isConnected) ||
       isRunningPWA();
-    this.setState({ showModal: !hasVisited, hasCheckedAccount: true }); // Changed to true to keep the modal open
+
+    if (!hasVisited && isSafariOnIOS()) {
+      const iOSLine = document.querySelector(".ios-pwa-line");
+      if (iOSLine) {
+        iOSLine.style.display = "flex";
+      }
+    }
+
+    this.setState({ hasCheckedAccount: true });
   };
 
   setVisited = () => {
@@ -131,126 +121,141 @@ class SimpleModal extends Component {
       navigator.userAgent.match(/EdgiOS/i);
 
     return (
-      <Modal
-        isOpen={this.state.showModal}
-        onRequestClose={this.closeModal}
-        contentLabel="Kiwi News Modal"
-        shouldCloseOnOverlayClick={true}
-        style={customStyles}
-      >
-        <div style={{ padding: "0 5vw" }}>
-          <p>
-            <b style={{ fontSize: "1.2rem", marginBottom: "15px" }}>gm!</b>
-            <br />
-            Kiwi News is the frontpage of web3!
-          </p>
-          {!isChromeOnAndroid() && !isSafariOnIOS() && (
+      <div>
+        <Modal
+          isOpen={this.state.showModal}
+          onRequestClose={this.closeModal}
+          contentLabel="Kiwi News Modal"
+          shouldCloseOnOverlayClick={true}
+          style={customStyles}
+        >
+          <div style={{ padding: "0 5vw" }}>
             <p>
-              Here a community of crypto veterans shares and curates
-              crypto-related stories from around the Internet.
+              <b style={{ fontSize: "1.2rem", marginBottom: "15px" }}>gm!</b>
               <br />
-              <br />
-              Click any link in the feed to see what we find interesting!
-              <br />
-              <br />
-              Have fun!
-              <br />
+              Kiwi News is the frontpage of web3!
             </p>
-          )}
-          {isChromeOnAndroid() && (
-            <>
+            {!isChromeOnAndroid() && !isSafariOnIOS() && (
               <p>
-                <b>Add to home screen</b>
+                Here a community of crypto veterans shares and curates
+                crypto-related stories from around the Internet.
                 <br />
                 <br />
-                To install the app, you need to add this website to your home
-                screen.
+                Click any link in the feed to see what we find interesting!
                 <br />
                 <br />
-                1. Tap the <ThreeDotsSVG /> Menu
-                <br />
-                <br />
-                2. Choose "<b>Install app</b>
-                "
-                <br />
-                <br />
-                3. Open the "Kiwi News" app on your home screen
-                <br />
+                Have fun!
                 <br />
               </p>
-            </>
-          )}
-          {isSafariOnIOS() && (
-            <>
-              <p>
-                <b>Add to home screen</b>
-                <br />
-                <br />
-                To install the app, you need to add this website to your home
-                screen.
-                <br />
-                <br />
-                {isntReallySafari && (
-                  <div>
-                    <b>Please switch to Safari!</b>
-                    <br />
-                    <br />
-                    On iOS <b>only</b> the Safari browser can add an app to the
-                    homescreen.
-                  </div>
-                )}
-                {!isntReallySafari && (
-                  <div>
-                    1. Tap the <ShareSVG /> Share icon
-                    <br />
-                    <br />
-                    2. Choose "
-                    <b>
-                      Add to Home Screen <PlusSVG />
-                    </b>
-                    "
-                    <br />
-                    <br />
-                    3. Open the "Kiwi News" app on your home screen
-                    <br />
-                    <br />
-                  </div>
-                )}
-              </p>
-            </>
-          )}
-        </div>
-        <div style={{ padding: "0 5vw" }}>
-          <a
-            href="/welcome?referral=0x3699BFc793e87195Be610748e2AdBdb462941C3d"
-            target="_blank"
-          >
-            <button
-              onClick={this.setVisited}
-              style={{
-                borderRadius: "2px",
-                padding: "5px 15px",
-                border: "1px solid black",
-                color: "black",
-                textAlign: "center",
-                textDecoration: "none",
-                cursor: "pointer",
-                width: "100%",
-                margin: "20px auto",
-                display: "block",
-                fontSize: "1.1rem",
-              }}
+            )}
+            {isChromeOnAndroid() && (
+              <>
+                <p>
+                  <b>Add to home screen</b>
+                  <br />
+                  <br />
+                  To install the app, you need to add this website to your home
+                  screen.
+                  <br />
+                  <br />
+                  1. Tap the <ThreeDotsSVG /> Menu
+                  <br />
+                  <br />
+                  2. Choose "<b>Install app</b>
+                  "
+                  <br />
+                  <br />
+                  3. Open the "Kiwi News" app on your home screen
+                  <br />
+                  <br />
+                </p>
+              </>
+            )}
+            {isSafariOnIOS() && (
+              <>
+                <p>
+                  <b>Add to home screen</b>
+                  <br />
+                  <br />
+                  To install the app, you need to add this website to your home
+                  screen.
+                  <br />
+                  <br />
+                  {isntReallySafari && (
+                    <div>
+                      <b>Please switch to Safari!</b>
+                      <br />
+                      <br />
+                      On iOS <b>only</b> the Safari browser can add an app to
+                      the homescreen.
+                    </div>
+                  )}
+                  {!isntReallySafari && (
+                    <div>
+                      1. Tap the <ShareSVG /> Share icon
+                      <br />
+                      <br />
+                      2. Choose "
+                      <b>
+                        Add to Home Screen <PlusSVG />
+                      </b>
+                      "
+                      <br />
+                      <br />
+                      3. Open the "Kiwi News" app on your home screen
+                      <br />
+                      <br />
+                    </div>
+                  )}
+                </p>
+              </>
+            )}
+          </div>
+          <div style={{ padding: "0 5vw" }}>
+            <a
+              href="/welcome?referral=0x3699BFc793e87195Be610748e2AdBdb462941C3d"
+              target="_blank"
             >
-              Learn more about 🥝
-            </button>
-          </a>
-        </div>
-        <p style={{ textAlign: "center" }}>
-          <u style={{ cursor: "pointer" }} onClick={this.closeModal}>
-            Take me back to the feed
-          </u>
-        </p>
-      </Modal>
+              <button
+                onClick={this.setVisited}
+                style={{
+                  borderRadius: "2px",
+                  padding: "5px 15px",
+                  border: "1px solid black",
+                  color: "black",
+                  textAlign: "center",
+                  textDecoration: "none",
+                  cursor: "pointer",
+                  width: "100%",
+                  margin: "20px auto",
+                  display: "block",
+                  fontSize: "1.1rem",
+                }}
+              >
+                Learn more about 🥝
+              </button>
+            </a>
+          </div>
+          <p style={{ textAlign: "center" }}>
+            <u style={{ cursor: "pointer" }} onClick={this.closeModal}>
+              Take me back to the feed
+            </u>
+          </p>
+        </Modal>
+        <button
+          onClick={this.openModal}
+          style={{
+            marginRight: "15px",
+            backgroundColor: "#007aff",
+            color: "white",
+            padding: "6px 15px",
+            border: "none",
+            borderRadius: "15px",
+          }}
+        >
+          Install
+        </button>
+      </div>
     );
   }
 }
@@ -348,5 +353,4 @@ const ShareSVG = () => (
     />
   </svg>
 );
-
 export default SimpleModal;

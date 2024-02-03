@@ -96,6 +96,13 @@ minted the NFT on Optimism at the contract located at
 Please note that it may take some time for the indexer to pick up a new mint
 (usually around 1-2 minutes).
 
+Request body:
+
+- ``address`` (string): An valid Ethereum address by which the allowlist can be
+  filtered by. If, upon requesting the allowlist endpoint with such an address,
+  the response is an empty array, it means that this address isn't allowlisted.
+  is inclusive.
+
 **GET /api/v1/delegations**
 
 Retrieves an object of valid delegations in the form of ``to:from``, where

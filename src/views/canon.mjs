@@ -7,6 +7,7 @@ import vhtml from "vhtml";
 import normalizeUrl from "normalize-url";
 import { sub, differenceInMinutes } from "date-fns";
 
+import PWALine from "./components/iospwaline.mjs";
 import { getTips, getTipsValue } from "../tips.mjs";
 import * as ens from "../ens.mjs";
 import Header from "./components/header.mjs";
@@ -144,6 +145,7 @@ export default async function index(trie, theme, canon) {
         ${custom(canon.largePreview, canon.displayName, canon.description)}
       </head>
       <body>
+        ${PWALine}
         <div class="container">
           ${Sidebar()}
           <div id="hnmain">

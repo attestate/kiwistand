@@ -6,6 +6,7 @@ import vhtml from "vhtml";
 import { sub } from "date-fns";
 import normalizeUrl from "normalize-url";
 
+import PWALine from "./components/iospwaline.mjs";
 import { getTips, getTipsValue } from "../tips.mjs";
 import * as ens from "../ens.mjs";
 import Header from "./components/header.mjs";
@@ -160,6 +161,7 @@ export default async function (trie, theme, index) {
         />
       </head>
       <body>
+        ${PWALine}
         <div class="container">
           ${Sidebar(path)}
           <div id="hnmain">

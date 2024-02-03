@@ -12,6 +12,7 @@ import {
   isBefore,
 } from "date-fns";
 
+import PWALine from "./components/iospwaline.mjs";
 import { getTips, getTipsValue } from "../tips.mjs";
 import * as ens from "../ens.mjs";
 import Header from "./components/header.mjs";
@@ -391,6 +392,7 @@ export default async function (trie, theme, page, domain) {
         />
       </head>
       <body>
+        ${PWALine}
         <div class="container">
           ${Sidebar(path)}
           <div id="hnmain">

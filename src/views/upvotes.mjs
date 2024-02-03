@@ -7,6 +7,7 @@ import normalizeUrl from "normalize-url";
 import { formatDistanceToNow } from "date-fns";
 import { utils } from "ethers";
 
+import PWALine from "./components/iospwaline.mjs";
 import { getTips, getTipsValue } from "../tips.mjs";
 import Header from "./components/header.mjs";
 import { trophySVG, broadcastSVG } from "./components/secondheader.mjs";
@@ -123,6 +124,7 @@ export default async function (trie, theme, identity, page, mode) {
         ${Head}
       </head>
       <body>
+        ${PWALine}
         <div class="container">
           ${Sidebar()}
           <div id="hnmain">
