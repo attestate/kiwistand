@@ -24,6 +24,7 @@ import { EIP712_MESSAGE } from "./constants.mjs";
 import { elog } from "./utils.mjs";
 import * as messages from "./topics/messages.mjs";
 import { newWalk } from "./WalkController.mjs";
+import { insertMessage } from "./cache.mjs";
 
 const maxReaders = 500;
 
@@ -277,6 +278,14 @@ export async function atomicPut(trie, message, identity) {
 
   try {
     await trie.put(Buffer.from(index, "hex"), canonical);
+    try {
+      // TODO: signer and identity aren't reproduced yet here.
+      insertMessage(message);
+    } catch (err) {
+      // NOTE: insertMessage is just a cache, so if this operation fails, we
+      // want the protocol to continue to execute as normally.
+      console.error(err);
+    }
     if (message.type === "comment") {
       addComment(message.href);
     }
