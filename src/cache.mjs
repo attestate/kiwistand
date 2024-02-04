@@ -12,9 +12,23 @@ const db = new Database(dbPath);
 db.pragma("journal_mode = WAL");
 
 function initialize() {
-  db.exec("DROP TABLE IF EXISTS upvotes");
-  db.exec("DROP TABLE IF EXISTS comments");
-  db.exec("DROP TABLE IF EXISTS submissions");
+  let isSetup = true;
+  const tables = ["submissions", "upvotes", "comments"];
+  tables.forEach((table) => {
+    const exists = db
+      .prepare(
+        `SELECT name FROM sqlite_master WHERE type='table' AND
+ name=?`,
+      )
+      .get(table);
+    if (!exists) {
+      isSetup = false;
+    }
+  });
+
+  if (isSetup) {
+    return isSetup;
+  }
 
   db.exec(`
      CREATE TABLE submissions (

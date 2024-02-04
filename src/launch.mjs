@@ -74,8 +74,10 @@ const comments = await store.posts(
   "comment",
 );
 
-cache.initialize();
-[...upvotes, ...comments].forEach(cache.insertMessage);
+const alreadySetup = cache.initialize();
+if (!alreadySetup) {
+  [...upvotes, ...comments].forEach(cache.insertMessage);
+}
 
 try {
   store.cache(upvotes, comments);
