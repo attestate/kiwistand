@@ -178,7 +178,10 @@ export async function launch(trie, libp2p) {
     },
   );
   app.get("/kiwipass-mint", async (request, reply) => {
-    reply.header("Cache-Control", "public, max-age=3600, must-revalidate");
+    reply.header(
+      "Cache-Control",
+      "public, max-age=3600, no-transform, must-revalidate, stale-while-revalidate=86400",
+    );
     return reply
       .status(200)
       .type("text/html")
