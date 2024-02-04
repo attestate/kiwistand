@@ -258,7 +258,13 @@ export function upvoteID(identity, link, type) {
   return `${utils.getAddress(identity)}|${normalizeUrl(link)}|${type}`;
 }
 
-export async function atomicPut(trie, message, identity) {
+export async function atomicPut(
+  trie,
+  message,
+  identity,
+  allowlist,
+  delegations,
+) {
   const marker = upvoteID(identity, message.href, message.type);
   const { canonical, index } = toDigest(message);
   log(
@@ -279,13 +285,15 @@ export async function atomicPut(trie, message, identity) {
   try {
     await trie.put(Buffer.from(index, "hex"), canonical);
     try {
-      // TODO: signer and identity aren't reproduced yet here.
-      insertMessage(message);
+      const cacheEnabled = false;
+      const enhancer = enhance(allowlist, delegations, cacheEnabled);
+      insertMessage(enhancer(message));
     } catch (err) {
       // NOTE: insertMessage is just a cache, so if this operation fails, we
       // want the protocol to continue to execute as normally.
-      console.error(err);
+      log(`Inserting message threw: ${JSON.stringify(message)}`);
     }
+    // TODO: Remove and replace with SQLite implementation
     if (message.type === "comment") {
       addComment(message.href);
     }
@@ -377,7 +385,13 @@ export async function add(
     }
   }
 
-  const { index, canonical } = await atomicPut(trie, message, identity);
+  const { index, canonical } = await atomicPut(
+    trie,
+    message,
+    identity,
+    allowlist,
+    delegations,
+  );
 
   if (!libp2p) {
     log(
@@ -504,26 +518,29 @@ export async function posts(
   );
 
   const cacheEnabled = true;
-  const posts = nodes
-    .map((node) => {
-      const signer = ecrecover(node, EIP712_MESSAGE, cacheEnabled);
-      const identity = eligible(allowlist, delegations, signer);
-      if (!identity) {
-        log(`Identity not found: ${signer}`);
-        return null;
-      }
-
-      const { index } = toDigest(node);
-
-      return {
-        index,
-        ...node,
-        signer,
-        identity,
-      };
-    })
-    .filter((node) => node !== null);
+  const enhancer = enhance(allowlist, delegations, cacheEnabled);
+  const posts = nodes.map(enhancer).filter((node) => node !== null);
   return posts;
+}
+
+export function enhance(allowlist, delegations, cacheEnabled) {
+  return (node) => {
+    const signer = ecrecover(node, EIP712_MESSAGE, cacheEnabled);
+    const identity = eligible(allowlist, delegations, signer);
+    if (!identity) {
+      log(`Identity not found: ${signer}`);
+      return null;
+    }
+
+    const { index } = toDigest(node);
+
+    return {
+      index,
+      ...node,
+      signer,
+      identity,
+    };
+  };
 }
 
 export async function leaves(
