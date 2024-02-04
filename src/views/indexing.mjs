@@ -66,13 +66,13 @@ export default async function (theme, userAddress, transactionHash) {
                       You minted
                       <span style="color: limegreen;"> a Kiwi Pass 🎉</span>
                     </h1>
-                    <h2 style="max-width: 720px; 
+                    <h2 style="max-width: 545px; 
                     margin-left: auto;
                     margin-right: auto;
                     text-align: center;
                     color: black;">
                       Spread the word and earn<span> </span>
-                      <span style="color: limegreen;">0.000222 ETH</span> <br /> for
+                      <span style="color: limegreen; white-space: nowrap;">0.000222 ETH</span> for
                       every mint from your Kiwipass link!
                     </h2>
                     <p style="max-width: 720px; 

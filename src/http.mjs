@@ -451,7 +451,7 @@ export async function launch(trie, libp2p) {
   app.get("/indexing", async (request, reply) => {
     let address;
     try {
-      address = utils.isAddress(request.query.address);
+      address = utils.getAddress(request.query.address);
     } catch (err) {
       return reply
         .status(404)
