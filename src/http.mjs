@@ -53,6 +53,7 @@ import * as store from "./store.mjs";
 import { generate } from "./preview.mjs";
 import * as ens from "./ens.mjs";
 import * as karma from "./karma.mjs";
+import { getSubmission } from "./cache.mjs";
 
 const app = express();
 
@@ -303,40 +304,28 @@ export async function launch(trie, libp2p) {
       return reply.status(404).type("text/plain").send("index wasn't found");
     }
 
-    const hexIndex = index.substring(2);
-    const parser = JSON.parse;
-    const allowlist = await registry.allowlist();
-    const delegations = await registry.delegations();
-    let post;
+    let submission;
     try {
-      post = await store.post(
-        trie,
-        Buffer.from(hexIndex, "hex"),
-        parser,
-        allowlist,
-        delegations,
-      );
+      submission = await getSubmission(index);
     } catch (err) {
+      console.error(err);
       log(
         `Requested index "${index}" but didn't find because of error "${err.toString()}"`,
       );
       return reply.status(404).type("text/plain").send("index wasn't found");
     }
 
-    if (post && post.value && post.value.type === "comment") {
-      return reply.status(404).type("text/plain").send("index wasn't found");
-    }
-
-    const ensData = await ens.resolve(post.value.identity);
+    const ensData = await ens.resolve(submission.identity);
     const value = {
-      ...post.value,
+      ...submission,
       displayName: ensData.displayName,
       submitter: ensData,
     };
     // NOTE: We aren't awaiting here because this can run in parallel
+    const hexIndex = index.substring(2);
     generate(hexIndex, value.title, value.submitter);
 
-    const content = await story(trie, reply.locals.theme, hexIndex, post.value);
+    const content = await story(trie, reply.locals.theme, hexIndex, submission);
 
     reply.header(
       "Cache-Control",

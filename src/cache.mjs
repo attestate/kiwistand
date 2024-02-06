@@ -72,6 +72,63 @@ function initialize() {
    `);
 }
 
+export function getSubmission(index) {
+  const submission = db
+    .prepare(
+      `
+     SELECT * FROM submissions WHERE id = ?
+   `,
+    )
+    .get(`kiwi:${index}`);
+
+  if (!submission) {
+    throw new Error(`Couldn't find submission with index: ${index}`);
+  }
+
+  const upvotesCount =
+    db
+      .prepare(
+        `
+     SELECT COUNT(*) AS count FROM upvotes WHERE href = ?
+   `,
+      )
+      .get(submission.href).count + 1;
+
+  const upvoters = [
+    { identity: submission.identity, timestamp: submission.timestamp },
+    ...db
+      .prepare(
+        `
+       SELECT identity, timestamp FROM upvotes WHERE href = ?
+     `,
+      )
+      .all(submission.href),
+  ];
+
+  const comments = db
+    .prepare(
+      `
+     SELECT * FROM comments WHERE submission_id = ? ORDER BY timestamp ASC
+   `,
+    )
+    .all(submission.id)
+    .map((comment) => ({
+      ...comment,
+      type: "comment",
+    }));
+
+  const [, indexExtracted] = submission.id.split("0x");
+  delete submission.id;
+
+  return {
+    ...submission,
+    index: indexExtracted,
+    upvotes: upvotesCount,
+    upvoters,
+    comments,
+  };
+}
+
 export function listNewest() {
   const submissions = db
     .prepare(
