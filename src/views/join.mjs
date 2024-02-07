@@ -305,7 +305,7 @@ export default async function (theme) {
                       </button>
                     </a>
                     <a
-                      href="/kiwipass?referral=0xa98a63A8447668e2e445fe070dC306ce8799C1d0"
+                      href="/kiwipass-mint?referral=0xa98a63A8447668e2e445fe070dC306ce8799C1d0"
                     >
                       <button
                         class="button-secondary"
