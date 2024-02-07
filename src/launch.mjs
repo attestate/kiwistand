@@ -12,6 +12,7 @@ import { handlers } from "./index.mjs";
 import * as api from "./api.mjs";
 import * as http from "./http.mjs";
 import * as store from "./store.mjs";
+import * as cache from "./cache.mjs";
 import mintCrawlPath from "./chainstate/mint.config.crawler.mjs";
 import delegateCrawlPath from "./chainstate/delegate.config.crawler.mjs";
 import * as registry from "./chainstate/registry.mjs";
@@ -72,6 +73,12 @@ const comments = await store.posts(
   href,
   "comment",
 );
+
+const alreadySetup = cache.initialize();
+if (!alreadySetup) {
+  [...upvotes, ...comments].forEach(cache.insertMessage);
+}
+
 try {
   store.cache(upvotes, comments);
 } catch (err) {

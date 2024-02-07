@@ -124,13 +124,13 @@ test("if cache inserts upvote IDs reliably", async (t) => {
     type: "amplify",
     identity: "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176",
   };
-  store.cache([message]);
+  store.cache([message], []);
   const metadb = store.upvotes;
   const marker = store.upvoteID(message.identity, message.href, message.type);
   t.true(store.upvotes.has(marker));
   t.is(store.upvotes.size, 1);
 
-  store.cache([message]);
+  store.cache([message], []);
   t.true(store.upvotes.has(marker));
   t.is(store.upvotes.size, 1);
 });
@@ -489,6 +489,7 @@ test("getting a leaf", async (t) => {
   );
   t.is(post.key, index);
   t.deepEqual(post.value, {
+    comments: [],
     signer: address,
     identity: address,
     ...signedMessage,

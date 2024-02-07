@@ -18,6 +18,7 @@ import * as store from "../store.mjs";
 import * as moderation from "./moderation.mjs";
 import * as registry from "../chainstate/registry.mjs";
 import { count } from "./feed.mjs";
+import { listNewest } from "../cache.mjs";
 import Row, { extractDomain } from "./components/row.mjs";
 
 const html = htm.bind(vhtml);
@@ -39,35 +40,9 @@ export async function recompute(trie) {
   if (inProgress) return;
   inProgress = true;
 
+  let counts = listNewest();
   const config = await moderation.getLists();
-  const from = null;
-  const amount = null;
-  const parser = JSON.parse;
-  const allowlist = await registry.allowlist();
-  const delegations = await registry.delegations();
-  const startDateTime = null;
-  const href = null;
-  const type = "amplify";
-
-  let leaves = await store.posts(
-    trie,
-    from,
-    amount,
-    parser,
-    startDateTime,
-    allowlist,
-    delegations,
-    href,
-    type,
-  );
-  leaves = leaves.filter(
-    ({ href }) =>
-      extractDomain(href) !== "imgur.com" &&
-      extractDomain(href) !== "catbox.moe",
-  );
-  leaves = moderation.moderate(leaves, config);
-
-  let counts = count(leaves);
+  counts = moderation.moderate(counts, config);
   let sortedCounts = counts.sort((a, b) => b.timestamp - a.timestamp);
   let slicedCounts = sortedCounts.slice(0, 40);
 

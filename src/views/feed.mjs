@@ -202,11 +202,6 @@ export async function index(trie, page, domain) {
     href,
     type,
   );
-  leaves = leaves.filter(
-    ({ href }) =>
-      extractDomain(href) !== "imgur.com" &&
-      extractDomain(href) !== "catbox.moe",
-  );
   const policy = await moderation.getLists();
   leaves = moderation.moderate(leaves, policy);
 
