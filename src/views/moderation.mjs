@@ -76,6 +76,7 @@ export async function getLists() {
     addresses: [],
     titles: {},
     links: [],
+    messages: [],
   };
 
   let addrResponse;
@@ -108,11 +109,33 @@ export async function getLists() {
   for (let obj of titleResponse) {
     titles[normalizeUrl(obj.link)] = obj.title;
   }
+
+  let messages;
+  try {
+    messages = await getConfig("banlist_messages");
+  } catch (err) {
+    log(`banlist_messages: Couldn't get config: ${err.toString()}`);
+    return defaultObj;
+  }
   return {
+    messages,
     titles,
     addresses,
     links,
   };
+}
+
+export function flag(leaves, config) {
+  return leaves.map((leaf) => {
+    const flag = config.messages.find(
+      ({ index }) => index === `0x${leaf.index}`,
+    );
+    if (flag) {
+      leaf.flagged = true;
+      leaf.reason = flag.reason;
+    }
+    return leaf;
+  });
 }
 
 export function moderate(leaves, config) {
