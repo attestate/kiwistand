@@ -112,10 +112,15 @@ export function getSubmission(index) {
    `,
     )
     .all(submission.id)
-    .map((comment) => ({
-      ...comment,
-      type: "comment",
-    }));
+    .map((comment) => {
+      const [, index] = comment.id.split("0x");
+      delete comment.id;
+      return {
+        ...comment,
+        index,
+        type: "comment",
+      };
+    });
 
   const [, indexExtracted] = submission.id.split("0x");
   delete submission.id;
