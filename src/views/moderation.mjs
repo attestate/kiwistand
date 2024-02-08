@@ -75,6 +75,7 @@ export async function getLists() {
   const defaultObj = {
     addresses: [],
     titles: {},
+    hrefs: {},
     links: [],
     messages: [],
   };
@@ -107,7 +108,21 @@ export async function getLists() {
   }
   const titles = {};
   for (let obj of titleResponse) {
+    if (!obj.link || !obj.title) continue;
     titles[normalizeUrl(obj.link)] = obj.title;
+  }
+
+  let hrefResponse;
+  try {
+    hrefResponse = await getConfig("moderation_hrefs");
+  } catch (err) {
+    log(`moderation_hrefs: Couldn't get config: ${err.toString()}`);
+    return defaultObj;
+  }
+  const hrefs = {};
+  for (let obj of hrefResponse) {
+    if (!obj.old || !obj.new) continue;
+    hrefs[normalizeUrl(obj.old)] = obj.new;
   }
 
   let messages;
@@ -118,6 +133,7 @@ export async function getLists() {
     return defaultObj;
   }
   return {
+    hrefs,
     messages,
     titles,
     addresses,
@@ -145,9 +161,12 @@ export function moderate(leaves, config) {
         const alternativeTitle = config.titles[normalizeUrl(leaf.href)];
         const nextTitle = alternativeTitle ? alternativeTitle : leaf.title;
 
-        const cacheEnabled = true;
+        const alternativeHref = config.hrefs[normalizeUrl(leaf.href)];
+        const nextHref = alternativeHref ? alternativeHref : leaf.href;
+
         return {
           ...leaf,
+          href: nextHref,
           title: nextTitle,
         };
       })
