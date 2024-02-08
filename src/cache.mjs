@@ -41,6 +41,7 @@ function initialize() {
      );
      CREATE INDEX IF NOT EXISTS idx_submission_href ON submissions(href);
      CREATE INDEX IF NOT EXISTS idx_submissions_timestamp ON submissions(timestamp);
+     CREATE INDEX IF NOT EXISTS idx_submissions_identity ON submissions(identity);
    `);
 
   db.exec(`
@@ -55,6 +56,7 @@ function initialize() {
      );
      CREATE INDEX IF NOT EXISTS idx_upvotes_submission_href ON upvotes(href);
      CREATE INDEX IF NOT EXISTS idx_upvotes_timestamp ON upvotes(timestamp);
+     CREATE INDEX IF NOT EXISTS idx_upvotes_identity ON upvotes(identity);
    `);
 
   db.exec(`
@@ -69,13 +71,15 @@ function initialize() {
      );
      CREATE INDEX IF NOT EXISTS idx_comments_submission_id ON comments(submission_id);
      CREATE INDEX IF NOT EXISTS idx_comments_timestamp ON comments(timestamp);
+     CREATE INDEX IF NOT EXISTS idx_comments_identity ON comments(identity);
    `);
 }
 
 export function getUpvotes(identity) {
+  const threeWeeksAgo = Math.floor(Date.now() / 1000) - 1814400;
   const submissions = db
-    .prepare(`SELECT * from submissions WHERE identity = ?`)
-    .all(identity)
+    .prepare(`SELECT * from submissions WHERE identity = ? AND timestamp >= ?`)
+    .all(identity, threeWeeksAgo)
     .map((upvote) => ({
       ...upvote,
       index: upvote.id.split("0x")[1],
@@ -85,10 +89,10 @@ export function getUpvotes(identity) {
     .prepare(
       `
      SELECT * FROM upvotes WHERE href IN (SELECT href FROM submissions WHERE
- identity = ?)
+ identity = ? AND timestamp >= ? )
    `,
     )
-    .all(identity)
+    .all(identity, threeWeeksAgo)
     .map((upvote) => ({
       ...upvote,
       index: upvote.id.split("0x")[1],
@@ -97,6 +101,7 @@ export function getUpvotes(identity) {
 }
 
 export function getComments(identity) {
+  const threeWeeksAgo = Math.floor(Date.now() / 1000) - 1814400;
   const comments = db
     .prepare(
       `
@@ -106,10 +111,14 @@ export function getComments(identity) {
      FROM 
       comments
      WHERE 
-      submission_id IN (SELECT id FROM submissions WHERE identity = ?) AND identity != ?
+        submission_id IN (SELECT id FROM submissions WHERE identity = ?)
+      AND
+        identity != ?
+      AND
+        timestamp >= ?
    `,
     )
-    .all(identity, identity)
+    .all(identity, identity, threeWeeksAgo)
     .map((comment) => {
       const href = comment.submission_id;
       delete comment.submission_id;
@@ -130,10 +139,14 @@ export function getComments(identity) {
      FROM
       comments
      WHERE
-      submission_id IN (SELECT submission_id FROM comments WHERE identity = ?) AND identity != ?
+        submission_id IN (SELECT submission_id FROM comments WHERE identity = ?)
+      AND
+        identity != ?
+      AND
+        timestamp >= ?
    `,
     )
-    .all(identity, identity)
+    .all(identity, identity, threeWeeksAgo)
     .map((comment) => {
       const href = comment.submission_id;
       delete comment.submission_id;
