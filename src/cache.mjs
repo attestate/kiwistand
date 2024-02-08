@@ -77,27 +77,19 @@ function initialize() {
 
 export function getUpvotes(identity) {
   const threeWeeksAgo = Math.floor(Date.now() / 1000) - 1814400;
-  const submissions = db
-    .prepare(`SELECT * from submissions WHERE identity = ? AND timestamp >= ?`)
+  const query = `
+     SELECT u.*
+     FROM upvotes u
+     JOIN submissions s ON u.href = s.href
+     WHERE s.identity = ? AND s.timestamp >= ?
+   `;
+  return db
+    .prepare(query)
     .all(identity, threeWeeksAgo)
     .map((upvote) => ({
       ...upvote,
       index: upvote.id.split("0x")[1],
     }));
-
-  const upvotes = db
-    .prepare(
-      `
-     SELECT * FROM upvotes WHERE href IN (SELECT href FROM submissions WHERE
- identity = ? AND timestamp >= ? )
-   `,
-    )
-    .all(identity, threeWeeksAgo)
-    .map((upvote) => ({
-      ...upvote,
-      index: upvote.id.split("0x")[1],
-    }));
-  return [...submissions, ...upvotes];
 }
 
 export function getComments(identity) {
@@ -105,17 +97,17 @@ export function getComments(identity) {
   const comments = db
     .prepare(
       `
-     SELECT 
-      comments.*,
-      (SELECT title FROM submissions WHERE id = comments.submission_id) AS submission_title
-     FROM 
-      comments
-     WHERE 
-        submission_id IN (SELECT id FROM submissions WHERE identity = ?)
-      AND
-        identity != ?
-      AND
-        timestamp >= ?
+     SELECT
+       c.*,
+       s.title AS submission_title
+     FROM
+       comments c
+     JOIN
+       submissions s ON c.submission_id = s.id
+     WHERE
+       s.identity = ? AND
+       c.identity != ? AND
+       c.timestamp >= ?
    `,
     )
     .all(identity, identity, threeWeeksAgo)
@@ -139,14 +131,15 @@ export function getComments(identity) {
      FROM
       comments
      WHERE
-        submission_id IN (SELECT submission_id FROM comments WHERE identity = ?)
+        submission_id
+          IN (SELECT submission_id FROM comments WHERE identity = ? AND timestamp >= ?)
       AND
         identity != ?
       AND
         timestamp >= ?
    `,
     )
-    .all(identity, identity, threeWeeksAgo)
+    .all(identity, threeWeeksAgo, identity, threeWeeksAgo)
     .map((comment) => {
       const href = comment.submission_id;
       delete comment.submission_id;

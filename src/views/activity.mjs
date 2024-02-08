@@ -51,9 +51,7 @@ const generateFeed = (messages) => {
       }
     });
 
-  return Object.values(groupedMessages).sort(
-    (a, b) => b.timestamp - a.timestamp,
-  );
+  return Object.values(groupedMessages);
 };
 
 function truncateComment(comment, maxLength = 260) {
