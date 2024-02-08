@@ -39,6 +39,10 @@ export default async function index(theme) {
           content="Kiwi News is the prime feed for hacker engineers building a decentralized future. All our content is handpicked and curated by crypto veterans."
         />
         <style>
+          #hnmain table {
+            border-left: none !important;
+            border-right: none !important;
+          }
           @media screen and (min-width: 769px) {
             .sidebar {
               display: none;
@@ -46,16 +50,15 @@ export default async function index(theme) {
 
             #hnmain {
               width: 100%;
+              border-bottom: none !important;
             }
+          }
         </style>
       </head>
       <body>
         <div class="container">
           ${Sidebar("/")}
-          <div
-            id="hnmain"
-            style="width: 100%; display: flex; justify-content: center;"
-          >
+          <div id="hnmain" style="display: flex; justify-content: center;">
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
               <tr>
                 ${await Header(theme)}
@@ -87,7 +90,7 @@ export default async function index(theme) {
                         align-items: center;
                         width: 100%; 
                         max-width: 60%; 
-                        padding: 0.5rem 3rem 2rem; /* Adjusted padding */
+                        padding: 0.5rem 3rem 2rem;
                         border: 1px solid rgba(0,0,0,0.05);
                         border-radius: 10px;
                         background-color: rgba(0,0,0,0.05);
@@ -109,13 +112,7 @@ export default async function index(theme) {
                         </p>
                         <table style="width: auto; margin: auto;">
                           ${mockStories.map((story, index) =>
-                            Row(
-                              index,
-                              null,
-                              false,
-                              true,
-                              mockStories.length === index + 1,
-                            )(story),
+                            Row(index, null, false, true)(story),
                           )}
                         </table>
                       </div>
@@ -131,18 +128,12 @@ export default async function index(theme) {
                     </td>
                   </tr>
                   <tr>
-                    <td
-                      style="display: flex; justify-content: space-evenly; padding: 20px;"
-                    >
-                      <div
-                        style="position: fixed; right: 20px; bottom: 20px; z-index: 100; text-align: center;"
+                    <td style="display: flex; justify-content: space-evenly;">
+                      <button
+                        style="background-color: grey; color: white; padding: 0.5rem 1rem; display: inline-flex; align-items: center; justify-content: center; gap: 10px; font-size: 1.2rem; cursor: pointer; border-radius: 0.5rem;"
                       >
-                        <button
-                          style="background-color: grey; color: white; padding: 0.5rem 1rem; display: inline-flex; align-items: center; justify-content: center; gap: 10px; font-size: 1.2rem; cursor: pointer; border-radius: 0.5rem;"
-                        >
-                          Explore Kiwi
-                        </button>
-                      </div>
+                        Explore Kiwi
+                      </button>
                     </td>
                   </tr>
                 </td>
