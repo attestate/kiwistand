@@ -187,7 +187,9 @@ function insertMessage(message) {
     message;
 
   if (type === "amplify") {
-    const normalizedHref = normalizeUrl(href);
+    const normalizedHref = normalizeUrl(href, {
+      stripWWW: false,
+    });
     const submissionExists =
       db
         .prepare(`SELECT COUNT(*) AS count FROM submissions WHERE href = ?`)
