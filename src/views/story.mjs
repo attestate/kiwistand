@@ -131,6 +131,9 @@ export default async function (trie, theme, index, value) {
     }
   }
 
+  const policy = await moderation.getLists();
+  story.comments = moderation.flag(story.comments, policy);
+
   for await (let comment of story.comments) {
     const profile = await ens.resolve(comment.identity);
     if (profile && profile.displayName) {
@@ -206,7 +209,9 @@ export default async function (trie, theme, index, value) {
                             (comment) =>
                               html`<span
                                 id="0x${comment.index}"
-                                style="color: black; background-color: rgba(0,0,0,0.075); padding: 0.55rem 0.75rem; border-radius: 5px;display: block; margin-bottom: 8px; white-space: pre-wrap; line-height: 1.4; word-break: break-word; overflow-wrap: break-word;"
+                                style="${comment.flagged
+                                  ? "opacity: 0.5"
+                                  : ""}; color: black; background-color: rgba(0,0,0,0.075); padding: 0.55rem 0.75rem; border-radius: 5px;display: block; margin-bottom: 8px; white-space: pre-wrap; line-height: 1.4; word-break: break-word; overflow-wrap: break-word;"
                               >
                                 <div
                                   style="display: inline-flex; align-items: center;"
@@ -218,11 +223,13 @@ export default async function (trie, theme, index, value) {
                                     style="margin-right: 5px; width: 12px; height:12px; border: 1px solid #828282; border-radius: 50%;"
                                   />
                                   <b
-                                    ><a
-                                      style="color: black;"
-                                      href="/upvotes?address=${comment.identity}"
-                                      >${comment.displayName}</a
-                                    ></b
+                                    >${!comment.flagged
+                                      ? html`<a
+                                          style="color: black;"
+                                          href="/upvotes?address=${comment.identity}"
+                                          >${comment.displayName}</a
+                                        >`
+                                      : comment.displayName}</b
                                   >
                                   <span> • </span>
                                   <a
@@ -238,7 +245,11 @@ export default async function (trie, theme, index, value) {
                                   </a>
                                 </div>
                                 <br />
-                                ${comment.title}
+                                ${comment.flagged && comment.reason
+                                  ? html`<i
+                                      >Moderated because: "${comment.reason}"</i
+                                    >`
+                                  : comment.title}
                               </span>`,
                           )}
                         </div>

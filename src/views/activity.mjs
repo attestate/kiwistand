@@ -18,7 +18,7 @@ import * as store from "../store.mjs";
 import * as registry from "../chainstate/registry.mjs";
 import * as id from "../id.mjs";
 import * as moderation from "./moderation.mjs";
-import cache from "../cache.mjs";
+import cache, { getUpvotes, getComments } from "../cache.mjs";
 import { getUserTips } from "../tips.mjs";
 
 const html = htm.bind(vhtml);
@@ -67,7 +67,7 @@ function generateCommentRow(activity, identity, borderColor) {
     ? html`<img
         src="${identity.safeAvatar}"
         alt="avatar"
-        style="width: 28px; height: 28px; border-radius: 50%;"
+        style="width: 28px; height: 28px; border-radius: 50%; margin-top: 1rem;"
       />`
     : "";
 
@@ -79,23 +79,25 @@ function generateCommentRow(activity, identity, borderColor) {
       <td>
         <div style="display: flex; border-bottom: 1px solid ${borderColor};">
           <div
-            style="flex: 0.2; display: flex; align-items: center; justify-content:
+            style="flex: 0.15; display: flex; align-items: start; justify-content:
  center;"
           >
             ${avatar}
           </div>
           <div
-            style="padding-top: 10px; flex: 0.8; display: flex; flex-direction: column;"
+            style="padding-top: 10px; flex: 0.85; display: flex; flex-direction: column;"
           >
             <div style="font-size: 0.9rem;">
               <p style="margin-top: 8px; margin-bottom: 2px;">
                 <strong>
-                  <a style="color: gray;" href="${link}">
-                    ${identity.displayName}
-                    <span> </span>
-                    ${activity.verb === "commented"
-                      ? "commented on your submission"
-                      : "replied to one of your conversations"}
+                  <a style="color: ;" href="${link}">
+                    <span style="color: limegreen;"
+                      >${identity.displayName}</span
+                    >
+                    <span> commented on </span>
+                    <span style="color: limegreen;"
+                      >${activity.message.submission_title}</span
+                    >
                   </a>
                 </strong>
               </p>
@@ -114,14 +116,13 @@ function generateCommentRow(activity, identity, borderColor) {
 
 function generateRow(lastUpdate) {
   return (activity, i) => {
+    const borderColor = "rgba(0,0,0,0.10)";
     if (activity.verb === "commented" || activity.verb === "involved") {
       const identity = activity.identities[0];
-      const borderColor = i % 2 === 0 ? "rgba(0,0,0,0.05)" : "rgba(0,0,0,0.10)";
       return generateCommentRow(activity, identity, borderColor);
     }
 
     const title = activity.message.title || activity.message.href;
-    const borderColor = i % 2 === 0 ? "rgba(0,0,0,0.05)" : "rgba(0,0,0,0.10)";
     const identity = activity.identities[activity.identities.length - 1];
     const size = 28;
     const identities = activity.identities
@@ -129,11 +130,7 @@ function generateRow(lastUpdate) {
       .filter((identity) => identity.safeAvatar)
       .slice(0, 5);
     const rowStyle =
-      activity.verb === "tipped"
-        ? "background-color: #E7FFE1;"
-        : lastUpdate < activity.timestamp
-        ? "background-color: #e6e6dfbf"
-        : "";
+      lastUpdate < activity.timestamp ? "background-color: #e6e6dfbf" : "";
 
     return html`
       <tr style="${rowStyle}">
@@ -141,13 +138,13 @@ function generateRow(lastUpdate) {
           <div style="display: flex; border-bottom: 1px solid ${borderColor};">
             <div
               class="votearrow"
-              style="font-size: 1.5rem; flex: 0.2; display: flex; align-items: center; justify-content: center; color: limegreen;"
+              style="font-size: 1.5rem; flex: 0.15; display: flex; align-items: center; justify-content: center; color: limegreen;"
               title="upvote"
             >
               ${activity.verb === "upvoted" ? html`▲` : html`$`}
             </div>
             <div
-              style="padding-top: 10px; flex: 0.8; display: flex; flex-direction: column;"
+              style="padding-top: 10px; flex: 0.85; display: flex; flex-direction: column;"
             >
               ${identities.length > 0 &&
               identities[0].address === identity.address
@@ -301,97 +298,33 @@ export async function data(trie, identity, lastRemoteValue) {
   const cutoff = sub(new Date(), {
     weeks: 2,
   });
-  const from = null;
-  const amount = null;
-  const parser = JSON.parse;
-  const cutoffUnixtime = Math.floor(cutoff.getTime() / 1000);
-  const allowlist = await registry.allowlist();
-  const delegations = await registry.delegations();
-  const href = null;
-  let leaves = await store.posts(
-    trie,
-    from,
-    amount,
-    parser,
-    cutoffUnixtime,
-    allowlist,
-    delegations,
-    href,
-    "amplify",
-  );
-  const comments = await store.posts(
-    trie,
-    from,
-    amount,
-    parser,
-    cutoffUnixtime,
-    allowlist,
-    delegations,
-    href,
-    "comment",
-  );
+
+  let leaves = getUpvotes(identity);
+  let comments = getComments(identity);
+
   leaves = moderation.moderate(leaves, config);
+  comments = moderation
+    .flag(comments, config)
+    .filter((comment) => !comment.flagged);
 
   let tips = await getUserTips(identity);
 
-  const activities = generateFeed(leaves);
-  const filteredActivities = activities.filter(
-    (activity) =>
-      activity.verb === "upvoted" &&
-      // TODO: Should start using ethers.utils.getAddress
-      activity.towards.toLowerCase() === identity.toLowerCase(),
+  const activities = generateFeed(leaves).filter(
+    (activity) => activity.verb === "upvoted",
   );
 
-  const submittedPosts = new Set(
-    activities
-      .filter(
-        (activity) => activity.towards.toLowerCase() === identity.toLowerCase(),
-      )
-      .map((post) => `kiwi:0x${post.message.index}`),
-  );
-
-  const submittedComments = new Set(
-    comments
-      .filter(
-        (comment) => comment.identity.toLowerCase() === identity.toLowerCase(),
-      )
-      .map(({ href }) => href),
-  );
-
-  comments
-    .filter(
-      (comment) =>
-        comment.identity.toLowerCase() !== identity.toLowerCase() &&
-        submittedComments.has(comment.href) &&
-        !submittedPosts.has(comment.href),
-    )
-    .map((comment) => {
-      filteredActivities.push({
-        verb: "involved",
-        message: comment,
-        timestamp: comment.timestamp,
-        identities: [comment.identity],
-      });
+  comments.map((comment) => {
+    activities.push({
+      verb: "commented",
+      message: comment,
+      timestamp: comment.timestamp,
+      identities: [comment.identity],
     });
-
-  comments
-    .filter(
-      (comment) =>
-        comment.identity.toLowerCase() !== identity.toLowerCase() &&
-        submittedPosts.has(comment.href),
-    )
-    .map((comment) => {
-      filteredActivities.push({
-        verb: "commented",
-        message: comment,
-        timestamp: comment.timestamp,
-        identities: [comment.identity],
-      });
-    });
+  });
 
   if (tips && tips.length > 0) {
     tips.forEach((tip) => {
-      filteredActivities.push({
+      activities.push({
         identities: [tip.from],
         verb: "tipped",
         message: {
@@ -410,11 +343,10 @@ export async function data(trie, identity, lastRemoteValue) {
     });
   }
 
-  // sort by timestamp
-  filteredActivities.sort((a, b) => b.timestamp - a.timestamp);
+  activities.sort((a, b) => b.timestamp - a.timestamp);
 
   let notifications = [];
-  for await (let activity of filteredActivities) {
+  for await (let activity of activities) {
     const identities = [];
     for await (let identity of activity.identities) {
       const ensData = await ens.resolve(identity);
