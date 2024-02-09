@@ -38,6 +38,7 @@ import upvotes from "./views/upvotes.mjs";
 import community from "./views/community.mjs";
 import stats from "./views/stats.mjs";
 import * as activity from "./views/activity.mjs";
+import * as comments from "./views/comments.mjs";
 import about from "./views/about.mjs";
 import why from "./views/why.mjs";
 import submit from "./views/submit.mjs";
@@ -513,6 +514,20 @@ export async function launch(trie, libp2p) {
       notifications: data.notifications,
       lastServerValue: data.latestValue,
     });
+  });
+  app.get("/comments", async (request, reply) => {
+    let data;
+    try {
+      data = await comments.data();
+    } catch (err) {
+      return reply.status(400).type("text/plain").send(err.toString());
+    }
+    const content = await comments.page(reply.locals.theme, data.notifications);
+    reply.header(
+      "Cache-Control",
+      "public, max-age=300, no-transform, must-revalidate",
+    );
+    return reply.status(200).type("text/html").send(content);
   });
   app.get("/activity", async (request, reply) => {
     let data;

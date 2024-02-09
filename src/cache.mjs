@@ -102,6 +102,37 @@ export function getUpvotes(identity) {
   return [...submissions, ...upvotes];
 }
 
+export function getAllComments() {
+  const threeWeeksAgo = Math.floor(Date.now() / 1000) - 1814400;
+  return db
+    .prepare(
+      `
+     SELECT
+       c.*,
+       s.title AS submission_title
+     FROM
+       comments c
+     JOIN
+       submissions s ON c.submission_id = s.id
+     WHERE
+       c.timestamp >= ?
+     ORDER BY
+      timestamp DESC
+   `,
+    )
+    .all(threeWeeksAgo)
+    .map((comment) => {
+      const href = comment.submission_id;
+      delete comment.submission_id;
+
+      return {
+        ...comment,
+        href,
+        index: comment.id.split("0x")[1],
+      };
+    });
+}
+
 export function getComments(identity) {
   const threeWeeksAgo = Math.floor(Date.now() / 1000) - 1814400;
   const comments = db
