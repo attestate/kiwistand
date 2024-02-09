@@ -77,19 +77,29 @@ function initialize() {
 
 export function getUpvotes(identity) {
   const threeWeeksAgo = Math.floor(Date.now() / 1000) - 1814400;
+
+  const submissions = db
+    .prepare(`SELECT * from submissions WHERE identity = ? AND timestamp >= ?`)
+    .all(identity, threeWeeksAgo)
+    .map((upvote) => ({
+      ...upvote,
+      index: upvote.id.split("0x")[1],
+    }));
+
   const query = `
      SELECT u.*
      FROM upvotes u
      JOIN submissions s ON u.href = s.href
-     WHERE s.identity = ? AND s.timestamp >= ?
+     WHERE s.identity = ? AND u.timestamp >= ?
    `;
-  return db
+  const upvotes = db
     .prepare(query)
     .all(identity, threeWeeksAgo)
     .map((upvote) => ({
       ...upvote,
       index: upvote.id.split("0x")[1],
     }));
+  return [...submissions, ...upvotes];
 }
 
 export function getComments(identity) {
