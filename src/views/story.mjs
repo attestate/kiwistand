@@ -12,6 +12,7 @@ import {
   differenceInMinutes,
   isBefore,
 } from "date-fns";
+import linkifyStr from "linkify-string";
 
 import PWALine from "./components/iospwaline.mjs";
 import { getTips, getTipsValue, filterTips } from "../tips.mjs";
@@ -249,7 +250,20 @@ export default async function (trie, theme, index, value) {
                                   ? html`<i
                                       >Moderated because: "${comment.reason}"</i
                                     >`
-                                  : comment.title}
+                                  : html`<span
+                                      dangerouslySetInnerHTML=${{
+                                        __html: linkifyStr(comment.title, {
+                                          className: "meta-link",
+                                          target: "_blank",
+                                          defaultProtocol: "https",
+                                          validate: {
+                                            url: (value) =>
+                                              /^https:\/\/.*/.test(value),
+                                            email: () => false,
+                                          },
+                                        }),
+                                      }}
+                                    ></span>`}
                               </span>`,
                           )}
                         </div>
