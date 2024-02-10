@@ -488,6 +488,20 @@ export async function launch(trie, libp2p) {
     reply.header("Cache-Control", "public, max-age=86400");
     return reply.status(200).type("text/html").send(content);
   });
+  app.get("/comments", async (request, reply) => {
+    let data;
+    try {
+      data = await comments.data();
+    } catch (err) {
+      return reply.status(400).type("text/plain").send(err.toString());
+    }
+    const content = await comments.page(reply.locals.theme, data.notifications);
+    reply.header(
+      "Cache-Control",
+      "public, max-age=300, no-transform, must-revalidate",
+    );
+    return reply.status(200).type("text/html").send(content);
+  });
   app.get("/api/v1/activity", async (request, reply) => {
     let data;
 
@@ -514,20 +528,6 @@ export async function launch(trie, libp2p) {
       notifications: data.notifications,
       lastServerValue: data.latestValue,
     });
-  });
-  app.get("/comments", async (request, reply) => {
-    let data;
-    try {
-      data = await comments.data();
-    } catch (err) {
-      return reply.status(400).type("text/plain").send(err.toString());
-    }
-    const content = await comments.page(reply.locals.theme, data.notifications);
-    reply.header(
-      "Cache-Control",
-      "public, max-age=300, no-transform, must-revalidate",
-    );
-    return reply.status(200).type("text/html").send(content);
   });
   app.get("/activity", async (request, reply) => {
     let data;
