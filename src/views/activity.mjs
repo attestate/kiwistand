@@ -85,7 +85,7 @@ function generateCommentRow(activity, identity, bgColor) {
           <div
             style="padding-top: 10px; flex: 0.85; display: flex; flex-direction: column;"
           >
-            <div style="font-size: 0.9rem;">
+            <div style="font-size: 0.9rem; margin-right: 1rem;">
               <p style="margin-top: 8px; margin-bottom: 2px;">
                 <strong>
                   <a style="color: ;" href="${link}">
@@ -100,9 +100,11 @@ function generateCommentRow(activity, identity, bgColor) {
                 </strong>
               </p>
               <p
-                style="white-space: pre-wrap; margin: 5px 3rem 1rem 0; color: gray; word-break: break-word;"
+                style="white-space: pre-wrap; margin: 5px 0 1rem 0; color: gray; word-break: break-word;"
               >
-                <a style="color: gray;" href="${link}">${comment}</a>
+                <a style="color: gray; text-align: justify;" href="${link}"
+                  >${comment}</a
+                >
               </p>
             </div>
           </div>
@@ -166,7 +168,7 @@ function generateRow(lastUpdate) {
                     )}
                   </div>`
                 : ""}
-              <div style="font-size: 0.9rem;">
+              <div style="font-size: 0.9rem; margin-right: 1rem;">
                 <p style="margin-top: 8px; margin-bottom: 2px;">
                   <strong>
                     <a href="/upvotes?address=${identity.address}">
