@@ -5,6 +5,12 @@ body {
      color:#828282;
      overscroll-behavior: none;
 }
+.comment-text-link {
+  color: black !important;
+}
+.comment-text-link:visited {
+  color: gray !important;
+}
 .chat-bubble:hover {
   background-color: rgba(0,0,0,0.05);
 }

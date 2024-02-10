@@ -118,6 +118,7 @@ export function getAllComments() {
        c.timestamp >= ?
      ORDER BY
       timestamp DESC
+     LIMIT 30
    `,
     )
     .all(threeWeeksAgo)

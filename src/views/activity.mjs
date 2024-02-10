@@ -100,7 +100,7 @@ function generateCommentRow(activity, identity, bgColor) {
                 </strong>
               </p>
               <p
-                style="white-space: pre-wrap; margin: 5px 0 1rem 0; color: gray; word-break: break-word;"
+                style="line-height: 1.2; white-space: pre-wrap; margin: 5px 0 1rem 0; color: gray; word-break: break-word;"
               >
                 <a style="color: gray; text-align: justify;" href="${link}"
                   >${comment}</a

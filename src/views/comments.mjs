@@ -55,7 +55,7 @@ function generateCommentRow(activity, identity, borderColor) {
           <div
             style="padding-top: 10px; flex: 0.85; display: flex; flex-direction: column;"
           >
-            <div style="font-size: 0.9rem;">
+            <div style="font-size: 0.9rem; margin-right: 2rem;">
               <p style="margin-top: 8px; margin-bottom: 2px;">
                 <strong>
                   <a style="color: ;" href="${link}">
@@ -70,9 +70,11 @@ function generateCommentRow(activity, identity, borderColor) {
                 </strong>
               </p>
               <p
-                style="white-space: pre-wrap; margin: 5px 3rem 1rem 0; color: gray; word-break: break-word;"
+                style="line-height: 1.2; white-space: pre-wrap; margin: 5px 0 1rem 0; color: gray; word-break: break-word;"
               >
-                <a style="color: gray;" href="${link}">${comment}</a>
+                <a class="comment-text-link" style="color: gray;" href="${link}"
+                  >${comment}</a
+                >
               </p>
             </div>
           </div>
@@ -106,7 +108,7 @@ export async function page(theme, notifications) {
                 ${ThirdHeader(theme, "comments")}
               </tr>
               <tr
-                style="display: block; padding: 6px; background-color: #e6e6df"
+                style="display: block; padding-bottom: 6px; background-color: #e6e6df"
               >
                 <td></td>
               </tr>
