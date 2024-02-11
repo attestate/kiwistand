@@ -498,7 +498,7 @@ export async function launch(trie, libp2p) {
     const content = await comments.page(reply.locals.theme, data.notifications);
     reply.header(
       "Cache-Control",
-      "public, max-age=300, no-transform, must-revalidate",
+      "public, max-age=60, no-transform, must-revalidate, stale-while-revalidate=3600",
     );
     return reply.status(200).type("text/html").send(content);
   });
