@@ -24,6 +24,7 @@ import guidelines from "./views/guidelines.mjs";
 import onboarding from "./views/onboarding.mjs";
 import join from "./views/join.mjs";
 import kiwipass from "./views/kiwipass.mjs";
+import kiwipassmint from "./views/kiwipass-mint.mjs";
 import memecoin from "./views/memecoin.mjs";
 import onboardingReader from "./views/onboarding-reader.mjs";
 import onboardingCurator from "./views/onboarding-curator.mjs";
