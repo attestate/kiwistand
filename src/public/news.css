@@ -186,9 +186,9 @@ body {
  pre:hover {
      overflow:auto 
 }
- .votearrow {
-     color: #828282;
-     font-size: 1.5rem;
+.votearrow {
+  color: #828282;
+  font-size: 1.5rem;
 }
 .pulsate {
   animation: pulsate 1s infinite;

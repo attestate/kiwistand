@@ -46,7 +46,8 @@ const Bell = (props) => {
     !isEligible ||
     (!getCookie("lastUpdate") && readNotifications === 0) ||
     window.location.pathname === "/indexing" ||
-    window.location.pathname === "/kiwipass-mint"
+    window.location.pathname === "/kiwipass-mint" ||
+    window.location.pathname === "/demonstration"
   ) {
     return null;
   }

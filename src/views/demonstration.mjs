@@ -56,9 +56,12 @@ export default async function index(theme) {
         </style>
       </head>
       <body>
-        <div class="container">
+        <div class="container" style="min-height: 90vh;">
           ${Sidebar("/")}
-          <div id="hnmain" style="display: flex; justify-content: center;">
+          <div
+            id="hnmain"
+            style="border-bottom: 1px solid rgba(0,0,0,0.2); display: flex; justify-content: center;"
+          >
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
               <tr>
                 ${await Header(theme)}
@@ -78,8 +81,6 @@ export default async function index(theme) {
                     Now you can<span style="color: limegreen;"
                       ><span> </span> upvote, submit & comment links.</span
                     >
-                    <br />
-                    <br />
                   </p>
                   <tr>
                     <td style="display: flex; justify-content: center;">
@@ -88,9 +89,8 @@ export default async function index(theme) {
                         display: flex;
                         flex-direction: column;
                         align-items: center;
-                        width: 100%; 
-                        max-width: 60%; 
-                        padding: 0.5rem 3rem 2rem;
+                        max-width: 90%; 
+                        padding: 0.5rem 0.75rem;
                         border: 1px solid rgba(0,0,0,0.05);
                         border-radius: 10px;
                         background-color: rgba(0,0,0,0.05);
@@ -103,6 +103,7 @@ export default async function index(theme) {
                           font-size: 1rem;
                           font-weight: bold;
                           text-align: center;
+                          line-height: 1;
                           margin-bottom: 1rem;
                         "
                         >
@@ -112,7 +113,7 @@ export default async function index(theme) {
                         </p>
                         <table style="width: auto; margin: auto;">
                           ${mockStories.map((story, index) =>
-                            Row(index, null, false, true)(story),
+                            Row(index, null, "", false, true)(story),
                           )}
                         </table>
                       </div>
@@ -127,13 +128,18 @@ export default async function index(theme) {
                       </p>
                     </td>
                   </tr>
-                  <tr>
-                    <td style="display: flex; justify-content: space-evenly;">
-                      <button
-                        style="background-color: grey; color: white; padding: 0.5rem 1rem; display: inline-flex; align-items: center; justify-content: center; gap: 10px; font-size: 1.2rem; cursor: pointer; border-radius: 0.5rem;"
-                      >
-                        Explore Kiwi
-                      </button>
+                  <tr style="border-bottom: 1px solid grey;">
+                    <td
+                      style="padding: 0 0 3rem 0; display: flex; justify-content: space-evenly;"
+                    >
+                      <a href="/onboarding-reader">
+                        <button
+                          style="width:auto; background-color: white; color: black;"
+                          id="button-onboarding"
+                        >
+                          Explore Kiwi
+                        </button>
+                      </a>
                     </td>
                   </tr>
                 </td>
