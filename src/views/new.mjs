@@ -153,7 +153,7 @@ export default async function (trie, theme, index) {
               </tr>
               ${items.map(Row(null, "/best"))}
               <tr
-                style="display: block; padding: 10px; background-color: ${theme.color}"
+                style="display: block; padding: 10px; background-color: #E6E6DF"
               >
                 <td></td>
               </tr>

@@ -555,7 +555,7 @@ body {
     }
      .sidebar a:not(.kiwi-logo):hover{
        background-color: rgba(0,0,0,0.1);
-       border-radius: 5px;
+       border-radius: 2px;
     }
      .sidebar .icon-svg {
          width: 36px;
