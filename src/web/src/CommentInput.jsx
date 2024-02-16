@@ -101,6 +101,7 @@ const CommentInput = (props) => {
         style={{
           display: "block",
           width: "100%",
+          border: "1px solid #828282",
         }}
         value={text}
         onChange={(e) => setText(e.target.value)}
@@ -109,6 +110,8 @@ const CommentInput = (props) => {
       <br />
       <br />
       <button
+        id="button-onboarding"
+        style={{ width: "auto" }}
         disabled={isLoading || !address || !isEligible}
         onClick={handleSubmit}
       >

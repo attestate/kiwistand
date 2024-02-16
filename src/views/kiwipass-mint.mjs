@@ -27,11 +27,9 @@ async function getENSAvatars(addresses) {
 const addresses = [
   "yashbora.eth",
   "ccarella.eth",
-  "thecap.eth",
-  "realcameron.eth",
-  "pugson.eth",
   "mishaderidder.eth",
-  "x0r.eth",
+  "annoushka.eth",
+  "cerv1.eth",
 ];
 
 const avatarData = await getENSAvatars(addresses);
@@ -60,12 +58,7 @@ export default async function (theme) {
           }
 
           .hnmain {
-            border-top-right-radius: 2px;
-            border-bottom-right-radius: 2px;
-            border-top: 1px solid #ccc;
-            border-right: 1px solid #ccc;
-            border-bottom: 1px solid #ccc;
-            border-left: 1px solid #ccc !important;
+            border: 1px solid #828282;
           }
 
           .flex-container {
@@ -95,7 +88,8 @@ export default async function (theme) {
           .circular-image {
             width: 35px;
             height: 35px;
-            border-radius: 50%;
+            border-radius: 2px;
+            border: 1px solid #828282;
           }
 
           .address {
@@ -156,14 +150,14 @@ export default async function (theme) {
           .text-row {
             display: flex;
             justify-content: space-between;
-            border-bottom: 1px solid #000;
+            border-bottom: 1px solid #828282;
             padding: 15px 5px 15px 5px;
           }
 
           .kiwi-nft {
             max-width: 100%;
             height: auto;
-            border-radius: 3px;
+            border-radius: 2px;
           }
 
           .text-below-button {
@@ -186,7 +180,7 @@ export default async function (theme) {
             display: flex;
             font-size: 0.9rem;
             cursor: pointer;
-            border-radius: 3px;
+            border-radius: 2px;
             font-family: "Helvetica", "Arial", sans-serif;
             justify-content: center;
             align-items: center;

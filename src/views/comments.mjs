@@ -35,7 +35,7 @@ function generateCommentRow(activity, identity, borderColor) {
     ? html`<img
         src="${identity.safeAvatar}"
         alt="avatar"
-        style="width: 28px; height: 28px; border-radius: 50%; margin-top: 1.5rem;"
+        style="border: 1px solid #828282; width: 28px; height: 28px; border-radius: 2px; margin-top: 1.5rem;"
       />`
     : "";
 

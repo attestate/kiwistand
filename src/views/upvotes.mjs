@@ -145,7 +145,7 @@ export default async function (trie, theme, identity, page, mode) {
                       ${ensData.safeAvatar &&
                       html`<img
                         src="${ensData.safeAvatar}"
-                        style="width: 30px; height: 30px; border-radius: 50%;"
+                        style="width: 30px; height: 30px; border-radius: 2px;"
                       />`}
                       ${ensData.displayName}
                       <span> (${points.toString()} 🥝)</span>

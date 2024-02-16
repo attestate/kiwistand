@@ -39,7 +39,7 @@ function CanonRow(sheets) {
     <tr>
       <td>
         <div
-          style="justify-content: space-evenly; scroll-snap-type: x mandatory; border-radius: 5px; padding: 15px 0 10px 0; gap: 15px; display: flex; overflow-x: auto; width: 100%;"
+          style="justify-content: space-evenly; scroll-snap-type: x mandatory; padding: 15px 0 10px 0; gap: 15px; display: flex; overflow-x: auto; width: 100%;"
         >
           ${sheets.map(
             ({ preview, name }) => html`
@@ -496,7 +496,7 @@ export default async function (trie, theme, page, domain) {
                 </td>
               </tr>
               <tr
-                style="display: block; padding: 10px; background-color: ${theme.color}"
+                style="display: block; padding: 10px; background-color: #E6E6DF;"
               >
                 <td>
                   <span style="color: black;"

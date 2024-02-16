@@ -61,7 +61,7 @@ export default async function (theme) {
           }
 
           .circular-image {
-            border-radius: 50%;
+            border-radius: 2px;
           }
 
           .avatar-container {
@@ -201,7 +201,7 @@ export default async function (theme) {
           .kiwi-nft {
             max-width: 100%;
             height: auto;
-            border-radius: 3px;
+            border-radius: 2px;
           }
           .image-meta {
             font-size: 0.9rem;
@@ -233,7 +233,7 @@ export default async function (theme) {
             display: inline-block;
             font-size: 0.9rem;
             cursor: pointer;
-            border-radius: 3px;
+            border-radius: 2px;
             font-family: "Helvetica", "Arial", sans-serif;
           }
 
@@ -319,7 +319,7 @@ export default async function (theme) {
                                 class="circular-image"
                                 src="${data.avatarUrl}"
                                 alt="${data.address}"
-                                style="width: 35px; height: 35px;"
+                                style="border: 1px solid #828282; width: 35px; height: 35px;"
                               />
                               <div style="font-size: 12px;">
                                 ${data.address}
@@ -346,7 +346,11 @@ export default async function (theme) {
                   <br />
                   <div class="flex-container flex-image-left">
                     <div class="image-left">
-                      <img src="Kiwi_Notifications.png" alt="Kiwi Posts" />
+                      <img
+                        style="border-radius: 2px;"
+                        src="Kiwi_Notifications.png"
+                        alt="Kiwi Posts"
+                      />
                     </div>
                     <div class="text-right">
                       <h2>Shape the kiwi feed</h2>
@@ -371,7 +375,7 @@ export default async function (theme) {
                       </p>
                     </div>
                     <div class="image-right">
-                      <img src="Kiwi_Profile.png" />
+                      <img style="border-radius: 2px;" src="Kiwi_Profile.png" />
                     </div>
                   </div>
                   <br />
@@ -379,7 +383,11 @@ export default async function (theme) {
                   <br />
                   <div class="flex-container flex-image-left">
                     <div class="image-left">
-                      <img src="LP_community.png" alt="Kiwi signless" />
+                      <img
+                        style="border-radius: 2px;"
+                        src="LP_community.png"
+                        alt="Kiwi signless"
+                      />
                     </div>
                     <div class="text-right">
                       <h2>
@@ -407,14 +415,22 @@ export default async function (theme) {
                       </p>
                     </div>
                     <div class="image-right">
-                      <img src="Kiwi_Sales.png" alt="Kiwi Revenue Split" />
+                      <img
+                        style="border-radius: 2px;"
+                        src="Kiwi_Sales.png"
+                        alt="Kiwi Revenue Split"
+                      />
                     </div>
                   </div>
                   <br />
                   <br />
                   <div class="flex-container flex-image-left">
                     <div class="image-left">
-                      <img src="Kiwi_Telegram.png" alt="Kiwi signless" />
+                      <img
+                        style="border-radius: 2px;"
+                        src="Kiwi_Telegram.png"
+                        alt="Kiwi signless"
+                      />
                     </div>
                     <div class="text-right">
                       <h2>Take part in building the product you use</h2>
@@ -437,6 +453,7 @@ export default async function (theme) {
                     <div class="image-and-text">
                       <div class="image-container">
                         <img
+                          style="border-radius: 2px;"
                           src="pass.jpeg"
                           alt="Kiwi News NFT"
                           class="kiwi-nft"
@@ -503,11 +520,13 @@ export default async function (theme) {
                     </h2>
                     <div class="image" style="margin-bottom: 1rem;">
                       <img
+                        style="border-radius: 2px;"
                         class="desktop-image"
                         src="LP_referrals.png"
                         alt="Kiwi Referrals"
                       />
                       <img
+                        style="border-radius: 2px;"
                         class="mobile-image"
                         src="LP_referrals_mobile.png"
                         alt="Kiwi Referrals"

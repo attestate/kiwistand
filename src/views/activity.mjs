@@ -65,7 +65,7 @@ function generateCommentRow(activity, identity, bgColor) {
     ? html`<img
         src="${identity.safeAvatar}"
         alt="avatar"
-        style="width: 28px; height: 28px; border-radius: 50%; margin-top: 1.5rem;"
+        style="border: 1px solid #828282; width: 28px; height: 28px; border-radius: 2px; margin-top: 1.5rem;"
       />`
     : "";
 
@@ -75,7 +75,7 @@ function generateCommentRow(activity, identity, bgColor) {
   return html`
     <tr style="background-color: ${bgColor}">
       <td>
-        <div style="display: flex; border-bottom: 1px solid rgba(0,0,0,0.15);">
+        <div style="display: flex; border-bottom: 1px solid rgba(0,0,0,0.1);">
           <div
             style="flex: 0.15; display: flex; align-items: start; justify-content:
  center;"
@@ -135,9 +135,7 @@ function generateRow(lastUpdate) {
     return html`
       <tr style="background-color: ${bgColor};">
         <td>
-          <div
-            style="display: flex; border-bottom: 1px solid rgba(0,0,0,0.15);"
-          >
+          <div style="display: flex; border-bottom: 1px solid rgba(0,0,0,0.1);">
             <div
               class="votearrow"
               style="font-size: 1.5rem; flex: 0.15; display: flex; align-items: center; justify-content: center; color: limegreen;"
@@ -161,7 +159,7 @@ function generateRow(lastUpdate) {
                           <img
                             src="${identity.safeAvatar}"
                             alt="avatar"
-                            style="z-index: ${index}; width: ${size}px; height: ${size}px; border: 1px solid #828282; border-radius: 50%; margin-left: 15px;"
+                            style="z-index: ${index}; width: ${size}px; height: ${size}px; border: 1px solid #828282; border-radius: 2px; margin-left: 15px;"
                           />
                         </a>
                       `,

@@ -141,8 +141,8 @@ export const fireSVG = html`
 `;
 
 const periodIconStyle = (theme, period, category) =>
-  `${period === category ? theme.color : "#7f8c8d"}; color: ${
-    period === category ? theme.color : "#7f8c8d"
+  `${period === category ? "black" : "#828282"}; color: ${
+    period === category ? "black" : "#828282"
   }; font-weight: bold; border: none; text-decoration: underline; font-size: 1.01rem; border-radius: 2px; cursor: pointer; padding: 5px 15px; background-color: transparent;;`;
 
 const animation = `
@@ -168,8 +168,8 @@ const secondheader = (theme, site, period) => html`
                 onclick="${animation}"
                 class="feed-button"
                 style=${`font-size: 1.01rem; border-radius: 2px; cursor: pointer; padding: 5px 15px; background-color: transparent; border: 1px solid ${
-                  site === "top" ? theme.color : "#7f8c8d"
-                }; color: ${site === "top" ? theme.color : "#7f8c8d"};`}
+                  site === "top" ? "black" : "#828282"
+                }; color: ${site === "top" ? "black" : "#828282"};`}
               >
                 <span>${fireSVG} Hot</span>
               </button>
@@ -185,14 +185,14 @@ const secondheader = (theme, site, period) => html`
                 onclick="${animation}"
                 class="feed-button"
                 style=${`position: relative; font-size: 1.01rem; margin-left: 10px; cursor: pointer; border-radius: 2px; padding: 5px 15px; background-color: transparent; border: 1px solid ${
-                  site === "new" || site === "nfts" ? theme.color : "#7f8c8d"
+                  site === "new" || site === "nfts" ? "black" : "#828282"
                 }; color: ${
-                  site === "new" || site === "nfts" ? theme.color : "#7f8c8d"
+                  site === "new" || site === "nfts" ? "black" : "#828282"
                 };`}
               >
                 <span
                   id="new-dot"
-                  style="display: none; position: absolute; top: -5px; right: -5px; width: 8px; height: 8px; border-radius: 50%; background-color: #228B22;"
+                  style="display: none; position: absolute; top: -5px; right: -5px; width: 8px; height: 8px; border-radius: 2px; background-color: #228B22;"
                 ></span>
                 <span> ${broadcastSVG} New</span>
               </button>
@@ -204,8 +204,8 @@ const secondheader = (theme, site, period) => html`
                 onclick="${animation}"
                 class="feed-button"
                 style=${`font-size: 1.01rem; margin-left: 10px; cursor: pointer; border-radius: 2px; padding: 5px 15px; background-color: transparent; border: 1px solid ${
-                  site === "best" ? theme.color : "#7f8c8d"
-                }; color: ${site === "best" ? theme.color : "#7f8c8d"};`}
+                  site === "best" ? "black" : "#828282"
+                }; color: ${site === "best" ? "black" : "#828282"};`}
               >
                 <span> ${trophySVG} Top</span>
               </button>

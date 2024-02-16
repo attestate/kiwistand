@@ -92,7 +92,7 @@ export default async function index(theme) {
                         max-width: 90%; 
                         padding: 0.5rem 0.75rem;
                         border: 1px solid rgba(0,0,0,0.05);
-                        border-radius: 10px;
+                        border-radius: 2px;
                         background-color: rgba(0,0,0,0.05);
                         box-shadow: 0 4px 8px rgba(0,0,0,0.1);
                       "

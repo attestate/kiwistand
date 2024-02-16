@@ -21,7 +21,7 @@ const secondheader = (theme, site) => html`
         >
           <div
             style="${site === "top" || site === "new" || site === "best"
-              ? "border-bottom: 3px solid limegreen; padding: 0.75rem 1.5rem 0.3rem 1.5rem;"
+              ? "border-bottom: 3px solid black; padding: 0.75rem 1.5rem 0.3rem 1.5rem;"
               : "padding-top: 0.75rem;"}"
           >
             All
@@ -39,7 +39,7 @@ const secondheader = (theme, site) => html`
         >
           <div
             style="${site === "comments"
-              ? "border-bottom: 3px solid limegreen; padding: 0.75rem 1.5rem 0.3rem 1.5rem;"
+              ? "border-bottom: 3px solid black; padding: 0.75rem 1.5rem 0.3rem 1.5rem;"
               : "padding-top: 0.65rem"}"
           >
             Comments
