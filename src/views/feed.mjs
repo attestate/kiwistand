@@ -48,7 +48,7 @@ function CanonRow(sheets) {
                   <img
                     loading="lazy"
                     src="${preview}"
-                    style="width: 100%; height: auto;"
+                    style="border-radius: 2px; width: 100%; height: auto;"
                   />
                 </a>
               </div>
