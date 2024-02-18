@@ -92,7 +92,7 @@ const CommentInput = (props) => {
   return (
     <div
       style={{
-        margin: "0 2rem 1rem 2rem",
+        margin: "0 1rem 1rem 1rem",
       }}
     >
       <textarea
@@ -102,6 +102,7 @@ const CommentInput = (props) => {
           display: "block",
           width: "100%",
           border: "1px solid #828282",
+          fontSize: "1rem",
         }}
         value={text}
         onChange={(e) => setText(e.target.value)}
