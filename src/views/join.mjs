@@ -235,7 +235,7 @@ export default async function (theme) {
             font-size: 0.9rem;
             cursor: pointer;
             border-radius: 2px;
-            font-family: "Helvetica", "Arial", sans-serif;
+            font-family: Verdana, Geneva, sans-serif;
           }
 
           .buy-button:disabled {

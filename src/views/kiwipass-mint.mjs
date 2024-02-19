@@ -47,7 +47,7 @@ export default async function (theme) {
         <style>
           /* Base Styles */
           body {
-            font-family: Arial, sans-serif;
+            font-family: Verdana, Geneva, sans-serif;
             line-height: 1.6;
             margin: 0;
             padding: 0;
@@ -181,7 +181,7 @@ export default async function (theme) {
             font-size: 0.9rem;
             cursor: pointer;
             border-radius: 2px;
-            font-family: "Helvetica", "Arial", sans-serif;
+            font-family: Verdana, Geneva, sans-serif;
             justify-content: center;
             align-items: center;
           }

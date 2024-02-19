@@ -92,7 +92,7 @@ const NFTModal = ({ modalIsOpen, setIsOpen, headline, text, closeText }) => {
               fontSize: "0.9rem",
               cursor: "pointer",
               borderRadius: "2px",
-              fontFamily: "'Helvetica', 'Arial', sans-serif",
+              fontFamily: "Verdana, Geneva, sans-serif",
               display: "flex",
               alignItems: "center",
               marginBottom: "20px",
