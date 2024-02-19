@@ -21,7 +21,7 @@ const secondheader = (theme, site) => html`
         >
           <div
             style="${site === "top" || site === "new" || site === "best"
-              ? "border-bottom: 3px solid limegreen; padding: 0.75rem 1.5rem 0.3rem 1.5rem;"
+              ? "border-bottom: 3px solid black; padding: 0.75rem 1.5rem 0.3rem 1.5rem;"
               : "padding-top: 0.75rem;"}"
           >
             All
@@ -29,7 +29,7 @@ const secondheader = (theme, site) => html`
         </div>
       </a>
       <a
-        href="/nfts"
+        href="/comments"
         style="padding: 0 0 0.1rem 0; flex: 1; text-decoration: none; color: inherit;"
       >
         <div
@@ -38,36 +38,11 @@ const secondheader = (theme, site) => html`
  center;"
         >
           <div
-            style="${site === "nfts"
-              ? "border-bottom: 3px solid limegreen; padding: 0.75rem 1.5rem 0.3rem 1.5rem;"
+            style="${site === "comments"
+              ? "border-bottom: 3px solid black; padding: 0.75rem 1.5rem 0.3rem 1.5rem;"
               : "padding-top: 0.65rem"}"
           >
-            NFTs
-          </div>
-        </div>
-      </a>
-      <a
-        href="/images"
-        style="padding: 0 0 0.1rem 0; flex: 1; text-decoration: none; color: inherit;"
-      >
-        <div
-          class="filter-tab"
-          style="width: 100%; height: 100%; display: flex; justify-content: center; justify-conten
- center;"
-        >
-          <div
-            style="${site === "images"
-              ? "border-bottom: 3px solid limegreen; padding: 0.75rem 1.5rem 0.3rem 1.5rem;"
-              : "padding-top: 0.65rem"}"
-          >
-            <span>Images </span>
-            ${site === "images"
-              ? ""
-              : html` <span
-                  id="images-dot"
-                  style="visibility: hidden; color: #228B22; font-size: smaller;"
-                  >•</span
-                >`}
+            Comments
           </div>
         </div>
       </a>

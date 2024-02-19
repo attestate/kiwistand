@@ -152,7 +152,7 @@ const row = (
                                 src="${avatar}"
                                 alt="avatar"
                                 style="z-index: ${index}; width: ${size}px; height:
- ${size}px; border: 1px solid #828282; border-radius: 50%; margin-left: -${size /
+ ${size}px; border: 1px solid #828282; border-radius: 2px; margin-left: -${size /
                                 2}px;"
                               />
                             `,

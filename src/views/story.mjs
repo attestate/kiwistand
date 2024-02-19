@@ -12,6 +12,7 @@ import {
   differenceInMinutes,
   isBefore,
 } from "date-fns";
+import linkifyStr from "linkify-string";
 
 import PWALine from "./components/iospwaline.mjs";
 import { getTips, getTipsValue, filterTips } from "../tips.mjs";
@@ -48,7 +49,7 @@ export function generateList(profiles) {
               <img
                 src="${profile.avatar}"
                 alt="avatar"
-                style="width: 15px; height: 15px; border: 1px solid #828282; border-radius: 50%;"
+                style="width: 15px; height: 15px; border: 1px solid #828282; border-radius: 2px;"
               />
               <span> </span>
               <a href="/${profile.name}">${profile.name}</a>
@@ -200,59 +201,67 @@ export default async function (trie, theme, index, value) {
               ${story.comments.length > 0
                 ? html`<tr>
                     <td>
-                      <div style="padding: 0 1rem 0 1rem;">
-                        <b style="font-size: 1rem;">Comments:</b>
-                        <br />
-                        <br />
-                        <div style="padding: 0 1rem 0 1rem;">
-                          ${story.comments.map(
-                            (comment) =>
-                              html`<span
-                                id="0x${comment.index}"
-                                style="${comment.flagged
-                                  ? "opacity: 0.5"
-                                  : ""}; color: black; background-color: rgba(0,0,0,0.075); padding: 0.55rem 0.75rem; border-radius: 5px;display: block; margin-bottom: 8px; white-space: pre-wrap; line-height: 1.4; word-break: break-word; overflow-wrap: break-word;"
+                      <div style="padding: 1rem 1rem 0 1rem; font-size: 1rem;">
+                        ${story.comments.map(
+                          (comment) =>
+                            html`<span
+                              id="0x${comment.index}"
+                              style="${comment.flagged
+                                ? "opacity: 0.5"
+                                : ""}; color: black; border: 1px solid rgba(0,0,0,0.1); background-color: #E6E6DF; padding: 0.55rem 0.75rem; border-radius: 2px;display: block; margin-bottom: 15px; white-space: pre-wrap; line-height: 1.3; word-break: break-word; overflow-wrap: break-word;"
+                            >
+                              <div
+                                style="margin-bottom: 0.25rem; display: inline-flex; align-items: center;"
                               >
-                                <div
-                                  style="display: inline-flex; align-items: center;"
+                                <img
+                                  loading="lazy"
+                                  src="${comment.avatar}"
+                                  alt="avatar"
+                                  style="margin-right: 5px; width: 12px; height:12px; border: 1px solid #828282; border-radius: 2px;"
+                                />
+                                <b
+                                  >${!comment.flagged
+                                    ? html`<a
+                                        style="color: black;"
+                                        href="/upvotes?address=${comment.identity}"
+                                        >${comment.displayName}</a
+                                      >`
+                                    : comment.displayName}</b
                                 >
-                                  <img
-                                    loading="lazy"
-                                    src="${comment.avatar}"
-                                    alt="avatar"
-                                    style="margin-right: 5px; width: 12px; height:12px; border: 1px solid #828282; border-radius: 50%;"
-                                  />
-                                  <b
-                                    >${!comment.flagged
-                                      ? html`<a
-                                          style="color: black;"
-                                          href="/upvotes?address=${comment.identity}"
-                                          >${comment.displayName}</a
-                                        >`
-                                      : comment.displayName}</b
-                                  >
-                                  <span> • </span>
-                                  <a
-                                    class="meta-link"
-                                    href="/stories?index=0x${index}#0x${comment.index}"
-                                  >
-                                    <span>
-                                      ${formatDistanceToNowStrict(
-                                        new Date(comment.timestamp * 1000),
-                                      )}
-                                    </span>
-                                    <span> ago</span>
-                                  </a>
-                                </div>
-                                <br />
-                                ${comment.flagged && comment.reason
-                                  ? html`<i
-                                      >Moderated because: "${comment.reason}"</i
-                                    >`
-                                  : comment.title}
-                              </span>`,
-                          )}
-                        </div>
+                                <span> • </span>
+                                <a
+                                  class="meta-link"
+                                  href="/stories?index=0x${index}#0x${comment.index}"
+                                >
+                                  <span>
+                                    ${formatDistanceToNowStrict(
+                                      new Date(comment.timestamp * 1000),
+                                    )}
+                                  </span>
+                                  <span> ago</span>
+                                </a>
+                              </div>
+                              <br />
+                              ${comment.flagged && comment.reason
+                                ? html`<i
+                                    >Moderated because: "${comment.reason}"</i
+                                  >`
+                                : html`<span
+                                    dangerouslySetInnerHTML=${{
+                                      __html: linkifyStr(comment.title, {
+                                        className: "meta-link",
+                                        target: "_blank",
+                                        defaultProtocol: "https",
+                                        validate: {
+                                          url: (value) =>
+                                            /^https:\/\/.*/.test(value),
+                                          email: () => false,
+                                        },
+                                      }),
+                                    }}
+                                  ></span>`}
+                            </span>`,
+                        )}
                       </div>
                     </td>
                   </tr>`
@@ -260,16 +269,22 @@ export default async function (trie, theme, index, value) {
               <tr>
                 <td>
                   <nav-comment-input>
-                    <div style="margin: 0 2rem 1rem 2rem;">
+                    <div style="margin: 0 1rem 1rem 1rem;">
                       <textarea
-                        style="display:block;width:100%;"
+                        style="font-size: 1rem; border: 1px solid #828282; display:block;width:100%;"
                         rows="12"
                         cols="80"
                         disabled
                       ></textarea>
                       <br />
                       <br />
-                      <button disabled>Loading...</button>
+                      <button
+                        style="width: auto;"
+                        id="button-onboarding"
+                        disabled
+                      >
+                        Loading...
+                      </button>
                     </div>
                   </nav-comment-input>
                 </td>

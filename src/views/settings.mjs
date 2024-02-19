@@ -30,8 +30,8 @@ export default async function index(theme, identity) {
               <tr style="display: flex; justify-content: center;">
                 <td style="padding: 40px;">
                   <div
-                    style="background-color: white; max-width: 315px; display: inline-block; padding: 30px; backgroun
- white; border-radius: 12px; box-shadow: 0 6px 20px rgba(0,0,0,0.1);"
+                    style="border: 1px solid rgba(0,0,0,0.1); background-color: #E6E6DF; max-width: 315px; display: inline-block; padding: 30px; backgroun
+ white; border-radius: 2px; box-shadow: 0 6px 20px rgba(0,0,0,0.1);"
                   >
                     <div style="margin-bottom: 20px; text-align: center;">
                       <span role="img" aria-label="Kiwi">🥝</span> Kiwi News
@@ -39,7 +39,7 @@ export default async function index(theme, identity) {
                     <h3 style="color: black; margin-bottom: 20px;">
                       <span>Connect with </span>
                       <a
-                        style="color: #0000EE;"
+                        style="color: limegreen;"
                         href="https://news.kiwistand.com"
                         >news.kiwistand.com</a
                       >:
@@ -51,8 +51,8 @@ export default async function index(theme, identity) {
                         >
                           <img
                             src="${profile.safeAvatar}"
-                            style="border-radius: 50%; height: 36px; width: 36px; border: 2px
- solid #ddd;"
+                            style="border-radius: 2px; height: 36px; width: 36px; border: 2px
+ solid #828282;"
                           />
                           <span style="font-size: 1.1em;"
                             >${profile.displayName}</span

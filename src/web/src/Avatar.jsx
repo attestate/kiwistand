@@ -81,7 +81,7 @@ const Avatar = (props) => {
                   top: "0",
                   right: "0px",
                   backgroundColor: "red",
-                  borderRadius: "50%",
+                  borderRadius: "2px",
                   minWidth: "8px",
                   height: "8px",
                 }}
@@ -90,10 +90,10 @@ const Avatar = (props) => {
             <img
               src={avatar}
               style={{
-                borderRadius: "100%",
+                borderRadius: "2px",
                 height: "18px",
                 width: "18px",
-                border: "1px solid black",
+                border: "1px solid #828282",
               }}
             />
             <span
@@ -135,7 +135,7 @@ const Avatar = (props) => {
                 top: "5px",
                 left: "5px",
                 backgroundColor: "red",
-                borderRadius: "50%",
+                borderRadius: "2px",
                 minWidth: "8px",
                 height: "8px",
               }}

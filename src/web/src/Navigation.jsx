@@ -29,7 +29,7 @@ export const RefreshButton = () => {
           borderRadius: "2px",
           padding: "5px 15px 5px 15px",
           backgroundColor: "transparent",
-          border: "1px solid #7f8c8d",
+          border: "1px solid #828282",
           color: "#7f8c8d",
         }}
       >
@@ -264,7 +264,7 @@ const Settings = (props) => {
                       top: "0",
                       left: "10px",
                       backgroundColor: "red",
-                      borderRadius: "50%",
+                      borderRadius: "2px",
                       minWidth: "12px",
                       height: "12px",
                     }}

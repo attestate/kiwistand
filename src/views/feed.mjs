@@ -17,6 +17,7 @@ import { getTips, getTipsValue } from "../tips.mjs";
 import * as ens from "../ens.mjs";
 import Header from "./components/header.mjs";
 import SecondHeader from "./components/secondheader.mjs";
+import ThirdHeader from "./components/thirdheader.mjs";
 import Sidebar from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
 import { custom } from "./components/head.mjs";
@@ -38,7 +39,7 @@ function CanonRow(sheets) {
     <tr>
       <td>
         <div
-          style="justify-content: space-evenly; scroll-snap-type: x mandatory; border-radius: 5px; padding: 15px 0 10px 0; gap: 15px; display: flex; overflow-x: auto; width: 100%;"
+          style="justify-content: space-evenly; scroll-snap-type: x mandatory; padding: 15px 0 10px 0; gap: 15px; display: flex; overflow-x: auto; width: 100%;"
         >
           ${sheets.map(
             ({ preview, name }) => html`
@@ -47,7 +48,7 @@ function CanonRow(sheets) {
                   <img
                     loading="lazy"
                     src="${preview}"
-                    style="width: 100%; height: auto;"
+                    style="border-radius: 2px; width: 100%; height: auto;"
                   />
                 </a>
               </div>
@@ -396,6 +397,9 @@ export default async function (trie, theme, page, domain) {
                 ${await Header(theme)}
               </tr>
               <tr>
+                ${ThirdHeader(theme, "top")}
+              </tr>
+              <tr>
                 ${SecondHeader(theme, "top")}
               </tr>
               ${page === 0 && editorPicks.length > 0
@@ -492,7 +496,7 @@ export default async function (trie, theme, page, domain) {
                 </td>
               </tr>
               <tr
-                style="display: block; padding: 10px; background-color: ${theme.color}"
+                style="display: block; padding: 10px; background-color: #E6E6DF;"
               >
                 <td>
                   <span style="color: black;"

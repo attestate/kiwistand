@@ -95,14 +95,14 @@ async function points(identity) {
   const ogImage = "https://news.kiwistand.com/kiwi_community_page.png";
   return html`
     <div
-      style="margin: 1rem; border: 1px solid rgba(0,0,0,0.05); border-radius: 5px; background-color: rgba(0,0,0,0.05);"
+      style="margin: 1rem; border: 1px solid rgba(0,0,0,0.05); border-radius: 2px; background-color: rgba(0,0,0,0.05);"
     >
       <div
         style="display: flex; justify-content: space-between; align-items: center; padding:
  1rem 2rem 0 1rem;"
       >
         <span
-          style="padding: 0 0 1rem 0; border: 1px solid rgba(0,0,0,0.05); border-radius: 5px; background-color: rgba(0,0,0,0.05);"
+          style="padding: 0 0 1rem 0; border: 1px solid rgba(0,0,0,0.05); border-radius: 2px; background-color: rgba(0,0,0,0.05);"
         >
           <span
             style="padding: 1rem 1rem 0 1rem; font-weight: bold; font-size: 2rem;"
@@ -117,7 +117,7 @@ async function points(identity) {
         <span style="font-size: 3rem;">🥝</span>
       </div>
       <div
-        style="font-family: monospace; border: 1px solid rgba(0,0,0,0.05); border-radius: 5px; background-color: rgba(0,0,0,0.05);display: flex; justify-content: space-between; align-items: center; margin: 1rem; padding: 1rem;"
+        style="font-family: monospace; border: 1px solid rgba(0,0,0,0.05); border-radius: 2px; background-color: rgba(0,0,0,0.05);display: flex; justify-content: space-between; align-items: center; margin: 1rem; padding: 1rem;"
       >
         <span style="font-weight: bold; font-size: 1.25rem; color:black;"
           >Your Rank</span
@@ -264,6 +264,7 @@ export default async function (trie, theme, query, identity) {
             font-size: 1.05rem;
             border-radius: 0;
             border: 1px solid black;
+            padding-left: 1rem;
           }
           .search-input:focus {
             outline: none;
@@ -292,7 +293,7 @@ export default async function (trie, theme, query, identity) {
               <tr>
                 <td>
                   ${identity ? await points(identity) : null}
-                  <p style="color: black; padding: 5px 10px; font-size: 14pt;">
+                  <p style="color: black; padding: 5px 1rem; font-size: 14pt;">
                     <b>COMMUNITY</b>
                   </p>
                   <form class="search-container">
@@ -344,7 +345,7 @@ export default async function (trie, theme, query, identity) {
                                     ? html`<img
                                         loading="lazy"
                                         src="${ensData.safeAvatar}"
-                                        style="width: 20px; height: 20px; border-radius: 100%; margin-right: 15px;"
+                                        style="border: 1px solid #828282; width: 20px; height: 20px; border-radius: 2px; margin-right: 15px;"
                                       />`
                                     : html`
                                         <zora-zorb

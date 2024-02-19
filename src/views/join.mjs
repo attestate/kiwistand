@@ -61,7 +61,8 @@ export default async function (theme) {
           }
 
           .circular-image {
-            border-radius: 50%;
+            border-radius: 2px;
+            border: 1px solid #828282;
           }
 
           .avatar-container {
@@ -201,7 +202,7 @@ export default async function (theme) {
           .kiwi-nft {
             max-width: 100%;
             height: auto;
-            border-radius: 3px;
+            border-radius: 2px;
           }
           .image-meta {
             font-size: 0.9rem;
@@ -233,8 +234,8 @@ export default async function (theme) {
             display: inline-block;
             font-size: 0.9rem;
             cursor: pointer;
-            border-radius: 3px;
-            font-family: "Helvetica", "Arial", sans-serif;
+            border-radius: 2px;
+            font-family: Verdana, Geneva, sans-serif;
           }
 
           .buy-button:disabled {

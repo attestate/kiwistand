@@ -106,7 +106,7 @@ export default async function (theme, userAddress, transactionHash) {
 
                   
             <div style="position: fixed; right: 20px; bottom: 20px; z-index: 100; text-align: center;">
-  <button style="background-color: grey; color: white; padding: 0.5rem 1rem; display: inline-flex; align-items: center; justify-content: center; gap: 10px; font-size: 1.2rem; cursor: pointer; border-radius: 0.5rem;">
+  <button style="background-color: grey; color: white; padding: 0.5rem 1rem; display: inline-flex; align-items: center; justify-content: center; gap: 10px; font-size: 1.2rem; cursor: pointer; border-radius: 2px;">
     Next 
     <span style="border: 4px solid #fff; border-top: 4px solid limegreen; border-radius: 50%; width: 20px; height: 20px; animation: spin 2s linear infinite;"></span>
   </button>

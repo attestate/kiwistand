@@ -70,10 +70,10 @@ class SimpleModal extends Component {
       content: {
         fontSize: "1.025rem",
         backgroundColor: "#e6e6df",
-        border: "1px solid #ccc",
+        border: "1px solid #828282",
         overflow: "auto",
         WebkitOverflowScrolling: "touch",
-        borderRadius: "4px",
+        borderRadius: "2px",
         outline: "none",
         padding: "20px",
         position: "absolute",
@@ -221,7 +221,7 @@ class SimpleModal extends Component {
                 style={{
                   borderRadius: "2px",
                   padding: "5px 15px",
-                  border: "1px solid black",
+                  border: "1px solid #828282",
                   color: "black",
                   textAlign: "center",
                   textDecoration: "none",
@@ -250,7 +250,7 @@ class SimpleModal extends Component {
             color: "white",
             padding: "6px 15px",
             border: "none",
-            borderRadius: "15px",
+            borderRadius: "2px",
           }}
         >
           Install

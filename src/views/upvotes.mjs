@@ -145,7 +145,7 @@ export default async function (trie, theme, identity, page, mode) {
                       ${ensData.safeAvatar &&
                       html`<img
                         src="${ensData.safeAvatar}"
-                        style="width: 30px; height: 30px; border-radius: 50%;"
+                        style="border: 1px solid #828282; width: 30px; height: 30px; border-radius: 2px;"
                       />`}
                       ${ensData.displayName}
                       <span> (${points.toString()} 🥝)</span>
@@ -222,18 +222,24 @@ export default async function (trie, theme, identity, page, mode) {
                   >
                     <a href="?mode=top&address=${ensData.address}&page=0">
                       <button
-                        style=${`margin-right: 10px; font-size: 1.01rem; border-radius: 2px; cursor: pointer; padding: 5px 15px; background-color: transparent; border: 1px solid ${
-                          mode === "top" ? theme.color : "#7f8c8d"
-                        }; color: ${mode === "top" ? theme.color : "#7f8c8d"};`}
+                        class="feed-button"
+                        style=${`margin-right: 10px; font-size: 1.01rem; border-radius: 2px; cursor: pointer; padding: 5px 15px; background-color: transparent; border: ${
+                          mode === "top"
+                            ? "2px solid black"
+                            : "1px solid #7f8c8d"
+                        }; color: ${mode === "top" ? "black" : "#7f8c8d"};`}
                       >
                         <span>${trophySVG} Top</span>
                       </button>
                     </a>
                     <a href="?mode=new&address=${ensData.address}&page=0">
                       <button
-                        style=${`font-size: 1.01rem; border-radius: 2px; cursor: pointer; padding: 5px 15px; background-color: transparent; border: 1px solid ${
-                          mode === "new" ? theme.color : "#7f8c8d"
-                        }; color: ${mode === "new" ? theme.color : "#7f8c8d"};`}
+                        class="feed-button"
+                        style=${`font-size: 1.01rem; border-radius: 2px; cursor: pointer; padding: 5px 15px; background-color: transparent; border: ${
+                          mode === "new"
+                            ? "2px solid black"
+                            : "1px solid #7f8c8d"
+                        }; color: ${mode === "new" ? "black" : "#7f8c8d"};`}
                       >
                         <span>${broadcastSVG} New</span>
                       </button>
