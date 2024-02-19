@@ -53,7 +53,7 @@ const Bell = (props) => {
   }
 
   if (notificationCount > 0 && documentTitle === document.title) {
-    document.title = `(${notificationCount}) ${documentTitle}`;
+    document.title = `[${notificationCount}] ${documentTitle}`;
   }
 
   return (
