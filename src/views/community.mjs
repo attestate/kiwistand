@@ -255,7 +255,7 @@ export default async function (trie, theme, query, identity) {
             display: flex;
             justify-content: center;
             align-items: center;
-            margin: 10px 10px;
+            margin: 10px 1rem;
           }
 
           .search-input {
@@ -293,7 +293,7 @@ export default async function (trie, theme, query, identity) {
               <tr>
                 <td>
                   ${identity ? await points(identity) : null}
-                  <p style="color: black; padding: 5px 10px; font-size: 14pt;">
+                  <p style="color: black; padding: 5px 1rem; font-size: 14pt;">
                     <b>COMMUNITY</b>
                   </p>
                   <form class="search-container">
