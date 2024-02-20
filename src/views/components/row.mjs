@@ -230,7 +230,7 @@ const row = (
                             </a>
                           </span>
                         `}
-                    ${interactive
+                    ${interactive || !story.identity || !story.identity
                       ? null
                       : html`
                           <span>
