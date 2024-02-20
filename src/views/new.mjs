@@ -21,6 +21,7 @@ import * as registry from "../chainstate/registry.mjs";
 import { count } from "./feed.mjs";
 import { listNewest } from "../cache.mjs";
 import Row, { extractDomain } from "./components/row.mjs";
+import * as feeds from "../feeds.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -37,13 +38,24 @@ export function getLatestTimestamp() {
 }
 
 let inProgress = false;
-export async function recompute(trie) {
+export async function recompute() {
   if (inProgress) return;
   inProgress = true;
 
   let counts = listNewest();
+
   const config = await moderation.getLists();
   counts = moderation.moderate(counts, config);
+  const submittedHrefs = new Set(
+    counts.map((story) => normalizeUrl(story.href)),
+  );
+
+  const urls = await moderation.getFeeds();
+  const feedStories = (await feeds.latest(urls)).filter(
+    (story) => !submittedHrefs.has(normalizeUrl(story.href)),
+  );
+
+  counts = [...counts, ...feedStories];
   let sortedCounts = counts.sort((a, b) => b.timestamp - a.timestamp);
   let slicedCounts = sortedCounts.slice(0, 40);
 
@@ -58,6 +70,18 @@ export async function recompute(trie) {
 
   let nextStories = [];
   for await (let story of slicedCounts) {
+    if (!story.identity || !story.index || !story.upvoters) {
+      nextStories.push({
+        ...story,
+        displayName: "Feedbot",
+        avatars: [],
+        upvoters: [],
+        isOriginal: false,
+        tipValue: 0,
+      });
+      continue;
+    }
+
     const ensData = await ens.resolve(story.identity);
 
     const tipValue = getTipsValue(tips, story.index);

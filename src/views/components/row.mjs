@@ -17,6 +17,8 @@ export function extractDomain(link) {
 }
 
 export function addOrUpdateReferrer(link, address) {
+  if (!address) return link;
+
   const url = new URL(link);
   if (url.hostname.endsWith("mirror.xyz")) {
     url.searchParams.set("referrerAddress", address);
@@ -180,17 +182,19 @@ const row = (
                           <span> ago</span>
                         `}
                     <span> by </span>
-                    <a
-                      href="${interactive
-                        ? ""
-                        : story.submitter && story.submitter.ens
-                        ? `/${story.submitter.ens}`
-                        : `/upvotes?address=${story.identity}`}"
-                      class="meta-link"
-                    >
-                      ${story.displayName}
-                    </a>
-                    ${interactive || hideCast
+                    ${story.identity
+                      ? html`<a
+                          href="${interactive
+                            ? ""
+                            : story.submitter && story.submitter.ens
+                            ? `/${story.submitter.ens}`
+                            : `/upvotes?address=${story.identity}`}"
+                          class="meta-link"
+                        >
+                          ${story.displayName}
+                        </a>`
+                      : story.displayName}
+                    ${interactive || hideCast || !story.index
                       ? null
                       : html`
                           <span> • </span>
