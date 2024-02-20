@@ -12,6 +12,7 @@ let alreadyRunning = false;
 async function recompute(feedUrls) {
   if (alreadyRunning) return;
   alreadyRunning = true;
+  stories = [];
 
   await Promise.all(
     feedUrls.map((url) =>
