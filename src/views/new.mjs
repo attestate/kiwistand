@@ -50,8 +50,7 @@ export async function recompute() {
     counts.map((story) => normalizeUrl(story.href)),
   );
 
-  const urls = await moderation.getFeeds();
-  const feedStories = (await feeds.latest(urls)).filter(
+  const feedStories = (await feeds.latest()).filter(
     (story) => !submittedHrefs.has(normalizeUrl(story.href)),
   );
 

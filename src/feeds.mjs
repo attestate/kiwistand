@@ -2,14 +2,13 @@ import Parser from "rss-parser";
 import { subDays } from "date-fns";
 import NodeCache from "node-cache";
 
-import * as newest from "./views/new.mjs";
 import log from "./logger.mjs";
 
 const parser = new Parser();
 let stories = [];
 let alreadyRunning = false;
 
-async function recompute(feedUrls) {
+export async function recompute(feedUrls) {
   if (alreadyRunning) return;
   alreadyRunning = true;
   stories = [];
@@ -25,13 +24,11 @@ async function recompute(feedUrls) {
         }),
     ),
   );
-  await newest.recompute();
 
   alreadyRunning = false;
 }
 
-export function latest(feedUrls) {
-  recompute(feedUrls);
+export function latest() {
   const cutoffDate = subDays(new Date(), 1);
   const cutoffTimestamp = cutoffDate.getTime() / 1000;
 

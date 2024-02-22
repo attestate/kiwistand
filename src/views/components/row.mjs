@@ -230,7 +230,10 @@ const row = (
                             </a>
                           </span>
                         `}
-                    ${interactive || !story.identity || !story.identity
+                    ${interactive ||
+                    !story.identity ||
+                    !story.index ||
+                    !story.title
                       ? null
                       : html`
                           <span>
