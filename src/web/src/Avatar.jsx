@@ -26,23 +26,26 @@ const Avatar = (props) => {
 
   useEffect(() => {
     const getAvatar = async () => {
-      if (address) {
-        const name = await provider.lookupAddress(address);
-        const ensResolver = await provider.getResolver(name);
-        if (ensResolver) {
-          const avatarUrl = await ensResolver.getAvatar();
-          setAvatar(avatarUrl.url);
-        }
-      }
+      if (!address) return;
+
+      const name = await provider.lookupAddress(address);
+      if (!name) return;
+
+      const ensResolver = await provider.getResolver(name);
+      if (!ensResolver) return;
+
+      const avatarUrl = await ensResolver.getAvatar();
+      setAvatar(avatarUrl.url);
     };
     const getPoints = async () => {
-      if (address) {
-        const data = await fetchKarma(address);
-        if (data && data.karma) {
-          setPoints(data.karma);
-        }
+      if (!address) return;
+
+      const data = await fetchKarma(address);
+      if (data && data.karma) {
+        setPoints(data.karma);
       }
     };
+
     getPoints();
     getAvatar();
   }, [address, account.isConnected, provider]);
