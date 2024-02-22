@@ -12,7 +12,10 @@ import * as ens from "../ens.mjs";
 const html = htm.bind(vhtml);
 
 export default async function (theme, identity) {
-  const ensData = await ens.resolve(identity);
+  let ensData;
+  if (identity) {
+    ensData = await ens.resolve(identity);
+  }
   return html`
     <html lang="en" op="news">
       <head>
@@ -186,31 +189,33 @@ export default async function (theme, identity) {
                   <br />
                   <br />
                   <br />
-                  <div class="flex-container flex-image-left">
-                    <div class="image-left">
-                      <img src="kiwi-profile.png" />
-                    </div>
-                    <div class="text-right">
-                      <h2>Check your Kiwi profile</h2>
-                      <p>
-                        We pull the data, links & avatar from your ENS and
-                        Farcaster so that people can get to know you. When you
-                        submit your first links, they'll show up on your
-                        profile.
-                      </p>
-                      <a href="/${ensData.displayName}" target="_blank">
-                        <button
-                          id="button-onboarding"
-                          style="margin-left: 0; width: 40%;"
-                        >
-                          Check your Kiwi profile
-                        </button>
-                      </a>
-                    </div>
-                  </div>
-                  <br />
-                  <br />
-                  <br />
+                  ${ensData
+                    ? html`<div class="flex-container flex-image-left">
+                          <div class="image-left">
+                            <img src="kiwi-profile.png" />
+                          </div>
+                          <div class="text-right">
+                            <h2>Check your Kiwi profile</h2>
+                            <p>
+                              We pull the data, links & avatar from your ENS and
+                              Farcaster so that people can get to know you. When
+                              you submit your first links, they'll show up on
+                              your profile.
+                            </p>
+                            <a href="/${ensData.displayName}" target="_blank">
+                              <button
+                                id="button-onboarding"
+                                style="margin-left: 0; width: 40%;"
+                              >
+                                Check your Kiwi profile
+                              </button>
+                            </a>
+                          </div>
+                        </div>
+                        <br />
+                        <br />
+                        <br />`
+                    : ""}
                   <h1>Ready to explore Kiwi Level III?</h1>
                   <a href="/onboarding-submitter">
                     <button id="button-onboarding" style="margin-left: 0;">

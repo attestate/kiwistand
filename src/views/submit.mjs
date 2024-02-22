@@ -193,7 +193,7 @@ const fileInputLabelStyle = `
    justify-content: center;
    background: grey;
    color: #fff;
-   border-radius: 3px;
+   border-radius: 2px;
    cursor: pointer;
  `;
 
@@ -205,13 +205,13 @@ const editableContent = `
    padding: 5px 10px;
    font-size: 16px;
    box-sizing: border-box;
-   border: 1px solid #8f8f9d;
+   border: 1px solid #828282;
    overflow: auto;
    resize: both;
    white-space: pre-wrap;
    background-color: white;
    color: black;
-   border-radius: 3px;
+   border-radius: 2px;
  `;
 
 const previewContainerStyle = `

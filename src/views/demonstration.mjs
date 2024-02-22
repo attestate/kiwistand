@@ -38,11 +38,30 @@ export default async function index(theme) {
           name="description"
           content="Kiwi News is the prime feed for hacker engineers building a decentralized future. All our content is handpicked and curated by crypto veterans."
         />
+        <style>
+          #hnmain table {
+            border-left: none !important;
+            border-right: none !important;
+          }
+          @media screen and (min-width: 769px) {
+            .sidebar {
+              display: none;
+            }
+
+            #hnmain {
+              width: 100%;
+              border-bottom: none !important;
+            }
+          }
+        </style>
       </head>
       <body>
-        <div class="container">
+        <div class="container" style="min-height: 90vh;">
           ${Sidebar("/")}
-          <div id="hnmain">
+          <div
+            id="hnmain"
+            style="border-bottom: 1px solid rgba(0,0,0,0.2); display: flex; justify-content: center;"
+          >
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
               <tr>
                 ${await Header(theme)}
@@ -52,60 +71,83 @@ export default async function index(theme) {
                   style="flex-direction: column; display: flex; justify-content: space-between; align-items: center;"
                 >
                   <p
-                    style="color: black; padding: 1rem 3rem 0 3rem; font-size: 14pt; font-weight: bold; text-align: center;"
+                    style="color: black; padding: 1rem 3rem 0 3rem; font-size: 1.5rem; font-weight: bold; text-align: center;"
                   >
                     You're in!
                   </p>
                   <p
-                    style="color: black; margin-top: 0; padding: 0 3rem 1rem 3rem; font-size: 14pt; text-align: center;"
+                    style="color: black; margin-top: 0; padding: 0 3rem 1rem 3rem; font-size: 1rem; text-align: center; font-weight: bold;"
                   >
-                    The Kiwi Pass allows you to upvote stories.
-                    <br />
-                    <br />
-                    <b>Try it out!</b>
+                    Now you can<span style="color: limegreen;"
+                      ><span> </span> upvote, submit & comment links.</span
+                    >
                   </p>
-                </td>
-              </tr>
-              ${mockStories.map((story, index) =>
-                Row(
-                  index,
-                  null,
-                  "padding: 1rem 2rem; background-color: #e6e6df;",
-                  false,
-                  true,
-                )(story),
-              )}
-              <tr>
-                <td>
-                  <p
-                    style="color: black; padding: 1rem 3rem 1rem 3rem; font-size: 14pt; text-align: center;"
-                  >
-                    Your next steps:
-                  </p>
-                </td>
-              </tr>
-              <tr>
-                <td
-                  style="display: flex; justify-content: space-evenly; padding: 20px;"
-                >
-                  <a
-                    id="button-onboarding"
-                    style="width: auto;"
-                    href="/onboarding"
-                  >
-                    Learn more
-                  </a>
-                  <a
-                    href="/submit"
-                    style="display: flex; align-items: center; text-decoration: underline; color: black;"
-                    >Submit a story</a
-                  >
+                  <tr>
+                    <td style="display: flex; justify-content: center;">
+                      <div
+                        style="
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        max-width: 90%; 
+                        padding: 0.5rem 0.75rem;
+                        border: 1px solid rgba(0,0,0,0.05);
+                        border-radius: 2px;
+                        background-color: rgba(0,0,0,0.05);
+                        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+                      "
+                      >
+                        <p
+                          style="
+                          color: black;
+                          font-size: 1rem;
+                          font-weight: bold;
+                          text-align: center;
+                          line-height: 1;
+                          margin-bottom: 1rem;
+                        "
+                        >
+                          Try upvoting by clicking on
+                          <span> </span><span class="votearrow">▲</span> next to
+                          one of the links below:
+                        </p>
+                        <table style="width: auto; margin: auto;">
+                          ${mockStories.map((story, index) =>
+                            Row(index, null, "", false, true)(story),
+                          )}
+                        </table>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <p
+                        style="color: black; padding: 1rem 3rem 1rem 3rem; font-size: 1rem; text-align: center; margin-top: 1rem;"
+                      >
+                        Your next step:
+                      </p>
+                    </td>
+                  </tr>
+                  <tr style="border-bottom: 1px solid grey;">
+                    <td
+                      style="padding: 0 0 3rem 0; display: flex; justify-content: space-evenly;"
+                    >
+                      <a href="/onboarding-reader">
+                        <button
+                          style="width:auto; background-color: white; color: black;"
+                          id="button-onboarding"
+                        >
+                          Explore Kiwi
+                        </button>
+                      </a>
+                    </td>
+                  </tr>
                 </td>
               </tr>
             </table>
           </div>
         </div>
-        ${Footer(theme, "/demonstration")}
+        <div style="display: none;">${Footer(theme, "/demonstration")}</div>
       </body>
     </html>
   `;

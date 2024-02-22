@@ -11,6 +11,7 @@ import { getTips, getTipsValue } from "../tips.mjs";
 import * as ens from "../ens.mjs";
 import Header from "./components/header.mjs";
 import SecondHeader from "./components/secondheader.mjs";
+import ThirdHeader from "./components/thirdheader.mjs";
 import Sidebar from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
 import { custom } from "./components/head.mjs";
@@ -20,6 +21,7 @@ import * as registry from "../chainstate/registry.mjs";
 import { count } from "./feed.mjs";
 import { listNewest } from "../cache.mjs";
 import Row, { extractDomain } from "./components/row.mjs";
+import * as feeds from "../feeds.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -36,13 +38,23 @@ export function getLatestTimestamp() {
 }
 
 let inProgress = false;
-export async function recompute(trie) {
+export async function recompute() {
   if (inProgress) return;
   inProgress = true;
 
   let counts = listNewest();
+
   const config = await moderation.getLists();
   counts = moderation.moderate(counts, config);
+  const submittedHrefs = new Set(
+    counts.map((story) => normalizeUrl(story.href)),
+  );
+
+  const feedStories = (await feeds.latest()).filter(
+    (story) => !submittedHrefs.has(normalizeUrl(story.href)),
+  );
+
+  counts = [...counts, ...feedStories];
   let sortedCounts = counts.sort((a, b) => b.timestamp - a.timestamp);
   let slicedCounts = sortedCounts.slice(0, 40);
 
@@ -57,6 +69,18 @@ export async function recompute(trie) {
 
   let nextStories = [];
   for await (let story of slicedCounts) {
+    if (!story.identity || !story.index || !story.upvoters) {
+      nextStories.push({
+        ...story,
+        displayName: "Feedbot",
+        avatars: [],
+        upvoters: [],
+        isOriginal: false,
+        tipValue: 0,
+      });
+      continue;
+    }
+
     const ensData = await ens.resolve(story.identity);
 
     const tipValue = getTipsValue(tips, story.index);
@@ -145,11 +169,14 @@ export default async function (trie, theme, index) {
                 ${await Header(theme)}
               </tr>
               <tr>
+                ${ThirdHeader(theme, "new")}
+              </tr>
+              <tr>
                 ${SecondHeader(theme, "new")}
               </tr>
               ${items.map(Row(null, "/best"))}
               <tr
-                style="display: block; padding: 10px; background-color: ${theme.color}"
+                style="display: block; padding: 10px; background-color: #E6E6DF"
               >
                 <td></td>
               </tr>

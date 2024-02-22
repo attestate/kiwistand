@@ -19,6 +19,8 @@ import * as registry from "./chainstate/registry.mjs";
 import * as karma from "./karma.mjs";
 import * as newest from "./views/new.mjs";
 import * as images from "./views/images.mjs";
+import * as feeds from "./feeds.mjs";
+import * as moderation from "./views/moderation.mjs";
 
 const trie = await store.create();
 
@@ -87,6 +89,13 @@ try {
   );
   exit(1);
 }
+
+const urls = await moderation.getFeeds();
+await feeds.recompute(urls);
+setInterval(async () => {
+  await feeds.recompute(urls);
+  await newest.recompute(trie);
+}, 1800000);
 await newest.recompute(trie);
 await images.recompute(trie);
 karma.count(upvotes);

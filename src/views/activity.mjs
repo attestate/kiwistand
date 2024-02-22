@@ -51,9 +51,7 @@ const generateFeed = (messages) => {
       }
     });
 
-  return Object.values(groupedMessages).sort(
-    (a, b) => b.timestamp - a.timestamp,
-  );
+  return Object.values(groupedMessages);
 };
 
 function truncateComment(comment, maxLength = 260) {
@@ -61,13 +59,13 @@ function truncateComment(comment, maxLength = 260) {
   return comment.slice(0, comment.lastIndexOf(" ", maxLength)) + "...";
 }
 
-function generateCommentRow(activity, identity, borderColor) {
+function generateCommentRow(activity, identity, bgColor) {
   const comment = truncateComment(activity.message.title);
   const avatar = identity.safeAvatar
     ? html`<img
         src="${identity.safeAvatar}"
         alt="avatar"
-        style="width: 28px; height: 28px; border-radius: 50%; margin-top: 1rem;"
+        style="border: 1px solid #828282; width: 28px; height: 28px; border-radius: 2px; margin-top: 1.5rem;"
       />`
     : "";
 
@@ -75,9 +73,9 @@ function generateCommentRow(activity, identity, borderColor) {
   const link = `/stories?index=${index}#0x${activity.message.index}`;
 
   return html`
-    <tr>
+    <tr style="background-color: ${bgColor}">
       <td>
-        <div style="display: flex; border-bottom: 1px solid ${borderColor};">
+        <div style="display: flex; border-bottom: 1px solid rgba(0,0,0,0.1);">
           <div
             style="flex: 0.15; display: flex; align-items: start; justify-content:
  center;"
@@ -87,7 +85,7 @@ function generateCommentRow(activity, identity, borderColor) {
           <div
             style="padding-top: 10px; flex: 0.85; display: flex; flex-direction: column;"
           >
-            <div style="font-size: 0.9rem;">
+            <div style="font-size: 0.9rem; margin-right: 1rem;">
               <p style="margin-top: 8px; margin-bottom: 2px;">
                 <strong>
                   <a style="color: ;" href="${link}">
@@ -102,9 +100,11 @@ function generateCommentRow(activity, identity, borderColor) {
                 </strong>
               </p>
               <p
-                style="white-space: pre-wrap; margin: 5px 3rem 1rem 0; color: gray; word-break: break-word;"
+                style="line-height: 1.2; white-space: pre-wrap; margin: 5px 0 1rem 0; color: gray; word-break: break-word;"
               >
-                <a style="color: gray;" href="${link}">${comment}</a>
+                <a style="color: gray; text-align: justify;" href="${link}"
+                  >${comment}</a
+                >
               </p>
             </div>
           </div>
@@ -116,10 +116,12 @@ function generateCommentRow(activity, identity, borderColor) {
 
 function generateRow(lastUpdate) {
   return (activity, i) => {
-    const borderColor = "rgba(0,0,0,0.10)";
+    const bgColor =
+      lastUpdate < activity.timestamp ? "rgba(0,0,0,0.05)" : "none";
+
     if (activity.verb === "commented" || activity.verb === "involved") {
       const identity = activity.identities[0];
-      return generateCommentRow(activity, identity, borderColor);
+      return generateCommentRow(activity, identity, bgColor);
     }
 
     const title = activity.message.title || activity.message.href;
@@ -129,13 +131,11 @@ function generateRow(lastUpdate) {
       .reverse()
       .filter((identity) => identity.safeAvatar)
       .slice(0, 5);
-    const rowStyle =
-      lastUpdate < activity.timestamp ? "background-color: #e6e6dfbf" : "";
 
     return html`
-      <tr style="${rowStyle}">
+      <tr style="background-color: ${bgColor};">
         <td>
-          <div style="display: flex; border-bottom: 1px solid ${borderColor};">
+          <div style="display: flex; border-bottom: 1px solid rgba(0,0,0,0.1);">
             <div
               class="votearrow"
               style="font-size: 1.5rem; flex: 0.15; display: flex; align-items: center; justify-content: center; color: limegreen;"
@@ -159,14 +159,14 @@ function generateRow(lastUpdate) {
                           <img
                             src="${identity.safeAvatar}"
                             alt="avatar"
-                            style="z-index: ${index}; width: ${size}px; height: ${size}px; border: 1px solid #828282; border-radius: 50%; margin-left: 15px;"
+                            style="z-index: ${index}; width: ${size}px; height: ${size}px; border: 1px solid #828282; border-radius: 2px; margin-left: 15px;"
                           />
                         </a>
                       `,
                     )}
                   </div>`
                 : ""}
-              <div style="font-size: 0.9rem;">
+              <div style="font-size: 0.9rem; margin-right: 1rem;">
                 <p style="margin-top: 8px; margin-bottom: 2px;">
                   <strong>
                     <a href="/upvotes?address=${identity.address}">

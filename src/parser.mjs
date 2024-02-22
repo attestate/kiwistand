@@ -75,8 +75,8 @@ const empty = html``;
 export const render = (ogTitle, domain, ogDescription, image) => html`
   <div
     onclick="navigator.clipboard.writeText('${ogTitle}')"
-    style="cursor:pointer; display: flex; flex-direction: column; border: 1px solid #ccc;
-  border-radius: 3px; overflow: hidden;"
+    style="cursor:pointer; display: flex; flex-direction: column; border: 1px solid #828282;
+  border-radius: 2px; overflow: hidden;"
   >
     <div style="background-color: #e6e6df; padding: 1rem; color: #777;">
       <div style="font-size: 0.7rem; margin-bottom: 0.5rem;">${domain}</div>

@@ -46,13 +46,14 @@ const Bell = (props) => {
     !isEligible ||
     (!getCookie("lastUpdate") && readNotifications === 0) ||
     window.location.pathname === "/indexing" ||
-    window.location.pathname === "/kiwipass-mint"
+    window.location.pathname === "/kiwipass-mint" ||
+    window.location.pathname === "/demonstration"
   ) {
     return null;
   }
 
   if (notificationCount > 0 && documentTitle === document.title) {
-    document.title = `(${notificationCount}) ${documentTitle}`;
+    document.title = `[${notificationCount}] ${documentTitle}`;
   }
 
   return (
@@ -75,13 +76,13 @@ const Bell = (props) => {
             top: "-5px",
             right: "0",
             backgroundColor: "red",
-            borderRadius: "50%",
+            borderRadius: "2px",
             color: "white",
             padding: "1px",
             fontSize: "8px",
             fontWeight: "bold",
-            minWidth: "15px",
-            height: "15px",
+            minWidth: "13px",
+            height: "13px",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",

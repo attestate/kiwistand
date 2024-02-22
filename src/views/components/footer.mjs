@@ -51,10 +51,10 @@ const footer = (theme, path) => html`
             <a
               class="submit-button"
               href="/submit"
-              style="align-items: center; justify-content: center; height: 50px; width: 50px; background-color: ${theme.color}; border-radius: 2px; box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);"
+              style="align-items: center; justify-content: center; height: 50px; width: 50px; background-color: black; border-radius: 2px; box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);"
             >
               <svg
-                style="color: black; width: 1.75rem;"
+                style="color: white; width: 1.75rem;"
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 256 256"
               >

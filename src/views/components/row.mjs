@@ -17,6 +17,8 @@ export function extractDomain(link) {
 }
 
 export function addOrUpdateReferrer(link, address) {
+  if (!address) return link;
+
   const url = new URL(link);
   if (url.hostname.endsWith("mirror.xyz")) {
     url.searchParams.set("referrerAddress", address);
@@ -152,7 +154,7 @@ const row = (
                                 src="${avatar}"
                                 alt="avatar"
                                 style="z-index: ${index}; width: ${size}px; height:
- ${size}px; border: 1px solid #828282; border-radius: 50%; margin-left: -${size /
+ ${size}px; border: 1px solid #828282; border-radius: 2px; margin-left: -${size /
                                 2}px;"
                               />
                             `,
@@ -180,17 +182,19 @@ const row = (
                           <span> ago</span>
                         `}
                     <span> by </span>
-                    <a
-                      href="${interactive
-                        ? ""
-                        : story.submitter && story.submitter.ens
-                        ? `/${story.submitter.ens}`
-                        : `/upvotes?address=${story.identity}`}"
-                      class="meta-link"
-                    >
-                      ${story.displayName}
-                    </a>
-                    ${interactive || hideCast
+                    ${story.identity
+                      ? html`<a
+                          href="${interactive
+                            ? ""
+                            : story.submitter && story.submitter.ens
+                            ? `/${story.submitter.ens}`
+                            : `/upvotes?address=${story.identity}`}"
+                          class="meta-link"
+                        >
+                          ${story.displayName}
+                        </a>`
+                      : story.displayName}
+                    ${interactive || hideCast || !story.index
                       ? null
                       : html`
                           <span> • </span>
@@ -226,7 +230,10 @@ const row = (
                             </a>
                           </span>
                         `}
-                    ${interactive
+                    ${interactive ||
+                    !story.identity ||
+                    !story.index ||
+                    !story.title
                       ? null
                       : html`
                           <span>

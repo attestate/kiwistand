@@ -19,7 +19,7 @@ function CanonRow(sheets) {
         <tr>
           <td>
             <div
-              style="justify-content: space-evenly; scroll-snap-type: x mandatory; border-radius: 5px; margin-bottom: -10px; padding: 20px 0; gap: 15px; display: flex; overflow-x: auto; width: 100%;"
+              style="justify-content: space-evenly; scroll-snap-type: x mandatory; border-radius: 2px; margin-bottom: -10px; padding: 20px 0; gap: 15px; display: flex; overflow-x: auto; width: 100%;"
             >
               ${rowSheets.map(
                 ({ preview, name }) => html`
@@ -28,7 +28,7 @@ function CanonRow(sheets) {
                       <img
                         loading="lazy"
                         src="${preview}"
-                        style="width: 100%; height: auto;"
+                        style="border-radius: 2px; width: 100%; height: auto;"
                       />
                     </a>
                   </div>

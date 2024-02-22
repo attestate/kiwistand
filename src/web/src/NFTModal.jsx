@@ -33,10 +33,10 @@ const NFTModal = ({ modalIsOpen, setIsOpen, headline, text, closeText }) => {
         content: {
           fontSize: "0.9rem",
           backgroundColor: "#e6e6df",
-          border: "1px solid #ccc",
+          border: "1px solid #828282",
           overflow: "auto",
           WebkitOverflowScrolling: "touch",
-          borderRadius: "4px",
+          borderRadius: "2px",
           outline: "none",
           padding: "20px",
           position: "absolute",
@@ -70,7 +70,7 @@ const NFTModal = ({ modalIsOpen, setIsOpen, headline, text, closeText }) => {
               alt="Kiwi News NFT"
               style={{
                 width: "100%",
-                borderRadius: "3px",
+                borderRadius: "2px",
                 marginBottom: "15px",
               }}
             />
@@ -91,8 +91,8 @@ const NFTModal = ({ modalIsOpen, setIsOpen, headline, text, closeText }) => {
               textDecoration: "none",
               fontSize: "0.9rem",
               cursor: "pointer",
-              borderRadius: "3px",
-              fontFamily: "'Helvetica', 'Arial', sans-serif",
+              borderRadius: "2px",
+              fontFamily: "Verdana, Geneva, sans-serif",
               display: "flex",
               alignItems: "center",
               marginBottom: "20px",

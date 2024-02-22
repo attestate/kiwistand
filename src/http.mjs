@@ -10,8 +10,6 @@ import { utils } from "ethers";
 import htm from "htm";
 import "express-async-errors";
 import multer from "multer";
-
-import kiwipassmint from "./views/kiwipass-mint.mjs";
 import log from "./logger.mjs";
 import { SCHEMATA } from "./constants.mjs";
 import themes from "./themes.mjs";
@@ -39,6 +37,7 @@ import upvotes from "./views/upvotes.mjs";
 import community from "./views/community.mjs";
 import stats from "./views/stats.mjs";
 import * as activity from "./views/activity.mjs";
+import * as comments from "./views/comments.mjs";
 import about from "./views/about.mjs";
 import why from "./views/why.mjs";
 import submit from "./views/submit.mjs";
@@ -488,6 +487,20 @@ export async function launch(trie, libp2p) {
     reply.header("Cache-Control", "public, max-age=86400");
     return reply.status(200).type("text/html").send(content);
   });
+  app.get("/comments", async (request, reply) => {
+    let data;
+    try {
+      data = await comments.data();
+    } catch (err) {
+      return reply.status(400).type("text/plain").send(err.toString());
+    }
+    const content = await comments.page(reply.locals.theme, data.notifications);
+    reply.header(
+      "Cache-Control",
+      "public, max-age=60, no-transform, must-revalidate, stale-while-revalidate=3600",
+    );
+    return reply.status(200).type("text/html").send(content);
+  });
   app.get("/api/v1/activity", async (request, reply) => {
     let data;
 
@@ -506,7 +519,10 @@ export async function launch(trie, libp2p) {
     const httpMessage = "OK";
     const details = "Notifications feed";
 
-    reply.header("Cache-Control", "no-cache");
+    reply.header(
+      "Cache-Control",
+      "public, max-age=300, no-transform, must-revalidate",
+    );
     return sendStatus(reply, code, httpMessage, details, {
       notifications: data.notifications,
       lastServerValue: data.latestValue,
@@ -533,7 +549,10 @@ export async function launch(trie, libp2p) {
       reply.setHeader("X-LAST-UPDATE", data.lastUpdate);
       reply.cookie("lastUpdate", data.lastUpdate);
     }
-    reply.header("Cache-Control", "no-cache");
+    reply.header(
+      "Cache-Control",
+      "public, max-age=300, no-transform, must-revalidate",
+    );
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/subscribe", async (request, reply) => {

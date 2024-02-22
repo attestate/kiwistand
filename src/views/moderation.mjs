@@ -62,6 +62,15 @@ export async function getFeedParameters() {
   };
 }
 
+export async function getFeeds() {
+  const response = await getConfig("feeds");
+  const feeds = [];
+  response.forEach(({ url }) => {
+    feeds.push(url);
+  });
+  return feeds;
+}
+
 export async function getWriters() {
   const response = await getConfig("writers");
   const writers = {};
