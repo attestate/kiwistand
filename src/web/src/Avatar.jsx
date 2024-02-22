@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { WagmiConfig, useAccount, useProvider } from "wagmi";
+import { WagmiConfig, useAccount } from "wagmi";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { eligible } from "@attestate/delegator2";
 
 import { getLocalAccount } from "./session.mjs";
-import { client, chains } from "./client.mjs";
+import { client, chains, useProvider } from "./client.mjs";
 import { fetchKarma } from "./API.mjs";
 
 const Avatar = (props) => {
@@ -161,7 +161,7 @@ const Avatar = (props) => {
 
 const Form = (props) => {
   return (
-    <WagmiConfig client={client}>
+    <WagmiConfig config={client}>
       <RainbowKitProvider chains={chains}>
         <Avatar {...props} />
       </RainbowKitProvider>

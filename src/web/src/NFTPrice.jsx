@@ -1,5 +1,5 @@
 import { useContractRead, WagmiConfig } from "wagmi";
-import { parseEther, formatEther } from "@ethersproject/units";
+import { parseEther, formatEther } from "viem";
 import { optimism } from "wagmi/chains";
 import { useEffect, useState } from "react";
 
@@ -76,7 +76,7 @@ export const PriceComponent = (props) => {
   const salesPrice = salesDetails?.data?.publicSalePrice || 0;
   let total = salesPrice;
   if (total && props.fee) {
-    total = total.add(parseEther(props.fee));
+    total = total + parseEther(props.fee);
   }
 
   const usdPrice = ethPrice
@@ -97,7 +97,7 @@ export const PriceComponent = (props) => {
 
 const WrappedPriceComponent = (props) => {
   return (
-    <WagmiConfig client={client}>
+    <WagmiConfig config={client}>
       <PriceComponent {...props} />
     </WagmiConfig>
   );

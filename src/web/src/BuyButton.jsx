@@ -1,16 +1,13 @@
 import {
-  usePrepareContractWrite,
   useContractWrite,
   WagmiConfig,
   useAccount,
-  useProvider,
-  useContractRead,
   useNetwork,
   useSwitchNetwork,
 } from "wagmi";
 import { Contract } from "@ethersproject/contracts";
 import { Provider } from "@ethersproject/providers";
-import { parseEther, formatEther } from "@ethersproject/units";
+import { parseEther, formatEther } from "viem";
 import { mainnet, optimism } from "wagmi/chains";
 import { Wallet } from "@ethersproject/wallet";
 import { getAddress } from "@ethersproject/address";
@@ -19,9 +16,7 @@ import { useState, useEffect } from "react";
 import useLocalStorageState from "use-local-storage-state";
 import { RainbowKitProvider, ConnectButton } from "@rainbow-me/rainbowkit";
 import {
-  getProvider,
   prepareWriteContract,
-  writeContract,
   getAccount,
   fetchBalance,
   readContract,
@@ -29,7 +24,7 @@ import {
 
 import { getLocalAccount } from "./session.mjs";
 
-import { client, chains } from "./client.mjs";
+import { getProvider, useProvider, client, chains } from "./client.mjs";
 
 export async function prepare(key) {
   const { address } = getAccount();
@@ -54,12 +49,12 @@ export async function prepare(key) {
   if (!saleDetails || !saleDetails.publicSalePrice) {
     throw new Error("Error getting the price");
   }
-  const price = saleDetails.publicSalePrice.add(ZORA_MINT_FEE);
+  const price = saleDetails.publicSalePrice + ZORA_MINT_FEE;
 
   let preferredChainId = null;
-  if (balance.optimism.gt(price)) {
+  if (balance.optimism > price) {
     preferredChainId = optimism.id;
-  } else if (balance.mainnet.gt(price)) {
+  } else if (balance.mainnet > price) {
     preferredChainId = mainnet.id;
   }
   if (!preferredChainId) {
@@ -102,9 +97,7 @@ export async function prepare(key) {
       abi: abiOptimismPortal,
       functionName: "depositTransaction",
       args: [addressDelegator, price, gasLimit, isCreation, data],
-      overrides: {
-        value: price,
-      },
+      value: price,
       chainId: mainnet.id,
     });
   } else if (preferredChainId === optimism.id) {
@@ -113,9 +106,7 @@ export async function prepare(key) {
       abi: abiDelegator,
       functionName: "setup",
       args: [quantity, payload, comment, referral],
-      overrides: {
-        value: price,
-      },
+      value: price,
       chainId: optimism.id,
     });
   } else {
@@ -267,7 +258,7 @@ const BuyButton = (props) => {
       try {
         config = await prepare(key);
       } catch (err) {
-        console.log(err);
+        console.log("setting error", err);
         setError(err);
         setConfig(null);
       }
@@ -305,6 +296,7 @@ const BuyButton = (props) => {
     name = "Optimism";
   }
 
+  console.log(config, error, chain.id);
   if (
     (config && config.chainId !== chain.id) ||
     (error && error.message.includes("Chain mismatch"))
@@ -414,7 +406,7 @@ const Button = (props) => {
 
 const Form = (props) => {
   return (
-    <WagmiConfig client={client}>
+    <WagmiConfig config={client}>
       <RainbowKitProvider chains={chains}>
         <ConnectButton.Custom>
           {({ account, chain, mounted, openConnectModal }) => {

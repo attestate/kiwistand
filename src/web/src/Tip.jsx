@@ -9,7 +9,7 @@ import { getLocalAccount } from "./session.mjs";
 
 const Container = (props) => {
   return (
-    <WagmiConfig client={client}>
+    <WagmiConfig config={client}>
       <RainbowKitProvider chains={chains}>
         <PayKitProvider>
           <Tip {...props} />

@@ -1,12 +1,12 @@
 // @format
 import { useState, useEffect } from "react";
-import { useSigner, useAccount, WagmiConfig, useProvider } from "wagmi";
+import { useAccount, WagmiConfig } from "wagmi";
 import { Wallet } from "@ethersproject/wallet";
 import { RainbowKitProvider, ConnectButton } from "@rainbow-me/rainbowkit";
 import { eligible } from "@attestate/delegator2";
 
 import * as API from "./API.mjs";
-import { client, chains } from "./client.mjs";
+import { useSigner, useProvider, client, chains } from "./client.mjs";
 import NFTModal from "./NFTModal.jsx";
 import theme from "./theme.mjs";
 import { getLocalAccount } from "./session.mjs";
@@ -15,7 +15,7 @@ const Container = (props) => {
   const [modalIsOpen, setIsOpen] = useState(false);
 
   return (
-    <WagmiConfig client={client}>
+    <WagmiConfig config={client}>
       <RainbowKitProvider chains={chains}>
         <Vote {...props} setIsOpen={setIsOpen} />
         <NFTModal
@@ -66,13 +66,12 @@ const Vote = (props) => {
     loadData();
   });
 
-  let signer, isError, isLocal;
+  let signer, isLocal;
   if (localAccount && localAccount.privateKey) {
     signer = new Wallet(localAccount.privateKey, provider);
     isLocal = true;
   } else {
-    signer = result.data;
-    isError = result.isError;
+    signer = result;
   }
 
   const handleSubmit = async (e) => {
