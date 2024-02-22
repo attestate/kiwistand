@@ -6,13 +6,16 @@ import vhtml from "vhtml";
 import Header from "./components/header.mjs";
 import Sidebar from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
-import Head from "./components/head.mjs";
+import { custom } from "./components/head.mjs";
 import * as ens from "../ens.mjs";
 
 const html = htm.bind(vhtml);
 
 export default async function (theme, identity) {
   const ogImage = "https://news.kiwistand.com/kiwi_onboarding_curator_page.png";
+  const title = "Onboard as a curator";
+  const description =
+    "Mint the Kiwi pass and help to curate our front page by upvoting the most important crypto stories of the day.";
   let ensData;
   if (identity) {
     ensData = await ens.resolve(identity);
@@ -20,7 +23,7 @@ export default async function (theme, identity) {
   return html`
     <html lang="en" op="news">
       <head>
-        ${custom(ogImage)} ${Head}
+        ${custom(ogImage, title, description)}
         <style>
           .flex-container {
             display: flex;
