@@ -478,7 +478,9 @@ function checkMintStatus(fetchAllowList, fetchDelegations) {
 
     console.log("Mint has been picked up by the node.");
     clearInterval(intervalId);
-    window.location.href = "/demonstration";
+    // NOTE: Priorly, we called /demonstration immediately, however, this lead
+    // to problems where the site didn't have the NFT eligibility ready yet.
+    setTimeout(() => (window.location.href = "/demonstration"), 10000);
   }, 5000);
 }
 
