@@ -59,7 +59,7 @@ export async function prepare(key) {
   }
   if (!preferredChainId) {
     throw new Error(
-      `Need at least ${formatEther(price)} on Mainnet or Optimism`,
+      `Need at least ${formatEther(price)} ETH on Mainnet or Optimism`,
     );
   }
 
@@ -289,24 +289,29 @@ const BuyButton = (props) => {
     );
   }
   let name;
-  if (config && config.chainId === mainnet.id) {
+  if (config && config.request && config.request.chainId === mainnet.id) {
     name = "Ethereum";
   }
-  if (config && config.chainId === optimism.id) {
+  if (config && config.request && config.request.chainId === optimism.id) {
     name = "Optimism";
   }
 
-  console.log(config, error, chain.id);
   if (
-    (config && config.chainId !== chain.id) ||
+    (config && config.request && config.request.chainId !== chain.id) ||
     (error && error.message.includes("Chain mismatch"))
   ) {
-    let chainId = config ? config.chainId : null;
-    if (error && error.message.includes('Expected "Ethereum"')) {
+    let chainId = config && config.request ? config.request.chainId : null;
+    if (
+      config.request.chainId !== chain.id &&
+      config.request.chainId === mainnet.id
+    ) {
       name = "Ethereum";
       chainId = mainnet.id;
     }
-    if (error && error.message.includes('Expected "Optimism"')) {
+    if (
+      config.request.chainId !== chain.id &&
+      config.request.chainId === optimism.id
+    ) {
       name = "Optimism";
       chainId = optimism.id;
     }
