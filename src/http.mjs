@@ -14,7 +14,7 @@ import log from "./logger.mjs";
 import { SCHEMATA } from "./constants.mjs";
 import themes from "./themes.mjs";
 import feed, { index } from "./views/feed.mjs";
-import story from "./views/story.mjs";
+import story, { generateStory } from "./views/story.mjs";
 import newest, * as newAPI from "./views/new.mjs";
 import images, * as imagesAPI from "./views/images.mjs";
 import best from "./views/best.mjs";
@@ -50,10 +50,8 @@ import { parse } from "./parser.mjs";
 import { toAddress, resolve } from "./ens.mjs";
 import * as registry from "./chainstate/registry.mjs";
 import * as store from "./store.mjs";
-import { generate } from "./preview.mjs";
 import * as ens from "./ens.mjs";
 import * as karma from "./karma.mjs";
-import { getSubmission } from "./cache.mjs";
 
 const app = express();
 
@@ -297,36 +295,15 @@ export async function launch(trie, libp2p) {
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/stories", async (request, reply) => {
-    const index = request.query.index;
-    const hexRegex = /^0x[a-fA-F0-9]{72}$/;
-
-    if (!hexRegex.test(index)) {
-      return reply.status(404).type("text/plain").send("index wasn't found");
-    }
-
     let submission;
     try {
-      submission = await getSubmission(index);
+      submission = await generateStory(request.query.index);
     } catch (err) {
-      console.error(err);
-      log(
-        `Requested index "${index}" but didn't find because of error "${err.toString()}"`,
-      );
-      return reply.status(404).type("text/plain").send("index wasn't found");
+      return reply.status(404).type("text/plain").send(err.message);
     }
 
-    const ensData = await ens.resolve(submission.identity);
-    const value = {
-      ...submission,
-      displayName: ensData.displayName,
-      submitter: ensData,
-    };
-    // NOTE: We aren't awaiting here because this can run in parallel
-    const hexIndex = index.substring(2);
-    generate(hexIndex, value.title, value.submitter);
-
+    const hexIndex = request.query.index.substring(2);
     const content = await story(trie, reply.locals.theme, hexIndex, submission);
-
     reply.header(
       "Cache-Control",
       "public, max-age=10, no-transform, must-revalidate, stale-while-revalidate=600",

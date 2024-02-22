@@ -81,7 +81,8 @@ const BuyAdvert = (props) => {
     !isEligible &&
     account.isConnected &&
     window.location.pathname !== "/indexing" &&
-    window.location.pathname !== "/kiwipass-mint"
+    window.location.pathname !== "/kiwipass-mint" &&
+    window.location.pathname !== "/demonstration"
   ) {
     return (
       <PrimaryActionButton

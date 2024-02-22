@@ -4,7 +4,7 @@ import vhtml from "vhtml";
 import Header from "./components/header.mjs";
 import Sidebar from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
-import Head from "./components/head.mjs";
+import { custom } from "./components/head.mjs";
 const html = htm.bind(vhtml);
 
 export default async function (theme, identity) {
@@ -13,7 +13,11 @@ export default async function (theme, identity) {
   return html`
     <html lang="en" op="news">
       <head>
-        ${custom(ogImage)} ${Head}
+        ${custom(
+          ogImage,
+          "Onboard as a link submitter",
+          "Share your findings and let everyone know what kind of articles, videos or podcasts you find interesting.",
+        )}
         <style>
           .flex-container {
             display: flex;
@@ -93,7 +97,7 @@ export default async function (theme, identity) {
                       </h2>
                       <p>
                         Share your findings and let everyone know what kind of
-                        readings, videos or podcasts you find interesting. Both
+                        articles, videos or podcasts you find interesting. Both
                         new & evergreen content is much welcome.
                         <br />While submitting, please be mindful of our<a
                           href="/guidelines"

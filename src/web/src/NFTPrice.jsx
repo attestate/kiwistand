@@ -55,11 +55,16 @@ export const PriceComponent = (props) => {
 
   useEffect(() => {
     (async () => {
-      const response = await fetch(
-        "https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd",
-      );
+      let data;
+      try {
+        const response = await fetch(
+          "https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd",
+        );
 
-      const data = await response.json();
+        data = await response.json();
+      } catch (err) {
+        console.error("Error in coingecko response");
+      }
       if (data?.ethereum?.usd) {
         setEthPrice(data.ethereum.usd);
       } else {

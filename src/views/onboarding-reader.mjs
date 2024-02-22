@@ -6,16 +6,19 @@ import vhtml from "vhtml";
 import Header from "./components/header.mjs";
 import Sidebar from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
-import Head from "./components/head.mjs";
+import { custom } from "./components/head.mjs";
 
 const html = htm.bind(vhtml);
 
 export default async function (theme, identity) {
   const ogImage = "https://news.kiwistand.com/kiwi_onboarding_reader_page.png";
+  const title = "Onboard as a Reader";
+  const description =
+    "Never miss great content with our Kiwi app. Onboard to Kiwi News as a reader by following these five steps.";
   return html`
     <html lang="en" op="news">
       <head>
-        ${custom(ogImage)} ${Head}
+        ${custom(ogImage, title, description)}
         <style>
           .flex-container {
             display: flex;
