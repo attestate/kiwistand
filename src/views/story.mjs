@@ -211,7 +211,7 @@ export default async function (trie, theme, index, value) {
                                 : ""}; color: black; border: 1px solid rgba(0,0,0,0.1); background-color: #E6E6DF; padding: 0.55rem 0.75rem; border-radius: 2px;display: block; margin-bottom: 15px; white-space: pre-wrap; line-height: 1.3; word-break: break-word; overflow-wrap: break-word;"
                             >
                               <div
-                                style="margin-bottom: 0.25rem; display: inline-flex; align-items: center;"
+                                style="white-space: nowrap; gap: 3px; margin-bottom: 0.25rem; display: inline-flex; align-items: center;"
                               >
                                 <img
                                   loading="lazy"
