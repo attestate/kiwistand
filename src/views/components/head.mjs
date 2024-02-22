@@ -5,7 +5,7 @@ import PwaLinks from "./pwaLinks.mjs";
 const html = htm.bind(vhtml);
 
 export function custom(
-  ogImage = "https://news.kiwistand.com/preview.jpeg",
+  ogImage = "https://news.kiwistand.com/kiwi_preview_basic.png",
   ogTitle = "Kiwi News - handpicked web3 alpha",
   ogDescription = "",
 ) {
