@@ -10,11 +10,12 @@ import Head from "./components/head.mjs";
 const html = htm.bind(vhtml);
 
 export default async function index(theme) {
+  const ogImage = "https://news.kiwistand.com/kiwi_subscribe_page.png";
   const path = "/subscribe";
   return html`
     <html lang="en" op="news">
       <head>
-        ${Head}
+        ${custom(ogImage)} ${Head}
       </head>
       <body>
         <div class="container">

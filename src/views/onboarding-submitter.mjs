@@ -8,10 +8,12 @@ import Head from "./components/head.mjs";
 const html = htm.bind(vhtml);
 
 export default async function (theme, identity) {
+  const ogImage =
+    "https://news.kiwistand.com/kiwi_onboarding_submitter_page.png";
   return html`
     <html lang="en" op="news">
       <head>
-        ${Head}
+        ${custom(ogImage)} ${Head}
         <style>
           .flex-container {
             display: flex;

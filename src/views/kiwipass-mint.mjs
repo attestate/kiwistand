@@ -39,7 +39,7 @@ const path = "/kiwipass-mint";
 const html = htm.bind(vhtml);
 
 export default async function (theme) {
-  const ogImage = "https://news.kiwistand.com/pass_preview.jpeg";
+  const ogImage = "https://news.kiwistand.com/kiwipass_mint_page.png";
   return html`
     <html lang="en" op="news">
       <head>

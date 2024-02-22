@@ -38,7 +38,7 @@ const avatarData = await getENSAvatars(addresses);
 const html = htm.bind(vhtml);
 
 export default async function (theme) {
-  const ogImage = "https://news.kiwistand.com/pass_preview.jpeg";
+  const ogImage = "https://news.kiwistand.com/kiwi_welcome_page.png";
   return html`
     <html lang="en" op="news">
       <head>
