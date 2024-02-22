@@ -12,6 +12,7 @@ import * as ens from "../ens.mjs";
 const html = htm.bind(vhtml);
 
 export default async function (theme, identity) {
+  const ogImage = "https://news.kiwistand.com/kiwi_onboarding_curator_page.png";
   let ensData;
   if (identity) {
     ensData = await ens.resolve(identity);
@@ -19,7 +20,7 @@ export default async function (theme, identity) {
   return html`
     <html lang="en" op="news">
       <head>
-        ${Head}
+        ${custom(ogImage)} ${Head}
         <style>
           .flex-container {
             display: flex;
