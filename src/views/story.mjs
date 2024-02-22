@@ -32,8 +32,39 @@ import { EIP712_MESSAGE } from "../constants.mjs";
 import Row, { extractDomain } from "./components/row.mjs";
 import * as karma from "../karma.mjs";
 import { metadata, render } from "../parser.mjs";
+import { getSubmission } from "../cache.mjs";
+import { generate } from "../preview.mjs";
 
 const html = htm.bind(vhtml);
+
+export async function generateStory(index) {
+  const hexRegex = /^0x[a-fA-F0-9]{72}$/;
+
+  if (!hexRegex.test(index)) {
+    throw new Error("Index wasn't found");
+  }
+
+  let submission;
+  try {
+    submission = await getSubmission(index);
+  } catch (err) {
+    console.error(err);
+    log(
+      `Requested index "${index}" but didn't find because of error "${err.toString()}"`,
+    );
+    throw new Error("Index wasn't found");
+  }
+
+  const ensData = await ens.resolve(submission.identity);
+  const value = {
+    ...submission,
+    displayName: ensData.displayName,
+    submitter: ensData,
+  };
+  const hexIndex = index.substring(2);
+  await generate(hexIndex, value.title, value.submitter);
+  return submission;
+}
 
 export function generateList(profiles) {
   // NOTE: Remove submitter
