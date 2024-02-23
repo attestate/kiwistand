@@ -211,13 +211,8 @@ const SubmitButton = (props) => {
     }
 
     let redirectTo = "/new";
-    let wait = false;
+    let wait = true;
     const domain = safeExtractDomain(canonicalURL);
-    if (domain === "imgur.com" || domain === "catbox.moe") {
-      redirectTo = "/images";
-      wait = true;
-    }
-
     const response = await API.send(value, signature, wait);
 
     let message;

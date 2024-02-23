@@ -109,45 +109,8 @@ export async function recompute() {
   inProgress = false;
 }
 
-async function getPost(trie, index) {
-  const hexRegex = /^0x[a-fA-F0-9]{72}$/;
-
-  if (!hexRegex.test(index)) {
-    throw new Error("getPost: index fails regex test");
-  }
-
-  const hexIndex = index.substring(2);
-  const parser = JSON.parse;
-  const allowlist = await registry.allowlist();
-  const delegations = await registry.delegations();
-
-  // NOTE: This call will throw and has to be caught
-  const post = await store.post(
-    trie,
-    Buffer.from(hexIndex, "hex"),
-    parser,
-    allowlist,
-    delegations,
-  );
-
-  const ensData = await ens.resolve(post.value.identity);
-  return {
-    ...post.value,
-    displayName: ensData.displayName,
-    submitter: ensData,
-    avatars: [],
-  };
-}
-
 export default async function (trie, theme, index) {
   let items = stories;
-  try {
-    const post = await getPost(trie, index);
-    items = [{ ...post, index: index.substring(2) }, ...items];
-  } catch (err) {
-    // NOTE: If we cannot find the post, we just pretend like nothing happened.
-  }
-
   const path = "/new";
   const ogImage = "https://news.kiwistand.com/kiwi_new_feed_page.png";
   return html`

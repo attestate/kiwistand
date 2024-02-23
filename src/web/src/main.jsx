@@ -524,7 +524,7 @@ async function start() {
     }
   });
 
-  if (window.location.path === "/new") {
+  if (window.location.pathname === "/new") {
     let url = new URL(window.location.href);
     let index = url.searchParams.get("index");
 
