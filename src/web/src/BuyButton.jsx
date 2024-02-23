@@ -1,16 +1,13 @@
 import {
-  usePrepareContractWrite,
   useContractWrite,
   WagmiConfig,
   useAccount,
-  useProvider,
-  useContractRead,
   useNetwork,
   useSwitchNetwork,
 } from "wagmi";
 import { Contract } from "@ethersproject/contracts";
 import { Provider } from "@ethersproject/providers";
-import { parseEther, formatEther } from "@ethersproject/units";
+import { parseEther, formatEther } from "viem";
 import { mainnet, optimism } from "wagmi/chains";
 import { Wallet } from "@ethersproject/wallet";
 import { getAddress } from "@ethersproject/address";
@@ -19,9 +16,7 @@ import { useState, useEffect } from "react";
 import useLocalStorageState from "use-local-storage-state";
 import { RainbowKitProvider, ConnectButton } from "@rainbow-me/rainbowkit";
 import {
-  getProvider,
   prepareWriteContract,
-  writeContract,
   getAccount,
   fetchBalance,
   readContract,
@@ -29,7 +24,7 @@ import {
 
 import { getLocalAccount } from "./session.mjs";
 
-import { client, chains } from "./client.mjs";
+import { getProvider, useProvider, client, chains } from "./client.mjs";
 
 export async function prepare(key) {
   const { address } = getAccount();
@@ -54,17 +49,17 @@ export async function prepare(key) {
   if (!saleDetails || !saleDetails.publicSalePrice) {
     throw new Error("Error getting the price");
   }
-  const price = saleDetails.publicSalePrice.add(ZORA_MINT_FEE);
+  const price = saleDetails.publicSalePrice + ZORA_MINT_FEE;
 
   let preferredChainId = null;
-  if (balance.optimism.gt(price)) {
+  if (balance.optimism > price) {
     preferredChainId = optimism.id;
-  } else if (balance.mainnet.gt(price)) {
+  } else if (balance.mainnet > price) {
     preferredChainId = mainnet.id;
   }
   if (!preferredChainId) {
     throw new Error(
-      `Need at least ${formatEther(price)} on Mainnet or Optimism`,
+      `Need at least ${formatEther(price)} ETH on Mainnet or Optimism`,
     );
   }
 
@@ -102,9 +97,7 @@ export async function prepare(key) {
       abi: abiOptimismPortal,
       functionName: "depositTransaction",
       args: [addressDelegator, price, gasLimit, isCreation, data],
-      overrides: {
-        value: price,
-      },
+      value: price,
       chainId: mainnet.id,
     });
   } else if (preferredChainId === optimism.id) {
@@ -113,9 +106,7 @@ export async function prepare(key) {
       abi: abiDelegator,
       functionName: "setup",
       args: [quantity, payload, comment, referral],
-      overrides: {
-        value: price,
-      },
+      value: price,
       chainId: optimism.id,
     });
   } else {
@@ -267,7 +258,7 @@ const BuyButton = (props) => {
       try {
         config = await prepare(key);
       } catch (err) {
-        console.log(err);
+        console.log("setting error", err);
         setError(err);
         setConfig(null);
       }
@@ -298,23 +289,29 @@ const BuyButton = (props) => {
     );
   }
   let name;
-  if (config && config.chainId === mainnet.id) {
+  if (config && config.request && config.request.chainId === mainnet.id) {
     name = "Ethereum";
   }
-  if (config && config.chainId === optimism.id) {
+  if (config && config.request && config.request.chainId === optimism.id) {
     name = "Optimism";
   }
 
   if (
-    (config && config.chainId !== chain.id) ||
+    (config && config.request && config.request.chainId !== chain.id) ||
     (error && error.message.includes("Chain mismatch"))
   ) {
-    let chainId = config ? config.chainId : null;
-    if (error && error.message.includes('Expected "Ethereum"')) {
+    let chainId = config && config.request ? config.request.chainId : null;
+    if (
+      config.request.chainId !== chain.id &&
+      config.request.chainId === mainnet.id
+    ) {
       name = "Ethereum";
       chainId = mainnet.id;
     }
-    if (error && error.message.includes('Expected "Optimism"')) {
+    if (
+      config.request.chainId !== chain.id &&
+      config.request.chainId === optimism.id
+    ) {
       name = "Optimism";
       chainId = optimism.id;
     }
@@ -414,7 +411,7 @@ const Button = (props) => {
 
 const Form = (props) => {
   return (
-    <WagmiConfig client={client}>
+    <WagmiConfig config={client}>
       <RainbowKitProvider chains={chains}>
         <ConnectButton.Custom>
           {({ account, chain, mounted, openConnectModal }) => {

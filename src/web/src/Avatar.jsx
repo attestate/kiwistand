@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { WagmiConfig, useAccount, useProvider } from "wagmi";
+import { WagmiConfig, useAccount } from "wagmi";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { eligible } from "@attestate/delegator2";
 
 import { getLocalAccount } from "./session.mjs";
-import { client, chains } from "./client.mjs";
+import { client, chains, useProvider } from "./client.mjs";
 import { fetchKarma } from "./API.mjs";
 
 const Avatar = (props) => {
@@ -26,23 +26,26 @@ const Avatar = (props) => {
 
   useEffect(() => {
     const getAvatar = async () => {
-      if (address) {
-        const name = await provider.lookupAddress(address);
-        const ensResolver = await provider.getResolver(name);
-        if (ensResolver) {
-          const avatarUrl = await ensResolver.getAvatar();
-          setAvatar(avatarUrl.url);
-        }
-      }
+      if (!address) return;
+
+      const name = await provider.lookupAddress(address);
+      if (!name) return;
+
+      const ensResolver = await provider.getResolver(name);
+      if (!ensResolver) return;
+
+      const avatarUrl = await ensResolver.getAvatar();
+      setAvatar(avatarUrl.url);
     };
     const getPoints = async () => {
-      if (address) {
-        const data = await fetchKarma(address);
-        if (data && data.karma) {
-          setPoints(data.karma);
-        }
+      if (!address) return;
+
+      const data = await fetchKarma(address);
+      if (data && data.karma) {
+        setPoints(data.karma);
       }
     };
+
     getPoints();
     getAvatar();
   }, [address, account.isConnected, provider]);
@@ -161,7 +164,7 @@ const Avatar = (props) => {
 
 const Form = (props) => {
   return (
-    <WagmiConfig client={client}>
+    <WagmiConfig config={client}>
       <RainbowKitProvider chains={chains}>
         <Avatar {...props} />
       </RainbowKitProvider>

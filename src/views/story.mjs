@@ -77,11 +77,13 @@ export function generateList(profiles) {
             <p
               style="display: flex; align-items: center; gap: 3px; flex: 1; margin: 0; padding: 2px 0; font-size: 14px; color: #6b7280;"
             >
-              <img
-                src="${profile.avatar}"
-                alt="avatar"
-                style="width: 15px; height: 15px; border: 1px solid #828282; border-radius: 2px;"
-              />
+              ${profile.avatar
+                ? html`<img
+                    src="${profile.avatar}"
+                    alt="avatar"
+                    style="width: 15px; height: 15px; border: 1px solid #828282; border-radius: 2px;"
+                  />`
+                : null}
               <span> </span>
               <a href="/${profile.name}">${profile.name}</a>
               <span> </span>
@@ -244,12 +246,14 @@ export default async function (trie, theme, index, value) {
                               <div
                                 style="white-space: nowrap; gap: 3px; margin-bottom: 0.25rem; display: inline-flex; align-items: center;"
                               >
-                                <img
-                                  loading="lazy"
-                                  src="${comment.avatar}"
-                                  alt="avatar"
-                                  style="margin-right: 5px; width: 12px; height:12px; border: 1px solid #828282; border-radius: 2px;"
-                                />
+                                ${comment.avatar
+                                  ? html`<img
+                                      loading="lazy"
+                                      src="${comment.avatar}"
+                                      alt="avatar"
+                                      style="margin-right: 5px; width: 12px; height:12px; border: 1px solid #828282; border-radius: 2px;"
+                                    />`
+                                  : null}
                                 <b
                                   >${!comment.flagged
                                     ? html`<a

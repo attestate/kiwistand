@@ -1,4 +1,4 @@
-import { WagmiConfig, createClient, useAccount } from "wagmi";
+import { WagmiConfig, useAccount } from "wagmi";
 import { RainbowKitProvider, ConnectButton } from "@rainbow-me/rainbowkit";
 import { useEffect, useState } from "react";
 import { eligible } from "@attestate/delegator2";
@@ -518,7 +518,7 @@ const CustomConnectButton = (props) => {
 
 const Connector = ({ children }) => {
   return (
-    <WagmiConfig client={client}>
+    <WagmiConfig config={client}>
       <RainbowKitProvider chains={chains}>{children}</RainbowKitProvider>
     </WagmiConfig>
   );

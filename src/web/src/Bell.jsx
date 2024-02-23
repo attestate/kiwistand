@@ -97,7 +97,7 @@ const Bell = (props) => {
 
 const Form = (props) => {
   return (
-    <WagmiConfig client={client}>
+    <WagmiConfig config={client}>
       <RainbowKitProvider chains={chains}>
         <Bell {...props} />
       </RainbowKitProvider>
