@@ -36,15 +36,22 @@ export async function getActiveCanons() {
 }
 
 export async function getFeedParameters() {
-  const response = await getConfig("feed_parameters");
+  const defaultFeedParams = {
+    replacementFactor: 3,
+    oldHours: 22,
+    fold: 10,
+    replacementThreshold: 1,
+    decayStrength: 1,
+  };
+  let response;
+  try {
+    response = await getConfig("feed_parameters");
+  } catch (err) {
+    return defaultFeedParams;
+  }
+
   if (response.length === 0) {
-    return {
-      replacementFactor: 3,
-      oldHours: 22,
-      fold: 10,
-      replacementThreshold: 1,
-      decayStrength: 1,
-    };
+    return defaultFeedParams;
   }
   const {
     replacementFactor,
@@ -63,8 +70,14 @@ export async function getFeedParameters() {
 }
 
 export async function getFeeds() {
-  const response = await getConfig("feeds");
   const feeds = [];
+
+  let response;
+  try {
+    response = await getConfig("feeds");
+  } catch (err) {
+    return feeds;
+  }
   response.forEach(({ url }) => {
     feeds.push(url);
   });
@@ -72,8 +85,14 @@ export async function getFeeds() {
 }
 
 export async function getWriters() {
-  const response = await getConfig("writers");
   const writers = {};
+
+  let response;
+  try {
+    response = await getConfig("writers");
+  } catch (err) {
+    return writers;
+  }
   response.forEach(({ domain, address }) => {
     writers[normalizeUrl(domain)] = address;
   });
