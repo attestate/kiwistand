@@ -92,7 +92,13 @@ const DelegateButton = (props) => {
 
   const { config, error, isError } = usePrepareContractWrite(prepArgs);
 
-  const { data, write, isLoading, isSuccess } = useContractWrite(config);
+  const {
+    data,
+    write,
+    isLoading,
+    isSuccess: isWriteSuccess,
+  } = useContractWrite(config);
+  const isSuccess = isWriteSuccess && data && data.hash !== "null";
   if (isSuccess) setKey(newKey.privateKey);
 
   const handleClick = () => {
