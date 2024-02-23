@@ -77,10 +77,14 @@ export function handleMessage(trie, libp2p, getAllowlist, getDelegations) {
 
     if (request.query && request.query.wait && request.query.wait === "true") {
       await newest.recompute(trie);
-      await generateStory(`0x${index}`);
+      if (message.type === "amplify") {
+        await generateStory(`0x${index}`);
+      }
     } else {
       newest.recompute(trie);
-      generateStory(`0x${index}`);
+      if (message.type === "amplify") {
+        generateStory(`0x${index}`);
+      }
     }
 
     const code = 200;
