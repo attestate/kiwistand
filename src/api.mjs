@@ -77,13 +77,14 @@ export function handleMessage(trie, libp2p, getAllowlist, getDelegations) {
 
     if (request.query && request.query.wait && request.query.wait === "true") {
       await newest.recompute(trie);
-      if (message.type === "amplify") {
-        await generateStory(`0x${index}`);
-      }
     } else {
       newest.recompute(trie);
-      if (message.type === "amplify") {
-        generateStory(`0x${index}`);
+    }
+    if (message.type === "amplify") {
+      try {
+        await generateStory(`0x${index}`);
+      } catch (err) {
+        // NOTE: This can fail if the message is an upvote, not a submission.
       }
     }
 
