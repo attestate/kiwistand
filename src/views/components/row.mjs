@@ -48,6 +48,7 @@ const row = (
   style = "border-bottom: 1px solid rgba(0,0,0,0.1);",
   interactive,
   hideCast,
+  period,
 ) => {
   const size = 12;
   return (story, i) => {
@@ -128,9 +129,9 @@ const row = (
                         style="white-space: nowrap;"
                         >(${!interactive && (path === "/" || path === "/best")
                           ? html`<a
-                              href="${path}?period=month&domain=${extractDomain(
+                              href="${path}?domain=${extractDomain(
                                 story.href,
-                              )}"
+                              )}${period ? `&period=${period}` : ""}"
                               style="color: #828282;"
                               >${extractDomain(story.href)}</a
                             >`
