@@ -8,6 +8,7 @@ export function custom(
   ogImage = "https://news.kiwistand.com/preview.jpeg",
   ogTitle = "Kiwi News - handpicked web3 alpha",
   ogDescription = "",
+  twitterCard = "summary_large_image",
 ) {
   return html`
     <meta charset="utf-8" />
@@ -21,7 +22,7 @@ export function custom(
     ${ogImage
       ? html`<meta property="twitter:image" content="${ogImage}" />`
       : null}
-    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:card" content="${twitterCard}" />
     <meta property="og:title" content="${ogTitle}" />
     ${ogDescription
       ? html`<meta property="og:description" content="${ogDescription}" />`

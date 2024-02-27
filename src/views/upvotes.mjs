@@ -13,7 +13,7 @@ import Header from "./components/header.mjs";
 import { trophySVG, broadcastSVG } from "./components/secondheader.mjs";
 import Footer from "./components/footer.mjs";
 import Sidebar from "./components/sidebar.mjs";
-import Head from "./components/head.mjs";
+import { custom } from "./components/head.mjs";
 import * as store from "../store.mjs";
 import * as ens from "../ens.mjs";
 import * as moderation from "./moderation.mjs";
@@ -89,11 +89,22 @@ export default async function (trie, theme, identity, page, mode) {
     }),
   );
 
+  const description = ensData.description
+    ? ensData.description
+    : ensData.farcaster
+    ? ensData.farcaster.bio
+    : "";
+  const twitterCard = "summary";
   const points = karma.resolve(identity);
   return html`
     <html lang="en" op="news">
       <head>
-        ${Head}
+        ${custom(
+          ensData.safeAvatar,
+          `${ensData.displayName} (${points.toString()} 🥝) on Kiwi News`,
+          description,
+          twitterCard,
+        )}
       </head>
       <body>
         ${PWALine}
@@ -123,10 +134,8 @@ export default async function (trie, theme, identity, page, mode) {
                       <span> (${points.toString()} 🥝)</span>
                     </a>
                     <span style="font-size: 0.8rem;">
-                      ${ensData.description
-                        ? html`<br />${ensData.description}<br />`
-                        : ensData.farcaster && ensData.farcaster.bio
-                        ? html`<br />${ensData.farcaster.bio}<br />`
+                      ${description
+                        ? html`<br />${description}<br />`
                         : html`<span><br /></span>`}
                     </span>
                     <div style="display: flex; gap: 15px; margin-top: 10px;">
