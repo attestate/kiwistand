@@ -21,6 +21,7 @@ import * as karma from "../karma.mjs";
 import Row from "./components/row.mjs";
 import { getSubmissions } from "../cache.mjs";
 import {
+  SocialButton,
   twitterSvg,
   githubSvg,
   warpcastSvg,
@@ -121,7 +122,7 @@ export default async function (trie, theme, identity, page, mode) {
                     style="padding: 10px 10px 0 10px; color: black; font-size: 16px; line-height: 1.5;"
                   >
                     <a
-                      style="font-weight: bold; display: flex; align-items: center; gap: 10px;"
+                      style="margin-bottom: 10px; font-weight: bold; display: flex; align-items: center; gap: 10px;"
                       target="_blank"
                       href="https://etherscan.io/address/${ensData.address}"
                     >
@@ -135,55 +136,49 @@ export default async function (trie, theme, identity, page, mode) {
                     </a>
                     <span style="font-size: 0.8rem;">
                       ${description
-                        ? html`<br />${description}<br />`
+                        ? html`${description}<br />`
                         : html`<span><br /></span>`}
                     </span>
-                    <div style="display: flex; gap: 15px; margin-top: 10px;">
+                    <div
+                      style="flex-wrap: wrap; display: flex; gap: 7px; margin-top: 10px;"
+                    >
                       ${ensData.url && ensData.url.startsWith("https://")
-                        ? html` <a target="_blank" href="${ensData.url}"
-                            >${websiteSvg()}</a
-                          >`
+                        ? SocialButton(ensData.url, websiteSvg(), "Website")
                         : ""}
                       ${ensData.twitter
-                        ? html` <a
-                            href="https://twitter.com/${ensData.twitter}"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            >${twitterSvg()}</a
-                          >`
+                        ? SocialButton(
+                            `https://twitter.com/${ensData.twitter}`,
+                            twitterSvg(),
+                            "X",
+                          )
                         : ""}
                       ${ensData.github
-                        ? html` <a
-                            href="https://github.com/${ensData.github}"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            >${githubSvg()}</a
-                          >`
+                        ? SocialButton(
+                            `https://github.com/${ensData.github}`,
+                            githubSvg(),
+                            "GitHub",
+                          )
                         : ""}
                       ${ensData.telegram
-                        ? html` <a
-                            href="https://t.me/${ensData.telegram}"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            >${telegramSvg()}</a
-                          >`
+                        ? SocialButton(
+                            `https://t.me/${ensData.telegram}`,
+                            telegramSvg(),
+                            "Telegram",
+                          )
                         : ""}
                       ${ensData.discord
-                        ? html` <a
-                            href="https://discordapp.com/users/${ensData.discord}"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            >${discordSvg()}</a
-                          >`
+                        ? SocialButton(
+                            `https://discordapp.com/users/${ensData.discord}`,
+                            discordSvg(),
+                            "Discord",
+                          )
                         : ""}
                       ${ensData.farcaster && ensData.farcaster.username
-                        ? html` <a
-                            href="https://warpcast.com/${ensData.farcaster
-                              .username}"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            >${warpcastSvg()}</a
-                          >`
+                        ? SocialButton(
+                            `https://warpcast.com/${ensData.farcaster.username}`,
+                            warpcastSvg(),
+                            "Warpcast",
+                          )
                         : ""}
                     </div>
                     <hr />

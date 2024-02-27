@@ -13,14 +13,6 @@ import Sidebar from "./components/sidebar.mjs";
 import { custom } from "./components/head.mjs";
 import * as karma from "../karma.mjs";
 import * as registry from "../chainstate/registry.mjs";
-import {
-  twitterSvg,
-  githubSvg,
-  warpcastSvg,
-  telegramSvg,
-  discordSvg,
-  websiteSvg,
-} from "./components/socialNetworkIcons.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -360,55 +352,6 @@ export default async function (trie, theme, query, identity) {
                                 </div>
                               </div>
                             </a>
-                            <div class="user-social-links">
-                              ${ensData.url &&
-                              ensData.url.startsWith("https://")
-                                ? html` <a target="_blank" href="${ensData.url}"
-                                    >${websiteSvg(iconsStyles)}</a
-                                  >`
-                                : ""}
-                              ${ensData.twitter
-                                ? html` <a
-                                    href="https://twitter.com/${ensData.twitter}"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    >${twitterSvg(iconsStyles)}</a
-                                  >`
-                                : ""}
-                              ${ensData.github
-                                ? html` <a
-                                    href="https://github.com/${ensData.github}"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    >${githubSvg(iconsStyles)}</a
-                                  >`
-                                : ""}
-                              ${ensData.telegram
-                                ? html` <a
-                                    href="https://t.me/${ensData.telegram}"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    >${telegramSvg(iconsStyles)}</a
-                                  >`
-                                : ""}
-                              ${ensData.discord
-                                ? html` <a
-                                    href="https://discordapp.com/users/${ensData.discord}"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    >${discordSvg(iconsStyles)}</a
-                                  >`
-                                : ""}
-                              ${ensData.farcaster && ensData.farcaster.username
-                                ? html` <a
-                                    href="https://warpcast.com/${ensData
-                                      .farcaster.username}"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    >${warpcastSvg(iconsStyles)}</a
-                                  >`
-                                : ""}
-                            </div>
                           </div>
 
                           <div class="user-karma">${karma} ${theme.emoji}</div>
