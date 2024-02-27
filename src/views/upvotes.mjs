@@ -15,13 +15,11 @@ import Footer from "./components/footer.mjs";
 import Sidebar from "./components/sidebar.mjs";
 import Head from "./components/head.mjs";
 import * as store from "../store.mjs";
-import { EIP712_MESSAGE } from "../constants.mjs";
-import { count } from "./feed.mjs";
 import * as ens from "../ens.mjs";
 import * as moderation from "./moderation.mjs";
 import * as karma from "../karma.mjs";
-import * as registry from "../chainstate/registry.mjs";
 import Row from "./components/row.mjs";
+import { getSubmissions } from "../cache.mjs";
 import {
   twitterSvg,
   githubSvg,
@@ -43,35 +41,15 @@ export default async function (trie, theme, identity, page, mode) {
     return html`Not a valid address`;
   }
   const ensData = await ens.resolve(identity);
-  const from = null;
-  const amount = null;
-  const parser = JSON.parse;
-  const startDatetime = null;
-  const allowlist = await registry.allowlist();
-  const delegations = await registry.delegations();
-  const href = null;
-  const type = "amplify";
-  let leaves = await store.posts(
-    trie,
-    from,
-    amount,
-    parser,
-    startDatetime,
-    allowlist,
-    delegations,
-    href,
-    type,
-  );
-  const cacheEnabled = true;
+
   const totalStories = 10;
   const start = totalStories * page;
-  const end = totalStories * (page + 1);
-  let storyPromises = await count(leaves);
 
+  let storyPromises;
   if (mode === "top") {
-    storyPromises = storyPromises.sort((a, b) => b.upvotes - a.upvotes);
+    storyPromises = getSubmissions(identity, totalStories, start, mode);
   } else if (mode === "new") {
-    storyPromises = storyPromises.sort((a, b) => b.timestamp - a.timestamp);
+    storyPromises = getSubmissions(identity, totalStories, start, mode);
   }
 
   let writers = [];
@@ -83,14 +61,8 @@ export default async function (trie, theme, identity, page, mode) {
 
   const tips = await getTips();
 
-  let stories = storyPromises
-    .filter(
-      (story) =>
-        utils.getAddress(story.identity) === utils.getAddress(identity),
-    )
-    .slice(start, end);
-  stories = await Promise.all(
-    stories.map(async (leaf) => {
+  const stories = await Promise.all(
+    storyPromises.map(async (leaf) => {
       const ensData = await ens.resolve(leaf.identity);
 
       const tipValue = getTipsValue(tips, leaf.index);
