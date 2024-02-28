@@ -20,6 +20,8 @@ import * as moderation from "./moderation.mjs";
 import * as karma from "../karma.mjs";
 import Row from "./components/row.mjs";
 import { getSubmissions } from "../cache.mjs";
+import { metadata } from "../parser.mjs";
+import { truncate } from "../utils.mjs";
 import {
   SocialButton,
   twitterSvg,
@@ -36,6 +38,29 @@ function extractDomain(link) {
   const parsedUrl = new url.URL(link);
   return parsedUrl.hostname;
 }
+
+const Post = (post) => html`
+  <a target="_blank" href="${post.href}">
+    <div style="gap: 1rem; display: flex; width: 90%; padding: 1rem 5%;">
+      <div style="flex: 2;">
+        <h3 style="margin: 0 0 0.25rem 0;">${post.title}</h3>
+        <div>${truncate(post.metadata.ogDescription, 100)}</div>
+      </div>
+      ${post.metadata.image
+        ? html`<div
+            style="height: 7rem; flex: 1; display: inline-flex; justify-content: center; align-items: start;"
+          >
+            <img
+              src="${post.metadata.image}"
+              alt="${post.metadata.ogTitle}"
+              style="height: 100%; object-fit:cover; border-radius: 2px; border: 1px solid #828282; width: 100%;"
+            />
+          </div>`
+        : ""}
+    </div>
+    <hr style="border-top: 0; margin: 0 5%; border-color: rgba(0,0,0,0.1);" />
+  </a>
+`;
 
 export default async function (trie, theme, identity, page, mode) {
   if (!utils.isAddress(identity)) {
@@ -60,35 +85,68 @@ export default async function (trie, theme, identity, page, mode) {
     // noop
   }
 
+  const opPostsLimit = 1000000;
+  const opPostsStart = 0;
+  let originalPosts = getSubmissions(
+    identity,
+    opPostsLimit,
+    opPostsStart,
+    "new",
+  );
+  originalPosts = originalPosts.filter((post) =>
+    Object.keys(writers).some(
+      (domain) =>
+        normalizeUrl(post.href).startsWith(domain) &&
+        writers[domain] === post.identity,
+    ),
+  );
+
   const tips = await getTips();
 
-  const stories = await Promise.all(
-    storyPromises.map(async (leaf) => {
-      const ensData = await ens.resolve(leaf.identity);
+  async function enhance(leaf) {
+    const ensData = await ens.resolve(leaf.identity);
 
-      const tipValue = getTipsValue(tips, leaf.index);
-      leaf.tipValue = tipValue;
+    const tipValue = getTipsValue(tips, leaf.index);
+    leaf.tipValue = tipValue;
 
-      let avatars = [];
-      for await (let upvoter of leaf.upvoters) {
-        const profile = await ens.resolve(upvoter);
-        if (profile.safeAvatar) {
-          avatars.push(profile.safeAvatar);
-        }
+    let avatars = [];
+    for await (let upvoter of leaf.upvoters) {
+      const profile = await ens.resolve(upvoter);
+      if (profile.safeAvatar) {
+        avatars.push(profile.safeAvatar);
       }
-      const isOriginal = Object.keys(writers).some(
-        (domain) =>
-          normalizeUrl(leaf.href).startsWith(domain) &&
-          writers[domain] === leaf.identity,
-      );
-      return {
-        ...leaf,
-        displayName: ensData.displayName,
-        avatars: avatars,
-        isOriginal,
-      };
-    }),
-  );
+    }
+    const isOriginal = Object.keys(writers).some(
+      (domain) =>
+        normalizeUrl(leaf.href).startsWith(domain) &&
+        writers[domain] === leaf.identity,
+    );
+    return {
+      ...leaf,
+      displayName: ensData.displayName,
+      avatars: avatars,
+      isOriginal,
+    };
+  }
+
+  const stories = await Promise.all(storyPromises.map(enhance));
+
+  async function addMetadata(post) {
+    let result;
+    try {
+      result = await metadata(post.href);
+    } catch (err) {
+      return null;
+    }
+    return {
+      ...post,
+      metadata: result,
+    };
+  }
+  const posts = (await Promise.allSettled(originalPosts.map(addMetadata)))
+    .filter(({ status, value }) => status === "fulfilled" && !!value)
+    .map(({ value }) => value)
+    .slice(0, 3);
 
   const description = ensData.description
     ? ensData.description
@@ -181,18 +239,42 @@ export default async function (trie, theme, identity, page, mode) {
                           )
                         : ""}
                     </div>
-                    <hr />
-                    ${stories.length > 0
-                      ? html`<b>
-                          <span>SUBMISSIONS </span>
-                          ${page !== 0 ? html`(page: ${page})` : ""}
-                        </b>`
-                      : ""}
                   </div>
                 </td>
               </tr>
+              ${posts.length > 0
+                ? html`<tr>
+                    <td>
+                      <hr />
+                      ${stories.length > 0
+                        ? html`<b
+                            style="font-size: 16px; padding: 5px 15px; color: black;"
+                          >
+                            <span>LATEST POSTS</span>
+                          </b>`
+                        : ""}
+                      ${posts.map(Post)}
+                    </td>
+                  </tr>`
+                : ""}
+              ${posts.length > 0
+                ? html`
+                    <tr style="height: 15px;">
+                      <td></td>
+                    </tr>
+                  `
+                : ""}
               <tr>
                 <td>
+                  ${posts.length === 0 ? html`<hr />` : ""}
+                  ${stories.length > 0
+                    ? html`<b
+                        style="font-size: 16px; padding: 5px 15px; color: black;"
+                      >
+                        <span>SUBMISSIONS </span>
+                        ${page !== 0 ? html`(page: ${page})` : ""}
+                      </b>`
+                    : ""}
                   <div
                     style="min-height: 40px; display: flex; align-items: center; padding: 10px 15px 10px 15px; color: white;"
                   >

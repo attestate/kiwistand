@@ -75,7 +75,7 @@ function initialize() {
    `);
 }
 
-export function getSubmissions(identity, amount, from, orderBy) {
+export function getSubmissions(identity, amount, from, orderBy, domains) {
   let orderClause = "upvotesCount DESC";
   if (orderBy === "new") {
     orderClause = "s.timestamp DESC";
