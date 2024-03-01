@@ -52,6 +52,7 @@ import * as registry from "./chainstate/registry.mjs";
 import * as store from "./store.mjs";
 import * as ens from "./ens.mjs";
 import * as karma from "./karma.mjs";
+import * as frame from "./frame.mjs";
 
 const app = express();
 
@@ -185,6 +186,20 @@ export async function launch(trie, libp2p) {
       .status(200)
       .type("text/html")
       .send(await kiwipassmint(reply.locals.theme));
+  });
+  app.post("/api/v1/writers/:address", async (request, reply) => {
+    let address;
+    try {
+      address = utils.getAddress(request.params.address);
+    } catch (err) {
+      const code = 400;
+      const httpMessage = "Bad Request";
+      const details = "Please only submit valid Ethereum addresses.";
+      return sendError(reply, code, httpMessage, details);
+    }
+    const data = frame.tip(address);
+    const code = 200;
+    return reply.status(code).json(data);
   });
   app.get("/api/v1/parse", async (request, reply) => {
     const embed = await parse(request.query.url);
@@ -624,7 +639,14 @@ export async function launch(trie, libp2p) {
       .send(await shortcut(reply.locals.theme));
   });
 
-  async function getProfile(trie, theme, address, page, mode) {
+  async function getProfile(
+    trie,
+    theme,
+    address,
+    page,
+    mode,
+    enabledFrame = false,
+  ) {
     let activeMode = "top";
     if (mode === "new") activeMode = "new";
 
@@ -632,7 +654,14 @@ export async function launch(trie, libp2p) {
     if (isNaN(page) || page < 1) {
       page = 0;
     }
-    const content = await upvotes(trie, theme, address, page, activeMode);
+    const content = await upvotes(
+      trie,
+      theme,
+      address,
+      page,
+      activeMode,
+      enabledFrame,
+    );
     return content;
   }
   app.get("/upvotes", async (request, reply) => {
@@ -653,6 +682,7 @@ export async function launch(trie, libp2p) {
       request.query.address,
       request.query.page,
       request.query.mode,
+      request.query.frame === "true",
     );
 
     if (request.query.mode === "new") {
@@ -708,6 +738,7 @@ export async function launch(trie, libp2p) {
         address,
         request.query.page,
         request.query.mode,
+        request.query.frame === "true",
       );
     } catch (err) {
       return next(err);

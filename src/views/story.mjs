@@ -33,7 +33,7 @@ import Row, { extractDomain } from "./components/row.mjs";
 import * as karma from "../karma.mjs";
 import { metadata, render } from "../parser.mjs";
 import { getSubmission } from "../cache.mjs";
-import { generate } from "../preview.mjs";
+import * as preview from "../preview.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -62,12 +62,22 @@ export async function generateStory(index) {
     submitter: ensData,
   };
   const hexIndex = index.substring(2);
-  await generate(hexIndex, value.title, value.submitter);
+  try {
+    const body = preview.story(
+      value.title,
+      value.submitter.displayName,
+      value.submitter.safeAvatar,
+    );
+    await preview.generate(hexIndex, body);
+  } catch (err) {
+    const body = preview.story(value.title, value.submitter.displayName);
+    await preview.generate(hexIndex, body);
+  }
+
   return submission;
 }
 
 export function generateList(profiles) {
-  // NOTE: Remove submitter
   profiles.shift();
   return html`
     <ul style="padding: 0.3rem 0 0.65rem 56px; list-style: none; margin: 0;">

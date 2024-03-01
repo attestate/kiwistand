@@ -18,6 +18,8 @@ import * as store from "../store.mjs";
 import * as ens from "../ens.mjs";
 import * as moderation from "./moderation.mjs";
 import * as karma from "../karma.mjs";
+import * as preview from "../preview.mjs";
+import * as frame from "../frame.mjs";
 import Row from "./components/row.mjs";
 import { getSubmissions } from "../cache.mjs";
 import { metadata } from "../parser.mjs";
@@ -62,11 +64,36 @@ const Post = (post) => html`
   </a>
 `;
 
-export default async function (trie, theme, identity, page, mode) {
+async function generateProfile(username, avatar) {
+  try {
+    const body = preview.writersFrame(username, avatar);
+    await preview.generate(username, body);
+  } catch (err) {
+    const body = preview.story(username);
+    await preview.generate(username, body);
+  }
+}
+
+export default async function (
+  trie,
+  theme,
+  identity,
+  page,
+  mode,
+  enabledFrame,
+) {
   if (!utils.isAddress(identity)) {
     return html`Not a valid address`;
   }
   const ensData = await ens.resolve(identity);
+
+  let frameHead;
+  let ogImage = ensData.safeAvatar;
+  if (enabledFrame && ensData.ens && ensData.safeAvatar) {
+    generateProfile(ensData.ens, ensData.safeAvatar);
+    frameHead = frame.profileHeader(ensData.ens, identity);
+    ogImage = `https://news.kiwistand.com/previews/${ensData.ens}.jpg`;
+  }
 
   const totalStories = 10;
   const start = totalStories * page;
@@ -159,11 +186,12 @@ export default async function (trie, theme, identity, page, mode) {
     <html lang="en" op="news">
       <head>
         ${custom(
-          ensData.safeAvatar,
+          ogImage,
           `${ensData.displayName} (${points.toString()} 🥝) on Kiwi News`,
           description,
           twitterCard,
         )}
+        ${frameHead ? frameHead : ""}
       </head>
       <body>
         ${PWALine}
