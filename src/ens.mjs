@@ -52,8 +52,16 @@ export async function toAddress(name) {
 }
 
 async function fetchENSData(address) {
+  let endpoint = "https://ensdata.net/";
+  if (env.ENSDATA_KEY) {
+    // NOTE: If you're coming across this environment variable and you're
+    // wondering why it wasn't documented, this is because its only meant to be
+    // used by the Kiwi News production server.
+    endpoint += env.ENSDATA_KEY + "/";
+  }
+
   try {
-    const response = await fetch(`https://ensdata.net/${address}`);
+    const response = await fetch(`${endpoint}${address}`);
     const data = await response.json();
 
     try {
