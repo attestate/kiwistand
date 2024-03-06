@@ -89,10 +89,12 @@ export default async function (
 
   let frameHead;
   let ogImage = ensData.safeAvatar;
-  if (enabledFrame && ensData.ens && ensData.safeAvatar) {
+  if (ensData.ens && ensData.safeAvatar) {
     generateProfile(ensData.ens, ensData.safeAvatar);
-    frameHead = frame.profileHeader(ensData.ens, identity);
-    ogImage = `https://news.kiwistand.com/previews/${ensData.ens}.jpg`;
+    if (enabledFrame) {
+      frameHead = frame.profileHeader(ensData.ens, identity);
+      ogImage = `https://news.kiwistand.com/previews/${ensData.ens}.jpg`;
+    }
   }
 
   const totalStories = 10;
