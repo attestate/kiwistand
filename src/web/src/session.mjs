@@ -1,3 +1,5 @@
+import { Wallet } from "@ethersproject/wallet";
+
 export function setCookie(name, value, maxAge = 60 * 60 * 24 * 7) {
   document.cookie = `${name}=${value};path=/;max-age=${maxAge}`;
 }
@@ -27,16 +29,29 @@ export function getLocalAccount(identity) {
   if (Object.keys(keys).length === 1) {
     const [[key, value]] = Object.entries(keys);
     setCookie("identity", key);
-    return { identity: key, privateKey: value };
+    const signer = new Wallet(value);
+    return { identity: key, privateKey: value, signer: signer.address };
   }
   if (Object.keys(keys).length > 1 && identity && keys[identity]) {
-    return { identity, privateKey: keys[identity] };
+    const signer = new Wallet(keys[identity]);
+    return { identity, privateKey: keys[identity], signer: signer.address };
   }
 
   if (Object.keys(keys).length === 0 && identity) {
     setCookie("identity", identity);
   }
   return null;
+}
+
+export function supportsPasskeys() {
+  return isSafariOnMacOS() || isSafariOnIOS();
+}
+
+export function isSafariOnMacOS() {
+  const ua = navigator.userAgent;
+  const macOS = !!ua.match(/Macintosh/i);
+  const safari = !!ua.match(/Safari/i) && !ua.match(/Chrome/i);
+  return macOS && safari;
 }
 
 export function isSafariOnIOS() {

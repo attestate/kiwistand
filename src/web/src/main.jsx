@@ -260,7 +260,7 @@ async function addCommentInput(toast, allowlist, delegations) {
   }
 }
 
-async function addDelegateButton(allowlist, delegations) {
+async function addDelegateButton(allowlist, delegations, toast) {
   const delegateButtonContainer = document.querySelector(".delegate-button");
   if (delegateButtonContainer) {
     const { createRoot } = await import("react-dom/client");
@@ -268,13 +268,17 @@ async function addDelegateButton(allowlist, delegations) {
     const DelegateButton = (await import("./DelegateButton.jsx")).default;
     createRoot(delegateButtonContainer).render(
       <StrictMode>
-        <DelegateButton allowlist={allowlist} delegations={delegations} />
+        <DelegateButton
+          allowlist={allowlist}
+          delegations={delegations}
+          toast={toast}
+        />
       </StrictMode>,
     );
   }
 }
 
-async function addConnectedComponents(allowlist, delegations) {
+async function addConnectedComponents(allowlist, delegations, toast) {
   const { createRoot } = await import("react-dom/client");
   const { StrictMode } = await import("react");
   const {
@@ -295,7 +299,11 @@ async function addConnectedComponents(allowlist, delegations) {
     <StrictMode>
       <ConnectedBuyAdvert allowlist={allowlist} delegations={delegations} />
       <Bell allowlist={allowlist} delegations={delegations} />
-      <ConnectedConnectButton allowlist={allowlist} delegations={delegations} />
+      <ConnectedConnectButton
+        allowlist={allowlist}
+        delegations={delegations}
+        toast={toast}
+      />
     </StrictMode>,
   );
 
@@ -511,9 +519,13 @@ async function start() {
     addModals(),
     addNFTPrice(),
     addAvatar(await allowlistPromise, await delegationsPromise),
-    addDelegateButton(await allowlistPromise, await delegationsPromise),
+    addDelegateButton(await allowlistPromise, await delegationsPromise, toast),
     addBuyButton(allowlistPromise, delegationsPromise, toast),
-    addConnectedComponents(await allowlistPromise, await delegationsPromise),
+    addConnectedComponents(
+      await allowlistPromise,
+      await delegationsPromise,
+      toast,
+    ),
     addSubmitButton(await allowlistPromise, await delegationsPromise, toast),
     checkNewStories(),
     checkImages(),

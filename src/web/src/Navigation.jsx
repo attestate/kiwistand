@@ -3,6 +3,7 @@ import { RainbowKitProvider, ConnectButton } from "@rainbow-me/rainbowkit";
 import { useEffect, useState } from "react";
 import { eligible } from "@attestate/delegator2";
 
+import { RestoreDialogue } from "./Passkeys.jsx";
 import { client, chains } from "./client.mjs";
 import {
   getLocalAccount,
@@ -516,46 +517,57 @@ const CustomConnectButton = (props) => {
   );
 };
 
-const Connector = ({ children }) => {
+const Connector = (props) => {
   return (
     <WagmiConfig config={client}>
-      <RainbowKitProvider chains={chains}>{children}</RainbowKitProvider>
+      <RainbowKitProvider
+        appInfo={{
+          disclaimer: RestoreDialogue(
+            props.allowlist,
+            props.delegations,
+            props.toast,
+          ),
+        }}
+        chains={chains}
+      >
+        {props.children}
+      </RainbowKitProvider>
     </WagmiConfig>
   );
 };
 
 export const ConnectedProfile = (props) => (
-  <Connector>
+  <Connector {...props}>
     <Profile {...props} />
   </Connector>
 );
 export const ConnectedDisconnectButton = (props) => (
-  <Connector>
+  <Connector {...props}>
     <DisconnectButton {...props} />
   </Connector>
 );
 export const ConnectedSimpleDisconnectButton = (props) => (
-  <Connector>
+  <Connector {...props}>
     <SimpleDisconnectButton {...props} />
   </Connector>
 );
 export const ConnectedConnectButton = (props) => (
-  <Connector>
+  <Connector {...props}>
     <CustomConnectButton {...props} />
   </Connector>
 );
 export const ConnectedSettings = (props) => (
-  <Connector>
+  <Connector {...props}>
     <Settings {...props} />
   </Connector>
 );
 export const ConnectedLearnMore = (props) => (
-  <Connector>
+  <Connector {...props}>
     <LearnMore {...props} />
   </Connector>
 );
 export const ConnectedBuyAdvert = (props) => (
-  <Connector>
+  <Connector {...props}>
     <BuyAdvert {...props} />
   </Connector>
 );
