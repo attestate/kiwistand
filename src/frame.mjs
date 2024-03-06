@@ -38,9 +38,36 @@ export function tip(address) {
   };
 }
 
+export function callback(hash) {
+  return html`
+    <html lang="en" op="news">
+      <head>
+        <meta property="fc:frame" content="vNext" />
+        <meta
+          name="fc:frame:image"
+          content="https://news.kiwistand.com/previews/success.jpg"
+        />
+        <meta property="fc:frame:button:1" content="See transaction" />
+        <meta property="fc:frame:button:1:action" content="link" />
+        <meta
+          property="fc:frame:button:1:target"
+          content="https://basescan.org/tx/${hash}"
+        />
+      </head>
+      <body>
+        no content
+      </body>
+    </html>
+  `;
+}
+
 export function profileHeader(name, address) {
   return html`
     <meta property="fc:frame" content="vNext" />
+    <meta
+      property="fc:frame:post_url"
+      content="https://news.kiwistand.com/api/v1/writers/${address}?callback=true"
+    />
     <meta
       name="fc:frame:image"
       content="https://news.kiwistand.com/previews/${name}.jpg"

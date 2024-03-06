@@ -197,9 +197,17 @@ export async function launch(trie, libp2p) {
       const details = "Please only submit valid Ethereum addresses.";
       return sendError(reply, code, httpMessage, details);
     }
-    const data = frame.tip(address);
-    const code = 200;
-    return reply.status(code).json(data);
+
+    const callback = request.query.callback === "true";
+    if (callback) {
+      const content = frame.callback(request.body.transaction_hash);
+      const code = 200;
+      return reply.status(200).type("text/html").send(content);
+    } else {
+      const data = frame.tip(address);
+      const code = 200;
+      return reply.status(code).json(data);
+    }
   });
   app.get("/api/v1/parse", async (request, reply) => {
     const embed = await parse(request.query.url);
