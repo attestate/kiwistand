@@ -1,5 +1,6 @@
 import { readFile, writeFile, access } from "fs/promises";
 import { resolve } from "path";
+import { env } from "process";
 
 import emojiRegex from "emoji-regex";
 import satori from "satori";
@@ -40,7 +41,7 @@ export function writersFrame(username, avatar) {
               border: "2px solid black",
               marginBottom: "2rem",
             }}
-            src="${avatar}"
+            src="${cfTransform(avatar, 500)}"
           />`
         : ""}
       <p
@@ -63,6 +64,14 @@ export function writersFrame(username, avatar) {
       </p>
     </div>
   `;
+}
+
+function cfTransform(url, size) {
+  if (env.CF_IMAGES_SECRET) {
+    const newurl = `https://images.kiwistand.com/?secret=${env.CF_IMAGES_SECRET}&avatarURL=${url}&width=${size}`;
+    return newurl;
+  }
+  return url;
 }
 
 const emojiMatcher = emojiRegex();
@@ -121,7 +130,7 @@ export function story(title, displayName, avatar) {
                   border: "2px solid black",
                   marginRight: "1rem",
                 }}
-                src="${avatar}"
+                src="${cfTransform(avatar, 500)}"
               />
             `
           : null}
