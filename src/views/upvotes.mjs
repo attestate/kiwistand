@@ -69,7 +69,7 @@ async function generateProfile(username, avatar) {
     const body = preview.writersFrame(username, avatar);
     await preview.generate(username, body);
   } catch (err) {
-    const body = preview.story(username);
+    const body = preview.writersFrame(username);
     await preview.generate(username, body);
   }
 }
