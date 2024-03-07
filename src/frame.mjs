@@ -5,7 +5,7 @@ import vhtml from "vhtml";
 
 const html = htm.bind(vhtml);
 
-const disperseContract = "0xd152f549545093347a162dce210e7293f1452150";
+const disperseContract = "0x1682E34D44838863E85Ec104D64eC7075711d500";
 const disperseSelector = {
   constant: false,
   inputs: [
@@ -19,7 +19,7 @@ const disperseSelector = {
   type: "function",
 };
 
-const kiwiMultisig = "0x1337E2624ffEC537087c6774e9A18031CFEAf0a9";
+const kiwiMultisig = "0xe657a66b0E155975ecceb5C95f0B20A4Ff5F5671";
 
 export function tip(address) {
   const data = encodeFunctionCall(disperseSelector, [
