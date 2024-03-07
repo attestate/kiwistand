@@ -156,7 +156,7 @@ const animation = `
   var intervalId = setInterval(animate, 500);
  `;
 
-const secondheader = (theme, site, period) => html`
+const secondheader = (theme, site, period, domain) => html`
   <td>
     <div
       style="background-color: #e6e6df; min-height: 40px; display: flex; justify-content: space-between; align-items: center; padding: 10px 15px 10px 15px; color: white;"
@@ -223,22 +223,22 @@ const secondheader = (theme, site, period) => html`
           style="background-color: #e6e6df; min-height: 40px; display: flex; justify-content: space-between; align-items: center; padding: 0 15px 10px 15px; color: white;"
         >
           <div>
-            <a href="/best?period=all">
+            <a href="/best?period=all${domain ? `&domain=${domain}` : ""}">
               <button style="${periodIconStyle(theme, period, "all")}">
                 <span>All</span>
               </button>
             </a>
-            <a href="/best?period=month">
+            <a href="/best?period=month${domain ? `&domain=${domain}` : ""}">
               <button style="${periodIconStyle(theme, period, "month")}">
                 <span>Month</span>
               </button>
             </a>
-            <a href="/best?period=week">
+            <a href="/best?period=week${domain ? `&domain=${domain}` : ""}">
               <button style="${periodIconStyle(theme, period, "week")}">
                 <span>Week</span>
               </button>
             </a>
-            <a href="/best?period=day">
+            <a href="/best?period=day${domain ? `&domain=${domain}` : ""}">
               <button style="${periodIconStyle(theme, period, "day")}">
                 <span>Day</span>
               </button>

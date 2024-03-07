@@ -545,12 +545,18 @@ export async function leaves(
   trie,
   from,
   amount,
+  // TODO: Is passing the parser here still necessary?
   parser,
   startDatetime,
   href,
-  type,
+  type = "amplify",
   root = trie.root(),
 ) {
+  if (type !== "amplify" && type !== "comment") {
+    throw new Error(
+      "store leaves: Must be called with type 'amplify' or 'comment'",
+    );
+  }
   const nodes = [];
 
   let pointer = 0;
@@ -561,14 +567,18 @@ export async function leaves(
       break;
     }
 
-    pointer++;
-    if (Number.isInteger(from) && pointer <= from) {
-      continue;
-    }
-
     const value = decode(node.value());
     if (parser) {
       const parsed = parser(value);
+
+      if (type && type === parsed.type) {
+        pointer++;
+      }
+
+      if (Number.isInteger(from) && pointer <= from) {
+        continue;
+      }
+
       if (parsed.timestamp < startDatetime) {
         continue;
       }
@@ -581,6 +591,12 @@ export async function leaves(
 
       nodes.push(parsed);
     } else {
+      pointer++;
+
+      if (Number.isInteger(from) && pointer <= from) {
+        continue;
+      }
+
       nodes.push(value);
     }
   }

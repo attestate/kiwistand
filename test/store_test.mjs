@@ -94,6 +94,7 @@ test("simulate dirty read", async (t) => {
     const amount = null;
     const startDatetime = null;
     const href = null;
+    const type = "amplify";
     const leavesPromise = await store.leaves(
       trieA,
       from,
@@ -101,6 +102,7 @@ test("simulate dirty read", async (t) => {
       JSON.parse,
       startDatetime,
       href,
+      type,
       originalRoot,
     );
     t.pass("Traversal was successful despite concurrent write to trie");
@@ -227,15 +229,22 @@ test("amount limiting factor", async (t) => {
 test("getting paginated leaves", async (t) => {
   env.DATA_DIR = "dbtestA";
   const trieA = await store.create();
-  await trieA.put(Buffer.from("0c", "hex"), encode({ num: 0xc }));
-  await trieA.put(Buffer.from("05", "hex"), encode({ num: 0x5 }));
-  await trieA.put(Buffer.from("0a", "hex"), encode({ num: 0xa }));
+  const type = "amplify";
+  await trieA.put(Buffer.from("0c", "hex"), encode({ num: 0xc, type }));
+  await trieA.put(Buffer.from("05", "hex"), encode({ num: 0x5, type }));
+  await trieA.put(Buffer.from("0a", "hex"), encode({ num: 0xa, type }));
 
   const from = 1;
   const amount = 2;
   const leaves = await store.leaves(trieA, from, amount);
   t.is(leaves.length, amount);
-  t.deepEqual([{ num: 0xa }, { num: 0xc }], leaves);
+  t.deepEqual(
+    [
+      { num: 0xa, type },
+      { num: 0xc, type },
+    ],
+    leaves,
+  );
 
   await rm("dbtestA", { recursive: true });
 });
@@ -1389,6 +1398,76 @@ test.serial("retrieving leaves selectively", async (t) => {
   );
   t.is(result1.length, 1);
   t.is(result1[0].type, type1);
+});
+
+test.serial("separate pagination per message type", async (t) => {
+  store.upvotes.clear();
+  env.DATA_DIR = "dbtestA";
+  t.plan(10);
+  const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
+  const privateKey =
+    "0xad54bdeade5537fb0a553190159783e45d02d316a992db05cbed606d3ca36b39";
+  const signer = new Wallet(privateKey);
+  t.is(signer.address, address);
+
+  const text0 = "hello world";
+  const href0 = "https://example.com";
+  const type0 = "amplify";
+  const timestamp0 = 1676559616;
+  const message0 = id.create(text0, href0, type0, timestamp0);
+  const signedMessage0 = await id.sign(signer, message0, EIP712_MESSAGE);
+
+  const trie = await store.create();
+  const libp2p = {
+    pubsub: {
+      publish: (name, message) => {
+        t.truthy(name);
+        t.truthy(message);
+      },
+    },
+  };
+  const allowlist = new Set([address]);
+  const index0 = await store.add(trie, signedMessage0, libp2p, allowlist);
+  t.is(store.upvotes.size, 1);
+
+  const text1 = "this is a short comment";
+  const href1 = `kiwi:0x${index0}`;
+  const type1 = "comment";
+  const timestamp1 = 1676559617;
+  const message1 = id.create(text1, href1, type1, timestamp1);
+  const signedMessage1 = await id.sign(signer, message1, EIP712_MESSAGE);
+
+  await store.add(trie, signedMessage1, libp2p, allowlist);
+
+  const text2 = "this is a short comment";
+  const href2 = `kiwi:0x${index0}`;
+  const type2 = "comment";
+  const timestamp2 = 1676559617 + 1;
+  const message2 = id.create(text2, href2, type2, timestamp2);
+  const signedMessage2 = await id.sign(signer, message2, EIP712_MESSAGE);
+
+  await store.add(trie, signedMessage2, libp2p, allowlist);
+
+  const from = 1;
+  const amount = 1;
+  const parser = JSON.parse;
+  const startDatetime = null;
+  const href = null;
+  const type = "comment";
+  const leaves = await store.leaves(
+    trie,
+    from,
+    amount,
+    parser,
+    startDatetime,
+    href,
+    type,
+  );
+  t.log(leaves);
+  t.is(leaves.length, 1);
+  t.is(leaves[0].timestamp, timestamp2);
+
+  await rm("dbtestA", { recursive: true });
 });
 
 test.serial("adding a comment to the store", async (t) => {

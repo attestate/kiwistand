@@ -32,11 +32,52 @@ import { EIP712_MESSAGE } from "../constants.mjs";
 import Row, { extractDomain } from "./components/row.mjs";
 import * as karma from "../karma.mjs";
 import { metadata, render } from "../parser.mjs";
+import { getSubmission } from "../cache.mjs";
+import * as preview from "../preview.mjs";
 
 const html = htm.bind(vhtml);
 
+export async function generateStory(index) {
+  const hexRegex = /^0x[a-fA-F0-9]{72}$/;
+
+  if (!hexRegex.test(index)) {
+    throw new Error("Index wasn't found");
+  }
+
+  let submission;
+  try {
+    submission = await getSubmission(index);
+  } catch (err) {
+    console.error(err);
+    log(
+      `Requested index "${index}" but didn't find because of error "${err.toString()}"`,
+    );
+    throw new Error("Index wasn't found");
+  }
+
+  const ensData = await ens.resolve(submission.identity);
+  const value = {
+    ...submission,
+    displayName: ensData.displayName,
+    submitter: ensData,
+  };
+  const hexIndex = index.substring(2);
+  try {
+    const body = preview.story(
+      value.title,
+      value.submitter.displayName,
+      value.submitter.safeAvatar,
+    );
+    await preview.generate(hexIndex, body);
+  } catch (err) {
+    const body = preview.story(value.title, value.submitter.displayName);
+    await preview.generate(hexIndex, body);
+  }
+
+  return submission;
+}
+
 export function generateList(profiles) {
-  // NOTE: Remove submitter
   profiles.shift();
   return html`
     <ul style="padding: 0.3rem 0 0.65rem 56px; list-style: none; margin: 0;">
@@ -46,11 +87,13 @@ export function generateList(profiles) {
             <p
               style="display: flex; align-items: center; gap: 3px; flex: 1; margin: 0; padding: 2px 0; font-size: 14px; color: #6b7280;"
             >
-              <img
-                src="${profile.avatar}"
-                alt="avatar"
-                style="width: 15px; height: 15px; border: 1px solid #828282; border-radius: 2px;"
-              />
+              ${profile.avatar
+                ? html`<img
+                    src="${profile.avatar}"
+                    alt="avatar"
+                    style="width: 15px; height: 15px; border: 1px solid #828282; border-radius: 2px;"
+                  />`
+                : null}
               <span> </span>
               <a href="/${profile.name}">${profile.name}</a>
               <span> </span>
@@ -213,12 +256,14 @@ export default async function (trie, theme, index, value) {
                               <div
                                 style="white-space: nowrap; gap: 3px; margin-bottom: 0.25rem; display: inline-flex; align-items: center;"
                               >
-                                <img
-                                  loading="lazy"
-                                  src="${comment.avatar}"
-                                  alt="avatar"
-                                  style="margin-right: 5px; width: 12px; height:12px; border: 1px solid #828282; border-radius: 2px;"
-                                />
+                                ${comment.avatar
+                                  ? html`<img
+                                      loading="lazy"
+                                      src="${comment.avatar}"
+                                      alt="avatar"
+                                      style="margin-right: 5px; width: 12px; height:12px; border: 1px solid #828282; border-radius: 2px;"
+                                    />`
+                                  : null}
                                 <b
                                   >${!comment.flagged
                                     ? html`<a

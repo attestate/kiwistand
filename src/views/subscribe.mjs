@@ -5,16 +5,21 @@ import vhtml from "vhtml";
 import Header from "./components/header.mjs";
 import Sidebar from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
-import Head from "./components/head.mjs";
+import { custom } from "./components/head.mjs";
 
 const html = htm.bind(vhtml);
 
 export default async function index(theme) {
+  const ogImage = "https://news.kiwistand.com/kiwi_subscribe_page.png";
   const path = "/subscribe";
   return html`
     <html lang="en" op="news">
       <head>
-        ${Head}
+        ${custom(
+          ogImage,
+          "Subscribe to Kiwi News",
+          "Stay in touch with Kiwi News by subscribing to our weekly news letter or by follwing us on social media.",
+        )}
       </head>
       <body>
         <div class="container">

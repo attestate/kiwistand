@@ -1,5 +1,5 @@
 import { useContractRead, WagmiConfig } from "wagmi";
-import { parseEther, formatEther } from "@ethersproject/units";
+import { parseEther, formatEther } from "viem";
 import { optimism } from "wagmi/chains";
 import { useEffect, useState } from "react";
 
@@ -55,11 +55,16 @@ export const PriceComponent = (props) => {
 
   useEffect(() => {
     (async () => {
-      const response = await fetch(
-        "https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd",
-      );
+      let data;
+      try {
+        const response = await fetch(
+          "https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd",
+        );
 
-      const data = await response.json();
+        data = await response.json();
+      } catch (err) {
+        console.error("Error in coingecko response");
+      }
       if (data?.ethereum?.usd) {
         setEthPrice(data.ethereum.usd);
       } else {
@@ -71,7 +76,7 @@ export const PriceComponent = (props) => {
   const salesPrice = salesDetails?.data?.publicSalePrice || 0;
   let total = salesPrice;
   if (total && props.fee) {
-    total = total.add(parseEther(props.fee));
+    total = total + parseEther(props.fee);
   }
 
   const usdPrice = ethPrice
@@ -92,7 +97,7 @@ export const PriceComponent = (props) => {
 
 const WrappedPriceComponent = (props) => {
   return (
-    <WagmiConfig client={client}>
+    <WagmiConfig config={client}>
       <PriceComponent {...props} />
     </WagmiConfig>
   );

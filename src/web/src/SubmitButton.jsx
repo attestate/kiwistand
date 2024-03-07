@@ -1,11 +1,11 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { Wallet } from "@ethersproject/wallet";
-import { useProvider, useSigner, useAccount, WagmiConfig } from "wagmi";
+import { useAccount, WagmiConfig } from "wagmi";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { eligible } from "@attestate/delegator2";
 
 import * as API from "./API.mjs";
-import { client, chains } from "./client.mjs";
+import { useSigner, useProvider, client, chains } from "./client.mjs";
 import NFTModal from "./NFTModal.jsx";
 import { getLocalAccount } from "./session.mjs";
 import { ConnectedConnectButton } from "./Navigation.jsx";
@@ -134,12 +134,11 @@ const SubmitButton = (props) => {
   const provider = useProvider();
   const result = useSigner();
 
-  let signer, isError;
+  let signer;
   if (localAccount && localAccount.privateKey) {
     signer = new Wallet(localAccount.privateKey, provider);
   } else {
-    signer = result.data;
-    isError = result.isError;
+    signer = result;
   }
 
   useEffect(() => {
@@ -212,13 +211,8 @@ const SubmitButton = (props) => {
     }
 
     let redirectTo = "/new";
-    let wait = false;
+    let wait = true;
     const domain = safeExtractDomain(canonicalURL);
-    if (domain === "imgur.com" || domain === "catbox.moe") {
-      redirectTo = "/images";
-      wait = true;
-    }
-
     const response = await API.send(value, signature, wait);
 
     let message;
@@ -260,9 +254,9 @@ const SubmitButton = (props) => {
         id="button-onboarding"
         style={buttonStyles}
         onClick={handleClick}
-        disabled={(isLoading && !isError) || !isEligible}
+        disabled={isLoading || !isEligible}
       >
-        {isLoading && !isError
+        {isLoading
           ? !localAccount
             ? "Please confirm signature..."
             : "Submitting..."
@@ -279,7 +273,7 @@ const Form = (props) => {
   const [url, setURL] = useState(urlInput.value);
 
   return (
-    <WagmiConfig client={client}>
+    <WagmiConfig config={client}>
       <RainbowKitProvider chains={chains}>
         <UrlInput url={url} setURL={setURL} />
         <SubmitButton {...props} setIsOpen={setIsOpen} url={url} />

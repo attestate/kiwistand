@@ -1,5 +1,6 @@
 import { readFile, writeFile, access } from "fs/promises";
 import { resolve } from "path";
+import { env } from "process";
 
 import emojiRegex from "emoji-regex";
 import satori from "satori";
@@ -16,8 +17,65 @@ function h(type, props, ...children) {
   }
 }
 
+export function writersFrame(username, avatar) {
+  return html`
+    <div
+      style=${{
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        alignItems: "center",
+        height: "100%",
+        width: "100%",
+        backgroundColor: "#F6F6EF",
+        color: "#828282",
+        padding: "0 5vw",
+      }}
+    >
+      ${avatar
+        ? html`<img
+            style=${{
+              height: "10rem",
+              width: "10rem",
+              borderRadius: "2px",
+              border: "2px solid black",
+              marginBottom: "2rem",
+            }}
+            src="${cfTransform(avatar, 500)}"
+          />`
+        : ""}
+      <p
+        style=${{
+          fontFamily: "VerdanaBold",
+          fontSize: "3rem",
+          color: "black",
+          margin: "0 0 1rem 0",
+        }}
+      >
+        @${username}
+      </p>
+      <p
+        style=${{
+          fontSize: "2rem",
+          textAlign: "center",
+        }}
+      >
+        Support my writing by buying me a coffee!
+      </p>
+    </div>
+  `;
+}
+
+function cfTransform(url, size) {
+  if (env.CF_IMAGES_SECRET) {
+    const newurl = `https://images.kiwistand.com/?secret=${env.CF_IMAGES_SECRET}&avatarURL=${url}&width=${size}`;
+    return newurl;
+  }
+  return url;
+}
+
 const emojiMatcher = emojiRegex();
-function content(title, displayName, avatar) {
+export function story(title, displayName, avatar) {
   title = title.replace(emojiMatcher, "");
   return html`
     <div
@@ -72,7 +130,7 @@ function content(title, displayName, avatar) {
                   border: "2px solid black",
                   marginRight: "1rem",
                 }}
-                src="${avatar}"
+                src="${cfTransform(avatar, 500)}"
               />
             `
           : null}
@@ -101,8 +159,8 @@ function content(title, displayName, avatar) {
   `;
 }
 
-export async function generate(index, title, submitter) {
-  const filePath = resolve(`./src/public/previews/${index}.jpg`);
+export async function generate(name, body) {
+  const filePath = resolve(`./src/public/previews/${name}.jpg`);
 
   try {
     await access(filePath);
@@ -126,24 +184,15 @@ export async function generate(index, title, submitter) {
     style: "normal",
   };
 
-  async function generatePreview(title, displayName, safeAvatar) {
-    const body = content(title, displayName, safeAvatar);
-    const svgData = await satori(body, {
-      width: 1200,
-      height: 630,
-      fonts: [verdana, verdanaBold],
-    });
-    await sharp(Buffer.from(svgData))
-      .jpeg({
-        quality: 100,
-        chromaSubsampling: "4:4:4",
-      })
-      .toFile(filePath);
-  }
-
-  try {
-    await generatePreview(title, submitter.displayName, submitter.safeAvatar);
-  } catch (err) {
-    await generatePreview(title, submitter.displayName);
-  }
+  const svgData = await satori(body, {
+    width: 1200,
+    height: 630,
+    fonts: [verdana, verdanaBold],
+  });
+  await sharp(Buffer.from(svgData))
+    .jpeg({
+      quality: 100,
+      chromaSubsampling: "4:4:4",
+    })
+    .toFile(filePath);
 }

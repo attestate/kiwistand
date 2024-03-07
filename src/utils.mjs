@@ -6,6 +6,16 @@ function dirname() {
   return path.dirname(filename);
 }
 
+export function truncate(comment, maxLength = 260) {
+  if (
+    !comment ||
+    (comment && comment.length <= maxLength) ||
+    (comment && comment.length === 0)
+  )
+    return comment;
+  return comment.slice(0, comment.lastIndexOf(" ", maxLength)) + "...";
+}
+
 export function appdir() {
   return path.resolve(dirname(), "../");
 }

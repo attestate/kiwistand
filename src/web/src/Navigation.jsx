@@ -1,4 +1,4 @@
-import { WagmiConfig, createClient, useAccount } from "wagmi";
+import { WagmiConfig, useAccount } from "wagmi";
 import { RainbowKitProvider, ConnectButton } from "@rainbow-me/rainbowkit";
 import { useEffect, useState } from "react";
 import { eligible } from "@attestate/delegator2";
@@ -81,7 +81,8 @@ const BuyAdvert = (props) => {
     !isEligible &&
     account.isConnected &&
     window.location.pathname !== "/indexing" &&
-    window.location.pathname !== "/kiwipass-mint"
+    window.location.pathname !== "/kiwipass-mint" &&
+    window.location.pathname !== "/demonstration"
   ) {
     return (
       <PrimaryActionButton
@@ -517,7 +518,7 @@ const CustomConnectButton = (props) => {
 
 const Connector = ({ children }) => {
   return (
-    <WagmiConfig client={client}>
+    <WagmiConfig config={client}>
       <RainbowKitProvider chains={chains}>{children}</RainbowKitProvider>
     </WagmiConfig>
   );

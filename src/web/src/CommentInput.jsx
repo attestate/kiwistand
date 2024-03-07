@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
-import { WagmiConfig, useAccount, useSigner, useProvider } from "wagmi";
+import { WagmiConfig, useAccount } from "wagmi";
 import { Wallet } from "@ethersproject/wallet";
 import { eligible } from "@attestate/delegator2";
 
 import * as API from "./API.mjs";
 import { getLocalAccount } from "./session.mjs";
-import { client, chains } from "./client.mjs";
+import { client, chains, useProvider, useSigner } from "./client.mjs";
 
 const CommentInput = (props) => {
   const { toast, allowlist, delegations } = props;
@@ -36,12 +36,11 @@ const CommentInput = (props) => {
     loadData();
   });
 
-  let signer, isError;
+  let signer;
   if (localAccount && localAccount.privateKey) {
     signer = new Wallet(localAccount.privateKey, provider);
   } else {
-    signer = result.data;
-    isError = result.isError;
+    signer = result;
   }
 
   const [text, setText] = useState("");
@@ -124,7 +123,7 @@ const CommentInput = (props) => {
 
 const Container = (props) => {
   return (
-    <WagmiConfig client={client}>
+    <WagmiConfig config={client}>
       <RainbowKitProvider chains={chains}>
         <CommentInput {...props} />
       </RainbowKitProvider>

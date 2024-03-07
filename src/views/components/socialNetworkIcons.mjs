@@ -3,7 +3,18 @@ import vhtml from "vhtml";
 
 const html = htm.bind(vhtml);
 
-const defaultIconStyle = "color: black; width: 32px;";
+const defaultIconStyle = "width: 16px;";
+
+export function SocialButton(url, icon, text) {
+  return html`<a target="_blank" href="${url}">
+    <button
+      class="feed-button"
+      style="display: flex; align-items: center; gap: 5px;  font-size: 0.9rem; border-radius: 2px; cursor: pointer; padding: 5px 10px; background-color: transparent; border: 1px solid #828282; color: #828282;"
+    >
+      ${icon} ${text}
+    </button></a
+  >`;
+}
 
 export const githubSvg = (iconStyle = defaultIconStyle) => html`
   <svg

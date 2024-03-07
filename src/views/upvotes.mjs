@@ -13,16 +13,19 @@ import Header from "./components/header.mjs";
 import { trophySVG, broadcastSVG } from "./components/secondheader.mjs";
 import Footer from "./components/footer.mjs";
 import Sidebar from "./components/sidebar.mjs";
-import Head from "./components/head.mjs";
+import { custom } from "./components/head.mjs";
 import * as store from "../store.mjs";
-import { EIP712_MESSAGE } from "../constants.mjs";
-import { count } from "./feed.mjs";
 import * as ens from "../ens.mjs";
 import * as moderation from "./moderation.mjs";
 import * as karma from "../karma.mjs";
-import * as registry from "../chainstate/registry.mjs";
+import * as preview from "../preview.mjs";
+import * as frame from "../frame.mjs";
 import Row from "./components/row.mjs";
+import { getSubmissions } from "../cache.mjs";
+import { metadata } from "../parser.mjs";
+import { truncate } from "../utils.mjs";
 import {
+  SocialButton,
   twitterSvg,
   githubSvg,
   warpcastSvg,
@@ -38,40 +41,70 @@ function extractDomain(link) {
   return parsedUrl.hostname;
 }
 
-export default async function (trie, theme, identity, page, mode) {
+const Post = (post) => html`
+  <a target="_blank" href="${post.href}">
+    <div style="gap: 1rem; display: flex; width: 90%; padding: 1rem 5%;">
+      <div style="flex: 2;">
+        <h3 style="margin: 0 0 0.25rem 0;">${post.title}</h3>
+        <div>${truncate(post.metadata.ogDescription, 100)}</div>
+      </div>
+      ${post.metadata.image
+        ? html`<div
+            style="height: 7rem; flex: 1; display: inline-flex; justify-content: center; align-items: start;"
+          >
+            <img
+              src="${post.metadata.image}"
+              alt="${post.metadata.ogTitle}"
+              style="height: 100%; object-fit:cover; border-radius: 2px; border: 1px solid #828282; width: 100%;"
+            />
+          </div>`
+        : ""}
+    </div>
+    <hr style="border-top: 0; margin: 0 5%; border-color: rgba(0,0,0,0.1);" />
+  </a>
+`;
+
+async function generateProfile(username, avatar) {
+  try {
+    const body = preview.writersFrame(username, avatar);
+    await preview.generate(username, body);
+  } catch (err) {
+    const body = preview.writersFrame(username);
+    await preview.generate(username, body);
+  }
+}
+
+export default async function (
+  trie,
+  theme,
+  identity,
+  page,
+  mode,
+  enabledFrame,
+) {
   if (!utils.isAddress(identity)) {
     return html`Not a valid address`;
   }
   const ensData = await ens.resolve(identity);
-  const from = null;
-  const amount = null;
-  const parser = JSON.parse;
-  const startDatetime = null;
-  const allowlist = await registry.allowlist();
-  const delegations = await registry.delegations();
-  const href = null;
-  const type = "amplify";
-  let leaves = await store.posts(
-    trie,
-    from,
-    amount,
-    parser,
-    startDatetime,
-    allowlist,
-    delegations,
-    href,
-    type,
-  );
-  const cacheEnabled = true;
+
+  let frameHead;
+  let ogImage = ensData.safeAvatar;
+  if (ensData.ens && ensData.safeAvatar) {
+    generateProfile(ensData.ens, ensData.safeAvatar);
+    if (enabledFrame) {
+      frameHead = frame.profileHeader(ensData.ens, identity);
+      ogImage = `https://news.kiwistand.com/previews/${ensData.ens}.jpg`;
+    }
+  }
+
   const totalStories = 10;
   const start = totalStories * page;
-  const end = totalStories * (page + 1);
-  let storyPromises = await count(leaves);
 
+  let storyPromises;
   if (mode === "top") {
-    storyPromises = storyPromises.sort((a, b) => b.upvotes - a.upvotes);
+    storyPromises = getSubmissions(identity, totalStories, start, mode);
   } else if (mode === "new") {
-    storyPromises = storyPromises.sort((a, b) => b.timestamp - a.timestamp);
+    storyPromises = getSubmissions(identity, totalStories, start, mode);
   }
 
   let writers = [];
@@ -81,47 +114,86 @@ export default async function (trie, theme, identity, page, mode) {
     // noop
   }
 
-  const tips = await getTips();
-
-  let stories = storyPromises
-    .filter(
-      (story) =>
-        utils.getAddress(story.identity) === utils.getAddress(identity),
-    )
-    .slice(start, end);
-  stories = await Promise.all(
-    stories.map(async (leaf) => {
-      const ensData = await ens.resolve(leaf.identity);
-
-      const tipValue = getTipsValue(tips, leaf.index);
-      leaf.tipValue = tipValue;
-
-      let avatars = [];
-      for await (let upvoter of leaf.upvoters) {
-        const profile = await ens.resolve(upvoter);
-        if (profile.safeAvatar) {
-          avatars.push(profile.safeAvatar);
-        }
-      }
-      const isOriginal = Object.keys(writers).some(
-        (domain) =>
-          normalizeUrl(leaf.href).startsWith(domain) &&
-          writers[domain] === leaf.identity,
-      );
-      return {
-        ...leaf,
-        displayName: ensData.displayName,
-        avatars: avatars,
-        isOriginal,
-      };
-    }),
+  const opPostsLimit = 1000000;
+  const opPostsStart = 0;
+  let originalPosts = getSubmissions(
+    identity,
+    opPostsLimit,
+    opPostsStart,
+    "new",
+  );
+  originalPosts = originalPosts.filter((post) =>
+    Object.keys(writers).some(
+      (domain) =>
+        normalizeUrl(post.href).startsWith(domain) &&
+        writers[domain] === post.identity,
+    ),
   );
 
+  const tips = await getTips();
+
+  async function enhance(leaf) {
+    const ensData = await ens.resolve(leaf.identity);
+
+    const tipValue = getTipsValue(tips, leaf.index);
+    leaf.tipValue = tipValue;
+
+    let avatars = [];
+    for await (let upvoter of leaf.upvoters) {
+      const profile = await ens.resolve(upvoter);
+      if (profile.safeAvatar) {
+        avatars.push(profile.safeAvatar);
+      }
+    }
+    const isOriginal = Object.keys(writers).some(
+      (domain) =>
+        normalizeUrl(leaf.href).startsWith(domain) &&
+        writers[domain] === leaf.identity,
+    );
+    return {
+      ...leaf,
+      displayName: ensData.displayName,
+      avatars: avatars,
+      isOriginal,
+    };
+  }
+
+  const stories = await Promise.all(storyPromises.map(enhance));
+
+  async function addMetadata(post) {
+    let result;
+    try {
+      result = await metadata(post.href);
+    } catch (err) {
+      return null;
+    }
+    return {
+      ...post,
+      metadata: result,
+    };
+  }
+  const posts = (await Promise.allSettled(originalPosts.map(addMetadata)))
+    .filter(({ status, value }) => status === "fulfilled" && !!value)
+    .map(({ value }) => value)
+    .slice(0, 3);
+
+  const description = ensData.description
+    ? ensData.description
+    : ensData.farcaster
+    ? ensData.farcaster.bio
+    : "";
+  const twitterCard = "summary";
   const points = karma.resolve(identity);
   return html`
     <html lang="en" op="news">
       <head>
-        ${Head}
+        ${custom(
+          ogImage,
+          `${ensData.displayName} (${points.toString()} 🥝) on Kiwi News`,
+          description,
+          twitterCard,
+        )}
+        ${frameHead ? frameHead : ""}
       </head>
       <body>
         ${PWALine}
@@ -138,7 +210,7 @@ export default async function (trie, theme, identity, page, mode) {
                     style="padding: 10px 10px 0 10px; color: black; font-size: 16px; line-height: 1.5;"
                   >
                     <a
-                      style="font-weight: bold; display: flex; align-items: center; gap: 10px;"
+                      style="margin-bottom: 10px; font-weight: bold; display: flex; align-items: center; gap: 10px;"
                       target="_blank"
                       href="https://etherscan.io/address/${ensData.address}"
                     >
@@ -151,72 +223,88 @@ export default async function (trie, theme, identity, page, mode) {
                       <span> (${points.toString()} 🥝)</span>
                     </a>
                     <span style="font-size: 0.8rem;">
-                      ${ensData.description
-                        ? html`<br />${ensData.description}<br />`
-                        : ensData.farcaster && ensData.farcaster.bio
-                        ? html`<br />${ensData.farcaster.bio}<br />`
+                      ${description
+                        ? html`${description}<br />`
                         : html`<span><br /></span>`}
                     </span>
-                    <div style="display: flex; gap: 15px; margin-top: 10px;">
+                    <div
+                      style="flex-wrap: wrap; display: flex; gap: 7px; margin-top: 10px;"
+                    >
                       ${ensData.url && ensData.url.startsWith("https://")
-                        ? html` <a target="_blank" href="${ensData.url}"
-                            >${websiteSvg()}</a
-                          >`
+                        ? SocialButton(ensData.url, websiteSvg(), "Website")
                         : ""}
                       ${ensData.twitter
-                        ? html` <a
-                            href="https://twitter.com/${ensData.twitter}"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            >${twitterSvg()}</a
-                          >`
+                        ? SocialButton(
+                            `https://twitter.com/${ensData.twitter}`,
+                            twitterSvg(),
+                            "X",
+                          )
                         : ""}
                       ${ensData.github
-                        ? html` <a
-                            href="https://github.com/${ensData.github}"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            >${githubSvg()}</a
-                          >`
+                        ? SocialButton(
+                            `https://github.com/${ensData.github}`,
+                            githubSvg(),
+                            "GitHub",
+                          )
                         : ""}
                       ${ensData.telegram
-                        ? html` <a
-                            href="https://t.me/${ensData.telegram}"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            >${telegramSvg()}</a
-                          >`
+                        ? SocialButton(
+                            `https://t.me/${ensData.telegram}`,
+                            telegramSvg(),
+                            "Telegram",
+                          )
                         : ""}
                       ${ensData.discord
-                        ? html` <a
-                            href="https://discordapp.com/users/${ensData.discord}"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            >${discordSvg()}</a
-                          >`
+                        ? SocialButton(
+                            `https://discordapp.com/users/${ensData.discord}`,
+                            discordSvg(),
+                            "Discord",
+                          )
                         : ""}
                       ${ensData.farcaster && ensData.farcaster.username
-                        ? html` <a
-                            href="https://warpcast.com/${ensData.farcaster
-                              .username}"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            >${warpcastSvg()}</a
-                          >`
+                        ? SocialButton(
+                            `https://warpcast.com/${ensData.farcaster.username}`,
+                            warpcastSvg(),
+                            "Warpcast",
+                          )
                         : ""}
                     </div>
-                    <hr />
-                    ${stories.length > 0
-                      ? html`<b>
-                          <span>SUBMISSIONS </span>
-                          ${page !== 0 ? html`(page: ${page})` : ""}
-                        </b>`
-                      : ""}
                   </div>
                 </td>
               </tr>
+              ${posts.length > 0
+                ? html`<tr>
+                    <td>
+                      <hr />
+                      ${stories.length > 0
+                        ? html`<b
+                            style="font-size: 16px; padding: 5px 15px; color: black;"
+                          >
+                            <span>LATEST POSTS</span>
+                          </b>`
+                        : ""}
+                      ${posts.map(Post)}
+                    </td>
+                  </tr>`
+                : ""}
+              ${posts.length > 0
+                ? html`
+                    <tr style="height: 15px;">
+                      <td></td>
+                    </tr>
+                  `
+                : ""}
               <tr>
                 <td>
+                  ${posts.length === 0 ? html`<hr />` : ""}
+                  ${stories.length > 0
+                    ? html`<b
+                        style="font-size: 16px; padding: 5px 15px; color: black;"
+                      >
+                        <span>SUBMISSIONS </span>
+                        ${page !== 0 ? html`(page: ${page})` : ""}
+                      </b>`
+                    : ""}
                   <div
                     style="min-height: 40px; display: flex; align-items: center; padding: 10px 15px 10px 15px; color: white;"
                   >

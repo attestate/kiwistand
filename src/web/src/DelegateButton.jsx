@@ -3,7 +3,6 @@ import {
   useContractWrite,
   WagmiConfig,
   useAccount,
-  useProvider,
   useNetwork,
   useSwitchNetwork,
 } from "wagmi";
@@ -14,7 +13,7 @@ import { create } from "@attestate/delegator2";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import useLocalStorageState from "use-local-storage-state";
 
-import { client, chains } from "./client.mjs";
+import { useProvider, chains, client } from "./client.mjs";
 import { ConnectedConnectButton } from "./Navigation.jsx";
 
 const abi = [
@@ -93,7 +92,13 @@ const DelegateButton = (props) => {
 
   const { config, error, isError } = usePrepareContractWrite(prepArgs);
 
-  const { data, write, isLoading, isSuccess } = useContractWrite(config);
+  const {
+    data,
+    write,
+    isLoading,
+    isSuccess: isWriteSuccess,
+  } = useContractWrite(config);
+  const isSuccess = isWriteSuccess && data && data.hash !== "null";
   if (isSuccess) setKey(newKey.privateKey);
 
   const handleClick = () => {
@@ -171,9 +176,8 @@ const DelegateButton = (props) => {
 };
 
 const Form = (props) => {
-  const { isConnected } = useAccount();
   return (
-    <WagmiConfig client={client}>
+    <WagmiConfig config={client}>
       <RainbowKitProvider chains={chains}>
         <DelegateButton {...props} />
       </RainbowKitProvider>

@@ -16,7 +16,7 @@ import * as store from "./store.mjs";
 import { SCHEMATA } from "./constants.mjs";
 import * as registry from "./chainstate/registry.mjs";
 import * as newest from "./views/new.mjs";
-import * as images from "./views/images.mjs";
+import { generateStory } from "./views/story.mjs";
 
 const ajv = new Ajv();
 addFormats(ajv);
@@ -77,10 +77,15 @@ export function handleMessage(trie, libp2p, getAllowlist, getDelegations) {
 
     if (request.query && request.query.wait && request.query.wait === "true") {
       await newest.recompute(trie);
-      await images.recompute(trie);
     } else {
       newest.recompute(trie);
-      images.recompute(trie);
+    }
+    if (message.type === "amplify") {
+      try {
+        await generateStory(`0x${index}`);
+      } catch (err) {
+        // NOTE: This can fail if the message is an upvote, not a submission.
+      }
     }
 
     const code = 200;

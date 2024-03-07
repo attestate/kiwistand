@@ -14,7 +14,7 @@ import log from "./logger.mjs";
 import { SCHEMATA } from "./constants.mjs";
 import themes from "./themes.mjs";
 import feed, { index } from "./views/feed.mjs";
-import story from "./views/story.mjs";
+import story, { generateStory } from "./views/story.mjs";
 import newest, * as newAPI from "./views/new.mjs";
 import images, * as imagesAPI from "./views/images.mjs";
 import best from "./views/best.mjs";
@@ -50,10 +50,9 @@ import { parse } from "./parser.mjs";
 import { toAddress, resolve } from "./ens.mjs";
 import * as registry from "./chainstate/registry.mjs";
 import * as store from "./store.mjs";
-import { generate } from "./preview.mjs";
 import * as ens from "./ens.mjs";
 import * as karma from "./karma.mjs";
-import { getSubmission } from "./cache.mjs";
+import * as frame from "./frame.mjs";
 
 const app = express();
 
@@ -188,6 +187,28 @@ export async function launch(trie, libp2p) {
       .type("text/html")
       .send(await kiwipassmint(reply.locals.theme));
   });
+  app.post("/api/v1/writers/success", async (request, reply) => {
+    const content = frame.callback(request.body?.untrustedData?.transactionId);
+    const code = 200;
+    reply.header("Cache-Control", "no-cache");
+    return reply.status(code).type("text/html").send(content);
+  });
+  app.post("/api/v1/writers/:address", async (request, reply) => {
+    let address;
+    try {
+      address = utils.getAddress(request.params.address);
+    } catch (err) {
+      const code = 400;
+      const httpMessage = "Bad Request";
+      const details = "Please only submit valid Ethereum addresses.";
+      return sendError(reply, code, httpMessage, details);
+    }
+
+    const data = frame.tip(address);
+    const code = 200;
+    reply.header("Cache-Control", "no-cache");
+    return reply.status(code).json(data);
+  });
   app.get("/api/v1/parse", async (request, reply) => {
     const embed = await parse(request.query.url);
     reply.header("Cache-Control", "no-cache");
@@ -297,36 +318,15 @@ export async function launch(trie, libp2p) {
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/stories", async (request, reply) => {
-    const index = request.query.index;
-    const hexRegex = /^0x[a-fA-F0-9]{72}$/;
-
-    if (!hexRegex.test(index)) {
-      return reply.status(404).type("text/plain").send("index wasn't found");
-    }
-
     let submission;
     try {
-      submission = await getSubmission(index);
+      submission = await generateStory(request.query.index);
     } catch (err) {
-      console.error(err);
-      log(
-        `Requested index "${index}" but didn't find because of error "${err.toString()}"`,
-      );
-      return reply.status(404).type("text/plain").send("index wasn't found");
+      return reply.status(404).type("text/plain").send(err.message);
     }
 
-    const ensData = await ens.resolve(submission.identity);
-    const value = {
-      ...submission,
-      displayName: ensData.displayName,
-      submitter: ensData,
-    };
-    // NOTE: We aren't awaiting here because this can run in parallel
-    const hexIndex = index.substring(2);
-    generate(hexIndex, value.title, value.submitter);
-
+    const hexIndex = request.query.index.substring(2);
     const content = await story(trie, reply.locals.theme, hexIndex, submission);
-
     reply.header(
       "Cache-Control",
       "public, max-age=10, no-transform, must-revalidate, stale-while-revalidate=600",
@@ -654,7 +654,14 @@ export async function launch(trie, libp2p) {
       .send(await shortcut(reply.locals.theme));
   });
 
-  async function getProfile(trie, theme, address, page, mode) {
+  async function getProfile(
+    trie,
+    theme,
+    address,
+    page,
+    mode,
+    enabledFrame = false,
+  ) {
     let activeMode = "top";
     if (mode === "new") activeMode = "new";
 
@@ -662,7 +669,14 @@ export async function launch(trie, libp2p) {
     if (isNaN(page) || page < 1) {
       page = 0;
     }
-    const content = await upvotes(trie, theme, address, page, activeMode);
+    const content = await upvotes(
+      trie,
+      theme,
+      address,
+      page,
+      activeMode,
+      enabledFrame,
+    );
     return content;
   }
   app.get("/upvotes", async (request, reply) => {
@@ -683,6 +697,7 @@ export async function launch(trie, libp2p) {
       request.query.address,
       request.query.page,
       request.query.mode,
+      request.query.frame === "true",
     );
 
     if (request.query.mode === "new") {
@@ -738,6 +753,7 @@ export async function launch(trie, libp2p) {
         address,
         request.query.page,
         request.query.mode,
+        request.query.frame === "true",
       );
     } catch (err) {
       return next(err);

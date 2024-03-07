@@ -159,6 +159,7 @@ async function recompute(trie, page, period, domain) {
 const pages = {};
 export default async function index(trie, theme, page, period, domain) {
   const key = `${page}-${period}-${domain}`;
+  const totalStories = parseInt(env.TOTAL_STORIES, 10);
   let cacheRes = pages[key];
   let stories;
 
@@ -215,7 +216,7 @@ export default async function index(trie, theme, page, period, domain) {
                 ${ThirdHeader(theme, "new")}
               </tr>
               <tr>
-                ${SecondHeader(theme, "best", period)}
+                ${SecondHeader(theme, "best", period, domain)}
               </tr>
               <tr>
                 <td>
@@ -230,42 +231,48 @@ export default async function index(trie, theme, page, period, domain) {
                   </p>
                 </td>
               </tr>
-              ${stories.map(Row(null, "/best"))}
+              ${stories.map(Row(null, "/best", null, false, false, period))}
               <tr class="spacer" style="height:15px"></tr>
-              <tr>
-                <td>
-                  <table
-                    style="padding: 5px;"
-                    border="0"
-                    cellpadding="0"
-                    cellspacing="0"
-                  >
-                    <tr class="athing" id="35233479">
-                      <td class="title">
-                        <span style="margin-left: 10px;" class="titleline">
-                          <a href="?period=${period}&page=${page + 1}">
-                            More
-                          </a>
-                        </span>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td colspan="2"></td>
-                      <td class="subtext">
-                        <span class="subline">
-                          <span
-                            style="display: inline-block; height: auto;"
-                            class="score"
-                            id="score_35233479"
-                          >
-                          </span>
-                        </span>
-                      </td>
-                    </tr>
-                    <tr class="spacer" style="height:5px"></tr>
-                  </table>
-                </td>
-              </tr>
+              ${stories.length < totalStories
+                ? ""
+                : html`<tr>
+                    <td>
+                      <table
+                        style="padding: 5px;"
+                        border="0"
+                        cellpadding="0"
+                        cellspacing="0"
+                      >
+                        <tr class="athing" id="35233479">
+                          <td class="title">
+                            <span style="margin-left: 10px;" class="titleline">
+                              <a
+                                href="?period=${period}&page=${page + 1}${domain
+                                  ? `&domain=${domain}`
+                                  : ""}"
+                              >
+                                More
+                              </a>
+                            </span>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td colspan="2"></td>
+                          <td class="subtext">
+                            <span class="subline">
+                              <span
+                                style="display: inline-block; height: auto;"
+                                class="score"
+                                id="score_35233479"
+                              >
+                              </span>
+                            </span>
+                          </td>
+                        </tr>
+                        <tr class="spacer" style="height:5px"></tr>
+                      </table>
+                    </td>
+                  </tr>`}
               <tr
                 style="display: block; padding: 10px; background-color: ${theme.color}"
               >

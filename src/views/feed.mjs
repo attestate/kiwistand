@@ -341,6 +341,7 @@ const pages = {};
 
 export default async function (trie, theme, page, domain) {
   const path = "/";
+  const totalStories = parseInt(env.TOTAL_STORIES, 10);
 
   const key = `${page}-${domain}`;
   let cacheRes = pages[key];
@@ -485,16 +486,18 @@ export default async function (trie, theme, page, domain) {
               ${stories.slice(0, 6).map(Row(start, "/"))}
               ${sheets && !domain ? CanonRow(sheets) : ""}
               ${stories.slice(6).map(Row(start, "/"))}
-              <tr style="height: 50px">
-                <td>
-                  <a
-                    style="padding: 20px 0 0 20px; font-size: 1.1rem;"
-                    href="${query}"
-                  >
-                    More
-                  </a>
-                </td>
-              </tr>
+              ${stories.length < totalStories
+                ? ""
+                : html`<tr style="height: 50px">
+                    <td>
+                      <a
+                        style="padding: 20px 0 0 20px; font-size: 1.1rem;"
+                        href="${query}"
+                      >
+                        More
+                      </a>
+                    </td>
+                  </tr>`}
               <tr
                 style="display: block; padding: 10px; background-color: #E6E6DF;"
               >
