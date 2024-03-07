@@ -1,1 +1,15 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="Livello_1" data-name="Livello 1" viewBox="0 0 240 240"><script xmlns="" id="argent-x-extension" data-extension-id="dlcobpjiigpikoobohmabehhmhfoodbb"/><script xmlns="" async="false" src="chrome-extension://pdgbckgdncnhihllonhnjbdoighgpimk/js/vendor.js"/><script xmlns="" async="false" src="chrome-extension://pdgbckgdncnhihllonhnjbdoighgpimk/js/injected/injectWalletGuard.js"/><defs><linearGradient id="linear-gradient" x1="120" y1="240" x2="120" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#1d93d2"/><stop offset="1" stop-color="#38b0e3"/></linearGradient></defs><title>Telegram_logo</title><circle cx="120" cy="120" r="120" fill="url(#linear-gradient)"/><path d="M81.229,128.772l14.237,39.406s1.78,3.687,3.686,3.687,30.255-29.492,30.255-29.492l31.525-60.89L81.737,118.6Z" fill="#c8daea"/><path d="M100.106,138.878l-2.733,29.046s-1.144,8.9,7.754,0,17.415-15.763,17.415-15.763" fill="#a9c6d8"/><path d="M81.486,130.178,52.2,120.636s-3.5-1.42-2.373-4.64c.232-.664.7-1.229,2.1-2.2,6.489-4.523,120.106-45.36,120.106-45.36s3.208-1.081,5.1-.362a2.766,2.766,0,0,1,1.885,2.055,9.357,9.357,0,0,1,.254,2.585c-.009.752-.1,1.449-.169,2.542-.692,11.165-21.4,94.493-21.4,94.493s-1.239,4.876-5.678,5.043A8.13,8.13,0,0,1,146.1,172.5c-8.711-7.493-38.819-27.727-45.472-32.177a1.27,1.27,0,0,1-.546-.9c-.093-.469.417-1.05.417-1.05s52.426-46.6,53.821-51.492c.108-.379-.3-.566-.848-.4-3.482,1.281-63.844,39.4-70.506,43.607A3.21,3.21,0,0,1,81.486,130.178Z" fill="#fff"/><script xmlns="" id="bw-fido2-page-script"/></svg>
+<svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0_35_487)">
+<path d="M50 775C450.406 775 775 450.406 775 50C775 -350.406 450.406 -675 50 -675C-350.406 -675 -675 -350.406 -675 50C-675 450.406 -350.406 775 50 775Z" fill="url(#paint0_linear_35_487)"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M24.9846 46.6637C40.5437 39.8898 50.9189 35.424 56.1101 33.2664C70.9321 27.1059 74.012 26.0357 76.0195 26.0004C76.461 25.9926 77.4482 26.1019 78.0877 26.6204C78.6276 27.0583 78.7762 27.6497 78.8473 28.0648C78.9183 28.4799 79.0069 29.4255 78.9365 30.1643C78.1333 38.5976 74.6578 59.0629 72.8897 68.5083C72.1415 72.505 70.6684 73.8451 69.2422 73.9762C66.1428 74.2612 63.7892 71.9294 60.7872 69.963C56.0898 66.886 53.436 64.9706 48.8763 61.968C43.6068 58.498 47.0228 56.5908 50.0259 53.474C50.8118 52.6583 64.468 40.246 64.7323 39.12C64.7653 38.9792 64.796 38.4543 64.4839 38.1771C64.1719 37.8999 63.7113 37.9947 63.3789 38.0701C62.9078 38.177 55.4035 43.1334 40.8662 52.9393C38.7361 54.4009 36.8068 55.1131 35.0782 55.0757C33.1725 55.0346 29.5068 53.999 26.7817 53.1139C23.4392 52.0282 20.7827 51.4541 21.014 49.6103C21.1345 48.6499 22.458 47.6677 24.9846 46.6637Z" fill="white"/>
+</g>
+<defs>
+<linearGradient id="paint0_linear_35_487" x1="71825" y1="-675" x2="71825" y2="143250" gradientUnits="userSpaceOnUse">
+<stop stop-color="#2AABEE"/>
+<stop offset="1" stop-color="#229ED9"/>
+</linearGradient>
+<clipPath id="clip0_35_487">
+<rect width="100" height="100" fill="white"/>
+</clipPath>
+</defs>
+</svg>

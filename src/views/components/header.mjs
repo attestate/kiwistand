@@ -51,27 +51,28 @@ const header = async (theme, path) => {
                 </div>
               </nav-header-avatar>
 
-              <a
-                href="/"
-                style="width: 33%; display: flex; justify-content: center;"
-              >
-                <span style="padding: 0 20px 0 20px" ; class="pagetop">
-                  <b class="hnname">
-                    <span>${theme.emoji}</span>
-                  </b>
-                </span>
-              </a>
+                <a
+                  href="/"
+                  style="width: 33%; display: flex; justify-content: center;"
+                >
+                  <span style="padding: 0 20px 0 20px" ; class="pagetop">
+                    <b class="hnname">
+                      <span>${theme.emoji}</span>
+                    </b>
+                  </span>
+                </a>
 
-              <div
-                style="width: 33%; padding: 7px 7px 7px 0; display: flex; justify-content: flex-end;"
-              >
-                <div id="connectButton"></div>
+                <div
+                  style="width: 33%; padding: 7px 7px 7px 0; display: flex; justify-content: flex-end;"
+                >
+                  <div id="connectButton"></div>
+                </div>
               </div>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </td>`;
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </td>`;
+  }
 };
 export default header;

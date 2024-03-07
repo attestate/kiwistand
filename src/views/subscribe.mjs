@@ -18,7 +18,7 @@ export default async function index(theme) {
         ${custom(
           ogImage,
           "Subscribe to Kiwi News",
-          "Stay in touch with Kiwi News by subscribing to our weekly news letter or by follwing us on social media.",
+          "Stay in touch with Kiwi News by subscribing to our weekly newsletter or by follwing us on social media.",
         )}
       </head>
       <body>

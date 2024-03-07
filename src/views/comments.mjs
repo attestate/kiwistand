@@ -90,9 +90,15 @@ export async function page(theme, notifications) {
     const borderColor = "rgba(0,0,0,0.10)";
     return generateCommentRow(activity, identity, borderColor);
   });
+  const ogImage = "https://news.kiwistand.com/kiwi_comments_page.png";
   const content = html`
     <html lang="en" op="news">
       <head>
+        ${custom(ogImage)}
+        <meta
+          name="description"
+          content="Follow crypto discussions happening on Kiwi and join the conversation."
+        />
         ${Head}
       </head>
       <body>

@@ -85,13 +85,13 @@ export default async function (theme, userAddress, transactionHash) {
                     <h1 style="color: black; text-align: center; margin-top: 30px;">Share</h1>
                     <div style="margin: 1rem; display:flex; justify-content:center; align-items:center;">
               <a href="https://warpcast.com/~/compose?text=I+just+minted+a+@kiwi&embeds[]=https://news.kiwistand.com/kiwipass-mint?referral=${userAddress}" target="_blank" style="display: inline-flex; justify-content: center; align-items: center; margin-right: 1rem;">
-            <img src="farcaster_logo.svg" alt="Farcaster" style="width: 50px; height: 50px;" />
+            <img src="farcaster_logo.svg" alt="Farcaster" style="width: 50px; height: 50px; border-radius: 2px;" />
           </a>
           <a href="https://twitter.com/intent/tweet?url=https%3A%2F%2Fnews.kiwistand.com%2Fkiwipass-mint?referral=${userAddress}&text=I%20just%20minted%20a%20kiwi%21" target="_blank" style="display: inline-flex; justify-content: center; align-items: center; margin-right: 1rem;">
-            <img src="x_logo.svg" alt="X" style="width: 50px; height: 50px;" />
+            <img src="x_logo.svg" alt="X" style="width: 50px; height: 50px; border-radius: 2px;" />
           </a>
           <a href="https://t.me/share/url?url=https%3A%2F%2Fnews.kiwistand.com%2Fkiwipass-mint?referral=${userAddress}&text=I%20just%20minted%20a%20kiwi" target="_blank" style="display: inline-flex; justify-content: center; align-items: center;">
-            <img src="telegram_logo.svg" alt="Telegram" style="width: 50px; height: 50px;" />
+            <img src="telegram_logo.svg" alt="Telegram" style="width: 50px; height: 50px; border-radius: 2px;" />
           </a>
 
           </div>

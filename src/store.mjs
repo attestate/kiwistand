@@ -411,7 +411,6 @@ export async function leaf(trie, index, parser) {
   }
 
   let node;
-  const throwIfMissing = true;
   try {
     const path = await trie.findPath(index, throwIfMissing);
     node = path.node;
@@ -443,7 +442,6 @@ export async function post(trie, index, parser, allowlist, delegations) {
   const identity = eligible(allowlist, delegations, signer);
   if (!identity) {
     throw new Error(`Identity not found: ${signer}`);
-    return null;
   }
 
   let upvoters = [];

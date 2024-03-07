@@ -125,6 +125,12 @@ const footer = (theme, path) => html`
     <span> | </span>
     <a target="_blank" href="https://github.com/attestate/kiwistand">Source code</a>
     <span> | </span>
+    <a target="_blank" href="https://github.com/attestate/kiwistand">Source code</a>
+    <span> | </span>
+    <a target="_blank" href="https://github.com/attestate/kiwistand">Source code</a>
+    <span> | </span>
+    <a target="_blank" href="https://github.com/attestate/kiwistand">Source code</a>
+    <span> | </span>
     <a href="https://dune.com/rvolz/kiwi-news" target"_blank">Dune Dashboard</a>
     <span> | </span>
     <a

@@ -632,6 +632,13 @@ export async function launch(trie, libp2p) {
       .type("text/html")
       .send(await kiwipass(reply.locals.theme));
   });
+  app.get("/kiwipass-mint", async (request, reply) => {
+    reply.header("Cache-Control", "public, max-age=3600, must-revalidate");
+    return reply
+      .status(200)
+      .type("text/html")
+      .send(await kiwipassmint(reply.locals.theme));
+  });
   app.get("/memecoin", async (request, reply) => {
     reply.header("Cache-Control", "public, must-revalidate");
     return reply
