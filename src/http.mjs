@@ -187,6 +187,13 @@ export async function launch(trie, libp2p) {
       .type("text/html")
       .send(await kiwipassmint(reply.locals.theme));
   });
+  app.post("/api/v1/writers/success", async (request, reply) => {
+    console.log(request.body);
+    const content = frame.callback(request.body.transaction_hash);
+    const code = 200;
+    reply.header("Cache-Control", "no-cache");
+    return reply.status(code).type("text/html").send(content);
+  });
   app.post("/api/v1/writers/:address", async (request, reply) => {
     let address;
     try {
@@ -198,16 +205,10 @@ export async function launch(trie, libp2p) {
       return sendError(reply, code, httpMessage, details);
     }
 
-    const callback = request.query.callback === "true";
-    if (callback) {
-      const content = frame.callback(request.body.transaction_hash);
-      const code = 200;
-      return reply.status(200).type("text/html").send(content);
-    } else {
-      const data = frame.tip(address);
-      const code = 200;
-      return reply.status(code).json(data);
-    }
+    const data = frame.tip(address);
+    const code = 200;
+    reply.header("Cache-Control", "no-cache");
+    return reply.status(code).json(data);
   });
   app.get("/api/v1/parse", async (request, reply) => {
     const embed = await parse(request.query.url);

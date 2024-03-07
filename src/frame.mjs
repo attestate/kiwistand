@@ -45,7 +45,7 @@ export function callback(hash) {
         <meta property="fc:frame" content="vNext" />
         <meta
           name="fc:frame:image"
-          content="https://news.kiwistand.com/previews/success.jpg"
+          content="https://og.onceupon.gg/card/${hash}"
         />
         <meta property="fc:frame:button:1" content="See transaction" />
         <meta property="fc:frame:button:1:action" content="link" />
@@ -66,7 +66,7 @@ export function profileHeader(name, address) {
     <meta property="fc:frame" content="vNext" />
     <meta
       property="fc:frame:post_url"
-      content="https://news.kiwistand.com/api/v1/writers/${address}?callback=true"
+      content="https://news.kiwistand.com/api/v1/writers/success"
     />
     <meta
       name="fc:frame:image"
