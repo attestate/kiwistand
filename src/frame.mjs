@@ -5,7 +5,7 @@ import vhtml from "vhtml";
 
 const html = htm.bind(vhtml);
 
-const disperseContract = "0x1682E34D44838863E85Ec104D64eC7075711d500";
+const disperseContract = "0xD152f549545093347A162Dce210e7293f1452150";
 const disperseSelector = {
   constant: false,
   inputs: [
