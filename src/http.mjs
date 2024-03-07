@@ -188,8 +188,7 @@ export async function launch(trie, libp2p) {
       .send(await kiwipassmint(reply.locals.theme));
   });
   app.post("/api/v1/writers/success", async (request, reply) => {
-    console.log(request.body);
-    const content = frame.callback(request.body.untrustedData?.transactionId);
+    const content = frame.callback(request.body?.untrustedData?.transactionId);
     const code = 200;
     reply.header("Cache-Control", "no-cache");
     return reply.status(code).type("text/html").send(content);

@@ -39,14 +39,14 @@ export function tip(address) {
 }
 
 export function callback(hash) {
+  const ogImage = "https://news.kiwistand.com/txsuccess.jpeg";
   return html`
-    <html lang="en" op="news">
+    <html>
       <head>
         <meta property="fc:frame" content="vNext" />
-        <meta
-          name="fc:frame:image"
-          content="https://og.onceupon.gg/card/${hash}"
-        />
+        <meta property="og:title" content="Writer's frame" />
+        <meta property="og:image" content="${ogImage}" />
+        <meta name="fc:frame:image" content="${ogImage}" />
         <meta property="fc:frame:button:1" content="See transaction" />
         <meta property="fc:frame:button:1:action" content="link" />
         <meta
@@ -54,9 +54,7 @@ export function callback(hash) {
           content="https://basescan.org/tx/${hash}"
         />
       </head>
-      <body>
-        no content
-      </body>
+      <body></body>
     </html>
   `;
 }
