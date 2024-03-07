@@ -39,7 +39,7 @@ export function tip(address) {
 }
 
 export function callback(hash) {
-  const ogImage = "https://news.kiwistand.com/txsuccess.jpeg";
+  const ogImage = "https://news.kiwistand.com/txsuccess.jpg";
   return html`
     <html>
       <head>
