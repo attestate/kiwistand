@@ -75,9 +75,6 @@ export const PriceComponent = (props) => {
 
   const salesPrice = salesDetails?.data?.publicSalePrice || 0;
   let total = salesPrice;
-  if (total && props.fee) {
-    total = total + parseEther(props.fee);
-  }
 
   const usdPrice = ethPrice
     ? `$${(formatEther(total) * ethPrice).toFixed(2)}`

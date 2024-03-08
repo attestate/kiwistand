@@ -316,10 +316,13 @@ export default async function (theme) {
                         Kiwipass NFT lets you submit, upvote & comment links on
                         Kiwi
                       </h2>
+                      <div>
+                        Price: <span> <nft-price /></span>
+                      </div>
                       <div id="buy-button-container">
                         <button class="buy-button" disabled>
                           Loading...
-                          <span> <nft-price data-fee="0.000777" /></span>
+                          <span> <nft-price /></span>
                         </button>
                       </div>
                       <br />

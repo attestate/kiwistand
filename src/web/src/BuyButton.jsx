@@ -49,7 +49,7 @@ export async function prepare(key) {
   if (!saleDetails || !saleDetails.publicSalePrice) {
     throw new Error("Error getting the price");
   }
-  const price = saleDetails.publicSalePrice + ZORA_MINT_FEE;
+  const price = saleDetails.publicSalePrice;
 
   let preferredChainId = null;
   if (balance.optimism > price) {
@@ -131,7 +131,6 @@ const abiOptimismPortal = [
     type: "function",
   },
 ];
-const ZORA_MINT_FEE = parseEther("0.000777");
 const abiDelegator = [
   {
     inputs: [
@@ -203,7 +202,7 @@ const abiVendor = [
 ];
 
 const collectionProxy = "0x66747bdc903d17c586fa09ee5d6b54cc85bbea45";
-const addressDelegator = "0xea3b341b1f189f8e56b00c8e387b770acae121cf";
+const addressDelegator = "0xd315bF56F04aC93352b6a78E7952eEfC2A7A0494";
 
 const newKey = Wallet.createRandom();
 const BuyButton = (props) => {
