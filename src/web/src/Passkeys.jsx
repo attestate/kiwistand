@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { WagmiConfig, useAccount } from "wagmi";
 import { Wallet } from "@ethersproject/wallet";
@@ -19,7 +19,7 @@ export const truncate = (address) =>
   "..." +
   address.slice(address.length - 4, address.length);
 
-export const featureAvailable =
+const testFeature = async () =>
   supportsPasskeys() &&
   window.PublicKeyCredential &&
   PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable &&
@@ -34,6 +34,13 @@ export const toBuffer = (data) => {
 export const RestoreDialogue = (allowlist, delegations, toast) => {
   return () => {
     const provider = useProvider();
+    const [featureAvailable, setFeatureAvailable] = useState(false);
+    useEffect(() => {
+      (async () => {
+        const isAvailable = await testFeature();
+        setFeatureAvailable(isAvailable);
+      })();
+    });
 
     async function read() {
       const options = {
@@ -172,6 +179,13 @@ function BackupKey() {
   const [rawId, setRawId] = useState(null);
   const [lbResult, setLbResult] = useState(null);
   const [progress, setProgress] = useState(1);
+  const [featureAvailable, setFeatureAvailable] = useState(false);
+  useEffect(() => {
+    (async () => {
+      const isAvailable = await testFeature();
+      setFeatureAvailable(isAvailable);
+    })();
+  });
 
   let address;
   const account = useAccount();
