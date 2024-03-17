@@ -301,6 +301,8 @@ const BuyButton = (props) => {
   ) {
     let chainId = config && config.request ? config.request.chainId : null;
     if (
+      config &&
+      config.request &&
       config.request.chainId !== chain.id &&
       config.request.chainId === mainnet.id
     ) {
@@ -308,9 +310,19 @@ const BuyButton = (props) => {
       chainId = mainnet.id;
     }
     if (
+      config &&
+      config.request &&
       config.request.chainId !== chain.id &&
       config.request.chainId === optimism.id
     ) {
+      name = "Optimism";
+      chainId = optimism.id;
+    }
+    if (error && error.message.includes(`Expected "Ethereum"`)) {
+      name = "Ethereum";
+      chainId = mainnet.id;
+    }
+    if (error && error.message.includes(`Expected "OP Mainnet"`)) {
       name = "Optimism";
       chainId = optimism.id;
     }
