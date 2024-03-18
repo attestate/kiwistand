@@ -43,8 +43,24 @@ export function getLocalAccount(identity) {
   return null;
 }
 
+export function isBraveOnIOS() {
+  const ua = navigator.userAgent;
+  const iOS = !!ua.match(/iPad/i) || !!ua.match(/iPhone/i);
+  const brave = !!ua.match(/Brave/i);
+  return iOS && brave;
+}
+
+export function isChromeOnIOS() {
+  const ua = navigator.userAgent;
+  const iOS = !!ua.match(/iPad/i) || !!ua.match(/iPhone/i);
+  const chrome = !!ua.match(/Chrome/i);
+  return iOS && chrome;
+}
+
 export function supportsPasskeys() {
-  return isSafariOnMacOS() || isSafariOnIOS();
+  return (
+    isSafariOnMacOS() || isSafariOnIOS() || isBraveOnIOS() || isChromeOnIOS()
+  );
 }
 
 export function isSafariOnMacOS() {
