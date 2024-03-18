@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@attestate/delegator2": "0.1.2",
-    "@dawnpay/kit": "0.0.9",
+    "@dawnpay/kit": "0.0.11",
     "@ethersproject/providers": "5.7.2",
     "@ethersproject/units": "5.7.0",
     "@ethersproject/wallet": "5.7.0",

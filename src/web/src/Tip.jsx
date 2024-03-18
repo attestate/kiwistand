@@ -1,8 +1,7 @@
 // @format
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { WagmiConfig, useAccount } from "wagmi";
-import { PayKitProvider } from "@dawnpay/kit";
-import { useDawnPay } from "@dawnpay/kit";
+import { DawnProvider, useDawnPay } from "@dawnpay/kit";
 
 import { client, chains } from "./client.mjs";
 import { getLocalAccount } from "./session.mjs";
@@ -11,32 +10,26 @@ const Container = (props) => {
   return (
     <WagmiConfig config={client}>
       <RainbowKitProvider chains={chains}>
-        <PayKitProvider>
+        <DawnProvider>
           <Tip {...props} />
-        </PayKitProvider>
+        </DawnProvider>
       </RainbowKitProvider>
     </WagmiConfig>
   );
 };
 
 const Tip = (props) => {
-  if (!window.ethereum) return null;
   const { pay } = useDawnPay();
 
   const handlePayClick = async () => {
-    await pay(props.address, props.metadata);
+    const amount = 0.69;
+    await pay(props.address, amount, props.metadata);
   };
 
-  let address;
   const account = useAccount();
-  const localAccount = getLocalAccount(account.address);
-  if (account.isConnected) {
-    address = account.address;
+  if (!account.isConnected) {
+    return;
   }
-  if (localAccount) {
-    address = localAccount.identity;
-  }
-  if (props.address === address) return;
 
   return (
     <span>
