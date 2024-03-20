@@ -306,7 +306,7 @@ export default async function (theme) {
                         </button>
                       </a>
                       <span style="margin-left: 5px;"
-                        ><b>Price:</b> <nft-price data-fee="0.000777"
+                        ><b>Price:</b> <nft-price
                       /></span>
                     </div>
                     <div class="full-width-container">
@@ -465,28 +465,9 @@ export default async function (theme) {
                       >
                         <div class="text-content">
                           <div class="text-row">
-                            <div>Lifetime membership</div>
-                            <div>
-                              <nft-price />
-                            </div>
-                          </div>
-                          <div class="text-row">
-                            <div>
-                              <b>ZORA</b> mint fee
-                              <span> </span>
-                              (<a
-                                style="font-size: 0.8rem; text-decoration: underline;"
-                                href="https://support.zora.co/en/articles/8192123-understanding-protocol-rewards-on-zora"
-                                target="_blank"
-                                >Learn more</a
-                              >)
-                            </div>
-                            <div>0.000777 ETH</div>
-                          </div>
-                          <div class="text-row">
                             <div>Total</div>
                             <div>
-                              <nft-price data-fee="0.000777" />
+                              <nft-price />
                             </div>
                           </div>
                           <div id="buy-button-container">

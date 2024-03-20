@@ -4,8 +4,21 @@ import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { eligible } from "@attestate/delegator2";
 
 import { getLocalAccount } from "./session.mjs";
-import { client, chains, useProvider } from "./client.mjs";
+import { client, chains, getProvider } from "./client.mjs";
 import { fetchKarma } from "./API.mjs";
+
+export const resolveAvatar = async (address) => {
+  if (!address) return;
+
+  const provider = getProvider({ chainId: 1 });
+  const name = await provider.lookupAddress(address);
+  if (!name) return;
+
+  const ensResolver = await provider.getResolver(name);
+  if (!ensResolver) return;
+
+  return (await ensResolver.getAvatar()).url;
+};
 
 const Avatar = (props) => {
   let address;
@@ -22,20 +35,11 @@ const Avatar = (props) => {
 
   const [avatar, setAvatar] = useState("");
   const [points, setPoints] = useState(0);
-  const provider = useProvider({ chainId: 1 });
 
   useEffect(() => {
     const getAvatar = async () => {
-      if (!address) return;
-
-      const name = await provider.lookupAddress(address);
-      if (!name) return;
-
-      const ensResolver = await provider.getResolver(name);
-      if (!ensResolver) return;
-
-      const avatarUrl = await ensResolver.getAvatar();
-      setAvatar(avatarUrl.url);
+      const avatarUrl = await resolveAvatar(address);
+      setAvatar(avatarUrl);
     };
     const getPoints = async () => {
       if (!address) return;
@@ -48,7 +52,7 @@ const Avatar = (props) => {
 
     getPoints();
     getAvatar();
-  }, [address, account.isConnected, provider]);
+  }, [address, account.isConnected]);
 
   if (avatar && points) {
     return (

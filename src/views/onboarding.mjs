@@ -272,36 +272,6 @@ export default async function (theme, identity) {
                   <br />
                   <br />
                   <br />
-                  ${identity
-                    ? html`<div style="text-align: left;">
-                          <h2>Earn Protocol Rewards!</h2>
-                          <p>
-                            Reading together is more fun than alone! So invite
-                            your friends and earn Zora's Protocol Rewards!
-                            0.000222 ETH per referred mint!
-                          </p>
-                          <div style="display: flex; align-items: center;">
-                            <button
-                              onclick="document.getElementById('invitelink').select(); document.execCommand('copy');"
-                              id="button-onboarding"
-                              style="border-radius: 2px; padding: 10px 15px; background-color: black; border: 1px
- solid black; color: white; cursor: pointer; width: 50%; margin-right: 10px;"
-                            >
-                              Copy invite link
-                            </button>
-                            <input
-                              id="invitelink"
-                              type="text"
-                              value="https://news.kiwistand.com/welcome?referral=${identity}"
-                              readonly
-                              style="width: 70%; padding: 10px 15px; border: 1px solid #ccc; border-radius: 2px;"
-                            />
-                          </div>
-                        </div>
-                        <br />
-                        <br />
-                        <br />`
-                    : ""}
                   <p>
                     If you had any questions, feel free to reach out to
                     @macbudkowski or @timdaub on Telegram!

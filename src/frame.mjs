@@ -5,7 +5,7 @@ import vhtml from "vhtml";
 
 const html = htm.bind(vhtml);
 
-const disperseContract = "0xD152f549545093347A162Dce210e7293f1452150";
+const disperseContract = "0x0A00984E7D5dF669Fa5eA4Ff17aB8c1CF76Be3aE";
 const disperseSelector = {
   constant: false,
   inputs: [
@@ -24,7 +24,7 @@ const kiwiMultisig = "0xe657a66b0E155975ecceb5C95f0B20A4Ff5F5671";
 export function tip(address) {
   const data = encodeFunctionCall(disperseSelector, [
     [address, kiwiMultisig],
-    [utils.parseEther("0.0013"), utils.parseEther("0.0002")],
+    [utils.parseEther("0.0009"), utils.parseEther("0.0001")],
   ]);
   return {
     chainId: "eip155:8453",
@@ -33,17 +33,18 @@ export function tip(address) {
       abi: [disperseSelector],
       to: disperseContract,
       data: data,
-      value: utils.parseEther("0.0015").toString(),
+      value: utils.parseEther("0.001").toString(),
     },
   };
 }
 
 export function callback(hash) {
-  const ogImage = "https://news.kiwistand.com/txsuccess.jpeg";
+  const ogImage = "https://news.kiwistand.com/txsuccess.jpg";
   return html`
     <html>
       <head>
         <meta property="fc:frame" content="vNext" />
+        <meta name="fc:frame:image:aspect_ratio" content="1.91:1" />
         <meta property="og:title" content="Writer's frame" />
         <meta property="og:image" content="${ogImage}" />
         <meta name="fc:frame:image" content="${ogImage}" />
@@ -70,7 +71,11 @@ export function profileHeader(name, address) {
       name="fc:frame:image"
       content="https://news.kiwistand.com/previews/${name}.jpg"
     />
-    <meta property="fc:frame:button:1" content="Send 0.0015 ETH ($5) on Base" />
+    <meta name="fc:frame:image:aspect_ratio" content="1.91:1" />
+    <meta
+      property="fc:frame:button:1"
+      content="Send 0.001 ETH (~ $4) on Base"
+    />
     <meta property="fc:frame:button:1:action" content="tx" />
     <meta
       property="fc:frame:button:1:target"

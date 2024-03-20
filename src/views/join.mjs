@@ -296,7 +296,7 @@ export default async function (theme) {
                         <img src="LP_links.png" />
                       </div>
                     </div>
-                    <p><b>Price:</b> <nft-price data-fee="0.000777" /></p>
+                    <p><b>Price:</b> <nft-price /></p>
                     <a href="#mint-dialogue">
                       <button
                         id="button-onboarding"
@@ -519,28 +519,9 @@ export default async function (theme) {
                       >
                         <div class="text-content">
                           <div class="text-row">
-                            <div>1 NFT</div>
-                            <div>
-                              <nft-price />
-                            </div>
-                          </div>
-                          <div class="text-row">
-                            <div>
-                              <b>ZORA</b> mint fee
-                              <span> </span>
-                              (<a
-                                style="font-size: 0.8rem; text-decoration: underline;"
-                                href="https://support.zora.co/en/articles/8192123-understanding-protocol-rewards-on-zora"
-                                target="_blank"
-                                >Learn more</a
-                              >)
-                            </div>
-                            <div>0.000777 ETH</div>
-                          </div>
-                          <div class="text-row">
                             <div>Total</div>
                             <div>
-                              <nft-price data-fee="0.000777" />
+                              <nft-price />
                             </div>
                           </div>
                           <div id="buy-button-container">
