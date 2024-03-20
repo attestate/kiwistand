@@ -268,6 +268,15 @@ export default async function (
                             "Warpcast",
                           )
                         : ""}
+                      ${ensData.ens
+                        ? SocialButton(
+                            `https://warpcast.com/~/compose?embeds[]=${encodeURIComponent(
+                              `https://news.kiwistand.com/${ensData.ens}?frame=true`,
+                            )}`,
+                            warpcastSvg(),
+                            "Ask for tips",
+                          )
+                        : ""}
                     </div>
                   </div>
                 </td>
