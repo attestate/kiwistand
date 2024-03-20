@@ -35,8 +35,8 @@ export function writersFrame(username, avatar) {
       ${avatar
         ? html`<img
             style=${{
-              height: "10rem",
-              width: "10rem",
+              height: "20rem",
+              width: "20rem",
               borderRadius: "2px",
               border: "2px solid black",
               marginBottom: "2rem",
@@ -47,7 +47,7 @@ export function writersFrame(username, avatar) {
       <p
         style=${{
           fontFamily: "VerdanaBold",
-          fontSize: "3rem",
+          fontSize: "4rem",
           color: "black",
           margin: "0 0 1rem 0",
         }}
@@ -56,8 +56,9 @@ export function writersFrame(username, avatar) {
       </p>
       <p
         style=${{
-          fontSize: "2rem",
+          fontSize: "3rem",
           textAlign: "center",
+          color: "black",
         }}
       >
         Support my writing by buying me a coffee!
