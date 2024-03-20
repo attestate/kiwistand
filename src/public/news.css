@@ -22,13 +22,19 @@ body {
 }
 .share-container {
    display: none;
- }
+}
+.inverse-share-container {
+  display: inline;
+}
 .tipsbuttoncontainer div {
   display: inline;
 }
 @media screen and (max-width: 768px) {
   .share-container {
     display: inline;
+  }
+  .inverse-share-container {
+    display: none;
   }
 }
 .hnname span:active, .votearrow:active {

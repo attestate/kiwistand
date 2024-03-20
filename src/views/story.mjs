@@ -34,6 +34,7 @@ import * as karma from "../karma.mjs";
 import { metadata, render } from "../parser.mjs";
 import { getSubmission } from "../cache.mjs";
 import * as preview from "../preview.mjs";
+import ShareIcon from "./components/shareicon.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -273,18 +274,35 @@ export default async function (trie, theme, index, value) {
                                       >`
                                     : comment.displayName}</b
                                 >
-                                <span> • </span>
-                                <a
-                                  class="meta-link"
-                                  href="/stories?index=0x${index}#0x${comment.index}"
-                                >
-                                  <span>
-                                    ${formatDistanceToNowStrict(
-                                      new Date(comment.timestamp * 1000),
+                                <span class="inverse-share-container">
+                                  <span> • </span>
+                                  <a
+                                    class="meta-link"
+                                    href="/stories?index=0x${index}#0x${comment.index}"
+                                  >
+                                    <span>
+                                      ${formatDistanceToNowStrict(
+                                        new Date(comment.timestamp * 1000),
+                                      )}
+                                    </span>
+                                    <span> ago</span>
+                                  </a>
+                                </span>
+                                <span class="share-container">
+                                  <span> • </span>
+                                  <a
+                                    href="#"
+                                    class="caster-link share-link"
+                                    title="Share"
+                                    style="white-space: nowrap;"
+                                    onclick="event.preventDefault(); navigator.share({url: 'https://news.kiwistand.com/stories?index=0x${index}#0x${comment.index}'});"
+                                  >
+                                    ${ShareIcon(
+                                      "padding: 0 3px 1px 0; vertical-align: middle; height: 13px; width: 13px;",
                                     )}
-                                  </span>
-                                  <span> ago</span>
-                                </a>
+                                    Share
+                                  </a>
+                                </span>
                               </div>
                               <br />
                               ${comment.flagged && comment.reason
