@@ -73,6 +73,7 @@
     "it-all": "2.0.0",
     "it-length-prefixed": "8.0.4",
     "it-map": "2.0.0",
+    "jsdom": "24.0.0",
     "libp2p": "0.40.0",
     "linkify-string": "4.1.3",
     "lmdb": "2.7.9",

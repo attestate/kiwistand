@@ -25,6 +25,29 @@ function safeExtractDomain(link) {
 
 const UrlInput = (props) => {
   const { url, setURL } = props;
+  const [checkedURLs, setCheckedURLs] = useState(new Set());
+
+  useEffect(() => {
+    if (
+      !checkedURLs.has(url) &&
+      (url.includes("http") || url.includes("https"))
+    ) {
+      fetchMetadata(url);
+    }
+  }, [url]);
+  const fetchMetadata = async (url) => {
+    try {
+      const response = await fetch(`/api/v1/metadata?url=${url}`);
+      const data = await response.json();
+
+      if (data.data && data.data.canonicalLink) {
+        setURL(data.data.canonicalLink);
+        setCheckedUrls(new Set(checkedUrls).add(url));
+      }
+    } catch (error) {
+      console.error("Error fetching metadata:", error);
+    }
+  };
 
   return (
     <div style={{ maxWidth: "600px" }}>

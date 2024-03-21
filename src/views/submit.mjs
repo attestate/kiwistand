@@ -21,6 +21,9 @@ export default async function submit(theme, url = "", title = "") {
     if (data && data.ogTitle) {
       title = data.ogTitle;
     }
+    if (data && data.canonicalLink) {
+      url = data.canonicalLink;
+    }
   }
   const path = "/submit";
   const story = {

@@ -10,6 +10,7 @@ import { utils } from "ethers";
 import htm from "htm";
 import "express-async-errors";
 import multer from "multer";
+
 import log from "./logger.mjs";
 import { SCHEMATA } from "./constants.mjs";
 import themes from "./themes.mjs";
@@ -46,7 +47,7 @@ import indexing from "./views/indexing.mjs";
 import demonstration from "./views/demonstration.mjs";
 import * as curation from "./views/curation.mjs";
 import * as moderation from "./views/moderation.mjs";
-import { parse } from "./parser.mjs";
+import { parse, metadata } from "./parser.mjs";
 import { toAddress, resolve } from "./ens.mjs";
 import * as registry from "./chainstate/registry.mjs";
 import * as store from "./store.mjs";
@@ -208,6 +209,23 @@ export async function launch(trie, libp2p) {
     const code = 200;
     reply.header("Cache-Control", "no-cache");
     return reply.status(code).json(data);
+  });
+  app.get("/api/v1/metadata", async (request, reply) => {
+    reply.header("Cache-Control", "no-cache");
+
+    let data;
+    try {
+      data = await metadata(request.query.url);
+    } catch (err) {
+      const code = 500;
+      const httpMessage = "Internal Server Error";
+      const details = "Failed to parse link metadata";
+      return sendError(reply, code, httpMessage, details);
+    }
+    const code = 200;
+    const httpMessage = "OK";
+    const details = "Downloaded and parsed URL's metadata";
+    return sendStatus(reply, code, httpMessage, details, data);
   });
   app.get("/api/v1/parse", async (request, reply) => {
     const embed = await parse(request.query.url);

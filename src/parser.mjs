@@ -1,8 +1,20 @@
+import { env } from "process";
+import path from "path";
+
 import ogs from "open-graph-scraper";
 import htm from "htm";
 import vhtml from "vhtml";
+import { JSDOM } from "jsdom";
+import { fetchBuilder, FileSystemCache } from "node-fetch-cache";
 
 import cache from "./cache.mjs";
+
+const fetch = fetchBuilder.withCache(
+  new FileSystemCache({
+    cacheDirectory: path.resolve(env.CACHE_DIR),
+    ttl: 86400000, // 24 hours
+  }),
+);
 
 const html = htm.bind(vhtml);
 
@@ -16,15 +28,37 @@ const filtered = [
   "x.com",
 ];
 
+async function extractCanonicalLink(html) {
+  const dom = new JSDOM(html);
+  const node = dom.window.document.querySelector('link[rel="canonical"]');
+  if (!node) return;
+
+  let response;
+  try {
+    response = await fetch(node.href);
+  } catch (err) {
+    return;
+  }
+
+  if (response.status !== 200) {
+    return;
+  }
+
+  return node.href;
+}
+
 export const metadata = async (url) => {
-  let result;
+  let result, html;
   if (cache.has(url)) {
-    result = cache.get(url);
+    const fromCache = cache.get(url);
+    result = fromCache.result;
+    html = fromCache.html;
   } else {
     const response = await ogs({ url });
     result = response.result;
+    html = response.html;
+    cache.set(url, { result, html });
   }
-  cache.set(url, result);
 
   const domain = safeExtractDomain(url);
   if (filtered.includes(domain) || (result && !result.success)) {
@@ -41,6 +75,8 @@ export const metadata = async (url) => {
   const { ogTitle } = result;
   let { ogDescription } = result;
 
+  const canonicalLink = await extractCanonicalLink(html);
+
   if (
     !ogTitle ||
     (!ogDescription && !image) ||
@@ -56,6 +92,7 @@ export const metadata = async (url) => {
     domain,
     ogDescription,
     image,
+    canonicalLink,
   };
 };
 
