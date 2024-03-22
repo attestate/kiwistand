@@ -300,7 +300,12 @@ export default async function (trie, theme, index, value) {
                                     ${ShareIcon(
                                       "padding: 0 3px 1px 0; vertical-align: middle; height: 13px; width: 13px;",
                                     )}
-                                    Share
+                                    <span>
+                                      ${formatDistanceToNowStrict(
+                                        new Date(comment.timestamp * 1000),
+                                      )}
+                                    </span>
+                                    <span> ago</span>
                                   </a>
                                 </span>
                               </div>
