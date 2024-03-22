@@ -43,6 +43,12 @@ export function getLocalAccount(identity) {
   return null;
 }
 
+export function isIOS() {
+  const ua = navigator.userAgent;
+  const iOS = !!ua.match(/iPad/i) || !!ua.match(/iPhone/i);
+  return iOS;
+}
+
 export function isBraveOnIOS() {
   const ua = navigator.userAgent;
   const iOS = !!ua.match(/iPad/i) || !!ua.match(/iPhone/i);

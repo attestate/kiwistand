@@ -54,6 +54,7 @@ import * as store from "./store.mjs";
 import * as ens from "./ens.mjs";
 import * as karma from "./karma.mjs";
 import * as frame from "./frame.mjs";
+import * as subscriptions from "./subscriptions.mjs";
 
 const app = express();
 
@@ -209,6 +210,70 @@ export async function launch(trie, libp2p) {
     const code = 200;
     reply.header("Cache-Control", "no-cache");
     return reply.status(code).json(data);
+  });
+  app.post("/api/v1/subscriptions/:address", async (request, reply) => {
+    function isValidWebPushSubscription(subscription) {
+      if (!subscription || typeof subscription !== "object") {
+        return false;
+      }
+
+      const { endpoint, keys } = subscription;
+
+      if (!endpoint || typeof endpoint !== "string") {
+        return false;
+      }
+
+      if (!keys || typeof keys !== "object" || !keys.p256dh || !keys.auth) {
+        return false;
+      }
+
+      return true;
+    }
+    reply.header("Cache-Control", "no-cache");
+
+    let address;
+    try {
+      address = utils.getAddress(request.params.address);
+    } catch (err) {
+      const code = 400;
+      const httpMessage = "Bad Request";
+      const details =
+        "Please only submit subscription along with a valid Ethereum addresses.";
+      reply.header(
+        "Cache-Control",
+        "public, max-age=0, no-transform, must-revalidate",
+      );
+      return sendError(reply, code, httpMessage, details);
+    }
+
+    if (!isValidWebPushSubscription(request.body)) {
+      const code = 400;
+      const httpMessage = "Bad Request";
+      const details = "Error storing subscription";
+      reply.header(
+        "Cache-Control",
+        "public, max-age=0, no-transform, must-revalidate",
+      );
+      return sendError(reply, code, httpMessage, details);
+    }
+
+    try {
+      subscriptions.store(address, request.body);
+    } catch (err) {
+      const code = 500;
+      const httpMessage = "Internal Server Error";
+      const details = "Error storing subscription";
+      reply.header(
+        "Cache-Control",
+        "public, max-age=0, no-transform, must-revalidate",
+      );
+      return sendError(reply, code, httpMessage, details);
+    }
+
+    const code = 200;
+    const httpMessage = "OK";
+    const details = "Successfully subscribed via push notifications";
+    return sendStatus(reply, code, httpMessage, details);
   });
   app.get("/api/v1/metadata", async (request, reply) => {
     reply.header("Cache-Control", "no-cache");

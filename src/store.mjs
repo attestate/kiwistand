@@ -25,6 +25,7 @@ import { elog } from "./utils.mjs";
 import * as messages from "./topics/messages.mjs";
 import { newWalk } from "./WalkController.mjs";
 import { insertMessage } from "./cache.mjs";
+import { triggerNotification } from "./subscriptions.mjs";
 
 const maxReaders = 500;
 
@@ -287,7 +288,9 @@ export async function atomicPut(
     try {
       const cacheEnabled = false;
       const enhancer = enhance(allowlist, delegations, cacheEnabled);
-      insertMessage(enhancer(message));
+      const enhancedMessage = enhancer(message);
+      insertMessage(enhancedMessage);
+      await triggerNotification(enhancedMessage);
     } catch (err) {
       // NOTE: insertMessage is just a cache, so if this operation fails, we
       // want the protocol to continue to execute as normally.

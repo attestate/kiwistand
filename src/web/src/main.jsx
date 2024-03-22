@@ -354,6 +354,22 @@ async function addConnectedComponents(allowlist, delegations, toast) {
   }
 }
 
+async function addSubscriptionButton() {
+  const button = document.querySelector("push-subscription-button");
+  if (button) {
+    const { createRoot } = await import("react-dom/client");
+    const { StrictMode } = await import("react");
+    const PushSubscriptionButton = (
+      await import("./PushSubscriptionButton.jsx")
+    ).default;
+    createRoot(button).render(
+      <StrictMode>
+        <PushSubscriptionButton />
+      </StrictMode>,
+    );
+  }
+}
+
 async function addModals() {
   const nftmodal = document.querySelector("nav-nft-modal");
   if (nftmodal) {
@@ -516,6 +532,7 @@ async function start() {
     addVotes(allowlistPromise, delegationsPromise, toast),
     addCommentInput(toast, allowlistPromise, delegationsPromise),
     addTips(),
+    addSubscriptionButton(),
     addModals(),
     addNFTPrice(),
     addAvatar(await allowlistPromise, await delegationsPromise),
@@ -549,9 +566,3 @@ async function start() {
 }
 
 start();
-
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", async () => {
-    await navigator.serviceWorker.register("/serviceWorker.js");
-  });
-}

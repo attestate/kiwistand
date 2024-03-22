@@ -54,7 +54,7 @@ const generateFeed = (messages) => {
   return Object.values(groupedMessages);
 };
 
-function truncateComment(comment, maxLength = 260) {
+export function truncateComment(comment, maxLength = 260) {
   if (comment.length <= maxLength) return comment;
   return comment.slice(0, comment.lastIndexOf(" ", maxLength)) + "...";
 }
@@ -267,6 +267,11 @@ export async function page(theme, identity, notifications, lastUpdate) {
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
               <tr>
                 ${await Header(theme)}
+              </tr>
+              <tr>
+                <td>
+                  <push-subscription-button> </push-subscription-button>
+                </td>
               </tr>
               ${feed}
             </table>

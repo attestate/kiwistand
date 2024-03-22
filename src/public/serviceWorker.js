@@ -1,21 +1,24 @@
-const name = "kiwi-news-cache";
+const version = "2.0.0";
 self.addEventListener("install", () => {
-  console.log("Installed network-first caching service worker");
+  console.log(`Installed Kiwi News service worker with version ${version}`);
 });
 
-self.addEventListener("fetch", (event) => {
-  event.respondWith(networkFirst(event.request));
+self.addEventListener('push', function(event) {
+  const payload = event.data.json();
+  const options = {
+    body: payload.message,
+    data: payload.data,
+    icon: 'apple-touch-icon.png',
+  };
+  event.waitUntil(
+    self.registration.showNotification(payload.title, options)
+  );
 });
 
-async function networkFirst(request) {
-  try {
-    const fresh = await fetch(request);
-    const cache = await caches.open(name);
-    cache.put(request, fresh.clone());
-    return fresh;
-  } catch (e) {
-    const cache = await caches.open(name);
-    const cached = await cache.match(request);
-    return cached;
-  }
-}
+self.addEventListener('notificationclick', function(event) {
+  event.notification.close();
+
+  event.waitUntil(
+    clients.openWindow(event.notification.data.url)
+  );
+});
