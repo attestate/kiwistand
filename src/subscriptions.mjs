@@ -59,20 +59,21 @@ export function get(address) {
   const stmt = db.prepare(
     "SELECT subscription FROM subscriptions WHERE address = ?",
   );
-  const row = stmt.get(address);
-  return row ? JSON.parse(row.subscription) : null;
+  const rows = stmt.all(address);
+  return rows.map((row) => JSON.parse(row.subscription));
 }
 
 export async function send(address, payload) {
-  const subscription = get(address);
-  if (!subscription) return;
+  const subscriptions = get(address);
+  if (!subscriptions || subscriptions.length === 0) return;
 
-  try {
-    await webpush.sendNotification(subscription, JSON.stringify(payload));
-  } catch (error) {
-    log(
-      `Error sending a notification to "${address}", err "${err.toString()}"`,
-    );
-    return;
+  for await (let subscription of subscriptions) {
+    try {
+      await webpush.sendNotification(subscription, JSON.stringify(payload));
+    } catch (error) {
+      log(
+        `Error sending a notification to "${address}", err "${err.toString()}"`,
+      );
+    }
   }
 }

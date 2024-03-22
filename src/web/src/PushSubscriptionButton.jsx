@@ -82,7 +82,8 @@ const SubscriptionButton = () => {
     <div
       style={{
         position: "fixed",
-        bottom: "0",
+        bottom: 0,
+        left: 0,
         height: "40px",
         padding: "0.75rem 0",
         width: "100%",
@@ -91,6 +92,7 @@ const SubscriptionButton = () => {
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
+        zIndex: 99,
       }}
     >
       <button
