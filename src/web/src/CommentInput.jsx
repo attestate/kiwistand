@@ -88,6 +88,7 @@ const CommentInput = (props) => {
     window.location.href = nextPage.href;
   };
 
+  const characterLimit = 10_000;
   return (
     <div
       style={{
@@ -107,6 +108,9 @@ const CommentInput = (props) => {
         onChange={(e) => setText(e.target.value)}
         disabled={isLoading || !address || !isEligible}
       ></textarea>
+      <span>
+        Characters remaining: {(characterLimit - text.length).toLocaleString()}
+      </span>
       <br />
       <br />
       <button
