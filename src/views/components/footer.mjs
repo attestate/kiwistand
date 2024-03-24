@@ -133,21 +133,6 @@ const footer = (theme, path) => html`
     >
     <br />
     <br />
-    <form
-      action="https://kiwinews.phyles.app/search"
-      method="get"
-      style="font-size: 1.1rem;display: flex; align-items: center;justify-content: center;
- margin: 0 auto; max-width: 90%;"
-    >
-      <label for="q">Search:</label>
-      <input
-        style="margin-left: 10px; font-size:1.1rem;"
-        type="text"
-        id="q"
-        name="q"
-      />
-      <input type="submit" value="Submit" style="display: none;" />
-    </form>
     ${scripts}
     <script
       async
