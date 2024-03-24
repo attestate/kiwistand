@@ -43,13 +43,24 @@ const CommentInput = (props) => {
     signer = result;
   }
 
-  const [text, setText] = useState("");
+  function getIndex() {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get("index");
+  }
+
+  const existingComment = localStorage.getItem(
+    `-kiwi-news-comment-${address}-${getIndex()}`,
+  );
+  const [text, setText] = useState(existingComment || "");
+  useEffect(() => {
+    localStorage.setItem(`-kiwi-news-comment-${address}-${getIndex()}`, text);
+  }, [text]);
+
   const [isLoading, setIsLoading] = useState(false);
   const handleSubmit = async (e) => {
     setIsLoading(true);
     e.preventDefault();
-    const urlParams = new URLSearchParams(window.location.search);
-    const index = urlParams.get("index");
+    const index = getIndex();
 
     if (text.length < 15 || text.length > 10_000) {
       toast.error("Comment must be between 15 and 10000 characters.");
@@ -75,11 +86,17 @@ const CommentInput = (props) => {
 
     const wait = false;
     const response = await API.send(value, signature, wait);
+    if (response && response.status === "error") {
+      toast.error("Failed to submit your comment.");
+      return;
+    }
+
     // NOTE: We fetch the current page here in JavaScript to (hopefully)
     // produce a cache revalidation that then makes the new comment fastly
     // available to all other users.
     fetch(window.location.href);
     toast.success("Thanks for submitting your comment. Reloading...");
+    localStorage.removeItem(`-kiwi-news-comment-${address}-${getIndex()}`);
 
     const nextPage = new URL(window.location.href);
     if (response?.data?.index) {
