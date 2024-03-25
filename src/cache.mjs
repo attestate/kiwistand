@@ -210,20 +210,29 @@ export function getComments(identity) {
     .prepare(
       `
      SELECT
-      comments.*,
-      (SELECT title FROM submissions WHERE id = comments.submission_id) AS submission_title
+      c1.*,
+      (SELECT title FROM submissions WHERE id = c1.submission_id) AS submission_title
      FROM
-      comments
+      comments AS c1
      WHERE
         submission_id
-          IN (SELECT submission_id FROM comments WHERE identity = ? AND timestamp >= ?)
+          IN (
+            SELECT submission_id 
+            FROM comments
+            WHERE identity = ?
+            AND timestamp >= ?
+          )
       AND
         identity != ?
-      AND
-        timestamp >= ?
+      AND c1.timestamp > (
+        SELECT MAX(c2.timestamp)
+        FROM comments AS c2
+        WHERE c2.identity = ?
+        AND c2.submission_id = c1.submission_id
+      )
    `,
     )
-    .all(identity, threeWeeksAgo, identity, threeWeeksAgo)
+    .all(identity, threeWeeksAgo, identity, identity)
     .map((comment) => {
       const href = comment.submission_id;
       delete comment.submission_id;
