@@ -31,6 +31,7 @@ import log from "../logger.mjs";
 import { EIP712_MESSAGE } from "../constants.mjs";
 import Row, { extractDomain } from "./components/row.mjs";
 import * as karma from "../karma.mjs";
+import { truncateName } from "../utils.mjs";
 import { metadata, render } from "../parser.mjs";
 import { getSubmission } from "../cache.mjs";
 import * as preview from "../preview.mjs";
@@ -270,9 +271,9 @@ export default async function (trie, theme, index, value) {
                                     ? html`<a
                                         style="color: black;"
                                         href="/upvotes?address=${comment.identity}"
-                                        >${comment.displayName}</a
+                                        >${truncateName(comment.displayName)}</a
                                       >`
-                                    : comment.displayName}</b
+                                    : truncateName(comment.displayName)}</b
                                 >
                                 <span class="inverse-share-container">
                                   <span> • </span>
