@@ -293,17 +293,11 @@ async function addConnectedComponents(allowlist, delegations, toast) {
   } = await import("./Navigation.jsx");
   const Bell = (await import("./Bell.jsx")).default;
 
-  const connectButton = document.querySelector("#connectButton");
-  connectButton.style = "";
-  createRoot(connectButton).render(
+  const bellButton = document.querySelector("#bell");
+  bellButton.style = "";
+  createRoot(bellButton).render(
     <StrictMode>
-      <ConnectedBuyAdvert allowlist={allowlist} delegations={delegations} />
       <Bell allowlist={allowlist} delegations={delegations} />
-      <ConnectedConnectButton
-        allowlist={allowlist}
-        delegations={delegations}
-        toast={toast}
-      />
     </StrictMode>,
   );
 
@@ -341,6 +335,20 @@ async function addConnectedComponents(allowlist, delegations, toast) {
     createRoot(simpledisconnect).render(
       <StrictMode>
         <ConnectedSimpleDisconnectButton />
+      </StrictMode>,
+    );
+  }
+}
+
+async function addSignupDialogue() {
+  const dialogue = document.querySelector("nav-signup-dialogue");
+  if (dialogue) {
+    const { createRoot } = await import("react-dom/client");
+    const { StrictMode } = await import("react");
+    const SignupDialogue = (await import("./SignupDialogue.jsx")).default;
+    createRoot(dialogue).render(
+      <StrictMode>
+        <SignupDialogue />
       </StrictMode>,
     );
   }
@@ -525,6 +533,7 @@ async function start() {
     addCommentInput(toast, allowlistPromise, delegationsPromise),
     addTips(),
     addSubscriptionButton(),
+    addSignupDialogue(),
     addModals(),
     addNFTPrice(),
     addAvatar(await allowlistPromise, await delegationsPromise),

@@ -140,6 +140,7 @@ const footer = (theme, path) => html`
     ></script>
     <script async src="ga.js"></script>
     <div style="height: 100px"></div>
+    <nav-signup-dialogue />
   </center>
 `;
 export default footer;

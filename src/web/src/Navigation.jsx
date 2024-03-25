@@ -5,6 +5,7 @@ import { eligible } from "@attestate/delegator2";
 
 import { RestoreDialogue } from "./Passkeys.jsx";
 import { client, chains } from "./client.mjs";
+import { EthereumSVG } from "./icons.jsx";
 import {
   getLocalAccount,
   isSafariOnIOS,
@@ -451,45 +452,24 @@ const DisconnectButton = () => {
 };
 
 export const PrimaryActionButton = (props) => {
-  const buttonStyle = {
-    borderRadius: "2px",
-    padding: "5px 15px 5px 15px",
-    backgroundColor: "black",
-    border: "1px solid black",
-    color: "white",
-    textAlign: "center",
-    textDecoration: "none",
-    cursor: "pointer",
-    width: "100px",
-  };
-
   return (
     <a
-      className="primary-action-button"
+      style={{
+        ...props.style,
+        ...{ display: "flex", gap: "5px", alignItems: "center" },
+      }}
+      className={props.className}
       href={props.href}
       title={props.text}
-      style={buttonStyle}
+      id="button-onboarding"
       onClick={props.onClick}
     >
-      {props.text}
+      {props.icon ? props.icon : ""} {props.text}
     </a>
   );
 };
 
-const CustomConnectButton = (props) => {
-  const buttonStyle = {
-    borderRadius: "2px",
-    padding: "5px 15px 5px 15px",
-    backgroundColor: "black",
-    border: "1px solid black",
-    color: "white",
-    textAlign: "center",
-    textDecoration: "none",
-    cursor: "pointer",
-    width: "100px",
-    display: "inline-block",
-  };
-
+export const CustomConnectButton = (props) => {
   return (
     <ConnectButton.Custom>
       {({ account, chain, mounted, openConnectModal }) => {
@@ -509,7 +489,13 @@ const CustomConnectButton = (props) => {
 
         if ((props.required && !connected) || (!connected && !isEligible)) {
           return (
-            <PrimaryActionButton text="Connect" onClick={openConnectModal} />
+            <PrimaryActionButton
+              className={props.className}
+              style={props.style}
+              icon={<EthereumSVG style={{ width: "16px" }} />}
+              text="Connect"
+              onClick={openConnectModal}
+            />
           );
         }
       }}
