@@ -340,7 +340,7 @@ async function addConnectedComponents(allowlist, delegations, toast) {
   }
 }
 
-async function addSignupDialogue() {
+async function addSignupDialogue(allowlist, delegations) {
   const dialogue = document.querySelector("nav-signup-dialogue");
   if (dialogue) {
     const { createRoot } = await import("react-dom/client");
@@ -348,7 +348,7 @@ async function addSignupDialogue() {
     const SignupDialogue = (await import("./SignupDialogue.jsx")).default;
     createRoot(dialogue).render(
       <StrictMode>
-        <SignupDialogue />
+        <SignupDialogue allowlist={allowlist} delegations={delegations} />
       </StrictMode>,
     );
   }
@@ -533,7 +533,7 @@ async function start() {
     addCommentInput(toast, allowlistPromise, delegationsPromise),
     addTips(),
     addSubscriptionButton(),
-    addSignupDialogue(),
+    addSignupDialogue(await allowlistPromise, await delegationsPromise),
     addModals(),
     addNFTPrice(),
     addAvatar(await allowlistPromise, await delegationsPromise),

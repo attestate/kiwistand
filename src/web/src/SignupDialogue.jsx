@@ -2,12 +2,13 @@ import React from "react";
 
 import { WagmiConfig, useAccount } from "wagmi";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
+import { eligible } from "@attestate/delegator2";
 
 import { getLocalAccount } from "./session.mjs";
 import { CustomConnectButton } from "./Navigation.jsx";
 import { client, chains } from "./client.mjs";
 
-const SignupDialogue = () => {
+const SignupDialogue = (props) => {
   const from = useAccount();
   let address;
   const localAccount = getLocalAccount(from.address);
@@ -17,9 +18,11 @@ const SignupDialogue = () => {
   if (localAccount) {
     address = localAccount.identity;
   }
+  const isEligible =
+    address && eligible(props.allowlist, props.delegations, address);
 
   if (
-    !address &&
+    !isEligible &&
     (window.location.pathname !== "/" ||
       window.location.pathname !== "/new" ||
       window.location.pathname !== "/top" ||
@@ -37,7 +40,7 @@ const SignupDialogue = () => {
           width: "100%",
           backgroundColor: "#e6e6df",
           borderTop: "1px solid #828282",
-          zIndex: 99,
+          zIndex: 6,
           borderTop: "1px solid #828282",
         }}
       >
@@ -65,10 +68,14 @@ const SignupDialogue = () => {
             justifyContent: "center",
           }}
         >
-          <CustomConnectButton
-            className="button-secondary"
-            style={{ width: "auto" }}
-          />
+          {!from.isConnected ? (
+            <CustomConnectButton
+              className="button-secondary"
+              style={{ width: "auto" }}
+            />
+          ) : (
+            ""
+          )}
           <a
             href="/kiwipass-mint"
             id="button-onboarding"
@@ -86,7 +93,7 @@ const Form = (props) => {
   return (
     <WagmiConfig config={client}>
       <RainbowKitProvider chains={chains}>
-        <SignupDialogue />
+        <SignupDialogue {...props} />
       </RainbowKitProvider>
     </WagmiConfig>
   );
