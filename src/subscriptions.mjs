@@ -33,19 +33,29 @@ export async function triggerNotification(message) {
 
   const [_, index] = message.href.split("kiwi:");
   const submission = getSubmission(index);
-  const ensData = await resolve(message.identity);
 
+  const ensData = await resolve(message.identity);
   if (!ensData.displayName) return;
-  if (message.identity === submission.identity) return;
+
+  const receivers = [
+    submission.identity,
+    ...submission.comments.map((comment) => comment.identity),
+  ].filter((receiver) => receiver !== message.identity);
+  const uniqueReceivers = Array.from(new Set(receivers));
 
   const maxChars = 140;
-  await send(submission.identity, {
-    title: `${ensData.displayName} replied:`,
-    message: truncateComment(message.title, maxChars),
-    data: {
-      url: `https://news.kiwistand.com/stories?index=0x${submission.index}#0x${message.index}`,
-    },
-  });
+  await Promise.allSettled(
+    uniqueReceivers.map(
+      async (receiver) =>
+        await send(receiver, {
+          title: `${ensData.displayName} replied`,
+          message: truncateComment(message.title, maxChars),
+          data: {
+            url: `https://news.kiwistand.com/stories?index=0x${submission.index}#0x${message.index}`,
+          },
+        }),
+    ),
+  );
 }
 
 export function store(address, subscription) {
