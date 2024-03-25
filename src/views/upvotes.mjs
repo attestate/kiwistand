@@ -268,6 +268,12 @@ export default async function (
                             "Warpcast",
                           )
                         : ""}
+                      ${SocialButton(
+                        `https://app.interface.social/profile/${identity}`,
+                        "/interface_logo.png",
+                        "Interface",
+                        true,
+                      )}
                       ${ensData.ens
                         ? SocialButton(
                             `https://warpcast.com/~/compose?embeds[]=${encodeURIComponent(
