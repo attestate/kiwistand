@@ -30,27 +30,36 @@ import log from "../logger.mjs";
 import { EIP712_MESSAGE } from "../constants.mjs";
 import Row, { extractDomain } from "./components/row.mjs";
 import * as karma from "../karma.mjs";
+import { metadata } from "../parser.mjs";
 
 const html = htm.bind(vhtml);
 
-function CanonRow(sheets) {
-  sheets = sheets.sort((a, b) => 0.5 - Math.random()).slice(0, 3);
+function CanonRow(originals) {
   return html`
     <tr>
       <td>
         <div
-          style="justify-content: space-evenly; scroll-snap-type: x mandatory; padding: 15px 0 10px 0; gap: 15px; display: flex; overflow-x: auto; width: 100%;"
+          style="justify-content: space-evenly; padding: 15px 0 10px 0; gap: 15px; display: flex; width: 100%;"
         >
-          ${sheets.map(
-            ({ preview, name }) => html`
-              <div style="flex: 0 0 30%; scroll-snap-align: center;">
-                <a href="/canons?name=${name}">
+          ${originals.map(
+            ({ metadata, href, index, title }) => html`
+              <div
+                class="canon-image"
+                style="background-color: rgba(0,0,0,0.1); border-radius: 2px; border: 1px solid #828282;"
+              >
+                <a href="${href}" target="_blank">
                   <img
                     loading="lazy"
-                    src="${preview}"
-                    style="border-radius: 2px; width: 100%; height: auto;"
+                    src="${metadata.image}"
+                    style="border-bottom: 1px solid #828282; width: 100%; height: auto;"
                   />
                 </a>
+                <a
+                  class="meta-link canon-font"
+                  style="display:block; margin: 0.2rem 0.2rem 0.3rem 0.3rem;"
+                  href="/stories?index=0x${index}"
+                  >${title}</a
+                >
               </div>
             `,
           )}
@@ -101,7 +110,15 @@ export function count(leaves) {
 export async function topstories(leaves, decayStrength) {
   return leaves
     .map((story) => {
-      const score = Math.log(story.upvotes);
+      const commentCount =
+        store.commentCounts.get(`kiwi:0x${story.index}`) || 0;
+      let score;
+      if (story.upvotes > 2) {
+        score = Math.log(story.upvotes + commentCount);
+      } else {
+        score = Math.log(story.upvotes);
+      }
+
       const decay = Math.sqrt(itemAge(story.timestamp));
       story.score = score / Math.pow(decay, decayStrength);
       return story;
@@ -329,10 +346,34 @@ export async function index(trie, page, domain) {
     });
   }
 
+  async function addMetadata(post) {
+    let result;
+    try {
+      result = await metadata(post.href);
+    } catch (err) {
+      return null;
+    }
+    if (result && !result.image) return;
+
+    return {
+      ...post,
+      metadata: result,
+    };
+  }
+  let originals = stories
+    .filter((story) => story.isOriginal)
+    .slice(0, 6)
+    .map(addMetadata);
+  originals = (await Promise.allSettled(originals))
+    .filter(({ status, value }) => status === "fulfilled" && !!value)
+    .map(({ value }) => value)
+    .slice(0, 2);
+
   return {
     editorPicks,
     config,
     stories,
+    originals,
     start,
   };
 }
@@ -364,15 +405,7 @@ export default async function (trie, theme, page, domain) {
   } else {
     content = cacheRes.content;
   }
-  const { editorPicks, config, stories, start } = content;
-
-  let sheets;
-  try {
-    const activeSheets = await moderation.getActiveCanons();
-    sheets = await curation.getSheets(activeSheets);
-  } catch (err) {
-    //noop
-  }
+  const { originals, editorPicks, config, stories, start } = content;
 
   let query = `?page=${page + 1}`;
   if (domain) {
@@ -483,9 +516,13 @@ export default async function (trie, theme, page, domain) {
                     <td></td>
                   </tr>`
                 : ""}
-              ${stories.slice(0, 6).map(Row(start, "/"))}
-              ${sheets && !domain ? CanonRow(sheets) : ""}
-              ${stories.slice(6).map(Row(start, "/"))}
+              ${originals && originals.length >= 2 && !domain
+                ? html`
+                    ${stories.slice(0, 6).map(Row(start, "/"))}
+                    ${CanonRow(originals)}
+                    ${stories.slice(6).map(Row(start, "/"))}
+                  `
+                : html` ${stories.map(Row(start, "/"))}`}
               ${stories.length < totalStories
                 ? ""
                 : html`<tr style="height: 50px">

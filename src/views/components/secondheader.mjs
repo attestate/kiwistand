@@ -215,7 +215,6 @@ const secondheader = (theme, site, period, domain) => html`
           : ""}
         <a class="nav-refresh-button"></a>
       </div>
-      <nav-learn-more />
     </div>
 
     ${site === "best"

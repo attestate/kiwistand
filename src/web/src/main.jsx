@@ -327,14 +327,6 @@ async function addConnectedComponents(allowlist, delegations, toast) {
       </StrictMode>,
     );
   }
-  const learnMore = document.querySelector("nav-learn-more");
-  if (learnMore) {
-    createRoot(learnMore).render(
-      <StrictMode>
-        <ConnectedLearnMore allowlist={allowlist} delegations={delegations} />
-      </StrictMode>,
-    );
-  }
   const disconnect = document.querySelector("#nav-disconnect");
   createRoot(disconnect).render(
     <StrictMode>

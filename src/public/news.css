@@ -314,8 +314,20 @@ body {
       border: 1px solid rgba(0,0,0,0.1);
     }
   
+.canon-font {
+  font-size: 11pt;
+}
+.canon-image {
+  flex: 0 0 30%;
+}
 /* mobile device */
  @media only screen and (min-width : 300px) and (max-width : 750px) {
+    .canon-image {
+      flex: 0 0 45%;
+    }
+    .canon-font {
+      font-size: 8pt;
+    }
      #hnmain {
          width: 100%;
          min-width: 0;
