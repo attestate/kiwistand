@@ -20,7 +20,14 @@ const Container = (props) => {
 };
 
 const Tip = (props) => {
-  if (!window.ethereum) return null;
+  if (!window.ethereum) {
+    return (
+      <span style={{ visibility: "hidden" }}>
+        <span> • </span>
+        <a className="caster-link">$ Tip </a>
+      </span>
+    );
+  }
   const { pay } = useDawnPay();
 
   const handlePayClick = async () => {
@@ -36,7 +43,14 @@ const Tip = (props) => {
   if (localAccount) {
     address = localAccount.identity;
   }
-  if (props.address === address) return;
+  if (props.address === address) {
+    return (
+      <span style={{ visibility: "hidden" }}>
+        <span> • </span>
+        <a className="caster-link">$ Tip </a>
+      </span>
+    );
+  }
 
   return (
     <span>
