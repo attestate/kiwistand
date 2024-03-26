@@ -26,7 +26,7 @@ const header = async (theme, path) => {
             <div
               style="display: flex; flex-wrap: nowrap; justify-content: space-between; align-items: center;"
             >
-              <div class="kn-banner-desk">Why did he leave?</div>
+              <div class="kn-banner-desk">Kiwi News</div>
               <nav-header-avatar class="sidebar-toggle" style="width: 33%;">
                 <div
                   style="display: ${path === "/kiwipass-mint"
