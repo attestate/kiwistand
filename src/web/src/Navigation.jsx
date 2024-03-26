@@ -503,7 +503,7 @@ export const CustomConnectButton = (props) => {
   );
 };
 
-const Connector = (props) => {
+export const Connector = (props) => {
   return (
     <WagmiConfig config={client}>
       <RainbowKitProvider

@@ -1,12 +1,10 @@
 import React from "react";
 
-import { WagmiConfig, useAccount } from "wagmi";
-import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
+import { useAccount } from "wagmi";
 import { eligible } from "@attestate/delegator2";
 
 import { getLocalAccount } from "./session.mjs";
-import { CustomConnectButton } from "./Navigation.jsx";
-import { client, chains } from "./client.mjs";
+import { Connector, CustomConnectButton } from "./Navigation.jsx";
 
 const SignupDialogue = (props) => {
   const from = useAccount();
@@ -91,11 +89,9 @@ const SignupDialogue = (props) => {
 
 const Form = (props) => {
   return (
-    <WagmiConfig config={client}>
-      <RainbowKitProvider chains={chains}>
-        <SignupDialogue {...props} />
-      </RainbowKitProvider>
-    </WagmiConfig>
+    <Connector {...props}>
+      <SignupDialogue {...props} />
+    </Connector>
   );
 };
 

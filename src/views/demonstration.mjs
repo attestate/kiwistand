@@ -133,10 +133,7 @@ export default async function index(theme) {
                       style="padding: 0 0 3rem 0; display: flex; justify-content: space-evenly;"
                     >
                       <a href="/onboarding-reader">
-                        <button
-                          style="width:auto; background-color: white; color: black;"
-                          id="button-onboarding"
-                        >
+                        <button style="width:auto;" id="button-onboarding">
                           Explore Kiwi
                         </button>
                       </a>

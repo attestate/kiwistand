@@ -354,6 +354,20 @@ async function addSignupDialogue(allowlist, delegations) {
   }
 }
 
+async function addTGLink() {
+  const elem = document.querySelector("nav-invite-link");
+  if (elem) {
+    const { createRoot } = await import("react-dom/client");
+    const { StrictMode } = await import("react");
+    const TelegramLink = (await import("./TelegramLink.jsx")).default;
+    createRoot(elem).render(
+      <StrictMode>
+        <TelegramLink />
+      </StrictMode>,
+    );
+  }
+}
+
 async function addSubscriptionButton() {
   const button = document.querySelector("push-subscription-button");
   if (button) {
@@ -504,7 +518,7 @@ function checkMintStatus(fetchAllowList, fetchDelegations) {
     clearInterval(intervalId);
     // NOTE: Priorly, we called /demonstration immediately, however, this lead
     // to problems where the site didn't have the NFT eligibility ready yet.
-    setTimeout(() => (window.location.href = "/demonstration"), 10000);
+    setTimeout(() => (window.location.href = "/invite"), 10000);
   }, 5000);
 }
 
@@ -533,6 +547,7 @@ async function start() {
     addCommentInput(toast, allowlistPromise, delegationsPromise),
     addTips(),
     addSubscriptionButton(),
+    addTGLink(),
     addSignupDialogue(await allowlistPromise, await delegationsPromise),
     addModals(),
     addNFTPrice(),

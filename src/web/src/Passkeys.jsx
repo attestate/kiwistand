@@ -7,7 +7,7 @@ import { eligible } from "@attestate/delegator2";
 import { PasskeysSVG } from "./icons.jsx";
 import { useProvider, client, chains } from "./client.mjs";
 import { ProgressBar } from "./DelegateButton.jsx";
-import { supportsPasskeys, getLocalAccount } from "./session.mjs";
+import { getLocalAccount } from "./session.mjs";
 
 export const rp = {
   name: "Kiwi News",
@@ -20,7 +20,6 @@ export const truncate = (address) =>
   address.slice(address.length - 4, address.length);
 
 const testFeature = async () =>
-  supportsPasskeys() &&
   window.PublicKeyCredential &&
   PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable &&
   PublicKeyCredential.isConditionalMediationAvailable &&

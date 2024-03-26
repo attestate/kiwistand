@@ -44,17 +44,18 @@ import why from "./views/why.mjs";
 import submit from "./views/submit.mjs";
 import settings from "./views/settings.mjs";
 import indexing from "./views/indexing.mjs";
+import invite from "./views/invite.mjs";
 import demonstration from "./views/demonstration.mjs";
 import * as curation from "./views/curation.mjs";
 import * as moderation from "./views/moderation.mjs";
 import { parse, metadata } from "./parser.mjs";
 import { toAddress, resolve } from "./ens.mjs";
-import * as registry from "./chainstate/registry.mjs";
 import * as store from "./store.mjs";
 import * as ens from "./ens.mjs";
 import * as karma from "./karma.mjs";
 import * as frame from "./frame.mjs";
 import * as subscriptions from "./subscriptions.mjs";
+import * as telegram from "./telegram.mjs";
 
 const app = express();
 
@@ -188,6 +189,38 @@ export async function launch(trie, libp2p) {
       .status(200)
       .type("text/html")
       .send(await kiwipassmint(reply.locals.theme));
+  });
+  app.post("/api/v1/telegram", async (request, reply) => {
+    const message = request.body;
+    // NOTE: The message here is ALMOST a compliant Kiwi News amplify or
+    // comment message just to not having to implement an entirely new
+    // validation flow for signing and validating a message. However, we
+    // wouldn't want this message to be circulated on the protocol and so we
+    // intentionally set all properties to TGAUTH.
+    if (
+      !message ||
+      message.title !== "TGAUTH" ||
+      message.href !== "TGAUTH" ||
+      message.type !== "TGAUTH"
+    ) {
+      const code = 400;
+      const httpMessage = "Bad Request";
+      const details = "Body must include title and href with value 'TGAUTH'.";
+      return sendError(reply, code, httpMessage, details);
+    }
+    let inviteLink;
+    try {
+      inviteLink = await telegram.generateLink(message);
+    } catch (err) {
+      const code = 400;
+      const httpMessage = "Bad Request";
+      const details = err.toString();
+      return sendError(reply, code, httpMessage, details);
+    }
+    const code = 200;
+    const httpMessage = "OK";
+    const details = "Successfully generated Telegram link.";
+    return sendStatus(reply, code, httpMessage, details, { link: inviteLink });
   });
   app.post("/api/v1/writers/success", async (request, reply) => {
     const content = frame.callback(request.body?.untrustedData?.transactionId);
@@ -519,6 +552,12 @@ export async function launch(trie, libp2p) {
   });
   app.get("/demonstration", async (request, reply) => {
     const content = await demonstration(reply.locals.theme);
+
+    reply.header("Cache-Control", "public, max-age=86400");
+    return reply.status(200).type("text/html").send(content);
+  });
+  app.get("/invite", async (request, reply) => {
+    const content = await invite(reply.locals.theme);
 
     reply.header("Cache-Control", "public, max-age=86400");
     return reply.status(200).type("text/html").send(content);

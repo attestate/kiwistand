@@ -147,7 +147,8 @@ export default async function (theme, identity) {
                         chat about on our Telegram Channel. Join us and say gm!
                       </p>
                       <p>
-                        Message @timdaub or @macbudkowski to get invited!
+                        Message @timdaub or @macbudkowski if you have issues
+                        with your invite!
                         <br />
                         (You need to hold
                         <span>

@@ -316,7 +316,7 @@ export default async function (theme) {
                         Kiwipass NFT lets you submit, upvote & comment links on
                         Kiwi
                       </h2>
-                      <div>
+                      <div style="display: flex; justify-content: center;">
                         Price: <span> <nft-price /></span>
                       </div>
                       <div id="buy-button-container">
