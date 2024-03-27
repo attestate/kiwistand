@@ -231,7 +231,9 @@ export default async function index(trie, theme, page, period, domain) {
                   </p>
                 </td>
               </tr>
-              ${stories.map(Row(null, "/best", null, false, false, period))}
+              ${stories.map(
+                Row(null, "/best", undefined, false, false, period),
+              )}
               <tr class="spacer" style="height:15px"></tr>
               ${stories.length < totalStories
                 ? ""
