@@ -4,8 +4,33 @@ import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { Wallet } from "@ethersproject/wallet";
 
 import { useProvider, client, chains } from "./client.mjs";
-import { getLocalAccount } from "./session.mjs";
+import { getLocalAccount, isIOS, isRunningPWA } from "./session.mjs";
 import * as API from "./API.mjs";
+
+export const Redirector = () => {
+  const hasPushNotificationSupport =
+    "serviceWorker" in navigator && "PushManager" in window;
+
+  if (
+    (hasPushNotificationSupport && !isIOS()) ||
+    (hasPushNotificationSupport && isIOS() && isRunningPWA())
+  ) {
+    return (
+      <a href="/notifications">
+        <button style={{ width: "auto" }} id="button-onboarding">
+          Setup notifications
+        </button>
+      </a>
+    );
+  }
+  return (
+    <a href="/demonstration">
+      <button style={{ width: "auto" }} id="button-onboarding">
+        Upvote your first story!
+      </button>
+    </a>
+  );
+};
 
 const TelegramLink = () => {
   const [generatedLink, setGeneratedLink] = useState("...loading");

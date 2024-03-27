@@ -9,9 +9,9 @@ import Head from "./components/head.mjs";
 
 const html = htm.bind(vhtml);
 
-const path = "/indexing";
+const path = "/notifications";
 
-export default async function (theme, userAddress, transactionHash) {
+export default async function (theme) {
   return html`
     <html lang="en" op="news">
       <head>
@@ -44,21 +44,18 @@ export default async function (theme, userAddress, transactionHash) {
                   <div
                     style="height: 60vh; flex-direction: column; display: flex; justify-content: center; align-items: center;"
                   >
-                    <img
-                      style="max-width: 65vw; overflow: auto; margin-top: 4rem;"
-                      src="Telegram.png"
-                    />
                     <div
-                      style="display: flex; justify-content: center; flex-direction: column; max-width: 20rem;"
+                      style="display: flex; align-items: center; justify-content: center; flex-direction: column; max-width: 20rem;"
                     >
-                      <h2 style="color: black;">
-                        Share and discuss content with fellow crypto builders
-                      </h2>
-                      <p>
-                        Discuss the content, project and anything you’d like to
-                        chat about on our Telegram Channel. Join us and say gm!
+                      <h2 style="color: black;">Turn on notifications</h2>
+                      <p style="text-align: center;">
+                        We'll send you notifications when there are new comments
+                        on your story.
                       </p>
-                      <nav-invite-link> ...loading </nav-invite-link>
+                      <br />
+                      <push-subscription-button data-wrapper="false">
+                        ...loading
+                      </push-subscription-button>
                     </div>
                   </div>
                 </td>
@@ -76,17 +73,15 @@ export default async function (theme, userAddress, transactionHash) {
                 <td
                   style="padding: 0 0 3rem 0; display: flex; justify-content: space-evenly;"
                 >
-                  <nav-push-notification-redirector>
-                    <a href="/demonstration">
-                      <button
-                        style="width:auto;"
-                        class="button-secondary"
-                        id="button-onboarding"
-                      >
-                        Upvote your first story!
-                      </button>
-                    </a>
-                  </nav-push-notification-redirector>
+                  <a href="/demonstration">
+                    <button
+                      style="width:auto;"
+                      class="button-secondary"
+                      id="button-onboarding"
+                    >
+                      Upvote your first story!
+                    </button>
+                  </a>
                 </td>
               </tr>
             </table>

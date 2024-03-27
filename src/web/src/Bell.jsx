@@ -49,7 +49,8 @@ const Bell = (props) => {
     window.location.pathname === "/kiwipass-mint" ||
     window.location.pathname === "/demonstration" ||
     window.location.pathname === "/invite" ||
-    window.location.pathname === "/passkeys"
+    window.location.pathname === "/passkeys" ||
+    window.location.pathname === "/notifications"
   ) {
     return null;
   }

@@ -48,6 +48,11 @@ export default async function (theme) {
                     >
                       <nav-passkeys-backup> ...loading </nav-passkeys-backup>
                     </div>
+                    <br />
+                    <br />
+                    <br />
+                    <br />
+                    <a href="/invite">skip</a>
                   </div>
                 </td>
               </tr>

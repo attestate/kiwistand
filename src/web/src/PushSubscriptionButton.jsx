@@ -24,7 +24,7 @@ const urlBase64ToUint8Array = (base64String) => {
   return outputArray;
 };
 
-const SubscriptionButton = () => {
+const SubscriptionButton = (props) => {
   const from = useAccount();
   let address;
   const localAccount = getLocalAccount(from.address);
@@ -75,33 +75,46 @@ const SubscriptionButton = () => {
     isRegistered ||
     isSubscribed ||
     !address ||
-    !("serviceWorker" in navigator)
+    !("serviceWorker" in navigator) ||
+    !("PushManager" in window)
   )
     return;
   return (
-    <div
-      style={{
-        position: "fixed",
-        bottom: 0,
-        left: 0,
-        height: "40px",
-        padding: "0.75rem 0",
-        width: "100%",
-        backgroundColor: "#e6e6df",
-        borderTop: "1px solid #828282",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        zIndex: 99,
-      }}
-    >
-      <button
-        style={{ width: "auto" }}
-        id="button-onboarding"
-        onClick={handlePushSubscription}
-      >
-        Enable Push Notifications
-      </button>
+    <div>
+      {props.wrapper === undefined || props.wrapper ? (
+        <div
+          style={{
+            position: "fixed",
+            bottom: 0,
+            left: 0,
+            height: "40px",
+            padding: "0.75rem 0",
+            width: "100%",
+            backgroundColor: "#e6e6df",
+            borderTop: "1px solid #828282",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 99,
+          }}
+        >
+          <button
+            style={{ width: "auto" }}
+            id="button-onboarding"
+            onClick={handlePushSubscription}
+          >
+            Enable Push Notifications
+          </button>
+        </div>
+      ) : (
+        <button
+          style={{ width: "auto" }}
+          id="button-onboarding"
+          onClick={handlePushSubscription}
+        >
+          Enable Push Notifications
+        </button>
+      )}
     </div>
   );
 };
@@ -110,7 +123,7 @@ const Form = (props) => {
   return (
     <WagmiConfig config={client}>
       <RainbowKitProvider chains={chains}>
-        <SubscriptionButton />
+        <SubscriptionButton {...props} />
       </RainbowKitProvider>
     </WagmiConfig>
   );

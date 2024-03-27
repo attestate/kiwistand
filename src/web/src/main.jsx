@@ -418,9 +418,22 @@ async function addSubscriptionButton() {
     const PushSubscriptionButton = (
       await import("./PushSubscriptionButton.jsx")
     ).default;
+    const wrapper = button.getAttribute("data-wrapper") === true;
     createRoot(button).render(
       <StrictMode>
-        <PushSubscriptionButton />
+        <PushSubscriptionButton wrapper={wrapper} />
+      </StrictMode>,
+    );
+  }
+
+  const elem = document.querySelector("nav-push-notification-redirector");
+  if (elem) {
+    const { createRoot } = await import("react-dom/client");
+    const { StrictMode } = await import("react");
+    const { Redirector } = await import("./TelegramLink.jsx");
+    createRoot(elem).render(
+      <StrictMode>
+        <Redirector />
       </StrictMode>,
     );
   }
