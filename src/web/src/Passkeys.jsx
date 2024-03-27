@@ -100,16 +100,15 @@ export const RestoreDialogue = (allowlist, delegations, toast) => {
             gap: "4px",
             border: "1px solid #828282",
             borderRadius: "2px",
-            padding: "0 0.75rem",
+            padding: "0.4rem 0.75rem",
             display: "flex",
             justifyContent: "center",
           }}
         >
-          <PasskeysSVG style={{ width: "28px" }} /> Connect with Passkeys
+          <PasskeysSVG style={{ width: "20px" }} /> Connect with Passkeys
         </button>
         <p style={{ color: "black" }}>
-          "Connect with Passkeys" is a Kiwi-specific feature that will only work
-          if you've previously backed up your key on the Settings page
+          (Only works if you previously backed up your app key)
         </p>
       </div>
     );
