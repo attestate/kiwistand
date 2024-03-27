@@ -418,7 +418,7 @@ async function addSubscriptionButton() {
     const PushSubscriptionButton = (
       await import("./PushSubscriptionButton.jsx")
     ).default;
-    const wrapper = button.getAttribute("data-wrapper") === true;
+    const wrapper = button.getAttribute("data-wrapper") === "true";
     createRoot(button).render(
       <StrictMode>
         <PushSubscriptionButton wrapper={wrapper} />

@@ -81,7 +81,7 @@ const SubscriptionButton = (props) => {
     return;
   return (
     <div>
-      {props.wrapper === undefined || props.wrapper ? (
+      {props.wrapper ? (
         <div
           style={{
             position: "fixed",

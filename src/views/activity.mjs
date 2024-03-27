@@ -270,7 +270,8 @@ export async function page(theme, identity, notifications, lastUpdate) {
               </tr>
               <tr>
                 <td>
-                  <push-subscription-button> </push-subscription-button>
+                  <push-subscription-button data-wrapper="true">
+                  </push-subscription-button>
                 </td>
               </tr>
               ${feed}
