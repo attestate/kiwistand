@@ -354,6 +354,48 @@ async function addSignupDialogue(allowlist, delegations) {
   }
 }
 
+async function addPasskeysDialogue(toast) {
+  const elem = document.querySelector("nav-passkeys-backup");
+  if (elem) {
+    const { createRoot } = await import("react-dom/client");
+    const { StrictMode } = await import("react");
+    const Passkeys = (await import("./Passkeys.jsx")).default;
+    const RedirectButton = () => {
+      return (
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+          }}
+        >
+          <p
+            style={{
+              color: "black",
+              padding: "1rem 3rem 1rem 3rem",
+              fontSize: "1rem",
+              textAlign: "center",
+              marginTop: "1rem",
+            }}
+          >
+            Your next step:
+          </p>
+          <a href="/invite">
+            <button style={{ width: "auto" }} id="button-onboarding">
+              Join our Telegram channel
+            </button>
+          </a>
+        </div>
+      );
+    };
+    createRoot(elem).render(
+      <StrictMode>
+        <Passkeys toast={toast} redirectButton={<RedirectButton />} />
+      </StrictMode>,
+    );
+  }
+}
+
 async function addTGLink() {
   const elem = document.querySelector("nav-invite-link");
   if (elem) {
@@ -495,13 +537,13 @@ async function share(toast, index) {
   });
 }
 
-function checkMintStatus(fetchAllowList, fetchDelegations) {
+async function checkMintStatus(fetchAllowList, fetchDelegations) {
   const url = new URL(window.location.href);
   if (url.pathname !== "/indexing") return;
 
   const address = url.searchParams.get("address");
-  // NOTE: For debugging
-  if (url.searchParams.get("stop")) return;
+  const { supportsPasskeys } = await import("./session.mjs");
+  const { testPasskeys } = await import("./Passkeys.jsx");
   const intervalId = setInterval(async () => {
     const allowList = await fetchAllowList();
     const delegations = await fetchDelegations();
@@ -518,7 +560,11 @@ function checkMintStatus(fetchAllowList, fetchDelegations) {
     clearInterval(intervalId);
     // NOTE: Priorly, we called /demonstration immediately, however, this lead
     // to problems where the site didn't have the NFT eligibility ready yet.
-    setTimeout(() => (window.location.href = "/invite"), 10000);
+    if (supportsPasskeys() && (await testPasskeys())) {
+      setTimeout(() => (window.location.href = "/passkeys"), 10000);
+    } else {
+      setTimeout(() => (window.location.href = "/invite"), 10000);
+    }
   }, 5000);
 }
 
@@ -548,6 +594,7 @@ async function start() {
     addTips(),
     addSubscriptionButton(),
     addTGLink(),
+    addPasskeysDialogue(toast),
     addSignupDialogue(await allowlistPromise, await delegationsPromise),
     addModals(),
     addNFTPrice(),

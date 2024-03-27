@@ -19,7 +19,7 @@ export const truncate = (address) =>
   "..." +
   address.slice(address.length - 4, address.length);
 
-const testFeature = async () =>
+export const testPasskeys = async () =>
   window.PublicKeyCredential &&
   PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable &&
   PublicKeyCredential.isConditionalMediationAvailable &&
@@ -36,7 +36,7 @@ export const RestoreDialogue = (allowlist, delegations, toast) => {
     const [featureAvailable, setFeatureAvailable] = useState(false);
     useEffect(() => {
       (async () => {
-        const isAvailable = await testFeature();
+        const isAvailable = await testPasskeys();
         setFeatureAvailable(isAvailable);
       })();
     });
@@ -150,7 +150,7 @@ const Dialogue = (props) => {
           textAlign: "left",
         }}
       >
-        Securely store your upvote key with Passkeys for multi-device access:
+        Securely store your app key with Passkeys for multi-device access:
       </p>
       <ul
         style={{
@@ -174,14 +174,14 @@ const Dialogue = (props) => {
   );
 };
 
-function BackupKey() {
+function BackupKey(props) {
   const [rawId, setRawId] = useState(null);
   const [lbResult, setLbResult] = useState(null);
   const [progress, setProgress] = useState(1);
   const [featureAvailable, setFeatureAvailable] = useState(false);
   useEffect(() => {
     (async () => {
-      const isAvailable = await testFeature();
+      const isAvailable = await testPasskeys();
       setFeatureAvailable(isAvailable);
     })();
   });
@@ -270,8 +270,9 @@ function BackupKey() {
     setProgress(3);
   };
 
-  if (!account.isConnected || !address || !localAccount || !featureAvailable)
+  if (!address || !localAccount || !featureAvailable) {
     return null;
+  }
   if (lbResult && lbResult.includes("successful")) {
     return (
       <div>
@@ -296,26 +297,11 @@ function BackupKey() {
         >
           Next time you connect your wallet, look out for the "Connect with
           Passkeys" button!
-          <br />
-          <br />
-          <button
-            id="button-onboarding"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              width: "auto",
-              padding: "0.2rem 0.5rem",
-            }}
-          >
-            <PasskeysSVG style={{ width: "32px" }} /> Connect with Passkeys
-          </button>
         </p>
+        {props.redirectButton ? props.redirectButton : ""}
       </div>
     );
   } else if (lbResult) {
-    props.toast.error(
-      "Something went wrong when storing your passkey. Please contact @timdaub",
-    );
     return (
       <span style={{ color: "black", fontWeight: "bold" }}>{lbResult}</span>
     );
@@ -328,6 +314,7 @@ function BackupKey() {
           <ProgressBar progress={progress} />
           <span>
             <Dialogue />
+            <br />
             <button
               style={{ width: "auto" }}
               id="button-onboarding"
@@ -342,6 +329,7 @@ function BackupKey() {
           <ProgressBar progress={progress} />
           <span>
             <Dialogue />
+            <br />
             <button
               style={{ width: "auto" }}
               id="button-onboarding"
@@ -360,7 +348,7 @@ const Form = (props) => {
   return (
     <WagmiConfig config={client}>
       <RainbowKitProvider chains={chains}>
-        <BackupKey />
+        <BackupKey {...props} />
       </RainbowKitProvider>
     </WagmiConfig>
   );

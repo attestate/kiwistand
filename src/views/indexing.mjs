@@ -35,10 +35,11 @@ export default async function (theme, userAddress, transactionHash) {
             width: 100%;
           }
 
-          @media screen and (min-width: 769px) {
-            .sidebar {
-              display: none;
-            }
+          .sidebar {
+            display: none;
+          }
+          .sidebar-toggle {
+            visibility: hidden;
           }
         </style>
       </head>

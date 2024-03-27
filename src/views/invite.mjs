@@ -22,6 +22,9 @@ export default async function (theme, userAddress, transactionHash) {
               display: none;
             }
           }
+          .sidebar-toggle {
+            visibility: hidden;
+          }
           #hnmain {
             width: 100%;
           }

@@ -45,6 +45,7 @@ import submit from "./views/submit.mjs";
 import settings from "./views/settings.mjs";
 import indexing from "./views/indexing.mjs";
 import invite from "./views/invite.mjs";
+import passkeys from "./views/passkeys.mjs";
 import demonstration from "./views/demonstration.mjs";
 import * as curation from "./views/curation.mjs";
 import * as moderation from "./views/moderation.mjs";
@@ -546,6 +547,12 @@ export async function launch(trie, libp2p) {
   });
   app.get("/about", async (request, reply) => {
     const content = await about(reply.locals.theme);
+
+    reply.header("Cache-Control", "public, max-age=86400");
+    return reply.status(200).type("text/html").send(content);
+  });
+  app.get("/passkeys", async (request, reply) => {
+    const content = await passkeys(reply.locals.theme);
 
     reply.header("Cache-Control", "public, max-age=86400");
     return reply.status(200).type("text/html").send(content);

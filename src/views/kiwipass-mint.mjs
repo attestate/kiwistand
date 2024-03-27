@@ -53,6 +53,10 @@ export default async function (theme) {
             padding: 0;
           }
 
+          .sidebar-toggle {
+            visibility: hidden;
+          }
+
           .kiwipass-mint-page #hnmain {
             border-bottom: none !important;
           }

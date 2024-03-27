@@ -456,7 +456,13 @@ export const PrimaryActionButton = (props) => {
     <a
       style={{
         ...props.style,
-        ...{ display: "flex", gap: "5px", alignItems: "center" },
+        ...{
+          display: "flex",
+          gap: "5px",
+          alignItems: "center",
+          width: "auto",
+          justifyContent: "center",
+        },
       }}
       className={props.className}
       href={props.href}
