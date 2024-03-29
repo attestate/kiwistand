@@ -7,7 +7,6 @@ import vhtml from "vhtml";
 import normalizeUrl from "normalize-url";
 import { sub, differenceInMinutes, differenceInSeconds } from "date-fns";
 
-import { getTips, getTipsValue } from "../tips.mjs";
 import PWALine from "./components/iospwaline.mjs";
 import * as ens from "../ens.mjs";
 import Header from "./components/header.mjs";
@@ -125,14 +124,9 @@ async function recompute(trie, page, period, domain) {
     // noop
   }
 
-  const tips = await getTips();
-
   let stories = [];
   for await (let story of storyPromises) {
     const ensData = await ens.resolve(story.identity);
-
-    const tipValue = getTipsValue(tips, story.index);
-    story.tipValue = tipValue;
 
     let avatars = [];
     for await (let upvoter of story.upvoters) {

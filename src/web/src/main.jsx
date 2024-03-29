@@ -73,35 +73,6 @@ async function checkNewStories() {
   }
 }
 
-async function checkImages() {
-  let data;
-  try {
-    const response = await fetch("/api/v1/feeds/images");
-    data = await response.json();
-  } catch (error) {
-    console.error("Error fetching new stories:", error);
-    return;
-  }
-
-  if (data.status === "success" && data.data.stories.length > 0) {
-    const account = getLocalAccount();
-    const story = data.data.stories[0];
-    const identity = story.identity;
-    const latestTimestamp = story.timestamp;
-    const localTimestamp = getCookie("imagesTimestamp");
-    const elem = document.getElementById("images-dot");
-
-    if (
-      elem &&
-      (!localTimestamp || latestTimestamp > Number(localTimestamp)) &&
-      account &&
-      account.identity !== identity
-    ) {
-      elem.style.visibility = "visible";
-    }
-  }
-}
-
 function handleClick(event) {
   const sidebar = document.querySelector(".sidebar");
   const overlay = document.querySelector("#overlay");
@@ -158,33 +129,6 @@ async function addSubmitButton(allowlist, delegations, toast) {
         />
       </StrictMode>,
     );
-  }
-}
-
-async function addTips() {
-  const tipsButton = document.querySelectorAll(".tipsbuttoncontainer");
-  if (tipsButton && tipsButton.length > 0) {
-    const { createRoot } = await import("react-dom/client");
-    const { StrictMode } = await import("react");
-    const Tip = (await import("./Tip.jsx")).default;
-
-    tipsButton.forEach((tip) => {
-      const address = tip.getAttribute("data-address");
-      const index = tip.getAttribute("data-index");
-      const title = tip.getAttribute("data-title");
-      const tipValue = tip.getAttribute("data-tip");
-
-      const metadata = {
-        index: index,
-        title: title,
-      };
-
-      createRoot(tip).render(
-        <StrictMode>
-          <Tip address={address} metadata={metadata} tipValue={tipValue} />
-        </StrictMode>,
-      );
-    });
   }
 }
 
@@ -604,7 +548,6 @@ async function start() {
   const results = await Promise.allSettled([
     addVotes(allowlistPromise, delegationsPromise, toast),
     addCommentInput(toast, allowlistPromise, delegationsPromise),
-    addTips(),
     addSubscriptionButton(),
     addTGLink(),
     addPasskeysDialogue(toast),
@@ -621,7 +564,6 @@ async function start() {
     ),
     addSubmitButton(await allowlistPromise, await delegationsPromise, toast),
     checkNewStories(),
-    checkImages(),
   ]);
   results.forEach((result, index) => {
     if (result.status === "rejected") {

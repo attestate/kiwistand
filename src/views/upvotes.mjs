@@ -8,7 +8,6 @@ import { formatDistanceToNow } from "date-fns";
 import { utils } from "ethers";
 
 import PWALine from "./components/iospwaline.mjs";
-import { getTips, getTipsValue } from "../tips.mjs";
 import Header from "./components/header.mjs";
 import { trophySVG, broadcastSVG } from "./components/secondheader.mjs";
 import Footer from "./components/footer.mjs";
@@ -130,13 +129,8 @@ export default async function (
     ),
   );
 
-  const tips = await getTips();
-
   async function enhance(leaf) {
     const ensData = await ens.resolve(leaf.identity);
-
-    const tipValue = getTipsValue(tips, leaf.index);
-    leaf.tipValue = tipValue;
 
     let avatars = [];
     for await (let upvoter of leaf.upvoters) {

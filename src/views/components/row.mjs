@@ -231,37 +231,6 @@ const row = (
                             </a>
                           </span>
                         `}
-                    ${interactive ||
-                    !story.identity ||
-                    !story.index ||
-                    !story.title
-                      ? null
-                      : html`
-                          <span>
-                            ${story.tipValue
-                              ? html` <span> • </span>
-                                  <a
-                                    class="meta-link"
-                                    href="/stories?index=0x${story.index}"
-                                    style="white-space: nowrap;"
-                                  >
-                                    $${parseFloat(story.tipValue).toFixed(2)}
-                                    <span> </span>
-                                    received</a
-                                  >`
-                              : ""}
-                            <span
-                              class="tipsbuttoncontainer"
-                              data-address="${story.identity}"
-                              data-index="${story.index}"
-                              data-title="${story.title}"
-                              data-tip="${story.tipValue}"
-                              style="white-space: nowrap;"
-                              ><span> • </span>
-                              $ Tip
-                            </span>
-                          </span>
-                        `}
                   </span>
                 </div>
               </div>

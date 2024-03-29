@@ -19,7 +19,6 @@ import * as registry from "../chainstate/registry.mjs";
 import * as id from "../id.mjs";
 import * as moderation from "./moderation.mjs";
 import cache, { getUpvotes, getComments } from "../cache.mjs";
-import { getUserTips } from "../tips.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -184,26 +183,12 @@ function generateRow(lastUpdate) {
                   >
                 </p>
                 <p style="margin-top: 5px;">
-                  ${activity.verb === "tipped"
-                    ? html`
-                        ${activity.message.href
-                          ? html`<a
-                              href="${activity.message.href}"
-                              target="_blank"
-                              style="color: gray; word-break: break-word;"
-                            >
-                              ${activity.message.title}
-                            </a>`
-                          : html` ${activity.message.title} `}
-                      `
-                    : html`
-                        <a
-                          href="/stories?index=0x${activity.message.index}"
-                          style="color: gray; word-break: break-word;"
-                        >
-                          ${title.substring(0, 80)}
-                        </a>
-                      `}
+                  <a
+                    href="/stories?index=0x${activity.message.index}"
+                    style="color: gray; word-break: break-word;"
+                  >
+                    ${title.substring(0, 80)}
+                  </a>
                 </p>
                 <p>
                   ${activity.metadata?.index && activity.metadata?.title
@@ -313,8 +298,6 @@ export async function data(trie, identity, lastRemoteValue) {
     .flag(comments, config)
     .filter((comment) => !comment.flagged);
 
-  let tips = await getUserTips(identity);
-
   const activities = generateFeed(leaves).filter(
     (activity) => activity.verb === "upvoted",
   );
@@ -327,27 +310,6 @@ export async function data(trie, identity, lastRemoteValue) {
       identities: [comment.identity],
     });
   });
-
-  if (tips && tips.length > 0) {
-    tips.forEach((tip) => {
-      activities.push({
-        identities: [tip.from],
-        verb: "tipped",
-        message: {
-          title: tip.message,
-          timestamp: tip.timestamp,
-          identity: tip.from,
-          href: tip.blockExplorerUrl,
-        },
-        metadata: {
-          index: tip.index,
-          title: tip.title,
-        },
-        timestamp: tip.timestamp,
-        towards: tip.to,
-      });
-    });
-  }
 
   activities.sort((a, b) => b.timestamp - a.timestamp);
 

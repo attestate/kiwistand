@@ -9,7 +9,6 @@ import cookieParser from "cookie-parser";
 import { utils } from "ethers";
 import htm from "htm";
 import "express-async-errors";
-import multer from "multer";
 
 import log from "./logger.mjs";
 import { SCHEMATA } from "./constants.mjs";
@@ -17,22 +16,18 @@ import themes from "./themes.mjs";
 import feed, { index } from "./views/feed.mjs";
 import story, { generateStory } from "./views/story.mjs";
 import newest, * as newAPI from "./views/new.mjs";
-import images, * as imagesAPI from "./views/images.mjs";
 import best from "./views/best.mjs";
-import canon from "./views/canon.mjs";
 import privacy from "./views/privacy.mjs";
 import guidelines from "./views/guidelines.mjs";
 import onboarding from "./views/onboarding.mjs";
 import join from "./views/join.mjs";
 import kiwipass from "./views/kiwipass.mjs";
 import kiwipassmint from "./views/kiwipass-mint.mjs";
-import memecoin from "./views/memecoin.mjs";
 import onboardingReader from "./views/onboarding-reader.mjs";
 import onboardingCurator from "./views/onboarding-curator.mjs";
 import onboardingSubmitter from "./views/onboarding-submitter.mjs";
 import lists from "./views/lists.mjs";
 import shortcut from "./views/shortcut.mjs";
-import nfts from "./views/nfts.mjs";
 import subscribe from "./views/subscribe.mjs";
 import upvotes from "./views/upvotes.mjs";
 import community from "./views/community.mjs";
@@ -144,44 +139,6 @@ export async function launch(trie, libp2p) {
     res.status(500).send("Internal Server Error");
   });
 
-  const upload = multer({ storage: multer.memoryStorage() });
-
-  app.post(
-    "/api/v1/images",
-    upload.single("fileToUpload"),
-    async (req, res) => {
-      if (!req.file) {
-        return res.status(400).send("No file uploaded.");
-      }
-
-      const form = new FormData();
-      form.set("reqtype", "fileupload");
-      form.set(
-        "fileToUpload",
-        new Blob([req.file.buffer]),
-        basename(req.file.originalname),
-      );
-
-      try {
-        const catboxResponse = await fetch("https://catbox.moe/user/api.php", {
-          method: "POST",
-          body: form,
-        });
-
-        if (!catboxResponse.ok) {
-          throw new Error(
-            `Catbox responded with status: ${catboxResponse.status}`,
-          );
-        }
-
-        const catboxUrl = await catboxResponse.text();
-        res.send(catboxUrl);
-      } catch (error) {
-        console.error(`Error during upload: ${error}`);
-        res.status(500).send("Error uploading to Catbox");
-      }
-    },
-  );
   app.get("/kiwipass-mint", async (request, reply) => {
     reply.header(
       "Cache-Control",
@@ -413,28 +370,6 @@ export async function launch(trie, libp2p) {
     );
     return reply.status(200).type("text/html").send(content);
   });
-  app.get("/canons", async (request, reply) => {
-    const name = request.query.name;
-    let sheets;
-    try {
-      const activeSheets = await moderation.getActiveCanons();
-      sheets = await curation.getSheets(activeSheets);
-    } catch (err) {
-      return reply.status(404).type("text/plain").send("canon wasn't found");
-    }
-
-    const sheet = sheets.find((element) => element.name === name);
-    if (!sheet) {
-      return reply.status(404).type("text/plain").send("canon wasn't found");
-    }
-    const content = await canon(trie, reply.locals.theme, sheet);
-
-    reply.header(
-      "Cache-Control",
-      "public, max-age=300, no-transform, must-revalidate, stale-while-revalidate=86400",
-    );
-    return reply.status(200).type("text/html").send(content);
-  });
   app.get("/stories", async (request, reply) => {
     let submission;
     try {
@@ -471,31 +406,6 @@ export async function launch(trie, libp2p) {
     }
 
     reply.header("Cache-Control", "no-cache");
-    return reply.status(200).type("text/html").send(content);
-  });
-  app.get("/images", async (request, reply) => {
-    const content = await images(reply.locals.theme);
-
-    let timestamp;
-    try {
-      timestamp = imagesAPI.getLatestTimestamp();
-      reply.cookie("imagesTimestamp", timestamp, {
-        maxAge: 1000 * 60 * 60 * 32,
-      });
-    } catch (err) {
-      //noop
-    }
-
-    reply.header("Cache-Control", "no-cache");
-    return reply.status(200).type("text/html").send(content);
-  });
-  app.get("/nfts", async (request, reply) => {
-    const content = await nfts(trie, reply.locals.theme);
-
-    reply.header(
-      "Cache-Control",
-      "public, max-age=0, no-transform, must-revalidate, stale-while-revalidate=86400",
-    );
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/alltime", function (req, res) {
@@ -767,13 +677,6 @@ export async function launch(trie, libp2p) {
       .status(200)
       .type("text/html")
       .send(await kiwipass(reply.locals.theme));
-  });
-  app.get("/memecoin", async (request, reply) => {
-    reply.header("Cache-Control", "public, must-revalidate");
-    return reply
-      .status(200)
-      .type("text/html")
-      .send(await memecoin(reply.locals.theme));
   });
   app.get("/shortcut", async (request, reply) => {
     reply.header("Cache-Control", "public, max-age=86400");

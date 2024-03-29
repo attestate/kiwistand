@@ -15,7 +15,6 @@ import {
 import linkifyStr from "linkify-string";
 
 import PWALine from "./components/iospwaline.mjs";
-import { getTips, getTipsValue, filterTips } from "../tips.mjs";
 import * as ens from "../ens.mjs";
 import Header from "./components/header.mjs";
 import SecondHeader from "./components/secondheader.mjs";
@@ -97,15 +96,7 @@ export function generateList(profiles) {
                   />`
                 : null}
               <span> </span>
-              <a href="/${profile.name}">${profile.name}</a>
-              <span> </span>
-              <span
-                >${profile.usdAmount
-                  ? html`<a href="${profile.blockExplorerUrl}" target="_blank"
-                      >tipped $${profile.usdAmount.toFixed(2)}</a
-                    >`
-                  : "upvoted"}</span
-              >
+              <a href="/${profile.name}">${profile.name} upvoted</a>
             </p>
           </li>
         `,
@@ -137,27 +128,6 @@ export default async function (trie, theme, index, value) {
     ...value,
     isOriginal,
   };
-  const tips = await getTips();
-  const tipValue = getTipsValue(tips, index);
-  story.tipValue = tipValue;
-
-  let tipActions = [];
-  for await (let { blockExplorerUrl, usdAmount, from, timestamp } of filterTips(
-    tips,
-    index,
-  )) {
-    const profile = await ens.resolve(from);
-    if (profile.safeAvatar && profile.displayName) {
-      tipActions.push({
-        blockExplorerUrl,
-        timestamp: timestamp._seconds,
-        name: profile.displayName,
-        avatar: profile.safeAvatar,
-        address: profile.address,
-        usdAmount,
-      });
-    }
-  }
 
   let profiles = [];
   let avatars = [];
@@ -191,9 +161,7 @@ export default async function (trie, theme, index, value) {
       comment.avatar = profile.safeAvatar;
     }
   }
-  const actions = [...profiles, ...tipActions].sort(
-    (a, b) => a.timestamp - b.timestamp,
-  );
+  const actions = profiles.sort((a, b) => a.timestamp - b.timestamp);
   story.avatars = avatars;
   // NOTE: store.post returns upvoters as objects of "identity" and "timestamp"
   // property so that we can zip them with tipping actions. But the row component

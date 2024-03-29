@@ -20,7 +20,6 @@ import * as registry from "../chainstate/registry.mjs";
 import * as id from "../id.mjs";
 import * as moderation from "./moderation.mjs";
 import cache, { getAllComments } from "../cache.mjs";
-import { getUserTips } from "../tips.mjs";
 
 const html = htm.bind(vhtml);
 

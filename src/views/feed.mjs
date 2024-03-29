@@ -13,7 +13,6 @@ import {
 } from "date-fns";
 
 import PWALine from "./components/iospwaline.mjs";
-import { getTips, getTipsValue } from "../tips.mjs";
 import * as ens from "../ens.mjs";
 import Header from "./components/header.mjs";
 import SecondHeader from "./components/secondheader.mjs";
@@ -312,16 +311,9 @@ export async function index(trie, page, domain) {
     // noop
   }
 
-  // 1. Fetch tips from the API
-  const tips = await getTips();
-
   let stories = [];
   for await (let story of storyPromises) {
     const ensData = await ens.resolve(story.identity);
-
-    // 1. Add the total value to the tipValue property of the story
-    const tipValue = getTipsValue(tips, story.index);
-    story.tipValue = tipValue;
 
     let avatars = [];
     for await (let upvoter of story.upvoters) {
