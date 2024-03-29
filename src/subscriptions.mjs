@@ -27,6 +27,23 @@ db.exec(`
      subscription JSON
    )
  `);
+db.exec(`
+    PRAGMA foreign_keys=off;
+    CREATE TABLE subscriptions_temp AS SELECT * FROM subscriptions;
+    DROP TABLE subscriptions;
+    CREATE TABLE subscriptions (
+      address TEXT,
+      subscription JSON
+    );
+    INSERT INTO subscriptions SELECT address, subscription FROM subscriptions_temp;
+    DROP TABLE subscriptions_temp;
+    PRAGMA foreign_keys=on;
+ `);
+
+db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_address_subscription ON subscriptions (address,
+ subscription)
+  `);
 
 export async function triggerNotification(message) {
   if (message.type !== "comment") return;
@@ -77,13 +94,18 @@ export async function send(address, payload) {
   const subscriptions = get(address);
   if (!subscriptions || subscriptions.length === 0) return;
 
-  for await (let subscription of subscriptions) {
-    try {
-      await webpush.sendNotification(subscription, JSON.stringify(payload));
-    } catch (error) {
-      log(
-        `Error sending a notification to "${address}", err "${err.toString()}"`,
-      );
-    }
-  }
+  await Promise.allSettled(
+    subscriptions.map(async (subscription) => {
+      try {
+        return await webpush.sendNotification(
+          subscription,
+          JSON.stringify(payload),
+        );
+      } catch (error) {
+        log(
+          `Error sending a notification to "${address}", err "${err.toString()}"`,
+        );
+      }
+    }),
+  );
 }
