@@ -96,7 +96,9 @@ export function generateList(profiles) {
                   />`
                 : null}
               <span> </span>
-              <a href="/${profile.name}">${profile.name} upvoted</a>
+              <a href="/upvotes?address=${profile.address}"
+                >${profile.name} upvoted</a
+              >
             </p>
           </li>
         `,
