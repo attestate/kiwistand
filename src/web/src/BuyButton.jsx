@@ -202,7 +202,7 @@ const abiVendor = [
 ];
 
 const collectionProxy = "0x66747bdc903d17c586fa09ee5d6b54cc85bbea45";
-const addressDelegator = "0xd315bF56F04aC93352b6a78E7952eEfC2A7A0494";
+const addressDelegator = "0xa86a9222daf3367474831145a07c868b598183fe";
 
 const newKey = Wallet.createRandom();
 const BuyButton = (props) => {
