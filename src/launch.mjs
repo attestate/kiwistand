@@ -23,9 +23,13 @@ import * as moderation from "./views/moderation.mjs";
 
 const trie = await store.create();
 
+const node = await start(config);
+
+await api.launch(trie, node);
+await http.launch(trie, node);
+
 crawl(mintCrawlPath);
 crawl(delegateCrawlPath);
-const node = await start(config);
 
 // NOTE: We're passing in the trie here as we don't want to make it globally
 // available to run more than one node in the tests
@@ -40,8 +44,6 @@ await subscribe(
   [messages, roots],
   trie,
 );
-await api.launch(trie, node);
-await http.launch(trie, node);
 
 // NOTE: This request queries all messages in the database to enable caching
 // when calling ecrecover on messages' signatures

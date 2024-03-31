@@ -4,56 +4,17 @@ import { optimism } from "wagmi/chains";
 import { useEffect, useState } from "react";
 
 import { client, chains } from "./client.mjs";
-
-const abi = [
-  {
-    inputs: [],
-    name: "saleDetails",
-    outputs: [
-      {
-        components: [
-          { internalType: "bool", name: "publicSaleActive", type: "bool" },
-          { internalType: "bool", name: "presaleActive", type: "bool" },
-          { internalType: "uint256", name: "publicSalePrice", type: "uint256" },
-          { internalType: "uint64", name: "publicSaleStart", type: "uint64" },
-          { internalType: "uint64", name: "publicSaleEnd", type: "uint64" },
-          { internalType: "uint64", name: "presaleStart", type: "uint64" },
-          { internalType: "uint64", name: "presaleEnd", type: "uint64" },
-          {
-            internalType: "bytes32",
-            name: "presaleMerkleRoot",
-            type: "bytes32",
-          },
-          {
-            internalType: "uint256",
-            name: "maxSalePurchasePerAddress",
-            type: "uint256",
-          },
-          { internalType: "uint256", name: "totalMinted", type: "uint256" },
-          { internalType: "uint256", name: "maxSupply", type: "uint256" },
-        ],
-        internalType: "struct IERC721Drop.SaleDetails",
-        name: "",
-        type: "tuple",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-];
-
-const address = "0x66747bdc903d17c586fa09ee5d6b54cc85bbea45";
+import { fetchPrice } from "./API.mjs";
 
 export const PriceComponent = (props) => {
   const [ethPrice, setEthPrice] = useState(null);
-  const salesDetails = useContractRead({
-    address,
-    abi,
-    functionName: "saleDetails",
-    chainId: optimism.id,
-  });
+  const [price, setPrice] = useState(null);
 
   useEffect(() => {
+    (async () => {
+      const price = await fetchPrice();
+      setPrice(price);
+    })();
     (async () => {
       let data;
       try {
@@ -73,21 +34,25 @@ export const PriceComponent = (props) => {
     })();
   }, []);
 
-  const salesPrice = salesDetails?.data?.publicSalePrice || 0;
-  let total = salesPrice;
+  const usdPrice =
+    ethPrice && price && price.authoritative
+      ? `$${(formatEther(price.authoritative) * ethPrice).toFixed(2)}`
+      : null;
 
-  const usdPrice = ethPrice
-    ? `$${(formatEther(total) * ethPrice).toFixed(2)}`
-    : null;
-
-  if (!usdPrice || !total) {
+  if (!usdPrice && !price) {
     return "...loading";
   }
 
   return (
     <span>
-      <span>({usdPrice}) </span>
-      <span>{formatEther(total)} ETH</span>
+      {price && price.authoritative ? (
+        <span>
+          {parseFloat(formatEther(price.authoritative)).toFixed(5)} ETH
+        </span>
+      ) : (
+        ""
+      )}
+      {usdPrice ? <span> ({usdPrice}) </span> : ""}
     </span>
   );
 };

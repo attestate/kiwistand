@@ -40,6 +40,7 @@ export default {
           ],
           blockspan: 5000,
           includeTimestamp: true,
+          includeValue: true,
         },
         output: {
           name: "op-call-block-logs-extraction",
@@ -74,6 +75,8 @@ export default {
   endpoints: {
     [process.env.OPTIMISM_RPC_HTTP_HOST]: {
       timeout: 10_000,
+      requestsPerUnit: 5,
+      unit: "second",
     },
   },
 };

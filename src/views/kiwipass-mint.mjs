@@ -321,7 +321,7 @@ export default async function (theme) {
                         Kiwi
                       </h2>
                       <div style="display: flex; justify-content: center;">
-                        Price: <span> <nft-price /></span>
+                        <span>Price: </span><nft-price />
                       </div>
                       <div id="buy-button-container">
                         <button class="buy-button" disabled>

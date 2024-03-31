@@ -48,6 +48,7 @@ export function* direct({ state: { line } }) {
       value: {
         to: parsedLog.to,
         timestamp: log.block.timestamp,
+        value: log.transaction.value,
       },
     };
   }

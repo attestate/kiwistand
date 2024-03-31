@@ -9,7 +9,9 @@ import cookieParser from "cookie-parser";
 import { utils } from "ethers";
 import htm from "htm";
 import "express-async-errors";
+import { sub } from "date-fns";
 
+import * as registry from "./chainstate/registry.mjs";
 import log from "./logger.mjs";
 import { SCHEMATA } from "./constants.mjs";
 import themes from "./themes.mjs";
@@ -53,6 +55,7 @@ import * as karma from "./karma.mjs";
 import * as frame from "./frame.mjs";
 import * as subscriptions from "./subscriptions.mjs";
 import * as telegram from "./telegram.mjs";
+import * as price from "./price.mjs";
 
 const app = express();
 
@@ -284,6 +287,21 @@ export async function launch(trie, libp2p) {
     const details = "Downloaded and parsed URL's metadata";
     return sendStatus(reply, code, httpMessage, details, data);
   });
+  app.get("/api/v1/price", async (request, reply) => {
+    reply.header("Cache-Control", "no-cache");
+    const today = new Date();
+    const firstDayInSchedule = sub(today, {
+      months: 6,
+    });
+    const mints = await registry.mints();
+    const value = await price.getPrice(mints, firstDayInSchedule, today);
+    const code = 200;
+    const httpMessage = "OK";
+    const details = "Calculated current price";
+    return sendStatus(reply, code, httpMessage, details, {
+      price: value.toString(),
+    });
+  });
   app.get("/api/v1/parse", async (request, reply) => {
     const embed = await parse(request.query.url);
     reply.header("Cache-Control", "no-cache");
@@ -446,6 +464,10 @@ export async function launch(trie, libp2p) {
     );
 
     reply.header("Cache-Control", "private, must-revalidate");
+    return reply.status(200).type("text/html").send(content);
+  });
+  app.get("/price", async (request, reply) => {
+    const content = await price.chart(reply.locals.theme);
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/stats", async (request, reply) => {

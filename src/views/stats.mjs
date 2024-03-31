@@ -117,8 +117,7 @@ async function calculateRetention31Days(messagesWithAddresses) {
   return retention;
 }
 
-async function calculateMintersPerDay() {
-  const mints = await registry.mints();
+export async function calculateMintersPerDay(mints) {
   const mintMap = new Map();
 
   for (const mint of mints) {
@@ -609,7 +608,8 @@ export default async function (trie, theme) {
     options,
   );
 
-  const mintersData = await calculateMintersPerDay();
+  const mints = await registry.mints();
+  const mintersData = await calculateMintersPerDay(mints);
   options.yLabel.name = "minters";
   options.xLabel.name = "";
   const mintersChart = plot(html)(

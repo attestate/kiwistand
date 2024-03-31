@@ -1,4 +1,7 @@
 // @format
+import { readContract } from "@wagmi/core";
+import { optimism } from "wagmi/chains";
+
 import { getCookie, setCookie } from "./session.mjs";
 
 export const EIP712_DOMAIN = {
@@ -100,6 +103,72 @@ export async function fetchNotifications(address) {
   }
 
   return data.data.notifications;
+}
+
+const address = "0x66747bdc903d17c586fa09ee5d6b54cc85bbea45";
+const abi = [
+  {
+    inputs: [],
+    name: "saleDetails",
+    outputs: [
+      {
+        components: [
+          { internalType: "bool", name: "publicSaleActive", type: "bool" },
+          { internalType: "bool", name: "presaleActive", type: "bool" },
+          { internalType: "uint256", name: "publicSalePrice", type: "uint256" },
+          { internalType: "uint64", name: "publicSaleStart", type: "uint64" },
+          { internalType: "uint64", name: "publicSaleEnd", type: "uint64" },
+          { internalType: "uint64", name: "presaleStart", type: "uint64" },
+          { internalType: "uint64", name: "presaleEnd", type: "uint64" },
+          {
+            internalType: "bytes32",
+            name: "presaleMerkleRoot",
+            type: "bytes32",
+          },
+          {
+            internalType: "uint256",
+            name: "maxSalePurchasePerAddress",
+            type: "uint256",
+          },
+          { internalType: "uint256", name: "totalMinted", type: "uint256" },
+          { internalType: "uint256", name: "maxSupply", type: "uint256" },
+        ],
+        internalType: "struct IERC721Drop.SaleDetails",
+        name: "",
+        type: "tuple",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+];
+
+export async function fetchPrice() {
+  const saleDetails = await readContract({
+    address,
+    abi,
+    functionName: "saleDetails",
+    chainId: optimism.id,
+  });
+
+  let response;
+  try {
+    response = await fetch(`/api/v1/price`);
+    const data = await response.json();
+    const prices = {
+      min: saleDetails.publicSalePrice,
+      current: BigInt(data.data.price),
+    };
+    if (prices.current <= prices.min) {
+      prices.authoritative = prices.min;
+    } else {
+      prices.authoritative = prices.current;
+    }
+    return prices;
+  } catch (err) {
+    console.error(err);
+    return null;
+  }
 }
 
 export async function fetchKarma(identity) {
