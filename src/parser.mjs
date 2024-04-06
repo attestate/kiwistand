@@ -75,7 +75,12 @@ export const metadata = async (url) => {
   const { ogTitle } = result;
   let { ogDescription } = result;
 
-  const canonicalLink = await extractCanonicalLink(html);
+  let canonicalLink;
+  // NOTE: Hey's canonical link implementation is wrong and always links back
+  // to the root
+  if (domain !== "hey.xyz") {
+    canonicalLink = await extractCanonicalLink(html);
+  }
 
   if (
     !ogTitle ||
