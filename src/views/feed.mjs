@@ -50,7 +50,7 @@ function CanonRow(originals) {
                   <img
                     loading="lazy"
                     src="${metadata.image}"
-                    style="border-bottom: 1px solid #828282; width: 100%; height: auto;"
+                    style="aspect-ratio: 16/9; object-fit:cover;border-bottom: 1px solid #828282; width: 100%; height: auto;"
                   />
                 </a>
                 <a
