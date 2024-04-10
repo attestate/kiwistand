@@ -46,6 +46,7 @@ export function* direct({ state: { line } }) {
     yield {
       key,
       value: {
+        from: parsedLog.from,
         to: parsedLog.to,
         timestamp: log.block.timestamp,
         value: log.transaction.value,
@@ -71,7 +72,12 @@ export function* order({ state: { line } }) {
     const parsedLog = parse(log);
     yield {
       key,
-      value: parsedLog.to,
+      value: {
+        from: parsedLog.from,
+        to: parsedLog.to,
+        timestamp: log.block.timestamp,
+        value: log.transaction.value,
+      },
     };
   }
 }

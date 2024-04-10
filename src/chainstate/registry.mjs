@@ -5,6 +5,9 @@ import { createHash } from "crypto";
 import { utils } from "ethers";
 import { database } from "@attestate/crawler";
 import { organize } from "@attestate/delegator2";
+import * as blockLogs from "@attestate/crawler-call-block-logs";
+
+const { aggregate } = blockLogs.loader;
 
 import mainnet from "./mainnet-mints.mjs";
 
@@ -47,7 +50,38 @@ export async function delegations() {
   return cachedDelegations;
 }
 
-export async function allowlist() {
+// NOTE: For the purpose of set reconciliation, we must know the first moment
+// of ownership, so in which block the user minted the NFT. However, for
+// mainnet NFTs we're NOT continuously tracking which addresses hold or
+// transfer the NFTs as this would increase scope and complexity significantly.
+export function augmentWithMainnet(opAccounts) {
+  for (let { to, timestamp } of mainnet) {
+    timestamp = parseInt(timestamp, 16);
+
+    if (
+      opAccounts[to] &&
+      opAccounts[to].balance !== undefined &&
+      opAccounts[to].start > timestamp
+    ) {
+      opAccounts[to].start = timestamp;
+      // NOTE: We're intentionally NOT increasing the balance here, as for
+      // mainnet mints, we've airdropped every one of these users a Kiwi Pass
+      // on Optimism too.
+      //opAccounts[to].balance += 1;
+    }
+
+    if (!opAccounts[to]) {
+      opAccounts[to] = {
+        balance: 1,
+        start: timestamp,
+      };
+    }
+  }
+
+  return opAccounts;
+}
+
+export async function accounts() {
   const path = resolve(process.env.DATA_DIR, "op-call-block-logs-load");
   // NOTE: On some cloud instances we ran into problems where LMDB reported
   // MDB_READERS_FULL which exceeded the LMDB default value of 126. So we
@@ -58,13 +92,26 @@ export async function allowlist() {
   const name = database.order("op-call-block-logs");
   const subdb = db.openDB(name);
   const optimism = await database.all(subdb, "");
-  const addresses = [
-    ...mainnet.map(({ to }) => to),
-    ...optimism.map(({ value }) => utils.getAddress(value)),
-  ];
-  return new Set(addresses);
+  const transformed = optimism.map(({ value }) => ({
+    ...value,
+    timestamp: parseInt(value.timestamp, 16),
+  }));
+  const accounts = aggregate(transformed);
+  return augmentWithMainnet(accounts);
 }
 
+export async function allowlist() {
+  const accs = await accounts();
+  const currentHolders = new Set();
+  for (let address of Object.keys(accs)) {
+    if (accs[address].balance > 0) {
+      currentHolders.add(address);
+    }
+  }
+  return currentHolders;
+}
+
+// NOTE: This function won't have accurate data for mainnet mints' existence.
 export async function mints() {
   const path = resolve(process.env.DATA_DIR, "op-call-block-logs-load");
   // NOTE: On some cloud instances we ran into problems where LMDB reported
@@ -75,7 +122,9 @@ export async function mints() {
   const db = database.open(path, maxReaders);
   const name = database.direct("op-call-block-logs");
   const subdb = db.openDB(name);
-  const all = await database.all(subdb, "");
-  const operations = [...mainnet, ...all.map(({ value }) => value)];
-  return operations;
+  const optimism = await database.all(subdb, "");
+  const zeroAddress = "0x0000000000000000000000000000000000000000";
+  return optimism
+    .map(({ value }) => value)
+    .filter(({ from }) => from === zeroAddress);
 }

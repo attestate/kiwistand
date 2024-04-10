@@ -184,7 +184,21 @@ test("listMessages success", async (t) => {
   const trie = await store.create();
   const libp2p = null;
   const allowlist = new Set([address]);
-  await store.add(trie, signedMessage, libp2p, allowlist);
+  const delegations = {};
+  const accounts = {
+    [address]: {
+      balance: 1,
+      start: 123,
+    },
+  };
+  await store.add(
+    trie,
+    signedMessage,
+    libp2p,
+    allowlist,
+    delegations,
+    accounts,
+  );
 
   const getAllowlist = () => allowlist;
   const getDelegations = () => ({});
@@ -239,7 +253,13 @@ test("handleMessage should send back an error upon invalid address signer", asyn
   const zeroAddr = "0x0000000000000000000000000000000000000000";
   const allowlist = () => new Set([zeroAddr]);
   const delegations = () => ({});
-  const handler = handleMessage(trie, libp2p, allowlist, delegations);
+  const accounts = () => ({
+    [zeroAddr]: {
+      balance: 1,
+      start: 123,
+    },
+  });
+  const handler = handleMessage(trie, libp2p, allowlist, delegations, accounts);
 
   await handler(request, reply);
 
@@ -283,7 +303,13 @@ test("handleMessage should handle a valid message and return 200 OK", async (t) 
   const libp2p = null;
   const allowlist = () => new Set([address]);
   const delegations = () => ({});
-  const handler = handleMessage(trie, libp2p, allowlist, delegations);
+  const accounts = () => ({
+    [address]: {
+      balance: 1,
+      start: 123,
+    },
+  });
+  const handler = handleMessage(trie, libp2p, allowlist, delegations, accounts);
 
   await handler(request, reply);
 

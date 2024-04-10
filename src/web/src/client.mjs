@@ -14,13 +14,13 @@ import {
   useWalletClient,
 } from "wagmi";
 import { mainnet, optimism } from "wagmi/chains";
-//import { alchemyProvider } from "wagmi/providers/alchemy";
-import { infuraProvider } from "wagmi/providers/infura";
+import { alchemyProvider } from "wagmi/providers/alchemy";
+//import { infuraProvider } from "wagmi/providers/infura";
 
 const config = configureChains(
   [optimism, mainnet],
-  //[alchemyProvider({ apiKey: "TfAhzs116ThO7Fwod1gzpTJmH0Cudxp7" })],
-  [infuraProvider({ apiKey: "ddb924190df54c22a268ae7671ed0f55" })],
+  [alchemyProvider({ apiKey: "TfAhzs116ThO7Fwod1gzpTJmH0Cudxp7" })],
+  //[infuraProvider({ apiKey: "ddb924190df54c22a268ae7671ed0f55" })],
 );
 
 export const chains = config.chains;

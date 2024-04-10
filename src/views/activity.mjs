@@ -278,6 +278,8 @@ export async function data(trie, identity, lastRemoteValue) {
     throw new Error("Not a valid address");
   }
 
+  // TODO: Now that we have committed to an sqlite database, we should replace
+  // this logic to make it permanent by storing the user timestamp on disk
   const userKey = `--last-updated-${identity}`;
   let latestValue = cache.get(userKey);
   if (!latestValue || latestValue < lastRemoteValue) {

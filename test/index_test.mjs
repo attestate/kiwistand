@@ -51,7 +51,9 @@ async function simplePut(trie, message) {
   for await (let { node, key } of missing) {
     const value = node.value();
     log(
-      `TESTFN: Adding to key "${key.toString("hex")}" database value "${value}"`
+      `TESTFN: Adding to key "${key.toString(
+        "hex",
+      )}" database value "${value}"`,
     );
     await trie.put(key, value);
   }
@@ -119,7 +121,20 @@ test.skip("if sync of signed messages work over the network", async (t) => {
   const trieA = await store.create();
   const libp2p = null;
   const allowlist = new Set([address]);
-  await store.add(trieA, signedMessage, libp2p, allowlist);
+  const accounts = {
+    [address]: {
+      balance: 1,
+      start: 123,
+    },
+  };
+  await store.add(
+    trieA,
+    signedMessage,
+    libp2p,
+    allowlist,
+    delegations,
+    accounts,
+  );
 
   const node1 = await start(config1);
   await subscribe(
@@ -128,7 +143,7 @@ test.skip("if sync of signed messages work over the network", async (t) => {
     handlers.connection,
     handlers.protocol,
     [],
-    trieA
+    trieA,
   );
 
   process.env.DATA_DIR = "dbtestB";
@@ -159,7 +174,7 @@ test.skip("if sync of signed messages work over the network", async (t) => {
     handlers.connection,
     handlers.protocol,
     [],
-    trieB
+    trieB,
   );
 
   const addrs = node2.getMultiaddrs();
@@ -194,7 +209,7 @@ test.skip("if sync of simple messages work over the network", async (t) => {
       ...{ [`/${leaves.id}/${leaves.version}`]: simpleHandleLeaves },
     },
     [],
-    trieA
+    trieA,
   );
 
   process.env.DATA_DIR = "dbtestB";
@@ -215,7 +230,7 @@ test.skip("if sync of simple messages work over the network", async (t) => {
       ...{ [`/${leaves.id}/${leaves.version}`]: simpleHandleLeaves },
     },
     [],
-    trieB
+    trieB,
   );
 
   const addrs = node2.getMultiaddrs();
@@ -238,7 +253,7 @@ test.serial(
       process.env.USE_EPHEMERAL_ID = "false";
       await import(`../src/config.mjs?${randInt()}`);
     });
-  }
+  },
 );
 
 test.skip("if nodes can be bootstrapped using from and to wire", async (t) => {
@@ -279,7 +294,7 @@ test.skip("if nodes can be bootstrapped using from and to wire", async (t) => {
       connHandler1,
       protoHandler1,
       topics,
-      trie
+      trie,
     );
 
     process.env.PORT = "0";
@@ -300,7 +315,7 @@ test.skip("if nodes can be bootstrapped using from and to wire", async (t) => {
       "peer:discovery": async (evt) => {
         const stream = await node2.dialProtocol(
           evt.detail.multiaddrs[0],
-          "/test/1.0.0"
+          "/test/1.0.0",
         );
         await toWire(message, stream.sink);
       },
@@ -314,7 +329,7 @@ test.skip("if nodes can be bootstrapped using from and to wire", async (t) => {
       connHandler2,
       protoHandler2,
       topics,
-      trie
+      trie,
     );
   });
   t.deepEqual(actual, [message]);
@@ -355,7 +370,7 @@ test.skip("if nodes can only be bootstrapped", async (t) => {
       connHandler1,
       protoHandler1,
       topics,
-      trie
+      trie,
     );
 
     process.env.PORT = "0";
@@ -368,7 +383,7 @@ test.skip("if nodes can only be bootstrapped", async (t) => {
       "peer:discovery": async (evt) => {
         const stream = await node2.dialProtocol(
           evt.detail.multiaddrs[0],
-          "/test/1.0.0"
+          "/test/1.0.0",
         );
         await pipe([encode(message)], lp.encode(), stream.sink);
       },
@@ -382,7 +397,7 @@ test.skip("if nodes can only be bootstrapped", async (t) => {
       connHandler2,
       protoHandler2,
       topics,
-      trie
+      trie,
     );
   });
   t.deepEqual(actual, message);
@@ -435,7 +450,7 @@ test.skip("if third node can be discovered from bootstrap and newly online node"
       connHandler1,
       protoHandler1,
       [{ name: topic }],
-      trie
+      trie,
     );
     peerId1 = node1.peerId.toString();
 
@@ -468,7 +483,7 @@ test.skip("if third node can be discovered from bootstrap and newly online node"
       connHandler2,
       protoHandler2,
       [{ name: topic }],
-      trie
+      trie,
     );
     peerId2 = node2.peerId.toString();
 
@@ -501,7 +516,7 @@ test.skip("if third node can be discovered from bootstrap and newly online node"
       connHandler3,
       protoHandler3,
       [{ name: topic }],
-      trie
+      trie,
     );
     peerId3 = node3.peerId.toString();
   });

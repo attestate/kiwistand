@@ -15,7 +15,7 @@ import rlp from "@ethereumjs/rlp";
 import { keccak256 } from "ethereum-cryptography/keccak.js";
 import { decode } from "cbor-x";
 import { open } from "lmdb";
-import { eligible } from "@attestate/delegator2";
+import { eligible, eligibleAt } from "@attestate/delegator2";
 
 import log from "./logger.mjs";
 import LMDB from "./lmdb.mjs";
@@ -336,11 +336,19 @@ export async function add(
   libp2p,
   allowlist,
   delegations,
+  accounts,
   synching = false,
   metadb = upvotes,
 ) {
   const address = verify(message);
-  const identity = eligible(allowlist, delegations, address);
+
+  let identity;
+  if (synching) {
+    const validationTime = new Date(message.timestamp * 1000);
+    identity = eligibleAt(accounts, delegations, address, validationTime);
+  } else {
+    identity = eligible(allowlist, delegations, address);
+  }
   if (!identity) {
     const err = `Address "${address}" wasn't found in the allow list or delegations list. Dropping message "${JSON.stringify(
       message,

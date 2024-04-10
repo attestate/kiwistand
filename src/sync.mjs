@@ -301,7 +301,7 @@ export async function initiate(
   );
 }
 
-export async function put(trie, message, allowlist, delegations) {
+export async function put(trie, message, allowlist, delegations, accounts) {
   let missing;
   try {
     missing = deserialize(message);
@@ -333,7 +333,15 @@ export async function put(trie, message, allowlist, delegations) {
     const libp2p = null;
     const synching = true;
     try {
-      await store.add(trie, obj, libp2p, allowlist, delegations, synching);
+      await store.add(
+        trie,
+        obj,
+        libp2p,
+        allowlist,
+        delegations,
+        accounts,
+        synching,
+      );
       log(`Adding to database value (as JSON)`);
     } catch (err) {
       // NOTE: We're not bubbling the error up here because we want to be
@@ -444,8 +452,9 @@ export function handleLeaves(trie, peerFab) {
       // because in each of their failure, we want to abort writing into
       // the databases.
       const allowlist = await registry.allowlist();
+      const accounts = await registry.accounts();
       const delegations = await registry.delegations();
-      await put(trie, message, allowlist, delegations);
+      await put(trie, message, allowlist, delegations, accounts);
     } catch (err) {
       elog(err, "handleLeaves: Unexpected error");
       await trie.revert();
