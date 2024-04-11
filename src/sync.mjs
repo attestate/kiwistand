@@ -77,12 +77,16 @@ export async function toWire(message, sink) {
   return await pipe([buf], lp.encode(), sink);
 }
 
+// NOTE: it-length-prefixed's default configuration will throw errors for
+// messages that are longer than 4MB, so we're doubling it here.
+export const maxDataLength = 1024 * 1024 * 4 * 2;
 export async function fromWire(source) {
-  return await pipe(source, lp.decode(), async (_source) => {
+  return await pipe(source, lp.decode({ maxDataLength }), async (_source) => {
     const results = await map(_source, (message) => {
       if (!message) return;
       const buf = Buffer.from(message.subarray());
-      return decode(buf);
+      const decoded = decode(buf);
+      return decoded;
     });
     return await all(results);
   });
