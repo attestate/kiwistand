@@ -157,7 +157,7 @@ export function listDelegations(getDelegations) {
   };
 }
 
-export function listMessages(trie, getAllowlist, getDelegations) {
+export function listMessages(trie, getAccounts, getDelegations) {
   const requestValidator = ajv.compile(SCHEMATA.listMessages);
   return async (request, reply) => {
     const result = requestValidator(request.body);
@@ -173,7 +173,7 @@ export function listMessages(trie, getAllowlist, getDelegations) {
     const { from, amount } = request.body;
     const parser = JSON.parse;
     const startDatetime = null;
-    const allowlist = await getAllowlist();
+    const accounts = await getAccounts();
     const delegations = await getDelegations();
     const href = null;
     const type = request.body.type || "amplify";
@@ -183,7 +183,7 @@ export function listMessages(trie, getAllowlist, getDelegations) {
       amount,
       parser,
       startDatetime,
-      allowlist,
+      accounts,
       delegations,
       href,
       type,
@@ -203,7 +203,7 @@ export function launch(trie, libp2p) {
 
   api.post(
     "/list",
-    listMessages(trie, registry.allowlist, registry.delegations),
+    listMessages(trie, registry.accounts, registry.delegations),
   );
   api.get("/allowlist", listAllowed(registry.allowlist));
   api.get("/delegations", listDelegations(registry.delegations));

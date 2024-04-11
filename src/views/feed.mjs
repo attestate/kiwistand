@@ -203,7 +203,7 @@ export async function index(trie, page, domain) {
   const amount = null;
   const parser = JSON.parse;
   const lookBackUnixTime = Math.floor(lookBack.getTime() / 1000);
-  const allowlist = await registry.allowlist();
+  const accounts = await registry.accounts();
   const delegations = await registry.delegations();
   const href = null;
   const type = "amplify";
@@ -214,7 +214,7 @@ export async function index(trie, page, domain) {
     amount,
     parser,
     lookBackUnixTime,
-    allowlist,
+    accounts,
     delegations,
     href,
     type,

@@ -70,7 +70,7 @@ async function recompute(trie, page, period, domain) {
   const from = null;
   const amount = null;
   const parser = JSON.parse;
-  const allowlist = await registry.allowlist();
+  const accounts = await registry.accounts();
   const delegations = await registry.delegations();
 
   let startDatetime = null;
@@ -96,7 +96,7 @@ async function recompute(trie, page, period, domain) {
     amount,
     parser,
     tolerance,
-    allowlist,
+    accounts,
     delegations,
     href,
     type,

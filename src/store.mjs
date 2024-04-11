@@ -263,7 +263,7 @@ export async function atomicPut(
   trie,
   message,
   identity,
-  allowlist,
+  accounts,
   delegations,
 ) {
   const marker = upvoteID(identity, message.href, message.type);
@@ -287,7 +287,7 @@ export async function atomicPut(
     await trie.put(Buffer.from(index, "hex"), canonical);
     try {
       const cacheEnabled = false;
-      const enhancer = enhance(allowlist, delegations, cacheEnabled);
+      const enhancer = enhance(accounts, delegations, cacheEnabled);
       const enhancedMessage = enhancer(message);
       insertMessage(enhancedMessage);
       await triggerNotification(enhancedMessage);
@@ -400,7 +400,7 @@ export async function add(
     trie,
     message,
     identity,
-    allowlist,
+    accounts,
     delegations,
   );
 
@@ -447,64 +447,6 @@ export async function leaf(trie, index, parser) {
   return message;
 }
 
-export async function post(trie, index, parser, allowlist, delegations) {
-  const message = await leaf(trie, index, parser);
-  const cacheEnabled = true;
-  const signer = ecrecover(message, EIP712_MESSAGE, cacheEnabled);
-  const identity = eligible(allowlist, delegations, signer);
-  if (!identity) {
-    throw new Error(`Identity not found: ${signer}`);
-    return null;
-  }
-
-  let upvoters = [];
-  let comments = [];
-  if (parser) {
-    const from = null;
-    const amount = null;
-    const startDatetime = null;
-    const upvotes = await posts(
-      trie,
-      from,
-      amount,
-      parser,
-      startDatetime,
-      allowlist,
-      delegations,
-      message.href,
-      "amplify",
-    );
-    upvoters = upvotes.map(({ identity, timestamp }) => ({
-      identity,
-      timestamp,
-    }));
-
-    comments = await posts(
-      trie,
-      from,
-      amount,
-      parser,
-      startDatetime,
-      allowlist,
-      delegations,
-      `kiwi:0x${index.toString("hex")}`,
-      "comment",
-    );
-  }
-
-  return {
-    key: index.toString("hex"),
-    value: {
-      signer,
-      identity,
-      ...message,
-      upvoters,
-      upvotes: upvoters.length,
-      comments,
-    },
-  };
-}
-
 // TODO: It'd be better to accept a JavaScript Date here and not expect a unix
 // timestamp integer value.
 export async function posts(
@@ -513,7 +455,7 @@ export async function posts(
   amount,
   parser,
   startDatetime,
-  allowlist,
+  accounts,
   delegations,
   href,
   type,
@@ -529,15 +471,16 @@ export async function posts(
   );
 
   const cacheEnabled = true;
-  const enhancer = enhance(allowlist, delegations, cacheEnabled);
+  const enhancer = enhance(accounts, delegations, cacheEnabled);
   const posts = nodes.map(enhancer).filter((node) => node !== null);
   return posts;
 }
 
-export function enhance(allowlist, delegations, cacheEnabled) {
+export function enhance(accounts, delegations, cacheEnabled) {
   return (node) => {
     const signer = ecrecover(node, EIP712_MESSAGE, cacheEnabled);
-    const identity = eligible(allowlist, delegations, signer);
+    const validationTime = new Date(node.timestamp * 1000);
+    const identity = eligibleAt(accounts, delegations, signer, validationTime);
     if (!identity) {
       log(`Identity not found: ${signer}`);
       return null;

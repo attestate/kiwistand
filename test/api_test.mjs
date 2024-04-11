@@ -200,11 +200,11 @@ test("listMessages success", async (t) => {
     accounts,
   );
 
-  const getAllowlist = () => allowlist;
+  const getAccounts = () => accounts;
   const getDelegations = () => ({});
   const response = await listMessages(
     trie,
-    getAllowlist,
+    getAccounts,
     getDelegations,
   )(mockRequest, mockReply);
 

@@ -51,7 +51,7 @@ const from = null;
 const amount = null;
 const startDatetime = null;
 const parser = JSON.parse;
-const allowlist = await registry.allowlist();
+const accounts = await registry.accounts();
 const delegations = await registry.delegations();
 const href = null;
 const upvotes = await store.posts(
@@ -60,7 +60,7 @@ const upvotes = await store.posts(
   amount,
   parser,
   startDatetime,
-  allowlist,
+  accounts,
   delegations,
   href,
   "amplify",
@@ -71,7 +71,7 @@ const comments = await store.posts(
   amount,
   parser,
   startDatetime,
-  allowlist,
+  accounts,
   delegations,
   href,
   "comment",
