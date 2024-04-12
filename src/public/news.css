@@ -545,43 +545,41 @@ body {
       background-color: rgba(0,0,0,0.1);
     }
      #mySidebar > hr {
-         display: none;
+      display: none;
     }
-     #hnmain {
-         border-top-right-radius: 2px;
-         border-bottom-right-radius: 2px;
-         border-top: 1px solid #ccc;
-         border-right: 1px solid #ccc;
-         border-bottom: 1px solid #ccc;
+    #hnmain {
+      border-top-right-radius: 2px;
+      border-bottom-right-radius: 2px;
+      border-top: 1px solid #ccc;
+      border-right: 1px solid #ccc;
+      border-bottom: 1px solid #ccc;
     }
-     .svg-container svg {
-         width: 1.75rem;
+    .svg-container svg {
+      width: 1.75rem;
     }
-     .svg-container svg:hover{
-         color: #36454F;
+    .svg-container svg:hover{
+      color: #36454F;
     }
-     .svg-container {
-         width: auto;
+    .svg-container {
+      width: auto;
     }
-     .svg-container + span {
-       margin: 0 0.25rem 0 0.75rem;
-       font-size: 1rem;
+    .svg-container + span {
+      margin: 0 0.25rem 0 0.75rem;
+      font-size: 1rem;
     }
-     .sidebar a {
-         font-size: 2em;
-        /* Adjust to preferred size */
+    .sidebar a {
+      font-size: 2em;
     }
-     .sidebar a:not(.kiwi-logo):hover{
-       background-color: rgba(0,0,0,0.1);
-       border-radius: 2px;
+    .sidebar a:not(.kiwi-logo):hover{
+      background-color: rgba(0,0,0,0.1);
+      border-radius: 2px;
     }
-     .sidebar .icon-svg {
-         width: 36px;
-         height: 36px;
+    .sidebar .icon-svg {
+      width: 36px;
+      height: 36px;
     }
-     .sidebar-div {
-       /* This has to have same font-size as sidebar a */
-         font-size: 1.7em;
+    .sidebar-div {
+      font-size: 1.7em;
     }
 }
  .sidebar a {
@@ -660,6 +658,14 @@ body {
      color: #472a91;
      fill: #472a91;
      cursor: pointer;
+}
+
+.interaction-element:hover {
+  background-color: rgba(0,0,0,0.1) !important;
+}
+
+.bell-button:hover{
+  background-color: rgba(0, 0, 0, 0.2) !important;
 }
  
 #top-bar {

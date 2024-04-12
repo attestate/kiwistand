@@ -11,7 +11,7 @@ import * as karma from "../../karma.mjs";
 const html = htm.bind(vhtml);
 
 const header = async (theme, path) => {
-  return html` <td style="height: 62px;">
+  return html` <td style="height: 70px;">
     <nav-nft-modal />
     <table
       style="padding:5px 7px 5px 7px;"

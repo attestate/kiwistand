@@ -63,7 +63,14 @@ const Bell = (props) => {
     <a
       title="Notifications"
       href={link}
-      style={{ display: "inline-flex", position: "relative" }}
+      className="bell-button"
+      style={{
+        padding: "10px 10px",
+        backgroundColor: "rgba(0, 0, 0, 0.1)",
+        borderRadius: "2px",
+        display: "inline-flex",
+        position: "relative",
+      }}
     >
       <i className="icon">
         {window.location.pathname === "/activity" ? (
@@ -76,8 +83,8 @@ const Bell = (props) => {
         <span
           style={{
             position: "absolute",
-            top: "-5px",
-            right: "0",
+            top: "5px",
+            right: "8px",
             backgroundColor: "red",
             borderRadius: "2px",
             color: "white",
@@ -114,7 +121,7 @@ const BellSVGFull = () => (
   <svg
     style={{
       color: "black",
-      width: "1.75rem",
+      width: "1.5rem",
     }}
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 256 256"
@@ -127,7 +134,7 @@ const BellSVG = () => (
   <svg
     style={{
       color: "black",
-      width: "1.75rem",
+      width: "1.5rem",
     }}
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 256 256"

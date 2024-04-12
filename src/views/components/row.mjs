@@ -64,9 +64,8 @@ const row = (
           >
             <div style="display: flex; align-items: center;">
               <div
-                style="display: flex; align-items: ${story.image
-                  ? "start"
-                  : "center"}; justify-content: center; min-width: 40px; margin: 0 6px 0 6px;"
+                class="interaction-element"
+                style="border-radius: 2px; padding: 5px 0; background-color: rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; min-width: 40px; margin: 5px 6px; align-self: stretch;"
               >
                 <div style="min-height: 40px; display:block;">
                   <div
@@ -93,7 +92,7 @@ const row = (
                 </div>
               </div>
               <div
-                style="display:flex; justify-content: center; flex-direction: column; flex-grow: 1; line-height: 1.3; padding: 8px 3px 5px 0;"
+                style="min-height: 55px; display:flex; justify-content: center; flex-direction: column; flex-grow: 1; line-height: 1.3; padding: 8px 3px 5px 0;"
               >
                 <span>
                   <a
@@ -139,7 +138,7 @@ const row = (
                           : extractDomain(story.href)})</span
                       >`}
                 </span>
-                <div style="margin-top: auto; font-size: 10pt;">
+                <div style="font-size: 10pt;">
                   <span>
                     ${path !== "/stories" &&
                     story.avatars.length > 1 &&
@@ -256,10 +255,11 @@ const row = (
               </div>
               ${story.index
                 ? html`<a
-                    class="chat-bubble"
+                    class="chat-bubble interaction-element"
                     id="chat-bubble-${story.index}"
                     href="/stories?index=0x${story.index}"
-                    style="display: ${path === "/stories"
+                    style="margin: 5px; background-color: #e6e6df; border-radius: 2px; display: ${path ===
+                    "/stories"
                       ? "none"
                       : "flex"}; align-self: stretch; justify-content: center; min-width: 40px; align-items: center; flex-direction: column;"
                   >
