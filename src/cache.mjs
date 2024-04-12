@@ -252,16 +252,35 @@ export function getComments(identity) {
   );
 }
 
-export function getSubmission(index) {
-  const submission = db
-    .prepare(
-      `
+export function getSubmission(index, href) {
+  let submission;
+  if (index) {
+    submission = db
+      .prepare(
+        `
      SELECT * FROM submissions WHERE id = ?
    `,
-    )
-    .get(`kiwi:${index}`);
+      )
+      .get(`kiwi:${index}`);
+  }
 
-  if (!submission) {
+  if (href) {
+    const normalizedHref = normalizeUrl(href, {
+      stripWWW: false,
+    });
+    submission = db
+      .prepare(
+        `
+     SELECT * FROM submissions WHERE href = ?
+   `,
+      )
+      .get(normalizedHref);
+  }
+
+  if (!submission && href) {
+    throw new Error(`Couldn't find submission with href: ${href}`);
+  }
+  if (!submission && index) {
     throw new Error(`Couldn't find submission with index: ${index}`);
   }
 

@@ -17,6 +17,7 @@ import { SCHEMATA } from "./constants.mjs";
 import * as registry from "./chainstate/registry.mjs";
 import * as newest from "./views/new.mjs";
 import { generateStory } from "./views/story.mjs";
+import { getSubmission } from "./cache.mjs";
 
 const ajv = new Ajv();
 addFormats(ajv);
@@ -94,20 +95,40 @@ export function handleMessage(
     } else {
       newest.recompute(trie);
     }
+
+    let submission;
     if (message.type === "amplify") {
       try {
         await generateStory(`0x${index}`);
       } catch (err) {
         // NOTE: This can fail if the message is an upvote, not a submission.
       }
+
+      try {
+        const index = null;
+        submission = getSubmission(index, message.href);
+      } catch (err) {
+        // NOTE: We can ignore the error here if it's being thrown
+      }
     }
 
     const code = 200;
     const httpMessage = "OK";
     const details = "Message included";
-    return sendStatus(reply, code, httpMessage, details, {
-      index: `0x${index}`,
-    });
+
+    let response;
+    if (submission && submission.upvotes > 1) {
+      response = {
+        index: `0x${submission.index}`,
+        isResubmission: true,
+      };
+    } else {
+      response = {
+        index: `0x${index}`,
+        isResubmission: false,
+      };
+    }
+    return sendStatus(reply, code, httpMessage, details, response);
   };
 }
 

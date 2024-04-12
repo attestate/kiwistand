@@ -42,7 +42,7 @@ const UrlInput = (props) => {
 
       if (data.data && data.data.canonicalLink) {
         setURL(data.data.canonicalLink);
-        setCheckedUrls(new Set(checkedUrls).add(url));
+        setCheckedURLs(new Set(checkedURLs).add(url));
       }
     } catch (error) {
       console.error("Error fetching metadata:", error);
@@ -245,8 +245,13 @@ const SubmitButton = (props) => {
       message = `Error! Sad Kiwi! "${response.details}"`;
     }
 
-    const nextPage = new URL(window.location.origin + redirectTo);
-    if (redirectTo === "/new" && response?.data?.index) {
+    let nextPage;
+    if (response?.data?.index && response?.data?.isResubmission) {
+      redirectTo = "/stories";
+      nextPage = new URL(window.location.origin + redirectTo);
+      nextPage.searchParams.set("index", response.data.index);
+    } else if (response?.data?.index) {
+      nextPage = new URL(window.location.origin + redirectTo);
       nextPage.searchParams.set("index", response.data.index);
     }
     window.location.href = nextPage.href;
