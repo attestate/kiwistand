@@ -647,15 +647,18 @@ body {
 }
  a.meta-link {
      color: #828282;
+     fill: #828282;
 }
  a.meta-link:hover {
      text-decoration: underline;
 }
  a.caster-link {
      color: #828282;
+     fill: #828282;
 }
  a.caster-link:hover {
      color: #472a91;
+     fill: #472a91;
      cursor: pointer;
 }
  

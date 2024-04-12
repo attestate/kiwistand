@@ -5,6 +5,7 @@ import { URL } from "url";
 
 import { commentCounts } from "../../store.mjs";
 import ShareIcon from "./shareicon.mjs";
+import CopyIcon from "./copyicon.mjs";
 import FCIcon from "./farcastericon.mjs";
 
 const html = htm.bind(vhtml);
@@ -228,6 +229,25 @@ const row = (
                                 "padding: 0 3px 1px 0; vertical-align: bottom; height: 13px; width: 13px;",
                               )}
                               Share
+                            </a>
+                          </span>
+                        `}
+                    ${interactive || hideCast
+                      ? null
+                      : html`
+                          <span class="inverse-share-container">
+                            <span> • </span>
+                            <a
+                              href="#"
+                              class="meta-link share-link"
+                              title="Share"
+                              style="white-space: nowrap;"
+                              onclick="event.preventDefault(); navigator.clipboard.writeText('https://news.kiwistand.com/stories?index=0x${story.index}'); window.toast.success('Link copied!');"
+                            >
+                              ${CopyIcon(
+                                "padding: 0 3px 1px 0; vertical-align: bottom; height: 13px; width: 13px;",
+                              )}
+                              Link
                             </a>
                           </span>
                         `}

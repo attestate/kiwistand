@@ -537,6 +537,7 @@ async function start() {
   commentCountSignifier();
 
   const toast = await addToaster();
+  window.toast = toast;
 
   const { fetchAllowList, fetchDelegations } = await import("./API.mjs");
   checkMintStatus(fetchAllowList, fetchDelegations);
