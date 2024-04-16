@@ -34,6 +34,9 @@ import subscribe from "./views/subscribe.mjs";
 import upvotes from "./views/upvotes.mjs";
 import community from "./views/community.mjs";
 import stats from "./views/stats.mjs";
+import users from "./views/users.mjs";
+import basics from "./views/basics.mjs";
+import retention from "./views/retention.mjs";
 import * as activity from "./views/activity.mjs";
 import * as comments from "./views/comments.mjs";
 import about from "./views/about.mjs";
@@ -468,6 +471,30 @@ export async function launch(trie, libp2p) {
   });
   app.get("/price", async (request, reply) => {
     const content = await price.chart(reply.locals.theme);
+    return reply.status(200).type("text/html").send(content);
+  });
+  app.get("/retention", async (request, reply) => {
+    const content = await retention(trie, reply.locals.theme);
+    reply.header(
+      "Cache-Control",
+      "public, max-age=3600, no-transform, must-revalidate, stale-while-revalidate=120",
+    );
+    return reply.status(200).type("text/html").send(content);
+  });
+  app.get("/users", async (request, reply) => {
+    const content = await users(trie, reply.locals.theme);
+    reply.header(
+      "Cache-Control",
+      "public, max-age=3600, no-transform, must-revalidate, stale-while-revalidate=120",
+    );
+    return reply.status(200).type("text/html").send(content);
+  });
+  app.get("/basics", async (request, reply) => {
+    const content = await basics(trie, reply.locals.theme);
+    reply.header(
+      "Cache-Control",
+      "public, max-age=3600, no-transform, must-revalidate, stale-while-revalidate=120",
+    );
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/stats", async (request, reply) => {

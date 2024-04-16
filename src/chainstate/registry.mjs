@@ -97,7 +97,8 @@ export async function accounts() {
     timestamp: parseInt(value.timestamp, 16),
   }));
   const accounts = aggregate(transformed);
-  return augmentWithMainnet(accounts);
+  const result = augmentWithMainnet(accounts);
+  return result;
 }
 
 export async function allowlist() {

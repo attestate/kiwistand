@@ -8,7 +8,6 @@ import Header from "./views/components/header.mjs";
 import Footer from "./views/components/footer.mjs";
 import Sidebar from "./views/components/sidebar.mjs";
 import Head from "./views/components/head.mjs";
-import { calculateMintersPerDay } from "./views/stats.mjs";
 import * as registry from "./chainstate/registry.mjs";
 import * as ens from "./ens.mjs";
 
@@ -93,6 +92,53 @@ const options = {
   },
   yNumLabels: 10,
 };
+
+function timestampToDate(ts) {
+  const date = new Date(ts * 1000);
+  return date.toISOString().split("T")[0];
+}
+
+function generateDateRange(start, end) {
+  const dates = [];
+  let currentDate = new Date(start);
+
+  while (currentDate <= end) {
+    dates.push(currentDate.toISOString().split("T")[0]);
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+
+  return dates;
+}
+
+async function calculateMintersPerDay(mints) {
+  const mintMap = new Map();
+
+  for (const mint of mints) {
+    const date = timestampToDate(parseInt(mint.timestamp, 16));
+
+    if (!mintMap.has(date)) {
+      mintMap.set(date, 0);
+    }
+
+    mintMap.set(date, mintMap.get(date) + 1);
+  }
+
+  const dates = generateDateRange(
+    Math.min(...Array.from(mintMap.keys(), (key) => new Date(key))),
+    Math.max(...Array.from(mintMap.keys(), (key) => new Date(key))),
+  );
+
+  const sortedDates = dates.sort();
+  for (const date of dates) {
+    if (!mintMap.has(date)) {
+      mintMap.set(date, 0);
+    }
+  }
+
+  const minters = sortedDates.map((date) => mintMap.get(date));
+
+  return { dates: sortedDates, minters };
+}
 
 export async function chart(theme) {
   const today = new Date();

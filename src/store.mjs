@@ -482,7 +482,6 @@ export function enhance(accounts, delegations, cacheEnabled) {
     const validationTime = new Date(node.timestamp * 1000);
     const identity = eligibleAt(accounts, delegations, signer, validationTime);
     if (!identity) {
-      log(`Identity not found: ${signer}`);
       return null;
     }
 
