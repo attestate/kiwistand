@@ -125,7 +125,12 @@ export async function mints() {
   const subdb = db.openDB(name);
   const optimism = await database.all(subdb, "");
   const zeroAddress = "0x0000000000000000000000000000000000000000";
-  return optimism
+  // NOTE: We originally didn't filter for value being zero but then this meant
+  // that admin-directed airdrops would also count towards increasing the price
+  // which increased the price unnecessarily high.
+  const mints = optimism
     .map(({ value }) => value)
-    .filter(({ from }) => from === zeroAddress);
+    .filter(({ from, value }) => from === zeroAddress && value !== "0x0");
+  console.log(JSON.stringify(mints));
+  return mints;
 }
