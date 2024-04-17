@@ -506,7 +506,7 @@ async function checkMintStatus(fetchAllowList, fetchDelegations) {
     const delegations = await fetchDelegations();
 
     if (
-      !allowList.includes(address) &&
+      !allowList.includes(address) ||
       !Object.values(delegations).includes(address)
     ) {
       console.log("Waiting for mint to be picked up...");
@@ -515,14 +515,12 @@ async function checkMintStatus(fetchAllowList, fetchDelegations) {
 
     console.log("Mint has been picked up by the node.");
     clearInterval(intervalId);
-    // NOTE: Priorly, we called /demonstration immediately, however, this lead
-    // to problems where the site didn't have the NFT eligibility ready yet.
     if (supportsPasskeys() && (await testPasskeys())) {
-      setTimeout(() => (window.location.href = "/passkeys"), 10000);
+      window.location.href = "/passkeys";
     } else {
-      setTimeout(() => (window.location.href = "/invite"), 10000);
+      window.location.href = "/invite";
     }
-  }, 5000);
+  }, 3000);
 }
 
 async function start() {

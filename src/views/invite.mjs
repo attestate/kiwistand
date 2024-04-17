@@ -45,19 +45,14 @@ export default async function (theme, userAddress, transactionHash) {
                     style="height: 60vh; flex-direction: column; display: flex; justify-content: center; align-items: center;"
                   >
                     <img
-                      style="max-width: 65vw; overflow: auto; margin-top: 4rem;"
+                      style="border: 1px solid #828282; border-radius: 2px; max-width: 65vw; overflow: auto; margin-top: 4rem;"
                       src="Telegram.png"
                     />
                     <div
                       style="display: flex; justify-content: center; flex-direction: column; max-width: 20rem;"
                     >
-                      <h2 style="color: black;">
-                        Share and discuss content with fellow crypto builders
-                      </h2>
-                      <p>
-                        Discuss the content, project and anything you’d like to
-                        chat about on our Telegram Channel. Join us and say gm!
-                      </p>
+                      <h2 style="color:black;">Join our Telegram!</h2>
+                      <p>Click the link below:</p>
                       <nav-invite-link> ...loading </nav-invite-link>
                     </div>
                   </div>
@@ -66,7 +61,7 @@ export default async function (theme, userAddress, transactionHash) {
               <tr>
                 <td>
                   <p
-                    style="color: black; padding: 1rem 3rem 1rem 3rem; font-size: 1rem; text-align: center; margin-top: 1rem;"
+                    style="color: black; padding: 3rem 3rem 1rem 3rem; font-size: 1rem; text-align: center; margin-top: 1rem;"
                   >
                     Your next step:
                   </p>
