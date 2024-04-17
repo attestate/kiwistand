@@ -47,10 +47,10 @@ export default async function (theme) {
                     <div
                       style="display: flex; align-items: center; justify-content: center; flex-direction: column; max-width: 20rem;"
                     >
-                      <h2 style="color: black;">Turn on notifications</h2>
+                      <h2 style="color: black;">Turn on push notifications</h2>
                       <p style="text-align: center;">
-                        We'll send you notifications when there are new comments
-                        on your story.
+                        We'll send you notifications <b>only</b> when there are
+                        new comments on your story. No spam, we promise!
                       </p>
                       <br />
                       <push-subscription-button data-wrapper="false">
