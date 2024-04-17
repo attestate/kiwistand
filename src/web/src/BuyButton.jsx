@@ -226,7 +226,7 @@ const BuyButton = (props) => {
     return (
       <div>
         <button className="buy-button" disabled>
-          Thanks for minting!
+          Thanks for joining!
         </button>
       </div>
     );
@@ -352,7 +352,7 @@ const Button = (props) => {
       <div>
         <a target="_blank" href={`https://${etherscan}/tx/${data.hash}`}>
           <button className="buy-button">
-            Thanks for minting! (view on Etherscan)
+            Thanks for joining! (view on Etherscan)
           </button>
         </a>
       </div>
@@ -391,7 +391,7 @@ const Form = (props) => {
                 }}
                 className="buy-button"
               >
-                Connect Wallet to Mint
+                Connect Wallet
               </button>
             );
           }}

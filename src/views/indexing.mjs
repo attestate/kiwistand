@@ -63,8 +63,7 @@ export default async function (theme, userAddress, transactionHash) {
                     text-align: center;
                     color: black;margin-top: 4rem; margin-bottom: 4rem;"
                     >
-                      You minted
-                      <span style="color: limegreen;"> a Kiwi Pass 🎉</span>
+                      You're <i>almost</i> set!
                     </h1>
                     <div
                       style="display: flex; align-items: center; justify-content: center; flex-direction: column; max-width: 20rem;"
