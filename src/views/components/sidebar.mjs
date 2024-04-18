@@ -72,65 +72,72 @@ const community = html`
 const about = html`
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
     <rect width="256" height="256" fill="none" />
-    <circle
-      cx="128"
-      cy="128"
-      r="96"
-      fill="none"
-      stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="16"
-    />
     <path
-      d="M120,120a8,8,0,0,1,8,8v40a8,8,0,0,0,8,8"
+      d="M48,216a24,24,0,0,1,24-24H208V32H72A24,24,0,0,0,48,56Z"
       fill="none"
       stroke="currentColor"
       stroke-linecap="round"
       stroke-linejoin="round"
       stroke-width="16"
     />
-    <circle cx="124" cy="84" r="12" />
+    <polyline
+      points="48 216 48 224 192 224"
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="16"
+    />
   </svg>
 `;
 
 const aboutfull = html`
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="64"
-    height="64"
-    fill="#000000"
-    viewBox="0 0 256 256"
-  >
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+    <rect width="256" height="256" fill="none" />
     <path
-      d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm-4,48a12,12,0,1,1-12,12A12,12,0,0,1,124,72Zm12,112a16,16,0,0,1-16-16V128a8,8,0,0,1,0-16,16,16,0,0,1,16,16v40a8,8,0,0,1,0,16Z"
-    ></path>
+      d="M216,32V192a8,8,0,0,1-8,8H72a16,16,0,0,0-16,16H192a8,8,0,0,1,0,16H48a8,8,0,0,1-8-8V56A32,32,0,0,1,72,24H208A8,8,0,0,1,216,32Z"
+    />
   </svg>
 `;
 
-const onboarding = html` <svg
-  xmlns="http://www.w3.org/2000/svg"
-  width="32"
-  height="32"
-  fill="#000000"
-  viewBox="0 0 256 256"
->
-  <path
-    d="M248,56a8,8,0,0,1-8,8H192v40a8,8,0,0,1-8,8H136v40a8,8,0,0,1-8,8H80v40a8,8,0,0,1-8,8H16a8,8,0,0,1,0-16H64V152a8,8,0,0,1,8-8h48V104a8,8,0,0,1,8-8h48V56a8,8,0,0,1,8-8h56A8,8,0,0,1,248,56Z"
-  />
-</svg>`;
+const onboarding = html`
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+    <rect width="256" height="256" fill="none" />
+    <polygon
+      points="8 96 128 32 248 96 128 160 8 96"
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="16"
+    />
+    <polyline
+      points="128 96 184 125.87 184 240"
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="16"
+    />
+    <path
+      d="M216,113.07v53.22a8,8,0,0,1-2,5.31c-11.3,12.59-38.9,36.4-86,36.4s-74.68-23.81-86-36.4a8,8,0,0,1-2-5.31V113.07"
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="16"
+    />
+  </svg>
+`;
 
-const onboardingfull = html` <svg
-  xmlns="http://www.w3.org/2000/svg"
-  width="32"
-  height="32"
-  fill="#000000"
-  viewBox="0 0 256 256"
->
-  <path
-    d="M240,56V200a8,8,0,0,1-8,8H8a8,8,0,0,1,0-16H56V152a8,8,0,0,1,8-8h48V104a8,8,0,0,1,8-8h48V56a8,8,0,0,1,8-8h56A8,8,0,0,1,240,56Z"
-  ></path>
-</svg>`;
+const onboardingfull = html`
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+    <rect width="256" height="256" fill="none" />
+    <path
+      d="M176,207.24a119,119,0,0,0,16-7.73V240a8,8,0,0,1-16,0Zm11.76-88.43-56-29.87a8,8,0,0,0-7.52,14.12L171,128l17-9.06Zm64-29.87-120-64a8,8,0,0,0-7.52,0l-120,64a8,8,0,0,0,0,14.12L32,117.87v48.42a15.91,15.91,0,0,0,4.06,10.65C49.16,191.53,78.51,216,128,216a130,130,0,0,0,48-8.76V130.67L171,128l-43,22.93L43.83,106l0,0L25,96,128,41.07,231,96l-18.78,10-.06,0L188,118.94a8,8,0,0,1,4,6.93v73.64a115.63,115.63,0,0,0,27.94-22.57A15.91,15.91,0,0,0,224,166.29V117.87l27.76-14.81a8,8,0,0,0,0-14.12Z"
+    />
+  </svg>
+`;
 
 const newsletter = html`
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
@@ -363,19 +370,20 @@ const sidebar = (path) => html`
       </div>
     </a>
     <a
-      title="About"
-      href="/welcome?referral=0x6804CC5a697eEDF020E6588Fb75b5844d8041298"
+      title="Docs"
+      href="https://kiwistand.github.io/kiwi-docs/"
+      target="_blank"
       style="color: black; text-decoration: none; display: block;"
     >
       <div style="display: flex; align-items: center;">
         <div class="svg-container">
           ${path === "/welcome" ? aboutfull : about}
         </div>
-        <span>About</span>
+        <span>Docs</span>
       </div>
     </a>
     <a
-      title="Explore"
+      title="Learn"
       href="/onboarding-reader"
       style="color: black; text-decoration: none; display: block;"
     >
@@ -383,7 +391,7 @@ const sidebar = (path) => html`
         <div class="svg-container">
           ${path === "/onboarding-reader" ? onboardingfull : onboarding}
         </div>
-        <span>Explore</span>
+        <span>Learn</span>
       </div>
     </a>
     <div id="nav-profile"><a></a></div>

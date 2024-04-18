@@ -78,7 +78,7 @@ export default async function (theme, identity) {
       </head>
       <body>
         <div class="container">
-          ${Sidebar()}
+          ${Sidebar("/onboarding-reader")}
           <div id="hnmain">
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
               <tr>

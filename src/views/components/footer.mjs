@@ -119,6 +119,8 @@ const footer = (theme, path) => html`
     <span> | </span>
     <a href="/onboarding">Onboarding</a>
     <span> | </span>
+    <a href="https://kiwistand.github.io/kiwi-docs/">Docs</a>
+    <span> | </span>
     <a href="/shortcut">iOS Shortcut</a>
     <span> | </span>
     <a href="/kiwipass">Kiwi Pass</a>
