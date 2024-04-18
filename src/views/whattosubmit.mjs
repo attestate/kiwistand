@@ -19,6 +19,15 @@ export default async function (theme, identity) {
       <head>
         ${custom(null, title, description)}
         <style>
+          @media screen and (min-width: 769px) {
+            .sidebar {
+              display: none;
+            }
+
+            #hnmain {
+              border: none;
+            }
+          }
           .sidebar {
             display: none;
           }
@@ -32,6 +41,7 @@ export default async function (theme, identity) {
 
           .text-left,
           .text-right {
+            padding-top: 1rem;
             width: 50%;
             flex: 0 0 50%; /* This ensures the flex items don't grow or shrink, and take up 50% of the width */
           }
@@ -86,12 +96,11 @@ export default async function (theme, identity) {
           ${Sidebar()}
           <div id="hnmain">
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
-              <tr>
-                ${await Header(theme)}
-              </tr>
-              <tr>
+              <tr style="background-color: rgb(246, 246, 239);">
                 <td style="padding: 1rem; text-align: center; color: black;">
                   <h1>What to submit</h1>
+                  <br />
+                  <br />
                   <div class="flex-container flex-image-left">
                     <div class="image-left">
                       <img
@@ -169,7 +178,6 @@ export default async function (theme, identity) {
             </table>
           </div>
         </div>
-        ${Footer(theme)}
         <div
           id="bookmark-modal"
           style="display: none; position: fixed; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4);"
