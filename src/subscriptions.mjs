@@ -68,7 +68,7 @@ export async function triggerNotification(message) {
           title: `${ensData.displayName} replied`,
           message: truncateComment(message.title, maxChars),
           data: {
-            url: `https://news.kiwistand.com/stories?index=0x${submission.index}#0x${message.index}`,
+            url: `https://news.kiwistand.com/stories?index=0x${submission.index}&cachebuster=0x${message.index}#0x${message.index}`,
           },
         }),
     ),
