@@ -309,8 +309,8 @@ const Form = (props) => {
           modalIsOpen={modalIsOpen}
           setIsOpen={setIsOpen}
           headline="Wait a minute!"
-          text="To submit links to Kiwi, you need to own our NFT. 👇"
-          closeText="OK, but let me browse more first!"
+          text="You have to sign up to submit a link"
+          closeText="Close"
         />
       </RainbowKitProvider>
     </WagmiConfig>

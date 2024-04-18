@@ -20,8 +20,8 @@ const Container = (props) => {
         <Vote {...props} setIsOpen={setIsOpen} />
         <NFTModal
           headline="Wait a minute!"
-          text="To upvote, you need to own our NFT. 👇"
-          closeText="OK, but let me browse a bit more..."
+          text="You have to sign up before voting."
+          closeText="Close"
           modalIsOpen={modalIsOpen}
           setIsOpen={setIsOpen}
         />
