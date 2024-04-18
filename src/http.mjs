@@ -49,6 +49,8 @@ import invite from "./views/invite.mjs";
 import passkeys from "./views/passkeys.mjs";
 import demonstration from "./views/demonstration.mjs";
 import notifications from "./views/notifications.mjs";
+import pwa from "./views/pwa.mjs";
+import pwaandroid from "./views/pwaandroid.mjs";
 import * as curation from "./views/curation.mjs";
 import * as moderation from "./views/moderation.mjs";
 import { parse, metadata } from "./parser.mjs";
@@ -514,6 +516,18 @@ export async function launch(trie, libp2p) {
   });
   app.get("/passkeys", async (request, reply) => {
     const content = await passkeys(reply.locals.theme);
+
+    reply.header("Cache-Control", "public, max-age=86400");
+    return reply.status(200).type("text/html").send(content);
+  });
+  app.get("/pwaandroid", async (request, reply) => {
+    const content = await pwaandroid(reply.locals.theme);
+
+    reply.header("Cache-Control", "public, max-age=86400");
+    return reply.status(200).type("text/html").send(content);
+  });
+  app.get("/pwa", async (request, reply) => {
+    const content = await pwa(reply.locals.theme);
 
     reply.header("Cache-Control", "public, max-age=86400");
     return reply.status(200).type("text/html").send(content);

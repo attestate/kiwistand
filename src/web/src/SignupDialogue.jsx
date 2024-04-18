@@ -3,8 +3,13 @@ import React from "react";
 import { useAccount } from "wagmi";
 import { eligible } from "@attestate/delegator2";
 
-import { getLocalAccount } from "./session.mjs";
 import { Connector, CustomConnectButton } from "./Navigation.jsx";
+import {
+  getLocalAccount,
+  isSafariOnIOS,
+  isChromeOnAndroid,
+  isRunningPWA,
+} from "./session.mjs";
 
 const SignupDialogue = (props) => {
   const from = useAccount();
@@ -18,6 +23,20 @@ const SignupDialogue = (props) => {
   }
   const isEligible =
     address && eligible(props.allowlist, props.delegations, address);
+
+  const isntReallySafari =
+    !!navigator.brave ||
+    navigator.userAgent.indexOf("CriOS") >= 0 ||
+    navigator.userAgent.match(/CriOS/i) ||
+    navigator.userAgent.match(/EdgiOS/i);
+  let link = "/kiwipass-mint";
+  if (isSafariOnIOS() && !isntReallySafari && !isRunningPWA()) {
+    link = "/pwa";
+  }
+
+  if (isChromeOnAndroid() && !isRunningPWA()) {
+    link = "/pwaandroid";
+  }
 
   if (
     !isEligible &&
@@ -75,7 +94,7 @@ const SignupDialogue = (props) => {
             ""
           )}
           <a
-            href="/kiwipass-mint"
+            href={link}
             id="button-onboarding"
             style={{ width: "auto", fontWeight: 700 }}
           >
