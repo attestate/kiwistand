@@ -25,6 +25,7 @@ import onboarding from "./views/onboarding.mjs";
 import join from "./views/join.mjs";
 import kiwipass from "./views/kiwipass.mjs";
 import kiwipassmint from "./views/kiwipass-mint.mjs";
+import whattosubmit from "./views/whattosubmit.mjs";
 import onboardingReader from "./views/onboarding-reader.mjs";
 import onboardingCurator from "./views/onboarding-curator.mjs";
 import onboardingSubmitter from "./views/onboarding-submitter.mjs";
@@ -677,6 +678,13 @@ export async function launch(trie, libp2p) {
       .status(200)
       .type("text/html")
       .send(await onboarding(reply.locals.theme, request.cookies.identity));
+  });
+  app.get("/whattosubmit", async (request, reply) => {
+    reply.header("Cache-Control", "private, max-age=86400");
+    return reply
+      .status(200)
+      .type("text/html")
+      .send(await whattosubmit(reply.locals.theme));
   });
   app.get("/onboarding-reader", async (request, reply) => {
     reply.header("Cache-Control", "private, max-age=86400");

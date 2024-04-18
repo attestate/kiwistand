@@ -76,7 +76,7 @@ export default async function index(theme) {
                   <p
                     style="color: black; padding: 1rem 3rem 0 3rem; font-size: 1.5rem; font-weight: bold; text-align: center;"
                   >
-                    You're in!
+                    Try upvoting!
                   </p>
                   <p
                     style="color: black; margin-top: 0; padding: 0 3rem 1rem 3rem; font-size: 1rem; text-align: center; font-weight: bold;"
@@ -135,9 +135,9 @@ export default async function index(theme) {
                     <td
                       style="padding: 0 0 3rem 0; display: flex; justify-content: space-evenly;"
                     >
-                      <a href="/onboarding-reader">
+                      <a href="/whattosubmit">
                         <button style="width:auto;" id="button-onboarding">
-                          Explore Kiwi
+                          What to submit
                         </button>
                       </a>
                     </td>
