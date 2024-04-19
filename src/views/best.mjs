@@ -188,6 +188,7 @@ export default async function index(trie, theme, page, period, domain) {
     stories = cacheRes.stories;
   }
   const ogImage = "https://news.kiwistand.com/kiwi_top_feed_page.png";
+  const recentJoiners = await registry.recents();
   return html`
     <html lang="en" op="news">
       <head>
@@ -226,7 +227,15 @@ export default async function index(trie, theme, page, period, domain) {
                 </td>
               </tr>
               ${stories.map(
-                Row(null, "/best", undefined, false, false, period),
+                Row(
+                  null,
+                  "/best",
+                  undefined,
+                  false,
+                  false,
+                  period,
+                  recentJoiners,
+                ),
               )}
               <tr class="spacer" style="height:15px"></tr>
               ${stories.length < totalStories

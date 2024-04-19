@@ -193,6 +193,7 @@ export default async function (trie, theme, index, value) {
     data && data.ogDescription
       ? data.ogDescription
       : "Kiwi News is the prime feed for hacker engineers building a decentralized future. All our content is handpicked and curated by crypto veterans.";
+  const recentJoiners = await registry.recents();
   return html`
     <html lang="en" op="news">
       <head>
@@ -208,7 +209,15 @@ export default async function (trie, theme, index, value) {
               <tr>
                 ${await Header(theme)}
               </tr>
-              ${Row(start, "/stories", style)({ ...story, index })}
+              ${Row(
+                start,
+                "/stories",
+                style,
+                null,
+                null,
+                null,
+                recentJoiners,
+              )({ ...story, index })}
               <tr>
                 <td>${generateList(actions)}</td>
               </tr>

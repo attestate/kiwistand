@@ -404,6 +404,7 @@ export default async function (trie, theme, page, domain) {
     query += `&domain=${domain}`;
   }
   const ogImage = "https://news.kiwistand.com/kiwi_hot_feed_page.png";
+  const recentJoiners = await registry.recents();
   return html`
     <html lang="en" op="news">
       <head>
@@ -510,11 +511,37 @@ export default async function (trie, theme, page, domain) {
                 : ""}
               ${originals && originals.length >= 2 && !domain
                 ? html`
-                    ${stories.slice(0, 6).map(Row(start, "/"))}
+                    ${stories
+                      .slice(0, 6)
+                      .map(
+                        Row(
+                          start,
+                          "/",
+                          undefined,
+                          null,
+                          null,
+                          null,
+                          recentJoiners,
+                        ),
+                      )}
                     ${CanonRow(originals)}
-                    ${stories.slice(6).map(Row(start, "/"))}
+                    ${stories
+                      .slice(6)
+                      .map(
+                        Row(
+                          start,
+                          "/",
+                          undefined,
+                          null,
+                          null,
+                          null,
+                          recentJoiners,
+                        ),
+                      )}
                   `
-                : html` ${stories.map(Row(start, "/"))}`}
+                : html` ${stories.map(
+                    Row(start, "/", undefined, null, null, null, recentJoiners),
+                  )}`}
               ${stories.length < totalStories
                 ? ""
                 : html`<tr style="height: 50px">

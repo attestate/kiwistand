@@ -50,6 +50,7 @@ const row = (
   interactive,
   hideCast,
   period,
+  recentJoiners,
 ) => {
   const size = 12;
   return (story, i) => {
@@ -191,6 +192,10 @@ const row = (
                             ? `/${story.submitter.ens}`
                             : `/upvotes?address=${story.identity}`}"
                           class="meta-link"
+                          style="${recentJoiners &&
+                          recentJoiners.includes(story.identity)
+                            ? "color:limegreen;"
+                            : ""}"
                         >
                           ${story.displayName}
                         </a>`

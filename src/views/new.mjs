@@ -106,6 +106,7 @@ export default async function (trie, theme, index) {
   let items = stories;
   const path = "/new";
   const ogImage = "https://news.kiwistand.com/kiwi_new_feed_page.png";
+  const recentJoiners = await registry.recents();
   return html`
     <html lang="en" op="news">
       <head>
@@ -130,7 +131,9 @@ export default async function (trie, theme, index) {
               <tr>
                 ${SecondHeader(theme, "new")}
               </tr>
-              ${items.map(Row(null, "/best"))}
+              ${items.map(
+                Row(null, "/best", undefined, null, null, null, recentJoiners),
+              )}
               <tr
                 style="display: block; padding: 10px; background-color: #E6E6DF"
               >
