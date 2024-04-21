@@ -96,7 +96,9 @@ export default async function submit(theme, url = "", title = "") {
                       </div>
                       <span style="font-size: 0.8rem;">
                         <span>Characters remaining: </span>
-                        <span class="remaining">80</span></span
+                        <span class="remaining"
+                          >${80 - title.length}</span
+                        ></span
                       >
                     </div>
                     <div id="submit-button">

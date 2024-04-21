@@ -127,6 +127,18 @@ const Vote = (props) => {
                   return;
                 }
 
+                // NOTE: It can happen that the Feedbot will suggests to submit
+                // articles that have a title length of > 80 chars, in this
+                // case we want to redirect the user to the /submit page to
+                // adjust the title.
+                if (props.title.length > 80) {
+                  const url = new URL(window.location);
+                  url.pathname = "/submit";
+                  url.searchParams.set("url", props.href);
+                  window.location.href = url.href;
+                  return;
+                }
+
                 handleSubmit(e);
               }}
               className={`votearrow ${isLoading ? "pulsate" : ""}`}
