@@ -77,6 +77,7 @@ export const ProgressBar = (props) => {
 };
 
 const ConnectionDialogue = (props) => {
+  const { pathname } = window.location;
   return (
     <div
       style={{
@@ -91,40 +92,75 @@ const ConnectionDialogue = (props) => {
           marginBottom: "20px",
         }}
       >
-        <span>
-          Connect with{" "}
-          <span style={{ whiteSpace: "nowrap" }}>news.kiwistand.com</span>
-        </span>
+        {pathname === "/settings" ? (
+          <span>
+            Connect with{" "}
+            <span style={{ whiteSpace: "nowrap" }}>news.kiwistand.com</span>
+          </span>
+        ) : (
+          <span>Welcome to Kiwi News! </span>
+        )}
       </h3>
-      <p
-        style={{
-          fontWeight: "bold",
-          color: "black",
-          marginBottom: "20px",
-          textAlign: "left",
-        }}
-      >
-        Enable Kiwi News to seamlessly interact on your behalf on the Optimism
-        network:
-      </p>
-      <ul
-        style={{
-          textAlign: "left",
-          listStyle: "none",
-          paddingLeft: "0",
-          color: "black",
-          marginBottom: "30px",
-        }}
-      >
-        <li>
-          <span style={{ color: "limegreen" }}>•</span> Automatically upvote and
-          submit stories.
-        </li>
-        <li style={{ marginTop: "5px" }}>
-          <span style={{ color: "limegreen" }}>•</span> Sign messages without
-          additional prompts.
-        </li>
-      </ul>
+      {pathname === "/settings" ? (
+        <p
+          style={{
+            fontWeight: "bold",
+            color: "black",
+            marginBottom: "20px",
+            textAlign: "left",
+          }}
+        >
+          Enable Kiwi News to seamlessly interact on your behalf on the Optimism
+          network:
+        </p>
+      ) : props.account && props.account.isConnected ? (
+        <p
+          style={{
+            fontWeight: "bold",
+            color: "black",
+            marginBottom: "20px",
+            textAlign: "left",
+          }}
+        >
+          To make signing easier, we're adding an application key.
+        </p>
+      ) : (
+        <p
+          style={{
+            fontWeight: "bold",
+            color: "black",
+            marginBottom: "20px",
+            textAlign: "left",
+          }}
+        >
+          Let us onboard you to the app.
+          <br />
+          <br />
+          Please connect the wallet that received the Kiwi Pass NFT.
+        </p>
+      )}
+      {pathname === "/settings" ? (
+        <ul
+          style={{
+            textAlign: "left",
+            listStyle: "none",
+            paddingLeft: "0",
+            color: "black",
+            marginBottom: "30px",
+          }}
+        >
+          <li>
+            <span style={{ color: "limegreen" }}>•</span> Automatically upvote
+            and submit stories.
+          </li>
+          <li style={{ marginTop: "5px" }}>
+            <span style={{ color: "limegreen" }}>•</span> Sign messages without
+            additional prompts.
+          </li>
+        </ul>
+      ) : (
+        ""
+      )}
     </div>
   );
 };
@@ -225,7 +261,7 @@ const DelegateButton = (props) => {
     return (
       <div>
         <ProgressBar progress={0} />
-        <ConnectionDialogue />
+        <ConnectionDialogue account={from} />
         <ConnectedConnectButton
           required
           allowlist={props.allowlist}
@@ -238,6 +274,9 @@ const DelegateButton = (props) => {
   if (key && wallet) {
     if (supportsPasskeys() && indexedDelegation) {
       return <Passkeys toast={props.toast} />;
+    } else if (window.location.pathname === "/start") {
+      const delegate = key && wallet ? wallet.address : newKey.address;
+      window.location.href = `/indexing?address=${from.address}&delegate=${delegate}`;
     } else {
       const progress = !supportsPasskeys() && indexedDelegation ? 3 : 1;
       return (
@@ -292,7 +331,7 @@ const DelegateButton = (props) => {
   }
   return (
     <div>
-      <ConnectionDialogue address={from.address} />
+      <ConnectionDialogue account={from} />
       {isPersistent ? (
         <div>
           <button

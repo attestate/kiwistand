@@ -52,7 +52,8 @@ const Bell = (props) => {
     window.location.pathname === "/passkeys" ||
     window.location.pathname === "/notifications" ||
     window.location.pathname === "/whattosubmit" ||
-    window.location.pathname === "/pwa"
+    window.location.pathname === "/pwa" ||
+    window.location.pathname === "/start"
   ) {
     return null;
   }

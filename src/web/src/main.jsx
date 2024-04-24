@@ -499,6 +499,7 @@ async function checkMintStatus(fetchAllowList, fetchDelegations) {
   if (url.pathname !== "/indexing") return;
 
   const address = url.searchParams.get("address");
+  const delegate = url.searchParams.get("delegate");
   const { supportsPasskeys } = await import("./session.mjs");
   const { testPasskeys } = await import("./Passkeys.jsx");
   const intervalId = setInterval(async () => {
@@ -510,6 +511,10 @@ async function checkMintStatus(fetchAllowList, fetchDelegations) {
       !Object.values(delegations).includes(address)
     ) {
       console.log("Waiting for mint to be picked up...");
+      return;
+    }
+    if (delegate && !Object.keys(delegations).includes(delegate)) {
+      console.log("Waiting for delegate to be picked up");
       return;
     }
 

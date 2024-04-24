@@ -44,6 +44,7 @@ import about from "./views/about.mjs";
 import why from "./views/why.mjs";
 import submit from "./views/submit.mjs";
 import settings from "./views/settings.mjs";
+import start from "./views/start.mjs";
 import indexing from "./views/indexing.mjs";
 import invite from "./views/invite.mjs";
 import passkeys from "./views/passkeys.mjs";
@@ -561,25 +562,15 @@ export async function launch(trie, libp2p) {
         .send("No valid Ethereum address");
     }
 
-    const { transactionHash } = request.query;
-    if (
-      !transactionHash ||
-      !utils.isHexString(transactionHash) ||
-      transactionHash.length !== 66
-    ) {
-      return reply
-        .status(404)
-        .type("text/plain")
-        .send("Not valid Ethereum transaction hash");
-    }
-
-    const content = await indexing(
-      reply.locals.theme,
-      address,
-      transactionHash,
-    );
+    const content = await indexing(reply.locals.theme, address);
 
     reply.header("Cache-Control", "public, max-age=86400");
+    return reply.status(200).type("text/html").send(content);
+  });
+  app.get("/start", async (request, reply) => {
+    const content = await start(reply.locals.theme, request.cookies.identity);
+
+    reply.header("Cache-Control", "private, max-age=86400");
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/settings", async (request, reply) => {
