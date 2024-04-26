@@ -11,7 +11,7 @@ const html = htm.bind(vhtml);
 
 const path = "/indexing";
 
-export default async function (theme, userAddress, transactionHash) {
+export default async function (theme, userAddress) {
   return html`
     <html lang="en" op="news">
       <head>
@@ -74,7 +74,7 @@ export default async function (theme, userAddress, transactionHash) {
                         Please do <b>NOT</b> close this site!
                       </p>
 
-                      <p>We're indexing your mint transaction...</p>
+                      <p>We're indexing your transaction...</p>
                     </div>
                     <div
                       style="position: fixed; right: 20px; bottom: 20px; z-index: 100; text-align: center;"
