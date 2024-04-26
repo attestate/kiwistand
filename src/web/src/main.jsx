@@ -257,14 +257,6 @@ async function addConnectedComponents(allowlist, delegations, toast) {
       <ConnectedProfile allowlist={allowlist} delegations={delegations} />
     </StrictMode>,
   );
-  const refreshButton = document.querySelector("div.nav-refresh-button");
-  if (refreshButton && isRunningPWA()) {
-    createRoot(refreshButton).render(
-      <StrictMode>
-        <RefreshButton />
-      </StrictMode>,
-    );
-  }
   const disconnect = document.querySelector("#nav-disconnect");
   createRoot(disconnect).render(
     <StrictMode>

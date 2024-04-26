@@ -256,7 +256,7 @@ const secondheader = (theme, site, period, domain) => {
                 </button>
               </a>`
             : ""}
-          <div style="display: flex; height: 33px;" class="nav-refresh-button">
+          <div style="display: flex; height: 33px;">
             ${OnlineIndicator(DAU)}
           </div>
         </div>

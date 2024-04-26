@@ -18,54 +18,6 @@ const shorten = (address) =>
   "..." +
   address.slice(address.length - 4, address.length);
 
-export const RefreshButton = () => {
-  if (isRunningPWA()) {
-    return (
-      <button
-        className="feed-button"
-        onClick={() => location.reload()}
-        style={{
-          fontSize: "1.01rem",
-          marginLeft: "10px",
-          cursor: "pointer",
-          borderRadius: "2px",
-          padding: "5px 15px 5px 15px",
-          backgroundColor: "transparent",
-          border: "1px solid #828282",
-          color: "#7f8c8d",
-        }}
-      >
-        &#8203;
-        <span>
-          <svg
-            style={{ width: "1rem", position: "relative", top: "0.15rem" }}
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 256 256"
-          >
-            <rect width="256" height="256" fill="none" />
-            <polyline
-              points="184 104 232 104 232 56"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="16"
-            />
-            <path
-              d="M188.4,192a88,88,0,1,1,1.83-126.23L232,104"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="16"
-            />
-          </svg>
-        </span>
-      </button>
-    );
-  }
-};
-
 const BuyAdvert = (props) => {
   let address;
   const account = useAccount();
