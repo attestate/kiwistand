@@ -2,6 +2,8 @@ import { env } from "process";
 import htm from "htm";
 import vhtml from "vhtml";
 
+import { getNumberOfOnlineUsers } from "../../cache.mjs";
+
 const html = htm.bind(vhtml);
 
 const style = "width: 1rem; position: relative; top: 0.15rem;";
@@ -156,96 +158,140 @@ const animation = `
   var intervalId = setInterval(animate, 500);
  `;
 
-const secondheader = (theme, site, period, domain) => html`
-  <td>
-    <div
-      style="background-color: #e6e6df; min-height: 40px; display: flex; justify-content: space-between; align-items: center; padding: 10px 15px 10px 15px; color: white;"
+const Circle = html`
+  <svg style="padding-right: 5px;" height="14" width="14">
+    <circle
+      cx="7"
+      cy="7"
+      r="3.5"
+      fill="#4BB543"
+      shape-rendering="optimizeQuality"
+    />
+    <circle
+      cx="7"
+      cy="7"
+      r="6"
+      stroke="#4BB543"
+      stroke-width="1.75"
+      shape-rendering="optimizeQuality"
+      style={{ fillOpacity: 0 }}
     >
-      <div>
-        ${site === "top" || site === "new" || site === "best"
-          ? html` <a href="/">
-              <button
-                onclick="${animation}"
-                class="feed-button"
-                style=${`font-size: 1.01rem; border-radius: 2px; cursor: pointer; padding: 5px 15px; background-color: transparent; border: ${
-                  site === "top" ? "2px solid black" : "1px solid #828282"
-                }; color: ${site === "top" ? "black" : "#828282"};`}
-              >
-                <span>${fireSVG} Hot</span>
-              </button>
-            </a>`
-          : ""}
-        ${site === "top" || site === "new" || site === "best" || site === "nfts"
-          ? html` <a
-              href="${site === "new" || site === "top" || site === "best"
-                ? "/new"
-                : "/nfts"}"
-            >
-              <button
-                onclick="${animation}"
-                class="feed-button"
-                style=${`position: relative; font-size: 1.01rem; margin-left: 10px; cursor: pointer; border-radius: 2px; padding: 5px 15px; background-color: transparent; border: ${
-                  site === "new" || site === "nfts"
-                    ? "2px solid black"
-                    : "1px solid #828282"
-                }; color: ${
-                  site === "new" || site === "nfts" ? "black" : "#828282"
-                };`}
-              >
-                <span
-                  id="new-dot"
-                  style="display: none; position: absolute; top: -5px; right: -5px; width: 8px; height: 8px; border-radius: 2px; background-color: #228B22;"
-                ></span>
-                <span> ${broadcastSVG} New</span>
-              </button>
-            </a>`
-          : ""}
-        ${site === "top" || site === "new" || site === "best"
-          ? html` <a href="/best">
-              <button
-                onclick="${animation}"
-                class="feed-button"
-                style=${`font-size: 1.01rem; margin-left: 10px; cursor: pointer; border-radius: 2px; padding: 5px 15px; background-color: transparent; border: ${
-                  site === "best" ? "1px solid black" : "1px solid #828282"
-                }; color: ${site === "best" ? "black" : "#828282"};`}
-              >
-                <span> ${trophySVG} Top</span>
-              </button>
-            </a>`
-          : ""}
-        <a class="nav-refresh-button"></a>
-      </div>
-    </div>
+      <animate
+        attributeName="r"
+        values="10%;30%;42%;43%;10%"
+        dur="5s"
+        repeatCount="indefinite"
+      />
+    </circle>
+  </svg>`;
 
-    ${site === "best"
-      ? html` <div
-          style="background-color: #e6e6df; min-height: 40px; display: flex; justify-content: space-between; align-items: center; padding: 0 15px 10px 15px; color: white;"
-        >
-          <div>
-            <a href="/best?period=all${domain ? `&domain=${domain}` : ""}">
-              <button style="${periodIconStyle(theme, period, "all")}">
-                <span>All</span>
-              </button>
-            </a>
-            <a href="/best?period=month${domain ? `&domain=${domain}` : ""}">
-              <button style="${periodIconStyle(theme, period, "month")}">
-                <span>Month</span>
-              </button>
-            </a>
-            <a href="/best?period=week${domain ? `&domain=${domain}` : ""}">
-              <button style="${periodIconStyle(theme, period, "week")}">
-                <span>Week</span>
-              </button>
-            </a>
-            <a href="/best?period=day${domain ? `&domain=${domain}` : ""}">
-              <button style="${periodIconStyle(theme, period, "day")}">
-                <span>Day</span>
-              </button>
-            </a>
-          </div>
-        </div>`
-      : null}
-  </td>
+const OnlineIndicator = (DAU) => html`
+  <div
+    alt="Users who interacted with the protocol in the last 24hrs"
+    style="align-items: center; height: 100%; display: flex; padding-left: 1rem; color: rgba(0,0,0,0.5);"
+  >
+    ${Circle} ${DAU} online
+  </div>
 `;
+
+const secondheader = (theme, site, period, domain) => {
+  const DAU = getNumberOfOnlineUsers();
+  return html`
+    <td>
+      <div
+        style="background-color: #e6e6df; min-height: 40px; display: flex; justify-content: space-between; align-items: center; padding: 10px 15px 10px 15px; color: white;"
+      >
+        <div style="display: flex;">
+          ${site === "top" || site === "new" || site === "best"
+            ? html` <a href="/">
+                <button
+                  onclick="${animation}"
+                  class="feed-button"
+                  style=${`font-size: 1.01rem; border-radius: 2px; cursor: pointer; padding: 5px 15px; background-color: transparent; border: ${
+                    site === "top" ? "2px solid black" : "1px solid #828282"
+                  }; color: ${site === "top" ? "black" : "#828282"};`}
+                >
+                  <span>${fireSVG} Hot</span>
+                </button>
+              </a>`
+            : ""}
+          ${site === "top" ||
+          site === "new" ||
+          site === "best" ||
+          site === "nfts"
+            ? html` <a
+                href="${site === "new" || site === "top" || site === "best"
+                  ? "/new"
+                  : "/nfts"}"
+              >
+                <button
+                  onclick="${animation}"
+                  class="feed-button"
+                  style=${`position: relative; font-size: 1.01rem; margin-left: 10px; cursor: pointer; border-radius: 2px; padding: 5px 15px; background-color: transparent; border: ${
+                    site === "new" || site === "nfts"
+                      ? "2px solid black"
+                      : "1px solid #828282"
+                  }; color: ${
+                    site === "new" || site === "nfts" ? "black" : "#828282"
+                  };`}
+                >
+                  <span
+                    id="new-dot"
+                    style="display: none; position: absolute; top: -5px; right: -5px; width: 8px; height: 8px; border-radius: 2px; background-color: #228B22;"
+                  ></span>
+                  <span> ${broadcastSVG} New</span>
+                </button>
+              </a>`
+            : ""}
+          ${site === "top" || site === "new" || site === "best"
+            ? html` <a href="/best">
+                <button
+                  onclick="${animation}"
+                  class="feed-button"
+                  style=${`font-size: 1.01rem; margin-left: 10px; cursor: pointer; border-radius: 2px; padding: 5px 15px; background-color: transparent; border: ${
+                    site === "best" ? "1px solid black" : "1px solid #828282"
+                  }; color: ${site === "best" ? "black" : "#828282"};`}
+                >
+                  <span> ${trophySVG} Top</span>
+                </button>
+              </a>`
+            : ""}
+          <div style="display: inline-block;" class="nav-refresh-button">
+            ${OnlineIndicator(DAU)}
+          </div>
+        </div>
+      </div>
+
+      ${site === "best"
+        ? html` <div
+            style="background-color: #e6e6df; min-height: 40px; display: flex; justify-content: space-between; align-items: center; padding: 0 15px 10px 15px; color: white;"
+          >
+            <div>
+              <a href="/best?period=all${domain ? `&domain=${domain}` : ""}">
+                <button style="${periodIconStyle(theme, period, "all")}">
+                  <span>All</span>
+                </button>
+              </a>
+              <a href="/best?period=month${domain ? `&domain=${domain}` : ""}">
+                <button style="${periodIconStyle(theme, period, "month")}">
+                  <span>Month</span>
+                </button>
+              </a>
+              <a href="/best?period=week${domain ? `&domain=${domain}` : ""}">
+                <button style="${periodIconStyle(theme, period, "week")}">
+                  <span>Week</span>
+                </button>
+              </a>
+              <a href="/best?period=day${domain ? `&domain=${domain}` : ""}">
+                <button style="${periodIconStyle(theme, period, "day")}">
+                  <span>Day</span>
+                </button>
+              </a>
+            </div>
+          </div>`
+        : null}
+    </td>
+  `;
+};
 
 export default secondheader;

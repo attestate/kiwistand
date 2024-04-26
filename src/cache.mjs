@@ -75,6 +75,25 @@ function initialize() {
    `);
 }
 
+export function getNumberOfOnlineUsers() {
+  const timestamp24HoursAgo = Math.floor(Date.now() / 1000 - 24 * 60 * 60);
+
+  const uniqueIdentities = new Set();
+
+  const tables = ["submissions", "upvotes", "comments"];
+  tables.forEach((table) => {
+    const stmt = db.prepare(`
+       SELECT DISTINCT identity FROM ${table}
+       WHERE timestamp > ?
+     `);
+    const identities = stmt.all(timestamp24HoursAgo);
+    console.log(identities);
+    identities.forEach((identity) => uniqueIdentities.add(identity.identity));
+  });
+
+  return uniqueIdentities.size;
+}
+
 export function getSubmissions(identity, amount, from, orderBy, domains) {
   let orderClause = "upvotesCount DESC";
   if (orderBy === "new") {

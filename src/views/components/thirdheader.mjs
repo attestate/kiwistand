@@ -24,7 +24,7 @@ const secondheader = (theme, site) => html`
               ? "border-bottom: 3px solid black; padding: 0.75rem 1.5rem 0.3rem 1.5rem;"
               : "padding-top: 0.75rem;"}"
           >
-            All
+            Links
           </div>
         </div>
       </a>
