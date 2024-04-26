@@ -10,7 +10,7 @@ import { getSubmission } from "./cache.mjs";
 import { resolve } from "./ens.mjs";
 import { truncateComment } from "./views/activity.mjs";
 
-webpush.setVapidDetails(
+if (env.NODE_ENV == "production") webpush.setVapidDetails(
   "mailto:tim@daubenschuetz.de",
   process.env.VAPID_PUBLIC_KEY,
   process.env.VAPID_PRIVATE_KEY,
