@@ -188,7 +188,7 @@ const Circle = html`
 const OnlineIndicator = (DAU) => html`
   <div
     alt="Users who interacted with the protocol in the last 24hrs"
-    style="align-items: center; height: 100%; display: flex; padding-left: 1rem; color: rgba(0,0,0,0.5);"
+    style="align-items: center; height: 100%; display: flex; padding-left: 10px; color: rgba(0,0,0,0.5);"
   >
     ${Circle} ${DAU} online
   </div>
@@ -256,7 +256,7 @@ const secondheader = (theme, site, period, domain) => {
                 </button>
               </a>`
             : ""}
-          <div style="display: inline-block;" class="nav-refresh-button">
+          <div style="display: flex;" class="nav-refresh-button">
             ${OnlineIndicator(DAU)}
           </div>
         </div>

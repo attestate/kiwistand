@@ -257,7 +257,7 @@ async function addConnectedComponents(allowlist, delegations, toast) {
       <ConnectedProfile allowlist={allowlist} delegations={delegations} />
     </StrictMode>,
   );
-  const refreshButton = document.querySelector("a.nav-refresh-button");
+  const refreshButton = document.querySelector("div.nav-refresh-button");
   if (refreshButton) {
     createRoot(refreshButton).render(
       <StrictMode>
