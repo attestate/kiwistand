@@ -258,7 +258,7 @@ async function addConnectedComponents(allowlist, delegations, toast) {
     </StrictMode>,
   );
   const refreshButton = document.querySelector("div.nav-refresh-button");
-  if (refreshButton) {
+  if (refreshButton && isRunningPWA()) {
     createRoot(refreshButton).render(
       <StrictMode>
         <RefreshButton />
