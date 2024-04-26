@@ -387,12 +387,16 @@ export async function launch(trie, libp2p) {
     try {
       submission = getSubmission(index);
     } catch (e) {
-      reply.status(404).type('application/json').send({
-        err: "Couldn't find the submission"
-      })
+      const code = 404;
+      const httpMessage = "Not Found";
+      const details = "Couldn't find the submission";
+      return sendError(reply, code, httpMessage, details);
     }
 
-    reply.status(200).type('application/json').send(submission);
+    const code = 200;
+    const httpMessage = "OK";
+    const details = "Responding with story queried by index";
+    return sendStatus(reply, code, httpMessage, details, submission);
   });
 
   app.get("/", async (request, reply) => {
