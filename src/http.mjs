@@ -63,6 +63,7 @@ import * as frame from "./frame.mjs";
 import * as subscriptions from "./subscriptions.mjs";
 import * as telegram from "./telegram.mjs";
 import * as price from "./price.mjs";
+import { getSubmission } from "./cache.mjs";
 
 const app = express();
 
@@ -378,6 +379,22 @@ export async function launch(trie, libp2p) {
     const details = `${request.params.name} feed`;
     return sendStatus(reply, code, httpMessage, details, { stories });
   });
+
+  app.get("/api/v1/stories", (request, reply) => {
+    let submission;
+
+    const index = request.query.index;
+    try {
+      submission = getSubmission(index);
+    } catch (e) {
+      reply.status(404).type('application/json').send({
+        err: "Couldn't find the submission"
+      })
+    }
+
+    reply.status(200).type('application/json').send(submission);
+  });
+
   app.get("/", async (request, reply) => {
     let page = parseInt(request.query.page);
     if (isNaN(page) || page < 1) {
