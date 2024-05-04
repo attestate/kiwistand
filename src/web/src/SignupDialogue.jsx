@@ -52,10 +52,10 @@ const SignupDialogue = (props) => {
           position: "fixed",
           bottom: 0,
           left: 0,
-          height: "90px",
+          height: "80vh",
           padding: "0.75rem 0",
           width: "100%",
-          backgroundColor: "#e6e6df",
+          backgroundColor: "rgba(230,230,223, 0.95)",
           borderTop: "1px solid #828282",
           zIndex: 6,
           borderTop: "1px solid #828282",
@@ -101,6 +101,9 @@ const SignupDialogue = (props) => {
             Sign up
           </a>
         </div>
+        <p style={{ color: "black" }}>
+          Sign up to read the best texts on crypto culture
+        </p>
       </div>
     );
   }
