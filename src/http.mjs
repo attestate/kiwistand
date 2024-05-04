@@ -18,7 +18,7 @@ import themes from "./themes.mjs";
 import feed, { index } from "./views/feed.mjs";
 import story, { generateStory } from "./views/story.mjs";
 import newest, * as newAPI from "./views/new.mjs";
-import best from "./views/best.mjs";
+import best, * as bestAPI from "./views/best.mjs";
 import privacy from "./views/privacy.mjs";
 import guidelines from "./views/guidelines.mjs";
 import onboarding from "./views/onboarding.mjs";
@@ -362,6 +362,29 @@ export async function launch(trie, libp2p) {
     } else if (request.params.name === "images") {
       reply.header("Cache-Control", "no-cache");
       stories = imagesAPI.getStories();
+    } else if (request.params.name === "best") {
+      reply.header(
+        "Cache-Control",
+        "public, max-age=3600, no-transform, must-revalidate, stale-while-revalidate=86400",
+      );
+
+      let page = parseInt(request.query.page);
+      if (isNaN(page) || page < 1) {
+        page = 0;
+      }
+
+      const periodValues = ["all", "month", "week", "day"];
+      let { period } = request.query;
+      if (!period || !periodValues.includes(period)) {
+        period = "week";
+      }
+
+      stories = await bestAPI.getStories(
+        trie,
+        page,
+        period,
+        request.query.domain,
+      );
     } else {
       const code = 501;
       const httpMessage = "Not Implemented";

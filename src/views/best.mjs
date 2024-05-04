@@ -151,9 +151,8 @@ async function recompute(trie, page, period, domain) {
 }
 
 const pages = {};
-export default async function index(trie, theme, page, period, domain) {
+export async function getStories(trie, page, period, domain) {
   const key = `${page}-${period}-${domain}`;
-  const totalStories = parseInt(env.TOTAL_STORIES, 10);
   let cacheRes = pages[key];
   let stories;
 
@@ -187,6 +186,11 @@ export default async function index(trie, theme, page, period, domain) {
   } else {
     stories = cacheRes.stories;
   }
+  return stories;
+}
+export default async function index(trie, theme, page, period, domain) {
+  const totalStories = parseInt(env.TOTAL_STORIES, 10);
+  const stories = await getStories(trie, page, period, domain);
   const ogImage = "https://news.kiwistand.com/kiwi_top_feed_page.png";
   const recentJoiners = await registry.recents();
   return html`
