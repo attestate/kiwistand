@@ -23,6 +23,7 @@ import { custom } from "./components/head.mjs";
 import * as store from "../store.mjs";
 import * as id from "../id.mjs";
 import * as moderation from "./moderation.mjs";
+import { countOutbounds } from "../cache.mjs";
 import * as curation from "./curation.mjs";
 import * as registry from "../chainstate/registry.mjs";
 import log from "../logger.mjs";
@@ -116,6 +117,11 @@ export async function topstories(leaves, decayStrength) {
         score = Math.log(story.upvotes + commentCount);
       } else {
         score = Math.log(story.upvotes);
+      }
+
+      const outboundClicks = countOutbounds(story.href);
+      if (outboundClicks > 0) {
+        score = score * 0.7 + 0.3 * Math.log(outboundClicks);
       }
 
       const decay = Math.sqrt(itemAge(story.timestamp));

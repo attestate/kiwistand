@@ -63,7 +63,7 @@ import * as frame from "./frame.mjs";
 import * as subscriptions from "./subscriptions.mjs";
 import * as telegram from "./telegram.mjs";
 import * as price from "./price.mjs";
-import { getSubmission } from "./cache.mjs";
+import { getSubmission, trackOutbound } from "./cache.mjs";
 
 const app = express();
 
@@ -150,6 +150,27 @@ export async function launch(trie, libp2p) {
     res.status(500).send("Internal Server Error");
   });
 
+  // NOTE: If you're reading this as an external contributor, yes the
+  // fingerprint.mjs file isn't distributed along with the other code because
+  // we must not allow people to understand what the criteria are that cast a
+  // requester a unique user. Users can control all aspects of a request, so if
+  // we'd open source this functionality, users could game the request to
+  // increase their ranking on the site.
+  const fingerprint = await import("./fingerprint.mjs");
+  app.get("/outbound", async (request, reply) => {
+    reply.header("Cache-Control", "no-cache");
+    const { url } = request.query;
+    if (!url) {
+      return reply.status(400).send("URL parameter is required");
+    }
+    if (!fingerprint) {
+      return reply.redirect(url);
+    }
+
+    const hash = fingerprint.generate(request);
+    trackOutbound(url, hash);
+    return reply.redirect(url);
+  });
   app.get("/kiwipass-mint", async (request, reply) => {
     reply.header(
       "Cache-Control",

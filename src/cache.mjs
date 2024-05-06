@@ -73,6 +73,43 @@ function initialize() {
      CREATE INDEX IF NOT EXISTS idx_comments_timestamp ON comments(timestamp);
      CREATE INDEX IF NOT EXISTS idx_comments_identity ON comments(identity);
    `);
+
+  db.exec(`
+      CREATE TABLE fingerprints (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        url TEXT NOT NULL,
+        hash TEXT NOT NULL,
+        timestamp INTEGER NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_fingerprints_url ON fingerprints(url);
+      CREATE INDEX IF NOT EXISTS idx_url_fingerprints_timestamp ON fingerprints(timestamp);
+    `);
+}
+
+export function countOutbounds(url, hours = 24) {
+  const normalizedUrl = normalizeUrl(url, {
+    stripWWW: false,
+  });
+  const cutoffTimestamp = Math.floor(Date.now() / 1000 - hours * 60 * 60);
+
+  const query = db.prepare(`
+     SELECT COUNT(DISTINCT hash) AS uniqueHashCount
+     FROM fingerprints 
+     WHERE url = ? AND timestamp >= ?
+   `);
+  const result = query.get(normalizedUrl, cutoffTimestamp);
+  return result.uniqueHashCount;
+}
+
+export function trackOutbound(url, hash) {
+  const normalizedUrl = normalizeUrl(url, {
+    stripWWW: false,
+  });
+  const timestamp = Math.floor(Date.now() / 1000);
+  const insert = db.prepare(
+    `INSERT INTO fingerprints(url, hash, timestamp) VALUES (?,?,?)`,
+  );
+  insert.run(normalizedUrl, hash, timestamp);
 }
 
 export function getNumberOfOnlineUsers() {
@@ -87,7 +124,6 @@ export function getNumberOfOnlineUsers() {
        WHERE timestamp > ?
      `);
     const identities = stmt.all(timestamp24HoursAgo);
-    console.log(identities);
     identities.forEach((identity) => uniqueIdentities.add(identity.identity));
   });
 

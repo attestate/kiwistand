@@ -99,7 +99,9 @@ const row = (
                   <a
                     href="${interactive || story.image
                       ? ""
-                      : addOrUpdateReferrer(story.href, story.identity)}"
+                      : `/outbound?url=${encodeURIComponent(
+                          addOrUpdateReferrer(story.href, story.identity),
+                        )}`}"
                     target="_blank"
                     class="story-link"
                     style="line-height: 13pt; ${story.image
