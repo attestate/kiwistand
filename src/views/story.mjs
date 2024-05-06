@@ -219,7 +219,7 @@ export default async function (trie, theme, index, value) {
                 recentJoiners,
               )({ ...story, index })}
               <tr>
-                <td>${generateList(actions)}</td>
+                <td>${actions.length > 3 ? generateList(actions) : ""}</td>
               </tr>
               ${story.comments.length > 0
                 ? html`<tr>

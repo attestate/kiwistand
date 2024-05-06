@@ -144,7 +144,7 @@ const row = (
                 <div style="font-size: 10pt;">
                   <span>
                     ${path !== "/stories" &&
-                    story.avatars.length > 1 &&
+                    story.avatars.length > 3 &&
                     html`
                       <span>
                         <div
