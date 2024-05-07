@@ -435,6 +435,25 @@ export default async function (trie, theme, page, domain) {
               <tr>
                 ${SecondHeader(theme, "top")}
               </tr>
+              <tr>
+                <td>
+                  <marquee
+                    style="text-transform: uppercase; font-family: monospace; background-color: black; padding: 5px; color: white;"
+                    >Pls don't forget to upvote when U like a story! Kiwi News
+                    is a collectively maintained feed. Unlike Twitter, Facebook
+                    and Co, it isn't engineered to give you an instant
+                    dopamine-hit so that you remain on the site. We encounter
+                    our users as human beings, not cattle meant to farm
+                    behavioral data. That said, please now position your head
+                    exactly 1 foot in front of the screen and look intently at
+                    this sideways scrolling text. You have 5 seconds. 5 ... 4
+                    ... 3 ... 2 ... 1... OK, now say outloud: "I will always
+                    help the Kiwi News community to upvote articles that I like.
+                    I will not complain about wallet UX issues and I will not
+                    ask when upvoting on Warpcast drops." Thank you.
+                  </marquee>
+                </td>
+              </tr>
               ${page === 0 && editorPicks.length > 0
                 ? html` <tr style="background-color: #e6e6df;">
                     <td>
@@ -510,11 +529,6 @@ export default async function (trie, theme, page, domain) {
                   </tr>
                 `,
               )}
-              ${page === 0 && editorPicks.length > 0
-                ? html` <tr style="height: 13px; background-color: #e6e6df;">
-                    <td></td>
-                  </tr>`
-                : ""}
               ${originals && originals.length >= 2 && !domain
                 ? html`
                     ${stories
