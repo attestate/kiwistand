@@ -207,7 +207,7 @@ const secondheader = (theme, site, period, domain) => {
                 <button
                   onclick="${animation}"
                   class="feed-button"
-                  style=${`font-size: 1.01rem; border: none; outline: none; border-radius: 2px; cursor: pointer; padding: 6px 20px; background-color: rgba(0,0,0,${
+                  style=${`font-size: 1.01rem; border: none; outline: none; border-radius: 2px; cursor: pointer; padding: 6px 15px; background-color: rgba(0,0,0,${
                     site === "top" ? "0.2" : "0.1"
                   }); color: black;`}
                 >
@@ -227,7 +227,7 @@ const secondheader = (theme, site, period, domain) => {
                 <button
                   onclick="${animation}"
                   class="feed-button"
-                  style=${`margin-left: 10px; font-size: 1.01rem; border: none; outline: none; border-radius: 2px; cursor: pointer; padding: 6px 20px; background-color: rgba(0,0,0,${
+                  style=${`margin-left: 10px; font-size: 1.01rem; border: none; outline: none; border-radius: 2px; cursor: pointer; padding: 6px 15px; background-color: rgba(0,0,0,${
                     site === "new" ? "0.2" : "0.1"
                   }); color: black;`}
                 >
@@ -244,7 +244,7 @@ const secondheader = (theme, site, period, domain) => {
                 <button
                   onclick="${animation}"
                   class="feed-button"
-                  style=${`margin-left: 10px; font-size: 1.01rem; border: none; outline: none; border-radius: 2px; cursor: pointer; padding: 6px 20px; background-color: rgba(0,0,0,${
+                  style=${`margin-left: 10px; font-size: 1.01rem; border: none; outline: none; border-radius: 2px; cursor: pointer; padding: 6px 15px; background-color: rgba(0,0,0,${
                     site === "best" ? "0.2" : "0.1"
                   }); color: black;`}
                 >
