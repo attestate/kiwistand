@@ -123,6 +123,9 @@ const Avatar = (props) => {
         style={{
           display: "flex",
           alignItems: "center",
+          padding: "0 13px 0 7px",
+          background: "rgba(0, 0, 0, 0.05)",
+          borderRadius: "2px",
         }}
       >
         <div

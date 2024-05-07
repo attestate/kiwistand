@@ -207,9 +207,9 @@ const secondheader = (theme, site, period, domain) => {
                 <button
                   onclick="${animation}"
                   class="feed-button"
-                  style=${`font-size: 1.01rem; border-radius: 2px; cursor: pointer; padding: 5px 15px; background-color: transparent; border: ${
-                    site === "top" ? "2px solid black" : "1px solid #828282"
-                  }; color: ${site === "top" ? "black" : "#828282"};`}
+                  style=${`font-size: 1.01rem; border: none; outline: none; border-radius: 2px; cursor: pointer; padding: 6px 20px; background-color: rgba(0,0,0,${
+                    site === "top" ? "0.2" : "0.1"
+                  }); color: black;`}
                 >
                   <span>${fireSVG} Hot</span>
                 </button>
@@ -227,13 +227,9 @@ const secondheader = (theme, site, period, domain) => {
                 <button
                   onclick="${animation}"
                   class="feed-button"
-                  style=${`position: relative; font-size: 1.01rem; margin-left: 10px; cursor: pointer; border-radius: 2px; padding: 5px 15px; background-color: transparent; border: ${
-                    site === "new" || site === "nfts"
-                      ? "2px solid black"
-                      : "1px solid #828282"
-                  }; color: ${
-                    site === "new" || site === "nfts" ? "black" : "#828282"
-                  };`}
+                  style=${`margin-left: 10px; font-size: 1.01rem; border: none; outline: none; border-radius: 2px; cursor: pointer; padding: 6px 20px; background-color: rgba(0,0,0,${
+                    site === "new" ? "0.2" : "0.1"
+                  }); color: black;`}
                 >
                   <span
                     id="new-dot"
@@ -248,9 +244,9 @@ const secondheader = (theme, site, period, domain) => {
                 <button
                   onclick="${animation}"
                   class="feed-button"
-                  style=${`font-size: 1.01rem; margin-left: 10px; cursor: pointer; border-radius: 2px; padding: 5px 15px; background-color: transparent; border: ${
-                    site === "best" ? "1px solid black" : "1px solid #828282"
-                  }; color: ${site === "best" ? "black" : "#828282"};`}
+                  style=${`margin-left: 10px; font-size: 1.01rem; border: none; outline: none; border-radius: 2px; cursor: pointer; padding: 6px 20px; background-color: rgba(0,0,0,${
+                    site === "best" ? "0.2" : "0.1"
+                  }); color: black;`}
                 >
                   <span> ${trophySVG} Top</span>
                 </button>
