@@ -411,6 +411,10 @@ export default async function (trie, theme, page, domain) {
   }
   const ogImage = "https://news.kiwistand.com/kiwi_hot_feed_page.png";
   const recentJoiners = await registry.recents();
+  const marquee1 = `Pls don't forget to upvote when U like a story! Kiwi News is a collectively maintained feed. Unlike Twitter, Facebook and Co, it isn't engineered to give you an instant dopamine-hit so that you remain on the site. We encounter our users as human beings, not cattle meant to farm behavioral data. That said, please now position your head exactly 1 foot in front of the screen and look intently at this sideways scrolling text. You have 5 seconds. 5 ... 4 ... 3 ... 2 ... 1... OK, now say outloud: "I will always help the Kiwi News community to upvote articles that I like. I will not complain about wallet UX issues and I will not ask when upvoting on Warpcast drops." Thank you.`;
+  const marquee2 = `FYI Kiwi News is a bootstrapped project. That means we exclusively finance ourselves from the Kiwi Passes that we sell, and, in some cases from grants that we receive. We do this to deliver you the best possible neutrality. That is to say: We don't want a sponsor or investor that gets so big that they can decide content policy or influence the site's moderation. Instead, by taking the money from you, our customers, we're directly aligning ourselves with your interests.`;
+  const marquees = [marquee1, marquee2];
+  const randomMarquee = marquees[Math.floor(Math.random() * marquees.length)];
   return html`
     <html lang="en" op="news">
       <head>
@@ -439,18 +443,7 @@ export default async function (trie, theme, page, domain) {
                 <td>
                   <marquee
                     style="text-transform: uppercase; font-family: monospace; background-color: black; padding: 5px; color: white;"
-                    >Pls don't forget to upvote when U like a story! Kiwi News
-                    is a collectively maintained feed. Unlike Twitter, Facebook
-                    and Co, it isn't engineered to give you an instant
-                    dopamine-hit so that you remain on the site. We encounter
-                    our users as human beings, not cattle meant to farm
-                    behavioral data. That said, please now position your head
-                    exactly 1 foot in front of the screen and look intently at
-                    this sideways scrolling text. You have 5 seconds. 5 ... 4
-                    ... 3 ... 2 ... 1... OK, now say outloud: "I will always
-                    help the Kiwi News community to upvote articles that I like.
-                    I will not complain about wallet UX issues and I will not
-                    ask when upvoting on Warpcast drops." Thank you.
+                    >${randomMarquee}
                   </marquee>
                 </td>
               </tr>
