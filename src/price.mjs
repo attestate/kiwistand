@@ -291,7 +291,7 @@ export async function chart(theme) {
                   ${averages.day30.toFixed(2)} NFTs
                   <br />
                   <span
-                    >Weighted average of daily mints (50% total average, 50% SME
+                    >Weighted average of daily mints (95% total average, 5% SME
                     of last 30 days):
                   </span>
                   <span> ${averages.weighted.toFixed(2)} NFTs</span>

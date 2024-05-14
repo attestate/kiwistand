@@ -328,7 +328,7 @@ export async function launch(trie, libp2p) {
     const httpMessage = "OK";
     const details = "Calculated current price";
     return sendStatus(reply, code, httpMessage, details, {
-      price: value.toString(),
+      price: value.price.toString(),
     });
   });
   app.get("/api/v1/parse", async (request, reply) => {
