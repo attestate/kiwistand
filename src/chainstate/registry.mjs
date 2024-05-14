@@ -146,6 +146,5 @@ export async function mints() {
   const mints = optimism
     .map(({ value }) => value)
     .filter(({ from, value }) => from === zeroAddress && value !== "0x0");
-  console.log(JSON.stringify(mints));
   return mints;
 }

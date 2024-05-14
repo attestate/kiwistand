@@ -20,17 +20,24 @@ export function getPrice(salesData, firstDayInSchedule, today = new Date()) {
   const firstPrice = BigNumber.from("1280000000000000"); // p0 in Wei
 
   const daysInSchedule = differenceInDays(today, firstDayInSchedule); // t
-  const priceDecreasePercentage = 0.2; // k
+  const priceDecreasePercentage = 0.15; // k
 
   const mints = salesData
-    .map((mint) => ({
-      ...mint,
-      timestamp: new Date(1000 * parseInt(mint.timestamp, 16)),
-    }))
+    .map((mint) => {
+      const timestamp = new Date(1000 * parseInt(mint.timestamp, 16));
+      return {
+        ...mint,
+        timestamp,
+        day: differenceInDays(timestamp, today),
+      };
+    })
     .filter(
       ({ timestamp }) => timestamp > firstDayInSchedule && timestamp < today,
-    );
-  const dailyNFTSellTarget = 6;
+    )
+    .sort((a, b) => a.timestamp - b.timestamp);
+  const lastMints = mints.filter(({ day }) => day > -31);
+  const average30DayMints = lastMints.length / 30;
+  const dailyNFTSellTarget = 6.26 * 0.95 + average30DayMints * 0.05;
   const numberOfSoldNFTs = mints.length; // n
 
   const exponent = daysInSchedule - numberOfSoldNFTs / dailyNFTSellTarget;
@@ -40,8 +47,16 @@ export function getPrice(salesData, firstDayInSchedule, today = new Date()) {
   // information contained in the decimals and so it can end up happening that
   // factor just becomes zero and so the price also becomes zero.
   const scaler = 100_000_000;
-  const linear = firstPrice.mul(BigNumber.from(Math.floor(factor * scaler)));
-  return linear.div(scaler);
+  const linear = firstPrice.mul(
+    BigNumber.from(`${Math.floor(factor * scaler)}`),
+  );
+  return {
+    averages: {
+      weighted: dailyNFTSellTarget,
+      day30: average30DayMints,
+    },
+    price: linear.div(scaler),
+  };
 }
 
 const options = {
@@ -153,12 +168,32 @@ export async function chart(theme) {
 
   const dates = [];
   let prices = [];
+  let averages;
   const mints = await registry.mints();
   while (differenceInDays(today, pointer) >= 0) {
     dates.push(pointer);
-    prices.push(getPrice(mints, firstDayInSchedule, pointer));
+    const result = getPrice(mints, firstDayInSchedule, pointer);
+    averages = result.averages;
+
+    prices.push(result.price);
     pointer = add(pointer, { days: 1 });
   }
+  const sales = mints
+    .map(({ value, timestamp }) => ({
+      price: parseFloat(ethers.utils.formatEther(value)) * 1000,
+      timestamp: new Date(1000 * parseInt(timestamp, 16)),
+    }))
+    .filter(({ timestamp }) => timestamp > monthAgo && timestamp < today);
+
+  options.yLabel.name = "Price in kilo ETH";
+  options.xLabel.name = "";
+  const salesChart1m = plot(html)(
+    {
+      x: sales.map(({ timestamp }) => timestamp),
+      y: sales.map(({ price }) => price),
+    },
+    options,
+  );
 
   //console.log(dates);
   //console.log(JSON.stringify(prices.map((value) => value.toString())));
@@ -249,14 +284,30 @@ export async function chart(theme) {
                   <span>Total Number of sales (6m): </span>
                   ${salesData6m.length} NFTs
                   <br />
-                  <span>Average number of daily sales (6m) </span>
+                  <span>Average number of daily sales (6m): </span>
                   ${(salesData6m.length / 182).toFixed(2)} NFTs
+                  <br />
+                  <span>Simple moving average (30 days) of daily mints: </span>
+                  ${averages.day30.toFixed(2)} NFTs
+                  <br />
+                  <span
+                    >Weighted average of daily mints (50% total average, 50% SME
+                    of last 30 days):
+                  </span>
+                  <span> ${averages.weighted.toFixed(2)} NFTs</span>
                   <br />
                   <span>Price recommendation: </span>
                   ${prices.pop() / 1000} ETH
                   <br />
                   <p>
-                    <b>NFT price simulation using VRGDA (6m)</b>
+                    <b>Real prices from sales (1m)</b>
+                    <br />
+                    <br />
+                  </p>
+                  ${salesChart1m}
+                  <br />
+                  <p>
+                    <b>NFT price simulation using VRGDA (1m)</b>
                     <br />
                     <br />
                   </p>
