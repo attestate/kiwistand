@@ -104,6 +104,25 @@ const SubmitButton = (props) => {
         .catch((error) => {
           console.log("Fetch error: ", error);
         });
+      fetch(`/api/v1/metadata?url=${encodeURIComponent(canonicalURL)}`)
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then((data) => {
+          if (data.data.ogTitle) {
+            const title = data.data.ogTitle;
+            document.getElementById("titleInput").innerText = title;
+            const remaining = 80 - title.length;
+            document.querySelector(".remaining").textContent = remaining;
+            setTitle(title);
+          }
+        })
+        .catch((error) => {
+          console.log("Fetch error: ", error);
+        });
     } else {
       embedPreview.innerHTML = "";
     }
