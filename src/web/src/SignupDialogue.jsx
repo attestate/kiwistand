@@ -3,7 +3,11 @@ import React from "react";
 import { useAccount } from "wagmi";
 import { eligible } from "@attestate/delegator2";
 
-import { Connector, CustomConnectButton } from "./Navigation.jsx";
+import {
+  ConnectedSimpleDisconnectButton,
+  Connector,
+  CustomConnectButton,
+} from "./Navigation.jsx";
 import {
   getLocalAccount,
   isSafariOnIOS,
@@ -100,6 +104,15 @@ const SignupDialogue = (props) => {
           >
             Sign up
           </a>
+        </div>
+        <div
+          style={{
+            color: "black",
+            marginTop: "1rem",
+            textDecoration: "underline",
+          }}
+        >
+          <ConnectedSimpleDisconnectButton />
         </div>
         <p style={{ color: "black" }}>
           Sign up to read the best texts on crypto culture
