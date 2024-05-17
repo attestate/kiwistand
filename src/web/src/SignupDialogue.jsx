@@ -44,11 +44,11 @@ const SignupDialogue = (props) => {
 
   if (
     !isEligible &&
-    (window.location.pathname !== "/" ||
-      window.location.pathname !== "/new" ||
-      window.location.pathname !== "/top" ||
-      window.location.pathname !== "/stories" ||
-      window.location.pathname !== "/comments")
+    (window.location.pathname === "/" ||
+      window.location.pathname === "/new" ||
+      window.location.pathname === "/top" ||
+      window.location.pathname === "/stories" ||
+      window.location.pathname === "/comments")
   ) {
     return (
       <div
