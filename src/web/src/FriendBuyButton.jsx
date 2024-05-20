@@ -165,7 +165,7 @@ const FriendBuyButton = (props) => {
 
   if (sent) {
     return (
-      <div style={{ fontSize: "1rem" }}>
+      <div id="friend-buy-button-container" style={{ fontSize: "1rem" }}>
         <b>Kiwi Pass sent</b>
         <br />
         <br />
