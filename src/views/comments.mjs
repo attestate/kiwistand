@@ -39,7 +39,7 @@ function generateCommentRow(activity, identity, borderColor) {
     : "";
 
   const [_, index] = activity.message.href.split(":");
-  const link = `/stories?index=${index}#0x${activity.message.index}`;
+  const link = `/stories?index=${index}&cacheBuster=${activity.message.index}#0x${activity.message.index}`;
 
   return html`
     <tr>
