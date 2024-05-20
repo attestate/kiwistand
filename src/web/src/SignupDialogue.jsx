@@ -56,7 +56,7 @@ const SignupDialogue = (props) => {
           position: "fixed",
           bottom: 0,
           left: 0,
-          height: "80vh",
+          height: "40vh",
           padding: "0.75rem 0",
           width: "100%",
           backgroundColor: "rgba(230,230,223, 0.95)",
