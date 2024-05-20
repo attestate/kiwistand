@@ -199,10 +199,11 @@ const FriendBuyButton = (props) => {
   }
 
   const name = "Optimism";
-  const chainId = optimism.id;
+  const chainId = optimism;
   if (
     (config && config.request && config.request.chainId !== chain.id) ||
-    (error && error.message.includes("Chain mismatch"))
+    (error && error.message.includes("Chain mismatch")) ||
+    (error && error.message.includes("attempting to switch chain"))
   ) {
     return (
       <div id="friend-buy-button-container">
