@@ -166,6 +166,22 @@ async function addVotes(allowlistPromise, delegationsPromise, toast) {
   }
 }
 
+async function addFriendBuyButton(toast) {
+  const buyButtonContainer = document.querySelector(
+    "#friend-buy-button-container",
+  );
+  if (buyButtonContainer) {
+    const { createRoot } = await import("react-dom/client");
+    const { StrictMode } = await import("react");
+    const BuyButton = (await import("./FriendBuyButton.jsx")).default;
+    createRoot(buyButtonContainer).render(
+      <StrictMode>
+        <BuyButton toast={toast} />
+      </StrictMode>,
+    );
+  }
+}
+
 async function addBuyButton(allowlistPromise, delegationsPromise, toast) {
   const buyButtonContainer = document.querySelector("#buy-button-container");
   if (buyButtonContainer) {
@@ -442,9 +458,10 @@ async function addNFTPrice() {
     const NFTPrice = (await import("./NFTPrice.jsx")).default;
     nftPriceElements.forEach((element) => {
       const fee = element.getAttribute("data-fee");
+      const selector = element.getAttribute("data-selector");
       createRoot(element).render(
         <StrictMode>
-          <NFTPrice fee={fee} />
+          <NFTPrice fee={fee} selector={selector} />
         </StrictMode>,
       );
     });
@@ -553,6 +570,7 @@ async function start() {
     addAvatar(await allowlistPromise, await delegationsPromise),
     addDelegateButton(await allowlistPromise, await delegationsPromise, toast),
     addBuyButton(allowlistPromise, delegationsPromise, toast),
+    addFriendBuyButton(toast),
     addConnectedComponents(
       await allowlistPromise,
       await delegationsPromise,

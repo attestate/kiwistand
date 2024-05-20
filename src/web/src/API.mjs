@@ -156,7 +156,7 @@ export async function fetchPrice() {
     response = await fetch(`/api/v1/price`);
     const data = await response.json();
     const prices = {
-      min: saleDetails.publicSalePrice,
+      min: saleDetails.publicSalePrice + 777000000000000n,
       current: BigInt(data.data.price),
     };
     if (prices.current <= prices.min) {

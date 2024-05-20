@@ -281,13 +281,13 @@ body {
     width: 50%;
     display: inline-block;
   }
-  .primary-action-button:hover, #button-onboarding:hover, .buy-button:hover {
+  .primary-action-button:hover, #button-onboarding:hover, .buy-button:hover, .friend-buy-button:hover {
     outline: 1px solid black;
     color: black !important;
     border-color: black !important;
     background-color: white !important;
   }
-  .primary-action-button:active, #button-onboarding:active, .buy-button:active {
+  .primary-action-button:active, #button-onboarding:active, .buy-button:active, .friend-buy-button:active {
     transform: scale(0.96);
     outline: 1px solid black;
     color: black !important;

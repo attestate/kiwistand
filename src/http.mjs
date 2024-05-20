@@ -25,6 +25,7 @@ import onboarding from "./views/onboarding.mjs";
 import join from "./views/join.mjs";
 import kiwipass from "./views/kiwipass.mjs";
 import kiwipassmint from "./views/kiwipass-mint.mjs";
+import friends from "./views/friends.mjs";
 import whattosubmit from "./views/whattosubmit.mjs";
 import onboardingReader from "./views/onboarding-reader.mjs";
 import onboardingCurator from "./views/onboarding-curator.mjs";
@@ -170,6 +171,16 @@ export async function launch(trie, libp2p) {
     const hash = fingerprint.generate(request);
     trackOutbound(url, hash);
     return reply.redirect(url);
+  });
+  app.get("/friends", async (request, reply) => {
+    reply.header(
+      "Cache-Control",
+      "public, max-age=3600, no-transform, must-revalidate, stale-while-revalidate=86400",
+    );
+    return reply
+      .status(200)
+      .type("text/html")
+      .send(await friends(reply.locals.theme));
   });
   app.get("/kiwipass-mint", async (request, reply) => {
     reply.header(

@@ -9,6 +9,7 @@ import { fetchPrice } from "./API.mjs";
 export const PriceComponent = (props) => {
   const [ethPrice, setEthPrice] = useState(null);
   const [price, setPrice] = useState(null);
+  const selector = props.selector ? props.selector : "authoritative";
 
   useEffect(() => {
     (async () => {
@@ -35,8 +36,8 @@ export const PriceComponent = (props) => {
   }, []);
 
   const usdPrice =
-    ethPrice && price && price.authoritative
-      ? `$${(formatEther(price.authoritative) * ethPrice).toFixed(2)}`
+    ethPrice && price && price[selector]
+      ? `$${(formatEther(price[selector]) * ethPrice).toFixed(2)}`
       : null;
 
   if (!usdPrice && !price) {
@@ -45,10 +46,8 @@ export const PriceComponent = (props) => {
 
   return (
     <span>
-      {price && price.authoritative ? (
-        <span>
-          {parseFloat(formatEther(price.authoritative)).toFixed(5)} ETH
-        </span>
+      {price && price[selector] ? (
+        <span>{parseFloat(formatEther(price[selector])).toFixed(5)} ETH</span>
       ) : (
         ""
       )}
