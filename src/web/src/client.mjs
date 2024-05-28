@@ -5,7 +5,7 @@ import {
   FallbackProvider,
   JsonRpcProvider,
 } from "@ethersproject/providers";
-import { getDefaultWallets } from "@rainbow-me/rainbowkit";
+import { connectorsForWallets } from "@rainbow-me/rainbowkit";
 import { getPublicClient } from "@wagmi/core";
 import {
   createConfig,
@@ -15,6 +15,14 @@ import {
 } from "wagmi";
 import { mainnet, optimism } from "wagmi/chains";
 import { alchemyProvider } from "wagmi/providers/alchemy";
+import {
+  injectedWallet,
+  walletConnectWallet,
+  safeWallet,
+  coinbaseWallet,
+  metaMaskWallet,
+  braveWallet,
+} from "@rainbow-me/rainbowkit/wallets";
 //import { infuraProvider } from "wagmi/providers/infura";
 
 const config = configureChains(
@@ -24,12 +32,22 @@ const config = configureChains(
 );
 
 export const chains = config.chains;
+const projectId = "cd46d2fcf6d171fb7c017129868fa211";
+const appName = "Kiwi News";
 
-const { connectors } = getDefaultWallets({
-  appName: "Kiwi News",
-  projectId: "cd46d2fcf6d171fb7c017129868fa211",
-  chains,
-});
+const connectors = connectorsForWallets([
+  {
+    groupName: "Popular",
+    wallets: [
+      injectedWallet({ chains }),
+      walletConnectWallet({ projectId, chains }),
+      safeWallet({ chains }),
+      coinbaseWallet({ appName, chains }),
+      metaMaskWallet({ chains, projectId }),
+      braveWallet({ chains }),
+    ],
+  },
+]);
 
 export const client = createConfig({
   autoConnect: true,
