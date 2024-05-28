@@ -122,7 +122,8 @@ const ConnectionDialogue = (props) => {
             textAlign: "left",
           }}
         >
-          To make signing easier, we're adding an application key.
+          To make signing easier, we're adding an application key. This will
+          cost a few cents worth of Optimism ETH.
         </p>
       ) : (
         <p
