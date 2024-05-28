@@ -370,7 +370,7 @@ const sidebar = (path) => html`
       </div>
     </a>
     <a
-      title="Docs"
+      title="Wiki"
       href="https://kiwistand.github.io/kiwi-docs/"
       target="_blank"
       style="color: black; text-decoration: none; display: block;"
@@ -379,7 +379,7 @@ const sidebar = (path) => html`
         <div class="svg-container">
           ${path === "/welcome" ? aboutfull : about}
         </div>
-        <span>Docs</span>
+        <span>Wiki</span>
       </div>
     </a>
     <a
