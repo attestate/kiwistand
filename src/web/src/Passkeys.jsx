@@ -264,7 +264,9 @@ function BackupKey(props) {
     if (assertion.getClientExtensionResults()?.largeBlob?.written) {
       setLbResult("Backup successful!");
     } else {
-      setLbResult("Backup failed!");
+      setLbResult(
+        "Backup failed. There can be multiple reasons for this. For example, this will happen if you use 1Password or if you don't use iOS 17 yet.",
+      );
     }
     setProgress(3);
   };
