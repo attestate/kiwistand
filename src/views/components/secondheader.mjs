@@ -229,7 +229,7 @@ const secondheader = (theme, site, period, domain) => {
                   class="feed-button"
                   style=${`margin-left: 10px; font-size: 1.01rem; border: none; outline: none; border-radius: 2px; cursor: pointer; padding: 6px 15px; background-color: rgba(0,0,0,${
                     site === "new" ? "0.2" : "0.1"
-                  }); color: black;`}
+                  }); color: black; position:relative;`}
                 >
                   <span
                     id="new-dot"
