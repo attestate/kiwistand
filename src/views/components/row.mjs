@@ -96,26 +96,26 @@ const row = (
                 style="min-height: 55px; display:flex; justify-content: center; flex-direction: column; flex-grow: 1; line-height: 1.3; padding: 8px 3px 5px 0;"
               >
                 <span>
-                  <a
-                    href="${interactive || story.image
-                      ? ""
-                      : `/outbound?url=${encodeURIComponent(
-                          addOrUpdateReferrer(story.href, story.identity),
-                        )}`}"
-                    target="_blank"
-                    class="story-link"
-                    style="line-height: 13pt; ${story.image
-                      ? "font-size: 14pt; font-weight: bold;"
-                      : "font-size: 13pt;"}"
-                  >
-                    ${story.isOriginal
-                      ? html`<mark
-                          style="background-color: rgba(255,255,0, 0.05); padding: 0px 2px;"
-                          >${truncateLongWords(story.title)}</mark
-                        >`
-                      : truncateLongWords(story.title)}
-                    <span> </span>
-                  </a>
+                  <span class="story-link-container">
+                    <a
+                      href="${interactive || story.image
+                        ? ""
+                        : `/outbound?url=${encodeURIComponent(
+                            addOrUpdateReferrer(story.href, story.identity),
+                          )}`}"
+                      target="_blank"
+                      class="story-link"
+                      style="line-height: 13pt; font-size: 13pt;"
+                    >
+                      ${story.isOriginal
+                        ? html`<mark
+                            style="background-color: rgba(255,255,0, 0.05); padding: 0px 2px;"
+                            >${truncateLongWords(story.title)}</mark
+                          >`
+                        : truncateLongWords(story.title)}
+                      <span> </span>
+                    </a>
+                  </span>
                   ${story.image
                     ? html`<br /><a target="_blank" href="${story.href}"
                           ><img

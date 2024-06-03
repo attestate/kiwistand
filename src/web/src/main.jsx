@@ -132,6 +132,38 @@ async function addSubmitButton(allowlist, delegations, toast) {
   }
 }
 
+async function obfuscateLinks(allowlist, delegations) {
+  const links = document.querySelectorAll(".story-link-container");
+  if (links && links.length > 0) {
+    const { createRoot } = await import("react-dom/client");
+    const { StrictMode } = await import("react");
+    const Link = (await import("./Link.jsx")).default;
+
+    links.forEach((linkContainer) => {
+      const link = linkContainer.querySelector("a");
+      const title = link.innerText;
+      const href = link.getAttribute("href");
+      const target = link.getAttribute("target");
+      const className = link.getAttribute("class");
+      const children = link.innerHTML;
+      createRoot(linkContainer).render(
+        <StrictMode>
+          <Link
+            title={title}
+            href={href}
+            target={target}
+            className={className}
+            allowlist={allowlist}
+            delegations={delegations}
+          >
+            <div dangerouslySetInnerHTML={{ __html: children }} />
+          </Link>
+        </StrictMode>,
+      );
+    });
+  }
+}
+
 async function addVotes(allowlistPromise, delegationsPromise, toast) {
   const voteArrows = document.querySelectorAll(".votearrowcontainer");
   if (voteArrows && voteArrows.length > 0) {
@@ -559,6 +591,7 @@ async function start() {
 
   // We're parallelizing all additions into the DOM
   const results = await Promise.allSettled([
+    obfuscateLinks(await allowlistPromise, await delegationsPromise),
     addVotes(allowlistPromise, delegationsPromise, toast),
     addCommentInput(toast, allowlistPromise, delegationsPromise),
     addSubscriptionButton(),

@@ -5,6 +5,9 @@ body {
      color:#828282;
      overscroll-behavior: none;
 }
+.story-link-container div {
+  display: inline;
+}
 .comment-text-link {
   color: black !important;
 }
