@@ -69,7 +69,7 @@ const row = (
                 data-href="${story.href}"
                 data-upvoters="${JSON.stringify(story.upvoters)}"
                 class="vote-button-container"
-                style="align-self: stretch;"
+                style="display: flex; align-self: stretch;"
               >
                 <div>
                   <div

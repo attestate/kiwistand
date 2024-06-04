@@ -658,8 +658,9 @@ body {
 }
 
 .vote-button-container > div {
-  height: 100%;
+  min-height: 100%;
   display: flex;
+  align-self: stretch;
 }
 .interaction-element:hover {
   cursor:pointer;
