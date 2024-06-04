@@ -225,7 +225,12 @@ const BuyButton = (props) => {
   if (isEligible) {
     return (
       <div>
-        <button className="buy-button" disabled>
+        <button
+          onClick={() => {
+            window.location.pathname = "/";
+          }}
+          className="buy-button"
+        >
           Thanks for joining!
         </button>
       </div>
