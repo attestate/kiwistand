@@ -657,7 +657,12 @@ body {
      cursor: pointer;
 }
 
+.vote-button-container > div {
+  height: 100%;
+  display: flex;
+}
 .interaction-element:hover {
+  cursor:pointer;
   background-color: rgba(0,0,0,0.1) !important;
 }
 

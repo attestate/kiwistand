@@ -65,28 +65,33 @@ const row = (
           >
             <div style="display: flex; align-items: center;">
               <div
-                class="interaction-element"
-                style="border-radius: 2px; padding: 5px 0; background-color: rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; min-width: 40px; margin: 5px 6px; align-self: stretch;"
+                data-title="${story.title}"
+                data-href="${story.href}"
+                data-upvoters="${JSON.stringify(story.upvoters)}"
+                class="vote-button-container"
+                style="align-self: stretch;"
               >
-                <div style="min-height: 40px; display:block;">
+                <div>
                   <div
-                    class="${interactive ? "" : "votearrowcontainer"}"
-                    data-title="${story.title}"
-                    data-href="${story.href}"
-                    data-upvoters="${JSON.stringify(story.upvoters)}"
+                    class="interaction-element"
+                    style="border-radius: 2px; padding: 5px 0; background-color: rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; min-width: 40px; margin: 5px 6px; align-self: stretch;"
                   >
-                    <div>
-                      <div
-                        class="${interactive
-                          ? "votearrow"
-                          : "votearrow pulsate"}"
-                        style="color: rgb(130, 130, 130); cursor: pointer;"
-                        title="upvote"
-                      >
-                        ▲
-                      </div>
-                      <div style="font-size: 8pt; text-align: center;">
-                        ${story.upvotes ? story.upvotes : "..."}
+                    <div style="min-height: 40px; display:block;">
+                      <div class="votearrowcontainer">
+                        <div>
+                          <div
+                            class="${interactive
+                              ? "votearrow"
+                              : "votearrow pulsate"}"
+                            style="color: rgb(130, 130, 130); cursor: pointer;"
+                            title="upvote"
+                          >
+                            ▲
+                          </div>
+                          <div style="font-size: 8pt; text-align: center;">
+                            ${story.upvotes ? story.upvotes : "..."}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>

@@ -109,57 +109,78 @@ const Vote = (props) => {
       {({ account, chain, mounted, openConnectModal }) => {
         const connected = account && chain && mounted;
         return (
-          <div>
-            <div
-              onClick={async (e) => {
-                if (hasUpvoted || isLoading) return;
+          <div
+            onClick={async (e) => {
+              if (
+                hasUpvoted ||
+                isLoading ||
+                window.location.pathname === "/submit"
+              )
+                return;
 
-                const isEligible =
-                  signer &&
-                  eligible(allowlist, delegations, await signer.getAddress());
+              const isEligible =
+                signer &&
+                eligible(allowlist, delegations, await signer.getAddress());
 
-                if (!connected && !isEligible) {
-                  openConnectModal();
-                  return;
-                }
-                if (connected && !isEligible) {
-                  props.setIsOpen(true);
-                  return;
-                }
+              if (!connected && !isEligible) {
+                openConnectModal();
+                return;
+              }
+              if (connected && !isEligible) {
+                props.setIsOpen(true);
+                return;
+              }
 
-                // NOTE: It can happen that the Feedbot will suggests to submit
-                // articles that have a title length of > 80 chars, in this
-                // case we want to redirect the user to the /submit page to
-                // adjust the title.
-                if (props.title.length > 80) {
-                  const url = new URL(window.location);
-                  url.pathname = "/submit";
-                  url.searchParams.set("url", props.href);
-                  window.location.href = url.href;
-                  return;
-                }
+              // NOTE: It can happen that the Feedbot will suggests to submit
+              // articles that have a title length of > 80 chars, in this
+              // case we want to redirect the user to the /submit page to
+              // adjust the title.
+              if (props.title.length > 80) {
+                const url = new URL(window.location);
+                url.pathname = "/submit";
+                url.searchParams.set("url", props.href);
+                window.location.href = url.href;
+                return;
+              }
 
-                handleSubmit(e);
-              }}
-              className={`votearrow ${isLoading ? "pulsate" : ""}`}
-              style={{
-                color: hasUpvoted ? theme.color : "#828282",
-                cursor: hasUpvoted ? "not-allowed" : "pointer",
-              }}
-              title="upvote"
-            >
-              ▲
-            </div>
-            {props.editorPicks !== "true" ? (
+              handleSubmit(e);
+            }}
+            className="interaction-element"
+            style={{
+              borderRadius: "2px",
+              padding: "5px 0",
+              backgroundColor: "rgba(0,0,0,0.05)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              minWidth: "40px",
+              margin: "5px 6px",
+              alignSelf: "stretch",
+              cursor: hasUpvoted ? "not-allowed" : "pointer",
+            }}
+          >
+            <div style={{ minHeight: "40px", display: "block" }}>
               <div
+                className={`votearrow ${isLoading ? "pulsate" : ""}`}
                 style={{
-                  fontSize: "8pt",
-                  textAlign: "center",
+                  color: hasUpvoted ? theme.color : "#828282",
+                  cursor: hasUpvoted ? "not-allowed" : "pointer",
                 }}
+                title="upvote"
               >
-                {upvotes}
+                ▲
               </div>
-            ) : null}
+              {props.editorPicks !== "true" ? (
+                <div
+                  style={{
+                    fontSize: "8pt",
+                    textAlign: "center",
+                  }}
+                >
+                  {upvotes}
+                </div>
+              ) : null}
+            </div>
           </div>
         );
       }}

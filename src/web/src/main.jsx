@@ -165,7 +165,7 @@ async function obfuscateLinks(allowlist, delegations) {
 }
 
 async function addVotes(allowlistPromise, delegationsPromise, toast) {
-  const voteArrows = document.querySelectorAll(".votearrowcontainer");
+  const voteArrows = document.querySelectorAll(".vote-button-container");
   if (voteArrows && voteArrows.length > 0) {
     const { createRoot } = await import("react-dom/client");
     const { StrictMode } = await import("react");
