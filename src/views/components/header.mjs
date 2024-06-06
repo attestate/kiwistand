@@ -22,7 +22,7 @@ const header = async (theme, path) => {
     >
       <tbody>
         <tr>
-          <td style="line-height:12pt; height:10px;">
+          <td style="line-height:12pt; height:60px;">
             <div
               style="display: flex; flex-wrap: nowrap; justify-content: space-between; align-items: center;"
             >
