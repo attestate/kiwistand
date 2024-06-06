@@ -14,7 +14,6 @@ import {
 } from "date-fns";
 import linkifyStr from "linkify-string";
 
-import PWALine from "./components/iospwaline.mjs";
 import * as ens from "../ens.mjs";
 import Header from "./components/header.mjs";
 import SecondHeader from "./components/secondheader.mjs";
@@ -201,7 +200,6 @@ export default async function (trie, theme, index, value) {
         <meta name="description" content="${ogDescription}" />
       </head>
       <body>
-        ${PWALine}
         <div class="container">
           ${Sidebar(path)}
           <div id="hnmain">

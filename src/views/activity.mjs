@@ -9,7 +9,6 @@ import { formatDistanceToNow, sub } from "date-fns";
 import { utils } from "ethers";
 
 import * as ens from "../ens.mjs";
-import PWALine from "./components/iospwaline.mjs";
 import Header from "./components/header.mjs";
 import Sidebar from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
@@ -245,7 +244,6 @@ export async function page(theme, identity, notifications, lastUpdate) {
         ${Head}
       </head>
       <body>
-        ${PWALine}
         <div class="container">
           ${Sidebar()}
           <div id="hnmain">

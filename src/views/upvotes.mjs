@@ -7,7 +7,6 @@ import normalizeUrl from "normalize-url";
 import { formatDistanceToNow } from "date-fns";
 import { utils } from "ethers";
 
-import PWALine from "./components/iospwaline.mjs";
 import Header from "./components/header.mjs";
 import { trophySVG, broadcastSVG } from "./components/secondheader.mjs";
 import Footer from "./components/footer.mjs";
@@ -190,7 +189,6 @@ export default async function (
         ${frameHead ? frameHead : ""}
       </head>
       <body>
-        ${PWALine}
         <div class="container">
           ${Sidebar()}
           <div id="hnmain">

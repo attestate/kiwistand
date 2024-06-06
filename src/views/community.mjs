@@ -5,7 +5,6 @@ import { env } from "process";
 import htm from "htm";
 import vhtml from "vhtml";
 
-import PWALine from "./components/iospwaline.mjs";
 import * as ens from "../ens.mjs";
 import Header from "./components/header.mjs";
 import Footer from "./components/footer.mjs";
@@ -248,7 +247,6 @@ export default async function (trie, theme, query, identity) {
         </style>
       </head>
       <body>
-        ${PWALine}
         <div class="container">
           ${Sidebar(path)}
           <div id="hnmain">

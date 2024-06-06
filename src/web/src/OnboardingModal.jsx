@@ -16,7 +16,6 @@ class SimpleModal extends Component {
       showModal: false,
       hasCheckedAccount: false,
     };
-    this.checkAccountDebounced = debounce(this.checkAccount, 1000); // Debounce for 1000ms = 1s
     this.openModal = this.openModal.bind(this);
   }
   openModal() {
@@ -24,29 +23,12 @@ class SimpleModal extends Component {
   }
 
   componentDidMount() {
-    this.checkAccountDebounced();
     window.addEventListener("openModal", this.openModal);
   }
 
   componentWillUnmount() {
     window.removeEventListener("openModal", this.openModal);
   }
-  checkAccount = () => {
-    const account = getAccount();
-    const hasVisited =
-      localStorage.getItem("-kiwi-news-has-visited") === "true" ||
-      (account && account.isConnected) ||
-      isRunningPWA();
-
-    if (!hasVisited && isSafariOnIOS()) {
-      const iOSLine = document.querySelector(".ios-pwa-line");
-      if (iOSLine) {
-        iOSLine.style.display = "flex";
-      }
-    }
-
-    this.setState({ hasCheckedAccount: true });
-  };
 
   setVisited = () => {
     localStorage.setItem("-kiwi-news-has-visited", "true");
