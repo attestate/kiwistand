@@ -26,8 +26,9 @@ export function getLocalAccount(identity) {
     return obj;
   }, {});
 
-  if (Object.keys(keys).length === 1) {
+  if (Object.keys(keys).length === 1 && keys[identity]) {
     const [[key, value]] = Object.entries(keys);
+    // TODO: We can probably remove this
     setCookie("identity", key);
     const signer = new Wallet(value);
     return { identity: key, privateKey: value, signer: signer.address };
@@ -37,6 +38,7 @@ export function getLocalAccount(identity) {
     return { identity, privateKey: keys[identity], signer: signer.address };
   }
 
+  // TODO: We can probably remove this
   if (Object.keys(keys).length === 0 && identity) {
     setCookie("identity", identity);
   }
