@@ -16,7 +16,10 @@ import useLocalStorageState from "use-local-storage-state";
 import Passkeys from "./Passkeys.jsx";
 import { useProvider, chains, client } from "./client.mjs";
 import { CheckmarkSVG } from "./icons.jsx";
-import { ConnectedConnectButton } from "./Navigation.jsx";
+import {
+  ConnectedSimpleDisconnectButton,
+  ConnectedConnectButton,
+} from "./Navigation.jsx";
 import { resolveAvatar } from "./Avatar.jsx";
 import { fetchDelegations } from "./API.mjs";
 import { supportsPasskeys } from "./session.mjs";
@@ -89,16 +92,13 @@ const ConnectionDialogue = (props) => {
           marginTop: "0",
           fontSize: "1.2rem",
           color: "black",
-          marginBottom: "20px",
+          marginBottom: "10px",
         }}
       >
-        {pathname === "/settings" ? (
-          <span>
-            Connect with{" "}
-            <span style={{ whiteSpace: "nowrap" }}>news.kiwistand.com</span>
-          </span>
-        ) : (
+        {pathname === "/start" ? (
           <span>Welcome to Kiwi News! </span>
+        ) : (
+          <span>Welcome back!</span>
         )}
       </h3>
       {pathname === "/settings" ? (
@@ -106,24 +106,22 @@ const ConnectionDialogue = (props) => {
           style={{
             fontWeight: "bold",
             color: "black",
-            marginBottom: "20px",
+            marginBottom: "10px",
             textAlign: "left",
           }}
         >
-          Enable Kiwi News to seamlessly interact on your behalf on the Optimism
-          network:
+          Allow your browser to seamlessly interact on your behalf on the
+          Optimism network:
         </p>
       ) : props.account && props.account.isConnected ? (
         <p
           style={{
-            fontWeight: "bold",
             color: "black",
-            marginBottom: "20px",
+            marginBottom: "10px",
             textAlign: "left",
           }}
         >
-          To make signing easier, we're adding an application key. This will
-          cost a few cents worth of Optimism ETH.
+          Please add an application key:
         </p>
       ) : (
         <p
@@ -140,28 +138,42 @@ const ConnectionDialogue = (props) => {
           Please connect the wallet that received the Kiwi Pass NFT.
         </p>
       )}
-      {pathname === "/settings" ? (
-        <ul
-          style={{
-            textAlign: "left",
-            listStyle: "none",
-            paddingLeft: "0",
-            color: "black",
-            marginBottom: "30px",
-          }}
+      <ul
+        style={{
+          textAlign: "left",
+          listStyle: "none",
+          paddingLeft: "0",
+          color: "black",
+          marginBottom: "35px",
+          paddingLeft: "5px",
+          fontSize: "0.9rem",
+        }}
+      >
+        <li
+          style={{ marginLeft: "14px", textIndent: "-14px", marginTop: "8px" }}
         >
-          <li>
-            <span style={{ color: "limegreen" }}>•</span> Automatically upvote
-            and submit stories.
-          </li>
-          <li style={{ marginTop: "5px" }}>
-            <span style={{ color: "limegreen" }}>•</span> Sign messages without
-            additional prompts.
-          </li>
-        </ul>
-      ) : (
-        ""
-      )}
+          <span style={{ color: "limegreen" }}>•</span> Sign messages without
+          additional prompts.
+        </li>
+        <li
+          style={{ marginLeft: "14px", textIndent: "-14px", marginTop: "5px" }}
+        >
+          <span style={{ color: "limegreen" }}>•</span> <b>Cost:</b> less than
+          $0.01 on Optimism
+        </li>
+        <li
+          style={{ marginLeft: "14px", textIndent: "-14px", marginTop: "5px" }}
+        >
+          <span style={{ color: "limegreen" }}>•</span> Learn more about this by{" "}
+          <a
+            style={{ textDecoration: "underline" }}
+            href="https://kiwistand.github.io/kiwi-docs/docs/kiwi-how-works/delegation"
+            target="_blank"
+          >
+            reading our docs
+          </a>
+        </li>
+      </ul>
     </div>
   );
 };
@@ -248,6 +260,13 @@ const DelegateButton = (props) => {
           if (Object.keys(delegations).includes(wallet.address)) {
             setIndexedDelegation(true);
             clearInterval(intervalId);
+            if (
+              !supportsPasskeys() &&
+              props.callback &&
+              typeof props.callback === "function"
+            ) {
+              props.callback();
+            }
           }
         };
 
@@ -274,7 +293,7 @@ const DelegateButton = (props) => {
 
   if (key && wallet) {
     if (supportsPasskeys() && indexedDelegation) {
-      return <Passkeys toast={props.toast} />;
+      return <Passkeys toast={props.toast} callback={props.callback} />;
     } else if (window.location.pathname === "/start") {
       const delegate = key && wallet ? wallet.address : newKey.address;
       window.location.href = `/indexing?address=${from.address}&delegate=${delegate}`;
@@ -313,16 +332,12 @@ const DelegateButton = (props) => {
   let content;
   let activity;
   let handler;
-  let message;
-  if (isLoading) {
-    message = "Please sign transaction";
-  }
-  if (isSuccess) {
-    message =
-      "Success! We're updating our database... (this can take 5 minutes)";
-  }
   if (chain.id === 10) {
-    content = <span>Enable on Optimism</span>;
+    content = isLoading ? (
+      "Please sign in wallet"
+    ) : (
+      <span>Enable on Optimism</span>
+    );
     activity = !write || (!write && !isError) || isLoading || isSuccess;
     handler = () => write?.();
   } else {
@@ -334,9 +349,21 @@ const DelegateButton = (props) => {
     <div>
       <ConnectionDialogue account={from} />
       {isPersistent ? (
-        <div>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            justifyContent: "space-evenly",
+            gap: "20px",
+            alignItems: "center",
+          }}
+        >
           <button
-            style={{ width: "auto" }}
+            style={{
+              width: "auto",
+              backgroundColor: isLoading ? "grey" : "black",
+              border: isLoading ? "1px solid grey" : "1px solid black",
+            }}
             className="buy-button"
             id="button-onboarding"
             disabled={activity}
@@ -344,8 +371,7 @@ const DelegateButton = (props) => {
           >
             {content}
           </button>
-          <br />
-          <span>{message}</span>
+          <ConnectedSimpleDisconnectButton />
         </div>
       ) : (
         <p>Your browser isn't supporting key storage.</p>
@@ -364,9 +390,10 @@ const Form = (props) => {
             backgroundColor: "#E6E6DF",
             maxWidth: "315px",
             display: "inline-block",
-            padding: "30px",
+            padding: "20px 15px",
             borderRadius: "2px",
             boxShadow: "0 6px 20 rgba(0,0,0,0.1)",
+            ...props.style,
           }}
         >
           <DelegateButton {...props} />

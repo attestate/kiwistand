@@ -423,7 +423,7 @@ async function addSubscriptionButton() {
   }
 }
 
-async function addModals() {
+async function addModals(allowlist, delegations, toast) {
   const nftmodal = document.querySelector("nav-nft-modal");
   if (nftmodal) {
     const { createRoot } = await import("react-dom/client");
@@ -432,6 +432,22 @@ async function addModals() {
     createRoot(nftmodal).render(
       <StrictMode>
         <NFTModal />
+      </StrictMode>,
+    );
+  }
+
+  const delegationModal = document.querySelector("nav-delegation-modal");
+  if (delegationModal) {
+    const { createRoot } = await import("react-dom/client");
+    const { StrictMode } = await import("react");
+    const DelegationModal = (await import("./DelegationModal.jsx")).default;
+    createRoot(delegationModal).render(
+      <StrictMode>
+        <DelegationModal
+          toast={toast}
+          allowlist={allowlist}
+          delegations={delegations}
+        />
       </StrictMode>,
     );
   }
@@ -598,7 +614,7 @@ async function start() {
     addTGLink(),
     addPasskeysDialogue(toast),
     addSignupDialogue(await allowlistPromise, await delegationsPromise),
-    addModals(),
+    addModals(await allowlistPromise, await delegationsPromise, toast),
     addNFTPrice(),
     addAvatar(await allowlistPromise, await delegationsPromise),
     addDelegateButton(await allowlistPromise, await delegationsPromise, toast),
@@ -612,6 +628,7 @@ async function start() {
     addSubmitButton(await allowlistPromise, await delegationsPromise, toast),
     checkNewStories(),
   ]);
+
   results.forEach((result, index) => {
     if (result.status === "rejected") {
       console.error(`Error in promise at index ${index}:`, result.reason);

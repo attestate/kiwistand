@@ -444,7 +444,7 @@ body {
 /* Media query for medium screens */
  @media (min-width: 768px) {
      .sidebar {
-         width: 30%;
+         width: 40%;
         /* modified width for medium screens */
          position: fixed;
         /* Static position for medium screens */
@@ -617,7 +617,7 @@ body {
 }
  @media (min-width: 768px) {
      .sidebar-div {
-         font-size: 1.7em;
+         font-size: 2em;
     }
 }
  #overlay {

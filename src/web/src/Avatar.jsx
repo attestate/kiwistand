@@ -30,8 +30,6 @@ const Avatar = (props) => {
   if (localAccount) {
     address = localAccount.identity;
   }
-  const isEligible =
-    address && eligible(props.allowlist, props.delegations, address);
 
   const [avatar, setAvatar] = useState("");
   const [points, setPoints] = useState(0);
@@ -81,19 +79,6 @@ const Avatar = (props) => {
               position: "relative",
             }}
           >
-            {isEligible && !localAccount && (
-              <span
-                style={{
-                  position: "absolute",
-                  top: "0",
-                  right: "0px",
-                  backgroundColor: "red",
-                  borderRadius: "2px",
-                  minWidth: "8px",
-                  height: "8px",
-                }}
-              />
-            )}
             <img
               src={avatar}
               style={{
@@ -138,19 +123,6 @@ const Avatar = (props) => {
             position: "relative",
           }}
         >
-          {isEligible && !localAccount && (
-            <span
-              style={{
-                position: "absolute",
-                top: "5px",
-                left: "5px",
-                backgroundColor: "red",
-                borderRadius: "2px",
-                minWidth: "8px",
-                height: "8px",
-              }}
-            />
-          )}
           <svg
             xmlns="http://www.w3.org/2000/svg"
             style={{ paddingTop: "2px" }}

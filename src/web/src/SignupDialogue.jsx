@@ -27,7 +27,6 @@ const SignupDialogue = (props) => {
   }
   const isEligible =
     address && eligible(props.allowlist, props.delegations, address);
-
   const isntReallySafari =
     !!navigator.brave ||
     navigator.userAgent.indexOf("CriOS") >= 0 ||

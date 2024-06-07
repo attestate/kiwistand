@@ -212,19 +212,6 @@ const Settings = (props) => {
             ) : (
               <>
                 <SettingsSVG />
-                {isEligible && !localAccount && (
-                  <span
-                    style={{
-                      position: "absolute",
-                      top: "0",
-                      left: "10px",
-                      backgroundColor: "red",
-                      borderRadius: "2px",
-                      minWidth: "12px",
-                      height: "12px",
-                    }}
-                  />
-                )}
               </>
             )}
           </div>
@@ -361,16 +348,19 @@ const DisconnectSVG = () => (
     />
   </svg>
 );
-const SimpleDisconnectButton = () => {
+const SimpleDisconnectButton = (props) => {
   return (
     <ConnectButton.Custom>
       {({ account, chain, mounted, openAccountModal }) => {
         const connected = account && chain && mounted;
-        if (connected) {
-          return <span onClick={openAccountModal}>Disconnect</span>;
-        } else {
-          return null;
-        }
+        return (
+          <span
+            style={{ visibility: connected ? "visible" : "hidden" }}
+            onClick={openAccountModal}
+          >
+            Disconnect
+          </span>
+        );
       }}
     </ConnectButton.Custom>
   );

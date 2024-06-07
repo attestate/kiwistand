@@ -13,6 +13,7 @@ const html = htm.bind(vhtml);
 const header = async (theme, path) => {
   return html` <td style="height: 70px;">
     <nav-nft-modal />
+    <nav-delegation-modal />
     <table
       style="padding:5px 7px 5px 7px;"
       width="100%"

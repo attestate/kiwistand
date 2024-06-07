@@ -181,6 +181,14 @@ function BackupKey(props) {
   useEffect(() => {
     (async () => {
       const isAvailable = await testPasskeys();
+      if (
+        !isAvailable &&
+        props.callback &&
+        typeof props.callback === "function"
+      ) {
+        props.callback();
+        return;
+      }
       setFeatureAvailable(isAvailable);
     })();
   });
@@ -267,6 +275,10 @@ function BackupKey(props) {
       setLbResult(
         "Backup failed. There can be multiple reasons for this. For example, this will happen if you use 1Password or if you don't use iOS 17 yet.",
       );
+    }
+
+    if (props.callback && typeof props.callback === "function") {
+      props.callback();
     }
     setProgress(3);
   };
