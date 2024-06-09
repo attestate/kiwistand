@@ -101,7 +101,7 @@ function toggleSidebar() {
   if (window.innerWidth >= 1200) {
     sidebarWidth = isSidebarOpen ? "-25%" : "0";
   } else if (window.innerWidth >= 768 && window.innerWidth < 1200) {
-    sidebarWidth = isSidebarOpen ? "-30%" : "0";
+    sidebarWidth = isSidebarOpen ? "-40%" : "0";
   } else {
     sidebarWidth = isSidebarOpen ? "-75%" : "0";
   }
