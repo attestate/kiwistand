@@ -195,7 +195,7 @@ function BackupKey(props) {
 
   let address;
   const account = useAccount();
-  const localAccount = getLocalAccount(account.address);
+  const localAccount = getLocalAccount(account.address, props.allowlist);
   if (account.isConnected) {
     address = account.address;
   }

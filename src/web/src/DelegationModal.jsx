@@ -29,7 +29,7 @@ function SimpleModal(props) {
     }
 
     const isEligible = eligible(allowlist, delegations, account.address);
-    const localAccount = getLocalAccount(account.address);
+    const localAccount = getLocalAccount(account.address, allowlist);
 
     if (isEligible && !localAccount) {
       setShowModal(true);

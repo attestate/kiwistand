@@ -13,7 +13,7 @@ const CommentInput = (props) => {
 
   let address;
   const account = useAccount();
-  const localAccount = getLocalAccount(account.address);
+  const localAccount = getLocalAccount(account.address, allowlist);
   if (account.isConnected) {
     address = account.address;
   }
@@ -29,8 +29,7 @@ const CommentInput = (props) => {
   useEffect(() => {
     const loadData = async () => {
       const result =
-        signer &&
-        eligible(await allowlist, await delegations, await signer.getAddress());
+        signer && eligible(allowlist, delegations, await signer.getAddress());
       setIsEligible(result);
     };
     loadData();

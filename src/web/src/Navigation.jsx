@@ -94,7 +94,7 @@ const ProfileSVG = () => (
 const Settings = (props) => {
   let address;
   const account = useAccount();
-  const localAccount = getLocalAccount(account.address);
+  const localAccount = getLocalAccount(account.address, props.allowlist);
   if (account.isConnected) {
     address = account.address;
   }
@@ -138,7 +138,7 @@ const Settings = (props) => {
 const Profile = (props) => {
   let address;
   const account = useAccount();
-  const localAccount = getLocalAccount(account.address);
+  const localAccount = getLocalAccount(account.address, props.allowlist);
   if (account.isConnected) {
     address = account.address;
   }
@@ -335,7 +335,10 @@ export const CustomConnectButton = (props) => {
       {({ account, chain, mounted, openConnectModal }) => {
         if (!mounted) return;
         const connected = account && chain;
-        const localAccount = getLocalAccount(account && account.address);
+        const localAccount = getLocalAccount(
+          account && account.address,
+          props.allowlist,
+        );
 
         let address;
         if (connected) {

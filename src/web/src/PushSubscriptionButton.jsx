@@ -27,7 +27,7 @@ const urlBase64ToUint8Array = (base64String) => {
 const SubscriptionButton = (props) => {
   const from = useAccount();
   let address;
-  const localAccount = getLocalAccount(from.address);
+  const localAccount = getLocalAccount(from.address, props.allowlist);
   if (from.isConnected) {
     address = from.address;
   }

@@ -18,7 +18,7 @@ import {
 const SignupDialogue = (props) => {
   const from = useAccount();
   let address;
-  const localAccount = getLocalAccount(from.address);
+  const localAccount = getLocalAccount(from.address, props.allowlist);
   if (from.isConnected) {
     address = from.address;
   }
@@ -27,6 +27,7 @@ const SignupDialogue = (props) => {
   }
   const isEligible =
     address && eligible(props.allowlist, props.delegations, address);
+
   const isntReallySafari =
     !!navigator.brave ||
     navigator.userAgent.indexOf("CriOS") >= 0 ||
@@ -90,6 +91,7 @@ const SignupDialogue = (props) => {
         >
           {!from.isConnected ? (
             <CustomConnectButton
+              allowlist={props.allowlist}
               className="button-secondary"
               style={{ width: "auto" }}
             />
@@ -114,7 +116,9 @@ const SignupDialogue = (props) => {
           <ConnectedSimpleDisconnectButton />
         </div>
         <p style={{ color: "black" }}>
-          Sign up to read the best texts on crypto culture
+          {localAccount
+            ? "Sign up to read the best texts on crypto culture"
+            : "Please connect your wallet"}
         </p>
       </div>
     );

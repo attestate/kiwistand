@@ -31,12 +31,13 @@ const Container = (props) => {
 };
 
 const Vote = (props) => {
+  const [allowlist, setAllowlist] = useState(null);
   const { toast } = props;
   const value = API.messageFab(props.title, props.href);
 
   let address;
   const account = useAccount();
-  const localAccount = getLocalAccount(account.address);
+  const localAccount = getLocalAccount(account.address, allowlist);
   if (account.isConnected) {
     address = account.address;
   }
@@ -50,7 +51,6 @@ const Vote = (props) => {
     props.upvoters.includes(address),
   );
   const [upvotes, setUpvotes] = useState(props.upvoters.length);
-  const [allowlist, setAllowlist] = useState(null);
   const [delegations, setDelegations] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 

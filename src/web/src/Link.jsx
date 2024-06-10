@@ -10,7 +10,7 @@ const Link = (props) => {
   const { allowlist, delegations } = props;
   const from = useAccount();
   let address;
-  const localAccount = getLocalAccount(from.address);
+  const localAccount = getLocalAccount(from.address, props.allowlist);
   if (from.isConnected) {
     address = from.address;
   }

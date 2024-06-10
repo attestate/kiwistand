@@ -177,7 +177,7 @@ const BuyButton = (props) => {
     });
 
   let address;
-  const localAccount = getLocalAccount(from.address);
+  const localAccount = getLocalAccount(from.address, allowlist);
   if (from.isConnected) {
     address = from.address;
   }

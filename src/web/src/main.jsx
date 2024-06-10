@@ -55,6 +55,10 @@ async function checkNewStories() {
   }
 
   if (data.status === "success" && data.data.stories.length > 0) {
+    // TODO: This might now be broken with the updates to getLocalAccount that
+    // need the allowlist and the connected account to be present. It probably
+    // would then make more sense to replace the entire logic with a react
+    // component.
     const account = getLocalAccount();
     const story = data.data.stories[0];
     const identity = story.identity;
@@ -198,7 +202,7 @@ async function addVotes(allowlistPromise, delegationsPromise, toast) {
   }
 }
 
-async function addFriendBuyButton(toast) {
+async function addFriendBuyButton(toast, allowlist) {
   const buyButtonContainer = document.querySelector(
     "#friend-buy-button-container",
   );
@@ -208,7 +212,7 @@ async function addFriendBuyButton(toast) {
     const BuyButton = (await import("./FriendBuyButton.jsx")).default;
     createRoot(buyButtonContainer).render(
       <StrictMode>
-        <BuyButton toast={toast} />
+        <BuyButton toast={toast} allowlist={allowlist} />
       </StrictMode>,
     );
   }
@@ -336,7 +340,7 @@ async function addSignupDialogue(allowlist, delegations) {
   }
 }
 
-async function addPasskeysDialogue(toast) {
+async function addPasskeysDialogue(toast, allowlist) {
   const elem = document.querySelector("nav-passkeys-backup");
   if (elem) {
     const { createRoot } = await import("react-dom/client");
@@ -372,13 +376,17 @@ async function addPasskeysDialogue(toast) {
     };
     createRoot(elem).render(
       <StrictMode>
-        <Passkeys toast={toast} redirectButton={<RedirectButton />} />
+        <Passkeys
+          toast={toast}
+          allowlist={allowlist}
+          redirectButton={<RedirectButton />}
+        />
       </StrictMode>,
     );
   }
 }
 
-async function addTGLink() {
+async function addTGLink(allowlist) {
   const elem = document.querySelector("nav-invite-link");
   if (elem) {
     const { createRoot } = await import("react-dom/client");
@@ -386,13 +394,13 @@ async function addTGLink() {
     const TelegramLink = (await import("./TelegramLink.jsx")).default;
     createRoot(elem).render(
       <StrictMode>
-        <TelegramLink />
+        <TelegramLink allowlist={allowlist} />
       </StrictMode>,
     );
   }
 }
 
-async function addSubscriptionButton() {
+async function addSubscriptionButton(allowlist) {
   const button = document.querySelector("push-subscription-button");
   if (button) {
     const { createRoot } = await import("react-dom/client");
@@ -403,7 +411,7 @@ async function addSubscriptionButton() {
     const wrapper = button.getAttribute("data-wrapper") === "true";
     createRoot(button).render(
       <StrictMode>
-        <PushSubscriptionButton wrapper={wrapper} />
+        <PushSubscriptionButton wrapper={wrapper} allowlist={allowlist} />
       </StrictMode>,
     );
   }
@@ -480,7 +488,7 @@ async function addToaster() {
   return toast;
 }
 
-async function addAvatar(allowlist, delegations) {
+async function addAvatar(allowlist) {
   const avatarElem = document.querySelectorAll("nav-header-avatar");
   if (avatarElem && avatarElem.length > 0) {
     const { createRoot } = await import("react-dom/client");
@@ -489,7 +497,7 @@ async function addAvatar(allowlist, delegations) {
     avatarElem.forEach((element) => {
       createRoot(element).render(
         <StrictMode>
-          <Avatar allowlist={allowlist} delegations={delegations} />
+          <Avatar allowlist={allowlist} />
         </StrictMode>,
       );
     });
@@ -607,17 +615,17 @@ async function start() {
   const results = await Promise.allSettled([
     obfuscateLinks(await allowlistPromise, await delegationsPromise),
     addVotes(allowlistPromise, delegationsPromise, toast),
-    addCommentInput(toast, allowlistPromise, delegationsPromise),
-    addSubscriptionButton(),
-    addTGLink(),
-    addPasskeysDialogue(toast),
+    addCommentInput(toast, await allowlistPromise, await delegationsPromise),
+    addSubscriptionButton(await allowlistPromise),
+    addTGLink(await allowlistPromise),
+    addPasskeysDialogue(toast, await allowlistPromise),
     addSignupDialogue(await allowlistPromise, await delegationsPromise),
     addModals(await allowlistPromise, await delegationsPromise, toast),
     addNFTPrice(),
-    addAvatar(await allowlistPromise, await delegationsPromise),
+    addAvatar(await allowlistPromise),
     addDelegateButton(await allowlistPromise, await delegationsPromise, toast),
     addBuyButton(allowlistPromise, delegationsPromise, toast),
-    addFriendBuyButton(toast),
+    addFriendBuyButton(toast, await allowlistPromise),
     addConnectedComponents(
       await allowlistPromise,
       await delegationsPromise,

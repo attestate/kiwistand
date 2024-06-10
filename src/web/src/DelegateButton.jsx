@@ -293,7 +293,13 @@ const DelegateButton = (props) => {
 
   if (key && wallet) {
     if (supportsPasskeys() && indexedDelegation) {
-      return <Passkeys toast={props.toast} callback={props.callback} />;
+      return (
+        <Passkeys
+          allowlist={props.allowlist}
+          toast={props.toast}
+          callback={props.callback}
+        />
+      );
     } else if (window.location.pathname === "/start") {
       const delegate = key && wallet ? wallet.address : newKey.address;
       window.location.href = `/indexing?address=${from.address}&delegate=${delegate}`;

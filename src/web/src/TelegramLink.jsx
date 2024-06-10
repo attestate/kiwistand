@@ -35,7 +35,7 @@ export const Redirector = () => {
 const TelegramLink = () => {
   const [generatedLink, setGeneratedLink] = useState("...loading");
   const account = useAccount();
-  const localAccount = getLocalAccount(account.address);
+  const localAccount = getLocalAccount(account.address, props.allowlist);
 
   let address;
   if (localAccount) {
