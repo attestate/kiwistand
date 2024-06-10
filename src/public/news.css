@@ -438,7 +438,7 @@ body {
      background-color: #e6e6df;
      overflow-x: hidden;
      transition: 0.5s;
-     border-right: 1px solid black;
+     border-right: none;
      padding-top: 35%;
 }
 /* Media query for medium screens */
@@ -521,7 +521,7 @@ body {
          background-color: rgb(246, 246, 239);
          min-width: 75px;
          height: 100vh;
-         border-right: 1px solid #ccc;
+         border-right: none;
          width: auto;
         /* modified width for large screens */
          position: sticky;
@@ -536,10 +536,6 @@ body {
     }
     #mySidebar {
       padding-right: 1.25rem;
-      border-left: 1px solid #ccc;
-      border-bottom: 1px solid #ccc;
-      border-top: 1px solid #ccc;
-      background-color: rgba(0,0,0,0.1);
     }
      #mySidebar > hr {
       display: none;
@@ -547,7 +543,6 @@ body {
     #hnmain {
       border-top-right-radius: 2px;
       border-bottom-right-radius: 2px;
-      border-top: 1px solid #ccc;
       border-right: 1px solid #ccc;
       border-bottom: 1px solid #ccc;
     }
@@ -567,7 +562,7 @@ body {
     .sidebar a {
       font-size: 2em;
     }
-    .sidebar a:not(.kiwi-logo):hover{
+    .sidebar a:not(.kiwi-logo):hover, #nav-disconnect:hover{
       background-color: rgba(0,0,0,0.1);
       border-radius: 2px;
     }
