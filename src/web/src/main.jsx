@@ -276,11 +276,9 @@ async function addConnectedComponents(allowlist, delegations, toast) {
   const {
     ConnectedSettings,
     ConnectedProfile,
-    ConnectedLearnMore,
     ConnectedDisconnectButton,
     ConnectedConnectButton,
     RefreshButton,
-    ConnectedBuyAdvert,
     ConnectedSimpleDisconnectButton,
   } = await import("./Navigation.jsx");
   const Bell = (await import("./Bell.jsx")).default;

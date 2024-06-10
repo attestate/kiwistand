@@ -18,94 +18,6 @@ const shorten = (address) =>
   "..." +
   address.slice(address.length - 4, address.length);
 
-const BuyAdvert = (props) => {
-  let address;
-  const account = useAccount();
-  const localAccount = getLocalAccount(account.address);
-  if (account.isConnected) {
-    address = account.address;
-  }
-  if (localAccount) {
-    address = localAccount.identity;
-  }
-  const isEligible =
-    address && eligible(props.allowlist, props.delegations, address);
-
-  if (
-    !isEligible &&
-    account.isConnected &&
-    window.location.pathname !== "/indexing" &&
-    window.location.pathname !== "/kiwipass-mint" &&
-    window.location.pathname !== "/demonstration"
-  ) {
-    return (
-      <PrimaryActionButton
-        text="Join"
-        href="/welcome?referral=0xb68D42FcDA11d84d626E42Ac01B67bC6a40DEcC9"
-      />
-    );
-  }
-  return null;
-};
-
-const LearnMore = (props) => {
-  const openModal = () => {
-    window.dispatchEvent(new CustomEvent("openModal"));
-  };
-
-  let address;
-  const account = useAccount();
-  const localAccount = getLocalAccount(account.address);
-  if (account.isConnected) {
-    address = account.address;
-  }
-  if (localAccount) {
-    address = localAccount.identity;
-  }
-  const isEligible =
-    address && eligible(props.allowlist, props.delegations, address);
-  const pwaCandidate =
-    !isRunningPWA() && (isChromeOnAndroid() || isSafariOnIOS());
-
-  if (pwaCandidate) {
-    return (
-      <div style={{ textAlign: "center", paddingRight: "4px" }}>
-        <span
-          onClick={openModal}
-          style={{
-            cursor: "pointer",
-            textDecoration: "underline",
-            color: "black",
-            fontSize: "0.9rem",
-          }}
-        >
-          Install our <br />
-          app 📲
-        </span>
-      </div>
-    );
-  }
-
-  if (isRunningPWA() || isEligible || (!isEligible && account.isConnected))
-    return;
-
-  return (
-    <div style={{ textAlign: "center", paddingRight: "4px" }}>
-      <a
-        href="/welcome?referral=0xE2D2d8f175De9cfd35023BBcB13592703fE9CCe2"
-        style={{
-          fontSize: "0.7rem",
-          textDecoration: "underline",
-          color: "black",
-        }}
-      >
-        Learn more <br />
-        about 🥝
-      </a>
-    </div>
-  );
-};
-
 const SettingsSVGFull = () => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
     <rect width="256" height="256" fill="none" />
@@ -493,15 +405,5 @@ export const ConnectedConnectButton = (props) => (
 export const ConnectedSettings = (props) => (
   <Connector {...props}>
     <Settings {...props} />
-  </Connector>
-);
-export const ConnectedLearnMore = (props) => (
-  <Connector {...props}>
-    <LearnMore {...props} />
-  </Connector>
-);
-export const ConnectedBuyAdvert = (props) => (
-  <Connector {...props}>
-    <BuyAdvert {...props} />
   </Connector>
 );
