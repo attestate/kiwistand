@@ -95,7 +95,6 @@ export const RestoreDialogue = (allowlist, delegations, toast) => {
             cursor: "pointer",
             display: "flex",
             alignItems: "center",
-            fontWeight: 600,
             fontSize: "15px",
             gap: "4px",
             border: "1px solid #828282",
@@ -105,7 +104,8 @@ export const RestoreDialogue = (allowlist, delegations, toast) => {
             justifyContent: "center",
           }}
         >
-          <PasskeysSVG style={{ width: "20px" }} /> Connect with Passkeys
+          <PasskeysSVG style={{ color: "white", width: "24px" }} /> Connect with
+          Passkeys
         </button>
         <p style={{ color: "black" }}>
           (Only works if you previously backed up your app key)
@@ -333,7 +333,8 @@ function BackupKey(props) {
               id="button-onboarding"
               onClick={create}
             >
-              Create Passkey
+              <PasskeysSVG style={{ color: "white", width: "24px" }} /> Create
+              Passkey (1/2)
             </button>
           </span>
         </div>
@@ -348,7 +349,8 @@ function BackupKey(props) {
               id="button-onboarding"
               onClick={store}
             >
-              Backup key
+              <PasskeysSVG style={{ color: "white", width: "24px" }} /> Backup
+              key (2/2)
             </button>
           </span>
         </div>

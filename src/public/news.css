@@ -284,6 +284,9 @@ body {
     width: 50%;
     display: inline-block;
   }
+  #button-onboarding:hover svg {
+    color: black !important;
+  }
   .primary-action-button:hover, #button-onboarding:hover, .buy-button:hover, .friend-buy-button:hover {
     outline: 1px solid black;
     color: black !important;

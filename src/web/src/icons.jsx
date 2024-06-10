@@ -67,18 +67,65 @@ export const CheckmarkSVG = (props) => (
 export const PasskeysSVG = (props) => (
   <svg
     style={props.style}
+    viewBox="0 0 24 24"
+    fill="none"
     xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 256 256"
   >
-    <rect width="256" height="256" fill="none" />
     <path
-      d="M93.17,122.83a72,72,0,1,1,40,40h0L120,176H96v24H72v24H32V184l61.17-61.17Z"
-      fill="none"
+      d="M7 3H5C3.89543 3 3 3.89543 3 5V7"
       stroke="currentColor"
+      strokeWidth="1.5"
       strokeLinecap="round"
       strokeLinejoin="round"
-      strokeWidth="16"
     />
-    <circle cx="180" cy="76" r="12" fill="currentColor" />
+    <path
+      d="M17 3H19C20.1046 3 21 3.89543 21 5V7"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M16 8L16 10"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M8 8L8 10"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M9 16C9 16 10 17 12 17C14 17 15 16 15 16"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M12 8L12 13L11 13"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M7 21H5C3.89543 21 3 20.1046 3 19V17"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M17 21H19C20.1046 21 21 20.1046 21 19V17"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
   </svg>
 );
