@@ -137,7 +137,7 @@ export default async function index(theme) {
                     >
                       <a href="/whattosubmit">
                         <button style="width:auto;" id="button-onboarding">
-                          What to submit
+                          Continue
                         </button>
                       </a>
                     </td>

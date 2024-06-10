@@ -18,7 +18,7 @@ export const Redirector = () => {
     return (
       <a href="/notifications">
         <button style={{ width: "auto" }} id="button-onboarding">
-          Setup notifications
+          Continue
         </button>
       </a>
     );
@@ -26,7 +26,7 @@ export const Redirector = () => {
   return (
     <a href="/demonstration">
       <button style={{ width: "auto" }} id="button-onboarding">
-        Upvote your first story!
+        Continue
       </button>
     </a>
   );

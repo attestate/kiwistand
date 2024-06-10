@@ -368,7 +368,7 @@ async function addPasskeysDialogue(toast, allowlist) {
           </p>
           <a href="/invite">
             <button style={{ width: "auto" }} id="button-onboarding">
-              Join our Telegram channel
+              Continue
             </button>
           </a>
         </div>
