@@ -31,7 +31,7 @@ const Container = (props) => {
 };
 
 const Vote = (props) => {
-  const [allowlist, setAllowlist] = useState(null);
+  const { allowlist, delegations } = props;
   const { toast } = props;
   const value = API.messageFab(props.title, props.href);
 
@@ -51,20 +51,6 @@ const Vote = (props) => {
     props.upvoters.includes(address),
   );
   const [upvotes, setUpvotes] = useState(props.upvoters.length);
-  const [delegations, setDelegations] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const loadData = async () => {
-      const list = await props.allowlistPromise;
-      const delegates = await props.delegationsPromise;
-      setAllowlist(list);
-      setDelegations(delegates);
-      setIsLoading(false);
-    };
-
-    loadData();
-  });
 
   let signer, isLocal;
   if (localAccount && localAccount.privateKey) {
@@ -111,12 +97,7 @@ const Vote = (props) => {
         return (
           <div
             onClick={async (e) => {
-              if (
-                hasUpvoted ||
-                isLoading ||
-                window.location.pathname === "/submit"
-              )
-                return;
+              if (hasUpvoted || window.location.pathname === "/submit") return;
 
               const isEligible =
                 signer &&
@@ -161,7 +142,7 @@ const Vote = (props) => {
           >
             <div style={{ minHeight: "40px", display: "block" }}>
               <div
-                className={`votearrow ${isLoading ? "pulsate" : ""}`}
+                className={`votearrow`}
                 style={{
                   color: hasUpvoted ? theme.color : "#828282",
                   cursor: hasUpvoted ? "not-allowed" : "pointer",

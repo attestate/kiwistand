@@ -168,7 +168,7 @@ async function obfuscateLinks(allowlist, delegations) {
   }
 }
 
-async function addVotes(allowlistPromise, delegationsPromise, toast) {
+async function addVotes(allowlist, delegations, toast) {
   const voteArrows = document.querySelectorAll(".vote-button-container");
   if (voteArrows && voteArrows.length > 0) {
     const { createRoot } = await import("react-dom/client");
@@ -190,8 +190,8 @@ async function addVotes(allowlistPromise, delegationsPromise, toast) {
           <Vote
             title={title}
             href={href}
-            allowlistPromise={allowlistPromise}
-            delegationsPromise={delegationsPromise}
+            allowlist={allowlist}
+            delegations={delegations}
             upvoters={upvoters}
             toast={toast}
             editorPicks={editorPicks}
@@ -614,7 +614,7 @@ async function start() {
   // We're parallelizing all additions into the DOM
   const results = await Promise.allSettled([
     obfuscateLinks(await allowlistPromise, await delegationsPromise),
-    addVotes(allowlistPromise, delegationsPromise, toast),
+    addVotes(await allowlistPromise, await delegationsPromise, toast),
     addCommentInput(toast, await allowlistPromise, await delegationsPromise),
     addSubscriptionButton(await allowlistPromise),
     addTGLink(await allowlistPromise),
