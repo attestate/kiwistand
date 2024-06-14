@@ -1,11 +1,12 @@
 import { env } from "process";
 import path from "path";
 
-import ogs from "open-graph-scraper";
+import ogs from "open-graph-scraper-lite";
 import htm from "htm";
 import vhtml from "vhtml";
 import { JSDOM } from "jsdom";
 import { fetchBuilder, FileSystemCache } from "node-fetch-cache";
+import { useAgent } from "request-filtering-agent";
 
 import cache from "./cache.mjs";
 
@@ -35,7 +36,9 @@ async function extractCanonicalLink(html) {
 
   let response;
   try {
-    response = await fetch(node.href);
+    response = await fetch(node.href, {
+      agent: useAgent(node.href),
+    });
   } catch (err) {
     return;
   }
@@ -54,9 +57,13 @@ export const metadata = async (url) => {
     result = fromCache.result;
     html = fromCache.html;
   } else {
-    const response = await ogs({ url });
-    result = response.result;
-    html = response.html;
+    const response = await fetch(url, {
+      agent: useAgent(url),
+    });
+
+    const html = await response.text();
+    const { result } = await ogs({ html });
+
     cache.set(url, { result, html });
   }
 
