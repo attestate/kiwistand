@@ -435,7 +435,7 @@ export async function launch(trie, libp2p) {
     return sendStatus(reply, code, httpMessage, details, { stories });
   });
 
-  app.get("/api/v1/stories", (request, reply) => {
+  app.get("/api/v1/stories", async (request, reply) => {
     let submission;
 
     const index = request.query.index;
@@ -448,10 +448,21 @@ export async function launch(trie, libp2p) {
       return sendError(reply, code, httpMessage, details);
     }
 
+    const commentRequests = await Promise.allSettled(
+      submission.comments.map(async (comment) => {
+        const identity = await ens.resolve(comment.identity);
+        return { ...comment, identity };
+      }),
+    );
+    const enrichedComments = commentRequests.map((result) => result.value);
+
     const code = 200;
     const httpMessage = "OK";
     const details = "Responding with story queried by index";
-    return sendStatus(reply, code, httpMessage, details, submission);
+    return sendStatus(reply, code, httpMessage, details, {
+      ...submission,
+      comments: enrichedComments,
+    });
   });
 
   app.get("/", async (request, reply) => {

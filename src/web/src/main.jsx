@@ -168,6 +168,46 @@ async function obfuscateLinks(allowlist, delegations) {
   }
 }
 
+async function addDynamicComments(allowlist, delegations, toast) {
+  const sections = document.querySelectorAll(".comment-section");
+  if (sections && sections.length > 0) {
+    const { createRoot } = await import("react-dom/client");
+    const { StrictMode } = await import("react");
+    const CommentSection = (await import("./CommentSection.jsx")).default;
+
+    sections.forEach((arrow) => {
+      const storyIndex = arrow.getAttribute("data-story-index");
+      createRoot(arrow).render(
+        <StrictMode>
+          <CommentSection
+            storyIndex={storyIndex}
+            allowlist={allowlist}
+            delegations={delegations}
+            toast={toast}
+          />
+        </StrictMode>,
+      );
+    });
+  }
+
+  const chatBubbles = document.querySelectorAll(".chat-bubble-container");
+  if (chatBubbles && chatBubbles.length > 0) {
+    const { createRoot } = await import("react-dom/client");
+    const { StrictMode } = await import("react");
+    const ChatBubble = (await import("./ChatBubble.jsx")).default;
+
+    chatBubbles.forEach((arrow) => {
+      const storyIndex = arrow.getAttribute("data-story-index");
+      const commentCount = arrow.getAttribute("data-comment-count");
+      createRoot(arrow).render(
+        <StrictMode>
+          <ChatBubble storyIndex={storyIndex} commentCount={commentCount} />
+        </StrictMode>,
+      );
+    });
+  }
+}
+
 async function addVotes(allowlist, delegations, toast) {
   const voteArrows = document.querySelectorAll(".vote-button-container");
   if (voteArrows && voteArrows.length > 0) {
@@ -244,9 +284,11 @@ async function addCommentInput(toast, allowlist, delegations) {
     const { createRoot } = await import("react-dom/client");
     const { StrictMode } = await import("react");
     const CommentInputComponent = (await import("./CommentInput.jsx")).default;
+    const storyIndex = commentInput.getAttribute("data-story-index");
     createRoot(commentInput).render(
       <StrictMode>
         <CommentInputComponent
+          storyIndex={storyIndex}
           toast={toast}
           allowlist={allowlist}
           delegations={delegations}
@@ -600,7 +642,10 @@ async function start() {
       },
     });
   }
-  commentCountSignifier();
+  // TODO: Fix, this is currently broken because the ChatBubble react component
+  // now takes over the rendering, but since we also couldn't figure out how we
+  // can make this work together.
+  //commentCountSignifier();
 
   const toast = await addToaster();
   window.toast = toast;
@@ -614,6 +659,7 @@ async function start() {
   // We're parallelizing all additions into the DOM
   const results = await Promise.allSettled([
     obfuscateLinks(await allowlistPromise, await delegationsPromise),
+    addDynamicComments(await allowlistPromise, await delegationsPromise, toast),
     addVotes(await allowlistPromise, await delegationsPromise, toast),
     addCommentInput(toast, await allowlistPromise, await delegationsPromise),
     addSubscriptionButton(await allowlistPromise),

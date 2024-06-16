@@ -266,30 +266,38 @@ const row = (
                 </div>
               </div>
               ${story.index
-                ? html`<a
-                    class="chat-bubble interaction-element"
-                    id="chat-bubble-${story.index}"
-                    href="/stories?index=0x${story.index}"
-                    style="margin: 5px; background-color: #e6e6df; border-radius: 2px; display: ${path ===
-                    "/stories"
-                      ? "none"
-                      : "flex"}; align-self: stretch; justify-content: center; min-width: 40px; align-items: center; flex-direction: column;"
+                ? html`<div
+                    data-story-index="0x${story.index}"
+                    data-comment-count="${commentCount}"
+                    class="chat-bubble-container"
+                    style="display: flex; align-self: stretch;"
                   >
-                    <${ChatsSVG} />
-                    <span
-                      id="comment-count-${story.index}"
-                      style="color: rgba(0,0,0,0.65); font-size: 8pt;"
-                      >${commentCount}</span
+                    <a
+                      class="chat-bubble interaction-element"
+                      id="chat-bubble-${story.index}"
+                      href="/stories?index=0x${story.index}"
+                      style="margin: 5px; background-color: #e6e6df; border-radius: 2px; display: ${path ===
+                      "/stories"
+                        ? "none"
+                        : "flex"}; justify-content: center; min-width: 40px; align-items: center; flex-direction: column;"
                     >
-                  </a>`
+                      <${ChatsSVG} />
+                      <span
+                        id="comment-count-${story.index}"
+                        style="color: rgba(0,0,0,0.65); font-size: 8pt;"
+                        >${commentCount}</span
+                      >
+                    </a>
+                  </div>`
                 : ""}
             </div>
+            ${commentCount > 0
+              ? html`<div
+                  class="comment-section"
+                  data-story-index="0x${story.index}"
+                ></div>`
+              : null}
           </div>
-          ${story.image
-            ? html`<hr
-                style="border-top: 1px solid rgba(0,0,0,0.2); border-bottom: none; margin: 5px 0 0 0;"
-              />`
-            : ""}
         </td>
       </tr>
     `;

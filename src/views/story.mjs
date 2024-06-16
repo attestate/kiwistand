@@ -313,7 +313,7 @@ export default async function (trie, theme, index, value) {
                 : null}
               <tr>
                 <td>
-                  <nav-comment-input>
+                  <nav-comment-input data-story-index="0x${index}">
                     <div style="margin: 0 1rem 1rem 1rem;">
                       <textarea
                         style="font-size: 1rem; border: 1px solid #828282; display:block;width:100%;"

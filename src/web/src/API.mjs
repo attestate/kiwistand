@@ -171,6 +171,18 @@ export async function fetchPrice() {
   }
 }
 
+export async function fetchStory(id) {
+  let response;
+  try {
+    response = await fetch(`/api/v1/stories?index=${id}`);
+    const data = await response.json();
+    return data.data;
+  } catch (err) {
+    console.error(err);
+    return null;
+  }
+}
+
 export async function fetchKarma(identity) {
   let response;
   try {

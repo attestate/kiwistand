@@ -43,8 +43,7 @@ const CommentInput = (props) => {
   }
 
   function getIndex() {
-    const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get("index");
+    return props.storyIndex;
   }
 
   const existingComment = localStorage.getItem(
@@ -93,13 +92,15 @@ const CommentInput = (props) => {
     // NOTE: We fetch the current page here in JavaScript to (hopefully)
     // produce a cache revalidation that then makes the new comment fastly
     // available to all other users.
-    fetch(window.location.href);
+    const path = `/stories?index=${getIndex()}`;
+    fetch(path);
     toast.success("Thanks for submitting your comment. Reloading...");
     localStorage.removeItem(`-kiwi-news-comment-${address}-${getIndex()}`);
 
-    const nextPage = new URL(window.location.href);
+    const nextPage = new URL(path, window.location.origin);
     if (response?.data?.index) {
       nextPage.searchParams.set("cachebuster", response.data.index);
+      nextPage.hash = `#${response.data.index}`;
     }
     window.location.href = nextPage.href;
   };
@@ -109,6 +110,7 @@ const CommentInput = (props) => {
     <div
       style={{
         margin: "0 1rem 1rem 1rem",
+        ...props.style,
       }}
     >
       <textarea
