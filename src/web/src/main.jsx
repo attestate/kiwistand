@@ -1,6 +1,7 @@
 import "vite/modulepreload-polyfill";
 import "@rainbow-me/rainbowkit/styles.css";
 import PullToRefresh from "pulltorefreshjs";
+import DOMPurify from "isomorphic-dompurify";
 
 import { isRunningPWA, getCookie, getLocalAccount } from "./session.mjs";
 
@@ -160,7 +161,9 @@ async function obfuscateLinks(allowlist, delegations) {
             allowlist={allowlist}
             delegations={delegations}
           >
-            <div dangerouslySetInnerHTML={{ __html: children }} />
+            <div
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(children) }}
+            />
           </Link>
         </StrictMode>,
       );
@@ -216,8 +219,8 @@ async function addVotes(allowlist, delegations, toast) {
     const Vote = (await import("./Vote.jsx")).default;
 
     voteArrows.forEach((arrow) => {
-      const title = arrow.getAttribute("data-title");
-      const href = arrow.getAttribute("data-href");
+      const title = DOMPurify.sanitize(arrow.getAttribute("data-title"));
+      const href = DOMPurify.sanitize(arrow.getAttribute("data-href"));
       const editorPicks = arrow.getAttribute("data-editorpicks");
       let upvoters;
       try {

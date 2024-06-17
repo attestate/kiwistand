@@ -3,6 +3,7 @@ import { Wallet } from "@ethersproject/wallet";
 import { useAccount, WagmiConfig } from "wagmi";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { eligible } from "@attestate/delegator2";
+import DOMPurify from "isomorphic-dompurify";
 
 import * as API from "./API.mjs";
 import { useSigner, useProvider, client, chains } from "./client.mjs";
@@ -99,7 +100,7 @@ const SubmitButton = (props) => {
           return response.text();
         })
         .then((data) => {
-          embedPreview.innerHTML = data;
+          embedPreview.innerHTML = DOMPurify.sanitize(data);
         })
         .catch((error) => {
           console.log("Fetch error: ", error);
@@ -144,9 +145,9 @@ const SubmitButton = (props) => {
 
     const canonicalURL = url;
     if (previewLink && canonicalURL) {
-      previewLink.href = canonicalURL;
+      previewLink.href = DOMPurify.sanitize(canonicalURL);
     } else if (previewLink) {
-      previewLink.href = placeholderUrl;
+      previewLink.href = DOMPurify.sanitize(placeholderUrl);
     }
 
     if (previewDomain) {

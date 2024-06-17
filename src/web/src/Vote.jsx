@@ -4,6 +4,7 @@ import { useAccount, WagmiConfig } from "wagmi";
 import { Wallet } from "@ethersproject/wallet";
 import { RainbowKitProvider, ConnectButton } from "@rainbow-me/rainbowkit";
 import { eligible } from "@attestate/delegator2";
+import DOMPurify from "isomorphic-dompurify";
 
 import * as API from "./API.mjs";
 import { useSigner, useProvider, client, chains } from "./client.mjs";
@@ -119,7 +120,7 @@ const Vote = (props) => {
               if (props.title.length > 80) {
                 const url = new URL(window.location);
                 url.pathname = "/submit";
-                url.searchParams.set("url", props.href);
+                url.searchParams.set("url", DOMPurify.sanitize(props.href));
                 window.location.href = url.href;
                 return;
               }
