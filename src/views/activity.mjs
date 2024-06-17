@@ -7,6 +7,7 @@ import vhtml from "vhtml";
 import normalizeUrl from "normalize-url";
 import { formatDistanceToNow, sub } from "date-fns";
 import { utils } from "ethers";
+import DOMPurify from "isomorphic-dompurify";
 
 import * as ens from "../ens.mjs";
 import Header from "./components/header.mjs";
@@ -58,10 +59,10 @@ export function truncateComment(comment, maxLength = 260) {
 }
 
 function generateCommentRow(activity, identity, bgColor) {
-  const comment = truncateComment(activity.message.title);
+  const comment = DOMPurify.sanitize(truncateComment(activity.message.title));
   const avatar = identity.safeAvatar
     ? html`<img
-        src="${identity.safeAvatar}"
+        src="${DOMPurify.sanitize(identity.safeAvatar)}"
         alt="avatar"
         style="border: 1px solid #828282; width: 28px; height: 28px; border-radius: 2px; margin-top: 1.5rem;"
       />`
@@ -92,7 +93,9 @@ function generateCommentRow(activity, identity, bgColor) {
                     >
                     <span> commented on </span>
                     <span style="color: limegreen;"
-                      >${activity.message.submission_title}</span
+                      >${DOMPurify.sanitize(
+                        activity.message.submission_title,
+                      )}</span
                     >
                   </a>
                 </strong>
@@ -122,7 +125,9 @@ function generateRow(lastUpdate) {
       return generateCommentRow(activity, identity, bgColor);
     }
 
-    const title = activity.message.title || activity.message.href;
+    const title = DOMPurify.sanitize(
+      activity.message.title || activity.message.href,
+    );
     const identity = activity.identities[activity.identities.length - 1];
     const size = 28;
     const identities = activity.identities
@@ -152,10 +157,12 @@ function generateRow(lastUpdate) {
                     ${identities.map(
                       (identity, index) => html`
                         <a
-                          href="https://news.kiwistand.com/upvotes?address=${identity.address}"
+                          href="https://news.kiwistand.com/upvotes?address=${DOMPurify.sanitize(
+                            identity.address,
+                          )}"
                         >
                           <img
-                            src="${identity.safeAvatar}"
+                            src="${DOMPurify.sanitize(identity.safeAvatar)}"
                             alt="avatar"
                             style="z-index: ${index}; width: ${size}px; height: ${size}px; border: 1px solid #828282; border-radius: 2px; margin-left: 15px;"
                           />
@@ -195,7 +202,7 @@ function generateRow(lastUpdate) {
                         href="/stories?index=0x${activity.metadata.index}"
                         style="color: gray; word-break: break-word;"
                       >
-                        ${activity.metadata.title}
+                        ${DOMPurify.sanitize(activity.metadata.title)}
                       </a>`
                     : ""}
                 </p>
@@ -209,6 +216,7 @@ function generateRow(lastUpdate) {
 }
 
 export async function page(theme, identity, notifications, lastUpdate) {
+  identity = DOMPurify.sanitize(identity);
   let feed = html`
     <tr>
       <td

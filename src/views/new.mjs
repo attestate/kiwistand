@@ -101,7 +101,7 @@ export async function recompute() {
   inProgress = false;
 }
 
-export default async function (trie, theme, index) {
+export default async function (trie, theme) {
   let items = stories;
   const path = "/new";
   const ogImage = "https://news.kiwistand.com/kiwi_new_feed_page.png";

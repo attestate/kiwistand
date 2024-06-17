@@ -6,6 +6,7 @@ import htm from "htm";
 import vhtml from "vhtml";
 import normalizeUrl from "normalize-url";
 import { sub, differenceInMinutes, differenceInSeconds } from "date-fns";
+import DOMPurify from "isomorphic-dompurify";
 
 import * as ens from "../ens.mjs";
 import Header from "./components/header.mjs";

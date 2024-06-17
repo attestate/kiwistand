@@ -11,6 +11,7 @@ import {
   differenceInMinutes,
   isBefore,
 } from "date-fns";
+import DOMPurify from "isomorphic-dompurify";
 
 import * as ens from "../ens.mjs";
 import Header from "./components/header.mjs";
@@ -46,10 +47,10 @@ function CanonRow(originals) {
                 class="canon-image"
                 style="background-color: rgba(0,0,0,0.1); border-radius: 2px; border: 1px solid #828282;"
               >
-                <a href="${href}" target="_blank">
+                <a href="${DOMPurify.sanitize(href)}" target="_blank">
                   <img
                     loading="lazy"
-                    src="${metadata.image}"
+                    src="${DOMPurify.sanitize(metadata.image)}"
                     style="aspect-ratio: 16/9; object-fit:cover;border-bottom: 1px solid #828282; width: 100%; height: auto;"
                   />
                 </a>
@@ -57,7 +58,7 @@ function CanonRow(originals) {
                   class="meta-link canon-font"
                   style="display:block; margin: 0.2rem 0.2rem 0.3rem 0.3rem;"
                   href="/stories?index=0x${index}"
-                  >${title}</a
+                  >${DOMPurify.sanitize(title)}</a
                 >
               </div>
             `,
@@ -410,10 +411,6 @@ export default async function (trie, theme, page, domain) {
   }
   const ogImage = "https://news.kiwistand.com/kiwi_hot_feed_page.png";
   const recentJoiners = await registry.recents();
-  const marquee1 = `Pls don't forget to upvote when U like a story! Kiwi News is a collectively maintained feed. Unlike Twitter, Facebook and Co, it isn't engineered to give you an instant dopamine-hit so that you remain on the site. We encounter our users as human beings, not cattle meant to farm behavioral data. That said, please now position your head exactly 1 foot in front of the screen and look intently at this sideways scrolling text. You have 5 seconds. 5 ... 4 ... 3 ... 2 ... 1... OK, now say outloud: "I will always help the Kiwi News community to upvote articles that I like. I will not complain about wallet UX issues and I will not ask when upvoting on Warpcast drops." Thank you.`;
-  const marquee2 = `FYI Kiwi News is a bootstrapped project. That means we exclusively finance ourselves from the Kiwi Passes that we sell, and, in some cases from grants that we receive. We do this to deliver you the best possible neutrality. That is to say: We don't want a sponsor or investor that gets so big that they can decide content policy or influence the site's moderation. Instead, by taking the money from you, our customers, we're directly aligning ourselves with your interests.`;
-  const marquees = [marquee1, marquee2];
-  const randomMarquee = marquees[Math.floor(Math.random() * marquees.length)];
   return html`
     <html lang="en" op="news">
       <head>
@@ -451,67 +448,6 @@ export default async function (trie, theme, page, domain) {
                     </td>
                   </tr>`
                 : ""}
-              ${page === 0 &&
-              editorPicks.map(
-                (story, i) => html`
-                  <tr style="background-color: #e6e6df;">
-                    <td>
-                      <div style="padding: 10px 0 0 5px;">
-                        <div style="display: flex; align-items: stretch;">
-                          <div
-                            style="display: flex; align-items: center; justify-content: center; min-width: 40px; margin-right: 6px;"
-                          >
-                            <a
-                              href="#"
-                              style="display: flex; align-items: center; min-height: 30px;"
-                            >
-                              <div
-                                class="votearrowcontainer"
-                                data-title="${story.title}"
-                                data-href="${story.href}"
-                                data-upvoters="${JSON.stringify(
-                                  story.upvoters,
-                                )}"
-                                data-editorpicks="true"
-                              >
-                                <div>
-                                  <div
-                                    class="votearrow pulsate"
-                                    style="color: rgb(130, 130, 130); cursor: pointer;"
-                                    title="upvote"
-                                  >
-                                    ▲
-                                  </div>
-                                </div>
-                              </div>
-                            </a>
-                          </div>
-                          <div
-                            style="display:flex; align-items: center; flex-grow: 1;"
-                          >
-                            <span>
-                              <a
-                                href="${story.href}"
-                                target="_blank"
-                                class="story-link"
-                                style="line-height: 13pt; font-size: 13pt;"
-                              >
-                                ${story.title}
-                              </a>
-                              <span
-                                style="padding-left: 5px; white-space: nowrap;"
-                                >(<a href="?domain=${extractDomain(story.href)}"
-                                  >${extractDomain(story.href)}</a
-                                >)</span
-                              >
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
-                `,
-              )}
               ${originals && originals.length >= 2 && !domain
                 ? html`
                     ${stories

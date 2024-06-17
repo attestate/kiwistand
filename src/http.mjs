@@ -10,6 +10,7 @@ import { utils } from "ethers";
 import htm from "htm";
 import "express-async-errors";
 import { sub } from "date-fns";
+import DOMPurify from "isomorphic-dompurify";
 
 import * as registry from "./chainstate/registry.mjs";
 import log from "./logger.mjs";
@@ -474,7 +475,7 @@ export async function launch(trie, libp2p) {
       trie,
       reply.locals.theme,
       page,
-      request.query.domain,
+      DOMPurify.sanitize(request.query.domain),
     );
     reply.header(
       "Cache-Control",
@@ -491,7 +492,12 @@ export async function launch(trie, libp2p) {
     }
 
     const hexIndex = request.query.index.substring(2);
-    const content = await story(trie, reply.locals.theme, hexIndex, submission);
+    const content = await story(
+      trie,
+      reply.locals.theme,
+      DOMPurify.sanitize(hexIndex),
+      submission,
+    );
     reply.header(
       "Cache-Control",
       "public, max-age=10, no-transform, must-revalidate, stale-while-revalidate=600",
@@ -508,7 +514,7 @@ export async function launch(trie, libp2p) {
     res.redirect(301, "/stats");
   });
   app.get("/new", async (request, reply) => {
-    const content = await newest(trie, reply.locals.theme, request.query.index);
+    const content = await newest(trie, reply.locals.theme);
     let timestamp;
     try {
       timestamp = newAPI.getLatestTimestamp();
@@ -540,7 +546,7 @@ export async function launch(trie, libp2p) {
       reply.locals.theme,
       page,
       period,
-      request.query.domain,
+      DOMPurify.sanitize(request.query.domain),
     );
 
     reply.header(
@@ -554,7 +560,7 @@ export async function launch(trie, libp2p) {
       trie,
       reply.locals.theme,
       request.query,
-      request.cookies.identity,
+      DOMPurify.sanitize(request.cookies.identity),
     );
 
     reply.header("Cache-Control", "private, must-revalidate");
@@ -655,7 +661,7 @@ export async function launch(trie, libp2p) {
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/start", async (request, reply) => {
-    const content = await start(reply.locals.theme, request.cookies.identity);
+    const content = await start(reply.locals.theme);
 
     reply.header("Cache-Control", "private, max-age=86400");
     return reply.status(200).type("text/html").send(content);
@@ -663,7 +669,7 @@ export async function launch(trie, libp2p) {
   app.get("/settings", async (request, reply) => {
     const content = await settings(
       reply.locals.theme,
-      request.cookies.identity,
+      DOMPurify.sanitize(request.cookies.identity),
     );
 
     reply.header("Cache-Control", "private, max-age=86400");
@@ -695,7 +701,7 @@ export async function launch(trie, libp2p) {
     try {
       data = await activity.data(
         trie,
-        request.cookies.identity || request.query.address,
+        DOMPurify.sanitize(request.cookies.identity || request.query.address),
         request.cookies.lastUpdate,
       );
     } catch (err) {
@@ -721,7 +727,7 @@ export async function launch(trie, libp2p) {
     try {
       data = await activity.data(
         trie,
-        request.query.address,
+        DOMPurify.sanitize(request.query.address),
         request.cookies.lastUpdate,
       );
     } catch (err) {
@@ -729,7 +735,7 @@ export async function launch(trie, libp2p) {
     }
     const content = await activity.page(
       reply.locals.theme,
-      request.cookies.identity || request.query.address,
+      DOMPurify.sanitize(request.cookies.identity || request.query.address),
       data.notifications,
       request.cookies.lastUpdate,
     );
@@ -769,7 +775,12 @@ export async function launch(trie, libp2p) {
     return reply
       .status(200)
       .type("text/html")
-      .send(await onboarding(reply.locals.theme, request.cookies.identity));
+      .send(
+        await onboarding(
+          reply.locals.theme,
+          DOMPurify.sanitize(request.cookies.identity),
+        ),
+      );
   });
   app.get("/whattosubmit", async (request, reply) => {
     reply.header("Cache-Control", "private, max-age=86400");
@@ -784,7 +795,10 @@ export async function launch(trie, libp2p) {
       .status(200)
       .type("text/html")
       .send(
-        await onboardingReader(reply.locals.theme, request.cookies.identity),
+        await onboardingReader(
+          reply.locals.theme,
+          DOMPurify.sanitize(request.cookies.identity),
+        ),
       );
   });
   app.get("/onboarding-curator", async (request, reply) => {
@@ -793,7 +807,10 @@ export async function launch(trie, libp2p) {
       .status(200)
       .type("text/html")
       .send(
-        await onboardingCurator(reply.locals.theme, request.cookies.identity),
+        await onboardingCurator(
+          reply.locals.theme,
+          DOMPurify.sanitize(request.cookies.identity),
+        ),
       );
   });
   app.get("/onboarding-submitter", async (request, reply) => {
@@ -802,7 +819,10 @@ export async function launch(trie, libp2p) {
       .status(200)
       .type("text/html")
       .send(
-        await onboardingSubmitter(reply.locals.theme, request.cookies.identity),
+        await onboardingSubmitter(
+          reply.locals.theme,
+          DOMPurify.sanitize(request.cookies.identity),
+        ),
       );
   });
 
@@ -876,8 +896,8 @@ export async function launch(trie, libp2p) {
       trie,
       reply.locals.theme,
       request.query.address,
-      request.query.page,
-      request.query.mode,
+      DOMPurify.sanitize(request.query.page),
+      DOMPurify.sanitize(request.query.mode),
       request.query.frame === "true",
     );
 
@@ -903,7 +923,11 @@ export async function launch(trie, libp2p) {
 
   app.get("/submit", async (request, reply) => {
     const { url, title } = request.query;
-    const content = await submit(reply.locals.theme, url, title);
+    const content = await submit(
+      reply.locals.theme,
+      DOMPurify.sanitize(url),
+      DOMPurify.sanitize(title),
+    );
 
     reply.header("Cache-Control", "public, max-age=18000, must-revalidate");
     return reply.status(200).type("text/html").send(content);
@@ -932,8 +956,8 @@ export async function launch(trie, libp2p) {
         trie,
         reply.locals.theme,
         address,
-        request.query.page,
-        request.query.mode,
+        DOMPurify.sanitize(request.query.page),
+        DOMPurify.sanitize(request.query.mode),
         request.query.frame === "true",
       );
     } catch (err) {

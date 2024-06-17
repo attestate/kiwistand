@@ -7,6 +7,7 @@ import vhtml from "vhtml";
 import normalizeUrl from "normalize-url";
 import { formatDistanceToNow, sub } from "date-fns";
 import { utils } from "ethers";
+import DOMPurify from "isomorphic-dompurify";
 
 import * as ens from "../ens.mjs";
 import Header from "./components/header.mjs";
@@ -28,7 +29,7 @@ function truncateComment(comment, maxLength = 260) {
 }
 
 function generateCommentRow(activity, identity, borderColor) {
-  const comment = truncateComment(activity.message.title);
+  const comment = DOMPurify.sanitize(truncateComment(activity.message.title));
   const avatar = identity.safeAvatar
     ? html`<img
         src="${identity.safeAvatar}"
@@ -62,7 +63,9 @@ function generateCommentRow(activity, identity, borderColor) {
                     >
                     <span> commented on </span>
                     <span style="color: limegreen;"
-                      >${activity.message.submission_title}</span
+                      >${DOMPurify.sanitize(
+                        activity.message.submission_title,
+                      )}</span
                     >
                   </a>
                 </strong>
@@ -70,8 +73,11 @@ function generateCommentRow(activity, identity, borderColor) {
               <p
                 style="line-height: 1.2; white-space: pre-wrap; margin: 5px 0 1rem 0; color: gray; word-break: break-word;"
               >
-                <a class="comment-text-link" style="color: gray;" href="${link}"
-                  >${comment}</a
+                <a
+                  class="comment-text-link"
+                  style="color: gray;"
+                  href="${DOMPurify.sanitize(link)}"
+                  >${DOMPurify.sanitize(comment)}</a
                 >
               </p>
             </div>

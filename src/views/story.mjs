@@ -13,6 +13,7 @@ import {
   isBefore,
 } from "date-fns";
 import linkifyStr from "linkify-string";
+import DOMPurify from "isomorphic-dompurify";
 
 import * as ens from "../ens.mjs";
 import Header from "./components/header.mjs";
@@ -196,8 +197,7 @@ export default async function (trie, theme, index, value) {
   return html`
     <html lang="en" op="news">
       <head>
-        ${head.custom(ogImage, value.title)}
-        <meta name="description" content="${ogDescription}" />
+        ${head.custom(ogImage, value.title, ogDescription)}
       </head>
       <body>
         <div class="container">
@@ -293,16 +293,19 @@ export default async function (trie, theme, index, value) {
                                   >`
                                 : html`<span
                                     dangerouslySetInnerHTML=${{
-                                      __html: linkifyStr(comment.title, {
-                                        className: "meta-link",
-                                        target: "_blank",
-                                        defaultProtocol: "https",
-                                        validate: {
-                                          url: (value) =>
-                                            /^https:\/\/.*/.test(value),
-                                          email: () => false,
+                                      __html: linkifyStr(
+                                        DOMPurify.sanitize(comment.title),
+                                        {
+                                          className: "meta-link",
+                                          target: "_blank",
+                                          defaultProtocol: "https",
+                                          validate: {
+                                            url: (value) =>
+                                              /^https:\/\/.*/.test(value),
+                                            email: () => false,
+                                          },
                                         },
-                                      }),
+                                      ),
                                     }}
                                   ></span>`}
                             </span>`,

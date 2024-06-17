@@ -1,6 +1,7 @@
 import { env } from "process";
 import htm from "htm";
 import vhtml from "vhtml";
+import DOMPurify from "isomorphic-dompurify";
 
 import { getNumberOfOnlineUsers } from "../../cache.mjs";
 
@@ -195,6 +196,8 @@ const OnlineIndicator = (DAU) => html`
 `;
 
 const secondheader = (theme, site, period, domain) => {
+  period = DOMPurify.sanitize(period);
+  domain = DOMPurify.sanitize(domain);
   const DAU = getNumberOfOnlineUsers();
   return html`
     <td>

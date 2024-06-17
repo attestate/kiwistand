@@ -10,7 +10,7 @@ import { custom } from "./components/head.mjs";
 
 const html = htm.bind(vhtml);
 
-export default async function (theme, identity) {
+export default async function (theme) {
   const title = "What to submit";
   const description =
     "Never miss great content with our Kiwi app. Onboard to Kiwi News as a reader by following these five steps.";

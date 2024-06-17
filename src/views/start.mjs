@@ -9,11 +9,7 @@ import Head from "./components/head.mjs";
 import * as ens from "../ens.mjs";
 
 const html = htm.bind(vhtml);
-export default async function index(theme, identity) {
-  let profile;
-  if (identity) {
-    profile = await ens.resolve(identity);
-  }
+export default async function index(theme) {
   return html`
     <html lang="en" op="news">
       <head>
@@ -38,7 +34,7 @@ export default async function index(theme, identity) {
           <div id="hnmain">
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
               <tr>
-                ${await Header(theme, identity)}
+                ${await Header(theme)}
               </tr>
               <tr style="display: flex; justify-content: center;">
                 <td style="padding: 40px; height: 90vh;">

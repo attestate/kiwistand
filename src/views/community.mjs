@@ -4,6 +4,7 @@ import { env } from "process";
 
 import htm from "htm";
 import vhtml from "vhtml";
+import DOMPurify from "isomorphic-dompurify";
 
 import * as ens from "../ens.mjs";
 import Header from "./components/header.mjs";
@@ -124,7 +125,7 @@ export default async function (trie, theme, query, identity) {
   if (isNaN(page) || page < 1) {
     page = 0;
   }
-  const search = query.search;
+  const search = DOMPurify.sanitize(query.search);
 
   const users = karma.ranking();
   const allowlist = Array.from(await registry.allowlist());
@@ -342,7 +343,7 @@ export default async function (trie, theme, query, identity) {
                     html`
                       <a
                         href="?${new URLSearchParams({
-                          ...query,
+                          search,
                           page: page - 1,
                         }).toString()}"
                       >
@@ -353,7 +354,7 @@ export default async function (trie, theme, query, identity) {
                     html`
                       <a
                         href="?${new URLSearchParams({
-                          ...query,
+                          search,
                           page: page + 1,
                         }).toString()}"
                       >

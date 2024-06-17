@@ -1,6 +1,7 @@
 import { env } from "process";
 import path from "path";
 
+import DOMPurify from "isomorphic-dompurify";
 import ogs from "open-graph-scraper-lite";
 import htm from "htm";
 import vhtml from "vhtml";
@@ -47,7 +48,7 @@ async function extractCanonicalLink(html) {
     return;
   }
 
-  return node.href;
+  return DOMPurify.sanitize(node.href);
 }
 
 export const metadata = async (url) => {
@@ -83,9 +84,9 @@ export const metadata = async (url) => {
   let { ogDescription } = result;
 
   let canonicalLink;
-  // NOTE: Hey's canonical link implementation is wrong and always links back
-  // to the root
-  if (domain !== "hey.xyz") {
+  // NOTE: Hey's and Rekt News's canonical link implementation is wrong and
+  // always links back to the root
+  if (domain !== "hey.xyz" || domain !== "rekt.news") {
     canonicalLink = await extractCanonicalLink(html);
   }
 
@@ -100,10 +101,10 @@ export const metadata = async (url) => {
   }
 
   return {
-    ogTitle,
-    domain,
-    ogDescription,
-    image,
+    ogTitle: DOMPurify.sanitize(ogTitle),
+    domain: DOMPurify.sanitize(domain),
+    ogDescription: DOMPurify.sanitize(ogDescription),
+    image: DOMPurify.sanitize(image),
     canonicalLink,
   };
 };
@@ -121,6 +122,8 @@ function safeExtractDomain(link) {
   return tld;
 }
 const empty = html``;
+// NOTE: All inputs into render from metadata are XSS-sanitized by the metadata
+// function.
 export const render = (ogTitle, domain, ogDescription, image) => html`
   <div
     onclick="navigator.clipboard.writeText('${ogTitle}')"

@@ -11,7 +11,7 @@ const html = htm.bind(vhtml);
 
 const path = "/indexing";
 
-export default async function (theme, userAddress, transactionHash) {
+export default async function (theme) {
   return html`
     <html lang="en" op="news">
       <head>

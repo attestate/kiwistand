@@ -6,6 +6,7 @@ import vhtml from "vhtml";
 import normalizeUrl from "normalize-url";
 import { formatDistanceToNow } from "date-fns";
 import { utils } from "ethers";
+import DOMPurify from "isomorphic-dompurify";
 
 import Header from "./components/header.mjs";
 import { trophySVG, broadcastSVG } from "./components/secondheader.mjs";
@@ -39,6 +40,7 @@ function extractDomain(link) {
   return parsedUrl.hostname;
 }
 
+// NOTE: User-defined inputs here are sanitized using the parser.mjs module
 const Post = (post) => html`
   <a target="_blank" href="${post.href}">
     <div style="gap: 1rem; display: flex; width: 90%; padding: 1rem 5%;">
@@ -91,7 +93,9 @@ export default async function (
     generateProfile(ensData.ens, ensData.safeAvatar);
     if (enabledFrame) {
       frameHead = frame.profileHeader(ensData.ens, identity);
-      ogImage = `https://news.kiwistand.com/previews/${ensData.ens}.jpg`;
+      ogImage = `https://news.kiwistand.com/previews/${DOMPurify.sanitize(
+        ensData.ens,
+      )}.jpg`;
     }
   }
 
@@ -216,7 +220,7 @@ export default async function (
                     </a>
                     <span style="font-size: 0.8rem;">
                       ${description
-                        ? html`${description}<br />`
+                        ? html`${DOMPurify.sanitize(description)}<br />`
                         : html`<span><br /></span>`}
                     </span>
                     <div

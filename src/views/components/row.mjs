@@ -2,6 +2,7 @@ import htm from "htm";
 import vhtml from "vhtml";
 import { formatDistanceToNowStrict } from "date-fns";
 import { URL } from "url";
+import DOMPurify from "isomorphic-dompurify";
 
 import { commentCounts } from "../../store.mjs";
 import ShareIcon from "./shareicon.mjs";
@@ -65,8 +66,8 @@ const row = (
           >
             <div style="display: flex; align-items: center;">
               <div
-                data-title="${story.title}"
-                data-href="${story.href}"
+                data-title="${DOMPurify.sanitize(story.title)}"
+                data-href="${DOMPurify.sanitize(story.href)}"
                 data-upvoters="${JSON.stringify(story.upvoters)}"
                 class="vote-button-container"
                 style="display: flex; align-self: stretch;"
@@ -106,7 +107,10 @@ const row = (
                       href="${interactive || story.image
                         ? ""
                         : `/outbound?url=${encodeURIComponent(
-                            addOrUpdateReferrer(story.href, story.identity),
+                            addOrUpdateReferrer(
+                              DOMPurify.sanitize(story.href),
+                              story.identity,
+                            ),
                           )}`}"
                       target="_blank"
                       class="story-link"
@@ -115,36 +119,26 @@ const row = (
                       ${story.isOriginal
                         ? html`<mark
                             style="background-color: rgba(255,255,0, 0.05); padding: 0px 2px;"
-                            >${truncateLongWords(story.title)}</mark
+                            >${truncateLongWords(
+                              DOMPurify.sanitize(story.title),
+                            )}</mark
                           >`
-                        : truncateLongWords(story.title)}
+                        : truncateLongWords(DOMPurify.sanitize(story.title))}
                       <span> </span>
                     </a>
                   </span>
-                  ${story.image
-                    ? html`<br /><a target="_blank" href="${story.href}"
-                          ><img
-                            loading="lazy"
-                            style="max-width: 80vw; padding: 0.75rem 1rem 0 0; max-height: 20vh"
-                            src="${story.image}"
-                        /></a>`
-                    : ""}
                   <span> </span>
-                  ${story.image
-                    ? ""
-                    : html` <span
-                        class="story-domain"
-                        style="white-space: nowrap;"
-                        >(${!interactive && (path === "/" || path === "/best")
-                          ? html`<a
-                              href="${path}?domain=${extractDomain(
-                                story.href,
-                              )}${period ? `&period=${period}` : ""}"
-                              style="color: #828282;"
-                              >${extractDomain(story.href)}</a
-                            >`
-                          : extractDomain(story.href)})</span
-                      >`}
+                  <span class="story-domain" style="white-space: nowrap;"
+                    >(${!interactive && (path === "/" || path === "/best")
+                      ? html`<a
+                          href="${path}?domain=${extractDomain(
+                            DOMPurify.sanitize(story.href),
+                          )}${period ? `&period=${period}` : ""}"
+                          style="color: #828282;"
+                          >${extractDomain(DOMPurify.sanitize(story.href))}</a
+                        >`
+                      : extractDomain(DOMPurify.sanitize(story.href))})</span
+                  >
                 </span>
                 <div style="font-size: 10pt;">
                   <span>

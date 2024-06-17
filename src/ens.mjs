@@ -1,5 +1,6 @@
 import { env } from "process";
 import path from "path";
+import DOMPurify from "isomorphic-dompurify";
 
 import { fetchBuilder, FileSystemCache } from "node-fetch-cache";
 import { allowlist } from "./chainstate/registry.mjs";
@@ -116,15 +117,15 @@ export async function resolve(address) {
     safeAvatar = fcProfile.avatar;
   }
 
-  let displayName = ensProfile.ens;
+  let displayName = DOMPurify.sanitize(ensProfile.ens);
   if (!displayName && fcProfile && fcProfile.username) {
-    displayName = `@${fcProfile.username}`;
+    displayName = `@${DOMPurify.sanitize(fcProfile.username)}`;
   }
   if (!displayName) {
     displayName = ensProfile.truncatedAddress;
   }
   const profile = {
-    safeAvatar,
+    safeAvatar: DOMPurify.sanitize(safeAvatar),
     ...ensProfile,
     farcaster: fcProfile,
     displayName,

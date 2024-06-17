@@ -1,11 +1,13 @@
 import htm from "htm";
 import vhtml from "vhtml";
+import DOMPurify from "isomorphic-dompurify";
 
 const html = htm.bind(vhtml);
 
 const defaultIconStyle = "width: 16px;";
 
 export function SocialButton(url, icon, text, isImg) {
+  url = DOMPurify.sanitize(url);
   return html`<a target="_blank" href="${url}">
     <button
       class="feed-button"
