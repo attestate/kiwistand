@@ -63,9 +63,12 @@ export const metadata = async (url) => {
     });
 
     const html = await response.text();
-    const { result } = await ogs({ html });
+    const parsed = await ogs({ html });
+    result = parsed.result;
 
-    cache.set(url, { result, html });
+    if (result && html) {
+      cache.set(url, { result, html });
+    }
   }
 
   const domain = safeExtractDomain(url);
