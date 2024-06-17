@@ -22,6 +22,7 @@ import {
   coinbaseWallet,
   metaMaskWallet,
   braveWallet,
+  rainbowWallet,
 } from "@rainbow-me/rainbowkit/wallets";
 //import { infuraProvider } from "wagmi/providers/infura";
 
@@ -35,17 +36,32 @@ export const chains = config.chains;
 const projectId = "cd46d2fcf6d171fb7c017129868fa211";
 const appName = "Kiwi News";
 
+const wallets = [
+  injectedWallet({ chains }),
+  walletConnectWallet({ projectId, chains }),
+  safeWallet({ chains }),
+  coinbaseWallet({ appName, chains }),
+  metaMaskWallet({ chains, projectId }),
+  braveWallet({ chains }),
+];
+
+const isDesktop = () => {
+  return (
+    !("ontouchstart" in window || navigator.maxTouchPoints) &&
+    window.innerWidth > 800
+  );
+};
+// NOTE: We've had issues with iOS Rainbow wallet users clicking on the Rainbow
+// link but then not being taken to Rainbow wallet on their mobile devices.
+// So instead, we're now asking mobile users to connect via the WalletConnect
+// dialogue, while we allow Desktop users to connect to their Rainbow wallet
+// extension directly.
+if (isDesktop()) wallets.push(rainbowWallet({ chains, projectId }));
+
 const connectors = connectorsForWallets([
   {
     groupName: "Popular",
-    wallets: [
-      injectedWallet({ chains }),
-      walletConnectWallet({ projectId, chains }),
-      safeWallet({ chains }),
-      coinbaseWallet({ appName, chains }),
-      metaMaskWallet({ chains, projectId }),
-      braveWallet({ chains }),
-    ],
+    wallets,
   },
 ]);
 
