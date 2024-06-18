@@ -12,14 +12,13 @@ const { aggregate } = blockLogs.loader;
 
 import mainnet from "./mainnet-mints.mjs";
 
-function hash(obj) {
-  const str = JSON.stringify(obj);
-  return createHash("sha256").update(str).digest("hex");
-}
-
-let cachedDelegations = null;
-let logsHash = null;
+let cachedDelegations = {};
+await refreshDelegations();
+setInterval(refreshDelegations, 5000);
 export async function delegations() {
+  return cachedDelegations;
+}
+export async function refreshDelegations() {
   const path = resolve(process.env.DATA_DIR, "list-delegations-load-2");
   const maxReaders = 500;
   const db = database.open(path, maxReaders);
@@ -43,12 +42,7 @@ export async function delegations() {
     .map(({ value }) => ({ ...value, data: value.data.data }))
     .filter(({ data }) => BigInt(data[2]) % 2n !== 0n);
 
-  if (logsHash !== hash(logs) || !cachedDelegations) {
-    cachedDelegations = organize(logs);
-    logsHash = hash(logs);
-  }
-
-  return cachedDelegations;
+  cachedDelegations = organize(logs);
 }
 
 // NOTE: For the purpose of set reconciliation, we must know the first moment
@@ -96,7 +90,13 @@ export async function recents() {
   return recentJoiners;
 }
 
+let cachedAccounts = {};
+await refreshAccounts();
+setInterval(refreshAccounts, 5000);
 export async function accounts() {
+  return cachedAccounts;
+}
+export async function refreshAccounts() {
   const path = resolve(process.env.DATA_DIR, "op-call-block-logs-load");
   // NOTE: On some cloud instances we ran into problems where LMDB reported
   // MDB_READERS_FULL which exceeded the LMDB default value of 126. So we
@@ -113,7 +113,8 @@ export async function accounts() {
   }));
   const accounts = aggregate(transformed);
   const result = augmentWithMainnet(accounts);
-  return result;
+
+  cachedAccounts = result;
 }
 
 export async function allowlist() {
