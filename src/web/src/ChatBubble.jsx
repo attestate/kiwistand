@@ -15,11 +15,7 @@ const ChatBubble = ({ storyIndex, commentCount }) => {
                 new CustomEvent(`open-comments-${storyIndex}`),
               )
       }
-      href={
-        isLargeScreen || commentCount === 0
-          ? `/stories?index=${storyIndex}`
-          : null
-      }
+      href={isLargeScreen ? `/stories?index=${storyIndex}` : null}
       className="chat-bubble interaction-element"
       id={`chat-bubble-${storyIndex}`}
       style={{

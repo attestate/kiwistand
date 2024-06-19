@@ -180,9 +180,14 @@ async function addDynamicComments(allowlist, delegations, toast) {
 
     sections.forEach((arrow) => {
       const storyIndex = arrow.getAttribute("data-story-index");
+      const commentCount = parseInt(
+        arrow.getAttribute("data-comment-count"),
+        10,
+      );
       createRoot(arrow).render(
         <StrictMode>
           <CommentSection
+            commentCount={commentCount}
             storyIndex={storyIndex}
             allowlist={allowlist}
             delegations={delegations}

@@ -285,9 +285,10 @@ const row = (
                   </div>`
                 : ""}
             </div>
-            ${commentCount > 0 && path !== "/stories"
+            ${path !== "/stories"
               ? html`<div
                   class="comment-section"
+                  data-comment-count="${commentCount}"
                   data-story-index="0x${story.index}"
                 ></div>`
               : null}

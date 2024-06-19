@@ -84,7 +84,7 @@ const Comment = ({ comment, index }) => {
 };
 
 const CommentsSection = (props) => {
-  const { storyIndex } = props;
+  const { storyIndex, commentCount } = props;
   const [comments, setComments] = useState([]);
   const [shown, setShown] = useState(false);
 
@@ -99,6 +99,8 @@ const CommentsSection = (props) => {
 
   useEffect(() => {
     (async () => {
+      if (commentCount === 0) return;
+
       const story = await fetchStory(storyIndex);
       if (story && story.comments) setComments(story.comments);
     })();
@@ -106,16 +108,13 @@ const CommentsSection = (props) => {
 
   if (!shown) return;
   return (
-    <>
-      {comments.length > 0 && (
-        <div style={{ padding: "5px 5px 0 5px", fontSize: "1rem" }}>
-          {comments.map((comment) => (
-            <Comment key={comment.index} comment={comment} index={storyIndex} />
-          ))}
-          <CommentInput {...props} style={{ margin: "1rem 0" }} />
-        </div>
-      )}{" "}
-    </>
+    <div style={{ padding: "5px 5px 0 5px", fontSize: "1rem" }}>
+      {comments.length > 0 &&
+        comments.map((comment) => (
+          <Comment key={comment.index} comment={comment} index={storyIndex} />
+        ))}
+      <CommentInput {...props} style={{ margin: "1rem 0" }} />
+    </div>
   );
 };
 
