@@ -253,9 +253,10 @@ export default async function (trie, theme) {
   };
 
   const today = new Date();
+  const yesterday = sub(today, { days: 1 });
   const d60Ago = sub(today, { days: 60 });
 
-  const dadData = getHashesPerDateRange(d60Ago, today);
+  const dadData = getHashesPerDateRange(d60Ago, yesterday);
   options.yLabel.name = "Daily active devices";
   options.xLabel.name = "";
   const dadChartData = {
