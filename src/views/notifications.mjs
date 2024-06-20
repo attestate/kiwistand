@@ -79,7 +79,7 @@ export default async function (theme) {
                       class="button-secondary"
                       id="button-onboarding"
                     >
-                      Upvote your first story!
+                      Continue
                     </button>
                   </a>
                 </td>

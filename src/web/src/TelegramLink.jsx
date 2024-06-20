@@ -32,7 +32,7 @@ export const Redirector = () => {
   );
 };
 
-const TelegramLink = () => {
+const TelegramLink = (props) => {
   const [generatedLink, setGeneratedLink] = useState("...loading");
   const account = useAccount();
   const localAccount = getLocalAccount(account.address, props.allowlist);
