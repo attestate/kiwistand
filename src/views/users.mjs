@@ -12,6 +12,7 @@ import Sidebar from "./components/sidebar.mjs";
 import Head from "./components/head.mjs";
 import * as store from "../store.mjs";
 import * as registry from "../chainstate/registry.mjs";
+import { getHashesPerDateRange } from "../cache.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -251,6 +252,18 @@ export default async function (trie, theme) {
     yNumLabels: 10,
   };
 
+  const today = new Date();
+  const d60Ago = sub(today, { days: 60 });
+
+  const dadData = getHashesPerDateRange(d60Ago, today);
+  options.yLabel.name = "Daily active devices";
+  options.xLabel.name = "";
+  const dadChartData = {
+    x: dadData.dates,
+    y: dadData.counts,
+  };
+  const dadChart = plot(html)(dadChartData, options);
+
   options.yLabel.name = "Daily active users";
   options.xLabel.name = "";
   const dauChartData = {
@@ -340,6 +353,14 @@ export default async function (trie, theme) {
                     the site once by either upvoting or submitting a new link.
                   </p>
                   ${mauChart}
+                  <p>
+                    <b>Daily Active Devices</b>
+                    <br />
+                    <br />
+                    <b>Definition: </b>We fingerprint every device that clicks
+                    an outbound link and track it uniquely on a daily basis.
+                  </p>
+                  ${dadChart}
                   <p>
                     <b>DAU/MAU Ratio DEFINITION:</b>
                     <br />

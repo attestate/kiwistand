@@ -5,6 +5,7 @@ export default cache;
 import { join } from "path";
 
 import Database from "better-sqlite3";
+import { add } from "date-fns";
 import normalizeUrl from "normalize-url";
 
 const dbPath = join(process.env.CACHE_DIR, "database.db");
@@ -84,6 +85,32 @@ function initialize() {
       CREATE INDEX IF NOT EXISTS idx_fingerprints_url ON fingerprints(url);
       CREATE INDEX IF NOT EXISTS idx_url_fingerprints_timestamp ON fingerprints(timestamp);
     `);
+}
+
+export function getHashesPerDateRange(startDate, endDate) {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  const dates = [];
+  const counts = [];
+
+  for (let day = start; day <= end; day = add(day, { days: 1 })) {
+    const dayStartTimestamp = Math.floor(day.getTime() / 1000);
+    const nextDay = add(day, { days: 1 });
+    const dayEndTimestamp = Math.floor(nextDay.getTime() / 1000) - 1;
+
+    const query = `
+        SELECT COUNT(DISTINCT hash) AS count
+        FROM fingerprints
+        WHERE timestamp >= ? AND timestamp <= ?
+      `;
+    const params = [dayStartTimestamp, dayEndTimestamp];
+    const result = db.prepare(query).get(params);
+    dates.push(day);
+    counts.push(result.count);
+  }
+  console.log(dates, counts);
+
+  return { dates, counts };
 }
 
 export function countOutbounds(url, hours = 24) {
