@@ -28,7 +28,7 @@ function truncateComment(comment, maxLength = 260) {
   return comment.slice(0, comment.lastIndexOf(" ", maxLength)) + "...";
 }
 
-function generateCommentRow(activity, identity, borderColor) {
+function generateCommentRow(activity, identity, borderColor, theme) {
   const comment = DOMPurify.sanitize(truncateComment(activity.message.title));
   const avatar = identity.safeAvatar
     ? html`<img
@@ -58,11 +58,11 @@ function generateCommentRow(activity, identity, borderColor) {
               <p style="margin-top: 8px; margin-bottom: 2px;">
                 <strong>
                   <a style="color: ;" href="${link}">
-                    <span style="color: limegreen;"
+                    <span style="color: ${theme.color};"
                       >${identity.displayName}</span
                     >
                     <span> commented on </span>
-                    <span style="color: limegreen;"
+                    <span style="color: ${theme.color};"
                       >${DOMPurify.sanitize(
                         activity.message.submission_title,
                       )}</span
@@ -92,7 +92,7 @@ export async function page(theme, notifications) {
   const feed = notifications.map((activity) => {
     const identity = activity.identities[0];
     const borderColor = "rgba(0,0,0,0.10)";
-    return generateCommentRow(activity, identity, borderColor);
+    return generateCommentRow(activity, identity, borderColor, theme);
   });
   const content = html`
     <html lang="en" op="news">

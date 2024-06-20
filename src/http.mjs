@@ -15,7 +15,7 @@ import DOMPurify from "isomorphic-dompurify";
 import * as registry from "./chainstate/registry.mjs";
 import log from "./logger.mjs";
 import { SCHEMATA } from "./constants.mjs";
-import themes from "./themes.mjs";
+import theme from "./theme.mjs";
 import feed, { index } from "./views/feed.mjs";
 import story, { generateStory } from "./views/story.mjs";
 import newest, * as newAPI from "./views/new.mjs";
@@ -105,18 +105,7 @@ app.use(express.json());
 app.use(cookieParser());
 
 function loadTheme(req, res, next) {
-  const themeId = parseInt(req.cookies.currentTheme, 10);
-  const savedTheme = themes.find((theme) => theme.id === themeId);
-
-  const theme = savedTheme || {
-    id: 14,
-    emoji: "🥝",
-    name: "Kiwi News",
-    color: "limegreen",
-  };
-
   res.locals.theme = theme;
-
   next();
 }
 

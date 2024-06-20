@@ -58,7 +58,7 @@ export function truncateComment(comment, maxLength = 260) {
   return comment.slice(0, comment.lastIndexOf(" ", maxLength)) + "...";
 }
 
-function generateCommentRow(activity, identity, bgColor) {
+function generateCommentRow(activity, identity, bgColor, theme) {
   const comment = DOMPurify.sanitize(truncateComment(activity.message.title));
   const avatar = identity.safeAvatar
     ? html`<img
@@ -88,11 +88,11 @@ function generateCommentRow(activity, identity, bgColor) {
               <p style="margin-top: 8px; margin-bottom: 2px;">
                 <strong>
                   <a style="color: ;" href="${link}">
-                    <span style="color: limegreen;"
+                    <span style="color: ${theme.color};"
                       >${identity.displayName}</span
                     >
                     <span> commented on </span>
-                    <span style="color: limegreen;"
+                    <span style="color: ${theme.color};"
                       >${DOMPurify.sanitize(
                         activity.message.submission_title,
                       )}</span
@@ -115,14 +115,14 @@ function generateCommentRow(activity, identity, bgColor) {
   `;
 }
 
-function generateRow(lastUpdate) {
+function generateRow(lastUpdate, theme) {
   return (activity, i) => {
     const bgColor =
       lastUpdate < activity.timestamp ? "rgba(0,0,0,0.05)" : "none";
 
     if (activity.verb === "commented" || activity.verb === "involved") {
       const identity = activity.identities[0];
-      return generateCommentRow(activity, identity, bgColor);
+      return generateCommentRow(activity, identity, bgColor, theme);
     }
 
     const title = DOMPurify.sanitize(
@@ -141,7 +141,7 @@ function generateRow(lastUpdate) {
           <div style="display: flex; border-bottom: 1px solid rgba(0,0,0,0.1);">
             <div
               class="votearrow"
-              style="font-size: 1.5rem; flex: 0.15; display: flex; align-items: center; justify-content: center; color: limegreen;"
+              style="font-size: 1.5rem; flex: 0.15; display: flex; align-items: center; justify-content: center; color: ${theme.color};"
               title="upvote"
             >
               ${activity.verb === "upvoted" ? html`▲` : html`$`}
@@ -245,7 +245,7 @@ export async function page(theme, identity, notifications, lastUpdate) {
       </td>
     </tr>
   `;
-  feed = notifications.map(generateRow(lastUpdate));
+  feed = notifications.map(generateRow(lastUpdate, theme));
   const content = html`
     <html lang="en" op="news">
       <head>

@@ -4,6 +4,7 @@ import PullToRefresh from "pulltorefreshjs";
 import DOMPurify from "isomorphic-dompurify";
 
 import { isRunningPWA, getCookie, getLocalAccount } from "./session.mjs";
+import theme from "./theme.mjs";
 
 function commentCountSignifier() {
   const isStoriesPage = window.location.pathname === "/stories";
@@ -40,7 +41,7 @@ function commentCountSignifier() {
       );
     } else if (currentCount > storedCount) {
       const svgElement = story.querySelector("svg");
-      svgElement.style.color = "limegreen";
+      svgElement.style.color = theme.color;
     }
   });
 }

@@ -16,6 +16,7 @@ import useLocalStorageState from "use-local-storage-state";
 import Passkeys from "./Passkeys.jsx";
 import { useProvider, chains, client } from "./client.mjs";
 import { CheckmarkSVG } from "./icons.jsx";
+import theme from "./theme.mjs";
 import {
   ConnectedSimpleDisconnectButton,
   ConnectedConnectButton,
@@ -54,25 +55,25 @@ export const ProgressBar = (props) => {
       <div
         style={{
           flex: 1,
-          backgroundColor: progress >= 0 ? "limegreen" : "black",
+          backgroundColor: progress >= 0 ? theme.color : "black",
         }}
       ></div>
       <div
         style={{
           flex: 1,
-          backgroundColor: progress >= 1 ? "limegreen" : "black",
+          backgroundColor: progress >= 1 ? theme.color : "black",
         }}
       ></div>
       <div
         style={{
           flex: 1,
-          backgroundColor: progress >= 2 ? "limegreen" : "black",
+          backgroundColor: progress >= 2 ? theme.color : "black",
         }}
       ></div>
       <div
         style={{
           flex: 1,
-          backgroundColor: progress >= 3 ? "limegreen" : "black",
+          backgroundColor: progress >= 3 ? theme.color : "black",
         }}
       ></div>
     </div>
@@ -152,19 +153,19 @@ const ConnectionDialogue = (props) => {
         <li
           style={{ marginLeft: "14px", textIndent: "-14px", marginTop: "8px" }}
         >
-          <span style={{ color: "limegreen" }}>•</span> Sign messages without
+          <span style={{ color: theme.color }}>•</span> Sign messages without
           additional prompts.
         </li>
         <li
           style={{ marginLeft: "14px", textIndent: "-14px", marginTop: "5px" }}
         >
-          <span style={{ color: "limegreen" }}>•</span> <b>Cost:</b> less than
+          <span style={{ color: theme.color }}>•</span> <b>Cost:</b> less than
           $0.01 on Optimism
         </li>
         <li
           style={{ marginLeft: "14px", textIndent: "-14px", marginTop: "5px" }}
         >
-          <span style={{ color: "limegreen" }}>•</span> Learn more about this by{" "}
+          <span style={{ color: theme.color }}>•</span> Learn more about this by{" "}
           <a
             style={{ textDecoration: "underline" }}
             href="https://kiwistand.github.io/kiwi-docs/docs/kiwi-how-works/delegation"

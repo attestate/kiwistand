@@ -84,7 +84,7 @@ export default async function (theme, userAddress) {
                       >
                         Next
                         <span
-                          style="border: 4px solid #fff; border-top: 4px solid limegreen; border-radius: 50%; width: 20px; height: 20px; animation: spin 2s linear infinite;"
+                          style="border: 4px solid #fff; border-top: 4px solid ${theme.color}; border-radius: 50%; width: 20px; height: 20px; animation: spin 2s linear infinite;"
                         ></span>
                       </button>
                       <p>Usually takes 3-5 minutes...</p>

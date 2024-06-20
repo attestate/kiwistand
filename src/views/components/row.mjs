@@ -8,6 +8,7 @@ import { commentCounts } from "../../store.mjs";
 import ShareIcon from "./shareicon.mjs";
 import CopyIcon from "./copyicon.mjs";
 import FCIcon from "./farcastericon.mjs";
+import theme from "../../theme.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -195,7 +196,7 @@ const row = (
                           class="meta-link"
                           style="${recentJoiners &&
                           recentJoiners.includes(story.identity)
-                            ? "color:limegreen;"
+                            ? `color: ${theme.color};`
                             : ""}"
                         >
                           ${story.displayName}

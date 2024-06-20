@@ -5,6 +5,7 @@ import { Wallet } from "@ethersproject/wallet";
 import { eligible } from "@attestate/delegator2";
 
 import { PasskeysSVG } from "./icons.jsx";
+import theme from "./theme.mjs";
 import { useProvider, client, chains } from "./client.mjs";
 import { ProgressBar } from "./DelegateButton.jsx";
 import { getLocalAccount } from "./session.mjs";
@@ -161,11 +162,11 @@ const Dialogue = (props) => {
         }}
       >
         <li>
-          <span style={{ color: "limegreen" }}>•</span> Encrypted storage on
+          <span style={{ color: theme.color }}>•</span> Encrypted storage on
           iCloud.
         </li>
         <li style={{ marginTop: "5px" }}>
-          <span style={{ color: "limegreen" }}>•</span> Your wallet's custody
+          <span style={{ color: theme.color }}>•</span> Your wallet's custody
           key remains on your device.
         </li>
       </ul>

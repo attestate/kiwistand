@@ -159,39 +159,12 @@ const animation = `
   var intervalId = setInterval(animate, 500);
  `;
 
-const Circle = html`
-  <svg style="padding-right: 5px;" height="14" width="14">
-    <circle
-      cx="7"
-      cy="7"
-      r="3.5"
-      fill="#4BB543"
-      shape-rendering="optimizeQuality"
-    />
-    <circle
-      cx="7"
-      cy="7"
-      r="6"
-      stroke="#4BB543"
-      stroke-width="1.75"
-      shape-rendering="optimizeQuality"
-      style={{ fillOpacity: 0 }}
-    >
-      <animate
-        attributeName="r"
-        values="10%;30%;42%;43%;10%"
-        dur="5s"
-        repeatCount="indefinite"
-      />
-    </circle>
-  </svg>`;
-
 const OnlineIndicator = (DAU) => html`
   <div
     alt="Users who interacted with the protocol in the last 24hrs"
     style="align-items: center; height: 100%; display: flex; padding-left: 10px; color: rgba(0,0,0,0.5);"
   >
-    ${Circle} ${DAU} online
+    ■ ${DAU} online
   </div>
 `;
 
