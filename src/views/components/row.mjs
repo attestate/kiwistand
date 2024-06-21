@@ -238,7 +238,7 @@ const row = (
                             </a>
                           </span>
                         `}
-                    ${interactive || hideCast
+                    ${interactive || hideCast || story.displayName === "Feedbot"
                       ? null
                       : html`
                           <span class="inverse-share-container">
