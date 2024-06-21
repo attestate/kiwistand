@@ -147,7 +147,12 @@ export async function launch(trie, libp2p) {
   // requester a unique user. Users can control all aspects of a request, so if
   // we'd open source this functionality, users could game the request to
   // increase their ranking on the site.
-  const fingerprint = await import("./fingerprint.mjs");
+  let fingerprint;
+  try {
+    fingerprint = await import("./fingerprint.mjs");
+  } catch (err) {
+    fingerprint = await import("./fingerprint_example.mjs");
+  }
   app.get("/outbound", async (request, reply) => {
     reply.header("Cache-Control", "no-cache");
     const { url } = request.query;
