@@ -31,7 +31,7 @@
     "ethereum"
   ],
   "engines": {
-    "node": ">=19"
+    "node": ">=18.0.0 <19.0.0"
   },
   "author": "The Kiwi News Developers",
   "license": "GPL-3.0-only",
