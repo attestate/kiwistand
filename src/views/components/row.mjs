@@ -142,7 +142,9 @@ const row = (
                   >
                 </span>
                 <div style="font-size: 10pt;">
-                  <span>
+                  <span 
+                    style="display: flex; flex-wrap: wrap; gap: 0.3em; opacity:0.5;"
+                  >
                     ${path !== "/stories" &&
                     story.avatars.length > 3 &&
                     html`
@@ -164,7 +166,7 @@ const row = (
                             `,
                           )}
                         </div>
-                        <span> • </span>
+                        <span style="opacity:0.3"> • </span>
                       </span>
                     `}
                     ${story.index
@@ -202,10 +204,11 @@ const row = (
                           ${story.displayName}
                         </a>`
                       : story.displayName}
+                      <span class="row-actions" role="actions">
                     ${interactive || hideCast || !story.index
                       ? null
                       : html`
-                          <span> • </span>
+                          <span style="opacity:0.3"> • </span>
                           <a
                             target="_blank"
                             href="https://warpcast.com/~/compose?embeds[]=${encodeURIComponent(
@@ -223,7 +226,7 @@ const row = (
                       ? null
                       : html`
                           <span class="share-container">
-                            <span> • </span>
+                            <span style="opacity:0.3"> • </span>
                             <a
                               href="#"
                               class="caster-link share-link"
@@ -242,7 +245,7 @@ const row = (
                       ? null
                       : html`
                           <span class="inverse-share-container">
-                            <span> • </span>
+                            <span style="opacity:0.3"> • </span>
                             <a
                               href="#"
                               class="meta-link share-link"
@@ -257,6 +260,7 @@ const row = (
                             </a>
                           </span>
                         `}
+                    </span>
                   </span>
                 </div>
               </div>
