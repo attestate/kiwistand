@@ -142,9 +142,7 @@ const row = (
                   >
                 </span>
                 <div style="font-size: 10pt;">
-                  <span 
-                    style="display: flex; flex-wrap: wrap; gap: 0.3em; opacity:0.5;"
-                  >
+                  <span style="opacity:0.8;">
                     ${path !== "/stories" &&
                     story.avatars.length > 3 &&
                     html`
@@ -166,7 +164,7 @@ const row = (
                             `,
                           )}
                         </div>
-                        <span style="opacity:0.3"> • </span>
+                        <span style="opacity:0.6"> • </span>
                       </span>
                     `}
                     ${story.index
@@ -204,62 +202,64 @@ const row = (
                           ${story.displayName}
                         </a>`
                       : story.displayName}
-                      <span class="row-actions" role="actions">
-                    ${interactive || hideCast || !story.index
-                      ? null
-                      : html`
-                          <span style="opacity:0.3"> • </span>
-                          <a
-                            target="_blank"
-                            href="https://warpcast.com/~/compose?embeds[]=${encodeURIComponent(
-                              `https://news.kiwistand.com/stories?index=0x${story.index}`,
-                            )}"
-                            style="white-space: nowrap;"
-                            class="caster-link"
-                          >
-                            ${FCIcon("height: 10px; width: 10px;")}
-                            <span> </span>
-                            Cast
-                          </a>
-                        `}
-                    ${interactive || hideCast
-                      ? null
-                      : html`
-                          <span class="share-container">
-                            <span style="opacity:0.3"> • </span>
+                    <span>
+                      ${interactive || hideCast || !story.index
+                        ? null
+                        : html`
+                            <span style="opacity:0.6"> • </span>
                             <a
-                              href="#"
-                              class="caster-link share-link"
-                              title="Share"
+                              target="_blank"
+                              href="https://warpcast.com/~/compose?embeds[]=${encodeURIComponent(
+                                `https://news.kiwistand.com/stories?index=0x${story.index}`,
+                              )}"
                               style="white-space: nowrap;"
-                              onclick="event.preventDefault(); navigator.share({url: 'https://news.kiwistand.com/stories?index=0x${story.index}' });"
+                              class="caster-link"
                             >
-                              ${ShareIcon(
-                                "padding: 0 3px 1px 0; vertical-align: bottom; height: 13px; width: 13px;",
-                              )}
-                              Share
+                              ${FCIcon("height: 10px; width: 10px;")}
+                              <span> </span>
+                              Cast
                             </a>
-                          </span>
-                        `}
-                    ${interactive || hideCast || story.displayName === "Feedbot"
-                      ? null
-                      : html`
-                          <span class="inverse-share-container">
-                            <span style="opacity:0.3"> • </span>
-                            <a
-                              href="#"
-                              class="meta-link share-link"
-                              title="Share"
-                              style="white-space: nowrap;"
-                              onclick="event.preventDefault(); navigator.clipboard.writeText('https://news.kiwistand.com/stories?index=0x${story.index}'); window.toast.success('Link copied!');"
-                            >
-                              ${CopyIcon(
-                                "padding: 0 3px 1px 0; vertical-align: bottom; height: 13px; width: 13px;",
-                              )}
-                              Link
-                            </a>
-                          </span>
-                        `}
+                          `}
+                      ${interactive || hideCast
+                        ? null
+                        : html`
+                            <span class="share-container">
+                              <span style="opacity:0.6"> • </span>
+                              <a
+                                href="#"
+                                class="caster-link share-link"
+                                title="Share"
+                                style="white-space: nowrap;"
+                                onclick="event.preventDefault(); navigator.share({url: 'https://news.kiwistand.com/stories?index=0x${story.index}' });"
+                              >
+                                ${ShareIcon(
+                                  "padding: 0 3px 1px 0; vertical-align: bottom; height: 13px; width: 13px;",
+                                )}
+                                Share
+                              </a>
+                            </span>
+                          `}
+                      ${interactive ||
+                      hideCast ||
+                      story.displayName === "Feedbot"
+                        ? null
+                        : html`
+                            <span class="inverse-share-container">
+                              <span style="opacity:0.6"> • </span>
+                              <a
+                                href="#"
+                                class="meta-link share-link"
+                                title="Share"
+                                style="white-space: nowrap;"
+                                onclick="event.preventDefault(); navigator.clipboard.writeText('https://news.kiwistand.com/stories?index=0x${story.index}'); window.toast.success('Link copied!');"
+                              >
+                                ${CopyIcon(
+                                  "padding: 0 3px 1px 0; vertical-align: bottom; height: 13px; width: 13px;",
+                                )}
+                                Link
+                              </a>
+                            </span>
+                          `}
                     </span>
                   </span>
                 </div>
