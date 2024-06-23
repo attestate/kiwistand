@@ -147,5 +147,26 @@ export async function mints() {
   const mints = optimism
     .map(({ value }) => value)
     .filter(({ from, value }) => from === zeroAddress && value !== "0x0");
-  return mints;
+
+  const counts = {};
+  const getKey = (tx) => `${tx.from}-${tx.to}-${tx.timestamp}`;
+  const withoutDuplicates = mints
+    .map((tx) => {
+      const key = getKey(tx);
+
+      if (!counts[key]) counts[key] = 0;
+      counts[key] += 1;
+
+      return tx;
+    })
+    .map((tx) => {
+      const key = getKey(tx);
+      const count = counts[key];
+      const value = `0x${(tx.value / count).toString(16)}`;
+      return {
+        ...tx,
+        value,
+      };
+    });
+  return withoutDuplicates;
 }

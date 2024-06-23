@@ -332,12 +332,8 @@ export async function launch(trie, libp2p) {
   });
   app.get("/api/v1/price", async (request, reply) => {
     reply.header("Cache-Control", "no-cache");
-    const today = new Date();
-    const firstDayInSchedule = sub(today, {
-      months: 6,
-    });
     const mints = await registry.mints();
-    const value = await price.getPrice(mints, firstDayInSchedule, today);
+    const value = await price.getPrice(mints);
     const code = 200;
     const httpMessage = "OK";
     const details = "Calculated current price";

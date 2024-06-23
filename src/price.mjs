@@ -1,4 +1,4 @@
-import { differenceInDays, differenceInHours, add, sub } from "date-fns";
+import { differenceInDays, differenceInSeconds, add, sub } from "date-fns";
 import { plot } from "svg-line-chart";
 import htm from "htm";
 import vhtml from "vhtml";
@@ -16,10 +16,9 @@ const html = htm.bind(vhtml);
 const address = "0x66747bdc903d17c586fa09ee5d6b54cc85bbea45";
 
 // NOTE: Inspired by: https://www.paradigm.xyz/2022/08/vrgda
-export function getPrice(salesData, firstDayInSchedule, today = new Date()) {
+export function getPrice(salesData, today = new Date()) {
   const firstPrice = BigNumber.from("1280000000000000"); // p0 in Wei
 
-  const daysInSchedule = differenceInDays(today, firstDayInSchedule); // t
   const priceDecreasePercentage = 0.15; // k
 
   const mints = salesData
@@ -31,17 +30,24 @@ export function getPrice(salesData, firstDayInSchedule, today = new Date()) {
         day: differenceInDays(timestamp, today),
       };
     })
-    .filter(
-      ({ timestamp }) => timestamp > firstDayInSchedule && timestamp < today,
-    )
     .sort((a, b) => a.timestamp - b.timestamp);
-  const lastMints = mints.filter(({ day }) => day > -31);
-  const average30DayMints = lastMints.length / 30;
-  const dailyNFTSellTarget = 6.26 * 0.95 + average30DayMints * 0.05;
+  const firstDayInSchedule = mints[0].timestamp;
+  const daysInSchedule = differenceInDays(today, firstDayInSchedule); // t
+  const secondsInSchedule = differenceInSeconds(today, firstDayInSchedule); // t
+
+  const dailyNFTSellTarget = 4.58;
+  const NFTSellTargetPerSecond = dailyNFTSellTarget / (60 * 60 * 24);
   const numberOfSoldNFTs = mints.length; // n
 
-  const exponent = daysInSchedule - numberOfSoldNFTs / dailyNFTSellTarget;
-  const factor = Math.pow(1 - priceDecreasePercentage, exponent);
+  const exponent =
+    secondsInSchedule - numberOfSoldNFTs / NFTSellTargetPerSecond;
+  const factor = Math.pow(
+    1 - priceDecreasePercentage,
+    // NOTE: We have to divide throught the scaling factor that is basically
+    // the number of seconds that a day has to make the price update on a
+    // per-second basis.
+    exponent / (60 * 60 * 24),
+  );
 
   // NOTE: If we're not scaling up the "factor" then we're losing all the
   // information contained in the decimals and so it can end up happening that
@@ -50,9 +56,16 @@ export function getPrice(salesData, firstDayInSchedule, today = new Date()) {
   const linear = firstPrice.mul(
     BigNumber.from(`${Math.floor(factor * scaler)}`),
   );
+
+  const lastMints = mints.filter(({ day }) => day > -31);
+  const average30DayMints = lastMints.length / 30;
   return {
+    information: {
+      daysInSchedule,
+      numberOfSoldNFTs,
+      dailyNFTSellTarget,
+    },
     averages: {
-      weighted: dailyNFTSellTarget,
       day30: average30DayMints,
     },
     price: linear.div(scaler),
@@ -157,32 +170,19 @@ async function calculateMintersPerDay(mints) {
 
 export async function chart(theme) {
   const today = new Date();
-  const firstDayInSchedule = sub(today, {
-    months: 6,
-  });
   const monthAgo = sub(today, {
     months: 1,
   });
 
-  let pointer = add(firstDayInSchedule, { days: 1 });
-
-  const dates = [];
-  let prices = [];
-  let averages;
   const mints = await registry.mints();
-  while (differenceInDays(today, pointer) >= 0) {
-    dates.push(pointer);
-    const result = getPrice(mints, firstDayInSchedule, pointer);
-    averages = result.averages;
-
-    prices.push(result.price);
-    pointer = add(pointer, { days: 1 });
-  }
+  const data = getPrice(mints);
   const sales = mints
-    .map(({ value, timestamp }) => ({
-      price: parseFloat(ethers.utils.formatEther(value)) * 1000,
-      timestamp: new Date(1000 * parseInt(timestamp, 16)),
-    }))
+    .map(({ value, timestamp }) => {
+      return {
+        price: parseFloat(ethers.utils.formatEther(value)) * 1000,
+        timestamp: new Date(1000 * parseInt(timestamp, 16)),
+      };
+    })
     .filter(({ timestamp }) => timestamp > monthAgo && timestamp < today);
 
   options.yLabel.name = "Price in kilo ETH";
@@ -195,61 +195,31 @@ export async function chart(theme) {
     options,
   );
 
-  //console.log(dates);
-  //console.log(JSON.stringify(prices.map((value) => value.toString())));
-  prices = prices.map(
-    (value) => parseFloat(ethers.utils.formatEther(value)) * 1000,
-  );
-  const dates1m = dates.filter((date) => date > monthAgo);
-  const prices1m = prices.slice(dates1m.length * -1);
-
-  options.yLabel.name = "Price in kilo ETH";
-  options.xLabel.name = "";
-  const priceChart6m = plot(html)(
-    {
-      x: dates,
-      y: prices,
-    },
-    options,
-  );
-  const priceChart1m = plot(html)(
-    {
-      x: dates1m,
-      y: prices1m,
-    },
-    options,
-  );
-
-  const salesData6m = mints
-    .map((mint) => ({
-      ...mint,
-      parsedTimestamp: new Date(1000 * parseInt(mint.timestamp, 16)),
-    }))
-    .filter(
-      ({ parsedTimestamp }) =>
-        parsedTimestamp > firstDayInSchedule && parsedTimestamp < today,
-    );
-  const salesData1m = salesData6m.filter(
+  const salesDataAll = mints.map((mint) => ({
+    ...mint,
+    parsedTimestamp: new Date(1000 * parseInt(mint.timestamp, 16)),
+  }));
+  const salesData1m = salesDataAll.filter(
     ({ parsedTimestamp }) =>
       parsedTimestamp > monthAgo && parsedTimestamp < today,
   );
-  const totalSalesValue = salesData6m.reduce(
+  const totalSalesValue = salesDataAll.reduce(
     (total, sale) => total + parseInt(sale.value, 16),
     0,
   );
 
   // Calculate average sales price
-  const averageSalesPrice = totalSalesValue / salesData6m.length;
+  const averageSalesPrice = Math.floor(totalSalesValue / salesDataAll.length);
 
-  const mintersData6m = await calculateMintersPerDay(salesData6m);
+  const mintersDataAll = await calculateMintersPerDay(salesDataAll);
   const mintersData1m = await calculateMintersPerDay(salesData1m);
 
   options.yLabel.name = "minters";
   options.xLabel.name = "";
-  const mintersChart6m = plot(html)(
+  const mintersChartAll = plot(html)(
     {
-      x: mintersData6m.dates.map((date) => new Date(date)),
-      y: mintersData6m.minters,
+      x: mintersDataAll.dates.map((date) => new Date(date)),
+      y: mintersDataAll.minters,
     },
     options,
   );
@@ -260,6 +230,7 @@ export async function chart(theme) {
     },
     options,
   );
+
   return html`
     <html lang="en" op="news">
       <head>
@@ -275,29 +246,30 @@ export async function chart(theme) {
               </tr>
               <tr>
                 <td style="padding: 20px;">
-                  <span>Total sales value (6m): </span>
+                  <span>Total sales value (all): </span>
                   ${ethers.utils.formatEther(totalSalesValue.toString())} ETH
                   <br />
-                  <span>Average Sale Price (6m): </span>
+                  <span>Average Sale Price (all): </span>
                   ${ethers.utils.formatEther(averageSalesPrice.toString())} ETH
                   <br />
-                  <span>Total Number of sales (6m): </span>
-                  ${salesData6m.length} NFTs
+                  <span>Total Number of sales (all): </span>
+                  ${data.information.numberOfSoldNFTs} NFTs
                   <br />
-                  <span>Average number of daily sales (6m): </span>
-                  ${(salesData6m.length / 182).toFixed(2)} NFTs
+                  <span>Target of NFT sales per day: </span>
+                  ${data.information.dailyNFTSellTarget} NFTs
                   <br />
-                  <span>Simple moving average (30 days) of daily mints: </span>
-                  ${averages.day30.toFixed(2)} NFTs
-                  <br />
-                  <span
-                    >Weighted average of daily mints (95% total average, 5% SME
-                    of last 30 days):
-                  </span>
-                  <span> ${averages.weighted.toFixed(2)} NFTs</span>
+                  <span>Average number of daily sales (all): </span>
+                  ${(
+                    data.information.numberOfSoldNFTs /
+                    data.information.daysInSchedule
+                  ).toFixed(2)}
+                  <span> NFTs</span>
+                  <span>Average number of daily sales (30 days): </span>
+                  ${data.averages.day30.toFixed(2)}
+                  <span> NFTs</span>
                   <br />
                   <span>Price recommendation: </span>
-                  ${prices.pop() / 1000} ETH
+                  ${ethers.utils.formatEther(data.price)} ETH
                   <br />
                   <p>
                     <b>Real prices from sales (1m)</b>
@@ -307,25 +279,13 @@ export async function chart(theme) {
                   ${salesChart1m}
                   <br />
                   <p>
-                    <b>NFT price simulation using VRGDA (1m)</b>
-                    <br />
-                    <br />
-                  </p>
-                  ${priceChart6m}
-                  <p>
-                    <b>NFT Minters (6m)</b>
+                    <b>NFT Minters (all)</b>
                     <br />
                     <br />
                     <b>Definition: </b>Shows how many addresses mint the Kiwi
                     News Pass per day.
                   </p>
-                  ${mintersChart6m}
-                  <p>
-                    <b>NFT price simulation using VRGDA (1m)</b>
-                    <br />
-                    <br />
-                  </p>
-                  ${priceChart1m}
+                  ${mintersChartAll}
                   <p>
                     <b>NFT Minters (1m)</b>
                     <br />
