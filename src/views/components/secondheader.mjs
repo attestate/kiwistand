@@ -9,7 +9,7 @@ const html = htm.bind(vhtml);
 
 const style = "width: 1rem; position: relative; top: 0.15rem;";
 
-export const broadcastSVG = html`
+export const broadcastSVG = (style) => html`
   <svg
     style="${style}"
     xmlns="http://www.w3.org/2000/svg"
@@ -211,7 +211,7 @@ const secondheader = (theme, site, period, domain) => {
                     id="new-dot"
                     style="display: none; position: absolute; top: -5px; right: -5px; width: 8px; height: 8px; border-radius: 2px; background-color: #228B22;"
                   ></span>
-                  <span> ${broadcastSVG} New</span>
+                  <span> ${broadcastSVG(style)} New</span>
                 </button>
               </a>`
             : ""}

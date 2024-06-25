@@ -240,7 +240,7 @@ const productUpdates = html`
   </svg>
 `;
 
-const home = html`
+export const home = html`
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
     <rect width="256" height="256" fill="none" />
     <path
@@ -253,7 +253,7 @@ const home = html`
     />
   </svg>
 `;
-const homefull = html`
+export const homefull = html`
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
     <rect width="256" height="256" fill="none" />
     <path

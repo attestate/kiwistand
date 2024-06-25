@@ -210,7 +210,7 @@ export default async function index(trie, theme, page, period, domain) {
               <tr>
                 ${await Header(theme)}
               </tr>
-              <tr>
+              <tr class="third-header">
                 ${ThirdHeader(theme, "new")}
               </tr>
               <tr>

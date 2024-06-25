@@ -280,7 +280,7 @@ const row = (
                         ? "none"
                         : "flex"}; justify-content: center; min-width: 40px; align-items: center; flex-direction: column;"
                     >
-                      <${ChatsSVG} />
+                      ${ChatsSVG()}
                       <span
                         id="comment-count-${story.index}"
                         style="color: rgba(0,0,0,0.65); font-size: 8pt;"
@@ -304,9 +304,11 @@ const row = (
   };
 };
 
-const ChatsSVG = () => html`
+export const ChatsSVG = (
+  style = "color: rgba(0,0,0,0.65); width: 25px;",
+) => html`
   <svg
-    style="color: rgba(0,0,0,0.65); width: 25px;"
+    style="${style}"
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 256 256"
   >

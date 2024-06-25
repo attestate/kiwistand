@@ -269,7 +269,7 @@ export async function page(theme, identity, notifications, lastUpdate) {
             </table>
           </div>
         </div>
-        ${Footer(theme)}
+        ${Footer(theme, "/activity")}
       </body>
     </html>
   `;

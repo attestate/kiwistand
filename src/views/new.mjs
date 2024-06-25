@@ -123,7 +123,7 @@ export default async function (trie, theme) {
               <tr>
                 ${await Header(theme)}
               </tr>
-              <tr>
+              <tr class="third-header">
                 ${ThirdHeader(theme, "new")}
               </tr>
               <tr>

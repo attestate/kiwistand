@@ -428,7 +428,7 @@ export default async function (trie, theme, page, domain) {
               <tr>
                 ${await Header(theme)}
               </tr>
-              <tr>
+              <tr class="third-header">
                 ${ThirdHeader(theme, "top")}
               </tr>
               <tr>

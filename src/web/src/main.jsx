@@ -346,6 +346,15 @@ async function addConnectedComponents(allowlist, delegations, toast) {
     </StrictMode>,
   );
 
+  const mobileBellButton = document.querySelector(".mobile-bell-container");
+  if (mobileBellButton) {
+    createRoot(mobileBellButton).render(
+      <StrictMode>
+        <Bell mobile allowlist={allowlist} delegations={delegations} />
+      </StrictMode>,
+    );
+  }
+
   const settings = document.querySelector("#nav-settings");
   createRoot(settings).render(
     <StrictMode>

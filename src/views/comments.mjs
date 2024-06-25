@@ -107,7 +107,7 @@ export async function page(theme, notifications) {
               <tr>
                 ${await Header(theme)}
               </tr>
-              <tr>
+              <tr class="third-header">
                 ${ThirdHeader(theme, "comments")}
               </tr>
               <tr
@@ -119,7 +119,7 @@ export async function page(theme, notifications) {
             </table>
           </div>
         </div>
-        ${Footer(theme)}
+        ${Footer(theme, "/comments")}
       </body>
     </html>
   `;
