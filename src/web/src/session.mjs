@@ -77,9 +77,13 @@ export function isChromeOnIOS() {
 }
 
 export function supportsPasskeys() {
-  return (
-    isSafariOnMacOS() || isSafariOnIOS() || isBraveOnIOS() || isChromeOnIOS()
-  );
+  return !isAndroid();
+}
+
+export function isAndroid() {
+  const ua = navigator.userAgent;
+  const android = !!ua.match(/Android/i);
+  return android;
 }
 
 export function isSafariOnMacOS() {
@@ -98,9 +102,8 @@ export function isSafariOnIOS() {
 
 export function isChromeOnAndroid() {
   const ua = navigator.userAgent;
-  const android = !!ua.match(/Android/i);
   const chrome = !!ua.match(/Chrome/i);
-  return android && chrome;
+  return isAndroid() && chrome;
 }
 
 export function isRunningPWA() {
