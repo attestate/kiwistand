@@ -118,7 +118,7 @@ const SignupDialogue = (props) => {
         <p style={{ color: "black" }}>
           {localAccount
             ? "Sign up to read the best texts on crypto culture"
-            : "Please connect your wallet"}
+            : "Please connect your wallet to have the full experience"}
         </p>
       </div>
     );

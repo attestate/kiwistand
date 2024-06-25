@@ -665,11 +665,13 @@ async function start() {
   const allowlistPromise = fetchAllowList();
   const delegationsPromise = fetchDelegations();
 
-  // We're parallelizing all additions into the DOM
-  const results = await Promise.allSettled([
+  const results0 = await Promise.allSettled([
     obfuscateLinks(await allowlistPromise, await delegationsPromise),
     addDynamicComments(await allowlistPromise, await delegationsPromise, toast),
     addVotes(await allowlistPromise, await delegationsPromise, toast),
+  ]);
+
+  const results1 = await Promise.allSettled([
     addCommentInput(toast, await allowlistPromise, await delegationsPromise),
     addSubscriptionButton(await allowlistPromise),
     addTGLink(await allowlistPromise),
@@ -690,7 +692,12 @@ async function start() {
     checkNewStories(),
   ]);
 
-  results.forEach((result, index) => {
+  results0.forEach((result, index) => {
+    if (result.status === "rejected") {
+      console.error(`Error in promise at index ${index}:`, result.reason);
+    }
+  });
+  results1.forEach((result, index) => {
     if (result.status === "rejected") {
       console.error(`Error in promise at index ${index}:`, result.reason);
     }
