@@ -439,13 +439,13 @@ export default async function (trie, theme, page, domain) {
                   <div
                     style="background-color: black; height: 2.3rem;display: flex; justify-content: start; align-items: center; padding-left: 1rem; gap: 1rem; color: white;"
                   >
-                    <img style="height: 20px;" src="dappcon.png" />
+                    <img style="height: 30px;" src="lens.png" />
                     <a
                       style="color: white; text-decoration: underline;"
-                      href="https://paragraph.xyz/@kiwi-updates/dappcon-writing-challenge?referrer=0x3e6c23CdAa52B1B6621dBb30c367d16ace21F760"
+                      href="https://paragraph.xyz/@kiwi-updates/t2-lens-writing-challenge"
                     >
-                      Kiwi x Dappcon writing challenge</a
-                    >
+                      1,200 USDC writing challenge
+                    </a>
                   </div>
                 </td>
               </tr>
