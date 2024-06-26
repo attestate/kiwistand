@@ -38,10 +38,6 @@ function SimpleModal(props) {
 
   function closeModal() {
     setShowModal(false);
-    // NOTE: The Vote component cannot determine whether a new application key
-    // was stored in the localStorage and so we have to rely on reloading the
-    // page for the user as this is the simplest cause of action to fix.
-    location.reload();
   }
 
   useEffect(() => {
