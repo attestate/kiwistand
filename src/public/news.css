@@ -324,6 +324,9 @@ body {
 }
 /* mobile device */
  @media only screen and (min-width : 300px) and (max-width : 750px) {
+    .notification-bar {
+      bottom: 51px !important;
+    }
     .third-header, #bell {
       display: none;
     }
@@ -451,6 +454,9 @@ body {
 }
 /* Media query for medium screens */
  @media (min-width: 768px) {
+    .notification-bar {
+      bottom: 51px !important;
+    }
     .third-header, #bell {
       display: none;
     }
@@ -521,6 +527,9 @@ body {
 
 /* Media query for larger screens */
  @media (min-width: 1150px) {
+    .notification-bar {
+      bottom: 0px !important;
+    }
     #hnmain {
      width: 60%;
     }

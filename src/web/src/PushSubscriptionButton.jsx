@@ -83,6 +83,7 @@ const SubscriptionButton = (props) => {
     <div>
       {props.wrapper ? (
         <div
+          className="notification-bar"
           style={{
             position: "fixed",
             bottom: 0,
