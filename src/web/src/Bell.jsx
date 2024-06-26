@@ -62,10 +62,12 @@ const Bell = (props) => {
     document.title = `[${notificationCount}] ${documentTitle}`;
   }
 
+  const disabled = !getCookie("lastUpdate") && readNotifications === 0;
   return (
     <a
+      disabled={disabled}
       title="Notifications"
-      href={link}
+      href={disabled ? "" : link}
       className={props.mobile ? "mobile-bell" : "bell-button"}
       style={{
         padding: props.mobile ? "" : "10px 10px",
@@ -78,7 +80,10 @@ const Bell = (props) => {
       {window.location.pathname === "/activity" ? (
         <BellSVGFull mobile={props.mobile} />
       ) : (
-        <BellSVG mobile={props.mobile} />
+        <BellSVG
+          mobile={props.mobile}
+          style={disabled ? { color: "grey" } : {}}
+        />
       )}
       {notificationCount > 0 && (
         <span
@@ -139,10 +144,11 @@ const BellSVG = (props) => (
   <svg
     style={
       props.mobile
-        ? {}
+        ? { ...props.style }
         : {
             color: "black",
             width: "1.5rem",
+            ...props.style,
           }
     }
     xmlns="http://www.w3.org/2000/svg"
