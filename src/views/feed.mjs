@@ -434,6 +434,21 @@ export default async function (trie, theme, page, domain) {
               <tr>
                 ${SecondHeader(theme, "top")}
               </tr>
+              <tr>
+                <td>
+                  <div
+                    style="background-color: black; height: 2.3rem;display: flex; justify-content: start; align-items: center; padding-left: 1rem; gap: 1rem; color: white;"
+                  >
+                    <img style="height: 20px;" src="dappcon.png" />
+                    <a
+                      style="color: white; text-decoration: underline;"
+                      href="https://paragraph.xyz/@kiwi-updates/dappcon-writing-challenge?referrer=0x3e6c23CdAa52B1B6621dBb30c367d16ace21F760"
+                    >
+                      Kiwi x Dappcon writing challenge</a
+                    >
+                  </div>
+                </td>
+              </tr>
               ${page === 0 && editorPicks.length > 0
                 ? html` <tr style="background-color: #e6e6df;">
                     <td>
