@@ -180,7 +180,18 @@ const ConnectionDialogue = (props) => {
 };
 
 const address = "0x08b7ECFac2c5754ABafb789c84F8fa37c9f088B0";
-const newKey = Wallet.createRandom();
+
+// NOTE: This is a performance optimization as `createRandom` causes a notable
+// occupation of the main thread of JavaScript to generate the randomness.
+// Hence we now call this just-in-time, when the user accesses the value for
+// the first time.
+let newKey = null;
+function getNewKey() {
+  if (!newKey) {
+    newKey = Wallet.createRandom();
+  }
+  return newKey;
+}
 const DelegateButton = (props) => {
   const { chain } = useNetwork();
   const from = useAccount();
@@ -213,9 +224,9 @@ const DelegateButton = (props) => {
     const generate = async () => {
       const authorize = true;
       const payload = await create(
-        newKey,
+        getNewKey(),
         from.address,
-        newKey.address,
+        getNewKey().address,
         authorize,
       );
       setPayload(payload);
@@ -240,7 +251,7 @@ const DelegateButton = (props) => {
     isSuccess: isWriteSuccess,
   } = useContractWrite(config);
   const isSuccess = isWriteSuccess && data && data.hash !== "null";
-  if (isSuccess) setKey(newKey.privateKey);
+  if (isSuccess) setKey(getNewKey().privateKey);
 
   const handleClick = () => {
     removeItem();
@@ -302,7 +313,7 @@ const DelegateButton = (props) => {
         />
       );
     } else if (window.location.pathname === "/start") {
-      const delegate = key && wallet ? wallet.address : newKey.address;
+      const delegate = key && wallet ? wallet.address : getNewKey().address;
       window.location.href = `/indexing?address=${from.address}&delegate=${delegate}`;
     } else {
       const progress = !supportsPasskeys() && indexedDelegation ? 3 : 1;

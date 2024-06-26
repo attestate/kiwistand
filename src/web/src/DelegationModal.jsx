@@ -38,6 +38,10 @@ function SimpleModal(props) {
 
   function closeModal() {
     setShowModal(false);
+    // NOTE: The Vote component cannot determine whether a new application key
+    // was stored in the localStorage and so we have to rely on reloading the
+    // page for the user as this is the simplest cause of action to fix.
+    location.reload();
   }
 
   useEffect(() => {
@@ -99,15 +103,6 @@ function SimpleModal(props) {
       maxWidth: "50%",
     };
   }
-
-  // TODO:
-  // fix styling
-  //
-  // remove red dot from settings
-  //
-  // adjust copy writing of Delegate button. Potentially come up with a
-  // better overall solution.
-  //
   return (
     <Modal
       isOpen={showModal}
