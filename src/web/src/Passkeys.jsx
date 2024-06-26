@@ -189,6 +189,11 @@ function BackupKey(props) {
         typeof props.callback === "function"
       ) {
         props.callback();
+        // NOTE: We have to reload the page here because the Vote
+        // component isn't reloading based on the updates in the
+        // localStorage, for example, when we store a new application key
+        // there. So we reload the page to fix this.
+        location.reload();
         return;
       }
       setFeatureAvailable(isAvailable);
@@ -281,6 +286,11 @@ function BackupKey(props) {
 
     if (props.callback && typeof props.callback === "function") {
       props.callback();
+      // NOTE: We have to reload the page here because the Vote
+      // component isn't reloading based on the updates in the
+      // localStorage, for example, when we store a new application key
+      // there. So we reload the page to fix this.
+      location.reload();
     }
     setProgress(3);
   };
@@ -331,7 +341,12 @@ function BackupKey(props) {
             <Dialogue />
             <br />
             <button
-              style={{ width: "auto" }}
+              style={{
+                width: "auto",
+                display: "flex",
+                alignItems: "center",
+                gap: "5px",
+              }}
               id="button-onboarding"
               onClick={create}
             >
@@ -347,7 +362,12 @@ function BackupKey(props) {
             <Dialogue />
             <br />
             <button
-              style={{ width: "auto" }}
+              style={{
+                width: "auto",
+                display: "flex",
+                alignItems: "center",
+                gap: "5px",
+              }}
               id="button-onboarding"
               onClick={store}
             >

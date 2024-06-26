@@ -278,6 +278,11 @@ const DelegateButton = (props) => {
               typeof props.callback === "function"
             ) {
               props.callback();
+              // NOTE: We have to reload the page here because the Vote
+              // component isn't reloading based on the updates in the
+              // localStorage, for example, when we store a new application key
+              // there. So we reload the page to fix this.
+              location.reload();
             }
           }
         };
