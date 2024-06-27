@@ -67,6 +67,8 @@ const UrlInput = (props) => {
           maxLength="2048"
           required
           style={{
+            borderRadius: "2px",
+            border: "1px solid #828282",
             flexGrow: 8,
             padding: "5px 10px",
             fontSize: "16px",

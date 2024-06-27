@@ -1,3 +1,17 @@
+.vote-button-container:active,
+.chat-bubble-container:active,
+.feed-button-link:active,
+.submit-button:active,
+.bottom-nav > a:active,
+.sidebar-toggle:active {
+  transform: scale(0.92);
+}
+.chat-bubble-container,
+.feed-button-link,
+.vote-button-container,
+.sidebar-toggle {
+  -webkit-tap-highlight-color: transparent;
+}
 body {
      margin: 0;
      font-family:Verdana, Geneva, sans-serif;

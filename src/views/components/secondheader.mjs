@@ -179,7 +179,7 @@ const secondheader = (theme, site, period, domain) => {
       >
         <div style="display: flex;">
           ${site === "top" || site === "new" || site === "best"
-            ? html` <a href="/">
+            ? html` <a class="feed-button-link" href="/">
                 <button
                   onclick="${animation}"
                   class="feed-button"
@@ -196,6 +196,7 @@ const secondheader = (theme, site, period, domain) => {
           site === "best" ||
           site === "nfts"
             ? html` <a
+                class="feed-button-link"
                 href="${site === "new" || site === "top" || site === "best"
                   ? "/new"
                   : "/nfts"}"
@@ -216,7 +217,7 @@ const secondheader = (theme, site, period, domain) => {
               </a>`
             : ""}
           ${site === "top" || site === "new" || site === "best"
-            ? html` <a href="/best">
+            ? html` <a class="feed-button-link" href="/best">
                 <button
                   onclick="${animation}"
                   class="feed-button"
