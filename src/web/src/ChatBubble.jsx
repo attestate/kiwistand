@@ -4,18 +4,12 @@ import { ChatsSVG } from "./icons.jsx";
 
 const ChatBubble = ({ storyIndex, commentCount }) => {
   commentCount = parseInt(commentCount, 10);
-  const isLargeScreen = window.innerWidth > 1150;
   return (
     <a
-      onClick={
-        isLargeScreen
-          ? null
-          : () =>
-              window.dispatchEvent(
-                new CustomEvent(`open-comments-${storyIndex}`),
-              )
+      onClick={() =>
+        window.dispatchEvent(new CustomEvent(`open-comments-${storyIndex}`))
       }
-      href={isLargeScreen ? `/stories?index=${storyIndex}` : null}
+      href={null}
       className="chat-bubble interaction-element"
       id={`chat-bubble-${storyIndex}`}
       style={{
