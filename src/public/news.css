@@ -3,8 +3,14 @@
 .feed-button-link:active,
 .submit-button:active,
 .bottom-nav > a:active,
-.sidebar-toggle:active {
+.sidebar-toggle:active,
+.sidebar > a:active,
+.bell-button:active,
+.sidebar-div:active,
+#nav-profile:active,
+#nav-settings:active {
   transform: scale(0.92);
+  transition: transform 0.1s ease;
 }
 .chat-bubble-container,
 .feed-button-link,
