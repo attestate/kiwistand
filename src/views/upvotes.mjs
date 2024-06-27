@@ -33,6 +33,7 @@ import {
   websiteSvg,
 } from "./components/socialNetworkIcons.mjs";
 
+const style = "width: 1rem; position: relative; top: 0.15rem;";
 const html = htm.bind(vhtml);
 
 function extractDomain(link) {
@@ -340,7 +341,7 @@ export default async function (
                             : "1px solid #7f8c8d"
                         }; color: ${mode === "new" ? "black" : "#7f8c8d"};`}
                       >
-                        <span>${broadcastSVG} New</span>
+                        <span>${broadcastSVG(style)} New</span>
                       </button>
                     </a>
                   </div>
