@@ -106,6 +106,24 @@ const CommentInput = (props) => {
   };
 
   const characterLimit = 10_000;
+
+  function toggleNavigationItems() {
+    toggleElement(".submit-button", "block");
+    toggleElement(".bottom-nav", "flex");
+  }
+
+  function toggleElement(name, defaultDisplay) {
+    const button = document.querySelector(name);
+    if (!button) return;
+
+    const { display } = button.style;
+
+    if (display === "none") {
+      button.style.display = defaultDisplay;
+    } else if (display === defaultDisplay || display === "") {
+      button.style.display = "none";
+    }
+  }
   return (
     <div
       style={{
@@ -114,6 +132,8 @@ const CommentInput = (props) => {
       }}
     >
       <textarea
+        onFocus={toggleNavigationItems}
+        onBlur={toggleNavigationItems}
         rows="12"
         cols="80"
         style={{
