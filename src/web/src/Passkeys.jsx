@@ -343,7 +343,7 @@ function BackupKey(props) {
             <button
               style={{
                 width: "auto",
-                display: "flex",
+                display: "inline-flex",
                 alignItems: "center",
                 gap: "5px",
               }}
@@ -364,7 +364,7 @@ function BackupKey(props) {
             <button
               style={{
                 width: "auto",
-                display: "flex",
+                display: "inline-flex",
                 alignItems: "center",
                 gap: "5px",
               }}
