@@ -149,7 +149,7 @@ const row = (
                       <span>
                         <div
                           style="margin-left: ${size /
-                          2}; top: 2px; display: inline-block; position:relative;"
+                          2}; top: 2px; display: inline-flex; position:relative;"
                         >
                           ${story.avatars.slice(0, 5).map(
                             (avatar, index) => html`

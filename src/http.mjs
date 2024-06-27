@@ -1,7 +1,7 @@
 //@format
 import { env } from "process";
 import { readFile } from "fs/promises";
-import { basename } from "path";
+import path, { basename } from "path";
 
 import morgan from "morgan";
 import express from "express";
@@ -11,6 +11,7 @@ import htm from "htm";
 import "express-async-errors";
 import { sub } from "date-fns";
 import DOMPurify from "isomorphic-dompurify";
+import { fetchBuilder, FileSystemCache } from "node-fetch-cache";
 
 import * as registry from "./chainstate/registry.mjs";
 import log from "./logger.mjs";
@@ -58,6 +59,7 @@ import * as curation from "./views/curation.mjs";
 import * as moderation from "./views/moderation.mjs";
 import { parse, metadata } from "./parser.mjs";
 import { toAddress, resolve } from "./ens.mjs";
+import * as preview from "./preview.mjs";
 import * as store from "./store.mjs";
 import * as ens from "./ens.mjs";
 import * as karma from "./karma.mjs";
@@ -67,6 +69,12 @@ import * as telegram from "./telegram.mjs";
 import * as price from "./price.mjs";
 import { getSubmission, trackOutbound } from "./cache.mjs";
 
+const fetch = fetchBuilder.withCache(
+  new FileSystemCache({
+    cacheDirectory: path.resolve(env.CACHE_DIR),
+    ttl: 86400000, // 24 hours
+  }),
+);
 const app = express();
 
 app.set("etag", "strong");
@@ -476,6 +484,37 @@ export async function launch(trie, libp2p) {
       "public, max-age=60, no-transform, must-revalidate, stale-while-revalidate=3600",
     );
     return reply.status(200).type("text/html").send(content);
+  });
+  app.get("/avatar/:address", async (request, reply) => {
+    let address;
+    try {
+      address = utils.getAddress(request.params.address);
+    } catch (err) {
+      return reply
+        .status(404)
+        .type("text/plain")
+        .send("No valid Ethereum address");
+    }
+    let data;
+    try {
+      data = await ens.resolve(address);
+    } catch (err) {
+      return reply.status(404).type("text/plain").send(err.message);
+    }
+
+    const size = 250;
+    const cfUrl = preview.cfTransform(data.safeAvatar, size);
+    const response = await fetch(cfUrl);
+    if (!response.ok) {
+      return reply.status(404).type("text/plain").send("Not Found");
+    }
+
+    reply.header("Content-Type", response.headers.get("Content-Type"));
+    reply.header(
+      "Cache-Control",
+      "public, max-age=3600, no-transform, must-revalidate, stale-while-revalidate=31536000",
+    );
+    response.body.pipe(reply);
   });
   app.get("/stories", async (request, reply) => {
     let submission;

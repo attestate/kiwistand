@@ -45,7 +45,7 @@ const Comment = ({ comment, index }) => {
         {comment.identity.safeAvatar && (
           <img
             loading="lazy"
-            src={comment.identity.safeAvatar}
+            src={`/avatar/${comment.identity.address}`}
             alt="avatar"
             style={{
               marginRight: "5px",

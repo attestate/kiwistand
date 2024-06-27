@@ -67,7 +67,7 @@ export function writersFrame(username, avatar) {
   `;
 }
 
-function cfTransform(url, size) {
+export function cfTransform(url, size) {
   if (env.CF_IMAGES_SECRET) {
     const newurl = `https://images.kiwistand.com/?secret=${env.CF_IMAGES_SECRET}&avatarURL=${url}&width=${size}`;
     return newurl;

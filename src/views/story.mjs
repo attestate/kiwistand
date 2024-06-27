@@ -135,7 +135,7 @@ export default async function (trie, theme, index, value) {
   for await (let { identity, timestamp } of story.upvoters) {
     const profile = await ens.resolve(identity);
     if (profile.safeAvatar) {
-      avatars.push(profile.safeAvatar);
+      avatars.push(`/avatar/${profile.address}`);
 
       if (profile.displayName) {
         profiles.push({
