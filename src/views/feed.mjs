@@ -49,7 +49,6 @@ function CanonRow(originals) {
               >
                 <a href="${DOMPurify.sanitize(href)}" target="_blank">
                   <img
-                    loading="lazy"
                     src="${DOMPurify.sanitize(metadata.image)}"
                     style="aspect-ratio: 16/9; object-fit:cover;border-bottom: 1px solid #828282; width: 100%; height: auto;"
                   />
@@ -466,7 +465,7 @@ export default async function (trie, theme, page, domain) {
               ${originals && originals.length >= 2 && !domain
                 ? html`
                     ${stories
-                      .slice(0, 6)
+                      .slice(0, 5)
                       .map(
                         Row(
                           start,
@@ -480,7 +479,7 @@ export default async function (trie, theme, page, domain) {
                       )}
                     ${CanonRow(originals)}
                     ${stories
-                      .slice(6)
+                      .slice(5)
                       .map(
                         Row(
                           start,
