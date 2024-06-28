@@ -32,7 +32,7 @@ function generateCommentRow(activity, identity, borderColor, theme) {
   const comment = DOMPurify.sanitize(truncateComment(activity.message.title));
   const avatar = identity.safeAvatar
     ? html`<img
-        src="${identity.safeAvatar}"
+        src="/avatar/${identity.address}"
         alt="avatar"
         style="border: 1px solid #828282; width: 28px; height: 28px; border-radius: 2px; margin-top: 1.5rem;"
       />`
