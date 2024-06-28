@@ -104,7 +104,7 @@ app.use(
     setHeaders: (res, pathName) => {
       if (env.NODE_ENV !== "production") return;
       if (!/\/assets\//.test(pathName)) {
-        res.setHeader("Cache-Control", "public, max-age=3600");
+        res.setHeader("Cache-Control", "public, max-age=86400");
       }
     },
   }),
