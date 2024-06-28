@@ -525,6 +525,9 @@ body {
    .bottom-nav {
      padding-bottom: calc(env(safe-area-inset-bottom, 0px));
    }
+   .notification-bar {
+     bottom: calc(51px + env(safe-area-inset-bottom, 51px)) !important;
+   }
  }
 .bottom-nav > a > svg,
 .mobile-bell-container > div > a > svg,
