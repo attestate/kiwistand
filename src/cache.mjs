@@ -157,6 +157,51 @@ export function getNumberOfOnlineUsers() {
   return uniqueIdentities.size;
 }
 
+export function getBest(amount, from, orderBy, domain, startDatetime) {
+  let orderClause = "upvotesCount DESC";
+  if (orderBy === "new") {
+    orderClause = "s.timestamp DESC";
+  }
+
+  const query = `
+     SELECT
+       s.*,
+       (SELECT COUNT(*) FROM upvotes WHERE href = s.href) AS upvotesCount,
+       GROUP_CONCAT(u.identity) AS upvoters
+     FROM
+       submissions s
+     LEFT JOIN
+       upvotes u ON s.href = u.href
+     WHERE
+       (? = '' OR s.href GLOB 'https://*.'|| ? ||'/*')
+       AND (? = 0 OR s.timestamp > ?)
+     GROUP BY
+       s.href
+     ORDER BY
+       ${orderClause}
+     LIMIT ? OFFSET ?
+   `;
+
+  const submissions = db
+    .prepare(query)
+    .all(domain, domain, startDatetime, startDatetime, amount, from);
+
+  return submissions.map((submission) => {
+    const [, index] = submission.id.split("0x");
+    const upvotersArray = submission.upvoters
+      ? submission.upvoters.split(",")
+      : [];
+    upvotersArray.unshift(submission.identity);
+    delete submission.id;
+    return {
+      ...submission,
+      index,
+      upvotes: submission.upvotesCount + 1,
+      upvoters: upvotersArray,
+    };
+  });
+}
+
 export function getSubmissions(identity, amount, from, orderBy, domains) {
   let orderClause = "upvotesCount DESC";
   if (orderBy === "new") {

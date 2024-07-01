@@ -22,101 +22,27 @@ import * as registry from "../chainstate/registry.mjs";
 import log from "../logger.mjs";
 import { EIP712_MESSAGE } from "../constants.mjs";
 import Row, { extractDomain } from "./components/row.mjs";
+import { getBest } from "../cache.mjs";
 
 const html = htm.bind(vhtml);
 
-const itemAge = (timestamp) => {
-  const now = new Date();
-  const ageInMinutes = differenceInMinutes(now, new Date(timestamp * 1000));
-  return ageInMinutes;
-};
-
-export function count(leaves) {
-  const stories = {};
-
-  leaves = leaves.sort((a, b) => a.timestamp - b.timestamp);
-  for (const leaf of leaves) {
-    const key = `${normalizeUrl(leaf.href)}`;
-    let story = stories[key];
-
-    if (!story) {
-      story = {
-        title: leaf.title,
-        timestamp: leaf.timestamp,
-        href: leaf.href,
-        identity: leaf.identity,
-        displayName: leaf.displayName,
-        upvotes: 1,
-        upvoters: [leaf.identity],
-        index: leaf.index,
-      };
-      stories[key] = story;
-    } else {
-      if (leaf.type === "amplify") {
-        story.upvotes += 1;
-        story.upvoters.push(leaf.identity);
-        if (!story.title && leaf.title) story.title = leaf.title;
-      }
-    }
-  }
-  return Object.values(stories);
-}
-
-async function topstories(leaves, start, end) {
-  return count(leaves).sort((a, b) => b.upvotes - a.upvotes);
-}
-
-async function recompute(trie, page, period, domain) {
-  const from = null;
-  const amount = null;
-  const parser = JSON.parse;
-  const accounts = await registry.accounts();
-  const delegations = await registry.delegations();
-
-  let startDatetime = null;
-  let tolerance = null;
+async function getStories(trie, page, period, domain) {
+  let startDatetime = 0;
   const unix = (date) => Math.floor(date.getTime() / 1000);
   const now = new Date();
   if (period === "month") {
     startDatetime = unix(sub(now, { months: 1 }));
-    tolerance = unix(sub(now, { months: 5 }));
   } else if (period === "week") {
     startDatetime = unix(sub(now, { weeks: 1 }));
-    tolerance = unix(sub(now, { weeks: 14 }));
   } else if (period === "day") {
     startDatetime = unix(sub(now, { days: 1 }));
-    tolerance = unix(sub(now, { weeks: 2 }));
   }
 
-  const href = null;
-  const type = "amplify";
-  let leaves = await store.posts(
-    trie,
-    from,
-    amount,
-    parser,
-    tolerance,
-    accounts,
-    delegations,
-    href,
-    type,
-  );
-  const policy = await moderation.getLists();
-  leaves = moderation.moderate(leaves, policy);
-
   const totalStories = parseInt(env.TOTAL_STORIES, 10);
-  const start = totalStories * page;
-  const end = totalStories * (page + 1);
-  let storyPromises = (await topstories(leaves, start, end)).filter(
-    (story) => story.timestamp >= startDatetime,
-  );
+  const from = totalStories * page;
+  const orderBy = null;
+  const result = getBest(totalStories, from, orderBy, domain, startDatetime);
 
-  if (domain)
-    storyPromises = storyPromises.filter(
-      ({ href }) => extractDomain(href) === domain,
-    );
-
-  storyPromises = storyPromises.slice(start, end);
   let writers = [];
   try {
     writers = await moderation.getWriters();
@@ -125,7 +51,7 @@ async function recompute(trie, page, period, domain) {
   }
 
   let stories = [];
-  for await (let story of storyPromises) {
+  for await (let story of result) {
     const ensData = await ens.resolve(story.identity);
 
     let avatars = [];
@@ -150,44 +76,6 @@ async function recompute(trie, page, period, domain) {
   return stories;
 }
 
-const pages = {};
-export async function getStories(trie, page, period, domain) {
-  const key = `${page}-${period}-${domain}`;
-  let cacheRes = pages[key];
-  let stories;
-
-  let maxAgeInSeconds = 60 * 60 * 24;
-  if (period === "day" && page === 0 && !domain) maxAgeInSeconds = 60 * 60 * 6;
-  if (period === "day" && page > 0 && page < 5 && !domain)
-    maxAgeInSeconds = 60 * 60 * 10;
-  if (period === "week" && page === 0 && !domain)
-    maxAgeInSeconds = 60 * 60 * 24;
-  if (period === "week" && page > 0 && page < 5 && !domain)
-    maxAgeInSeconds = 60 * 60 * 24 * 2;
-  if (period === "month" && page === 0 && !domain)
-    maxAgeInSeconds = 60 * 60 * 24 * 3;
-  if (period === "month" && page > 0 && page < 5 && !domain)
-    maxAgeInSeconds = 60 * 60 * 24 * 5;
-  if (period === "all" && page === 0 && !domain)
-    maxAgeInSeconds = 60 * 60 * 24 * 7;
-  if (period === "all" && page > 0 && page < 5 && !domain)
-    maxAgeInSeconds = 60 * 60 * 24 * 7;
-
-  if (
-    !cacheRes ||
-    (cacheRes &&
-      differenceInSeconds(new Date(), cacheRes.age) > maxAgeInSeconds)
-  ) {
-    stories = await recompute(trie, page, period, domain);
-    pages[key] = {
-      stories,
-      age: new Date(),
-    };
-  } else {
-    stories = cacheRes.stories;
-  }
-  return stories;
-}
 export default async function index(trie, theme, page, period, domain) {
   const totalStories = parseInt(env.TOTAL_STORIES, 10);
   const stories = await getStories(trie, page, period, domain);
@@ -281,11 +169,6 @@ export default async function index(trie, theme, page, period, domain) {
                       </table>
                     </td>
                   </tr>`}
-              <tr
-                style="display: block; padding: 10px; background-color: ${theme.color}"
-              >
-                <td></td>
-              </tr>
             </table>
           </div>
         </div>

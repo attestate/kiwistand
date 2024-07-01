@@ -588,7 +588,7 @@ export async function launch(trie, libp2p) {
 
     reply.header(
       "Cache-Control",
-      "public, max-age=3600, no-transform, must-revalidate, stale-while-revalidate=86400",
+      "public, max-age=3600, no-transform, must-revalidate, stale-while-revalidate=2592000",
     );
     return reply.status(200).type("text/html").send(content);
   });
