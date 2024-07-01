@@ -14,7 +14,6 @@ import mainnet from "./mainnet-mints.mjs";
 
 let cachedDelegations = {};
 await refreshDelegations();
-setInterval(refreshDelegations, 5000);
 export async function delegations() {
   return cachedDelegations;
 }
@@ -43,6 +42,7 @@ export async function refreshDelegations() {
     .filter(({ data }) => BigInt(data[2]) % 2n !== 0n);
 
   cachedDelegations = organize(logs);
+  setTimeout(refreshDelegations, 5000);
 }
 
 // NOTE: For the purpose of set reconciliation, we must know the first moment
@@ -92,7 +92,6 @@ export async function recents() {
 
 let cachedAccounts = {};
 await refreshAccounts();
-setInterval(refreshAccounts, 5000);
 export async function accounts() {
   return cachedAccounts;
 }
@@ -115,6 +114,7 @@ export async function refreshAccounts() {
   const result = augmentWithMainnet(accounts);
 
   cachedAccounts = result;
+  setTimeout(refreshAccounts, 5000);
 }
 
 export async function allowlist() {
