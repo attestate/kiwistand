@@ -1,0 +1,3 @@
+User-agent: *
+Disallow: /outbound
+Disallow: /best?*domain=
