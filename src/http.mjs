@@ -459,6 +459,10 @@ export async function launch(trie, libp2p) {
     );
     const enrichedComments = commentRequests.map((result) => result.value);
 
+    reply.header(
+      "Cache-Control",
+      "public, max-age=10, no-transform, must-revalidate, stale-while-revalidate=31536000",
+    );
     const code = 200;
     const httpMessage = "OK";
     const details = "Responding with story queried by index";
