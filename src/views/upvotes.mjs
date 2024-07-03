@@ -28,6 +28,7 @@ import {
   twitterSvg,
   githubSvg,
   warpcastSvg,
+  orbSvg,
   telegramSvg,
   discordSvg,
   websiteSvg,
@@ -263,6 +264,13 @@ export default async function (
                             `https://warpcast.com/${ensData.farcaster.username}`,
                             warpcastSvg(),
                             "Warpcast",
+                          )
+                        : ""}
+                      ${ensData.lens && ensData.lens.id
+                        ? SocialButton(
+                            `https://orb.ac/p/${ensData.lens.id}`,
+                            orbSvg(),
+                            "Orb",
                           )
                         : ""}
                       ${SocialButton(

@@ -21,6 +21,61 @@ export async function toAddress(name) {
   throw new Error("Couldn't convert to address");
 }
 
+async function fetchLensData(address) {
+  try {
+    utils.getAddress(address);
+  } catch (err) {
+    return;
+  }
+  const query = `
+     query {
+       profiles(request: {
+         where: {
+           ownedBy: ["${address}"]
+         }
+       }) {
+         items {
+           id,
+           handle {
+             fullHandle
+           },
+           metadata {
+             bio,
+             displayName,
+             picture {
+               ... on ImageSet {
+                 optimized {
+                   uri
+                 }
+               }
+             }
+           }
+         }
+       }
+     }
+   `;
+
+  const response = await fetch("https://api-v2.lens.dev/", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ query }),
+  });
+
+  const { data } = await response.json();
+  if (!data || !data.profiles.items.length) return;
+
+  const { id, handle, metadata } = data.profiles.items[0];
+  return {
+    id,
+    username: handle?.fullHandle,
+    bio: metadata?.bio,
+    displayName: metadata?.displayName,
+    avatar: metadata?.picture?.optimized?.uri,
+  };
+}
+
 async function fetchENSData(address) {
   let endpoint = "https://ensdata.net/";
   if (env.ENSDATA_KEY) {
@@ -90,6 +145,7 @@ async function fetchENSData(address) {
 
 export async function resolve(address) {
   const ensProfile = await fetchENSData(address);
+  const lensProfile = await fetchLensData(address);
 
   let safeAvatar = ensProfile.avatar;
   if (safeAvatar && !safeAvatar.startsWith("https")) {
@@ -98,10 +154,16 @@ export async function resolve(address) {
   if (!safeAvatar && ensProfile?.farcaster?.avatar) {
     safeAvatar = ensProfile.farcaster.avatar;
   }
+  if (!safeAvatar && lensProfile?.avatar) {
+    safeAvatar = lensProfile.avatar;
+  }
 
   let displayName = DOMPurify.sanitize(ensProfile.ens);
   if (!displayName && ensProfile?.farcaster?.username) {
     displayName = `@${DOMPurify.sanitize(ensProfile.farcaster.username)}`;
+  }
+  if (!displayName && lensProfile?.username) {
+    displayName = `${DOMPurify.sanitize(lensProfile.username)}`;
   }
   if (!displayName) {
     displayName = ensProfile.truncatedAddress;
@@ -109,6 +171,7 @@ export async function resolve(address) {
   const profile = {
     safeAvatar: DOMPurify.sanitize(safeAvatar),
     ...ensProfile,
+    lens: lensProfile,
     displayName,
   };
   return profile;
