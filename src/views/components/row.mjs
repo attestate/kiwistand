@@ -203,23 +203,6 @@ const row = (
                         </a>`
                       : story.displayName}
                     <span>
-                      ${interactive || hideCast || !story.index
-                        ? null
-                        : html`
-                            <span style="opacity:0.6"> • </span>
-                            <a
-                              target="_blank"
-                              href="https://warpcast.com/~/compose?embeds[]=${encodeURIComponent(
-                                `https://news.kiwistand.com/stories?index=0x${story.index}`,
-                              )}"
-                              style="white-space: nowrap;"
-                              class="caster-link"
-                            >
-                              ${FCIcon("height: 10px; width: 10px;")}
-                              <span> </span>
-                              Cast
-                            </a>
-                          `}
                       ${interactive || hideCast
                         ? null
                         : html`
