@@ -55,15 +55,26 @@ async function fetchLensData(address) {
      }
    `;
 
-  const response = await fetch("https://api-v2.lens.dev/", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ query }),
-  });
+  let response;
+  try {
+    response = await fetch("https://api-v2.lens.dev/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ query }),
+    });
+  } catch (err) {
+    return;
+  }
 
-  const { data } = await response.json();
+  let data;
+  try {
+    result = await response.json();
+    data = result.data;
+  } catch (err) {
+    return;
+  }
   if (!data || !data.profiles.items.length) return;
 
   const { id, handle, metadata } = data.profiles.items[0];
