@@ -15,33 +15,6 @@ const fetch = fetchBuilder.withCache(
   }),
 );
 
-async function fetchFCData(address) {
-  let response;
-  try {
-    response = await fetch(
-      `https://searchcaster.xyz/api/profiles?connected_address=${address.toLowerCase()}`,
-    );
-  } catch (err) {
-    return;
-  }
-  let data;
-  try {
-    data = await response.json();
-  } catch (err) {
-    return;
-  }
-  if (data.error || (data && Array.isArray(data) && data.length === 0)) return;
-
-  const { bio, displayName, avatarUrl, username } = data[0].body;
-
-  return {
-    bio,
-    displayName,
-    avatar: avatarUrl,
-    username,
-  };
-}
-
 export async function toAddress(name) {
   const address = await provider.resolveName(name);
   if (address) return address;
@@ -58,7 +31,7 @@ async function fetchENSData(address) {
   }
 
   try {
-    const response = await fetch(`${endpoint}${address}`);
+    const response = await fetch(`${endpoint}${address}?farcaster=true`);
     const data = await response.json();
 
     try {
@@ -75,6 +48,20 @@ async function fetchENSData(address) {
       address.slice(address.length - 4, address.length);
 
     const displayName = data.ens ? data.ens : truncatedAddress;
+
+    // NOTE: We used to have a function fetchFCData that would add the fields
+    // {bio,displayName,username,avatar} to the ENS object and so to preserve
+    // the ens module's expected returned value, we're now backfilling these
+    // values even though fetchFCData doesn't exist anymore.
+    if (data?.farcaster?.profile?.bio?.text) {
+      data.farcaster.bio = data.farcaster.profile.bio.text;
+    }
+    if (data?.farcaster?.display_name) {
+      data.farcaster.displayName = data.farcaster.display_name;
+    }
+    if (data?.farcaster?.pfp_url) {
+      data.farcaster.avatar = data.farcaster.pfp_url;
+    }
 
     return {
       ...data,
@@ -103,19 +90,18 @@ async function fetchENSData(address) {
 
 export async function resolve(address) {
   const ensProfile = await fetchENSData(address);
-  const fcProfile = await fetchFCData(ensProfile.address);
 
   let safeAvatar = ensProfile.avatar;
   if (safeAvatar && !safeAvatar.startsWith("https")) {
     safeAvatar = ensProfile.avatar_url;
   }
-  if (!safeAvatar && fcProfile && fcProfile.avatar) {
-    safeAvatar = fcProfile.avatar;
+  if (!safeAvatar && ensProfile?.farcaster?.avatar) {
+    safeAvatar = ensProfile.farcaster.avatar;
   }
 
   let displayName = DOMPurify.sanitize(ensProfile.ens);
-  if (!displayName && fcProfile && fcProfile.username) {
-    displayName = `@${DOMPurify.sanitize(fcProfile.username)}`;
+  if (!displayName && ensProfile?.farcaster?.username) {
+    displayName = `@${DOMPurify.sanitize(ensProfile.farcaster.username)}`;
   }
   if (!displayName) {
     displayName = ensProfile.truncatedAddress;
@@ -123,7 +109,6 @@ export async function resolve(address) {
   const profile = {
     safeAvatar: DOMPurify.sanitize(safeAvatar),
     ...ensProfile,
-    farcaster: fcProfile,
     displayName,
   };
   return profile;
