@@ -11,7 +11,7 @@ const provider = new providers.JsonRpcProvider(env.RPC_HTTP_HOST);
 const fetch = fetchBuilder.withCache(
   new FileSystemCache({
     cacheDirectory: path.resolve(env.CACHE_DIR),
-    ttl: 86400000, // 24 hours
+    ttl: 86400000 * 3, // 72 hours
   }),
 );
 
@@ -19,7 +19,7 @@ async function fetchFCData(address) {
   let response;
   try {
     response = await fetch(
-      `https://api.phyles.xyz/v0/farcaster/users?address=${address.toLowerCase()}`,
+      `https://searchcaster.xyz/api/profiles?connected_address=${address.toLowerCase()}`,
     );
   } catch (err) {
     return;
@@ -30,18 +30,14 @@ async function fetchFCData(address) {
   } catch (err) {
     return;
   }
-  if (
-    data.error === "User not found" ||
-    (data.users && Array.isArray(data.users) && data.users.length !== 1)
-  )
-    return;
+  if (data.error || (data && Array.isArray(data) && data.length === 0)) return;
 
-  const { bio, display_name, pfp, username } = data.users[0];
+  const { bio, displayName, avatarUrl, username } = data[0].body;
 
   return {
     bio,
-    displayName: display_name,
-    avatar: pfp,
+    displayName,
+    avatar: avatarUrl,
     username,
   };
 }
