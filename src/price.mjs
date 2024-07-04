@@ -264,6 +264,7 @@ export async function chart(theme) {
                     data.information.daysInSchedule
                   ).toFixed(2)}
                   <span> NFTs</span>
+                  <br />
                   <span>Average number of daily sales (30 days): </span>
                   ${data.averages.day30.toFixed(2)}
                   <span> NFTs</span>
