@@ -8,6 +8,8 @@ import Database from "better-sqlite3";
 import { add } from "date-fns";
 import normalizeUrl from "normalize-url";
 
+import log from "./logger.mjs";
+
 const dbPath = join(process.env.CACHE_DIR, "database.db");
 const db = new Database(dbPath);
 db.pragma("journal_mode = WAL");
@@ -556,14 +558,18 @@ function insertMessage(message) {
     const insertComment = db.prepare(
       `INSERT INTO comments (id, submission_id, timestamp, title, signer, identity) VALUES (?, ?, ?, ?, ?, ?)`,
     );
-    insertComment.run(
-      `kiwi:0x${index}`,
-      href,
-      timestamp,
-      title,
-      signer,
-      identity,
-    );
+    try {
+      insertComment.run(
+        `kiwi:0x${index}`,
+        href,
+        timestamp,
+        title,
+        signer,
+        identity,
+      );
+    } catch (err) {
+      log(`Failing to insert comment "${title}", error: "${err.toString()}"`);
+    }
   } else {
     throw new Error("Unsupported message type");
   }
