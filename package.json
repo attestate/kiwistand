@@ -69,6 +69,7 @@
     "ethers": "5.7.2",
     "express": "4.18.2",
     "express-async-errors": "3.1.1",
+    "fastq": "1.17.1",
     "htm": "3.1.1",
     "isbot": "3.7.0",
     "isomorphic-dompurify": "2.12.0",
