@@ -16,7 +16,6 @@ import { custom } from "./components/head.mjs";
 import * as store from "../store.mjs";
 import * as moderation from "./moderation.mjs";
 import * as registry from "../chainstate/registry.mjs";
-import { count } from "./feed.mjs";
 import { listNewest } from "../cache.mjs";
 import Row, { extractDomain } from "./components/row.mjs";
 import * as feeds from "../feeds.mjs";

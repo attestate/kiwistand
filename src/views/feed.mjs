@@ -21,14 +21,11 @@ import Sidebar from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
 import { custom } from "./components/head.mjs";
 import * as store from "../store.mjs";
-import * as id from "../id.mjs";
 import * as moderation from "./moderation.mjs";
-import { countOutbounds } from "../cache.mjs";
-import * as curation from "./curation.mjs";
+import { countOutbounds, getBest } from "../cache.mjs";
 import * as registry from "../chainstate/registry.mjs";
 import log from "../logger.mjs";
-import { EIP712_MESSAGE } from "../constants.mjs";
-import Row, { extractDomain } from "./components/row.mjs";
+import Row from "./components/row.mjs";
 import * as karma from "../karma.mjs";
 import { metadata } from "../parser.mjs";
 
@@ -74,38 +71,6 @@ const itemAge = (timestamp) => {
   return ageInMinutes;
 };
 
-export function count(leaves) {
-  const stories = {};
-
-  leaves = leaves.sort((a, b) => a.timestamp - b.timestamp);
-  for (const leaf of leaves) {
-    const key = `${normalizeUrl(leaf.href)}`;
-    let story = stories[key];
-
-    if (!story) {
-      story = {
-        title: leaf.title,
-        timestamp: leaf.timestamp,
-        href: leaf.href,
-        identity: leaf.identity,
-        upvotes: 1,
-        upvoters: [leaf.identity],
-        index: leaf.index,
-        lastInteraction: leaf.timestamp,
-      };
-      stories[key] = story;
-    } else {
-      if (leaf.type === "amplify") {
-        story.upvotes += 1;
-        story.upvoters.push(leaf.identity);
-        story.lastInteraction = leaf.timestamp;
-        if (!story.title && leaf.title) story.title = leaf.title;
-      }
-    }
-  }
-  return Object.values(stories);
-}
-
 export async function topstories(leaves, decayStrength) {
   return leaves
     .map((story) => {
@@ -130,110 +95,24 @@ export async function topstories(leaves, decayStrength) {
     .sort((a, b) => b.score - a.score);
 }
 
-async function editors(leaves) {
-  function parseConfig(config) {
-    const copy = { ...config };
-    copy.numberOfStories = parseInt(config.numberOfStories, 10);
-    return copy;
-  }
-
-  function editorPicks(leaves, config, links) {
-    const cacheEnabled = true;
-    const editorStories = leaves.filter(
-      // TODO: Should start using ethers.utils.getAddress
-      ({ identity }) => identity.toLowerCase() === config.address.toLowerCase(),
-    );
-
-    if (links && Array.isArray(links) && links.length > 0) {
-      return editorStories.filter(({ href }) =>
-        links.includes(!!href && normalizeUrl(href)),
-      );
-    }
-    return editorStories;
-  }
-  let response;
-  try {
-    response = (await moderation.getConfig("3wi"))[0];
-  } catch (err) {
-    log(`3wi: Couldn't get editor pick config: ${err.toString()}`);
-    return {
-      editorPicks: [],
-      links: [],
-      config: {
-        name: "isyettoberevealed!",
-        link: "https://anddoesnthaveawebsite.com",
-      },
-    };
-  }
-  const config = parseConfig(response);
-
-  let links;
-  try {
-    links = await moderation.getConfig("editor_links");
-  } catch (err) {
-    log(`editor_links: Couldn't get editor pick config: ${err.toString()}`);
-    return {
-      editorPicks: [],
-      links: [],
-      config: {
-        name: "isyettoberevealed!",
-        link: "https://anddoesnthaveawebsite.com",
-      },
-    };
-  }
-
-  if (links && Array.isArray(links)) {
-    links = links.map(({ link }) => !!link && normalizeUrl(link));
-  }
-
-  const from = null;
-  const amount = null;
-  const parser = JSON.parse;
-  const picks = editorPicks(leaves, config, links);
-  const stories = count(picks)
-    .sort((a, b) => b.timestamp - a.timestamp)
-    .slice(0, config.numberOfStories);
-  return {
-    editorPicks: stories,
-    links,
-    config,
-  };
-}
-
 export async function index(trie, page, domain) {
   const lookBack = sub(new Date(), {
     weeks: 3,
   });
-  const from = null;
-  const amount = null;
-  const parser = JSON.parse;
+  const from = 0;
+  const amount = -1;
   const lookBackUnixTime = Math.floor(lookBack.getTime() / 1000);
-  const accounts = await registry.accounts();
-  const delegations = await registry.delegations();
-  const href = null;
-  const type = "amplify";
 
-  let leaves = await store.posts(
-    trie,
-    from,
+  const orderBy = "new";
+  const countedStories = getBest(
     amount,
-    parser,
+    from,
+    orderBy,
+    domain,
     lookBackUnixTime,
-    accounts,
-    delegations,
-    href,
-    type,
-  );
-  const policy = await moderation.getLists();
-  leaves = moderation.moderate(leaves, policy);
-
-  const { editorPicks, config } = await editors(leaves);
-  const editorLinks = editorPicks.map(
-    ({ href }) => !!href && normalizeUrl(href),
   );
 
   const totalStories = parseInt(env.TOTAL_STORIES, 10);
-  const countedStories = count(leaves);
   const parameters = await moderation.getFeedParameters();
   let storyPromises = await topstories(
     countedStories,
@@ -300,10 +179,6 @@ export async function index(trie, page, domain) {
   } else {
     storyPromises = storyPromises.filter(({ upvotes }) => upvotes > threshold);
   }
-  if (domain)
-    storyPromises = storyPromises.filter(
-      ({ href }) => extractDomain(href) === domain,
-    );
 
   const start = totalStories * page;
   const end = totalStories * (page + 1);
@@ -367,8 +242,6 @@ export async function index(trie, page, domain) {
     .slice(0, 2);
 
   return {
-    editorPicks,
-    config,
     stories,
     originals,
     start,
@@ -402,7 +275,7 @@ export default async function (trie, theme, page, domain) {
   } else {
     content = cacheRes.content;
   }
-  const { originals, editorPicks, config, stories, start } = content;
+  const { originals, config, stories, start } = content;
 
   let query = `?page=${page + 1}`;
   if (domain) {
@@ -448,20 +321,6 @@ export default async function (trie, theme, page, domain) {
                   </div>
                 </td>
               </tr>
-              ${page === 0 && editorPicks.length > 0
-                ? html` <tr style="background-color: #e6e6df;">
-                    <td>
-                      <p
-                        style="padding-left: 10px; color: black; font-size: 12pt; font-weight: bold;"
-                      >
-                        <span>Today's Editor's Picks by </span>
-                        <a style="color:black;" href="${config.link}">
-                          ${config.name}</a
-                        >!
-                      </p>
-                    </td>
-                  </tr>`
-                : ""}
               ${originals && originals.length >= 2 && !domain
                 ? html`
                     ${stories
