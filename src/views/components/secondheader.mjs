@@ -9,6 +9,17 @@ const html = htm.bind(vhtml);
 
 const style = "width: 1rem; position: relative; top: 0.15rem;";
 
+export const broadcastFullSVG = html`<svg
+  style="${style}"
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 256 256"
+>
+  <rect width="256" height="256" fill="none" />
+  <path
+    d="M168,128a40,40,0,1,1-40-40A40,40,0,0,1,168,128Zm40,0a79.74,79.74,0,0,0-20.37-53.33,8,8,0,1,0-11.92,10.67,64,64,0,0,1,0,85.33,8,8,0,0,0,11.92,10.67A79.79,79.79,0,0,0,208,128ZM80.29,85.34A8,8,0,1,0,68.37,74.67a79.94,79.94,0,0,0,0,106.67,8,8,0,0,0,11.92-10.67,63.95,63.95,0,0,1,0-85.33Zm158.28-4A119.48,119.48,0,0,0,213.71,44a8,8,0,1,0-11.42,11.2,103.9,103.9,0,0,1,0,145.56A8,8,0,1,0,213.71,212,120.12,120.12,0,0,0,238.57,81.29ZM32.17,168.48A103.9,103.9,0,0,1,53.71,55.22,8,8,0,1,0,42.29,44a119.87,119.87,0,0,0,0,168,8,8,0,1,0,11.42-11.2A103.61,103.61,0,0,1,32.17,168.48Z"
+  />
+</svg>`;
+
 export const broadcastSVG = (style) => html`
   <svg
     style="${style}"
@@ -60,6 +71,17 @@ export const broadcastSVG = (style) => html`
     />
   </svg>
 `;
+
+export const trophyFullSVG = html`<svg
+  style="${style}"
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 256 256"
+>
+  <rect width="256" height="256" fill="none" />
+  <path
+    d="M232,64H208V48a8,8,0,0,0-8-8H56a8,8,0,0,0-8,8V64H24A16,16,0,0,0,8,80V96a40,40,0,0,0,40,40h3.65A80.13,80.13,0,0,0,120,191.61V216H96a8,8,0,0,0,0,16h64a8,8,0,0,0,0-16H136V191.58c31.94-3.23,58.44-25.64,68.08-55.58H208a40,40,0,0,0,40-40V80A16,16,0,0,0,232,64ZM48,120A24,24,0,0,1,24,96V80H48v32q0,4,.39,8ZM232,96a24,24,0,0,1-24,24h-.5a81.81,81.81,0,0,0,.5-8.9V80h24Z"
+  />
+</svg>`;
 
 export const trophySVG = html`
   <svg
@@ -116,6 +138,17 @@ export const trophySVG = html`
     />
   </svg>
 `;
+
+export const fireFullSVG = html`<svg
+  style="${style}"
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 256 256"
+>
+  <rect width="256" height="256" fill="none" />
+  <path
+    d="M143.38,17.85a8,8,0,0,0-12.63,3.41l-22,60.41L84.59,58.26a8,8,0,0,0-11.93.89C51,87.53,40,116.08,40,144a88,88,0,0,0,176,0C216,84.55,165.21,36,143.38,17.85Zm40.51,135.49a57.6,57.6,0,0,1-46.56,46.55A7.65,7.65,0,0,1,136,200a8,8,0,0,1-1.32-15.89c16.57-2.79,30.63-16.85,33.44-33.45a8,8,0,0,1,15.78,2.68Z"
+  />
+</svg>`;
 
 export const fireSVG = html`
   <svg
@@ -187,7 +220,7 @@ const secondheader = (theme, site, period, domain) => {
                     site === "top" ? "0.2" : "0.1"
                   }); color: black;`}
                 >
-                  <span>${fireSVG} Hot</span>
+                  <span>${site === "top" ? fireFullSVG : fireSVG} Hot</span>
                 </button>
               </a>`
             : ""}
@@ -212,7 +245,10 @@ const secondheader = (theme, site, period, domain) => {
                     id="new-dot"
                     style="display: none; position: absolute; top: -5px; right: -5px; width: 8px; height: 8px; border-radius: 2px; background-color: #228B22;"
                   ></span>
-                  <span> ${broadcastSVG(style)} New</span>
+                  <span>
+                    ${site === "new" ? broadcastFullSVG : broadcastSVG(style)}
+                    <span> New </span>
+                  </span>
                 </button>
               </a>`
             : ""}
@@ -225,7 +261,9 @@ const secondheader = (theme, site, period, domain) => {
                     site === "best" ? "0.2" : "0.1"
                   }); color: black;`}
                 >
-                  <span> ${trophySVG} Top</span>
+                  <span>
+                    ${site === "best" ? trophyFullSVG : trophySVG} Top</span
+                  >
                 </button>
               </a>`
             : ""}
