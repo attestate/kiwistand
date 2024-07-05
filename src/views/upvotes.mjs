@@ -207,19 +207,23 @@ export default async function (
                   <div
                     style="padding: 10px 10px 0 10px; color: black; font-size: 16px; line-height: 1.5;"
                   >
-                    <a
+                    <span
                       style="margin-bottom: 10px; font-weight: bold; display: flex; align-items: center; gap: 10px;"
-                      target="_blank"
-                      href="https://etherscan.io/address/${ensData.address}"
                     >
                       ${ensData.safeAvatar &&
-                      html`<img
-                        src="${ensData.safeAvatar}"
-                        style="border: 1px solid #828282; width: 30px; height: 30px; border-radius: 2px;"
-                      />`}
-                      ${ensData.displayName}
-                      <span> (${points.toString()} 🥝)</span>
-                    </a>
+                      html` <a href="${ensData.safeAvatar}" target="_blank">
+                        <img
+                          src="${ensData.safeAvatar}"
+                          style="border: 1px solid #828282; width: 30px; height: 30px; border-radius: 2px;"
+                      /></a>`}
+                      <a
+                        target="_blank"
+                        href="https://etherscan.io/address/${ensData.address}"
+                      >
+                        ${ensData.displayName}
+                        <span> (${points.toString()} 🥝)</span>
+                      </a>
+                    </span>
                     <span style="font-size: 0.8rem;">
                       ${description
                         ? html`${DOMPurify.sanitize(description)}<br />`
