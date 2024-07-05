@@ -54,28 +54,36 @@ const parser = JSON.parse;
 const accounts = await registry.accounts();
 const delegations = await registry.delegations();
 const href = null;
-const upvotes = await store.posts(
-  trie,
-  from,
-  amount,
-  parser,
-  startDatetime,
-  accounts,
-  delegations,
-  href,
-  "amplify",
-);
-const comments = await store.posts(
-  trie,
-  from,
-  amount,
-  parser,
-  startDatetime,
-  accounts,
-  delegations,
-  href,
-  "comment",
-);
+
+let upvotes, comments;
+await Promise.allSettled([
+  (async () => {
+    upvotes = await store.posts(
+      trie,
+      from,
+      amount,
+      parser,
+      startDatetime,
+      accounts,
+      delegations,
+      href,
+      "amplify",
+    );
+  })(),
+  (async () => {
+    comments = await store.posts(
+      trie,
+      from,
+      amount,
+      parser,
+      startDatetime,
+      accounts,
+      delegations,
+      href,
+      "comment",
+    );
+  })(),
+]);
 
 const alreadySetup = cache.initialize();
 if (!alreadySetup) {
@@ -93,6 +101,7 @@ try {
 
 const urls = await moderation.getFeeds();
 await feeds.recompute(urls);
+// TODO: Unclear if this is still necessary
 setInterval(async () => {
   await feeds.recompute(urls);
   await newest.recompute(trie);
