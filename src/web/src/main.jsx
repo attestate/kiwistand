@@ -2,6 +2,7 @@ import "vite/modulepreload-polyfill";
 import "@rainbow-me/rainbowkit/styles.css";
 import PullToRefresh from "pulltorefreshjs";
 import DOMPurify from "isomorphic-dompurify";
+import { getAccount } from "@wagmi/core";
 
 import { isRunningPWA, getCookie, getLocalAccount } from "./session.mjs";
 import theme from "./theme.mjs";
@@ -651,6 +652,81 @@ async function checkMintStatus(fetchAllowList, fetchDelegations) {
   }, 3000);
 }
 
+async function startWatchAccount(allowlist) {
+  const { client } = await import("./client.mjs");
+
+  const account = await getAccount();
+  let signer;
+  try {
+    signer = await getSigner(account, allowlist);
+  } catch (err) {
+    // NOTE: Couldn't find a valid local signer, so we're returning and not
+    // doing anything.
+  }
+  await processAndSendVotes(signer, account.address);
+  window.addEventListener(
+    "upvote-storage",
+    async () => await processAndSendVotes(signer, account.address),
+  );
+}
+
+async function getSigner(account, allowlist) {
+  const { getLocalAccount } = await import("./session.mjs");
+  const localAccount = getLocalAccount(account.address, allowlist);
+
+  if (localAccount && localAccount.privateKey) {
+    const { getProvider } = await import("./client.mjs");
+    const { Wallet } = await import("@ethersproject/wallet");
+    return new Wallet(localAccount.privateKey, getProvider());
+  } else {
+    throw new Error("Application key not found");
+  }
+}
+
+async function processAndSendVotes(signer, identity) {
+  const storiesString = localStorage.getItem("--kiwi-news-upvoted-stories");
+  let stories = JSON.parse(storiesString);
+  if (!stories) return;
+
+  const removeDuplicates = (arr) => {
+    const seen = new Set();
+    return arr.filter(({ href }) => !seen.has(href) && seen.add(href));
+  };
+  stories = removeDuplicates(stories);
+
+  const { messageFab, send, EIP712_DOMAIN, EIP712_TYPES } = await import(
+    "./API.mjs"
+  );
+  for (const { href, title } of stories) {
+    const value = messageFab(title, href);
+
+    try {
+      const signature = await signer._signTypedData(
+        EIP712_DOMAIN,
+        EIP712_TYPES,
+        value,
+      );
+      const response = await send(value, signature);
+      if (response && response.status === "success") {
+        window.toast.success("Thanks for your upvote! Have a 🥝");
+        console.log("Vote sent:", response);
+
+        const element = document.querySelector(
+          `.vote-button-container[data-href="${href}"]`,
+        );
+        if (element) {
+          const upvoters = JSON.parse(element.getAttribute("data-upvoters"));
+          upvoters.push(identity);
+          element.setAttribute("data-upvoters", JSON.stringify(upvoters));
+        }
+      }
+    } catch (error) {
+      console.error("Error sending vote:", error);
+    }
+    localStorage.removeItem("--kiwi-news-upvoted-stories");
+  }
+}
+
 async function start() {
   if (isRunningPWA()) {
     PullToRefresh.init({
@@ -674,6 +750,7 @@ async function start() {
   const allowlistPromise = fetchAllowList();
   const delegationsPromise = fetchDelegations();
 
+  await startWatchAccount(await allowlistPromise);
   const results0 = await Promise.allSettled([
     obfuscateLinks(await allowlistPromise, await delegationsPromise),
     addDynamicComments(await allowlistPromise, await delegationsPromise, toast),

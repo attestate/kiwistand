@@ -73,7 +73,13 @@ const row = (
                 class="vote-button-container"
                 style="display: flex; align-self: stretch;"
               >
-                <div>
+                <div
+                  onclick="const key='--kiwi-news-upvoted-stories';const href='${DOMPurify.sanitize(
+                    story.href,
+                  )}';const title='${DOMPurify.sanitize(
+                    story.title,
+                  )}';const stories=JSON.parse(localStorage.getItem(key)||'[]');stories.push({href,title});localStorage.setItem(key,JSON.stringify(stories));window.dispatchEvent(new Event('upvote-storage'));"
+                >
                   <div
                     class="interaction-element"
                     style="border-radius: 2px; padding: 5px 0; background-color: rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; min-width: 40px; margin: 5px 6px; align-self: stretch;"
@@ -82,15 +88,17 @@ const row = (
                       <div class="votearrowcontainer">
                         <div>
                           <div
-                            class="${interactive
-                              ? "votearrow"
-                              : "votearrow pulsate"}"
+                            class="votearrow"
                             style="color: rgb(130, 130, 130); cursor: pointer;"
                             title="upvote"
                           >
                             ▲
                           </div>
-                          <div style="font-size: 8pt; text-align: center;">
+                          <div
+                            class="upvotes-container"
+                            data-href="${story.href}"
+                            style="font-size: 8pt; text-align: center;"
+                          >
                             ${story.upvotes ? story.upvotes : "..."}
                           </div>
                         </div>
