@@ -596,10 +596,7 @@ export async function launch(trie, libp2p) {
       DOMPurify.sanitize(request.cookies.identity),
     );
 
-    reply.header(
-      "Cache-Control",
-      "public, max-age=21600, no-transform, must-revalidate, stale-while-revalidate=86400",
-    );
+    reply.header("Cache-Control", "private, must-revalidate");
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/price", async (request, reply) => {
