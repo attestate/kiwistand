@@ -231,8 +231,30 @@ export const twitterSvg = (iconStyle = defaultIconStyle) => html`
     viewBox="0 0 256 256"
   >
     <rect width="256" height="256" fill="none" />
-    <path
-      d="M88,176S32.85,144,40.78,56c0,0,39.66,40,87.22,48V88c0-22,18-40.27,40-40a40.74,40.74,0,0,1,36.67,24H240l-32,32c-4.26,66.84-60.08,120-128,120-32,0-40-12-40-12S72,200,88,176Z"
+    <polygon
+      points="48 40 96 40 208 216 160 216 48 40"
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="16"
+    />
+    <line
+      x1="113.88"
+      y1="143.53"
+      x2="48"
+      y2="216"
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="16"
+    />
+    <line
+      x1="208"
+      y1="40"
+      x2="142.12"
+      y2="112.47"
       fill="none"
       stroke="currentColor"
       stroke-linecap="round"

@@ -240,7 +240,7 @@ export default async function (
                         ? SocialButton(
                             `https://twitter.com/${ensData.twitter}`,
                             twitterSvg(),
-                            "X",
+                            "",
                           )
                         : ""}
                       ${ensData.github

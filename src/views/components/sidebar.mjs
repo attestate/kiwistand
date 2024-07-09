@@ -573,7 +573,7 @@ const sidebar = (path) => html`
       </div>
     </a>
     <a
-      title="Newsletter"
+      title="Subscribe"
       href="/subscribe"
       style="color: black; text-decoration: none; display: block;"
     >
@@ -581,7 +581,7 @@ const sidebar = (path) => html`
         <div class="svg-container">
           ${path === "/subscribe" ? envelopefull : envelope}
         </div>
-        <span>Newsletter</span>
+        <span>Subscribe</span>
       </div>
     </a>
     <a
