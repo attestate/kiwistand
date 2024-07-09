@@ -46,7 +46,8 @@ const SignupDialogue = (props) => {
     !isEligible &&
     (window.location.pathname === "/" ||
       window.location.pathname === "/new" ||
-      window.location.pathname === "/top" ||
+      window.location.pathname === "/best" ||
+      window.location.pathname === "/submit" ||
       window.location.pathname === "/stories" ||
       window.location.pathname === "/comments")
   ) {
