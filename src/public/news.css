@@ -287,6 +287,15 @@ body {
     margin: 0;
     text-align: left;  
   }
+
+#button-onboarding:disabled,
+#button-onboarding:disabled:hover {
+  background-color: grey !important;
+  outline: none;
+  border: 1px solid grey !important;
+  color: white !important;
+}
+
 @media (max-width: 768px) {
   #button-onboarding {
     font-size: 1rem;
