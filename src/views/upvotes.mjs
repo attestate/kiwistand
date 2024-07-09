@@ -183,6 +183,7 @@ export default async function (
     : "";
   const twitterCard = "summary";
   const points = karma.resolve(identity);
+  const path = "/upvotes";
   return html`
     <html lang="en" op="news">
       <head>
@@ -196,7 +197,7 @@ export default async function (
       </head>
       <body>
         <div class="container">
-          ${Sidebar()}
+          ${Sidebar(path)}
           <div id="hnmain">
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
               <tr>

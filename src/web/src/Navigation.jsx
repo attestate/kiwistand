@@ -104,35 +104,32 @@ const Settings = (props) => {
   const isEligible =
     address && eligible(props.allowlist, props.delegations, address);
 
-  if (isEligible || account.isConnected) {
-    return (
-      <a
-        title="Settings"
-        href="/settings"
-        onClick={(e) => !isEligible && e.preventDefault()}
-        style={{
-          color: isEligible ? "black" : "grey",
-          cursor: isEligible ? "pointer" : "not-allowed",
-          textDecoration: "none",
-          display: "block",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center" }}>
-          <div className="svg-container" style={{ position: "relative" }}>
-            {window.location.pathname === "/settings" ? (
-              <SettingsSVGFull />
-            ) : (
-              <>
-                <SettingsSVG />
-              </>
-            )}
-          </div>
-          <span>Settings</span>
+  return (
+    <a
+      title="Settings"
+      href="/settings"
+      onClick={(e) => !isEligible && e.preventDefault()}
+      style={{
+        pointerEvents: isEligible ? "auto" : "none",
+        color: isEligible ? "black" : "grey",
+        textDecoration: "none",
+        display: "block",
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center" }}>
+        <div className="svg-container" style={{ position: "relative" }}>
+          {window.location.pathname === "/settings" ? (
+            <SettingsSVGFull />
+          ) : (
+            <>
+              <SettingsSVG />
+            </>
+          )}
         </div>
-      </a>
-    );
-  }
-  return null;
+        <span>Settings</span>
+      </div>
+    </a>
+  );
 };
 
 const Profile = (props) => {
@@ -148,27 +145,127 @@ const Profile = (props) => {
   const isEligible =
     address && eligible(props.allowlist, props.delegations, address);
 
-  if (isEligible || account.isConnected) {
-    return (
-      <a
-        title="Profile"
-        href={"/upvotes?address=" + address}
-        style={{ color: "black", textDecoration: "none", display: "block" }}
-      >
-        <div style={{ display: "flex", alignItems: "center" }}>
-          <div className="svg-container">
-            {window.location.pathname.includes("/upvotes") ? (
-              <ProfileSVGFull />
-            ) : (
-              <ProfileSVG />
-            )}
-          </div>
-          <span>Profile</span>
+  const isEnabled = isEligible || account.isConnected;
+  return (
+    <a
+      title="Profile"
+      href={isEnabled ? "/upvotes?address=" + address : ""}
+      style={{
+        pointerEvents: isEnabled ? "auto" : "none",
+        color: isEnabled ? "black" : "grey",
+        textDecoration: "none",
+        display: "block",
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center" }}>
+        <div className="svg-container">
+          {window.location.pathname.includes("/upvotes") ? (
+            <ProfileSVGFull />
+          ) : (
+            <ProfileSVG />
+          )}
         </div>
-      </a>
-    );
+        <span>Profile</span>
+      </div>
+    </a>
+  );
+};
+
+const SubmitSVGFull = (props) => (
+  <svg
+    style={props.style}
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 256 256"
+  >
+    <rect width="256" height="256" fill="none" />
+    <path d="M227.31,73.37,182.63,28.68a16,16,0,0,0-22.63,0L36.69,152A15.86,15.86,0,0,0,32,163.31V208a16,16,0,0,0,16,16H92.69A15.86,15.86,0,0,0,104,219.31L227.31,96a16,16,0,0,0,0-22.63ZM51.31,160l90.35-90.35,16.68,16.69L68,176.68ZM48,179.31,76.69,208H48Zm48,25.38L79.31,188l90.35-90.35h0l16.68,16.69Z" />
+  </svg>
+);
+
+const SubmitSVG = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+    <rect width="256" height="256" fill="none" />
+    <path
+      d="M92.69,216H48a8,8,0,0,1-8-8V163.31a8,8,0,0,1,2.34-5.65L165.66,34.34a8,8,0,0,1,11.31,0L221.66,79a8,8,0,0,1,0,11.31L98.34,213.66A8,8,0,0,1,92.69,216Z"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="16"
+    />
+    <line
+      x1="136"
+      y1="64"
+      x2="192"
+      y2="120"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="16"
+    />
+    <line
+      x1="164"
+      y1="92"
+      x2="68"
+      y2="188"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="16"
+    />
+    <line
+      x1="95.49"
+      y1="215.49"
+      x2="40.51"
+      y2="160.51"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="16"
+    />
+  </svg>
+);
+
+const Submit = (props) => {
+  let address;
+  const account = useAccount();
+  const localAccount = getLocalAccount(account.address, props.allowlist);
+  if (account.isConnected) {
+    address = account.address;
   }
-  return null;
+  if (localAccount) {
+    address = localAccount.identity;
+  }
+  const isEligible =
+    address && eligible(props.allowlist, props.delegations, address);
+
+  const isEnabled = isEligible || account.isConnected;
+  return (
+    <a
+      title="Submit"
+      href={isEnabled ? "/submit" : ""}
+      style={{
+        pointerEvents: isEnabled ? "auto" : "none",
+        color: isEnabled ? "black" : "grey",
+        textDecoration: "none",
+        display: "block",
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center" }}>
+        <div className="svg-container">
+          {window.location.pathname.includes("/submit") ? (
+            <SubmitSVGFull style={{ fill: isEnabled ? "black" : "grey" }} />
+          ) : (
+            <SubmitSVG />
+          )}
+        </div>
+        <span>Submit</span>
+      </div>
+    </a>
+  );
 };
 
 const DisconnectSVG = () => (
@@ -282,24 +379,24 @@ const DisconnectButton = () => {
     <ConnectButton.Custom>
       {({ account, chain, mounted, openConnectModal, openAccountModal }) => {
         const connected = account && chain && mounted;
-        if (connected) {
-          return (
-            <div
-              title="Disconnect Wallet"
-              onClick={openAccountModal}
-              className="sidebar-div"
-            >
-              <div style={{ display: "flex", alignItems: "center" }}>
-                <div className="svg-container">
-                  <DisconnectSVG />
-                </div>
-                <span>Disconnect</span>
+        return (
+          <div
+            title="Disconnect Wallet"
+            onClick={connected && openAccountModal}
+            style={{
+              color: connected ? "black" : "grey",
+              pointerEvents: connected ? "auto" : "none",
+            }}
+            className="sidebar-div"
+          >
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <div className="svg-container">
+                <DisconnectSVG />
               </div>
+              <span>Disconnect</span>
             </div>
-          );
-        } else {
-          return null;
-        }
+          </div>
+        );
       }}
     </ConnectButton.Custom>
   );
@@ -385,6 +482,11 @@ export const Connector = (props) => {
   );
 };
 
+export const ConnectedSubmit = (props) => (
+  <Connector {...props}>
+    <Submit {...props} />
+  </Connector>
+);
 export const ConnectedProfile = (props) => (
   <Connector {...props}>
     <Profile {...props} />

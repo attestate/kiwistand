@@ -8,6 +8,7 @@
 .bell-button:active,
 .sidebar-div:active,
 #nav-profile:active,
+#nav-submit:active,
 #nav-settings:active {
   transform: scale(0.92);
   transition: transform 0.1s ease;

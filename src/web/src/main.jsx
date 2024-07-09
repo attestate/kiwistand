@@ -331,6 +331,7 @@ async function addConnectedComponents(allowlist, delegations, toast) {
   const { StrictMode } = await import("react");
   const {
     ConnectedSettings,
+    ConnectedSubmit,
     ConnectedProfile,
     ConnectedDisconnectButton,
     ConnectedConnectButton,
@@ -372,6 +373,13 @@ async function addConnectedComponents(allowlist, delegations, toast) {
   createRoot(disconnect).render(
     <StrictMode>
       <ConnectedDisconnectButton />
+    </StrictMode>,
+  );
+
+  const submit = document.querySelector("#nav-submit");
+  createRoot(submit).render(
+    <StrictMode>
+      <ConnectedSubmit allowlist={allowlist} delegations={delegations} />
     </StrictMode>,
   );
 
