@@ -9,7 +9,6 @@ import * as API from "./API.mjs";
 import { useSigner, useProvider, client, chains } from "./client.mjs";
 import NFTModal from "./NFTModal.jsx";
 import { getLocalAccount } from "./session.mjs";
-import { ConnectedConnectButton } from "./Navigation.jsx";
 
 function safeExtractDomain(link) {
   let parsedUrl;
@@ -86,7 +85,6 @@ const SubmitButton = (props) => {
   const { toast, url } = props;
   const [isLoading, setIsLoading] = useState(false);
   const [title, setTitle] = useState("");
-  const [openedOnce, setOpenedOnce] = useState(false);
   const [remainingChars, setRemainingChars] = useState(80);
 
   useEffect(() => {
@@ -170,11 +168,6 @@ const SubmitButton = (props) => {
   }
   const isEligible =
     address && eligible(props.allowlist, props.delegations, address);
-
-  if (!isEligible && !openedOnce) {
-    props.setIsOpen(true);
-    setOpenedOnce(true);
-  }
 
   const provider = useProvider();
   const result = useSigner();
@@ -288,18 +281,8 @@ const SubmitButton = (props) => {
     cursor: "pointer",
   };
 
-  if (!account.isConnected && !isEligible) {
-    return (
-      <ConnectedConnectButton
-        allowlist={props.allowlist}
-        delegations={props.delegations}
-      />
-    );
-  }
-
   return (
     <div>
-      {!isEligible && "You need to buy our NFT to submit and upvote..."}
       <button
         id="button-onboarding"
         style={buttonStyles}
@@ -317,8 +300,6 @@ const SubmitButton = (props) => {
 };
 
 const Form = (props) => {
-  const [modalIsOpen, setIsOpen] = useState(false);
-
   const urlInput = document.getElementById("urlInput");
   const [url, setURL] = useState(urlInput.value);
 
@@ -326,14 +307,7 @@ const Form = (props) => {
     <WagmiConfig config={client}>
       <RainbowKitProvider chains={chains}>
         <UrlInput url={url} setURL={setURL} />
-        <SubmitButton {...props} setIsOpen={setIsOpen} url={url} />
-        <NFTModal
-          modalIsOpen={modalIsOpen}
-          setIsOpen={setIsOpen}
-          headline="Wait a minute!"
-          text="You have to sign up to submit a link"
-          closeText="Close"
-        />
+        <SubmitButton {...props} url={url} />
       </RainbowKitProvider>
     </WagmiConfig>
   );
