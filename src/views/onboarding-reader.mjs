@@ -115,13 +115,6 @@ export default async function (theme, identity) {
                         install our Progressive Web App (PWA). This will make
                         Kiwi News look like any other app on your phone!
                       </p>
-                      <button
-                        id="button-onboarding"
-                        style="margin-right: 0;"
-                        onclick="window.dispatchEvent(new CustomEvent('openModal'));"
-                      >
-                        Install Kiwi app
-                      </button>
                     </div>
                     <div class="image centered-image">
                       <img

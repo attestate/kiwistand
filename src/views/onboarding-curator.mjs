@@ -100,20 +100,17 @@ export default async function (theme, identity) {
                   <br />
                   <div class="flex-container flex-image-right">
                     <div class="text-left">
-                      <h2>Mint Kiwi Pass to join the Kiwi community</h2>
+                      <h2>Mint the Kiwi Pass to join the Kiwi community</h2>
                       <p>
                         Shape the kiwi feed, get discovered by 1,500+ monthly
                         readers & meet 800+ other crypto connoisseurs.
                       </p>
-                      <a
-                        href="/kiwipass?referral=0x9fa714F170E9488F70536d947003308eBd1A2bbD"
-                        target="_blank"
-                      >
+                      <a href="/kiwipass-mint" target="_blank">
                         <button
                           id="button-onboarding"
                           style="margin-left: 0; width: 40%;"
                         >
-                          Mint Kiwi Pass
+                          Mint the Kiwi Pass
                         </button>
                       </a>
                     </div>
