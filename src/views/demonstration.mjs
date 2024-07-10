@@ -43,6 +43,9 @@ export default async function index(theme) {
             border-left: none !important;
             border-right: none !important;
           }
+          .sidebar-toggle {
+            visibility: hidden;
+          }
           @media screen and (min-width: 769px) {
             .sidebar {
               display: none;
@@ -73,12 +76,12 @@ export default async function index(theme) {
                   <p
                     style="color: black; padding: 1rem 3rem 0 3rem; font-size: 1.5rem; font-weight: bold; text-align: center;"
                   >
-                    You're in!
+                    Try upvoting!
                   </p>
                   <p
                     style="color: black; margin-top: 0; padding: 0 3rem 1rem 3rem; font-size: 1rem; text-align: center; font-weight: bold;"
                   >
-                    Now you can<span style="color: limegreen;"
+                    Now you can<span style="color: ${theme.color};"
                       ><span> </span> upvote, submit & comment links.</span
                     >
                   </p>
@@ -132,12 +135,9 @@ export default async function index(theme) {
                     <td
                       style="padding: 0 0 3rem 0; display: flex; justify-content: space-evenly;"
                     >
-                      <a href="/onboarding-reader">
-                        <button
-                          style="width:auto; background-color: white; color: black;"
-                          id="button-onboarding"
-                        >
-                          Explore Kiwi
+                      <a href="/whattosubmit">
+                        <button style="width:auto;" id="button-onboarding">
+                          Continue
                         </button>
                       </a>
                     </td>

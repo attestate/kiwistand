@@ -2,6 +2,7 @@ node_modules
 src/public/previews
 cache
 dbtest
+src/fingerprint.mjs
 src/web/node_modules
 src/public/assets/*
 src/public/manifest.json

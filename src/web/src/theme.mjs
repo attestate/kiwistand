@@ -1,4 +1,4 @@
 const theme = {
-  color: "limegreen",
+  color: "#654515",
 };
 export default theme;

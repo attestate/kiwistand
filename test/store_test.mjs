@@ -47,9 +47,23 @@ test.serial("adding message to the store with trie.put error", async (t) => {
   };
   const libp2p = null;
   const allowlist = new Set([address]);
+  const delegations = {};
+  const accounts = {
+    [address]: {
+      balance: 1,
+      start: 123,
+    },
+  };
 
   try {
-    await store.add(trie, signedMessage, libp2p, allowlist);
+    await store.add(
+      trie,
+      signedMessage,
+      libp2p,
+      allowlist,
+      delegations,
+      accounts,
+    );
   } catch (error) {
     t.true(error.toString().includes("Successfully rolled back"));
   }
@@ -70,6 +84,13 @@ test("simulate dirty read", async (t) => {
   const trieA = await store.create();
   const libp2p = null;
   const allowlist = new Set([address]);
+  const delegations = {};
+  const accounts = {
+    [address]: {
+      balance: 1,
+      start: 123,
+    },
+  };
 
   const title = `hello world `;
   const href = `https://example.com`;
@@ -77,7 +98,14 @@ test("simulate dirty read", async (t) => {
   const timestamp = 1676559616;
   const message = id.create(title, href, type, timestamp);
   const signedMessage = await id.sign(signer, message, EIP712_MESSAGE);
-  await store.add(trieA, signedMessage, libp2p, allowlist);
+  await store.add(
+    trieA,
+    signedMessage,
+    libp2p,
+    allowlist,
+    delegations,
+    accounts,
+  );
 
   const originalRoot = trieA.root();
 
@@ -87,7 +115,14 @@ test("simulate dirty read", async (t) => {
   const newTimestamp = 1676559616 + 101;
   const newMessage = id.create(newTitle, newHref, newType, newTimestamp);
   const newSignedMessage = await id.sign(signer, newMessage, EIP712_MESSAGE);
-  await store.add(trieA, newSignedMessage, libp2p, allowlist);
+  await store.add(
+    trieA,
+    newSignedMessage,
+    libp2p,
+    allowlist,
+    delegations,
+    accounts,
+  );
 
   try {
     const from = null;
@@ -265,112 +300,6 @@ test("getting more paginated leaves than exist but only return existing", async 
   await rm("dbtestA", { recursive: true });
 });
 
-test("getting a non-existing path", async (t) => {
-  env.DATA_DIR = "dbtestA";
-  const trieA = await store.create();
-
-  const parser = JSON.parse;
-  const allowlist = [];
-  const error = await t.throwsAsync(
-    async () =>
-      await store.post(trieA, Buffer.from("abc", "hex"), parser, allowlist),
-  );
-  t.truthy(error);
-  t.truthy(error.message);
-  t.true(error.message.startsWith("Didn't find node for"));
-
-  await rm("dbtestA", { recursive: true });
-});
-
-test("getting a leaf with an non-eligible signer", async (t) => {
-  store.upvotes.clear();
-  const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
-  const privateKey =
-    "0xad54bdeade5537fb0a553190159783e45d02d316a992db05cbed606d3ca36b39";
-  const signer = new Wallet(privateKey);
-  t.is(signer.address, address);
-
-  const title = "hello world";
-  const href = "https://example.com";
-  const type = "amplify";
-  const timestamp = 1676559616;
-  const message = id.create(title, href, type, timestamp);
-  const signedMessage = await id.sign(signer, message, EIP712_MESSAGE);
-  t.deepEqual(signedMessage, {
-    ...message,
-    signature:
-      "0x1df128dfe1f86df4e20ecc6ebbd586e0ab56e3fc8d0db9210422c3c765633ad8793af68aa232cf39cc3f75ea18f03260258f7276c2e0d555f98e1cf16672dd201c",
-  });
-
-  env.DATA_DIR = "dbtestA";
-  const trieA = await store.create();
-  const libp2p = null;
-  const allowlist = new Set([address]);
-  await store.add(trieA, signedMessage, libp2p, allowlist);
-
-  const { index } = id.toDigest(signedMessage);
-  const parser = JSON.parse;
-  const newAllowlist = new Set([]);
-  const delegations = {};
-  const err = await t.throwsAsync(
-    async () =>
-      await store.post(
-        trieA,
-        Buffer.from(index, "hex"),
-        parser,
-        newAllowlist,
-        delegations,
-      ),
-  );
-  t.truthy(err && err.message);
-  t.true(err.message.startsWith("Identity not found"));
-
-  await rm("dbtestA", { recursive: true });
-});
-
-test("getting a non-leaf", async (t) => {
-  store.upvotes.clear();
-  const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
-  const privateKey =
-    "0xad54bdeade5537fb0a553190159783e45d02d316a992db05cbed606d3ca36b39";
-  const signer = new Wallet(privateKey);
-  t.is(signer.address, address);
-
-  const title = "hello world";
-  const href = "https://example.com";
-  const type = "amplify";
-  const timestamp = 1676559616;
-  const message = id.create(title, href, type, timestamp);
-  const signedMessage = await id.sign(signer, message, EIP712_MESSAGE);
-  t.deepEqual(signedMessage, {
-    ...message,
-    signature:
-      "0x1df128dfe1f86df4e20ecc6ebbd586e0ab56e3fc8d0db9210422c3c765633ad8793af68aa232cf39cc3f75ea18f03260258f7276c2e0d555f98e1cf16672dd201c",
-  });
-
-  env.DATA_DIR = "dbtestA";
-  const trieA = await store.create();
-  const libp2p = null;
-  const allowlist = new Set([address]);
-  await store.add(trieA, signedMessage, libp2p, allowlist);
-
-  const { index } = id.toDigest(signedMessage);
-  const parser = JSON.parse;
-  const err = await t.throwsAsync(
-    async () =>
-      await store.post(
-        trieA,
-        Buffer.from(index.slice(0, 10), "hex"),
-        parser,
-        allowlist,
-      ),
-  );
-  t.truthy(err && err.message);
-  t.true(err.message.startsWith("Didn't find a node or found"));
-
-  await rm("dbtestA", { recursive: true });
-});
-
 test("getting leaves of a particular href", async (t) => {
   store.upvotes.clear();
   const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
@@ -395,11 +324,32 @@ test("getting leaves of a particular href", async (t) => {
   const trieA = await store.create();
   const libp2p = null;
   const allowlist = new Set([address]);
-  await store.add(trieA, signedMessage, libp2p, allowlist);
+  const delegations = {};
+  const accounts = {
+    [address]: {
+      balance: 1,
+      start: 123,
+    },
+  };
+  await store.add(
+    trieA,
+    signedMessage,
+    libp2p,
+    allowlist,
+    delegations,
+    accounts,
+  );
 
   const message2 = id.create(title, "https://otherlink.com", type, timestamp);
   const signedMessage2 = await id.sign(signer, message2, EIP712_MESSAGE);
-  await store.add(trieA, signedMessage2, libp2p, allowlist);
+  await store.add(
+    trieA,
+    signedMessage2,
+    libp2p,
+    allowlist,
+    delegations,
+    accounts,
+  );
 
   const from = null;
   const amount = null;
@@ -415,100 +365,6 @@ test("getting leaves of a particular href", async (t) => {
   );
   t.is(leaves.length, 1);
   t.is(leaves[0].href, signedMessage.href);
-
-  await rm("dbtestA", { recursive: true });
-});
-
-test("getting a leaf where index parameter isn't of type Buffer", async (t) => {
-  store.upvotes.clear();
-  const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
-  const privateKey =
-    "0xad54bdeade5537fb0a553190159783e45d02d316a992db05cbed606d3ca36b39";
-  const signer = new Wallet(privateKey);
-  t.is(signer.address, address);
-
-  const title = "hello world";
-  const href = "https://example.com";
-  const type = "amplify";
-  const timestamp = 1676559616;
-  const message = id.create(title, href, type, timestamp);
-  const signedMessage = await id.sign(signer, message, EIP712_MESSAGE);
-  t.deepEqual(signedMessage, {
-    ...message,
-    signature:
-      "0x1df128dfe1f86df4e20ecc6ebbd586e0ab56e3fc8d0db9210422c3c765633ad8793af68aa232cf39cc3f75ea18f03260258f7276c2e0d555f98e1cf16672dd201c",
-  });
-
-  env.DATA_DIR = "dbtestA";
-  const trieA = await store.create();
-  const libp2p = null;
-  const allowlist = new Set([address]);
-  await store.add(trieA, signedMessage, libp2p, allowlist);
-
-  const { index } = id.toDigest(signedMessage);
-  const parser = JSON.parse;
-  const err = await t.throwsAsync(
-    async () =>
-      await store.post(
-        trieA,
-        "this is a string parameter for index",
-        parser,
-        allowlist,
-      ),
-  );
-  t.truthy(err && err.message);
-  t.true(err.message.startsWith("index parameter must be"));
-
-  await rm("dbtestA", { recursive: true });
-});
-
-test("getting a leaf", async (t) => {
-  store.upvotes.clear();
-  const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
-  const privateKey =
-    "0xad54bdeade5537fb0a553190159783e45d02d316a992db05cbed606d3ca36b39";
-  const signer = new Wallet(privateKey);
-  t.is(signer.address, address);
-
-  const title = "hello world";
-  const href = "https://example.com";
-  const type = "amplify";
-  const timestamp = 1676559616;
-  const message = id.create(title, href, type, timestamp);
-  const signedMessage = await id.sign(signer, message, EIP712_MESSAGE);
-  t.deepEqual(signedMessage, {
-    ...message,
-    signature:
-      "0x1df128dfe1f86df4e20ecc6ebbd586e0ab56e3fc8d0db9210422c3c765633ad8793af68aa232cf39cc3f75ea18f03260258f7276c2e0d555f98e1cf16672dd201c",
-  });
-
-  env.DATA_DIR = "dbtestA";
-  const trieA = await store.create();
-  const libp2p = null;
-  const allowlist = new Set([address]);
-  await store.add(trieA, signedMessage, libp2p, allowlist);
-
-  const { index } = id.toDigest(signedMessage);
-  const parser = JSON.parse;
-  const post = await store.post(
-    trieA,
-    Buffer.from(index, "hex"),
-    parser,
-    allowlist,
-  );
-  t.is(post.key, index);
-  t.deepEqual(post.value, {
-    comments: [],
-    signer: address,
-    identity: address,
-    ...signedMessage,
-    upvoters: [
-      { identity: "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176", timestamp },
-    ],
-    upvotes: 1,
-  });
-  t.is(post.value.signer, address);
-  t.is(post.value.identity, address);
 
   await rm("dbtestA", { recursive: true });
 });
@@ -537,7 +393,21 @@ test("getting leaves", async (t) => {
   const trieA = await store.create();
   const libp2p = null;
   const allowlist = new Set([address]);
-  await store.add(trieA, signedMessage, libp2p, allowlist);
+  const delegations = {};
+  const accounts = {
+    [address]: {
+      balance: 1,
+      start: 123,
+    },
+  };
+  await store.add(
+    trieA,
+    signedMessage,
+    libp2p,
+    allowlist,
+    delegations,
+    accounts,
+  );
 
   const from = null;
   const amount = null;
@@ -573,7 +443,21 @@ test("descend levels with actual data ", async (t) => {
   const trieA = await store.create();
   const libp2p = null;
   const allowlist = new Set([address]);
-  await store.add(trieA, signedMessage, libp2p, allowlist);
+  const delegations = {};
+  const accounts = {
+    [address]: {
+      balance: 1,
+      start: 123,
+    },
+  };
+  await store.add(
+    trieA,
+    signedMessage,
+    libp2p,
+    allowlist,
+    delegations,
+    accounts,
+  );
 
   const [root] = await store.descend(trieA, 0);
   t.is(root.key.length, 0);
@@ -961,8 +845,23 @@ test("try adding message with invalid href", async (t) => {
     },
   };
   const allowlist = new Set([address]);
+  const delegations = {};
+  const accounts = {
+    [address]: {
+      balance: 1,
+      start: 123,
+    },
+  };
   await t.throwsAsync(
-    async () => await store.add(trie, signedMessage, libp2p, allowlist),
+    async () =>
+      await store.add(
+        trie,
+        signedMessage,
+        libp2p,
+        allowlist,
+        delegations,
+        accounts,
+      ),
   );
 });
 
@@ -995,8 +894,23 @@ test("try to add invalidly formatted message to store", async (t) => {
     },
   };
   const allowlist = new Set([address]);
+  const delegations = {};
+  const accounts = {
+    [address]: {
+      balance: 1,
+      start: 123,
+    },
+  };
   await t.throwsAsync(
-    async () => await store.add(trie, signedMessage, libp2p, allowlist),
+    async () =>
+      await store.add(
+        trie,
+        signedMessage,
+        libp2p,
+        allowlist,
+        delegations,
+        accounts,
+      ),
   );
 });
 
@@ -1028,8 +942,16 @@ test("try to add invalidly signed message to store", async (t) => {
     },
   };
   const allowlist = new Set([address]);
+  const delegations = {};
+  const accounts = {
+    [address]: {
+      balance: 1,
+      start: 123,
+    },
+  };
   await t.throwsAsync(
-    async () => await store.add(trie, message, libp2p, allowlist),
+    async () =>
+      await store.add(trie, message, libp2p, allowlist, delegations, accounts),
   );
 });
 
@@ -1062,10 +984,23 @@ test("add with delegated address but from isn't on allow list", async (t) => {
   const delegations = {
     [address]: "0x0000000000000000000000000000000000000001",
   };
+  const accounts = {
+    [list[0]]: {
+      balance: 1,
+      start: 123,
+    },
+  };
 
   await t.throwsAsync(
     async () =>
-      await store.add(trie, signedMessage, libp2p, allowlist, delegations),
+      await store.add(
+        trie,
+        signedMessage,
+        libp2p,
+        allowlist,
+        delegations,
+        accounts,
+      ),
   );
 });
 
@@ -1105,10 +1040,30 @@ test("attempting to upvote twice, once with custody and delegate address", async
   const delegations = {
     [address1]: address0,
   };
-  await store.add(trie, signedMessage0, libp2p, allowlist, delegations);
+  const accounts = {
+    [address0]: {
+      balance: 1,
+      start: 123,
+    },
+  };
+  await store.add(
+    trie,
+    signedMessage0,
+    libp2p,
+    allowlist,
+    delegations,
+    accounts,
+  );
   await t.throwsAsync(
     async () =>
-      await store.add(trie, signedMessage1, libp2p, allowlist, delegations),
+      await store.add(
+        trie,
+        signedMessage1,
+        libp2p,
+        allowlist,
+        delegations,
+        accounts,
+      ),
   );
 });
 
@@ -1141,7 +1096,20 @@ test("trying to add a message to store that isn't on allowlist but was delegated
   const delegations = {
     [address]: list[0],
   };
-  await store.add(trie, signedMessage, libp2p, allowlist, delegations);
+  const accounts = {
+    [list[0]]: {
+      balance: 1,
+      start: 123,
+    },
+  };
+  await store.add(
+    trie,
+    signedMessage,
+    libp2p,
+    allowlist,
+    delegations,
+    accounts,
+  );
 });
 
 test("trying to add message to store that isn't on allowlist", async (t) => {
@@ -1172,8 +1140,18 @@ test("trying to add message to store that isn't on allowlist", async (t) => {
     },
   };
   const allowlist = new Set();
+  const delegations = {};
+  const accounts = {};
   await t.throwsAsync(
-    async () => await store.add(trie, signedMessage, libp2p, allowlist),
+    async () =>
+      await store.add(
+        trie,
+        signedMessage,
+        libp2p,
+        allowlist,
+        delegations,
+        accounts,
+      ),
   );
 });
 
@@ -1206,8 +1184,23 @@ test("adding message from too far into the future", async (t) => {
     },
   };
   const allowlist = new Set([address]);
+  const delegations = {};
+  const accounts = {
+    [address]: {
+      balance: 1,
+      start: 123,
+    },
+  };
   await t.throwsAsync(
-    async () => await store.add(trie, signedMessage, libp2p, allowlist),
+    async () =>
+      await store.add(
+        trie,
+        signedMessage,
+        libp2p,
+        allowlist,
+        delegations,
+        accounts,
+      ),
   );
 });
 
@@ -1239,9 +1232,24 @@ test("adding message from before minimum timestamp", async (t) => {
     },
   };
   const allowlist = new Set([address]);
+  const delegations = {};
+  const accounts = {
+    [address]: {
+      balance: 1,
+      start: 123,
+    },
+  };
   env.MIN_TIMESTAMP_SECS = 1;
   await t.throwsAsync(
-    async () => await store.add(trie, signedMessage, libp2p, allowlist),
+    async () =>
+      await store.add(
+        trie,
+        signedMessage,
+        libp2p,
+        allowlist,
+        delegations,
+        accounts,
+      ),
   );
 });
 
@@ -1269,6 +1277,13 @@ test.serial("adding a comment to the store with missing parent", async (t) => {
     },
   };
   const allowlist = new Set([address]);
+  const delegations = {};
+  const accounts = {
+    [address]: {
+      balance: 1,
+      start: 123,
+    },
+  };
 
   const text0 = "this is a short comment";
   const href0 = `kiwi:0x000000000000000000000000000000000000000000000000000000000000000000000000`;
@@ -1278,7 +1293,15 @@ test.serial("adding a comment to the store with missing parent", async (t) => {
   const signedMessage0 = await id.sign(signer, message0, EIP712_MESSAGE);
 
   await t.throwsAsync(
-    async () => await store.add(trie, signedMessage0, libp2p, allowlist),
+    async () =>
+      await store.add(
+        trie,
+        signedMessage0,
+        libp2p,
+        allowlist,
+        delegations,
+        accounts,
+      ),
     { message: "add: Didn't find root message of comment" },
   );
 });
@@ -1312,7 +1335,21 @@ test.serial(
       },
     };
     const allowlist = new Set([address]);
-    const index0 = await store.add(trie, signedMessage0, libp2p, allowlist);
+    const delegations = {};
+    const accounts = {
+      [address]: {
+        balance: 1,
+        start: 123,
+      },
+    };
+    const index0 = await store.add(
+      trie,
+      signedMessage0,
+      libp2p,
+      allowlist,
+      delegations,
+      accounts,
+    );
 
     const text1 = "this is a short comment";
     const href1 = `kiwi:0x${index0}`;
@@ -1322,7 +1359,15 @@ test.serial(
     const signedMessage1 = await id.sign(signer, message1, EIP712_MESSAGE);
 
     await t.throwsAsync(
-      async () => await store.add(trie, signedMessage1, libp2p, allowlist),
+      async () =>
+        await store.add(
+          trie,
+          signedMessage1,
+          libp2p,
+          allowlist,
+          delegations,
+          accounts,
+        ),
       { message: "add: child timestamp must be greater than parent timestamp" },
     );
 
@@ -1357,7 +1402,21 @@ test.serial("retrieving leaves selectively", async (t) => {
     },
   };
   const allowlist = new Set([address]);
-  const index0 = await store.add(trie, signedMessage0, libp2p, allowlist);
+  const delegations = {};
+  const accounts = {
+    [address]: {
+      balance: 1,
+      start: 123,
+    },
+  };
+  const index0 = await store.add(
+    trie,
+    signedMessage0,
+    libp2p,
+    allowlist,
+    delegations,
+    accounts,
+  );
 
   const text1 = "this is a short comment";
   const href1 = `kiwi:0x${index0}`;
@@ -1366,7 +1425,14 @@ test.serial("retrieving leaves selectively", async (t) => {
   const message1 = id.create(text1, href1, type1, timestamp1);
   const signedMessage1 = await id.sign(signer, message1, EIP712_MESSAGE);
 
-  await store.add(trie, signedMessage1, libp2p, allowlist);
+  await store.add(
+    trie,
+    signedMessage1,
+    libp2p,
+    allowlist,
+    delegations,
+    accounts,
+  );
 
   const from = null;
   const amount = null;
@@ -1427,7 +1493,21 @@ test.serial("separate pagination per message type", async (t) => {
     },
   };
   const allowlist = new Set([address]);
-  const index0 = await store.add(trie, signedMessage0, libp2p, allowlist);
+  const delegations = {};
+  const accounts = {
+    [address]: {
+      balance: 1,
+      start: 123,
+    },
+  };
+  const index0 = await store.add(
+    trie,
+    signedMessage0,
+    libp2p,
+    allowlist,
+    delegations,
+    accounts,
+  );
   t.is(store.upvotes.size, 1);
 
   const text1 = "this is a short comment";
@@ -1437,7 +1517,14 @@ test.serial("separate pagination per message type", async (t) => {
   const message1 = id.create(text1, href1, type1, timestamp1);
   const signedMessage1 = await id.sign(signer, message1, EIP712_MESSAGE);
 
-  await store.add(trie, signedMessage1, libp2p, allowlist);
+  await store.add(
+    trie,
+    signedMessage1,
+    libp2p,
+    allowlist,
+    delegations,
+    accounts,
+  );
 
   const text2 = "this is a short comment";
   const href2 = `kiwi:0x${index0}`;
@@ -1446,7 +1533,14 @@ test.serial("separate pagination per message type", async (t) => {
   const message2 = id.create(text2, href2, type2, timestamp2);
   const signedMessage2 = await id.sign(signer, message2, EIP712_MESSAGE);
 
-  await store.add(trie, signedMessage2, libp2p, allowlist);
+  await store.add(
+    trie,
+    signedMessage2,
+    libp2p,
+    allowlist,
+    delegations,
+    accounts,
+  );
 
   const from = 1;
   const amount = 1;
@@ -1463,7 +1557,6 @@ test.serial("separate pagination per message type", async (t) => {
     href,
     type,
   );
-  t.log(leaves);
   t.is(leaves.length, 1);
   t.is(leaves[0].timestamp, timestamp2);
 
@@ -1497,7 +1590,21 @@ test.serial("adding a comment to the store", async (t) => {
     },
   };
   const allowlist = new Set([address]);
-  const index0 = await store.add(trie, signedMessage0, libp2p, allowlist);
+  const delegations = {};
+  const accounts = {
+    [address]: {
+      balance: 1,
+      start: 123,
+    },
+  };
+  const index0 = await store.add(
+    trie,
+    signedMessage0,
+    libp2p,
+    allowlist,
+    delegations,
+    accounts,
+  );
   t.is(store.upvotes.size, 1);
 
   const text1 = "this is a short comment";
@@ -1507,7 +1614,14 @@ test.serial("adding a comment to the store", async (t) => {
   const message1 = id.create(text1, href1, type1, timestamp1);
   const signedMessage1 = await id.sign(signer, message1, EIP712_MESSAGE);
 
-  await store.add(trie, signedMessage1, libp2p, allowlist);
+  await store.add(
+    trie,
+    signedMessage1,
+    libp2p,
+    allowlist,
+    delegations,
+    accounts,
+  );
   t.is(
     store.upvotes.size,
     1,
@@ -1550,7 +1664,21 @@ test.serial("adding message to the store", async (t) => {
     },
   };
   const allowlist = new Set([address]);
-  await store.add(trie, signedMessage, libp2p, allowlist);
+  const delegations = {};
+  const accounts = {
+    [address]: {
+      balance: 1,
+      start: 123,
+    },
+  };
+  await store.add(
+    trie,
+    signedMessage,
+    libp2p,
+    allowlist,
+    delegations,
+    accounts,
+  );
 });
 
 test.serial(
@@ -1587,14 +1715,36 @@ test.serial(
       },
     };
     const allowlist = new Set([address]);
-    await store.add(trie, signedMessage0, libp2p, allowlist);
+    const delegations = {};
+    const accounts = {
+      [address]: {
+        balance: 1,
+        start: 123,
+      },
+    };
+    await store.add(
+      trie,
+      signedMessage0,
+      libp2p,
+      allowlist,
+      delegations,
+      accounts,
+    );
 
     const timestamp1 = timestamp0 + 1;
     const message1 = id.create(text, href, type, timestamp1);
     const signedMessage1 = await id.sign(signer, message1, EIP712_MESSAGE);
 
     await t.throwsAsync(
-      async () => await store.add(trie, signedMessage1, libp2p, allowlist),
+      async () =>
+        await store.add(
+          trie,
+          signedMessage1,
+          libp2p,
+          allowlist,
+          delegations,
+          accounts,
+        ),
     );
   },
 );

@@ -15,7 +15,7 @@ export function getCookie(name) {
   return matches ? decodeURIComponent(matches[1]) : undefined;
 }
 
-export function getLocalAccount(identity) {
+export function getLocalAccount(identity, allowlist) {
   const schema = /^-kiwi-news-(0x[a-fA-F0-9]{40})-key$/;
   const keys = Object.entries(localStorage).reduce((obj, [key, value]) => {
     const match = key.match(schema);
@@ -28,19 +28,38 @@ export function getLocalAccount(identity) {
 
   if (Object.keys(keys).length === 1) {
     const [[key, value]] = Object.entries(keys);
+    if (
+      (identity && key !== identity) ||
+      (allowlist && !allowlist.includes(key)) ||
+      !allowlist
+    )
+      return;
+
+    // TODO: We can probably remove this
     setCookie("identity", key);
     const signer = new Wallet(value);
     return { identity: key, privateKey: value, signer: signer.address };
   }
   if (Object.keys(keys).length > 1 && identity && keys[identity]) {
     const signer = new Wallet(keys[identity]);
-    return { identity, privateKey: keys[identity], signer: signer.address };
+    return {
+      identity,
+      privateKey: keys[identity],
+      signer: signer.address,
+    };
   }
 
+  // TODO: We can probably remove this
   if (Object.keys(keys).length === 0 && identity) {
     setCookie("identity", identity);
   }
   return null;
+}
+
+export function isIOS() {
+  const ua = navigator.userAgent;
+  const iOS = !!ua.match(/iPad/i) || !!ua.match(/iPhone/i);
+  return iOS;
 }
 
 export function isBraveOnIOS() {
@@ -58,9 +77,13 @@ export function isChromeOnIOS() {
 }
 
 export function supportsPasskeys() {
-  return (
-    isSafariOnMacOS() || isSafariOnIOS() || isBraveOnIOS() || isChromeOnIOS()
-  );
+  return !isAndroid();
+}
+
+export function isAndroid() {
+  const ua = navigator.userAgent;
+  const android = !!ua.match(/Android/i);
+  return android;
 }
 
 export function isSafariOnMacOS() {
@@ -79,9 +102,8 @@ export function isSafariOnIOS() {
 
 export function isChromeOnAndroid() {
   const ua = navigator.userAgent;
-  const android = !!ua.match(/Android/i);
   const chrome = !!ua.match(/Chrome/i);
-  return android && chrome;
+  return isAndroid() && chrome;
 }
 
 export function isRunningPWA() {

@@ -1,8 +1,11 @@
 import "vite/modulepreload-polyfill";
 import "@rainbow-me/rainbowkit/styles.css";
 import PullToRefresh from "pulltorefreshjs";
+import DOMPurify from "isomorphic-dompurify";
+import { getAccount } from "@wagmi/core";
 
 import { isRunningPWA, getCookie, getLocalAccount } from "./session.mjs";
+import theme from "./theme.mjs";
 
 function commentCountSignifier() {
   const isStoriesPage = window.location.pathname === "/stories";
@@ -39,7 +42,7 @@ function commentCountSignifier() {
       );
     } else if (currentCount > storedCount) {
       const svgElement = story.querySelector("svg");
-      svgElement.style.color = "limegreen";
+      svgElement.style.color = theme.color;
     }
   });
 }
@@ -55,6 +58,10 @@ async function checkNewStories() {
   }
 
   if (data.status === "success" && data.data.stories.length > 0) {
+    // TODO: This might now be broken with the updates to getLocalAccount that
+    // need the allowlist and the connected account to be present. It probably
+    // would then make more sense to replace the entire logic with a react
+    // component.
     const account = getLocalAccount();
     const story = data.data.stories[0];
     const identity = story.identity;
@@ -69,35 +76,6 @@ async function checkNewStories() {
       account.identity !== identity
     ) {
       elem.style.display = "block";
-    }
-  }
-}
-
-async function checkImages() {
-  let data;
-  try {
-    const response = await fetch("/api/v1/feeds/images");
-    data = await response.json();
-  } catch (error) {
-    console.error("Error fetching new stories:", error);
-    return;
-  }
-
-  if (data.status === "success" && data.data.stories.length > 0) {
-    const account = getLocalAccount();
-    const story = data.data.stories[0];
-    const identity = story.identity;
-    const latestTimestamp = story.timestamp;
-    const localTimestamp = getCookie("imagesTimestamp");
-    const elem = document.getElementById("images-dot");
-
-    if (
-      elem &&
-      (!localTimestamp || latestTimestamp > Number(localTimestamp)) &&
-      account &&
-      account.identity !== identity
-    ) {
-      elem.style.visibility = "visible";
     }
   }
 }
@@ -130,7 +108,7 @@ function toggleSidebar() {
   if (window.innerWidth >= 1200) {
     sidebarWidth = isSidebarOpen ? "-25%" : "0";
   } else if (window.innerWidth >= 768 && window.innerWidth < 1200) {
-    sidebarWidth = isSidebarOpen ? "-30%" : "0";
+    sidebarWidth = isSidebarOpen ? "-40%" : "0";
   } else {
     sidebarWidth = isSidebarOpen ? "-75%" : "0";
   }
@@ -161,43 +139,95 @@ async function addSubmitButton(allowlist, delegations, toast) {
   }
 }
 
-async function addTips() {
-  const tipsButton = document.querySelectorAll(".tipsbuttoncontainer");
-  if (tipsButton && tipsButton.length > 0) {
+async function obfuscateLinks(allowlist, delegations) {
+  const links = document.querySelectorAll(".story-link-container");
+  if (links && links.length > 0) {
     const { createRoot } = await import("react-dom/client");
     const { StrictMode } = await import("react");
-    const Tip = (await import("./Tip.jsx")).default;
+    const Link = (await import("./Link.jsx")).default;
 
-    tipsButton.forEach((tip) => {
-      const address = tip.getAttribute("data-address");
-      const index = tip.getAttribute("data-index");
-      const title = tip.getAttribute("data-title");
-      const tipValue = tip.getAttribute("data-tip");
-
-      const metadata = {
-        index: index,
-        title: title,
-      };
-
-      createRoot(tip).render(
+    links.forEach((linkContainer) => {
+      const link = linkContainer.querySelector("a");
+      const title = link.innerText;
+      const href = link.getAttribute("href");
+      const target = link.getAttribute("target");
+      const className = link.getAttribute("class");
+      const children = link.innerHTML;
+      createRoot(linkContainer).render(
         <StrictMode>
-          <Tip address={address} metadata={metadata} tipValue={tipValue} />
+          <Link
+            title={title}
+            href={href}
+            target={target}
+            className={className}
+            allowlist={allowlist}
+            delegations={delegations}
+          >
+            <div
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(children) }}
+            />
+          </Link>
         </StrictMode>,
       );
     });
   }
 }
 
-async function addVotes(allowlistPromise, delegationsPromise, toast) {
-  const voteArrows = document.querySelectorAll(".votearrowcontainer");
+async function addDynamicComments(allowlist, delegations, toast) {
+  const sections = document.querySelectorAll(".comment-section");
+  if (sections && sections.length > 0) {
+    const { createRoot } = await import("react-dom/client");
+    const { StrictMode } = await import("react");
+    const CommentSection = (await import("./CommentSection.jsx")).default;
+
+    sections.forEach((arrow) => {
+      const storyIndex = arrow.getAttribute("data-story-index");
+      const commentCount = parseInt(
+        arrow.getAttribute("data-comment-count"),
+        10,
+      );
+      createRoot(arrow).render(
+        <StrictMode>
+          <CommentSection
+            commentCount={commentCount}
+            storyIndex={storyIndex}
+            allowlist={allowlist}
+            delegations={delegations}
+            toast={toast}
+          />
+        </StrictMode>,
+      );
+    });
+  }
+
+  const chatBubbles = document.querySelectorAll(".chat-bubble-container");
+  if (chatBubbles && chatBubbles.length > 0) {
+    const { createRoot } = await import("react-dom/client");
+    const { StrictMode } = await import("react");
+    const ChatBubble = (await import("./ChatBubble.jsx")).default;
+
+    chatBubbles.forEach((arrow) => {
+      const storyIndex = arrow.getAttribute("data-story-index");
+      const commentCount = arrow.getAttribute("data-comment-count");
+      createRoot(arrow).render(
+        <StrictMode>
+          <ChatBubble storyIndex={storyIndex} commentCount={commentCount} />
+        </StrictMode>,
+      );
+    });
+  }
+}
+
+async function addVotes(allowlist, delegations, toast) {
+  const voteArrows = document.querySelectorAll(".vote-button-container");
   if (voteArrows && voteArrows.length > 0) {
     const { createRoot } = await import("react-dom/client");
     const { StrictMode } = await import("react");
     const Vote = (await import("./Vote.jsx")).default;
 
     voteArrows.forEach((arrow) => {
-      const title = arrow.getAttribute("data-title");
-      const href = arrow.getAttribute("data-href");
+      const title = DOMPurify.sanitize(arrow.getAttribute("data-title"));
+      const href = DOMPurify.sanitize(arrow.getAttribute("data-href"));
       const editorPicks = arrow.getAttribute("data-editorpicks");
       let upvoters;
       try {
@@ -210,8 +240,8 @@ async function addVotes(allowlistPromise, delegationsPromise, toast) {
           <Vote
             title={title}
             href={href}
-            allowlistPromise={allowlistPromise}
-            delegationsPromise={delegationsPromise}
+            allowlist={allowlist}
+            delegations={delegations}
             upvoters={upvoters}
             toast={toast}
             editorPicks={editorPicks}
@@ -219,6 +249,22 @@ async function addVotes(allowlistPromise, delegationsPromise, toast) {
         </StrictMode>,
       );
     });
+  }
+}
+
+async function addFriendBuyButton(toast, allowlist) {
+  const buyButtonContainer = document.querySelector(
+    "#friend-buy-button-container",
+  );
+  if (buyButtonContainer) {
+    const { createRoot } = await import("react-dom/client");
+    const { StrictMode } = await import("react");
+    const BuyButton = (await import("./FriendBuyButton.jsx")).default;
+    createRoot(buyButtonContainer).render(
+      <StrictMode>
+        <BuyButton toast={toast} allowlist={allowlist} />
+      </StrictMode>,
+    );
   }
 }
 
@@ -248,9 +294,11 @@ async function addCommentInput(toast, allowlist, delegations) {
     const { createRoot } = await import("react-dom/client");
     const { StrictMode } = await import("react");
     const CommentInputComponent = (await import("./CommentInput.jsx")).default;
+    const storyIndex = commentInput.getAttribute("data-story-index");
     createRoot(commentInput).render(
       <StrictMode>
         <CommentInputComponent
+          storyIndex={storyIndex}
           toast={toast}
           allowlist={allowlist}
           delegations={delegations}
@@ -283,29 +331,31 @@ async function addConnectedComponents(allowlist, delegations, toast) {
   const { StrictMode } = await import("react");
   const {
     ConnectedSettings,
+    ConnectedSubmit,
     ConnectedProfile,
-    ConnectedLearnMore,
     ConnectedDisconnectButton,
     ConnectedConnectButton,
     RefreshButton,
-    ConnectedBuyAdvert,
     ConnectedSimpleDisconnectButton,
   } = await import("./Navigation.jsx");
   const Bell = (await import("./Bell.jsx")).default;
 
-  const connectButton = document.querySelector("#connectButton");
-  connectButton.style = "";
-  createRoot(connectButton).render(
+  const bellButton = document.querySelector("#bell");
+  bellButton.style = "";
+  createRoot(bellButton).render(
     <StrictMode>
-      <ConnectedBuyAdvert allowlist={allowlist} delegations={delegations} />
       <Bell allowlist={allowlist} delegations={delegations} />
-      <ConnectedConnectButton
-        allowlist={allowlist}
-        delegations={delegations}
-        toast={toast}
-      />
     </StrictMode>,
   );
+
+  const mobileBellButton = document.querySelector(".mobile-bell-container");
+  if (mobileBellButton) {
+    createRoot(mobileBellButton).render(
+      <StrictMode>
+        <Bell mobile allowlist={allowlist} delegations={delegations} />
+      </StrictMode>,
+    );
+  }
 
   const settings = document.querySelector("#nav-settings");
   createRoot(settings).render(
@@ -319,26 +369,17 @@ async function addConnectedComponents(allowlist, delegations, toast) {
       <ConnectedProfile allowlist={allowlist} delegations={delegations} />
     </StrictMode>,
   );
-  const refreshButton = document.querySelector("a.nav-refresh-button");
-  if (refreshButton) {
-    createRoot(refreshButton).render(
-      <StrictMode>
-        <RefreshButton />
-      </StrictMode>,
-    );
-  }
-  const learnMore = document.querySelector("nav-learn-more");
-  if (learnMore) {
-    createRoot(learnMore).render(
-      <StrictMode>
-        <ConnectedLearnMore allowlist={allowlist} delegations={delegations} />
-      </StrictMode>,
-    );
-  }
   const disconnect = document.querySelector("#nav-disconnect");
   createRoot(disconnect).render(
     <StrictMode>
       <ConnectedDisconnectButton />
+    </StrictMode>,
+  );
+
+  const submit = document.querySelector("#nav-submit");
+  createRoot(submit).render(
+    <StrictMode>
+      <ConnectedSubmit allowlist={allowlist} delegations={delegations} />
     </StrictMode>,
   );
 
@@ -354,7 +395,110 @@ async function addConnectedComponents(allowlist, delegations, toast) {
   }
 }
 
-async function addModals() {
+async function addSignupDialogue(allowlist, delegations) {
+  const dialogue = document.querySelector("nav-signup-dialogue");
+  if (dialogue) {
+    const { createRoot } = await import("react-dom/client");
+    const { StrictMode } = await import("react");
+    const SignupDialogue = (await import("./SignupDialogue.jsx")).default;
+    createRoot(dialogue).render(
+      <StrictMode>
+        <SignupDialogue allowlist={allowlist} delegations={delegations} />
+      </StrictMode>,
+    );
+  }
+}
+
+async function addPasskeysDialogue(toast, allowlist) {
+  const elem = document.querySelector("nav-passkeys-backup");
+  if (elem) {
+    const { createRoot } = await import("react-dom/client");
+    const { StrictMode } = await import("react");
+    const Passkeys = (await import("./Passkeys.jsx")).default;
+    const RedirectButton = () => {
+      return (
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+          }}
+        >
+          <p
+            style={{
+              color: "black",
+              padding: "1rem 3rem 1rem 3rem",
+              fontSize: "1rem",
+              textAlign: "center",
+              marginTop: "1rem",
+            }}
+          >
+            Your next step:
+          </p>
+          <a href="/invite">
+            <button style={{ width: "auto" }} id="button-onboarding">
+              Continue
+            </button>
+          </a>
+        </div>
+      );
+    };
+    createRoot(elem).render(
+      <StrictMode>
+        <Passkeys
+          toast={toast}
+          allowlist={allowlist}
+          redirectButton={<RedirectButton />}
+        />
+      </StrictMode>,
+    );
+  }
+}
+
+async function addTGLink(allowlist) {
+  const elem = document.querySelector("nav-invite-link");
+  if (elem) {
+    const { createRoot } = await import("react-dom/client");
+    const { StrictMode } = await import("react");
+    const TelegramLink = (await import("./TelegramLink.jsx")).default;
+    createRoot(elem).render(
+      <StrictMode>
+        <TelegramLink allowlist={allowlist} />
+      </StrictMode>,
+    );
+  }
+}
+
+async function addSubscriptionButton(allowlist) {
+  const button = document.querySelector("push-subscription-button");
+  if (button) {
+    const { createRoot } = await import("react-dom/client");
+    const { StrictMode } = await import("react");
+    const PushSubscriptionButton = (
+      await import("./PushSubscriptionButton.jsx")
+    ).default;
+    const wrapper = button.getAttribute("data-wrapper") === "true";
+    createRoot(button).render(
+      <StrictMode>
+        <PushSubscriptionButton wrapper={wrapper} allowlist={allowlist} />
+      </StrictMode>,
+    );
+  }
+
+  const elem = document.querySelector("nav-push-notification-redirector");
+  if (elem) {
+    const { createRoot } = await import("react-dom/client");
+    const { StrictMode } = await import("react");
+    const { Redirector } = await import("./TelegramLink.jsx");
+    createRoot(elem).render(
+      <StrictMode>
+        <Redirector />
+      </StrictMode>,
+    );
+  }
+}
+
+async function addModals(allowlist, delegations, toast) {
   const nftmodal = document.querySelector("nav-nft-modal");
   if (nftmodal) {
     const { createRoot } = await import("react-dom/client");
@@ -363,6 +507,22 @@ async function addModals() {
     createRoot(nftmodal).render(
       <StrictMode>
         <NFTModal />
+      </StrictMode>,
+    );
+  }
+
+  const delegationModal = document.querySelector("nav-delegation-modal");
+  if (delegationModal) {
+    const { createRoot } = await import("react-dom/client");
+    const { StrictMode } = await import("react");
+    const DelegationModal = (await import("./DelegationModal.jsx")).default;
+    createRoot(delegationModal).render(
+      <StrictMode>
+        <DelegationModal
+          toast={toast}
+          allowlist={allowlist}
+          delegations={delegations}
+        />
       </StrictMode>,
     );
   }
@@ -397,7 +557,7 @@ async function addToaster() {
   return toast;
 }
 
-async function addAvatar(allowlist, delegations) {
+async function addAvatar(allowlist) {
   const avatarElem = document.querySelectorAll("nav-header-avatar");
   if (avatarElem && avatarElem.length > 0) {
     const { createRoot } = await import("react-dom/client");
@@ -406,7 +566,7 @@ async function addAvatar(allowlist, delegations) {
     avatarElem.forEach((element) => {
       createRoot(element).render(
         <StrictMode>
-          <Avatar allowlist={allowlist} delegations={delegations} />
+          <Avatar allowlist={allowlist} />
         </StrictMode>,
       );
     });
@@ -421,9 +581,10 @@ async function addNFTPrice() {
     const NFTPrice = (await import("./NFTPrice.jsx")).default;
     nftPriceElements.forEach((element) => {
       const fee = element.getAttribute("data-fee");
+      const selector = element.getAttribute("data-selector");
       createRoot(element).render(
         <StrictMode>
-          <NFTPrice fee={fee} />
+          <NFTPrice fee={fee} selector={selector} />
         </StrictMode>,
       );
     });
@@ -465,31 +626,113 @@ async function share(toast, index) {
   });
 }
 
-function checkMintStatus(fetchAllowList, fetchDelegations) {
+async function checkMintStatus(fetchAllowList, fetchDelegations) {
   const url = new URL(window.location.href);
   if (url.pathname !== "/indexing") return;
 
   const address = url.searchParams.get("address");
-  // NOTE: For debugging
-  if (url.searchParams.get("stop")) return;
+  const delegate = url.searchParams.get("delegate");
+  const { supportsPasskeys } = await import("./session.mjs");
+  const { testPasskeys } = await import("./Passkeys.jsx");
   const intervalId = setInterval(async () => {
     const allowList = await fetchAllowList();
     const delegations = await fetchDelegations();
 
     if (
-      !allowList.includes(address) &&
+      !allowList.includes(address) ||
       !Object.values(delegations).includes(address)
     ) {
       console.log("Waiting for mint to be picked up...");
       return;
     }
+    if (delegate && !Object.keys(delegations).includes(delegate)) {
+      console.log("Waiting for delegate to be picked up");
+      return;
+    }
 
     console.log("Mint has been picked up by the node.");
     clearInterval(intervalId);
-    // NOTE: Priorly, we called /demonstration immediately, however, this lead
-    // to problems where the site didn't have the NFT eligibility ready yet.
-    setTimeout(() => (window.location.href = "/demonstration"), 10000);
-  }, 5000);
+    if (supportsPasskeys() && (await testPasskeys())) {
+      window.location.href = "/passkeys";
+    } else {
+      window.location.href = "/invite";
+    }
+  }, 3000);
+}
+
+async function startWatchAccount(allowlist) {
+  const { client } = await import("./client.mjs");
+
+  const account = await getAccount();
+  let signer;
+  try {
+    signer = await getSigner(account, allowlist);
+  } catch (err) {
+    // NOTE: Couldn't find a valid local signer, so we're returning and not
+    // doing anything.
+  }
+  await processAndSendVotes(signer, account.address);
+  window.addEventListener(
+    "upvote-storage",
+    async () => await processAndSendVotes(signer, account.address),
+  );
+}
+
+async function getSigner(account, allowlist) {
+  const { getLocalAccount } = await import("./session.mjs");
+  const localAccount = getLocalAccount(account.address, allowlist);
+
+  if (localAccount && localAccount.privateKey) {
+    const { getProvider } = await import("./client.mjs");
+    const { Wallet } = await import("@ethersproject/wallet");
+    return new Wallet(localAccount.privateKey, getProvider());
+  } else {
+    throw new Error("Application key not found");
+  }
+}
+
+async function processAndSendVotes(signer, identity) {
+  const storiesString = localStorage.getItem("--kiwi-news-upvoted-stories");
+  let stories = JSON.parse(storiesString);
+  if (!stories) return;
+
+  const removeDuplicates = (arr) => {
+    const seen = new Set();
+    return arr.filter(({ href }) => !seen.has(href) && seen.add(href));
+  };
+  stories = removeDuplicates(stories);
+
+  const { messageFab, send, EIP712_DOMAIN, EIP712_TYPES } = await import(
+    "./API.mjs"
+  );
+  for (const { href, title } of stories) {
+    const value = messageFab(title, href);
+
+    try {
+      const signature = await signer._signTypedData(
+        EIP712_DOMAIN,
+        EIP712_TYPES,
+        value,
+      );
+      const response = await send(value, signature);
+      if (response && response.status === "success") {
+        window.toast.success("Thanks for your upvote! Have a 🥝");
+        console.log("Vote sent:", response);
+
+        const element = document.querySelector(
+          `.vote-button-container[data-href="${href}"]`,
+        );
+        if (element) {
+          const upvoters = JSON.parse(element.getAttribute("data-upvoters"));
+          upvoters.push(identity);
+          element.setAttribute("data-upvoters", JSON.stringify(upvoters));
+        }
+      }
+    } catch (error) {
+      console.error("Error sending vote:", error);
+    }
+    localStorage.removeItem("--kiwi-news-upvoted-stories");
+  }
 }
 
 async function start() {
@@ -501,9 +744,13 @@ async function start() {
       },
     });
   }
-  commentCountSignifier();
+  // TODO: Fix, this is currently broken because the ChatBubble react component
+  // now takes over the rendering, but since we also couldn't figure out how we
+  // can make this work together.
+  //commentCountSignifier();
 
   const toast = await addToaster();
+  window.toast = toast;
 
   const { fetchAllowList, fetchDelegations } = await import("./API.mjs");
   checkMintStatus(fetchAllowList, fetchDelegations);
@@ -511,16 +758,25 @@ async function start() {
   const allowlistPromise = fetchAllowList();
   const delegationsPromise = fetchDelegations();
 
-  // We're parallelizing all additions into the DOM
-  const results = await Promise.allSettled([
-    addVotes(allowlistPromise, delegationsPromise, toast),
-    addCommentInput(toast, allowlistPromise, delegationsPromise),
-    addTips(),
-    addModals(),
+  await startWatchAccount(await allowlistPromise);
+  const results0 = await Promise.allSettled([
+    obfuscateLinks(await allowlistPromise, await delegationsPromise),
+    addDynamicComments(await allowlistPromise, await delegationsPromise, toast),
+    addVotes(await allowlistPromise, await delegationsPromise, toast),
+  ]);
+
+  const results1 = await Promise.allSettled([
+    addCommentInput(toast, await allowlistPromise, await delegationsPromise),
+    addSubscriptionButton(await allowlistPromise),
+    addTGLink(await allowlistPromise),
+    addPasskeysDialogue(toast, await allowlistPromise),
+    addSignupDialogue(await allowlistPromise, await delegationsPromise),
+    addModals(await allowlistPromise, await delegationsPromise, toast),
     addNFTPrice(),
-    addAvatar(await allowlistPromise, await delegationsPromise),
+    addAvatar(await allowlistPromise),
     addDelegateButton(await allowlistPromise, await delegationsPromise, toast),
     addBuyButton(allowlistPromise, delegationsPromise, toast),
+    addFriendBuyButton(toast, await allowlistPromise),
     addConnectedComponents(
       await allowlistPromise,
       await delegationsPromise,
@@ -528,9 +784,14 @@ async function start() {
     ),
     addSubmitButton(await allowlistPromise, await delegationsPromise, toast),
     checkNewStories(),
-    checkImages(),
   ]);
-  results.forEach((result, index) => {
+
+  results0.forEach((result, index) => {
+    if (result.status === "rejected") {
+      console.error(`Error in promise at index ${index}:`, result.reason);
+    }
+  });
+  results1.forEach((result, index) => {
     if (result.status === "rejected") {
       console.error(`Error in promise at index ${index}:`, result.reason);
     }
@@ -549,9 +810,3 @@ async function start() {
 }
 
 start();
-
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", async () => {
-    await navigator.serviceWorker.register("/serviceWorker.js");
-  });
-}

@@ -4,6 +4,7 @@ import { useAccount, WagmiConfig } from "wagmi";
 import { Wallet } from "@ethersproject/wallet";
 import { RainbowKitProvider, ConnectButton } from "@rainbow-me/rainbowkit";
 import { eligible } from "@attestate/delegator2";
+import DOMPurify from "isomorphic-dompurify";
 
 import * as API from "./API.mjs";
 import { useSigner, useProvider, client, chains } from "./client.mjs";
@@ -20,8 +21,8 @@ const Container = (props) => {
         <Vote {...props} setIsOpen={setIsOpen} />
         <NFTModal
           headline="Wait a minute!"
-          text="To upvote, you need to own our NFT. 👇"
-          closeText="OK, but let me browse a bit more..."
+          text="You have to sign up before voting."
+          closeText="Close"
           modalIsOpen={modalIsOpen}
           setIsOpen={setIsOpen}
         />
@@ -31,12 +32,13 @@ const Container = (props) => {
 };
 
 const Vote = (props) => {
+  const { allowlist, delegations } = props;
   const { toast } = props;
   const value = API.messageFab(props.title, props.href);
 
   let address;
   const account = useAccount();
-  const localAccount = getLocalAccount(account.address);
+  const localAccount = getLocalAccount(account.address, allowlist);
   if (account.isConnected) {
     address = account.address;
   }
@@ -50,21 +52,6 @@ const Vote = (props) => {
     props.upvoters.includes(address),
   );
   const [upvotes, setUpvotes] = useState(props.upvoters.length);
-  const [allowlist, setAllowlist] = useState(null);
-  const [delegations, setDelegations] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const loadData = async () => {
-      const list = await props.allowlistPromise;
-      const delegates = await props.delegationsPromise;
-      setAllowlist(list);
-      setDelegations(delegates);
-      setIsLoading(false);
-    };
-
-    loadData();
-  });
 
   let signer, isLocal;
   if (localAccount && localAccount.privateKey) {
@@ -109,45 +96,73 @@ const Vote = (props) => {
       {({ account, chain, mounted, openConnectModal }) => {
         const connected = account && chain && mounted;
         return (
-          <div>
-            <div
-              onClick={async (e) => {
-                if (hasUpvoted || isLoading) return;
+          <div
+            onClick={async (e) => {
+              if (hasUpvoted || window.location.pathname === "/submit") return;
 
-                const isEligible =
-                  signer &&
-                  eligible(allowlist, delegations, await signer.getAddress());
+              const isEligible =
+                signer &&
+                eligible(allowlist, delegations, await signer.getAddress());
 
-                if (!connected && !isEligible) {
-                  openConnectModal();
-                  return;
-                }
-                if (connected && !isEligible) {
-                  props.setIsOpen(true);
-                  return;
-                }
+              if (!connected && !isEligible) {
+                openConnectModal();
+                return;
+              }
+              if (connected && !isEligible) {
+                props.setIsOpen(true);
+                return;
+              }
 
-                handleSubmit(e);
-              }}
-              className={`votearrow ${isLoading ? "pulsate" : ""}`}
-              style={{
-                color: hasUpvoted ? theme.color : "#828282",
-                cursor: hasUpvoted ? "not-allowed" : "pointer",
-              }}
-              title="upvote"
-            >
-              ▲
-            </div>
-            {props.editorPicks !== "true" ? (
+              // NOTE: It can happen that the Feedbot will suggests to submit
+              // articles that have a title length of > 80 chars, in this
+              // case we want to redirect the user to the /submit page to
+              // adjust the title.
+              if (props.title.length > 80) {
+                const url = new URL(window.location);
+                url.pathname = "/submit";
+                url.searchParams.set("url", DOMPurify.sanitize(props.href));
+                window.location.href = url.href;
+                return;
+              }
+
+              handleSubmit(e);
+            }}
+            className="interaction-element"
+            style={{
+              borderRadius: "2px",
+              padding: "5px 0",
+              backgroundColor: "rgba(0,0,0,0.05)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              minWidth: "40px",
+              margin: "5px 6px",
+              alignSelf: "stretch",
+              cursor: hasUpvoted ? "not-allowed" : "pointer",
+            }}
+          >
+            <div style={{ minHeight: "40px", display: "block" }}>
               <div
+                className={`votearrow`}
                 style={{
-                  fontSize: "8pt",
-                  textAlign: "center",
+                  color: hasUpvoted ? theme.color : "#828282",
+                  cursor: hasUpvoted ? "not-allowed" : "pointer",
                 }}
+                title="upvote"
               >
-                {upvotes}
+                ▲
               </div>
-            ) : null}
+              {props.editorPicks !== "true" ? (
+                <div
+                  style={{
+                    fontSize: "8pt",
+                    textAlign: "center",
+                  }}
+                >
+                  {upvotes}
+                </div>
+              ) : null}
+            </div>
           </div>
         );
       }}

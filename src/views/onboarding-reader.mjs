@@ -78,7 +78,7 @@ export default async function (theme, identity) {
       </head>
       <body>
         <div class="container">
-          ${Sidebar()}
+          ${Sidebar("/onboarding-reader")}
           <div id="hnmain">
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
               <tr>
@@ -115,13 +115,6 @@ export default async function (theme, identity) {
                         install our Progressive Web App (PWA). This will make
                         Kiwi News look like any other app on your phone!
                       </p>
-                      <button
-                        id="button-onboarding"
-                        style="margin-right: 0;"
-                        onclick="window.dispatchEvent(new CustomEvent('openModal'));"
-                      >
-                        Install Kiwi app
-                      </button>
                     </div>
                     <div class="image centered-image">
                       <img
@@ -147,7 +140,8 @@ export default async function (theme, identity) {
                         chat about on our Telegram Channel. Join us and say gm!
                       </p>
                       <p>
-                        Message @timdaub or @macbudkowski to get invited!
+                        Message @timdaub or @macbudkowski if you have issues
+                        with your invite!
                         <br />
                         (You need to hold
                         <span>
@@ -197,32 +191,6 @@ export default async function (theme, identity) {
                     </div>
                     <div class="image-right">
                       <img src="Newsletter.png" alt="Kiwi Newsletter" />
-                    </div>
-                  </div>
-                  <br />
-                  <br />
-                  <br />
-                  <div class="flex-container flex-image-left">
-                    <div class="image-left">
-                      <img src="Kiwi_lists.png" />
-                    </div>
-                    <div class="text-right">
-                      <h2>Dive deeper into one subject</h2>
-                      <p>
-                        If you want to learn more about a specific subject, Kiwi
-                        Canons are here to help. Kiwi curators - like Spotify
-                        DJs - collect the top materials about one subject and
-                        compose them into a list.
-                      </p>
-
-                      <a href="/lists" target="_blank">
-                        <button
-                          id="button-onboarding"
-                          style="margin-left: 0; width: 40%;"
-                        >
-                          Check Kiwi Canons
-                        </button>
-                      </a>
                     </div>
                   </div>
                   <br />

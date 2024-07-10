@@ -76,39 +76,37 @@ const NFTModal = ({ modalIsOpen, setIsOpen, headline, text, closeText }) => {
             />
           </div>
         </div>
-        <a
-          href="/welcome?referral=0xf6a650E5B0f7A741347c0D78fdda8a5c86855F33"
-          target="_blank"
-          style={{ margin: "0px auto" }}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: "2rem",
+          }}
         >
-          <button
-            style={{
-              backgroundColor: "black",
-              border: "none",
-              color: "white",
-              padding: "10px 20px",
-              textAlign: "center",
-              textDecoration: "none",
-              fontSize: "0.9rem",
-              cursor: "pointer",
-              borderRadius: "2px",
-              fontFamily: "Verdana, Geneva, sans-serif",
-              display: "flex",
-              alignItems: "center",
-              marginBottom: "20px",
-            }}
+          <a
+            href="/kiwipass-mint"
+            target="_blank"
+            style={{ margin: "0px auto" }}
           >
-            <span>
-              Buy for <PriceComponent />
-            </span>
-          </button>
-        </a>
-        <u
-          style={{ cursor: "pointer", textAlign: "center", width: "80%" }}
-          onClick={closeModal}
-        >
-          {closeText}
-        </u>
+            <button style={{ width: "auto" }} id="button-onboarding">
+              Sign up
+            </button>
+          </a>
+          <span
+            style={{
+              padding: "10px 15px",
+              borderRadius: "2px",
+              backgroundColor: "rgba(0,0,0,0.1)",
+              color: "black",
+              cursor: "pointer",
+            }}
+            onClick={closeModal}
+          >
+            {closeText}
+          </span>
+        </div>
       </div>
     </Modal>
   );

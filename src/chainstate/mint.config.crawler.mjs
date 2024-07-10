@@ -23,23 +23,19 @@ export default {
       coordinator: {
         archive: false,
         module: blockLogs.state,
-        interval: 1000 * 60,
+        interval: 1000 * 30,
       },
       extractor: {
         module: blockLogs.extractor,
         args: {
-          // NOTE: This isn't the block of the contract creation. Instead it is
-          // the block when the first legit mint happened on the Kiwi Pass:
-          // https://optimistic.etherscan.io/tx/0xfd03f38a58a83db73da6ac01b62747b3d2da4ab26f925b513ceb50b12257473a
-          // Optimism contract.
-          start: 109546193,
+          start: 109542336,
           address: "0x66747bdC903d17C586fA09eE5D6b54CC85bBEA45",
           topics: [
             "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
-            "0x0000000000000000000000000000000000000000000000000000000000000000",
           ],
           blockspan: 5000,
           includeTimestamp: true,
+          includeValue: true,
         },
         output: {
           name: "op-call-block-logs-extraction",
@@ -74,6 +70,8 @@ export default {
   endpoints: {
     [process.env.OPTIMISM_RPC_HTTP_HOST]: {
       timeout: 10_000,
+      requestsPerUnit: 15,
+      unit: "second",
     },
   },
 };

@@ -5,6 +5,7 @@ import { eligible } from "@attestate/delegator2";
 
 import { RestoreDialogue } from "./Passkeys.jsx";
 import { client, chains } from "./client.mjs";
+import { EthereumSVG } from "./icons.jsx";
 import {
   getLocalAccount,
   isSafariOnIOS,
@@ -16,142 +17,6 @@ const shorten = (address) =>
   address.slice(0, 6) +
   "..." +
   address.slice(address.length - 4, address.length);
-
-export const RefreshButton = () => {
-  if (isRunningPWA()) {
-    return (
-      <button
-        className="feed-button"
-        onClick={() => location.reload()}
-        style={{
-          fontSize: "1.01rem",
-          marginLeft: "10px",
-          cursor: "pointer",
-          borderRadius: "2px",
-          padding: "5px 15px 5px 15px",
-          backgroundColor: "transparent",
-          border: "1px solid #828282",
-          color: "#7f8c8d",
-        }}
-      >
-        &#8203;
-        <span>
-          <svg
-            style={{ width: "1rem", position: "relative", top: "0.15rem" }}
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 256 256"
-          >
-            <rect width="256" height="256" fill="none" />
-            <polyline
-              points="184 104 232 104 232 56"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="16"
-            />
-            <path
-              d="M188.4,192a88,88,0,1,1,1.83-126.23L232,104"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="16"
-            />
-          </svg>
-        </span>
-      </button>
-    );
-  }
-};
-
-const BuyAdvert = (props) => {
-  let address;
-  const account = useAccount();
-  const localAccount = getLocalAccount(account.address);
-  if (account.isConnected) {
-    address = account.address;
-  }
-  if (localAccount) {
-    address = localAccount.identity;
-  }
-  const isEligible =
-    address && eligible(props.allowlist, props.delegations, address);
-
-  if (
-    !isEligible &&
-    account.isConnected &&
-    window.location.pathname !== "/indexing" &&
-    window.location.pathname !== "/kiwipass-mint" &&
-    window.location.pathname !== "/demonstration"
-  ) {
-    return (
-      <PrimaryActionButton
-        text="Join"
-        href="/welcome?referral=0xb68D42FcDA11d84d626E42Ac01B67bC6a40DEcC9"
-      />
-    );
-  }
-  return null;
-};
-
-const LearnMore = (props) => {
-  const openModal = () => {
-    window.dispatchEvent(new CustomEvent("openModal"));
-  };
-
-  let address;
-  const account = useAccount();
-  const localAccount = getLocalAccount(account.address);
-  if (account.isConnected) {
-    address = account.address;
-  }
-  if (localAccount) {
-    address = localAccount.identity;
-  }
-  const isEligible =
-    address && eligible(props.allowlist, props.delegations, address);
-  const pwaCandidate =
-    !isRunningPWA() && (isChromeOnAndroid() || isSafariOnIOS());
-
-  if (pwaCandidate) {
-    return (
-      <div style={{ textAlign: "center", paddingRight: "4px" }}>
-        <span
-          onClick={openModal}
-          style={{
-            cursor: "pointer",
-            textDecoration: "underline",
-            color: "black",
-            fontSize: "0.9rem",
-          }}
-        >
-          Install our <br />
-          app 📲
-        </span>
-      </div>
-    );
-  }
-
-  if (isRunningPWA() || isEligible || (!isEligible && account.isConnected))
-    return;
-
-  return (
-    <div style={{ textAlign: "center", paddingRight: "4px" }}>
-      <a
-        href="/welcome?referral=0xE2D2d8f175De9cfd35023BBcB13592703fE9CCe2"
-        style={{
-          fontSize: "0.7rem",
-          textDecoration: "underline",
-          color: "black",
-        }}
-      >
-        Learn more <br />
-        about 🥝
-      </a>
-    </div>
-  );
-};
 
 const SettingsSVGFull = () => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
@@ -229,7 +94,7 @@ const ProfileSVG = () => (
 const Settings = (props) => {
   let address;
   const account = useAccount();
-  const localAccount = getLocalAccount(account.address);
+  const localAccount = getLocalAccount(account.address, props.allowlist);
   if (account.isConnected) {
     address = account.address;
   }
@@ -239,54 +104,38 @@ const Settings = (props) => {
   const isEligible =
     address && eligible(props.allowlist, props.delegations, address);
 
-  if (isEligible || account.isConnected) {
-    return (
-      <a
-        title="Settings"
-        href="/settings"
-        onClick={(e) => !isEligible && e.preventDefault()}
-        style={{
-          color: isEligible ? "black" : "grey",
-          cursor: isEligible ? "pointer" : "not-allowed",
-          textDecoration: "none",
-          display: "block",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center" }}>
-          <div className="svg-container" style={{ position: "relative" }}>
-            {window.location.pathname === "/settings" ? (
-              <SettingsSVGFull />
-            ) : (
-              <>
-                <SettingsSVG />
-                {isEligible && !localAccount && (
-                  <span
-                    style={{
-                      position: "absolute",
-                      top: "0",
-                      left: "10px",
-                      backgroundColor: "red",
-                      borderRadius: "2px",
-                      minWidth: "12px",
-                      height: "12px",
-                    }}
-                  />
-                )}
-              </>
-            )}
-          </div>
-          <span>Settings</span>
+  return (
+    <a
+      title="Settings"
+      href="/settings"
+      onClick={(e) => !isEligible && e.preventDefault()}
+      style={{
+        pointerEvents: isEligible ? "auto" : "none",
+        color: isEligible ? "black" : "grey",
+        textDecoration: "none",
+        display: "block",
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center" }}>
+        <div className="svg-container" style={{ position: "relative" }}>
+          {window.location.pathname === "/settings" ? (
+            <SettingsSVGFull />
+          ) : (
+            <>
+              <SettingsSVG />
+            </>
+          )}
         </div>
-      </a>
-    );
-  }
-  return null;
+        <span>Settings</span>
+      </div>
+    </a>
+  );
 };
 
 const Profile = (props) => {
   let address;
   const account = useAccount();
-  const localAccount = getLocalAccount(account.address);
+  const localAccount = getLocalAccount(account.address, props.allowlist);
   if (account.isConnected) {
     address = account.address;
   }
@@ -296,27 +145,127 @@ const Profile = (props) => {
   const isEligible =
     address && eligible(props.allowlist, props.delegations, address);
 
-  if (isEligible || account.isConnected) {
-    return (
-      <a
-        title="Profile"
-        href={"/upvotes?address=" + address}
-        style={{ color: "black", textDecoration: "none", display: "block" }}
-      >
-        <div style={{ display: "flex", alignItems: "center" }}>
-          <div className="svg-container">
-            {window.location.pathname.includes("/upvotes") ? (
-              <ProfileSVGFull />
-            ) : (
-              <ProfileSVG />
-            )}
-          </div>
-          <span>Profile</span>
+  const isEnabled = isEligible || account.isConnected;
+  return (
+    <a
+      title="Profile"
+      href={isEnabled ? "/upvotes?address=" + address : ""}
+      style={{
+        pointerEvents: isEnabled ? "auto" : "none",
+        color: isEnabled ? "black" : "grey",
+        textDecoration: "none",
+        display: "block",
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center" }}>
+        <div className="svg-container">
+          {window.location.pathname.includes("/upvotes") ? (
+            <ProfileSVGFull />
+          ) : (
+            <ProfileSVG />
+          )}
         </div>
-      </a>
-    );
+        <span>Profile</span>
+      </div>
+    </a>
+  );
+};
+
+const SubmitSVGFull = (props) => (
+  <svg
+    style={props.style}
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 256 256"
+  >
+    <rect width="256" height="256" fill="none" />
+    <path d="M227.31,73.37,182.63,28.68a16,16,0,0,0-22.63,0L36.69,152A15.86,15.86,0,0,0,32,163.31V208a16,16,0,0,0,16,16H92.69A15.86,15.86,0,0,0,104,219.31L227.31,96a16,16,0,0,0,0-22.63ZM51.31,160l90.35-90.35,16.68,16.69L68,176.68ZM48,179.31,76.69,208H48Zm48,25.38L79.31,188l90.35-90.35h0l16.68,16.69Z" />
+  </svg>
+);
+
+const SubmitSVG = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+    <rect width="256" height="256" fill="none" />
+    <path
+      d="M92.69,216H48a8,8,0,0,1-8-8V163.31a8,8,0,0,1,2.34-5.65L165.66,34.34a8,8,0,0,1,11.31,0L221.66,79a8,8,0,0,1,0,11.31L98.34,213.66A8,8,0,0,1,92.69,216Z"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="16"
+    />
+    <line
+      x1="136"
+      y1="64"
+      x2="192"
+      y2="120"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="16"
+    />
+    <line
+      x1="164"
+      y1="92"
+      x2="68"
+      y2="188"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="16"
+    />
+    <line
+      x1="95.49"
+      y1="215.49"
+      x2="40.51"
+      y2="160.51"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="16"
+    />
+  </svg>
+);
+
+const Submit = (props) => {
+  let address;
+  const account = useAccount();
+  const localAccount = getLocalAccount(account.address, props.allowlist);
+  if (account.isConnected) {
+    address = account.address;
   }
-  return null;
+  if (localAccount) {
+    address = localAccount.identity;
+  }
+  const isEligible =
+    address && eligible(props.allowlist, props.delegations, address);
+
+  const isEnabled = isEligible || account.isConnected;
+  return (
+    <a
+      title="Submit"
+      href={isEnabled ? "/submit" : ""}
+      style={{
+        pointerEvents: isEnabled ? "auto" : "none",
+        color: isEnabled ? "black" : "grey",
+        textDecoration: "none",
+        display: "block",
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center" }}>
+        <div className="svg-container">
+          {window.location.pathname.includes("/submit") ? (
+            <SubmitSVGFull style={{ fill: isEnabled ? "black" : "grey" }} />
+          ) : (
+            <SubmitSVG />
+          )}
+        </div>
+        <span>Submit</span>
+      </div>
+    </a>
+  );
 };
 
 const DisconnectSVG = () => (
@@ -408,16 +357,19 @@ const DisconnectSVG = () => (
     />
   </svg>
 );
-const SimpleDisconnectButton = () => {
+const SimpleDisconnectButton = (props) => {
   return (
     <ConnectButton.Custom>
       {({ account, chain, mounted, openAccountModal }) => {
         const connected = account && chain && mounted;
-        if (connected) {
-          return <span onClick={openAccountModal}>Disconnect</span>;
-        } else {
-          return null;
-        }
+        return (
+          <span
+            style={{ visibility: connected ? "visible" : "hidden" }}
+            onClick={openAccountModal}
+          >
+            Disconnect
+          </span>
+        );
       }}
     </ConnectButton.Custom>
   );
@@ -427,75 +379,63 @@ const DisconnectButton = () => {
     <ConnectButton.Custom>
       {({ account, chain, mounted, openConnectModal, openAccountModal }) => {
         const connected = account && chain && mounted;
-        if (connected) {
-          return (
-            <div
-              title="Disconnect Wallet"
-              onClick={openAccountModal}
-              className="sidebar-div"
-            >
-              <div style={{ display: "flex", alignItems: "center" }}>
-                <div className="svg-container">
-                  <DisconnectSVG />
-                </div>
-                <span>Disconnect</span>
+        return (
+          <div
+            title="Disconnect Wallet"
+            onClick={connected && openAccountModal}
+            style={{
+              color: connected ? "black" : "grey",
+              pointerEvents: connected ? "auto" : "none",
+            }}
+            className="sidebar-div"
+          >
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <div className="svg-container">
+                <DisconnectSVG />
               </div>
+              <span>Disconnect</span>
             </div>
-          );
-        } else {
-          return null;
-        }
+          </div>
+        );
       }}
     </ConnectButton.Custom>
   );
 };
 
 export const PrimaryActionButton = (props) => {
-  const buttonStyle = {
-    borderRadius: "2px",
-    padding: "5px 15px 5px 15px",
-    backgroundColor: "black",
-    border: "1px solid black",
-    color: "white",
-    textAlign: "center",
-    textDecoration: "none",
-    cursor: "pointer",
-    width: "100px",
-  };
-
   return (
     <a
-      className="primary-action-button"
+      style={{
+        ...props.style,
+        ...{
+          display: "flex",
+          gap: "5px",
+          alignItems: "center",
+          width: "auto",
+          justifyContent: "center",
+        },
+      }}
+      className={props.className}
       href={props.href}
       title={props.text}
-      style={buttonStyle}
+      id="button-onboarding"
       onClick={props.onClick}
     >
-      {props.text}
+      {props.icon ? props.icon : ""} {props.text}
     </a>
   );
 };
 
-const CustomConnectButton = (props) => {
-  const buttonStyle = {
-    borderRadius: "2px",
-    padding: "5px 15px 5px 15px",
-    backgroundColor: "black",
-    border: "1px solid black",
-    color: "white",
-    textAlign: "center",
-    textDecoration: "none",
-    cursor: "pointer",
-    width: "100px",
-    display: "inline-block",
-  };
-
+export const CustomConnectButton = (props) => {
   return (
     <ConnectButton.Custom>
       {({ account, chain, mounted, openConnectModal }) => {
         if (!mounted) return;
         const connected = account && chain;
-        const localAccount = getLocalAccount(account && account.address);
+        const localAccount = getLocalAccount(
+          account && account.address,
+          props.allowlist,
+        );
 
         let address;
         if (connected) {
@@ -509,7 +449,13 @@ const CustomConnectButton = (props) => {
 
         if ((props.required && !connected) || (!connected && !isEligible)) {
           return (
-            <PrimaryActionButton text="Connect" onClick={openConnectModal} />
+            <PrimaryActionButton
+              className={props.className}
+              style={props.style}
+              icon={<EthereumSVG style={{ width: "16px" }} />}
+              text="Connect"
+              onClick={openConnectModal}
+            />
           );
         }
       }}
@@ -517,7 +463,7 @@ const CustomConnectButton = (props) => {
   );
 };
 
-const Connector = (props) => {
+export const Connector = (props) => {
   return (
     <WagmiConfig config={client}>
       <RainbowKitProvider
@@ -536,6 +482,11 @@ const Connector = (props) => {
   );
 };
 
+export const ConnectedSubmit = (props) => (
+  <Connector {...props}>
+    <Submit {...props} />
+  </Connector>
+);
 export const ConnectedProfile = (props) => (
   <Connector {...props}>
     <Profile {...props} />
@@ -559,15 +510,5 @@ export const ConnectedConnectButton = (props) => (
 export const ConnectedSettings = (props) => (
   <Connector {...props}>
     <Settings {...props} />
-  </Connector>
-);
-export const ConnectedLearnMore = (props) => (
-  <Connector {...props}>
-    <LearnMore {...props} />
-  </Connector>
-);
-export const ConnectedBuyAdvert = (props) => (
-  <Connector {...props}>
-    <BuyAdvert {...props} />
   </Connector>
 );

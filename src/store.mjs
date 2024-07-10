@@ -2,6 +2,7 @@
 import { env } from "process";
 import { resolve } from "path";
 
+import fastq from "fastq";
 import normalizeUrl from "normalize-url";
 import { utils } from "ethers";
 import {
@@ -15,7 +16,7 @@ import rlp from "@ethereumjs/rlp";
 import { keccak256 } from "ethereum-cryptography/keccak.js";
 import { decode } from "cbor-x";
 import { open } from "lmdb";
-import { eligible } from "@attestate/delegator2";
+import { eligible, eligibleAt } from "@attestate/delegator2";
 
 import log from "./logger.mjs";
 import LMDB from "./lmdb.mjs";
@@ -25,6 +26,7 @@ import { elog } from "./utils.mjs";
 import * as messages from "./topics/messages.mjs";
 import { newWalk } from "./WalkController.mjs";
 import { insertMessage } from "./cache.mjs";
+import { triggerNotification } from "./subscriptions.mjs";
 
 const maxReaders = 500;
 
@@ -120,6 +122,7 @@ export function isEqual(buf1, buf2) {
   return false;
 }
 
+// NOTE: Only set to export because this function is imported in tests
 export async function lookup(trie, hash, key) {
   const result = {
     node: null,
@@ -258,13 +261,7 @@ export function upvoteID(identity, link, type) {
   return `${utils.getAddress(identity)}|${normalizeUrl(link)}|${type}`;
 }
 
-export async function atomicPut(
-  trie,
-  message,
-  identity,
-  allowlist,
-  delegations,
-) {
+async function atomicPut(trie, message, identity, accounts, delegations) {
   const marker = upvoteID(identity, message.href, message.type);
   const { canonical, index } = toDigest(message);
   log(
@@ -286,8 +283,10 @@ export async function atomicPut(
     await trie.put(Buffer.from(index, "hex"), canonical);
     try {
       const cacheEnabled = false;
-      const enhancer = enhance(allowlist, delegations, cacheEnabled);
-      insertMessage(enhancer(message));
+      const enhancer = enhance(accounts, delegations, cacheEnabled);
+      const enhancedMessage = enhancer(message);
+      insertMessage(enhancedMessage);
+      await triggerNotification(enhancedMessage);
     } catch (err) {
       // NOTE: insertMessage is just a cache, so if this operation fails, we
       // want the protocol to continue to execute as normally.
@@ -327,17 +326,68 @@ export async function atomicPut(
   };
 }
 
+// NOTE: The ethereumjs trie library doesn't support more concurrency than one
+// write at a time, that is because the trie is shuffled and recomputed with a
+// new leaf entering.
+//
+// `store.add` is the fundamental write operation and we've had cases where a
+// write can disrupt a concurrent read, and I'm also speculating that we have
+// had writes disrupting parallel writes (I think I have observed this
+// recently).
+//
+// Technically, since it's hard to reason about the process of retrieval and
+// writing in the ethereumjs trie, it would be best to wrap all `trie`-touching
+// functions with this type of queue sequentialization seen below. But, at this
+// stage it is also a potential over-optimization, as reads themselves should
+// not disrupts reads, and since reads should now mostly occur through the
+// sqlite cache.
+//
+// So, at the moment, I consider it viable enough to just sequentialize the
+// writes so that they don't accidentially disrupt themselves and then to see
+// where this change takes us. So this is pretty much a work in progress.
+const concurrency = 1;
+const queue = fastq.promise(_add, 1);
 export async function add(
   trie,
   message,
   libp2p,
   allowlist,
   delegations,
+  accounts,
+  synching,
+  metadb,
+) {
+  return await queue.push({
+    trie,
+    message,
+    libp2p,
+    allowlist,
+    delegations,
+    accounts,
+    synching,
+    metadb,
+  });
+}
+
+async function _add({
+  trie,
+  message,
+  libp2p,
+  allowlist,
+  delegations,
+  accounts,
   synching = false,
   metadb = upvotes,
-) {
+}) {
   const address = verify(message);
-  const identity = eligible(allowlist, delegations, address);
+
+  let identity;
+  if (synching) {
+    const validationTime = new Date(message.timestamp * 1000);
+    identity = eligibleAt(accounts, delegations, address, validationTime);
+  } else {
+    identity = eligible(allowlist, delegations, address);
+  }
   if (!identity) {
     const err = `Address "${address}" wasn't found in the allow list or delegations list. Dropping message "${JSON.stringify(
       message,
@@ -389,7 +439,7 @@ export async function add(
     trie,
     message,
     identity,
-    allowlist,
+    accounts,
     delegations,
   );
 
@@ -435,63 +485,6 @@ export async function leaf(trie, index, parser) {
   return message;
 }
 
-export async function post(trie, index, parser, allowlist, delegations) {
-  const message = await leaf(trie, index, parser);
-  const cacheEnabled = true;
-  const signer = ecrecover(message, EIP712_MESSAGE, cacheEnabled);
-  const identity = eligible(allowlist, delegations, signer);
-  if (!identity) {
-    throw new Error(`Identity not found: ${signer}`);
-  }
-
-  let upvoters = [];
-  let comments = [];
-  if (parser) {
-    const from = null;
-    const amount = null;
-    const startDatetime = null;
-    const upvotes = await posts(
-      trie,
-      from,
-      amount,
-      parser,
-      startDatetime,
-      allowlist,
-      delegations,
-      message.href,
-      "amplify",
-    );
-    upvoters = upvotes.map(({ identity, timestamp }) => ({
-      identity,
-      timestamp,
-    }));
-
-    comments = await posts(
-      trie,
-      from,
-      amount,
-      parser,
-      startDatetime,
-      allowlist,
-      delegations,
-      `kiwi:0x${index.toString("hex")}`,
-      "comment",
-    );
-  }
-
-  return {
-    key: index.toString("hex"),
-    value: {
-      signer,
-      identity,
-      ...message,
-      upvoters,
-      upvotes: upvoters.length,
-      comments,
-    },
-  };
-}
-
 // TODO: It'd be better to accept a JavaScript Date here and not expect a unix
 // timestamp integer value.
 export async function posts(
@@ -500,7 +493,7 @@ export async function posts(
   amount,
   parser,
   startDatetime,
-  allowlist,
+  accounts,
   delegations,
   href,
   type,
@@ -516,17 +509,17 @@ export async function posts(
   );
 
   const cacheEnabled = true;
-  const enhancer = enhance(allowlist, delegations, cacheEnabled);
+  const enhancer = enhance(accounts, delegations, cacheEnabled);
   const posts = nodes.map(enhancer).filter((node) => node !== null);
   return posts;
 }
 
-export function enhance(allowlist, delegations, cacheEnabled) {
+export function enhance(accounts, delegations, cacheEnabled) {
   return (node) => {
     const signer = ecrecover(node, EIP712_MESSAGE, cacheEnabled);
-    const identity = eligible(allowlist, delegations, signer);
+    const validationTime = new Date(node.timestamp * 1000);
+    const identity = eligibleAt(accounts, delegations, signer, validationTime);
     if (!identity) {
-      log(`Identity not found: ${signer}`);
       return null;
     }
 

@@ -13,10 +13,9 @@ import Ajv from "ajv";
 import addFormats from "ajv-formats";
 import { utils } from "ethers";
 import canonicalize from "canonicalize";
+
 import cache from "./cache.mjs";
-
 import { SCHEMATA, EIP712_DOMAIN, EIP712_MESSAGE } from "./constants.mjs";
-
 import log from "./logger.mjs";
 
 const ajv = new Ajv();

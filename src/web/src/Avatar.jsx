@@ -23,15 +23,13 @@ export const resolveAvatar = async (address) => {
 const Avatar = (props) => {
   let address;
   const account = useAccount();
-  const localAccount = getLocalAccount(account.address);
+  const localAccount = getLocalAccount(account.address, props.allowlist);
   if (account.isConnected) {
     address = account.address;
   }
   if (localAccount) {
     address = localAccount.identity;
   }
-  const isEligible =
-    address && eligible(props.allowlist, props.delegations, address);
 
   const [avatar, setAvatar] = useState("");
   const [points, setPoints] = useState(0);
@@ -81,19 +79,6 @@ const Avatar = (props) => {
               position: "relative",
             }}
           >
-            {isEligible && !localAccount && (
-              <span
-                style={{
-                  position: "absolute",
-                  top: "0",
-                  right: "0px",
-                  backgroundColor: "red",
-                  borderRadius: "2px",
-                  minWidth: "8px",
-                  height: "8px",
-                }}
-              />
-            )}
             <img
               src={avatar}
               style={{
@@ -123,6 +108,9 @@ const Avatar = (props) => {
         style={{
           display: "flex",
           alignItems: "center",
+          padding: "0 13px 0 7px",
+          background: "rgba(0, 0, 0, 0.05)",
+          borderRadius: "2px",
         }}
       >
         <div
@@ -135,19 +123,6 @@ const Avatar = (props) => {
             position: "relative",
           }}
         >
-          {isEligible && !localAccount && (
-            <span
-              style={{
-                position: "absolute",
-                top: "5px",
-                left: "5px",
-                backgroundColor: "red",
-                borderRadius: "2px",
-                minWidth: "8px",
-                height: "8px",
-              }}
-            />
-          )}
           <svg
             xmlns="http://www.w3.org/2000/svg"
             style={{ paddingTop: "2px" }}

@@ -6,8 +6,6 @@ import vhtml from "vhtml";
 import { sub } from "date-fns";
 import normalizeUrl from "normalize-url";
 
-import PWALine from "./components/iospwaline.mjs";
-import { getTips, getTipsValue } from "../tips.mjs";
 import * as ens from "../ens.mjs";
 import Header from "./components/header.mjs";
 import SecondHeader from "./components/secondheader.mjs";
@@ -65,8 +63,6 @@ export async function recompute() {
     // noop
   }
 
-  const tips = await getTips();
-
   let nextStories = [];
   for await (let story of slicedCounts) {
     if (!story.identity || !story.index || !story.upvoters) {
@@ -76,21 +72,17 @@ export async function recompute() {
         avatars: [],
         upvoters: [],
         isOriginal: false,
-        tipValue: 0,
       });
       continue;
     }
 
     const ensData = await ens.resolve(story.identity);
 
-    const tipValue = getTipsValue(tips, story.index);
-    story.tipValue = tipValue;
-
     let avatars = [];
     for await (let upvoter of story.upvoters) {
       const profile = await ens.resolve(upvoter);
       if (profile.safeAvatar) {
-        avatars.push(profile.safeAvatar);
+        avatars.push(`/avatar/${profile.address}`);
       }
     }
     const isOriginal = Object.keys(writers).some(
@@ -109,10 +101,11 @@ export async function recompute() {
   inProgress = false;
 }
 
-export default async function (trie, theme, index) {
+export default async function (trie, theme) {
   let items = stories;
   const path = "/new";
   const ogImage = "https://news.kiwistand.com/kiwi_new_feed_page.png";
+  const recentJoiners = await registry.recents();
   return html`
     <html lang="en" op="news">
       <head>
@@ -123,7 +116,6 @@ export default async function (trie, theme, index) {
         />
       </head>
       <body>
-        ${PWALine}
         <div class="container">
           ${Sidebar(path)}
           <div id="hnmain">
@@ -131,13 +123,15 @@ export default async function (trie, theme, index) {
               <tr>
                 ${await Header(theme)}
               </tr>
-              <tr>
+              <tr class="third-header">
                 ${ThirdHeader(theme, "new")}
               </tr>
               <tr>
                 ${SecondHeader(theme, "new")}
               </tr>
-              ${items.map(Row(null, "/best"))}
+              ${items.map(
+                Row(null, "/best", undefined, null, null, null, recentJoiners),
+              )}
               <tr
                 style="display: block; padding: 10px; background-color: #E6E6DF"
               >

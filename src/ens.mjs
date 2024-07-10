@@ -1,5 +1,6 @@
 import { env } from "process";
 import path from "path";
+import DOMPurify from "isomorphic-dompurify";
 
 import { fetchBuilder, FileSystemCache } from "node-fetch-cache";
 import { allowlist } from "./chainstate/registry.mjs";
@@ -10,45 +11,80 @@ const provider = new providers.JsonRpcProvider(env.RPC_HTTP_HOST);
 const fetch = fetchBuilder.withCache(
   new FileSystemCache({
     cacheDirectory: path.resolve(env.CACHE_DIR),
-    ttl: 86400000, // 24 hours
+    ttl: 86400000 * 3, // 72 hours
   }),
 );
-
-async function fetchFCData(address) {
-  let response;
-  try {
-    response = await fetch(
-      `https://api.phyles.xyz/v0/farcaster/users?address=${address.toLowerCase()}`,
-    );
-  } catch (err) {
-    return;
-  }
-  let data;
-  try {
-    data = await response.json();
-  } catch (err) {
-    return;
-  }
-  if (
-    data.error === "User not found" ||
-    (data.users && Array.isArray(data.users) && data.users.length !== 1)
-  )
-    return;
-
-  const { bio, display_name, pfp, username } = data.users[0];
-
-  return {
-    bio,
-    displayName: display_name,
-    avatar: pfp,
-    username,
-  };
-}
 
 export async function toAddress(name) {
   const address = await provider.resolveName(name);
   if (address) return address;
   throw new Error("Couldn't convert to address");
+}
+
+async function fetchLensData(address) {
+  try {
+    utils.getAddress(address);
+  } catch (err) {
+    return;
+  }
+  const query = `
+     query {
+       profiles(request: {
+         where: {
+           ownedBy: ["${address}"]
+         }
+       }) {
+         items {
+           id,
+           handle {
+             fullHandle
+           },
+           metadata {
+             bio,
+             displayName,
+             picture {
+               ... on ImageSet {
+                 optimized {
+                   uri
+                 }
+               }
+             }
+           }
+         }
+       }
+     }
+   `;
+
+  let response;
+  try {
+    response = await fetch("https://api-v2.lens.dev/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ query }),
+    });
+  } catch (err) {
+    return;
+  }
+
+  let data;
+  try {
+    result = await response.json();
+    data = result.data;
+  } catch (err) {
+    return;
+  }
+  if (!data || !data.profiles.items.length) return;
+
+  const { id, handle, metadata } = data.profiles.items[0];
+  return {
+    id,
+    username: handle?.fullHandle,
+    bio: metadata?.bio,
+    displayName: metadata?.displayName,
+    avatar: metadata?.picture?.optimized?.uri,
+  };
 }
 
 async function fetchENSData(address) {
@@ -61,7 +97,7 @@ async function fetchENSData(address) {
   }
 
   try {
-    const response = await fetch(`${endpoint}${address}`);
+    const response = await fetch(`${endpoint}${address}?farcaster=true`);
     const data = await response.json();
 
     try {
@@ -78,6 +114,20 @@ async function fetchENSData(address) {
       address.slice(address.length - 4, address.length);
 
     const displayName = data.ens ? data.ens : truncatedAddress;
+
+    // NOTE: We used to have a function fetchFCData that would add the fields
+    // {bio,displayName,username,avatar} to the ENS object and so to preserve
+    // the ens module's expected returned value, we're now backfilling these
+    // values even though fetchFCData doesn't exist anymore.
+    if (data?.farcaster?.profile?.bio?.text) {
+      data.farcaster.bio = data.farcaster.profile.bio.text;
+    }
+    if (data?.farcaster?.display_name) {
+      data.farcaster.displayName = data.farcaster.display_name;
+    }
+    if (data?.farcaster?.pfp_url) {
+      data.farcaster.avatar = data.farcaster.pfp_url;
+    }
 
     return {
       ...data,
@@ -106,27 +156,33 @@ async function fetchENSData(address) {
 
 export async function resolve(address) {
   const ensProfile = await fetchENSData(address);
-  const fcProfile = await fetchFCData(ensProfile.address);
+  const lensProfile = await fetchLensData(address);
 
   let safeAvatar = ensProfile.avatar;
   if (safeAvatar && !safeAvatar.startsWith("https")) {
     safeAvatar = ensProfile.avatar_url;
   }
-  if (!safeAvatar && fcProfile && fcProfile.avatar) {
-    safeAvatar = fcProfile.avatar;
+  if (!safeAvatar && ensProfile?.farcaster?.avatar) {
+    safeAvatar = ensProfile.farcaster.avatar;
+  }
+  if (!safeAvatar && lensProfile?.avatar) {
+    safeAvatar = lensProfile.avatar;
   }
 
-  let displayName = ensProfile.ens;
-  if (!displayName && fcProfile && fcProfile.username) {
-    displayName = `@${fcProfile.username}`;
+  let displayName = DOMPurify.sanitize(ensProfile.ens);
+  if (!displayName && ensProfile?.farcaster?.username) {
+    displayName = `@${DOMPurify.sanitize(ensProfile.farcaster.username)}`;
+  }
+  if (!displayName && lensProfile?.username) {
+    displayName = `${DOMPurify.sanitize(lensProfile.username)}`;
   }
   if (!displayName) {
     displayName = ensProfile.truncatedAddress;
   }
   const profile = {
-    safeAvatar,
+    safeAvatar: DOMPurify.sanitize(safeAvatar),
     ...ensProfile,
-    farcaster: fcProfile,
+    lens: lensProfile,
     displayName,
   };
   return profile;

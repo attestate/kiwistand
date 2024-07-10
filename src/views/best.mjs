@@ -6,9 +6,8 @@ import htm from "htm";
 import vhtml from "vhtml";
 import normalizeUrl from "normalize-url";
 import { sub, differenceInMinutes, differenceInSeconds } from "date-fns";
+import DOMPurify from "isomorphic-dompurify";
 
-import { getTips, getTipsValue } from "../tips.mjs";
-import PWALine from "./components/iospwaline.mjs";
 import * as ens from "../ens.mjs";
 import Header from "./components/header.mjs";
 import SecondHeader from "./components/secondheader.mjs";
@@ -23,101 +22,27 @@ import * as registry from "../chainstate/registry.mjs";
 import log from "../logger.mjs";
 import { EIP712_MESSAGE } from "../constants.mjs";
 import Row, { extractDomain } from "./components/row.mjs";
+import { getBest } from "../cache.mjs";
 
 const html = htm.bind(vhtml);
 
-const itemAge = (timestamp) => {
-  const now = new Date();
-  const ageInMinutes = differenceInMinutes(now, new Date(timestamp * 1000));
-  return ageInMinutes;
-};
-
-export function count(leaves) {
-  const stories = {};
-
-  leaves = leaves.sort((a, b) => a.timestamp - b.timestamp);
-  for (const leaf of leaves) {
-    const key = `${normalizeUrl(leaf.href)}`;
-    let story = stories[key];
-
-    if (!story) {
-      story = {
-        title: leaf.title,
-        timestamp: leaf.timestamp,
-        href: leaf.href,
-        identity: leaf.identity,
-        displayName: leaf.displayName,
-        upvotes: 1,
-        upvoters: [leaf.identity],
-        index: leaf.index,
-      };
-      stories[key] = story;
-    } else {
-      if (leaf.type === "amplify") {
-        story.upvotes += 1;
-        story.upvoters.push(leaf.identity);
-        if (!story.title && leaf.title) story.title = leaf.title;
-      }
-    }
-  }
-  return Object.values(stories);
-}
-
-async function topstories(leaves, start, end) {
-  return count(leaves).sort((a, b) => b.upvotes - a.upvotes);
-}
-
-async function recompute(trie, page, period, domain) {
-  const from = null;
-  const amount = null;
-  const parser = JSON.parse;
-  const allowlist = await registry.allowlist();
-  const delegations = await registry.delegations();
-
-  let startDatetime = null;
-  let tolerance = null;
+async function getStories(trie, page, period, domain) {
+  let startDatetime = 0;
   const unix = (date) => Math.floor(date.getTime() / 1000);
   const now = new Date();
   if (period === "month") {
     startDatetime = unix(sub(now, { months: 1 }));
-    tolerance = unix(sub(now, { months: 5 }));
   } else if (period === "week") {
     startDatetime = unix(sub(now, { weeks: 1 }));
-    tolerance = unix(sub(now, { weeks: 14 }));
   } else if (period === "day") {
     startDatetime = unix(sub(now, { days: 1 }));
-    tolerance = unix(sub(now, { weeks: 2 }));
   }
 
-  const href = null;
-  const type = "amplify";
-  let leaves = await store.posts(
-    trie,
-    from,
-    amount,
-    parser,
-    tolerance,
-    allowlist,
-    delegations,
-    href,
-    type,
-  );
-  const policy = await moderation.getLists();
-  leaves = moderation.moderate(leaves, policy);
-
   const totalStories = parseInt(env.TOTAL_STORIES, 10);
-  const start = totalStories * page;
-  const end = totalStories * (page + 1);
-  let storyPromises = (await topstories(leaves, start, end)).filter(
-    (story) => story.timestamp >= startDatetime,
-  );
+  const from = totalStories * page;
+  const orderBy = null;
+  const result = getBest(totalStories, from, orderBy, domain, startDatetime);
 
-  if (domain)
-    storyPromises = storyPromises.filter(
-      ({ href }) => extractDomain(href) === domain,
-    );
-
-  storyPromises = storyPromises.slice(start, end);
   let writers = [];
   try {
     writers = await moderation.getWriters();
@@ -125,20 +50,15 @@ async function recompute(trie, page, period, domain) {
     // noop
   }
 
-  const tips = await getTips();
-
   let stories = [];
-  for await (let story of storyPromises) {
+  for await (let story of result) {
     const ensData = await ens.resolve(story.identity);
-
-    const tipValue = getTipsValue(tips, story.index);
-    story.tipValue = tipValue;
 
     let avatars = [];
     for await (let upvoter of story.upvoters) {
       const profile = await ens.resolve(upvoter);
       if (profile.safeAvatar) {
-        avatars.push(profile.safeAvatar);
+        avatars.push(`/avatar/${profile.address}`);
       }
     }
     const isOriginal = Object.keys(writers).some(
@@ -156,44 +76,11 @@ async function recompute(trie, page, period, domain) {
   return stories;
 }
 
-const pages = {};
 export default async function index(trie, theme, page, period, domain) {
-  const key = `${page}-${period}-${domain}`;
   const totalStories = parseInt(env.TOTAL_STORIES, 10);
-  let cacheRes = pages[key];
-  let stories;
-
-  let maxAgeInSeconds = 60 * 60 * 24;
-  if (period === "day" && page === 0 && !domain) maxAgeInSeconds = 60 * 60 * 6;
-  if (period === "day" && page > 0 && page < 5 && !domain)
-    maxAgeInSeconds = 60 * 60 * 10;
-  if (period === "week" && page === 0 && !domain)
-    maxAgeInSeconds = 60 * 60 * 24;
-  if (period === "week" && page > 0 && page < 5 && !domain)
-    maxAgeInSeconds = 60 * 60 * 24 * 2;
-  if (period === "month" && page === 0 && !domain)
-    maxAgeInSeconds = 60 * 60 * 24 * 3;
-  if (period === "month" && page > 0 && page < 5 && !domain)
-    maxAgeInSeconds = 60 * 60 * 24 * 5;
-  if (period === "all" && page === 0 && !domain)
-    maxAgeInSeconds = 60 * 60 * 24 * 7;
-  if (period === "all" && page > 0 && page < 5 && !domain)
-    maxAgeInSeconds = 60 * 60 * 24 * 7;
-
-  if (
-    !cacheRes ||
-    (cacheRes &&
-      differenceInSeconds(new Date(), cacheRes.age) > maxAgeInSeconds)
-  ) {
-    stories = await recompute(trie, page, period, domain);
-    pages[key] = {
-      stories,
-      age: new Date(),
-    };
-  } else {
-    stories = cacheRes.stories;
-  }
+  const stories = await getStories(trie, page, period, domain);
   const ogImage = "https://news.kiwistand.com/kiwi_top_feed_page.png";
+  const recentJoiners = await registry.recents();
   return html`
     <html lang="en" op="news">
       <head>
@@ -204,7 +91,6 @@ export default async function index(trie, theme, page, period, domain) {
         />
       </head>
       <body>
-        ${PWALine}
         <div class="container">
           ${Sidebar()}
           <div id="hnmain">
@@ -212,7 +98,7 @@ export default async function index(trie, theme, page, period, domain) {
               <tr>
                 ${await Header(theme)}
               </tr>
-              <tr>
+              <tr class="third-header">
                 ${ThirdHeader(theme, "new")}
               </tr>
               <tr>
@@ -231,7 +117,17 @@ export default async function index(trie, theme, page, period, domain) {
                   </p>
                 </td>
               </tr>
-              ${stories.map(Row(null, "/best", null, false, false, period))}
+              ${stories.map(
+                Row(
+                  null,
+                  "/best",
+                  undefined,
+                  false,
+                  false,
+                  period,
+                  recentJoiners,
+                ),
+              )}
               <tr class="spacer" style="height:15px"></tr>
               ${stories.length < totalStories
                 ? ""
@@ -273,11 +169,6 @@ export default async function index(trie, theme, page, period, domain) {
                       </table>
                     </td>
                   </tr>`}
-              <tr
-                style="display: block; padding: 10px; background-color: ${theme.color}"
-              >
-                <td></td>
-              </tr>
             </table>
           </div>
         </div>

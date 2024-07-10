@@ -23,7 +23,7 @@ import {
 } from "@wagmi/core";
 
 import { getLocalAccount } from "./session.mjs";
-
+import { fetchPrice } from "./API.mjs";
 import { getProvider, useProvider, client, chains } from "./client.mjs";
 
 export async function prepare(key) {
@@ -40,16 +40,12 @@ export async function prepare(key) {
     mainnet: (await fetchBalance({ address, chainId: mainnet.id })).value,
     optimism: (await fetchBalance({ address, chainId: optimism.id })).value,
   };
-  const saleDetails = await readContract({
-    address: collectionProxy,
-    abi: abiVendor,
-    functionName: "saleDetails",
-    chainId: optimism.id,
-  });
-  if (!saleDetails || !saleDetails.publicSalePrice) {
+
+  let price = await fetchPrice();
+  if (!price || !price.authoritative) {
     throw new Error("Error getting the price");
   }
-  const price = saleDetails.publicSalePrice;
+  price = price.authoritative;
 
   let preferredChainId = null;
   if (balance.optimism > price) {
@@ -157,52 +153,9 @@ const abiDelegator = [
     type: "function",
   },
 ];
-const abiVendor = [
-  {
-    inputs: [{ internalType: "uint256", name: "quantity", type: "uint256" }],
-    name: "purchase",
-    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
-    stateMutability: "payable",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "saleDetails",
-    outputs: [
-      {
-        components: [
-          { internalType: "bool", name: "publicSaleActive", type: "bool" },
-          { internalType: "bool", name: "presaleActive", type: "bool" },
-          { internalType: "uint256", name: "publicSalePrice", type: "uint256" },
-          { internalType: "uint64", name: "publicSaleStart", type: "uint64" },
-          { internalType: "uint64", name: "publicSaleEnd", type: "uint64" },
-          { internalType: "uint64", name: "presaleStart", type: "uint64" },
-          { internalType: "uint64", name: "presaleEnd", type: "uint64" },
-          {
-            internalType: "bytes32",
-            name: "presaleMerkleRoot",
-            type: "bytes32",
-          },
-          {
-            internalType: "uint256",
-            name: "maxSalePurchasePerAddress",
-            type: "uint256",
-          },
-          { internalType: "uint256", name: "totalMinted", type: "uint256" },
-          { internalType: "uint256", name: "maxSupply", type: "uint256" },
-        ],
-        internalType: "struct IERC721Drop.SaleDetails",
-        name: "",
-        type: "tuple",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-];
 
 const collectionProxy = "0x66747bdc903d17c586fa09ee5d6b54cc85bbea45";
-const addressDelegator = "0xd315bF56F04aC93352b6a78E7952eEfC2A7A0494";
+const addressDelegator = "0xe657d8b936ffd1890540e43829c3330c4a93de82";
 
 const newKey = Wallet.createRandom();
 const BuyButton = (props) => {
@@ -224,7 +177,7 @@ const BuyButton = (props) => {
     });
 
   let address;
-  const localAccount = getLocalAccount(from.address);
+  const localAccount = getLocalAccount(from.address, allowlist);
   if (from.isConnected) {
     address = from.address;
   }
@@ -272,8 +225,13 @@ const BuyButton = (props) => {
   if (isEligible) {
     return (
       <div>
-        <button className="buy-button" disabled>
-          Thanks for minting!
+        <button
+          onClick={() => {
+            window.location.pathname = "/";
+          }}
+          className="buy-button"
+        >
+          Thanks for joining!
         </button>
       </div>
     );
@@ -399,7 +357,7 @@ const Button = (props) => {
       <div>
         <a target="_blank" href={`https://${etherscan}/tx/${data.hash}`}>
           <button className="buy-button">
-            Thanks for minting! (view on Etherscan)
+            Thanks for joining! (view on Etherscan)
           </button>
         </a>
       </div>
@@ -438,7 +396,7 @@ const Form = (props) => {
                 }}
                 className="buy-button"
               >
-                Connect Wallet to Mint
+                Connect Wallet
               </button>
             );
           }}

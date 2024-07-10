@@ -7,9 +7,9 @@ import vhtml from "vhtml";
 import normalizeUrl from "normalize-url";
 import { formatDistanceToNow, sub } from "date-fns";
 import { utils } from "ethers";
+import DOMPurify from "isomorphic-dompurify";
 
 import * as ens from "../ens.mjs";
-import PWALine from "./components/iospwaline.mjs";
 import Header from "./components/header.mjs";
 import Sidebar from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
@@ -19,7 +19,6 @@ import * as registry from "../chainstate/registry.mjs";
 import * as id from "../id.mjs";
 import * as moderation from "./moderation.mjs";
 import cache, { getUpvotes, getComments } from "../cache.mjs";
-import { getUserTips } from "../tips.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -54,23 +53,23 @@ const generateFeed = (messages) => {
   return Object.values(groupedMessages);
 };
 
-function truncateComment(comment, maxLength = 260) {
+export function truncateComment(comment, maxLength = 260) {
   if (comment.length <= maxLength) return comment;
   return comment.slice(0, comment.lastIndexOf(" ", maxLength)) + "...";
 }
 
-function generateCommentRow(activity, identity, bgColor) {
-  const comment = truncateComment(activity.message.title);
+function generateCommentRow(activity, identity, bgColor, theme) {
+  const comment = DOMPurify.sanitize(truncateComment(activity.message.title));
   const avatar = identity.safeAvatar
     ? html`<img
-        src="${identity.safeAvatar}"
+        src="/avatar/${identity.address}"
         alt="avatar"
         style="border: 1px solid #828282; width: 28px; height: 28px; border-radius: 2px; margin-top: 1.5rem;"
       />`
     : "";
 
   const [_, index] = activity.message.href.split(":");
-  const link = `/stories?index=${index}#0x${activity.message.index}`;
+  const link = `/stories?index=${index}&cacheBuster=${activity.message.index}#0x${activity.message.index}`;
 
   return html`
     <tr style="background-color: ${bgColor}">
@@ -89,12 +88,14 @@ function generateCommentRow(activity, identity, bgColor) {
               <p style="margin-top: 8px; margin-bottom: 2px;">
                 <strong>
                   <a style="color: ;" href="${link}">
-                    <span style="color: limegreen;"
+                    <span style="color: ${theme.color};"
                       >${identity.displayName}</span
                     >
                     <span> commented on </span>
-                    <span style="color: limegreen;"
-                      >${activity.message.submission_title}</span
+                    <span style="color: ${theme.color};"
+                      >${DOMPurify.sanitize(
+                        activity.message.submission_title,
+                      )}</span
                     >
                   </a>
                 </strong>
@@ -114,17 +115,19 @@ function generateCommentRow(activity, identity, bgColor) {
   `;
 }
 
-function generateRow(lastUpdate) {
+function generateRow(lastUpdate, theme) {
   return (activity, i) => {
     const bgColor =
       lastUpdate < activity.timestamp ? "rgba(0,0,0,0.05)" : "none";
 
     if (activity.verb === "commented" || activity.verb === "involved") {
       const identity = activity.identities[0];
-      return generateCommentRow(activity, identity, bgColor);
+      return generateCommentRow(activity, identity, bgColor, theme);
     }
 
-    const title = activity.message.title || activity.message.href;
+    const title = DOMPurify.sanitize(
+      activity.message.title || activity.message.href,
+    );
     const identity = activity.identities[activity.identities.length - 1];
     const size = 28;
     const identities = activity.identities
@@ -138,7 +141,7 @@ function generateRow(lastUpdate) {
           <div style="display: flex; border-bottom: 1px solid rgba(0,0,0,0.1);">
             <div
               class="votearrow"
-              style="font-size: 1.5rem; flex: 0.15; display: flex; align-items: center; justify-content: center; color: limegreen;"
+              style="font-size: 1.5rem; flex: 0.15; display: flex; align-items: center; justify-content: center; color: ${theme.color};"
               title="upvote"
             >
               ${activity.verb === "upvoted" ? html`▲` : html`$`}
@@ -154,10 +157,12 @@ function generateRow(lastUpdate) {
                     ${identities.map(
                       (identity, index) => html`
                         <a
-                          href="https://news.kiwistand.com/upvotes?address=${identity.address}"
+                          href="https://news.kiwistand.com/upvotes?address=${DOMPurify.sanitize(
+                            identity.address,
+                          )}"
                         >
                           <img
-                            src="${identity.safeAvatar}"
+                            src="/avatar/${identity.address}"
                             alt="avatar"
                             style="z-index: ${index}; width: ${size}px; height: ${size}px; border: 1px solid #828282; border-radius: 2px; margin-left: 15px;"
                           />
@@ -184,26 +189,12 @@ function generateRow(lastUpdate) {
                   >
                 </p>
                 <p style="margin-top: 5px;">
-                  ${activity.verb === "tipped"
-                    ? html`
-                        ${activity.message.href
-                          ? html`<a
-                              href="${activity.message.href}"
-                              target="_blank"
-                              style="color: gray; word-break: break-word;"
-                            >
-                              ${activity.message.title}
-                            </a>`
-                          : html` ${activity.message.title} `}
-                      `
-                    : html`
-                        <a
-                          href="/stories?index=0x${activity.message.index}"
-                          style="color: gray; word-break: break-word;"
-                        >
-                          ${title.substring(0, 80)}
-                        </a>
-                      `}
+                  <a
+                    href="/stories?index=0x${activity.message.index}"
+                    style="color: gray; word-break: break-word;"
+                  >
+                    ${title.substring(0, 80)}
+                  </a>
                 </p>
                 <p>
                   ${activity.metadata?.index && activity.metadata?.title
@@ -211,7 +202,7 @@ function generateRow(lastUpdate) {
                         href="/stories?index=0x${activity.metadata.index}"
                         style="color: gray; word-break: break-word;"
                       >
-                        ${activity.metadata.title}
+                        ${DOMPurify.sanitize(activity.metadata.title)}
                       </a>`
                     : ""}
                 </p>
@@ -225,6 +216,7 @@ function generateRow(lastUpdate) {
 }
 
 export async function page(theme, identity, notifications, lastUpdate) {
+  identity = DOMPurify.sanitize(identity);
   let feed = html`
     <tr>
       <td
@@ -253,14 +245,13 @@ export async function page(theme, identity, notifications, lastUpdate) {
       </td>
     </tr>
   `;
-  feed = notifications.map(generateRow(lastUpdate));
+  feed = notifications.map(generateRow(lastUpdate, theme));
   const content = html`
     <html lang="en" op="news">
       <head>
         ${Head}
       </head>
       <body>
-        ${PWALine}
         <div class="container">
           ${Sidebar()}
           <div id="hnmain">
@@ -268,11 +259,17 @@ export async function page(theme, identity, notifications, lastUpdate) {
               <tr>
                 ${await Header(theme)}
               </tr>
+              <tr>
+                <td>
+                  <push-subscription-button data-wrapper="true">
+                  </push-subscription-button>
+                </td>
+              </tr>
               ${feed}
             </table>
           </div>
         </div>
-        ${Footer(theme)}
+        ${Footer(theme, "/activity")}
       </body>
     </html>
   `;
@@ -287,6 +284,8 @@ export async function data(trie, identity, lastRemoteValue) {
     throw new Error("Not a valid address");
   }
 
+  // TODO: Now that we have committed to an sqlite database, we should replace
+  // this logic to make it permanent by storing the user timestamp on disk
   const userKey = `--last-updated-${identity}`;
   let latestValue = cache.get(userKey);
   if (!latestValue || latestValue < lastRemoteValue) {
@@ -307,8 +306,6 @@ export async function data(trie, identity, lastRemoteValue) {
     .flag(comments, config)
     .filter((comment) => !comment.flagged);
 
-  let tips = await getUserTips(identity);
-
   const activities = generateFeed(leaves).filter(
     (activity) => activity.verb === "upvoted",
   );
@@ -321,27 +318,6 @@ export async function data(trie, identity, lastRemoteValue) {
       identities: [comment.identity],
     });
   });
-
-  if (tips && tips.length > 0) {
-    tips.forEach((tip) => {
-      activities.push({
-        identities: [tip.from],
-        verb: "tipped",
-        message: {
-          title: tip.message,
-          timestamp: tip.timestamp,
-          identity: tip.from,
-          href: tip.blockExplorerUrl,
-        },
-        metadata: {
-          index: tip.index,
-          title: tip.title,
-        },
-        timestamp: tip.timestamp,
-        towards: tip.to,
-      });
-    });
-  }
 
   activities.sort((a, b) => b.timestamp - a.timestamp);
 

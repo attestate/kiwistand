@@ -5,7 +5,10 @@ export default cache;
 import { join } from "path";
 
 import Database from "better-sqlite3";
+import { add } from "date-fns";
 import normalizeUrl from "normalize-url";
+
+import log from "./logger.mjs";
 
 const dbPath = join(process.env.CACHE_DIR, "database.db");
 const db = new Database(dbPath);
@@ -73,6 +76,132 @@ function initialize() {
      CREATE INDEX IF NOT EXISTS idx_comments_timestamp ON comments(timestamp);
      CREATE INDEX IF NOT EXISTS idx_comments_identity ON comments(identity);
    `);
+
+  db.exec(`
+      CREATE TABLE fingerprints (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        url TEXT NOT NULL,
+        hash TEXT NOT NULL,
+        timestamp INTEGER NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_fingerprints_url ON fingerprints(url);
+      CREATE INDEX IF NOT EXISTS idx_url_fingerprints_timestamp ON fingerprints(timestamp);
+    `);
+}
+
+export function getHashesPerDateRange(startDate, endDate) {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  const dates = [];
+  const counts = [];
+
+  for (let day = start; day <= end; day = add(day, { days: 1 })) {
+    const dayStartTimestamp = Math.floor(day.getTime() / 1000);
+    const nextDay = add(day, { days: 1 });
+    const dayEndTimestamp = Math.floor(nextDay.getTime() / 1000) - 1;
+
+    const query = `
+        SELECT COUNT(DISTINCT hash) AS count
+        FROM fingerprints
+        WHERE timestamp >= ? AND timestamp <= ?
+      `;
+    const params = [dayStartTimestamp, dayEndTimestamp];
+    const result = db.prepare(query).get(params);
+    dates.push(day);
+    counts.push(result.count);
+  }
+  console.log(dates, counts);
+
+  return { dates, counts };
+}
+
+export function countOutbounds(url, hours = 24) {
+  const normalizedUrl = normalizeUrl(url, {
+    stripWWW: false,
+  });
+  const cutoffTimestamp = Math.floor(Date.now() / 1000 - hours * 60 * 60);
+
+  const query = db.prepare(`
+     SELECT COUNT(DISTINCT hash) AS uniqueHashCount
+     FROM fingerprints 
+     WHERE url = ? AND timestamp >= ?
+   `);
+  const result = query.get(normalizedUrl, cutoffTimestamp);
+  return result.uniqueHashCount;
+}
+
+export function trackOutbound(url, hash) {
+  const normalizedUrl = normalizeUrl(url, {
+    stripWWW: false,
+  });
+  const timestamp = Math.floor(Date.now() / 1000);
+  const insert = db.prepare(
+    `INSERT INTO fingerprints(url, hash, timestamp) VALUES (?,?,?)`,
+  );
+  insert.run(normalizedUrl, hash, timestamp);
+}
+
+export function getNumberOfOnlineUsers() {
+  const timestamp24HoursAgo = Math.floor(Date.now() / 1000 - 24 * 60 * 60);
+
+  const uniqueIdentities = new Set();
+
+  const tables = ["submissions", "upvotes", "comments"];
+  tables.forEach((table) => {
+    const stmt = db.prepare(`
+       SELECT DISTINCT identity FROM ${table}
+       WHERE timestamp > ?
+     `);
+    const identities = stmt.all(timestamp24HoursAgo);
+    identities.forEach((identity) => uniqueIdentities.add(identity.identity));
+  });
+
+  return uniqueIdentities.size;
+}
+
+export function getBest(amount, from, orderBy, domain, startDatetime) {
+  let orderClause = "upvotesCount DESC";
+  if (orderBy === "new") {
+    orderClause = "s.timestamp DESC";
+  }
+
+  const query = `
+     SELECT
+       s.*,
+       (SELECT COUNT(*) FROM upvotes WHERE href = s.href) AS upvotesCount,
+       GROUP_CONCAT(u.identity) AS upvoters
+     FROM
+       submissions s
+     LEFT JOIN
+       upvotes u ON s.href = u.href
+     WHERE
+       (? = '' OR s.href GLOB 'https://*.'|| ? ||'/*')
+       AND (? = 0 OR s.timestamp > ?)
+     GROUP BY
+       s.href
+     ORDER BY
+       ${orderClause}
+     LIMIT ? OFFSET ?
+   `;
+
+  const submissions = db
+    .prepare(query)
+    .all(domain, domain, startDatetime, startDatetime, amount, from);
+
+  return submissions.map((submission) => {
+    const [, index] = submission.id.split("0x");
+    const upvotersArray = submission.upvoters
+      ? submission.upvoters.split(",")
+      : [];
+    upvotersArray.unshift(submission.identity);
+    delete submission.id;
+    return {
+      ...submission,
+      index,
+      upvotes: submission.upvotesCount + 1,
+      upvoters: upvotersArray,
+    };
+  });
 }
 
 export function getSubmissions(identity, amount, from, orderBy, domains) {
@@ -210,20 +339,29 @@ export function getComments(identity) {
     .prepare(
       `
      SELECT
-      comments.*,
-      (SELECT title FROM submissions WHERE id = comments.submission_id) AS submission_title
+      c1.*,
+      (SELECT title FROM submissions WHERE id = c1.submission_id) AS submission_title
      FROM
-      comments
+      comments AS c1
      WHERE
         submission_id
-          IN (SELECT submission_id FROM comments WHERE identity = ? AND timestamp >= ?)
+          IN (
+            SELECT submission_id 
+            FROM comments
+            WHERE identity = ?
+            AND timestamp >= ?
+          )
       AND
         identity != ?
-      AND
-        timestamp >= ?
+      AND c1.timestamp > (
+        SELECT MAX(c2.timestamp)
+        FROM comments AS c2
+        WHERE c2.identity = ?
+        AND c2.submission_id = c1.submission_id
+      )
    `,
     )
-    .all(identity, threeWeeksAgo, identity, threeWeeksAgo)
+    .all(identity, threeWeeksAgo, identity, identity)
     .map((comment) => {
       const href = comment.submission_id;
       delete comment.submission_id;
@@ -243,16 +381,35 @@ export function getComments(identity) {
   );
 }
 
-export function getSubmission(index) {
-  const submission = db
-    .prepare(
-      `
+export function getSubmission(index, href) {
+  let submission;
+  if (index) {
+    submission = db
+      .prepare(
+        `
      SELECT * FROM submissions WHERE id = ?
    `,
-    )
-    .get(`kiwi:${index}`);
+      )
+      .get(`kiwi:${index}`);
+  }
 
-  if (!submission) {
+  if (href) {
+    const normalizedHref = normalizeUrl(href, {
+      stripWWW: false,
+    });
+    submission = db
+      .prepare(
+        `
+     SELECT * FROM submissions WHERE href = ?
+   `,
+      )
+      .get(normalizedHref);
+  }
+
+  if (!submission && href) {
+    throw new Error(`Couldn't find submission with href: ${href}`);
+  }
+  if (!submission && index) {
     throw new Error(`Couldn't find submission with index: ${index}`);
   }
 
@@ -286,8 +443,12 @@ export function getSubmission(index) {
     .map((comment) => {
       const [, index] = comment.id.split("0x");
       delete comment.id;
+
+      const submissionId = comment.submission_id;
+      delete comment.submission_id;
       return {
         ...comment,
+        submissionId,
         index,
         type: "comment",
       };
@@ -397,14 +558,18 @@ function insertMessage(message) {
     const insertComment = db.prepare(
       `INSERT INTO comments (id, submission_id, timestamp, title, signer, identity) VALUES (?, ?, ?, ?, ?, ?)`,
     );
-    insertComment.run(
-      `kiwi:0x${index}`,
-      href,
-      timestamp,
-      title,
-      signer,
-      identity,
-    );
+    try {
+      insertComment.run(
+        `kiwi:0x${index}`,
+        href,
+        timestamp,
+        title,
+        signer,
+        identity,
+      );
+    } catch (err) {
+      log(`Failing to insert comment "${title}", error: "${err.toString()}"`);
+    }
   } else {
     throw new Error("Unsupported message type");
   }

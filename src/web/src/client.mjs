@@ -5,7 +5,7 @@ import {
   FallbackProvider,
   JsonRpcProvider,
 } from "@ethersproject/providers";
-import { getDefaultWallets } from "@rainbow-me/rainbowkit";
+import { connectorsForWallets } from "@rainbow-me/rainbowkit";
 import { getPublicClient } from "@wagmi/core";
 import {
   createConfig,
@@ -15,19 +15,55 @@ import {
 } from "wagmi";
 import { mainnet, optimism } from "wagmi/chains";
 import { alchemyProvider } from "wagmi/providers/alchemy";
+import {
+  injectedWallet,
+  walletConnectWallet,
+  safeWallet,
+  coinbaseWallet,
+  metaMaskWallet,
+  braveWallet,
+  rainbowWallet,
+} from "@rainbow-me/rainbowkit/wallets";
+//import { infuraProvider } from "wagmi/providers/infura";
 
 const config = configureChains(
   [optimism, mainnet],
-  [alchemyProvider({ apiKey: "3ZBBnBhNn0nMmNcdgXFpqWqC981hd1Z2" })],
+  [alchemyProvider({ apiKey: "TfAhzs116ThO7Fwod1gzpTJmH0Cudxp7" })],
+  //[infuraProvider({ apiKey: "ddb924190df54c22a268ae7671ed0f55" })],
 );
 
 export const chains = config.chains;
+const projectId = "cd46d2fcf6d171fb7c017129868fa211";
+const appName = "Kiwi News";
 
-const { connectors } = getDefaultWallets({
-  appName: "Kiwi News",
-  projectId: "cd46d2fcf6d171fb7c017129868fa211",
-  chains,
-});
+const wallets = [
+  injectedWallet({ chains }),
+  walletConnectWallet({ projectId, chains }),
+  safeWallet({ chains }),
+  coinbaseWallet({ appName, chains }),
+  metaMaskWallet({ chains, projectId }),
+  braveWallet({ chains }),
+];
+
+const isDesktop = () => {
+  return (
+    !("ontouchstart" in window || navigator.maxTouchPoints) &&
+    window.innerWidth > 800
+  );
+};
+// NOTE: We've had issues with iOS Rainbow wallet users clicking on the Rainbow
+// link but then not being taken to Rainbow wallet on their mobile devices.
+// So instead, we're now asking mobile users to connect via the WalletConnect
+// dialogue, while we allow Desktop users to connect to their Rainbow wallet
+// extension directly.
+if (isDesktop()) wallets.push(rainbowWallet({ chains, projectId }));
+
+const connectors = connectorsForWallets([
+  {
+    groupName: "Popular",
+    wallets,
+  },
+]);
 
 export const client = createConfig({
   autoConnect: true,

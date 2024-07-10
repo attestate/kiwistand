@@ -13,9 +13,8 @@ import {
   isBefore,
 } from "date-fns";
 import linkifyStr from "linkify-string";
+import DOMPurify from "isomorphic-dompurify";
 
-import PWALine from "./components/iospwaline.mjs";
-import { getTips, getTipsValue, filterTips } from "../tips.mjs";
 import * as ens from "../ens.mjs";
 import Header from "./components/header.mjs";
 import SecondHeader from "./components/secondheader.mjs";
@@ -31,9 +30,11 @@ import log from "../logger.mjs";
 import { EIP712_MESSAGE } from "../constants.mjs";
 import Row, { extractDomain } from "./components/row.mjs";
 import * as karma from "../karma.mjs";
+import { truncateName } from "../utils.mjs";
 import { metadata, render } from "../parser.mjs";
 import { getSubmission } from "../cache.mjs";
 import * as preview from "../preview.mjs";
+import ShareIcon from "./components/shareicon.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -46,9 +47,8 @@ export async function generateStory(index) {
 
   let submission;
   try {
-    submission = await getSubmission(index);
+    submission = getSubmission(index);
   } catch (err) {
-    console.error(err);
     log(
       `Requested index "${index}" but didn't find because of error "${err.toString()}"`,
     );
@@ -95,14 +95,8 @@ export function generateList(profiles) {
                   />`
                 : null}
               <span> </span>
-              <a href="/${profile.name}">${profile.name}</a>
-              <span> </span>
-              <span
-                >${profile.usdAmount
-                  ? html`<a href="${profile.blockExplorerUrl}" target="_blank"
-                      >tipped $${profile.usdAmount.toFixed(2)}</a
-                    >`
-                  : "upvoted"}</span
+              <a href="/upvotes?address=${profile.address}"
+                >${profile.name} upvoted</a
               >
             </p>
           </li>
@@ -135,34 +129,13 @@ export default async function (trie, theme, index, value) {
     ...value,
     isOriginal,
   };
-  const tips = await getTips();
-  const tipValue = getTipsValue(tips, index);
-  story.tipValue = tipValue;
-
-  let tipActions = [];
-  for await (let { blockExplorerUrl, usdAmount, from, timestamp } of filterTips(
-    tips,
-    index,
-  )) {
-    const profile = await ens.resolve(from);
-    if (profile.safeAvatar && profile.displayName) {
-      tipActions.push({
-        blockExplorerUrl,
-        timestamp: timestamp._seconds,
-        name: profile.displayName,
-        avatar: profile.safeAvatar,
-        address: profile.address,
-        usdAmount,
-      });
-    }
-  }
 
   let profiles = [];
   let avatars = [];
   for await (let { identity, timestamp } of story.upvoters) {
     const profile = await ens.resolve(identity);
     if (profile.safeAvatar) {
-      avatars.push(profile.safeAvatar);
+      avatars.push(`/avatar/${profile.address}`);
 
       if (profile.displayName) {
         profiles.push({
@@ -189,9 +162,7 @@ export default async function (trie, theme, index, value) {
       comment.avatar = profile.safeAvatar;
     }
   }
-  const actions = [...profiles, ...tipActions].sort(
-    (a, b) => a.timestamp - b.timestamp,
-  );
+  const actions = profiles.sort((a, b) => a.timestamp - b.timestamp);
   story.avatars = avatars;
   // NOTE: store.post returns upvoters as objects of "identity" and "timestamp"
   // property so that we can zip them with tipping actions. But the row component
@@ -222,14 +193,13 @@ export default async function (trie, theme, index, value) {
     data && data.ogDescription
       ? data.ogDescription
       : "Kiwi News is the prime feed for hacker engineers building a decentralized future. All our content is handpicked and curated by crypto veterans.";
+  const recentJoiners = await registry.recents();
   return html`
     <html lang="en" op="news">
       <head>
-        ${head.custom(ogImage, value.title)}
-        <meta name="description" content="${ogDescription}" />
+        ${head.custom(ogImage, value.title, ogDescription)}
       </head>
       <body>
-        ${PWALine}
         <div class="container">
           ${Sidebar(path)}
           <div id="hnmain">
@@ -237,9 +207,17 @@ export default async function (trie, theme, index, value) {
               <tr>
                 ${await Header(theme)}
               </tr>
-              ${Row(start, "/stories", style)({ ...story, index })}
+              ${Row(
+                start,
+                "/stories",
+                style,
+                null,
+                null,
+                null,
+                recentJoiners,
+              )({ ...story, index })}
               <tr>
-                <td>${generateList(actions)}</td>
+                <td>${actions.length > 3 ? generateList(actions) : ""}</td>
               </tr>
               ${story.comments.length > 0
                 ? html`<tr>
@@ -269,22 +247,44 @@ export default async function (trie, theme, index, value) {
                                     ? html`<a
                                         style="color: black;"
                                         href="/upvotes?address=${comment.identity}"
-                                        >${comment.displayName}</a
+                                        >${truncateName(comment.displayName)}</a
                                       >`
-                                    : comment.displayName}</b
+                                    : truncateName(comment.displayName)}</b
                                 >
-                                <span> • </span>
-                                <a
-                                  class="meta-link"
-                                  href="/stories?index=0x${index}#0x${comment.index}"
-                                >
-                                  <span>
-                                    ${formatDistanceToNowStrict(
-                                      new Date(comment.timestamp * 1000),
+                                <span class="inverse-share-container">
+                                  <span> • </span>
+                                  <a
+                                    class="meta-link"
+                                    href="/stories?index=0x${index}#0x${comment.index}"
+                                  >
+                                    <span>
+                                      ${formatDistanceToNowStrict(
+                                        new Date(comment.timestamp * 1000),
+                                      )}
+                                    </span>
+                                    <span> ago</span>
+                                  </a>
+                                </span>
+                                <span class="share-container">
+                                  <span> • </span>
+                                  <a
+                                    href="#"
+                                    class="caster-link share-link"
+                                    title="Share"
+                                    style="white-space: nowrap;"
+                                    onclick="event.preventDefault(); navigator.share({url: 'https://news.kiwistand.com/stories?index=0x${index}#0x${comment.index}'});"
+                                  >
+                                    ${ShareIcon(
+                                      "padding: 0 3px 1px 0; vertical-align: middle; height: 13px; width: 13px;",
                                     )}
-                                  </span>
-                                  <span> ago</span>
-                                </a>
+                                    <span>
+                                      ${formatDistanceToNowStrict(
+                                        new Date(comment.timestamp * 1000),
+                                      )}
+                                    </span>
+                                    <span> ago</span>
+                                  </a>
+                                </span>
                               </div>
                               <br />
                               ${comment.flagged && comment.reason
@@ -293,16 +293,19 @@ export default async function (trie, theme, index, value) {
                                   >`
                                 : html`<span
                                     dangerouslySetInnerHTML=${{
-                                      __html: linkifyStr(comment.title, {
-                                        className: "meta-link",
-                                        target: "_blank",
-                                        defaultProtocol: "https",
-                                        validate: {
-                                          url: (value) =>
-                                            /^https:\/\/.*/.test(value),
-                                          email: () => false,
+                                      __html: linkifyStr(
+                                        DOMPurify.sanitize(comment.title),
+                                        {
+                                          className: "meta-link",
+                                          target: "_blank",
+                                          defaultProtocol: "https",
+                                          validate: {
+                                            url: (value) =>
+                                              /^https:\/\/.*/.test(value),
+                                            email: () => false,
+                                          },
                                         },
-                                      }),
+                                      ),
                                     }}
                                   ></span>`}
                             </span>`,
@@ -313,7 +316,7 @@ export default async function (trie, theme, index, value) {
                 : null}
               <tr>
                 <td>
-                  <nav-comment-input>
+                  <nav-comment-input data-story-index="0x${index}">
                     <div style="margin: 0 1rem 1rem 1rem;">
                       <textarea
                         style="font-size: 1rem; border: 1px solid #828282; display:block;width:100%;"

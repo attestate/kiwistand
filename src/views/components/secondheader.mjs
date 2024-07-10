@@ -1,12 +1,26 @@
 import { env } from "process";
 import htm from "htm";
 import vhtml from "vhtml";
+import DOMPurify from "isomorphic-dompurify";
+
+import { getNumberOfOnlineUsers } from "../../cache.mjs";
 
 const html = htm.bind(vhtml);
 
 const style = "width: 1rem; position: relative; top: 0.15rem;";
 
-export const broadcastSVG = html`
+export const broadcastFullSVG = html`<svg
+  style="${style}"
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 256 256"
+>
+  <rect width="256" height="256" fill="none" />
+  <path
+    d="M168,128a40,40,0,1,1-40-40A40,40,0,0,1,168,128Zm40,0a79.74,79.74,0,0,0-20.37-53.33,8,8,0,1,0-11.92,10.67,64,64,0,0,1,0,85.33,8,8,0,0,0,11.92,10.67A79.79,79.79,0,0,0,208,128ZM80.29,85.34A8,8,0,1,0,68.37,74.67a79.94,79.94,0,0,0,0,106.67,8,8,0,0,0,11.92-10.67,63.95,63.95,0,0,1,0-85.33Zm158.28-4A119.48,119.48,0,0,0,213.71,44a8,8,0,1,0-11.42,11.2,103.9,103.9,0,0,1,0,145.56A8,8,0,1,0,213.71,212,120.12,120.12,0,0,0,238.57,81.29ZM32.17,168.48A103.9,103.9,0,0,1,53.71,55.22,8,8,0,1,0,42.29,44a119.87,119.87,0,0,0,0,168,8,8,0,1,0,11.42-11.2A103.61,103.61,0,0,1,32.17,168.48Z"
+  />
+</svg>`;
+
+export const broadcastSVG = (style) => html`
   <svg
     style="${style}"
     xmlns="http://www.w3.org/2000/svg"
@@ -57,6 +71,17 @@ export const broadcastSVG = html`
     />
   </svg>
 `;
+
+export const trophyFullSVG = html`<svg
+  style="${style}"
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 256 256"
+>
+  <rect width="256" height="256" fill="none" />
+  <path
+    d="M232,64H208V48a8,8,0,0,0-8-8H56a8,8,0,0,0-8,8V64H24A16,16,0,0,0,8,80V96a40,40,0,0,0,40,40h3.65A80.13,80.13,0,0,0,120,191.61V216H96a8,8,0,0,0,0,16h64a8,8,0,0,0,0-16H136V191.58c31.94-3.23,58.44-25.64,68.08-55.58H208a40,40,0,0,0,40-40V80A16,16,0,0,0,232,64ZM48,120A24,24,0,0,1,24,96V80H48v32q0,4,.39,8ZM232,96a24,24,0,0,1-24,24h-.5a81.81,81.81,0,0,0,.5-8.9V80h24Z"
+  />
+</svg>`;
 
 export const trophySVG = html`
   <svg
@@ -114,6 +139,17 @@ export const trophySVG = html`
   </svg>
 `;
 
+export const fireFullSVG = html`<svg
+  style="${style}"
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 256 256"
+>
+  <rect width="256" height="256" fill="none" />
+  <path
+    d="M143.38,17.85a8,8,0,0,0-12.63,3.41l-22,60.41L84.59,58.26a8,8,0,0,0-11.93.89C51,87.53,40,116.08,40,144a88,88,0,0,0,176,0C216,84.55,165.21,36,143.38,17.85Zm40.51,135.49a57.6,57.6,0,0,1-46.56,46.55A7.65,7.65,0,0,1,136,200a8,8,0,0,1-1.32-15.89c16.57-2.79,30.63-16.85,33.44-33.45a8,8,0,0,1,15.78,2.68Z"
+  />
+</svg>`;
+
 export const fireSVG = html`
   <svg
     style="${style}"
@@ -156,97 +192,117 @@ const animation = `
   var intervalId = setInterval(animate, 500);
  `;
 
-const secondheader = (theme, site, period, domain) => html`
-  <td>
-    <div
-      style="background-color: #e6e6df; min-height: 40px; display: flex; justify-content: space-between; align-items: center; padding: 10px 15px 10px 15px; color: white;"
-    >
-      <div>
-        ${site === "top" || site === "new" || site === "best"
-          ? html` <a href="/">
-              <button
-                onclick="${animation}"
-                class="feed-button"
-                style=${`font-size: 1.01rem; border-radius: 2px; cursor: pointer; padding: 5px 15px; background-color: transparent; border: ${
-                  site === "top" ? "2px solid black" : "1px solid #828282"
-                }; color: ${site === "top" ? "black" : "#828282"};`}
-              >
-                <span>${fireSVG} Hot</span>
-              </button>
-            </a>`
-          : ""}
-        ${site === "top" || site === "new" || site === "best" || site === "nfts"
-          ? html` <a
-              href="${site === "new" || site === "top" || site === "best"
-                ? "/new"
-                : "/nfts"}"
-            >
-              <button
-                onclick="${animation}"
-                class="feed-button"
-                style=${`position: relative; font-size: 1.01rem; margin-left: 10px; cursor: pointer; border-radius: 2px; padding: 5px 15px; background-color: transparent; border: ${
-                  site === "new" || site === "nfts"
-                    ? "2px solid black"
-                    : "1px solid #828282"
-                }; color: ${
-                  site === "new" || site === "nfts" ? "black" : "#828282"
-                };`}
-              >
-                <span
-                  id="new-dot"
-                  style="display: none; position: absolute; top: -5px; right: -5px; width: 8px; height: 8px; border-radius: 2px; background-color: #228B22;"
-                ></span>
-                <span> ${broadcastSVG} New</span>
-              </button>
-            </a>`
-          : ""}
-        ${site === "top" || site === "new" || site === "best"
-          ? html` <a href="/best">
-              <button
-                onclick="${animation}"
-                class="feed-button"
-                style=${`font-size: 1.01rem; margin-left: 10px; cursor: pointer; border-radius: 2px; padding: 5px 15px; background-color: transparent; border: ${
-                  site === "best" ? "1px solid black" : "1px solid #828282"
-                }; color: ${site === "best" ? "black" : "#828282"};`}
-              >
-                <span> ${trophySVG} Top</span>
-              </button>
-            </a>`
-          : ""}
-        <a class="nav-refresh-button"></a>
-      </div>
-      <nav-learn-more />
-    </div>
-
-    ${site === "best"
-      ? html` <div
-          style="background-color: #e6e6df; min-height: 40px; display: flex; justify-content: space-between; align-items: center; padding: 0 15px 10px 15px; color: white;"
-        >
-          <div>
-            <a href="/best?period=all${domain ? `&domain=${domain}` : ""}">
-              <button style="${periodIconStyle(theme, period, "all")}">
-                <span>All</span>
-              </button>
-            </a>
-            <a href="/best?period=month${domain ? `&domain=${domain}` : ""}">
-              <button style="${periodIconStyle(theme, period, "month")}">
-                <span>Month</span>
-              </button>
-            </a>
-            <a href="/best?period=week${domain ? `&domain=${domain}` : ""}">
-              <button style="${periodIconStyle(theme, period, "week")}">
-                <span>Week</span>
-              </button>
-            </a>
-            <a href="/best?period=day${domain ? `&domain=${domain}` : ""}">
-              <button style="${periodIconStyle(theme, period, "day")}">
-                <span>Day</span>
-              </button>
-            </a>
-          </div>
-        </div>`
-      : null}
-  </td>
+const OnlineIndicator = (DAU) => html`
+  <div
+    alt="Users who interacted with the protocol in the last 24hrs"
+    style="align-items: center; height: 100%; display: flex; padding-left: 10px; color: rgba(0,0,0,0.5);"
+  >
+    ■ ${DAU} online
+  </div>
 `;
+
+const secondheader = (theme, site, period, domain) => {
+  period = DOMPurify.sanitize(period);
+  domain = DOMPurify.sanitize(domain);
+  const DAU = getNumberOfOnlineUsers();
+  return html`
+    <td>
+      <div
+        style="background-color: #e6e6df; min-height: 40px; display: flex; justify-content: space-between; align-items: center; padding: 10px 15px 10px 15px; color: white;"
+      >
+        <div style="display: flex;">
+          ${site === "top" || site === "new" || site === "best"
+            ? html` <a class="feed-button-link" href="/">
+                <button
+                  onclick="${animation}"
+                  class="feed-button"
+                  style=${`font-size: 1.01rem; border: none; outline: none; border-radius: 2px; cursor: pointer; padding: 6px 15px; background-color: rgba(0,0,0,${
+                    site === "top" ? "0.2" : "0.1"
+                  }); color: black;`}
+                >
+                  <span>${site === "top" ? fireFullSVG : fireSVG} Hot</span>
+                </button>
+              </a>`
+            : ""}
+          ${site === "top" ||
+          site === "new" ||
+          site === "best" ||
+          site === "nfts"
+            ? html` <a
+                class="feed-button-link"
+                href="${site === "new" || site === "top" || site === "best"
+                  ? "/new"
+                  : "/nfts"}"
+              >
+                <button
+                  onclick="${animation}"
+                  class="feed-button"
+                  style=${`margin-left: 10px; font-size: 1.01rem; border: none; outline: none; border-radius: 2px; cursor: pointer; padding: 6px 15px; background-color: rgba(0,0,0,${
+                    site === "new" ? "0.2" : "0.1"
+                  }); color: black; position:relative;`}
+                >
+                  <span
+                    id="new-dot"
+                    style="display: none; position: absolute; top: -5px; right: -5px; width: 8px; height: 8px; border-radius: 2px; background-color: #228B22;"
+                  ></span>
+                  <span>
+                    ${site === "new" ? broadcastFullSVG : broadcastSVG(style)}
+                    <span> New </span>
+                  </span>
+                </button>
+              </a>`
+            : ""}
+          ${site === "top" || site === "new" || site === "best"
+            ? html` <a class="feed-button-link" href="/best">
+                <button
+                  onclick="${animation}"
+                  class="feed-button"
+                  style=${`margin-left: 10px; font-size: 1.01rem; border: none; outline: none; border-radius: 2px; cursor: pointer; padding: 6px 15px; background-color: rgba(0,0,0,${
+                    site === "best" ? "0.2" : "0.1"
+                  }); color: black;`}
+                >
+                  <span>
+                    ${site === "best" ? trophyFullSVG : trophySVG} Top</span
+                  >
+                </button>
+              </a>`
+            : ""}
+          <div style="display: flex; height: 33px;">
+            ${OnlineIndicator(DAU)}
+          </div>
+        </div>
+      </div>
+
+      ${site === "best"
+        ? html` <div
+            style="background-color: #e6e6df; min-height: 40px; display: flex; justify-content: space-between; align-items: center; padding: 0 15px 10px 15px; color: white;"
+          >
+            <div>
+              <a href="/best?period=all${domain ? `&domain=${domain}` : ""}">
+                <button style="${periodIconStyle(theme, period, "all")}">
+                  <span>All</span>
+                </button>
+              </a>
+              <a href="/best?period=month${domain ? `&domain=${domain}` : ""}">
+                <button style="${periodIconStyle(theme, period, "month")}">
+                  <span>Month</span>
+                </button>
+              </a>
+              <a href="/best?period=week${domain ? `&domain=${domain}` : ""}">
+                <button style="${periodIconStyle(theme, period, "week")}">
+                  <span>Week</span>
+                </button>
+              </a>
+              <a href="/best?period=day${domain ? `&domain=${domain}` : ""}">
+                <button style="${periodIconStyle(theme, period, "day")}">
+                  <span>Day</span>
+                </button>
+              </a>
+            </div>
+          </div>`
+        : null}
+    </td>
+  `;
+};
 
 export default secondheader;

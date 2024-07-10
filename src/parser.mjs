@@ -1,8 +1,22 @@
-import ogs from "open-graph-scraper";
+import { env } from "process";
+import path from "path";
+
+import DOMPurify from "isomorphic-dompurify";
+import ogs from "open-graph-scraper-lite";
 import htm from "htm";
 import vhtml from "vhtml";
+import { JSDOM } from "jsdom";
+import { fetchBuilder, FileSystemCache } from "node-fetch-cache";
+import { useAgent } from "request-filtering-agent";
 
 import cache from "./cache.mjs";
+
+const fetch = fetchBuilder.withCache(
+  new FileSystemCache({
+    cacheDirectory: path.resolve(env.CACHE_DIR),
+    ttl: 86400000, // 24 hours
+  }),
+);
 
 const html = htm.bind(vhtml);
 
@@ -16,15 +30,46 @@ const filtered = [
   "x.com",
 ];
 
-export const metadata = async (url) => {
-  let result;
-  if (cache.has(url)) {
-    result = cache.get(url);
-  } else {
-    const response = await ogs({ url });
-    result = response.result;
+async function extractCanonicalLink(html) {
+  const dom = new JSDOM(html);
+  const node = dom.window.document.querySelector('link[rel="canonical"]');
+  if (!node) return;
+
+  let response;
+  try {
+    response = await fetch(node.href, {
+      agent: useAgent(node.href),
+    });
+  } catch (err) {
+    return;
   }
-  cache.set(url, result);
+
+  if (response.status !== 200) {
+    return;
+  }
+
+  return DOMPurify.sanitize(node.href);
+}
+
+export const metadata = async (url) => {
+  let result, html;
+  if (cache.has(url)) {
+    const fromCache = cache.get(url);
+    result = fromCache.result;
+    html = fromCache.html;
+  } else {
+    const response = await fetch(url, {
+      agent: useAgent(url),
+    });
+
+    const html = await response.text();
+    const parsed = await ogs({ html });
+    result = parsed.result;
+
+    if (result && html) {
+      cache.set(url, { result, html });
+    }
+  }
 
   const domain = safeExtractDomain(url);
   if (filtered.includes(domain) || (result && !result.success)) {
@@ -41,6 +86,13 @@ export const metadata = async (url) => {
   const { ogTitle } = result;
   let { ogDescription } = result;
 
+  let canonicalLink;
+  // NOTE: Hey's and Rekt News's canonical link implementation is wrong and
+  // always links back to the root
+  if (domain !== "hey.xyz" || domain !== "rekt.news") {
+    canonicalLink = await extractCanonicalLink(html);
+  }
+
   if (
     !ogTitle ||
     (!ogDescription && !image) ||
@@ -52,10 +104,11 @@ export const metadata = async (url) => {
   }
 
   return {
-    ogTitle,
-    domain,
-    ogDescription,
-    image,
+    ogTitle: DOMPurify.sanitize(ogTitle),
+    domain: DOMPurify.sanitize(domain),
+    ogDescription: DOMPurify.sanitize(ogDescription),
+    image: DOMPurify.sanitize(image),
+    canonicalLink,
   };
 };
 
@@ -72,6 +125,8 @@ function safeExtractDomain(link) {
   return tld;
 }
 const empty = html``;
+// NOTE: All inputs into render from metadata are XSS-sanitized by the metadata
+// function.
 export const render = (ogTitle, domain, ogDescription, image) => html`
   <div
     onclick="navigator.clipboard.writeText('${ogTitle}')"

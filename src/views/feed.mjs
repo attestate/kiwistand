@@ -11,9 +11,8 @@ import {
   differenceInMinutes,
   isBefore,
 } from "date-fns";
+import DOMPurify from "isomorphic-dompurify";
 
-import PWALine from "./components/iospwaline.mjs";
-import { getTips, getTipsValue } from "../tips.mjs";
 import * as ens from "../ens.mjs";
 import Header from "./components/header.mjs";
 import SecondHeader from "./components/secondheader.mjs";
@@ -24,33 +23,42 @@ import { custom } from "./components/head.mjs";
 import * as store from "../store.mjs";
 import * as id from "../id.mjs";
 import * as moderation from "./moderation.mjs";
+import { countOutbounds } from "../cache.mjs";
 import * as curation from "./curation.mjs";
 import * as registry from "../chainstate/registry.mjs";
 import log from "../logger.mjs";
 import { EIP712_MESSAGE } from "../constants.mjs";
 import Row, { extractDomain } from "./components/row.mjs";
 import * as karma from "../karma.mjs";
+import { metadata } from "../parser.mjs";
 
 const html = htm.bind(vhtml);
 
-function CanonRow(sheets) {
-  sheets = sheets.sort((a, b) => 0.5 - Math.random()).slice(0, 3);
+function CanonRow(originals) {
   return html`
     <tr>
       <td>
         <div
-          style="justify-content: space-evenly; scroll-snap-type: x mandatory; padding: 15px 0 10px 0; gap: 15px; display: flex; overflow-x: auto; width: 100%;"
+          style="justify-content: space-evenly; padding: 15px 0 10px 0; gap: 15px; display: flex; width: 100%;"
         >
-          ${sheets.map(
-            ({ preview, name }) => html`
-              <div style="flex: 0 0 30%; scroll-snap-align: center;">
-                <a href="/canons?name=${name}">
+          ${originals.map(
+            ({ metadata, href, index, title }) => html`
+              <div
+                class="canon-image"
+                style="background-color: rgba(0,0,0,0.1); border-radius: 2px; border: 1px solid #828282;"
+              >
+                <a href="${DOMPurify.sanitize(href)}" target="_blank">
                   <img
-                    loading="lazy"
-                    src="${preview}"
-                    style="border-radius: 2px; width: 100%; height: auto;"
+                    src="${DOMPurify.sanitize(metadata.image)}"
+                    style="aspect-ratio: 16/9; object-fit:cover;border-bottom: 1px solid #828282; width: 100%; height: auto;"
                   />
                 </a>
+                <a
+                  class="meta-link canon-font"
+                  style="display:block; margin: 0.2rem 0.2rem 0.3rem 0.3rem;"
+                  href="/stories?index=0x${index}"
+                  >${DOMPurify.sanitize(title)}</a
+                >
               </div>
             `,
           )}
@@ -101,7 +109,20 @@ export function count(leaves) {
 export async function topstories(leaves, decayStrength) {
   return leaves
     .map((story) => {
-      const score = Math.log(story.upvotes);
+      const commentCount =
+        store.commentCounts.get(`kiwi:0x${story.index}`) || 0;
+      let score;
+      if (story.upvotes > 2) {
+        score = Math.log(story.upvotes + commentCount);
+      } else {
+        score = Math.log(story.upvotes);
+      }
+
+      const outboundClicks = countOutbounds(story.href);
+      if (outboundClicks > 0) {
+        score = score * 0.7 + 0.3 * Math.log(outboundClicks);
+      }
+
       const decay = Math.sqrt(itemAge(story.timestamp));
       story.score = score / Math.pow(decay, decayStrength);
       return story;
@@ -187,7 +208,7 @@ export async function index(trie, page, domain) {
   const amount = null;
   const parser = JSON.parse;
   const lookBackUnixTime = Math.floor(lookBack.getTime() / 1000);
-  const allowlist = await registry.allowlist();
+  const accounts = await registry.accounts();
   const delegations = await registry.delegations();
   const href = null;
   const type = "amplify";
@@ -198,7 +219,7 @@ export async function index(trie, page, domain) {
     amount,
     parser,
     lookBackUnixTime,
-    allowlist,
+    accounts,
     delegations,
     href,
     type,
@@ -295,22 +316,15 @@ export async function index(trie, page, domain) {
     // noop
   }
 
-  // 1. Fetch tips from the API
-  const tips = await getTips();
-
   let stories = [];
   for await (let story of storyPromises) {
     const ensData = await ens.resolve(story.identity);
-
-    // 1. Add the total value to the tipValue property of the story
-    const tipValue = getTipsValue(tips, story.index);
-    story.tipValue = tipValue;
 
     let avatars = [];
     for await (let upvoter of story.upvoters) {
       const profile = await ens.resolve(upvoter);
       if (profile.safeAvatar) {
-        avatars.push(profile.safeAvatar);
+        avatars.push(`/avatar/${profile.address}`);
       }
     }
 
@@ -329,10 +343,34 @@ export async function index(trie, page, domain) {
     });
   }
 
+  async function addMetadata(post) {
+    let result;
+    try {
+      result = await metadata(post.href);
+    } catch (err) {
+      return null;
+    }
+    if (result && !result.image) return;
+
+    return {
+      ...post,
+      metadata: result,
+    };
+  }
+  let originals = stories
+    .filter((story) => story.isOriginal)
+    .slice(0, 6)
+    .map(addMetadata);
+  originals = (await Promise.allSettled(originals))
+    .filter(({ status, value }) => status === "fulfilled" && !!value)
+    .map(({ value }) => value)
+    .slice(0, 2);
+
   return {
     editorPicks,
     config,
     stories,
+    originals,
     start,
   };
 }
@@ -364,21 +402,14 @@ export default async function (trie, theme, page, domain) {
   } else {
     content = cacheRes.content;
   }
-  const { editorPicks, config, stories, start } = content;
-
-  let sheets;
-  try {
-    const activeSheets = await moderation.getActiveCanons();
-    sheets = await curation.getSheets(activeSheets);
-  } catch (err) {
-    //noop
-  }
+  const { originals, editorPicks, config, stories, start } = content;
 
   let query = `?page=${page + 1}`;
   if (domain) {
     query += `&domain=${domain}`;
   }
   const ogImage = "https://news.kiwistand.com/kiwi_hot_feed_page.png";
+  const recentJoiners = await registry.recents();
   return html`
     <html lang="en" op="news">
       <head>
@@ -389,7 +420,6 @@ export default async function (trie, theme, page, domain) {
         />
       </head>
       <body>
-        ${PWALine}
         <div class="container">
           ${Sidebar(path)}
           <div id="hnmain">
@@ -397,11 +427,26 @@ export default async function (trie, theme, page, domain) {
               <tr>
                 ${await Header(theme)}
               </tr>
-              <tr>
+              <tr class="third-header">
                 ${ThirdHeader(theme, "top")}
               </tr>
               <tr>
                 ${SecondHeader(theme, "top")}
+              </tr>
+              <tr>
+                <td>
+                  <div
+                    style="background-color: black; height: 2.3rem;display: flex; justify-content: start; align-items: center; padding-left: 1rem; gap: 1rem; color: white;"
+                  >
+                    <img style="height: 30px;" src="lens.png" />
+                    <a
+                      style="color: white; text-decoration: underline;"
+                      href="https://paragraph.xyz/@kiwi-updates/t2-lens-writing-challenge"
+                    >
+                      1,200 USDC writing challenge
+                    </a>
+                  </div>
+                </td>
               </tr>
               ${page === 0 && editorPicks.length > 0
                 ? html` <tr style="background-color: #e6e6df;">
@@ -417,75 +462,39 @@ export default async function (trie, theme, page, domain) {
                     </td>
                   </tr>`
                 : ""}
-              ${page === 0 &&
-              editorPicks.map(
-                (story, i) => html`
-                  <tr style="background-color: #e6e6df;">
-                    <td>
-                      <div style="padding: 10px 0 0 5px;">
-                        <div style="display: flex; align-items: stretch;">
-                          <div
-                            style="display: flex; align-items: center; justify-content: center; min-width: 40px; margin-right: 6px;"
-                          >
-                            <a
-                              href="#"
-                              style="display: flex; align-items: center; min-height: 30px;"
-                            >
-                              <div
-                                class="votearrowcontainer"
-                                data-title="${story.title}"
-                                data-href="${story.href}"
-                                data-upvoters="${JSON.stringify(
-                                  story.upvoters,
-                                )}"
-                                data-editorpicks="true"
-                              >
-                                <div>
-                                  <div
-                                    class="votearrow pulsate"
-                                    style="color: rgb(130, 130, 130); cursor: pointer;"
-                                    title="upvote"
-                                  >
-                                    ▲
-                                  </div>
-                                </div>
-                              </div>
-                            </a>
-                          </div>
-                          <div
-                            style="display:flex; align-items: center; flex-grow: 1;"
-                          >
-                            <span>
-                              <a
-                                href="${story.href}"
-                                target="_blank"
-                                class="story-link"
-                                style="line-height: 13pt; font-size: 13pt;"
-                              >
-                                ${story.title}
-                              </a>
-                              <span
-                                style="padding-left: 5px; white-space: nowrap;"
-                                >(<a href="?domain=${extractDomain(story.href)}"
-                                  >${extractDomain(story.href)}</a
-                                >)</span
-                              >
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
-                `,
-              )}
-              ${page === 0 && editorPicks.length > 0
-                ? html` <tr style="height: 13px; background-color: #e6e6df;">
-                    <td></td>
-                  </tr>`
-                : ""}
-              ${stories.slice(0, 6).map(Row(start, "/"))}
-              ${sheets && !domain ? CanonRow(sheets) : ""}
-              ${stories.slice(6).map(Row(start, "/"))}
+              ${originals && originals.length >= 2 && !domain
+                ? html`
+                    ${stories
+                      .slice(0, 5)
+                      .map(
+                        Row(
+                          start,
+                          "/",
+                          undefined,
+                          null,
+                          null,
+                          null,
+                          recentJoiners,
+                        ),
+                      )}
+                    ${CanonRow(originals)}
+                    ${stories
+                      .slice(5)
+                      .map(
+                        Row(
+                          start,
+                          "/",
+                          undefined,
+                          null,
+                          null,
+                          null,
+                          recentJoiners,
+                        ),
+                      )}
+                  `
+                : html` ${stories.map(
+                    Row(start, "/", undefined, null, null, null, recentJoiners),
+                  )}`}
               ${stories.length < totalStories
                 ? ""
                 : html`<tr style="height: 50px">

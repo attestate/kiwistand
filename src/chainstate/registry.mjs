@@ -2,20 +2,22 @@
 import { resolve } from "path";
 import { createHash } from "crypto";
 
+import { differenceInDays } from "date-fns";
 import { utils } from "ethers";
 import { database } from "@attestate/crawler";
 import { organize } from "@attestate/delegator2";
+import * as blockLogs from "@attestate/crawler-call-block-logs";
+
+const { aggregate } = blockLogs.loader;
 
 import mainnet from "./mainnet-mints.mjs";
 
-function hash(obj) {
-  const str = JSON.stringify(obj);
-  return createHash("sha256").update(str).digest("hex");
-}
-
-let cachedDelegations = null;
-let logsHash = null;
+let cachedDelegations = {};
+await refreshDelegations();
 export async function delegations() {
+  return cachedDelegations;
+}
+export async function refreshDelegations() {
   const path = resolve(process.env.DATA_DIR, "list-delegations-load-2");
   const maxReaders = 500;
   const db = database.open(path, maxReaders);
@@ -39,15 +41,61 @@ export async function delegations() {
     .map(({ value }) => ({ ...value, data: value.data.data }))
     .filter(({ data }) => BigInt(data[2]) % 2n !== 0n);
 
-  if (logsHash !== hash(logs) || !cachedDelegations) {
-    cachedDelegations = organize(logs);
-    logsHash = hash(logs);
-  }
-
-  return cachedDelegations;
+  cachedDelegations = organize(logs);
+  setTimeout(refreshDelegations, 5000);
 }
 
-export async function allowlist() {
+// NOTE: For the purpose of set reconciliation, we must know the first moment
+// of ownership, so in which block the user minted the NFT. However, for
+// mainnet NFTs we're NOT continuously tracking which addresses hold or
+// transfer the NFTs as this would increase scope and complexity significantly.
+export function augmentWithMainnet(opAccounts) {
+  for (let { to, timestamp } of mainnet) {
+    timestamp = parseInt(timestamp, 16);
+
+    if (
+      opAccounts[to] &&
+      opAccounts[to].balance !== undefined &&
+      opAccounts[to].start > timestamp
+    ) {
+      opAccounts[to].start = timestamp;
+      // NOTE: We're intentionally NOT increasing the balance here, as for
+      // mainnet mints, we've airdropped every one of these users a Kiwi Pass
+      // on Optimism too.
+      //opAccounts[to].balance += 1;
+    }
+
+    if (!opAccounts[to]) {
+      opAccounts[to] = {
+        balance: 1,
+        start: timestamp,
+      };
+    }
+  }
+
+  return opAccounts;
+}
+
+export async function recents() {
+  const everyone = await accounts();
+  const recentJoiners = [];
+  for (const [address, { start }] of Object.entries(everyone)) {
+    const today = new Date();
+    const parsedStart = new Date(start * 1000);
+    const diff = differenceInDays(today, parsedStart);
+    if (diff < 7) {
+      recentJoiners.push(address);
+    }
+  }
+  return recentJoiners;
+}
+
+let cachedAccounts = {};
+await refreshAccounts();
+export async function accounts() {
+  return cachedAccounts;
+}
+export async function refreshAccounts() {
   const path = resolve(process.env.DATA_DIR, "op-call-block-logs-load");
   // NOTE: On some cloud instances we ran into problems where LMDB reported
   // MDB_READERS_FULL which exceeded the LMDB default value of 126. So we
@@ -58,13 +106,29 @@ export async function allowlist() {
   const name = database.order("op-call-block-logs");
   const subdb = db.openDB(name);
   const optimism = await database.all(subdb, "");
-  const addresses = [
-    ...mainnet.map(({ to }) => to),
-    ...optimism.map(({ value }) => utils.getAddress(value)),
-  ];
-  return new Set(addresses);
+  const transformed = optimism.map(({ value }) => ({
+    ...value,
+    timestamp: parseInt(value.timestamp, 16),
+  }));
+  const accounts = aggregate(transformed);
+  const result = augmentWithMainnet(accounts);
+
+  cachedAccounts = result;
+  setTimeout(refreshAccounts, 5000);
 }
 
+export async function allowlist() {
+  const accs = await accounts();
+  const currentHolders = new Set();
+  for (let address of Object.keys(accs)) {
+    if (accs[address].balance > 0) {
+      currentHolders.add(address);
+    }
+  }
+  return currentHolders;
+}
+
+// NOTE: This function won't have accurate data for mainnet mints' existence.
 export async function mints() {
   const path = resolve(process.env.DATA_DIR, "op-call-block-logs-load");
   // NOTE: On some cloud instances we ran into problems where LMDB reported
@@ -75,7 +139,34 @@ export async function mints() {
   const db = database.open(path, maxReaders);
   const name = database.direct("op-call-block-logs");
   const subdb = db.openDB(name);
-  const all = await database.all(subdb, "");
-  const operations = [...mainnet, ...all.map(({ value }) => value)];
-  return operations;
+  const optimism = await database.all(subdb, "");
+  const zeroAddress = "0x0000000000000000000000000000000000000000";
+  // NOTE: We originally didn't filter for value being zero but then this meant
+  // that admin-directed airdrops would also count towards increasing the price
+  // which increased the price unnecessarily high.
+  const mints = optimism
+    .map(({ value }) => value)
+    .filter(({ from, value }) => from === zeroAddress && value !== "0x0");
+
+  const counts = {};
+  const getKey = (tx) => `${tx.from}-${tx.to}-${tx.timestamp}`;
+  const withoutDuplicates = mints
+    .map((tx) => {
+      const key = getKey(tx);
+
+      if (!counts[key]) counts[key] = 0;
+      counts[key] += 1;
+
+      return tx;
+    })
+    .map((tx) => {
+      const key = getKey(tx);
+      const count = counts[key];
+      const value = `0x${(tx.value / count).toString(16)}`;
+      return {
+        ...tx,
+        value,
+      };
+    });
+  return withoutDuplicates;
 }

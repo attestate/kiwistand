@@ -11,7 +11,7 @@ import { client, chains } from "./client.mjs";
 const Bell = (props) => {
   let address;
   const account = useAccount();
-  const localAccount = getLocalAccount(account.address);
+  const localAccount = getLocalAccount(account.address, props.allowlist);
   if (account.isConnected) {
     address = account.address;
   }
@@ -20,7 +20,7 @@ const Bell = (props) => {
   }
   const isEligible =
     address && eligible(props.allowlist, props.delegations, address);
-  const link = `/activity?address=${address}`;
+  const link = isEligible ? `/activity?address=${address}` : "/kiwipass-mint";
 
   const [notificationCount, setNotificationCount] = useState(0);
   const [readNotifications, setReadNotifications] = useState(0);
@@ -43,11 +43,17 @@ const Bell = (props) => {
   }, [address]);
 
   if (
-    !isEligible ||
-    (!getCookie("lastUpdate") && readNotifications === 0) ||
+    (!props.mobile && !getCookie("lastUpdate") && readNotifications === 0) ||
     window.location.pathname === "/indexing" ||
     window.location.pathname === "/kiwipass-mint" ||
-    window.location.pathname === "/demonstration"
+    window.location.pathname === "/demonstration" ||
+    window.location.pathname === "/invite" ||
+    window.location.pathname === "/passkeys" ||
+    window.location.pathname === "/notifications" ||
+    window.location.pathname === "/whattosubmit" ||
+    window.location.pathname === "/pwa" ||
+    window.location.pathname === "/start" ||
+    window.location.pathname === "/friends"
   ) {
     return null;
   }
@@ -56,25 +62,35 @@ const Bell = (props) => {
     document.title = `[${notificationCount}] ${documentTitle}`;
   }
 
+  const disabled = !getCookie("lastUpdate") && readNotifications === 0;
   return (
     <a
+      disabled={disabled}
       title="Notifications"
-      href={link}
-      style={{ display: "inline-flex", position: "relative" }}
+      href={disabled ? "" : link}
+      className={props.mobile ? "mobile-bell" : "bell-button"}
+      style={{
+        padding: props.mobile ? "" : "10px 10px",
+        backgroundColor: props.mobile ? "" : "rgba(0, 0, 0, 0.1)",
+        borderRadius: "2px",
+        display: "inline-flex",
+        position: "relative",
+      }}
     >
-      <i className="icon">
-        {window.location.pathname === "/activity" ? (
-          <BellSVGFull />
-        ) : (
-          <BellSVG />
-        )}
-      </i>
+      {window.location.pathname === "/activity" ? (
+        <BellSVGFull mobile={props.mobile} />
+      ) : (
+        <BellSVG
+          mobile={props.mobile}
+          style={disabled ? { color: "grey" } : {}}
+        />
+      )}
       {notificationCount > 0 && (
         <span
           style={{
             position: "absolute",
-            top: "-5px",
-            right: "0",
+            top: props.mobile ? "8px" : "5px",
+            right: props.mobile ? "32px" : "8px",
             backgroundColor: "red",
             borderRadius: "2px",
             color: "white",
@@ -107,12 +123,16 @@ const Form = (props) => {
 
 export default Form;
 
-const BellSVGFull = () => (
+const BellSVGFull = (props) => (
   <svg
-    style={{
-      color: "black",
-      width: "1.75rem",
-    }}
+    style={
+      props.mobile
+        ? {}
+        : {
+            color: "black",
+            width: "1.5rem",
+          }
+    }
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 256 256"
   >
@@ -120,12 +140,17 @@ const BellSVGFull = () => (
     <path d="M221.8,175.94C216.25,166.38,208,139.33,208,104a80,80,0,1,0-160,0c0,35.34-8.26,62.38-13.81,71.94A16,16,0,0,0,48,200H88.81a40,40,0,0,0,78.38,0H208a16,16,0,0,0,13.8-24.06ZM128,216a24,24,0,0,1-22.62-16h45.24A24,24,0,0,1,128,216Z" />
   </svg>
 );
-const BellSVG = () => (
+const BellSVG = (props) => (
   <svg
-    style={{
-      color: "black",
-      width: "1.75rem",
-    }}
+    style={
+      props.mobile
+        ? { ...props.style }
+        : {
+            color: "black",
+            width: "1.5rem",
+            ...props.style,
+          }
+    }
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 256 256"
   >

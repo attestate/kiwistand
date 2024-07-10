@@ -17,6 +17,7 @@ import { SCHEMATA } from "./constants.mjs";
 import * as registry from "./chainstate/registry.mjs";
 import * as newest from "./views/new.mjs";
 import { generateStory } from "./views/story.mjs";
+import { getSubmission } from "./cache.mjs";
 
 const ajv = new Ajv();
 addFormats(ajv);
@@ -60,15 +61,29 @@ export function sendStatus(reply, code, message, details, data) {
   return reply.status(code).json(obj);
 }
 
-export function handleMessage(trie, libp2p, getAllowlist, getDelegations) {
+export function handleMessage(
+  trie,
+  libp2p,
+  getAllowlist,
+  getDelegations,
+  getAccounts,
+) {
   return async (request, reply) => {
     const message = request.body;
     const allowlist = await getAllowlist();
     const delegations = await getDelegations();
+    const accounts = await getAccounts();
 
     let index;
     try {
-      index = await store.add(trie, message, libp2p, allowlist, delegations);
+      index = await store.add(
+        trie,
+        message,
+        libp2p,
+        allowlist,
+        delegations,
+        accounts,
+      );
     } catch (err) {
       const code = 400;
       const httpMessage = "Bad Request";
@@ -80,20 +95,40 @@ export function handleMessage(trie, libp2p, getAllowlist, getDelegations) {
     } else {
       newest.recompute(trie);
     }
+
+    let submission;
     if (message.type === "amplify") {
       try {
         await generateStory(`0x${index}`);
       } catch (err) {
         // NOTE: This can fail if the message is an upvote, not a submission.
       }
+
+      try {
+        const index = null;
+        submission = getSubmission(index, message.href);
+      } catch (err) {
+        // NOTE: We can ignore the error here if it's being thrown
+      }
     }
 
     const code = 200;
     const httpMessage = "OK";
     const details = "Message included";
-    return sendStatus(reply, code, httpMessage, details, {
-      index: `0x${index}`,
-    });
+
+    let response;
+    if (submission && submission.upvotes > 1) {
+      response = {
+        index: `0x${submission.index}`,
+        isResubmission: true,
+      };
+    } else {
+      response = {
+        index: `0x${index}`,
+        isResubmission: false,
+      };
+    }
+    return sendStatus(reply, code, httpMessage, details, response);
   };
 }
 
@@ -143,7 +178,7 @@ export function listDelegations(getDelegations) {
   };
 }
 
-export function listMessages(trie, getAllowlist, getDelegations) {
+export function listMessages(trie, getAccounts, getDelegations) {
   const requestValidator = ajv.compile(SCHEMATA.listMessages);
   return async (request, reply) => {
     const result = requestValidator(request.body);
@@ -159,7 +194,7 @@ export function listMessages(trie, getAllowlist, getDelegations) {
     const { from, amount } = request.body;
     const parser = JSON.parse;
     const startDatetime = null;
-    const allowlist = await getAllowlist();
+    const accounts = await getAccounts();
     const delegations = await getDelegations();
     const href = null;
     const type = request.body.type || "amplify";
@@ -169,7 +204,7 @@ export function listMessages(trie, getAllowlist, getDelegations) {
       amount,
       parser,
       startDatetime,
-      allowlist,
+      accounts,
       delegations,
       href,
       type,
@@ -189,13 +224,19 @@ export function launch(trie, libp2p) {
 
   api.post(
     "/list",
-    listMessages(trie, registry.allowlist, registry.delegations),
+    listMessages(trie, registry.accounts, registry.delegations),
   );
   api.get("/allowlist", listAllowed(registry.allowlist));
   api.get("/delegations", listDelegations(registry.delegations));
   api.post(
     "/messages",
-    handleMessage(trie, libp2p, registry.allowlist, registry.delegations),
+    handleMessage(
+      trie,
+      libp2p,
+      registry.allowlist,
+      registry.delegations,
+      registry.accounts,
+    ),
   );
 
   const app = express();

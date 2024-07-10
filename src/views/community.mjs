@@ -4,8 +4,8 @@ import { env } from "process";
 
 import htm from "htm";
 import vhtml from "vhtml";
+import DOMPurify from "isomorphic-dompurify";
 
-import PWALine from "./components/iospwaline.mjs";
 import * as ens from "../ens.mjs";
 import Header from "./components/header.mjs";
 import Footer from "./components/footer.mjs";
@@ -125,7 +125,7 @@ export default async function (trie, theme, query, identity) {
   if (isNaN(page) || page < 1) {
     page = 0;
   }
-  const search = query.search;
+  const search = DOMPurify.sanitize(query.search);
 
   const users = karma.ranking();
   const allowlist = Array.from(await registry.allowlist());
@@ -248,7 +248,6 @@ export default async function (trie, theme, query, identity) {
         </style>
       </head>
       <body>
-        ${PWALine}
         <div class="container">
           ${Sidebar(path)}
           <div id="hnmain">
@@ -310,7 +309,7 @@ export default async function (trie, theme, query, identity) {
                                   ${ensData.safeAvatar
                                     ? html`<img
                                         loading="lazy"
-                                        src="${ensData.safeAvatar}"
+                                        src="/avatar/${ensData.address}"
                                         style="border: 1px solid #828282; width: 20px; height: 20px; border-radius: 2px; margin-right: 15px;"
                                       />`
                                     : html`
@@ -344,7 +343,7 @@ export default async function (trie, theme, query, identity) {
                     html`
                       <a
                         href="?${new URLSearchParams({
-                          ...query,
+                          search,
                           page: page - 1,
                         }).toString()}"
                       >
@@ -355,7 +354,7 @@ export default async function (trie, theme, query, identity) {
                     html`
                       <a
                         href="?${new URLSearchParams({
-                          ...query,
+                          search,
                           page: page + 1,
                         }).toString()}"
                       >

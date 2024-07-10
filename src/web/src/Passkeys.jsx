@@ -5,9 +5,10 @@ import { Wallet } from "@ethersproject/wallet";
 import { eligible } from "@attestate/delegator2";
 
 import { PasskeysSVG } from "./icons.jsx";
+import theme from "./theme.mjs";
 import { useProvider, client, chains } from "./client.mjs";
 import { ProgressBar } from "./DelegateButton.jsx";
-import { supportsPasskeys, getLocalAccount } from "./session.mjs";
+import { getLocalAccount, supportsPasskeys } from "./session.mjs";
 
 export const rp = {
   name: "Kiwi News",
@@ -19,7 +20,7 @@ export const truncate = (address) =>
   "..." +
   address.slice(address.length - 4, address.length);
 
-const testFeature = async () =>
+export const testPasskeys = async () =>
   supportsPasskeys() &&
   window.PublicKeyCredential &&
   PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable &&
@@ -37,7 +38,7 @@ export const RestoreDialogue = (allowlist, delegations, toast) => {
     const [featureAvailable, setFeatureAvailable] = useState(false);
     useEffect(() => {
       (async () => {
-        const isAvailable = await testFeature();
+        const isAvailable = await testPasskeys();
         setFeatureAvailable(isAvailable);
       })();
     });
@@ -96,21 +97,20 @@ export const RestoreDialogue = (allowlist, delegations, toast) => {
             cursor: "pointer",
             display: "flex",
             alignItems: "center",
-            fontWeight: 600,
             fontSize: "15px",
             gap: "4px",
             border: "1px solid #828282",
             borderRadius: "2px",
-            padding: "0 0.75rem",
+            padding: "0.4rem 0.75rem",
             display: "flex",
             justifyContent: "center",
           }}
         >
-          <PasskeysSVG style={{ width: "28px" }} /> Connect with Passkeys
+          <PasskeysSVG style={{ color: "white", width: "24px" }} /> Connect with
+          Passkeys
         </button>
         <p style={{ color: "black" }}>
-          "Connect with Passkeys" is a Kiwi-specific feature that will only work
-          if you've previously backed up your key on the Settings page
+          (Only works if you previously backed up your app key)
         </p>
       </div>
     );
@@ -151,7 +151,7 @@ const Dialogue = (props) => {
           textAlign: "left",
         }}
       >
-        Securely store your upvote key with Passkeys for multi-device access:
+        Securely store your app key with Passkeys for multi-device access:
       </p>
       <ul
         style={{
@@ -163,11 +163,11 @@ const Dialogue = (props) => {
         }}
       >
         <li>
-          <span style={{ color: "limegreen" }}>•</span> Encrypted storage on
+          <span style={{ color: theme.color }}>•</span> Encrypted storage on
           iCloud.
         </li>
         <li style={{ marginTop: "5px" }}>
-          <span style={{ color: "limegreen" }}>•</span> Your wallet's custody
+          <span style={{ color: theme.color }}>•</span> Your wallet's custody
           key remains on your device.
         </li>
       </ul>
@@ -175,21 +175,34 @@ const Dialogue = (props) => {
   );
 };
 
-function BackupKey() {
+function BackupKey(props) {
   const [rawId, setRawId] = useState(null);
   const [lbResult, setLbResult] = useState(null);
   const [progress, setProgress] = useState(1);
   const [featureAvailable, setFeatureAvailable] = useState(false);
   useEffect(() => {
     (async () => {
-      const isAvailable = await testFeature();
+      const isAvailable = await testPasskeys();
+      if (
+        !isAvailable &&
+        props.callback &&
+        typeof props.callback === "function"
+      ) {
+        props.callback();
+        // NOTE: We have to reload the page here because the Vote
+        // component isn't reloading based on the updates in the
+        // localStorage, for example, when we store a new application key
+        // there. So we reload the page to fix this.
+        location.reload();
+        return;
+      }
       setFeatureAvailable(isAvailable);
     })();
   });
 
   let address;
   const account = useAccount();
-  const localAccount = getLocalAccount(account.address);
+  const localAccount = getLocalAccount(account.address, props.allowlist);
   if (account.isConnected) {
     address = account.address;
   }
@@ -266,13 +279,25 @@ function BackupKey() {
     if (assertion.getClientExtensionResults()?.largeBlob?.written) {
       setLbResult("Backup successful!");
     } else {
-      setLbResult("Backup failed!");
+      setLbResult(
+        "Backup failed. There can be multiple reasons for this. For example, this will happen if you use 1Password or if you don't use iOS 17 yet.",
+      );
+    }
+
+    if (props.callback && typeof props.callback === "function") {
+      props.callback();
+      // NOTE: We have to reload the page here because the Vote
+      // component isn't reloading based on the updates in the
+      // localStorage, for example, when we store a new application key
+      // there. So we reload the page to fix this.
+      location.reload();
     }
     setProgress(3);
   };
 
-  if (!account.isConnected || !address || !localAccount || !featureAvailable)
+  if (!address || !localAccount || !featureAvailable) {
     return null;
+  }
   if (lbResult && lbResult.includes("successful")) {
     return (
       <div>
@@ -297,26 +322,11 @@ function BackupKey() {
         >
           Next time you connect your wallet, look out for the "Connect with
           Passkeys" button!
-          <br />
-          <br />
-          <button
-            id="button-onboarding"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              width: "auto",
-              padding: "0.2rem 0.5rem",
-            }}
-          >
-            <PasskeysSVG style={{ width: "32px" }} /> Connect with Passkeys
-          </button>
         </p>
+        {props.redirectButton ? props.redirectButton : ""}
       </div>
     );
   } else if (lbResult) {
-    props.toast.error(
-      "Something went wrong when storing your passkey. Please contact @timdaub",
-    );
     return (
       <span style={{ color: "black", fontWeight: "bold" }}>{lbResult}</span>
     );
@@ -329,12 +339,19 @@ function BackupKey() {
           <ProgressBar progress={progress} />
           <span>
             <Dialogue />
+            <br />
             <button
-              style={{ width: "auto" }}
+              style={{
+                width: "auto",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "5px",
+              }}
               id="button-onboarding"
               onClick={create}
             >
-              Create Passkey
+              <PasskeysSVG style={{ color: "white", width: "24px" }} /> Create
+              Passkey (1/2)
             </button>
           </span>
         </div>
@@ -343,12 +360,19 @@ function BackupKey() {
           <ProgressBar progress={progress} />
           <span>
             <Dialogue />
+            <br />
             <button
-              style={{ width: "auto" }}
+              style={{
+                width: "auto",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "5px",
+              }}
               id="button-onboarding"
               onClick={store}
             >
-              Backup key
+              <PasskeysSVG style={{ color: "white", width: "24px" }} /> Backup
+              key (2/2)
             </button>
           </span>
         </div>
@@ -361,7 +385,7 @@ const Form = (props) => {
   return (
     <WagmiConfig config={client}>
       <RainbowKitProvider chains={chains}>
-        <BackupKey />
+        <BackupKey {...props} />
       </RainbowKitProvider>
     </WagmiConfig>
   );

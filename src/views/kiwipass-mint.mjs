@@ -53,6 +53,10 @@ export default async function (theme) {
             padding: 0;
           }
 
+          .sidebar-toggle {
+            visibility: hidden;
+          }
+
           .kiwipass-mint-page #hnmain {
             border-bottom: none !important;
           }
@@ -308,23 +312,26 @@ export default async function (theme) {
               <tr>
                 <td style="padding: 1rem; color: black;">
                   <div class="parent-container">
-                    <div class="image-section">
+                    <div
+                      class="image-section"
+                      style="display: flex; flex-direction: column; align-items: center;"
+                    >
+                      <h2 style="text-align: center;">Sign up to Kiwi</h2>
                       <img src="KiwiPass.png" alt="Kiwi Pass" />
+                      <p style="text-align: center;">
+                        Kiwi Pass is a perpetual subscription, tradable as an
+                        NFT on Ethereum.
+                      </p>
                     </div>
                     <div class="text-section">
-                      <h2 style="text-align: center;">
-                        Kiwipass NFT lets you submit, upvote & comment links on
-                        Kiwi
-                      </h2>
-                      <div>
-                        Price: <span> <nft-price /></span>
-                      </div>
                       <div id="buy-button-container">
-                        <button class="buy-button" disabled>
-                          Loading...
-                          <span> <nft-price /></span>
-                        </button>
+                        <button class="buy-button" disabled>Loading...</button>
                       </div>
+                      <span
+                        style="display: block; margin-top: 1rem; text-align: center;"
+                      >
+                        <nft-price />
+                      </span>
                       <br />
                       <nav-simple-disconnect-button
                         style="text-align: center; min-height: 16.5px; display: block;"

@@ -1,7 +1,6 @@
 //@format
 import htm from "htm";
 import vhtml from "vhtml";
-import PWALine from "./components/iospwaline.mjs";
 
 import Header from "./components/header.mjs";
 import Sidebar from "./components/sidebar.mjs";
@@ -17,7 +16,6 @@ export default async function (theme) {
         ${Head}
       </head>
       <body>
-        ${PWALine}
         <div class="container">
           ${Sidebar()}
           <div id="hnmain">

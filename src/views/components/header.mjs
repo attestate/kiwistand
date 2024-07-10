@@ -11,8 +11,9 @@ import * as karma from "../../karma.mjs";
 const html = htm.bind(vhtml);
 
 const header = async (theme, path) => {
-  return html` <td style="height: 62px;">
+  return html` <td style="height: 70px;">
     <nav-nft-modal />
+    <nav-delegation-modal />
     <table
       style="padding:5px 7px 5px 7px;"
       width="100%"
@@ -22,14 +23,15 @@ const header = async (theme, path) => {
     >
       <tbody>
         <tr>
-          <td style="line-height:12pt; height:10px;">
+          <td style="line-height:12pt; height:60px;">
             <div
               style="display: flex; flex-wrap: nowrap; justify-content: space-between; align-items: center;"
             >
               <div class="kn-banner-desk">Kiwi News</div>
               <nav-header-avatar class="sidebar-toggle" style="width: 33%;">
                 <div
-                  style="display: ${path === "/kiwipass-mint"
+                  style="padding: 0 13px 0 7px; background: rgba(0, 0, 0, 0.05); border-radius: 2px; display: ${path ===
+                  "/kiwipass-mint"
                     ? "none"
                     : "flex"}; align-items: center;"
                 >
@@ -51,28 +53,27 @@ const header = async (theme, path) => {
                 </div>
               </nav-header-avatar>
 
-                <a
-                  href="/"
-                  style="width: 33%; display: flex; justify-content: center;"
-                >
-                  <span style="padding: 0 20px 0 20px" ; class="pagetop">
-                    <b class="hnname">
-                      <span>${theme.emoji}</span>
-                    </b>
-                  </span>
-                </a>
+              <a
+                href="/"
+                style="width: 33%; display: flex; justify-content: center;"
+              >
+                <span style="padding: 0 20px 0 20px" ; class="pagetop">
+                  <b class="hnname">
+                    <span>${theme.emoji}</span>
+                  </b>
+                </span>
+              </a>
 
-                <div
-                  style="width: 33%; padding: 7px 7px 7px 0; display: flex; justify-content: flex-end;"
-                >
-                  <div id="connectButton"></div>
-                </div>
+              <div
+                style="width: 33%; padding: 7px 7px 7px 0; display: flex; justify-content: flex-end;"
+              >
+                <div id="bell"></div>
               </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </td>`;
-  }
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </td>`;
 };
 export default header;

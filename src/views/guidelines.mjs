@@ -43,9 +43,16 @@ export default async function (theme) {
                   <p>That includes:</p>
                   <ul>
                     <li>Technical resources, hacking, and awesome git repos</li>
+                    <li>Dune dashboards, reports, data-driven articles</li>
                     <li>Startups, cryptocurrencies, cryptography</li>
                     <li>Networking, privacy, decentralization</li>
                     <li>Hardware, open source, art, economics, game theory</li>
+                    <li>
+                      Anything else our community might find fascinating,
+                      covering any subject from philosophy, literature, and pop
+                      culture, through science, and health, up to society and
+                      infrastructure
+                    </li>
                   </ul>
                   <h3>Off topic:</h3>
                   <ul>

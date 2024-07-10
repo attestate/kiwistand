@@ -14,6 +14,7 @@ export default async function index(theme, identity) {
   if (identity) {
     profile = await ens.resolve(identity);
   }
+  const path = "/settings";
   return html`
     <html lang="en" op="news">
       <head>

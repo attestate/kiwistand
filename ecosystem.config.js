@@ -6,9 +6,6 @@ module.exports = {
       name: "kiwinews",
       script: "npm run start",
       env: {
-        THEME_COLOR: "limegreen",
-        THEME_EMOJI: "🥝",
-        THEME_NAME: "Kiwi News",
         DEBUG: "*attestate*",
         NODE_ENV: "production",
         THEME: "kiwi",

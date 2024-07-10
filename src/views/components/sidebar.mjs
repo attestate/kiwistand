@@ -4,6 +4,52 @@ import htm from "htm";
 import vhtml from "vhtml";
 
 const html = htm.bind(vhtml);
+const invite = html`<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 256 256"
+>
+  <rect width="256" height="256" fill="none" />
+  <line
+    x1="200"
+    y1="136"
+    x2="248"
+    y2="136"
+    fill="none"
+    stroke="currentColor"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    stroke-width="16"
+  />
+  <line
+    x1="224"
+    y1="112"
+    x2="224"
+    y2="160"
+    fill="none"
+    stroke="currentColor"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    stroke-width="16"
+  />
+  <circle
+    cx="108"
+    cy="100"
+    r="60"
+    fill="none"
+    stroke="currentColor"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    stroke-width="16"
+  />
+  <path
+    d="M24,200c20.55-24.45,49.56-40,84-40s63.45,15.55,84,40"
+    fill="none"
+    stroke="currentColor"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    stroke-width="16"
+  />
+</svg>`;
 const communityfull = html`<svg
   xmlns="http://www.w3.org/2000/svg"
   viewBox="0 0 256 256"
@@ -72,65 +118,72 @@ const community = html`
 const about = html`
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
     <rect width="256" height="256" fill="none" />
-    <circle
-      cx="128"
-      cy="128"
-      r="96"
-      fill="none"
-      stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="16"
-    />
     <path
-      d="M120,120a8,8,0,0,1,8,8v40a8,8,0,0,0,8,8"
+      d="M48,216a24,24,0,0,1,24-24H208V32H72A24,24,0,0,0,48,56Z"
       fill="none"
       stroke="currentColor"
       stroke-linecap="round"
       stroke-linejoin="round"
       stroke-width="16"
     />
-    <circle cx="124" cy="84" r="12" />
+    <polyline
+      points="48 216 48 224 192 224"
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="16"
+    />
   </svg>
 `;
 
 const aboutfull = html`
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="64"
-    height="64"
-    fill="#000000"
-    viewBox="0 0 256 256"
-  >
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+    <rect width="256" height="256" fill="none" />
     <path
-      d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm-4,48a12,12,0,1,1-12,12A12,12,0,0,1,124,72Zm12,112a16,16,0,0,1-16-16V128a8,8,0,0,1,0-16,16,16,0,0,1,16,16v40a8,8,0,0,1,0,16Z"
-    ></path>
+      d="M216,32V192a8,8,0,0,1-8,8H72a16,16,0,0,0-16,16H192a8,8,0,0,1,0,16H48a8,8,0,0,1-8-8V56A32,32,0,0,1,72,24H208A8,8,0,0,1,216,32Z"
+    />
   </svg>
 `;
 
-const onboarding = html` <svg
-  xmlns="http://www.w3.org/2000/svg"
-  width="32"
-  height="32"
-  fill="#000000"
-  viewBox="0 0 256 256"
->
-  <path
-    d="M248,56a8,8,0,0,1-8,8H192v40a8,8,0,0,1-8,8H136v40a8,8,0,0,1-8,8H80v40a8,8,0,0,1-8,8H16a8,8,0,0,1,0-16H64V152a8,8,0,0,1,8-8h48V104a8,8,0,0,1,8-8h48V56a8,8,0,0,1,8-8h56A8,8,0,0,1,248,56Z"
-  />
-</svg>`;
+const onboarding = html`
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+    <rect width="256" height="256" fill="none" />
+    <polygon
+      points="8 96 128 32 248 96 128 160 8 96"
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="16"
+    />
+    <polyline
+      points="128 96 184 125.87 184 240"
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="16"
+    />
+    <path
+      d="M216,113.07v53.22a8,8,0,0,1-2,5.31c-11.3,12.59-38.9,36.4-86,36.4s-74.68-23.81-86-36.4a8,8,0,0,1-2-5.31V113.07"
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="16"
+    />
+  </svg>
+`;
 
-const onboardingfull = html` <svg
-  xmlns="http://www.w3.org/2000/svg"
-  width="32"
-  height="32"
-  fill="#000000"
-  viewBox="0 0 256 256"
->
-  <path
-    d="M240,56V200a8,8,0,0,1-8,8H8a8,8,0,0,1,0-16H56V152a8,8,0,0,1,8-8h48V104a8,8,0,0,1,8-8h48V56a8,8,0,0,1,8-8h56A8,8,0,0,1,240,56Z"
-  ></path>
-</svg>`;
+const onboardingfull = html`
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+    <rect width="256" height="256" fill="none" />
+    <path
+      d="M176,207.24a119,119,0,0,0,16-7.73V240a8,8,0,0,1-16,0Zm11.76-88.43-56-29.87a8,8,0,0,0-7.52,14.12L171,128l17-9.06Zm64-29.87-120-64a8,8,0,0,0-7.52,0l-120,64a8,8,0,0,0,0,14.12L32,117.87v48.42a15.91,15.91,0,0,0,4.06,10.65C49.16,191.53,78.51,216,128,216a130,130,0,0,0,48-8.76V130.67L171,128l-43,22.93L43.83,106l0,0L25,96,128,41.07,231,96l-18.78,10-.06,0L188,118.94a8,8,0,0,1,4,6.93v73.64a115.63,115.63,0,0,0,27.94-22.57A15.91,15.91,0,0,0,224,166.29V117.87l27.76-14.81a8,8,0,0,0,0-14.12Z"
+    />
+  </svg>
+`;
 
 const newsletter = html`
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
@@ -187,7 +240,7 @@ const productUpdates = html`
   </svg>
 `;
 
-const home = html`
+export const home = html`
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
     <rect width="256" height="256" fill="none" />
     <path
@@ -200,7 +253,7 @@ const home = html`
     />
   </svg>
 `;
-const homefull = html`
+export const homefull = html`
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
     <rect width="256" height="256" fill="none" />
     <path
@@ -313,6 +366,173 @@ const envelopefull = html`
     />
   </svg>
 `;
+const profilefull = html`
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+    <rect width="256" height="256" fill="none" />
+    <path
+      d="M172,120a44,44,0,1,1-44-44A44,44,0,0,1,172,120Zm52-72V208a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V48A16,16,0,0,1,48,32H208A16,16,0,0,1,224,48ZM208,208V48H48V208h3.67a80.58,80.58,0,0,1,26.07-38.25q3.08-2.48,6.36-4.62a4,4,0,0,1,4.81.33,59.82,59.82,0,0,0,78.18,0,4,4,0,0,1,4.81-.33q3.28,2.15,6.36,4.62A80.58,80.58,0,0,1,204.33,208H208Z"
+    />
+  </svg>
+`;
+
+const profile = html`
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+    <rect width="256" height="256" fill="none" />
+    <circle
+      cx="128"
+      cy="120"
+      r="40"
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="16"
+    />
+    <rect
+      x="40"
+      y="40"
+      width="176"
+      height="176"
+      rx="8"
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="16"
+    />
+    <path
+      d="M57.78,216a72,72,0,0,1,140.44,0"
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="16"
+    />
+  </svg>
+`;
+
+const settingsfull = html`
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+    <rect width="256" height="256" fill="none" />
+    <path
+      d="M216,130.16q.06-2.16,0-4.32l14.92-18.64a8,8,0,0,0,1.48-7.06,107.6,107.6,0,0,0-10.88-26.25,8,8,0,0,0-6-3.93l-23.72-2.64q-1.48-1.56-3-3L186,40.54a8,8,0,0,0-3.94-6,107.29,107.29,0,0,0-26.25-10.86,8,8,0,0,0-7.06,1.48L130.16,40Q128,40,125.84,40L107.2,25.11a8,8,0,0,0-7.06-1.48A107.6,107.6,0,0,0,73.89,34.51a8,8,0,0,0-3.93,6L67.32,64.27q-1.56,1.49-3,3L40.54,70a8,8,0,0,0-6,3.94,107.71,107.71,0,0,0-10.87,26.25,8,8,0,0,0,1.49,7.06L40,125.84Q40,128,40,130.16L25.11,148.8a8,8,0,0,0-1.48,7.06,107.6,107.6,0,0,0,10.88,26.25,8,8,0,0,0,6,3.93l23.72,2.64q1.49,1.56,3,3L70,215.46a8,8,0,0,0,3.94,6,107.71,107.71,0,0,0,26.25,10.87,8,8,0,0,0,7.06-1.49L125.84,216q2.16.06,4.32,0l18.64,14.92a8,8,0,0,0,7.06,1.48,107.21,107.21,0,0,0,26.25-10.88,8,8,0,0,0,3.93-6l2.64-23.72q1.56-1.48,3-3L215.46,186a8,8,0,0,0,6-3.94,107.71,107.71,0,0,0,10.87-26.25,8,8,0,0,0-1.49-7.06ZM128,168a40,40,0,1,1,40-40A40,40,0,0,1,128,168Z"
+    />
+  </svg>
+`;
+
+const settings = html`
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+    <rect width="256" height="256" fill="none" />
+    <circle
+      cx="128"
+      cy="128"
+      r="40"
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="16"
+    />
+    <path
+      d="M130.05,206.11c-1.34,0-2.69,0-4,0L94,224a104.61,104.61,0,0,1-34.11-19.2l-.12-36c-.71-1.12-1.38-2.25-2-3.41L25.9,147.24a99.15,99.15,0,0,1,0-38.46l31.84-18.1c.65-1.15,1.32-2.29,2-3.41l.16-36A104.58,104.58,0,0,1,94,32l32,17.89c1.34,0,2.69,0,4,0L162,32a104.61,104.61,0,0,1,34.11,19.2l.12,36c.71,1.12,1.38,2.25,2,3.41l31.85,18.14a99.15,99.15,0,0,1,0,38.46l-31.84,18.1c-.65,1.15-1.32,2.29-2,3.41l-.16,36A104.58,104.58,0,0,1,162,224Z"
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="16"
+    />
+  </svg>
+`;
+const disconnect = html`
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+    <rect width="256" height="256" fill="none" />
+    <line
+      x1="144"
+      y1="144"
+      x2="120"
+      y2="168"
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="16"
+    />
+    <line x1="144" y1="144" x2="120" y2="168" fill="#231f20" />
+    <line
+      x1="112"
+      y1="112"
+      x2="88"
+      y2="136"
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="16"
+    />
+    <line x1="112" y1="112" x2="88" y2="136" fill="#231f20" />
+    <line
+      x1="64"
+      y1="112"
+      x2="144"
+      y2="192"
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="16"
+    />
+    <line
+      x1="58.06"
+      y1="197.94"
+      x2="24"
+      y2="232"
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="16"
+    />
+    <path
+      d="M132,180l-29,29a24,24,0,0,1-33.94,0L47,186.91A24,24,0,0,1,47,153l29-29"
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="16"
+    />
+    <line
+      x1="112"
+      y1="64"
+      x2="192"
+      y2="144"
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="16"
+    />
+    <line
+      x1="197.94"
+      y1="58.06"
+      x2="232"
+      y2="24"
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="16"
+    />
+    <path
+      d="M180,132l29-29a24,24,0,0,0,0-33.94L186.91,47A24,24,0,0,0,153,47L124,76"
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="16"
+    />
+  </svg>
+`;
+
 const sidebar = (path) => html`
   <div class="sidebar" id="mySidebar" style="color: black;">
     <a class="kiwi-logo" href="/">🥝</a>
@@ -326,18 +546,20 @@ const sidebar = (path) => html`
         <span>Home</span>
       </div>
     </a>
-    <a
-      title="Submit"
-      href="/submit"
-      style="color: black; text-decoration: none;"
-    >
-      <div style="display: flex; align-items: center;">
-        <div class="svg-container">
-          ${path === "/submit" ? submitfull : submit}
+    <div id="nav-submit">
+      <a
+        title="Submit"
+        href=""
+        style="color: grey; text-decoration: none; display: block;"
+      >
+        <div style="display: flex; align-items: center;">
+          <div class="svg-container">
+            ${path === "/submit" ? submitfull : submit}
+          </div>
+          <span>Submit</span>
         </div>
-        <span>Submit</span>
-      </div>
-    </a>
+      </a>
+    </div>
     <a
       title="Community"
       href="/community"
@@ -351,7 +573,7 @@ const sidebar = (path) => html`
       </div>
     </a>
     <a
-      title="Newsletter"
+      title="Subscribe"
       href="/subscribe"
       style="color: black; text-decoration: none; display: block;"
     >
@@ -359,23 +581,24 @@ const sidebar = (path) => html`
         <div class="svg-container">
           ${path === "/subscribe" ? envelopefull : envelope}
         </div>
-        <span>Newsletter</span>
+        <span>Subscribe</span>
       </div>
     </a>
     <a
-      title="About"
-      href="/welcome?referral=0x6804CC5a697eEDF020E6588Fb75b5844d8041298"
+      title="Wiki"
+      href="https://kiwistand.github.io/kiwi-docs/"
+      target="_blank"
       style="color: black; text-decoration: none; display: block;"
     >
       <div style="display: flex; align-items: center;">
         <div class="svg-container">
           ${path === "/welcome" ? aboutfull : about}
         </div>
-        <span>About</span>
+        <span>Wiki</span>
       </div>
     </a>
     <a
-      title="Explore"
+      title="Learn"
       href="/onboarding-reader"
       style="color: black; text-decoration: none; display: block;"
     >
@@ -383,12 +606,49 @@ const sidebar = (path) => html`
         <div class="svg-container">
           ${path === "/onboarding-reader" ? onboardingfull : onboarding}
         </div>
-        <span>Explore</span>
+        <span>Learn</span>
       </div>
     </a>
-    <div id="nav-profile"><a></a></div>
-    <div id="nav-settings"><a></a></div>
-    <div id="nav-disconnect"><a></a></div>
+    <div id="nav-profile">
+      <a
+        title="Profile"
+        href=""
+        style="color: grey; text-decoration: none; display: block;"
+      >
+        <div style="display: flex; align-items: center;">
+          <div class="svg-container">
+            ${path === "/upvotes" ? profilefull : profile}
+          </div>
+          <span>Profile</span>
+        </div>
+      </a>
+    </div>
+    <div id="nav-settings">
+      <a
+        title="Settings"
+        href=""
+        style="color: grey; text-decoration: none; display: block;"
+      >
+        <div style="display: flex; align-items: center;">
+          <div class="svg-container">
+            ${path === "/settings" ? settingsfull : settings}
+          </div>
+          <span>Settings</span>
+        </div>
+      </a>
+    </div>
+    <div id="nav-disconnect">
+      <a
+        title="Disconnect"
+        href=""
+        style="color: grey; text-decoration: none; display: block;"
+      >
+        <div style="display: flex; align-items: center;">
+          <div class="svg-container">${disconnect}</div>
+          <span>Disconnect</span>
+        </div>
+      </a>
+    </div>
   </div>
   <div id="overlay"></div>
 `;

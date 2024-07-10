@@ -6,9 +6,8 @@ import vhtml from "vhtml";
 import normalizeUrl from "normalize-url";
 import { formatDistanceToNow } from "date-fns";
 import { utils } from "ethers";
+import DOMPurify from "isomorphic-dompurify";
 
-import PWALine from "./components/iospwaline.mjs";
-import { getTips, getTipsValue } from "../tips.mjs";
 import Header from "./components/header.mjs";
 import { trophySVG, broadcastSVG } from "./components/secondheader.mjs";
 import Footer from "./components/footer.mjs";
@@ -29,11 +28,13 @@ import {
   twitterSvg,
   githubSvg,
   warpcastSvg,
+  orbSvg,
   telegramSvg,
   discordSvg,
   websiteSvg,
 } from "./components/socialNetworkIcons.mjs";
 
+const style = "width: 1rem; position: relative; top: 0.15rem;";
 const html = htm.bind(vhtml);
 
 function extractDomain(link) {
@@ -41,6 +42,7 @@ function extractDomain(link) {
   return parsedUrl.hostname;
 }
 
+// NOTE: User-defined inputs here are sanitized using the parser.mjs module
 const Post = (post) => html`
   <a target="_blank" href="${post.href}">
     <div style="gap: 1rem; display: flex; width: 90%; padding: 1rem 5%;">
@@ -93,7 +95,9 @@ export default async function (
     generateProfile(ensData.ens, ensData.safeAvatar);
     if (enabledFrame) {
       frameHead = frame.profileHeader(ensData.ens, identity);
-      ogImage = `https://news.kiwistand.com/previews/${ensData.ens}.jpg`;
+      ogImage = `https://news.kiwistand.com/previews/${DOMPurify.sanitize(
+        ensData.ens,
+      )}.jpg`;
     }
   }
 
@@ -130,13 +134,8 @@ export default async function (
     ),
   );
 
-  const tips = await getTips();
-
   async function enhance(leaf) {
     const ensData = await ens.resolve(leaf.identity);
-
-    const tipValue = getTipsValue(tips, leaf.index);
-    leaf.tipValue = tipValue;
 
     let avatars = [];
     for await (let upvoter of leaf.upvoters) {
@@ -184,6 +183,7 @@ export default async function (
     : "";
   const twitterCard = "summary";
   const points = karma.resolve(identity);
+  const path = "/upvotes";
   return html`
     <html lang="en" op="news">
       <head>
@@ -196,9 +196,8 @@ export default async function (
         ${frameHead ? frameHead : ""}
       </head>
       <body>
-        ${PWALine}
         <div class="container">
-          ${Sidebar()}
+          ${Sidebar(path)}
           <div id="hnmain">
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
               <tr>
@@ -209,22 +208,26 @@ export default async function (
                   <div
                     style="padding: 10px 10px 0 10px; color: black; font-size: 16px; line-height: 1.5;"
                   >
-                    <a
+                    <span
                       style="margin-bottom: 10px; font-weight: bold; display: flex; align-items: center; gap: 10px;"
-                      target="_blank"
-                      href="https://etherscan.io/address/${ensData.address}"
                     >
                       ${ensData.safeAvatar &&
-                      html`<img
-                        src="${ensData.safeAvatar}"
-                        style="border: 1px solid #828282; width: 30px; height: 30px; border-radius: 2px;"
-                      />`}
-                      ${ensData.displayName}
-                      <span> (${points.toString()} 🥝)</span>
-                    </a>
+                      html` <a href="${ensData.safeAvatar}" target="_blank">
+                        <img
+                          src="${ensData.safeAvatar}"
+                          style="border: 1px solid #828282; width: 30px; height: 30px; border-radius: 2px;"
+                      /></a>`}
+                      <a
+                        target="_blank"
+                        href="https://etherscan.io/address/${ensData.address}"
+                      >
+                        ${ensData.displayName}
+                        <span> (${points.toString()} 🥝)</span>
+                      </a>
+                    </span>
                     <span style="font-size: 0.8rem;">
                       ${description
-                        ? html`${description}<br />`
+                        ? html`${DOMPurify.sanitize(description)}<br />`
                         : html`<span><br /></span>`}
                     </span>
                     <div
@@ -237,7 +240,7 @@ export default async function (
                         ? SocialButton(
                             `https://twitter.com/${ensData.twitter}`,
                             twitterSvg(),
-                            "X",
+                            "",
                           )
                         : ""}
                       ${ensData.github
@@ -268,6 +271,19 @@ export default async function (
                             "Warpcast",
                           )
                         : ""}
+                      ${ensData.lens && ensData.lens.id
+                        ? SocialButton(
+                            `https://orb.ac/p/${ensData.lens.id}`,
+                            orbSvg(),
+                            "Orb",
+                          )
+                        : ""}
+                      ${SocialButton(
+                        `https://app.interface.social/profile/${identity}`,
+                        "/interface_logo.png",
+                        "Interface",
+                        true,
+                      )}
                     </div>
                   </div>
                 </td>
@@ -329,7 +345,7 @@ export default async function (
                             : "1px solid #7f8c8d"
                         }; color: ${mode === "new" ? "black" : "#7f8c8d"};`}
                       >
-                        <span>${broadcastSVG} New</span>
+                        <span>${broadcastSVG(style)} New</span>
                       </button>
                     </a>
                   </div>

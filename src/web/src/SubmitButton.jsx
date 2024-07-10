@@ -3,12 +3,12 @@ import { Wallet } from "@ethersproject/wallet";
 import { useAccount, WagmiConfig } from "wagmi";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { eligible } from "@attestate/delegator2";
+import DOMPurify from "isomorphic-dompurify";
 
 import * as API from "./API.mjs";
 import { useSigner, useProvider, client, chains } from "./client.mjs";
 import NFTModal from "./NFTModal.jsx";
 import { getLocalAccount } from "./session.mjs";
-import { ConnectedConnectButton } from "./Navigation.jsx";
 
 function safeExtractDomain(link) {
   let parsedUrl;
@@ -25,6 +25,29 @@ function safeExtractDomain(link) {
 
 const UrlInput = (props) => {
   const { url, setURL } = props;
+  const [checkedURLs, setCheckedURLs] = useState(new Set());
+
+  useEffect(() => {
+    if (
+      !checkedURLs.has(url) &&
+      (url.includes("http") || url.includes("https"))
+    ) {
+      fetchMetadata(url);
+    }
+  }, [url]);
+  const fetchMetadata = async (url) => {
+    try {
+      const response = await fetch(`/api/v1/metadata?url=${url}`);
+      const data = await response.json();
+
+      if (data.data && data.data.canonicalLink) {
+        setURL(data.data.canonicalLink);
+        setCheckedURLs(new Set(checkedURLs).add(url));
+      }
+    } catch (error) {
+      console.error("Error fetching metadata:", error);
+    }
+  };
 
   return (
     <div style={{ maxWidth: "600px" }}>
@@ -43,6 +66,8 @@ const UrlInput = (props) => {
           maxLength="2048"
           required
           style={{
+            borderRadius: "2px",
+            border: "1px solid #828282",
             flexGrow: 8,
             padding: "5px 10px",
             fontSize: "16px",
@@ -60,7 +85,6 @@ const SubmitButton = (props) => {
   const { toast, url } = props;
   const [isLoading, setIsLoading] = useState(false);
   const [title, setTitle] = useState("");
-  const [openedOnce, setOpenedOnce] = useState(false);
   const [remainingChars, setRemainingChars] = useState(80);
 
   useEffect(() => {
@@ -76,7 +100,26 @@ const SubmitButton = (props) => {
           return response.text();
         })
         .then((data) => {
-          embedPreview.innerHTML = data;
+          embedPreview.innerHTML = DOMPurify.sanitize(data);
+        })
+        .catch((error) => {
+          console.log("Fetch error: ", error);
+        });
+      fetch(`/api/v1/metadata?url=${encodeURIComponent(canonicalURL)}`)
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then((data) => {
+          if (data.data.ogTitle) {
+            const title = data.data.ogTitle;
+            document.getElementById("titleInput").innerText = title;
+            const remaining = 80 - title.length;
+            document.querySelector(".remaining").textContent = remaining;
+            setTitle(title);
+          }
         })
         .catch((error) => {
           console.log("Fetch error: ", error);
@@ -102,9 +145,9 @@ const SubmitButton = (props) => {
 
     const canonicalURL = url;
     if (previewLink && canonicalURL) {
-      previewLink.href = canonicalURL;
+      previewLink.href = DOMPurify.sanitize(canonicalURL);
     } else if (previewLink) {
-      previewLink.href = placeholderUrl;
+      previewLink.href = DOMPurify.sanitize(placeholderUrl);
     }
 
     if (previewDomain) {
@@ -116,7 +159,7 @@ const SubmitButton = (props) => {
 
   let address;
   const account = useAccount();
-  const localAccount = getLocalAccount(account.address);
+  const localAccount = getLocalAccount(account.address, props.allowlist);
   if (account.isConnected) {
     address = account.address;
   }
@@ -125,11 +168,6 @@ const SubmitButton = (props) => {
   }
   const isEligible =
     address && eligible(props.allowlist, props.delegations, address);
-
-  if (!isEligible && !openedOnce) {
-    props.setIsOpen(true);
-    setOpenedOnce(true);
-  }
 
   const provider = useProvider();
   const result = useSigner();
@@ -222,8 +260,13 @@ const SubmitButton = (props) => {
       message = `Error! Sad Kiwi! "${response.details}"`;
     }
 
-    const nextPage = new URL(window.location.origin + redirectTo);
-    if (redirectTo === "/new" && response?.data?.index) {
+    let nextPage;
+    if (response?.data?.index && response?.data?.isResubmission) {
+      redirectTo = "/stories";
+      nextPage = new URL(window.location.origin + redirectTo);
+      nextPage.searchParams.set("index", response.data.index);
+    } else if (response?.data?.index) {
+      nextPage = new URL(window.location.origin + redirectTo);
       nextPage.searchParams.set("index", response.data.index);
     }
     window.location.href = nextPage.href;
@@ -238,18 +281,8 @@ const SubmitButton = (props) => {
     cursor: "pointer",
   };
 
-  if (!account.isConnected && !isEligible) {
-    return (
-      <ConnectedConnectButton
-        allowlist={props.allowlist}
-        delegations={props.delegations}
-      />
-    );
-  }
-
   return (
     <div>
-      {!isEligible && "You need to buy our NFT to submit and upvote..."}
       <button
         id="button-onboarding"
         style={buttonStyles}
@@ -267,8 +300,6 @@ const SubmitButton = (props) => {
 };
 
 const Form = (props) => {
-  const [modalIsOpen, setIsOpen] = useState(false);
-
   const urlInput = document.getElementById("urlInput");
   const [url, setURL] = useState(urlInput.value);
 
@@ -276,14 +307,7 @@ const Form = (props) => {
     <WagmiConfig config={client}>
       <RainbowKitProvider chains={chains}>
         <UrlInput url={url} setURL={setURL} />
-        <SubmitButton {...props} setIsOpen={setIsOpen} url={url} />
-        <NFTModal
-          modalIsOpen={modalIsOpen}
-          setIsOpen={setIsOpen}
-          headline="Wait a minute!"
-          text="To submit links to Kiwi, you need to own our NFT. 👇"
-          closeText="OK, but let me browse more first!"
-        />
+        <SubmitButton {...props} url={url} />
       </RainbowKitProvider>
     </WagmiConfig>
   );

@@ -18,15 +18,18 @@ import delegateCrawlPath from "./chainstate/delegate.config.crawler.mjs";
 import * as registry from "./chainstate/registry.mjs";
 import * as karma from "./karma.mjs";
 import * as newest from "./views/new.mjs";
-import * as images from "./views/images.mjs";
 import * as feeds from "./feeds.mjs";
 import * as moderation from "./views/moderation.mjs";
 
 const trie = await store.create();
 
+const node = await start(config);
+
+await api.launch(trie, node);
+await http.launch(trie, node);
+
 crawl(mintCrawlPath);
 crawl(delegateCrawlPath);
-const node = await start(config);
 
 // NOTE: We're passing in the trie here as we don't want to make it globally
 // available to run more than one node in the tests
@@ -41,8 +44,6 @@ await subscribe(
   [messages, roots],
   trie,
 );
-await api.launch(trie, node);
-await http.launch(trie, node);
 
 // NOTE: This request queries all messages in the database to enable caching
 // when calling ecrecover on messages' signatures
@@ -50,31 +51,39 @@ const from = null;
 const amount = null;
 const startDatetime = null;
 const parser = JSON.parse;
-const allowlist = await registry.allowlist();
+const accounts = await registry.accounts();
 const delegations = await registry.delegations();
 const href = null;
-const upvotes = await store.posts(
-  trie,
-  from,
-  amount,
-  parser,
-  startDatetime,
-  allowlist,
-  delegations,
-  href,
-  "amplify",
-);
-const comments = await store.posts(
-  trie,
-  from,
-  amount,
-  parser,
-  startDatetime,
-  allowlist,
-  delegations,
-  href,
-  "comment",
-);
+
+let upvotes, comments;
+await Promise.allSettled([
+  (async () => {
+    upvotes = await store.posts(
+      trie,
+      from,
+      amount,
+      parser,
+      startDatetime,
+      accounts,
+      delegations,
+      href,
+      "amplify",
+    );
+  })(),
+  (async () => {
+    comments = await store.posts(
+      trie,
+      from,
+      amount,
+      parser,
+      startDatetime,
+      accounts,
+      delegations,
+      href,
+      "comment",
+    );
+  })(),
+]);
 
 const alreadySetup = cache.initialize();
 if (!alreadySetup) {
@@ -92,10 +101,10 @@ try {
 
 const urls = await moderation.getFeeds();
 await feeds.recompute(urls);
+// TODO: Unclear if this is still necessary
 setInterval(async () => {
   await feeds.recompute(urls);
   await newest.recompute(trie);
 }, 1800000);
 await newest.recompute(trie);
-await images.recompute(trie);
 karma.count(upvotes);

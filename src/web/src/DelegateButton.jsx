@@ -16,7 +16,11 @@ import useLocalStorageState from "use-local-storage-state";
 import Passkeys from "./Passkeys.jsx";
 import { useProvider, chains, client } from "./client.mjs";
 import { CheckmarkSVG } from "./icons.jsx";
-import { ConnectedConnectButton } from "./Navigation.jsx";
+import theme from "./theme.mjs";
+import {
+  ConnectedSimpleDisconnectButton,
+  ConnectedConnectButton,
+} from "./Navigation.jsx";
 import { resolveAvatar } from "./Avatar.jsx";
 import { fetchDelegations } from "./API.mjs";
 import { supportsPasskeys } from "./session.mjs";
@@ -51,25 +55,25 @@ export const ProgressBar = (props) => {
       <div
         style={{
           flex: 1,
-          backgroundColor: progress >= 0 ? "limegreen" : "black",
+          backgroundColor: progress >= 0 ? theme.color : "black",
         }}
       ></div>
       <div
         style={{
           flex: 1,
-          backgroundColor: progress >= 1 ? "limegreen" : "black",
+          backgroundColor: progress >= 1 ? theme.color : "black",
         }}
       ></div>
       <div
         style={{
           flex: 1,
-          backgroundColor: progress >= 2 ? "limegreen" : "black",
+          backgroundColor: progress >= 2 ? theme.color : "black",
         }}
       ></div>
       <div
         style={{
           flex: 1,
-          backgroundColor: progress >= 3 ? "limegreen" : "black",
+          backgroundColor: progress >= 3 ? theme.color : "black",
         }}
       ></div>
     </div>
@@ -77,6 +81,7 @@ export const ProgressBar = (props) => {
 };
 
 const ConnectionDialogue = (props) => {
+  const { pathname } = window.location;
   return (
     <div
       style={{
@@ -88,41 +93,86 @@ const ConnectionDialogue = (props) => {
           marginTop: "0",
           fontSize: "1.2rem",
           color: "black",
-          marginBottom: "20px",
+          marginBottom: "10px",
         }}
       >
-        <span>
-          Connect with{" "}
-          <span style={{ whiteSpace: "nowrap" }}>news.kiwistand.com</span>
-        </span>
+        {pathname === "/start" ? (
+          <span>Welcome to Kiwi News! </span>
+        ) : (
+          <span>Welcome back!</span>
+        )}
       </h3>
-      <p
-        style={{
-          fontWeight: "bold",
-          color: "black",
-          marginBottom: "20px",
-          textAlign: "left",
-        }}
-      >
-        Enable Kiwi News to seamlessly interact on your behalf on the Optimism
-        network:
-      </p>
+      {pathname === "/settings" ? (
+        <p
+          style={{
+            fontWeight: "bold",
+            color: "black",
+            marginBottom: "10px",
+            textAlign: "left",
+          }}
+        >
+          Allow your browser to seamlessly interact on your behalf on the
+          Optimism network:
+        </p>
+      ) : props.account && props.account.isConnected ? (
+        <p
+          style={{
+            color: "black",
+            marginBottom: "10px",
+            textAlign: "left",
+          }}
+        >
+          Please add an application key:
+        </p>
+      ) : (
+        <p
+          style={{
+            fontWeight: "bold",
+            color: "black",
+            marginBottom: "20px",
+            textAlign: "left",
+          }}
+        >
+          Let us onboard you to the app.
+          <br />
+          <br />
+          Please connect the wallet that received the Kiwi Pass NFT.
+        </p>
+      )}
       <ul
         style={{
           textAlign: "left",
           listStyle: "none",
           paddingLeft: "0",
           color: "black",
-          marginBottom: "30px",
+          marginBottom: "35px",
+          paddingLeft: "5px",
+          fontSize: "0.9rem",
         }}
       >
-        <li>
-          <span style={{ color: "limegreen" }}>•</span> Automatically upvote and
-          submit stories.
-        </li>
-        <li style={{ marginTop: "5px" }}>
-          <span style={{ color: "limegreen" }}>•</span> Sign messages without
+        <li
+          style={{ marginLeft: "14px", textIndent: "-14px", marginTop: "8px" }}
+        >
+          <span style={{ color: theme.color }}>•</span> Sign messages without
           additional prompts.
+        </li>
+        <li
+          style={{ marginLeft: "14px", textIndent: "-14px", marginTop: "5px" }}
+        >
+          <span style={{ color: theme.color }}>•</span> <b>Cost:</b> less than
+          $0.01 on Optimism
+        </li>
+        <li
+          style={{ marginLeft: "14px", textIndent: "-14px", marginTop: "5px" }}
+        >
+          <span style={{ color: theme.color }}>•</span> Learn more about this by{" "}
+          <a
+            style={{ textDecoration: "underline" }}
+            href="https://kiwistand.github.io/kiwi-docs/docs/kiwi-how-works/delegation"
+            target="_blank"
+          >
+            reading our docs
+          </a>
         </li>
       </ul>
     </div>
@@ -130,7 +180,18 @@ const ConnectionDialogue = (props) => {
 };
 
 const address = "0x08b7ECFac2c5754ABafb789c84F8fa37c9f088B0";
-const newKey = Wallet.createRandom();
+
+// NOTE: This is a performance optimization as `createRandom` causes a notable
+// occupation of the main thread of JavaScript to generate the randomness.
+// Hence we now call this just-in-time, when the user accesses the value for
+// the first time.
+let newKey = null;
+function getNewKey() {
+  if (!newKey) {
+    newKey = Wallet.createRandom();
+  }
+  return newKey;
+}
 const DelegateButton = (props) => {
   const { chain } = useNetwork();
   const from = useAccount();
@@ -163,9 +224,9 @@ const DelegateButton = (props) => {
     const generate = async () => {
       const authorize = true;
       const payload = await create(
-        newKey,
+        getNewKey(),
         from.address,
-        newKey.address,
+        getNewKey().address,
         authorize,
       );
       setPayload(payload);
@@ -190,7 +251,7 @@ const DelegateButton = (props) => {
     isSuccess: isWriteSuccess,
   } = useContractWrite(config);
   const isSuccess = isWriteSuccess && data && data.hash !== "null";
-  if (isSuccess) setKey(newKey.privateKey);
+  if (isSuccess) setKey(getNewKey().privateKey);
 
   const handleClick = () => {
     removeItem();
@@ -211,6 +272,18 @@ const DelegateButton = (props) => {
           if (Object.keys(delegations).includes(wallet.address)) {
             setIndexedDelegation(true);
             clearInterval(intervalId);
+            if (
+              !supportsPasskeys() &&
+              props.callback &&
+              typeof props.callback === "function"
+            ) {
+              props.callback();
+              // NOTE: We have to reload the page here because the Vote
+              // component isn't reloading based on the updates in the
+              // localStorage, for example, when we store a new application key
+              // there. So we reload the page to fix this.
+              location.reload();
+            }
           }
         };
 
@@ -225,7 +298,7 @@ const DelegateButton = (props) => {
     return (
       <div>
         <ProgressBar progress={0} />
-        <ConnectionDialogue />
+        <ConnectionDialogue account={from} />
         <ConnectedConnectButton
           required
           allowlist={props.allowlist}
@@ -237,7 +310,16 @@ const DelegateButton = (props) => {
 
   if (key && wallet) {
     if (supportsPasskeys() && indexedDelegation) {
-      return <Passkeys toast={props.toast} />;
+      return (
+        <Passkeys
+          allowlist={props.allowlist}
+          toast={props.toast}
+          callback={props.callback}
+        />
+      );
+    } else if (window.location.pathname === "/start") {
+      const delegate = key && wallet ? wallet.address : getNewKey().address;
+      window.location.href = `/indexing?address=${from.address}&delegate=${delegate}`;
     } else {
       const progress = !supportsPasskeys() && indexedDelegation ? 3 : 1;
       return (
@@ -273,16 +355,12 @@ const DelegateButton = (props) => {
   let content;
   let activity;
   let handler;
-  let message;
-  if (isLoading) {
-    message = "Please sign transaction";
-  }
-  if (isSuccess) {
-    message =
-      "Success! We're updating our database... (this can take 5 minutes)";
-  }
   if (chain.id === 10) {
-    content = <span>Enable on Optimism</span>;
+    content = isLoading ? (
+      "Please sign in wallet"
+    ) : (
+      <span>Enable on Optimism</span>
+    );
     activity = !write || (!write && !isError) || isLoading || isSuccess;
     handler = () => write?.();
   } else {
@@ -292,11 +370,23 @@ const DelegateButton = (props) => {
   }
   return (
     <div>
-      <ConnectionDialogue address={from.address} />
+      <ConnectionDialogue account={from} />
       {isPersistent ? (
-        <div>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            justifyContent: "space-evenly",
+            gap: "20px",
+            alignItems: "center",
+          }}
+        >
           <button
-            style={{ width: "auto" }}
+            style={{
+              width: "auto",
+              backgroundColor: isLoading ? "grey" : "black",
+              border: isLoading ? "1px solid grey" : "1px solid black",
+            }}
             className="buy-button"
             id="button-onboarding"
             disabled={activity}
@@ -304,8 +394,7 @@ const DelegateButton = (props) => {
           >
             {content}
           </button>
-          <br />
-          <span>{message}</span>
+          <ConnectedSimpleDisconnectButton />
         </div>
       ) : (
         <p>Your browser isn't supporting key storage.</p>
@@ -324,9 +413,10 @@ const Form = (props) => {
             backgroundColor: "#E6E6DF",
             maxWidth: "315px",
             display: "inline-block",
-            padding: "30px",
+            padding: "20px 15px",
             borderRadius: "2px",
             boxShadow: "0 6px 20 rgba(0,0,0,0.1)",
+            ...props.style,
           }}
         >
           <DelegateButton {...props} />
