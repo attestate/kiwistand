@@ -86,6 +86,7 @@ const ConnectionDialogue = (props) => {
     <div
       style={{
         wordBreak: "break-word",
+        margin: "0 3px",
       }}
     >
       <h3
@@ -94,6 +95,7 @@ const ConnectionDialogue = (props) => {
           fontSize: "1.2rem",
           color: "black",
           marginBottom: "10px",
+          textAlign: "left",
         }}
       >
         {pathname === "/start" ? (
