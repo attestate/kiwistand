@@ -102,12 +102,129 @@ export default async function (theme) {
                   <p>
                     <span>Thanks to </span>
                     <u
-                      ><a
-                        href="https://news.kiwistand.com/upvotes?address=0x3601a913fD3466f30f5ABb978E484d1B37Ce995D"
-                        >@thatalexpalmer</a
+                      ><a href="/thatalexpalmer.eth" target="_blank"
+                        >thatalexpalmer.eth</a
                       ></u
                     >
-                    <span> who helped us prepare these guidelines.</span>
+                    <span> who helped us prepare submission guidelines.</span>
+                  </p>
+                  <h1>Commenting guidelines</h1>
+                  <p>
+                    Kiwi wants to provide clarity in the confusing crypto world.
+                    Comments play a huge role here, as they can expand the idea,
+                    add context, or debunk the statements in the articles shared
+                    here.
+                  </p>
+                  <p>
+                    So just as we specified what content we want to see, now we
+                    want to ensure it's clear what kind of comments we are
+                    looking for. Also, since comments can't be edited (at least
+                    for now) and are fully public, it’s good to give them a bit
+                    of thought.
+                  </p>
+
+                  <h2>What comments are we looking for?</h2>
+                  <ol>
+                    <li>
+                      <strong>Extra Context</strong><br />
+                      Kiwi users see only the headline, so if you are a person
+                      who submitted the link, feel free to add more context.
+                      Explain what this content is about, why you think it’s
+                      interesting, and share if you agree with it or not.
+                    </li>
+                    <br />
+                    <li>
+                      <strong>Insider's perspective</strong><br />
+                      If an essay is about subject X (app, blockchain, or
+                      whatever), and you have interacted with it before, feel
+                      free to share your perspective. It's always interesting to
+                      learn from people who have first-hand experience.
+                    </li>
+                    <br />
+                    <li>
+                      <strong>Deeper dive</strong><br />
+                      If you can add more context and information about the
+                      subject, please do it. We like to get a 360 perspective of
+                      the things we discuss.
+                    </li>
+                    <br />
+                    <li>
+                      <strong>Debunks</strong><br />
+                      If the material is misleading or you disagree with it,
+                      share your perspective (and, if applicable, sources to
+                      support it!)
+                    </li>
+                    <br />
+                    <li>
+                      <strong>Impact on you</strong><br />
+                      If this essay changed how you look at this particular
+                      subject, tell us what you thought before and how you think
+                      about it now.
+                    </li>
+                    <br />
+                    <li>
+                      <strong>Questions</strong><br />
+                      If you have any questions related to the subject, feel
+                      free to ask them.
+                    </li>
+                    <br />
+                    <li>
+                      <strong>Funny, spicy remarks</strong><br />
+                      If you have a funny, spicy way to comment on the content,
+                      feel free to do it.
+                    </li>
+                  </ol>
+                  <p>
+                    This list is non-exhaustive, so all comments that include
+                    more context, help us understand the subject better, or add
+                    value to the conversation are much welcome!
+                  </p>
+
+                  <h2>What comments to avoid?</h2>
+                  <ol>
+                    <li>
+                      <strong>Ad hominem attacks</strong><br />
+                      Please avoid personal attacks against authors and
+                      commenters. If you think they are questionable, point to
+                      relevant material (see above: Debunks).
+                    </li>
+                    <br />
+                    <li>
+                      <strong>Shilling and spamming</strong><br />
+                      We all know what this means. If you spot a comment you
+                      think could be labeled as such, please let us know on the
+                      Telegram group.
+                    </li>
+                    <br />
+                    <li>
+                      <strong>Strawman's arguments</strong><br />
+                      It’s okay to digress, but if your arguments aren’t related
+                      to the discussion, then it’s not that helpful.
+                    </li>
+                    <br />
+                    <li>
+                      <strong>“I made it up” comments</strong><br />
+                      “Extraordinary claims require extraordinary evidence”. So
+                      if you say something that is not a well-known fact, and
+                      don’t provide data or arguments to support your point, the
+                      comment is not that useful.
+                    </li>
+                  </ol>
+
+                  <p>
+                    PS: Thanks to<span> </span>
+                    <u
+                      ><a href="/mishaderrider.eth" target="_blank"
+                        >mishaderidder.eth</a
+                      ></u
+                    >,<span> </span>
+                    <u><a href="/rvolz.eth" target="_blank">rvolz.eth</a></u
+                    >,<span> </span>
+                    <u><a href="/zinkk.eth" target="_blank">zinkk.eth</a></u
+                    >,<span> </span> and<span> </span>
+                    <u><a href="/noctis.eth" target="_blank">noctis.eth</a></u
+                    ><span> </span>
+                    for helping us to set up commenting guidelines.
                   </p>
                   <a href="/submit">
                     <button
