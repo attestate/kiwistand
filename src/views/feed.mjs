@@ -441,7 +441,7 @@ export default async function (trie, theme, page, domain) {
                     <img style="height: 30px;" src="lens.png" />
                     <a
                       style="color: white; text-decoration: underline;"
-                      href="https://paragraph.xyz/@kiwi-updates/t2-lens-writing-challenge"
+                      href="https://paragraph.xyz/@kiwi-updates/t2-lens-submissions-ended"
                     >
                       1,200 USDC writing challenge
                     </a>
