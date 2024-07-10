@@ -206,7 +206,7 @@ export default async function (
               <tr>
                 <td>
                   <div
-                    style="padding: 10px 10px 0 10px; color: black; font-size: 16px; line-height: 1.5;"
+                    style="max-width: 96vw; margin: 2vw 2vw; overflow-wrap: break-word; color: black; font-size: 16px; line-height: 1.5;"
                   >
                     <span
                       style="margin-bottom: 10px; font-weight: bold; display: flex; align-items: center; gap: 10px;"
