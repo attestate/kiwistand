@@ -1,7 +1,6 @@
 //@format
 import { env } from "process";
 import { URL } from "url";
-import { extname } from "path";
 
 import htm from "htm";
 import vhtml from "vhtml";
@@ -77,10 +76,29 @@ export async function generateStory(index) {
   return submission;
 }
 
-export function generateList(profiles) {
+export function generateList(profiles, submitter) {
   profiles.shift();
   return html`
     <ul style="padding: 0.3rem 0 0.65rem 56px; list-style: none; margin: 0;">
+      <li style="position: relative;">
+        <p
+          style="display: flex; align-items: center; gap: 3px; flex: 1; margin: 0; padding: 2px 0; font-size: 14px; color: #6b7280;"
+        >
+          ${submitter.safeAvatar
+            ? html`<img
+                src="${submitter.safeAvatar}"
+                alt="avatar"
+                style="object-fit: contain; width: 15px; height: 15px; border: 1px solid #828282; border-radius: 2px;"
+              />`
+            : null}
+          <span> </span>
+          <a href="/upvotes?address=${submitter.address}"
+            >${submitter.displayName}
+            <span> (${karma.resolve(submitter.address).toString()})</span>
+            <span> submitted</span></a
+          >
+        </p>
+      </li>
       ${profiles.map(
         (profile, i) => html`
           <li style="position: relative;">
@@ -91,12 +109,13 @@ export function generateList(profiles) {
                 ? html`<img
                     src="${profile.avatar}"
                     alt="avatar"
-                    style="width: 15px; height: 15px; border: 1px solid #828282; border-radius: 2px;"
+                    style="object-fit: contain; width: 15px; height: 15px; border: 1px solid #828282; border-radius: 2px;"
                   />`
                 : null}
               <span> </span>
               <a href="/upvotes?address=${profile.address}"
-                >${profile.name} upvoted</a
+                >${profile.name} (${karma.resolve(profile.address).toString()})
+                <span> upvoted</span></a
               >
             </p>
           </li>
@@ -134,17 +153,14 @@ export default async function (trie, theme, index, value) {
   let avatars = [];
   for await (let { identity, timestamp } of story.upvoters) {
     const profile = await ens.resolve(identity);
+    profiles.push({
+      timestamp,
+      name: profile.displayName,
+      avatar: profile.safeAvatar ? profile.safeAvatar : "/pfp.png",
+      address: profile.address,
+    });
     if (profile.safeAvatar) {
       avatars.push(`/avatar/${profile.address}`);
-
-      if (profile.displayName) {
-        profiles.push({
-          timestamp,
-          name: profile.displayName,
-          avatar: profile.safeAvatar,
-          address: profile.address,
-        });
-      }
     }
   }
 
@@ -177,18 +193,6 @@ export default async function (trie, theme, index, value) {
   const style = "padding: 1rem 5px 0 10px;";
 
   let ogImage = `https://news.kiwistand.com/previews/${index}.jpg`;
-  const extension = extname(story.href);
-  if (
-    (extractDomain(story.href) === "imgur.com" ||
-      extractDomain(story.href) === "catbox.moe") &&
-    (extension === ".gif" ||
-      extension === ".png" ||
-      extension === ".jpg" ||
-      extension === ".jpeg")
-  ) {
-    ogImage = story.href;
-    story.image = story.href;
-  }
   const ogDescription =
     data && data.ogDescription
       ? data.ogDescription
@@ -217,7 +221,11 @@ export default async function (trie, theme, index, value) {
                 recentJoiners,
               )({ ...story, index })}
               <tr>
-                <td>${actions.length > 3 ? generateList(actions) : ""}</td>
+                <td>
+                  ${actions.length > 3
+                    ? generateList(actions, story.submitter)
+                    : ""}
+                </td>
               </tr>
               ${story.comments.length > 0
                 ? html`<tr>
