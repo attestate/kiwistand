@@ -443,7 +443,7 @@ export default async function (trie, theme, page, domain) {
                       style="color: white; text-decoration: underline;"
                       href="https://paragraph.xyz/@kiwi-updates/t2-lens-submissions-ended"
                     >
-                      1,200 USDC writing challenge
+                      Vote until July 15!
                     </a>
                   </div>
                 </td>
