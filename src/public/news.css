@@ -1,3 +1,6 @@
+:root {
+  --font-family: Verdana, Geneva, sans-serif;
+}
 .drawer {
   border-top-left-radius: 2px !important;
   border-top-right-radius: 2px !important;
@@ -28,7 +31,7 @@
 }
 body {
      margin: 0;
-     font-family:Verdana, Geneva, sans-serif;
+     font-family: var(--font-family);
      font-size:10pt;
      color:#828282;
      overscroll-behavior: none;
@@ -116,12 +119,12 @@ body {
  }
 
  td {
-     font-family:Verdana, Geneva, sans-serif;
+     font-family: var(--font-family);
      font-size:10pt;
      color:#828282;
 }
  .subtext td {
-     font-family:Verdana, Geneva, sans-serif;
+     font-family: var(--font-family);
      font-size: 7pt;
      color:#828282;
 }
@@ -133,7 +136,7 @@ body {
      font-size:10pt;
 }
  input[type=\"submit\"] {
-     font-family:Verdana, Geneva, sans-serif;
+     font-family: var(--font-family);
 }
  textarea {
      font-family:monospace;
@@ -149,23 +152,23 @@ body {
      text-decoration:none;
 }
  .default {
-     font-family:Verdana, Geneva, sans-serif;
+     font-family: var(--font-family);
      font-size: 10pt;
      color:#828282;
 }
  .title {
      display: table-row;
-     font-family:Verdana, Geneva, sans-serif;
+     font-family: var(--font-family);
      font-size: 13pt;
      color:#828282;
 }
  .subtext {
-     font-family:Verdana, Geneva, sans-serif;
+     font-family: var(--font-family);
      font-size: 9pt;
      color:#828282;
 }
  .pagetop {
-     font-family:Verdana, Geneva, sans-serif;
+     font-family: var(--font-family);
      font-size: 14pt;
      color:#222222;
      line-height:normal;
@@ -175,7 +178,7 @@ body {
      margin-right: 5px;
 }
  #hnmain {
-     min-width: 796px;
+     min-width: 70ch;
 }
  .title a {
      word-break: break-word;
@@ -571,7 +574,7 @@ body {
       bottom: 0px !important;
     }
     #hnmain {
-     width: 60%;
+     width: 70ch;
     }
     #bell {
       display: block;
@@ -680,9 +683,10 @@ body {
 }
  .sidebar a {
     padding: 0.3rem 0 0.3rem 0;
-    margin: 0.5rem 10px 0.2rem 10px;
+    margin: 0.3rem 10px 0 10px;
     font-size: 1.7rem;
     font-weight: bold;
+    font-variant: small-caps;
 }
  .svg-container {
      width: 19%;

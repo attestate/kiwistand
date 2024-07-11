@@ -300,7 +300,13 @@ const DisconnectButton = () => {
             }}
             className="sidebar-div"
           >
-            <div style={{ display: "flex", alignItems: "center" }}>
+            <div
+              style={{
+                fontVariant: "small-caps",
+                display: "flex",
+                alignItems: "center",
+              }}
+            >
               <div className="svg-container">
                 <EthereumSVG />
               </div>
