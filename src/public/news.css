@@ -1,3 +1,10 @@
+.drawer {
+  border-top-left-radius: 2px !important;
+  border-top-right-radius: 2px !important;
+  background: #f6f6ef !important;
+  border-top: 1px solid #828282 !important;
+}
+
 .vote-button-container:active,
 .chat-bubble-container:active,
 .feed-button-link:active,
@@ -732,12 +739,13 @@ body {
  .story-link:visited {
      color: #828282;
 }
- a.meta-link {
-     color: #828282;
-     fill: #828282;
+a.meta-link, span.meta-link {
+  cursor: pointer;
+  color: #828282;
+  fill: #828282;
 }
- a.meta-link:hover {
-     text-decoration: underline;
+a.meta-link:hover, span.meta-link:hover {
+  text-decoration: underline;
 }
  a.caster-link {
      color: #828282;

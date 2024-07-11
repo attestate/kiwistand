@@ -3,6 +3,7 @@ import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { WagmiConfig, useAccount } from "wagmi";
 import { Wallet } from "@ethersproject/wallet";
 import { eligible } from "@attestate/delegator2";
+import Drawer from "react-bottom-drawer";
 
 import * as API from "./API.mjs";
 import { getLocalAccount } from "./session.mjs";
@@ -151,15 +152,74 @@ const CommentInput = (props) => {
       </span>
       <br />
       <br />
-      <button
-        id="button-onboarding"
-        style={{ width: "auto" }}
-        disabled={isLoading || !address || !isEligible}
-        onClick={handleSubmit}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
       >
-        {isLoading ? "Submitting..." : "Add comment"}
-      </button>
+        <button
+          id="button-onboarding"
+          style={{ width: "auto" }}
+          disabled={isLoading || !address || !isEligible}
+          onClick={handleSubmit}
+        >
+          {isLoading ? "Submitting..." : "Add comment"}
+        </button>
+        <CommentGuidelines />
+      </div>
     </div>
+  );
+};
+
+const CommentGuidelines = () => {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <Drawer
+        className="drawer"
+        isVisible={open}
+        onClose={() => setOpen(false)}
+      >
+        <h4>What comments are we looking for?</h4>
+        <ol>
+          <li>
+            <strong>Extra Context: </strong>
+            Explain why you think the story is interesting.
+          </li>
+          <br />
+          <li>
+            <strong>Insider's perspective: </strong>
+            Have you been involved? What was <i>your</i> experience?
+          </li>
+          <br />
+          <li>
+            <strong>Debunks: </strong>
+            Do you believe the material is false or misleading? Tell us why!
+          </li>
+          <br />
+          <li>
+            <strong>Impact on you: </strong>
+            How were you impacted?
+          </li>
+          <br />
+          <li>
+            <strong>Questions: </strong>
+            Ask for more information.
+          </li>
+          <br />
+        </ol>
+      </Drawer>
+      <span
+        className="meta-link"
+        style={{ fontSize: "0.8rem" }}
+        onClick={() => setOpen(true)}
+      >
+        comment guidelines
+      </span>
+    </>
   );
 };
 
