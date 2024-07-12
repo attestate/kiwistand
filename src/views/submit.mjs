@@ -175,6 +175,7 @@ const inputStyle = `
    padding: 5px 10px;
    font-size: 16px;
    box-sizing: border-box;
+   border: 1px solid rgb(130, 130, 130);
  `;
 
 const buttonStyle = `

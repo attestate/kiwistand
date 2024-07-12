@@ -114,8 +114,14 @@ const SubmitButton = (props) => {
         })
         .then((data) => {
           if (data.data.ogTitle) {
+            const titleInputElem = document.getElementById("titleInput");
+            const isTitleBlank = titleInputElem.innerText.length === 0;
+            // NOTE: We don't want to overwrite the title in case the user has
+            // already typed something in the title box.
+            if (!isTitleBlank) return;
+
             const title = data.data.ogTitle;
-            document.getElementById("titleInput").innerText = title;
+            titleInputElem.innerText = title;
             const remaining = 80 - title.length;
             document.querySelector(".remaining").textContent = remaining;
             setTitle(title);
