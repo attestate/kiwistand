@@ -92,7 +92,7 @@ export default async function index(trie, theme, page, period, domain) {
       </head>
       <body>
         <div class="container">
-          ${Sidebar()}
+          ${Sidebar("/best")}
           <div id="hnmain">
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
               <tr>

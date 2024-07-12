@@ -14,12 +14,7 @@
 .submit-button:active,
 .bottom-nav > a:active,
 .sidebar-toggle:active,
-.sidebar > a:active,
-.bell-button:active,
-.sidebar-div:active,
-#nav-profile:active,
-#nav-submit:active,
-#nav-settings:active {
+.bell-button:active {
   transform: scale(0.92);
   transition: transform 0.1s ease;
 }
@@ -27,7 +22,12 @@
 .chat-bubble-container,
 .feed-button-link,
 .vote-button-container,
-.sidebar-toggle {
+.sidebar-toggle,
+.sidebar > a:active,
+.sidebar-div:active,
+#nav-profile:active,
+#nav-submit:active,
+#nav-settings:active {
   -webkit-tap-highlight-color: transparent;
 }
 body {
@@ -618,10 +618,9 @@ body {
          font-weight: bold;
     }
      .sidebar .kiwi-logo {
-         display: flex;
-         align-items: center;
+         display: block;
          font-size: 1.9rem;
-         margin: 14px 14px 14px 20px;
+         margin: 14px 14px 14px 10px !important;
     }
      .sidebar {
          z-index: 6;
@@ -636,20 +635,23 @@ body {
         /* Static position for large screens */
          top: 0;
          padding-top: 0;
-         border-top-left-radius: 2px;
          border-bottom-left-radius: 2px;
+         margin-left:3vw;
     }
      .sidebar-toggle {
          display: none;
     }
     #mySidebar {
-      padding-right: 0.44rem;
+      padding-right: 0.8rem;
+      border-left: 1px solid rgba(0, 0, 0, 0.1);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+      border-bottom-left-radius: 2px;
+      background: #e6e6df;
     }
      #mySidebar > hr {
       display: none;
     }
     #hnmain {
-      border-top-right-radius: 2px;
       border-bottom-right-radius: 2px;
       border-right: 1px solid #ccc;
       border-bottom: 1px solid #ccc;
@@ -667,12 +669,17 @@ body {
       margin: 0 0.25rem 0 0.75rem;
       font-size: 1rem;
     }
-    .sidebar a {
+    .sidebar a, .sidebar-div {
       font-size: 2em;
+      margin-left: 0 !important;
+      margin-right: 0 !important;
+      padding-left: 1rem !important;
     }
     .sidebar a:not(.kiwi-logo):hover, #nav-disconnect:hover {
       background-color: rgba(0,0,0,0.1);
       border-radius: 2px;
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
     }
     .sidebar .icon-svg {
       width: 36px;
@@ -684,7 +691,7 @@ body {
 }
  .sidebar a {
     padding: 0.3rem 0 0.3rem 0;
-    margin: 0.3rem 10px 0 10px;
+    margin: 0.3rem 0 0 0;
     font-size: 1.7rem;
     font-variant: small-caps;
     min-width: 140px;
@@ -710,13 +717,14 @@ body {
     }
 }
  .sidebar-div {
+     padding: 0.3rem 0 0.3rem 0;
+     margin: 0.3rem 10px 0 0;
      color: black;
      text-decoration: none;
      display: block;
-     padding: 0.3rem 0 0.3rem 0;
-     margin: 0.3rem 10px 0 10px;
      font-size: 1.7rem;
      cursor: pointer;
+     min-width: 140px;
 }
  @media (min-width: 768px) {
      .sidebar-div {

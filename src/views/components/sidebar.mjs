@@ -483,9 +483,9 @@ const sidebar = (path) => html`
     <a
       title="Home"
       href="/"
-      style="font-weight: ${path === "/"
-        ? " bold"
-        : "normal"}; color: black; text-decoration: none; display: block;"
+      style="${path === "/" || path === "/new" || path === "/best"
+        ? " font-weight: bold; background-color: rgba(0,0,0,0.1);"
+        : "font-weight: normal"}; color: black; text-decoration: none; display: block;"
     >
       <div style="display: flex; align-items: center;">
         <div class="svg-container">${path === "/" ? homefull : home}</div>
@@ -494,7 +494,9 @@ const sidebar = (path) => html`
     </a>
     <div
       id="nav-submit"
-      style="font-weight: ${path === "/submit" ? "bold" : "normal"};"
+      style="${path === "/submit"
+        ? " font-weight: bold; background-color: rgba(0,0,0,0.1);"
+        : "font-weight: normal"}; color: black; text-decoration: none; display: block;"
     >
       <a
         title="Submit"
@@ -512,9 +514,9 @@ const sidebar = (path) => html`
     <a
       title="Community"
       href="/community"
-      style="font-weight: ${path === "/community"
-        ? "bold"
-        : "normal"}; color: black; text-decoration: none; display: block;"
+      style="${path === "/community"
+        ? " font-weight: bold; background-color: rgba(0,0,0,0.1);"
+        : "font-weight: normal"}; color: black; text-decoration: none; display: block;"
     >
       <div style="display: flex; align-items: center;">
         <div class="svg-container">
@@ -526,9 +528,9 @@ const sidebar = (path) => html`
     <a
       title="Subscribe"
       href="/subscribe"
-      style="font-weight: ${path === "/subscribe"
-        ? "bold"
-        : "normal"}; color: black; text-decoration: none; display: block;"
+      style="${path === "/subscribe"
+        ? " font-weight: bold; background-color: rgba(0,0,0,0.1);"
+        : "font-weight: normal"}; color: black; text-decoration: none; display: block;"
     >
       <div style="display: flex; align-items: center;">
         <div class="svg-container">
@@ -541,9 +543,7 @@ const sidebar = (path) => html`
       title="Wiki"
       href="https://kiwistand.github.io/kiwi-docs/"
       target="_blank"
-      style="font-weight: ${path === "/welcome"
-        ? "bold"
-        : "normal"}; color: black; text-decoration: none; display: block;"
+      style="color: black; text-decoration: none; display: block;"
     >
       <div style="display: flex; align-items: center;">
         <div class="svg-container">
@@ -555,9 +555,9 @@ const sidebar = (path) => html`
     <a
       title="Learn"
       href="/onboarding-reader"
-      style="font-weight: ${path === "/onboarding-reader"
-        ? "bold"
-        : "normal"}; color: black; text-decoration: none; display: block;"
+      style="${path === "/onboarding-reader"
+        ? " font-weight: bold; background-color: rgba(0,0,0,0.1);"
+        : "font-weight: normal"}; color: black; text-decoration: none; display: block;"
     >
       <div style="display: flex; align-items: center;">
         <div class="svg-container">
@@ -568,7 +568,9 @@ const sidebar = (path) => html`
     </a>
     <div
       id="nav-profile"
-      style="font-weight: ${path === "/upvotes" ? "bold" : "normal"};"
+      style="${path === "/upvotes"
+        ? " font-weight: bold; background-color: rgba(0,0,0,0.1);"
+        : "font-weight: normal"}; color: black; text-decoration: none; display: block;"
     >
       <a
         title="Profile"
@@ -585,7 +587,9 @@ const sidebar = (path) => html`
     </div>
     <div
       id="nav-settings"
-      style="font-weight: ${path === "/settings" ? "bold" : "normal"};"
+      style="${path === "/settings"
+        ? " font-weight: bold; background-color: rgba(0,0,0,0.1);"
+        : "font-weight: normal"}; color: black; text-decoration: none; display: block;"
     >
       <a
         title="Settings"
