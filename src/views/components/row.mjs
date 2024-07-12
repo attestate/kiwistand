@@ -61,7 +61,7 @@ const row = (
       <tr>
         <td>
           <div
-            class="content-row"
+            class="${interactive ? "" : "content-row"}"
             style="${style}${i === 0
               ? "border-top: 1px solid rgba(0,0,0,0.1);"
               : ""}"

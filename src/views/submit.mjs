@@ -52,25 +52,7 @@ export default async function submit(theme, url = "", title = "") {
               <tr>
                 ${await Header(theme)}
               </tr>
-              <tr>
-                <td>
-                  <p
-                    style="color: black; padding: 10px 10px 0 10px; font-size: 12pt; font-weight: bold;"
-                  >
-                    Preview:
-                  </p>
-                </td>
-              </tr>
               ${Row(rowNumber, null, rowStyle, interactive)(story)}
-              <tr>
-                <td>
-                  <p
-                    style="color: black; padding: 0 10px 0 10px; font-size: 12pt; font-weight: bold;"
-                  >
-                    Submission:
-                  </p>
-                </td>
-              </tr>
               <tr>
                 <td>
                   <form style="${formContainerStyle}">
