@@ -483,7 +483,10 @@ const sidebar = (path) => html`
     <a
       title="Home"
       href="/"
-      style="${path === "/" || path === "/new" || path === "/best"
+      style="${path === "/" ||
+      path === "/new" ||
+      path === "/best" ||
+      path === "/stories"
         ? " font-weight: bold; background-color: rgba(0,0,0,0.1);"
         : "font-weight: normal"}; color: black; text-decoration: none; display: block;"
     >
