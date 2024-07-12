@@ -159,7 +159,8 @@ const Profile = (props) => {
     >
       <div style={{ display: "flex", alignItems: "center" }}>
         <div className="svg-container">
-          {window.location.pathname.includes("/upvotes") ? (
+          {window.location.pathname.includes("/upvotes") ||
+          window.location.href.endsWith(".eth") ? (
             <ProfileSVGFull />
           ) : (
             <ProfileSVG />

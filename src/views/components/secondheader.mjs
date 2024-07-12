@@ -216,11 +216,15 @@ const secondheader = (theme, site, period, domain) => {
                 <button
                   onclick="${animation}"
                   class="feed-button"
-                  style=${`font-size: 1.01rem; border: none; outline: none; border-radius: 2px; cursor: pointer; padding: 6px 15px; background-color: rgba(0,0,0,${
+                  style=${`font-variant: small-caps; font-size: 1.01rem; border: none; outline: none; border-radius: 2px; cursor: pointer; padding: 6px 15px; background-color: rgba(0,0,0,${
                     site === "top" ? "0.2" : "0.1"
                   }); color: black;`}
                 >
-                  <span>${site === "top" ? fireFullSVG : fireSVG} Hot</span>
+                  <span
+                    style="font-weight: ${site === "top" ? "bold" : "normal"};"
+                  >
+                    ${site === "top" ? fireFullSVG : fireSVG} Hot</span
+                  >
                 </button>
               </a>`
             : ""}
@@ -237,7 +241,7 @@ const secondheader = (theme, site, period, domain) => {
                 <button
                   onclick="${animation}"
                   class="feed-button"
-                  style=${`margin-left: 10px; font-size: 1.01rem; border: none; outline: none; border-radius: 2px; cursor: pointer; padding: 6px 15px; background-color: rgba(0,0,0,${
+                  style=${`font-variant: small-caps; margin-left: 10px; font-size: 1.01rem; border: none; outline: none; border-radius: 2px; cursor: pointer; padding: 6px 15px; background-color: rgba(0,0,0,${
                     site === "new" ? "0.2" : "0.1"
                   }); color: black; position:relative;`}
                 >
@@ -245,7 +249,9 @@ const secondheader = (theme, site, period, domain) => {
                     id="new-dot"
                     style="display: none; position: absolute; top: -5px; right: -5px; width: 8px; height: 8px; border-radius: 2px; background-color: #228B22;"
                   ></span>
-                  <span>
+                  <span
+                    style="font-weight: ${site === "new" ? "bold" : "normal"};"
+                  >
                     ${site === "new" ? broadcastFullSVG : broadcastSVG(style)}
                     <span> New </span>
                   </span>
@@ -257,11 +263,13 @@ const secondheader = (theme, site, period, domain) => {
                 <button
                   onclick="${animation}"
                   class="feed-button"
-                  style=${`margin-left: 10px; font-size: 1.01rem; border: none; outline: none; border-radius: 2px; cursor: pointer; padding: 6px 15px; background-color: rgba(0,0,0,${
+                  style=${`font-variant: small-caps; margin-left: 10px; font-size: 1.01rem; border: none; outline: none; border-radius: 2px; cursor: pointer; padding: 6px 15px; background-color: rgba(0,0,0,${
                     site === "best" ? "0.2" : "0.1"
                   }); color: black;`}
                 >
-                  <span>
+                  <span
+                    style="font-weight: ${site === "best" ? "bold" : "normal"};"
+                  >
                     ${site === "best" ? trophyFullSVG : trophySVG} Top</span
                   >
                 </button>

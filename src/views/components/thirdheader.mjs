@@ -16,7 +16,7 @@ const secondheader = (theme, site) => html`
       >
         <div
           class="filter-tab"
-          style="width: 100%; height: 100%; display: flex; justify-content: center; justify-conten
+          style="font-variant: small-caps; width: 100%; height: 100%; display: flex; justify-content: center; justify-conten
  center;"
         >
           <div
@@ -34,7 +34,7 @@ const secondheader = (theme, site) => html`
       >
         <div
           class="filter-tab"
-          style="width: 100%; height: 100%; display: flex; justify-content: center; justify-conten
+          style="font-variant: small-caps; width: 100%; height: 100%; display: flex; justify-content: center; justify-conten
  center;"
         >
           <div

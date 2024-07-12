@@ -483,18 +483,23 @@ const sidebar = (path) => html`
     <a
       title="Home"
       href="/"
-      style="color: black; text-decoration: none; display: block;"
+      style="font-weight: ${path === "/"
+        ? " bold"
+        : "normal"}; color: black; text-decoration: none; display: block;"
     >
       <div style="display: flex; align-items: center;">
         <div class="svg-container">${path === "/" ? homefull : home}</div>
         <span>Home</span>
       </div>
     </a>
-    <div id="nav-submit">
+    <div
+      id="nav-submit"
+      style="font-weight: ${path === "/submit" ? "bold" : "normal"};"
+    >
       <a
         title="Submit"
         href=""
-        style="color: grey; text-decoration: none; display: block;"
+        style="color: black; text-decoration: none; display: block;"
       >
         <div style="display: flex; align-items: center;">
           <div class="svg-container">
@@ -507,7 +512,9 @@ const sidebar = (path) => html`
     <a
       title="Community"
       href="/community"
-      style="color: black; text-decoration: none; display: block;"
+      style="font-weight: ${path === "/community"
+        ? "bold"
+        : "normal"}; color: black; text-decoration: none; display: block;"
     >
       <div style="display: flex; align-items: center;">
         <div class="svg-container">
@@ -519,7 +526,9 @@ const sidebar = (path) => html`
     <a
       title="Subscribe"
       href="/subscribe"
-      style="color: black; text-decoration: none; display: block;"
+      style="font-weight: ${path === "/subscribe"
+        ? "bold"
+        : "normal"}; color: black; text-decoration: none; display: block;"
     >
       <div style="display: flex; align-items: center;">
         <div class="svg-container">
@@ -532,7 +541,9 @@ const sidebar = (path) => html`
       title="Wiki"
       href="https://kiwistand.github.io/kiwi-docs/"
       target="_blank"
-      style="color: black; text-decoration: none; display: block;"
+      style="font-weight: ${path === "/welcome"
+        ? "bold"
+        : "normal"}; color: black; text-decoration: none; display: block;"
     >
       <div style="display: flex; align-items: center;">
         <div class="svg-container">
@@ -544,7 +555,9 @@ const sidebar = (path) => html`
     <a
       title="Learn"
       href="/onboarding-reader"
-      style="color: black; text-decoration: none; display: block;"
+      style="font-weight: ${path === "/onboarding-reader"
+        ? "bold"
+        : "normal"}; color: black; text-decoration: none; display: block;"
     >
       <div style="display: flex; align-items: center;">
         <div class="svg-container">
@@ -553,11 +566,14 @@ const sidebar = (path) => html`
         <span>Learn</span>
       </div>
     </a>
-    <div id="nav-profile">
+    <div
+      id="nav-profile"
+      style="font-weight: ${path === "/upvotes" ? "bold" : "normal"};"
+    >
       <a
         title="Profile"
         href=""
-        style="color: grey; text-decoration: none; display: block;"
+        style="color: black; text-decoration: none; display: block;"
       >
         <div style="display: flex; align-items: center;">
           <div class="svg-container">
@@ -567,11 +583,14 @@ const sidebar = (path) => html`
         </div>
       </a>
     </div>
-    <div id="nav-settings">
+    <div
+      id="nav-settings"
+      style="font-weight: ${path === "/settings" ? "bold" : "normal"};"
+    >
       <a
         title="Settings"
         href=""
-        style="color: grey; text-decoration: none; display: block;"
+        style="color: black; text-decoration: none; display: block;"
       >
         <div style="display: flex; align-items: center;">
           <div class="svg-container">
@@ -585,7 +604,7 @@ const sidebar = (path) => html`
       <a
         title="Disconnect"
         href=""
-        style="color: grey; text-decoration: none; display: block;"
+        style="color: black; text-decoration: none; display: block;"
       >
         <div style="display: flex; align-items: center;">
           <div class="svg-container">${ethereum}</div>

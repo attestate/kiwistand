@@ -23,6 +23,7 @@
   transform: scale(0.92);
   transition: transform 0.1s ease;
 }
+
 .chat-bubble-container,
 .feed-button-link,
 .vote-button-container,
@@ -642,7 +643,7 @@ body {
          display: none;
     }
     #mySidebar {
-      padding-right: 1.25rem;
+      padding-right: 0.44rem;
     }
      #mySidebar > hr {
       display: none;
@@ -669,7 +670,7 @@ body {
     .sidebar a {
       font-size: 2em;
     }
-    .sidebar a:not(.kiwi-logo):hover, #nav-disconnect:hover{
+    .sidebar a:not(.kiwi-logo):hover, #nav-disconnect:hover {
       background-color: rgba(0,0,0,0.1);
       border-radius: 2px;
     }
@@ -685,8 +686,8 @@ body {
     padding: 0.3rem 0 0.3rem 0;
     margin: 0.3rem 10px 0 10px;
     font-size: 1.7rem;
-    font-weight: bold;
     font-variant: small-caps;
+    min-width: 140px;
 }
  .svg-container {
      width: 19%;
@@ -713,9 +714,8 @@ body {
      text-decoration: none;
      display: block;
      padding: 0.3rem 0 0.3rem 0;
-     margin: 0.5rem 10px 0.2rem 10px;
+     margin: 0.3rem 10px 0 10px;
      font-size: 1.7rem;
-     font-weight: bold;
      cursor: pointer;
 }
  @media (min-width: 768px) {
