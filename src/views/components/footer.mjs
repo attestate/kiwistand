@@ -157,7 +157,7 @@ const footer = (theme, path) => html`
           target="_blank"
           >attestate.com</a
         >
-        (Kontakt).
+        <span> (Kontakt).</span>
       </div>
     </div>
 
