@@ -736,7 +736,9 @@ async function processAndSendVotes(signer, identity) {
 }
 
 async function start() {
-  if (isRunningPWA()) {
+  // NOTE: We don't want pull to refresh for the submission page as this could
+  // mess up the user's input on an accidential scroll motion.
+  if (isRunningPWA() && window.location.pathname !== "/submit") {
     PullToRefresh.init({
       mainElement: "body",
       onRefresh() {
