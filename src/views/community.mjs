@@ -365,9 +365,9 @@ export default async function (trie, theme, query, identity) {
                 </td>
               </tr>
             </table>
+            ${Footer(theme, "/community")}
           </div>
         </div>
-        ${Footer(theme, "/community")}
       </body>
     </html>
   `;

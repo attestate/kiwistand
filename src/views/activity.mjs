@@ -267,9 +267,9 @@ export async function page(theme, identity, notifications, lastUpdate) {
               </tr>
               ${feed}
             </table>
+            ${Footer(theme, "/activity")}
           </div>
         </div>
-        ${Footer(theme, "/activity")}
       </body>
     </html>
   `;

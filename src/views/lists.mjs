@@ -80,9 +80,9 @@ export default async function displayCanonRow(theme) {
               </tr>
               ${sheets ? CanonRow(sheets) : ""}
             </table>
+            ${Footer(theme)}
           </div>
         </div>
-        ${Footer(theme)}
       </body>
     </html>
   `;

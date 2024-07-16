@@ -521,9 +521,9 @@ export default async function (trie, theme, page, domain) {
                 </td>
               </tr>
             </table>
+            ${Footer(theme, path)}
           </div>
         </div>
-        ${Footer(theme, path)}
       </body>
     </html>
   `;

@@ -170,9 +170,9 @@ export default async function (theme, identity) {
                 </td>
               </tr>
             </table>
+            ${Footer(theme)}
           </div>
         </div>
-        ${Footer(theme)}
         <div
           id="bookmark-modal"
           style="

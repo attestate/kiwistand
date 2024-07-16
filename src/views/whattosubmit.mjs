@@ -5,7 +5,6 @@ import vhtml from "vhtml";
 
 import Header from "./components/header.mjs";
 import Sidebar from "./components/sidebar.mjs";
-import Footer from "./components/footer.mjs";
 import { custom } from "./components/head.mjs";
 
 const html = htm.bind(vhtml);

@@ -80,9 +80,9 @@ export default async function (theme) {
                 </td>
               </tr>
             </table>
+            <div style="display: none;">${Footer(theme, "/invite")}</div>
           </div>
         </div>
-        <div style="display: none;">${Footer(theme, "/invite")}</div>
       </body>
     </html>
   `;

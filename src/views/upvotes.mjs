@@ -373,9 +373,9 @@ export default async function (
                   `
                 : ""}
             </table>
+            ${Footer(theme)}
           </div>
         </div>
-        ${Footer(theme)}
       </body>
     </html>
   `;

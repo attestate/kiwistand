@@ -51,9 +51,9 @@ export default async function index(theme) {
                 </td>
               </tr>
             </table>
+            <div style="display: none;">${Footer(theme, "/start")}</div>
           </div>
         </div>
-        <div style="display: none;">${Footer(theme, "/start")}</div>
       </body>
     </html>
   `;

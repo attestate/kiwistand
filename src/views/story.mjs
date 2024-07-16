@@ -347,9 +347,9 @@ export default async function (trie, theme, index, value) {
               </tr>
               <tr style="height: 20px;"></tr>
             </table>
+            ${Footer(theme, path)}
           </div>
         </div>
-        ${Footer(theme, path)}
       </body>
     </html>
   `;

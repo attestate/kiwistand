@@ -57,9 +57,9 @@ export default async function (theme) {
                 </td>
               </tr>
             </table>
+            <div style="display: none;">${Footer(theme, "/passkeys")}</div>
           </div>
         </div>
-        <div style="display: none;">${Footer(theme, "/passkeys")}</div>
       </body>
     </html>
   `;

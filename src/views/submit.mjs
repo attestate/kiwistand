@@ -118,9 +118,9 @@ export default async function submit(theme, url = "", title = "") {
                 </td>
               </tr>
             </table>
+            ${Footer(theme)}
           </div>
         </div>
-        ${Footer(theme)}
       </body>
     </html>
   `;

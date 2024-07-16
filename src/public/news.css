@@ -1,6 +1,17 @@
 :root {
   --font-family: Verdana, Geneva, sans-serif;
 }
+.footer-table strong {
+  display: inline-block;
+  margin: 0 0 7px 0;
+}
+.footer-table a {
+  display: inline-block;
+  margin: 5px 0;
+}
+.footer-table a:hover {
+  text-decoration: underline;
+}
 .drawer {
   border-top-left-radius: 2px !important;
   border-top-right-radius: 2px !important;
@@ -365,6 +376,9 @@ body {
 }
 /* mobile device */
  @media only screen and (min-width : 300px) and (max-width : 750px) {
+    footer {
+      padding-bottom: 100px;
+    }
     .notification-bar {
       bottom: 51px !important;
     }
@@ -495,6 +509,9 @@ body {
 }
 /* Media query for medium screens */
  @media (min-width: 768px) {
+    footer {
+      padding-bottom: 100px;
+    }
     .notification-bar {
       bottom: 51px !important;
     }

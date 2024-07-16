@@ -170,9 +170,9 @@ export default async function index(trie, theme, page, period, domain) {
                     </td>
                   </tr>`}
             </table>
+            ${Footer(theme, "/best")}
           </div>
         </div>
-        ${Footer(theme, "/best")}
       </body>
     </html>
   `;

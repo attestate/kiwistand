@@ -138,9 +138,9 @@ export default async function (trie, theme) {
                 <td></td>
               </tr>
             </table>
+            ${Footer(theme, "/new")}
           </div>
         </div>
-        ${Footer(theme, "/new")}
       </body>
     </html>
   `;

@@ -117,9 +117,9 @@ export async function page(theme, notifications) {
               </tr>
               ${feed}
             </table>
+            ${Footer(theme, "/comments")}
           </div>
         </div>
-        ${Footer(theme, "/comments")}
       </body>
     </html>
   `;

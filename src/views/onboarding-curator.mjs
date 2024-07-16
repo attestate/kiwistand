@@ -234,9 +234,9 @@ export default async function (theme, identity) {
                 </td>
               </tr>
             </table>
+            ${Footer(theme)}
           </div>
         </div>
-        ${Footer(theme)}
         <div
           id="bookmark-modal"
           style="display: none; position: fixed; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4);"

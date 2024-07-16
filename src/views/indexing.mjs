@@ -93,9 +93,9 @@ export default async function (theme, userAddress) {
                 </td>
               </tr>
             </table>
+            <div style="display: none;">${Footer(theme, "/indexing")}</div>
           </div>
         </div>
-        <div style="display: none;">${Footer(theme, "/indexing")}</div>
       </body>
     </html>
   `;

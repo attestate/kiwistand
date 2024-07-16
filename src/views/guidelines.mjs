@@ -236,9 +236,9 @@ export default async function (theme) {
                 </td>
               </tr>
             </table>
+            ${Footer(theme)}
           </div>
         </div>
-        ${Footer(theme)}
       </body>
     </html>
   `;
