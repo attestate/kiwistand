@@ -64,6 +64,9 @@ const SignupDialogue = (props) => {
           borderTop: "1px solid #828282",
           zIndex: 6,
           borderTop: "1px solid #828282",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
         }}
       >
         <h3
