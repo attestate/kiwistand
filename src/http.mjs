@@ -503,10 +503,27 @@ export async function launch(trie, libp2p) {
     }
 
     const size = 250;
-    const cfUrl = preview.cfTransform(data.safeAvatar, size);
-    const response = await fetch(cfUrl);
+    let url;
+    if (
+      data.safeAvatar.includes("imagedelivery.net") ||
+      data.safeAvatar.includes("imgur.com")
+    ) {
+      url = data.safeAvatar;
+    } else {
+      url = preview.cfTransform(data.safeAvatar, size);
+    }
+    const response = await fetch(url);
     if (!response.ok) {
       return reply.status(404).type("text/plain").send("Not Found");
+    }
+
+    try {
+      const message = await response.clone().text();
+      if (message.startsWith("ERROR")) {
+        return reply.status(404).type("text/plain").send("Not Found");
+      }
+    } catch (err) {
+      return reply.status(500).type("text/plain").send("Internal Server Error");
     }
 
     reply.header("Content-Type", response.headers.get("Content-Type"));
