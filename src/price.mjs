@@ -1,8 +1,19 @@
-import { differenceInDays, differenceInSeconds, add, sub } from "date-fns";
+import { env } from "process";
+import path from "path";
+
+import {
+  parseISO,
+  differenceInDays,
+  differenceInSeconds,
+  add,
+  sub,
+  format,
+} from "date-fns";
 import { plot } from "svg-line-chart";
 import htm from "htm";
 import vhtml from "vhtml";
 import ethers from "ethers";
+import { fetchBuilder, FileSystemCache } from "node-fetch-cache";
 
 import Header from "./views/components/header.mjs";
 import Footer from "./views/components/footer.mjs";
@@ -14,6 +25,61 @@ import * as ens from "./ens.mjs";
 const { BigNumber } = ethers;
 const html = htm.bind(vhtml);
 const address = "0x66747bdc903d17c586fa09ee5d6b54cc85bbea45";
+const fetch = fetchBuilder.withCache(
+  new FileSystemCache({
+    cacheDirectory: path.resolve(env.CACHE_DIR),
+    ttl: 86400000, // 24 hours
+  }),
+);
+
+function takeMedian(incomeData) {
+  const incomes = incomeData.map(({ income }) => income).sort((a, b) => a - b);
+  const mid = Math.floor(incomes.length / 2);
+  return incomes.length % 2 !== 0
+    ? incomes[mid]
+    : (incomes[mid - 1] + incomes[mid]) / 2;
+}
+
+function calcMonthlyIncome(transactions) {
+  const incomeByMonth = transactions.reduce((acc, { timestamp, valueEUR }) => {
+    const month = format(timestamp, "MMMM yyyy");
+    if (!acc[month]) acc[month] = { month, income: 0 };
+    acc[month].income += valueEUR;
+    return acc;
+  }, {});
+
+  return Object.values(incomeByMonth);
+}
+
+function extractDateAndOpen(csvData) {
+  const lines = csvData.split("\n");
+  let lastValidOpen = null; // Keep track of the last valid open price
+  const dataObject = lines.slice(1).reduce((acc, line) => {
+    const [date, open] = line.split(",");
+    if (open && open !== "null") {
+      lastValidOpen = parseFloat(open);
+    }
+    if (date && lastValidOpen !== null) {
+      acc[date] = lastValidOpen;
+    }
+    return acc;
+  }, {});
+  return dataObject;
+}
+
+async function fetchEURPrice(date) {
+  const endDate = date;
+  const startDate = sub(endDate, { years: 1 });
+
+  const period1 = Math.floor(startDate.getTime() / 1000);
+  const period2 = Math.floor(endDate.getTime() / 1000);
+
+  const url = `https://query1.finance.yahoo.com/v7/finance/download/ETH-EUR?period1=${period1}&period2=${period2}&interval=1d&events=history&includeAdjustedClose=true`;
+
+  const response = await fetch(url);
+  if (!response.ok) throw new Error("Failed to fetch data");
+  return response.text();
+}
 
 // NOTE: Inspired by: https://www.paradigm.xyz/2022/08/vrgda
 export function getPrice(salesData, today = new Date()) {
@@ -185,6 +251,23 @@ export async function chart(theme) {
     })
     .filter(({ timestamp }) => timestamp > monthAgo && timestamp < today);
 
+  const prices = await fetchEURPrice(today);
+  const opensPerDay = extractDateAndOpen(prices);
+
+  const saleData = mints.map(({ timestamp, value }) => {
+    const parsedTimestamp = new Date(1000 * parseInt(timestamp, 16));
+    const valueETH = ethers.utils.formatEther(value);
+    const ETHEUR = opensPerDay[format(parsedTimestamp, "yyyy-MM-dd")];
+
+    return {
+      timestamp: parsedTimestamp,
+      valueETH,
+      valueEUR: valueETH * ETHEUR,
+    };
+  });
+  const monthlyIncome = calcMonthlyIncome(saleData);
+  const medianMonthlyIncome = takeMedian(monthlyIncome);
+
   options.yLabel.name = "Price in kilo ETH";
   options.xLabel.name = "";
   const salesChart1m = plot(html)(
@@ -295,6 +378,38 @@ export async function chart(theme) {
                     News Pass per day.
                   </p>
                   ${mintersChart1m}
+                  <p>
+                    <b>EUR income from NFT mints</b>
+                    <br />
+                    <br />
+                    <b>Definition:</b> Calculates the EUR income from all mints
+                    over the last year and shows it on a monthly basis.
+                  </p>
+                  <table>
+                    <thead>
+                      <tr style="text-align: left;">
+                        <th>Month</th>
+                        <th>Income (EUR)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${monthlyIncome.map(
+                        ({ month, income }) => html`
+                          <tr>
+                            <td>${month}</td>
+                            <td>${income.toFixed(2)}</td>
+                          </tr>
+                        `,
+                      )}
+                    </tbody>
+                  </table>
+                  <p>Median income (EUR): ${medianMonthlyIncome.toFixed(2)}</p>
+                  <p>
+                    <span>Yearly income (EUR): </span>
+                    ${monthlyIncome
+                      .reduce((sum, value) => sum + value.income, 0)
+                      .toFixed(2)}
+                  </p>
                 </td>
               </tr>
             </table>
