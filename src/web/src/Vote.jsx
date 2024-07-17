@@ -127,7 +127,7 @@ const Vote = (props) => {
 
               handleSubmit(e);
             }}
-            className="interaction-element"
+            className={hasUpvoted ? "" : "interaction-element"}
             style={{
               borderRadius: "2px",
               padding: "5px 0",

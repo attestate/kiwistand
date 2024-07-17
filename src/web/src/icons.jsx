@@ -1,9 +1,7 @@
-export const ChatsSVG = () => (
-  <svg
-    style={{ color: "rgba(0,0,0,0.65)", width: "25px" }}
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 256 256"
-  >
+export const ChatsSVG = ({
+  style = { color: "rgba(0,0,0,0.65)", width: "25px" },
+}) => (
+  <svg style={style} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
     <rect width="256" height="256" fill="none" />
     <path
       d="M71.58,144,32,176V48a8,8,0,0,1,8-8H168a8,8,0,0,1,8,8v88a8,8,0,0,1-8,8Z"

@@ -210,7 +210,12 @@ const row = (
                         >
                           ${story.displayName}
                         </a>`
-                      : story.displayName}
+                      : html`<a
+                          target="_blank"
+                          class="meta-link"
+                          href="https://paragraph.xyz/@kiwi-updates/kiwi-feedbot-submissions-open"
+                          >${story.displayName}</a
+                        >`}
                     <span>
                       ${interactive || hideCast
                         ? null
@@ -256,7 +261,7 @@ const row = (
                   </span>
                 </div>
               </div>
-              ${story.index && path !== "/stories"
+              ${path !== "/stories"
                 ? html`<div
                     data-story-index="0x${story.index}"
                     data-comment-count="${commentCount}"

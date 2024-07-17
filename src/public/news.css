@@ -20,7 +20,7 @@
 }
 
 .vote-button-container:active,
-.chat-bubble-container:active,
+.chat-bubble.interaction-element:active,
 .feed-button-link:active,
 .submit-button:active,
 .bottom-nav > a:active,
@@ -56,12 +56,6 @@ body {
 }
 .comment-text-link:visited {
   color: gray !important;
-}
-.chat-bubble:hover {
-  background-color: rgba(0,0,0,0.05);
-}
-.chat-bubble svg:hover {
-  color: black !important;
 }
 .story-domain a:hover {
   text-decoration: underline;
