@@ -17,7 +17,7 @@ const address = "0x66747bdc903d17c586fa09ee5d6b54cc85bbea45";
 
 // NOTE: Inspired by: https://www.paradigm.xyz/2022/08/vrgda
 export function getPrice(salesData, today = new Date()) {
-  const firstPrice = BigNumber.from("128000000000000000"); // p0 in Wei
+  const firstPrice = BigNumber.from("12800000000000000"); // p0 in Wei
 
   const priceDecreasePercentage = 0.15; // k
 
