@@ -433,21 +433,6 @@ export default async function (trie, theme, page, domain) {
               <tr>
                 ${SecondHeader(theme, "top")}
               </tr>
-              <tr>
-                <td>
-                  <div
-                    style="background-color: black; height: 2.3rem;display: flex; justify-content: start; align-items: center; padding-left: 1rem; gap: 1rem; color: white;"
-                  >
-                    <img style="height: 30px;" src="lens.png" />
-                    <a
-                      style="color: white; text-decoration: underline;"
-                      href="https://paragraph.xyz/@kiwi-updates/t2-lens-submissions-ended"
-                    >
-                      Vote until July 15!
-                    </a>
-                  </div>
-                </td>
-              </tr>
               ${page === 0 && editorPicks.length > 0
                 ? html` <tr style="background-color: #e6e6df;">
                     <td>
