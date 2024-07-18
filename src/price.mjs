@@ -42,16 +42,20 @@ function takeMedian(incomeData) {
 
 function calcMonthlyIncome(transactions) {
   const incomeByMonth = transactions.reduce((acc, { timestamp, valueEUR }) => {
-    const month = format(timestamp, "MMMM yyyy");
-    if (!acc[month]) acc[month] = { month, income: 0 };
+    const month = format(new Date(timestamp), "MMMM yyyy");
+    if (!acc[month]) {
+      acc[month] = { month, income: 0, nftSold: 0, averagePrice: 0 };
+    }
     acc[month].income += valueEUR;
+    acc[month].nftSold += 1;
+    acc[month].averagePrice = acc[month].income / acc[month].nftSold;
     return acc;
   }, {});
 
   return Object.values(incomeByMonth);
 }
 
-function extractDateAndOpen(csvData) {
+export function extractDateAndOpen(csvData) {
   const lines = csvData.split("\n");
   let lastValidOpen = null; // Keep track of the last valid open price
   const dataObject = lines.slice(1).reduce((acc, line) => {
@@ -67,7 +71,7 @@ function extractDateAndOpen(csvData) {
   return dataObject;
 }
 
-async function fetchEURPrice(date) {
+export async function fetchEURPrice(date) {
   const endDate = date;
   const startDate = sub(endDate, { years: 1 });
 
@@ -234,6 +238,32 @@ async function calculateMintersPerDay(mints) {
   return { dates: sortedDates, minters };
 }
 
+export async function getSalesData() {
+  const today = new Date();
+  const mints = await registry.mints();
+  const prices = await fetchEURPrice(today);
+  const opensPerDay = extractDateAndOpen(prices);
+
+  const data = mints.map(({ timestamp, value }) => {
+    const parsedTimestamp = new Date(1000 * parseInt(timestamp, 16));
+    const valueETH = ethers.utils.formatEther(value);
+    const ETHEUR = opensPerDay[format(parsedTimestamp, "yyyy-MM-dd")];
+
+    return {
+      timestamp: parsedTimestamp.toISOString(),
+      valueETH,
+      valueEUR: (valueETH * ETHEUR).toFixed(2),
+    };
+  });
+
+  const csv = [
+    Object.keys(data[0]).join(","),
+    ...data.map((row) => Object.values(row).join(",")),
+  ].join("\n");
+
+  return csv;
+}
+
 export async function chart(theme) {
   const today = new Date();
   const monthAgo = sub(today, {
@@ -390,14 +420,18 @@ export async function chart(theme) {
                       <tr style="text-align: left;">
                         <th>Month</th>
                         <th>Income (EUR)</th>
+                        <th>NFTs Sold</th>
+                        <th>Average Price (EUR)</th>
                       </tr>
                     </thead>
                     <tbody>
                       ${monthlyIncome.map(
-                        ({ month, income }) => html`
+                        ({ month, income, nftSold, averagePrice }) => html`
                           <tr>
                             <td>${month}</td>
                             <td>${income.toFixed(2)}</td>
+                            <td>${nftSold}</td>
+                            <td>${averagePrice.toFixed(2)}</td>
                           </tr>
                         `,
                       )}

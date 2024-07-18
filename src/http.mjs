@@ -195,6 +195,12 @@ export async function launch(trie, libp2p) {
       .type("text/html")
       .send(await kiwipassmint(reply.locals.theme));
   });
+  app.get("/api/v1/sales", async (request, reply) => {
+    const sales = await price.getSalesData();
+    reply.header("Content-Type", "text/csv");
+    reply.header("Content-Disposition", 'attachment; filename="sales.csv"');
+    reply.send(sales);
+  });
   app.post("/api/v1/telegram", async (request, reply) => {
     const message = request.body;
     // NOTE: The message here is ALMOST a compliant Kiwi News amplify or
