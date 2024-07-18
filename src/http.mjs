@@ -196,10 +196,24 @@ export async function launch(trie, libp2p) {
       .send(await kiwipassmint(reply.locals.theme));
   });
   app.get("/api/v1/sales", async (request, reply) => {
-    const sales = await price.getSalesData();
-    reply.header("Content-Type", "text/csv");
-    reply.header("Content-Disposition", 'attachment; filename="sales.csv"');
-    reply.send(sales);
+    if (request.query.granularity === "all") {
+      const data = await price.getSalesData();
+      const csv = [
+        Object.keys([0]).join(","),
+        ...data.map((row) => Object.values(row).join(",")),
+      ].join("\n");
+
+      reply.header("Content-Type", "text/csv");
+      reply.header("Content-Disposition", 'attachment; filename="sales.csv"');
+      reply.send(csv);
+    }
+    if (request.query.granularity === "week") {
+      const sales = await price.getSalesData();
+      const weeklySales = price.calcWeeklyIncome(sales);
+      reply.header("Content-Type", "text/csv");
+      reply.header("Content-Disposition", 'attachment; filename="sales.csv"');
+      reply.send(weeklySales);
+    }
   });
   app.post("/api/v1/telegram", async (request, reply) => {
     const message = request.body;

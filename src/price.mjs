@@ -2,6 +2,8 @@ import { env } from "process";
 import path from "path";
 
 import {
+  startOfWeek,
+  getISOWeek,
   parseISO,
   differenceInDays,
   differenceInSeconds,
@@ -38,6 +40,54 @@ function takeMedian(incomeData) {
   return incomes.length % 2 !== 0
     ? incomes[mid]
     : (incomes[mid - 1] + incomes[mid]) / 2;
+}
+
+export function calcWeeklyIncome(transactions) {
+  const incomeByWeek = transactions.reduce((acc, { timestamp, valueEUR }) => {
+    const date = new Date(timestamp);
+    const weekStart = startOfWeek(date, { weekStartsOn: 1 });
+    const weekYearKey = format(weekStart, "yyyy-MM-dd");
+    if (!acc[weekYearKey]) {
+      acc[weekYearKey] = {
+        week: weekYearKey,
+        income: 0,
+        nftSold: 0,
+        averagePrice: 0,
+        date: weekYearKey,
+      };
+    }
+    acc[weekYearKey].income += parseFloat(valueEUR);
+    acc[weekYearKey].nftSold += 1;
+    acc[weekYearKey].averagePrice =
+      acc[weekYearKey].income / acc[weekYearKey].nftSold;
+    return acc;
+  }, {});
+
+  const weeksSorted = Object.keys(incomeByWeek).sort();
+  const nthWeekHeader = weeksSorted.map((_, index) => index); // nth week starting from 0
+  const dateHeader = weeksSorted; // Dates are already in 'yyyy-MM-dd' format
+  const incomeRow = [
+    "Income (EUR)",
+    ...weeksSorted.map((week) => incomeByWeek[week].income.toFixed(2)),
+  ];
+  const soldRow = [
+    "NFTs Sold",
+    ...weeksSorted.map((week) => incomeByWeek[week].nftSold),
+  ];
+  const averagePriceRow = [
+    "Average Price (EUR)",
+    ...weeksSorted.map((week) => incomeByWeek[week].averagePrice.toFixed(2)),
+  ];
+
+  const csv = [
+    ["Nth week", ...nthWeekHeader].join("\t"),
+    ["Date", ...dateHeader].join("\t"),
+    incomeRow.join("\t"),
+    soldRow.join("\t"),
+    averagePriceRow.join("\t"),
+  ].join("\n");
+
+  return csv;
 }
 
 function calcMonthlyIncome(transactions) {
@@ -87,10 +137,14 @@ export async function fetchEURPrice(date) {
 
 // NOTE: Inspired by: https://www.paradigm.xyz/2022/08/vrgda
 export function getPrice(salesData, today = new Date()) {
-  const firstPrice = BigNumber.from("12800000000000000"); // p0 in Wei
+  const firstPrice = BigNumber.from("5000000000000000"); // p0 in Wei
 
   const priceDecreasePercentage = 0.15; // k
 
+  const firstDayInScheduleUnixTime = 1709247600; // 2024-03-01
+  const firstDayInSchedule = new Date(
+    1000 * parseInt(firstDayInScheduleUnixTime),
+  );
   const mints = salesData
     .map((mint) => {
       const timestamp = new Date(1000 * parseInt(mint.timestamp, 16));
@@ -100,12 +154,12 @@ export function getPrice(salesData, today = new Date()) {
         day: differenceInDays(timestamp, today),
       };
     })
-    .sort((a, b) => a.timestamp - b.timestamp);
-  const firstDayInSchedule = mints[0].timestamp;
+    .sort((a, b) => a.timestamp - b.timestamp)
+    .filter((elem) => elem.timestamp > firstDayInSchedule);
   const daysInSchedule = differenceInDays(today, firstDayInSchedule); // t
   const secondsInSchedule = differenceInSeconds(today, firstDayInSchedule); // t
 
-  const dailyNFTSellTarget = 4.58;
+  const dailyNFTSellTarget = 2.09;
   const NFTSellTargetPerSecond = dailyNFTSellTarget / (60 * 60 * 24);
   const numberOfSoldNFTs = mints.length; // n
 
@@ -256,12 +310,7 @@ export async function getSalesData() {
     };
   });
 
-  const csv = [
-    Object.keys(data[0]).join(","),
-    ...data.map((row) => Object.values(row).join(",")),
-  ].join("\n");
-
-  return csv;
+  return data;
 }
 
 export async function chart(theme) {
@@ -447,9 +496,9 @@ export async function chart(theme) {
                 </td>
               </tr>
             </table>
+            ${Footer(theme)}
           </div>
         </div>
-        ${Footer(theme)}
       </body>
     </html>
   `;
