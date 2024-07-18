@@ -137,7 +137,7 @@ export async function fetchEURPrice(date) {
 
 // NOTE: Inspired by: https://www.paradigm.xyz/2022/08/vrgda
 export function getPrice(salesData, today = new Date()) {
-  const firstPrice = BigNumber.from("5000000000000000"); // p0 in Wei
+  const firstPrice = BigNumber.from("4500000000000000"); // p0 in Wei
 
   const priceDecreasePercentage = 0.15; // k
 
