@@ -33,14 +33,7 @@ const SignupDialogue = (props) => {
     navigator.userAgent.indexOf("CriOS") >= 0 ||
     navigator.userAgent.match(/CriOS/i) ||
     navigator.userAgent.match(/EdgiOS/i);
-  let link = "/kiwipass-mint";
-  if (isSafariOnIOS() && !isntReallySafari && !isRunningPWA()) {
-    link = "/pwa";
-  }
-
-  if (isChromeOnAndroid() && !isRunningPWA()) {
-    link = "/pwaandroid";
-  }
+  const link = "/kiwipass-mint";
 
   if (
     !isEligible &&
