@@ -23,7 +23,7 @@ import {
 } from "@wagmi/core";
 
 import { getLocalAccount } from "./session.mjs";
-import { fetchPrice } from "./API.mjs";
+import { fetchPrice, fetchLeaderboard } from "./API.mjs";
 import { getProvider, useProvider, client, chains } from "./client.mjs";
 
 export async function prepare(key) {
@@ -42,9 +42,10 @@ export async function prepare(key) {
   };
 
   let price = await fetchPrice();
-  if (!price || !price.authoritative) {
+  if (!price || !price.authoritative || price.difference === null) {
     throw new Error("Error getting the price");
   }
+  const { difference } = price;
   price = price.authoritative;
 
   let preferredChainId = null;
@@ -59,33 +60,46 @@ export async function prepare(key) {
     );
   }
 
-  const quantity = 1;
   const authorize = true;
   const payload = await create(key, address, key.address, authorize);
-  const comment = "";
-  const zeroAddress = "0x0000000000000000000000000000000000000000";
-  let referral = zeroAddress;
-  const queryReferral = new URLSearchParams(window.location.search).get(
-    "referral",
+
+  const leaderboard = await fetchLeaderboard();
+  if (!leaderboard || !leaderboard.leaders) {
+    throw new Error("Error getting the leaderboard");
+  }
+
+  const totalKarma = leaderboard.leaders.reduce(
+    (sum, { totalKarma }) => sum + totalKarma,
+    0,
   );
-  try {
-    referral = getAddress(queryReferral);
-  } catch (err) {
-    console.log("Couldn't find referral address in URL bar");
-    //noop
+  const recipients = [];
+  const values = [];
+  if (difference !== 0n) {
+    const totalKarmaBigInt = BigInt(totalKarma);
+    let remainder = difference;
+
+    for (const { identity, totalKarma } of leaderboard.leaders) {
+      const share = (difference * BigInt(totalKarma)) / totalKarmaBigInt;
+      recipients.push(identity);
+      values.push(share);
+      remainder -= share;
+    }
+
+    for (let i = 0; i < remainder; i++) {
+      values[i] += 1n;
+    }
   }
 
   let config;
   if (preferredChainId === mainnet.id) {
     const isCreation = false;
-    const gasLimit = 170000;
+    const gasLimit = 280_000;
     const opProvider = getProvider({ chainId: optimism.id });
     const contract = new Contract(addressDelegator, abiDelegator, opProvider);
     const data = contract.interface.encodeFunctionData("setup", [
-      quantity,
       payload,
-      comment,
-      referral,
+      recipients,
+      values,
     ]);
 
     config = await prepareWriteContract({
@@ -101,7 +115,7 @@ export async function prepare(key) {
       address: addressDelegator,
       abi: abiDelegator,
       functionName: "setup",
-      args: [quantity, payload, comment, referral],
+      args: [payload, recipients, values],
       value: price,
       chainId: optimism.id,
     });
@@ -130,22 +144,9 @@ const abiOptimismPortal = [
 const abiDelegator = [
   {
     inputs: [
-      {
-        internalType: "uint256",
-        name: "quantity",
-        type: "uint256",
-      },
-      {
-        internalType: "bytes32[3]",
-        name: "data",
-        type: "bytes32[3]",
-      },
-      {
-        internalType: "string",
-        name: "comment",
-        type: "string",
-      },
-      { internalType: "address", name: "referral", type: "address" },
+      { internalType: "bytes32[3]", name: "data", type: "bytes32[3]" },
+      { internalType: "address[]", name: "recipients", type: "address[]" },
+      { internalType: "uint256[]", name: "values", type: "uint256[]" },
     ],
     name: "setup",
     outputs: [],
@@ -155,7 +156,7 @@ const abiDelegator = [
 ];
 
 const collectionProxy = "0x66747bdc903d17c586fa09ee5d6b54cc85bbea45";
-const addressDelegator = "0xe657d8b936ffd1890540e43829c3330c4a93de82";
+const addressDelegator = "0x2F08c366D6C267BCeCF8B5A25089e1Ed66Eb4040";
 
 const newKey = Wallet.createRandom();
 const BuyButton = (props) => {
@@ -210,7 +211,7 @@ const BuyButton = (props) => {
       try {
         config = await prepare(key);
       } catch (err) {
-        console.log("setting error", err);
+        console.log("setting error", err.message);
         setError(err);
         setConfig(null);
       }
@@ -311,7 +312,7 @@ const BuyButton = (props) => {
     return (
       <div>
         <button className="buy-button" disabled>
-          {error.message}
+          {error.message.length < 100 ? error.message : "Unexpected Error"}
         </button>
       </div>
     );

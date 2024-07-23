@@ -155,17 +155,32 @@ export async function fetchPrice() {
   try {
     response = await fetch(`/api/v1/price`);
     const data = await response.json();
+    const current = BigInt(data.data.price);
     const prices = {
       min: saleDetails.publicSalePrice,
       minPlusFee: saleDetails.publicSalePrice + 777000000000000n,
-      current: BigInt(data.data.price),
+      current,
     };
     if (prices.current <= prices.min) {
       prices.authoritative = prices.min;
+      prices.difference = 0n;
     } else {
       prices.authoritative = prices.current;
+      prices.difference = prices.current - prices.min;
     }
     return prices;
+  } catch (err) {
+    console.error(err);
+    return null;
+  }
+}
+
+export async function fetchLeaderboard() {
+  let response;
+  try {
+    response = await fetch(`/api/v1/leaderboard`);
+    const data = await response.json();
+    return data.data;
   } catch (err) {
     console.error(err);
     return null;
