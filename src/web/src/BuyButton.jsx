@@ -145,8 +145,8 @@ const abiDelegator = [
   {
     inputs: [
       { internalType: "bytes32[3]", name: "data", type: "bytes32[3]" },
-      { internalType: "address[]", name: "recipients", type: "address[]" },
-      { internalType: "uint256[]", name: "values", type: "uint256[]" },
+      { internalType: "address[]", name: "beneficiaries", type: "address[]" },
+      { internalType: "uint256[]", name: "amounts", type: "uint256[]" },
     ],
     name: "setup",
     outputs: [],
@@ -156,7 +156,7 @@ const abiDelegator = [
 ];
 
 const collectionProxy = "0x66747bdc903d17c586fa09ee5d6b54cc85bbea45";
-const addressDelegator = "0x2F08c366D6C267BCeCF8B5A25089e1Ed66Eb4040";
+const addressDelegator = "0xe63496a8a9e6bd3ad9270236a890d78239441cf6";
 
 const newKey = Wallet.createRandom();
 const BuyButton = (props) => {
