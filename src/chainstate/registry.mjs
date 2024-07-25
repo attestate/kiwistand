@@ -128,6 +128,27 @@ export async function allowlist() {
   return currentHolders;
 }
 
+export async function aggregateRevenue() {
+  const revenueMap = new Map();
+
+  for (const tx of await mints()) {
+    const { revenueShare } = tx;
+    if (revenueShare) {
+      const { beneficiaries, amounts } = revenueShare;
+      beneficiaries.forEach((addr, index) => {
+        const amount = BigInt(amounts[index]);
+        if (revenueMap.has(addr)) {
+          revenueMap.set(addr, revenueMap.get(addr) + amount);
+        } else {
+          revenueMap.set(addr, amount);
+        }
+      });
+    }
+  }
+
+  return Object.fromEntries(revenueMap);
+}
+
 // NOTE: This function won't have accurate data for mainnet mints' existence.
 export async function mints() {
   const path = resolve(process.env.DATA_DIR, "op-call-block-logs-load");

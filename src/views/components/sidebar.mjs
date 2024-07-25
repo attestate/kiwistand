@@ -4,7 +4,8 @@ import htm from "htm";
 import vhtml from "vhtml";
 
 const html = htm.bind(vhtml);
-const ethereum = html`<svg
+export const ethereum = (style) => html`<svg
+  style="${style}"
   xmlns="http://www.w3.org/2000/svg"
   viewBox="0 0 256 256"
 >
@@ -614,7 +615,7 @@ const sidebar = (path) => html`
         style="color: black; text-decoration: none; display: block;"
       >
         <div style="display: flex; align-items: center;">
-          <div class="svg-container">${ethereum}</div>
+          <div class="svg-container">${ethereum()}</div>
           <span>Disconnect</span>
         </div>
       </a>

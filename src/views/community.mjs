@@ -2,6 +2,7 @@
 import url from "url";
 import { env } from "process";
 
+import ethers from "ethers";
 import htm from "htm";
 import vhtml from "vhtml";
 import DOMPurify from "isomorphic-dompurify";
@@ -9,7 +10,7 @@ import DOMPurify from "isomorphic-dompurify";
 import * as ens from "../ens.mjs";
 import Header from "./components/header.mjs";
 import Footer from "./components/footer.mjs";
-import Sidebar from "./components/sidebar.mjs";
+import Sidebar, { ethereum } from "./components/sidebar.mjs";
 import { custom } from "./components/head.mjs";
 import * as karma from "../karma.mjs";
 import * as registry from "../chainstate/registry.mjs";
@@ -130,6 +131,8 @@ export default async function (trie, theme, query, identity) {
   const users = karma.ranking();
   const allowlist = Array.from(await registry.allowlist());
 
+  const revenueMap = await registry.aggregateRevenue();
+
   const { usersData, totalPages, pageSize } = await paginate(
     users,
     allowlist,
@@ -169,7 +172,7 @@ export default async function (trie, theme, query, identity) {
             align-items: start;
             padding: 12px 8px;
             box-sizing: border-box;
-            font-size: 1.05rem;
+            font-size: 0.95rem;
           }
           .user-row:nth-child(odd) {
             background-color: rgba(0, 0, 0, 0.05);
@@ -194,7 +197,7 @@ export default async function (trie, theme, query, identity) {
           }
           .user-karma {
             flex: none;
-            padding-right: 15px;
+            padding-right: 7px;
             text-align: right;
           }
           @media (min-width: 601px) {
@@ -299,7 +302,7 @@ export default async function (trie, theme, query, identity) {
                               href="/upvotes?address=${identity}"
                               class="user-upvote-link"
                             >
-                              <div style="min-width:50px">
+                              <div style="min-width:40px">
                                 ${i + 1 + page * pageSize}.
                               </div>
                               <div style="display: flex; align-items: center;">
@@ -327,7 +330,39 @@ export default async function (trie, theme, query, identity) {
                             </a>
                           </div>
 
-                          <div class="user-karma">${karma} ${theme.emoji}</div>
+                          <div class="user-karma">
+                            ${revenueMap[ensData.address] &&
+                            BigInt(revenueMap[ensData.address]) >
+                              100000000000000n
+                              ? html`<a
+                                  href="https://paragraph.xyz/@kiwi-updates/karma-rewards-program"
+                                  target="_blank"
+                                  ><span
+                                    style="border-bottom: 2px dotted; margin-right: 0.5rem;"
+                                  >
+                                    ${ethers.utils
+                                      .formatEther(
+                                        revenueMap[ensData.address] || "0",
+                                      )
+                                      .slice(
+                                        0,
+                                        ethers.utils
+                                          .formatEther(
+                                            revenueMap[ensData.address] || "0",
+                                          )
+                                          .indexOf(".") + 5,
+                                      )}
+                                    ${ethereum(
+                                      "margin-left: 2px; width: 0.7rem;",
+                                    )}
+                                  </span></a
+                                >`
+                              : null}
+                            <span
+                              style="display: inline-block; min-width: 75px;"
+                              >${karma} ${theme.emoji}</span
+                            >
+                          </div>
                         </div>
                       `,
                     )}
