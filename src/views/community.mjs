@@ -10,7 +10,7 @@ import DOMPurify from "isomorphic-dompurify";
 import * as ens from "../ens.mjs";
 import Header from "./components/header.mjs";
 import Footer from "./components/footer.mjs";
-import Sidebar, { ethereum } from "./components/sidebar.mjs";
+import Sidebar from "./components/sidebar.mjs";
 import { custom } from "./components/head.mjs";
 import * as karma from "../karma.mjs";
 import * as registry from "../chainstate/registry.mjs";
@@ -76,6 +76,10 @@ export async function paginate(users, allowlist, page, search) {
     totalPages: Math.ceil(totalUsers.length / pageSize),
     pageSize,
   };
+}
+
+function toSparks(wei) {
+  return ethers.utils.commify(wei / 1000000000000n);
 }
 
 async function points(identity) {
@@ -199,6 +203,9 @@ export default async function (trie, theme, query, identity) {
             flex: none;
             padding-right: 7px;
             text-align: right;
+            height: 20px;
+            display: flex;
+            align-items: center;
           }
           @media (min-width: 601px) {
             .user-row {
@@ -338,23 +345,13 @@ export default async function (trie, theme, query, identity) {
                                   href="https://paragraph.xyz/@kiwi-updates/karma-rewards-program"
                                   target="_blank"
                                   ><span
+                                    id="spark-container"
                                     style="border-bottom: 2px dotted; margin-right: 0.5rem;"
                                   >
-                                    ${ethers.utils
-                                      .formatEther(
-                                        revenueMap[ensData.address] || "0",
-                                      )
-                                      .slice(
-                                        0,
-                                        ethers.utils
-                                          .formatEther(
-                                            revenueMap[ensData.address] || "0",
-                                          )
-                                          .indexOf(".") + 5,
-                                      )}
-                                    ${ethereum(
-                                      "margin-left: 2px; width: 0.7rem;",
+                                    ${toSparks(
+                                      revenueMap[ensData.address] || "0",
                                     )}
+                                    ✧
                                   </span></a
                                 >`
                               : null}
