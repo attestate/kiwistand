@@ -348,10 +348,10 @@ export default async function (trie, theme, query, identity) {
                                     id="spark-container"
                                     style="border-bottom: 2px dotted; margin-right: 0.5rem;"
                                   >
+                                    ✧
                                     ${toSparks(
                                       revenueMap[ensData.address] || "0",
                                     )}
-                                    ✧
                                   </span></a
                                 >`
                               : null}
