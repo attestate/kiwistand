@@ -122,6 +122,7 @@ const row = (
                               story.identity,
                             ),
                           )}`}"
+                      data-story-link="/stories?index=0x${story.index}"
                       target="_blank"
                       class="story-link"
                       style="line-height: 13pt; font-size: 13pt;"

@@ -1,6 +1,10 @@
 :root {
   --font-family: Verdana, Geneva, sans-serif;
 }
+.redacted {
+    -webkit-box-decoration-break: clone;
+    filter: blur(2px);
+}
 .footer-table strong {
   display: inline-block;
   margin: 0 0 7px 0;
@@ -588,7 +592,7 @@ body {
     .feed-button:hover {
       background-color: rgba(0,0,0,0.15) !important;
     }
-    .story-link:hover {
+    .story-link:not(.redacted):hover {
       text-decoration: underline;
     }
     .notification-bar {

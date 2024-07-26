@@ -7,7 +7,7 @@ import { Connector } from "./Navigation.jsx";
 import { getLocalAccount } from "./session.mjs";
 
 const Link = (props) => {
-  const { allowlist, delegations } = props;
+  const { allowlist, delegations, toast, storyLink } = props;
   const from = useAccount();
   let address;
   const localAccount = getLocalAccount(from.address, props.allowlist);
@@ -40,8 +40,22 @@ const Link = (props) => {
           lineHeight: "13pt",
           fontSize: "13pt",
         }}
-        className={props.className}
-        href="/kiwipass-mint"
+        disabled={window.location.pathname === "/stories"}
+        className={
+          window.location.pathname === "/stories"
+            ? `redacted ${props.className}`
+            : props.className
+        }
+        onClick={(evt) => {
+          if (window.location.pathname === "/stories") {
+            evt.preventDefault();
+            toast(
+              "Hey stranger, feel free to read the comments! To click links, please sign up!",
+              { icon: "🥝" },
+            );
+          }
+        }}
+        href={window.location.pathname === "/stories" ? "" : storyLink}
       >
         {props.children || props.title}
       </a>

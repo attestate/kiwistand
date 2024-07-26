@@ -139,7 +139,7 @@ async function addSubmitButton(allowlist, delegations, toast) {
   }
 }
 
-async function obfuscateLinks(allowlist, delegations) {
+async function obfuscateLinks(allowlist, delegations, toast) {
   const links = document.querySelectorAll(".story-link-container");
   if (links && links.length > 0) {
     const { createRoot } = await import("react-dom/client");
@@ -151,6 +151,7 @@ async function obfuscateLinks(allowlist, delegations) {
       const title = link.innerText;
       const href = link.getAttribute("href");
       const target = link.getAttribute("target");
+      const storyLink = link.getAttribute("data-story-link");
       const className = link.getAttribute("class");
       const children = link.innerHTML;
       createRoot(linkContainer).render(
@@ -162,6 +163,8 @@ async function obfuscateLinks(allowlist, delegations) {
             className={className}
             allowlist={allowlist}
             delegations={delegations}
+            toast={toast}
+            storyLink={storyLink}
           >
             <div
               dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(children) }}
@@ -762,7 +765,7 @@ async function start() {
 
   await startWatchAccount(await allowlistPromise);
   const results0 = await Promise.allSettled([
-    obfuscateLinks(await allowlistPromise, await delegationsPromise),
+    obfuscateLinks(await allowlistPromise, await delegationsPromise, toast),
     addDynamicComments(await allowlistPromise, await delegationsPromise, toast),
     addVotes(await allowlistPromise, await delegationsPromise, toast),
   ]);

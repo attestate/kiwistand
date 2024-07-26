@@ -112,11 +112,7 @@ const SignupDialogue = (props) => {
         >
           <ConnectedSimpleDisconnectButton />
         </div>
-        <p style={{ color: "black" }}>
-          {localAccount
-            ? "Sign up to read the best texts on crypto culture"
-            : "Please connect your wallet to have the full experience"}
-        </p>
+        <p style={{ color: "black" }}>Sign up to explore our content</p>
       </div>
     );
   }
