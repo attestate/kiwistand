@@ -357,7 +357,7 @@ export default async function (trie, theme, query, identity) {
                               : null}
                             <span
                               style="display: inline-block; min-width: 75px;"
-                              >${karma} ${theme.emoji}</span
+                              >${karma.toLocaleString()} ${theme.emoji}</span
                             >
                           </div>
                         </div>
