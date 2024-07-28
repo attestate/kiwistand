@@ -67,6 +67,7 @@ const nav = (path) => html`
  0; bottom: 0px; width: 100%; background-color: #e6e6df; box-shadow: 0 -2px 5px rgba(0,0,0,0.1);"
   >
     <a
+      data-icon="home"
       href="/"
       style="flex-direction: column; display: flex; justify-content: center; align-items: center; padding: 10px 0; flex-grow: 1;
  text-decoration: none; color: black; height: 30px;"
@@ -74,6 +75,7 @@ const nav = (path) => html`
       ${path === "/" ? homefull : home}
     </a>
     <a
+      data-icon="newest"
       href="/new"
       style="flex-direction: column; display: flex; justify-content: center; align-items: center; padding: 10px 0; flex-grow: 1;
  text-decoration: none; color: black; height: 30px;"
@@ -81,6 +83,7 @@ const nav = (path) => html`
       ${path === "/new" ? newestfull : newest()}
     </a>
     <a
+      data-icon="comments"
       href="/comments"
       style="flex-direction: column; display: flex; justify-content: center; align-items: center; padding: 10px 0; flex-grow: 1;
  text-decoration: none; color: black; height: 30px;"

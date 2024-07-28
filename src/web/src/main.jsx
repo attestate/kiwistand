@@ -176,6 +176,24 @@ async function obfuscateLinks(allowlist, delegations, toast) {
   }
 }
 
+async function addDynamicNavElements() {
+  const navElements = document.querySelectorAll("[data-icon]");
+  if (navElements && navElements.length > 0) {
+    const { createRoot } = await import("react-dom/client");
+    const { StrictMode } = await import("react");
+    const BottomNavElem = (await import("./BottomNavElem.jsx")).default;
+
+    navElements.forEach((elem) => {
+      const icon = elem.getAttribute("data-icon");
+      createRoot(elem).render(
+        <StrictMode>
+          <BottomNavElem icon={icon} />
+        </StrictMode>,
+      );
+    });
+  }
+}
+
 async function addDynamicComments(allowlist, delegations, toast) {
   const sections = document.querySelectorAll(".comment-section");
   if (sections && sections.length > 0) {
@@ -771,6 +789,7 @@ async function start() {
   ]);
 
   const results1 = await Promise.allSettled([
+    addDynamicNavElements(),
     addCommentInput(toast, await allowlistPromise, await delegationsPromise),
     addSubscriptionButton(await allowlistPromise),
     addTGLink(await allowlistPromise),

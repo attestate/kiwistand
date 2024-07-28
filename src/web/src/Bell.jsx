@@ -25,6 +25,11 @@ const Bell = (props) => {
   const [notificationCount, setNotificationCount] = useState(0);
   const [readNotifications, setReadNotifications] = useState(0);
   const [documentTitle] = useState(document.title);
+  const [isFull, setIsFull] = useState(false);
+
+  const handleClick = () => {
+    setIsFull(!isFull);
+  };
 
   useEffect(() => {
     if (address) {
@@ -69,6 +74,7 @@ const Bell = (props) => {
       title="Notifications"
       href={disabled ? "" : link}
       className={props.mobile ? "mobile-bell" : "bell-button"}
+      onClick={handleClick}
       style={{
         padding: props.mobile ? "" : "10px 10px",
         backgroundColor: props.mobile ? "" : "rgba(0, 0, 0, 0.1)",
@@ -77,7 +83,7 @@ const Bell = (props) => {
         position: "relative",
       }}
     >
-      {window.location.pathname === "/activity" ? (
+      {isFull || window.location.pathname === "/activity" ? (
         <BellSVGFull mobile={props.mobile} />
       ) : (
         <BellSVG
