@@ -307,6 +307,13 @@ const secondheader = (theme, site, period, domain) => {
                 </button>
               </a>
             </div>
+            ${domain
+              ? html`<a
+                  style="text-decoration:underline;"
+                  href="/best?period=${period}"
+                  >Clear filter</a
+                >`
+              : null}
           </div>`
         : null}
     </td>
