@@ -37,10 +37,7 @@ const SignupDialogue = (props) => {
 
   if (
     !isEligible &&
-    (window.location.pathname === "/" ||
-      window.location.pathname === "/new" ||
-      window.location.pathname === "/best" ||
-      window.location.pathname === "/submit" ||
+    (window.location.pathname === "/submit" ||
       window.location.pathname === "/stories" ||
       window.location.pathname === "/comments")
   ) {
@@ -50,7 +47,7 @@ const SignupDialogue = (props) => {
           position: "fixed",
           bottom: 0,
           left: 0,
-          height: "40vh",
+          height: "20vh",
           padding: "0.75rem 0",
           width: "100%",
           backgroundColor: "rgba(230,230,223, 0.95)",

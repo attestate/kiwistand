@@ -42,6 +42,7 @@ export function getLocalAccount(identity, allowlist) {
   }
   if (Object.keys(keys).length > 1 && identity && keys[identity]) {
     const signer = new Wallet(keys[identity]);
+    setCookie("identity", identity);
     return {
       identity,
       privateKey: keys[identity],

@@ -374,6 +374,15 @@ body {
 }
 /* mobile device */
  @media only screen and (min-width : 300px) and (max-width : 750px) {
+    .gateway-container {
+      padding: 0 5vw !important;
+    }
+    .gateway-container img, .gateway-banner {
+      max-width: 80% !important;
+    }
+    .gateway-banner {
+      margin-top: -15rem;
+    }
     footer {
       padding-bottom: 100px;
     }
@@ -507,6 +516,15 @@ body {
 }
 /* Media query for medium screens */
  @media (min-width: 768px) {
+    .gateway-container {
+      padding: 0 5vw !important;
+    }
+    .gateway-container img, .gateway-banner {
+      max-width: 55% !important;
+    }
+    .gateway-banner {
+      margin-top: 5rem;
+    }
     footer {
       padding-bottom: 100px;
     }
@@ -586,6 +604,13 @@ body {
 
 /* Media query for larger screens */
  @media (min-width: 1150px) {
+    .gateway-banner {
+      max-width: 400px !important;
+      margin-top: 5rem;
+    }
+    .gateway-container img {
+      max-width: 45% !important;
+    }
     .content-row:hover {
       background-color: rgba(0,0,0,0.025);
     }

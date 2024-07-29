@@ -139,43 +139,6 @@ async function addSubmitButton(allowlist, delegations, toast) {
   }
 }
 
-async function obfuscateLinks(allowlist, delegations, toast) {
-  const links = document.querySelectorAll(".story-link-container");
-  if (links && links.length > 0) {
-    const { createRoot } = await import("react-dom/client");
-    const { StrictMode } = await import("react");
-    const Link = (await import("./Link.jsx")).default;
-
-    links.forEach((linkContainer) => {
-      const link = linkContainer.querySelector("a");
-      const title = link.innerText;
-      const href = link.getAttribute("href");
-      const target = link.getAttribute("target");
-      const storyLink = link.getAttribute("data-story-link");
-      const className = link.getAttribute("class");
-      const children = link.innerHTML;
-      createRoot(linkContainer).render(
-        <StrictMode>
-          <Link
-            title={title}
-            href={href}
-            target={target}
-            className={className}
-            allowlist={allowlist}
-            delegations={delegations}
-            toast={toast}
-            storyLink={storyLink}
-          >
-            <div
-              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(children) }}
-            />
-          </Link>
-        </StrictMode>,
-      );
-    });
-  }
-}
-
 async function addDynamicNavElements() {
   const navElements = document.querySelectorAll("[data-icon]");
   if (navElements && navElements.length > 0) {
@@ -359,15 +322,30 @@ async function addConnectedComponents(allowlist, delegations, toast) {
     RefreshButton,
     ConnectedSimpleDisconnectButton,
   } = await import("./Navigation.jsx");
-  const Bell = (await import("./Bell.jsx")).default;
 
+  const connectButton = document.querySelector(".connect-button-wrapper");
+  if (connectButton) {
+    createRoot(connectButton).render(
+      <StrictMode>
+        <ConnectedConnectButton
+          allowlist={allowlist}
+          className="button-secondary"
+          style={{ width: "auto" }}
+        />
+      </StrictMode>,
+    );
+  }
+
+  const Bell = (await import("./Bell.jsx")).default;
   const bellButton = document.querySelector("#bell");
-  bellButton.style = "";
-  createRoot(bellButton).render(
-    <StrictMode>
-      <Bell allowlist={allowlist} delegations={delegations} />
-    </StrictMode>,
-  );
+  if (bellButton) {
+    bellButton.style = "";
+    createRoot(bellButton).render(
+      <StrictMode>
+        <Bell allowlist={allowlist} delegations={delegations} />
+      </StrictMode>,
+    );
+  }
 
   const mobileBellButton = document.querySelector(".mobile-bell-container");
   if (mobileBellButton) {
@@ -379,30 +357,40 @@ async function addConnectedComponents(allowlist, delegations, toast) {
   }
 
   const settings = document.querySelector("#nav-settings");
-  createRoot(settings).render(
-    <StrictMode>
-      <ConnectedSettings allowlist={allowlist} delegations={delegations} />
-    </StrictMode>,
-  );
+  if (settings) {
+    createRoot(settings).render(
+      <StrictMode>
+        <ConnectedSettings allowlist={allowlist} delegations={delegations} />
+      </StrictMode>,
+    );
+  }
+
   const profileLink = document.querySelector("#nav-profile");
-  createRoot(profileLink).render(
-    <StrictMode>
-      <ConnectedProfile allowlist={allowlist} delegations={delegations} />
-    </StrictMode>,
-  );
+  if (profileLink) {
+    createRoot(profileLink).render(
+      <StrictMode>
+        <ConnectedProfile allowlist={allowlist} delegations={delegations} />
+      </StrictMode>,
+    );
+  }
+
   const disconnect = document.querySelector("#nav-disconnect");
-  createRoot(disconnect).render(
-    <StrictMode>
-      <ConnectedDisconnectButton />
-    </StrictMode>,
-  );
+  if (disconnect) {
+    createRoot(disconnect).render(
+      <StrictMode>
+        <ConnectedDisconnectButton />
+      </StrictMode>,
+    );
+  }
 
   const submit = document.querySelector("#nav-submit");
-  createRoot(submit).render(
-    <StrictMode>
-      <ConnectedSubmit allowlist={allowlist} delegations={delegations} />
-    </StrictMode>,
-  );
+  if (submit) {
+    createRoot(submit).render(
+      <StrictMode>
+        <ConnectedSubmit allowlist={allowlist} delegations={delegations} />
+      </StrictMode>,
+    );
+  }
 
   const simpledisconnect = document.querySelector(
     "nav-simple-disconnect-button",
@@ -783,7 +771,6 @@ async function start() {
 
   await startWatchAccount(await allowlistPromise);
   const results0 = await Promise.allSettled([
-    obfuscateLinks(await allowlistPromise, await delegationsPromise, toast),
     addDynamicComments(await allowlistPromise, await delegationsPromise, toast),
     addVotes(await allowlistPromise, await delegationsPromise, toast),
   ]);

@@ -26,6 +26,7 @@ import guidelines from "./views/guidelines.mjs";
 import onboarding from "./views/onboarding.mjs";
 import join from "./views/join.mjs";
 import kiwipass from "./views/kiwipass.mjs";
+import gateway from "./views/gateway.mjs";
 import kiwipassmint from "./views/kiwipass-mint.mjs";
 import friends from "./views/friends.mjs";
 import whattosubmit from "./views/whattosubmit.mjs";
@@ -497,6 +498,17 @@ export async function launch(trie, libp2p) {
       ...submission,
       comments: enrichedComments,
     });
+  });
+
+  app.get("/gateway", async (request, reply) => {
+    reply.header(
+      "Cache-Control",
+      "public, max-age=60, no-transform, must-revalidate, stale-while-revalidate=3600",
+    );
+    return reply
+      .status(200)
+      .type("text/html")
+      .send(await gateway());
   });
 
   app.get("/", async (request, reply) => {
