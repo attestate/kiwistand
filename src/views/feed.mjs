@@ -324,7 +324,7 @@ export async function index(trie, page, domain) {
     for await (let upvoter of story.upvoters) {
       const profile = await ens.resolve(upvoter);
       if (profile.safeAvatar) {
-        avatars.push(`/avatar/${profile.address}`);
+        avatars.push(profile.safeAvatar);
       }
     }
 

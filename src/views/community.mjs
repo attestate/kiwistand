@@ -319,7 +319,9 @@ export default async function (trie, theme, query, identity) {
                                   ${ensData.safeAvatar
                                     ? html`<img
                                         loading="lazy"
-                                        src="/avatar/${ensData.address}"
+                                        src="${DOMPurify.sanitize(
+                                          ensData.safeAvatar,
+                                        )}"
                                         style="border: 1px solid #828282; width: 20px; height: 20px; border-radius: 2px; margin-right: 15px;"
                                       />`
                                     : html`

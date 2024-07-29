@@ -160,7 +160,7 @@ export default async function (trie, theme, index, value) {
       address: profile.address,
     });
     if (profile.safeAvatar) {
-      avatars.push(`/avatar/${profile.address}`);
+      avatars.push(profile.safeAvatar);
     }
   }
 

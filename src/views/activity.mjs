@@ -62,7 +62,7 @@ function generateCommentRow(activity, identity, bgColor, theme) {
   const comment = DOMPurify.sanitize(truncateComment(activity.message.title));
   const avatar = identity.safeAvatar
     ? html`<img
-        src="/avatar/${identity.address}"
+        src="${DOMPurify.sanitize(identity.safeAvatar)}"
         alt="avatar"
         style="border: 1px solid #828282; width: 28px; height: 28px; border-radius: 2px; margin-top: 1.5rem;"
       />`
@@ -162,7 +162,7 @@ function generateRow(lastUpdate, theme) {
                           )}"
                         >
                           <img
-                            src="/avatar/${identity.address}"
+                            src="${DOMPurify.sanitize(identity.safeAvatar)}"
                             alt="avatar"
                             style="z-index: ${index}; width: ${size}px; height: ${size}px; border: 1px solid #828282; border-radius: 2px; margin-left: 15px;"
                           />

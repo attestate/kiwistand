@@ -528,54 +528,6 @@ export async function launch(trie, libp2p) {
     );
     return reply.status(200).type("text/html").send(content);
   });
-  app.get("/avatar/:address", async (request, reply) => {
-    let address;
-    try {
-      address = utils.getAddress(request.params.address);
-    } catch (err) {
-      return reply
-        .status(404)
-        .type("text/plain")
-        .send("No valid Ethereum address");
-    }
-    let data;
-    try {
-      data = await ens.resolve(address);
-    } catch (err) {
-      return reply.status(404).type("text/plain").send(err.message);
-    }
-
-    const size = 250;
-    let url;
-    if (
-      data.safeAvatar.includes("imagedelivery.net") ||
-      data.safeAvatar.includes("imgur.com")
-    ) {
-      url = data.safeAvatar;
-    } else {
-      url = preview.cfTransform(data.safeAvatar, size);
-    }
-    const response = await fetch(url);
-    if (!response.ok) {
-      return reply.status(404).type("text/plain").send("Not Found");
-    }
-
-    try {
-      const message = await response.clone().text();
-      if (message.startsWith("ERROR")) {
-        return reply.status(404).type("text/plain").send("Not Found");
-      }
-    } catch (err) {
-      return reply.status(500).type("text/plain").send("Internal Server Error");
-    }
-
-    reply.header("Content-Type", response.headers.get("Content-Type"));
-    reply.header(
-      "Cache-Control",
-      "public, max-age=3600, no-transform, must-revalidate, stale-while-revalidate=31536000",
-    );
-    response.body.pipe(reply);
-  });
   app.get("/stories", async (request, reply) => {
     let submission;
     try {
