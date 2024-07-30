@@ -212,6 +212,7 @@ async function addVotes(allowlist, delegations, toast) {
     voteArrows.forEach((arrow) => {
       const title = DOMPurify.sanitize(arrow.getAttribute("data-title"));
       const href = DOMPurify.sanitize(arrow.getAttribute("data-href"));
+      const isad = DOMPurify.sanitize(arrow.getAttribute("data-isad"));
       const editorPicks = arrow.getAttribute("data-editorpicks");
       let upvoters;
       try {
@@ -222,6 +223,7 @@ async function addVotes(allowlist, delegations, toast) {
       createRoot(arrow).render(
         <StrictMode>
           <Vote
+            isad={idad}
             title={title}
             href={href}
             allowlist={allowlist}

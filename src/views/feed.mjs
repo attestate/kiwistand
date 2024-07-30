@@ -2,6 +2,7 @@
 import { env } from "process";
 import { URL } from "url";
 
+import ethers from "ethers";
 import htm from "htm";
 import vhtml from "vhtml";
 import normalizeUrl from "normalize-url";
@@ -33,6 +34,101 @@ import * as karma from "../karma.mjs";
 import { metadata } from "../parser.mjs";
 
 const html = htm.bind(vhtml);
+
+async function getAd() {
+  const provider = new ethers.providers.JsonRpcProvider(
+    env.OPTIMISM_RPC_HTTP_HOST,
+  );
+
+  const contractAddress = "0xb0c9502ea7c11ea0fe6157bfc43e3507fa69bba0";
+  const abi = [
+    { inputs: [], name: "ErrUnauthorized", type: "error" },
+    { inputs: [], name: "ErrValue", type: "error" },
+    {
+      inputs: [],
+      name: "collateral",
+      outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+      stateMutability: "view",
+      type: "function",
+    },
+    {
+      inputs: [],
+      name: "controller",
+      outputs: [{ internalType: "address", name: "", type: "address" }],
+      stateMutability: "view",
+      type: "function",
+    },
+    {
+      inputs: [],
+      name: "href",
+      outputs: [{ internalType: "string", name: "", type: "string" }],
+      stateMutability: "view",
+      type: "function",
+    },
+    {
+      inputs: [],
+      name: "price",
+      outputs: [
+        { internalType: "uint256", name: "nextPrice", type: "uint256" },
+        { internalType: "uint256", name: "taxes", type: "uint256" },
+      ],
+      stateMutability: "view",
+      type: "function",
+    },
+    {
+      inputs: [],
+      name: "ragequit",
+      outputs: [],
+      stateMutability: "nonpayable",
+      type: "function",
+    },
+    {
+      inputs: [
+        { internalType: "string", name: "_title", type: "string" },
+        { internalType: "string", name: "_href", type: "string" },
+      ],
+      name: "set",
+      outputs: [],
+      stateMutability: "payable",
+      type: "function",
+    },
+    {
+      inputs: [],
+      name: "timestamp",
+      outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+      stateMutability: "view",
+      type: "function",
+    },
+    {
+      inputs: [],
+      name: "title",
+      outputs: [{ internalType: "string", name: "", type: "string" }],
+      stateMutability: "view",
+      type: "function",
+    },
+  ];
+
+  const contract = new ethers.Contract(contractAddress, abi, provider);
+  const title = await contract.title();
+  const href = await contract.href();
+  const timestamp = await contract.timestamp();
+  const identity = await contract.controller();
+  const collateral = await contract.collateral();
+  const submitter = await ens.resolve(identity);
+
+  return {
+    upvotes: 0,
+    upvoters: [],
+    avatars: [],
+    title,
+    href,
+    collateral,
+    identity,
+    submitter,
+    displayName: submitter.displayName,
+    timestamp,
+  };
+}
 
 function CanonRow(originals) {
   return html`
@@ -366,7 +462,9 @@ export async function index(trie, page, domain) {
     .map(({ value }) => value)
     .slice(0, 2);
 
+  const ad = await getAd();
   return {
+    ad,
     editorPicks,
     config,
     stories,
@@ -402,7 +500,7 @@ export default async function (trie, theme, page, domain) {
   } else {
     content = cacheRes.content;
   }
-  const { originals, editorPicks, config, stories, start } = content;
+  const { ad, originals, editorPicks, config, stories, start } = content;
 
   let query = `?page=${page + 1}`;
   if (domain) {
@@ -450,7 +548,21 @@ export default async function (trie, theme, page, domain) {
               ${originals && originals.length >= 2 && !domain
                 ? html`
                     ${stories
-                      .slice(0, 5)
+                      .slice(0, 3)
+                      .map(
+                        Row(
+                          start,
+                          "/",
+                          undefined,
+                          null,
+                          null,
+                          null,
+                          recentJoiners,
+                        ),
+                      )}
+                    ${Row(start, "/", "", null, null, null, recentJoiners)(ad)}
+                    ${stories
+                      .slice(3, 5)
                       .map(
                         Row(
                           start,
@@ -477,9 +589,35 @@ export default async function (trie, theme, page, domain) {
                         ),
                       )}
                   `
-                : html` ${stories.map(
-                    Row(start, "/", undefined, null, null, null, recentJoiners),
-                  )}`}
+                : html`
+                    ${stories
+                      .slice(0, 3)
+                      .map(
+                        Row(
+                          start,
+                          "/",
+                          undefined,
+                          null,
+                          null,
+                          null,
+                          recentJoiners,
+                        ),
+                      )}
+                    ${Row(start, "/", "", null, null, null, recentJoiners)(ad)}
+                    ${stories
+                      .slice(3)
+                      .map(
+                        Row(
+                          start,
+                          "/",
+                          undefined,
+                          null,
+                          null,
+                          null,
+                          recentJoiners,
+                        ),
+                      )}
+                  `}
               ${stories.length < totalStories
                 ? ""
                 : html`<tr style="height: 50px">

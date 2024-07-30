@@ -71,6 +71,7 @@ const row = (
                 data-title="${DOMPurify.sanitize(story.title)}"
                 data-href="${DOMPurify.sanitize(story.href)}"
                 data-upvoters="${JSON.stringify(story.upvoters)}"
+                data-isad="${!!story.collateral}"
                 class="vote-button-container"
                 style="display: flex; align-self: stretch;"
               >
@@ -217,6 +218,14 @@ const row = (
                           href="https://paragraph.xyz/@kiwi-updates/kiwi-feedbot-submissions-open"
                           >${story.displayName}</a
                         >`}
+                    ${story.collateral
+                      ? html` <a
+                          class="meta-link"
+                          href="https://github.com/attestate/ad?tab=readme-ov-file#how-does-it-work"
+                          target="_blank"
+                          >(sponsored)</a
+                        >`
+                      : null}
                     <span>
                       ${interactive || hideCast
                         ? null

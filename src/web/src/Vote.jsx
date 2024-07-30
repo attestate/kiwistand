@@ -32,8 +32,7 @@ const Container = (props) => {
 };
 
 const Vote = (props) => {
-  const { allowlist, delegations } = props;
-  const { toast } = props;
+  const { allowlist, delegations, toast, isad } = props;
   const value = API.messageFab(props.title, props.href);
 
   let address;
@@ -98,7 +97,8 @@ const Vote = (props) => {
         return (
           <div
             onClick={async (e) => {
-              if (hasUpvoted || window.location.pathname === "/submit") return;
+              if (hasUpvoted || isad || window.location.pathname === "/submit")
+                return;
 
               const isEligible =
                 signer &&
