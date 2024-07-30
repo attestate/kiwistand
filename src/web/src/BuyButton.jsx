@@ -68,18 +68,39 @@ export async function prepare(key) {
     throw new Error("Error getting the leaderboard");
   }
 
-  const totalKarma = leaderboard.leaders.reduce(
+  let allKarma = leaderboard.leaders.reduce(
     (sum, { totalKarma }) => sum + totalKarma,
     0,
   );
+
+  const zeroAddress = "0x0000000000000000000000000000000000000000";
+  let referral = zeroAddress;
+  const queryReferral = new URLSearchParams(window.location.search).get(
+    "referral",
+  );
+  try {
+    referral = getAddress(queryReferral);
+  } catch (err) {
+    console.log("Couldn't find referral address in URL bar");
+    //noop
+  }
+  if (referral !== zeroAddress) {
+    const last = leaderboard.leaders.pop();
+    allKarma -= last.totalKarma;
+
+    const halfKarma = Math.floor(allKarma / 2);
+    leaderboard.leaders.push({ identity: referral, totalKarma: halfKarma });
+    allKarma += halfKarma;
+  }
+
   const recipients = [];
   const values = [];
   if (difference !== 0n) {
-    const totalKarmaBigInt = BigInt(totalKarma);
+    const allKarmaBigInt = BigInt(allKarma);
     let remainder = difference;
 
     for (const { identity, totalKarma } of leaderboard.leaders) {
-      const share = (difference * BigInt(totalKarma)) / totalKarmaBigInt;
+      const share = (difference * BigInt(totalKarma)) / allKarmaBigInt;
       recipients.push(identity);
       values.push(share);
       remainder -= share;

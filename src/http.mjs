@@ -501,6 +501,13 @@ export async function launch(trie, libp2p) {
   });
 
   app.get("/gateway", async (request, reply) => {
+    let referral;
+    try {
+      referral = utils.getAddress(request.query.referral);
+    } catch (err) {
+      //noop
+    }
+
     reply.header(
       "Cache-Control",
       "public, max-age=60, no-transform, must-revalidate, stale-while-revalidate=3600",
@@ -508,7 +515,7 @@ export async function launch(trie, libp2p) {
     return reply
       .status(200)
       .type("text/html")
-      .send(await gateway());
+      .send(await gateway(referral));
   });
 
   app.get("/", async (request, reply) => {

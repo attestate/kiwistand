@@ -8,10 +8,11 @@ import { ethereum } from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
 import Head from "./components/head.mjs";
 import * as ens from "../ens.mjs";
+import DOMPurify from "isomorphic-dompurify";
 
 const html = htm.bind(vhtml);
 
-export default async function (theme) {
+export default async function (referral) {
   return html`
     <html lang="en" op="news">
       <head>
@@ -66,7 +67,9 @@ export default async function (theme) {
                       style="display: flex; align-items: center; gap: 2rem; justify-content: center;"
                     >
                       <a
-                        href="/kiwipass-mint"
+                        href="/kiwipass-mint${referral
+                          ? `?referral=${DOMPurify.sanitize(referral)}`
+                          : ""}"
                         id="button-onboarding"
                         style="width: auto; font-weight: 700;"
                       >
@@ -86,7 +89,7 @@ export default async function (theme) {
                 </div>
               </tr>
             </table>
-            <div style="display: none;">${Footer(theme)}</div>
+            <div style="display: none;">${Footer()}</div>
             <div style="margin: 2rem 1rem 0 0; text-align: center;">
               <a
                 style="color: rgba(0,0,0,0.4); text-decoration: underline;"

@@ -1,5 +1,6 @@
 import React from "react";
 
+import { getAddress } from "@ethersproject/address";
 import { useAccount } from "wagmi";
 import { eligible } from "@attestate/delegator2";
 
@@ -33,7 +34,21 @@ const SignupDialogue = (props) => {
     navigator.userAgent.indexOf("CriOS") >= 0 ||
     navigator.userAgent.match(/CriOS/i) ||
     navigator.userAgent.match(/EdgiOS/i);
-  const link = "/kiwipass-mint";
+
+  const zeroAddress = "0x0000000000000000000000000000000000000000";
+  let referral = zeroAddress;
+  const queryReferral = new URLSearchParams(window.location.search).get(
+    "referral",
+  );
+
+  let link;
+  try {
+    referral = getAddress(queryReferral);
+    link = `/kiwipass-mint?referral=${referral}`;
+  } catch (err) {
+    link = "/kiwipass-mint";
+    console.log("Couldn't find referral address in URL bar");
+  }
 
   if (
     !isEligible &&
