@@ -223,7 +223,7 @@ async function addVotes(allowlist, delegations, toast) {
       createRoot(arrow).render(
         <StrictMode>
           <Vote
-            isad={idad}
+            isad={isad}
             title={title}
             href={href}
             allowlist={allowlist}
