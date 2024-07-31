@@ -24,6 +24,7 @@ import best, * as bestAPI from "./views/best.mjs";
 import privacy from "./views/privacy.mjs";
 import guidelines from "./views/guidelines.mjs";
 import onboarding from "./views/onboarding.mjs";
+import referral from "./views/referral.mjs";
 import join from "./views/join.mjs";
 import kiwipass from "./views/kiwipass.mjs";
 import gateway from "./views/gateway.mjs";
@@ -849,6 +850,28 @@ export async function launch(trie, libp2p) {
       .status(200)
       .type("text/html")
       .send(await whattosubmit(reply.locals.theme));
+  });
+  app.get("/referral", async (request, reply) => {
+    const mints = await registry.mints();
+    const website = await price.getPrice(mints);
+    const onchain = await price.getOnchainPrice();
+    const leaders = getLeaders();
+    reply.header(
+      "Cache-Control",
+      "public, max-age=3600, no-transform, must-revalidate, stale-while-revalidate=86400",
+    );
+    return reply
+      .status(200)
+      .type("text/html")
+      .send(
+        await referral(
+          reply.locals.theme,
+          website.price,
+          onchain,
+          DOMPurify.sanitize(request.cookies.identity),
+          leaders,
+        ),
+      );
   });
   app.get("/onboarding-reader", async (request, reply) => {
     reply.header(

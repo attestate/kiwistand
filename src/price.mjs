@@ -26,7 +26,6 @@ import * as ens from "./ens.mjs";
 
 const { BigNumber } = ethers;
 const html = htm.bind(vhtml);
-const address = "0x66747bdc903d17c586fa09ee5d6b54cc85bbea45";
 const fetch = fetchBuilder.withCache(
   new FileSystemCache({
     cacheDirectory: path.resolve(env.CACHE_DIR),
@@ -290,6 +289,57 @@ async function calculateMintersPerDay(mints) {
   const minters = sortedDates.map((date) => mintMap.get(date));
 
   return { dates: sortedDates, minters };
+}
+
+export async function getOnchainPrice() {
+  const address = "0x66747bdc903d17c586fa09ee5d6b54cc85bbea45";
+  const abi = [
+    {
+      inputs: [],
+      name: "saleDetails",
+      outputs: [
+        {
+          components: [
+            { internalType: "bool", name: "publicSaleActive", type: "bool" },
+            { internalType: "bool", name: "presaleActive", type: "bool" },
+            {
+              internalType: "uint256",
+              name: "publicSalePrice",
+              type: "uint256",
+            },
+            { internalType: "uint64", name: "publicSaleStart", type: "uint64" },
+            { internalType: "uint64", name: "publicSaleEnd", type: "uint64" },
+            { internalType: "uint64", name: "presaleStart", type: "uint64" },
+            { internalType: "uint64", name: "presaleEnd", type: "uint64" },
+            {
+              internalType: "bytes32",
+              name: "presaleMerkleRoot",
+              type: "bytes32",
+            },
+            {
+              internalType: "uint256",
+              name: "maxSalePurchasePerAddress",
+              type: "uint256",
+            },
+            { internalType: "uint256", name: "totalMinted", type: "uint256" },
+            { internalType: "uint256", name: "maxSupply", type: "uint256" },
+          ],
+          internalType: "struct IERC721Drop.SaleDetails",
+          name: "",
+          type: "tuple",
+        },
+      ],
+      stateMutability: "view",
+      type: "function",
+    },
+  ];
+  const provider = new ethers.providers.JsonRpcProvider(
+    env.OPTIMISM_RPC_HTTP_HOST,
+  );
+
+  const contract = new ethers.Contract(address, abi, provider);
+  const saleDetails = await contract.saleDetails();
+  return saleDetails.publicSalePrice;
 }
 
 export async function getSalesData() {
