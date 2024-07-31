@@ -856,10 +856,7 @@ export async function launch(trie, libp2p) {
     const website = await price.getPrice(mints);
     const onchain = await price.getOnchainPrice();
     const leaders = getLeaders();
-    reply.header(
-      "Cache-Control",
-      "public, max-age=3600, no-transform, must-revalidate, stale-while-revalidate=86400",
-    );
+    reply.header("Cache-Control", "private, must-revalidate");
     return reply
       .status(200)
       .type("text/html")
