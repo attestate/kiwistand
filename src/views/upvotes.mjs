@@ -7,6 +7,8 @@ import normalizeUrl from "normalize-url";
 import { formatDistanceToNow } from "date-fns";
 import { utils } from "ethers";
 import DOMPurify from "isomorphic-dompurify";
+import { createCanvas, loadImage } from "canvas";
+import { drawContributions } from "github-contributions-canvas";
 
 import Header from "./components/header.mjs";
 import { trophySVG, broadcastSVG } from "./components/secondheader.mjs";
@@ -20,7 +22,7 @@ import * as karma from "../karma.mjs";
 import * as preview from "../preview.mjs";
 import * as frame from "../frame.mjs";
 import Row from "./components/row.mjs";
-import { getSubmissions } from "../cache.mjs";
+import { getSubmissions, getContributionsData } from "../cache.mjs";
 import { metadata } from "../parser.mjs";
 import { truncate } from "../utils.mjs";
 import {
@@ -76,6 +78,22 @@ async function generateProfile(username, avatar) {
   }
 }
 
+function contributionsChart(identity) {
+  const contributions = getContributionsData(identity);
+  const width = 1200;
+  const height = 630;
+
+  const canvas = createCanvas(width, height);
+  drawContributions(canvas, {
+    skipHeader: true,
+    data: contributions,
+    themeName: "standard",
+  });
+
+  const buffer = canvas.toBuffer().toString("base64");
+  return `data:image/png;base64,${buffer}`;
+}
+
 export default async function (
   trie,
   theme,
@@ -87,6 +105,7 @@ export default async function (
   if (!utils.isAddress(identity)) {
     return html`Not a valid address`;
   }
+  const chartSrc = contributionsChart(identity);
   const ensData = await ens.resolve(identity);
 
   let frameHead;
@@ -286,6 +305,11 @@ export default async function (
                       )}
                     </div>
                   </div>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <img src="${chartSrc}" style="width: 100%;" />
                 </td>
               </tr>
               ${posts.length > 0

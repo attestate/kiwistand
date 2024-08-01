@@ -4,6 +4,7 @@ export default cache;
 
 import { join } from "path";
 
+import { subYears, formatISO } from "date-fns";
 import Database from "better-sqlite3";
 import { add } from "date-fns";
 import normalizeUrl from "normalize-url";
@@ -120,6 +121,56 @@ export function getLeaders() {
      LIMIT 10
    `;
   return db.prepare(query).all(oneWeekAgo, oneWeekAgo);
+}
+
+export function getContributionsData(identity) {
+  const endDate = new Date();
+  const startDate = new Date(new Date().getFullYear(), 0, 1);
+  const startTimestamp = Math.floor(startDate.getTime() / 1000);
+  const endTimestamp = Math.floor(endDate.getTime() / 1000);
+
+  const query = `
+     SELECT date(timestamp, 'unixepoch') AS date, COUNT(*) AS count
+     FROM (
+       SELECT timestamp FROM submissions WHERE timestamp BETWEEN ? AND ? AND identity = ?
+       UNION ALL
+       SELECT timestamp FROM upvotes WHERE timestamp BETWEEN ? AND ? AND identity = ?
+     )
+     GROUP BY date
+     ORDER BY date
+   `;
+  const params = [
+    startTimestamp,
+    endTimestamp,
+    identity,
+    startTimestamp,
+    endTimestamp,
+    identity,
+  ];
+  const rawData = db.prepare(query).all(params);
+
+  const contributions = rawData.map(({ date, count }) => ({
+    date,
+    count,
+    color: "#654515",
+    intensity: count,
+  }));
+
+  let contributionsData = {
+    years: [
+      {
+        year: startDate.getFullYear().toString(),
+        total: contributions.reduce((acc, curr) => acc + curr.count, 0),
+        range: {
+          start: formatISO(startDate, { representation: "date" }),
+          end: formatISO(endDate, { representation: "date" }),
+        },
+      },
+    ],
+    contributions,
+  };
+
+  return contributionsData;
 }
 
 export function getHashesPerDateRange(startDate, endDate) {
