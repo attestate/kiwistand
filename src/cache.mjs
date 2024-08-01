@@ -89,6 +89,17 @@ function initialize() {
     `);
 }
 
+export function getRandomIndex() {
+  const row = db
+    .prepare(`SELECT id FROM submissions ORDER BY RANDOM() LIMIT 1`)
+    .get();
+  if (!row) {
+    throw new Error("Nothing found in db");
+  }
+  const [, index] = row.id.split("kiwi:");
+  return index;
+}
+
 export function getLeaders() {
   const oneWeekAgo = Math.floor(Date.now() / 1000) - 7 * 24 * 60 * 60;
   const query = `

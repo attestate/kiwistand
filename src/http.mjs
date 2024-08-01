@@ -69,7 +69,12 @@ import * as frame from "./frame.mjs";
 import * as subscriptions from "./subscriptions.mjs";
 import * as telegram from "./telegram.mjs";
 import * as price from "./price.mjs";
-import { getSubmission, trackOutbound, getLeaders } from "./cache.mjs";
+import {
+  getRandomIndex,
+  getSubmission,
+  trackOutbound,
+  getLeaders,
+} from "./cache.mjs";
 
 const fetch = fetchBuilder.withCache(
   new FileSystemCache({
@@ -163,6 +168,16 @@ export async function launch(trie, libp2p) {
   } catch (err) {
     fingerprint = await import("./fingerprint_example.mjs");
   }
+  app.get("/random", async (request, reply) => {
+    reply.header("Cache-Control", "no-cache");
+    let index;
+    try {
+      index = getRandomIndex();
+    } catch (err) {
+      return reply.status(404).send("Not Found");
+    }
+    return reply.redirect(`/stories?index=${index}`);
+  });
   app.get("/outbound", async (request, reply) => {
     reply.header("Cache-Control", "no-cache");
     const { url } = request.query;

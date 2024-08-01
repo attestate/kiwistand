@@ -190,7 +190,7 @@ export default async function (trie, theme, index, value) {
   story.displayName = ensData.displayName;
 
   const start = 0;
-  const style = "padding: 1rem 5px 0 10px;";
+  const style = "padding: 1rem 10px 0 10px;";
 
   let ogImage = `https://news.kiwistand.com/previews/${index}.jpg`;
   const ogDescription =
