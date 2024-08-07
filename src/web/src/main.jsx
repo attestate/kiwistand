@@ -747,6 +747,11 @@ async function processAndSendVotes(signer, identity) {
 }
 
 async function start() {
+  // NOTE: There are clients which had the identity cookie sent to 1 week and
+  // they're now encountering the paywall. So in case this happens but their
+  // local storage contains the respective private key, we want them to reload
+  // the page. See the logic in CustomConnectButton to follow this flow.
+  window.initialIdentityCookie = getCookie("identity");
   // NOTE: We don't want pull to refresh for the submission page as this could
   // mess up the user's input on an accidential scroll motion.
   if (isRunningPWA() && window.location.pathname !== "/submit") {

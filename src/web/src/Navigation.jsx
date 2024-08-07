@@ -8,6 +8,7 @@ import { client, chains } from "./client.mjs";
 import { EthereumSVG } from "./icons.jsx";
 import {
   getLocalAccount,
+  getCookie,
   isSafariOnIOS,
   isChromeOnAndroid,
   isRunningPWA,
@@ -350,6 +351,9 @@ export const CustomConnectButton = (props) => {
       {({ account, chain, mounted, openConnectModal }) => {
         if (!mounted) return;
         const connected = account && chain;
+        // NOTE: We are checking the cookie before calling getLocalAccount
+        // because if the cookie expired, then the user will have been taken to
+        // the paywall and this means we'll have to reload the page.
         const localAccount = getLocalAccount(
           account && account.address,
           props.allowlist,
@@ -364,6 +368,14 @@ export const CustomConnectButton = (props) => {
         }
         const isEligible =
           address && eligible(props.allowlist, props.delegations, address);
+
+        const newIdentityCookie = getCookie("identity");
+        if (isEligible && newIdentityCookie && !window.initialIdentityCookie) {
+          console.log(
+            "Reloading because initial identity cookie was undefined but eligibly was recognized",
+          );
+          window.location.reload();
+        }
 
         if ((props.required && !connected) || (!connected && !isEligible)) {
           return (
