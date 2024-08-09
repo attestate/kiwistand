@@ -23,7 +23,7 @@ export default async function (referral) {
         <div class="container">
           <div
             id="hnmain"
-            style="background-color: #f6f6ef; width: 100%; height: 100vh; display: flex; justify-content: center; flex-direction: column;"
+            style="margin: 0 !important; border: none !important; background-color: #f6f6ef; width: 100%; height: 100vh; display: flex; justify-content: center; flex-direction: column;"
           >
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
               <tr>
@@ -90,7 +90,7 @@ export default async function (referral) {
               </tr>
             </table>
             <div style="display: none;">${Footer()}</div>
-            <div style="margin: 2rem 1rem 0 0; text-align: center;">
+            <div style="background-color: #f6f6ef; text-align: center;">
               <a
                 style="color: rgba(0,0,0,0.4); text-decoration: underline;"
                 href="https://attestate.com"

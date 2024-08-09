@@ -65,6 +65,15 @@ export default async function (theme) {
             border: 1px solid #828282;
           }
 
+          .desktop-nav {
+            display: none;
+          }
+
+          #hnmain {
+            margin: 0;
+            border: none;
+          }
+
           .flex-container {
             display: flex;
             align-items: flex-start; /* Align the top edges of the child elements */
