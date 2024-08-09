@@ -345,6 +345,54 @@ export const PrimaryActionButton = (props) => {
   );
 };
 
+export const TextConnectButton = (props) => {
+  return (
+    <ConnectButton.Custom>
+      {({ account, chain, mounted, openConnectModal }) => {
+        if (!mounted) return;
+        const connected = account && chain;
+        // NOTE: We are checking the cookie before calling getLocalAccount
+        // because if the cookie expired, then the user will have been taken to
+        // the paywall and this means we'll have to reload the page.
+        const localAccount = getLocalAccount(
+          account && account.address,
+          props.allowlist,
+        );
+
+        let address;
+        if (connected) {
+          address = account.address;
+        }
+        if (localAccount) {
+          address = localAccount.identity;
+        }
+        const isEligible =
+          address && eligible(props.allowlist, props.delegations, address);
+
+        const newIdentityCookie = getCookie("identity");
+        if (isEligible && newIdentityCookie && !window.initialIdentityCookie) {
+          console.log(
+            "Reloading because initial identity cookie was undefined but eligibly was recognized",
+          );
+          window.location.reload();
+        }
+
+        if ((props.required && !connected) || (!connected && !isEligible)) {
+          return (
+            <span
+              style={{ color: "black" }}
+              onClick={openConnectModal}
+              className="meta-link"
+            >
+              Connect
+            </span>
+          );
+        }
+      }}
+    </ConnectButton.Custom>
+  );
+};
+
 export const CustomConnectButton = (props) => {
   return (
     <ConnectButton.Custom>
@@ -435,6 +483,11 @@ export const ConnectedSimpleDisconnectButton = (props) => (
 export const ConnectedConnectButton = (props) => (
   <Connector {...props}>
     <CustomConnectButton {...props} />
+  </Connector>
+);
+export const ConnectedTextConnectButton = (props) => (
+  <Connector {...props}>
+    <TextConnectButton {...props} />
   </Connector>
 );
 export const ConnectedSettings = (props) => (

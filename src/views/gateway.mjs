@@ -64,7 +64,7 @@ export default async function (referral) {
                       crypto devs, founders, creators and investors.
                     </p>
                     <div
-                      style="display: flex; align-items: center; gap: 2rem; justify-content: center;"
+                      style="flex-direction: column; display: flex; align-items: center; justify-content: center;"
                     >
                       <a
                         href="/kiwipass-mint${referral
@@ -75,22 +75,26 @@ export default async function (referral) {
                       >
                         Sign up
                       </a>
-                      <div class="connect-button-wrapper">
-                        <a
-                          id="button-onboarding"
-                          class="button-secondary"
-                          style="display: flex; gap: 5px; align-items: center; justify-content: center;width: auto; font-weight: normal;"
+                      <br />
+                      <span style="color: black;"
+                        >Already have an account?
+                        <span> </span>
+                        <div
+                          style="color: black; font-weight: bold;"
+                          class="connect-button-wrapper"
                         >
-                          ${ethereum("width: 16px;")} Connect
-                        </a>
-                      </div>
+                          Connect
+                        </div>
+                      </span>
                     </div>
                   </div>
                 </div>
               </tr>
             </table>
             <div style="display: none;">${Footer()}</div>
-            <div style="background-color: #f6f6ef; text-align: center;">
+            <div
+              style="margin-top: 1rem; background-color: #f6f6ef; text-align: center;"
+            >
               <a
                 style="color: rgba(0,0,0,0.4); text-decoration: underline;"
                 href="https://attestate.com"

@@ -1,6 +1,9 @@
 :root {
   --font-family: Verdana, Geneva, sans-serif;
 }
+.connect-button-wrapper, .connect-button-wrapper div {
+  display: inline;
+}
 .redacted {
     -webkit-box-decoration-break: clone;
     filter: blur(2px);

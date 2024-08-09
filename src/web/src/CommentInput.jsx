@@ -142,6 +142,7 @@ const CommentInput = (props) => {
           width: "100%",
           border: "1px solid #828282",
           fontSize: "1rem",
+          borderRadius: "2px",
         }}
         value={text}
         onChange={(e) => setText(e.target.value)}

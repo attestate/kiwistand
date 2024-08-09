@@ -320,7 +320,7 @@ async function addConnectedComponents(allowlist, delegations, toast) {
     ConnectedSubmit,
     ConnectedProfile,
     ConnectedDisconnectButton,
-    ConnectedConnectButton,
+    ConnectedTextConnectButton,
     RefreshButton,
     ConnectedSimpleDisconnectButton,
   } = await import("./Navigation.jsx");
@@ -329,11 +329,7 @@ async function addConnectedComponents(allowlist, delegations, toast) {
   if (connectButton) {
     createRoot(connectButton).render(
       <StrictMode>
-        <ConnectedConnectButton
-          allowlist={allowlist}
-          className="button-secondary"
-          style={{ width: "auto" }}
-        />
+        <ConnectedTextConnectButton allowlist={allowlist} />
       </StrictMode>,
     );
   }
