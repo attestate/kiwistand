@@ -27,7 +27,9 @@ const header = async (theme, path) => {
             <div
               style="display: flex; flex-wrap: nowrap; justify-content: space-between; align-items: center;"
             >
-              <div class="kn-banner-desk">🥝 Kiwi News</div>
+              <div class="kn-banner-desk">
+                <a style="color: black;" href="/">🥝 Kiwi News</a>
+              </div>
               <nav-header-avatar class="sidebar-toggle" style="width: 33%;">
                 <div
                   style="padding: 0 13px 0 7px; background: rgba(0, 0, 0, 0.05); border-radius: 2px; display: ${path ===
