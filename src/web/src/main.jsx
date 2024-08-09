@@ -406,20 +406,6 @@ async function addConnectedComponents(allowlist, delegations, toast) {
   }
 }
 
-async function addSignupDialogue(allowlist, delegations) {
-  const dialogue = document.querySelector("nav-signup-dialogue");
-  if (dialogue) {
-    const { createRoot } = await import("react-dom/client");
-    const { StrictMode } = await import("react");
-    const SignupDialogue = (await import("./SignupDialogue.jsx")).default;
-    createRoot(dialogue).render(
-      <StrictMode>
-        <SignupDialogue allowlist={allowlist} delegations={delegations} />
-      </StrictMode>,
-    );
-  }
-}
-
 async function addPasskeysDialogue(toast, allowlist) {
   const elem = document.querySelector("nav-passkeys-backup");
   if (elem) {
@@ -788,7 +774,6 @@ async function start() {
     addSubscriptionButton(await allowlistPromise),
     addTGLink(await allowlistPromise),
     addPasskeysDialogue(toast, await allowlistPromise),
-    addSignupDialogue(await allowlistPromise, await delegationsPromise),
     addModals(await allowlistPromise, await delegationsPromise, toast),
     addNFTPrice(),
     addAvatar(await allowlistPromise),

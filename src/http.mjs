@@ -985,6 +985,14 @@ export async function launch(trie, libp2p) {
     );
     return content;
   }
+  app.get("/profile", async (request, reply) => {
+    if (!utils.isAddress(request.cookies.identity)) {
+      // NOTE: We redirect to community in case the user isn't logged in
+      return reply.redirect(301, `/community`);
+    }
+    const profile = await resolve(request.cookies.identity);
+    return reply.redirect(301, `/${profile.ens}`);
+  });
   app.get("/upvotes", async (request, reply) => {
     if (!utils.isAddress(request.query.address)) {
       return reply
@@ -1027,6 +1035,11 @@ export async function launch(trie, libp2p) {
   });
 
   app.get("/submit", async (request, reply) => {
+    if (!utils.isAddress(request.cookies.identity)) {
+      // NOTE: We redirect to the main page in case the user isn't logged in
+      return reply.redirect(301, `/`);
+    }
+
     const { url, title } = request.query;
     const content = await submit(
       reply.locals.theme,

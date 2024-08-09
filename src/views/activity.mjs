@@ -118,7 +118,7 @@ function generateCommentRow(activity, identity, bgColor, theme) {
 function generateRow(lastUpdate, theme) {
   return (activity, i) => {
     const bgColor =
-      lastUpdate < activity.timestamp ? "rgba(0,0,0,0.05)" : "none";
+      lastUpdate < activity.timestamp ? "rgba(255,255,255,0.3)" : "none";
 
     if (activity.verb === "commented" || activity.verb === "involved") {
       const identity = activity.identities[0];

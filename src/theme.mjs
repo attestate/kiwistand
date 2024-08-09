@@ -1,5 +1,5 @@
 const theme = {
-  color: "#654515",
+  color: "#AFC046",
   id: 14,
   emoji: "🥝",
   name: "Kiwi News",

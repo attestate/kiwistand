@@ -208,6 +208,7 @@ const secondheader = (theme, site, period, domain) => {
   return html`
     <td>
       <div
+        class="second-header"
         style="background-color: #e6e6df; min-height: 40px; display: flex; justify-content: space-between; align-items: center; padding: 10px 15px 10px 15px; color: white;"
       >
         <div style="display: flex;">
@@ -283,6 +284,7 @@ const secondheader = (theme, site, period, domain) => {
 
       ${site === "best"
         ? html` <div
+            class="second-header"
             style="background-color: #e6e6df; min-height: 40px; display: flex; justify-content: space-between; align-items: center; padding: 0 15px 10px 15px; color: white;"
           >
             <div>

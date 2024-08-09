@@ -27,7 +27,7 @@ const header = async (theme, path) => {
             <div
               style="display: flex; flex-wrap: nowrap; justify-content: space-between; align-items: center;"
             >
-              <div class="kn-banner-desk">Kiwi News</div>
+              <div class="kn-banner-desk">🥝 Kiwi News</div>
               <nav-header-avatar class="sidebar-toggle" style="width: 33%;">
                 <div
                   style="padding: 0 13px 0 7px; background: rgba(0, 0, 0, 0.05); border-radius: 2px; display: ${path ===
@@ -54,6 +54,7 @@ const header = async (theme, path) => {
               </nav-header-avatar>
 
               <a
+                class="mobile-center"
                 href="/"
                 style="width: 33%; display: flex; justify-content: center;"
               >
@@ -63,8 +64,14 @@ const header = async (theme, path) => {
                   </b>
                 </span>
               </a>
-
+              <div class="desktop-nav">
+                <a class="meta-link" href="/">Feed</a>
+                <a class="meta-link" href="/submit">Submit</a>
+                <a class="meta-link" href="/community">Community</a>
+                <a class="meta-link" href="/profile">Profile</a>
+              </div>
               <div
+                class="header-bell"
                 style="width: 33%; padding: 7px 7px 7px 0; display: flex; justify-content: flex-end;"
               >
                 <div id="bell"></div>

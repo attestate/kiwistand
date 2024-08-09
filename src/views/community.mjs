@@ -343,9 +343,7 @@ export default async function (trie, theme, query, identity) {
                             ${revenueMap[ensData.address] &&
                             BigInt(revenueMap[ensData.address]) >
                               100000000000000n
-                              ? html`<a
-                                  href="https://paragraph.xyz/@kiwi-updates/karma-rewards-program"
-                                  target="_blank"
+                              ? html`<a href="/referral"
                                   ><span
                                     id="spark-container"
                                     style="border-bottom: 2px dotted; margin-right: 0.5rem;"

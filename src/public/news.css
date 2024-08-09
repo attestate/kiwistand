@@ -360,7 +360,7 @@ body {
   }
 
     #hnmain {
-      border: 1px solid rgba(0,0,0,0.1);
+      border: 1px solid #ccc;
       border-top: none;
       border-top-left-radius: 0;
       border-top-right-radius: 0;
@@ -374,6 +374,9 @@ body {
 }
 /* mobile device */
  @media only screen and (min-width : 300px) and (max-width : 750px) {
+    #hnmain {
+      border: none;
+    }
     .gateway-container {
       padding: 0 5vw !important;
     }
@@ -602,8 +605,27 @@ body {
   align-items: center;
 }
 
+.desktop-nav {
+  display: none;
+}
+
 /* Media query for larger screens */
  @media (min-width: 1150px) {
+    .mobile-center {
+      display: none !important;
+    }
+    .header-bell {
+      width: 20% !important;
+    }
+    .desktop-nav {
+      width: 47%;
+      display: flex;
+      justify-content: space-between;
+      margin-top: 5px;
+    }
+    .sidebar {
+      display: none;
+    }
     .gateway-banner {
       max-width: 400px !important;
       margin-top: 5rem;
@@ -624,7 +646,11 @@ body {
       bottom: 0px !important;
     }
     #hnmain {
-     width: 70ch;
+      width: 70ch;
+      margin-top: 1rem;
+      margin-bottom: 1rem;
+      border-top: 1px solid #ccc;
+      border-radius: 2px;
     }
     #bell {
       display: block;
@@ -636,16 +662,23 @@ body {
       display: none !important;
     }
     #hnmain > table:first-of-type > tbody > tr:first-of-type {
-         background-color: #e6e6df;
+         background-color: #f6f6ef !important;
     }
     #hnmain table {
       border-left: none;
       border-right: none;
     }
-    body {
-         background-color: rgb(246, 246, 239);
+    .second-header, .third-header td div, footer {
+      background-color: #f6f6ef !important;
     }
-     a[href="/submit"] {
+    footer {
+      border-top: 1px solid #ccc;
+      padding-bottom: 1rem;
+    }
+    body {
+      background-color: #E6E6DF;
+    }
+    .submit-button {
          display: none;
     }
      .sidebar a[href="/submit"] {
@@ -659,12 +692,13 @@ body {
      .pagetop {
          display: none 
     }
-     .kn-banner-desk {
-         width: 200px;
-         display: block;
-         color: black;
-         font-size: 1.1rem;
-         font-weight: bold;
+    .kn-banner-desk {
+      width: 33%;
+      margin-left: 1rem;
+      display: block;
+      color: black;
+      font-size: 1.1rem;
+      font-weight: bold;
     }
      .sidebar .kiwi-logo {
          display: block;

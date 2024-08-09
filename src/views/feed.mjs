@@ -630,19 +630,6 @@ export default async function (trie, theme, page, domain) {
                       </a>
                     </td>
                   </tr>`}
-              <tr
-                style="display: block; padding: 10px; background-color: #E6E6DF;"
-              >
-                <td>
-                  <span style="color: black;"
-                    >Hungry for more links? Check out the
-                  </span>
-                  <span> </span>
-                  <a href="/best" style="color: black;"
-                    ><u>Best links of the week!</u></a
-                  >
-                </td>
-              </tr>
             </table>
             ${Footer(theme, path)}
           </div>

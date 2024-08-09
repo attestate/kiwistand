@@ -110,11 +110,6 @@ export async function page(theme, notifications) {
               <tr class="third-header">
                 ${ThirdHeader(theme, "comments")}
               </tr>
-              <tr
-                style="display: block; padding-bottom: 6px; background-color: #e6e6df"
-              >
-                <td></td>
-              </tr>
               ${feed}
             </table>
             ${Footer(theme, "/comments")}
