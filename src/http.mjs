@@ -991,7 +991,10 @@ export async function launch(trie, libp2p) {
       return reply.redirect(301, `/community`);
     }
     const profile = await resolve(request.cookies.identity);
-    return reply.redirect(301, `/${profile.ens}`);
+    if (profile.ens) {
+      return reply.redirect(301, `/${profile.ens}`);
+    }
+    return reply.redirect(301, `/upvotes?address=${request.cookies.identity}`);
   });
   app.get("/upvotes", async (request, reply) => {
     if (!utils.isAddress(request.query.address)) {
