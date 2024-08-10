@@ -33,9 +33,13 @@ export default async function (theme, userAddress) {
 
           #hnmain {
             width: 100%;
+            margin-top: 0;
+            margin-bottom: 0;
+            border: none;
           }
 
-          .sidebar {
+          .sidebar,
+          .desktop-nav {
             display: none;
           }
           .sidebar-toggle {

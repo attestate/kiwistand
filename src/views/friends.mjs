@@ -67,8 +67,14 @@ export default async function (theme) {
             border-bottom: none !important;
           }
 
-          .hnmain {
-            border: 1px solid #828282;
+          #hnmain {
+            margin-top: 0;
+            margin-bottom: 0;
+            border: none;
+          }
+
+          .desktop-nav {
+            display: none;
           }
 
           .flex-container {

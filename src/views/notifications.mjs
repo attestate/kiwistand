@@ -27,7 +27,12 @@ export default async function (theme) {
           }
           #hnmain {
             width: 100%;
-            border-bottom: none;
+            border: none;
+            margin-top: 0;
+            margin-bottom: 0;
+          }
+          .desktop-nav {
+            display: none;
           }
         </style>
       </head>

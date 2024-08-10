@@ -27,7 +27,13 @@ export default async function (theme) {
               border: none;
             }
           }
-          .sidebar {
+          #hnmain {
+            border: none;
+            margin-top: 0;
+            margin-bottom: 0;
+          }
+          .sidebar,
+          .desktop-nav {
             display: none;
           }
           .sidebar-toggle {

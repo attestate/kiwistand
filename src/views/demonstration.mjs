@@ -46,6 +46,14 @@ export default async function index(theme) {
           .sidebar-toggle {
             visibility: hidden;
           }
+          #hnmain {
+            margin-top: 0;
+            margin-bottom: 0;
+            border: none;
+          }
+          .desktop-nav {
+            display: none;
+          }
           @media screen and (min-width: 769px) {
             .sidebar {
               display: none;
