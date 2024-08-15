@@ -354,6 +354,9 @@ function BackupKey(props) {
               Passkey (1/2)
             </button>
           </span>
+          <br />
+          <br />
+          {props.redirectButton ? props.redirectButton : ""}
         </div>
       ) : (
         <div>
@@ -375,6 +378,9 @@ function BackupKey(props) {
               key (2/2)
             </button>
           </span>
+          <br />
+          <br />
+          {props.redirectButton ? props.redirectButton : ""}
         </div>
       )}
     </div>

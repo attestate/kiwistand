@@ -312,11 +312,17 @@ const DelegateButton = (props) => {
 
   if (key && wallet) {
     if (supportsPasskeys() && indexedDelegation) {
+      const skipButton = (
+        <a onClick={props.callback} href="" class="meta-link">
+          Don't want to back up your key? skip dialogue
+        </a>
+      );
       return (
         <Passkeys
           allowlist={props.allowlist}
           toast={props.toast}
           callback={props.callback}
+          redirectButton={skipButton}
         />
       );
     } else if (window.location.pathname === "/start") {

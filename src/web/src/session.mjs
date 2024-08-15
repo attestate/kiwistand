@@ -63,6 +63,16 @@ export function isIOS() {
   return iOS;
 }
 
+export function isFirefox() {
+  const ua = navigator.userAgent;
+  return !!ua.match(/Firefox/i);
+}
+
+export function isLinux() {
+  const platform = navigator.platform;
+  return !!platform.match(/Linux/i);
+}
+
 export function isBraveOnIOS() {
   const ua = navigator.userAgent;
   const iOS = !!ua.match(/iPad/i) || !!ua.match(/iPhone/i);
@@ -78,7 +88,7 @@ export function isChromeOnIOS() {
 }
 
 export function supportsPasskeys() {
-  return !isAndroid();
+  return !isAndroid() && !isLinux() && !isFirefox();
 }
 
 export function isAndroid() {
