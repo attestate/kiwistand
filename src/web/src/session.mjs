@@ -50,10 +50,6 @@ export function getLocalAccount(identity, allowlist) {
     };
   }
 
-  // TODO: We can probably remove this
-  if (Object.keys(keys).length === 0 && identity) {
-    setCookie("identity", identity, tenYearsInSeconds);
-  }
   return null;
 }
 
