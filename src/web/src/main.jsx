@@ -329,7 +329,10 @@ async function addConnectedComponents(allowlist, delegations, toast) {
   if (connectButton) {
     createRoot(connectButton).render(
       <StrictMode>
-        <ConnectedTextConnectButton allowlist={allowlist} />
+        <ConnectedTextConnectButton
+          allowlist={allowlist}
+          delegations={delegations}
+        />
       </StrictMode>,
     );
   }

@@ -8,7 +8,12 @@ import { PasskeysSVG } from "./icons.jsx";
 import theme from "./theme.mjs";
 import { useProvider, client, chains } from "./client.mjs";
 import { ProgressBar } from "./DelegateButton.jsx";
-import { getLocalAccount, supportsPasskeys } from "./session.mjs";
+import {
+  getLocalAccount,
+  supportsPasskeys,
+  setCookie,
+  tenYearsInSeconds,
+} from "./session.mjs";
 
 export const rp = {
   name: "Kiwi News",
@@ -76,6 +81,7 @@ export const RestoreDialogue = (allowlist, delegations, toast) => {
       const wallet = new Wallet(decodedData, provider);
       const identity = eligible(allowlist, delegations, wallet.address);
       localStorage.setItem(`-kiwi-news-${identity}-key`, decodedData);
+      setCookie("identity", identity, tenYearsInSeconds);
       location.reload();
     }
 

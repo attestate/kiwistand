@@ -15,7 +15,7 @@ export function getCookie(name) {
   return matches ? decodeURIComponent(matches[1]) : undefined;
 }
 
-const tenYearsInSeconds = 10 * 365 * 24 * 60 * 60;
+export const tenYearsInSeconds = 10 * 365 * 24 * 60 * 60;
 export function getLocalAccount(identity, allowlist) {
   const schema = /^-kiwi-news-(0x[a-fA-F0-9]{40})-key$/;
   const keys = Object.entries(localStorage).reduce((obj, [key, value]) => {
