@@ -19,7 +19,9 @@ import * as registry from "../chainstate/registry.mjs";
 import { count } from "./feed.mjs";
 import { listNewest } from "../cache.mjs";
 import Row, { extractDomain } from "./components/row.mjs";
+import InviteRow from "./components/invite-row.mjs";
 import * as feeds from "../feeds.mjs";
+import * as price from "../price.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -102,6 +104,9 @@ export async function recompute() {
 }
 
 export default async function (trie, theme) {
+  const mints = await registry.mints();
+  const referralRewardEth = await price.getReferralReward(mints);
+
   let items = stories;
   const path = "/new";
   const ogImage = "https://news.kiwistand.com/kiwi_new_feed_page.png";
@@ -129,9 +134,34 @@ export default async function (trie, theme) {
               <tr>
                 ${SecondHeader(theme, "new")}
               </tr>
-              ${items.map(
-                Row(null, "/best", undefined, null, null, null, recentJoiners),
-              )}
+              ${items
+                .slice(0, 5)
+                .map(
+                  Row(
+                    null,
+                    "/best",
+                    undefined,
+                    null,
+                    null,
+                    null,
+                    recentJoiners,
+                  ),
+                )}
+              ${InviteRow(referralRewardEth)}
+              ${items
+                .slice(5)
+                .map(
+                  Row(
+                    null,
+                    "/best",
+                    undefined,
+                    null,
+                    null,
+                    null,
+                    recentJoiners,
+                  ),
+                )}
+
               <tr
                 style="display: block; padding: 10px; background-color: #E6E6DF"
               >

@@ -342,6 +342,16 @@ export async function getOnchainPrice() {
   return saleDetails.publicSalePrice;
 }
 
+export async function getReferralReward(mints) {
+  const website = await getPrice(mints);
+  const onchain = await getOnchainPrice();
+  const referralReward = (website.price - onchain) / 2;
+  const referralRewardEth = parseFloat(
+    ethers.utils.formatEther(referralReward.toString()),
+  ).toFixed(4);
+  return referralRewardEth;
+}
+
 export async function getSalesData() {
   const today = new Date();
   const mints = await registry.mints();

@@ -139,6 +139,20 @@ async function addSubmitButton(allowlist, delegations, toast) {
   }
 }
 
+async function addInviteLink(toast) {
+  const linkContainer = document.querySelector("#invitelink-container");
+  if (linkContainer) {
+    const { createRoot } = await import("react-dom/client");
+    const { StrictMode } = await import("react");
+    const InviteLink = (await import("./InviteLink.jsx")).default;
+
+    createRoot(linkContainer).render(
+      <StrictMode>
+        <InviteLink toast={toast} />
+      </StrictMode>,
+    );
+  }
+}
 async function addDynamicNavElements() {
   const navElements = document.querySelectorAll("[data-icon]");
   if (navElements && navElements.length > 0) {
@@ -769,6 +783,7 @@ async function start() {
 
   const results1 = await Promise.allSettled([
     addDynamicNavElements(),
+    addInviteLink(toast),
     addCommentInput(toast, await allowlistPromise, await delegationsPromise),
     addSubscriptionButton(await allowlistPromise),
     addTGLink(await allowlistPromise),

@@ -25,6 +25,7 @@ import * as store from "../store.mjs";
 import * as id from "../id.mjs";
 import * as moderation from "./moderation.mjs";
 import { countOutbounds } from "../cache.mjs";
+import * as price from "../price.mjs";
 import * as curation from "./curation.mjs";
 import * as registry from "../chainstate/registry.mjs";
 import log from "../logger.mjs";
@@ -32,6 +33,7 @@ import { EIP712_MESSAGE } from "../constants.mjs";
 import Row, { extractDomain } from "./components/row.mjs";
 import * as karma from "../karma.mjs";
 import { metadata } from "../parser.mjs";
+import InviteRow from "./components/invite-row.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -476,6 +478,8 @@ export async function index(trie, page, domain) {
 const pages = {};
 
 export default async function (trie, theme, page, domain) {
+  const mints = await registry.mints();
+  const referralRewardEth = await price.getReferralReward(mints);
   const path = "/";
   const totalStories = parseInt(env.TOTAL_STORIES, 10);
 
@@ -605,7 +609,21 @@ export default async function (trie, theme, page, domain) {
                       )}
                     ${Row(start, "/", "", null, null, null, recentJoiners)(ad)}
                     ${stories
-                      .slice(3)
+                      .slice(3, 5)
+                      .map(
+                        Row(
+                          start,
+                          "/",
+                          undefined,
+                          null,
+                          null,
+                          null,
+                          recentJoiners,
+                        ),
+                      )}
+                    ${InviteRow(referralRewardEth)}
+                    ${stories
+                      .slice(5)
                       .map(
                         Row(
                           start,
