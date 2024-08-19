@@ -25,9 +25,17 @@ const html = htm.bind(vhtml);
 
 export function truncateComment(comment, maxLength = 260) {
   const emptyLineIndex = comment.indexOf("\n\n");
-  if (emptyLineIndex !== -1 && emptyLineIndex < maxLength) {
+  if (emptyLineIndex !== -1 && emptyLineIndex < maxLength)
     return comment.slice(0, emptyLineIndex);
+
+  const lastLinkStart = comment.lastIndexOf("https://", maxLength);
+  if (lastLinkStart !== -1 && lastLinkStart < maxLength) {
+    const breakPoint = comment.lastIndexOf(" ", lastLinkStart);
+    return breakPoint !== -1
+      ? comment.slice(0, breakPoint) + "..."
+      : comment.slice(0, lastLinkStart) + "...";
   }
+
   if (comment.length <= maxLength) return comment;
   return comment.slice(0, comment.lastIndexOf(" ", maxLength)) + "...";
 }

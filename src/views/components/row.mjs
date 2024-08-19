@@ -186,8 +186,8 @@ const row = (
                             )}</mark
                           >`
                         : truncateLongWords(DOMPurify.sanitize(story.title))}
-                      <span> </span>
                     </a>
+                    <span> </span>
                   </span>
                   <span> </span>
                   <span class="story-domain" style="white-space: nowrap;"
