@@ -23,7 +23,11 @@ import cache, { getAllComments } from "../cache.mjs";
 
 const html = htm.bind(vhtml);
 
-function truncateComment(comment, maxLength = 260) {
+export function truncateComment(comment, maxLength = 260) {
+  const emptyLineIndex = comment.indexOf("\n\n");
+  if (emptyLineIndex !== -1 && emptyLineIndex < maxLength) {
+    return comment.slice(0, emptyLineIndex) + "...";
+  }
   if (comment.length <= maxLength) return comment;
   return comment.slice(0, comment.lastIndexOf(" ", maxLength)) + "...";
 }

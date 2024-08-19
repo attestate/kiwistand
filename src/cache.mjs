@@ -469,6 +469,28 @@ export function getComments(identity) {
   );
 }
 
+export function getLastComment(submissionId) {
+  const lastComment = db
+    .prepare(
+      `
+     SELECT * FROM comments WHERE submission_id = ? ORDER BY timestamp DESC LIMIT 1
+   `,
+    )
+    .get(submissionId);
+
+  if (!lastComment) return null;
+
+  const { id, submission_id, ...rest } = lastComment;
+  const [, index] = id.split("0x");
+
+  return {
+    ...rest,
+    submissionId: submission_id,
+    index,
+    type: "comment",
+  };
+}
+
 export function getSubmission(index, href) {
   let submission;
   if (index) {

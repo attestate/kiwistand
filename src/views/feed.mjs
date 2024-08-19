@@ -24,7 +24,7 @@ import { custom } from "./components/head.mjs";
 import * as store from "../store.mjs";
 import * as id from "../id.mjs";
 import * as moderation from "./moderation.mjs";
-import { countOutbounds } from "../cache.mjs";
+import { countOutbounds, getLastComment } from "../cache.mjs";
 import * as price from "../price.mjs";
 import * as curation from "./curation.mjs";
 import * as registry from "../chainstate/registry.mjs";
@@ -426,6 +426,11 @@ export async function index(trie, page, domain) {
       }
     }
 
+    const lastComment = getLastComment(`kiwi:0x${story.index}`);
+    if (lastComment && lastComment.identity) {
+      lastComment.identity = await ens.resolve(lastComment.identity);
+    }
+
     const isOriginal = Object.keys(writers).some(
       (domain) =>
         normalizeUrl(story.href).startsWith(domain) &&
@@ -434,6 +439,7 @@ export async function index(trie, page, domain) {
 
     stories.push({
       ...story,
+      lastComment,
       displayName: ensData.displayName,
       submitter: ensData,
       avatars: avatars,

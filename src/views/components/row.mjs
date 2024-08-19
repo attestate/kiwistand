@@ -4,6 +4,7 @@ import { formatDistanceToNowStrict } from "date-fns";
 import { URL } from "url";
 import DOMPurify from "isomorphic-dompurify";
 
+import { truncateComment } from "../comments.mjs";
 import { commentCounts } from "../../store.mjs";
 import ShareIcon from "./shareicon.mjs";
 import CopyIcon from "./copyicon.mjs";
@@ -104,7 +105,8 @@ const row = (
 ) => {
   const size = 12;
   return (story, i) => {
-    const commentCount = commentCounts.get(`kiwi:0x${story.index}`) || 0;
+    const submissionId = `kiwi:0x${story.index}`;
+    const commentCount = commentCounts.get(submissionId) || 0;
     return html`
       <tr>
         <td>
@@ -359,6 +361,40 @@ const row = (
                   </div>`
                 : ""}
             </div>
+            ${story.lastComment && story.lastComment.identity.safeAvatar
+              ? html` <div
+                  class="comment-preview-0x${story.index}"
+                  style="cursor: pointer; margin: 6px 0 9px 0; display: flex; justify-content: center;"
+                >
+                  <div
+                    onclick="document.querySelector('.comment-preview-0x${story.index}').style.display = 'none';window.dispatchEvent(new CustomEvent('open-comments-0x${story.index}'));"
+                    style="width: 90%;"
+                  >
+                    <div style="display: inline-flex; align-items: start;">
+                      <img
+                        src="${DOMPurify.sanitize(
+                          story.lastComment.identity.safeAvatar,
+                        )}"
+                        alt="avatar"
+                        style="border: 1px solid #ccc; width: ${size}px; height: ${size}px; border-radius: 2px; margin-right: 4px;"
+                      />
+                      <span style="font-weight: bold;"
+                        >${DOMPurify.sanitize(
+                          story.lastComment.identity.displayName,
+                        )}:</span
+                      >
+                    </div>
+                    <span> </span>
+                    <span
+                      >${truncateComment(
+                        DOMPurify.sanitize(story.lastComment.title),
+                      )}</span
+                    >
+                    <span> </span>
+                    <span style="text-decoration: underline;">Read more</span>
+                  </div>
+                </div>`
+              : null}
             ${path !== "/stories"
               ? html`<div
                   class="comment-section"

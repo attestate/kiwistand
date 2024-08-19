@@ -17,7 +17,7 @@ import * as store from "../store.mjs";
 import * as moderation from "./moderation.mjs";
 import * as registry from "../chainstate/registry.mjs";
 import { count } from "./feed.mjs";
-import { listNewest } from "../cache.mjs";
+import { getLastComment, listNewest } from "../cache.mjs";
 import Row, { extractDomain } from "./components/row.mjs";
 import InviteRow from "./components/invite-row.mjs";
 import * as feeds from "../feeds.mjs";
@@ -78,6 +78,11 @@ export async function recompute() {
       continue;
     }
 
+    const lastComment = getLastComment(`kiwi:0x${story.index}`);
+    if (lastComment && lastComment.identity) {
+      lastComment.identity = await ens.resolve(lastComment.identity);
+    }
+
     const ensData = await ens.resolve(story.identity);
 
     let avatars = [];
@@ -94,6 +99,7 @@ export async function recompute() {
     );
     nextStories.push({
       ...story,
+      lastComment,
       displayName: ensData.displayName,
       avatars: avatars,
       isOriginal,
