@@ -7,6 +7,16 @@ import { getAccount } from "@wagmi/core";
 import { isRunningPWA, getCookie, getLocalAccount } from "./session.mjs";
 import theme from "./theme.mjs";
 
+function storeReferral() {
+  if (!localStorage.getItem("--kiwi-news-original-referral")) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const referral = urlParams.get("referral");
+    if (referral) {
+      localStorage.setItem("--kiwi-news-original-referral", referral);
+    }
+  }
+}
+
 function commentCountSignifier() {
   const isStoriesPage = window.location.pathname === "/stories";
   const indexQueryParam = new URLSearchParams(window.location.search).get(
@@ -751,6 +761,8 @@ async function start() {
   // local storage contains the respective private key, we want them to reload
   // the page. See the logic in CustomConnectButton to follow this flow.
   window.initialIdentityCookie = getCookie("identity");
+
+  storeReferral();
   // NOTE: We don't want pull to refresh for the submission page as this could
   // mess up the user's input on an accidential scroll motion.
   if (isRunningPWA() && window.location.pathname !== "/submit") {

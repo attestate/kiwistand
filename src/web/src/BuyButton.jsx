@@ -75,9 +75,7 @@ export async function prepare(key) {
 
   const zeroAddress = "0x0000000000000000000000000000000000000000";
   let referral = zeroAddress;
-  const queryReferral = new URLSearchParams(window.location.search).get(
-    "referral",
-  );
+  const queryReferral = localStorage.getItem("--kiwi-news-original-referral");
   try {
     referral = getAddress(queryReferral);
   } catch (err) {
