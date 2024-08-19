@@ -414,6 +414,21 @@ export async function index(trie, page, domain) {
     // noop
   }
 
+  async function addMetadata(post) {
+    let result;
+    try {
+      result = await metadata(post.href);
+    } catch (err) {
+      return null;
+    }
+    if (result && !result.image) return;
+
+    return {
+      ...post,
+      metadata: result,
+    };
+  }
+
   let stories = [];
   for await (let story of storyPromises) {
     const ensData = await ens.resolve(story.identity);
@@ -437,6 +452,11 @@ export async function index(trie, page, domain) {
         writers[domain] === story.identity,
     );
 
+    const augmentedStory = await addMetadata(story);
+    if (augmentedStory) {
+      story = augmentedStory;
+    }
+
     stories.push({
       ...story,
       lastComment,
@@ -447,20 +467,6 @@ export async function index(trie, page, domain) {
     });
   }
 
-  async function addMetadata(post) {
-    let result;
-    try {
-      result = await metadata(post.href);
-    } catch (err) {
-      return null;
-    }
-    if (result && !result.image) return;
-
-    return {
-      ...post,
-      metadata: result,
-    };
-  }
   let originals = stories
     .filter((story) => story.isOriginal)
     .slice(0, 6)

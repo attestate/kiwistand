@@ -160,165 +160,185 @@ const row = (
                 </div>
               </div>
               <div
-                style="min-height: 55px; display:flex; justify-content: center; flex-direction: column; flex-grow: 1; line-height: 1.3; padding: 8px 3px 5px 0;"
+                style="display: flex; align-items: center; flex-grow: 1; gap: 0.25rem;"
               >
-                <span>
-                  <span class="story-link-container">
-                    <a
-                      href="${interactive || story.image
-                        ? ""
-                        : `/outbound?url=${encodeURIComponent(
-                            addOrUpdateReferrer(
-                              DOMPurify.sanitize(story.href),
-                              story.identity,
-                            ),
-                          )}`}"
-                      data-story-link="/stories?index=0x${story.index}"
+                ${story.metadata && story.metadata.image && !interactive
+                  ? html`<a
+                      href="${`/outbound?url=${encodeURIComponent(
+                        addOrUpdateReferrer(
+                          DOMPurify.sanitize(story.href),
+                          story.identity,
+                        ),
+                      )}`}"
                       target="_blank"
-                      class="story-link"
-                      style="line-height: 13pt; font-size: 13pt;"
                     >
-                      ${story.isOriginal
-                        ? html`<mark
-                            style="background-color: rgba(255,255,0, 0.05); padding: 0px 2px;"
-                            >${truncateLongWords(
-                              DOMPurify.sanitize(story.title),
-                            )}</mark
-                          >`
-                        : truncateLongWords(DOMPurify.sanitize(story.title))}
-                    </a>
+                      <img
+                        class="row-image"
+                        style="border: 1px solid #ccc; border-radius: 2px; height: 55px; object-fit: contain;"
+                        src="${DOMPurify.sanitize(story.metadata.image)}"
+                    /></a>`
+                  : null}
+                <div
+                  style="min-height: 55px; display:flex; justify-content: center; flex-direction: column; flex-grow: 1; line-height: 1.3; padding: 8px 3px 5px 0;"
+                >
+                  <span>
+                    <span class="story-link-container">
+                      <a
+                        href="${interactive
+                          ? ""
+                          : `/outbound?url=${encodeURIComponent(
+                              addOrUpdateReferrer(
+                                DOMPurify.sanitize(story.href),
+                                story.identity,
+                              ),
+                            )}`}"
+                        data-story-link="/stories?index=0x${story.index}"
+                        target="_blank"
+                        class="story-link"
+                        style="line-height: 13pt; font-size: 13pt;"
+                      >
+                        ${story.isOriginal
+                          ? html`<mark
+                              style="background-color: rgba(255,255,0, 0.05); padding: 0px 2px;"
+                              >${truncateLongWords(
+                                DOMPurify.sanitize(story.title),
+                              )}</mark
+                            >`
+                          : truncateLongWords(DOMPurify.sanitize(story.title))}
+                      </a>
+                      <span> </span>
+                    </span>
                     <span> </span>
+                    <span class="story-domain" style="white-space: nowrap;"
+                      >(${!interactive && (path === "/" || path === "/best")
+                        ? html`<a
+                            href="${path}?domain=${extractDomain(
+                              DOMPurify.sanitize(story.href),
+                            )}${period ? `&period=${period}` : ""}"
+                            style="color: #828282;"
+                            >${extractDomain(DOMPurify.sanitize(story.href))}</a
+                          >`
+                        : extractDomain(DOMPurify.sanitize(story.href))})</span
+                    >
                   </span>
-                  <span> </span>
-                  <span class="story-domain" style="white-space: nowrap;"
-                    >(${!interactive && (path === "/" || path === "/best")
-                      ? html`<a
-                          href="${path}?domain=${extractDomain(
-                            DOMPurify.sanitize(story.href),
-                          )}${period ? `&period=${period}` : ""}"
-                          style="color: #828282;"
-                          >${extractDomain(DOMPurify.sanitize(story.href))}</a
-                        >`
-                      : extractDomain(DOMPurify.sanitize(story.href))})</span
-                  >
-                </span>
-                <div style="font-size: 10pt;">
-                  <span style="opacity:0.8;">
-                    ${path !== "/stories" &&
-                    story.avatars.length > 3 &&
-                    html`
-                      <span>
-                        <div
-                          style="margin-left: ${size /
-                          2}; top: 2px; display: inline-flex; position:relative;"
-                        >
-                          ${story.avatars.slice(0, 5).map(
-                            (avatar, index) => html`
-                              <img
-                                loading="lazy"
-                                src="${avatar}"
-                                alt="avatar"
-                                style="z-index: ${index}; width: ${size}px; height:
- ${size}px; border: 1px solid #828282; border-radius: 2px; margin-left: -${size /
-                                2}px;"
-                              />
-                            `,
-                          )}
-                        </div>
-                        <span style="opacity:0.6"> • </span>
-                      </span>
-                    `}
-                    ${story.index
-                      ? html`
-                          <a
-                            class="meta-link"
-                            href="/stories?index=0x${story.index}"
+                  <div style="font-size: 10pt;">
+                    <span style="opacity:0.8;">
+                      ${path !== "/stories" &&
+                      story.avatars.length > 3 &&
+                      html`
+                        <span>
+                          <div
+                            style="margin-left: ${size /
+                            2}; top: 2px; display: inline-flex; position:relative;"
                           >
+                            ${story.avatars.slice(0, 5).map(
+                              (avatar, index) => html`
+                                <img
+                                  loading="lazy"
+                                  src="${avatar}"
+                                  alt="avatar"
+                                  style="z-index: ${index}; width: ${size}px; height:
+ ${size}px; border: 1px solid #828282; border-radius: 2px; margin-left: -${size /
+                                  2}px;"
+                                />
+                              `,
+                            )}
+                          </div>
+                          <span style="opacity:0.6"> • </span>
+                        </span>
+                      `}
+                      ${story.index
+                        ? html`
+                            <a
+                              class="meta-link"
+                              href="/stories?index=0x${story.index}"
+                            >
+                              ${formatDistanceToNowStrict(
+                                new Date(story.timestamp * 1000),
+                              )}
+                              <span> ago</span>
+                            </a>
+                          `
+                        : html`
                             ${formatDistanceToNowStrict(
                               new Date(story.timestamp * 1000),
                             )}
                             <span> ago</span>
-                          </a>
-                        `
-                      : html`
-                          ${formatDistanceToNowStrict(
-                            new Date(story.timestamp * 1000),
-                          )}
-                          <span> ago</span>
-                        `}
-                    <span> by </span>
-                    ${story.identity
-                      ? html`<a
-                          href="${interactive
-                            ? ""
-                            : story.submitter && story.submitter.ens
-                            ? `/${story.submitter.ens}`
-                            : `/upvotes?address=${story.identity}`}"
-                          class="meta-link"
-                          style="${recentJoiners &&
-                          recentJoiners.includes(story.identity)
-                            ? `color: ${theme.color};`
-                            : ""}"
-                        >
-                          ${story.displayName}
-                        </a>`
-                      : html`<a
-                          target="_blank"
-                          class="meta-link"
-                          href="https://paragraph.xyz/@kiwi-updates/kiwi-feedbot-submissions-open"
-                          >${story.displayName}</a
-                        >`}
-                    ${story.collateral
-                      ? html` <a
-                          class="meta-link"
-                          href="https://github.com/attestate/ad?tab=readme-ov-file#how-does-it-work"
-                          target="_blank"
-                          >(sponsored)</a
-                        >`
-                      : null}
-                    <span>
-                      ${interactive || hideCast
-                        ? null
-                        : html`
-                            <span class="share-container">
-                              <span style="opacity:0.6"> • </span>
-                              <a
-                                href="#"
-                                class="caster-link share-link"
-                                title="Share"
-                                style="white-space: nowrap;"
-                                onclick="event.preventDefault(); navigator.share({url: 'https://news.kiwistand.com/stories?index=0x${story.index}' });"
-                              >
-                                ${ShareIcon(
-                                  "padding: 0 3px 1px 0; vertical-align: bottom; height: 13px; width: 13px;",
-                                )}
-                                Share
-                              </a>
-                            </span>
                           `}
-                      ${interactive ||
-                      hideCast ||
-                      story.displayName === "Feedbot"
-                        ? null
-                        : html`
-                            <span class="inverse-share-container">
-                              <span style="opacity:0.6"> • </span>
-                              <a
-                                href="#"
-                                class="meta-link share-link"
-                                title="Share"
-                                style="white-space: nowrap;"
-                                onclick="event.preventDefault(); navigator.clipboard.writeText('https://news.kiwistand.com/stories?index=0x${story.index}'); window.toast.success('Link copied!');"
-                              >
-                                ${CopyIcon(
-                                  "padding: 0 3px 1px 0; vertical-align: bottom; height: 13px; width: 13px;",
-                                )}
-                                Link
-                              </a>
-                            </span>
-                          `}
+                      <span> by </span>
+                      ${story.identity
+                        ? html`<a
+                            href="${interactive
+                              ? ""
+                              : story.submitter && story.submitter.ens
+                              ? `/${story.submitter.ens}`
+                              : `/upvotes?address=${story.identity}`}"
+                            class="meta-link"
+                            style="${recentJoiners &&
+                            recentJoiners.includes(story.identity)
+                              ? `color: ${theme.color};`
+                              : ""}"
+                          >
+                            ${story.displayName}
+                          </a>`
+                        : html`<a
+                            target="_blank"
+                            class="meta-link"
+                            href="https://paragraph.xyz/@kiwi-updates/kiwi-feedbot-submissions-open"
+                            >${story.displayName}</a
+                          >`}
+                      ${story.collateral
+                        ? html` <a
+                            class="meta-link"
+                            href="https://github.com/attestate/ad?tab=readme-ov-file#how-does-it-work"
+                            target="_blank"
+                            >(sponsored)</a
+                          >`
+                        : null}
+                      <span>
+                        ${interactive || hideCast
+                          ? null
+                          : html`
+                              <span class="share-container">
+                                <span style="opacity:0.6"> • </span>
+                                <a
+                                  href="#"
+                                  class="caster-link share-link"
+                                  title="Share"
+                                  style="white-space: nowrap;"
+                                  onclick="event.preventDefault(); navigator.share({url: 'https://news.kiwistand.com/stories?index=0x${story.index}' });"
+                                >
+                                  ${ShareIcon(
+                                    "padding: 0 3px 1px 0; vertical-align: bottom; height: 13px; width: 13px;",
+                                  )}
+                                  Share
+                                </a>
+                              </span>
+                            `}
+                        ${interactive ||
+                        hideCast ||
+                        story.displayName === "Feedbot"
+                          ? null
+                          : html`
+                              <span class="inverse-share-container">
+                                <span style="opacity:0.6"> • </span>
+                                <a
+                                  href="#"
+                                  class="meta-link share-link"
+                                  title="Share"
+                                  style="white-space: nowrap;"
+                                  onclick="event.preventDefault(); navigator.clipboard.writeText('https://news.kiwistand.com/stories?index=0x${story.index}'); window.toast.success('Link copied!');"
+                                >
+                                  ${CopyIcon(
+                                    "padding: 0 3px 1px 0; vertical-align: bottom; height: 13px; width: 13px;",
+                                  )}
+                                  Link
+                                </a>
+                              </span>
+                            `}
+                      </span>
                     </span>
-                  </span>
+                  </div>
                 </div>
               </div>
               ${path !== "/stories"
@@ -364,11 +384,10 @@ const row = (
             ${story.lastComment && story.lastComment.identity.safeAvatar
               ? html` <div
                   class="comment-preview-0x${story.index}"
-                  style="cursor: pointer; margin: 6px 0 9px 0; display: flex; justify-content: center;"
+                  style="cursor: pointer; margin: 6px 6px 9px 6px; display: flex;"
                 >
                   <div
                     onclick="document.querySelector('.comment-preview-0x${story.index}').style.display = 'none';window.dispatchEvent(new CustomEvent('open-comments-0x${story.index}'));"
-                    style="width: 90%;"
                   >
                     <div style="display: inline-flex; align-items: start;">
                       <img

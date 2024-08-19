@@ -375,6 +375,9 @@ body {
 .canon-image {
   flex: 0 0 30%;
 }
+.row-image {
+  display: none;
+}
 /* mobile device */
  @media only screen and (min-width : 300px) and (max-width : 750px) {
     #hnmain {
@@ -614,6 +617,9 @@ body {
 
 /* Media query for larger screens */
  @media (min-width: 1150px) {
+    .row-image {
+      display: block;
+    }
     .mobile-center {
       display: none !important;
     }
