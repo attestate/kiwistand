@@ -208,6 +208,22 @@ async function addDynamicComments(allowlist, delegations, toast) {
     });
   }
 
+  const mintButtons = document.querySelectorAll(".mint-button-container");
+  if (mintButtons && mintButtons.length > 0) {
+    const { createRoot } = await import("react-dom/client");
+    const { StrictMode } = await import("react");
+    const MintButton = (await import("./MintButton.jsx")).default;
+
+    mintButtons.forEach((elem) => {
+      const href = elem.getAttribute("data-href");
+      createRoot(elem).render(
+        <StrictMode>
+          <MintButton href={href} />
+        </StrictMode>,
+      );
+    });
+  }
+
   const chatBubbles = document.querySelectorAll(".chat-bubble-container");
   if (chatBubbles && chatBubbles.length > 0) {
     const { createRoot } = await import("react-dom/client");

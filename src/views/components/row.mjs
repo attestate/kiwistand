@@ -341,6 +341,19 @@ const row = (
                   </div>
                 </div>
               </div>
+              <div
+                style="align-self: stretch; padding: 0 10px; margin: 5px; background-color: #e6e6df; border-radius: 2px; display: flex; justify-content: center; min-width: 40px; align-items: center; flex-direction: column;"
+                class="mint-button-container interaction-element"
+                data-href="${story.href}"
+              >
+                <a class="mint-button" style="border:none;">
+                  <span
+                    id="comment-count-${story.index}"
+                    style="color: rgba(0,0,0,0.65); font-size: 8pt;"
+                    >Preview</span
+                  >
+                </a>
+              </div>
               ${path !== "/stories"
                 ? html`<div
                     data-story-index="0x${story.index}"

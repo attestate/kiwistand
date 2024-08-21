@@ -1,6 +1,9 @@
 :root {
   --font-family: Verdana, Geneva, sans-serif;
 }
+.mint-button-container > div {
+  height: 100%;
+}
 .connect-button-wrapper, .connect-button-wrapper div {
   display: inline;
 }
