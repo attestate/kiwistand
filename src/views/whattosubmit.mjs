@@ -173,7 +173,7 @@ export default async function (theme) {
                 <td
                   style="padding: 0 0 3rem 0; display: flex; justify-content: space-evenly;"
                 >
-                  <a href="/onboarding-reader">
+                  <a href="/">
                     <button style="width:auto;" id="button-onboarding">
                       Explore Kiwi
                     </button>

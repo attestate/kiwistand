@@ -19,37 +19,6 @@ const shorten = (address) =>
   "..." +
   address.slice(address.length - 4, address.length);
 
-const SettingsSVGFull = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
-    <rect width="256" height="256" fill="none" />
-    <path d="M216,130.16q.06-2.16,0-4.32l14.92-18.64a8,8,0,0,0,1.48-7.06,107.6,107.6,0,0,0-10.88-26.25,8,8,0,0,0-6-3.93l-23.72-2.64q-1.48-1.56-3-3L186,40.54a8,8,0,0,0-3.94-6,107.29,107.29,0,0,0-26.25-10.86,8,8,0,0,0-7.06,1.48L130.16,40Q128,40,125.84,40L107.2,25.11a8,8,0,0,0-7.06-1.48A107.6,107.6,0,0,0,73.89,34.51a8,8,0,0,0-3.93,6L67.32,64.27q-1.56,1.49-3,3L40.54,70a8,8,0,0,0-6,3.94,107.71,107.71,0,0,0-10.87,26.25,8,8,0,0,0,1.49,7.06L40,125.84Q40,128,40,130.16L25.11,148.8a8,8,0,0,0-1.48,7.06,107.6,107.6,0,0,0,10.88,26.25,8,8,0,0,0,6,3.93l23.72,2.64q1.49,1.56,3,3L70,215.46a8,8,0,0,0,3.94,6,107.71,107.71,0,0,0,26.25,10.87,8,8,0,0,0,7.06-1.49L125.84,216q2.16.06,4.32,0l18.64,14.92a8,8,0,0,0,7.06,1.48,107.21,107.21,0,0,0,26.25-10.88,8,8,0,0,0,3.93-6l2.64-23.72q1.56-1.48,3-3L215.46,186a8,8,0,0,0,6-3.94,107.71,107.71,0,0,0,10.87-26.25,8,8,0,0,0-1.49-7.06ZM128,168a40,40,0,1,1,40-40A40,40,0,0,1,128,168Z" />
-  </svg>
-);
-
-const SettingsSVG = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
-    <rect width="256" height="256" fill="none" />
-    <circle
-      cx="128"
-      cy="128"
-      r="40"
-      fill="none"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="16"
-    />
-    <path
-      d="M130.05,206.11c-1.34,0-2.69,0-4,0L94,224a104.61,104.61,0,0,1-34.11-19.2l-.12-36c-.71-1.12-1.38-2.25-2-3.41L25.9,147.24a99.15,99.15,0,0,1,0-38.46l31.84-18.1c.65-1.15,1.32-2.29,2-3.41l.16-36A104.58,104.58,0,0,1,94,32l32,17.89c1.34,0,2.69,0,4,0L162,32a104.61,104.61,0,0,1,34.11,19.2l.12,36c.71,1.12,1.38,2.25,2,3.41l31.85,18.14a99.15,99.15,0,0,1,0,38.46l-31.84,18.1c-.65,1.15-1.32,2.29-2,3.41l-.16,36A104.58,104.58,0,0,1,162,224Z"
-      fill="none"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="16"
-    />
-  </svg>
-);
-
 const ProfileSVGFull = () => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
     <rect width="256" height="256" fill="none" />
@@ -92,46 +61,6 @@ const ProfileSVG = () => (
     />
   </svg>
 );
-const Settings = (props) => {
-  let address;
-  const account = useAccount();
-  const localAccount = getLocalAccount(account.address, props.allowlist);
-  if (account.isConnected) {
-    address = account.address;
-  }
-  if (localAccount) {
-    address = localAccount.identity;
-  }
-  const isEligible =
-    address && eligible(props.allowlist, props.delegations, address);
-
-  return (
-    <a
-      title="Settings"
-      href="/settings"
-      onClick={(e) => !isEligible && e.preventDefault()}
-      style={{
-        pointerEvents: isEligible ? "auto" : "none",
-        color: isEligible ? "black" : "grey",
-        textDecoration: "none",
-        display: "block",
-      }}
-    >
-      <div style={{ display: "flex", alignItems: "center" }}>
-        <div className="svg-container" style={{ position: "relative" }}>
-          {window.location.pathname === "/settings" ? (
-            <SettingsSVGFull />
-          ) : (
-            <>
-              <SettingsSVG />
-            </>
-          )}
-        </div>
-        <span>Settings</span>
-      </div>
-    </a>
-  );
-};
 
 const Profile = (props) => {
   let address;
@@ -168,103 +97,6 @@ const Profile = (props) => {
           )}
         </div>
         <span>Profile</span>
-      </div>
-    </a>
-  );
-};
-
-const SubmitSVGFull = (props) => (
-  <svg
-    style={props.style}
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 256 256"
-  >
-    <rect width="256" height="256" fill="none" />
-    <path d="M227.31,73.37,182.63,28.68a16,16,0,0,0-22.63,0L36.69,152A15.86,15.86,0,0,0,32,163.31V208a16,16,0,0,0,16,16H92.69A15.86,15.86,0,0,0,104,219.31L227.31,96a16,16,0,0,0,0-22.63ZM51.31,160l90.35-90.35,16.68,16.69L68,176.68ZM48,179.31,76.69,208H48Zm48,25.38L79.31,188l90.35-90.35h0l16.68,16.69Z" />
-  </svg>
-);
-
-const SubmitSVG = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
-    <rect width="256" height="256" fill="none" />
-    <path
-      d="M92.69,216H48a8,8,0,0,1-8-8V163.31a8,8,0,0,1,2.34-5.65L165.66,34.34a8,8,0,0,1,11.31,0L221.66,79a8,8,0,0,1,0,11.31L98.34,213.66A8,8,0,0,1,92.69,216Z"
-      fill="none"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="16"
-    />
-    <line
-      x1="136"
-      y1="64"
-      x2="192"
-      y2="120"
-      fill="none"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="16"
-    />
-    <line
-      x1="164"
-      y1="92"
-      x2="68"
-      y2="188"
-      fill="none"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="16"
-    />
-    <line
-      x1="95.49"
-      y1="215.49"
-      x2="40.51"
-      y2="160.51"
-      fill="none"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="16"
-    />
-  </svg>
-);
-
-const Submit = (props) => {
-  let address;
-  const account = useAccount();
-  const localAccount = getLocalAccount(account.address, props.allowlist);
-  if (account.isConnected) {
-    address = account.address;
-  }
-  if (localAccount) {
-    address = localAccount.identity;
-  }
-  const isEligible =
-    address && eligible(props.allowlist, props.delegations, address);
-
-  const isEnabled = isEligible || account.isConnected;
-  return (
-    <a
-      title="Submit"
-      href={isEnabled ? "/submit" : ""}
-      style={{
-        pointerEvents: isEnabled ? "auto" : "none",
-        color: isEnabled ? "black" : "grey",
-        textDecoration: "none",
-        display: "block",
-      }}
-    >
-      <div style={{ display: "flex", alignItems: "center" }}>
-        <div className="svg-container">
-          {window.location.pathname.includes("/submit") ? (
-            <SubmitSVGFull style={{ fill: isEnabled ? "black" : "grey" }} />
-          ) : (
-            <SubmitSVG />
-          )}
-        </div>
-        <span>Submit</span>
       </div>
     </a>
   );
@@ -460,11 +292,6 @@ export const Connector = (props) => {
   );
 };
 
-export const ConnectedSubmit = (props) => (
-  <Connector {...props}>
-    <Submit {...props} />
-  </Connector>
-);
 export const ConnectedProfile = (props) => (
   <Connector {...props}>
     <Profile {...props} />
@@ -488,10 +315,5 @@ export const ConnectedConnectButton = (props) => (
 export const ConnectedTextConnectButton = (props) => (
   <Connector {...props}>
     <TextConnectButton {...props} />
-  </Connector>
-);
-export const ConnectedSettings = (props) => (
-  <Connector {...props}>
-    <Settings {...props} />
   </Connector>
 );

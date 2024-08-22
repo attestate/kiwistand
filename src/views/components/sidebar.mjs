@@ -579,21 +579,21 @@ const sidebar = (path) => html`
       </div>
     </a>
     <div
-      id="nav-submit"
-      style="${path === "/submit"
+      id="nav-profile"
+      style="${path === "/upvotes"
         ? " font-weight: bold; background-color: rgba(0,0,0,0.1);"
         : "font-weight: normal"}; color: black; text-decoration: none; display: block;"
     >
       <a
-        title="Submit"
+        title="Profile"
         href=""
         style="color: black; text-decoration: none; display: block;"
       >
         <div style="display: flex; align-items: center;">
           <div class="svg-container">
-            ${path === "/submit" ? submitfull : submit}
+            ${path === "/upvotes" ? profilefull : profile}
           </div>
-          <span>Submit</span>
+          <span>Profile</span>
         </div>
       </a>
     </div>
@@ -666,44 +666,6 @@ const sidebar = (path) => html`
         <span>Learn</span>
       </div>
     </a>
-    <div
-      id="nav-profile"
-      style="${path === "/upvotes"
-        ? " font-weight: bold; background-color: rgba(0,0,0,0.1);"
-        : "font-weight: normal"}; color: black; text-decoration: none; display: block;"
-    >
-      <a
-        title="Profile"
-        href=""
-        style="color: black; text-decoration: none; display: block;"
-      >
-        <div style="display: flex; align-items: center;">
-          <div class="svg-container">
-            ${path === "/upvotes" ? profilefull : profile}
-          </div>
-          <span>Profile</span>
-        </div>
-      </a>
-    </div>
-    <div
-      id="nav-settings"
-      style="${path === "/settings"
-        ? " font-weight: bold; background-color: rgba(0,0,0,0.1);"
-        : "font-weight: normal"}; color: black; text-decoration: none; display: block;"
-    >
-      <a
-        title="Settings"
-        href=""
-        style="color: black; text-decoration: none; display: block;"
-      >
-        <div style="display: flex; align-items: center;">
-          <div class="svg-container">
-            ${path === "/settings" ? settingsfull : settings}
-          </div>
-          <span>Settings</span>
-        </div>
-      </a>
-    </div>
     <div id="nav-disconnect">
       <a
         title="Disconnect"

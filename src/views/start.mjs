@@ -51,9 +51,6 @@ export default async function index(theme) {
                   >
                     loading...
                   </div>
-                  <nav-simple-disconnect-button
-                    style="cursor: pointer; margin-top: 1rem; text-align: center; min-height: 16.5px; display: block;"
-                  />
                 </td>
               </tr>
             </table>

@@ -124,7 +124,13 @@ export default async function index(theme) {
                         </p>
                         <table style="width: auto; margin: auto;">
                           ${mockStories.map((story, index) =>
-                            Row(index, null, "", false, true)(story),
+                            Row(
+                              index,
+                              "/demonstration",
+                              "",
+                              false,
+                              true,
+                            )(story),
                           )}
                         </table>
                       </div>
@@ -144,7 +150,11 @@ export default async function index(theme) {
                       style="padding: 0 0 3rem 0; display: flex; justify-content: space-evenly;"
                     >
                       <a href="/whattosubmit">
-                        <button style="width:auto;" id="button-onboarding">
+                        <button
+                          class="button-secondary"
+                          style="width:auto;"
+                          id="button-onboarding"
+                        >
                           Continue
                         </button>
                       </a>

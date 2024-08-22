@@ -17,7 +17,11 @@ export const Redirector = () => {
   ) {
     return (
       <a href="/notifications">
-        <button style={{ width: "auto" }} id="button-onboarding">
+        <button
+          style={{ width: "auto" }}
+          className="button-secondary"
+          id="button-onboarding"
+        >
           Continue
         </button>
       </a>
@@ -25,7 +29,11 @@ export const Redirector = () => {
   }
   return (
     <a href="/demonstration">
-      <button style={{ width: "auto" }} id="button-onboarding">
+      <button
+        style={{ width: "auto" }}
+        className="button-secondary"
+        id="button-onboarding"
+      >
         Continue
       </button>
     </a>

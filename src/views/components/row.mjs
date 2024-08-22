@@ -184,8 +184,8 @@ const row = (
                   <span>
                     <span class="story-link-container">
                       <a
-                        href="${interactive
-                          ? ""
+                        href="${path === "/submit" || path === "/demonstration"
+                          ? "javascript:void(0);"
                           : `/outbound?url=${encodeURIComponent(
                               addOrUpdateReferrer(
                                 DOMPurify.sanitize(story.href),
@@ -193,7 +193,10 @@ const row = (
                               ),
                             )}`}"
                         data-story-link="/stories?index=0x${story.index}"
-                        target="_blank"
+                        target="${path === "/submit" ||
+                        path === "/demonstration"
+                          ? "_self"
+                          : "_blank"}"
                         class="story-link"
                         style="line-height: 13pt; font-size: 13pt;"
                       >
@@ -281,6 +284,10 @@ const row = (
                           >
                             ${story.displayName}
                           </a>`
+                        : path === "/demonstration"
+                        ? html`<a class="meta-link" href="javascript:void(0);"
+                            >${story.displayName}</a
+                          >`
                         : html`<a
                             target="_blank"
                             class="meta-link"
@@ -341,7 +348,9 @@ const row = (
                   </div>
                 </div>
               </div>
-              ${path !== "/stories"
+              ${path !== "/stories" &&
+              path !== "/demonstration" &&
+              path !== "/submit"
                 ? html`<div
                     data-story-index="0x${story.index}"
                     data-comment-count="${commentCount}"

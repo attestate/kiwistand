@@ -381,15 +381,6 @@ async function addConnectedComponents(allowlist, delegations, toast) {
     );
   }
 
-  const settings = document.querySelector("#nav-settings");
-  if (settings) {
-    createRoot(settings).render(
-      <StrictMode>
-        <ConnectedSettings allowlist={allowlist} delegations={delegations} />
-      </StrictMode>,
-    );
-  }
-
   const profileLink = document.querySelector("#nav-profile");
   if (profileLink) {
     createRoot(profileLink).render(
@@ -404,15 +395,6 @@ async function addConnectedComponents(allowlist, delegations, toast) {
     createRoot(disconnect).render(
       <StrictMode>
         <ConnectedDisconnectButton />
-      </StrictMode>,
-    );
-  }
-
-  const submit = document.querySelector("#nav-submit");
-  if (submit) {
-    createRoot(submit).render(
-      <StrictMode>
-        <ConnectedSubmit allowlist={allowlist} delegations={delegations} />
       </StrictMode>,
     );
   }
@@ -456,7 +438,11 @@ async function addPasskeysDialogue(toast, allowlist) {
             Your next step:
           </p>
           <a href="/invite">
-            <button style={{ width: "auto" }} id="button-onboarding">
+            <button
+              className="button-secondary"
+              style={{ width: "auto" }}
+              id="button-onboarding"
+            >
               Continue
             </button>
           </a>

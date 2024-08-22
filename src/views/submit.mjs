@@ -52,7 +52,7 @@ export default async function submit(theme, url = "", title = "") {
               <tr>
                 ${await Header(theme)}
               </tr>
-              ${Row(rowNumber, null, rowStyle, interactive)(story)}
+              ${Row(rowNumber, "/submit", rowStyle, interactive)(story)}
               <tr>
                 <td>
                   <form style="${formContainerStyle}">
