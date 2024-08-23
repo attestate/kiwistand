@@ -132,40 +132,6 @@ async function getAd() {
   };
 }
 
-function CanonRow(originals) {
-  return html`
-    <tr>
-      <td>
-        <div
-          style="justify-content: space-evenly; padding: 15px 0 10px 0; gap: 15px; display: flex; width: 100%;"
-        >
-          ${originals.map(
-            ({ metadata, href, index, title }) => html`
-              <div
-                class="canon-image"
-                style="background-color: rgba(0,0,0,0.1); border-radius: 2px; border: 1px solid #828282;"
-              >
-                <a href="${DOMPurify.sanitize(href)}" target="_blank">
-                  <img
-                    src="${DOMPurify.sanitize(metadata.image)}"
-                    style="aspect-ratio: 16/9; object-fit:cover;border-bottom: 1px solid #828282; width: 100%; height: auto;"
-                  />
-                </a>
-                <a
-                  class="meta-link canon-font"
-                  style="display:block; margin: 0.2rem 0.2rem 0.3rem 0.3rem;"
-                  href="/stories?index=0x${index}"
-                  >${DOMPurify.sanitize(title)}</a
-                >
-              </div>
-            `,
-          )}
-        </div>
-      </td>
-    </tr>
-  `;
-}
-
 const itemAge = (timestamp) => {
   const now = new Date();
   const ageInMinutes = differenceInMinutes(now, new Date(timestamp * 1000));
@@ -561,93 +527,23 @@ export default async function (trie, theme, page, domain) {
                     </td>
                   </tr>`
                 : ""}
-              ${originals && originals.length >= 2 && !domain
-                ? html`
-                    ${stories
-                      .slice(0, 3)
-                      .map(
-                        Row(
-                          start,
-                          "/",
-                          undefined,
-                          null,
-                          null,
-                          null,
-                          recentJoiners,
-                        ),
-                      )}
-                    ${Row(start, "/", "", null, null, null, recentJoiners)(ad)}
-                    ${stories
-                      .slice(3, 5)
-                      .map(
-                        Row(
-                          start,
-                          "/",
-                          undefined,
-                          null,
-                          null,
-                          null,
-                          recentJoiners,
-                        ),
-                      )}
-                    ${CanonRow(originals)}
-                    ${stories
-                      .slice(5)
-                      .map(
-                        Row(
-                          start,
-                          "/",
-                          undefined,
-                          null,
-                          null,
-                          null,
-                          recentJoiners,
-                        ),
-                      )}
-                  `
-                : html`
-                    ${stories
-                      .slice(0, 3)
-                      .map(
-                        Row(
-                          start,
-                          "/",
-                          undefined,
-                          null,
-                          null,
-                          null,
-                          recentJoiners,
-                        ),
-                      )}
-                    ${Row(start, "/", "", null, null, null, recentJoiners)(ad)}
-                    ${stories
-                      .slice(3, 5)
-                      .map(
-                        Row(
-                          start,
-                          "/",
-                          undefined,
-                          null,
-                          null,
-                          null,
-                          recentJoiners,
-                        ),
-                      )}
-                    ${InviteRow(referralRewardEth)}
-                    ${stories
-                      .slice(5)
-                      .map(
-                        Row(
-                          start,
-                          "/",
-                          undefined,
-                          null,
-                          null,
-                          null,
-                          recentJoiners,
-                        ),
-                      )}
-                  `}
+              ${stories
+                .slice(0, 3)
+                .map(
+                  Row(start, "/", undefined, null, null, null, recentJoiners),
+                )}
+              ${Row(start, "/", "", null, null, null, recentJoiners)(ad)}
+              ${stories
+                .slice(3, 5)
+                .map(
+                  Row(start, "/", undefined, null, null, null, recentJoiners),
+                )}
+              ${InviteRow(referralRewardEth)}
+              ${stories
+                .slice(5)
+                .map(
+                  Row(start, "/", undefined, null, null, null, recentJoiners),
+                )}
               ${stories.length < totalStories
                 ? ""
                 : html`<tr style="height: 50px">
