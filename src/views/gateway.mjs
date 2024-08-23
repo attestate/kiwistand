@@ -2,13 +2,14 @@
 
 import htm from "htm";
 import vhtml from "vhtml";
+import DOMPurify from "isomorphic-dompurify";
 
 import Header from "./components/header.mjs";
 import { ethereum } from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
 import Head from "./components/head.mjs";
 import * as ens from "../ens.mjs";
-import DOMPurify from "isomorphic-dompurify";
+import * as frame from "../frame.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -16,7 +17,7 @@ export default async function (referral) {
   return html`
     <html lang="en" op="news">
       <head>
-        ${Head}
+        ${Head} ${frame.header(referral)}
       </head>
       <body>
         <nav-delegation-modal />

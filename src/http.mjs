@@ -264,24 +264,27 @@ export async function launch(trie, libp2p) {
     const details = "Successfully generated Telegram link.";
     return sendStatus(reply, code, httpMessage, details, { link: inviteLink });
   });
-  app.post("/api/v1/writers/success", async (request, reply) => {
+  app.post("/api/v1/mint/success", async (request, reply) => {
     const content = frame.callback(request.body?.untrustedData?.transactionId);
     const code = 200;
     reply.header("Cache-Control", "no-cache");
     return reply.status(code).type("text/html").send(content);
   });
-  app.post("/api/v1/writers/:address", async (request, reply) => {
-    let address;
+  app.post("/api/v1/mint/:referral", async (request, reply) => {
+    let referral;
     try {
-      address = utils.getAddress(request.params.address);
+      address = utils.getAddress(request.params.referral);
+    } catch (err) {}
+
+    let data;
+    try {
+      data = await frame.buy(referral);
     } catch (err) {
-      const code = 400;
-      const httpMessage = "Bad Request";
-      const details = "Please only submit valid Ethereum addresses.";
+      const code = 500;
+      const httpMessage = "Internal Server Error";
+      const details = err.toString();
       return sendError(reply, code, httpMessage, details);
     }
-
-    const data = frame.tip(address);
     const code = 200;
     reply.header("Cache-Control", "no-cache");
     return reply.status(code).json(data);

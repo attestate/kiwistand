@@ -20,7 +20,6 @@ import * as ens from "../ens.mjs";
 import * as moderation from "./moderation.mjs";
 import * as karma from "../karma.mjs";
 import * as preview from "../preview.mjs";
-import * as frame from "../frame.mjs";
 import Row from "./components/row.mjs";
 import { getSubmissions, getContributionsData } from "../cache.mjs";
 import { metadata } from "../parser.mjs";
@@ -108,12 +107,10 @@ export default async function (
   const chartSrc = contributionsChart(identity);
   const ensData = await ens.resolve(identity);
 
-  let frameHead;
   let ogImage = ensData.safeAvatar;
   if (ensData.ens && ensData.safeAvatar) {
     generateProfile(ensData.ens, ensData.safeAvatar);
     if (enabledFrame) {
-      frameHead = frame.profileHeader(ensData.ens, identity);
       ogImage = `https://news.kiwistand.com/previews/${DOMPurify.sanitize(
         ensData.ens,
       )}.jpg`;
@@ -212,7 +209,6 @@ export default async function (
           description,
           twitterCard,
         )}
-        ${frameHead ? frameHead : ""}
       </head>
       <body>
         <div class="container">
