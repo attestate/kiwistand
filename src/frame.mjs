@@ -40,7 +40,7 @@ function computeDistribution(referral, difference) {
     // else as this gives them half of the protocol reward.
     // Previuously, we gave the referrer half of all karma, but this lead to
     // the referrer only getting a quarter.
-    leaderboard.leaders.push({ identity: referral, totalKarma: allKarma });
+    leaders.push({ identity: referral, totalKarma: allKarma });
     allKarma *= 2;
   }
 

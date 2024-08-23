@@ -270,7 +270,7 @@ export async function launch(trie, libp2p) {
     reply.header("Cache-Control", "no-cache");
     return reply.status(code).type("text/html").send(content);
   });
-  app.post("/api/v1/mint/:referral", async (request, reply) => {
+  app.post("/api/v1/mint/:referral?", async (request, reply) => {
     let referral;
     try {
       referral = utils.getAddress(request.params.referral);
