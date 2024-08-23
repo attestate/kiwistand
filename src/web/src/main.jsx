@@ -598,12 +598,16 @@ async function addNFTPrice() {
 }
 
 async function share(toast, index) {
+  const identity = getCookie("identity");
+
   const FCIcon = (await import("./fcicon.jsx")).default;
   const toastContent = (
     <div style={{ display: "flex", alignItems: "center" }}>
       <a
         style={{ display: "flex", alignItems: "center" }}
-        href={`https://warpcast.com/~/compose?embeds[]=https://news.kiwistand.com/stories?index=${index}`}
+        href={`https://warpcast.com/~/compose?embeds[]=https://news.kiwistand.com/stories?index=${index}${
+          identity ? `&referral=${identity}` : ""
+        }`}
         target="_blank"
       >
         <FCIcon style={{ height: "15px", color: "white" }} />
