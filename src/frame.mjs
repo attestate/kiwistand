@@ -133,7 +133,7 @@ export function header(referral) {
     />
     <meta
       name="fc:frame:image"
-      content="https://news.kiwistand.com/kiwipass-page.png"
+      content="https://news.kiwistand.com/kiwipass_page.png"
     />
     <meta name="fc:frame:image:aspect_ratio" content="1.91:1" />
     <meta property="fc:frame:button:1" content="Buy on OP Mainnet" />

@@ -1,6 +1,7 @@
 import React, { useRef, useState } from "react";
 
 import { getCookie } from "./session.mjs";
+import Fcicon from "./fcicon.jsx";
 
 const copySVG = (
   <svg
@@ -34,6 +35,7 @@ const copySVG = (
 const InviteLink = ({ toast }) => {
   const cookieValue = getCookie("identity") || "0x";
   const referralLink = `https://news.kiwistand.com/?referral=${cookieValue}`;
+  const wcLink = `https://warpcast.com/~/compose?embeds[]=${referralLink}`;
   const inputRef = useRef(null);
 
   const copyToClipboard = () => {
@@ -52,7 +54,7 @@ const InviteLink = ({ toast }) => {
         readOnly
         style={{
           height: "40px",
-          width: "80%",
+          width: "60%",
           padding: "10px 15px",
           border: "1px solid #ccc",
           borderRadius: "2px",
@@ -61,10 +63,17 @@ const InviteLink = ({ toast }) => {
       />
       <button
         id="button-onboarding"
-        style={{ width: "20%", height: "40px" }}
+        style={{ width: "15%", marginRight: "10px", height: "40px" }}
         onClick={copyToClipboard}
       >
         {copySVG}
+      </button>
+      <button
+        id="button-onboarding"
+        style={{ backgroundColor: "#472a91", width: "15%", height: "40px" }}
+        onClick={() => window.open(wcLink, "_blank")}
+      >
+        <Fcicon style={{ height: "1rem", color: "white" }} />
       </button>
     </div>
   );
