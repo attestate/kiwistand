@@ -33,6 +33,7 @@ import { truncateName } from "../utils.mjs";
 import { metadata, render } from "../parser.mjs";
 import { getSubmission } from "../cache.mjs";
 import * as preview from "../preview.mjs";
+import * as frame from "../frame.mjs";
 import ShareIcon from "./components/shareicon.mjs";
 
 const html = htm.bind(vhtml);
@@ -125,7 +126,7 @@ export function generateList(profiles, submitter) {
   `;
 }
 
-export default async function (trie, theme, index, value) {
+export default async function (trie, theme, index, value, referral) {
   let writers = [];
   try {
     writers = await moderation.getWriters();
@@ -198,10 +199,14 @@ export default async function (trie, theme, index, value) {
       ? data.ogDescription
       : "Kiwi News is the prime feed for hacker engineers building a decentralized future. All our content is handpicked and curated by crypto veterans.";
   const recentJoiners = await registry.recents();
+  const link = `https://news.kiwistand.com/stories?index=0x${index}${
+    referral ? `&referral=${referral}` : ""
+  }`;
   return html`
     <html lang="en" op="news">
       <head>
         ${head.custom(ogImage, value.title, ogDescription)}
+        ${frame.header(referral, link, ogImage)}
       </head>
       <body>
         <div class="container">

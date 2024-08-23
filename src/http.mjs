@@ -273,7 +273,7 @@ export async function launch(trie, libp2p) {
   app.post("/api/v1/mint/:referral", async (request, reply) => {
     let referral;
     try {
-      address = utils.getAddress(request.params.referral);
+      referral = utils.getAddress(request.params.referral);
     } catch (err) {}
 
     let data;
@@ -555,6 +555,11 @@ export async function launch(trie, libp2p) {
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/stories", async (request, reply) => {
+    let referral;
+    try {
+      referral = utils.getAddress(request.query.referral);
+    } catch (err) {}
+
     let submission;
     try {
       submission = await generateStory(request.query.index);
@@ -568,6 +573,7 @@ export async function launch(trie, libp2p) {
       reply.locals.theme,
       DOMPurify.sanitize(hexIndex),
       submission,
+      referral,
     );
     reply.header(
       "Cache-Control",

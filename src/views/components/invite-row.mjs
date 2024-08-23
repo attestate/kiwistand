@@ -4,6 +4,7 @@ import vhtml from "vhtml";
 const html = htm.bind(vhtml);
 
 import farcastericon from "./farcastericon.mjs";
+import theme from "../../theme.mjs";
 
 const copySVG = html`<svg
   style="height: 1rem;"
@@ -139,7 +140,7 @@ function row(reward) {
         </div>
         <p style="margin: 0 0 0.5rem 1rem;">
           <span
-            style="margin-right: 10px; color: white; padding: 3px 5px; background-color: green; border-radius: 2px;"
+            style="margin-right: 10px; color: white; padding: 3px 5px; background-color: ${theme.color}; border-radius: 2px;"
             >New!</span
           >
           <span>Invite others with our Farcaster frame!</span>

@@ -124,7 +124,7 @@ export function callback(hash) {
   `;
 }
 
-export function header(referral) {
+export function header(referral, link, image) {
   return html`
     <meta property="fc:frame" content="vNext" />
     <meta
@@ -133,16 +133,34 @@ export function header(referral) {
     />
     <meta
       name="fc:frame:image"
-      content="https://news.kiwistand.com/kiwipass_page.png"
+      content="${link && image
+        ? image
+        : "https://news.kiwistand.com/kiwipass_page.png"}"
     />
     <meta name="fc:frame:image:aspect_ratio" content="1.91:1" />
-    <meta property="fc:frame:button:1" content="Buy on OP Mainnet" />
-    <meta property="fc:frame:button:1:action" content="tx" />
-    <meta
-      property="fc:frame:button:1:target"
-      content="https://news.kiwistand.com/api/v1/mint/${referral
-        ? referral
-        : ""}"
-    />
+    ${link
+      ? html`
+          <meta property="fc:frame:button:1" content="Open" />
+          <meta property="fc:frame:button:1:action" content="link" />
+          <meta property="fc:frame:button:1:target" content="${link}" />
+          <meta property="fc:frame:button:2" content="Sign up" />
+          <meta property="fc:frame:button:2:action" content="tx" />
+          <meta
+            property="fc:frame:button:2:target"
+            content="https://news.kiwistand.com/api/v1/mint/${referral
+              ? referral
+              : ""}"
+          />
+        `
+      : html`
+          <meta property="fc:frame:button:1" content="Buy on OP Mainnet" />
+          <meta property="fc:frame:button:1:action" content="tx" />
+          <meta
+            property="fc:frame:button:1:target"
+            content="https://news.kiwistand.com/api/v1/mint/${referral
+              ? referral
+              : ""}"
+          />
+        `}
   `;
 }
