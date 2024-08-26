@@ -11,7 +11,7 @@ const provider = new providers.JsonRpcProvider(env.RPC_HTTP_HOST);
 const fetch = fetchBuilder.withCache(
   new FileSystemCache({
     cacheDirectory: path.resolve(env.CACHE_DIR),
-    ttl: 86400000 * 3, // 72 hours
+    ttl: 86400000 * 5, // 72 hours
   }),
 );
 
