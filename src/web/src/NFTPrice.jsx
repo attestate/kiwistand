@@ -2,6 +2,7 @@ import { useContractRead, WagmiConfig } from "wagmi";
 import { parseEther, formatEther } from "viem";
 import { optimism } from "wagmi/chains";
 import { useEffect, useState } from "react";
+import { getAddress } from "@ethersproject/address";
 
 import { client, chains } from "./client.mjs";
 import { fetchPrice } from "./API.mjs";
@@ -30,6 +31,15 @@ export const DiscountLogo = (props) => (
 export const PriceComponent = (props) => {
   const [ethPrice, setEthPrice] = useState(null);
   const [price, setPrice] = useState(null);
+
+  let referral;
+  const queryReferral = localStorage.getItem("--kiwi-news-original-referral");
+  try {
+    referral = getAddress(queryReferral);
+  } catch (err) {
+    console.log("Couldn't find referral address in URL bar");
+    //noop
+  }
   const discountQuery = new URLSearchParams(window.location.search).get(
     "discount",
   );
@@ -38,6 +48,8 @@ export const PriceComponent = (props) => {
   let selector;
   if (validDiscount) {
     selector = "min";
+  } else if (referral) {
+    selector = "referralPrice";
   } else if (props.selector) {
     selector = props.selector;
   } else {
@@ -78,6 +90,9 @@ export const PriceComponent = (props) => {
   let percentageOff;
   if (validDiscount && price) {
     percentageOff = (price["difference"] * 100n) / price["authoritative"];
+  } else if (referral && price) {
+    percentageOff =
+      ((price["difference"] / 2n) * 100n) / price["authoritative"];
   }
 
   if (!usdPrice && !price) {
@@ -96,15 +111,17 @@ export const PriceComponent = (props) => {
       {percentageOff ? (
         <span
           style={{
-            backgroundColor: theme.discount.secondary,
-            color: theme.discount.primary,
+            backgroundColor: validDiscount
+              ? theme.discount.secondary
+              : theme.color,
+            color: validDiscount ? theme.discount.primary : "white",
             borderRadius: "1px",
             padding: "3px 5px",
             border: "1px solid #ccc",
           }}
         >
-          <DiscountLogo style={{ height: "10px" }} /> {percentageOff.toString()}
-          % off!
+          {validDiscount ? <DiscountLogo style={{ height: "10px" }} /> : ""}{" "}
+          {percentageOff.toString()}% off!
         </span>
       ) : (
         ""

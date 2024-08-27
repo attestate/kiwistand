@@ -95,7 +95,7 @@ const frameSVG = html`<svg
   />
 </svg>`;
 
-function row(reward) {
+function row(reward, percentageOff) {
   return html`
     <tr>
       <td>
@@ -105,7 +105,7 @@ function row(reward) {
         >
           <div style="margin-bottom: 0.5rem;">
             <span style="color: black; font-weight: bold; font-size: 14pt;"
-              >Invite a friend, earn ${reward} ETH </span
+              >Send a discount, get rewarded! </span
             ><a
               href="/referral"
               class="meta-link"
@@ -143,7 +143,11 @@ function row(reward) {
             style="margin-right: 10px; color: white; padding: 3px 5px; background-color: ${theme.color}; border-radius: 2px;"
             >New!</span
           >
-          <span>Invite others with our Farcaster frame!</span>
+          <span
+            >Send a friend an invite! They'll get
+
+            <b> ${percentageOff}% off</b>, and you'll get ${reward} ETH!</span
+          >
         </p>
       </td>
     </tr>

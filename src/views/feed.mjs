@@ -457,7 +457,7 @@ const pages = {};
 
 export default async function (trie, theme, page, domain) {
   const mints = await registry.mints();
-  const referralRewardEth = await price.getReferralReward(mints);
+  const { reward, percentageOff } = await price.getReferralReward(mints);
   const path = "/";
   const totalStories = parseInt(env.TOTAL_STORIES, 10);
 
@@ -538,7 +538,7 @@ export default async function (trie, theme, page, domain) {
                 .map(
                   Row(start, "/", undefined, null, null, null, recentJoiners),
                 )}
-              ${InviteRow(referralRewardEth)}
+              ${InviteRow(reward, percentageOff)}
               ${stories
                 .slice(5)
                 .map(

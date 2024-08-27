@@ -164,9 +164,11 @@ export async function fetchPrice() {
     if (prices.current <= prices.min) {
       prices.authoritative = prices.min;
       prices.difference = 0n;
+      prices.referralPrice = prices.min;
     } else {
       prices.authoritative = prices.current;
       prices.difference = prices.current - prices.min;
+      prices.referralPrice = prices.authoritative - prices.difference / 2n;
     }
     return prices;
   } catch (err) {

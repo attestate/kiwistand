@@ -349,7 +349,14 @@ export async function getReferralReward(mints) {
   const referralRewardEth = parseFloat(
     ethers.utils.formatEther(referralReward.toString()),
   ).toFixed(4);
-  return referralRewardEth;
+
+  const percentageOff = BigNumber.from(referralReward)
+    .mul(100)
+    .div(website.price);
+  return {
+    reward: referralRewardEth,
+    percentageOff,
+  };
 }
 
 export async function getSalesData() {

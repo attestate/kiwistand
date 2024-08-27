@@ -111,7 +111,7 @@ export async function recompute() {
 
 export default async function (trie, theme) {
   const mints = await registry.mints();
-  const referralRewardEth = await price.getReferralReward(mints);
+  const { reward, percentageOff } = await price.getReferralReward(mints);
 
   let items = stories;
   const path = "/new";
@@ -153,7 +153,7 @@ export default async function (trie, theme) {
                     recentJoiners,
                   ),
                 )}
-              ${InviteRow(referralRewardEth)}
+              ${InviteRow(reward, percentageOff)}
               ${items
                 .slice(5)
                 .map(

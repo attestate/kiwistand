@@ -95,18 +95,11 @@ export async function prepare(key) {
       //noop
     }
     if (referral !== zeroAddress) {
-      const last = leaderboard.leaders.pop();
-      allKarma -= last.totalKarma;
-
-      // NOTE: We have to give the referrer all the karma earned from everyone
-      // else as this gives them half of the protocol reward.
-      // Previuously, we gave the referrer half of all karma, but this lead to
-      // the referrer only getting a quarter.
-      leaderboard.leaders.push({ identity: referral, totalKarma: allKarma });
-      allKarma *= 2;
-    }
-
-    if (difference !== 0n) {
+      const reward = difference / 2n;
+      price -= reward;
+      recipients.push(referral);
+      values.push(reward);
+    } else if (difference !== 0n) {
       const allKarmaBigInt = BigInt(allKarma);
       let remainder = difference;
 
