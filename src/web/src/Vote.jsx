@@ -9,7 +9,7 @@ import DOMPurify from "isomorphic-dompurify";
 import * as API from "./API.mjs";
 import { useSigner, useProvider, client, chains } from "./client.mjs";
 import NFTModal from "./NFTModal.jsx";
-import theme from "./theme.mjs";
+import theme from "./theme.jsx";
 import { getLocalAccount } from "./session.mjs";
 
 const Container = (props) => {

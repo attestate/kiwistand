@@ -16,7 +16,7 @@ import useLocalStorageState from "use-local-storage-state";
 import Passkeys from "./Passkeys.jsx";
 import { useProvider, chains, client } from "./client.mjs";
 import { CheckmarkSVG } from "./icons.jsx";
-import theme from "./theme.mjs";
+import theme from "./theme.jsx";
 import {
   ConnectedSimpleDisconnectButton,
   ConnectedConnectButton,

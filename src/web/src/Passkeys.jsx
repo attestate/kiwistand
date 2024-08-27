@@ -5,7 +5,7 @@ import { Wallet } from "@ethersproject/wallet";
 import { eligible } from "@attestate/delegator2";
 
 import { PasskeysSVG } from "./icons.jsx";
-import theme from "./theme.mjs";
+import theme from "./theme.jsx";
 import { useProvider, client, chains } from "./client.mjs";
 import { ProgressBar } from "./DelegateButton.jsx";
 import {

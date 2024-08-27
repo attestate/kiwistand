@@ -157,7 +157,7 @@ export async function fetchPrice() {
     const data = await response.json();
     const current = BigInt(data.data.price);
     const prices = {
-      min: saleDetails.publicSalePrice,
+      min: saleDetails.publicSalePrice + 1n,
       minPlusFee: saleDetails.publicSalePrice + 777000000000000n,
       current,
     };

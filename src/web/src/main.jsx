@@ -5,7 +5,7 @@ import DOMPurify from "isomorphic-dompurify";
 import { getAccount } from "@wagmi/core";
 
 import { isRunningPWA, getCookie, getLocalAccount } from "./session.mjs";
-import theme from "./theme.mjs";
+import theme from "./theme.jsx";
 
 function storeReferral() {
   if (!localStorage.getItem("--kiwi-news-original-referral")) {

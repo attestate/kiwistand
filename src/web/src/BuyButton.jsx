@@ -23,6 +23,7 @@ import {
 } from "@wagmi/core";
 
 import { getLocalAccount } from "./session.mjs";
+import theme from "./theme.jsx";
 import { fetchPrice, fetchLeaderboard } from "./API.mjs";
 import { getProvider, useProvider, client, chains } from "./client.mjs";
 
@@ -46,7 +47,15 @@ export async function prepare(key) {
     throw new Error("Error getting the price");
   }
   const { difference } = price;
-  price = price.authoritative;
+
+  const discount = new URLSearchParams(window.location.search).get("discount");
+  const validDiscount = discount === theme.discount.code;
+
+  if (validDiscount) {
+    price = price.min;
+  } else {
+    price = price.authoritative;
+  }
 
   let preferredChainId = null;
   if (balance.optimism > price) {
@@ -73,42 +82,44 @@ export async function prepare(key) {
     0,
   );
 
-  const zeroAddress = "0x0000000000000000000000000000000000000000";
-  let referral = zeroAddress;
-  const queryReferral = localStorage.getItem("--kiwi-news-original-referral");
-  try {
-    referral = getAddress(queryReferral);
-  } catch (err) {
-    console.log("Couldn't find referral address in URL bar");
-    //noop
-  }
-  if (referral !== zeroAddress) {
-    const last = leaderboard.leaders.pop();
-    allKarma -= last.totalKarma;
-    
-    // NOTE: We have to give the referrer all the karma earned from everyone
-    // else as this gives them half of the protocol reward.
-    // Previuously, we gave the referrer half of all karma, but this lead to
-    // the referrer only getting a quarter.
-    leaderboard.leaders.push({ identity: referral, totalKarma: allKarma });
-    allKarma *= 2;
-  }
-
   const recipients = [];
   const values = [];
-  if (difference !== 0n) {
-    const allKarmaBigInt = BigInt(allKarma);
-    let remainder = difference;
+  if (!validDiscount) {
+    const zeroAddress = "0x0000000000000000000000000000000000000000";
+    let referral = zeroAddress;
+    const queryReferral = localStorage.getItem("--kiwi-news-original-referral");
+    try {
+      referral = getAddress(queryReferral);
+    } catch (err) {
+      console.log("Couldn't find referral address in URL bar");
+      //noop
+    }
+    if (referral !== zeroAddress) {
+      const last = leaderboard.leaders.pop();
+      allKarma -= last.totalKarma;
 
-    for (const { identity, totalKarma } of leaderboard.leaders) {
-      const share = (difference * BigInt(totalKarma)) / allKarmaBigInt;
-      recipients.push(identity);
-      values.push(share);
-      remainder -= share;
+      // NOTE: We have to give the referrer all the karma earned from everyone
+      // else as this gives them half of the protocol reward.
+      // Previuously, we gave the referrer half of all karma, but this lead to
+      // the referrer only getting a quarter.
+      leaderboard.leaders.push({ identity: referral, totalKarma: allKarma });
+      allKarma *= 2;
     }
 
-    for (let i = 0; i < remainder; i++) {
-      values[i] += 1n;
+    if (difference !== 0n) {
+      const allKarmaBigInt = BigInt(allKarma);
+      let remainder = difference;
+
+      for (const { identity, totalKarma } of leaderboard.leaders) {
+        const share = (difference * BigInt(totalKarma)) / allKarmaBigInt;
+        recipients.push(identity);
+        values.push(share);
+        remainder -= share;
+      }
+
+      for (let i = 0; i < remainder; i++) {
+        values[i] += 1n;
+      }
     }
   }
 
