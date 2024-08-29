@@ -600,7 +600,21 @@ export async function launch(trie, libp2p) {
       //noop
     }
 
-    reply.header("Cache-Control", "no-cache");
+    // NOTE: Especially for international customers /new got embarassingly slow
+    // taking up to 2s to load as the page had to served previously from
+    // Germany and not via Cloudflare. Now when the `cached` QS is present
+    // we'll allow this page to be cached. We'll only use this configuration
+    // when the user visits the new page looking for new content, not right
+    // after submission.
+    if (request.query.cached) {
+      reply.header(
+        "Cache-Control",
+        "public, max-age=1, no-transform, must-revalidate, stale-while-revalidate=5",
+      );
+    } else {
+      reply.header("Cache-Control", "no-cache");
+    }
+
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/alltime", function (req, res) {
