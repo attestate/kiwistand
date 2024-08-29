@@ -52,7 +52,7 @@ export default async function (referral) {
         <div class="container">
           <div
             id="hnmain"
-            style="margin: 0 !important; border: none !important; background-color: #f6f6ef; width: 100%; height: 100vh; display: flex; justify-content: center; flex-direction: column;"
+            style="margin: 0 !important; border: none !important; background-color: #f6f6ef; width: 100%; height: 100vh; display: flex; justify-content: start; flex-direction: column;"
           >
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
               <tr>
@@ -126,9 +126,36 @@ export default async function (referral) {
             >
               <a
                 style="color: rgba(0,0,0,0.4); text-decoration: underline;"
+                href="https://kiwistand.github.io/kiwi-docs/"
+                >About</a
+              >
+              <span> | </span>
+              <a
+                style="color: rgba(0,0,0,0.4); text-decoration: underline;"
                 href="https://attestate.com"
                 target="_blank"
                 >Kontakt</a
+              >
+              <span> | </span>
+              <a
+                style="color: rgba(0,0,0,0.4); text-decoration: underline;"
+                href="https://warpcast.com/kiwi"
+                target="_blank"
+                >Warpcast</a
+              >
+              <span> | </span>
+              <a
+                style="color: rgba(0,0,0,0.4); text-decoration: underline;"
+                href="https://x.com/KiwiNewsHQ"
+                target="_blank"
+                >X (Twitter)</a
+              >
+              <span> | </span>
+              <a
+                style="color: rgba(0,0,0,0.4); text-decoration: underline;"
+                href="https://orb.club/@kiwinews"
+                target="_blank"
+                >Orb</a
               >
             </div>
           </div>
