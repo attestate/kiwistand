@@ -1,33 +1,29 @@
 //@format
 import htm from "htm";
 import vhtml from "vhtml";
+import { ethers } from "ethers";
 
 import Header from "./components/header.mjs";
 import Sidebar from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
 import Head from "./components/head.mjs";
+import InviteRow from "./components/invite-row.mjs";
 import * as ens from "../ens.mjs";
+import * as price from "../price.mjs";
+import * as registry from "../chainstate/registry.mjs";
+import { getLeaders } from "../cache.mjs";
 
 const html = htm.bind(vhtml);
-import { ethers } from "ethers";
 
-export default async function (
-  theme,
-  websitePrice,
-  onchainPrice,
-  identity,
-  leaders,
-) {
+export default async function (theme) {
+  const mints = await registry.mints();
+  const { reward, percentageOff } = await price.getReferralReward(mints);
+  const leaders = getLeaders();
   const ensLeaders = await Promise.all(
     leaders.map(({ identity, totalKarma }) =>
       ens.resolve(identity).then((resolved) => ({ ...resolved, totalKarma })),
     ),
   );
-
-  const referralReward = (websitePrice - onchainPrice) / 2;
-  const referralRewardEth = parseFloat(
-    ethers.utils.formatEther(referralReward.toString()),
-  ).toFixed(4);
 
   return html`
     <html lang="en" op="news">
@@ -45,7 +41,7 @@ export default async function (
               <tr>
                 <td style="padding: 1rem; text-align: left;">
                   <h1 style="color: black; font-size: 1.5rem;">
-                    Earn ${referralRewardEth} ETH for Every Friend You Invite
+                    Earn ${reward} ETH for Every Friend You Invite
                   </h1>
                   <p>Let's grow the Kiwi community together!</p>
                   <p>
@@ -67,33 +63,22 @@ export default async function (
                   </div>
                   <p>
                     If you send a friend the link below and they sign up, you're
-                    being sent ${referralRewardEth} ETH immediately. No need to
-                    wait for withdrawing or stupid retention games. You get the
-                    funds sent directly to your wallet!
+                    being sent ${reward} ETH immediately. No need to wait for
+                    withdrawing or stupid retention games. You get the funds
+                    sent directly to your wallet!
                   </p>
                   <p>
                     Best of all, the more people sign up, the bigger the
                     difference between website an onchain price will become!
                   </p>
-                  <div
-                    style="margin-top: 1rem; display: flex; align-items: center;"
+                  <table
+                    border="0"
+                    cellpadding="0"
+                    cellspacing="0"
+                    bgcolor="#f6f6ef"
                   >
-                    <button
-                      onclick="document.getElementById('invitelink').select(); document.execCommand('copy'); window.toast.success('Link copied!');"
-                      id="button-onboarding"
-                      style="border-radius: 2px; padding: 10px 15px; background-color: black; border: 1px
- solid black; color: white; cursor: pointer; width: 25%; margin-right: 10px;"
-                    >
-                      Copy
-                    </button>
-                    <input
-                      id="invitelink"
-                      type="text"
-                      value="https://news.kiwistand.com/?referral=${identity}"
-                      readonly
-                      style="width: 75%; padding: 10px 15px; border: 1px solid #ccc; border-radius: 2px;"
-                    />
-                  </div>
+                    ${InviteRow(reward, percentageOff)}
+                  </table>
                   <h1
                     style="margin-top: 1.5rem; color: black; font-size: 1.5rem;"
                   >
