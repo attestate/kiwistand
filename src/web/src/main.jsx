@@ -826,6 +826,12 @@ async function start() {
       window.history.replaceState({}, "", url.href);
     }
   }
+
+  // NOTE: We're setting this value here because there are inline scripts which
+  // are only executing in case react has successfully loaded on the site,
+  // which we consider to be the case when we've reached this part of the
+  // application.
+  window.reactHasLoaded = true;
 }
 
 start();

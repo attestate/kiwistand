@@ -396,7 +396,7 @@ const row = (
                   style="cursor: pointer; margin: 6px 6px 9px 6px; display: flex;"
                 >
                   <div
-                    onclick="document.querySelector('.comment-preview-0x${story.index}').style.display = 'none';window.dispatchEvent(new CustomEvent('open-comments-0x${story.index}'));"
+                    onclick="window.reactHasLoaded && (document.querySelector('.comment-preview-0x${story.index}').style.display = 'none', window.dispatchEvent(new CustomEvent('open-comments-0x${story.index}')));"
                   >
                     <div style="display: inline-flex; align-items: start;">
                       <img
