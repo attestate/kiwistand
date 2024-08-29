@@ -266,6 +266,20 @@ const SubmitButton = (props) => {
       message = `Error! Sad Kiwi! "${response.details}"`;
     }
 
+    if (
+      response.status === "error" &&
+      response.details.includes("Message with marker")
+    ) {
+      toast.success(
+        "You've voted on this link already earlier, redirecting...",
+      );
+    } else if (response.status === "error") {
+      toast.error(
+        "Unexpected error during submission. Please report this to the team!",
+      );
+      return;
+    }
+
     let nextPage;
     if (response?.data?.index && response?.data?.isResubmission) {
       redirectTo = "/stories";
@@ -274,6 +288,8 @@ const SubmitButton = (props) => {
     } else if (response?.data?.index) {
       nextPage = new URL(window.location.origin + redirectTo);
       nextPage.searchParams.set("index", response.data.index);
+    } else {
+      nextPage = new URL(window.location.origin + redirectTo);
     }
     window.location.href = nextPage.href;
   };
