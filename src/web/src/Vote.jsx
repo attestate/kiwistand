@@ -104,12 +104,8 @@ const Vote = (props) => {
                 signer &&
                 eligible(allowlist, delegations, await signer.getAddress());
 
-              if (!connected && !isEligible) {
-                openConnectModal();
-                return;
-              }
-              if (connected && !isEligible) {
-                props.setIsOpen(true);
+              if (!isEligible) {
+                window.location.pathname = "/gateway";
                 return;
               }
 
