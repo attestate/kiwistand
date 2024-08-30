@@ -775,6 +775,8 @@ export async function launch(trie, libp2p) {
     reply.header("Cache-Control", "public, max-age=86400");
     return reply.status(200).type("text/html").send(content);
   });
+  // TODO: Remove this page after having removed its links from the page for a
+  // few days or weeks
   app.get("/comments", async (request, reply) => {
     let data;
     try {
