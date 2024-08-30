@@ -100,7 +100,7 @@ function row(reward, percentageOff) {
     <tr>
       <td>
         <div
-          style="padding: 1rem 1rem 0.5rem 1rem; display: flex; flex-direction: column; align-items: start; border-bottom: 1px solid rgba(0,0,0,0.1);"
+          style="padding: 0.25rem 1rem 0.5rem 1rem; display: flex; flex-direction: column; align-items: start;"
         >
           <div style="margin-bottom: 0.5rem;">
             <span style="color: black; font-weight: bold; font-size: 14pt;"

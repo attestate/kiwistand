@@ -34,15 +34,28 @@ const copySVG = (
 
 const InviteLink = ({ toast }) => {
   const cookieValue = getCookie("identity") || "0x";
-  const referralLink = `https://news.kiwistand.com/?referral=${cookieValue}`;
+  let referralLink = `https://news.kiwistand.com/?referral=${cookieValue}`;
   const wcLink = `https://warpcast.com/~/compose?embeds[]=${referralLink}`;
   const inputRef = useRef(null);
+  const isLoggedOut = cookieValue === "0x";
+
+  if (isLoggedOut) {
+    referralLink = "members only...";
+  }
 
   const copyToClipboard = () => {
+    if (isLoggedOut) {
+      window.location.pathname = "/gateway";
+      return;
+    }
     const input = inputRef.current;
     input.select();
     document.execCommand("copy");
     toast.success("Link copied!");
+  };
+
+  const handleFCLinkClick = () => {
+    window.open(wcLink, "_blank");
   };
 
   return (
@@ -64,14 +77,20 @@ const InviteLink = ({ toast }) => {
       <button
         id="button-onboarding"
         style={{ width: "15%", marginRight: "10px", height: "40px" }}
+        disabled={isLoggedOut}
         onClick={copyToClipboard}
       >
         {copySVG}
       </button>
       <button
         id="button-onboarding"
-        style={{ backgroundColor: "#472a91", width: "15%", height: "40px" }}
-        onClick={() => window.open(wcLink, "_blank")}
+        disabled={isLoggedOut}
+        style={{
+          backgroundColor: "#472a91",
+          width: "15%",
+          height: "40px",
+        }}
+        onClick={handleFCLinkClick}
       >
         <Fcicon style={{ height: "1rem", color: "white" }} />
       </button>

@@ -72,7 +72,7 @@ const Bell = (props) => {
     <a
       disabled={disabled}
       title="Notifications"
-      href={disabled ? "" : link}
+      href={disabled ? "/gateway" : link}
       className={props.mobile ? "mobile-bell" : "bell-button"}
       onClick={handleClick}
       style={{
