@@ -82,7 +82,7 @@ export const RestoreDialogue = (allowlist, delegations, toast) => {
       const identity = eligible(allowlist, delegations, wallet.address);
       localStorage.setItem(`-kiwi-news-${identity}-key`, decodedData);
       setCookie("identity", identity, tenYearsInSeconds);
-      location.reload();
+      window.location.pathname = "/";
     }
 
     if (!featureAvailable || window.location.pathname === "/settings")
@@ -199,7 +199,7 @@ function BackupKey(props) {
         // component isn't reloading based on the updates in the
         // localStorage, for example, when we store a new application key
         // there. So we reload the page to fix this.
-        location.reload();
+        window.location.pathname = "/";
         return;
       }
       setFeatureAvailable(isAvailable);
@@ -296,7 +296,7 @@ function BackupKey(props) {
       // component isn't reloading based on the updates in the
       // localStorage, for example, when we store a new application key
       // there. So we reload the page to fix this.
-      location.reload();
+      window.location.pathname = "/";
     }
     setProgress(3);
   };

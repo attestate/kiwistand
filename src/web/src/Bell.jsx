@@ -47,6 +47,25 @@ const Bell = (props) => {
     }
   }, [address]);
 
+  if (!getCookie("identity") || !isEligible) {
+    return (
+      <a
+        style={{
+          textAlign: "center",
+          fontSize: "6pt",
+          display: props.mobile ? "inline-flex" : "inline",
+          padding: props.mobile ? "" : "10px 10px",
+          flexGrow: 1,
+          width: "1.5rem",
+        }}
+        className={props.mobile ? "mobile-bell" : "bell-button"}
+        href="/gateway"
+      >
+        Sign {props.mobile && <br />}
+        up
+      </a>
+    );
+  }
   if (
     (!props.mobile && !getCookie("lastUpdate") && readNotifications === 0) ||
     window.location.pathname === "/indexing" ||

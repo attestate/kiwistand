@@ -206,7 +206,7 @@ export const TextConnectButton = (props) => {
           console.log(
             "Reloading because initial identity cookie was undefined but eligibly was recognized",
           );
-          window.location.reload();
+          window.location.pathname = "/";
         }
 
         if ((props.required && !connected) || (!connected && !isEligible)) {
@@ -254,7 +254,7 @@ export const CustomConnectButton = (props) => {
           console.log(
             "Reloading because initial identity cookie was undefined but eligibly was recognized",
           );
-          window.location.reload();
+          window.location.pathname = "/";
         }
 
         if ((props.required && !connected) || (!connected && !isEligible)) {

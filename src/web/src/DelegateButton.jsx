@@ -284,7 +284,7 @@ const DelegateButton = (props) => {
               // component isn't reloading based on the updates in the
               // localStorage, for example, when we store a new application key
               // there. So we reload the page to fix this.
-              location.reload();
+              window.location.pathname = "/";
             }
           }
         };
