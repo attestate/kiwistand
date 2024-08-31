@@ -319,7 +319,7 @@ const DelegateButton = (props) => {
             props.callback();
             window.location.pathname = "/";
           }}
-          href=""
+          href="/"
           class="meta-link"
         >
           I don't want to backup! Skip dialogue
