@@ -313,8 +313,16 @@ const DelegateButton = (props) => {
   if (key && wallet) {
     if (supportsPasskeys() && indexedDelegation) {
       const skipButton = (
-        <a onClick={props.callback} href="" class="meta-link">
-          Don't want to back up your key? skip dialogue
+        <a
+          style={{ textDecoration: "underline" }}
+          onClick={() => {
+            props.callback();
+            window.location.pathname = "/";
+          }}
+          href=""
+          class="meta-link"
+        >
+          I don't want to backup! Skip dialogue
         </a>
       );
       return (
