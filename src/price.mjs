@@ -106,14 +106,10 @@ function calcMonthlyIncome(transactions) {
 
 export function extractDateAndOpen(csvData) {
   const lines = csvData.split("\n");
-  let lastValidOpen = null; // Keep track of the last valid open price
   const dataObject = lines.slice(1).reduce((acc, line) => {
     const [date, open] = line.split(",");
     if (open && open !== "null") {
-      lastValidOpen = parseFloat(open);
-    }
-    if (date && lastValidOpen !== null) {
-      acc[date] = lastValidOpen;
+      acc[date] = parseFloat(open);
     }
     return acc;
   }, {});
@@ -121,13 +117,8 @@ export function extractDateAndOpen(csvData) {
 }
 
 export async function fetchEURPrice(date) {
-  const endDate = date;
-  const startDate = sub(endDate, { years: 1 });
-
-  const period1 = Math.floor(startDate.getTime() / 1000);
-  const period2 = Math.floor(endDate.getTime() / 1000);
-
-  const url = `https://query1.finance.yahoo.com/v7/finance/download/ETH-EUR?period1=${period1}&period2=${period2}&interval=1d&events=history&includeAdjustedClose=true`;
+  const url =
+    "https://raw.githubusercontent.com/attestate/eth-eur-historical-price-data/main/data.csv";
 
   const response = await fetch(url);
   if (!response.ok) throw new Error("Failed to fetch data");
@@ -368,7 +359,7 @@ export async function getSalesData() {
   const data = mints.map(({ timestamp, value }) => {
     const parsedTimestamp = new Date(1000 * parseInt(timestamp, 16));
     const valueETH = ethers.utils.formatEther(value);
-    const ETHEUR = opensPerDay[format(parsedTimestamp, "yyyy-MM-dd")];
+    const ETHEUR = opensPerDay[format(parsedTimestamp, "MM/dd/yyyy")];
 
     return {
       timestamp: parsedTimestamp.toISOString(),
@@ -403,7 +394,7 @@ export async function chart(theme) {
   const saleData = mints.map(({ timestamp, value }) => {
     const parsedTimestamp = new Date(1000 * parseInt(timestamp, 16));
     const valueETH = ethers.utils.formatEther(value);
-    const ETHEUR = opensPerDay[format(parsedTimestamp, "yyyy-MM-dd")];
+    const ETHEUR = opensPerDay[format(parsedTimestamp, "MM/dd/yyyy")];
 
     return {
       timestamp: parsedTimestamp,
