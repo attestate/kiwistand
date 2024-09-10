@@ -70,7 +70,7 @@ async function fetchLensData(address) {
 
   let data;
   try {
-    result = await response.json();
+    const result = await response.json();
     data = result.data;
   } catch (err) {
     return;
