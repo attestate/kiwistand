@@ -33,6 +33,8 @@ const maxReaders = 500;
 export const upvotes = new Set();
 export const commentCounts = new Map();
 
+// TODO: This function is badly named, it should be renamed to
+// "incrementCommentsCount"
 export function addComment(storyId) {
   const count = commentCounts.get(storyId) || 0;
   commentCounts.set(storyId, count + 1);
@@ -290,7 +292,6 @@ async function atomicPut(trie, message, identity, accounts, delegations) {
       const enhancer = enhance(accounts, delegations, cacheEnabled);
       const enhancedMessage = enhancer(message);
       insertMessage(enhancedMessage);
-      await triggerNotification(enhancedMessage);
     } catch (err) {
       // NOTE: insertMessage is just a cache, so if this operation fails, we
       // want the protocol to continue to execute as normally.
@@ -335,6 +336,7 @@ async function atomicPut(trie, message, identity, accounts, delegations) {
   return {
     index,
     canonical,
+    enhanced: enhancedMessage,
   };
 }
 
@@ -447,13 +449,14 @@ async function _add({
     }
   }
 
-  const { index, canonical } = await atomicPut(
+  const { index, canonical, enhanced } = await atomicPut(
     trie,
     message,
     identity,
     accounts,
     delegations,
   );
+  await triggerNotification(enhanced);
 
   if (!libp2p) {
     log(
