@@ -516,10 +516,11 @@ export default async function (trie, theme, page, domain) {
                   >
                     <img style="height: 30px;" src="lens.png" />
                     <a
+                      target="_blank"
                       style="color: white; text-decoration: underline;"
-                      href="https://paragraph.xyz/@kiwi-updates/t2-lens-submissions-ended"
+                      href="https://app.t2.world/article/cm0dybwsm14867811ymc3nenain2"
                     >
-                      Vote until July 15!
+                      Writing contest! Win 1,200 USDC
                     </a>
                   </div>
                 </td>
