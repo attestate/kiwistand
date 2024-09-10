@@ -285,12 +285,13 @@ async function atomicPut(trie, message, identity, accounts, delegations) {
   // NOTE on 2024-09-10: Not sure why we're nesting try catchs here, I'm pretty
   // sure this wasn't initially intended so if we end up touching this part of
   // the code again, it may make sense to remove it.
+  let enhancedMessage;
   try {
     await trie.put(Buffer.from(index, "hex"), canonical);
     try {
       const cacheEnabled = false;
       const enhancer = enhance(accounts, delegations, cacheEnabled);
-      const enhancedMessage = enhancer(message);
+      enhancedMessage = enhancer(message);
       insertMessage(enhancedMessage);
     } catch (err) {
       // NOTE: insertMessage is just a cache, so if this operation fails, we
@@ -456,7 +457,9 @@ async function _add({
     accounts,
     delegations,
   );
-  await triggerNotification(enhanced);
+  if (enhanced) {
+    await triggerNotification(enhanced);
+  }
 
   if (!libp2p) {
     log(
