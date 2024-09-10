@@ -5,6 +5,15 @@
 - We are versioning according to [semver.org](https://semver.org)
 - We are currently in the ["Initial development phase"](https://semver.org/#spec-item-4)
 
+## 0.8.0
+
+- (breaking) Double it-length-prefixed length
+- Fixes in reconciliation algorithm
+
+**Caution:** If you're running a node and you must preserve its reconciliation
+data, it is best get in touch with us directly via Telegram. If you can afford
+to just delete the reconciliation data and start over, we suggest you do this.
+
 ## 0.7.0
 
 - (breaking) Fixed a bug in the constraints metadata db. Details:
