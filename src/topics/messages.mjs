@@ -16,7 +16,14 @@ assert.ok(id);
 export const name = `${prefix}/${version}/${id}`;
 
 export const handlers = {
-  message: (trie, allowlistFn = registry.allowlist) => {
+  message: (
+    trie,
+    allowlistFn = registry.allowlist,
+    delegationsFn = registry.delegations,
+    // TODO: We're not testing if accounts is present or not in this call. We
+    // should test this.
+    accountsFn = registry.accounts,
+  ) => {
     return async (evt) => {
       if (evt.detail.topic !== name) {
         return false;
@@ -35,19 +42,21 @@ export const handlers = {
         obj = JSON.parse(message);
       } catch (err) {
         log(
-          `message handler: Couldn't JSON-parse message "${message}" to in trie: ${err.toString()}`
+          `message handler: Couldn't JSON-parse message "${message}" to in trie: ${err.toString()}`,
         );
         return false;
       }
 
       const libp2p = null;
       const allowlist = await allowlistFn();
+      const delegations = await delegationsFn();
+      const accounts = await accountsFn();
       try {
-        await store.add(trie, obj, libp2p, allowlist);
+        await store.add(trie, obj, libp2p, allowlist, delegations, accounts);
         return true;
       } catch (err) {
         log(
-          `message handler: Didn't add message to database because of error: "${err.toString()}"`
+          `message handler: Didn't add message to database because of error: "${err.stack}"`,
         );
         return false;
       }
