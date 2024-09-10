@@ -445,7 +445,6 @@ export function handleLeaves(trie, peerFab) {
       return;
     }
 
-    if (!trie.hasCheckpoints()) trie.checkpoint();
     log("handleLeaves: Received leaves and storing them in db");
 
     try {
@@ -458,21 +457,9 @@ export function handleLeaves(trie, peerFab) {
       await put(trie, message, allowlist, delegations, accounts);
     } catch (err) {
       elog(err, "handleLeaves: Unexpected error");
-      await trie.revert();
       peerFab.set();
     }
 
-    // NOTE: While there could be a strategy where we continuously stay in a
-    // checkpoint the entire time when the synchronization is going one, this
-    // seems detrimental to the mechanism, in that it introduces a high-stakes
-    // operation towards the very end where after many minutes of back and
-    // forth all data is being committed into the trie. So right now it seems
-    // more robust if we hence open a checkpoint the first time new levels are
-    // sent, and we close it by the time leaves are being received. While this
-    // means that practically for every newly received leaf, the
-    // synchronization starts over again, it sequentializes downloading the
-    // leaves into many sub tasks which are more likely to succeed.
-    await trie.commit();
     peerFab.set();
   });
 }

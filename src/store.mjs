@@ -261,6 +261,7 @@ export function upvoteID(identity, link, type) {
   return `${utils.getAddress(identity)}|${normalizeUrl(link)}|${type}`;
 }
 
+let messagesAdded = 0;
 async function atomicPut(trie, message, identity, accounts, delegations) {
   const marker = upvoteID(identity, message.href, message.type);
   const { canonical, index } = toDigest(message);
@@ -279,6 +280,9 @@ async function atomicPut(trie, message, identity, accounts, delegations) {
     }
   }
 
+  // NOTE on 2024-09-10: Not sure why we're nesting try catchs here, I'm pretty
+  // sure this wasn't initially intended so if we end up touching this part of
+  // the code again, it may make sense to remove it.
   try {
     await trie.put(Buffer.from(index, "hex"), canonical);
     try {
@@ -290,7 +294,13 @@ async function atomicPut(trie, message, identity, accounts, delegations) {
     } catch (err) {
       // NOTE: insertMessage is just a cache, so if this operation fails, we
       // want the protocol to continue to execute as normally.
-      log(`Inserting message threw: ${JSON.stringify(message)}`);
+      log(
+        `Inserting message threw: ${JSON.stringify(
+          message,
+        )}, and error. If this is an error about inserting the message into the cache, it may be ignored as it is uncritical ${
+          err.stack
+        }`,
+      );
     }
     // TODO: Remove and replace with SQLite implementation
     if (message.type === "comment") {
@@ -310,15 +320,17 @@ async function atomicPut(trie, message, identity, accounts, delegations) {
     // cached data structure that gets recomputed upon every restart of the
     // application.
     const result = upvotes.delete(marker);
-    let reason = `trie.put failed with "${err.toString()}". Successfully rolled back constraint`;
+    let reason = `trie.put failed with "${err.stack}". Successfully rolled back constraint`;
     if (!result) {
-      reason = `trie.put failed with "${err.toString()}". Tried to roll back constraint but failed`;
+      reason = `trie.put failed with "${err.stack}". Tried to roll back constraint but failed`;
     }
     log(reason);
     throw new Error(reason);
   }
   log(`Stored message with index "${index}"`);
   log(`New root: "${trie.root().toString("hex")}"`);
+  messagesAdded += 1;
+  log(`Number of messages added: ${messagesAdded}`);
 
   return {
     index,
@@ -554,7 +566,6 @@ export async function leaves(
   const nodes = [];
 
   let pointer = 0;
-  log(`leaves: Does trie have checkpoints? "${trie.hasCheckpoints()}"`);
   log(`leaves: Trie root "${root.toString("hex")}"`);
   for await (const [node] of walkTrieDfs(trie, root, [])) {
     if (Number.isInteger(amount) && nodes.length >= amount) {

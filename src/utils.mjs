@@ -35,5 +35,11 @@ export function elog(err, msg) {
   if (msg) {
     console.error(`Message: ${msg}`);
   }
-  console.error(`Stack Trace: ${err.stack}`);
+  if (err && err.stack) {
+    console.error(`Stack Trace: ${err.stack}`);
+  } else if (err) {
+    console.error(`Error: ${err}`);
+  } else {
+    console.error(`Error wasn't defined in elog: ${err}`);
+  }
 }

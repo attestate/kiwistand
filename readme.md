@@ -46,6 +46,12 @@ In your `.env` file, replace the value of `OPTIMISM_RPC_HTTP_HOST` with your ful
 
 You can also watch the video explaining [how to get started editing the Kiwi News frontend](https://www.loom.com/share/e0e8866450d54c52b161e77907d1ccb9).
 
+## Syncing to the network
+
+Kiwistand isn't venture capital funded and so its algorithm is a bit rough around the edges. Please don't expect a super polished piece of software! We're working with constraints. That said, despite all of the challenges, we're trying to keep the set reconciliation algorithm as best in shape as we can! If you're running into issues, please make sure to reach out to Tim on Telegram.
+
+Now, for actually syncing the node, please follow the guide in `Contributing.md`!
+
 ## Debugging
 
 Once you're up and running, you might want to submit new links to the network. However, we encourage you to NOT do that on the main net.
