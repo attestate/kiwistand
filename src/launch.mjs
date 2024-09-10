@@ -27,18 +27,6 @@ if (reconcileMode) {
 }
 
 const trie = await store.create();
-if (!(await trie.checkRoot(trie.root()))) {
-  log("Couldn't find root, trying to recover from last valid root");
-  const lastRoot = await store.getLastValidRoot();
-
-  if (lastRoot) {
-    await trie.root(Buffer.from(lastRoot, "hex"));
-    log(`Using last root ${lastRoot} to recover`);
-    console.log(await trie.checkRoot(trie.root()), trie.root());
-  } else {
-    log("Failed to recover from missing root");
-  }
-}
 
 const node = await start(config);
 
