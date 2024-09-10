@@ -285,7 +285,6 @@ async function atomicPut(trie, message, identity, accounts, delegations) {
   // NOTE on 2024-09-10: Not sure why we're nesting try catchs here, I'm pretty
   // sure this wasn't initially intended so if we end up touching this part of
   // the code again, it may make sense to remove it.
-  let enhancedMessage;
   try {
     await trie.put(Buffer.from(index, "hex"), canonical);
     try {
