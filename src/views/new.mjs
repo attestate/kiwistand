@@ -139,15 +139,7 @@ export default async function (trie, theme) {
               ${items
                 .slice(0, 5)
                 .map(
-                  Row(
-                    null,
-                    "/best",
-                    undefined,
-                    null,
-                    null,
-                    null,
-                    recentJoiners,
-                  ),
+                  Row(null, "/new", undefined, null, null, null, recentJoiners),
                 )}
               ${InviteRow(reward, percentageOff)}
               ${items
