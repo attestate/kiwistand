@@ -282,16 +282,37 @@ async function atomicPut(trie, message, identity, accounts, delegations) {
     }
   }
 
-  // NOTE on 2024-09-10: Not sure why we're nesting try catchs here, I'm pretty
-  // sure this wasn't initially intended so if we end up touching this part of
-  // the code again, it may make sense to remove it.
+  // NOTE: We used to not have this check and so the reconciliation algorithm
+  // would actually allow re-adding comments back to the trie, basically just
+  // overwriting what already existed there (as we're anyways storing the
+  // comments at a hash as all other messages).
+  //
+  // However, this creates problems downstream because, for example, triggering
+  // push notifications relies on getting information on whether a message is
+  // newly added to the database, and so `atomicPut` would report successfully
+  // adding comments to the store, when, in reality, it was just overwriting
+  // existing comments.
+  //
+  // To check whether a comment exists and then aborting the routine now
+  // prevents the above from happening.
+  if (message.type === "comment") {
+    const existingLeaf = await trie.get(Buffer.from(index, "hex"));
+    if (existingLeaf) {
+      const err = `Message with index "${index}" already exists in the trie. Skipping.`;
+      log(err);
+      throw new Error(err);
+    }
+  }
+
+>>>>>>> d97c138 (Re-enable push notifs / fix comment storage bug)
   try {
     await trie.put(Buffer.from(index, "hex"), canonical);
     try {
       const cacheEnabled = false;
       const enhancer = enhance(accounts, delegations, cacheEnabled);
-      enhancedMessage = enhancer(message);
+      const enhancedMessage = enhancer(message);
       insertMessage(enhancedMessage);
+      await triggerNotification(enhancedMessage);
     } catch (err) {
       // NOTE: insertMessage is just a cache, so if this operation fails, we
       // want the protocol to continue to execute as normally.
@@ -336,7 +357,6 @@ async function atomicPut(trie, message, identity, accounts, delegations) {
   return {
     index,
     canonical,
-    enhanced: enhancedMessage,
   };
 }
 
@@ -449,16 +469,13 @@ async function _add({
     }
   }
 
-  const { index, canonical, enhanced } = await atomicPut(
+  const { index, canonical } = await atomicPut(
     trie,
     message,
     identity,
     accounts,
     delegations,
   );
-  if (enhanced) {
-    await triggerNotification(enhanced);
-  }
 
   if (!libp2p) {
     log(

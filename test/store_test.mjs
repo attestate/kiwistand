@@ -1464,6 +1464,8 @@ test.serial("retrieving leaves selectively", async (t) => {
   );
   t.is(result1.length, 1);
   t.is(result1[0].type, type1);
+
+  await rm("dbtestA", { recursive: true });
 });
 
 test.serial("separate pagination per message type", async (t) => {
@@ -1559,6 +1561,88 @@ test.serial("separate pagination per message type", async (t) => {
   );
   t.is(leaves.length, 1);
   t.is(leaves[0].timestamp, timestamp2);
+
+  await rm("dbtestA", { recursive: true });
+});
+
+test.serial("adding the same comment again to the store", async (t) => {
+  store.upvotes.clear();
+  env.DATA_DIR = "dbtestA";
+  t.plan(8);
+  const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
+  const privateKey =
+    "0xad54bdeade5537fb0a553190159783e45d02d316a992db05cbed606d3ca36b39";
+  const signer = new Wallet(privateKey);
+  t.is(signer.address, address);
+
+  const text0 = "hello world";
+  const href0 = "https://example.com";
+  const type0 = "amplify";
+  const timestamp0 = 1676559616;
+  const message0 = id.create(text0, href0, type0, timestamp0);
+  const signedMessage0 = await id.sign(signer, message0, EIP712_MESSAGE);
+
+  const trie = await store.create();
+  const libp2p = {
+    pubsub: {
+      publish: (name, message) => {
+        t.truthy(name);
+        t.truthy(message);
+      },
+    },
+  };
+  const allowlist = new Set([address]);
+  const delegations = {};
+  const accounts = {
+    [address]: {
+      balance: 1,
+      start: 123,
+    },
+  };
+  const index0 = await store.add(
+    trie,
+    signedMessage0,
+    libp2p,
+    allowlist,
+    delegations,
+    accounts,
+  );
+  t.is(store.upvotes.size, 1);
+
+  const text1 = "this is a short comment";
+  const href1 = `kiwi:0x${index0}`;
+  const type1 = "comment";
+  const timestamp1 = 1676559617;
+  const message1 = id.create(text1, href1, type1, timestamp1);
+  const signedMessage1 = await id.sign(signer, message1, EIP712_MESSAGE);
+
+  await store.add(
+    trie,
+    signedMessage1,
+    libp2p,
+    allowlist,
+    delegations,
+    accounts,
+  );
+  t.is(
+    store.upvotes.size,
+    1,
+    "Only upvotes must be added as constraints to metadata db",
+  );
+
+  await t.throwsAsync(
+    async () => {
+      await store.add(
+        trie,
+        signedMessage1,
+        libp2p,
+        allowlist,
+        delegations,
+        accounts,
+      );
+    },
+    { message: /already exists in the trie/ },
+  );
 
   await rm("dbtestA", { recursive: true });
 });
