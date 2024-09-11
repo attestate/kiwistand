@@ -304,7 +304,6 @@ async function atomicPut(trie, message, identity, accounts, delegations) {
     }
   }
 
->>>>>>> d97c138 (Re-enable push notifs / fix comment storage bug)
   try {
     await trie.put(Buffer.from(index, "hex"), canonical);
     try {

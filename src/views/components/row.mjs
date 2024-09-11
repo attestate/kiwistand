@@ -10,6 +10,7 @@ import ShareIcon from "./shareicon.mjs";
 import CopyIcon from "./copyicon.mjs";
 import FCIcon from "./farcastericon.mjs";
 import theme from "../../theme.mjs";
+import { countOutbounds } from "../../cache.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -107,6 +108,8 @@ const row = (
   return (story, i) => {
     const submissionId = `kiwi:0x${story.index}`;
     const commentCount = commentCounts.get(submissionId) || 0;
+    const outboundsLookbackHours = 24 * 5;
+    const clicks = countOutbounds(story.href, outboundsLookbackHours);
     return html`
       <tr>
         <td>
@@ -343,6 +346,16 @@ const row = (
                                 </a>
                               </span>
                             `}
+                        <span style="opacity:0.6"> • </span>
+                        <span
+                          class="click-counter"
+                          data-story-clicks="${clicks}"
+                          data-story-href="${story.href}"
+                        >
+                          ${clicks.toString()}
+                          <span> </span>
+                          ${clicks === 1 ? "click" : "clicks"}</span
+                        >
                       </span>
                     </span>
                   </div>

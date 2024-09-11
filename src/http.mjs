@@ -12,6 +12,8 @@ import "express-async-errors";
 import { sub } from "date-fns";
 import DOMPurify from "isomorphic-dompurify";
 import { fetchBuilder, FileSystemCache } from "node-fetch-cache";
+import ws from "ws";
+import { createServer } from "http";
 
 import * as registry from "./chainstate/registry.mjs";
 import log from "./logger.mjs";
@@ -82,7 +84,9 @@ const fetch = fetchBuilder.withCache(
     ttl: 86400000, // 24 hours
   }),
 );
+
 const app = express();
+const server = createServer(app);
 
 app.set("etag", "strong");
 app.use((req, res, next) => {
@@ -151,6 +155,9 @@ function sendStatus(reply, code, message, details, data) {
 }
 
 export async function launch(trie, libp2p) {
+  const wss = new ws.Server({ noServer: true });
+  const clients = new Set();
+
   app.use((err, req, res, next) => {
     log(`Express error: "${err.message}", "${err.stack}"`);
     res.status(500).send("Internal Server Error");
@@ -190,6 +197,12 @@ export async function launch(trie, libp2p) {
 
     const hash = fingerprint.generate(request);
     trackOutbound(url, hash);
+
+    clients.forEach((client) => {
+      if (client.readyState === ws.WebSocket.OPEN) {
+        client.send(JSON.stringify({ href: url }));
+      }
+    });
     return reply.redirect(url);
   });
   app.get("/friends", async (request, reply) => {
@@ -1103,7 +1116,20 @@ export async function launch(trie, libp2p) {
     return reply.status(200).type("text/html").send(content);
   });
 
-  app.listen(env.HTTP_PORT, () =>
+  wss.on("connection", (ws) => {
+    clients.add(ws);
+
+    ws.on("close", () => {
+      clients.delete(ws);
+    });
+  });
+
+  server.on("upgrade", (request, socket, head) => {
+    wss.handleUpgrade(request, socket, head, (socket) => {
+      wss.emit("connection", socket, request);
+    });
+  });
+  server.listen(env.HTTP_PORT, () =>
     log(`Launched HTTP server at port "${env.HTTP_PORT}"`),
   );
 }

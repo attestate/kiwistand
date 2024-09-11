@@ -163,6 +163,39 @@ async function addInviteLink(toast) {
     );
   }
 }
+
+async function addClickCounters() {
+  const counters = document.querySelectorAll(".click-counter");
+  if (counters && counters.length > 0) {
+    const { createRoot } = await import("react-dom/client");
+    const { StrictMode } = await import("react");
+    const ClickCounter = (await import("./ClickCounter.jsx")).default;
+
+    const wsProtocol = window.location.protocol === "https:" ? "wss" : "ws";
+    const ws = new WebSocket(`${wsProtocol}://${window.location.host}`);
+
+    ws.onmessage = (event) => {
+      let data;
+      try {
+        data = JSON.parse(event.data);
+      } catch (err) {
+        return;
+      }
+      window.dispatchEvent(new CustomEvent(`click-increment-${data.href}`));
+    };
+
+    counters.forEach((elem) => {
+      const href = elem.getAttribute("data-story-href");
+      const clicks = elem.getAttribute("data-story-clicks");
+      createRoot(elem).render(
+        <StrictMode>
+          <ClickCounter href={href} initialClicks={clicks} />
+        </StrictMode>,
+      );
+    });
+  }
+}
+
 async function addDynamicNavElements() {
   const navElements = document.querySelectorAll("[data-icon]");
   if (navElements && navElements.length > 0) {
@@ -785,6 +818,7 @@ async function start() {
 
   const results1 = await Promise.allSettled([
     addDynamicNavElements(),
+    addClickCounters(),
     addInviteLink(toast),
     addCommentInput(toast, await allowlistPromise, await delegationsPromise),
     addSubscriptionButton(await allowlistPromise),
