@@ -306,6 +306,18 @@ const row = (
                           >`
                         : null}
                       <span>
+                        ${path === "/" || path === "/new"
+                          ? html` <span style="opacity:0.6"> • </span>
+                              <span
+                                class="click-counter"
+                                data-story-clicks="${clicks}"
+                                data-story-href="${story.href}"
+                              >
+                                ${clicks.toString()}
+                                <span> </span>
+                                ${clicks === 1 ? "click" : "clicks"}</span
+                              >`
+                          : null}
                         ${interactive || hideCast
                           ? null
                           : html`
@@ -346,16 +358,6 @@ const row = (
                                 </a>
                               </span>
                             `}
-                        <span style="opacity:0.6"> • </span>
-                        <span
-                          class="click-counter"
-                          data-story-clicks="${clicks}"
-                          data-story-href="${story.href}"
-                        >
-                          ${clicks.toString()}
-                          <span> </span>
-                          ${clicks === 1 ? "click" : "clicks"}</span
-                        >
                       </span>
                     </span>
                   </div>

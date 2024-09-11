@@ -183,7 +183,7 @@ export async function topstories(leaves, decayStrength) {
 
       const outboundClicks = countOutbounds(story.href);
       if (outboundClicks > 0) {
-        score = score * 0.7 + 0.3 * Math.log(outboundClicks);
+        score = score * 0.6 + 0.4 * Math.log(outboundClicks);
       }
 
       const decay = Math.sqrt(itemAge(story.timestamp));
