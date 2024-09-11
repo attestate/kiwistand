@@ -29,7 +29,7 @@ import {
   twitterSvg,
   githubSvg,
   warpcastSvg,
-  orbSvg,
+  heySvg,
   telegramSvg,
   discordSvg,
   websiteSvg,
@@ -288,9 +288,9 @@ export default async function (
                         : ""}
                       ${ensData.lens && ensData.lens.id
                         ? SocialButton(
-                            `https://orb.ac/p/${ensData.lens.id}`,
-                            orbSvg(),
-                            "Orb",
+                            `https://hey.xyz/profile/${ensData.lens.id}`,
+                            heySvg(),
+                            "Lens",
                           )
                         : ""}
                       ${SocialButton(
