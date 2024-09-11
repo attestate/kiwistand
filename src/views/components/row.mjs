@@ -109,7 +109,10 @@ const row = (
     const submissionId = `kiwi:0x${story.index}`;
     const commentCount = commentCounts.get(submissionId) || 0;
     const outboundsLookbackHours = 24 * 5;
-    const clicks = countOutbounds(story.href, outboundsLookbackHours);
+    const clicks = countOutbounds(
+      addOrUpdateReferrer(story.href, story.identity),
+      outboundsLookbackHours,
+    );
     return html`
       <tr>
         <td>
@@ -311,7 +314,12 @@ const row = (
                               <span
                                 class="click-counter"
                                 data-story-clicks="${clicks}"
-                                data-story-href="${story.href}"
+                                data-story-href="${DOMPurify.sanitize(
+                                  addOrUpdateReferrer(
+                                    story.href,
+                                    story.identity,
+                                  ),
+                                )}"
                               >
                                 ${clicks.toString()}
                                 <span> </span>

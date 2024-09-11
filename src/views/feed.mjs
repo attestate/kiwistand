@@ -29,7 +29,7 @@ import * as curation from "./curation.mjs";
 import * as registry from "../chainstate/registry.mjs";
 import log from "../logger.mjs";
 import { EIP712_MESSAGE } from "../constants.mjs";
-import Row, { extractDomain } from "./components/row.mjs";
+import Row, { addOrUpdateReferrer, extractDomain } from "./components/row.mjs";
 import * as karma from "../karma.mjs";
 import { metadata } from "../parser.mjs";
 import InviteRow from "./components/invite-row.mjs";
@@ -181,7 +181,9 @@ export async function topstories(leaves, decayStrength) {
         score = Math.log(story.upvotes);
       }
 
-      const outboundClicks = countOutbounds(story.href);
+      const outboundClicks = countOutbounds(
+        addOrUpdateReferrer(story.href, story.identity),
+      );
       if (outboundClicks > 0) {
         score = score * 0.6 + 0.4 * Math.log(outboundClicks);
       }
