@@ -100,6 +100,19 @@ export default async function submit(theme, url = "", title = "") {
                           />
                         </div>
                       </div>
+                      <div
+                        style="display: flex;flex-direction: column;gap: 5px; max-width: 600px; margin-top: 1rem;"
+                      >
+                        <label
+                          style="display:flex;gap:1rem;align-items:center;"
+                        >
+                          <input
+                            type="checkbox"
+                            style="transform:scale(1.5);"
+                          />
+                          Submit story as an ad
+                        </label>
+                      </div>
                       <button
                         id="button-onboarding"
                         style="width: 100%;max-width: 600px;margin-top: 1rem;padding: 5px;font-size: 16px;cursor: pointer;"

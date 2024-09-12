@@ -1,14 +1,25 @@
 import { useEffect, useState } from "react";
 import { Wallet } from "@ethersproject/wallet";
-import { useAccount, WagmiConfig } from "wagmi";
-import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
+import { formatEther, parseEther, formatUnits } from "viem";
+import {
+  useAccount,
+  useBalance,
+  WagmiConfig,
+  useContractRead,
+  useContractWrite,
+  usePrepareContractWrite,
+  useSwitchNetwork,
+} from "wagmi";
+import { RainbowKitProvider, ConnectButton } from "@rainbow-me/rainbowkit";
 import { eligible } from "@attestate/delegator2";
 import DOMPurify from "isomorphic-dompurify";
+import { optimism } from "wagmi/chains";
 
 import * as API from "./API.mjs";
 import { useSigner, useProvider, client, chains } from "./client.mjs";
 import NFTModal from "./NFTModal.jsx";
 import { getLocalAccount } from "./session.mjs";
+import { SimpleDisconnectButton } from "./Navigation.jsx";
 
 function safeExtractDomain(link) {
   let parsedUrl;
@@ -81,11 +92,21 @@ const UrlInput = (props) => {
   );
 };
 
+const buttonStyles = {
+  width: "100%",
+  maxWidth: "600px",
+  marginTop: "1rem",
+  padding: "5px",
+  fontSize: "16px",
+  cursor: "pointer",
+};
+
 const SubmitButton = (props) => {
   const { toast, url } = props;
   const [isLoading, setIsLoading] = useState(false);
   const [title, setTitle] = useState("");
   const [remainingChars, setRemainingChars] = useState(80);
+  const [isAd, setIsAd] = useState(false);
 
   useEffect(() => {
     const embedPreview = document.getElementById("embed-preview");
@@ -294,29 +315,350 @@ const SubmitButton = (props) => {
     window.location.href = nextPage.href;
   };
 
-  const buttonStyles = {
-    width: "100%",
-    maxWidth: "600px",
-    marginTop: "1rem",
-    padding: "5px",
-    fontSize: "16px",
-    cursor: "pointer",
-  };
-
   return (
     <div>
-      <button
-        id="button-onboarding"
-        style={buttonStyles}
-        onClick={handleClick}
-        disabled={isLoading || !isEligible}
-      >
-        {isLoading
-          ? !localAccount
-            ? "Please confirm signature..."
-            : "Submitting..."
-          : "Submit"}
-      </button>
+      <AdForm toast={toast} isAd={isAd} setIsAd={setIsAd} url={url} />
+      {isAd ? null : (
+        <button
+          id="button-onboarding"
+          style={buttonStyles}
+          onClick={handleClick}
+          disabled={isLoading || !isEligible}
+        >
+          {isLoading
+            ? !localAccount
+              ? "Please confirm signature..."
+              : "Submitting..."
+            : "Submit"}
+        </button>
+      )}
+    </div>
+  );
+};
+
+const adContractABI = [
+  { inputs: [], name: "ErrUnauthorized", type: "error" },
+  { inputs: [], name: "ErrValue", type: "error" },
+  {
+    inputs: [],
+    name: "collateral",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "controller",
+    outputs: [{ internalType: "address", name: "", type: "address" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "href",
+    outputs: [{ internalType: "string", name: "", type: "string" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "price",
+    outputs: [
+      { internalType: "uint256", name: "nextPrice", type: "uint256" },
+      { internalType: "uint256", name: "taxes", type: "uint256" },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "ragequit",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "string", name: "_title", type: "string" },
+      { internalType: "string", name: "_href", type: "string" },
+    ],
+    name: "set",
+    outputs: [],
+    stateMutability: "payable",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "timestamp",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "title",
+    outputs: [{ internalType: "string", name: "", type: "string" }],
+    stateMutability: "view",
+    type: "function",
+  },
+];
+const adContractAddress = "0xb0c9502ea7c11ea0fe6157bfc43e3507fa69bba0";
+
+const AdForm = (props) => {
+  const titleInputElem = document.getElementById("titleInput");
+  const title = titleInputElem.innerText;
+  const { isAd, setIsAd, url, toast } = props;
+  const [isValid, setIsValid] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const { switchNetwork } = useSwitchNetwork();
+
+  const { address, isConnected } = useAccount();
+  const { data: balanceData } = useBalance({
+    address: address,
+  });
+  const [ethUSD, setETHUSD] = useState(0);
+  useEffect(() => {
+    (async () => {
+      const price = await API.fetchEthUsdPrice();
+      setETHUSD(parseFloat(formatUnits(price, 8)));
+    })();
+  });
+
+  const [userPrice, setUserPrice] = useState("");
+  const [minAdPrice, setMinAdPrice] = useState(10000000000000000n);
+
+  const { data: priceData } = useContractRead({
+    address: adContractAddress,
+    abi: adContractABI,
+    functionName: "price",
+    chainId: optimism.id,
+  });
+
+  useEffect(() => setIsValid(userPrice > minAdPrice), [userPrice, minAdPrice]);
+
+  useEffect(() => {
+    if (priceData) {
+      const [nextPrice] = priceData;
+      if (nextPrice > minAdPrice) {
+        setMinAdPrice(nextPrice);
+      }
+    }
+  }, [priceData]);
+
+  let parsedUserPrice;
+  if (isNaN(userPrice)) {
+    parsedUserPrice = 0n;
+  } else {
+    parsedUserPrice = parseEther(userPrice);
+  }
+
+  const { config, error } = usePrepareContractWrite({
+    address: adContractAddress,
+    abi: adContractABI,
+    functionName: "set",
+    args: [title, url],
+    value: parsedUserPrice,
+    chainId: optimism.id,
+  });
+
+  const { writeAsync } = useContractWrite(config);
+  const handleAdSubmission = async (e) => {
+    e.preventDefault();
+
+    if (title.length > 80 || url.length > 2048) {
+      toast.error(
+        "The title should be no more than 80 characters, and the URL should be no more than 2048 characters.",
+      );
+      setIsLoading(false);
+      return;
+    }
+    if (title.length === 0) {
+      toast.error("Please add a title.");
+      setIsLoading(false);
+      return;
+    }
+    if (
+      url.length === 0 ||
+      (!url.startsWith("https://") && !url.startsWith("http://"))
+    ) {
+      toast.error("Please add a valid link.");
+      setIsLoading(false);
+      return;
+    }
+    setIsLoading(true);
+    if (writeAsync) {
+      try {
+        await writeAsync();
+        toast.success("Submitted onchain...");
+        window.location.href = "/";
+      } catch (err) {
+        console.log(err);
+        setIsLoading(false);
+      }
+    }
+  };
+
+  const oneEther = parseEther("1000000000000000000");
+  const formattedAdPrice = parseFloat(formatEther(minAdPrice)).toFixed(2);
+  const dailyFee =
+    ((parsedUserPrice * (oneEther / 31556952n)) / oneEther) * 60n * 60n * 24n;
+  const formattedDailyFee = parseFloat(formatEther(dailyFee)).toFixed(5);
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: "5px",
+        maxWidth: "600px",
+        marginTop: "1rem",
+      }}
+    >
+      <label style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+        <input
+          type="checkbox"
+          checked={isAd}
+          onChange={(e) => setIsAd(e.target.checked)}
+          style={{ transform: "scale(1.5)" }}
+        />
+        Submit story as an ad
+      </label>
+      {isAd && (
+        <>
+          <p style={{ marginBottom: 0 }}>
+            Minimum Ad Collateral: {formattedAdPrice} ETH ($
+            {(formattedAdPrice * ethUSD).toFixed(2)})
+          </p>
+          <p style={{ marginTop: 0 }}>
+            Daily fee: {formattedDailyFee} ETH ($
+            {(formattedDailyFee * ethUSD).toFixed(
+              formattedDailyFee * ethUSD > 1 ? 2 : 3,
+            )}
+            )
+          </p>
+          <p style={{ fontSize: "16px", marginTop: 0, marginBottom: 0 }}>
+            Collateral:
+          </p>
+          <div
+            style={{
+              backgroundColor: "white",
+              display: "flex",
+              alignItems: "center",
+              borderRadius: "2px",
+              border: "1px solid #828282",
+              padding: "5px 10px",
+              boxSizing: "border-box",
+            }}
+          >
+            <input
+              type="text"
+              placeholder="0.000"
+              value={userPrice.toString()}
+              onChange={(e) => setUserPrice(e.target.value)}
+              style={{
+                border: "none",
+                outline: "none",
+                width: "100%",
+                fontSize: "16px",
+                padding: "0",
+                marginRight: "5px",
+              }}
+            />
+            <span style={{ whiteSpace: "nowrap" }}>ETH</span>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              fontSize: "0.8rem",
+            }}
+          >
+            <p style={{ margin: 0 }}>
+              ≈ ${(formatEther(parsedUserPrice) * ethUSD).toFixed(2)}
+            </p>
+            {isConnected && balanceData ? (
+              <p style={{ margin: 0 }}>
+                Balance: {parseFloat(balanceData.formatted).toFixed(3)} ETH
+              </p>
+            ) : null}
+          </div>
+          <b style={{ marginTop: "0.5rem" }}>What is this?</b>
+          <p style={{ marginTop: 0 }}>
+            Check the forth story on the Kiwi News front page. Notice how it
+            says "(sponsored)" next to the submitter's username? That's because
+            the forth story on Kiwi News is always an ad. Ads are like regular
+            Kiwi News stories except that they don't need to be upvoted to reach
+            the fourth spot on the front page.
+          </p>
+          <b style={{ marginTop: 0 }}>How much does it cost?</b>
+          <p style={{ marginTop: 0 }}>
+            You'll be charged the "Daily fee" on your collateral. Upon
+            submitting the ad, you'll be asked to send all of your collateral.
+            However, you'll get back most of your collateral when someone else
+            runs an ad. We'll simply subtract the accumulated daily fees from
+            the collateral.
+          </p>
+          <b style={{ marginTop: 0 }}>
+            What if I want my collateral back earlier?
+          </b>
+          <p style={{ marginTop: 0 }}>
+            Currently, the contract will just return your collateral when
+            someone else buys the ad. Keep this in mind! We have however admin
+            rights to rescue your collateral if you direly need it back
+            immediately.
+          </p>
+          <b style={{ marginTop: 0 }}>Is this safe?</b>
+          <p style={{ marginTop: 0 }}>Use at your own risk!</p>
+          <b style={{ marginTop: 0 }}>I have more questions!</b>
+          <p style={{ marginTop: 0 }}>
+            Please reach out to us via Telegram, we're happy to help you!
+          </p>
+          <ConnectButton.Custom>
+            {({ account, chain, mounted, openConnectModal }) => {
+              const connected = account && chain && mounted;
+
+              let clickHandler, copy, disabled;
+              if (connected) {
+                if (chain.id === optimism.id) {
+                  disabled = isLoading || isValid;
+                  copy = isLoading
+                    ? "Please sign transaction"
+                    : "Submit onchain ad";
+                  clickHandler = handleAdSubmission;
+                } else {
+                  disabled = false;
+                  copy = "Switch to OP Mainnet";
+                  clickHandler = (e) => {
+                    e.preventDefault();
+                    switchNetwork?.(optimism.id);
+                  };
+                }
+              } else {
+                copy = "Connect Wallet";
+                disabled = false;
+                clickHandler = (e) => {
+                  e.preventDefault();
+                  openConnectModal();
+                };
+              }
+              return (
+                <>
+                  <span>Connected with {address}</span>
+                  <button
+                    id="button-onboarding"
+                    style={{ ...buttonStyles, ...{ marginTop: 0 } }}
+                    onClick={clickHandler}
+                    disabled={disabled}
+                  >
+                    {copy}
+                  </button>
+                  <br />
+                  <SimpleDisconnectButton />
+                </>
+              );
+            }}
+          </ConnectButton.Custom>
+        </>
+      )}
     </div>
   );
 };

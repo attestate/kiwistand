@@ -1,6 +1,6 @@
 // @format
 import { readContract } from "@wagmi/core";
-import { optimism } from "wagmi/chains";
+import { mainnet, optimism } from "wagmi/chains";
 
 import { getCookie, setCookie } from "./session.mjs";
 
@@ -267,5 +267,39 @@ function checkMintStatus() {
         console.log("Waiting for mint to be picked up...");
       }
     }, 5000); // Check every 5 seconds
+  }
+}
+
+const ETH_USD_PRICE_FEED_ADDRESS = "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419";
+
+const PRICE_FEED_ABI = [
+  {
+    name: "latestRoundData",
+    outputs: [
+      { type: "uint80", name: "roundId" },
+      { type: "int256", name: "answer" },
+      { type: "uint256", name: "startedAt" },
+      { type: "uint256", name: "updatedAt" },
+      { type: "uint80", name: "answeredInRound" },
+    ],
+    inputs: [],
+    stateMutability: "view",
+    type: "function",
+  },
+];
+
+export async function fetchEthUsdPrice() {
+  try {
+    const priceData = await readContract({
+      address: ETH_USD_PRICE_FEED_ADDRESS,
+      abi: PRICE_FEED_ABI,
+      functionName: "latestRoundData",
+      chainId: mainnet.id,
+    });
+    const [_, answer] = priceData;
+    return answer;
+  } catch (err) {
+    console.error(err);
+    return null;
   }
 }
