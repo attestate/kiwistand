@@ -301,7 +301,8 @@ export async function data(trie, identity, lastRemoteValue) {
   let leaves = getUpvotes(identity);
   let comments = getComments(identity);
 
-  leaves = moderation.moderate(leaves, config);
+  const path = "/activity";
+  leaves = moderation.moderate(leaves, config, path);
   comments = moderation
     .flag(comments, config)
     .filter((comment) => !comment.flagged);

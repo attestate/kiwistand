@@ -290,7 +290,8 @@ export async function index(trie, page, domain) {
     type,
   );
   const policy = await moderation.getLists();
-  leaves = moderation.moderate(leaves, policy);
+  const path = "/";
+  leaves = moderation.moderate(leaves, policy, path);
 
   const { editorPicks, config } = await editors(leaves);
   const editorLinks = editorPicks.map(

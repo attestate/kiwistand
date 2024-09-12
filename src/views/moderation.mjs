@@ -150,7 +150,7 @@ export async function getLists() {
   const hrefs = {};
   for (let obj of hrefResponse) {
     if (!obj.old || !obj.new) continue;
-    hrefs[normalizeUrl(obj.old)] = obj.new;
+    hrefs[normalizeUrl(obj.old)] = normalizeUrl(obj.new);
   }
 
   let messages;
@@ -182,26 +182,36 @@ export function flag(leaves, config) {
   });
 }
 
-export function moderate(leaves, config) {
-  return (
-    leaves
-      .map((leaf) => {
-        const alternativeTitle = config.titles[normalizeUrl(leaf.href)];
-        const nextTitle = alternativeTitle ? alternativeTitle : leaf.title;
+export function moderate(leaves, config, path) {
+  let result = leaves
+    .map((leaf) => {
+      const alternativeTitle = config.titles[normalizeUrl(leaf.href)];
+      const nextTitle = alternativeTitle ? alternativeTitle : leaf.title;
 
-        const alternativeHref = config.hrefs[normalizeUrl(leaf.href)];
-        const nextHref = alternativeHref ? alternativeHref : leaf.href;
+      const alternativeHref = config.hrefs[normalizeUrl(leaf.href)];
+      const nextHref = alternativeHref ? alternativeHref : leaf.href;
 
-        return {
-          ...leaf,
-          href: nextHref,
-          title: nextTitle,
-        };
-      })
-      // TODO: Should start using ethers.utils.getAddress
-      .filter(
-        ({ identity }) => !config.addresses.includes(identity.toLowerCase()),
-      )
-      .filter(({ href }) => !config.links.includes(normalizeUrl(href)))
-  );
+      return {
+        ...leaf,
+        href: nextHref,
+        title: nextTitle,
+      };
+    })
+    // TODO: Should start using ethers.utils.getAddress
+    .filter(
+      ({ identity }) => !config.addresses.includes(identity.toLowerCase()),
+    )
+    .filter(({ href }) => !config.links.includes(normalizeUrl(href)));
+
+  // NOTE: When we change the URL of a story then any upvoter who upvotes the
+  // story after the moderation will, for the first time, upvote a new link
+  // which will then appear as a new submission on the new page. So as to avoid
+  // this, for the /new page, we're removing all values from the "new" column
+  // of the "moderation_hrefs" table
+  if (path === "/new") {
+    result = result.filter(
+      ({ href }) => !Object.values(config.hrefs).includes(normalizeUrl(href)),
+    );
+  }
+  return result;
 }

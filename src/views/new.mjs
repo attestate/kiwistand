@@ -43,8 +43,9 @@ export async function recompute() {
 
   let counts = listNewest();
 
+  const path = "/new";
   const config = await moderation.getLists();
-  counts = moderation.moderate(counts, config);
+  counts = moderation.moderate(counts, config, path);
   const submittedHrefs = new Set(
     counts.map((story) => normalizeUrl(story.href)),
   );
