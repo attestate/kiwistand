@@ -90,6 +90,12 @@ const CommentsSection = (props) => {
 
   useEffect(() => {
     const toggle = () => {
+      const elem = document.querySelector(`.comment-preview-${storyIndex}`);
+      if (shown && elem) {
+        elem.style.display = "flex";
+      } else if (elem) {
+        elem.style.display = "none";
+      }
       setShown(!shown);
     };
     window.addEventListener(`open-comments-${storyIndex}`, toggle);
