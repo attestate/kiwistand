@@ -499,7 +499,7 @@ const AdForm = (props) => {
   };
 
   const oneEther = parseEther("1000000000000000000");
-  const formattedAdPrice = parseFloat(formatEther(minAdPrice)).toFixed(2);
+  const formattedAdPrice = parseFloat(formatEther(minAdPrice));
   const dailyFee =
     ((parsedUserPrice * (oneEther / 31556952n)) / oneEther) * 60n * 60n * 24n;
   const formattedDailyFee = parseFloat(formatEther(dailyFee)).toFixed(5);
@@ -551,7 +551,7 @@ const AdForm = (props) => {
           >
             <input
               type="text"
-              placeholder="0.000"
+              placeholder="0.0000"
               value={userPrice.toString()}
               onChange={(e) => setUserPrice(e.target.value)}
               style={{
@@ -576,8 +576,14 @@ const AdForm = (props) => {
               ≈ ${(formatEther(parsedUserPrice) * ethUSD).toFixed(2)}
             </p>
             {isConnected && balanceData ? (
-              <p style={{ margin: 0 }}>
-                Balance: {parseFloat(balanceData.formatted).toFixed(3)} ETH
+              <p
+                style={{
+                  color:
+                    parsedUserPrice > balanceData.value ? "red" : "inherit",
+                  margin: 0,
+                }}
+              >
+                Balance: {parseFloat(balanceData.formatted).toFixed(4)} ETH
               </p>
             ) : null}
           </div>
