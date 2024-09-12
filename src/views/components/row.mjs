@@ -4,7 +4,6 @@ import { formatDistanceToNowStrict } from "date-fns";
 import { URL } from "url";
 import DOMPurify from "isomorphic-dompurify";
 
-import { truncateComment } from "../comments.mjs";
 import { commentCounts } from "../../store.mjs";
 import ShareIcon from "./shareicon.mjs";
 import CopyIcon from "./copyicon.mjs";
@@ -94,6 +93,27 @@ const truncateLongWords = (text, maxLength = 20) => {
   );
   return truncatedWords.join(" ");
 };
+
+export function truncateComment(comment, maxLength = 260) {
+  const emptyLineIndex = comment.indexOf("\n\n");
+  if (emptyLineIndex !== -1 && emptyLineIndex < maxLength)
+    return truncateLongWords(comment.slice(0, emptyLineIndex));
+
+  const lastLinkStart = comment.lastIndexOf("https://", maxLength);
+  if (lastLinkStart !== -1 && lastLinkStart < maxLength) {
+    const breakPoint = comment.lastIndexOf(" ", lastLinkStart);
+    const truncated =
+      breakPoint !== -1
+        ? comment.slice(0, breakPoint) + "..."
+        : comment.slice(0, lastLinkStart) + "...";
+    return truncateLongWords(truncated);
+  }
+
+  if (comment.length <= maxLength) return truncateLongWords(comment);
+  return truncateLongWords(
+    comment.slice(0, comment.lastIndexOf(" ", maxLength)) + "...",
+  );
+}
 
 const row = (
   start = 0,

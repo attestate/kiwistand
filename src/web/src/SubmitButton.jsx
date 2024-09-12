@@ -648,7 +648,7 @@ const AdForm = (props) => {
               }
               return (
                 <>
-                  <span>Connected with {address}</span>
+                  {isConnected ? <span>Connected with {address}</span> : null}
                   <button
                     id="button-onboarding"
                     style={{ ...buttonStyles, ...{ marginTop: 0 } }}
