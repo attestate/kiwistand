@@ -19,6 +19,7 @@ module.exports = {
         SSL_KEY_PATH: "/etc/letsencrypt/live/news.kiwistand.com/privkey.pem",
       },
       time: true,
+      node_args: "--max-old-space-size=12288",
     },
   ],
 };
