@@ -470,7 +470,7 @@ async function addPasskeysDialogue(toast, allowlist) {
           >
             Your next step:
           </p>
-          <a href="/invite">
+          <a href="/demonstration">
             <button
               className="button-secondary"
               style={{ width: "auto" }}
@@ -508,7 +508,7 @@ async function addTGLink(allowlist) {
   }
 }
 
-async function addSubscriptionButton(allowlist) {
+async function addSubscriptionButton(allowlist, toast) {
   const button = document.querySelector("push-subscription-button");
   if (button) {
     const { createRoot } = await import("react-dom/client");
@@ -519,19 +519,11 @@ async function addSubscriptionButton(allowlist) {
     const wrapper = button.getAttribute("data-wrapper") === "true";
     createRoot(button).render(
       <StrictMode>
-        <PushSubscriptionButton wrapper={wrapper} allowlist={allowlist} />
-      </StrictMode>,
-    );
-  }
-
-  const elem = document.querySelector("nav-push-notification-redirector");
-  if (elem) {
-    const { createRoot } = await import("react-dom/client");
-    const { StrictMode } = await import("react");
-    const { Redirector } = await import("./TelegramLink.jsx");
-    createRoot(elem).render(
-      <StrictMode>
-        <Redirector />
+        <PushSubscriptionButton
+          toast={toast}
+          wrapper={wrapper}
+          allowlist={allowlist}
+        />
       </StrictMode>,
     );
   }
@@ -706,7 +698,7 @@ async function checkMintStatus(address) {
     if (supportsPasskeys() && (await testPasskeys())) {
       window.location.href = "/passkeys";
     } else {
-      window.location.href = "/invite";
+      window.location.href = "/demonstration";
     }
   }, 3000);
 }
@@ -831,7 +823,7 @@ async function start() {
     addClickCounters(),
     addInviteLink(toast),
     addCommentInput(toast, await allowlistPromise, await delegationsPromise),
-    addSubscriptionButton(await allowlistPromise),
+    addSubscriptionButton(await allowlistPromise, toast),
     addTGLink(await allowlistPromise),
     addPasskeysDialogue(toast, await allowlistPromise),
     addModals(await allowlistPromise, await delegationsPromise, toast),

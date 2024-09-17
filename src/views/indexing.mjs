@@ -65,7 +65,7 @@ export default async function (theme) {
                     margin-left: auto;
                     margin-right: auto;
                     text-align: center;
-                    color: black;margin-top: 4rem; margin-bottom: 4rem;"
+                    color: black;margin-top: 4rem; margin-bottom: 0; padding-bottom: 0;"
                     >
                       You're <i>almost</i> set!
                     </h1>
@@ -81,6 +81,13 @@ export default async function (theme) {
                       <p>We're indexing your transaction...</p>
                     </div>
                     <div
+                      style="margin-top: 2rem; display: flex; align-items: center; justify-content: center; flex-direction: column; max-width: 20rem;"
+                    >
+                      <push-subscription-button data-wrapper="false">
+                        ...loading
+                      </push-subscription-button>
+                    </div>
+                    <div
                       style="position: fixed; right: 20px; bottom: 20px; z-index: 100; text-align: center;"
                     >
                       <button
@@ -91,7 +98,10 @@ export default async function (theme) {
                           style="border: 4px solid #fff; border-top: 4px solid ${theme.color}; border-radius: 50%; width: 20px; height: 20px; animation: spin 2s linear infinite;"
                         ></span>
                       </button>
-                      <p>Usually takes 3-5 minutes...</p>
+                      <p style="margin-bottom: 0;">
+                        Usually takes 2-3 minutes...
+                      </p>
+                      <p style="margin-top: 0;">We'll redirect you!</p>
                     </div>
                   </div>
                 </td>

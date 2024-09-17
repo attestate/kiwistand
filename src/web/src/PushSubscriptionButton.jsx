@@ -52,14 +52,27 @@ const SubscriptionButton = (props) => {
   });
 
   const handlePushSubscription = async () => {
-    const registration = await navigator.serviceWorker.register(
-      "/serviceWorker.js",
-    );
+    let registration;
+    try {
+      registration = await navigator.serviceWorker.register(
+        "/serviceWorker.js",
+      );
+    } catch (err) {
+      console.log("Service worker registration failed", err);
+      return;
+    }
     setIsRegistered(true);
-    const subscription = await registration.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(applicationServerKey),
-    });
+
+    let subscription;
+    try {
+      subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(applicationServerKey),
+      });
+    } catch (err) {
+      console.log("Push manager registration failed", err);
+      return;
+    }
 
     await fetch(`/api/v1/subscriptions/${address}`, {
       method: "POST",

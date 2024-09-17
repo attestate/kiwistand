@@ -68,7 +68,7 @@ export default async function (theme) {
                   <p
                     style="color: black; padding: 3rem 3rem 1rem 3rem; font-size: 1rem; text-align: center; margin-top: 1rem;"
                   >
-                    Your next step:
+                    Congratz 🎉 <b>You've made it!</b>:
                   </p>
                 </td>
               </tr>
@@ -76,17 +76,15 @@ export default async function (theme) {
                 <td
                   style="padding: 0 0 3rem 0; display: flex; justify-content: space-evenly;"
                 >
-                  <nav-push-notification-redirector>
-                    <a href="/demonstration">
-                      <button
-                        style="width:auto;"
-                        class="button-secondary"
-                        id="button-onboarding"
-                      >
-                        Continue
-                      </button>
-                    </a>
-                  </nav-push-notification-redirector>
+                  <a href="/">
+                    <button
+                      style="width:auto;"
+                      class="button-secondary"
+                      id="button-onboarding"
+                    >
+                      Start using Kiwi!
+                    </button>
+                  </a>
                 </td>
               </tr>
             </table>

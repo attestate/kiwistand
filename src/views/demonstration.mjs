@@ -149,7 +149,7 @@ export default async function index(theme) {
                     <td
                       style="padding: 0 0 3rem 0; display: flex; justify-content: space-evenly;"
                     >
-                      <a href="/whattosubmit">
+                      <a href="/invite">
                         <button
                           class="button-secondary"
                           style="width:auto;"

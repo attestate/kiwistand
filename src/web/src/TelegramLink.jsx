@@ -7,39 +7,6 @@ import { useProvider, client, chains } from "./client.mjs";
 import { getLocalAccount, isIOS, isRunningPWA } from "./session.mjs";
 import * as API from "./API.mjs";
 
-export const Redirector = () => {
-  const hasPushNotificationSupport =
-    "serviceWorker" in navigator && "PushManager" in window;
-
-  if (
-    (hasPushNotificationSupport && !isIOS()) ||
-    (hasPushNotificationSupport && isIOS() && isRunningPWA())
-  ) {
-    return (
-      <a href="/notifications">
-        <button
-          style={{ width: "auto" }}
-          className="button-secondary"
-          id="button-onboarding"
-        >
-          Continue
-        </button>
-      </a>
-    );
-  }
-  return (
-    <a href="/demonstration">
-      <button
-        style={{ width: "auto" }}
-        className="button-secondary"
-        id="button-onboarding"
-      >
-        Continue
-      </button>
-    </a>
-  );
-};
-
 const TelegramLink = (props) => {
   const [generatedLink, setGeneratedLink] = useState("...loading");
   const account = useAccount();
