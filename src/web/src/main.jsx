@@ -669,12 +669,20 @@ async function share(toast, index) {
   });
 }
 
-async function checkMintStatus(fetchAllowList, fetchDelegations) {
+async function checkMintStatus(address) {
   const url = new URL(window.location.href);
   if (url.pathname !== "/indexing") return;
 
-  const address = url.searchParams.get("address");
-  const delegate = url.searchParams.get("delegate");
+  const { fetchAllowList, fetchDelegations } = await import("./API.mjs");
+  const { Wallet } = await import("@ethersproject/wallet");
+
+  const delegatePk = localStorage.getItem(`-kiwi-news-${address}-key`);
+
+  let delegate;
+  if (delegatePk) {
+    delegate = new Wallet(delegatePk).address;
+  }
+
   const { supportsPasskeys } = await import("./session.mjs");
   const { testPasskeys } = await import("./Passkeys.jsx");
   const intervalId = setInterval(async () => {
@@ -714,6 +722,8 @@ async function startWatchAccount(allowlist) {
     // NOTE: Couldn't find a valid local signer, so we're returning and not
     // doing anything.
   }
+
+  checkMintStatus(account.address);
   await processAndSendVotes(signer, account.address);
   window.addEventListener(
     "upvote-storage",
@@ -805,12 +815,12 @@ async function start() {
   window.toast = toast;
 
   const { fetchAllowList, fetchDelegations } = await import("./API.mjs");
-  checkMintStatus(fetchAllowList, fetchDelegations);
 
   const allowlistPromise = fetchAllowList();
   const delegationsPromise = fetchDelegations();
 
   await startWatchAccount(await allowlistPromise);
+
   const results0 = await Promise.allSettled([
     addDynamicComments(await allowlistPromise, await delegationsPromise, toast),
     addVotes(await allowlistPromise, await delegationsPromise, toast),

@@ -749,17 +749,7 @@ export async function launch(trie, libp2p) {
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/indexing", async (request, reply) => {
-    let address;
-    try {
-      address = utils.getAddress(request.query.address);
-    } catch (err) {
-      return reply
-        .status(404)
-        .type("text/plain")
-        .send("No valid Ethereum address");
-    }
-
-    const content = await indexing(reply.locals.theme, address);
+    const content = await indexing(reply.locals.theme);
 
     reply.header("Cache-Control", "public, max-age=86400");
     return reply.status(200).type("text/html").send(content);
