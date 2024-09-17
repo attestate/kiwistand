@@ -176,7 +176,7 @@ export async function topstories(leaves, decayStrength) {
         store.commentCounts.get(`kiwi:0x${story.index}`) || 0;
       let score;
       if (story.upvotes > 2) {
-        score = Math.log(story.upvotes + commentCount);
+        score = Math.log(story.upvotes * 0.4 + commentCount * 0.6);
       } else {
         score = Math.log(story.upvotes);
       }
