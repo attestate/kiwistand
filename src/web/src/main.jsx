@@ -588,6 +588,20 @@ async function addToaster() {
   return toast;
 }
 
+async function addMinuteCountdown() {
+  const elem = document.querySelector(".nav-countdown");
+  if (elem) {
+    const { createRoot } = await import("react-dom/client");
+    const { StrictMode } = await import("react");
+    const Countdown = (await import("./MinuteCountdown.jsx")).default;
+    createRoot(elem).render(
+      <StrictMode>
+        <Countdown />
+      </StrictMode>,
+    );
+  }
+}
+
 async function addAvatar(allowlist) {
   const avatarElem = document.querySelectorAll("nav-header-avatar");
   if (avatarElem && avatarElem.length > 0) {
@@ -828,6 +842,7 @@ async function start() {
     addPasskeysDialogue(toast, await allowlistPromise),
     addModals(await allowlistPromise, await delegationsPromise, toast),
     addNFTPrice(),
+    addMinuteCountdown(),
     addAvatar(await allowlistPromise),
     addDelegateButton(await allowlistPromise, await delegationsPromise, toast),
     addBuyButton(allowlistPromise, delegationsPromise, toast),

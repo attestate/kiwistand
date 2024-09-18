@@ -98,10 +98,12 @@ export default async function (theme) {
                           style="border: 4px solid #fff; border-top: 4px solid ${theme.color}; border-radius: 50%; width: 20px; height: 20px; animation: spin 2s linear infinite;"
                         ></span>
                       </button>
-                      <p style="margin-bottom: 0;">
-                        Usually takes 2-3 minutes...
-                      </p>
-                      <p style="margin-top: 0;">We'll redirect you!</p>
+                      <div class="nav-countdown">
+                        <div style="margin-top: 10px;">
+                          Should take a minute... <br />
+                          0:59
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </td>
