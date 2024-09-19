@@ -214,7 +214,7 @@ const CommentGuidelines = () => {
         </ol>
       </Drawer>
       <span
-        className="meta-link"
+        className="meta-link drawer-link"
         style={{ fontSize: "0.8rem" }}
         onClick={() => setOpen(true)}
       >

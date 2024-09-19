@@ -576,16 +576,15 @@ export function getSubmission(index, href) {
   };
 }
 
-export function listNewest() {
-  const submissions = db
-    .prepare(
-      `
+export function listNewest(limit = 30, lookbackUnixTime) {
+  const query = `
      SELECT * FROM submissions
+     ${lookbackUnixTime ? "WHERE timestamp > ?" : ""}
      ORDER BY timestamp DESC
-     LIMIT 30
-   `,
-    )
-    .all();
+     LIMIT ?
+   `;
+  const params = lookbackUnixTime ? [lookbackUnixTime, limit] : [limit];
+  const submissions = db.prepare(query).all(params);
 
   const submissionsWithUpvotes = submissions.map((submission) => {
     const upvotes =

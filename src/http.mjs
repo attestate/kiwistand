@@ -36,7 +36,6 @@ import whattosubmit from "./views/whattosubmit.mjs";
 import onboardingReader from "./views/onboarding-reader.mjs";
 import onboardingCurator from "./views/onboarding-curator.mjs";
 import onboardingSubmitter from "./views/onboarding-submitter.mjs";
-import lists from "./views/lists.mjs";
 import shortcut from "./views/shortcut.mjs";
 import subscribe from "./views/subscribe.mjs";
 import upvotes from "./views/upvotes.mjs";
@@ -555,12 +554,19 @@ export async function launch(trie, libp2p) {
     if (isNaN(page) || page < 1) {
       page = 0;
     }
-    const content = await feed(
-      trie,
-      reply.locals.theme,
-      page,
-      DOMPurify.sanitize(request.query.domain),
-    );
+
+    let content;
+    try {
+      content = await feed(
+        trie,
+        reply.locals.theme,
+        page,
+        DOMPurify.sanitize(request.query.domain),
+      );
+    } catch (err) {
+      log(`Error in /: ${err.stack}`);
+      return reply.status(500).send("Internal Server Error");
+    }
     reply.header(
       "Cache-Control",
       "public, max-age=5, no-transform, must-revalidate, stale-while-revalidate=3600",
@@ -949,14 +955,6 @@ export async function launch(trie, libp2p) {
         ),
       );
   });
-
-  app.get("/lists", async (request, reply) => {
-    const content = await lists(reply.locals.theme);
-
-    reply.header("Cache-Control", "public, max-age=60, must-revalidate");
-    return reply.status(200).type("text/html").send(content);
-  });
-
   app.get("/welcome", async (request, reply) => {
     reply.header("Cache-Control", "public, must-revalidate");
     return reply

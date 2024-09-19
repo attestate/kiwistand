@@ -23,7 +23,12 @@ import { custom } from "./components/head.mjs";
 import * as store from "../store.mjs";
 import * as id from "../id.mjs";
 import * as moderation from "./moderation.mjs";
-import { countOutbounds, getLastComment } from "../cache.mjs";
+import {
+  countOutbounds,
+  getLastComment,
+  getSubmission,
+  listNewest,
+} from "../cache.mjs";
 import * as price from "../price.mjs";
 import * as curation from "./curation.mjs";
 import * as registry from "../chainstate/registry.mjs";
@@ -35,6 +40,37 @@ import { metadata } from "../parser.mjs";
 import InviteRow from "./components/invite-row.mjs";
 
 const html = htm.bind(vhtml);
+
+export async function getContestStories() {
+  const sheetName = "contest";
+
+  let result;
+  try {
+    result = await curation.getSheet(sheetName);
+  } catch (err) {
+    log(`Error getting contest submissions ${err.stack}`);
+    return [];
+  }
+
+  const submissions = result.links
+    .map((href) => {
+      try {
+        const submission = getSubmission(null, href);
+        submission.upvoters = submission.upvoters.map(
+          ({ identity }) => identity,
+        );
+        return submission;
+      } catch (err) {
+        log(`Error getting submission (contest stories): ${err.stack}`);
+        return null;
+        // noop
+      }
+    })
+    .filter((elem) => elem !== null)
+    .sort((a, b) => b.upvotes - a.upvotes);
+
+  return submissions;
+}
 
 async function getAd() {
   const provider = new ethers.providers.JsonRpcProvider(
@@ -137,38 +173,6 @@ const itemAge = (timestamp) => {
   return ageInMinutes;
 };
 
-export function count(leaves) {
-  const stories = {};
-
-  leaves = leaves.sort((a, b) => a.timestamp - b.timestamp);
-  for (const leaf of leaves) {
-    const key = `${normalizeUrl(leaf.href)}`;
-    let story = stories[key];
-
-    if (!story) {
-      story = {
-        title: leaf.title,
-        timestamp: leaf.timestamp,
-        href: leaf.href,
-        identity: leaf.identity,
-        upvotes: 1,
-        upvoters: [leaf.identity],
-        index: leaf.index,
-        lastInteraction: leaf.timestamp,
-      };
-      stories[key] = story;
-    } else {
-      if (leaf.type === "amplify") {
-        story.upvotes += 1;
-        story.upvoters.push(leaf.identity);
-        story.lastInteraction = leaf.timestamp;
-        if (!story.title && leaf.title) story.title = leaf.title;
-      }
-    }
-  }
-  return Object.values(stories);
-}
-
 export async function topstories(leaves, decayStrength) {
   return leaves
     .map((story) => {
@@ -195,116 +199,20 @@ export async function topstories(leaves, decayStrength) {
     .sort((a, b) => b.score - a.score);
 }
 
-async function editors(leaves) {
-  function parseConfig(config) {
-    const copy = { ...config };
-    copy.numberOfStories = parseInt(config.numberOfStories, 10);
-    return copy;
-  }
-
-  function editorPicks(leaves, config, links) {
-    const cacheEnabled = true;
-    const editorStories = leaves.filter(
-      // TODO: Should start using ethers.utils.getAddress
-      ({ identity }) => identity.toLowerCase() === config.address.toLowerCase(),
-    );
-
-    if (links && Array.isArray(links) && links.length > 0) {
-      return editorStories.filter(({ href }) =>
-        links.includes(!!href && normalizeUrl(href)),
-      );
-    }
-    return editorStories;
-  }
-  let response;
-  try {
-    response = (await moderation.getConfig("3wi"))[0];
-  } catch (err) {
-    log(`3wi: Couldn't get editor pick config: ${err.toString()}`);
-    return {
-      editorPicks: [],
-      links: [],
-      config: {
-        name: "isyettoberevealed!",
-        link: "https://anddoesnthaveawebsite.com",
-      },
-    };
-  }
-  const config = parseConfig(response);
-
-  let links;
-  try {
-    links = await moderation.getConfig("editor_links");
-  } catch (err) {
-    log(`editor_links: Couldn't get editor pick config: ${err.toString()}`);
-    return {
-      editorPicks: [],
-      links: [],
-      config: {
-        name: "isyettoberevealed!",
-        link: "https://anddoesnthaveawebsite.com",
-      },
-    };
-  }
-
-  if (links && Array.isArray(links)) {
-    links = links.map(({ link }) => !!link && normalizeUrl(link));
-  }
-
-  const from = null;
-  const amount = null;
-  const parser = JSON.parse;
-  const picks = editorPicks(leaves, config, links);
-  const stories = count(picks)
-    .sort((a, b) => b.timestamp - a.timestamp)
-    .slice(0, config.numberOfStories);
-  return {
-    editorPicks: stories,
-    links,
-    config,
-  };
-}
-
 export async function index(trie, page, domain) {
-  const lookBack = sub(new Date(), {
+  const lookback = sub(new Date(), {
     weeks: 3,
   });
-  const from = null;
-  const amount = null;
-  const parser = JSON.parse;
-  const lookBackUnixTime = Math.floor(lookBack.getTime() / 1000);
-  const accounts = await registry.accounts();
-  const delegations = await registry.delegations();
-  const href = null;
-  const type = "amplify";
-
-  let leaves = await store.posts(
-    trie,
-    from,
-    amount,
-    parser,
-    lookBackUnixTime,
-    accounts,
-    delegations,
-    href,
-    type,
-  );
+  const lookbackUnixTime = Math.floor(lookback.getTime() / 1000);
+  const limit = -1;
+  let leaves = listNewest(limit, lookbackUnixTime);
   const policy = await moderation.getLists();
   const path = "/";
   leaves = moderation.moderate(leaves, policy, path);
 
-  const { editorPicks, config } = await editors(leaves);
-  const editorLinks = editorPicks.map(
-    ({ href }) => !!href && normalizeUrl(href),
-  );
-
   const totalStories = parseInt(env.TOTAL_STORIES, 10);
-  const countedStories = count(leaves);
   const parameters = await moderation.getFeedParameters();
-  let storyPromises = await topstories(
-    countedStories,
-    parameters.decayStrength,
-  );
+  let storyPromises = await topstories(leaves, parameters.decayStrength);
 
   let threshold = 1;
   let pill = true;
@@ -335,7 +243,7 @@ export async function index(trie, page, domain) {
     // going to replace with super new stories (ones that haven't gained any
     // upvotes yet).
     let { replacementFactor } = parameters;
-    const newStories = countedStories
+    const newStories = leaves
       .filter(({ upvotes }) => upvotes === 1)
       .sort((a, b) => b.timestamp - a.timestamp)
       .slice(0, 20)
@@ -397,43 +305,47 @@ export async function index(trie, page, domain) {
     };
   }
 
-  let stories = [];
-  for await (let story of storyPromises) {
-    const ensData = await ens.resolve(story.identity);
+  async function resolveIds(storyPromises) {
+    const stories = [];
+    for await (let story of storyPromises) {
+      const ensData = await ens.resolve(story.identity);
 
-    let avatars = [];
-    for await (let upvoter of story.upvoters) {
-      const profile = await ens.resolve(upvoter);
-      if (profile.safeAvatar) {
-        avatars.push(profile.safeAvatar);
+      let avatars = [];
+      for await (let upvoter of story.upvoters) {
+        const profile = await ens.resolve(upvoter);
+        if (profile.safeAvatar) {
+          avatars.push(profile.safeAvatar);
+        }
       }
+
+      const lastComment = getLastComment(`kiwi:0x${story.index}`);
+      if (lastComment && lastComment.identity) {
+        lastComment.identity = await ens.resolve(lastComment.identity);
+      }
+
+      const isOriginal = Object.keys(writers).some(
+        (domain) =>
+          normalizeUrl(story.href).startsWith(domain) &&
+          writers[domain] === story.identity,
+      );
+
+      const augmentedStory = await addMetadata(story);
+      if (augmentedStory) {
+        story = augmentedStory;
+      }
+
+      stories.push({
+        ...story,
+        lastComment,
+        displayName: ensData.displayName,
+        submitter: ensData,
+        avatars: avatars,
+        isOriginal,
+      });
     }
-
-    const lastComment = getLastComment(`kiwi:0x${story.index}`);
-    if (lastComment && lastComment.identity) {
-      lastComment.identity = await ens.resolve(lastComment.identity);
-    }
-
-    const isOriginal = Object.keys(writers).some(
-      (domain) =>
-        normalizeUrl(story.href).startsWith(domain) &&
-        writers[domain] === story.identity,
-    );
-
-    const augmentedStory = await addMetadata(story);
-    if (augmentedStory) {
-      story = augmentedStory;
-    }
-
-    stories.push({
-      ...story,
-      lastComment,
-      displayName: ensData.displayName,
-      submitter: ensData,
-      avatars: avatars,
-      isOriginal,
-    });
+    return stories;
   }
+  const stories = await resolveIds(storyPromises);
 
   let originals = stories
     .filter((story) => story.isOriginal)
@@ -445,15 +357,41 @@ export async function index(trie, page, domain) {
     .slice(0, 2);
 
   const ad = await getAd();
+
+  const contestStories = await getContestStories();
+  const resolvedContestStories = await resolveIds(contestStories);
   return {
+    contestStories: resolvedContestStories,
     ad,
-    editorPicks,
-    config,
     stories,
     originals,
     start,
   };
 }
+
+const expandSVG = html`<svg
+  style="height: 1rem;"
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 256 256"
+>
+  <rect width="256" height="256" fill="none" />
+  <polyline
+    points="80 176 128 224 176 176"
+    fill="none"
+    stroke="currentColor"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    stroke-width="24"
+  />
+  <polyline
+    points="80 80 128 32 176 80"
+    fill="none"
+    stroke="currentColor"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    stroke-width="24"
+  />
+</svg>`;
 
 const pages = {};
 
@@ -484,7 +422,7 @@ export default async function (trie, theme, page, domain) {
   } else {
     content = cacheRes.content;
   }
-  const { ad, originals, editorPicks, config, stories, start } = content;
+  const { ad, originals, stories, start, contestStories } = content;
 
   let query = `?page=${page + 1}`;
   if (domain) {
@@ -512,36 +450,35 @@ export default async function (trie, theme, page, domain) {
               <tr>
                 ${SecondHeader(theme, "top")}
               </tr>
-              <tr>
+              <tr
+                style="cursor: pointer;"
+                onclick="document.querySelectorAll('.inverted-row').forEach(el => el.style.display =
+ el.style.display === 'none' ? '' : 'none');"
+              >
                 <td>
                   <div
                     style="background-color: black; height: 2.3rem;display: flex; justify-content: start; align-items: center; padding-left: 1rem; gap: 1rem; color: white;"
                   >
                     <img style="height: 30px;" src="lens.png" />
-                    <a
-                      target="_blank"
-                      style="color: white; text-decoration: underline;"
-                      href="https://app.t2.world/article/cm0dybwsm14867811ymc3nenain2"
+                    <span
+                      style="display:flex;justify-content: center; align-items: center; gap:1rem;"
+                      >Show/Hide submissions ${expandSVG}</span
                     >
-                      Writing contest! Win 1,200 USDC
-                    </a>
                   </div>
                 </td>
               </tr>
-              ${page === 0 && editorPicks.length > 0
-                ? html` <tr style="background-color: #e6e6df;">
-                    <td>
-                      <p
-                        style="padding-left: 10px; color: black; font-size: 12pt; font-weight: bold;"
-                      >
-                        <span>Today's Editor's Picks by </span>
-                        <a style="color:black;" href="${config.link}">
-                          ${config.name}</a
-                        >!
-                      </p>
-                    </td>
-                  </tr>`
-                : ""}
+              ${contestStories.map(
+                Row(
+                  start,
+                  "/",
+                  undefined,
+                  null,
+                  null,
+                  null,
+                  recentJoiners,
+                  true,
+                ),
+              )}
               ${stories
                 .slice(0, 3)
                 .map(

@@ -1,6 +1,15 @@
 :root {
   --font-family: Verdana, Geneva, sans-serif;
 }
+.inverted-row {
+  filter: invert(100%) brightness(175%);
+}
+.inverted-row img {
+  filter: brightness(60%) invert(100%);
+}
+.inverted-row .drawer-link {
+  display: none;
+}
 .connect-button-wrapper, .connect-button-wrapper div {
   display: inline;
 }
