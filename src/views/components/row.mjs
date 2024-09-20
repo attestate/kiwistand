@@ -1,6 +1,6 @@
 import htm from "htm";
 import vhtml from "vhtml";
-import { formatDistanceToNowStrict } from "date-fns";
+import { formatDistanceToNowStrict as originalFormatDistance } from "date-fns";
 import { URL } from "url";
 import DOMPurify from "isomorphic-dompurify";
 
@@ -12,6 +12,17 @@ import theme from "../../theme.mjs";
 import { countOutbounds } from "../../cache.mjs";
 
 const html = htm.bind(vhtml);
+
+const formatDistanceToNowStrict = (date) => {
+  return originalFormatDistance(date)
+    .replace(/ years?/, "y")
+    .replace(/ months?/, "mo")
+    .replace(/ weeks?/, "w")
+    .replace(/ days?/, "d")
+    .replace(/ hours?/, "h")
+    .replace(/ minutes?/, "m")
+    .replace(/ seconds?/, "s");
+};
 
 const ShuffleSVG = html`<svg
   style="width: 24px; color: black;"
