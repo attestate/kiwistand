@@ -154,7 +154,7 @@ export default async function (
     const ensData = await ens.resolve(leaf.identity);
 
     let avatars = [];
-    for await (let upvoter of leaf.upvoters) {
+    for await (let upvoter of leaf.upvoters.slice(0, 5)) {
       const profile = await ens.resolve(upvoter);
       if (profile.safeAvatar) {
         avatars.push(profile.safeAvatar);
