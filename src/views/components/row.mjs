@@ -161,6 +161,7 @@ const row = (
       outboundsLookbackHours,
     );
     const extractedDomain = extractDomain(DOMPurify.sanitize(story.href));
+    const isad = !!story.collateral;
     return html`
       <tr style="${invert ? "background-color: black;" : ""}">
         <td>
@@ -177,9 +178,11 @@ const row = (
                 data-title="${DOMPurify.sanitize(story.title)}"
                 data-href="${DOMPurify.sanitize(story.href)}"
                 data-upvoters="${JSON.stringify(story.upvoters)}"
-                data-isad="${!!story.collateral}"
+                data-isad="${isad}"
                 class="vote-button-container"
-                style="display: flex; align-self: stretch;"
+                style="${
+                  isad ? "opacity: 0.3;" : ""
+                }display: flex; align-self: stretch;"
               >
                 <div
                   onclick="const key='--kiwi-news-upvoted-stories';const href='${DOMPurify.sanitize(
@@ -457,7 +460,9 @@ const row = (
                       data-story-index="0x${story.index}"
                       data-comment-count="${commentCount}"
                       class="chat-bubble-container"
-                      style="display: flex; align-self: stretch;"
+                      style="${isad
+                        ? "opacity: 0.3;"
+                        : ""}display: flex; align-self: stretch;"
                     >
                       <a
                         class="chat-bubble interaction-element"

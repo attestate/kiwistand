@@ -155,7 +155,7 @@ const Vote = (props) => {
                     textAlign: "center",
                   }}
                 >
-                  {upvotes}
+                  {isad ? "..." : upvotes}
                 </div>
               ) : null}
             </div>
