@@ -78,7 +78,7 @@ export function totalSubmissions(identity) {
   return user && user.submissions ? user.submissions : 0;
 }
 
-export function count(messages) {
+export async function count(messages) {
   cache.flushAll();
 
   messages = messages.sort((a, b) => a.timestamp - b.timestamp);

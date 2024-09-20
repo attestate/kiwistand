@@ -50,7 +50,7 @@ export function passes(marker) {
   }
   return !exists;
 }
-export function cache(upvotes, comments) {
+export async function cache(upvotes, comments) {
   log("Caching upvote ids of upvotes, this can take a minute...");
   for (const { identity, href, type } of upvotes) {
     const marker = upvoteID(identity, href, type);
@@ -309,7 +309,7 @@ async function atomicPut(trie, message, identity, accounts, delegations) {
     try {
       const cacheEnabled = false;
       const enhancer = enhance(accounts, delegations, cacheEnabled);
-      const enhancedMessage = enhancer(message);
+      const enhancedMessage = await enhancer(message);
       insertMessage(enhancedMessage);
       await triggerNotification(enhancedMessage);
     } catch (err) {
@@ -379,7 +379,7 @@ async function atomicPut(trie, message, identity, accounts, delegations) {
 // writes so that they don't accidentially disrupt themselves and then to see
 // where this change takes us. So this is pretty much a work in progress.
 const concurrency = 1;
-const queue = fastq.promise(_add, 1);
+const queue = fastq.promise(_add, concurrency);
 export async function add(
   trie,
   message,
@@ -544,12 +544,14 @@ export async function posts(
 
   const cacheEnabled = true;
   const enhancer = enhance(accounts, delegations, cacheEnabled);
-  const posts = nodes.map(enhancer).filter((node) => node !== null);
+  const posts = (await Promise.allSettled(nodes.map(enhancer)))
+    .map(({ value }) => value)
+    .filter(({ value }) => value !== null);
   return posts;
 }
 
-export function enhance(accounts, delegations, cacheEnabled) {
-  return (node) => {
+function enhance(accounts, delegations, cacheEnabled) {
+  async function job(node) {
     const signer = ecrecover(node, EIP712_MESSAGE, cacheEnabled);
     const validationTime = new Date(node.timestamp * 1000);
     const identity = eligibleAt(accounts, delegations, signer, validationTime);
@@ -565,7 +567,11 @@ export function enhance(accounts, delegations, cacheEnabled) {
       signer,
       identity,
     };
-  };
+  }
+
+  const computeConcurrency = 100;
+  const computeQueue = fastq.promise(job, computeConcurrency);
+  return async (node) => await computeQueue.push(node);
 }
 
 export async function leaves(

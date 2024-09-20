@@ -95,27 +95,23 @@ if (!reconcileMode) {
       .catch((error) => console.error("Comment posts error:", error)),
   ]);
 
-  const alreadySetup = cache.initialize();
-  if (!alreadySetup) {
-    [...upvotes, ...comments].forEach(cache.insertMessage);
-  }
-
-  try {
-    store.cache(upvotes, comments);
-  } catch (err) {
-    log(
-      `launch: An irrecoverable error during upvote caching occurred. "${err.toString()}`,
-    );
-    exit(1);
-  }
+  store
+    .cache(upvotes, comments)
+    .then(() => log("store cached"))
+    .catch((err) => {
+      log(
+        `launch: An irrecoverable error during upvote caching occurred. "${err.toString()}`,
+      );
+      exit(1);
+    });
 
   const urls = await moderation.getFeeds();
-  await feeds.recompute(urls);
+  Promise.all([feeds.recompute(urls), newest.recompute(trie)]).then(() =>
+    log("Feeds computed"),
+  );
   // TODO: Unclear if this is still necessary
   setInterval(async () => {
-    await feeds.recompute(urls);
-    await newest.recompute(trie);
+    await Promise.all([feeds.recompute(urls), newest.recompute(trie)]);
   }, 1800000);
-  await newest.recompute(trie);
-  karma.count(upvotes);
+  karma.count(upvotes).then(() => log("Karma counted!"));
 }
