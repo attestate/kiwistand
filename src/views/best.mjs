@@ -100,19 +100,17 @@ export default async function index(trie, theme, page, period, domain) {
               <tr>
                 ${SecondHeader(theme, "best", period, domain)}
               </tr>
-              <tr>
-                <td>
-                  <p
-                    style="color: black; padding: ${page === 0
-                      ? "0"
-                      : "5px"} 10px ${page === 0
-                      ? "0"
-                      : "5px"} 10px; font-size: 12pt; font-weight: bold;"
-                  >
-                    <span> ${page !== 0 ? html`Page: ${page}` : ""}</span>
-                  </p>
-                </td>
-              </tr>
+              ${page !== 0
+                ? html`<tr>
+                    <td>
+                      <p
+                        style="color: black; padding: 5px 10px 5px 10px; font-size: 12pt; font-weight: bold;"
+                      >
+                        <span>Page: ${page}</span>
+                      </p>
+                    </td>
+                  </tr>`
+                : null}
               ${stories.map(
                 Row(
                   null,
