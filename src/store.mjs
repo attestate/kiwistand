@@ -546,7 +546,7 @@ export async function posts(
   const enhancer = enhance(accounts, delegations, cacheEnabled);
   const posts = (await Promise.allSettled(nodes.map(enhancer)))
     .map(({ value }) => value)
-    .filter(({ value }) => value !== null);
+    .filter((elem) => elem !== null);
   return posts;
 }
 
