@@ -173,7 +173,21 @@ const itemAge = (timestamp) => {
   return ageInMinutes;
 };
 
+function calculateUpvoteClickRatio(story) {
+  const clicks = countOutbounds(
+    addOrUpdateReferrer(story.href, story.identity),
+  );
+  return clicks === 0 ? 0 : story.upvotes / clicks;
+}
+
+function meanUpvoteRatio(leaves) {
+  const ratios = leaves.map((story) => calculateUpvoteClickRatio(story));
+  const sumRatios = ratios.reduce((sum, ratio) => sum + ratio, 0);
+  return ratios.length > 0 ? sumRatios / ratios.length : 0;
+}
+
 export async function topstories(leaves, decayStrength) {
+  const upvoteRatio = meanUpvoteRatio(leaves);
   return leaves
     .map((story) => {
       const commentCount =
@@ -189,11 +203,17 @@ export async function topstories(leaves, decayStrength) {
         addOrUpdateReferrer(story.href, story.identity),
       );
       if (outboundClicks > 0) {
-        score = score * 0.6 + 0.4 * Math.log(outboundClicks);
+        score = score * 0.7 + 0.3 * Math.log(outboundClicks);
       }
 
+      const storyRatio = calculateUpvoteClickRatio(story);
+      const upvotePerformance = storyRatio / upvoteRatio;
+      score *= upvotePerformance;
+
       const decay = Math.sqrt(itemAge(story.timestamp));
-      story.score = score / Math.pow(decay, decayStrength);
+      score = score / Math.pow(decay, 3);
+
+      story.score = score;
       return story;
     })
     .sort((a, b) => b.score - a.score);
