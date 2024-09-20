@@ -5,7 +5,12 @@ import { URL } from "url";
 import htm from "htm";
 import vhtml from "vhtml";
 import normalizeUrl from "normalize-url";
-import { sub, differenceInMinutes, differenceInSeconds } from "date-fns";
+import {
+  startOfYear,
+  sub,
+  differenceInMinutes,
+  differenceInSeconds,
+} from "date-fns";
 import DOMPurify from "isomorphic-dompurify";
 
 import * as ens from "../ens.mjs";
@@ -29,7 +34,9 @@ async function getStories(trie, page, period, domain) {
   let startDatetime = 0;
   const unix = (date) => Math.floor(date.getTime() / 1000);
   const now = new Date();
-  if (period === "month") {
+  if (period === "year") {
+    startDatetime = unix(startOfYear(now));
+  } else if (period === "month") {
     startDatetime = unix(sub(now, { months: 1 }));
   } else if (period === "week") {
     startDatetime = unix(sub(now, { weeks: 1 }));
@@ -42,34 +49,15 @@ async function getStories(trie, page, period, domain) {
   const orderBy = null;
   const result = getBest(totalStories, from, orderBy, domain, startDatetime);
 
-  let writers = [];
-  try {
-    writers = await moderation.getWriters();
-  } catch (err) {
-    // noop
-  }
-
   let stories = [];
   for await (let story of result) {
     const ensData = await ens.resolve(story.identity);
 
-    let avatars = [];
-    for await (let upvoter of story.upvoters) {
-      const profile = await ens.resolve(upvoter);
-      if (profile.safeAvatar) {
-        avatars.push(profile.safeAvatar);
-      }
-    }
-    const isOriginal = Object.keys(writers).some(
-      (domain) =>
-        normalizeUrl(story.href).startsWith(domain) &&
-        writers[domain] === story.identity,
-    );
     stories.push({
       ...story,
       displayName: ensData.displayName,
-      avatars: avatars,
-      isOriginal,
+      avatars: [],
+      isOriginal: false,
     });
   }
   return stories;

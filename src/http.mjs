@@ -467,7 +467,7 @@ export async function launch(trie, libp2p) {
         page = 0;
       }
 
-      const periodValues = ["all", "month", "week", "day"];
+      const periodValues = ["all", "year", "month", "week", "day"];
       let { period } = request.query;
       if (!period || !periodValues.includes(period)) {
         period = "week";
@@ -645,19 +645,25 @@ export async function launch(trie, libp2p) {
       page = 0;
     }
 
-    const periodValues = ["all", "month", "week", "day"];
+    const periodValues = ["all", "year", "month", "week", "day"];
     let { period } = request.query;
     if (!period || !periodValues.includes(period)) {
       period = "week";
     }
 
-    const content = await best(
-      trie,
-      reply.locals.theme,
-      page,
-      period,
-      DOMPurify.sanitize(request.query.domain),
-    );
+    let content;
+    try {
+      content = await best(
+        trie,
+        reply.locals.theme,
+        page,
+        period,
+        DOMPurify.sanitize(request.query.domain),
+      );
+    } catch (err) {
+      log(`Error rendering /best ${err.stack}`);
+      return reply.status(500).send("Internal Server Error");
+    }
 
     reply.header(
       "Cache-Control",

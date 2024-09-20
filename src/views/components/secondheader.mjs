@@ -285,6 +285,11 @@ const secondheader = (theme, site, period, domain) => {
                   <span>All</span>
                 </button>
               </a>
+              <a href="/best?period=year${domain ? `&domain=${domain}` : ""}">
+                <button style="${periodIconStyle(theme, period, "year")}">
+                  <span>Year</span>
+                </button>
+              </a>
               <a href="/best?period=month${domain ? `&domain=${domain}` : ""}">
                 <button style="${periodIconStyle(theme, period, "month")}">
                   <span>Month</span>
