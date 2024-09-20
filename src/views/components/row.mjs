@@ -115,6 +115,21 @@ export function truncateComment(comment, maxLength = 260) {
   );
 }
 
+// NOTE: Some sites have awful OG images that we don't want to show. Notion for
+// example always have the same generic ogImages, but many people often share
+// Notion documents.
+const blockedOGImageDomains = [
+  "notion.site",
+  "abs.xyz",
+  "github.com",
+  "https://www.railway.xyz/",
+  "t.me",
+];
+const knownBadOgImages = [
+  "https://paragraph.xyz/share/share_img.jpg",
+  "https://s.turbifycdn.com/aah/paulgraham/essays-5.gif",
+];
+
 const row = (
   start = 0,
   path,
@@ -134,6 +149,7 @@ const row = (
       addOrUpdateReferrer(story.href, story.identity),
       outboundsLookbackHours,
     );
+    const extractedDomain = extractDomain(DOMPurify.sanitize(story.href));
     return html`
       <tr style="${invert ? "background-color: black;" : ""}">
         <td>
@@ -189,10 +205,14 @@ const row = (
                 </div>
               </div>
               <div
-                style="display: flex; align-items: center; flex-grow: 1; gap: 0.25rem;"
+                style="display: flex; align-items: start; flex-grow: 1; gap: 0.25rem;"
               >
                 ${
-                  story.metadata && story.metadata.image && !interactive
+                  story.metadata &&
+                  story.metadata.image &&
+                  !interactive &&
+                  !blockedOGImageDomains.includes(extractedDomain) &&
+                  !knownBadOgImages.includes(story.metadata.image)
                     ? html`<a
                         href="${`/outbound?url=${encodeURIComponent(
                           addOrUpdateReferrer(
@@ -201,6 +221,7 @@ const row = (
                           ),
                         )}`}"
                         target="_blank"
+                        style="margin-top: 5px;"
                       >
                         <img
                           class="row-image"
@@ -252,15 +273,13 @@ const row = (
                       >(${
                         !interactive && (path === "/" || path === "/best")
                           ? html`<a
-                              href="${path}?domain=${extractDomain(
-                                DOMPurify.sanitize(story.href),
-                              )}${period ? `&period=${period}` : ""}"
+                              href="${path}?domain=${extractedDomain}${period
+                                ? `&period=${period}`
+                                : ""}"
                               style="color: #828282;"
-                              >${extractDomain(
-                                DOMPurify.sanitize(story.href),
-                              )}</a
+                              >${extractedDomain}</a
                             >`
-                          : extractDomain(DOMPurify.sanitize(story.href))
+                          : extractedDomain
                       })</span
                     >
                   </span>
