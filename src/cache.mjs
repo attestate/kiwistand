@@ -194,7 +194,6 @@ export function getHashesPerDateRange(startDate, endDate) {
     dates.push(day);
     counts.push(result.count);
   }
-  console.log(dates, counts);
 
   return { dates, counts };
 }
