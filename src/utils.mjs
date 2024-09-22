@@ -1,6 +1,18 @@
 import path from "path";
 import { fileURLToPath } from "url";
 
+let lastCall;
+
+export function logd(label = "") {
+  const now = Date.now();
+  if (lastCall === undefined) {
+    console.log(`${label}${label ? ": " : ""}Delta: 0ms`);
+  } else {
+    console.log(`${label}${label ? ": " : ""}Delta: ${now - lastCall}ms`);
+  }
+  lastCall = now;
+}
+
 function dirname() {
   const filename = fileURLToPath(import.meta.url);
   return path.dirname(filename);
