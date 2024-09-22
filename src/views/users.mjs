@@ -5,6 +5,7 @@ import htm from "htm";
 import vhtml from "vhtml";
 import { isSameDay, sub, add } from "date-fns";
 import { plot } from "svg-line-chart";
+import makeAsync from "make-asynchronous";
 
 import Header from "./components/header.mjs";
 import Footer from "./components/footer.mjs";
@@ -191,13 +192,15 @@ export default async function (trie, theme) {
   );
 
   const cacheEnabled = true;
-  const messagesWithAddresses = await Promise.all(
-    [...messages, ...comments].filter((msg) => {
+
+  const messagesWithAddresses = await makeAsync((messages, comments) => {
+    return [...messages, ...comments].filter((msg) => {
       const messageDate = new Date(msg.timestamp * 1000);
-      const cutOffDate = new Date(2023, 3); // months are 0-indexed in JS, so 3 is April
+      // NOTE: months are 0-indexed in JS, so 3 is April
+      const cutOffDate = new Date(2023, 3);
       return messageDate >= cutOffDate;
-    }),
-  );
+    });
+  })(messages, comments);
 
   const dauData = calculateDAU(messagesWithAddresses);
   const mauData = calculateMAU(messagesWithAddresses);

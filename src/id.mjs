@@ -91,6 +91,17 @@ function cacheResult(cacheKey, computeFunc) {
   return result;
 }
 
+export async function cacheResultAsync(cacheKey, computeFunc) {
+  if (cache.has(cacheKey)) {
+    return cache.get(cacheKey);
+  }
+
+  const result = await computeFunc();
+  cache.set(cacheKey, result);
+
+  return result;
+}
+
 export function ecrecover(message, types, enableCache = false) {
   const copy = { ...message };
   delete copy["signature"];
@@ -99,7 +110,7 @@ export function ecrecover(message, types, enableCache = false) {
     utils.verifyTypedData(EIP712_DOMAIN, types, copy, message.signature);
 
   if (enableCache) {
-    const cacheKey = JSON.stringify(copy) + message.signature;
+    const cacheKey = canonicalize(copy) + message.signature;
     return cacheResult(cacheKey, computeFunc);
   }
 

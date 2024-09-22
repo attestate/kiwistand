@@ -2,6 +2,7 @@
 import { env } from "process";
 import { resolve } from "path";
 
+import Piscina from "piscina";
 import fastq from "fastq";
 import normalizeUrl from "normalize-url";
 import { utils } from "ethers";
@@ -17,10 +18,11 @@ import { keccak256 } from "ethereum-cryptography/keccak.js";
 import { decode } from "cbor-x";
 import { open } from "lmdb";
 import { eligible, eligibleAt } from "@attestate/delegator2";
+import canonicalize from "canonicalize";
 
 import log from "./logger.mjs";
 import LMDB from "./lmdb.mjs";
-import { verify, ecrecover, toDigest } from "./id.mjs";
+import { verify, ecrecover, toDigest, cacheResultAsync } from "./id.mjs";
 import { EIP712_MESSAGE } from "./constants.mjs";
 import { elog } from "./utils.mjs";
 import * as messages from "./topics/messages.mjs";
@@ -551,27 +553,24 @@ export async function posts(
 }
 
 function enhance(accounts, delegations, cacheEnabled) {
-  async function job(node) {
-    const signer = ecrecover(node, EIP712_MESSAGE, cacheEnabled);
-    const validationTime = new Date(node.timestamp * 1000);
-    const identity = eligibleAt(accounts, delegations, signer, validationTime);
-    if (!identity) {
-      return null;
+  const piscina = new Piscina({
+    filename: resolve("./src/workers/enhancer.mjs"),
+  });
+  return async (node) => {
+    const computeFunc = async () =>
+      await piscina.run({
+        node,
+        accounts,
+        delegations,
+      });
+
+    if (cacheEnabled) {
+      const cacheKey = canonicalize(node);
+      return await cacheResultAsync(cacheKey, computeFunc);
     }
 
-    const { index } = toDigest(node);
-
-    return {
-      index,
-      ...node,
-      signer,
-      identity,
-    };
-  }
-
-  const computeConcurrency = 100;
-  const computeQueue = fastq.promise(job, computeConcurrency);
-  return async (node) => await computeQueue.push(node);
+    return await computeFunc();
+  };
 }
 
 export async function leaves(
