@@ -22,6 +22,7 @@ function SimpleModal(props) {
       !account.isConnected ||
       (window.location.pathname !== "/" &&
         window.location.pathname !== "/new" &&
+        window.location.pathname !== "/submit" &&
         window.location.pathname !== "/stories" &&
         window.location.pathname !== "/gateway" &&
         window.location.pathname !== "/best")
