@@ -21,6 +21,9 @@ import * as newest from "./views/new.mjs";
 import * as feeds from "./feeds.mjs";
 import * as moderation from "./views/moderation.mjs";
 
+cache.initialize();
+cache.initializeNotifications();
+
 const reconcileMode = env.NODE_ENV === "reconcile";
 if (reconcileMode) {
   log(`Running in reconciliation mode`);

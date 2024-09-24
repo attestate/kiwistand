@@ -18,7 +18,12 @@ import * as store from "../store.mjs";
 import * as registry from "../chainstate/registry.mjs";
 import * as id from "../id.mjs";
 import * as moderation from "./moderation.mjs";
-import cache, { getUpvotes, getComments } from "../cache.mjs";
+import cache, {
+  getUpvotes,
+  getComments,
+  getTimestamp,
+  setTimestamp,
+} from "../cache.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -284,13 +289,10 @@ export async function data(trie, identity, lastRemoteValue) {
     throw new Error("Not a valid address");
   }
 
-  // TODO: Now that we have committed to an sqlite database, we should replace
-  // this logic to make it permanent by storing the user timestamp on disk
-  const userKey = `--last-updated-${identity}`;
-  let latestValue = cache.get(userKey);
+  let latestValue = getTimestamp(identity);
   if (!latestValue || latestValue < lastRemoteValue) {
     latestValue = lastRemoteValue;
-    cache.set(userKey, latestValue);
+    setTimestamp(identity, latestValue);
   }
 
   const config = await moderation.getLists();

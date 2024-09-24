@@ -813,12 +813,13 @@ export async function launch(trie, libp2p) {
       data = await activity.data(
         trie,
         DOMPurify.sanitize(request.cookies.identity || request.query.address),
-        request.cookies.lastUpdate,
+        parseInt(request.cookies.lastUpdate, 10),
       );
     } catch (err) {
+      log(`Error getting activity data: ${err.stack}`);
       const code = 400;
       const httpMessage = "Bad Request";
-      return sendError(reply, code, httpMessage, "Valid query parameters");
+      return sendError(reply, code, httpMessage, "Invalid query parameters");
     }
     const code = 200;
     const httpMessage = "OK";
@@ -839,7 +840,7 @@ export async function launch(trie, libp2p) {
       data = await activity.data(
         trie,
         DOMPurify.sanitize(request.query.address),
-        request.cookies.lastUpdate,
+        parseInt(request.cookies.lastUpdate, 10),
       );
     } catch (err) {
       return reply.status(400).type("text/plain").send(err.toString());
@@ -848,11 +849,12 @@ export async function launch(trie, libp2p) {
       reply.locals.theme,
       DOMPurify.sanitize(request.cookies.identity || request.query.address),
       data.notifications,
-      request.cookies.lastUpdate,
+      parseInt(request.cookies.lastUpdate, 10),
     );
     if (data && data.lastUpdate) {
-      reply.setHeader("X-LAST-UPDATE", data.lastUpdate);
-      reply.cookie("lastUpdate", data.lastUpdate);
+      reply.cookie("lastUpdate", data.lastUpdate, {
+        maxAge: 60 * 60 * 24 * 7 * 1000,
+      });
     }
     reply.header(
       "Cache-Control",

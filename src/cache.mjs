@@ -17,7 +17,7 @@ db.pragma("journal_mode = WAL");
 
 function initialize() {
   let isSetup = true;
-  const tables = ["submissions", "upvotes", "comments"];
+  const tables = ["fingerprints", "submissions", "upvotes", "comments"];
   tables.forEach((table) => {
     const exists = db
       .prepare(
@@ -31,6 +31,7 @@ function initialize() {
   });
 
   if (isSetup) {
+    log("Aborting cache.initialize early because all tables already exist");
     return isSetup;
   }
 
@@ -88,6 +89,39 @@ function initialize() {
       CREATE INDEX IF NOT EXISTS idx_fingerprints_url ON fingerprints(url);
       CREATE INDEX IF NOT EXISTS idx_url_fingerprints_timestamp ON fingerprints(timestamp);
     `);
+}
+
+export function initializeNotifications() {
+  const tableExists = db
+    .prepare(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name='notifications'",
+    )
+    .get();
+
+  if (tableExists) return;
+
+  db.exec(`
+     CREATE TABLE notifications (
+       identity TEXT NOT NULL PRIMARY KEY,
+       timestamp INTEGER NOT NULL
+     );
+   `);
+}
+
+export function getTimestamp(identity) {
+  const row = db
+    .prepare(`SELECT timestamp FROM notifications WHERE identity = ?`)
+    .get(identity);
+  return row ? row.timestamp : null;
+}
+
+export function setTimestamp(identity, timestamp) {
+  db.prepare(
+    `
+     INSERT INTO notifications (identity, timestamp) VALUES (?, ?)
+     ON CONFLICT(identity) DO UPDATE SET timestamp = excluded.timestamp;
+   `,
+  ).run(identity, timestamp);
 }
 
 export function getRandomIndex() {
