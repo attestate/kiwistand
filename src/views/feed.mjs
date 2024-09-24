@@ -234,7 +234,7 @@ export async function index(trie, page, domain) {
   const parameters = await moderation.getFeedParameters();
   let storyPromises = await topstories(leaves, parameters.decayStrength);
 
-  let threshold = 1;
+  let threshold = 2;
   let pill = true;
   const now = new Date();
   const old = sub(now, { hours: parameters.oldHours });
