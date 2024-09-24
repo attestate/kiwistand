@@ -4,7 +4,7 @@ import PullToRefresh from "pulltorefreshjs";
 import DOMPurify from "isomorphic-dompurify";
 import { getAccount } from "@wagmi/core";
 
-import { isRunningPWA, getCookie, getLocalAccount } from "./session.mjs";
+import { isIOS, isRunningPWA, getCookie, getLocalAccount } from "./session.mjs";
 import theme from "./theme.jsx";
 
 function storeReferral() {
@@ -794,6 +794,21 @@ async function processAndSendVotes(signer, identity) {
   }
 }
 
+// NOTE: There's a bug for PWAs running in production, maybe it is related to
+// https (because on localhost it isn't happening), where opening a new link in
+// target="_blank" and then closing it causes the page to "reload". I asked
+// about this in the Apple forum
+// (https://developer.apple.com/forums/thread/742095) months ago and didn't get
+// an answer but I now finally seem to have figured out that the _blank
+// statement causes the issue and that it doesn't happen for _self. So this is
+// what we're setting for iPhone
+function updateLinkTargetsForIOSPWA() {
+  if (isIOS() && isRunningPWA()) {
+    const links = document.querySelectorAll(".story-link-container a");
+    links.forEach((link) => link.setAttribute("target", "_self"));
+  }
+}
+
 async function start() {
   // NOTE: There are clients which had the identity cookie sent to 1 week and
   // they're now encountering the paywall. So in case this happens but their
@@ -802,6 +817,9 @@ async function start() {
   window.initialIdentityCookie = getCookie("identity");
 
   storeReferral();
+
+  updateLinkTargetsForIOSPWA();
+
   // NOTE: We don't want pull to refresh for the submission page as this could
   // mess up the user's input on an accidential scroll motion.
   if (isRunningPWA() && window.location.pathname !== "/submit") {
