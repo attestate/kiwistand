@@ -501,7 +501,9 @@ const row = (
               }
             </div>
             ${
-              story.lastComment && story.lastComment.identity.safeAvatar
+              story.lastComment &&
+              story.lastComment.identity.safeAvatar &&
+              !invert
                 ? html` <div
                     class="comment-preview-0x${story.index}"
                     style="cursor: pointer; padding: 6px 6px 9px 6px; display: flex;"
