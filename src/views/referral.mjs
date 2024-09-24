@@ -33,7 +33,7 @@ export default async function (theme) {
       <body>
         <div class="container">
           ${Sidebar("/referral")}
-          <div id="hnmain">
+          <div id="hnmain" class="scaled-hnmain">
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
               <tr>
                 ${await Header(theme)}

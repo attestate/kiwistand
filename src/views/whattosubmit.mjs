@@ -99,7 +99,7 @@ export default async function (theme) {
       <body>
         <div class="container">
           ${Sidebar()}
-          <div id="hnmain">
+          <div id="hnmain" class="scaled-hnmain">
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
               <tr style="background-color: rgb(246, 246, 239);">
                 <td style="padding: 1rem; text-align: center; color: black;">

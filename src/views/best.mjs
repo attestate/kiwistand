@@ -80,7 +80,7 @@ export default async function index(trie, theme, page, period, domain) {
       <body>
         <div class="container">
           ${Sidebar("/best")}
-          <div id="hnmain">
+          <div id="hnmain" class="scaled-hnmain">
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
               <tr>
                 ${await Header(theme)}

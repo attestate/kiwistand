@@ -1,6 +1,15 @@
 :root {
   --font-family: Verdana, Geneva, sans-serif;
 }
+@media screen and (min-width: 1800px) {
+  .scaled-hnmain {
+    transform: scale(1.5);
+    transform-origin: center top;
+  }
+  .drawer-link {
+    display: none;
+  }
+}
 .inverted-row {
   filter: invert(100%) brightness(175%);
 }
