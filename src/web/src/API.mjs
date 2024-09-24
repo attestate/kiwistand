@@ -94,10 +94,11 @@ export async function fetchNotifications(address) {
 
   const lastUpdate = getCookie("lastUpdate");
   if (
-    data &&
-    data.data &&
-    data.data.lastServerValue &&
-    lastUpdate < parseInt(data.data.lastServerValue, 10)
+    (data &&
+      data.data &&
+      data.data.lastServerValue &&
+      lastUpdate < parseInt(data.data.lastServerValue, 10)) ||
+    (!lastUpdate && data && data.data && data.data.lastServerValue)
   ) {
     setCookie("lastUpdate", parseInt(data.data.lastServerValue, 10));
   }

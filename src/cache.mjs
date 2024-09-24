@@ -116,6 +116,13 @@ export function getTimestamp(identity) {
 }
 
 export function setTimestamp(identity, timestamp) {
+  // NOTE: For a user without a 'lastValue' in their cookies and no server
+  // value this function would throw and return the error to the user, so we
+  // have to have a default value, which we set to the current time.
+  if (!timestamp) {
+    timestamp = Math.floor(new Date().getTime() / 1000);
+  }
+
   db.prepare(
     `
      INSERT INTO notifications (identity, timestamp) VALUES (?, ?)
