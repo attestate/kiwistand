@@ -9,6 +9,7 @@ import { getLocalAccount, getCookie } from "./session.mjs";
 import { client, chains } from "./client.mjs";
 
 const Bell = (props) => {
+  const lastUpdate = parseInt(getCookie("lastUpdate"), 10);
   let address;
   const account = useAccount();
   const localAccount = getLocalAccount(account.address, props.allowlist);
@@ -35,7 +36,6 @@ const Bell = (props) => {
     if (address) {
       const fetchAndUpdateNotifications = async () => {
         const notifications = await fetchNotifications(address);
-        const lastUpdate = getCookie("lastUpdate");
         setReadNotifications(notifications.length);
 
         const count = notifications.reduce((acc, notification) => {
@@ -67,7 +67,7 @@ const Bell = (props) => {
     );
   }
   if (
-    (!props.mobile && !getCookie("lastUpdate") && readNotifications === 0) ||
+    (!props.mobile && !lastUpdate && readNotifications === 0) ||
     window.location.pathname === "/indexing" ||
     window.location.pathname === "/kiwipass-mint" ||
     window.location.pathname === "/demonstration" ||
@@ -86,7 +86,7 @@ const Bell = (props) => {
     document.title = `[${notificationCount}] ${documentTitle}`;
   }
 
-  const disabled = !getCookie("lastUpdate") && readNotifications === 0;
+  const disabled = !lastUpdate && readNotifications === 0;
   return (
     <a
       disabled={disabled}

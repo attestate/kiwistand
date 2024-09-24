@@ -92,12 +92,12 @@ export async function fetchNotifications(address) {
     return [];
   }
 
-  const lastUpdate = getCookie("lastUpdate");
+  const lastUpdate = parseInt(getCookie("lastUpdate"), 10);
   if (
     (data &&
       data.data &&
       data.data.lastServerValue &&
-      lastUpdate < parseInt(data.data.lastServerValue, 10)) ||
+      lastUpdate <= parseInt(data.data.lastServerValue, 10)) ||
     (!lastUpdate && data && data.data && data.data.lastServerValue)
   ) {
     setCookie("lastUpdate", parseInt(data.data.lastServerValue, 10));
