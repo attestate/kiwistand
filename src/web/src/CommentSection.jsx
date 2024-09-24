@@ -42,22 +42,28 @@ const Comment = ({ comment, index }) => {
           alignItems: "center",
         }}
       >
-        {comment.identity.safeAvatar && (
-          <img
-            loading="lazy"
-            src={comment.identity.safeAvatar}
-            alt="avatar"
-            style={{
-              marginRight: "5px",
-              width: "12px",
-              height: "12px",
-              border: "1px solid #828282",
-              borderRadius: "2px",
-            }}
-          />
-        )}
-        <b>{truncateName(comment.identity.displayName)}</b>
-        <span> • </span>
+        <a
+          style={{ color: "black" }}
+          className="meta-link"
+          href={`/upvotes?address=${comment.identity.address}`}
+        >
+          {comment.identity.safeAvatar && (
+            <img
+              loading="lazy"
+              src={comment.identity.safeAvatar}
+              alt="avatar"
+              style={{
+                marginRight: "5px",
+                width: "12px",
+                height: "12px",
+                border: "1px solid #828282",
+                borderRadius: "2px",
+              }}
+            />
+          )}
+          <b>{truncateName(comment.identity.displayName)}</b>
+        </a>
+        <span style={{ color: "grey", opacity: "0.6" }}> • </span>
         <span style={{ color: "grey" }}>
           {formatDistanceToNowStrict(new Date(comment.timestamp * 1000))}
           <span> ago</span>
