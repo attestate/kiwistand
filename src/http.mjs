@@ -856,10 +856,7 @@ export async function launch(trie, libp2p) {
         maxAge: 60 * 60 * 24 * 7 * 1000,
       });
     }
-    reply.header(
-      "Cache-Control",
-      "public, max-age=300, no-transform, must-revalidate, stale-while-revalidate=86400",
-    );
+    reply.header("Cache-Control", "no-cache");
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/subscribe", async (request, reply) => {
