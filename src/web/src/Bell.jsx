@@ -55,6 +55,22 @@ const Bell = (props) => {
     }
   }, [address]);
 
+  if (
+    (isEligible && !lastUpdate && readNotifications === 0) ||
+    window.location.pathname === "/indexing" ||
+    window.location.pathname === "/kiwipass-mint" ||
+    window.location.pathname === "/demonstration" ||
+    window.location.pathname === "/invite" ||
+    window.location.pathname === "/passkeys" ||
+    window.location.pathname === "/notifications" ||
+    window.location.pathname === "/whattosubmit" ||
+    window.location.pathname === "/pwa" ||
+    window.location.pathname === "/start" ||
+    window.location.pathname === "/friends"
+  ) {
+    return null;
+  }
+
   if (!getCookie("identity") || !isEligible) {
     return (
       <a
@@ -73,21 +89,6 @@ const Bell = (props) => {
         up
       </a>
     );
-  }
-  if (
-    (!props.mobile && !lastUpdate && readNotifications === 0) ||
-    window.location.pathname === "/indexing" ||
-    window.location.pathname === "/kiwipass-mint" ||
-    window.location.pathname === "/demonstration" ||
-    window.location.pathname === "/invite" ||
-    window.location.pathname === "/passkeys" ||
-    window.location.pathname === "/notifications" ||
-    window.location.pathname === "/whattosubmit" ||
-    window.location.pathname === "/pwa" ||
-    window.location.pathname === "/start" ||
-    window.location.pathname === "/friends"
-  ) {
-    return null;
   }
 
   if (notificationCount > 0 && documentTitle === document.title) {
