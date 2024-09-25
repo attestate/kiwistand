@@ -21,12 +21,17 @@ const Bell = (props) => {
   }
   const isEligible =
     address && eligible(props.allowlist, props.delegations, address);
-  const link = isEligible ? `/activity?address=${address}` : "/kiwipass-mint";
 
   const [notificationCount, setNotificationCount] = useState(0);
   const [readNotifications, setReadNotifications] = useState(0);
+  const [cacheBuster, setCacheBuster] = useState("");
   const [documentTitle] = useState(document.title);
   const [isFull, setIsFull] = useState(false);
+  const link = isEligible
+    ? `/activity?address=${address}${
+        cacheBuster ? `&cacheBuster=${cacheBuster}` : ""
+      }`
+    : "/kiwipass-mint";
 
   const handleClick = () => {
     setIsFull(!isFull);
@@ -38,10 +43,13 @@ const Bell = (props) => {
         const notifications = await fetchNotifications(address);
         setReadNotifications(notifications.length);
 
-        const count = notifications.reduce((acc, notification) => {
-          return notification.timestamp > lastUpdate ? acc + 1 : acc;
-        }, 0);
-        setNotificationCount(count);
+        const newNotifications = notifications
+          .filter((elem) => elem.timestamp > lastUpdate)
+          .sort((a, b) => b.timestamp - a.timestamp);
+        if (newNotifications.length > 0) {
+          setCacheBuster(`0x${newNotifications[0].message.index}`);
+        }
+        setNotificationCount(newNotifications.length);
       };
       fetchAndUpdateNotifications();
     }
