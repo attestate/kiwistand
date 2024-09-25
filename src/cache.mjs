@@ -482,7 +482,7 @@ export function getComments(identity) {
       AND
         identity != ?
       AND c1.timestamp > (
-        SELECT MAX(c2.timestamp)
+        SELECT MIN(c2.timestamp)
         FROM comments AS c2
         WHERE c2.identity = ?
         AND c2.submission_id = c1.submission_id
