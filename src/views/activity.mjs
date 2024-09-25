@@ -84,7 +84,7 @@ function generateCommentRow(activity, identity, bgColor, theme) {
             style="flex: 0.15; display: flex; align-items: start; justify-content:
  center;"
           >
-            ${avatar}
+            <a href="/upvotes?address=${identity.address}">${avatar}</a>
           </div>
           <div
             style="padding-top: 10px; flex: 0.85; display: flex; flex-direction: column;"
