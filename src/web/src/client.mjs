@@ -13,7 +13,7 @@ import {
   usePublicClient,
   useWalletClient,
 } from "wagmi";
-import { mainnet, optimism } from "wagmi/chains";
+import { mainnet, optimism, base, arbitrum } from "wagmi/chains";
 import { alchemyProvider } from "wagmi/providers/alchemy";
 import {
   injectedWallet,
@@ -27,7 +27,7 @@ import {
 //import { infuraProvider } from "wagmi/providers/infura";
 
 const config = configureChains(
-  [optimism, mainnet],
+  [optimism, mainnet, arbitrum, base],
   [alchemyProvider({ apiKey: "TfAhzs116ThO7Fwod1gzpTJmH0Cudxp7" })],
   //[infuraProvider({ apiKey: "ddb924190df54c22a268ae7671ed0f55" })],
 );

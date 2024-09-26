@@ -8,7 +8,7 @@ import {
 import { Contract } from "@ethersproject/contracts";
 import { Provider } from "@ethersproject/providers";
 import { parseEther, formatEther } from "viem";
-import { mainnet, optimism } from "wagmi/chains";
+import { mainnet, optimism, base, arbitrum } from "wagmi/chains";
 import { Wallet } from "@ethersproject/wallet";
 import { getAddress } from "@ethersproject/address";
 import { eligible, create } from "@attestate/delegator2";
@@ -40,6 +40,8 @@ export async function prepare(key) {
   const balance = {
     mainnet: (await fetchBalance({ address, chainId: mainnet.id })).value,
     optimism: (await fetchBalance({ address, chainId: optimism.id })).value,
+    base: (await fetchBalance({ address, chainId: base.id })).value,
+    arbitrum: (await fetchBalance({ address, chainId: arbitrum.id })).value,
   };
 
   let price = await fetchPrice();
@@ -64,9 +66,17 @@ export async function prepare(key) {
     preferredChainId = mainnet.id;
   }
   if (!preferredChainId) {
-    throw new Error(
-      `Need at least ${formatEther(price)} ETH on Mainnet or Optimism`,
-    );
+    let error = `Need at least ${formatEther(
+      price,
+    )} ETH on Mainnet or Optimism`;
+
+    if (balance.base > price) {
+      error = `Bridge:${base.id}:${price}`;
+    }
+    if (balance.arbitrum > price) {
+      error = `Bridge:${arbitrum.id}:${price}`;
+    }
+    throw new Error(error);
   }
 
   const authorize = true;
@@ -325,8 +335,36 @@ const BuyButton = (props) => {
       (error.toString().includes("insufficient funds") ||
         error.code === -32603 ||
         error.code === "INSUFFICIENT_FUNDS")) ||
-    error.toString().includes("Need at least")
+    error.toString().includes("Need at least") ||
+    error.toString().includes("Bridge:")
   ) {
+    let button = (
+      <button className="buy-button" disabled>
+        {error.message}
+      </button>
+    );
+    const ETHSymbol = "0x0000000000000000000000000000000000000000";
+    let link = `https://jumper.exchange/?toChain=10&toToken=${ETHSymbol}`;
+
+    const match = error.toString().match(/Bridge:(\w+):(\d+)/);
+    if (match) {
+      const [, fromChain, price] = match;
+
+      const gasReserve = 1000000000000000n;
+      const fromAmount = BigInt(price) + gasReserve;
+      link += `&fromAmount=${formatEther(
+        fromAmount,
+      )}&fromChain=${fromChain}&fromToken=${ETHSymbol}`;
+      button = (
+        <>
+          <a href={link} target="_blank">
+            <button className="buy-button">Bridge ETH to OP Mainnet</button>
+          </a>
+          <p>Once you're done bridging, come back and refresh this page</p>
+        </>
+      );
+    }
+
     return (
       <div
         style={{
@@ -336,21 +374,7 @@ const BuyButton = (props) => {
           flexDirection: "column",
         }}
       >
-        <button className="buy-button" disabled>
-          {error.message}
-        </button>
-        <a
-          href="https://jumper.exchange/?toChain=10&toToken=0x0000000000000000000000000000000000000000"
-          target="_blank"
-          style={{
-            marginTop: "1rem",
-            textDecoration: "underline",
-            fontWeight: "bold",
-            fontSize: "1.1rem",
-          }}
-        >
-          Bridge to OP mainnet on jumper.exchange
-        </a>
+        {button}
       </div>
     );
   }
