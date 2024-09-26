@@ -27,6 +27,9 @@ cache.initializeNotifications();
 const reconcileMode = env.NODE_ENV === "reconcile";
 if (reconcileMode) {
   log(`Running in reconciliation mode`);
+  log(
+    `In reconciliation mode, syncing with the chain and reconciling with the p2p network are enabled. The product backend/frontends are disabled.`,
+  );
 }
 
 const trie = await store.create();
@@ -36,10 +39,10 @@ const node = await start(config);
 if (!reconcileMode) {
   await api.launch(trie, node);
   await http.launch(trie, node);
-
-  crawl(mintCrawlPath);
-  crawl(delegateCrawlPath);
 }
+
+crawl(mintCrawlPath);
+crawl(delegateCrawlPath);
 
 // NOTE: We're passing in the trie here as we don't want to make it globally
 // available to run more than one node in the tests

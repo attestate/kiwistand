@@ -32,6 +32,14 @@ import { triggerNotification } from "./subscriptions.mjs";
 
 const maxReaders = 500;
 
+// NOTE: We're running the launching of Piscina workers on the top of the
+// module as when this is run in a function, and the function is called
+// multiple times then Piscina will continue to spawn more and more workers
+// which fills up the memory fast.
+const piscina = new Piscina({
+  filename: resolve("./src/workers/enhancer.mjs"),
+});
+
 export const upvotes = new Set();
 export const commentCounts = new Map();
 
@@ -552,10 +560,11 @@ export async function posts(
   return posts;
 }
 
+// NOTE: If you're wondering why the enhancer is recreated on each call of
+// posts( and other calls, the reason for it is that we constantly have to
+// re-query accounts and delegations as they're subject to change throughout
+// the application's lifecycle (e.g. when a new person mints/delegates).
 function enhance(accounts, delegations, cacheEnabled) {
-  const piscina = new Piscina({
-    filename: resolve("./src/workers/enhancer.mjs"),
-  });
   return async (node) => {
     const computeFunc = async () =>
       await piscina.run({
