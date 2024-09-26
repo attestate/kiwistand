@@ -321,16 +321,36 @@ const BuyButton = (props) => {
   }
 
   if (
-    error &&
-    (error.toString().includes("insufficient funds") ||
-      error.code === -32603 ||
-      error.code === "INSUFFICIENT_FUNDS")
+    (error &&
+      (error.toString().includes("insufficient funds") ||
+        error.code === -32603 ||
+        error.code === "INSUFFICIENT_FUNDS")) ||
+    error.toString().includes("Need at least")
   ) {
     return (
-      <div>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          flexDirection: "column",
+        }}
+      >
         <button className="buy-button" disabled>
-          Insufficient funds on {name}...
+          {error.message}
         </button>
+        <a
+          href="https://jumper.exchange/?toChain=10&toToken=0x0000000000000000000000000000000000000000"
+          target="_blank"
+          style={{
+            marginTop: "1rem",
+            textDecoration: "underline",
+            fontWeight: "bold",
+            fontSize: "1.1rem",
+          }}
+        >
+          Bridge to OP mainnet on jumper.exchange
+        </a>
       </div>
     );
   }
