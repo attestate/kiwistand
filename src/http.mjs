@@ -825,10 +825,7 @@ export async function launch(trie, libp2p) {
     const httpMessage = "OK";
     const details = "Notifications feed";
 
-    reply.header(
-      "Cache-Control",
-      "public, max-age=300, no-transform, must-revalidate",
-    );
+    reply.header("Cache-Control", "no-cache");
     return sendStatus(reply, code, httpMessage, details, {
       notifications: data.notifications,
       lastServerValue: data.latestValue,
