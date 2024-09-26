@@ -2,7 +2,6 @@
 import { setTimeout } from "timers/promises";
 
 import * as lp from "it-length-prefixed";
-import { pipe } from "it-pipe";
 import map from "it-map";
 import all from "it-all";
 import { LeafNode, decodeNode } from "@ethereumjs/trie";
@@ -74,7 +73,8 @@ export function syncPeerFactory() {
 
 export async function toWire(message, sink) {
   const buf = encode(message);
-  return await pipe([buf], lp.encode(), sink);
+  const encoded = lp.encode()([buf]);
+  return await sink(encoded);
 }
 
 // NOTE: it-length-prefixed's default configuration will throw errors for
@@ -82,7 +82,8 @@ export async function toWire(message, sink) {
 // NOTE: 2024-09-09, we're doubling it again
 export const maxDataLength = 1024 * 1024 * 4 * 2 * 2;
 export async function fromWire(source) {
-  return await pipe(source, lp.decode({ maxDataLength }), async (_source) => {
+  const decoded = lp.decode({ maxDataLength })(source);
+  const process = async (_source) => {
     const results = await map(_source, (message) => {
       if (!message) return;
       const buf = Buffer.from(message.subarray());
@@ -90,7 +91,8 @@ export async function fromWire(source) {
       return decoded;
     });
     return await all(results);
-  });
+  };
+  return await process(decoded);
 }
 
 export function handleDiscovery(evt) {
