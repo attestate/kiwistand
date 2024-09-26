@@ -402,12 +402,18 @@ export function receive(peerFab, trie, expectResponse, handler) {
 
     if (expectResponse && !response) {
       log(
-        "Failed to handle response from remote. Can't generate answer, closing stream.",
+        "receive: Failed to handle response from remote. Can't generate answer, closing stream.",
       );
       peerFab.set();
       return stream.close();
     }
-    await toWire(response, stream.sink);
+    try {
+      await toWire(response, stream.sink);
+    } catch (err) {
+      log(`receive: Failed to respond: ${err.stack}`);
+      peerFab.set();
+      return stream.close();
+    }
   };
 }
 
