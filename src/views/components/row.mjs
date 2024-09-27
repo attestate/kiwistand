@@ -193,7 +193,7 @@ const row = (
                 >
                   <div
                     class="interaction-element"
-                    style="border-radius: 2px; padding: 5px 0; background-color: rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; min-width: 40px; margin: 5px 6px; align-self: stretch;"
+                    style="border-radius: 2px; padding: 5px 0; background-color: rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; min-width: 40px; margin: 5px 8px 5px 6px; align-self: stretch;"
                   >
                     <div style="min-height: 40px; display:block;">
                       <div class="votearrowcontainer">
@@ -219,7 +219,7 @@ const row = (
                 </div>
               </div>
               <div
-                style="display: flex; align-items: start; flex-grow: 1; gap: 0.25rem;"
+                style="display: flex; align-items: start; flex-grow: 1; gap: 8px;"
               >
                 ${
                   story.metadata &&
@@ -234,12 +234,12 @@ const row = (
                             story.identity,
                           ),
                         )}`}"
+                        class="row-image"
                         target="_blank"
-                        style="margin-top: 5px;"
+                        style="align-self: stretch; margin: 5px 0;"
                       >
                         <img
-                          class="row-image"
-                          style="border: 1px solid #ccc; border-radius: 2px; width: 110px; height: 55px; object-fit: cover;"
+                          style="max-height: 61px; border: 1px solid #ccc; border-radius: 2px; width: 110px; object-fit: cover;"
                           src="${DOMPurify.sanitize(story.metadata.image)}"
                       /></a>`
                     : null
@@ -267,7 +267,7 @@ const row = (
                             : "_blank"
                         }"
                         class="story-link"
-                        style="line-height: 13pt; font-size: 13pt;"
+                        style="line-height: 15pt; font-size: 13pt;"
                       >
                         ${
                           story.isOriginal
@@ -297,7 +297,7 @@ const row = (
                       })</span
                     >
                   </span>
-                  <div style="font-size: 10pt;">
+                  <div style="font-size: 10pt; margin-top: 1px;">
                     <spani style="opacity: 0.8">
                       ${
                         path !== "/stories" &&
@@ -506,10 +506,11 @@ const row = (
               !invert
                 ? html` <div
                     class="comment-preview-0x${story.index}"
-                    style="cursor: pointer; padding: 6px 6px 9px 6px; display: flex;"
+                    style="cursor: pointer; padding: 1px 5px 9px 6px; display: flex;"
                   >
                     <div
                       onclick="window.reactHasLoaded && (document.querySelector('.comment-preview-0x${story.index}').style.display = 'none', window.dispatchEvent(new CustomEvent('open-comments-0x${story.index}')));"
+                      style="width: 100%; background-color: rgba(0, 0, 0, 0.05);padding: 7px 9px;border-radius: 2px;"
                     >
                       <div style="display: inline-flex; align-items: start;">
                         <img
@@ -532,7 +533,6 @@ const row = (
                         )}</span
                       >
                       <span> </span>
-                      <span style="text-decoration: underline;">Read more</span>
                     </div>
                   </div>`
                 : null

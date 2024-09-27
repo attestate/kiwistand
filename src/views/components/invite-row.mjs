@@ -100,7 +100,7 @@ function row(reward, percentageOff) {
     <tr>
       <td>
         <div
-          style="padding: 0.25rem 1rem 0.5rem 1rem; display: flex; flex-direction: column; align-items: start;"
+          style="padding: 0.5rem 1rem 0.5rem 1rem; display: flex; flex-direction: column; align-items: start;"
         >
           <div style="margin-bottom: 0.5rem;">
             <span style="color: black; font-weight: bold; font-size: 14pt;"
@@ -137,12 +137,12 @@ function row(reward, percentageOff) {
             </button>
           </div>
         </div>
-        <p style="margin: 0 0 0.5rem 1rem;">
+        <p style="margin: 0 0 1rem 1rem;">
           <span
             style="margin-right: 10px; color: white; padding: 3px 5px; background-color: ${theme.color}; border-radius: 2px;"
             >New!</span
           >
-          <span
+          <span style="line-height: 20px;"
             >Send a friend an invite! They'll get
 
             <b> ${percentageOff}% off</b>, and you'll get ${reward} ETH!</span

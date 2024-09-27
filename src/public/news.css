@@ -394,7 +394,7 @@ body {
   flex: 0 0 30%;
 }
 .row-image {
-  display: none;
+  display: none !important;
 }
 /* mobile device */
  @media only screen and (min-width : 300px) and (max-width : 750px) {
@@ -637,7 +637,7 @@ body {
 /* Media query for larger screens */
  @media (min-width: 1150px) {
     .row-image {
-      display: block;
+      display: block !important;
     }
     .mobile-center {
       display: none !important;

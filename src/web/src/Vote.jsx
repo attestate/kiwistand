@@ -126,13 +126,12 @@ const Vote = (props) => {
             className={hasUpvoted ? "" : "interaction-element"}
             style={{
               borderRadius: "2px",
-              padding: "5px 0",
               backgroundColor: "rgba(0,0,0,0.05)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               minWidth: "40px",
-              margin: "5px 6px",
+              margin: "5px 8px 5px 6px",
               alignSelf: "stretch",
               cursor: hasUpvoted ? "not-allowed" : "pointer",
             }}
