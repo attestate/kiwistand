@@ -335,8 +335,8 @@ const BuyButton = (props) => {
       (error.toString().includes("insufficient funds") ||
         error.code === -32603 ||
         error.code === "INSUFFICIENT_FUNDS")) ||
-    error.toString().includes("Need at least") ||
-    error.toString().includes("Bridge:")
+    (error && error.toString().includes("Need at least")) ||
+    (error && error.toString().includes("Bridge:"))
   ) {
     let button = (
       <button className="buy-button" disabled>
