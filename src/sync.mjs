@@ -384,7 +384,14 @@ export async function compare(trie, message) {
 
 export function receive(peerFab, trie, expectResponse, handler) {
   return async ({ connection, stream }) => {
-    const [message] = await fromWire(stream.source);
+    let message;
+    try {
+      [message] = await fromWire(stream.source);
+    } catch (err) {
+      elog(err, "receive: error in fromWire");
+      peerFab.set();
+      return stream.close();
+    }
 
     let response;
     try {
