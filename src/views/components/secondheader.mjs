@@ -230,7 +230,7 @@ const secondheader = (theme, site, period, domain) => {
               </a>`
             : ""}
           ${site === "top" || site === "new" || site === "best"
-            ? html` <a class="feed-button-link" href="/new?cached=true">
+            ? html` <a class="feed-button-link" href="/new">
                 <button
                   onclick="${animation}"
                   class="feed-button"

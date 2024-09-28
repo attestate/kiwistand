@@ -122,7 +122,7 @@ const nav = (path) => html`
     </a>
     <a
       data-icon="newest"
-      href="/new?cached=true"
+      href="/new"
       style="flex-direction: column; display: flex; justify-content: center; align-items: center; padding: 10px 0; flex-grow: 1;
  text-decoration: none; color: black; height: 30px;"
     >
