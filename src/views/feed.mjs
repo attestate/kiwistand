@@ -146,7 +146,7 @@ async function getAd() {
   ];
 
   const contract = new ethers.Contract(contractAddress, abi, provider);
-  const title = await contract.title();
+  const title = (await contract.title()).slice(0, 80);
   const href = await contract.href();
   const timestamp = await contract.timestamp();
   const identity = await contract.controller();
