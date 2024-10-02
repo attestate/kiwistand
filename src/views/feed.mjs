@@ -77,7 +77,7 @@ async function getAd() {
     env.OPTIMISM_RPC_HTTP_HOST,
   );
 
-  const contractAddress = "0xb0c9502ea7c11ea0fe6157bfc43e3507fa69bba0";
+  const contractAddress = "0x2e78Fad843177343Feb2f1d5cb9699A061C59c06";
   const abi = [
     { inputs: [], name: "ErrUnauthorized", type: "error" },
     { inputs: [], name: "ErrValue", type: "error" },
@@ -151,6 +151,7 @@ async function getAd() {
   const timestamp = await contract.timestamp();
   const identity = await contract.controller();
   const collateral = await contract.collateral();
+  const [price, taxes] = await contract.price();
   const submitter = await ens.resolve(identity);
 
   return {
@@ -160,6 +161,8 @@ async function getAd() {
     title,
     href,
     collateral,
+    price,
+    taxes,
     identity,
     submitter,
     displayName: submitter.displayName,

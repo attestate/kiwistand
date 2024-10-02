@@ -3,6 +3,7 @@ import vhtml from "vhtml";
 import { formatDistanceToNowStrict as originalFormatDistance } from "date-fns";
 import { URL } from "url";
 import DOMPurify from "isomorphic-dompurify";
+import ethers from "ethers";
 
 import { commentCounts } from "../../store.mjs";
 import ShareIcon from "./shareicon.mjs";
@@ -374,13 +375,34 @@ const row = (
                             >`
                       }
                       ${
-                        story.collateral
-                          ? html` <a
-                              class="meta-link"
-                              href="https://github.com/attestate/ad?tab=readme-ov-file#how-does-it-work"
-                              target="_blank"
-                              >(sponsored)</a
-                            >`
+                        story.collateral && story.price
+                          ? html`
+                              <span>
+                                <a
+                                  class="meta-link"
+                                  href="https://github.com/attestate/ad?tab=readme-ov-file#how-does-it-work"
+                                  target="_blank"
+                                >
+                                  <span> </span>
+                                  (sponsored)</a
+                                >
+                                <span style="opacity:0.6"> • </span>
+                                <a
+                                  style="display: inline;"
+                                  class="meta-link"
+                                  href="/submit"
+                                >
+                                  <span>Price: </span>
+                                  ${parseFloat(
+                                    ethers.utils.formatEther(
+                                      story.price.toString(),
+                                    ),
+                                  ).toFixed(4)}
+                                  <span> </span>
+                                  ETH
+                                </a>
+                              </span>
+                            `
                           : null
                       }
                       <span>
@@ -404,7 +426,7 @@ const row = (
                             : null
                         }
                         ${
-                          interactive || hideCast
+                          interactive || hideCast || isad
                             ? null
                             : html`
                                 <span class="share-container">
@@ -425,6 +447,7 @@ const row = (
                               `
                         }
                         ${
+                          isad ||
                           interactive ||
                           hideCast ||
                           story.displayName === "Feedbot"
