@@ -378,40 +378,16 @@ export async function index(trie, page, domain) {
 
   const ad = await getAd();
 
-  const contestStories = await getContestStories();
-  const resolvedContestStories = await resolveIds(contestStories);
+  //const contestStories = await getContestStories();
+  //const resolvedContestStories = await resolveIds(contestStories);
   return {
-    contestStories: resolvedContestStories,
+    //contestStories: resolvedContestStories,
     ad,
     stories,
     originals,
     start,
   };
 }
-
-const expandSVG = html`<svg
-  style="height: 1rem;"
-  xmlns="http://www.w3.org/2000/svg"
-  viewBox="0 0 256 256"
->
-  <rect width="256" height="256" fill="none" />
-  <polyline
-    points="80 176 128 224 176 176"
-    fill="none"
-    stroke="currentColor"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    stroke-width="24"
-  />
-  <polyline
-    points="80 80 128 32 176 80"
-    fill="none"
-    stroke="currentColor"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    stroke-width="24"
-  />
-</svg>`;
 
 const pages = {};
 
@@ -442,7 +418,7 @@ export default async function (trie, theme, page, domain) {
   } else {
     content = cacheRes.content;
   }
-  const { ad, originals, stories, start, contestStories } = content;
+  const { ad, originals, stories, start } = content;
 
   let query = `?page=${page + 1}`;
   if (domain) {
@@ -470,35 +446,21 @@ export default async function (trie, theme, page, domain) {
               <tr>
                 ${SecondHeader(theme, "top")}
               </tr>
-              <tr
-                style="cursor: pointer;"
-                onclick="document.querySelectorAll('.inverted-row').forEach(el => el.style.display =
- el.style.display === 'none' ? '' : 'none');"
-              >
+              <tr style="cursor: pointer;">
                 <td>
-                  <div
+                  <a
+                    target="_blank"
+                    href="https://paragraph.xyz/@kiwi-updates/pluralistic-future-of-l2s-results"
                     style="background-color: black; height: 2.3rem;display: flex; justify-content: start; align-items: center; padding-left: 1rem; gap: 1rem; color: white;"
                   >
                     <img style="height: 30px;" src="lens.png" />
                     <span
-                      style="display:flex;justify-content: center; align-items: center; gap:1rem;"
-                      >Show/Hide submissions ${expandSVG}</span
+                      style="text-decoration: underline; display:flex;justify-content: center; align-items: center; gap:1rem;"
+                      >Contest ended! See results</span
                     >
-                  </div>
+                  </a>
                 </td>
               </tr>
-              ${contestStories.map(
-                Row(
-                  start,
-                  "/",
-                  undefined,
-                  null,
-                  null,
-                  null,
-                  recentJoiners,
-                  true,
-                ),
-              )}
               ${stories
                 .slice(0, 3)
                 .map(
