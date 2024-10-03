@@ -106,7 +106,10 @@ const SubmitButton = (props) => {
   const [isLoading, setIsLoading] = useState(false);
   const [title, setTitle] = useState("");
   const [remainingChars, setRemainingChars] = useState(80);
-  const [isAd, setIsAd] = useState(false);
+
+  const params = new URLSearchParams(window.location.search);
+  const adParam = params.get("isad") === "true";
+  const [isAd, setIsAd] = useState(adParam);
 
   useEffect(() => {
     const embedPreview = document.getElementById("embed-preview");
@@ -402,7 +405,7 @@ const adContractABI = [
     type: "function",
   },
 ];
-const adContractAddress = "0xb0c9502ea7c11ea0fe6157bfc43e3507fa69bba0";
+const adContractAddress = "0x2e78Fad843177343Feb2f1d5cb9699A061C59c06";
 
 const AdForm = (props) => {
   const titleInputElem = document.getElementById("titleInput");
@@ -500,8 +503,12 @@ const AdForm = (props) => {
 
   const oneEther = parseEther("1000000000000000000");
   const formattedAdPrice = parseFloat(formatEther(minAdPrice));
+  const feeDenominator = 2629746n;
   const dailyFee =
-    ((parsedUserPrice * (oneEther / 31556952n)) / oneEther) * 60n * 60n * 24n;
+    ((parsedUserPrice * (oneEther / feeDenominator)) / oneEther) *
+    60n *
+    60n *
+    24n;
   const formattedDailyFee = parseFloat(formatEther(dailyFee)).toFixed(5);
   return (
     <div
@@ -528,13 +535,14 @@ const AdForm = (props) => {
             Minimum Ad Collateral: {formattedAdPrice} ETH ($
             {(formattedAdPrice * ethUSD).toFixed(2)})
           </p>
-          <p style={{ marginTop: 0 }}>
+          <p style={{ marginTop: 0, marginBottom: 0 }}>
             Daily fee: {formattedDailyFee} ETH ($
             {(formattedDailyFee * ethUSD).toFixed(
               formattedDailyFee * ethUSD > 1 ? 2 : 3,
             )}
             )
           </p>
+          <p style={{ marginTop: 0 }}>Fee: 100% of the collateral a month</p>
           <p style={{ fontSize: "16px", marginTop: 0, marginBottom: 0 }}>
             Collateral:
           </p>
@@ -597,11 +605,15 @@ const AdForm = (props) => {
           </p>
           <b style={{ marginTop: 0 }}>How much does it cost?</b>
           <p style={{ marginTop: 0 }}>
-            You'll be charged the "Daily fee" on your collateral. Upon
-            submitting the ad, you'll be asked to send all of your collateral.
-            However, you'll get back most of your collateral when someone else
-            runs an ad. We'll simply subtract the accumulated daily fees from
-            the collateral.
+            Let’s say you put $30 worth of ETH as collateral.
+            <br />
+            <br />
+            We charge you 1/30th of your collateral per day, equally distributed
+            for thirty days. So, displaying the ad will cost $1/day. Other users
+            can outbid you - like in Google Ads - if they put more collateral
+            than you. If that happens, you’ll get your collateral back. So,
+            e.g., someone puts $20 on your 15th day, you would have paid $15 out
+            of $30 for displaying the ad and get your remaining $15 back.
           </p>
           <b style={{ marginTop: 0 }}>
             What if I want my collateral back earlier?
@@ -613,10 +625,15 @@ const AdForm = (props) => {
             immediately.
           </p>
           <b style={{ marginTop: 0 }}>Is this safe?</b>
-          <p style={{ marginTop: 0 }}>Use at your own risk!</p>
+          <p style={{ marginTop: 0 }}>
+            The contract has been written by timdaub.eth. Some folks from the
+            Rico Credit System audited the math a while ago. But please bear in
+            mind that it’s still experimental, so don't put more than you can
+            afford to lose.
+          </p>
           <b style={{ marginTop: 0 }}>I have more questions!</b>
           <p style={{ marginTop: 0 }}>
-            Please reach out to us via Telegram, we're happy to help you!
+            Reach out on our groupchat or DM @timdaub on telegram.
           </p>
           <ConnectButton.Custom>
             {({ account, chain, mounted, openConnectModal }) => {

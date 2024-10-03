@@ -11,6 +11,7 @@ import CopyIcon from "./copyicon.mjs";
 import FCIcon from "./farcastericon.mjs";
 import theme from "../../theme.mjs";
 import { countOutbounds } from "../../cache.mjs";
+import log from "../../logger.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -154,6 +155,17 @@ const row = (
 ) => {
   const size = 12;
   return (story, i) => {
+    try {
+      // NOTE: Normally it can't happen, but when we deploy a new ad contract
+      // then story can indeed be empty, and so this made several functions in
+      // the row component panic, which is why we now check before we continue
+      // the rendering.
+      new URL(story.href);
+    } catch (err) {
+      log(`Fault during row render for story href: ${story.href}`);
+      return;
+    }
+
     const submissionId = `kiwi:0x${story.index}`;
     const commentCount = commentCounts.get(submissionId) || 0;
     const outboundsLookbackHours = 24 * 5;
@@ -390,7 +402,7 @@ const row = (
                                 <a
                                   style="display: inline;"
                                   class="meta-link"
-                                  href="/submit"
+                                  href="/submit?isad=true"
                                 >
                                   <span>Price: </span>
                                   ${parseFloat(
