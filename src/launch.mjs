@@ -119,5 +119,5 @@ if (!reconcileMode) {
   setInterval(async () => {
     await Promise.all([feeds.recompute(urls), newest.recompute(trie)]);
   }, 1800000);
-  karma.count(upvotes).then(() => log("Karma counted!"));
+  karma.count(upvotes);
 }

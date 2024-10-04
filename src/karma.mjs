@@ -1,19 +1,22 @@
 import normalizeUrl from "normalize-url";
+import { format } from "date-fns";
 
 import cache from "./cache.mjs";
 
-function increment(identity) {
-  let user = cache.get(identity);
+const karmaPrefix = `karma-present`;
+
+function increment(identity, prefix) {
+  let user = cache.get(`${prefix}-${identity}`);
   if (user) {
     user.points = Number.isInteger(user.points) ? user.points + 1 : 1;
   } else {
     user = { points: 1, submissions: 0 };
   }
-  cache.set(identity, user);
+  cache.set(`${prefix}-${identity}`, user);
 }
 
-function record(identity) {
-  let user = cache.get(identity);
+function record(identity, prefix) {
+  let user = cache.get(`${prefix}-${identity}`);
   if (user) {
     user.submissions = Number.isInteger(user.submissions)
       ? user.submissions + 1
@@ -21,41 +24,56 @@ function record(identity) {
   } else {
     user = { points: 0, submissions: 1 };
   }
-  cache.set(identity, user);
+  cache.set(`${prefix}-${identity}`, user);
 }
 
-export function all() {
-  const map = {};
-  for (const key of cache.keys()) {
-    map[key] = cache.get(key);
+export function resolve(identity, endDate) {
+  let prefix = karmaPrefix;
+  if (endDate) {
+    prefix = datePrefix(endDate);
   }
-  return map;
-}
-
-export function resolve(identity) {
-  const user = cache.get(identity);
+  const user = cache.get(`${prefix}-${identity}`);
   return user && user.points ? user.points : 0;
 }
 
-export async function count(messages) {
-  cache.flushAll();
+function datePrefix(date) {
+  return `karma-${format(date, "yyyy-MM-dd")}`;
+}
 
+export function count(messages, endDate) {
+  let prefix = karmaPrefix;
+  if (endDate) {
+    prefix = datePrefix(endDate);
+    messages = messages.filter(
+      (message) => new Date(message.timestamp * 1000) <= endDate,
+    );
+  }
   messages = messages.sort((a, b) => a.timestamp - b.timestamp);
   const submissions = new Map();
 
   messages.forEach((message) => {
     const normalizedUrl = normalizeUrl(message.href);
-    const cacheEnabled = true;
 
     if (!submissions.has(normalizedUrl)) {
       submissions.set(normalizedUrl, message.identity);
-      increment(message.identity);
-      record(message.identity);
+      increment(message.identity, prefix);
+      record(message.identity, prefix);
     } else {
       const submitter = submissions.get(normalizedUrl);
-      increment(submitter);
+      increment(submitter, prefix);
     }
   });
+}
+
+export function all() {
+  const map = {};
+  for (const key of cache.keys()) {
+    if (key.includes(karmaPrefix)) {
+      const [_, address] = key.split(`${karmaPrefix}-`);
+      map[address] = cache.get(key);
+    }
+  }
+  return map;
 }
 
 export function rank(identity) {
