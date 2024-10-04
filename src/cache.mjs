@@ -531,7 +531,7 @@ export function getLastComment(submissionId) {
   };
 }
 
-export function getSubmission(index, href) {
+export function getSubmission(index, href, identityFilter) {
   let submission;
   if (index) {
     submission = db
@@ -563,7 +563,7 @@ export function getSubmission(index, href) {
     throw new Error(`Couldn't find submission with index: ${index}`);
   }
 
-  const upvotesCount =
+  let upvotesCount =
     db
       .prepare(
         `
@@ -572,15 +572,22 @@ export function getSubmission(index, href) {
       )
       .get(submission.href).count + 1;
 
-  const upvoters = [
-    { identity: submission.identity, timestamp: submission.timestamp },
-    ...db
-      .prepare(
-        `
+  let upvoters = db
+    .prepare(
+      `
        SELECT identity, timestamp FROM upvotes WHERE href = ?
      `,
-      )
-      .all(submission.href),
+    )
+    .all(submission.href);
+
+  if (identityFilter) {
+    upvoters = upvoters.filter(({ identity }) => identityFilter(identity));
+    upvotesCount = upvoters.length;
+  }
+
+  upvoters = [
+    { identity: submission.identity, timestamp: submission.timestamp },
+    ...upvoters,
   ];
 
   const comments = db

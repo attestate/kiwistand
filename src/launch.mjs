@@ -128,4 +128,5 @@ if (!reconcileMode) {
     await Promise.all([feeds.recompute(urls), newest.recompute(trie)]);
   }, 1800000);
   karma.count(upvotes);
+  karma.count(upvotes, new Date("2024-01-01"));
 }

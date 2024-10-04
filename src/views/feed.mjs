@@ -39,6 +39,12 @@ import { metadata } from "../parser.mjs";
 
 const html = htm.bind(vhtml);
 
+const cutoffDate = new Date("2024-01-01");
+const thresholdKarma = 10;
+export function identityFilter(identity) {
+  return karma.resolve(identity, cutoffDate) > thresholdKarma;
+}
+
 export async function getContestStories() {
   const sheetName = "contest";
 
@@ -53,7 +59,7 @@ export async function getContestStories() {
   const submissions = result.links
     .map((href) => {
       try {
-        const submission = getSubmission(null, href);
+        const submission = getSubmission(null, href, identityFilter);
         submission.upvoters = submission.upvoters.map(
           ({ identity }) => identity,
         );
