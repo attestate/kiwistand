@@ -17,9 +17,7 @@ import * as moderation from "./moderation.mjs";
 import * as registry from "../chainstate/registry.mjs";
 import { getLastComment, listNewest } from "../cache.mjs";
 import Row, { extractDomain } from "./components/row.mjs";
-import InviteRow from "./components/invite-row.mjs";
 import * as feeds from "../feeds.mjs";
-import * as price from "../price.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -110,7 +108,6 @@ export async function recompute() {
 
 export default async function (trie, theme) {
   const mints = await registry.mints();
-  const { reward, percentageOff } = await price.getReferralReward(mints);
 
   let items = stories;
   const path = "/new";
@@ -136,17 +133,9 @@ export default async function (trie, theme) {
               <tr>
                 ${SecondHeader(theme, "new")}
               </tr>
-              ${items
-                .slice(0, 5)
-                .map(
-                  Row(null, "/new", undefined, null, null, null, recentJoiners),
-                )}
-              ${InviteRow(reward, percentageOff)}
-              ${items
-                .slice(5)
-                .map(
-                  Row(null, "/new", undefined, null, null, null, recentJoiners),
-                )}
+              ${items.map(
+                Row(null, "/new", undefined, null, null, null, recentJoiners),
+              )}
             </table>
             ${Footer(theme, "/new")}
           </div>
