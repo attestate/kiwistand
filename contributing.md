@@ -1,7 +1,9 @@
 # Contributors' guide!
+
 Hey, thanks for considering to help us out with the project. Before starting to code you need to get a few things set up.
 
-1. Create two directories in the root of of the repository with `mkdir anon cache`
+
+1. Create two directories in the root of the repository with `mkdir anon cache`
 2. Create a .env file from our template `.env-copy` with `cp .env-copy .env`
 3. Make sure your `DATA_DIR` in the `.env` file is `DATA_DIR=anon`
 4. Set your `OPTIMISM_RPC_HTTP_HOST` in the `.env` files 
@@ -23,7 +25,13 @@ npm run sync
 npm run reconcile
 npm run dev:anon
 ```
+
+## Docker
+
+You can also run this project with docker! Dockefile and docker-compose.yml files are included! You'll have to follow roughly the same process as above by potentially first adjusting to run your docker file in sync and reconcile mode, and later in production mode
+
 ## Project layout
+
 We use ES module (`.mjs` extension) for their simplicity and convenience. The most important files (according to me lol) are:
 - `api.mjs` - define the functions used to return the standard JSON messages for the API!*
 - `http.mjs` - define the REST routes for the API, you can see how the functions for the feeds, stories, and comments are used.
