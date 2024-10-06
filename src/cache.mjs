@@ -15,7 +15,7 @@ const dbPath = join(process.env.CACHE_DIR, "database.db");
 const db = new Database(dbPath);
 db.pragma("journal_mode = WAL");
 
-function initialize() {
+function initialize(messages) {
   let isSetup = true;
   const tables = ["fingerprints", "submissions", "upvotes", "comments"];
   tables.forEach((table) => {
@@ -89,6 +89,8 @@ function initialize() {
       CREATE INDEX IF NOT EXISTS idx_fingerprints_url ON fingerprints(url);
       CREATE INDEX IF NOT EXISTS idx_url_fingerprints_timestamp ON fingerprints(timestamp);
     `);
+  messages.forEach(insertMessage);
+  log("initialize: Done re-inserting all messages");
 }
 
 export function initializeNotifications() {
