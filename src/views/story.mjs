@@ -46,7 +46,7 @@ export async function generateStory(index) {
 
   let submission;
   try {
-    submission = getSubmission(index);
+    submission = await getSubmission(index);
   } catch (err) {
     log(
       `Requested index "${index}" but didn't find because of error "${err.toString()}"`,

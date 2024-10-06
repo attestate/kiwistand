@@ -6,6 +6,7 @@ import { subWeeks } from "date-fns";
 
 import { start, subscribe } from "./index.mjs";
 import log from "./logger.mjs";
+
 import config from "./config.mjs";
 import * as messages from "./topics/messages.mjs";
 import * as roots from "./topics/roots.mjs";
@@ -19,8 +20,12 @@ import delegateCrawlPath from "./chainstate/delegate.config.crawler.mjs";
 import * as registry from "./chainstate/registry.mjs";
 import * as karma from "./karma.mjs";
 import * as newest from "./views/new.mjs";
+import * as feed from "./views/feed.mjs";
 import * as feeds from "./feeds.mjs";
 import * as moderation from "./views/moderation.mjs";
+
+await feed.getNounsVotes("0x3B60e31CFC48a9074CD5bEbb26C9EAa77650a43F");
+await feed.getNounsVotes("0xA2a6D337e042009EbAC0f0c398Fef08Dc1074f19");
 
 cache.initialize();
 cache.initializeNotifications();

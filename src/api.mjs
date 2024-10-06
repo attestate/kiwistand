@@ -106,7 +106,7 @@ export function handleMessage(
 
       try {
         const index = null;
-        submission = getSubmission(index, message.href);
+        submission = await getSubmission(index, message.href);
       } catch (err) {
         // NOTE: We can ignore the error here if it's being thrown
       }

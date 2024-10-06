@@ -23,7 +23,7 @@ import { custom } from "./components/head.mjs";
 import * as store from "../store.mjs";
 import * as id from "../id.mjs";
 import * as moderation from "./moderation.mjs";
-import {
+import cache, {
   countOutbounds,
   getLastComment,
   getSubmission,
@@ -40,9 +40,40 @@ import { metadata } from "../parser.mjs";
 const html = htm.bind(vhtml);
 
 const cutoffDate = new Date("2024-01-01");
-const thresholdKarma = 10;
-export function identityFilter(identity) {
-  return karma.resolve(identity, cutoffDate) > thresholdKarma;
+const thresholdKarma = 1000;
+export async function identityFilter(upvoter) {
+  const votes = await getNounsVotes(upvoter.identity);
+  const karmaScore = karma.resolve(upvoter.identity, cutoffDate);
+  if (karmaScore < thresholdKarma && votes < 1) {
+    throw new Error("Not eligible to upvote");
+  }
+  return upvoter;
+}
+
+const provider = new ethers.providers.JsonRpcProvider(env.RPC_HTTP_HOST);
+export async function getNounsVotes(address) {
+  const cacheKey = `nouns-votes-${address}`;
+  if (cache.has(cacheKey)) {
+    return cache.get(cacheKey);
+  }
+
+  const contractAddress = "0x9c8ff314c9bc7f6e59a9d9225fb22946427edc03";
+  const abi = [
+    {
+      inputs: [{ internalType: "address", name: "account", type: "address" }],
+      name: "getCurrentVotes",
+      outputs: [{ internalType: "uint96", name: "", type: "uint96" }],
+      stateMutability: "view",
+      type: "function",
+    },
+  ];
+
+  const contract = new ethers.Contract(contractAddress, abi, provider);
+  const votes = await contract.getCurrentVotes(address);
+
+  const votesNumber = votes.toNumber();
+  cache.set(cacheKey, votesNumber);
+  return votesNumber;
 }
 
 export async function getContestStories() {
@@ -56,22 +87,20 @@ export async function getContestStories() {
     return [];
   }
 
-  const submissions = result.links
-    .map((href) => {
-      try {
-        const submission = getSubmission(null, href, identityFilter);
-        submission.upvoters = submission.upvoters.map(
-          ({ identity }) => identity,
-        );
-        return submission;
-      } catch (err) {
-        log(`Error getting submission (contest stories): ${err.stack}`);
-        return null;
-        // noop
-      }
+  const promises = result.links.map((href) =>
+    getSubmission(null, href, identityFilter),
+  );
+  let submissions = await Promise.allSettled(promises);
+  console.log(submissions);
+  submissions = submissions
+    .filter((elem) => elem.status === "fulfilled")
+    .map((elem) => {
+      const submission = elem.value;
+      submission.upvoters = submission.upvoters.map(({ identity }) => identity);
+      return submission;
     })
-    .filter((elem) => elem !== null)
     .sort((a, b) => b.upvotes - a.upvotes);
+  console.log(submissions);
 
   return submissions;
 }

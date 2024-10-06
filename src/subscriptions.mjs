@@ -10,11 +10,12 @@ import { getSubmission } from "./cache.mjs";
 import { resolve } from "./ens.mjs";
 import { truncateComment } from "./views/activity.mjs";
 
-if (env.NODE_ENV == "production") webpush.setVapidDetails(
-  "mailto:tim@daubenschuetz.de",
-  process.env.VAPID_PUBLIC_KEY,
-  process.env.VAPID_PRIVATE_KEY,
-);
+if (env.NODE_ENV == "production")
+  webpush.setVapidDetails(
+    "mailto:tim@daubenschuetz.de",
+    process.env.VAPID_PUBLIC_KEY,
+    process.env.VAPID_PRIVATE_KEY,
+  );
 
 const DATA_DIR = process.env.DATA_DIR;
 const DB_FILE = path.join(DATA_DIR, "web_push_subscriptions.db");
@@ -49,7 +50,7 @@ export async function triggerNotification(message) {
   if (message.type !== "comment") return;
 
   const [_, index] = message.href.split("kiwi:");
-  const submission = getSubmission(index);
+  const submission = await getSubmission(index);
 
   const ensData = await resolve(message.identity);
   if (!ensData.displayName) return;
