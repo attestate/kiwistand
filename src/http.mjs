@@ -573,7 +573,12 @@ export async function launch(trie, libp2p) {
     );
     return reply.status(200).type("text/html").send(content);
   });
-  app.get("/stories", async (request, reply) => {
+  app.get("/stories/:slug?", async (request, reply) => {
+    if (request.params.slug) {
+      const queryParams = new URLSearchParams(request.query).toString();
+      return reply.redirect(`/stories?${queryParams}`);
+    }
+
     let referral;
     try {
       referral = utils.getAddress(request.query.referral);

@@ -4,6 +4,7 @@ import { formatDistanceToNowStrict as originalFormatDistance } from "date-fns";
 import { URL } from "url";
 import DOMPurify from "isomorphic-dompurify";
 import ethers from "ethers";
+import slugify from "slugify";
 
 import { commentCounts } from "../../store.mjs";
 import ShareIcon from "./shareicon.mjs";
@@ -273,7 +274,9 @@ const row = (
                                 ),
                               )}`
                         }"
-                        data-story-link="/stories?index=0x${story.index}"
+                        data-story-link="/stories/${slugify(
+                          DOMPurify.sanitize(story.title),
+                        )}?index=0x${story.index}"
                         target="${
                           path === "/submit" || path === "/demonstration"
                             ? "_self"
@@ -343,7 +346,9 @@ const row = (
                           ? html`
                               <a
                                 class="meta-link"
-                                href="/stories?index=0x${story.index}"
+                                href="/stories/${slugify(
+                                  DOMPurify.sanitize(story.title),
+                                )}?index=0x${story.index}"
                               >
                                 ${formatDistanceToNowStrict(
                                   new Date(story.timestamp * 1000),
@@ -448,7 +453,9 @@ const row = (
                                     class="caster-link share-link"
                                     title="Share"
                                     style="white-space: nowrap;"
-                                    onclick="event.preventDefault(); navigator.share({url: 'https://news.kiwistand.com/stories?index=0x${story.index}' });"
+                                    onclick="event.preventDefault(); navigator.share({url: 'https://news.kiwistand.com/stories/${slugify(
+                                      DOMPurify.sanitize(story.title),
+                                    )}?index=0x${story.index}' });"
                                   >
                                     ${ShareIcon(
                                       "padding: 0 3px 1px 0; vertical-align: bottom; height: 13px; width: 13px;",
@@ -472,7 +479,9 @@ const row = (
                                     class="meta-link share-link"
                                     title="Share"
                                     style="white-space: nowrap;"
-                                    onclick="event.preventDefault(); navigator.clipboard.writeText('https://news.kiwistand.com/stories?index=0x${story.index}'); window.toast.success('Link copied!');"
+                                    onclick="event.preventDefault(); navigator.clipboard.writeText('https://news.kiwistand.com/stories/${slugify(
+                                      DOMPurify.sanitize(story.title),
+                                    )}?index=0x${story.index}'); window.toast.success('Link copied!');"
                                   >
                                     ${CopyIcon(
                                       "padding: 0 3px 1px 0; vertical-align: bottom; height: 13px; width: 13px;",
@@ -502,7 +511,9 @@ const row = (
                       <a
                         class="chat-bubble interaction-element"
                         id="chat-bubble-${story.index}"
-                        href="/stories?index=0x${story.index}"
+                        href="/stories/${slugify(
+                          DOMPurify.sanitize(story.title),
+                        )}?index=0x${story.index}"
                         style="margin: 5px; background-color: #e6e6df; border-radius: 2px; display: ${path ===
                         "/stories"
                           ? "none"
