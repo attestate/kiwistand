@@ -24,9 +24,6 @@ import * as feed from "./views/feed.mjs";
 import * as feeds from "./feeds.mjs";
 import * as moderation from "./views/moderation.mjs";
 
-await feed.getNounsVotes("0x3B60e31CFC48a9074CD5bEbb26C9EAa77650a43F");
-await feed.getNounsVotes("0xA2a6D337e042009EbAC0f0c398Fef08Dc1074f19");
-
 const reconcileMode = env.NODE_ENV === "reconcile";
 const productionMode = env.NODE_ENV === "production";
 if (reconcileMode) {

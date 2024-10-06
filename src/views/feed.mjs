@@ -40,14 +40,27 @@ import { metadata } from "../parser.mjs";
 const html = htm.bind(vhtml);
 
 const cutoffDate = new Date("2024-01-01");
-const thresholdKarma = 1000;
-export async function identityFilter(upvoter) {
-  const votes = await getNounsVotes(upvoter.identity);
-  const karmaScore = karma.resolve(upvoter.identity, cutoffDate);
-  if (karmaScore < thresholdKarma && votes < 1) {
-    throw new Error("Not eligible to upvote");
+const thresholdKarma = 10;
+export async function identityClassifier(upvoter) {
+  let votes = 0;
+  try {
+    votes = await getNounsVotes(upvoter.identity);
+  } catch (err) {
+    // noop
   }
-  return upvoter;
+  const karmaScore = karma.resolve(upvoter.identity, cutoffDate);
+  return {
+    ...upvoter,
+    isNoun: votes > 0,
+    isKiwi: karmaScore > thresholdKarma,
+  };
+}
+export async function identityFilter(upvoter) {
+  upvoter = await identityClassifier(upvoter);
+  if (upvoter.isNoun || upvoter.isKiwi) {
+    return upvoter;
+  }
+  throw new Error("Not eligible to upvote");
 }
 
 const provider = new ethers.providers.JsonRpcProvider(env.RPC_HTTP_HOST);
@@ -91,7 +104,6 @@ export async function getContestStories() {
     getSubmission(null, href, identityFilter),
   );
   let submissions = await Promise.allSettled(promises);
-  console.log(submissions);
   submissions = submissions
     .filter((elem) => elem.status === "fulfilled")
     .map((elem) => {
@@ -100,7 +112,6 @@ export async function getContestStories() {
       return submission;
     })
     .sort((a, b) => b.upvotes - a.upvotes);
-  console.log(submissions);
 
   return submissions;
 }

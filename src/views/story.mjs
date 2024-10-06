@@ -14,6 +14,7 @@ import {
 import linkifyStr from "linkify-string";
 import DOMPurify from "isomorphic-dompurify";
 
+import * as curation from "./curation.mjs";
 import * as ens from "../ens.mjs";
 import Header from "./components/header.mjs";
 import SecondHeader from "./components/secondheader.mjs";
@@ -29,6 +30,7 @@ import { EIP712_MESSAGE } from "../constants.mjs";
 import Row, { extractDomain } from "./components/row.mjs";
 import * as karma from "../karma.mjs";
 import { truncateName } from "../utils.mjs";
+import { identityClassifier } from "./feed.mjs";
 import { metadata, render } from "../parser.mjs";
 import { getSubmission } from "../cache.mjs";
 import * as preview from "../preview.mjs";
@@ -46,7 +48,7 @@ export async function generateStory(index) {
 
   let submission;
   try {
-    submission = await getSubmission(index);
+    submission = await getSubmission(index, null, identityClassifier);
   } catch (err) {
     log(
       `Requested index "${index}" but didn't find because of error "${err.toString()}"`,
@@ -114,8 +116,21 @@ export function generateList(profiles, submitter) {
                 : null}
               <span> </span>
               <a href="/upvotes?address=${profile.address}"
-                >${profile.name} (${karma.resolve(profile.address).toString()})
-                <span> upvoted</span></a
+                >${profile.name} (${karma.resolve(profile.address).toString()}
+                ${profile.isNoun
+                  ? html`,
+                      <span> </span>
+                      <img
+                        style="object-fit: contain; width: 10px; height: 10px; border: 1px solid #828282; border-radius: 2px;"
+                        src="/nouns.webp"
+                      />`
+                  : ""}
+                ${profile.isKiwi ? ", 🥝" : ""})
+
+                <span>
+                  <span> </span>
+                  upvoted
+                </span></a
               >
             </p>
           </li>
@@ -151,10 +166,10 @@ export default async function (trie, theme, index, value, referral) {
 
   let profiles = [];
   let avatars = [];
-  for await (let { identity, timestamp } of story.upvoters) {
-    const profile = await ens.resolve(identity);
+  for await (let upvoter of story.upvoters) {
+    const profile = await ens.resolve(upvoter.identity);
     profiles.push({
-      timestamp,
+      ...upvoter,
       name: profile.displayName,
       avatar: profile.safeAvatar ? profile.safeAvatar : "/pfp.png",
       address: profile.address,
