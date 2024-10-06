@@ -575,6 +575,10 @@ export async function launch(trie, libp2p) {
   });
   app.get("/stories/:slug?", async (request, reply) => {
     if (request.params.slug) {
+      reply.header(
+        "Cache-Control",
+        "public, max-age=10, no-transform, must-revalidate, stale-while-revalidate=31536000",
+      );
       const queryParams = new URLSearchParams(request.query).toString();
       return reply.redirect(`/stories?${queryParams}`);
     }
