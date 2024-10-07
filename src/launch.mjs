@@ -36,8 +36,9 @@ const trie = await store.create();
 
 const node = await start(config);
 
+await api.launch(trie, node);
+
 if (!reconcileMode) {
-  await api.launch(trie, node);
   await http.launch(trie, node);
 }
 
