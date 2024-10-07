@@ -2,6 +2,7 @@
 import { env, exit } from "process";
 
 import { boot as crawl } from "@attestate/crawler";
+import { subWeeks } from "date-fns";
 
 import { start, subscribe } from "./index.mjs";
 import log from "./logger.mjs";
@@ -64,7 +65,9 @@ if (!reconcileMode) {
   // when calling ecrecover on messages' signatures
   const from = null;
   const amount = null;
-  const startDatetime = null;
+
+  const oneWeekAgo = subWeeks(new Date(), 1).getTime() / 1000;
+  const startDatetime = oneWeekAgo;
   const parser = JSON.parse;
   const accounts = await registry.accounts();
   const delegations = await registry.delegations();
