@@ -127,10 +127,6 @@ export async function fetchEURPrice(date) {
 
 // NOTE: Inspired by: https://www.paradigm.xyz/2022/08/vrgda
 export function getPrice(salesData, today = new Date()) {
-  const firstPrice = BigNumber.from("40000000000000000"); // p0 in Wei
-
-  const priceDecreasePercentage = 0.15; // k
-
   const firstDayInScheduleUnixTime = 1709247600; // 2024-03-01
   const firstDayInSchedule = new Date(
     1000 * parseInt(firstDayInScheduleUnixTime),
@@ -147,29 +143,9 @@ export function getPrice(salesData, today = new Date()) {
     .sort((a, b) => a.timestamp - b.timestamp)
     .filter((elem) => elem.timestamp > firstDayInSchedule);
   const daysInSchedule = differenceInDays(today, firstDayInSchedule); // t
-  const secondsInSchedule = differenceInSeconds(today, firstDayInSchedule); // t
 
   const dailyNFTSellTarget = 2.09;
-  const NFTSellTargetPerSecond = dailyNFTSellTarget / (60 * 60 * 24);
   const numberOfSoldNFTs = mints.length; // n
-
-  const exponent =
-    secondsInSchedule - numberOfSoldNFTs / NFTSellTargetPerSecond;
-  const factor = Math.pow(
-    1 - priceDecreasePercentage,
-    // NOTE: We have to divide throught the scaling factor that is basically
-    // the number of seconds that a day has to make the price update on a
-    // per-second basis.
-    exponent / (60 * 60 * 24),
-  );
-
-  // NOTE: If we're not scaling up the "factor" then we're losing all the
-  // information contained in the decimals and so it can end up happening that
-  // factor just becomes zero and so the price also becomes zero.
-  const scaler = 100_000_000;
-  const linear = firstPrice.mul(
-    BigNumber.from(`${Math.floor(factor * scaler)}`),
-  );
 
   const lastMints = mints.filter(({ day }) => day > -31);
   const average30DayMints = lastMints.length / 30;
@@ -182,7 +158,7 @@ export function getPrice(salesData, today = new Date()) {
     averages: {
       day30: average30DayMints,
     },
-    price: linear.div(scaler),
+    price: BigNumber.from("3500000000000000"),
   };
 }
 
@@ -489,7 +465,7 @@ export async function chart(theme) {
                   ${data.averages.day30.toFixed(2)}
                   <span> NFTs</span>
                   <br />
-                  <span>Price recommendation: </span>
+                  <span>Server's price recommendation: </span>
                   ${ethers.utils.formatEther(data.price)} ETH
                   <br />
                   <p>
