@@ -510,6 +510,16 @@ const AdForm = (props) => {
     60n *
     24n;
   const formattedDailyFee = parseFloat(formatEther(dailyFee)).toFixed(5);
+
+  const handleMinClick = (e) => {
+    e.preventDefault();
+    if (balanceData.value < minAdPrice + 1n) {
+      toast.error("Not enough ETH in your connected wallet.");
+      return;
+    }
+    setUserPrice(formatEther(minAdPrice + 1n));
+  };
+  const minPriceSet = minAdPrice > parsedUserPrice;
   return (
     <div
       style={{
@@ -531,7 +541,12 @@ const AdForm = (props) => {
       </label>
       {isAd && (
         <>
-          <p style={{ marginBottom: 0 }}>
+          <p
+            style={{
+              color: minPriceSet ? "red" : "#828282",
+              marginBottom: 0,
+            }}
+          >
             Minimum Ad Collateral: {formattedAdPrice} ETH ($
             {(formattedAdPrice * ethUSD).toFixed(2)})
           </p>
@@ -571,6 +586,18 @@ const AdForm = (props) => {
                 marginRight: "5px",
               }}
             />
+            {minPriceSet ? (
+              <button
+                onClick={handleMinClick}
+                style={{
+                  fontSize: "10px",
+                  whiteSpace: "nowrap",
+                  marginRight: "1rem",
+                }}
+              >
+                Set minimum
+              </button>
+            ) : null}
             <span style={{ whiteSpace: "nowrap" }}>ETH</span>
           </div>
           <div
