@@ -9,7 +9,6 @@ import { getLocalAccount, getCookie } from "./session.mjs";
 import { client, chains } from "./client.mjs";
 
 const Bell = (props) => {
-  const lastUpdate = parseInt(getCookie("lastUpdate"), 10);
   let address;
   const account = useAccount();
   const localAccount = getLocalAccount(account.address, props.allowlist);
@@ -22,6 +21,8 @@ const Bell = (props) => {
   const isEligible =
     address && eligible(props.allowlist, props.delegations, address);
 
+  const localLastUpdate = parseInt(getCookie("lastUpdate"), 10);
+  const [lastUpdate, setLastUpdate] = useState(localLastUpdate);
   const [notificationCount, setNotificationCount] = useState(0);
   const [readNotifications, setReadNotifications] = useState(0);
   const [cacheBuster, setCacheBuster] = useState("");
@@ -41,10 +42,11 @@ const Bell = (props) => {
     if (address) {
       const fetchAndUpdateNotifications = async () => {
         const notifications = await fetchNotifications(address);
+        const localLastUpdate = parseInt(getCookie("lastUpdate"), 10);
         setReadNotifications(notifications.length);
 
         const newNotifications = notifications
-          .filter((elem) => elem.timestamp > lastUpdate)
+          .filter((elem) => elem.timestamp > localLastUpdate)
           .sort((a, b) => b.timestamp - a.timestamp);
         if (newNotifications.length > 0) {
           setCacheBuster(`0x${newNotifications[0].message.index}`);
