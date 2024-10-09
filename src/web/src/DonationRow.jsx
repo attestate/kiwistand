@@ -1,7 +1,8 @@
 import { useContractRead, WagmiConfig } from "wagmi";
 import SuperfluidWidget from "@superfluid-finance/widget";
+import { RainbowKitProvider, ConnectButton } from "@rainbow-me/rainbowkit";
 
-import { client } from "./client.mjs";
+import { client, chains } from "./client.mjs";
 
 export const DonationRow = (props) => {
   const productDetails = { name: "", description: "", imageURI: "" };
@@ -21,30 +22,50 @@ export const DonationRow = (props) => {
     ],
   };
   return (
-    <SuperfluidWidget
-      productDetails={productDetails}
-      paymentDetails={paymentDetails}
-      type="dialog"
-    >
-      {({ openModal }) => {
+    <ConnectButton.Custom>
+      {({ account, chain, mounted, openConnectModal, openAccountModal }) => {
+        const connected = account && chain && mounted;
+        if (!connected) {
+          return (
+            <button
+              onClick={() => openConnectModal()}
+              style={{ width: "auto", height: "40px" }}
+              id="button-onboarding"
+            >
+              Connect Wallet
+            </button>
+          );
+        }
         return (
-          <button
-            onClick={() => openModal()}
-            style={{ width: "auto", height: "40px" }}
-            id="button-onboarding"
+          <SuperfluidWidget
+            productDetails={productDetails}
+            paymentDetails={paymentDetails}
+            type="dialog"
           >
-            Support
-          </button>
+            {({ openModal }) => {
+              return (
+                <button
+                  onClick={() => openModal()}
+                  style={{ width: "auto", height: "40px" }}
+                  id="button-onboarding"
+                >
+                  Support
+                </button>
+              );
+            }}
+          </SuperfluidWidget>
         );
       }}
-    </SuperfluidWidget>
+    </ConnectButton.Custom>
   );
 };
 
 const WrappedDonationRow = (props) => {
   return (
     <WagmiConfig config={client}>
-      <DonationRow />
+      <RainbowKitProvider chains={chains}>
+        <DonationRow />
+      </RainbowKitProvider>
     </WagmiConfig>
   );
 };
