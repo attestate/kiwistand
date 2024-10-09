@@ -33,7 +33,7 @@ export const DonationRow = (props) => {
             style={{ width: "auto", height: "40px" }}
             id="button-onboarding"
           >
-            Donate
+            Support
           </button>
         );
       }}

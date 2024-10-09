@@ -24,7 +24,7 @@ function row() {
           </div>
           <div class="donation-button">
             <button style="width: auto; height: 40px;" id="button-onboarding">
-              Donate
+              Support
             </button>
           </div>
         </div>
