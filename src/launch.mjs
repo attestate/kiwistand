@@ -26,6 +26,7 @@ cache.initialize();
 cache.initializeNotifications();
 
 const reconcileMode = env.NODE_ENV === "reconcile";
+const productionMode = env.NODE_ENV === "production";
 if (reconcileMode) {
   log(`Running in reconciliation mode`);
   log(
@@ -67,7 +68,11 @@ if (!reconcileMode) {
   const amount = null;
 
   const oneWeekAgo = subWeeks(new Date(), 1).getTime() / 1000;
-  const startDatetime = oneWeekAgo;
+  let startDatetime = oneWeekAgo;
+  if (productionMode) {
+    startDateTime = null;
+  }
+
   const parser = JSON.parse;
   const accounts = await registry.accounts();
   const delegations = await registry.delegations();
