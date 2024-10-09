@@ -73,7 +73,7 @@ const Comment = ({ comment, index }) => {
       <span>
         <Linkify
           options={{
-            className: "meta-link",
+            className: "meta-link comment-link",
             target: "_blank",
             defaultProtocol: "https",
             validate: {

@@ -804,7 +804,9 @@ async function processAndSendVotes(signer, identity) {
 // what we're setting for iPhone
 function updateLinkTargetsForIOSPWA() {
   if (isIOS() && isRunningPWA()) {
-    const links = document.querySelectorAll(".story-link-container a");
+    const links = document.querySelectorAll(
+      ".story-link-container a, .comment-link",
+    );
     links.forEach((link) => link.setAttribute("target", "_self"));
   }
 }
