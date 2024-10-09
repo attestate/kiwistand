@@ -17,6 +17,7 @@ import * as moderation from "./moderation.mjs";
 import * as registry from "../chainstate/registry.mjs";
 import { getLastComment, listNewest } from "../cache.mjs";
 import Row, { extractDomain } from "./components/row.mjs";
+import InviteRow from "./components/invite-row.mjs";
 import * as feeds from "../feeds.mjs";
 
 const html = htm.bind(vhtml);
@@ -133,9 +134,17 @@ export default async function (trie, theme) {
               <tr>
                 ${SecondHeader(theme, "new")}
               </tr>
-              ${items.map(
-                Row(null, "/new", undefined, null, null, null, recentJoiners),
-              )}
+              ${items
+                .slice(0, 8)
+                .map(
+                  Row(null, "/new", undefined, null, null, null, recentJoiners),
+                )}
+              ${InviteRow()}
+              ${items
+                .slice(8)
+                .map(
+                  Row(null, "/new", undefined, null, null, null, recentJoiners),
+                )}
             </table>
             ${Footer(theme, "/new")}
           </div>

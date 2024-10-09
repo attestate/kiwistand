@@ -196,6 +196,22 @@ async function addClickCounters() {
   }
 }
 
+async function addDonationRow() {
+  const donationRow = document.querySelector(".donation-button");
+  if (donationRow) {
+    const { createRoot } = await import("react-dom/client");
+    const { StrictMode } = await import("react");
+    const DonationRow = (await import("./DonationRow.jsx")).default;
+
+    console.log("running");
+    createRoot(donationRow).render(
+      <StrictMode>
+        <DonationRow />
+      </StrictMode>,
+    );
+  }
+}
+
 async function addDynamicNavElements() {
   const navElements = document.querySelectorAll("[data-icon]");
   if (navElements && navElements.length > 0) {
@@ -853,6 +869,7 @@ async function start() {
   ]);
 
   const results1 = await Promise.allSettled([
+    addDonationRow(),
     addDynamicNavElements(),
     addClickCounters(),
     addInviteLink(toast),
