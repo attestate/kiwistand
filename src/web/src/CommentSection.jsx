@@ -113,7 +113,7 @@ const CommentsSection = (props) => {
     (async () => {
       if (commentCount === 0) return;
 
-      const story = await fetchStory(storyIndex);
+      const story = await fetchStory(storyIndex, commentCount);
       if (story && story.comments) setComments(story.comments);
     })();
   }, [storyIndex]);

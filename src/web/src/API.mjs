@@ -190,10 +190,18 @@ export async function fetchLeaderboard() {
   }
 }
 
-export async function fetchStory(id) {
+export async function fetchStory(id, commentCount) {
   let response;
+
+  let url = `/api/v1/stories?index=${id}`;
+  // NOTE: As the comment count will increase and since the server-rendered
+  // page can sometimes be ahead of the API's cache, the comment count may bust
+  // the cache in some cases and force a reload.
+  if (commentCount) {
+    url += `&commentCount=${commentCount}`;
+  }
   try {
-    response = await fetch(`/api/v1/stories?index=${id}`);
+    response = await fetch(url);
     const data = await response.json();
     return data.data;
   } catch (err) {
