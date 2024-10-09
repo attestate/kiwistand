@@ -70,7 +70,7 @@ if (!reconcileMode) {
   const oneWeekAgo = subWeeks(new Date(), 1).getTime() / 1000;
   let startDatetime = oneWeekAgo;
   if (productionMode) {
-    startDateTime = null;
+    startDatetime = null;
   }
 
   const parser = JSON.parse;
