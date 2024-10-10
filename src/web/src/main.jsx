@@ -198,18 +198,29 @@ async function addClickCounters() {
 
 async function addDonationRow() {
   const donationRow = document.querySelector(".donation-button");
-  if (donationRow) {
-    const { createRoot } = await import("react-dom/client");
-    const { StrictMode } = await import("react");
-    const DonationRow = (await import("./DonationRow.jsx")).default;
+  if (!donationRow) return;
 
-    console.log("running");
-    createRoot(donationRow).render(
-      <StrictMode>
-        <DonationRow />
-      </StrictMode>,
-    );
-  }
+  const observer = new IntersectionObserver(
+    async (entries, observer) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) {
+          const { createRoot } = await import("react-dom/client");
+          const { StrictMode } = await import("react");
+          const DonationRow = (await import("./DonationRow.jsx")).default;
+
+          createRoot(entry.target).render(
+            <StrictMode>
+              <DonationRow />
+            </StrictMode>,
+          );
+          observer.unobserve(entry.target); // Stop observing after rendering
+        }
+      }
+    },
+    { threshold: 0.1 },
+  );
+
+  observer.observe(donationRow);
 }
 
 async function addDynamicNavElements() {
@@ -282,38 +293,49 @@ async function addDynamicComments(allowlist, delegations, toast) {
 
 async function addVotes(allowlist, delegations, toast) {
   const voteArrows = document.querySelectorAll(".vote-button-container");
-  if (voteArrows && voteArrows.length > 0) {
-    const { createRoot } = await import("react-dom/client");
-    const { StrictMode } = await import("react");
-    const Vote = (await import("./Vote.jsx")).default;
+  if (voteArrows.length === 0) return;
 
-    voteArrows.forEach((arrow) => {
-      const title = DOMPurify.sanitize(arrow.getAttribute("data-title"));
-      const href = DOMPurify.sanitize(arrow.getAttribute("data-href"));
-      const isad = DOMPurify.sanitize(arrow.getAttribute("data-isad"));
-      const editorPicks = arrow.getAttribute("data-editorpicks");
-      let upvoters;
-      try {
-        upvoters = JSON.parse(arrow.getAttribute("data-upvoters"));
-      } catch (err) {
-        console.log("Couldn't parse upvoters", err);
-      }
-      createRoot(arrow).render(
-        <StrictMode>
-          <Vote
-            isad={isad}
-            title={title}
-            href={href}
-            allowlist={allowlist}
-            delegations={delegations}
-            upvoters={upvoters}
-            toast={toast}
-            editorPicks={editorPicks}
-          />
-        </StrictMode>,
-      );
-    });
-  }
+  const { createRoot } = await import("react-dom/client");
+  const { StrictMode } = await import("react");
+  const Vote = (await import("./Vote.jsx")).default;
+
+  const observer = new IntersectionObserver(
+    (entries, observer) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const arrow = entry.target;
+          const title = DOMPurify.sanitize(arrow.getAttribute("data-title"));
+          const href = DOMPurify.sanitize(arrow.getAttribute("data-href"));
+          const isad = DOMPurify.sanitize(arrow.getAttribute("data-isad"));
+          const editorPicks = arrow.getAttribute("data-editorpicks");
+          let upvoters;
+          try {
+            upvoters = JSON.parse(arrow.getAttribute("data-upvoters"));
+          } catch (err) {
+            console.log("Couldn't parse upvoters", err);
+          }
+          createRoot(arrow).render(
+            <StrictMode>
+              <Vote
+                isad={isad}
+                title={title}
+                href={href}
+                allowlist={allowlist}
+                delegations={delegations}
+                upvoters={upvoters}
+                toast={toast}
+                editorPicks={editorPicks}
+              />
+            </StrictMode>,
+          );
+          observer.unobserve(arrow); // Stop observing after rendering
+        }
+      });
+    },
+    { threshold: 0.1 },
+  );
+
+  voteArrows.forEach((arrow) => observer.observe(arrow));
 }
 
 async function addFriendBuyButton(toast, allowlist) {
