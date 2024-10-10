@@ -447,21 +447,6 @@ export default async function (trie, theme, page, domain) {
               <tr>
                 ${SecondHeader(theme, "top")}
               </tr>
-              <tr style="cursor: pointer;">
-                <td>
-                  <a
-                    target="_blank"
-                    href="https://paragraph.xyz/@kiwi-updates/pluralistic-future-of-l2s-results"
-                    style="background-color: black; height: 2.3rem;display: flex; justify-content: start; align-items: center; padding-left: 1rem; gap: 1rem; color: white;"
-                  >
-                    <img style="height: 30px;" src="lens.png" />
-                    <span
-                      style="text-decoration: underline; display:flex;justify-content: center; align-items: center; gap:1rem;"
-                      >Contest ended! See results</span
-                    >
-                  </a>
-                </td>
-              </tr>
               ${stories
                 .slice(0, 3)
                 .map(
