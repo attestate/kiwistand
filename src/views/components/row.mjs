@@ -216,6 +216,7 @@ const blockedOGImageDomains = [
   "https://www.railway.xyz/",
   "t.me",
   "soliditylang.org",
+  "hey.xyz",
 ];
 const knownBadOgImages = [
   "https://paragraph.xyz/share/share_img.jpg",
