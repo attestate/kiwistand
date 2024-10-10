@@ -215,6 +215,7 @@ const blockedOGImageDomains = [
   "github.com",
   "https://www.railway.xyz/",
   "t.me",
+  "soliditylang.org",
 ];
 const knownBadOgImages = [
   "https://paragraph.xyz/share/share_img.jpg",
@@ -253,6 +254,13 @@ const row = (
     );
     const extractedDomain = extractDomain(DOMPurify.sanitize(story.href));
     const isad = !!story.collateral;
+    const displayMobileImage =
+      story.metadata &&
+      story.metadata.image &&
+      !interactive &&
+      path == "/" &&
+      !blockedOGImageDomains.includes(extractedDomain) &&
+      !knownBadOgImages.includes(story.metadata.image);
     return html`
       <tr style="${invert ? "background-color: black;" : ""}">
         <td>
@@ -264,13 +272,38 @@ const row = (
       i === 0 ? "border-top: 1px solid rgba(0,0,0,0.1);" : ""
     }${style}"
           >
-            <div style="display: flex; align-items: center;">
+            ${
+              displayMobileImage
+                ? html` <a
+                    style="display: block; width: 100%;"
+                    class="mobile-row-image"
+                    href="${`/outbound?url=${encodeURIComponent(
+                      addOrUpdateReferrer(
+                        DOMPurify.sanitize(story.href),
+                        story.identity,
+                      ),
+                    )}`}"
+                  >
+                    <img
+                      style="width: 100%;"
+                      src="${DOMPurify.sanitize(story.metadata.image)}"
+                  /></a>`
+                : null
+            }
+            <div 
+              class="${displayMobileImage ? "elevating-row" : ""}"
+
+              style="display: flex; align-items: center;">
               <div
                 data-title="${DOMPurify.sanitize(story.title)}"
                 data-href="${DOMPurify.sanitize(story.href)}"
                 data-upvoters="${JSON.stringify(story.upvoters)}"
                 data-isad="${isad}"
-                class="vote-button-container"
+                class="${
+                  displayMobileImage
+                    ? "vote-button-container interaction-container-with-image"
+                    : "vote-button-container"
+                }"
                 style="${
                   isad ? "opacity: 0.3;" : ""
                 }display: flex; align-self: stretch;"
@@ -580,7 +613,9 @@ const row = (
                   ? html`<div
                       data-story-index="0x${story.index}"
                       data-comment-count="${commentCount}"
-                      class="chat-bubble-container"
+                      class="${displayMobileImage
+                        ? "interaction-container-with-image chat-bubble-container"
+                        : "chat-bubble-container"}"
                       style="${isad
                         ? "opacity: 0.3;"
                         : ""}display: flex; align-self: stretch;"
