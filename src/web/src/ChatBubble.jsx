@@ -1,27 +1,46 @@
 import React, { useState, useEffect } from "react";
+import { WagmiConfig, useAccount } from "wagmi";
+import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 
+import { getLocalAccount } from "./session.mjs";
 import { ChatsSVG } from "./icons.jsx";
+import { client, chains } from "./client.mjs";
 
-const ChatBubble = ({ storyIndex, commentCount }) => {
-  let isFeedbot = false;
+const ChatBubble = ({ allowlist, delegations, storyIndex, commentCount }) => {
+  let address;
+  const account = useAccount();
+  const localAccount = getLocalAccount(account.address, allowlist);
+  if (account.isConnected) {
+    address = account.address;
+  }
+  if (localAccount) {
+    address = localAccount.identity;
+  }
+
+  commentCount = parseInt(commentCount, 10);
+
+  let isDisabled = false;
   try {
     BigInt(storyIndex);
   } catch (err) {
-    isFeedbot = true;
+    isDisabled = true;
   }
-  commentCount = parseInt(commentCount, 10);
+  if (!address && commentCount === 0) {
+    isDisabled = true;
+  }
+
   return (
     <a
-      disabled={isFeedbot}
+      disabled={isDisabled}
       onClick={() => {
-        if (isFeedbot) return;
+        if (isDisabled) return;
         window.dispatchEvent(new CustomEvent(`open-comments-${storyIndex}`));
       }}
       href={null}
-      className={`chat-bubble${isFeedbot ? "" : " interaction-element"}`}
+      className={`chat-bubble${isDisabled ? "" : " interaction-element"}`}
       id={`chat-bubble-${storyIndex}`}
       style={{
-        cursor: isFeedbot ? "not-allowed" : "pointer",
+        cursor: isDisabled ? "not-allowed" : "pointer",
         margin: "5px",
         backgroundColor: "#e6e6df",
         borderRadius: "2px",
@@ -35,7 +54,7 @@ const ChatBubble = ({ storyIndex, commentCount }) => {
     >
       <ChatsSVG
         style={{
-          color: isFeedbot ? "grey" : "rgba(0,0,0,0.65)",
+          color: isDisabled ? "grey" : "rgba(0,0,0,0.65)",
           width: "25px",
         }}
       />
@@ -46,4 +65,14 @@ const ChatBubble = ({ storyIndex, commentCount }) => {
   );
 };
 
-export default ChatBubble;
+const Container = (props) => {
+  return (
+    <WagmiConfig config={client}>
+      <RainbowKitProvider chains={chains}>
+        <ChatBubble {...props} />
+      </RainbowKitProvider>
+    </WagmiConfig>
+  );
+};
+
+export default Container;

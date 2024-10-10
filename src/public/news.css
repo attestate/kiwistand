@@ -66,6 +66,11 @@
 #nav-settings:active {
   -webkit-tap-highlight-color: transparent;
 }
+
+.chat-bubble-container div {
+  display: flex;
+  align-self: stretch;
+}
 body {
      margin: 0;
      font-family: var(--font-family);

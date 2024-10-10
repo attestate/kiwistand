@@ -268,7 +268,12 @@ async function addDynamicComments(allowlist, delegations, toast) {
       const commentCount = arrow.getAttribute("data-comment-count");
       createRoot(arrow).render(
         <StrictMode>
-          <ChatBubble storyIndex={storyIndex} commentCount={commentCount} />
+          <ChatBubble
+            allowlist={allowlist}
+            delegations={delegations}
+            storyIndex={storyIndex}
+            commentCount={commentCount}
+          />
         </StrictMode>,
       );
     });
