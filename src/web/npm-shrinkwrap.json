@@ -12,7 +12,6 @@
         "@ethersproject/providers": "5.7.2",
         "@ethersproject/units": "5.7.0",
         "@ethersproject/wallet": "5.7.0",
-        "@mui/joy": "5.0.0-beta.47",
         "@rainbow-me/rainbowkit": "1.3.6",
         "@superfluid-finance/widget": "0.5.0",
         "buffer": "6.0.3",
@@ -1625,6 +1624,7 @@
       "version": "5.0.0-beta.40",
       "resolved": "https://registry.npmjs.org/@mui/base/-/base-5.0.0-beta.40.tgz",
       "integrity": "sha512-I/lGHztkCzvwlXpjD2+SNmvNQvB4227xBXhISPjEaJUXGImOQ9f3D2Yj/T3KasSI/h0MLWy74X0J6clhPmsRbQ==",
+      "peer": true,
       "dependencies": {
         "@babel/runtime": "^7.23.9",
         "@floating-ui/react-dom": "^2.0.8",
@@ -1656,6 +1656,7 @@
       "version": "5.16.7",
       "resolved": "https://registry.npmjs.org/@mui/core-downloads-tracker/-/core-downloads-tracker-5.16.7.tgz",
       "integrity": "sha512-RtsCt4Geed2/v74sbihWzzRs+HsIQCfclHeORh5Ynu2fS4icIKozcSubwuG7vtzq2uW3fOR1zITSP84TNt2GoQ==",
+      "peer": true,
       "funding": {
         "type": "opencollective",
         "url": "https://opencollective.com/mui-org"
@@ -1681,46 +1682,6 @@
         "react": "^17.0.0 || ^18.0.0"
       },
       "peerDependenciesMeta": {
-        "@types/react": {
-          "optional": true
-        }
-      }
-    },
-    "node_modules/@mui/joy": {
-      "version": "5.0.0-beta.47",
-      "resolved": "https://registry.npmjs.org/@mui/joy/-/joy-5.0.0-beta.47.tgz",
-      "integrity": "sha512-iWTuabnVg8XA5oBB5d6inNbCfYBhE0oq0d0+DMs2ndI4Nq459LheJ74P7mTkohg4sFIhTbvr3uXuKk8U9Rw+zg==",
-      "dependencies": {
-        "@babel/runtime": "^7.23.9",
-        "@mui/base": "5.0.0-beta.40",
-        "@mui/core-downloads-tracker": "^5.16.0",
-        "@mui/system": "^5.16.0",
-        "@mui/types": "^7.2.14",
-        "@mui/utils": "^5.16.0",
-        "clsx": "^2.1.0",
-        "prop-types": "^15.8.1"
-      },
-      "engines": {
-        "node": ">=12.0.0"
-      },
-      "funding": {
-        "type": "opencollective",
-        "url": "https://opencollective.com/mui-org"
-      },
-      "peerDependencies": {
-        "@emotion/react": "^11.5.0",
-        "@emotion/styled": "^11.3.0",
-        "@types/react": "^17.0.0 || ^18.0.0",
-        "react": "^17.0.0 || ^18.0.0",
-        "react-dom": "^17.0.0 || ^18.0.0"
-      },
-      "peerDependenciesMeta": {
-        "@emotion/react": {
-          "optional": true
-        },
-        "@emotion/styled": {
-          "optional": true
-        },
         "@types/react": {
           "optional": true
         }
