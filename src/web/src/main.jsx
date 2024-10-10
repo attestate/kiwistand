@@ -819,7 +819,7 @@ async function processAndSendVotes(signer, identity) {
 // statement causes the issue and that it doesn't happen for _self. So this is
 // what we're setting for iPhone
 function updateLinkTargetsForIOSPWA() {
-  if (isIOS() && isRunningPWA()) {
+  if (isIOS()) {
     const links = document.querySelectorAll(
       ".story-link-container a, .comment-link",
     );
