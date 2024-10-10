@@ -604,6 +604,9 @@ body {
   bottom: 4.5rem;
 }
 
+.bottom-nav {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px));
+}
 @media (display-mode: standalone) {
    .submit-button {
      bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
