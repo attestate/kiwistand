@@ -16,6 +16,65 @@ import log from "../../logger.mjs";
 
 const html = htm.bind(vhtml);
 
+const expandSVG = html`
+  <svg
+    style="color:black; height: 1rem;"
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 256 256"
+  >
+    <rect width="256" height="256" fill="none" />
+    <line
+      x1="216"
+      y1="128"
+      x2="40"
+      y2="128"
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="16"
+    />
+    <line
+      x1="128"
+      y1="96"
+      x2="128"
+      y2="16"
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="16"
+    />
+    <polyline
+      points="96 48 128 16 160 48"
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="16"
+    />
+    <line
+      x1="128"
+      y1="160"
+      x2="128"
+      y2="240"
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="16"
+    />
+    <polyline
+      points="160 208 128 240 96 208"
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="16"
+    />
+  </svg>
+`;
+
 const formatDistanceToNowStrict = (date) => {
   return originalFormatDistance(date)
     .replace(/ years?/, "y")
@@ -556,29 +615,36 @@ const row = (
                   >
                     <div
                       onclick="window.reactHasLoaded && (document.querySelector('.comment-preview-0x${story.index}').style.display = 'none', window.dispatchEvent(new CustomEvent('open-comments-0x${story.index}')));"
-                      style="width: 100%; background-color: rgba(0, 0, 0, 0.05);padding: 7px 9px;border-radius: 2px;"
+                      style="display: flex;width: 100%; background-color: rgba(0, 0, 0, 0.05);border-radius: 2px;"
                     >
-                      <div style="display: inline-flex; align-items: start;">
-                        <img
-                          src="${DOMPurify.sanitize(
-                            story.lastComment.identity.safeAvatar,
-                          )}"
-                          alt="avatar"
-                          style="border: 1px solid #ccc; width: ${size}px; height: ${size}px; border-radius: 2px; margin-right: 4px;"
-                        />
-                        <span style="font-weight: bold;"
-                          >${DOMPurify.sanitize(
-                            story.lastComment.identity.displayName,
-                          )}:</span
+                      <div style="width:90%; padding: 7px 9px;">
+                        <div style="display: inline-flex; align-items: start;">
+                          <img
+                            src="${DOMPurify.sanitize(
+                              story.lastComment.identity.safeAvatar,
+                            )}"
+                            alt="avatar"
+                            style="border: 1px solid #ccc; width: ${size}px; height: ${size}px; border-radius: 2px; margin-right: 4px;"
+                          />
+                          <span style="font-weight: bold;"
+                            >${DOMPurify.sanitize(
+                              story.lastComment.identity.displayName,
+                            )}:</span
+                          >
+                        </div>
+                        <span> </span>
+                        <span
+                          >${truncateComment(
+                            DOMPurify.sanitize(story.lastComment.title),
+                          )}</span
                         >
+                        <span> </span>
                       </div>
-                      <span> </span>
-                      <span
-                        >${truncateComment(
-                          DOMPurify.sanitize(story.lastComment.title),
-                        )}</span
+                      <div
+                        style="width:10%; display: flex; align-items: center; justify-content: end; padding-right: 9px;"
                       >
-                      <span> </span>
+                        ${expandSVG}
+                      </div>
                     </div>
                   </div>`
                 : null
