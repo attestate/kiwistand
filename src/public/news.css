@@ -50,6 +50,7 @@
 .submit-button:active,
 .bottom-nav > a:active,
 .sidebar-toggle:active,
+.comment-preview:active,
 .bell-button:active {
   transform: scale(0.92);
   transition: transform 0.1s ease;
@@ -58,7 +59,6 @@
 .mobile-row-image:active {
   transform: scale(0.99);
   transition: transform 0.1s ease;
-  mask-image: none;
   cursor: pointer;
 }
 
@@ -417,9 +417,6 @@ body {
       border-radius: 2px;
       border: 1px solid rgba(0, 0, 0, 0.1);
       box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
-    }
-    .interaction-container-with-image {
-      max-height: 100px;
     }
     #hnmain {
       border: none;

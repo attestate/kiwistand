@@ -159,7 +159,7 @@ const Vote = (props) => {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              minWidth: "40px",
+              minWidth: "45px",
               margin: "5px 8px 5px 6px",
               alignSelf: "stretch",
               cursor: hasUpvoted ? "not-allowed" : "pointer",

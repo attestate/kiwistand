@@ -293,7 +293,7 @@ const row = (
             <div 
               class="${displayMobileImage ? "elevating-row" : ""}"
 
-              style="display: flex; align-items: center;">
+              style="display: flex; align-items: center; padding: 7px 0;">
               <div
                 data-title="${DOMPurify.sanitize(story.title)}"
                 data-href="${DOMPurify.sanitize(story.href)}"
@@ -317,7 +317,7 @@ const row = (
                 >
                   <div
                     class="interaction-element"
-                    style="border-radius: 2px; padding: 5px 0; background-color: rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; min-width: 40px; margin: 5px 8px 5px 6px; align-self: stretch;"
+                    style="border-radius: 2px; padding: 5px 0; background-color: rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; min-width: 45px; margin: 5px 8px 5px 6px; align-self: stretch;"
                   >
                     <div style="min-height: 40px; display:block;">
                       <div class="votearrowcontainer">
@@ -423,7 +423,7 @@ const row = (
                       })</span
                     >
                   </span>
-                  <div style="font-size: 10pt; margin-top: 1px;">
+                  <div style="font-size: 10pt; margin-top: 3px;">
                     <spani style="opacity: 0.8">
                       ${
                         path !== "/stories" &&
@@ -629,7 +629,7 @@ const row = (
                         style="margin: 5px; background-color: #e6e6df; border-radius: 2px; display: ${path ===
                         "/stories"
                           ? "none"
-                          : "flex"}; justify-content: center; min-width: 40px; align-items: center; flex-direction: column;"
+                          : "flex"}; justify-content: center; min-width: 45px; align-items: center; flex-direction: column;"
                       >
                         ${ChatsSVG()}
                         <span
@@ -663,14 +663,14 @@ const row = (
               story.lastComment.identity.safeAvatar &&
               !invert
                 ? html` <div
-                    class="comment-preview-0x${story.index}"
-                    style="cursor: pointer; padding: 1px 5px 9px 6px; display: flex;"
+                    class="comment-preview comment-preview-0x${story.index}"
+                    style="cursor: pointer; padding: 9px 5px 14px 6px; display: flex;"
                   >
                     <div
                       onclick="window.reactHasLoaded && (document.querySelector('.comment-preview-0x${story.index}').style.display = 'none', window.dispatchEvent(new CustomEvent('open-comments-0x${story.index}')));"
                       style="display: flex;width: 100%; background-color: rgba(0, 0, 0, 0.05);border-radius: 2px;"
                     >
-                      <div style="width:90%; padding: 7px 9px;">
+                      <div style="width:90%; padding: 11px 9px;">
                         <div style="display: inline-flex; align-items: start;">
                           <img
                             src="${DOMPurify.sanitize(
