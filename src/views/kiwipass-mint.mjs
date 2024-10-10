@@ -310,7 +310,7 @@ export default async function (theme) {
         <meta property="eth:nft:mint_status" content="live" />
         <meta property="eth:nft:chain" content="ethereum" />
       </head>
-      <body class="kiwipass-mint-page">
+      <body ontouchstart="" class="kiwipass-mint-page">
         <div class="container">
           <div class="sidebar">${Sidebar()}</div>
           <div id="hnmain" style="width: 100%;">

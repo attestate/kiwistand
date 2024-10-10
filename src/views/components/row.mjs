@@ -285,7 +285,7 @@ const row = (
                     )}`}"
                   >
                     <img
-                      style="width: 100%;"
+                      style="mask-image: linear-gradient(to top, rgba(0,0,0,0.5), rgba(0,0,0,1)); aspect-ratio: 2 / 1; object-fit:cover; width: 100%;"
                       src="${DOMPurify.sanitize(story.metadata.image)}"
                   /></a>`
                 : null

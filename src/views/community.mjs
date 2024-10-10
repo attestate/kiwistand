@@ -257,7 +257,7 @@ export default async function (trie, theme, query, identity) {
           }
         </style>
       </head>
-      <body>
+      <body ontouchstart="">
         <div class="container">
           ${Sidebar(path)}
           <div id="hnmain" class="scaled-hnmain">

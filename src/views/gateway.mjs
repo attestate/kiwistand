@@ -19,7 +19,7 @@ export default async function (referral) {
       <head>
         ${Head} ${frame.header(referral)}
       </head>
-      <body>
+      <body ontouchstart="">
         <nav-delegation-modal />
         <div class="container">
           <div

@@ -36,7 +36,7 @@ export default async function (theme) {
           }
         </style>
       </head>
-      <body>
+      <body ontouchstart="">
         <div class="container">
           ${Sidebar()}
           <div id="hnmain">

@@ -256,7 +256,7 @@ export async function page(theme, identity, notifications, lastUpdate) {
       <head>
         ${Head}
       </head>
-      <body>
+      <body ontouchstart="">
         <div class="container">
           ${Sidebar()}
           <div id="hnmain" class="scaled-hnmain">

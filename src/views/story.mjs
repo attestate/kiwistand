@@ -207,7 +207,7 @@ export default async function (trie, theme, index, value, referral) {
         ${head.custom(ogImage, value.title, ogDescription)}
         ${frame.header(referral, link, ogImage)}
       </head>
-      <body>
+      <body ontouchstart="">
         <div class="container">
           ${Sidebar(path)}
           <div id="hnmain" class="scaled-hnmain">

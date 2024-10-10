@@ -44,7 +44,7 @@ export default async function submit(theme, url = "", title = "") {
       <head>
         ${Head}
       </head>
-      <body>
+      <body ontouchstart="">
         <div class="container">
           ${Sidebar(path)}
           <div id="hnmain" class="scaled-hnmain">

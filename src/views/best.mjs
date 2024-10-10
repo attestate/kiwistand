@@ -77,7 +77,7 @@ export default async function index(trie, theme, page, period, domain) {
           content="Explore the latest news in the decentralized world on Kiwi News. Stay updated with fresh content handpicked by crypto veterans."
         />
       </head>
-      <body>
+      <body ontouchstart="">
         <div class="container">
           ${Sidebar("/best")}
           <div id="hnmain" class="scaled-hnmain">

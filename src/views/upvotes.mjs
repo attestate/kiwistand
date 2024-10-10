@@ -210,7 +210,7 @@ export default async function (
           twitterCard,
         )}
       </head>
-      <body>
+      <body ontouchstart="">
         <div class="container">
           ${Sidebar(path)}
           <div id="hnmain" class="scaled-hnmain">

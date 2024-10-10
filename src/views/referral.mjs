@@ -30,7 +30,7 @@ export default async function (theme) {
       <head>
         ${Head}
       </head>
-      <body>
+      <body ontouchstart="">
         <div class="container">
           ${Sidebar("/referral")}
           <div id="hnmain" class="scaled-hnmain">

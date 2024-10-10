@@ -36,7 +36,7 @@ export default async function index(theme) {
           "Stay in touch with Kiwi News by subscribing to our weekly news letter or by follwing us on social media.",
         )}
       </head>
-      <body>
+      <body ontouchstart="">
         <div class="container">
           ${Sidebar(path)}
           <div id="hnmain" class="scaled-hnmain">
