@@ -668,7 +668,7 @@ const row = (
                     style="cursor: pointer; padding: 9px 5px 14px 6px; display: flex;"
                   >
                     <div
-                      onclick="window.reactHasLoaded && (document.querySelector('.comment-preview-0x${story.index}').style.display = 'none', window.dispatchEvent(new CustomEvent('open-comments-0x${story.index}')));"
+                      onclick="document.querySelector('.comment-preview-0x${story.index}').style.opacity = 0.5, window.addToQueue(new CustomEvent('open-comments-0x${story.index}'));"
                       style="display: flex;width: 100%; background-color: rgba(0, 0, 0, 0.05);border-radius: 2px;"
                     >
                       <div style="width:90%; padding: 11px 9px;">

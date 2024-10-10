@@ -16,6 +16,7 @@ export function custom(
   ogTitle = DOMPurify.sanitize(ogTitle);
   ogDescription = DOMPurify.sanitize(ogDescription);
   return html`
+    <script src="event-queue.js"></script>
     <meta charset="utf-8" />
     <meta name="referrer" content="origin" />
     <meta
