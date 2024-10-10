@@ -826,7 +826,7 @@ async function processAndSendVotes(signer, identity) {
 function updateLinkTargetsForIOSPWA() {
   if (isIOS()) {
     const links = document.querySelectorAll(
-      ".story-link-container a, .comment-link, .mobile-row-image",
+      ".story-link-container a, .mobile-row-image",
     );
     links.forEach((link) => link.setAttribute("target", "_self"));
   }

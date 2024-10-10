@@ -4,6 +4,7 @@ import Linkify from "linkify-react";
 
 import CommentInput from "./CommentInput.jsx";
 import { fetchStory } from "./API.mjs";
+import { isIOS } from "./session.mjs";
 
 function truncateName(name) {
   const maxLength = 12;
@@ -73,8 +74,8 @@ const Comment = ({ comment, index }) => {
       <span>
         <Linkify
           options={{
-            className: "meta-link comment-link",
-            target: "_blank",
+            className: "meta-link",
+            target: isIOS() ? "_self" : "_blank",
             defaultProtocol: "https",
             validate: {
               url: (value) => /^https:\/\/.*/.test(value),
