@@ -158,7 +158,9 @@ export async function resolve(address) {
   const ensProfile = await fetchENSData(address);
   const lensProfile = await fetchLensData(address);
 
-  let safeAvatar = ensProfile.avatar;
+  let safeAvatar = ensProfile.avatar_small
+    ? ensProfile.avatar_small
+    : ensProfile.avatar;
   if (safeAvatar && !safeAvatar.startsWith("https")) {
     safeAvatar = ensProfile.avatar_url;
   }
