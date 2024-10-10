@@ -1,5 +1,5 @@
+import React, { lazy, Suspense } from "react";
 import { useContractRead, WagmiConfig } from "wagmi";
-import SuperfluidWidget from "@superfluid-finance/widget";
 import { RainbowKitProvider, ConnectButton } from "@rainbow-me/rainbowkit";
 
 import { client, chains } from "./client.mjs";
@@ -21,6 +21,7 @@ export const DonationRow = (props) => {
       },
     ],
   };
+
   return (
     <ConnectButton.Custom>
       {({ account, chain, mounted, openConnectModal, openAccountModal }) => {
@@ -36,24 +37,29 @@ export const DonationRow = (props) => {
             </button>
           );
         }
+        const SuperfluidWidget = lazy(() =>
+          import("@superfluid-finance/widget"),
+        );
         return (
-          <SuperfluidWidget
-            productDetails={productDetails}
-            paymentDetails={paymentDetails}
-            type="dialog"
-          >
-            {({ openModal }) => {
-              return (
-                <button
-                  onClick={() => openModal()}
-                  style={{ width: "auto", height: "40px" }}
-                  id="button-onboarding"
-                >
-                  Support
-                </button>
-              );
-            }}
-          </SuperfluidWidget>
+          <Suspense fallback={<div>Loading...</div>}>
+            <SuperfluidWidget
+              productDetails={productDetails}
+              paymentDetails={paymentDetails}
+              type="dialog"
+            >
+              {({ openModal }) => {
+                return (
+                  <button
+                    onClick={() => openModal()}
+                    style={{ width: "auto", height: "40px" }}
+                    id="button-onboarding"
+                  >
+                    Support
+                  </button>
+                );
+              }}
+            </SuperfluidWidget>
+          </Suspense>
         );
       }}
     </ConnectButton.Custom>
