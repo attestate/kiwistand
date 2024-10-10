@@ -12,6 +12,35 @@ import NFTModal from "./NFTModal.jsx";
 import theme from "./theme.jsx";
 import { getLocalAccount } from "./session.mjs";
 
+const heartSVG = (
+  <svg
+    style={{ color: "rgba(0, 0, 0, 0.65)", width: "23px", padding: "3px 0" }}
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 256 256"
+  >
+    <rect width="256" height="256" fill="none" />
+    <path
+      d="M128,224S24,168,24,102A54,54,0,0,1,78,48c22.59,0,41.94,12.31,50,32,8.06-19.69,27.41-32,50-32a54,54,0,0,1,54,54C232,168,128,224,128,224Z"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="16"
+    />
+  </svg>
+);
+
+const heartFullSVG = (
+  <svg
+    style={{ width: "23px", padding: "3px 0" }}
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 256 256"
+  >
+    <rect width="256" height="256" fill="none" />
+    <path d="M240,102c0,70-103.79,126.66-108.21,129a8,8,0,0,1-7.58,0C119.79,228.66,16,172,16,102A62.07,62.07,0,0,1,78,40c20.65,0,38.73,8.88,50,23.89C139.27,48.88,157.35,40,178,40A62.07,62.07,0,0,1,240,102Z" />
+  </svg>
+);
+
 const Container = (props) => {
   const [modalIsOpen, setIsOpen] = useState(false);
 
@@ -140,12 +169,12 @@ const Vote = (props) => {
               <div
                 className={`votearrow`}
                 style={{
-                  color: hasUpvoted ? theme.color : "#828282",
+                  fill: hasUpvoted ? theme.color : "#828282",
                   cursor: hasUpvoted ? "not-allowed" : "pointer",
                 }}
                 title="upvote"
               >
-                ▲
+                {hasUpvoted ? heartFullSVG : heartSVG}
               </div>
               {props.editorPicks !== "true" ? (
                 <div
