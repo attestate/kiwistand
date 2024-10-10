@@ -76,6 +76,7 @@ const Profile = (props) => {
     address && eligible(props.allowlist, props.delegations, address);
 
   const isEnabled = isEligible || account.isConnected;
+  if (!isEnabled) return null;
   return (
     <a
       title="Profile"
@@ -127,6 +128,7 @@ const DisconnectButton = () => {
     <ConnectButton.Custom>
       {({ account, chain, mounted, openConnectModal, openAccountModal }) => {
         const connected = account && chain && mounted;
+        if (!connected) return null;
         return (
           <div
             title="Disconnect Wallet"
