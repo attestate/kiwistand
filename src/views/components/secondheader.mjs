@@ -3,8 +3,6 @@ import htm from "htm";
 import vhtml from "vhtml";
 import DOMPurify from "isomorphic-dompurify";
 
-import { getNumberOfOnlineUsers } from "../../cache.mjs";
-
 const html = htm.bind(vhtml);
 
 const style = "width: 1rem; position: relative; top: 0.15rem;";
@@ -192,19 +190,9 @@ const animation = `
   var intervalId = setInterval(animate, 500);
  `;
 
-const OnlineIndicator = (DAU) => html`
-  <div
-    alt="Users who interacted with the protocol in the last 24hrs"
-    style="align-items: center; height: 100%; display: flex; padding-left: 10px; color: rgba(0,0,0,0.5);"
-  >
-    ■ ${DAU} online
-  </div>
-`;
-
 const secondheader = (theme, site, period, domain) => {
   period = DOMPurify.sanitize(period);
   domain = DOMPurify.sanitize(domain);
-  const DAU = getNumberOfOnlineUsers();
   return html`
     <td>
       <div
@@ -268,9 +256,6 @@ const secondheader = (theme, site, period, domain) => {
                 </button>
               </a>`
             : ""}
-          <div style="display: flex; height: 33px;">
-            ${OnlineIndicator(DAU)}
-          </div>
         </div>
       </div>
 
