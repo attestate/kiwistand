@@ -2,18 +2,39 @@ import { env } from "process";
 import path from "path";
 import DOMPurify from "isomorphic-dompurify";
 
-import { fetchBuilder, FileSystemCache } from "node-fetch-cache";
+import { Response } from "node-fetch";
+import { fetchBuilder, FileSystemCache, getCacheKey } from "node-fetch-cache";
 import { allowlist } from "./chainstate/registry.mjs";
 import { providers, utils } from "ethers";
 
 const provider = new providers.JsonRpcProvider(env.RPC_HTTP_HOST);
 
-const fetch = fetchBuilder.withCache(
-  new FileSystemCache({
-    cacheDirectory: path.resolve(env.CACHE_DIR),
-    ttl: 86400000 * 5, // 72 hours
-  }),
-);
+const cache = new FileSystemCache({
+  cacheDirectory: path.resolve(env.CACHE_DIR),
+  ttl: 86400000 * 5, // 72 hours
+});
+const fetch = fetchBuilder.withCache(cache);
+
+const fetchStaleWhileRevalidate = async (url, options = {}) => {
+  const cacheKey = getCacheKey(url, options);
+  const cachedValue = await cache.get(cacheKey);
+
+  (async () => {
+    try {
+      await fetch(url, options);
+    } catch (error) {
+      console.error(`Error fetching and caching data for ${url}:`, error);
+    }
+  })();
+
+  if (cachedValue) {
+    // NOTE: node-fetch-cache doesn't return a node-fetch Response, hence we're
+    // casting it to one before handing it back to the business logic.
+    return new Response(cachedValue.bodyStream, cachedValue.metaData);
+  }
+
+  throw new Error(`No cached data momentarily available for ${url}`);
+};
 
 export async function toAddress(name) {
   const address = await provider.resolveName(name);
@@ -57,7 +78,7 @@ async function fetchLensData(address) {
 
   let response;
   try {
-    response = await fetch("https://api-v2.lens.dev/", {
+    response = await fetchStaleWhileRevalidate("https://api-v2.lens.dev/", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -97,9 +118,9 @@ async function fetchENSData(address) {
   }
 
   try {
-    const response = await fetch(`${endpoint}${address}?farcaster=true`);
+    const url = `${endpoint}${address}?farcaster=true`;
+    const response = await fetchStaleWhileRevalidate(url);
     const data = await response.json();
-
     try {
       utils.getAddress(address);
     } catch (err) {
