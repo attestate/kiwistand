@@ -121,11 +121,12 @@ const Avatar = (props) => {
             justifyContent: "left",
             padding: "7px 0 7px 7px",
             position: "relative",
+            userSelect: "none",
           }}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            style={{ paddingTop: "2px" }}
+            style={{ userSelect: "none", paddingTop: "2px" }}
             viewBox="0 0 100 80"
             width="20"
             height="20"
@@ -134,7 +135,11 @@ const Avatar = (props) => {
             <rect y="30" width="100" height="10"></rect>
             <rect y="60" width="100" height="10"></rect>
           </svg>
-          <span style={{ color: "black", marginLeft: "10px" }}>Menu</span>
+          <span
+            style={{ userSelect: "none", color: "black", marginLeft: "10px" }}
+          >
+            Menu
+          </span>
         </div>
       </div>
     );

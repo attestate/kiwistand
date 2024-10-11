@@ -61,7 +61,13 @@ const ChatBubble = ({ allowlist, delegations, storyIndex, commentCount }) => {
           width: "25px",
         }}
       />
-      <span style={{ color: "rgba(0,0,0,0.65)", fontSize: "8pt" }}>
+      <span
+        style={{
+          userSelect: "none",
+          color: "rgba(0,0,0,0.65)",
+          fontSize: "8pt",
+        }}
+      >
         {commentCount !== 0 ? commentCount : null}
       </span>
     </a>

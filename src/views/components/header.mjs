@@ -58,7 +58,7 @@ const header = async (theme, path) => {
               <a
                 class="mobile-center"
                 href="/"
-                style="width: 33%; display: flex; justify-content: center;"
+                style="user-select: none; width: 33%; display: flex; justify-content: center;"
               >
                 <span style="padding: 0 20px 0 20px" ; class="pagetop">
                   <b class="hnname">

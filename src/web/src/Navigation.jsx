@@ -111,6 +111,7 @@ export const SimpleDisconnectButton = (props) => {
         return (
           <span
             style={{
+              userSelect: "none",
               textDecoration: "underline",
               visibility: connected ? "visible" : "hidden",
             }}

@@ -179,6 +179,7 @@ const Vote = (props) => {
               {props.editorPicks !== "true" ? (
                 <div
                   style={{
+                    userSelect: "none",
                     fontSize: "8pt",
                     textAlign: "center",
                   }}
