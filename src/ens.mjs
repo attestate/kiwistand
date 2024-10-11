@@ -1,11 +1,12 @@
 import { env } from "process";
 import path from "path";
-import DOMPurify from "isomorphic-dompurify";
 
-import { Response } from "node-fetch";
-import { fetchBuilder, FileSystemCache, getCacheKey } from "node-fetch-cache";
-import { allowlist } from "./chainstate/registry.mjs";
+import DOMPurify from "isomorphic-dompurify";
+import { fetchBuilder, FileSystemCache } from "node-fetch-cache";
 import { providers, utils } from "ethers";
+
+import { allowlist } from "./chainstate/registry.mjs";
+import { fetchCache } from "./utils.mjs";
 
 const provider = new providers.JsonRpcProvider(env.RPC_HTTP_HOST);
 
@@ -14,27 +15,7 @@ const cache = new FileSystemCache({
   ttl: 86400000 * 5, // 72 hours
 });
 const fetch = fetchBuilder.withCache(cache);
-
-const fetchStaleWhileRevalidate = async (url, options = {}) => {
-  const cacheKey = getCacheKey(url, options);
-  const cachedValue = await cache.get(cacheKey);
-
-  (async () => {
-    try {
-      await fetch(url, options);
-    } catch (error) {
-      console.error(`Error fetching and caching data for ${url}:`, error);
-    }
-  })();
-
-  if (cachedValue) {
-    // NOTE: node-fetch-cache doesn't return a node-fetch Response, hence we're
-    // casting it to one before handing it back to the business logic.
-    return new Response(cachedValue.bodyStream, cachedValue.metaData);
-  }
-
-  throw new Error(`No cached data momentarily available for ${url}`);
-};
+const fetchStaleWhileRevalidate = fetchCache(fetch, cache);
 
 export async function toAddress(name) {
   const address = await provider.resolveName(name);
@@ -209,36 +190,4 @@ export async function resolve(address) {
     displayName,
   };
   return profile;
-}
-
-async function initializeCache() {
-  let addresses = Array.from(await allowlist());
-  while (addresses.length === 0) {
-    await new Promise((r) => setTimeout(r, 5000)); // wait for 5 seconds
-    addresses = await allowlist();
-  }
-
-  if (addresses && Array.isArray(addresses)) {
-    const promises = addresses.map(async (address) => {
-      const profile = await resolve(address);
-      if (profile && profile.ens) {
-        try {
-          await toAddress(profile.ens);
-        } catch (err) {
-          // ignore error
-        }
-      }
-    });
-
-    await Promise.allSettled(promises);
-  }
-}
-
-// NOTE: For nodes that have never downloaded and committed all addresses into
-// LMDB during their first crawl, it may be that this function is launched and
-// then initializeCache's `let addresses = Array.from(await allowlist());` will
-// unexpectedly throw because it should wait for allowlist to be crawled at
-// least onceit should wait for allowlist to be crawled at least once
-if (env.NODE_ENV === "production") {
-  setTimeout(initializeCache, 30000);
 }

@@ -1,21 +1,26 @@
 // @format
-import { fetchBuilder, MemoryCache } from "node-fetch-cache";
+import path from "path";
+import { env } from "process";
+
+import { fetchBuilder, FileSystemCache } from "node-fetch-cache";
 import normalizeUrl from "normalize-url";
 
 import * as id from "../id.mjs";
 import log from "../logger.mjs";
 import { EIP712_MESSAGE } from "../constants.mjs";
+import { fetchCache } from "../utils.mjs";
 
-const fetch = fetchBuilder.withCache(
-  new MemoryCache({
-    ttl: 60000, // 1min
-  }),
-);
+const cache = new FileSystemCache({
+  cacheDirectory: path.resolve(env.CACHE_DIR),
+  ttl: 60000 * 5, // 5min
+});
+const fetch = fetchBuilder.withCache(cache);
+const fetchStaleWhileRevalidate = fetchCache(fetch, cache);
 
 const url =
   "https://opensheet.elk.sh/1kh9zHwzekLb7toabpdSfd87pINBpyVU6Q8jLliBXtEc/";
 export async function getConfig(sheet) {
-  const response = await fetch(url + sheet);
+  const response = await fetchStaleWhileRevalidate(url + sheet);
   if (response.ok) {
     return await response.json();
   } else {

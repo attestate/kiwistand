@@ -11,7 +11,6 @@ import htm from "htm";
 import "express-async-errors";
 import { sub } from "date-fns";
 import DOMPurify from "isomorphic-dompurify";
-import { fetchBuilder, FileSystemCache } from "node-fetch-cache";
 import ws from "ws";
 import { createServer } from "http";
 
@@ -76,13 +75,6 @@ import {
   trackOutbound,
   getLeaders,
 } from "./cache.mjs";
-
-const fetch = fetchBuilder.withCache(
-  new FileSystemCache({
-    cacheDirectory: path.resolve(env.CACHE_DIR),
-    ttl: 86400000, // 24 hours
-  }),
-);
 
 const app = express();
 const server = createServer(app);

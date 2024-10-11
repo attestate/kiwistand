@@ -1,8 +1,41 @@
 import path from "path";
 import { fileURLToPath } from "url";
 
-let lastCall;
+import { Response } from "node-fetch";
+import { getCacheKey } from "node-fetch-cache";
 
+// NOTE: This is an extension of node-fetch-cache where we're loading the
+// to-be-cached data in the background while returning an error to the caller
+// in the meantime. What this does is that it stops blocking requests from
+// being resolved, for example, in the ens module.
+export function fetchCache(fetch, cache) {
+  if (!fetch || !cache) {
+    throw new Error("fetch and cache must be passed to fetchCache");
+  }
+
+  return async (url, options = {}) => {
+    const cacheKey = getCacheKey(url, options);
+    const cachedValue = await cache.get(cacheKey);
+
+    (async () => {
+      try {
+        await fetch(url, options);
+      } catch (error) {
+        console.error(`Error fetching and caching data for ${url}:`, error);
+      }
+    })();
+
+    if (cachedValue) {
+      // NOTE: node-fetch-cache doesn't return a node-fetch Response, hence we're
+      // casting it to one before handing it back to the business logic.
+      return new Response(cachedValue.bodyStream, cachedValue.metaData);
+    }
+
+    throw new Error(`No cached data momentarily available for ${url}`);
+  };
+}
+
+let lastCall;
 export function logd(label = "") {
   const now = Date.now();
   if (lastCall === undefined) {
