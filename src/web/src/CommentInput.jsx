@@ -125,7 +125,6 @@ const CommentInput = (props) => {
       button.style.display = "none";
     }
   }
-  if (!address || !isEligible) return null;
   return (
     <div
       style={{
