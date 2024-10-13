@@ -260,42 +260,7 @@ export async function index(trie, page, domain) {
   } while (pill);
 
   log(`Feed threshold for upvotes ${threshold}`);
-  if (threshold <= parameters.replacementThreshold) {
-    // NOTE: The replacementFactor is the number of old stories that we are
-    // going to replace with super new stories (ones that haven't gained any
-    // upvotes yet).
-    let { replacementFactor } = parameters;
-    const newStories = leaves
-      .filter(({ upvotes }) => upvotes === 1)
-      .sort((a, b) => b.timestamp - a.timestamp)
-      .slice(0, 20)
-      .map((story) => ({ ...story, userScore: karma.score(story.identity) }))
-      .filter(({ timestamp }) => !isBefore(new Date(timestamp * 1000), old))
-      .sort(
-        (a, b) =>
-          0.4 * (b.userScore - a.userScore) + 0.6 * (b.timestamp - a.timestamp),
-      );
-    if (replacementFactor > newStories.length) {
-      log(
-        `Downgrading replacementFactor of "${replacementFactor}" to new story length "${newStories.length}"`,
-      );
-      replacementFactor = newStories.length;
-    }
-    const oldStories = storyPromises
-      .slice(0, 10)
-      .sort((a, b) => a.timestamp - b.timestamp)
-      .slice(0, replacementFactor)
-      .reverse();
-    for (let i = 0; i < oldStories.length; i++) {
-      const index = storyPromises.indexOf(oldStories[i]);
-      if (index !== -1) {
-        storyPromises[index] = newStories[i];
-      }
-    }
-    storyPromises.splice(10, 0, ...oldStories);
-  } else {
-    storyPromises = storyPromises.filter(({ upvotes }) => upvotes > threshold);
-  }
+  storyPromises = storyPromises.filter(({ upvotes }) => upvotes > threshold);
   if (domain)
     storyPromises = storyPromises.filter(
       ({ href }) => extractDomain(href) === domain,
