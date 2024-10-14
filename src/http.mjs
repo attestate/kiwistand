@@ -79,6 +79,7 @@ import {
 const app = express();
 const server = createServer(app);
 
+app.set("etag", false);
 app.use((req, res, next) => {
   res.setHeader("Last-Modified", new Date().toUTCString());
   next();
