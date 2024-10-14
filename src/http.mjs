@@ -1008,7 +1008,7 @@ export async function launch(trie, libp2p) {
   app.get("/profile", async (request, reply) => {
     if (!utils.isAddress(request.cookies.identity)) {
       // NOTE: We redirect to community in case the user isn't logged in
-      return reply.redirect(301, `/community`);
+      return reply.redirect(301, `/gateway`);
     }
     const profile = await resolve(request.cookies.identity);
     if (profile.ens) {
@@ -1058,6 +1058,10 @@ export async function launch(trie, libp2p) {
   });
 
   app.get("/submit", async (request, reply) => {
+    if (!utils.isAddress(request.cookies.identity)) {
+      return reply.redirect(301, `/gateway`);
+    }
+
     const { url, title } = request.query;
     const content = await submit(
       reply.locals.theme,
