@@ -205,7 +205,7 @@ export async function topstories(leaves, decayStrength) {
         addOrUpdateReferrer(story.href, story.identity),
       );
       if (outboundClicks > 0) {
-        score = score * 0.7 + 0.3 * Math.log(outboundClicks);
+        score = score * 0.9 + 0.1 * Math.log(outboundClicks);
       }
 
       const storyRatio = calculateUpvoteClickRatio(story);
