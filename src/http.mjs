@@ -612,12 +612,6 @@ export async function launch(trie, libp2p) {
   app.get("/new", async (request, reply) => {
     const content = await newest(trie, reply.locals.theme);
     let timestamp;
-    try {
-      timestamp = newAPI.getLatestTimestamp();
-      reply.cookie("newTimestamp", timestamp, { maxAge: 1000 * 60 * 60 * 32 });
-    } catch (err) {
-      //noop
-    }
 
     // NOTE: Especially for international customers /new got embarassingly slow
     // taking up to 2s to load as the page had to served previously from
