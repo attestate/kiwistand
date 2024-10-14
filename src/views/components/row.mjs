@@ -457,7 +457,6 @@ const row = (
                           ? html`
                               <a
                                 class="meta-link"
-                                style="user-select: none;"
                                 href="/stories/${slugify(
                                   DOMPurify.sanitize(story.title),
                                 )}?index=0x${story.index}"
@@ -485,7 +484,7 @@ const row = (
                                 ? `/${story.submitter.ens}`
                                 : `/upvotes?address=${story.identity}`}"
                               class="meta-link"
-                              style="user-select: none; ${recentJoiners &&
+                              style="${recentJoiners &&
                               recentJoiners.includes(story.identity)
                                 ? `color: ${theme.color};`
                                 : ""}"
