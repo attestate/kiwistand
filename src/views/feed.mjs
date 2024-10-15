@@ -14,7 +14,6 @@ import {
 } from "date-fns";
 import DOMPurify from "isomorphic-dompurify";
 
-import InviteRow from "./components/invite-row.mjs";
 import * as ens from "../ens.mjs";
 import Header from "./components/header.mjs";
 import SecondHeader from "./components/secondheader.mjs";
@@ -766,7 +765,6 @@ export default async function (trie, theme, page, domain) {
                 .map(
                   Row(start, "/", undefined, null, null, null, recentJoiners),
                 )}
-              ${InviteRow()}
               ${stories
                 .slice(8)
                 .map(

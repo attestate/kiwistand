@@ -165,33 +165,6 @@ async function addInviteLink(toast) {
   }
 }
 
-async function addDonationRow() {
-  const donationRow = document.querySelector(".donation-button");
-  if (!donationRow) return;
-
-  const observer = new IntersectionObserver(
-    async (entries, observer) => {
-      for (const entry of entries) {
-        if (entry.isIntersecting) {
-          const { createRoot } = await import("react-dom/client");
-          const { StrictMode } = await import("react");
-          const DonationRow = (await import("./DonationRow.jsx")).default;
-
-          createRoot(entry.target).render(
-            <StrictMode>
-              <DonationRow />
-            </StrictMode>,
-          );
-          observer.unobserve(entry.target); // Stop observing after rendering
-        }
-      }
-    },
-    { threshold: 0.1 },
-  );
-
-  observer.observe(donationRow);
-}
-
 async function addDynamicNavElements() {
   const navElements = document.querySelectorAll("[data-icon]");
   if (navElements && navElements.length > 0) {
@@ -895,7 +868,6 @@ async function start() {
   ]);
 
   const results1 = await Promise.allSettled([
-    addDonationRow(),
     addDynamicNavElements(),
     addInviteLink(toast),
     addCommentInput(toast, await allowlistPromise, await delegationsPromise),
