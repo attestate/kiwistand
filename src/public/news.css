@@ -50,9 +50,10 @@
 .submit-button:active,
 .bottom-nav > a:active,
 .sidebar-toggle:active,
+.sidebar a:active,
 .comment-preview:active,
 .bell-button:active {
-  transform: scale(0.92);
+  transform: scale(0.88);
   transition: transform 0.1s ease;
   cursor: pointer;
 }
@@ -116,6 +117,7 @@ body {
 }
 .hnname span:active, .votearrow:active {
   transform: scale(0.80);
+  transition: transform 0.3s;
   display: inline-block;
 }
 .submit-button {

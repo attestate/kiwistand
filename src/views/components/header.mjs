@@ -28,7 +28,16 @@ const header = async (theme, path) => {
               style="display: flex; flex-wrap: nowrap; justify-content: space-between; align-items: center;"
             >
               <div class="kn-banner-desk">
-                <a style="color: black;" href="/">🥝 Kiwi News</a>
+                <a
+                  style="display: flex; align-items: center; gap: 0.5rem; color: black;"
+                  href="/"
+                >
+                  <img
+                    style="filter: saturate(90%); width: 35px;"
+                    src="kiwi-icon.webp"
+                  />
+                  Kiwi News</a
+                >
               </div>
               <nav-header-avatar class="sidebar-toggle" style="width: 33%;">
                 <div
@@ -62,7 +71,12 @@ const header = async (theme, path) => {
               >
                 <span style="padding: 0 20px 0 20px" ; class="pagetop">
                   <b class="hnname">
-                    <span>${theme.emoji}</span>
+                    <span>
+                      <img
+                        style="filter: saturate(90%); width: 40px;"
+                        src="kiwi-icon.webp"
+                      />
+                    </span>
                   </b>
                 </span>
               </a>

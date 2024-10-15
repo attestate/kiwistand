@@ -822,12 +822,33 @@ function updateLinkTargetsForIOSPWA() {
   }
 }
 
+function initKiwiRotation(selector) {
+  const kiwi = document.querySelector(selector);
+  kiwi.style.transition = "transform 0.3s";
+
+  const val = () => Math.floor(Math.random() * 30);
+
+  function rotateKiwi() {
+    kiwi.style.transform = `rotate(-${val()}deg)`;
+    setTimeout(() => {
+      kiwi.style.transform = `rotate(${val()}deg)`;
+      setTimeout(() => {
+        kiwi.style.transform = "rotate(0deg)";
+      }, Math.random() * 5000 + 1000); // Random delay for looking right
+    }, Math.random() * 5000 + 1000); // Random delay for looking left
+  }
+
+  setInterval(rotateKiwi, Math.random() * 5000 + 10000);
+}
+
 async function start() {
   // NOTE: There are clients which had the identity cookie sent to 1 week and
   // they're now encountering the paywall. So in case this happens but their
   // local storage contains the respective private key, we want them to reload
   // the page. See the logic in CustomConnectButton to follow this flow.
   window.initialIdentityCookie = getCookie("identity");
+
+  initKiwiRotation(".hnname span img");
 
   storeReferral();
 
