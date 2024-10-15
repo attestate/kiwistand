@@ -93,6 +93,7 @@ async function checkNewStories() {
 function handleClick(event) {
   const sidebar = document.querySelector(".sidebar");
   const overlay = document.querySelector("#overlay");
+  if (!sidebar) return;
   const isClickOutside = !sidebar.contains(event.target);
   const isSidebarOpen =
     sidebar.style.left === "0" || sidebar.style.left === "0px";
@@ -593,7 +594,15 @@ async function addToaster() {
 
   createRoot(newElement).render(
     <StrictMode>
-      <Toaster />
+      <Toaster
+        toastOptions={{
+          success: {
+            iconTheme: {
+              primary: "rgb(175, 192, 70)",
+            },
+          },
+        }}
+      />
     </StrictMode>,
   );
   return toast;
@@ -824,8 +833,9 @@ function updateLinkTargetsForIOSPWA() {
 
 function initKiwiRotation(selector) {
   const kiwi = document.querySelector(selector);
-  kiwi.style.transition = "transform 0.3s";
+  if (!kiwi) return;
 
+  kiwi.style.transition = "transform 0.3s";
   const val = () => Math.floor(Math.random() * 30);
 
   function rotateKiwi() {

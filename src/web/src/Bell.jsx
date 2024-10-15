@@ -127,7 +127,7 @@ const Bell = (props) => {
             position: "absolute",
             top: props.mobile ? "8px" : "5px",
             right: props.mobile ? "32px" : "8px",
-            backgroundColor: "red",
+            backgroundColor: "rgb(175, 192, 70)",
             borderRadius: "2px",
             color: "white",
             padding: "1px",

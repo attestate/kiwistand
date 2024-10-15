@@ -16,20 +16,14 @@ import log from "../../logger.mjs";
 
 const html = htm.bind(vhtml);
 
-const heartSVG = html`
+const iconSVG = html`
   <svg
-    style="color: rgba(0, 0, 0, 0.65); width: 23px; padding: 3px 0;"
+    style="width: 35px;"
+    viewBox="0 0 200 200"
     xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 256 256"
   >
-    <rect width="256" height="256" fill="none" />
     <path
-      d="M128,224S24,168,24,102A54,54,0,0,1,78,48c22.59,0,41.94,12.31,50,32,8.06-19.69,27.41-32,50-32a54,54,0,0,1,54,54C232,168,128,224,128,224Z"
-      fill="none"
-      stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="16"
+      d="M99.84 52.0801L55.04 96.8001L68.44 110.04L90.36 88.0401L90.3747 148H109.8V88.0401L131.84 110.04L144.96 96.8001L100.24 52.0801H99.84Z"
     />
   </svg>
 `;
@@ -328,7 +322,7 @@ const row = (
                             style="color: rgb(130, 130, 130); cursor: pointer;"
                             title="upvote"
                           >
-                            ${heartSVG}
+                            ${iconSVG}
                           </div>
                           <div
                             class="upvotes-container"
