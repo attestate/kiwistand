@@ -530,25 +530,6 @@ const row = (
                       }
                       <span>
                         ${
-                          path === "/" || path === "/new"
-                            ? html` <span style="opacity:0.6"> • </span>
-                                <span
-                                  class="click-counter"
-                                  data-story-clicks="${clicks}"
-                                  data-story-href="${DOMPurify.sanitize(
-                                    addOrUpdateReferrer(
-                                      story.href,
-                                      story.identity,
-                                    ),
-                                  )}"
-                                >
-                                  ${clicks.toString()}
-                                  <span> </span>
-                                  ${clicks === 1 ? "click" : "clicks"}</span
-                                >`
-                            : null
-                        }
-                        ${
                           interactive || hideCast || isad
                             ? null
                             : html`
