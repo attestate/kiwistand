@@ -497,7 +497,7 @@ export async function launch(trie, libp2p) {
 
     reply.header(
       "Cache-Control",
-      "public, max-age=10, stale-while-revalidate=31536000",
+      "public, s-maxage=10, max-age=10, stale-while-revalidate=31536000",
     );
     const code = 200;
     const httpMessage = "OK";
@@ -554,7 +554,7 @@ export async function launch(trie, libp2p) {
     if (request.params.slug) {
       reply.header(
         "Cache-Control",
-        "public, max-age=10, stale-while-revalidate=31536000",
+        "public, s-maxage=10, max-age=10, stale-while-revalidate=31536000",
       );
       const queryParams = new URLSearchParams(request.query).toString();
       return reply.redirect(`/stories?${queryParams}`);
@@ -608,7 +608,7 @@ export async function launch(trie, libp2p) {
     if (request.query.cached) {
       reply.header(
         "Cache-Control",
-        "public, max-age=1, stale-while-revalidate=5",
+        "public, s-maxage=1, max-age=1, stale-while-revalidate=5",
       );
     } else {
       reply.header("Cache-Control", "no-cache");
