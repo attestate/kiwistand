@@ -54,15 +54,14 @@ export default async function (referral) {
                   <div
                     class="gateway-banner"
                     style="flex: 1 1 auto; max-width: 50%; border: 1px solid rgba(0,0,0,0.1);
- border-radius: 2px; background-color: #e6e6df; text-align: left; padding: 1rem;"
+ border-radius: 2px; background-color: #e6e6df; text-align: left; padding: 1.5rem 2rem;"
                   >
-                    <h3 style="color: black; margin: 0;">
-                      Hacker News, without the "crypto derangement syndrome."
+                    <h3 style="font-size: 1.5rem; color: black; margin: 0;">
+                      Onchain Hacker News
                     </h3>
-                    <p style="margin: 0.75rem 0 2rem 0;">
-                      Kiwi News is a self-funded, credible neutral,
-                      decentralized Hacker News, built on the submissions of
-                      crypto devs, founders, creators and investors.
+                    <p style="font-size: 1.2rem; margin: 0.75rem 0 2rem 0;">
+                      Join our community of onchain devs, founders, creators and
+                      investors to curate the best Ethereum links!
                     </p>
                     <div
                       style="flex-direction: column; display: flex; align-items: center; justify-content: center;"
