@@ -49,28 +49,33 @@ export async function refreshDelegations() {
 // of ownership, so in which block the user minted the NFT. However, for
 // mainnet NFTs we're NOT continuously tracking which addresses hold or
 // transfer the NFTs as this would increase scope and complexity significantly.
+//
+// In addition to that, every holder has been sent an OP NFT some time after
+// MAINNET_MAX_TIMESTAMP, which is when we invalidate the mainnet NFT.
+//
+// We're not increasing or decreasing mainnet NFT holders "balance" property
+// because instead we assume that they have held the token from the date of
+// minting to the moment when we switched over to OP mainnet.
 export function augmentWithMainnet(opAccounts) {
+  const MAINNET_MAX_TIMESTAMP = 1694676249;
+
   for (let { to, timestamp } of mainnet) {
     timestamp = parseInt(timestamp, 16);
-
-    if (
-      opAccounts[to] &&
-      opAccounts[to].balance !== undefined &&
-      opAccounts[to].start > timestamp
-    ) {
-      opAccounts[to].start = timestamp;
-      // NOTE: We're intentionally NOT increasing the balance here, as for
-      // mainnet mints, we've airdropped every one of these users a Kiwi Pass
-      // on Optimism too.
-      //opAccounts[to].balance += 1;
-    }
+    const tokenId = `mainnet-tokenId-${timestamp}`;
 
     if (!opAccounts[to]) {
-      opAccounts[to] = {
-        balance: 1,
-        start: timestamp,
-      };
+      opAccounts[to] = {};
     }
+    if (!opAccounts[to].tokens) {
+      opAccounts[to].tokens = {};
+    }
+
+    opAccounts[to].tokens[tokenId] = [
+      {
+        start: timestamp,
+        end: MAINNET_MAX_TIMESTAMP,
+      },
+    ];
   }
 
   return opAccounts;

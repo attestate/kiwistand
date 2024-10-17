@@ -123,6 +123,7 @@ export function* order({ state: { line } }) {
       value: {
         from: parsedLog.from,
         to: parsedLog.to,
+        tokenId: parsedLog.tokenId,
         timestamp: log.block.timestamp,
         value: log.transaction.value,
         revenueShare: {
