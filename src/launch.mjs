@@ -106,6 +106,7 @@ await Promise.allSettled([
     .then((result) => (comments = result))
     .catch((error) => console.error("Comment posts error:", error)),
 ]);
+
 cache.initialize([...upvotes, ...comments]);
 cache.initializeNotifications();
 
