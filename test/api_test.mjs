@@ -188,7 +188,13 @@ test("listMessages success", async (t) => {
   const accounts = {
     [address]: {
       balance: 1,
-      start: 123,
+      tokens: {
+        0: [
+          {
+            start: 123,
+          },
+        ],
+      },
     },
   };
   await store.add(
@@ -256,7 +262,13 @@ test("handleMessage should send back an error upon invalid address signer", asyn
   const accounts = () => ({
     [zeroAddr]: {
       balance: 1,
-      start: 123,
+      tokens: {
+        5: [
+          {
+            start: 123,
+          },
+        ],
+      },
     },
   });
   const handler = handleMessage(trie, libp2p, allowlist, delegations, accounts);
@@ -306,7 +318,13 @@ test("handleMessage should handle a valid message and return 200 OK", async (t) 
   const accounts = () => ({
     [address]: {
       balance: 1,
-      start: 123,
+      tokens: {
+        5: [
+          {
+            start: 123,
+          },
+        ],
+      },
     },
   });
   const handler = handleMessage(trie, libp2p, allowlist, delegations, accounts);
