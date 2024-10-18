@@ -5,6 +5,39 @@
 - We are versioning according to [semver.org](https://semver.org)
 - We are currently in the ["Initial development phase"](https://semver.org/#spec-item-4)
 
+## 0.9.0
+
+1. (breaking) Add token tracking to allow to precisely determine during
+  reconciliation if someone was eligible to post during a period. For more
+  details of what this feature consists of, read the changelogs of the
+  dependencies:
+  - [@attestate/crawler-call-block-logs@0.5.0](https://github.com/attestate/crawler-call-block-logs/blob/main/changelog.md#050)
+  - [@attestate/delegator2@0.5.0 and 0.5.1](https://github.com/attestate/delegator2/blob/main/sdk/changelog.md#051)
+
+Essentially with this release we're laying the groundwork for our later 1 pass
+= 1 upvote change. For more details, see [this
+document](https://hackmd.io/@TimDaub/B1MAvNL1kl).
+
+If you're running a node in version 0.9.0 it is required to re-sync the node
+using `npm run sync`. For this, in your `DATA_DIR`, delete the
+`op-call-block-logs` folder, then run `npm run sync` until you catch up again
+with the OP mainnet chain tip. This is necessary as we have to load each chain
+interactions respective `tokenId` into the mints database.
+
+2. (breaking) For those who are running a kiwistand node in `npm run reconcile`
+  mode, we've fixed a bug that could have allowed an upvote to be stored twice.
+  If you've done this, please delete the `data.mdb` and `lock.mdb` file from
+  your `DATA_DIR` and re-reconcile with the network from scratch.
+
+3. We're including many other changes in this release, none of which are
+   supposed to be breaking. Most changes are related to the product and the
+   front end.
+
+This release doesn't include any breaking changes to the protocol itself, which
+is why we've also not bumped the protocol version identifiers. It, however,
+contains the above breaking changes for anyone currently running a node, which
+is why this release is a minor patch version increase.
+
 ## 0.8.0
 
 - (breaking) Double it-length-prefixed length
