@@ -427,7 +427,9 @@ async function _add({
   let identity;
   if (synching) {
     const validationTime = new Date(message.timestamp * 1000);
-    identity = eligibleAt(accounts, delegations, address, validationTime);
+    // TODO: If a V2 message is being added here, we must submit the tokenId
+    // claim of the message to eligibleAt
+    identity = eligibleAt(accounts, delegations, { address, validationTime });
   } else {
     identity = eligible(allowlist, delegations, address);
   }

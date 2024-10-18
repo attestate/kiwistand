@@ -51,7 +51,13 @@ test.serial("adding message to the store with trie.put error", async (t) => {
   const accounts = {
     [address]: {
       balance: 1,
-      start: 123,
+      tokens: {
+        5: [
+          {
+            start: 123,
+          },
+        ],
+      },
     },
   };
 
@@ -88,7 +94,13 @@ test("simulate dirty read", async (t) => {
   const accounts = {
     [address]: {
       balance: 1,
-      start: 123,
+      tokens: {
+        5: [
+          {
+            start: 123,
+          },
+        ],
+      },
     },
   };
 
@@ -328,7 +340,13 @@ test("getting leaves of a particular href", async (t) => {
   const accounts = {
     [address]: {
       balance: 1,
-      start: 123,
+      tokens: {
+        5: [
+          {
+            start: 123,
+          },
+        ],
+      },
     },
   };
   await store.add(
@@ -397,7 +415,13 @@ test("getting leaves", async (t) => {
   const accounts = {
     [address]: {
       balance: 1,
-      start: 123,
+      tokens: {
+        5: [
+          {
+            start: 123,
+          },
+        ],
+      },
     },
   };
   await store.add(
@@ -447,7 +471,13 @@ test("descend levels with actual data ", async (t) => {
   const accounts = {
     [address]: {
       balance: 1,
-      start: 123,
+      tokens: {
+        5: [
+          {
+            start: 123,
+          },
+        ],
+      },
     },
   };
   await store.add(
@@ -849,7 +879,13 @@ test("try adding message with invalid href", async (t) => {
   const accounts = {
     [address]: {
       balance: 1,
-      start: 123,
+      tokens: {
+        5: [
+          {
+            start: 123,
+          },
+        ],
+      },
     },
   };
   await t.throwsAsync(
@@ -898,7 +934,13 @@ test("try to add invalidly formatted message to store", async (t) => {
   const accounts = {
     [address]: {
       balance: 1,
-      start: 123,
+      tokens: {
+        5: [
+          {
+            start: 123,
+          },
+        ],
+      },
     },
   };
   await t.throwsAsync(
@@ -946,7 +988,13 @@ test("try to add invalidly signed message to store", async (t) => {
   const accounts = {
     [address]: {
       balance: 1,
-      start: 123,
+      tokens: {
+        5: [
+          {
+            start: 123,
+          },
+        ],
+      },
     },
   };
   await t.throwsAsync(
@@ -987,7 +1035,13 @@ test("add with delegated address but from isn't on allow list", async (t) => {
   const accounts = {
     [list[0]]: {
       balance: 1,
-      start: 123,
+      tokens: {
+        5: [
+          {
+            start: 123,
+          },
+        ],
+      },
     },
   };
 
@@ -1043,7 +1097,13 @@ test("attempting to upvote twice, once with custody and delegate address", async
   const accounts = {
     [address0]: {
       balance: 1,
-      start: 123,
+      tokens: {
+        5: [
+          {
+            start: 123,
+          },
+        ],
+      },
     },
   };
   await store.add(
@@ -1099,7 +1159,13 @@ test("trying to add a message to store that isn't on allowlist but was delegated
   const accounts = {
     [list[0]]: {
       balance: 1,
-      start: 123,
+      tokens: {
+        5: [
+          {
+            start: 123,
+          },
+        ],
+      },
     },
   };
   await store.add(
@@ -1188,7 +1254,13 @@ test("adding message from too far into the future", async (t) => {
   const accounts = {
     [address]: {
       balance: 1,
-      start: 123,
+      tokens: {
+        5: [
+          {
+            start: 123,
+          },
+        ],
+      },
     },
   };
   await t.throwsAsync(
@@ -1236,7 +1308,13 @@ test("adding message from before minimum timestamp", async (t) => {
   const accounts = {
     [address]: {
       balance: 1,
-      start: 123,
+      tokens: {
+        5: [
+          {
+            start: 123,
+          },
+        ],
+      },
     },
   };
   env.MIN_TIMESTAMP_SECS = 1;
@@ -1281,7 +1359,13 @@ test.serial("adding a comment to the store with missing parent", async (t) => {
   const accounts = {
     [address]: {
       balance: 1,
-      start: 123,
+      tokens: {
+        5: [
+          {
+            start: 123,
+          },
+        ],
+      },
     },
   };
 
@@ -1339,7 +1423,13 @@ test.serial(
     const accounts = {
       [address]: {
         balance: 1,
-        start: 123,
+        tokens: {
+          5: [
+            {
+              start: 123,
+            },
+          ],
+        },
       },
     };
     const index0 = await store.add(
@@ -1406,7 +1496,13 @@ test.serial("retrieving leaves selectively", async (t) => {
   const accounts = {
     [address]: {
       balance: 1,
-      start: 123,
+      tokens: {
+        5: [
+          {
+            start: 123,
+          },
+        ],
+      },
     },
   };
   const index0 = await store.add(
@@ -1499,7 +1595,13 @@ test.serial("separate pagination per message type", async (t) => {
   const accounts = {
     [address]: {
       balance: 1,
-      start: 123,
+      tokens: {
+        5: [
+          {
+            start: 123,
+          },
+        ],
+      },
     },
   };
   const index0 = await store.add(
@@ -1596,7 +1698,13 @@ test.serial("adding the same comment again to the store", async (t) => {
   const accounts = {
     [address]: {
       balance: 1,
-      start: 123,
+      tokens: {
+        5: [
+          {
+            start: 123,
+          },
+        ],
+      },
     },
   };
   const index0 = await store.add(
@@ -1678,7 +1786,13 @@ test.serial("adding a comment to the store", async (t) => {
   const accounts = {
     [address]: {
       balance: 1,
-      start: 123,
+      tokens: {
+        5: [
+          {
+            start: 123,
+          },
+        ],
+      },
     },
   };
   const index0 = await store.add(
@@ -1752,7 +1866,13 @@ test.serial("adding message to the store", async (t) => {
   const accounts = {
     [address]: {
       balance: 1,
-      start: 123,
+      tokens: {
+        5: [
+          {
+            start: 123,
+          },
+        ],
+      },
     },
   };
   await store.add(
@@ -1803,7 +1923,13 @@ test.serial(
     const accounts = {
       [address]: {
         balance: 1,
-        start: 123,
+        tokens: {
+          5: [
+            {
+              start: 123,
+            },
+          ],
+        },
       },
     };
     await store.add(
