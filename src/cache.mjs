@@ -589,7 +589,7 @@ export async function getSubmission(index, href, identityFilter) {
     // exceptions. So when I serialized this call it started working.
     for await (const upvoter of upvoters) {
       try {
-        const validated = await identityFilter(upvoter);
+        const validated = await identityFilter(upvoter, submission.identity);
         validatedUpvoters.push(validated);
       } catch (err) {}
     }
