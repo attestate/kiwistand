@@ -113,7 +113,7 @@ store
   .then(() => log("store cached"))
   .catch((err) => {
     log(
-      `launch: An irrecoverable error during upvote caching occurred. "${err.toString()}`,
+      `launch: An irrecoverable error during upvote caching occurred. "${err.stack}`,
     );
     exit(1);
   });
