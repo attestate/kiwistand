@@ -61,65 +61,64 @@ await subscribe(
   trie,
 );
 
-if (!reconcileMode) {
-  // NOTE: This request queries all messages in the database to enable caching
-  // when calling ecrecover on messages' signatures
-  const from = null;
-  const amount = null;
+// NOTE: This request queries all messages in the database to enable caching
+// when calling ecrecover on messages' signatures.
+//
+// NOTE: Yes, this does influence the startup duration of a node as it extracts
+// and re-validates all messages from the DB. However, the store.cache function
+// is necessary to be run as it generates the markers that prevent double
+// upvoting from happening.
+const from = null;
+const amount = null;
+const startDatetime = null;
+const parser = JSON.parse;
+const accounts = await registry.accounts();
+const delegations = await registry.delegations();
+const href = null;
 
-  const oneWeekAgo = subWeeks(new Date(), 1).getTime() / 1000;
-  let startDatetime = oneWeekAgo;
-  if (productionMode) {
-    startDatetime = null;
-  }
-
-  const parser = JSON.parse;
-  const accounts = await registry.accounts();
-  const delegations = await registry.delegations();
-  const href = null;
-
-  let upvotes, comments;
-  await Promise.allSettled([
-    store
-      .posts(
-        trie,
-        from,
-        amount,
-        parser,
-        startDatetime,
-        accounts,
-        delegations,
-        href,
-        "amplify",
-      )
-      .then((result) => (upvotes = result))
-      .catch((error) => console.error("Amplify posts error:", error)),
-    store
-      .posts(
-        trie,
-        from,
-        amount,
-        parser,
-        startDatetime,
-        accounts,
-        delegations,
-        href,
-        "comment",
-      )
-      .then((result) => (comments = result))
-      .catch((error) => console.error("Comment posts error:", error)),
-  ]);
-
+let upvotes, comments;
+await Promise.allSettled([
   store
-    .cache(upvotes, comments)
-    .then(() => log("store cached"))
-    .catch((err) => {
-      log(
-        `launch: An irrecoverable error during upvote caching occurred. "${err.toString()}`,
-      );
-      exit(1);
-    });
+    .posts(
+      trie,
+      from,
+      amount,
+      parser,
+      startDatetime,
+      accounts,
+      delegations,
+      href,
+      "amplify",
+    )
+    .then((result) => (upvotes = result))
+    .catch((error) => console.error("Amplify posts error:", error)),
+  store
+    .posts(
+      trie,
+      from,
+      amount,
+      parser,
+      startDatetime,
+      accounts,
+      delegations,
+      href,
+      "comment",
+    )
+    .then((result) => (comments = result))
+    .catch((error) => console.error("Comment posts error:", error)),
+]);
 
+store
+  .cache(upvotes, comments)
+  .then(() => log("store cached"))
+  .catch((err) => {
+    log(
+      `launch: An irrecoverable error during upvote caching occurred. "${err.toString()}`,
+    );
+    exit(1);
+  });
+
+if (!reconcileMode) {
   const urls = await moderation.getFeeds();
   Promise.all([feeds.recompute(urls), newest.recompute(trie)]).then(() =>
     log("Feeds computed"),
