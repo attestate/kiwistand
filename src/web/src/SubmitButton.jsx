@@ -428,7 +428,7 @@ const AdForm = (props) => {
   });
 
   const [userPrice, setUserPrice] = useState("");
-  const [minAdPrice, setMinAdPrice] = useState(10000000000000000n);
+  const [minAdPrice, setMinAdPrice] = useState(1000000000000000n);
 
   const { data: priceData } = useContractRead({
     address: adContractAddress,
