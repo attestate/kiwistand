@@ -1,5 +1,8 @@
 import NodeCache from "node-cache";
 const cache = new NodeCache({ stdTTL: 60 * 60 });
+// NOTE: This cache is for values that can be safely cached for the entirety of
+// the application's lifecycle, e.g., the karma count
+export const lifetimeCache = new NodeCache();
 export default cache;
 
 import { join } from "path";

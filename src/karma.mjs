@@ -1,7 +1,7 @@
 import normalizeUrl from "normalize-url";
 import { format } from "date-fns";
 
-import cache from "./cache.mjs";
+import { lifetimeCache as cache } from "./cache.mjs";
 
 const karmaPrefix = `karma-present`;
 
