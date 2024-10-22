@@ -124,7 +124,7 @@ Drawbacks of bitmaps
 ....................
 
 - Message sets are usually user-defined, meaning we cannot predict the set's size when constructing the algorithm, so assuming a fixed-length set size isn't practical.
-- Modern hash functions like keccak-256 produce an output between 0 and :math:`2^{256} - 1` which would make a bitmap of their size incredbily huge and impractical to share between nodes over a network. In fact, it would be significantly more bandwidth efficient to re-download each node's entire database on each re-synchronization.
+- Modern hash functions like keccak-256 produce an output between 0 and :math:`2^{256} - 1` which would make a bitmap of their size incredibly huge and impractical to share between nodes over a network. In fact, it would be significantly more bandwidth efficient to re-download each node's entire database on each re-synchronization.
 - But even more storage-efficient implementations of bitmaps, as for example, bloom filters don't work well as they are probabilistic (they can have false positives) and since they potentially require the remote node to re-validate its entire database upon synchronization.
 
 Hence, for set reconciliation, we favor a data structure that is deterministic and doesn't have over-linear complexity growth: Merkle trees.
