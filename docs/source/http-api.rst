@@ -98,7 +98,7 @@ Please note that it may take some time for the indexer to pick up a new mint
 
 Request body:
 
-- ``address`` (string): An valid Ethereum address by which the allowlist can be
+- ``address`` (string): A valid Ethereum address by which the allowlist can be
   filtered by. If, upon requesting the allowlist endpoint with such an address,
   the response is an empty array, it means that this address isn't allowlisted.
   is inclusive.
