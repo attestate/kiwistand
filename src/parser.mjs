@@ -80,23 +80,30 @@ export const metadata = async (url) => {
     canonicalLink = await extractCanonicalLink(html);
   }
 
-  if (
-    !ogTitle ||
-    (!ogDescription && !image) ||
-    (image && !image.startsWith("https://"))
-  )
-    throw new Error("Insufficient metadata");
+  let output = {};
+  if (ogTitle) {
+    output.ogTitle = DOMPurify.sanitize(ogTitle);
+  }
+  if (domain) {
+    output.domain = DOMPurify.sanitize(domain);
+  }
+  if (image && image.startsWith("https://")) {
+    output.image = DOMPurify.sanitize(image);
+  }
   if (ogDescription) {
-    ogDescription = `${ogDescription.substring(0, 150)}...`;
+    output.ogDescription = DOMPurify.sanitize(
+      `${ogDescription.substring(0, 150)}...`,
+    );
+  }
+  if (canonicalLink) {
+    output.canonicalLink = DOMPurify.sanitize(canonicalLink);
   }
 
-  return {
-    ogTitle: DOMPurify.sanitize(ogTitle),
-    domain: DOMPurify.sanitize(domain),
-    ogDescription: DOMPurify.sanitize(ogDescription),
-    image: DOMPurify.sanitize(image),
-    canonicalLink,
-  };
+  if (Object.keys(output).length === 0) {
+    throw new Error("Insufficient metadata");
+  }
+
+  return output;
 };
 
 function safeExtractDomain(link) {
