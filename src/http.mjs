@@ -597,6 +597,10 @@ export async function launch(trie, libp2p) {
     res.redirect(301, "/stats");
   });
   app.get("/new", async (request, reply) => {
+    const stories = newAPI.getStories();
+    if (stories.length === 0) {
+      await newAPI.recompute(trie);
+    }
     const content = await newest(trie, reply.locals.theme);
     let timestamp;
 
