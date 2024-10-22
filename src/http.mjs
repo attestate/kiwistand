@@ -355,6 +355,7 @@ export async function launch(trie, libp2p) {
     try {
       data = await metadata(request.query.url);
     } catch (err) {
+      log(`parser.metadata failure: ${err.stack}`);
       const code = 500;
       const httpMessage = "Internal Server Error";
       const details = "Failed to parse link metadata";

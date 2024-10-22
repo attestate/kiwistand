@@ -1,6 +1,5 @@
 import Parser from "rss-parser";
 import { subDays } from "date-fns";
-import NodeCache from "node-cache";
 
 import log from "./logger.mjs";
 
@@ -44,11 +43,7 @@ export function latest() {
   return articles;
 }
 
-const cache = new NodeCache({ stdTTL: 3600 });
 async function extract(feedUrl) {
-  const cachedFeed = cache.get(feedUrl);
-  if (cachedFeed) return cachedFeed;
-
   const feed = await parser.parseURL(feedUrl);
   return feed.items.map((item) => ({
     date: new Date(item.pubDate).getTime() / 1000,
