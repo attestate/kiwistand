@@ -37,7 +37,7 @@ Considerations
 Rationale
 .........
 
-- We use "canonicalize" and "cbor-x" because of subsequent historical decisions and because they both refer to complex but canonical RFCs that we hope are good enough to allow someone to re-implment the Kiwi News Protocol in another programming language.
+- We use "canonicalize" and "cbor-x" because of subsequent historical decisions and because they both refer to complex but canonical RFCs that we hope are good enough to allow someone to re-implement the Kiwi News Protocol in another programming language.
 - We use "canonicalize" because "cbor-x" isn't canonicalizing a JSON object by itself.
 - We use keccak-256 to be compatible with the Ethereum ecosystem.
 - We prefix the message hash with a hexa-decimal UNIX timestamp to create a lexographic total order.
