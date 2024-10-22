@@ -1,6 +1,6 @@
 # Installation & Usage
 
-**Note**: We're using sphinx-multiversion and so only commited changes will
+**Note**: We're using sphinx-multiversion and so only committed changes will
 alter the output of `make html`!
 
 ```bash
