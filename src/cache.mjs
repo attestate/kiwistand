@@ -536,7 +536,7 @@ export function getLastComment(submissionId) {
   };
 }
 
-export async function getSubmission(index, href, identityFilter) {
+export async function getSubmission(index, href, identityFilter, hrefs) {
   let submission;
   if (index) {
     submission = db
@@ -585,7 +585,13 @@ export async function getSubmission(index, href, identityFilter) {
     )
     .all(submission.href);
 
-  if (identityFilter) {
+  if (
+    (identityFilter && !hrefs) ||
+    (identityFilter &&
+      hrefs &&
+      hrefs.length !== 0 &&
+      hrefs.includes(submission.href))
+  ) {
     let validatedUpvoters = [];
     // NOTE: When I tried using a map and Promise allSettled to parallelize,
     // the ethers component of identityFilter was constantly failing with call
