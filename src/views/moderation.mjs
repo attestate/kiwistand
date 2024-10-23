@@ -12,7 +12,7 @@ import { fetchCache } from "../utils.mjs";
 
 const cache = new FileSystemCache({
   cacheDirectory: path.resolve(env.CACHE_DIR),
-  ttl: 60000 * 5, // 5min
+  ttl: 60000 * 60, // 60min
 });
 const fetch = fetchBuilder.withCache(cache);
 const fetchStaleWhileRevalidate = fetchCache(fetch, cache);

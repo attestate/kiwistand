@@ -237,7 +237,7 @@ function meanUpvoteRatio(leaves) {
   return ratios.length > 0 ? sumRatios / ratios.length : 0;
 }
 
-export async function topstories(leaves, decayStrength) {
+export async function topstories(leaves) {
   const upvoteRatio = meanUpvoteRatio(leaves);
   return leaves
     .map((story) => {
@@ -277,39 +277,16 @@ export async function index(trie, page, domain) {
   const lookbackUnixTime = Math.floor(lookback.getTime() / 1000);
   const limit = -1;
   let leaves = listNewest(limit, lookbackUnixTime);
+
   const policy = await moderation.getLists();
   const path = "/";
   leaves = moderation.moderate(leaves, policy, path);
 
   const totalStories = parseInt(env.TOTAL_STORIES, 10);
-  const parameters = await moderation.getFeedParameters();
-  let storyPromises = await topstories(leaves, parameters.decayStrength);
-
-  let threshold = 2;
-  let pill = true;
-  const now = new Date();
-  const old = sub(now, { hours: parameters.oldHours });
-  const oldInMinutes = differenceInMinutes(now, old);
-  const { fold } = parameters;
-  do {
-    const sample = storyPromises.filter(({ upvotes }) => upvotes > threshold);
-    const sum = sample.slice(0, fold).reduce((acc, { timestamp }) => {
-      const submissionTime = new Date(timestamp * 1000);
-      const diff = differenceInMinutes(now, submissionTime);
-      return acc + diff;
-    }, 0);
-    const averageAgeInMinutes = sum / fold;
-    if (averageAgeInMinutes > oldInMinutes) {
-      threshold--;
-      pill = false;
-      continue;
-    } else {
-      threshold++;
-    }
-  } while (pill);
-
-  log(`Feed threshold for upvotes ${threshold}`);
+  let storyPromises = await topstories(leaves);
+  const threshold = 1;
   storyPromises = storyPromises.filter(({ upvotes }) => upvotes > threshold);
+
   if (domain)
     storyPromises = storyPromises.filter(
       ({ href }) => extractDomain(href) === domain,
@@ -429,34 +406,12 @@ const expandSVG = html`<svg
   />
 </svg>`;
 
-const pages = {};
-
 export default async function (trie, theme, page, domain) {
   const mints = await registry.mints();
   const path = "/";
   const totalStories = parseInt(env.TOTAL_STORIES, 10);
 
-  const key = `${page}-${domain}`;
-  let cacheRes = pages[key];
-  let content;
-
-  let maxAgeInSeconds = 60 * 60 * 24;
-  if (page === 0 && !domain) maxAgeInSeconds = 25;
-  if (page > 0 && page < 5 && !domain) maxAgeInSeconds = 60 * 5;
-
-  if (
-    !cacheRes ||
-    (cacheRes &&
-      differenceInSeconds(new Date(), cacheRes.age) > maxAgeInSeconds)
-  ) {
-    content = await index(trie, page, domain);
-    pages[key] = {
-      content,
-      age: new Date(),
-    };
-  } else {
-    content = cacheRes.content;
-  }
+  const content = await index(trie, page, domain);
   const { ad, originals, stories, start, contestStories } = content;
 
   let query = `?page=${page + 1}`;

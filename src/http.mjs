@@ -425,7 +425,13 @@ export async function launch(trie, libp2p) {
       if (isNaN(page) || page < 1) {
         page = 0;
       }
-      const results = await index(trie, page);
+
+      let results;
+      try {
+        results = await index(trie, page);
+      } catch (err) {
+        log(`Error in api/v1/feeds/hot: ${err.stack}`);
+      }
       reply.header(
         "Cache-Control",
         "public, s-maxage=300, max-age=300,  must-revalidate, stale-while-revalidate=30",
@@ -433,10 +439,12 @@ export async function launch(trie, libp2p) {
       stories = results.stories;
     } else if (request.params.name === "new") {
       reply.header("Cache-Control", "no-cache");
-      stories = newAPI.getStories();
-    } else if (request.params.name === "images") {
-      reply.header("Cache-Control", "no-cache");
-      stories = imagesAPI.getStories();
+
+      try {
+        stories = newAPI.getStories();
+      } catch (err) {
+        log(`Error in api/v1/feeds/new: ${err.stack}`);
+      }
     } else if (request.params.name === "best") {
       reply.header(
         "Cache-Control",
@@ -454,12 +462,16 @@ export async function launch(trie, libp2p) {
         period = "week";
       }
 
-      stories = await bestAPI.getStories(
-        trie,
-        page,
-        period,
-        request.query.domain,
-      );
+      try {
+        stories = await bestAPI.getStories(
+          trie,
+          page,
+          period,
+          request.query.domain,
+        );
+      } catch (err) {
+        log(`error in /api/v1/feeds/best: ${err.stack}`);
+      }
     } else {
       const code = 501;
       const httpMessage = "Not Implemented";
