@@ -122,9 +122,7 @@ store
 
 if (!reconcileMode) {
   const urls = await moderation.getFeeds();
-  Promise.all([feeds.recompute(urls), newest.recompute(trie)]).then(() =>
-    log("Feeds computed"),
-  );
+  newest.recompute(trie).then(() => log("Feeds computed"));
   // TODO: Unclear if this is still necessary
   setInterval(async () => {
     await Promise.all([feeds.recompute(urls), newest.recompute(trie)]);
