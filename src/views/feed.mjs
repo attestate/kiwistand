@@ -837,7 +837,8 @@ export default async function (trie, theme, page, domain) {
                   </div>
                 </td>
               </tr>
-              ${contestStories.map(
+              ${contestStories &&
+              contestStories.map(
                 Row(
                   start,
                   "/",
@@ -854,7 +855,7 @@ export default async function (trie, theme, page, domain) {
                 .map(
                   Row(start, "/", undefined, null, null, null, recentJoiners),
                 )}
-              ${Row(start, "/", "", null, null, null, recentJoiners)(ad)}
+              ${ad && Row(start, "/", "", null, null, null, recentJoiners)(ad)}
               ${stories
                 .slice(3, 8)
                 .map(

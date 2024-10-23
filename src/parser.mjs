@@ -9,6 +9,8 @@ import { JSDOM } from "jsdom";
 import { fetchBuilder, FileSystemCache } from "node-fetch-cache";
 import { useAgent } from "request-filtering-agent";
 
+import cache from "./cache.mjs";
+
 const fetch = fetchBuilder.withCache(
   new FileSystemCache({
     cacheDirectory: path.resolve(env.CACHE_DIR),
@@ -50,13 +52,24 @@ async function extractCanonicalLink(html) {
 }
 
 export const metadata = async (url) => {
-  const response = await fetch(url, {
-    agent: useAgent(url),
-  });
+  let result, html;
+  if (cache.has(url)) {
+    const fromCache = cache.get(url);
+    result = fromCache.result;
+    html = fromCache.html;
+  } else {
+    const response = await fetch(url, {
+      agent: useAgent(url),
+    });
 
-  const html = await response.text();
-  const parsed = await ogs({ html });
-  const result = parsed.result;
+    const html = await response.text();
+    const parsed = await ogs({ html });
+    result = parsed.result;
+
+    if (result && html) {
+      cache.set(url, { result, html });
+    }
+  }
 
   const domain = safeExtractDomain(url);
   if (filtered.includes(domain) || (result && !result.success)) {
