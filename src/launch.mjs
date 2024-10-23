@@ -19,6 +19,7 @@ import mintCrawlPath from "./chainstate/mint.config.crawler.mjs";
 import delegateCrawlPath from "./chainstate/delegate.config.crawler.mjs";
 import * as registry from "./chainstate/registry.mjs";
 import * as karma from "./karma.mjs";
+import * as newest from "./views/new.mjs";
 import * as feed from "./views/feed.mjs";
 import * as feeds from "./feeds.mjs";
 import * as moderation from "./views/moderation.mjs";
@@ -121,8 +122,12 @@ store
 
 if (!reconcileMode) {
   const urls = await moderation.getFeeds();
+  Promise.all([feeds.recompute(urls), newest.recompute(trie)]).then(() =>
+    log("Feeds computed"),
+  );
+  // TODO: Unclear if this is still necessary
   setInterval(async () => {
-    await feeds.recompute(urls);
+    await Promise.all([feeds.recompute(urls), newest.recompute(trie)]);
   }, 1800000);
   karma.count(upvotes);
   // NOTE: Only set this date in synchronicity with the src/launch.mjs date!!
