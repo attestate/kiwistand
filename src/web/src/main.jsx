@@ -57,39 +57,6 @@ function commentCountSignifier() {
   });
 }
 
-async function checkNewStories() {
-  let data;
-  try {
-    const response = await fetch("/api/v1/feeds/new");
-    data = await response.json();
-  } catch (error) {
-    console.error("Error fetching new stories:", error);
-    return;
-  }
-
-  if (data.status === "success" && data.data.stories.length > 0) {
-    // TODO: This might now be broken with the updates to getLocalAccount that
-    // need the allowlist and the connected account to be present. It probably
-    // would then make more sense to replace the entire logic with a react
-    // component.
-    const account = getLocalAccount();
-    const story = data.data.stories[0];
-    const identity = story.identity;
-    const latestTimestamp = story.timestamp;
-    const localTimestamp = getCookie("newTimestamp");
-    const elem = document.getElementById("new-dot");
-
-    if (
-      elem &&
-      (!localTimestamp || latestTimestamp > Number(localTimestamp)) &&
-      account &&
-      account.identity !== identity
-    ) {
-      elem.style.display = "block";
-    }
-  }
-}
-
 function handleClick(event) {
   const sidebar = document.querySelector(".sidebar");
   const overlay = document.querySelector("#overlay");
@@ -887,7 +854,6 @@ async function start() {
       toast,
     ),
     addSubmitButton(await allowlistPromise, await delegationsPromise, toast),
-    checkNewStories(),
   ]);
 
   results0.forEach((result, index) => {
