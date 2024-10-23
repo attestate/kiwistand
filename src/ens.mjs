@@ -59,7 +59,9 @@ async function fetchLensData(address) {
 
   let response;
   try {
+    const signal = AbortSignal.timeout(5000);
     response = await fetchStaleWhileRevalidate("https://api-v2.lens.dev/", {
+      signal,
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -100,7 +102,8 @@ async function fetchENSData(address) {
 
   try {
     const url = `${endpoint}${address}?farcaster=true`;
-    const response = await fetchStaleWhileRevalidate(url);
+    const signal = AbortSignal.timeout(5000);
+    const response = await fetchStaleWhileRevalidate(url, { signal });
     const data = await response.json();
     try {
       utils.getAddress(address);

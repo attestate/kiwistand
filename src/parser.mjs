@@ -37,8 +37,10 @@ async function extractCanonicalLink(html) {
 
   let response;
   try {
+    const signal = AbortSignal.timeout(5000);
     response = await fetch(node.href, {
       agent: useAgent(node.href),
+      signal,
     });
   } catch (err) {
     return;
@@ -58,8 +60,10 @@ export const metadata = async (url) => {
     result = fromCache.result;
     html = fromCache.html;
   } else {
+    const signal = AbortSignal.timeout(5000);
     const response = await fetch(url, {
       agent: useAgent(url),
+      signal,
     });
 
     const html = await response.text();
