@@ -36,10 +36,6 @@ export function custom(
     <link rel="stylesheet" type="text/css" href="news.css" />
     <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
     ${PwaLinks()}
-    <script
-      defer
-      src="https://unpkg.com/@zoralabs/zorb@^0.0/dist/zorb-web-component.umd.js"
-    ></script>
     <title>${ogTitle}</title>
   `;
 }
