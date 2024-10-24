@@ -5,7 +5,7 @@ import DOMPurify from "isomorphic-dompurify";
 import ogs from "open-graph-scraper-lite";
 import htm from "htm";
 import vhtml from "vhtml";
-import { JSDOM } from "jsdom";
+import { parse as parser } from "node-html-parser";
 import { fetchBuilder, FileSystemCache } from "node-fetch-cache";
 import { useAgent } from "request-filtering-agent";
 
@@ -31,15 +31,15 @@ const filtered = [
 ];
 
 async function extractCanonicalLink(html) {
-  const dom = new JSDOM(html);
-  const node = dom.window.document.querySelector('link[rel="canonical"]');
+  const dom = parser(html);
+  const node = dom.querySelector('link[rel="canonical"]');
   if (!node) return;
 
   let response;
   try {
     const signal = AbortSignal.timeout(5000);
-    response = await fetch(node.href, {
-      agent: useAgent(node.href),
+    response = await fetch(node._attrs.href, {
+      agent: useAgent(node._attrs.href),
       signal,
     });
   } catch (err) {
