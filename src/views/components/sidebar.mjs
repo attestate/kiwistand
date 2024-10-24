@@ -598,20 +598,6 @@ const sidebar = (path) => html`
       </a>
     </div>
     <a
-      title="Earn"
-      href="/referral"
-      style="${path === "/referral"
-        ? " font-weight: bold; background-color: rgba(0,0,0,0.1);"
-        : "font-weight: normal"}; color: black; text-decoration: none; display: block;"
-    >
-      <div style="display: flex; align-items: center;">
-        <div class="svg-container">
-          ${path === "/referral" ? coinfull : coin}
-        </div>
-        <span>Earn</span>
-      </div>
-    </a>
-    <a
       title="Community"
       href="/community"
       style="${path === "/community"

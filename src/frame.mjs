@@ -3,7 +3,6 @@ import { utils } from "ethers";
 import htm from "htm";
 import vhtml from "vhtml";
 
-import { getLeaders } from "./cache.mjs";
 import * as price from "./price.mjs";
 import * as registry from "./chainstate/registry.mjs";
 
@@ -28,43 +27,20 @@ const emptyDelegation = [
   "0x0000000000000000000000000000000000000000000000000000000000000000",
 ];
 
+const treasury = "0x1337E2624ffEC537087c6774e9A18031CFEAf0a9";
 function computeDistribution(referral, difference) {
-  const leaders = getLeaders();
-
-  let allKarma = leaders.reduce((sum, { totalKarma }) => sum + totalKarma, 0);
-  if (referral) {
-    const last = leaders.pop();
-    allKarma -= last.totalKarma;
-
-    // NOTE: We have to give the referrer all the karma earned from everyone
-    // else as this gives them half of the protocol reward.
-    // Previuously, we gave the referrer half of all karma, but this lead to
-    // the referrer only getting a quarter.
-    leaders.push({ identity: referral, totalKarma: allKarma });
-    allKarma *= 2;
+  const beneficiaries = [];
+  const amounts = [];
+  if (referral && difference) {
+    beneficiaries.push(referral);
+    amounts.push(difference);
+  } else {
+    beneficiaries.push(treasury);
+    amounts.push(difference);
   }
-
-  const recipients = [];
-  const values = [];
-  if (difference !== 0n) {
-    const allKarmaBigInt = BigInt(allKarma);
-    let remainder = difference;
-
-    for (const { identity, totalKarma } of leaders) {
-      const share = (difference * BigInt(totalKarma)) / allKarmaBigInt;
-      recipients.push(identity);
-      values.push(share);
-      remainder -= share;
-    }
-
-    for (let i = 0; i < remainder; i++) {
-      values[i] += 1n;
-    }
-  }
-
   return {
-    beneficiaries: recipients,
-    amounts: values,
+    beneficiaries,
+    amounts,
   };
 }
 

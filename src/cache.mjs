@@ -11,6 +11,7 @@ import { subYears, formatISO } from "date-fns";
 import Database from "better-sqlite3";
 import { add } from "date-fns";
 import normalizeUrl from "normalize-url";
+import { ethers } from "ethers";
 
 import log from "./logger.mjs";
 
@@ -145,28 +146,6 @@ export function getRandomIndex() {
   }
   const [, index] = row.id.split("kiwi:");
   return index;
-}
-
-export function getLeaders() {
-  const oneWeekAgo = Math.floor(Date.now() / 1000) - 7 * 24 * 60 * 60;
-  const query = `
-     SELECT identity, SUM(karma) AS totalKarma
-     FROM (
-       SELECT identity, COUNT(*) AS karma
-       FROM submissions
-       WHERE timestamp >= ?
-       GROUP BY identity
-       UNION ALL
-       SELECT identity, COUNT(*) AS karma
-       FROM upvotes
-       WHERE timestamp >= ?
-       GROUP BY identity
-     )
-     GROUP BY identity
-     ORDER BY totalKarma DESC
-     LIMIT 10
-   `;
-  return db.prepare(query).all(oneWeekAgo, oneWeekAgo);
 }
 
 export function getContributionsData(identity) {

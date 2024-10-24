@@ -54,6 +54,7 @@ export async function prepare(key) {
   const validDiscount = discount === theme.discount.code;
 
   if (validDiscount) {
+    console.log("Found valid discount");
     price = price.min;
   } else {
     price = price.authoritative;
@@ -82,16 +83,6 @@ export async function prepare(key) {
   const authorize = true;
   const payload = await create(key, address, key.address, authorize);
 
-  const leaderboard = await fetchLeaderboard();
-  if (!leaderboard || !leaderboard.leaders) {
-    throw new Error("Error getting the leaderboard");
-  }
-
-  let allKarma = leaderboard.leaders.reduce(
-    (sum, { totalKarma }) => sum + totalKarma,
-    0,
-  );
-
   const recipients = [];
   const values = [];
   if (!validDiscount) {
@@ -104,25 +95,14 @@ export async function prepare(key) {
       console.log("Couldn't find referral address in URL bar");
       //noop
     }
+    const treasury = "0x1337E2624ffEC537087c6774e9A18031CFEAf0a9";
     if (referral !== zeroAddress) {
-      const reward = difference / 2n;
-      price -= reward;
+      price -= difference;
       recipients.push(referral);
-      values.push(reward);
-    } else if (difference !== 0n) {
-      const allKarmaBigInt = BigInt(allKarma);
-      let remainder = difference;
-
-      for (const { identity, totalKarma } of leaderboard.leaders) {
-        const share = (difference * BigInt(totalKarma)) / allKarmaBigInt;
-        recipients.push(identity);
-        values.push(share);
-        remainder -= share;
-      }
-
-      for (let i = 0; i < remainder; i++) {
-        values[i] += 1n;
-      }
+      values.push(difference);
+    } else {
+      recipients.push(treasury);
+      values.push(difference);
     }
   }
 

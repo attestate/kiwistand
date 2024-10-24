@@ -69,12 +69,7 @@ import * as frame from "./frame.mjs";
 import * as subscriptions from "./subscriptions.mjs";
 import * as telegram from "./telegram.mjs";
 import * as price from "./price.mjs";
-import {
-  getRandomIndex,
-  getSubmission,
-  trackOutbound,
-  getLeaders,
-} from "./cache.mjs";
+import { getRandomIndex, getSubmission, trackOutbound } from "./cache.mjs";
 
 const app = express();
 const server = createServer(app);
@@ -381,17 +376,6 @@ export async function launch(trie, libp2p) {
     const embed = await parse(request.query.url);
     reply.header("Cache-Control", "no-cache");
     return reply.status(200).type("text/html").send(embed);
-  });
-  app.get("/api/v1/leaderboard", async (request, reply) => {
-    const leaders = getLeaders();
-    const code = 200;
-    const httpMessage = "OK";
-    const details = `Get Leaderboard`;
-    reply.header(
-      "Cache-Control",
-      "public, s-maxage=300, max-age=300, must-revalidate, stale-while-revalidate=3600",
-    );
-    return sendStatus(reply, code, httpMessage, details, { leaders });
   });
   app.get("/api/v1/karma/:address", async (request, reply) => {
     let address;
