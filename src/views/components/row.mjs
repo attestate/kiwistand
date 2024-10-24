@@ -280,6 +280,7 @@ const row = (
                     )}`}"
                   >
                     <img
+                      loading="lazy"
                       style="mask-image: linear-gradient(to top, rgba(0,0,0,0.5), rgba(0,0,0,1)); aspect-ratio: 2 / 1; object-fit:cover; width: 100%;"
                       src="${DOMPurify.sanitize(story.metadata.image)}"
                   /></a>`
@@ -358,6 +359,7 @@ const row = (
                         style="align-self: stretch; margin: 5px 0;"
                       >
                         <img
+                          loading="lazy"
                           style="max-height: 61px; border: 1px solid #ccc; border-radius: 2px; width: 110px; object-fit: cover;"
                           src="${DOMPurify.sanitize(story.metadata.image)}"
                       /></a>`
@@ -650,6 +652,7 @@ const row = (
                       <div style="width:90%; padding: 11px 9px;">
                         <div style="display: inline-flex; align-items: start;">
                           <img
+                            loading="lazy"
                             src="${DOMPurify.sanitize(
                               story.lastComment.identity.safeAvatar,
                             )}"
