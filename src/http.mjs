@@ -492,7 +492,7 @@ export async function launch(trie, libp2p) {
 
     const index = request.query.index;
     try {
-      submission = await getSubmission(index);
+      submission = getSubmission(index);
     } catch (e) {
       const code = 404;
       const httpMessage = "Not Found";

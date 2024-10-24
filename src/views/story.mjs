@@ -57,12 +57,7 @@ export async function generateStory(index) {
 
   let submission;
   try {
-    submission = await getSubmission(
-      index,
-      null,
-      identityClassifier,
-      result.links,
-    );
+    submission = getSubmission(index, null, identityClassifier, result.links);
   } catch (err) {
     log(
       `Requested index "${index}" but didn't find because of error "${err.toString()}"`,

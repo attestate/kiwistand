@@ -50,7 +50,7 @@ export async function triggerNotification(message) {
   if (message.type !== "comment") return;
 
   const [_, index] = message.href.split("kiwi:");
-  const submission = await getSubmission(index);
+  const submission = getSubmission(index);
 
   const ensData = await resolve(message.identity);
   if (!ensData.displayName) return;

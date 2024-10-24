@@ -536,7 +536,7 @@ export function getLastComment(submissionId) {
   };
 }
 
-export async function getSubmission(index, href, identityFilter, hrefs) {
+export function getSubmission(index, href, identityFilter, hrefs) {
   let submission;
   if (index) {
     submission = db
@@ -596,9 +596,9 @@ export async function getSubmission(index, href, identityFilter, hrefs) {
     // NOTE: When I tried using a map and Promise allSettled to parallelize,
     // the ethers component of identityFilter was constantly failing with call
     // exceptions. So when I serialized this call it started working.
-    for await (const upvoter of upvoters) {
+    for (const upvoter of upvoters) {
       try {
-        const validated = await identityFilter(upvoter, submission.identity);
+        const validated = identityFilter(upvoter, submission.identity);
         validatedUpvoters.push(validated);
       } catch (err) {}
     }

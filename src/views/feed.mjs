@@ -42,12 +42,20 @@ const html = htm.bind(vhtml);
 // NOTE: Only set this date in synchronicity with the src/launch.mjs date!!
 const cutoffDate = new Date("2024-10-12");
 const thresholdKarma = 3;
-export async function identityClassifier(upvoter) {
+export function identityClassifier(upvoter) {
   let votes = 0;
-  try {
-    votes = await getNounsVotes(upvoter.identity);
-  } catch (err) {
-    // noop
+
+  const cacheKey = `nouns-votes-${upvoter.identity}`;
+  if (cache.has(cacheKey)) {
+    votes = cache.get(cacheKey);
+  } else {
+    try {
+      getNounsVotes(upvoter.identity)
+        .then((votesNumber) => cache.set(cacheKey, votesNumber))
+        .catch((err) => log(`Error in getNounsVotes: ${err.stack}`));
+    } catch (err) {
+      // noop
+    }
   }
   const karmaScore = karma.resolve(upvoter.identity, cutoffDate);
   return {
@@ -56,11 +64,11 @@ export async function identityClassifier(upvoter) {
     isKiwi: karmaScore > thresholdKarma,
   };
 }
-export async function identityFilter(upvoter, submitter) {
+export function identityFilter(upvoter, submitter) {
   if (upvoter === submitter) {
     return upvoter;
   }
-  upvoter = await identityClassifier(upvoter);
+  upvoter = identityClassifier(upvoter);
   if (upvoter.isNoun || upvoter.isKiwi) {
     return upvoter;
   }
@@ -69,11 +77,6 @@ export async function identityFilter(upvoter, submitter) {
 
 const provider = new ethers.providers.JsonRpcProvider(env.RPC_HTTP_HOST);
 export async function getNounsVotes(address) {
-  const cacheKey = `nouns-votes-${address}`;
-  if (cache.has(cacheKey)) {
-    return cache.get(cacheKey);
-  }
-
   const contractAddress = "0x9c8ff314c9bc7f6e59a9d9225fb22946427edc03";
   const abi = [
     {
@@ -89,7 +92,6 @@ export async function getNounsVotes(address) {
   const votes = await contract.getCurrentVotes(address);
 
   const votesNumber = votes.toNumber();
-  cache.set(cacheKey, votesNumber);
   return votesNumber;
 }
 
@@ -104,14 +106,9 @@ export async function getContestStories() {
     return [];
   }
 
-  const promises = result.links.map((href) =>
-    getSubmission(null, href, identityFilter),
-  );
-  let submissions = await Promise.allSettled(promises);
-  submissions = submissions
-    .filter((elem) => elem.status === "fulfilled")
-    .map((elem) => {
-      const submission = elem.value;
+  const submissions = result.links
+    .map((href) => getSubmission(null, href, identityFilter))
+    .map((submission) => {
       submission.upvoters = submission.upvoters.map(({ identity }) => identity);
       return submission;
     })
@@ -369,7 +366,15 @@ export async function index(trie, page, domain) {
     .map(({ value }) => value)
     .slice(0, 2);
 
-  const ad = await getAd();
+  let ad;
+  const adCacheKey = "ad-cache-key";
+  if (cache.get(adCacheKey)) {
+    ad = cache.get(adCacheKey);
+  } else {
+    getAd()
+      .then((result) => cache.set(adCacheKey, result))
+      .catch((err) => log(`Err in getAd: ${err.stack}`));
+  }
 
   const contestStories = await getContestStories();
   const resolvedContestStories = await resolveIds(contestStories);
