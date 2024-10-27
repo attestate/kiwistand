@@ -122,7 +122,11 @@ export default async function (trie, theme) {
           content="Explore the latest news in the decentralized world on Kiwi News. Stay updated with fresh content handpicked by crypto veterans."
         />
       </head>
-      <body ontouchstart="">
+      <body
+        data-instant-allow-query-string
+        data-instant-allow-external-links
+        ontouchstart=""
+      >
         <div class="container">
           ${Sidebar(path)}
           <div id="hnmain" class="scaled-hnmain">

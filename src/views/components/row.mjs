@@ -270,6 +270,7 @@ const row = (
             ${
               displayMobileImage
                 ? html` <a
+                    data-no-instant
                     style="display: block; width: 100%;"
                     class="mobile-row-image"
                     href="${`/outbound?url=${encodeURIComponent(
@@ -348,6 +349,7 @@ const row = (
                   !blockedOGImageDomains.includes(extractedDomain) &&
                   !knownBadOgImages.includes(story.metadata.image)
                     ? html`<a
+                        data-no-instant
                         href="${`/outbound?url=${encodeURIComponent(
                           addOrUpdateReferrer(
                             DOMPurify.sanitize(story.href),
@@ -371,6 +373,7 @@ const row = (
                   <span>
                     <span class="story-link-container">
                       <a
+                        data-no-instant
                         href="${
                           path === "/submit" || path === "/demonstration"
                             ? "javascript:void(0);"

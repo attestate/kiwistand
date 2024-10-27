@@ -256,7 +256,11 @@ export async function page(theme, identity, notifications, lastUpdate) {
       <head>
         ${Head}
       </head>
-      <body ontouchstart="">
+      <body
+        data-instant-allow-query-string
+        data-instant-allow-external-links
+        ontouchstart=""
+      >
         <div class="container">
           ${Sidebar()}
           <div id="hnmain" class="scaled-hnmain">

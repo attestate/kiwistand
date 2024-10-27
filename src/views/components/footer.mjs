@@ -103,7 +103,12 @@ const footer = (theme, path) => html`
       async
       src="https://www.googletagmanager.com/gtag/js?id=G-21BKTD0NKN"
     ></script>
-    <script async src="ga.js"></script>
+    <script defer src="ga.js"></script>
+    <script
+      src="//instant.page/5.2.0"
+      type="module"
+      integrity="sha384-jnZyxPjiipYXnSU0ygqeac2q7CVYMbh84q0uHVRRxEtvFPiQYbXWUorga2aqZJ0z"
+    ></script>
     <nav-signup-dialogue />
   </footer>
 `;

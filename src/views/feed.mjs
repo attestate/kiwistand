@@ -434,7 +434,11 @@ export default async function (trie, theme, page, domain) {
           content="Kiwi News is the prime feed for hacker engineers building a decentralized future. All our content is handpicked and curated by crypto veterans."
         />
       </head>
-      <body ontouchstart="">
+      <body
+        data-instant-allow-query-string
+        data-instant-allow-external-links
+        ontouchstart=""
+      >
         <div class="container">
           ${Sidebar(path)}
           <div id="hnmain" class="scaled-hnmain">
