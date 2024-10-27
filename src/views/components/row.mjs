@@ -494,7 +494,7 @@ const row = (
                           : html`<a
                               target="_blank"
                               class="meta-link"
-                              style="user-select: none;"
+                              style="touch-action: manipulation; user-select: none;"
                               href="https://paragraph.xyz/@kiwi-updates/kiwi-feedbot-submissions-open"
                               >${story.displayName}</a
                             >`
@@ -541,7 +541,7 @@ const row = (
                                     href="#"
                                     class="caster-link share-link"
                                     title="Share"
-                                    style="user-select: none; white-space: nowrap;"
+                                    style="touch-action: manipulation; user-select: none; white-space: nowrap;"
                                     onclick="event.preventDefault(); navigator.share({url: 'https://news.kiwistand.com/stories/${slugify(
                                       DOMPurify.sanitize(story.title),
                                     )}?index=0x${story.index}' });"
@@ -567,7 +567,7 @@ const row = (
                                     href="#"
                                     class="meta-link share-link"
                                     title="Share"
-                                    style="user-select: none; white-space: nowrap;"
+                                    style="touch-action: manipulation; user-select: none; white-space: nowrap;"
                                     onclick="event.preventDefault(); navigator.clipboard.writeText('https://news.kiwistand.com/stories/${slugify(
                                       DOMPurify.sanitize(story.title),
                                     )}?index=0x${story.index}'); window.toast.success('Link copied!');"
@@ -643,7 +643,7 @@ const row = (
               !invert
                 ? html` <div
                     class="comment-preview comment-preview-0x${story.index}"
-                    style="user-select: none; cursor: pointer; padding: 9px 5px 14px 6px; display: flex;"
+                    style="touch-action: manipulation; user-select: none; cursor: pointer; padding: 9px 5px 14px 6px; display: flex;"
                   >
                     <div
                       onclick="document.querySelector('.comment-preview-0x${story.index}').style.opacity = 0.5, window.addToQueue(new CustomEvent('open-comments-0x${story.index}'));"
@@ -659,14 +659,16 @@ const row = (
                             alt="avatar"
                             style="border: 1px solid #ccc; width: ${size}px; height: ${size}px; border-radius: 2px; margin-right: 4px;"
                           />
-                          <span style="user-select: none; font-weight: bold;"
+                          <span
+                            style="touch-action: manipulation;user-select: none; font-weight: bold;"
                             >${DOMPurify.sanitize(
                               story.lastComment.identity.displayName,
                             )}:</span
                           >
                         </div>
                         <span> </span>
-                        <span style="user-select: none;"
+                        <span
+                          style="touch-action: manipulation;user-select: none;"
                           >${truncateComment(
                             DOMPurify.sanitize(story.lastComment.title),
                           )}</span

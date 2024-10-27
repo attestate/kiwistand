@@ -53,9 +53,14 @@
 .sidebar a:active,
 .comment-preview:active,
 .bell-button:active {
+  touch-action: manipulation;
   transform: scale(0.88);
   transition: transform 0.1s ease;
   cursor: pointer;
+}
+button, a, .interaction-element {
+  touch-action: manipulation;
+  user-select: none;
 }
 .mobile-row-image:active {
   transform: scale(0.99);
