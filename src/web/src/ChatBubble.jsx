@@ -35,9 +35,13 @@ const ChatBubble = ({ allowlist, delegations, storyIndex, commentCount }) => {
       onClick={() => {
         if (isDisabled) return;
         window.dispatchEvent(new CustomEvent(`open-comments-${storyIndex}`));
-        document.querySelector(
+
+        const commentPreview = document.querySelector(
           `.comment-preview-${storyIndex}`,
-        ).style.opacity = 1;
+        );
+        if (commentPreview) {
+          commentPreview.style.opacity = 1;
+        }
       }}
       href={null}
       className={`chat-bubble${isDisabled ? "" : " interaction-element"}`}
