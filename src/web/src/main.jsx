@@ -1,8 +1,8 @@
 import "vite/modulepreload-polyfill";
 import "@rainbow-me/rainbowkit/styles.css";
 import PullToRefresh from "pulltorefreshjs";
-import DOMPurify from "isomorphic-dompurify";
-import { getAccount } from "@wagmi/core";
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
 
 import { isIOS, isRunningPWA, getCookie, getLocalAccount } from "./session.mjs";
 import theme from "./theme.jsx";
@@ -15,46 +15,6 @@ function storeReferral() {
       localStorage.setItem("--kiwi-news-original-referral", referral);
     }
   }
-}
-
-function commentCountSignifier() {
-  const isStoriesPage = window.location.pathname === "/stories";
-  const indexQueryParam = new URLSearchParams(window.location.search).get(
-    "index",
-  );
-
-  if (isStoriesPage && indexQueryParam) {
-    const index = indexQueryParam.substring(2);
-    // Update localStorage for a specific comment page
-    const commentCountElement = document.querySelector(
-      `[id^='comment-count-']`,
-    );
-    if (commentCountElement) {
-      const currentCount = parseInt(commentCountElement.textContent, 10);
-      localStorage.setItem(`commentCount-${index}`, currentCount.toString());
-    }
-    return;
-  }
-
-  document.querySelectorAll("[id^='chat-bubble-']").forEach((story) => {
-    const index = story.id.split("-")[2];
-    const commentCountElement = document.getElementById(
-      `comment-count-${index}`,
-    );
-    const currentCount = parseInt(commentCountElement.textContent, 10);
-    const storedCountKey = `commentCount-${index}`;
-    const storedCount = parseInt(localStorage.getItem(storedCountKey), 10);
-
-    if (isNaN(storedCount)) {
-      localStorage.setItem(
-        storedCountKey,
-        isNaN(currentCount) ? "0" : currentCount.toString(),
-      );
-    } else if (currentCount > storedCount) {
-      const svgElement = story.querySelector("svg");
-      svgElement.style.color = theme.color;
-    }
-  });
 }
 
 function handleClick(event) {
@@ -102,9 +62,8 @@ document.addEventListener("click", handleClick);
 async function addSubmitButton(allowlist, delegations, toast) {
   const submitButtonContainer = document.getElementById("submit-button");
   if (submitButtonContainer) {
-    const { createRoot } = await import("react-dom/client");
-    const { StrictMode } = await import("react");
     const SubmitButton = (await import("./SubmitButton.jsx")).default;
+
     createRoot(submitButtonContainer).render(
       <StrictMode>
         <SubmitButton
@@ -120,8 +79,6 @@ async function addSubmitButton(allowlist, delegations, toast) {
 async function addInviteLink(toast) {
   const linkContainer = document.querySelector("#invitelink-container");
   if (linkContainer) {
-    const { createRoot } = await import("react-dom/client");
-    const { StrictMode } = await import("react");
     const InviteLink = (await import("./InviteLink.jsx")).default;
 
     createRoot(linkContainer).render(
@@ -135,8 +92,6 @@ async function addInviteLink(toast) {
 async function addDynamicNavElements() {
   const navElements = document.querySelectorAll("[data-icon]");
   if (navElements && navElements.length > 0) {
-    const { createRoot } = await import("react-dom/client");
-    const { StrictMode } = await import("react");
     const BottomNavElem = (await import("./BottomNavElem.jsx")).default;
 
     navElements.forEach((elem) => {
@@ -153,8 +108,6 @@ async function addDynamicNavElements() {
 async function addDynamicComments(allowlist, delegations, toast) {
   const sections = document.querySelectorAll(".comment-section");
   if (sections && sections.length > 0) {
-    const { createRoot } = await import("react-dom/client");
-    const { StrictMode } = await import("react");
     const CommentSection = (await import("./CommentSection.jsx")).default;
 
     sections.forEach((arrow) => {
@@ -179,8 +132,6 @@ async function addDynamicComments(allowlist, delegations, toast) {
 
   const chatBubbles = document.querySelectorAll(".chat-bubble-container");
   if (chatBubbles && chatBubbles.length > 0) {
-    const { createRoot } = await import("react-dom/client");
-    const { StrictMode } = await import("react");
     const ChatBubble = (await import("./ChatBubble.jsx")).default;
 
     chatBubbles.forEach((arrow) => {
@@ -204,10 +155,10 @@ async function addVotes(allowlist, delegations, toast) {
   const voteArrows = document.querySelectorAll(".vote-button-container");
   if (voteArrows.length === 0) return;
 
-  const { createRoot } = await import("react-dom/client");
-  const { StrictMode } = await import("react");
-  const Vote = (await import("./Vote.jsx")).default;
-
+  const [{ default: Vote }, { default: DOMPurify }] = await Promise.all([
+    import("./Vote.jsx"),
+    import("isomorphic-dompurify"),
+  ]);
   const observer = new IntersectionObserver(
     (entries, observer) => {
       entries.forEach((entry) => {
@@ -252,8 +203,6 @@ async function addFriendBuyButton(toast, allowlist) {
     "#friend-buy-button-container",
   );
   if (buyButtonContainer) {
-    const { createRoot } = await import("react-dom/client");
-    const { StrictMode } = await import("react");
     const BuyButton = (await import("./FriendBuyButton.jsx")).default;
     createRoot(buyButtonContainer).render(
       <StrictMode>
@@ -266,11 +215,11 @@ async function addFriendBuyButton(toast, allowlist) {
 async function addBuyButton(allowlistPromise, delegationsPromise, toast) {
   const buyButtonContainer = document.querySelector("#buy-button-container");
   if (buyButtonContainer) {
-    const allowlist = await allowlistPromise;
-    const delegations = await delegationsPromise;
-    const { createRoot } = await import("react-dom/client");
-    const { StrictMode } = await import("react");
-    const BuyButton = (await import("./BuyButton.jsx")).default;
+    const [allowlist, delegations, { default: BuyButton }] = await Promise.all([
+      allowlistPromise,
+      delegationsPromise,
+      import("./BuyButton.jsx"),
+    ]);
     createRoot(buyButtonContainer).render(
       <StrictMode>
         <BuyButton
@@ -286,9 +235,8 @@ async function addBuyButton(allowlistPromise, delegationsPromise, toast) {
 async function addCommentInput(toast, allowlist, delegations) {
   const commentInput = document.querySelector("nav-comment-input");
   if (commentInput) {
-    const { createRoot } = await import("react-dom/client");
-    const { StrictMode } = await import("react");
     const CommentInputComponent = (await import("./CommentInput.jsx")).default;
+
     const storyIndex = commentInput.getAttribute("data-story-index");
     createRoot(commentInput).render(
       <StrictMode>
@@ -306,8 +254,6 @@ async function addCommentInput(toast, allowlist, delegations) {
 async function addDelegateButton(allowlist, delegations, toast) {
   const delegateButtonContainer = document.querySelector(".delegate-button");
   if (delegateButtonContainer) {
-    const { createRoot } = await import("react-dom/client");
-    const { StrictMode } = await import("react");
     const DelegateButton = (await import("./DelegateButton.jsx")).default;
     createRoot(delegateButtonContainer).render(
       <StrictMode>
@@ -322,20 +268,9 @@ async function addDelegateButton(allowlist, delegations, toast) {
 }
 
 async function addConnectedComponents(allowlist, delegations, toast) {
-  const { createRoot } = await import("react-dom/client");
-  const { StrictMode } = await import("react");
-  const {
-    ConnectedSettings,
-    ConnectedSubmit,
-    ConnectedProfile,
-    ConnectedDisconnectButton,
-    ConnectedTextConnectButton,
-    RefreshButton,
-    ConnectedSimpleDisconnectButton,
-  } = await import("./Navigation.jsx");
-
   const connectButton = document.querySelector(".connect-button-wrapper");
   if (connectButton) {
+    const { ConnectedTextConnectButton } = await import("./Navigation.jsx");
     createRoot(connectButton).render(
       <StrictMode>
         <ConnectedTextConnectButton
@@ -346,9 +281,9 @@ async function addConnectedComponents(allowlist, delegations, toast) {
     );
   }
 
-  const Bell = (await import("./Bell.jsx")).default;
   const bellButton = document.querySelector("#bell");
   if (bellButton) {
+    const Bell = (await import("./Bell.jsx")).default;
     bellButton.style = "";
     createRoot(bellButton).render(
       <StrictMode>
@@ -359,6 +294,7 @@ async function addConnectedComponents(allowlist, delegations, toast) {
 
   const mobileBellButton = document.querySelector(".mobile-bell-container");
   if (mobileBellButton) {
+    const Bell = (await import("./Bell.jsx")).default;
     createRoot(mobileBellButton).render(
       <StrictMode>
         <Bell mobile allowlist={allowlist} delegations={delegations} />
@@ -368,6 +304,7 @@ async function addConnectedComponents(allowlist, delegations, toast) {
 
   const profileLink = document.querySelector("#nav-profile");
   if (profileLink) {
+    const { ConnectedProfile } = await import("./Navigation.jsx");
     createRoot(profileLink).render(
       <StrictMode>
         <ConnectedProfile allowlist={allowlist} delegations={delegations} />
@@ -377,6 +314,7 @@ async function addConnectedComponents(allowlist, delegations, toast) {
 
   const disconnect = document.querySelector("#nav-disconnect");
   if (disconnect) {
+    const { ConnectedDisconnectButton } = await import("./Navigation.jsx");
     createRoot(disconnect).render(
       <StrictMode>
         <ConnectedDisconnectButton />
@@ -388,6 +326,9 @@ async function addConnectedComponents(allowlist, delegations, toast) {
     "nav-simple-disconnect-button",
   );
   if (simpledisconnect) {
+    const { ConnectedSimpleDisconnectButton } = await import(
+      "./Navigation.jsx"
+    );
     createRoot(simpledisconnect).render(
       <StrictMode>
         <ConnectedSimpleDisconnectButton />
@@ -399,8 +340,6 @@ async function addConnectedComponents(allowlist, delegations, toast) {
 async function addPasskeysDialogue(toast, allowlist) {
   const elem = document.querySelector("nav-passkeys-backup");
   if (elem) {
-    const { createRoot } = await import("react-dom/client");
-    const { StrictMode } = await import("react");
     const Passkeys = (await import("./Passkeys.jsx")).default;
     const RedirectButton = () => {
       return (
@@ -449,8 +388,6 @@ async function addPasskeysDialogue(toast, allowlist) {
 async function addTGLink(allowlist) {
   const elem = document.querySelector("nav-invite-link");
   if (elem) {
-    const { createRoot } = await import("react-dom/client");
-    const { StrictMode } = await import("react");
     const TelegramLink = (await import("./TelegramLink.jsx")).default;
     createRoot(elem).render(
       <StrictMode>
@@ -463,8 +400,6 @@ async function addTGLink(allowlist) {
 async function addSubscriptionButton(allowlist, toast) {
   const button = document.querySelector("push-subscription-button");
   if (button) {
-    const { createRoot } = await import("react-dom/client");
-    const { StrictMode } = await import("react");
     const PushSubscriptionButton = (
       await import("./PushSubscriptionButton.jsx")
     ).default;
@@ -484,8 +419,6 @@ async function addSubscriptionButton(allowlist, toast) {
 async function addModals(allowlist, delegations, toast) {
   const nftmodal = document.querySelector("nav-nft-modal");
   if (nftmodal) {
-    const { createRoot } = await import("react-dom/client");
-    const { StrictMode } = await import("react");
     const NFTModal = (await import("./NFTModal.jsx")).default;
     createRoot(nftmodal).render(
       <StrictMode>
@@ -496,8 +429,6 @@ async function addModals(allowlist, delegations, toast) {
 
   const delegationModal = document.querySelector("nav-delegation-modal");
   if (delegationModal) {
-    const { createRoot } = await import("react-dom/client");
-    const { StrictMode } = await import("react");
     const DelegationModal = (await import("./DelegationModal.jsx")).default;
     createRoot(delegationModal).render(
       <StrictMode>
@@ -512,8 +443,6 @@ async function addModals(allowlist, delegations, toast) {
 
   const onboarding = document.querySelector(".nav-onboarding-modal");
   if (onboarding) {
-    const { createRoot } = await import("react-dom/client");
-    const { StrictMode } = await import("react");
     const OnboardingModal = (await import("./OnboardingModal.jsx")).default;
     createRoot(onboarding).render(
       <StrictMode>
@@ -528,8 +457,6 @@ async function addToaster() {
   newElement.id = "new-element";
   document.body.appendChild(newElement);
 
-  const { createRoot } = await import("react-dom/client");
-  const { StrictMode } = await import("react");
   const { Toaster, toast } = await import("react-hot-toast");
 
   createRoot(newElement).render(
@@ -551,8 +478,6 @@ async function addToaster() {
 async function addMinuteCountdown() {
   const elem = document.querySelector(".nav-countdown");
   if (elem) {
-    const { createRoot } = await import("react-dom/client");
-    const { StrictMode } = await import("react");
     const Countdown = (await import("./MinuteCountdown.jsx")).default;
     createRoot(elem).render(
       <StrictMode>
@@ -565,8 +490,6 @@ async function addMinuteCountdown() {
 async function addAvatar(allowlist) {
   const avatarElem = document.querySelectorAll("nav-header-avatar");
   if (avatarElem && avatarElem.length > 0) {
-    const { createRoot } = await import("react-dom/client");
-    const { StrictMode } = await import("react");
     const Avatar = (await import("./Avatar.jsx")).default;
     avatarElem.forEach((element) => {
       createRoot(element).render(
@@ -581,8 +504,6 @@ async function addAvatar(allowlist) {
 async function addNFTPrice() {
   const nftPriceElements = document.querySelectorAll("nft-price");
   if (nftPriceElements && nftPriceElements.length > 0) {
-    const { createRoot } = await import("react-dom/client");
-    const { StrictMode } = await import("react");
     const NFTPrice = (await import("./NFTPrice.jsx")).default;
     nftPriceElements.forEach((element) => {
       const fee = element.getAttribute("data-fee");
@@ -639,8 +560,10 @@ async function checkMintStatus(address) {
   const url = new URL(window.location.href);
   if (url.pathname !== "/indexing") return;
 
-  const { fetchAllowList, fetchDelegations } = await import("./API.mjs");
-  const { Wallet } = await import("@ethersproject/wallet");
+  const [{ fetchAllowList, fetchDelegations }, { Wallet }] = await Promise.all([
+    import("./API.mjs"),
+    import("@ethersproject/wallet"),
+  ]);
 
   const delegatePk = localStorage.getItem(`-kiwi-news-${address}-key`);
 
@@ -649,11 +572,15 @@ async function checkMintStatus(address) {
     delegate = new Wallet(delegatePk).address;
   }
 
-  const { supportsPasskeys } = await import("./session.mjs");
-  const { testPasskeys } = await import("./Passkeys.jsx");
+  const [{ supportsPasskeys }, { testPasskeys }] = await Promise.all([
+    import("./session.mjs"),
+    import("./Passkeys.jsx"),
+  ]);
   const intervalId = setInterval(async () => {
-    const allowList = await fetchAllowList();
-    const delegations = await fetchDelegations();
+    const [allowList, delegations] = await Promise.all([
+      fetchAllowList(),
+      fetchDelegations(),
+    ]);
 
     if (
       !allowList.includes(address) ||
@@ -678,7 +605,10 @@ async function checkMintStatus(address) {
 }
 
 async function startWatchAccount(allowlist) {
-  const { client } = await import("./client.mjs");
+  const [{ client }, { getAccount }] = await Promise.all([
+    import("./client.mjs"),
+    import("@wagmi/core"),
+  ]);
 
   const account = await getAccount();
   let signer;
@@ -702,8 +632,10 @@ async function getSigner(account, allowlist) {
   const localAccount = getLocalAccount(account.address, allowlist);
 
   if (localAccount && localAccount.privateKey) {
-    const { getProvider } = await import("./client.mjs");
-    const { Wallet } = await import("@ethersproject/wallet");
+    const [{ getProvider }, { Wallet }] = await Promise.all([
+      import("./client.mjs"),
+      import("@ethersproject/wallet"),
+    ]);
     return new Wallet(localAccount.privateKey, getProvider());
   } else {
     throw new Error("Application key not found");
@@ -814,10 +746,6 @@ async function start() {
       },
     });
   }
-  // TODO: Fix, this is currently broken because the ChatBubble react component
-  // now takes over the rendering, but since we also couldn't figure out how we
-  // can make this work together.
-  //commentCountSignifier();
 
   const toast = await addToaster();
   window.toast = toast;
