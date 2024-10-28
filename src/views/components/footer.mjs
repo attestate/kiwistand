@@ -104,11 +104,7 @@ const footer = (theme, path) => html`
       src="https://www.googletagmanager.com/gtag/js?id=G-21BKTD0NKN"
     ></script>
     <script defer src="ga.js"></script>
-    <script
-      src="//instant.page/5.2.0"
-      type="module"
-      integrity="sha384-jnZyxPjiipYXnSU0ygqeac2q7CVYMbh84q0uHVRRxEtvFPiQYbXWUorga2aqZJ0z"
-    ></script>
+    <script src="instantpage.js" type="module"></script>
     <nav-signup-dialogue />
   </footer>
 `;
