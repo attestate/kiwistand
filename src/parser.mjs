@@ -10,6 +10,7 @@ import { fetchBuilder, FileSystemCache } from "node-fetch-cache";
 import { useAgent } from "request-filtering-agent";
 
 import cache from "./cache.mjs";
+import log from "./logger.mjs";
 
 const fetch = fetchBuilder.withCache(
   new FileSystemCache({
@@ -66,7 +67,7 @@ export const metadata = async (url) => {
       signal,
     });
 
-    const html = await response.text();
+    html = await response.text();
     const parsed = await ogs({ html });
     result = parsed.result;
 
@@ -94,7 +95,11 @@ export const metadata = async (url) => {
   // NOTE: Hey's and Rekt News's canonical link implementation is wrong and
   // always links back to the root
   if (domain !== "hey.xyz" || domain !== "rekt.news") {
-    canonicalLink = await extractCanonicalLink(html);
+    try {
+      canonicalLink = await extractCanonicalLink(html);
+    } catch (err) {
+      log(`Failed to extract canonical link ${err.stack}`);
+    }
   }
 
   let output = {};
