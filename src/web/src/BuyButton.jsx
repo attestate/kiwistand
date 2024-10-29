@@ -64,7 +64,10 @@ export async function prepare(key) {
   if (balance.optimism > price) {
     preferredChainId = optimism.id;
   } else if (balance.mainnet > price) {
-    preferredChainId = mainnet.id;
+    // NOTE: We used to refer people to mint on Ethereum L1, but nowadays
+    // most people have Ether on an L2 which makes bridging and minting far
+    // cheaper.
+    // preferredChainId = mainnet.id;
   }
   if (!preferredChainId) {
     let error = `Need at least ${formatEther(
@@ -227,7 +230,7 @@ const BuyButton = (props) => {
       try {
         config = await prepare(key);
       } catch (err) {
-        console.log("setting error", err.message);
+        console.log("setting error", err.message, err.stack);
         setError(err);
         setConfig(null);
       }
@@ -328,7 +331,15 @@ const BuyButton = (props) => {
 
     const match = error.toString().match(/Bridge:(\w+):(\d+)/);
     if (match) {
-      const [, fromChain, price] = match;
+      let [, fromChain, price] = match;
+      fromChain = parseInt(fromChain, 10);
+
+      let chainName = "";
+      if (fromChain === base.id) {
+        chainName += "from Base";
+      } else if (fromChain === arbitrum.id) {
+        chainName += "from Arbitrum";
+      }
 
       const gasReserve = 1000000000000000n;
       const fromAmount = BigInt(price) + gasReserve;
@@ -338,9 +349,13 @@ const BuyButton = (props) => {
       button = (
         <>
           <a href={link} target="_blank">
-            <button className="buy-button">Bridge ETH to OP Mainnet</button>
+            <button className="buy-button">
+              Bridge ETH {chainName} to Optimism (Jumper)
+            </button>
           </a>
-          <p>Once you're done bridging, come back and refresh this page</p>
+          <p>
+            Once you're done bridging, <b>come back and reload this page</b>
+          </p>
         </>
       );
     }
