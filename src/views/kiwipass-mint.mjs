@@ -311,6 +311,7 @@ export default async function (theme) {
         <meta property="eth:nft:chain" content="ethereum" />
       </head>
       <body ontouchstart="" class="kiwipass-mint-page">
+        <div id="zupass-connector"></div>
         <div class="container">
           <div class="sidebar">${Sidebar()}</div>
           <div id="hnmain" style="width: 100%;">
@@ -319,7 +320,7 @@ export default async function (theme) {
                 ${await Header(theme, path)}
               </tr>
               <tr>
-                <td style="padding: 1rem; color: black;">
+                <td style="color: black;">
                   <div class="parent-container">
                     <div
                       class="image-section"

@@ -1,9 +1,9 @@
 const theme = {
   color: "#AFC046",
   discount: {
-    code: "octant",
-    primary: "#2d9b87",
-    secondary: "white",
+    code: "devcon",
+    primary: "white",
+    secondary: "#8c72ae",
   },
 };
 export default theme;

@@ -26,6 +26,7 @@ import { getLocalAccount } from "./session.mjs";
 import theme from "./theme.jsx";
 import { fetchPrice, fetchLeaderboard } from "./API.mjs";
 import { getProvider, useProvider, client, chains } from "./client.mjs";
+import { ZupassButton } from "./ZupassButton.jsx";
 
 export async function prepare(key) {
   const { address } = getAccount();
@@ -181,7 +182,7 @@ const newKey = Wallet.createRandom();
 const BuyButton = (props) => {
   const { chain } = useNetwork();
   const { switchNetwork } = useSwitchNetwork();
-  const { allowlist, delegations, toast } = props;
+  const { discountEligible, allowlist, delegations, toast } = props;
   const from = useAccount();
   const provider = useProvider();
   const [key, setKey] = useState(null);
@@ -228,6 +229,7 @@ const BuyButton = (props) => {
 
       let config;
       try {
+        setConfig(null);
         config = await prepare(key);
       } catch (err) {
         console.log("setting error", err.message, err.stack);
@@ -240,7 +242,7 @@ const BuyButton = (props) => {
       setError(null);
     };
     generate();
-  }, [key, chain.id]);
+  }, [key, chain.id, discountEligible]);
 
   if (isEligible) {
     return (
@@ -445,28 +447,62 @@ const Button = (props) => {
 };
 
 const Form = (props) => {
+  const [discountEligible, setDiscountEligible] = useState(false);
+
   return (
     <WagmiConfig config={client}>
       <RainbowKitProvider chains={chains}>
-        <ConnectButton.Custom>
-          {({ account, chain, mounted, openConnectModal }) => {
-            const connected = account && chain && mounted;
-            if (connected) return <BuyButton {...props} />;
-            return (
-              <button
-                onClick={async (e) => {
-                  if (!connected) {
-                    openConnectModal();
-                    return;
-                  }
-                }}
-                className="buy-button"
-              >
-                Connect Wallet
-              </button>
-            );
+        <div
+          style={{
+            padding: "1rem 3rem",
+            margin: "0 0 2rem 0",
+            backgroundImage: "url(devconbackground.avif)",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            borderRadius: "8px",
+            color: "white",
+            textShadow:
+              "2px 2px 4px rgba(0,0,0,0.9), 0px 0px 8px rgba(0,0,0,0.8)",
+            fontWeight: "bold",
+            fontSize: "1.5rem",
+            textAlign: "center",
           }}
-        </ConnectButton.Custom>
+        >
+          <p>
+            Attending Devcon? <br /> Get 24% off with Zupass!
+          </p>
+          <ZupassButton setHasTicket={setDiscountEligible} />
+        </div>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <ConnectButton.Custom>
+            {({ account, chain, mounted, openConnectModal }) => {
+              const connected = account && chain && mounted;
+              if (connected)
+                return (
+                  <BuyButton {...props} discountEligible={discountEligible} />
+                );
+              return (
+                <button
+                  onClick={async (e) => {
+                    if (!connected) {
+                      openConnectModal();
+                      return;
+                    }
+                  }}
+                  className="buy-button"
+                >
+                  Connect Wallet
+                </button>
+              );
+            }}
+          </ConnectButton.Custom>
+        </div>
       </RainbowKitProvider>
     </WagmiConfig>
   );
