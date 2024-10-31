@@ -48,6 +48,9 @@ export function count(messages, endDate) {
       (message) => new Date(message.timestamp * 1000) <= endDate,
     );
   }
+  for (const key of cache.keys(`${prefix}-`)) {
+    cache.del(key);
+  }
   messages = messages.sort((a, b) => a.timestamp - b.timestamp);
   const submissions = new Map();
 

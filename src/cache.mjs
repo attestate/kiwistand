@@ -23,13 +23,15 @@ export const lifetimeCache = {
     );
     insert.run(key, JSON.stringify(value));
   },
-
   get: (key) => {
     const query = db.prepare(`SELECT value FROM ltCache WHERE key = ?`);
     const row = query.get(key);
     return row && row.value ? JSON.parse(row.value) : null;
   },
-
+  del: (key) => {
+    const del = db.prepare(`DELETE FROM ltCache WHERE key = ?`);
+    del.run(key);
+  },
   has: (key) => {
     const query = db.prepare(`SELECT 1 FROM ltCache WHERE key = ?`);
     const row = query.get(key);
