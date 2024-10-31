@@ -106,13 +106,16 @@ export async function getContestStories() {
     return [];
   }
 
-  const submissions = result.links
-    .map((href) => getSubmission(null, href, identityFilter))
-    .map((submission) => {
-      submission.upvoters = submission.upvoters.map(({ identity }) => identity);
-      return submission;
-    })
-    .sort((a, b) => b.upvotes - a.upvotes);
+  const submissions = [];
+  for (const href of result.links) {
+    try {
+      const sub = await getSubmission(null, href, identityFilter);
+      sub.upvoters = sub.upvoters.map(({ identity }) => identity);
+      submissions.push(sub);
+    } catch (err) {
+      log(`Skipping submission ${href}, err ${err.stack}`);
+    }
+  }
 
   return submissions;
 }
