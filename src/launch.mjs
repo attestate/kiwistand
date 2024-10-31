@@ -30,7 +30,6 @@ cache.initializeLtCache();
 
 const reconcileMode = env.NODE_ENV === "reconcile";
 const productionMode = env.NODE_ENV === "production";
-const devMode = env.NODE_ENV === "dev";
 if (reconcileMode) {
   log(`Running in reconciliation mode`);
   log(
@@ -74,12 +73,7 @@ await subscribe(
 // upvoting from happening.
 const from = null;
 const amount = null;
-
-let startDatetime = null;
-if (devMode) {
-  const oneWeekAgo = subWeeks(new Date(), 1).getTime() / 1000;
-  startDatetime = oneWeekAgo;
-}
+const startDatetime = null;
 const parser = JSON.parse;
 const accounts = await registry.accounts();
 const delegations = await registry.delegations();
