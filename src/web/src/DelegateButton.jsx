@@ -355,8 +355,14 @@ const DelegateButton = (props) => {
           </h3>
           {!indexedDelegation ? (
             <p>
-              The Kiwi News node is searching for your transaction onchain. This
-              can take a few minutes...
+              Thanks! Your key is being added to Optimism (1-2 min).
+              <br />
+              <br />
+              This is so that you can upvote without having to confirm each time
+              in your wallet
+              <br />
+              <br />
+              Redirecting when complete...
             </p>
           ) : (
             <p>
