@@ -67,7 +67,7 @@ export function count(messages, endDate) {
 
 export function all() {
   const map = {};
-  for (const key of cache.keys()) {
+  for (const key of cache.keys(`${karmaPrefix}-`)) {
     if (key.includes(karmaPrefix)) {
       const [_, address] = key.split(`${karmaPrefix}-`);
       map[address] = cache.get(key);

@@ -1,8 +1,5 @@
 import NodeCache from "node-cache";
 const cache = new NodeCache({ stdTTL: 60 * 60 });
-// NOTE: This cache is for values that can be safely cached for the entirety of
-// the application's lifecycle, e.g., the karma count
-export const lifetimeCache = new NodeCache();
 export default cache;
 
 import { join } from "path";
@@ -19,7 +16,50 @@ const dbPath = join(process.env.CACHE_DIR, "database.db");
 const db = new Database(dbPath);
 db.pragma("journal_mode = WAL");
 
-function initialize(messages) {
+export const lifetimeCache = {
+  set: (key, value) => {
+    const insert = db.prepare(
+      `INSERT OR REPLACE INTO ltCache (key, value) VALUES (?, ?)`,
+    );
+    insert.run(key, JSON.stringify(value));
+  },
+
+  get: (key) => {
+    const query = db.prepare(`SELECT value FROM ltCache WHERE key = ?`);
+    const row = query.get(key);
+    return row && row.value ? JSON.parse(row.value) : null;
+  },
+
+  has: (key) => {
+    const query = db.prepare(`SELECT 1 FROM ltCache WHERE key = ?`);
+    const row = query.get(key);
+    return !!row;
+  },
+  keys: (prefix) => {
+    const query = db.prepare(`SELECT key FROM ltCache WHERE key LIKE ?`);
+    return query.all(prefix + "%").map((row) => row.key);
+  },
+};
+
+export function initializeLtCache() {
+  const exists = db
+    .prepare(
+      `SELECT name FROM sqlite_master WHERE type='table' AND name='ltCache'`,
+    )
+    .get();
+  if (exists) {
+    log("Aborting cache.initializeLtCache early because table already exists");
+    return true;
+  }
+
+  log("Creating ltCache table");
+  db.exec(`CREATE TABLE IF NOT EXISTS ltCache (
+     key TEXT PRIMARY KEY,
+     value TEXT)`);
+  return false;
+}
+
+export function initialize(messages) {
   let isSetup = true;
   const tables = ["fingerprints", "submissions", "upvotes", "comments"];
   tables.forEach((table) => {
@@ -670,7 +710,7 @@ export function listNewest(limit = 30, lookbackUnixTime) {
   return submissionsWithUpvotes;
 }
 
-function insertMessage(message) {
+export function insertMessage(message) {
   const { type, href, index, title, timestamp, signature, signer, identity } =
     message;
 
@@ -730,5 +770,3 @@ function insertMessage(message) {
     throw new Error("Unsupported message type");
   }
 }
-
-export { initialize, insertMessage };

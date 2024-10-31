@@ -24,6 +24,10 @@ import * as feed from "./views/feed.mjs";
 import * as feeds from "./feeds.mjs";
 import * as moderation from "./views/moderation.mjs";
 
+// NOTE: Initializing the lifetime cache as a first order is important as it
+// is widely used throughout the application.
+cache.initializeLtCache();
+
 const reconcileMode = env.NODE_ENV === "reconcile";
 const productionMode = env.NODE_ENV === "production";
 const devMode = env.NODE_ENV === "dev";
