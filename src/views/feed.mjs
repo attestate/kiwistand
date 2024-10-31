@@ -116,6 +116,7 @@ export async function getContestStories() {
       log(`Skipping submission ${href}, err ${err.stack}`);
     }
   }
+  submissions.sort((a, b) => b.upvotes - a.upvotes);
 
   return submissions;
 }
