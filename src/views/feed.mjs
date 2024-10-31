@@ -203,7 +203,7 @@ async function getAd() {
   const [price, taxes] = await contract.price();
   const submitter = await ens.resolve(identity);
 
-  return {
+  const post = {
     upvotes: 0,
     upvoters: [],
     avatars: [],
@@ -217,6 +217,11 @@ async function getAd() {
     displayName: submitter.displayName,
     timestamp,
   };
+  const augmentedPost = await addMetadata(post);
+  if (augmentedPost) {
+    post = augmentedPost;
+  }
+  return post;
 }
 
 const itemAge = (timestamp) => {
@@ -271,6 +276,21 @@ export async function topstories(leaves) {
     .sort((a, b) => b.score - a.score);
 }
 
+async function addMetadata(post) {
+  let result;
+  try {
+    result = await metadata(post.href);
+  } catch (err) {
+    return null;
+  }
+  if (result && !result.image) return;
+
+  return {
+    ...post,
+    metadata: result,
+  };
+}
+
 export async function index(trie, page, domain) {
   const lookback = sub(new Date(), {
     weeks: 3,
@@ -302,21 +322,6 @@ export async function index(trie, page, domain) {
     writers = await moderation.getWriters();
   } catch (err) {
     // noop
-  }
-
-  async function addMetadata(post) {
-    let result;
-    try {
-      result = await metadata(post.href);
-    } catch (err) {
-      return null;
-    }
-    if (result && !result.image) return;
-
-    return {
-      ...post,
-      metadata: result,
-    };
   }
 
   async function resolveIds(storyPromises) {
@@ -375,8 +380,9 @@ export async function index(trie, page, domain) {
   if (cache.get(adCacheKey)) {
     ad = cache.get(adCacheKey);
   } else {
+    const adTTLSeconds = 60 * 5;
     getAd()
-      .then((result) => cache.set(adCacheKey, result))
+      .then((result) => cache.set(adCacheKey, result, [adTTLSeconds]))
       .catch((err) => log(`Err in getAd: ${err.stack}`));
   }
 
