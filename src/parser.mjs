@@ -41,6 +41,9 @@ async function extractCanonicalLink(html) {
     const signal = AbortSignal.timeout(5000);
     response = await fetch(node._attrs.href, {
       agent: useAgent(node._attrs.href),
+      headers: {
+        "User-Agent": env.USER_AGENT,
+      },
       signal,
     });
   } catch (err) {
@@ -63,6 +66,9 @@ export const metadata = async (url) => {
   } else {
     const signal = AbortSignal.timeout(5000);
     const response = await fetch(url, {
+      headers: {
+        "User-Agent": env.USER_AGENT,
+      },
       agent: useAgent(url),
       signal,
     });
