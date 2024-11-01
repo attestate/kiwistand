@@ -57,6 +57,23 @@ async function extractCanonicalLink(html) {
   return DOMPurify.sanitize(node.href);
 }
 
+const checkOgImage = async (url) => {
+  const signal = AbortSignal.timeout(5000);
+  try {
+    const res = await fetch(url, {
+      agent: useAgent(url),
+      signal,
+      method: "HEAD",
+      headers: {
+        "User-Agent": env.USER_AGENT,
+      },
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+};
+
 export const metadata = async (url) => {
   let result, html;
   if (cache.has(url)) {
@@ -116,7 +133,10 @@ export const metadata = async (url) => {
     output.domain = DOMPurify.sanitize(domain);
   }
   if (image && image.startsWith("https://")) {
-    output.image = DOMPurify.sanitize(image);
+    const exists = await checkOgImage(image);
+    if (exists) {
+      output.image = DOMPurify.sanitize(image);
+    }
   }
   if (ogDescription) {
     output.ogDescription = DOMPurify.sanitize(
