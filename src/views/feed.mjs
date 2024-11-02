@@ -203,7 +203,7 @@ async function getAd() {
   const [price, taxes] = await contract.price();
   const submitter = await ens.resolve(identity);
 
-  const post = {
+  let post = {
     upvotes: 0,
     upvoters: [],
     avatars: [],
