@@ -61,7 +61,7 @@ export function identityClassifier(upvoter) {
   return {
     ...upvoter,
     isNoun: votes > 0,
-    isKiwi: karmaScore > thresholdKarma,
+    isKiwi: karmaScore >= thresholdKarma,
   };
 }
 export function identityFilter(upvoter, submitter) {
