@@ -358,7 +358,7 @@ const row = (
                         )}`}"
                         class="row-image"
                         target="_blank"
-                        style="align-self: stretch; margin: 5px 0;"
+                        style="user-select:text; align-self: stretch; margin: 5px 0;"
                       >
                         <img
                           loading="lazy"
@@ -393,7 +393,7 @@ const row = (
                             : "_blank"
                         }"
                         class="story-link"
-                        style="line-height: 15pt; font-size: 13pt;"
+                        style="user-select: text; line-height: 15pt; font-size: 13pt;"
                       >
                         ${
                           story.isOriginal
@@ -456,6 +456,7 @@ const row = (
                           ? html`
                               <a
                                 class="meta-link"
+                                style="user-select: text;"
                                 href="/stories/${slugify(
                                   DOMPurify.sanitize(story.title),
                                 )}?index=0x${story.index}"
@@ -483,7 +484,7 @@ const row = (
                                 ? `/${story.submitter.ens}`
                                 : `/upvotes?address=${story.identity}`}"
                               class="meta-link"
-                              style="${recentJoiners &&
+                              style="user-select: text; ${recentJoiners &&
                               recentJoiners.includes(story.identity)
                                 ? `color: ${theme.color};`
                                 : ""}"
