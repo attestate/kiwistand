@@ -126,12 +126,12 @@ export function generateList(profiles, submitter) {
               <span> </span>
               <a href="/upvotes?address=${profile.address}"
                 >${profile.name} (${karma.resolve(profile.address).toString()}
-                ${profile.isNoun
+                ${profile.fromSponsorCommunity
                   ? html`,
                       <span> </span>
                       <img
-                        style="object-fit: contain; width: 10px; height: 10px; border: 1px solid #828282; border-radius: 2px;"
-                        src="/nouns.webp"
+                        style="vertical-align: -1px; object-fit: contain; width: 13px; height: 13px;"
+                        src="/gnosis.svg"
                       />`
                   : ""}
                 ${profile.isKiwi ? ", 🥝" : ""})

@@ -37,30 +37,37 @@ import Row, { addOrUpdateReferrer, extractDomain } from "./components/row.mjs";
 import * as karma from "../karma.mjs";
 import { metadata } from "../parser.mjs";
 
+import poaps from "./gnosis-poap-addresses.mjs";
+const gnosisPoaps = poaps.map((p) => ethers.utils.getAddress(p));
+
 const html = htm.bind(vhtml);
 
 // NOTE: Only set this date in synchronicity with the src/launch.mjs date!!
 const cutoffDate = new Date("2024-10-12");
 const thresholdKarma = 3;
 export function identityClassifier(upvoter) {
-  let votes = 0;
+  let balance = 0;
 
-  const cacheKey = `nouns-votes-${upvoter.identity}`;
+  const cacheKey = `gnosis-pay-nft-${upvoter.identity}`;
   if (cache.has(cacheKey)) {
-    votes = cache.get(cacheKey);
+    balance = cache.get(cacheKey);
   } else {
     try {
-      getNounsVotes(upvoter.identity)
-        .then((votesNumber) => cache.set(cacheKey, votesNumber))
-        .catch((err) => log(`Error in getNounsVotes: ${err.stack}`));
+      getGnosisPayNFT(upvoter.identity)
+        .then((balance) => cache.set(cacheKey, balance))
+        .catch((err) => log(`Error in getGnosisPayNFT: ${err.stack}`));
     } catch (err) {
       // noop
     }
   }
+  const hasGnosisPoap = gnosisPoaps.includes(
+    ethers.utils.getAddress(upvoter.identity),
+  );
   const karmaScore = karma.resolve(upvoter.identity, cutoffDate);
+  const hasGnosisPayNFT = balance > 0;
   return {
     ...upvoter,
-    isNoun: votes > 0,
+    fromSponsorCommunity: hasGnosisPoap || hasGnosisPayNFT,
     isKiwi: karmaScore >= thresholdKarma,
   };
 }
@@ -68,31 +75,36 @@ export function identityFilter(upvoter, submitter) {
   if (upvoter === submitter) {
     return upvoter;
   }
-  upvoter = identityClassifier(upvoter);
-  if (upvoter.isNoun || upvoter.isKiwi) {
+  try {
+    upvoter = identityClassifier(upvoter);
+  } catch (err) {
+    log(`Error in identity classifier ${err.stack}`);
+    throw err;
+  }
+  if (upvoter.fromSponsorCommunity || upvoter.isKiwi) {
     return upvoter;
   }
   throw new Error("Not eligible to upvote");
 }
 
-const provider = new ethers.providers.JsonRpcProvider(env.RPC_HTTP_HOST);
-export async function getNounsVotes(address) {
-  const contractAddress = "0x9c8ff314c9bc7f6e59a9d9225fb22946427edc03";
+const provider = new ethers.providers.JsonRpcProvider(env.GNOSIS_RPC_HTTP_HOST);
+export async function getGnosisPayNFT(address) {
+  const contractAddress = "0x88997988a6a5aaf29ba973d298d276fe75fb69ab";
   const abi = [
     {
-      inputs: [{ internalType: "address", name: "account", type: "address" }],
-      name: "getCurrentVotes",
-      outputs: [{ internalType: "uint96", name: "", type: "uint96" }],
+      inputs: [{ internalType: "address", name: "owner", type: "address" }],
+      name: "balanceOf",
+      outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
       stateMutability: "view",
       type: "function",
     },
   ];
 
   const contract = new ethers.Contract(contractAddress, abi, provider);
-  const votes = await contract.getCurrentVotes(address);
+  const balance = await contract.balanceOf(address);
 
-  const votesNumber = votes.toNumber();
-  return votesNumber;
+  const balanceNumber = balance.toNumber();
+  return balanceNumber;
 }
 
 export async function getContestStories() {
@@ -466,340 +478,12 @@ export default async function (trie, theme, page, domain) {
               >
                 <td>
                   <div
-                    style="background-color: #f1ca50; height: 2.3rem;display: flex; justify-content: start; align-items: center; padding-left: 1rem; gap: 1rem; color: white;"
+                    style="border-bottom: 1px solid black; border-top: 1px solid black; background-color: white; height: 2.3rem;display: flex; justify-content: start; align-items: center; padding-left: 1rem; gap: 1rem; color: black;"
                   >
                     <span
                       style="height: 2.3rem;display: flex; justify-content: center; align-items: center; gap: 1rem; color: black;"
                     >
-                      <svg
-                        style="height: 4rem; margin-top:0.5rem; margin-right:-1.7rem;"
-                        viewBox="0 0 320 320"
-                        xmlns="http://www.w3.org/2000/svg"
-                        shape-rendering="crispEdges"
-                      >
-                        <rect width="100%" height="100%" fill="none" />
-                        <rect
-                          width="60"
-                          height="10"
-                          x="100"
-                          y="110"
-                          fill="#ff638d"
-                          shape-rendering="crispEdges"
-                        />
-                        <rect
-                          width="60"
-                          height="10"
-                          x="170"
-                          y="110"
-                          fill="#cc0595"
-                          shape-rendering="crispEdges"
-                        />
-                        <rect
-                          width="10"
-                          height="10"
-                          x="100"
-                          y="120"
-                          fill="#ff638d"
-                          shape-rendering="crispEdges"
-                        />
-                        <rect
-                          width="20"
-                          height="10"
-                          x="110"
-                          y="120"
-                          fill="#ffffff"
-                          shape-rendering="crispEdges"
-                        />
-                        <rect
-                          width="20"
-                          height="10"
-                          x="130"
-                          y="120"
-                          fill="#000000"
-                          shape-rendering="crispEdges"
-                        />
-                        <rect
-                          width="10"
-                          height="10"
-                          x="150"
-                          y="120"
-                          fill="#ff638d"
-                          shape-rendering="crispEdges"
-                        />
-                        <rect
-                          width="10"
-                          height="10"
-                          x="170"
-                          y="120"
-                          fill="#cc0595"
-                          shape-rendering="crispEdges"
-                        />
-                        <rect
-                          width="20"
-                          height="10"
-                          x="180"
-                          y="120"
-                          fill="#ffffff"
-                          shape-rendering="crispEdges"
-                        />
-                        <rect
-                          width="20"
-                          height="10"
-                          x="200"
-                          y="120"
-                          fill="#000000"
-                          shape-rendering="crispEdges"
-                        />
-                        <rect
-                          width="10"
-                          height="10"
-                          x="220"
-                          y="120"
-                          fill="#cc0595"
-                          shape-rendering="crispEdges"
-                        />
-                        <rect
-                          width="30"
-                          height="10"
-                          x="70"
-                          y="130"
-                          fill="#ab36be"
-                          shape-rendering="crispEdges"
-                        />
-                        <rect
-                          width="10"
-                          height="10"
-                          x="100"
-                          y="130"
-                          fill="#ff638d"
-                          shape-rendering="crispEdges"
-                        />
-                        <rect
-                          width="20"
-                          height="10"
-                          x="110"
-                          y="130"
-                          fill="#ffffff"
-                          shape-rendering="crispEdges"
-                        />
-                        <rect
-                          width="20"
-                          height="10"
-                          x="130"
-                          y="130"
-                          fill="#000000"
-                          shape-rendering="crispEdges"
-                        />
-                        <rect
-                          width="10"
-                          height="10"
-                          x="150"
-                          y="130"
-                          fill="#ff638d"
-                          shape-rendering="crispEdges"
-                        />
-                        <rect
-                          width="10"
-                          height="10"
-                          x="160"
-                          y="130"
-                          fill="#ab36be"
-                          shape-rendering="crispEdges"
-                        />
-                        <rect
-                          width="10"
-                          height="10"
-                          x="170"
-                          y="130"
-                          fill="#cc0595"
-                          shape-rendering="crispEdges"
-                        />
-                        <rect
-                          width="20"
-                          height="10"
-                          x="180"
-                          y="130"
-                          fill="#ffffff"
-                          shape-rendering="crispEdges"
-                        />
-                        <rect
-                          width="20"
-                          height="10"
-                          x="200"
-                          y="130"
-                          fill="#000000"
-                          shape-rendering="crispEdges"
-                        />
-                        <rect
-                          width="10"
-                          height="10"
-                          x="220"
-                          y="130"
-                          fill="#cc0595"
-                          shape-rendering="crispEdges"
-                        />
-                        <rect
-                          width="10"
-                          height="10"
-                          x="70"
-                          y="140"
-                          fill="#cc0595"
-                          shape-rendering="crispEdges"
-                        />
-                        <rect
-                          width="10"
-                          height="10"
-                          x="100"
-                          y="140"
-                          fill="#ff638d"
-                          shape-rendering="crispEdges"
-                        />
-                        <rect
-                          width="20"
-                          height="10"
-                          x="110"
-                          y="140"
-                          fill="#ffffff"
-                          shape-rendering="crispEdges"
-                        />
-                        <rect
-                          width="20"
-                          height="10"
-                          x="130"
-                          y="140"
-                          fill="#000000"
-                          shape-rendering="crispEdges"
-                        />
-                        <rect
-                          width="10"
-                          height="10"
-                          x="150"
-                          y="140"
-                          fill="#ff638d"
-                          shape-rendering="crispEdges"
-                        />
-                        <rect
-                          width="10"
-                          height="10"
-                          x="170"
-                          y="140"
-                          fill="#cc0595"
-                          shape-rendering="crispEdges"
-                        />
-                        <rect
-                          width="20"
-                          height="10"
-                          x="180"
-                          y="140"
-                          fill="#ffffff"
-                          shape-rendering="crispEdges"
-                        />
-                        <rect
-                          width="20"
-                          height="10"
-                          x="200"
-                          y="140"
-                          fill="#000000"
-                          shape-rendering="crispEdges"
-                        />
-                        <rect
-                          width="10"
-                          height="10"
-                          x="220"
-                          y="140"
-                          fill="#cc0595"
-                          shape-rendering="crispEdges"
-                        />
-                        <rect
-                          width="10"
-                          height="10"
-                          x="70"
-                          y="150"
-                          fill="#cc0595"
-                          shape-rendering="crispEdges"
-                        />
-                        <rect
-                          width="10"
-                          height="10"
-                          x="100"
-                          y="150"
-                          fill="#ff638d"
-                          shape-rendering="crispEdges"
-                        />
-                        <rect
-                          width="20"
-                          height="10"
-                          x="110"
-                          y="150"
-                          fill="#ffffff"
-                          shape-rendering="crispEdges"
-                        />
-                        <rect
-                          width="20"
-                          height="10"
-                          x="130"
-                          y="150"
-                          fill="#000000"
-                          shape-rendering="crispEdges"
-                        />
-                        <rect
-                          width="10"
-                          height="10"
-                          x="150"
-                          y="150"
-                          fill="#ff638d"
-                          shape-rendering="crispEdges"
-                        />
-                        <rect
-                          width="10"
-                          height="10"
-                          x="170"
-                          y="150"
-                          fill="#cc0595"
-                          shape-rendering="crispEdges"
-                        />
-                        <rect
-                          width="20"
-                          height="10"
-                          x="180"
-                          y="150"
-                          fill="#ffffff"
-                          shape-rendering="crispEdges"
-                        />
-                        <rect
-                          width="20"
-                          height="10"
-                          x="200"
-                          y="150"
-                          fill="#000000"
-                          shape-rendering="crispEdges"
-                        />
-                        <rect
-                          width="10"
-                          height="10"
-                          x="220"
-                          y="150"
-                          fill="#cc0595"
-                          shape-rendering="crispEdges"
-                        />
-                        <rect
-                          width="60"
-                          height="10"
-                          x="100"
-                          y="160"
-                          fill="#ff638d"
-                          shape-rendering="crispEdges"
-                        />
-                        <rect
-                          width="60"
-                          height="10"
-                          x="170"
-                          y="160"
-                          fill="#cc0595"
-                          shape-rendering="crispEdges"
-                        />
-                      </svg>
-                      ❤️ 🥝
+                      <img src="devconflictlogo.png" style="height: 25px;" />
                       <span
                         style="text-decoration: underline; display:flex;justify-content: center; align-items: center; gap:1rem;"
                       ></span>
