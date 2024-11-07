@@ -43,7 +43,7 @@ const gnosisPoaps = poaps.map((p) => ethers.utils.getAddress(p));
 const html = htm.bind(vhtml);
 
 // NOTE: Only set this date in synchronicity with the src/launch.mjs date!!
-const cutoffDate = new Date("2024-10-12");
+const cutoffDate = new Date("2024-11-06");
 const thresholdKarma = 3;
 export function identityClassifier(upvoter) {
   let balance = 0;
