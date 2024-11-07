@@ -386,10 +386,10 @@ export async function index(trie, page, domain) {
       .catch((err) => log(`Err in getAd: ${err.stack}`));
   }
 
-  const contestStories = await getContestStories();
-  const resolvedContestStories = await resolveIds(contestStories);
+  //const contestStories = await getContestStories();
+  //const resolvedContestStories = await resolveIds(contestStories);
   return {
-    contestStories: resolvedContestStories,
+    //contestStories: resolvedContestStories,
     ad,
     stories,
     originals,
@@ -804,9 +804,13 @@ export default async function (trie, theme, page, domain) {
                         style="text-decoration: underline; display:flex;justify-content: center; align-items: center; gap:1rem;"
                       ></span>
                     </span>
-                    <span
-                      style="display:flex;justify-content: center; align-items: center; gap:1rem;"
-                      >Show/Hide submissions ${expandSVG}</span
+                    <a
+                      class="story-link"
+                      style="color:white;"
+                      href="https://paragraph.xyz/@kiwi-updates/preview/NlleF0zcWF3bzDTreedP"
+                      target="_blank"
+                    >
+                      Results of the writing contest</a
                     >
                   </div>
                 </td>
