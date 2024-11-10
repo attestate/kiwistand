@@ -101,7 +101,18 @@ export async function getGnosisPayNFT(address) {
   ];
 
   const contract = new ethers.Contract(contractAddress, abi, provider);
-  const balance = await contract.balanceOf(address);
+
+  let timeoutId;
+  const timeout = new Promise((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error("Timeout")), 5000);
+  });
+
+  let balance;
+  try {
+    balance = await Promise.race([contract.balanceOf(address), timeout]);
+  } finally {
+    clearTimeout(timeoutId);
+  }
 
   const balanceNumber = balance.toNumber();
   return balanceNumber;
@@ -471,11 +482,7 @@ export default async function (trie, theme, page, domain) {
               <tr>
                 ${SecondHeader(theme, "top")}
               </tr>
-              <tr
-                style="cursor: pointer;"
-                onclick="document.querySelectorAll('.inverted-row').forEach(el => el.style.display =
- el.style.display === 'none' ? '' : 'none');"
-              >
+              <tr style="cursor: pointer;">
                 <td>
                   <div
                     style="border-bottom: 1px solid black; border-top: 1px solid black; background-color: white; height: 2.3rem;display: flex; justify-content: start; align-items: center; padding-left: 1rem; gap: 1rem; color: black;"
@@ -484,18 +491,13 @@ export default async function (trie, theme, page, domain) {
                       style="height: 2.3rem;display: flex; justify-content: center; align-items: center; gap: 1rem; color: black;"
                     >
                       <img src="devconflictlogo.png" style="height: 25px;" />
-                      <span
-                        style="text-decoration: underline; display:flex;justify-content: center; align-items: center; gap:1rem;"
-                      ></span>
                     </span>
                     <a
-                      class="story-link"
-                      style="color:white;"
-                      href="https://paragraph.xyz/@kiwi-updates/preview/NlleF0zcWF3bzDTreedP"
+                      href="https://paragraph.xyz/@kiwi-updates/arena-devconflict-writing-contest"
                       target="_blank"
                     >
-                      Results of the writing contest</a
-                    >
+                      New contest: "Arena: Devconflict"
+                    </a>
                   </div>
                 </td>
               </tr>
