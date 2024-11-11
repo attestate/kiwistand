@@ -549,10 +549,10 @@ export async function launch(trie, libp2p) {
   });
   app.get("/stories/:slug?", async (request, reply) => {
     if (request.params.slug) {
-      reply.header(
-        "Cache-Control",
-        "public, s-maxage=10, max-age=10, stale-while-revalidate=31536000",
-      );
+      // NOTE: The slug is used to make the story URL more human readable, at
+      // the same time though, the slug is really just cosmetical as the index
+      // always informs about the actual origin of a domain
+      reply.header("Cache-Control", "public, max-age=31536000, immutable");
       const queryParams = new URLSearchParams(request.query).toString();
       return reply.redirect(`/stories?${queryParams}`);
     }
