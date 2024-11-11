@@ -204,7 +204,7 @@ export async function launch(trie, libp2p) {
   app.get("/kiwipass-mint", async (request, reply) => {
     reply.header(
       "Cache-Control",
-      "public, s-maxage=3600, max-age=3600, stale-while-revalidate=86400",
+      "public, s-maxage=86400, max-age=86400, stale-while-revalidate=604800",
     );
     return reply
       .status(200)
@@ -395,7 +395,7 @@ export async function launch(trie, libp2p) {
     const details = `Karma`;
     reply.header(
       "Cache-Control",
-      "public, s-maxage=300, max-age=300, stale-while-revalidate=300",
+      "public, s-maxage=86400, max-age=86400, stale-while-revalidate=259200",
     );
     return sendStatus(reply, code, httpMessage, details, {
       address,
@@ -515,7 +515,7 @@ export async function launch(trie, libp2p) {
 
     reply.header(
       "Cache-Control",
-      "public, s-maxage=60, max-age=60, stale-while-revalidate=3600",
+      "public, s-maxage=86400, max-age=86400, stale-while-revalidate=259200",
     );
     return reply
       .status(200)
@@ -698,13 +698,19 @@ export async function launch(trie, libp2p) {
   app.get("/about", async (request, reply) => {
     const content = await about(reply.locals.theme);
 
-    reply.header("Cache-Control", "public, max-age=86400");
+    reply.header(
+      "Cache-Control",
+      "public, s-maxage=86400, max-age=86400, stale-while-revalidate=600000",
+    );
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/passkeys", async (request, reply) => {
     const content = await passkeys(reply.locals.theme);
 
-    reply.header("Cache-Control", "public, max-age=86400");
+    reply.header(
+      "Cache-Control",
+      "public, s-maxage=86400, max-age=86400, stale-while-revalidate=600000",
+    );
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/pwaandroid", async (request, reply) => {
@@ -728,25 +734,37 @@ export async function launch(trie, libp2p) {
   app.get("/demonstration", async (request, reply) => {
     const content = await demonstration(reply.locals.theme);
 
-    reply.header("Cache-Control", "public, max-age=86400");
+    reply.header(
+      "Cache-Control",
+      "public, s-maxage=86400, max-age=86400, stale-while-revalidate=600000",
+    );
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/invite", async (request, reply) => {
     const content = await invite(reply.locals.theme);
 
-    reply.header("Cache-Control", "public, max-age=86400");
+    reply.header(
+      "Cache-Control",
+      "public, s-maxage=86400, max-age=86400, stale-while-revalidate=600000",
+    );
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/indexing", async (request, reply) => {
     const content = await indexing(reply.locals.theme);
 
-    reply.header("Cache-Control", "public, max-age=86400");
+    reply.header(
+      "Cache-Control",
+      "public, s-maxage=86400, max-age=86400, stale-while-revalidate=600000",
+    );
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/start", async (request, reply) => {
     const content = await start(reply.locals.theme);
 
-    reply.header("Cache-Control", "private, max-age=86400");
+    reply.header(
+      "Cache-Control",
+      "public, s-maxage=86400, max-age=86400, stale-while-revalidate=600000",
+    );
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/settings", async (request, reply) => {
@@ -834,21 +852,30 @@ export async function launch(trie, libp2p) {
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/subscribe", async (request, reply) => {
-    reply.header("Cache-Control", "public, max-age=86400");
+    reply.header(
+      "Cache-Control",
+      "public, s-maxage=86400, max-age=86400, stale-while-revalidate=600000",
+    );
     return reply
       .status(200)
       .type("text/html")
       .send(await subscribe(reply.locals.theme));
   });
   app.get("/privacy-policy", async (request, reply) => {
-    reply.header("Cache-Control", "public, max-age=86400");
+    reply.header(
+      "Cache-Control",
+      "public, s-maxage=86400, max-age=86400, stale-while-revalidate=600000",
+    );
     return reply
       .status(200)
       .type("text/html")
       .send(await privacy(reply.locals.theme));
   });
   app.get("/guidelines", async (request, reply) => {
-    reply.header("Cache-Control", "public, max-age=86400");
+    reply.header(
+      "Cache-Control",
+      "public, s-maxage=86400, max-age=86400, stale-while-revalidate=600000",
+    );
     return reply
       .status(200)
       .type("text/html")
@@ -872,7 +899,7 @@ export async function launch(trie, libp2p) {
   app.get("/whattosubmit", async (request, reply) => {
     reply.header(
       "Cache-Control",
-      "public, s-maxage=3600, max-age=3600, stale-while-revalidate=864000",
+      "public, s-maxage=86400, max-age=86400, stale-while-revalidate=600000",
     );
     return reply
       .status(200)
@@ -949,7 +976,10 @@ export async function launch(trie, libp2p) {
       .send(await kiwipass(reply.locals.theme));
   });
   app.get("/shortcut", async (request, reply) => {
-    reply.header("Cache-Control", "public, max-age=86400");
+    reply.header(
+      "Cache-Control",
+      "public, s-maxage=86400, max-age=86400, stale-while-revalidate=600000",
+    );
     return reply
       .status(200)
       .type("text/html")
@@ -1049,7 +1079,19 @@ export async function launch(trie, libp2p) {
       DOMPurify.sanitize(title),
     );
 
-    reply.header("Cache-Control", "public, max-age=18000, must-revalidate");
+    if (url || title) {
+      reply.header(
+        "Cache-Control",
+        "public, s-maxage=18000, max-age=18000, must-revalidate",
+      );
+    } else {
+      // NOTE: If url and title aren't present
+      reply.header(
+        "Cache-Control",
+        "public, s-maxage=86400, max-age=86400, stale-while-revalidate=600000",
+      );
+    }
+
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/*", async (request, reply, next) => {
