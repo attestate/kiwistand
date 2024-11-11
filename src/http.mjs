@@ -1001,6 +1001,10 @@ export async function launch(trie, libp2p) {
     }
     const profile = await resolve(request.query.address);
     if (profile && profile.ens) {
+      reply.header(
+        "Cache-Control",
+        "public, s-maxage=86400, max-age=86400, stale-while-revalidate=86400",
+      );
       return reply.redirect(301, `/${profile.ens}`);
     }
 
