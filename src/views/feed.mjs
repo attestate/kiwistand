@@ -409,10 +409,11 @@ export async function index(trie, page, domain) {
       .catch((err) => log(`Err in getAd: ${err.stack}`));
   }
 
-  //const contestStories = await getContestStories();
-  //const resolvedContestStories = await resolveIds(contestStories);
+  const contestStories = await getContestStories();
+  const resolvedContestStories = await resolveIds(contestStories);
+  console.log(resolvedContestStories);
   return {
-    //contestStories: resolvedContestStories,
+    contestStories: resolvedContestStories,
     ad,
     stories,
     originals,
@@ -482,7 +483,10 @@ export default async function (trie, theme, page, domain) {
               <tr>
                 ${SecondHeader(theme, "top")}
               </tr>
-              <tr style="cursor: pointer;">
+              <tr
+                style="cursor: pointer; user-select:none;"
+                onclick="document.querySelectorAll('.inverted-row').forEach(el => el.style.display = el.style.display === 'none' ? '' : 'none');"
+              >
                 <td>
                   <div
                     style="border-bottom: 1px solid black; border-top: 1px solid black; background-color: white; height: 2.3rem;display: flex; justify-content: start; align-items: center; padding-left: 1rem; gap: 1rem; color: black;"
@@ -492,12 +496,7 @@ export default async function (trie, theme, page, domain) {
                     >
                       <img src="devconflictlogo.png" style="height: 25px;" />
                     </span>
-                    <a
-                      href="https://paragraph.xyz/@kiwi-updates/arena-devconflict-writing-contest"
-                      target="_blank"
-                    >
-                      New contest: "Arena: Devconflict"
-                    </a>
+                    <span> Show/Hide submissions </span>
                   </div>
                 </td>
               </tr>
