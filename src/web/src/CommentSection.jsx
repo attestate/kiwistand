@@ -23,7 +23,7 @@ const Comment = ({ comment, index }) => {
       style={{
         color: "black",
         border: "1px solid rgba(0,0,0,0.1)",
-        backgroundColor: "#E6E6DF",
+        backgroundColor: "rgba(0,0,0,0.075)",
         padding: "0.55rem 0.75rem",
         borderRadius: "2px",
         display: "block",

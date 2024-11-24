@@ -10,6 +10,12 @@
     display: none;
   }
 }
+.content-row {
+  margin-bottom: 17px;
+  background-color: rgba(0,0,0,0.045);
+  border-top: 1px solid rgba(0,0,0,0.3);
+  border-bottom: 1px solid rgba(0,0,0,0.3);
+}
 .inverted-row {
   filter: invert(100%) brightness(175%);
 }
@@ -54,7 +60,7 @@
 .comment-preview:active,
 .bell-button:active {
   touch-action: manipulation;
-  transform: scale(0.88);
+  transform: scale(0.95);
   transition: transform 0.1s ease;
   cursor: pointer;
 }
@@ -376,14 +382,20 @@ body {
   #button-onboarding:hover svg {
     color: black !important;
   }
-  .primary-action-button:hover, #button-onboarding:hover, .buy-button:hover, .friend-buy-button:hover {
+  .primary-action-button:hover,
+  #button-onboarding:hover,
+  .buy-button:hover,
+  .friend-buy-button:hover {
     outline: 1px solid black;
     color: black !important;
     border-color: black !important;
     background-color: white !important;
   }
-  .primary-action-button:active, #button-onboarding:active, .buy-button:active, .friend-buy-button:active {
-    transform: scale(0.96);
+  .primary-action-button:active,
+  #button-onboarding:active,
+  .buy-button:active,
+  .friend-buy-button:active {
+    transform: scale(0.98);
     outline: 1px solid black;
     color: black !important;
     background-color: white !important;
@@ -400,7 +412,7 @@ body {
   }
 
     #hnmain {
-      border: 1px solid #ccc;
+      border: 1px solid rgba(0,0,0,0.2);
       border-top: none;
       border-top-left-radius: 0;
       border-top-right-radius: 0;
@@ -417,13 +429,19 @@ body {
 }
 /* mobile device */
  @media only screen and (min-width : 300px) and (max-width : 750px) {
+    .mobile-row-image img {
+      padding-top: 10px;
+    }
+    .content-row-elevated {
+      background-color: rgba(0,0,0,0.065);
+    }
     .elevating-row {
-      background: rgba(246, 246, 239, 0.98);
+      background: rgba(245, 245, 238, 0.98);
       position: relative;
-      margin: -28px 3px 5px 3px;
+      margin: -28px 7px 10px 7px;
       border-radius: 2px;
-      border: 1px solid rgba(0, 0, 0, 0.1);
-      box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
+      border: 1px solid rgba(0, 0, 0, 0.2);
+      box-shadow: rgba(0, 0, 0, 0.26) 0px 1px 4px;
     }
     #hnmain {
       border: none;
@@ -695,7 +713,7 @@ body {
       max-width: 45% !important;
     }
     .content-row:hover {
-      background-color: rgba(0,0,0,0.025);
+      background-color: rgba(0,0,0,0.05);
     }
     .feed-button:hover {
       background-color: rgba(0,0,0,0.15) !important;
@@ -710,7 +728,7 @@ body {
       width: 70ch;
       margin-top: 1rem;
       margin-bottom: 1rem;
-      border-top: 1px solid #ccc;
+      border-top: 1px solid rgba(0,0,0,0.2);
       border-radius: 2px;
     }
     #bell {
@@ -797,8 +815,8 @@ body {
     }
     #hnmain {
       border-bottom-right-radius: 2px;
-      border-right: 1px solid #ccc;
-      border-bottom: 1px solid #ccc;
+      border-right: 1px solid rgba(0,0,0,0.2);
+      border-bottom: 1px solid rgba(0,0,0,0.2);
     }
     .svg-container svg {
       width: 1.75rem;
@@ -920,7 +938,7 @@ a.meta-link:hover, span.meta-link:hover {
 }
 .interaction-element:hover {
   cursor:pointer;
-  background-color: rgba(0,0,0,0.1) !important;
+  background-color: rgba(0,0,0,0.15) !important;
 }
 
 .bell-button:hover{

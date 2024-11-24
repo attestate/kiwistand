@@ -521,13 +521,29 @@ export default async function (trie, theme, page, domain) {
               ${ad && Row(start, "/", "", null, null, null, recentJoiners)(ad)}
               ${stories
                 .slice(3, 8)
-                .map(
-                  Row(start, "/", undefined, null, null, null, recentJoiners),
+                .map((story, i) =>
+                  Row(
+                    start,
+                    "/",
+                    undefined,
+                    null,
+                    null,
+                    null,
+                    recentJoiners,
+                  )(story, i + 3),
                 )}
               ${stories
                 .slice(8)
-                .map(
-                  Row(start, "/", undefined, null, null, null, recentJoiners),
+                .map((story, i) =>
+                  Row(
+                    start,
+                    "/",
+                    undefined,
+                    null,
+                    null,
+                    null,
+                    recentJoiners,
+                  )(story, i + 8),
                 )}
               ${stories.length < totalStories
                 ? ""

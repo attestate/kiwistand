@@ -137,16 +137,9 @@ export default async function (trie, theme) {
               <tr>
                 ${SecondHeader(theme, "new")}
               </tr>
-              ${items
-                .slice(0, 8)
-                .map(
-                  Row(null, "/new", undefined, null, null, null, recentJoiners),
-                )}
-              ${items
-                .slice(8)
-                .map(
-                  Row(null, "/new", undefined, null, null, null, recentJoiners),
-                )}
+              ${items.map(
+                Row(null, "/new", undefined, null, null, null, recentJoiners),
+              )}
             </table>
             ${Footer(theme, "/new")}
           </div>

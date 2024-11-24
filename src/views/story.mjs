@@ -90,7 +90,9 @@ export async function generateStory(index) {
 export function generateList(profiles, submitter) {
   profiles.shift();
   return html`
-    <ul style="padding: 0.3rem 0 0.65rem 56px; list-style: none; margin: 0;">
+    <ul
+      style="border: 1px solid rgba(0,0,0,0.1); border-radius: 2px; margin: 0 1rem; background-color: rgba(0,0,0,0.1); padding: 0.3rem 0 0.65rem 0.65rem; list-style: none;"
+    >
       <li style="position: relative;">
         <p
           style="display: flex; align-items: center; gap: 3px; flex: 1; margin: 0; padding: 2px 0; font-size: 14px; color: #6b7280;"
@@ -214,7 +216,7 @@ export default async function (trie, theme, index, value, referral) {
   story.displayName = ensData.displayName;
 
   const start = 0;
-  const style = "padding: 1rem 10px 0 10px;";
+  const style = "";
 
   let ogImage = `https://news.kiwistand.com/previews/${index}.jpg`;
   const ogDescription =

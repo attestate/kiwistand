@@ -220,7 +220,7 @@ const knownBadOgImages = [
 const row = (
   start = 0,
   path,
-  style = "border-bottom: 1px solid rgba(0,0,0,0.1);",
+  style = "",
   interactive,
   hideCast,
   period,
@@ -262,10 +262,10 @@ const row = (
           <div
             class="${interactive ? "" : "content-row"} ${
       invert ? "inverted-row" : ""
-    }"
-            style="${invert ? "display:none;" : ""} ${
-      i === 0 ? "border-top: 1px solid rgba(0,0,0,0.1);" : ""
-    }${style}"
+    } ${displayMobileImage ? "content-row-elevated" : ""}"
+            style="${i === 0 ? "margin-top: 17px;" : ""} ${
+      invert ? "display:none;" : ""
+    } ${style}"
           >
             ${
               displayMobileImage
@@ -290,7 +290,7 @@ const row = (
             <div 
               class="${displayMobileImage ? "elevating-row" : ""}"
 
-              style="display: flex; align-items: center; padding: 7px 0;">
+              style="display: flex; align-items: center; padding: 3px 0;">
               <div
                 data-title="${DOMPurify.sanitize(story.title)}"
                 data-href="${DOMPurify.sanitize(story.href)}"
@@ -314,7 +314,7 @@ const row = (
                 >
                   <div
                     class="interaction-element"
-                    style="border-radius: 2px; padding: 5px 0; background-color: rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; min-width: 45px; margin: 5px 8px 5px 6px; align-self: stretch;"
+                    style="border-radius: 2px; padding: 5px 0; background-color: rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; min-width: 45px; margin: 5px 8px 5px 6px; align-self: stretch;"
                   >
                     <div style="min-height: 40px; display:block;">
                       <div class="votearrowcontainer">
@@ -609,7 +609,7 @@ const row = (
                         href="/stories/${slugify(
                           DOMPurify.sanitize(story.title),
                         )}?index=0x${story.index}"
-                        style="margin: 5px; background-color: #e6e6df; border-radius: 2px; display: ${path ===
+                        style="margin: 5px; background-color: rgba(0,0,0,0.1); border-radius: 2px; display: ${path ===
                         "/stories"
                           ? "none"
                           : "flex"}; justify-content: center; min-width: 45px; align-items: center; flex-direction: column;"
@@ -647,11 +647,11 @@ const row = (
               !invert
                 ? html` <div
                     class="comment-preview comment-preview-0x${story.index}"
-                    style="touch-action: manipulation; user-select: none; cursor: pointer; padding: 9px 5px 14px 6px; display: flex;"
+                    style="touch-action: manipulation; user-select: none; cursor: pointer; display: flex;"
                   >
                     <div
                       onclick="document.querySelector('.comment-preview-0x${story.index}').style.opacity = 0.5, window.addToQueue(new CustomEvent('open-comments-0x${story.index}'));"
-                      style="display: flex;width: 100%; background-color: rgba(0, 0, 0, 0.05);border-radius: 2px;"
+                      style="display: flex;width: 100%; background-color: border-radius: 2px;"
                     >
                       <div style="width:90%; padding: 11px 9px;">
                         <div style="display: inline-flex; align-items: start;">
@@ -680,7 +680,7 @@ const row = (
                         <span> </span>
                       </div>
                       <div
-                        style="width:10%; display: flex; align-items: center; justify-content: end; padding-right: 9px;"
+                        style="width:10%; display: flex; align-items: center; justify-content: end; padding-right: 19px;"
                       >
                         ${expandSVG}
                       </div>

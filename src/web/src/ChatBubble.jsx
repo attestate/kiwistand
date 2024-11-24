@@ -49,7 +49,7 @@ const ChatBubble = ({ allowlist, delegations, storyIndex, commentCount }) => {
       style={{
         cursor: isDisabled ? "not-allowed" : "pointer",
         margin: "5px",
-        backgroundColor: "#e6e6df",
+        backgroundColor: "rgba(0,0,0,0.1)",
         borderRadius: "2px",
         display: "flex",
         alignSelf: "stretch",
