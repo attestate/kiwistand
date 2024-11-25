@@ -411,7 +411,6 @@ export async function index(trie, page, domain) {
 
   const contestStories = await getContestStories();
   const resolvedContestStories = await resolveIds(contestStories);
-  console.log(resolvedContestStories);
   return {
     contestStories: resolvedContestStories,
     ad,
