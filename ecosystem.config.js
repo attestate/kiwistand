@@ -4,9 +4,9 @@ module.exports = {
   apps: [
     {
       name: "kiwinews",
-      script: "npm run start",
+      script: "./src/launch.mjs",
       env: {
-        DEBUG: "*attestate*",
+        NODE_PATH: "./node_modules",
         NODE_ENV: "production",
         THEME: "kiwi",
         HTTP_PORT: 3000,
@@ -18,8 +18,7 @@ module.exports = {
         SSL_CERT_PATH: "/etc/letsencrypt/live/news.kiwistand.com/fullchain.pem",
         SSL_KEY_PATH: "/etc/letsencrypt/live/news.kiwistand.com/privkey.pem",
       },
-      time: true,
-      node_args: "--max-old-space-size=12288",
+      node_args: "-r dotenv/config --max-old-space-size=4096",
     },
   ],
 };
