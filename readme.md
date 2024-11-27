@@ -25,6 +25,8 @@ Please reach out to us if you don't have access to an Alchemy account and we'll 
 
 ## Getting started
 
+If you want to deploy Kiwi News with Terraform, check out [this repo](https://github.com/x4901/kiwi-news-deploy).
+
 ```bash
 git clone git@github.com:attestate/kiwistand.git
 cp .env-copy .env
