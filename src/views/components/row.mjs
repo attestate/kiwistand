@@ -653,30 +653,42 @@ const row = (
                       onclick="document.querySelector('.comment-preview-0x${story.index}').style.opacity = 0.5, window.addToQueue(new CustomEvent('open-comments-0x${story.index}'));"
                       style="display: flex;width: 100%; background-color: border-radius: 2px;"
                     >
-                      <div style="width:90%; padding: 11px 9px;">
-                        <div style="display: inline-flex; align-items: start;">
+                      <div style="width:90%; padding: 11px 9px 11px 11px;">
+                        <div
+                          style="display: flex; align-items: center; gap: 5px; margin-bottom: 3px;"
+                        >
                           <img
                             loading="lazy"
                             src="${DOMPurify.sanitize(
                               story.lastComment.identity.safeAvatar,
                             )}"
                             alt="avatar"
-                            style="border: 1px solid #ccc; width: ${size}px; height: ${size}px; border-radius: 2px; margin-right: 4px;"
+                            style="border: 1px solid #ccc; width: ${size}px; height: ${size}px; border-radius: 2px;"
                           />
                           <span
                             style="touch-action: manipulation;user-select: none; font-weight: bold;"
                             >${DOMPurify.sanitize(
                               story.lastComment.identity.displayName,
-                            )}:</span
+                            )}</span
                           >
+                          <span style="opacity:0.6"> • </span>
+                          <span style="font-size: 9pt; opacity: 0.9;">
+                            ${formatDistanceToNowStrict(
+                              new Date(story.lastComment.timestamp * 1000),
+                            )}
+                            <span> </span>
+                            ago
+                          </span>
                         </div>
                         <span> </span>
-                        <span
-                          style="touch-action: manipulation;user-select: none;"
-                          >${truncateComment(
-                            DOMPurify.sanitize(story.lastComment.title),
-                          )}</span
-                        >
+                        <div style="padding-left:20px;">
+                          <span
+                            style="touch-action: manipulation;user-select: none;"
+                            >${truncateComment(
+                              DOMPurify.sanitize(story.lastComment.title),
+                            )}</span
+                          >
+                        </div>
                         <span> </span>
                       </div>
                       <div
