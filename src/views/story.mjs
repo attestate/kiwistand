@@ -172,6 +172,7 @@ export default async function (trie, theme, index, value, referral) {
   );
   const story = {
     ...value,
+    metadata: data,
     isOriginal,
   };
 

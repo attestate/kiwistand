@@ -253,7 +253,7 @@ const row = (
       story.metadata &&
       story.metadata.image &&
       !interactive &&
-      path == "/" &&
+      (path === "/" || path === "/stories") &&
       !blockedOGImageDomains.includes(extractedDomain) &&
       !knownBadOgImages.includes(story.metadata.image);
     return html`
