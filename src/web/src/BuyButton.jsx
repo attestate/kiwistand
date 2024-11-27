@@ -71,9 +71,7 @@ export async function prepare(key) {
     // preferredChainId = mainnet.id;
   }
   if (!preferredChainId) {
-    let error = `Need at least ${formatEther(
-      price,
-    )} ETH on Mainnet or Optimism`;
+    let error = `Need at least ${formatEther(price)} ETH on Optimism`;
 
     if (balance.base > price) {
       error = `Bridge:${base.id}:${price}`;
