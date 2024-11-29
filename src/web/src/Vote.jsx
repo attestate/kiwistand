@@ -146,7 +146,8 @@ const Vote = (props) => {
             className={hasUpvoted ? "" : "interaction-element"}
             style={{
               borderRadius: "2px",
-              backgroundColor: "rgba(0,0,0,0.1)",
+              backgroundColor: "var(--bg-off-white)",
+              border: "var(--border)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",

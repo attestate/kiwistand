@@ -197,7 +197,7 @@ const secondheader = (theme, site, period, domain) => {
     <td>
       <div
         class="second-header"
-        style="background-color: #e6e6df; min-height: 40px; display: flex; justify-content: space-between; align-items: center; padding: 10px 15px 10px 15px; color: white;"
+        style="background-color: var(--table-bg); min-height: 40px; display: flex; justify-content: space-between; align-items: center; padding: 10px 15px 10px 15px; color: white;"
       >
         <div style="display: flex;">
           ${site === "top" || site === "new" || site === "best"

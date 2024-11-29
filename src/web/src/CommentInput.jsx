@@ -140,7 +140,7 @@ const CommentInput = (props) => {
         style={{
           display: "block",
           width: "100%",
-          border: "1px solid #828282",
+          border: "var(--border)",
           fontSize: "1rem",
           borderRadius: "2px",
         }}

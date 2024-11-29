@@ -22,8 +22,8 @@ const Comment = ({ comment, index }) => {
     <span
       style={{
         color: "black",
-        border: "1px solid rgba(0,0,0,0.1)",
-        backgroundColor: "rgba(0,0,0,0.075)",
+        border: "var(--border)",
+        backgroundColor: "var(--bg-off-white)",
         padding: "0.55rem 0.75rem",
         borderRadius: "2px",
         display: "block",

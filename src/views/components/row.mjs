@@ -314,7 +314,7 @@ const row = (
                 >
                   <div
                     class="interaction-element"
-                    style="border-radius: 2px; padding: 5px 0; background-color: rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; min-width: 45px; margin: 5px 8px 5px 6px; align-self: stretch;"
+                    style="border-radius: 2px; padding: 5px 0; border: var(--border); background-color: var(--bg-off-white); display: flex; align-items: center; justify-content: center; min-width: 45px; margin: 5px 8px 5px 6px; align-self: stretch;"
                   >
                     <div style="min-height: 40px; display:block;">
                       <div class="votearrowcontainer">
@@ -609,7 +609,7 @@ const row = (
                         href="/stories/${slugify(
                           DOMPurify.sanitize(story.title),
                         )}?index=0x${story.index}"
-                        style="margin: 5px; background-color: rgba(0,0,0,0.1); border-radius: 2px; display: ${path ===
+                        style="margin: 5px; border: var(--border); background-color: var(--bg-off-white); border-radius: 2px; display: ${path ===
                         "/stories"
                           ? "none"
                           : "flex"}; justify-content: center; min-width: 45px; align-items: center; flex-direction: column;"
@@ -633,7 +633,7 @@ const row = (
                       <a
                         class="chat-bubble interaction-element"
                         href="/random"
-                        style="margin: 5px; background-color: #e6e6df; border-radius: 2px; display: flex; justify-content: center; min-width: 40px; align-items: center; flex-direction: column;"
+                        style="margin: 5px; border: var(--border); background-color: var(--bg-off-white); border-radius: 2px; display: flex; justify-content: center; min-width: 40px; align-items: center; flex-direction: column;"
                       >
                         ${ShuffleSVG}
                       </a>
@@ -650,10 +650,11 @@ const row = (
                     style="touch-action: manipulation; user-select: none; cursor: pointer; display: flex;"
                   >
                     <div
+                      class="interaction-element"
                       onclick="document.querySelector('.comment-preview-0x${story.index}').style.opacity = 0.5, window.addToQueue(new CustomEvent('open-comments-0x${story.index}'));"
-                      style="display: flex;width: 100%; background-color: border-radius: 2px;"
+                      style="margin: 0 5px 5px 5px; padding: 11px; border: var(--border); display: flex;width: 100%; background-color: var(--bg-off-white); border-radius: 2px;"
                     >
-                      <div style="width:90%; padding: 11px 9px 11px 11px;">
+                      <div style="width:90%;">
                         <div
                           style="display: flex; align-items: center; gap: 5px; margin-bottom: 3px;"
                         >

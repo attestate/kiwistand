@@ -92,14 +92,14 @@ async function points(identity) {
   const ogImage = "https://news.kiwistand.com/kiwi_community_page.png";
   return html`
     <div
-      style="margin: 1rem; border: 1px solid rgba(0,0,0,0.05); border-radius: 2px; background-color: rgba(0,0,0,0.05);"
+      style="margin: 1rem; border: var(--border); border-radius: 2px; background-color: rgba(0,0,0,0.05);"
     >
       <div
         style="display: flex; justify-content: space-between; align-items: center; padding:
  1rem 2rem 0 1rem;"
       >
         <span
-          style="padding: 0 0 1rem 0; border: 1px solid rgba(0,0,0,0.05); border-radius: 2px; background-color: rgba(0,0,0,0.05);"
+          style="padding: 0 0 1rem 0; border: var(--border); border-radius: 2px; background-color: rgba(0,0,0,0.05);"
         >
           <span
             style="padding: 1rem 1rem 0 1rem; font-weight: bold; font-size: 2rem;"
@@ -114,7 +114,7 @@ async function points(identity) {
         <span style="font-size: 3rem;">🥝</span>
       </div>
       <div
-        style="font-family: monospace; border: 1px solid rgba(0,0,0,0.05); border-radius: 2px; background-color: rgba(0,0,0,0.05);display: flex; justify-content: space-between; align-items: center; margin: 1rem; padding: 1rem;"
+        style="font-family: monospace; border: var(--border); border-radius: 2px; background-color: rgba(0,0,0,0.05);display: flex; justify-content: space-between; align-items: center; margin: 1rem; padding: 1rem;"
       >
         <span style="font-weight: bold; font-size: 1.25rem; color:black;"
           >Your Rank</span
@@ -243,7 +243,7 @@ export default async function (trie, theme, query, identity) {
             height: 40px;
             font-size: 1.05rem;
             border-radius: 0;
-            border: 1px solid black;
+            border: var(--border);
             padding-left: 1rem;
           }
           .search-input:focus {
@@ -288,7 +288,7 @@ export default async function (trie, theme, query, identity) {
                     />
                     <button
                       type="submit"
-                      style="font-size: 1.05rem; border-radius: 0; border: 1px solid black; height: 40px; width: auto; padding: 6px 15px;"
+                      style="font-size: 1.05rem; border-radius: 0; border: var(--border); height: 40px; width: auto; padding: 6px 15px;"
                       id="button-onboarding"
                     >
                       Search
@@ -330,7 +330,7 @@ export default async function (trie, theme, query, identity) {
                                         src="${DOMPurify.sanitize(
                                           ensData.safeAvatar,
                                         )}"
-                                        style="border: 1px solid #828282; width: 20px; height: 20px; border-radius: 2px; margin-right: 15px;"
+                                        style="border: var(--border); width: 20px; height: 20px; border-radius: 2px; margin-right: 15px;"
                                       />`
                                     : html`
                                         <zora-zorb

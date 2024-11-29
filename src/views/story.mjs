@@ -91,7 +91,7 @@ export function generateList(profiles, submitter) {
   profiles.shift();
   return html`
     <ul
-      style="border: 1px solid rgba(0,0,0,0.1); border-radius: 2px; margin: 0 1rem; background-color: rgba(0,0,0,0.1); padding: 0.3rem 0 0.65rem 0.65rem; list-style: none;"
+      style="border: var(--border); border-radius: 2px; margin: 17px 1rem 0 1rem; background-color: var(--background-color0); padding: 0.3rem 0 0.65rem 0.65rem; list-style: none;"
     >
       <li style="position: relative;">
         <p
@@ -243,18 +243,24 @@ export default async function (trie, theme, index, value, referral) {
           ${Sidebar(path)}
           <div id="hnmain" class="scaled-hnmain">
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
-              <tr>
-                ${await Header(theme)}
-              </tr>
-              ${Row(
-                start,
-                "/stories",
-                style,
-                null,
-                null,
-                null,
-                recentJoiners,
-              )({ ...story, index })}
+              <thead>
+                <tr>
+                  ${await Header(theme)}
+                </tr>
+              </thead>
+              <thead
+                style="background-color: #ebebe6; position: sticky; top: 0; z-index: 9;"
+              >
+                ${Row(
+                  start,
+                  "/stories",
+                  style,
+                  null,
+                  null,
+                  null,
+                  recentJoiners,
+                )({ ...story, index })}
+              </thead>
               <tr>
                 <td>
                   ${actions.length > 3
@@ -272,7 +278,7 @@ export default async function (trie, theme, index, value, referral) {
                               id="0x${comment.index}"
                               style="${comment.flagged
                                 ? "opacity: 0.5"
-                                : ""}; color: black; border: 1px solid rgba(0,0,0,0.1); background-color: #E6E6DF; padding: 0.55rem 0.75rem; border-radius: 2px;display: block; margin-bottom: 15px; white-space: pre-wrap; line-height: 1.3; word-break: break-word; overflow-wrap: break-word;"
+                                : ""}; color: black; border: var(--border); background-color: var(--background-color0); padding: 0.55rem 0.75rem; border-radius: 2px;display: block; margin-bottom: 15px; white-space: pre-wrap; line-height: 1.3; word-break: break-word; overflow-wrap: break-word;"
                             >
                               <div
                                 style="white-space: nowrap; gap: 3px; margin-bottom: 0.25rem; display: inline-flex; align-items: center;"

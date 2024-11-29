@@ -138,7 +138,15 @@ export default async function (trie, theme) {
                 ${SecondHeader(theme, "new")}
               </tr>
               ${items.map(
-                Row(null, "/new", undefined, null, null, null, recentJoiners),
+                Row(
+                  null,
+                  "/new",
+                  "margin-bottom: 17px;",
+                  null,
+                  null,
+                  null,
+                  recentJoiners,
+                ),
               )}
             </table>
             ${Footer(theme, "/new")}

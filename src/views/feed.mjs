@@ -475,7 +475,7 @@ export default async function (trie, theme, page, domain) {
         <div class="container">
           ${Sidebar(path)}
           <div id="hnmain" class="scaled-hnmain">
-            <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
+            <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f8f8f7">
               <tr>
                 ${await Header(theme)}
               </tr>
@@ -515,16 +515,33 @@ export default async function (trie, theme, page, domain) {
               ${stories
                 .slice(0, 3)
                 .map(
-                  Row(start, "/", undefined, null, null, null, recentJoiners),
+                  Row(
+                    start,
+                    "/",
+                    "margin-bottom: 17px;",
+                    null,
+                    null,
+                    null,
+                    recentJoiners,
+                  ),
                 )}
-              ${ad && Row(start, "/", "", null, null, null, recentJoiners)(ad)}
+              ${ad &&
+              Row(
+                start,
+                "/",
+                "margin-bottom: 17px;",
+                null,
+                null,
+                null,
+                recentJoiners,
+              )(ad)}
               ${stories
                 .slice(3, 8)
                 .map((story, i) =>
                   Row(
                     start,
                     "/",
-                    undefined,
+                    "margin-bottom: 17px;",
                     null,
                     null,
                     null,
@@ -537,7 +554,7 @@ export default async function (trie, theme, page, domain) {
                   Row(
                     start,
                     "/",
-                    undefined,
+                    "margin-bottom: 17px;",
                     null,
                     null,
                     null,

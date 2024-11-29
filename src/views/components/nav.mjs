@@ -109,8 +109,7 @@ const notificationsfull = html`<svg
 const nav = (path) => html`
   <div
     class="bottom-nav"
-    style="border-top: 1px solid rgba(0,0,0,0.1); display: flex; justify-content: space-around; position: fixed; bottom
- 0; bottom: 0px; width: 100%; background-color: #e6e6df; box-shadow: 0 -2px 5px rgba(0,0,0,0.1);"
+    style="border-top: 1px solid rgba(0,0,0,0.1); display: flex; justify-content: space-around; position: fixed; bottom: 0px; width: 100%; background-color: var(--background-color0); box-shadow: 0 -2px 5px rgba(0,0,0,0.1);"
   >
     <a
       data-icon="home"

@@ -47,7 +47,7 @@ if (env.NODE_ENV === "production") {
 
 const footer = (theme, path) => html`
   ${Nav(path)}
-  <footer style="overflow-y: hidden; background-color: #e6e6df;">
+  <footer style="overflow-y: hidden; background-color: var(--header-beige);">
     <div
       class="footer-table"
       style="display: flex; justify-content: space-around; padding: 0.75rem 0 1rem 0;"

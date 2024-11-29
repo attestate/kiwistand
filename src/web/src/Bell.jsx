@@ -107,7 +107,8 @@ const Bell = (props) => {
       onClick={handleClick}
       style={{
         padding: props.mobile ? "" : "10px 10px",
-        backgroundColor: props.mobile ? "" : "rgba(0, 0, 0, 0.1)",
+        backgroundColor: props.mobile ? "" : "var(--bg-off-white)",
+        border: props.mobile ? "" : "var(--border)",
         borderRadius: "2px",
         display: "inline-flex",
         position: "relative",
