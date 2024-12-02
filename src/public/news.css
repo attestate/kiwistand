@@ -17,6 +17,9 @@
     display: none;
   }
 }
+:target {
+  box-shadow: 0 0 0 2px rgb(175, 192, 70, 0.75);
+}
 .content-row {
   background-color: var(--header-beige);
 }
