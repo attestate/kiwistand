@@ -95,7 +95,7 @@ const Vote = (props) => {
     console.log(response);
     let message;
     if (response.status === "success") {
-      toast.success("Thanks for your upvote! Have a 🥝");
+      toast.success("Thanks for your upvote!");
       setUpvotes(upvotes + 1);
     } else if (response.details.includes("You must mint")) {
       // NOTE: This should technically never happen, but if it does we pop open
