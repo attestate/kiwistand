@@ -26,9 +26,6 @@ const filtered = [
   "kiwinews.xyz",
   "kiwinews.io",
   "instagram.com",
-  "warpcast.com",
-  "twitter.com",
-  "x.com",
 ];
 
 async function extractCanonicalLink(html) {
@@ -74,7 +71,34 @@ const checkOgImage = async (url) => {
   }
 };
 
+const getYTId = (url) => {
+  try {
+    const u = new URL(url);
+    if (u.hostname === "youtu.be") return u.pathname.slice(1);
+    if (u.hostname === "youtube.com" || u.hostname === "www.youtube.com") {
+      return u.searchParams.get("v");
+    }
+    return null;
+  } catch {
+    return null;
+  }
+};
+
 export const metadata = async (url) => {
+  let urlObj;
+  try {
+    urlObj = new URL(url);
+  } catch {
+    throw new Error("Invalid URL");
+  }
+
+  const { hostname } = urlObj;
+
+  if (hostname === "twitter.com" || hostname === "x.com") {
+    urlObj.hostname = "fxtwitter.com";
+    url = urlObj.toString();
+  }
+
   let result, html;
   if (cache.has(url)) {
     const fromCache = cache.get(url);
