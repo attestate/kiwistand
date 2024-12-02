@@ -314,7 +314,7 @@ const row = (
                 >
                   <div
                     class="interaction-element"
-                    style="border-radius: 2px; padding: 5px 0; border: var(--border); background-color: var(--bg-off-white); display: flex; align-items: center; justify-content: center; min-width: 45px; margin: 5px 8px 5px 6px; align-self: stretch;"
+                    style="border-radius: 2px; padding: 5px 0; border: var(--border); background-color: var(--bg-off-white); display: flex; align-items: center; justify-content: center; min-width: 49px; margin: 5px 8px 5px 6px; align-self: stretch;"
                   >
                     <div style="min-height: 40px; display:block;">
                       <div class="votearrowcontainer">
@@ -362,13 +362,13 @@ const row = (
                       >
                         <img
                           loading="lazy"
-                          style="max-height: 61px; border: 1px solid #ccc; border-radius: 2px; width: 110px; object-fit: cover;"
+                          style="max-height: 61px; border: var(--border-line); border-radius: 2px; width: 110px; object-fit: cover;"
                           src="${DOMPurify.sanitize(story.metadata.image)}"
                       /></a>`
                     : null
                 }
                 <div
-                  style="min-height: 55px; display:flex; justify-content: center; flex-direction: column; flex-grow: 1; line-height: 1.3; padding: 8px 3px 5px 0;"
+                  style="min-height: 59px; display:flex; justify-content: center; flex-direction: column; flex-grow: 1; line-height: 1.3; padding: 8px 3px 5px 0;"
                 >
                   <span>
                     <span class="story-link-container">
@@ -612,7 +612,7 @@ const row = (
                         style="margin: 5px; border: var(--border); background-color: var(--bg-off-white); border-radius: 2px; display: ${path ===
                         "/stories"
                           ? "none"
-                          : "flex"}; justify-content: center; min-width: 45px; align-items: center; flex-direction: column;"
+                          : "flex"}; justify-content: center; min-width: 49px; align-items: center; flex-direction: column;"
                       >
                         ${ChatsSVG()}
                         <span

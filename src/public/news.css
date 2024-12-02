@@ -4,6 +4,8 @@
   --background-color1: rgba(255,0,0,0.06);
   --bg-off-white: #f6f6ef;
   --border: 2px dotted rgba(219, 105, 141,0.3);
+  --border-thin: 1px dotted rgba(219, 105, 141,0.3);
+  --border-line: 1px solid rgba(219, 105, 141,0.3);
   --header-beige: #fafafa;
   --middle-beige: #f3f3f3;
   --table-bg: #f8f8f7;

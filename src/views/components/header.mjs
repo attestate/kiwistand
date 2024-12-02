@@ -23,7 +23,7 @@ const header = async (theme, path) => {
     >
       <tbody>
         <tr>
-          <td style="line-height:12pt; height:60px;">
+          <td style="line-height:12pt; height:62px;">
             <div
               style="display: flex; flex-wrap: nowrap; justify-content: space-between; align-items: center;"
             >
@@ -33,7 +33,7 @@ const header = async (theme, path) => {
                   href="/"
                 >
                   <img
-                    style="filter: saturate(90%); width: 35px;"
+                    style="filter: saturate(90%); width: 35px; height: 35px;"
                     src="kiwi-icon.webp"
                   />
                   Kiwi News</a

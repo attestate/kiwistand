@@ -55,7 +55,7 @@ const ChatBubble = ({ allowlist, delegations, storyIndex, commentCount }) => {
         display: "flex",
         alignSelf: "stretch",
         justifyContent: "center",
-        minWidth: "45px",
+        minWidth: "49px",
         alignItems: "center",
         flexDirection: "column",
       }}

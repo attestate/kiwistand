@@ -151,13 +151,13 @@ const Vote = (props) => {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              minWidth: "45px",
+              minWidth: "49px",
               margin: "5px 8px 5px 6px",
               alignSelf: "stretch",
               cursor: hasUpvoted ? "not-allowed" : "pointer",
             }}
           >
-            <div style={{ minHeight: "40px", display: "block" }}>
+            <div style={{ minHeight: "38px", display: "block" }}>
               <div
                 className={`votearrow`}
                 style={{
