@@ -135,6 +135,13 @@ export const metadata = async (url) => {
   if (result.twitterImage && result.twitterImage.length >= 1) {
     image = result.twitterImage[0].url;
   }
+  if (hostname === "youtu.be" || hostname.endsWith("youtube.com")) {
+    const id = getYTId(url);
+    if (id) {
+      image = `https://i.ytimg.com/vi/${id}/maxresdefault.jpg`;
+    }
+  }
+
   const { ogTitle } = result;
   let { ogDescription } = result;
 
