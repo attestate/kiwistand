@@ -54,7 +54,6 @@ const footer = (theme, path) => html`
     >
       <div>
         <strong>Resources</strong><br />
-        <a href="/referral">How to earn</a><br />
         <a href="/privacy-policy">Privacy Policy</a><br />
         <a href="/onboarding-reader">Onboarding</a><br />
         <a href="/shortcut">iOS Shortcut</a><br />
