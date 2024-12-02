@@ -571,7 +571,7 @@ const row = (
                                     href="#"
                                     class="meta-link share-link"
                                     title="Share"
-                                    style="touch-action: manipulation; user-select: none; white-space: nowrap;"
+                                    style="color: var(--contrast-color); touch-action: manipulation; user-select: none; white-space: nowrap;"
                                     onclick="event.preventDefault(); navigator.clipboard.writeText('https://news.kiwistand.com/stories/${slugify(
                                       DOMPurify.sanitize(story.title),
                                     )}?index=0x${story.index}'); window.toast.success('Link copied!');"
@@ -579,7 +579,7 @@ const row = (
                                     ${CopyIcon(
                                       "padding: 0 3px 1px 0; vertical-align: bottom; height: 13px; width: 13px;",
                                     )}
-                                    Link
+                                    Copy Kiwi link
                                   </a>
                                 </span>
                               `
