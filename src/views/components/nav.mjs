@@ -140,7 +140,7 @@ const nav = (path) => html`
       style="flex-direction: column; display: flex; justify-content: center; align-items: center; flex-grow: 1;
  text-decoration: none; color: black;"
     >
-      <a class="mobile-bell" href="">
+      <a class="mobile-bell" href="/activity">
         ${path === "/activity" ? notificationsfull : notifications}
       </a>
     </div>

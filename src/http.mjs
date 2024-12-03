@@ -831,7 +831,7 @@ export async function launch(trie, libp2p) {
     try {
       data = await activity.data(
         trie,
-        DOMPurify.sanitize(request.query.address),
+        DOMPurify.sanitize(request.cookies.identity || request.query.address),
         parseInt(request.cookies.lastUpdate, 10),
       );
     } catch (err) {
