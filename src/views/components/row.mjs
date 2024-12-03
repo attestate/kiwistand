@@ -5,6 +5,7 @@ import { URL } from "url";
 import DOMPurify from "isomorphic-dompurify";
 import ethers from "ethers";
 import slugify from "slugify";
+slugify.extend({ "′": "", "'": "", "'": "" });
 
 import { commentCounts } from "../../store.mjs";
 import ShareIcon from "./shareicon.mjs";
