@@ -262,7 +262,7 @@ const secondheader = (theme, site, period, domain) => {
       ${site === "best"
         ? html` <div
             class="second-header"
-            style="background-color: #e6e6df; min-height: 40px; display: flex; justify-content: space-between; align-items: center; padding: 0 15px 10px 15px; color: white;"
+            style="background-color: var(--table-bg); min-height: 40px; display: flex; justify-content: space-between; align-items: center; padding: 0 15px 10px 15px; color: white;"
           >
             <div>
               <a href="/best?period=all${domain ? `&domain=${domain}` : ""}">
