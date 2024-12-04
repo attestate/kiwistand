@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { formatDistanceToNowStrict } from "date-fns";
 import Linkify from "linkify-react";
 
@@ -17,9 +17,10 @@ function truncateName(name) {
   return name.slice(0, maxLength) + "...";
 }
 
-const Comment = ({ comment, index }) => {
+const Comment = React.forwardRef(({ comment, index }, ref) => {
   return (
     <span
+      ref={ref}
       style={{
         color: "black",
         border: "var(--border)",
@@ -88,12 +89,13 @@ const Comment = ({ comment, index }) => {
       </span>
     </span>
   );
-};
+});
 
 const CommentsSection = (props) => {
   const { storyIndex, commentCount } = props;
   const [comments, setComments] = useState([]);
   const [shown, setShown] = useState(false);
+  const lastCommentRef = useRef(null);
 
   useEffect(() => {
     const toggle = () => {
@@ -119,12 +121,26 @@ const CommentsSection = (props) => {
     })();
   }, [storyIndex]);
 
+  useEffect(() => {
+    if (shown && comments.length > 0 && lastCommentRef.current) {
+      lastCommentRef.current.scrollIntoView({
+        behavior: "instant",
+        block: "start",
+      });
+    }
+  }, [shown, comments]);
+
   if (!shown) return;
   return (
     <div style={{ padding: "5px 5px 0 5px", fontSize: "1rem" }}>
       {comments.length > 0 &&
-        comments.map((comment) => (
-          <Comment key={comment.index} comment={comment} index={storyIndex} />
+        comments.map((comment, index) => (
+          <Comment
+            ref={index === comments.length - 1 ? lastCommentRef : null}
+            key={comment.index}
+            comment={comment}
+            index={storyIndex}
+          />
         ))}
       <CommentInput {...props} style={{ margin: "1rem 0" }} />
     </div>
