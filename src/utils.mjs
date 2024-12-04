@@ -43,7 +43,12 @@ export function logd(label = "") {
   } else {
     console.log(`${label}${label ? ": " : ""}Delta: ${now - lastCall}ms`);
   }
-  lastCall = now;
+
+  if (label === "reset") {
+    lastCall = undefined;
+  } else {
+    lastCall = now;
+  }
 }
 
 function dirname() {
