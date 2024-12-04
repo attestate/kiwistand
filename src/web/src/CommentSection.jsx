@@ -96,13 +96,16 @@ const CommentsSection = (props) => {
   const [comments, setComments] = useState([]);
   const [shown, setShown] = useState(false);
   const lastCommentRef = useRef(null);
+  const [source, setSource] = useState(null);
 
   useEffect(() => {
-    const toggle = () => {
+    const toggle = (evt) => {
       const elem = document.querySelector(`.comment-preview-${storyIndex}`);
       if (shown && elem) {
+        setSource(null);
         elem.style.display = "flex";
       } else if (elem) {
+        setSource(evt?.detail?.source);
         elem.style.display = "none";
       }
       setShown(!shown);
@@ -122,7 +125,12 @@ const CommentsSection = (props) => {
   }, [storyIndex]);
 
   useEffect(() => {
-    if (shown && comments.length > 0 && lastCommentRef.current) {
+    if (
+      shown &&
+      comments.length > 0 &&
+      lastCommentRef.current &&
+      source === "comment-preview"
+    ) {
       lastCommentRef.current.scrollIntoView({
         behavior: "instant",
         block: "start",

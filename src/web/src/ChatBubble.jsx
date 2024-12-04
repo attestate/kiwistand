@@ -34,7 +34,13 @@ const ChatBubble = ({ allowlist, delegations, storyIndex, commentCount }) => {
       disabled={isDisabled}
       onClick={() => {
         if (isDisabled) return;
-        window.dispatchEvent(new CustomEvent(`open-comments-${storyIndex}`));
+        window.dispatchEvent(
+          new CustomEvent(`open-comments-${storyIndex}`, {
+            detail: {
+              source: "chat-bubble",
+            },
+          }),
+        );
 
         const commentPreview = document.querySelector(
           `.comment-preview-${storyIndex}`,
