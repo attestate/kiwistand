@@ -1,6 +1,9 @@
 import htm from "htm";
 import vhtml from "vhtml";
-import { formatDistanceToNowStrict as originalFormatDistance } from "date-fns";
+import {
+  differenceInHours,
+  formatDistanceToNowStrict as originalFormatDistance,
+} from "date-fns";
 import { URL } from "url";
 import DOMPurify from "isomorphic-dompurify";
 import ethers from "ethers";
@@ -645,6 +648,10 @@ const row = (
             ${
               story.lastComment &&
               story.lastComment.identity.safeAvatar &&
+              differenceInHours(
+                new Date(),
+                new Date(story.lastComment.timestamp * 1000),
+              ) < 20 &&
               !invert
                 ? html` <div
                     class="comment-preview comment-preview-0x${story.index}"
