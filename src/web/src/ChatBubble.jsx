@@ -41,6 +41,7 @@ const ChatBubble = ({ allowlist, delegations, storyIndex, commentCount }) => {
             },
           }),
         );
+        window.dispatchEvent(new HashChangeEvent("hashchange"));
 
         const commentPreview = document.querySelector(
           `.comment-preview-${storyIndex}`,

@@ -18,14 +18,24 @@ function truncateName(name) {
 }
 
 const Comment = React.forwardRef(({ comment, storyIndex }, ref) => {
+  const [isTargeted, setIsTargeted] = useState(
+    window.location.hash === `#0x${comment.index}`,
+  );
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      setIsTargeted(window.location.hash === `#0x${comment.index}`);
+    };
+
+    window.addEventListener("hashchange", handleHashChange);
+    return () => window.removeEventListener("hashchange", handleHashChange);
+  }, [comment.index]);
+
   return (
     <span
       ref={ref}
       style={{
-        boxShadow:
-          window.location.hash === `#0x${comment.index}`
-            ? "0 0 0 2px rgb(175, 192, 70, 0.75)"
-            : undefined,
+        boxShadow: isTargeted ? "0 0 0 2px rgb(175, 192, 70, 0.75)" : undefined,
         color: "black",
         border: "var(--border)",
         backgroundColor: "var(--bg-off-white)",
@@ -108,6 +118,14 @@ const CommentsSection = (props) => {
       if (shown && elem) {
         setSource(null);
         elem.style.display = "flex";
+        if (window.location.hash.startsWith("#0x")) {
+          history.replaceState(
+            null,
+            "",
+            window.location.pathname + window.location.search,
+          );
+          window.dispatchEvent(new HashChangeEvent("hashchange"));
+        }
       } else if (elem) {
         setSource(evt?.detail?.source);
         elem.style.display = "none";
