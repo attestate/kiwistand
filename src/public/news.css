@@ -20,6 +20,9 @@
     display: none;
   }
 }
+.comment-preview-anchor {
+  color: black;
+}
 :target {
   box-shadow: 0 0 0 2px rgb(175, 192, 70, 0.75);
 }
@@ -213,7 +216,7 @@ body {
      color:#000000;
      text-decoration:none;
 }
- a:visited {
+ a:visited, .comment-preview-anchor:visited{
      color:#828282;
      text-decoration:none;
 }

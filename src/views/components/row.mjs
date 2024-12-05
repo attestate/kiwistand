@@ -659,52 +659,60 @@ const row = (
                   >
                     <div
                       class="interaction-element"
-                      onclick="document.querySelector('.comment-preview-0x${story.index}').style.opacity = 0.5, window.addToQueue(new CustomEvent('open-comments-0x${story.index}', { detail: {source: 'comment-preview'}}));"
+                      onclick="(function(){const orig=window.location.href; history.replaceState(null,'',window.location.pathname + window.location.search + '#open-comment-0x${story
+                        .lastComment
+                        .index}'); history.replaceState(null,'',orig)})(), document.querySelector('.comment-preview-0x${story.index}').style.opacity = 0.5, window.addToQueue(new CustomEvent('open-comments-0x${story.index}', { detail: {source: 'comment-preview'}}));"
                       style="margin: 0 5px 5px 5px; padding: 11px; border: var(--border); border-top: 2px dotted rgba(219, 105, 141, 0.075); display: flex;width: 100%; background-color: var(--bg-off-white); border-radius: 2px;"
                     >
-                      <div style="width:90%;">
-                        <div
-                          style="display: flex; align-items: center; gap: 5px; margin-bottom: 3px;"
-                        >
-                          <img
-                            loading="lazy"
-                            src="${DOMPurify.sanitize(
-                              story.lastComment.identity.safeAvatar,
-                            )}"
-                            alt="avatar"
-                            style="border: 1px solid #ccc; width: ${size}px; height: ${size}px; border-radius: 2px;"
-                          />
-                          <span
-                            style="touch-action: manipulation;user-select: none; font-weight: bold;"
-                            >${DOMPurify.sanitize(
-                              story.lastComment.identity.displayName,
-                            )}</span
-                          >
-                          <span style="opacity:0.6"> • </span>
-                          <span style="font-size: 9pt; opacity: 0.9;">
-                            ${formatDistanceToNowStrict(
-                              new Date(story.lastComment.timestamp * 1000),
-                            )}
-                            <span> </span>
-                            ago
-                          </span>
-                        </div>
-                        <span> </span>
-                        <div style="padding-left:20px;">
-                          <span
-                            style="touch-action: manipulation;user-select: none;"
-                            >${truncateComment(
-                              DOMPurify.sanitize(story.lastComment.title),
-                            )}</span
-                          >
-                        </div>
-                        <span> </span>
-                      </div>
-                      <div
-                        style="width:10%; display: flex; align-items: center; justify-content: end; padding-right: 19px;"
+                      <a
+                        class="comment-preview-anchor"
+                        href="#open-comment-0x${story.lastComment.index}"
+                        style="width: 100%; display: flex; pointer-events: none;"
                       >
-                        ${expandSVG}
-                      </div>
+                        <div style="width:90%;">
+                          <div
+                            style="display: flex; align-items: center; gap: 5px; margin-bottom: 3px;"
+                          >
+                            <img
+                              loading="lazy"
+                              src="${DOMPurify.sanitize(
+                                story.lastComment.identity.safeAvatar,
+                              )}"
+                              alt="avatar"
+                              style="border: 1px solid #ccc; width: ${size}px; height: ${size}px; border-radius: 2px;"
+                            />
+                            <span
+                              style="touch-action: manipulation;user-select: none; font-weight: bold;"
+                              >${DOMPurify.sanitize(
+                                story.lastComment.identity.displayName,
+                              )}</span
+                            >
+                            <span style="opacity:0.6"> • </span>
+                            <span style="font-size: 9pt; opacity: 0.9;">
+                              ${formatDistanceToNowStrict(
+                                new Date(story.lastComment.timestamp * 1000),
+                              )}
+                              <span> </span>
+                              ago
+                            </span>
+                          </div>
+                          <span> </span>
+                          <div style="padding-left:20px;">
+                            <span
+                              style="touch-action: manipulation;user-select: none;"
+                              >${truncateComment(
+                                DOMPurify.sanitize(story.lastComment.title),
+                              )}</span
+                            >
+                          </div>
+                          <span> </span>
+                        </div>
+                        <div
+                          style="width:10%; display: flex; align-items: center; justify-content: end; padding-right: 19px;"
+                        >
+                          ${expandSVG}
+                        </div>
+                      </a>
                     </div>
                   </div>`
                 : null
