@@ -17,11 +17,15 @@ function truncateName(name) {
   return name.slice(0, maxLength) + "...";
 }
 
-const Comment = React.forwardRef(({ comment, index }, ref) => {
+const Comment = React.forwardRef(({ comment, storyIndex }, ref) => {
   return (
     <span
       ref={ref}
       style={{
+        boxShadow:
+          window.location.hash === `#0x${comment.index}`
+            ? "0 0 0 2px rgb(175, 192, 70, 0.75)"
+            : undefined,
         color: "black",
         border: "var(--border)",
         backgroundColor: "var(--bg-off-white)",
@@ -147,7 +151,7 @@ const CommentsSection = (props) => {
             ref={index === comments.length - 1 ? lastCommentRef : null}
             key={comment.index}
             comment={comment}
-            index={storyIndex}
+            storyIndex={storyIndex}
           />
         ))}
       <CommentInput {...props} style={{ margin: "1rem 0" }} />

@@ -659,14 +659,14 @@ const row = (
                   >
                     <div
                       class="interaction-element"
-                      onclick="(function(){const orig=window.location.href; history.replaceState(null,'',window.location.pathname + window.location.search + '#open-comment-0x${story
+                      onclick="(function(){history.replaceState(null,'','#0x${story
                         .lastComment
-                        .index}'); history.replaceState(null,'',orig)})(), document.querySelector('.comment-preview-0x${story.index}').style.opacity = 0.5, window.addToQueue(new CustomEvent('open-comments-0x${story.index}', { detail: {source: 'comment-preview'}}));"
+                        .index}')})(), document.querySelector('.comment-preview-0x${story.index}').style.opacity = 0.5, window.addToQueue(new CustomEvent('open-comments-0x${story.index}', { detail: {source: 'comment-preview'}}));"
                       style="margin: 0 5px 5px 5px; padding: 11px; border: var(--border); border-top: 2px dotted rgba(219, 105, 141, 0.075); display: flex;width: 100%; background-color: var(--bg-off-white); border-radius: 2px;"
                     >
                       <a
                         class="comment-preview-anchor"
-                        href="#open-comment-0x${story.lastComment.index}"
+                        href="#0x${story.lastComment.index}"
                         style="width: 100%; display: flex; pointer-events: none;"
                       >
                         <div style="width:90%;">
