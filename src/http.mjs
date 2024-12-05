@@ -804,11 +804,13 @@ export async function launch(trie, libp2p) {
   app.get("/api/v1/activity", async (request, reply) => {
     let data;
 
+    const skipDetails = true;
     try {
       data = await activity.data(
         trie,
         DOMPurify.sanitize(request.cookies.identity || request.query.address),
         parseInt(request.cookies.lastUpdate, 10),
+        skipDetails,
       );
     } catch (err) {
       log(`Error getting activity data: ${err.stack}`);
@@ -820,7 +822,10 @@ export async function launch(trie, libp2p) {
     const httpMessage = "OK";
     const details = "Notifications feed";
 
-    reply.header("Cache-Control", "no-cache");
+    reply.header(
+      "Cache-Control",
+      "public, maxage=10, s-maxage=10, stale-while-revalidate=3600",
+    );
     return sendStatus(reply, code, httpMessage, details, {
       notifications: data.notifications,
       lastServerValue: data.latestValue,

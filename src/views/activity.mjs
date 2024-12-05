@@ -285,7 +285,12 @@ export async function page(theme, identity, notifications, lastUpdate) {
   return content;
 }
 
-export async function data(trie, identity, lastRemoteValue) {
+export async function data(
+  trie,
+  identity,
+  lastRemoteValue,
+  skipDetails = false,
+) {
   if (!identity) {
     throw new Error("Address has to be a query parameter");
   }
@@ -331,13 +336,15 @@ export async function data(trie, identity, lastRemoteValue) {
   let notifications = [];
   for await (let activity of activities) {
     const identities = [];
-    for await (let identity of activity.identities) {
-      const ensData = await ens.resolve(identity);
+    if (!skipDetails) {
+      for await (let identity of activity.identities) {
+        const ensData = await ens.resolve(identity);
 
-      identities.push({
-        address: identity,
-        ...ensData,
-      });
+        identities.push({
+          address: identity,
+          ...ensData,
+        });
+      }
     }
     notifications.push({
       ...activity,
