@@ -230,6 +230,10 @@ const row = (
   period,
   recentJoiners,
   invert = false,
+  // NOTE: query is currently only used when we want to mark a comment preview
+  // as visited, and so since comment previews are only active on / and /new, we
+  // don't have to properly set query anywhere else.
+  query = "",
 ) => {
   const size = 12;
   return (story, i) => {
@@ -666,7 +670,8 @@ const row = (
                     >
                       <a
                         class="comment-preview-anchor"
-                        href="#0x${story.lastComment.index}"
+                        href="${path === "/" ? "" : path}${query}#0x${story
+                          .lastComment.index}"
                         style="width: 100%; display: flex; pointer-events: none;"
                       >
                         <div style="width:90%;">

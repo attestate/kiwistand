@@ -113,6 +113,7 @@ export default async function (trie, theme) {
   const path = "/new";
   const ogImage = "https://news.kiwistand.com/kiwi_new_feed_page.png";
   const recentJoiners = await registry.recents();
+  const query = "?cached=true";
   return html`
     <html lang="en" op="news">
       <head>
@@ -146,6 +147,8 @@ export default async function (trie, theme) {
                   null,
                   null,
                   recentJoiners,
+                  false,
+                  query,
                 ),
               )}
             </table>

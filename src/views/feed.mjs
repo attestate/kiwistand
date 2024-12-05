@@ -452,6 +452,15 @@ export default async function (trie, theme, page, domain) {
   const content = await index(trie, page, domain);
   const { ad, originals, stories, start, contestStories } = content;
 
+  let currentQuery = "";
+  if (page && domain) {
+    currentQuery += `?page=${page}&domain=${domain}`;
+  } else if (page && !domain) {
+    currentQuery += `?page=${page}`;
+  } else if (!page && domain) {
+    currentQuery += `?domain=${domain}`;
+  }
+
   let query = `?page=${page + 1}`;
   if (domain) {
     query += `&domain=${domain}`;
@@ -510,6 +519,7 @@ export default async function (trie, theme, page, domain) {
                   null,
                   recentJoiners,
                   true,
+                  currentQuery,
                 ),
               )}
               ${stories
@@ -523,6 +533,8 @@ export default async function (trie, theme, page, domain) {
                     null,
                     null,
                     recentJoiners,
+                    false,
+                    currentQuery,
                   ),
                 )}
               ${ad &&
@@ -534,6 +546,8 @@ export default async function (trie, theme, page, domain) {
                 null,
                 null,
                 recentJoiners,
+                false,
+                currentQuery,
               )(ad)}
               ${stories
                 .slice(3, 8)
@@ -546,6 +560,8 @@ export default async function (trie, theme, page, domain) {
                     null,
                     null,
                     recentJoiners,
+                    false,
+                    currentQuery,
                   )(story, i + 3),
                 )}
               ${stories
@@ -559,6 +575,8 @@ export default async function (trie, theme, page, domain) {
                     null,
                     null,
                     recentJoiners,
+                    false,
+                    currentQuery,
                   )(story, i + 8),
                 )}
               ${stories.length < totalStories
