@@ -47,17 +47,17 @@ export async function generateStory(index) {
   }
 
   const sheetName = "contest";
-  let result;
+  let links;
   try {
-    result = await curation.getSheet(sheetName);
+    const result = await curation.getSheet(sheetName);
+    links = result.links;
   } catch (err) {
     log(`Error getting contest submissions ${err.stack}`);
-    return [];
   }
 
   let submission;
   try {
-    submission = getSubmission(index, null, identityClassifier, result.links);
+    submission = getSubmission(index, null, identityClassifier, links);
   } catch (err) {
     log(
       `Requested index "${index}" but didn't find because of error "${err.toString()}"`,
