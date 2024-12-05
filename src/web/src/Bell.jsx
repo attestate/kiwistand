@@ -12,11 +12,10 @@ const Bell = (props) => {
   let address;
   const account = useAccount();
   const localAccount = getLocalAccount(account.address, props.allowlist);
-  if (account.isConnected) {
-    address = account.address;
-  }
   if (localAccount) {
     address = localAccount.identity;
+  } else if (account.isConnected) {
+    address = account.address;
   }
   const isEligible =
     address && eligible(props.allowlist, props.delegations, address);
@@ -28,6 +27,7 @@ const Bell = (props) => {
   const [cacheBuster, setCacheBuster] = useState("");
   const [documentTitle] = useState(document.title);
   const [isFull, setIsFull] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const link = isEligible
     ? `/activity?address=${address}${
         cacheBuster ? `&cacheBuster=${cacheBuster}` : ""
@@ -39,8 +39,12 @@ const Bell = (props) => {
   };
 
   useEffect(() => {
-    if (address) {
-      const fetchAndUpdateNotifications = async () => {
+    if (!address || isLoading) return;
+
+    const fetchAndUpdateNotifications = async () => {
+      setIsLoading(true);
+
+      try {
         const notifications = await fetchNotifications(address);
         const localLastUpdate = parseInt(getCookie("lastUpdate"), 10);
         setReadNotifications(notifications.length);
@@ -52,9 +56,12 @@ const Bell = (props) => {
           setCacheBuster(`0x${newNotifications[0].message.index}`);
         }
         setNotificationCount(newNotifications.length);
-      };
-      fetchAndUpdateNotifications();
-    }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchAndUpdateNotifications();
   }, [address]);
 
   if (
