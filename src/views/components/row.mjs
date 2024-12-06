@@ -718,7 +718,7 @@ const row = (
                           <span> </span>
                         </div>
                         <div
-                          style="width:10%; display: flex; align-items: center; justify-content: end; padding-right: 19px;"
+                          style="width:10%; display: flex; align-items: center; justify-content: end; padding-right: 7px;"
                         >
                           ${expandSVG}
                         </div>
