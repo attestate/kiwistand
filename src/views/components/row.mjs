@@ -264,6 +264,14 @@ const row = (
       (path === "/" || path === "/stories") &&
       !blockedOGImageDomains.includes(extractedDomain) &&
       !knownBadOgImages.includes(story.metadata.image);
+    const displayCommentPreview =
+      story.lastComment &&
+      story.lastComment.identity.safeAvatar &&
+      differenceInHours(
+        new Date(),
+        new Date(story.lastComment.timestamp * 1000),
+      ) < 20 &&
+      !invert;
     return html`
       <tr style="${invert ? "background-color: black;" : ""}">
         <td>
@@ -290,14 +298,17 @@ const row = (
                   >
                     <img
                       loading="lazy"
-                      style="mask-image: linear-gradient(to top, rgba(0,0,0,0.5), rgba(0,0,0,1)); aspect-ratio: 2 / 1; object-fit:cover; width: 100%;"
+                      style="mask-image: linear-gradient(to top, rgba(0,0,0,0.5), rgba(0,0,0,0.8)); aspect-ratio: 2 / 1; object-fit:cover; margin: 0 7px; border-radius: 2px; width: calc(100% - 18px);"
                       src="${DOMPurify.sanitize(story.metadata.image)}"
                   /></a>`
                 : null
             }
             <div 
-              class="${displayMobileImage ? "elevating-row" : ""}"
-
+              class="${
+                displayCommentPreview
+                  ? "with-comment-preview"
+                  : `without-comment-preview without-comment-preview-0x${story.index}`
+              } ${displayMobileImage ? "elevating-row" : ""}"
               style="display: flex; align-items: center; padding: 3px 0;">
               <div
                 data-title="${DOMPurify.sanitize(story.title)}"
@@ -650,15 +661,11 @@ const row = (
               }
             </div>
             ${
-              story.lastComment &&
-              story.lastComment.identity.safeAvatar &&
-              differenceInHours(
-                new Date(),
-                new Date(story.lastComment.timestamp * 1000),
-              ) < 20 &&
-              !invert
+              displayCommentPreview
                 ? html` <div
-                    class="comment-preview comment-preview-0x${story.index}"
+                    class="comment-preview comment-preview-0x${story.index} ${displayMobileImage
+                      ? "elevating-comment-preview"
+                      : "comment-preview-no-mobile-image"}"
                     style="touch-action: manipulation; user-select: none; cursor: pointer; display: flex;"
                   >
                     <div

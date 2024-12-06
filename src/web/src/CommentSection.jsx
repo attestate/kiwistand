@@ -162,7 +162,7 @@ const CommentsSection = (props) => {
 
   if (!shown) return;
   return (
-    <div style={{ padding: "5px 5px 0 5px", fontSize: "1rem" }}>
+    <div style={{ padding: "0 7px 0 7px", fontSize: "1rem" }}>
       {comments.length > 0 &&
         comments.map((comment, index) => (
           <Comment

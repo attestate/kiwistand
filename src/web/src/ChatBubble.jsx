@@ -49,6 +49,12 @@ const ChatBubble = ({ allowlist, delegations, storyIndex, commentCount }) => {
         if (commentPreview) {
           commentPreview.style.opacity = 1;
         }
+        const borderElem = document.querySelector(
+          `.without-comment-preview-${storyIndex}`,
+        );
+        if (borderElem) {
+          borderElem.classList.toggle("no-border");
+        }
       }}
       href={null}
       className={`chat-bubble${isDisabled ? "" : " interaction-element"}`}
