@@ -149,7 +149,7 @@ const CommentsSection = (props) => {
   useEffect(() => {
     if (
       shown &&
-      comments.length > 0 &&
+      comments.length > 1 &&
       lastCommentRef.current &&
       source === "comment-preview"
     ) {
