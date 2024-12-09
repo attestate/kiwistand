@@ -11,6 +11,14 @@
   --middle-beige: #f3f3f3;
   --table-bg: #f8f8f7;
 }
+
+.notification:link {
+  color: black !important;
+}
+.notification:visited {
+  color: #D0D0D0 !important;
+}
+
 @media screen and (min-width: 1800px) {
   .scaled-hnmain {
     transform: scale(1.2);

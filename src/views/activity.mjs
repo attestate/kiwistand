@@ -14,6 +14,7 @@ import Header from "./components/header.mjs";
 import Sidebar from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
 import Head from "./components/head.mjs";
+import { iconSVG } from "./components/row.mjs";
 import * as store from "../store.mjs";
 import * as registry from "../chainstate/registry.mjs";
 import * as id from "../id.mjs";
@@ -79,42 +80,41 @@ function generateCommentRow(activity, identity, bgColor, theme) {
   return html`
     <tr style="background-color: ${bgColor}">
       <td>
-        <div style="display: flex; border-bottom: 1px solid rgba(0,0,0,0.1);">
-          <div
-            style="flex: 0.15; display: flex; align-items: start; justify-content:
+        <a class="notification" href="${link}">
+          <div style="display: flex; border-bottom: 1px solid rgba(0,0,0,0.1);">
+            <div
+              style="flex: 0.15; display: flex; align-items: start; justify-content:
  center;"
-          >
-            <a href="/upvotes?address=${identity.address}">${avatar}</a>
-          </div>
-          <div
-            style="padding-top: 10px; flex: 0.85; display: flex; flex-direction: column;"
-          >
-            <div style="font-size: 0.9rem; margin-right: 1rem;">
-              <p style="margin-top: 8px; margin-bottom: 2px;">
-                <strong>
-                  <a style="color: ;" href="${link}">
-                    <span style="color: ${theme.color};"
-                      >${identity.displayName}</span
-                    >
+            >
+              ${avatar}
+            </div>
+            <div
+              style="padding-top: 10px; flex: 0.85; display: flex; flex-direction: column;"
+            >
+              <div style="font-size: 0.9rem; margin-right: 1rem;">
+                <p
+                  class="notification-title"
+                  style="margin-top: 8px; margin-bottom: 2px;"
+                >
+                  <strong>
+                    <span>${identity.displayName}</span>
                     <span> commented on </span>
-                    <span style="color: ${theme.color};"
+                    <span
                       >${DOMPurify.sanitize(
                         activity.message.submission_title,
                       )}</span
                     >
-                  </a>
-                </strong>
-              </p>
-              <p
-                style="line-height: 1.2; white-space: pre-wrap; margin: 5px 0 1rem 0; color: gray; word-break: break-word;"
-              >
-                <a style="color: gray; text-align: justify;" href="${link}"
-                  >${comment}</a
+                  </strong>
+                </p>
+                <p
+                  style="line-height: 1.2; white-space: pre-wrap; margin: 5px 0 1rem 0; word-break: break-word;"
                 >
-              </p>
+                  <span style="text-align: justify;">${comment}</span>
+                </p>
+              </div>
             </div>
           </div>
-        </div>
+        </a>
       </td>
     </tr>
   `;
@@ -143,77 +143,67 @@ function generateRow(lastUpdate, theme) {
     return html`
       <tr style="background-color: ${bgColor};">
         <td>
-          <div style="display: flex; border-bottom: 1px solid rgba(0,0,0,0.1);">
+          <a
+            href="/stories?index=0x${activity.message
+              .index}${identities.length > 0
+              ? `&upvoter=${identities[identities.length - 1].address}`
+              : ""}"
+            class="notification"
+          >
             <div
-              class="votearrow"
-              style="font-size: 1.5rem; flex: 0.15; display: flex; align-items: center; justify-content: center; color: ${theme.color};"
-              title="upvote"
+              style="display: flex; border-bottom: 1px solid rgba(0,0,0,0.1);"
             >
-              ${activity.verb === "upvoted" ? html`▲` : html`$`}
-            </div>
-            <div
-              style="padding-top: 10px; flex: 0.85; display: flex; flex-direction: column;"
-            >
-              ${identities.length > 0 &&
-              identities[0].address === identity.address
-                ? html`<div
-                    style="margin-left: -15px; display: flex; align-items: center;"
-                  >
-                    ${identities.map(
-                      (identity, index) => html`
-                        <a
-                          href="https://news.kiwistand.com/upvotes?address=${DOMPurify.sanitize(
-                            identity.address,
-                          )}"
-                        >
+              <div
+                class="votearrow"
+                style="font-size: 1.5rem; flex: 0.15; display: flex; align-items: center; justify-content: center; color: ${theme.color};"
+                title="upvote"
+              >
+                ${iconSVG}
+              </div>
+              <div
+                style="padding-top: 10px; flex: 0.85; display: flex; flex-direction: column;"
+              >
+                ${identities.length > 0 &&
+                identities[0].address === identity.address
+                  ? html`<div
+                      style="margin-left: -15px; display: flex; align-items: center;"
+                    >
+                      ${identities.map(
+                        (identity, index) => html`
                           <img
                             src="${DOMPurify.sanitize(identity.safeAvatar)}"
                             alt="avatar"
                             style="z-index: ${index}; width: ${size}px; height: ${size}px; border: 1px solid #828282; border-radius: 2px; margin-left: 15px;"
                           />
-                        </a>
-                      `,
-                    )}
-                  </div>`
-                : ""}
-              <div style="font-size: 0.9rem; margin-right: 1rem;">
-                <p style="margin-top: 8px; margin-bottom: 2px;">
-                  <strong>
-                    <a href="/upvotes?address=${identity.address}">
+                        `,
+                      )}
+                    </div>`
+                  : ""}
+                <div style="font-size: 0.9rem; margin-right: 1rem;">
+                  <p style="margin-top: 8px; margin-bottom: 2px;">
+                    <strong>
                       ${identity.displayName}
-                    </a>
-                    <span> </span>
-                    ${activity.identities.length > 1
-                      ? html`
-                          <span>and </span>
-                          ${activity.identities.length - 1}
-                          <span> others </span>
-                        `
+                      <span> </span>
+                      ${activity.identities.length > 1
+                        ? html`
+                            <span>and </span>
+                            ${activity.identities.length - 1}
+                            <span> others </span>
+                          `
+                        : ""}
+                      ${activity.verb} your submission</strong
+                    >
+                  </p>
+                  <p style="margin-top: 5px;">${title.substring(0, 80)}</p>
+                  <p>
+                    ${activity.metadata?.index && activity.metadata?.title
+                      ? DOMPurify.sanitize(activity.metadata.title)
                       : ""}
-                    ${activity.verb} your submission</strong
-                  >
-                </p>
-                <p style="margin-top: 5px;">
-                  <a
-                    href="/stories?index=0x${activity.message.index}"
-                    style="color: gray; word-break: break-word;"
-                  >
-                    ${title.substring(0, 80)}
-                  </a>
-                </p>
-                <p>
-                  ${activity.metadata?.index && activity.metadata?.title
-                    ? html` <a
-                        href="/stories?index=0x${activity.metadata.index}"
-                        style="color: gray; word-break: break-word;"
-                      >
-                        ${DOMPurify.sanitize(activity.metadata.title)}
-                      </a>`
-                    : ""}
-                </p>
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
+          </a>
         </td>
       </tr>
     `;
