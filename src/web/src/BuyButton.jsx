@@ -26,7 +26,6 @@ import { getLocalAccount } from "./session.mjs";
 import theme from "./theme.jsx";
 import { fetchPrice, fetchLeaderboard } from "./API.mjs";
 import { getProvider, useProvider, client, chains } from "./client.mjs";
-import { ZupassButton } from "./ZupassButton.jsx";
 
 export async function prepare(key) {
   const { address } = getAccount();
@@ -450,27 +449,6 @@ const Form = (props) => {
   return (
     <WagmiConfig config={client}>
       <RainbowKitProvider chains={chains}>
-        <div
-          style={{
-            padding: "1rem 3rem",
-            margin: "0 0 2rem 0",
-            backgroundImage: "url(devconbackground.avif)",
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            borderRadius: "8px",
-            color: "white",
-            textShadow:
-              "2px 2px 4px rgba(0,0,0,0.9), 0px 0px 8px rgba(0,0,0,0.8)",
-            fontWeight: "bold",
-            fontSize: "1.5rem",
-            textAlign: "center",
-          }}
-        >
-          <p>
-            Attending Devcon? <br /> Get 24% off with Zupass!
-          </p>
-          <ZupassButton setHasTicket={setDiscountEligible} />
-        </div>
         <div
           style={{
             display: "flex",
