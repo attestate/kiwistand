@@ -3,6 +3,7 @@ import { env } from "process";
 
 import * as blockLogs from "@attestate/crawler-call-block-logs";
 import * as delegations from "./delegations.mjs";
+import * as registry from "./registry.mjs";
 
 export default {
   environment: {
@@ -24,7 +25,7 @@ export default {
       coordinator: {
         archive: false,
         module: blockLogs.state,
-        interval: 1000 * 30,
+        interval: 1000 * 5,
       },
       extractor: {
         module: {
@@ -75,6 +76,7 @@ export default {
           name: "list-delegations-load-2",
         },
       },
+      end: registry.refreshDelegations,
     },
   ],
   queue: {

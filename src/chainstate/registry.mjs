@@ -42,7 +42,6 @@ export async function refreshDelegations() {
     .filter(({ data }) => BigInt(data[2]) % 2n !== 0n);
 
   cachedDelegations = organize(logs);
-  setTimeout(refreshDelegations, 5000);
 }
 
 // NOTE: For the purpose of set reconciliation, we must know the first moment
@@ -119,7 +118,6 @@ export async function refreshAccounts() {
   const result = augmentWithMainnet(accounts);
 
   cachedAccounts = result;
-  setTimeout(refreshAccounts, 5000);
 }
 
 export async function allowlist() {
