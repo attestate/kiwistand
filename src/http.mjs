@@ -171,6 +171,20 @@ export async function launch(trie, libp2p) {
     }
     return reply.redirect(`/stories?index=${index}`);
   });
+  app.post("/outbound", async (request, reply) => {
+    reply.header("Cache-Control", "no-cache");
+    const { url } = request.query;
+    if (!url) {
+      return reply.status(400).send("URL parameter is required");
+    }
+    if (!fingerprint) {
+      return reply.redirect(url);
+    }
+
+    const hash = fingerprint.generate(request);
+    trackOutbound(url, hash);
+    return reply.status(204).send();
+  });
   app.get("/outbound", async (request, reply) => {
     reply.header("Cache-Control", "no-cache");
     const { url } = request.query;

@@ -20,7 +20,7 @@ import log from "../../logger.mjs";
 
 const html = htm.bind(vhtml);
 
-const iconSVG = html`
+export const iconSVG = html`
   <svg
     style="width: 35px;"
     viewBox="0 0 200 200"
@@ -289,12 +289,17 @@ const row = (
                     data-no-instant
                     style="display: block; width: 100%;"
                     class="mobile-row-image"
-                    href="${`/outbound?url=${encodeURIComponent(
-                      addOrUpdateReferrer(
-                        DOMPurify.sanitize(story.href),
-                        story.identity,
-                      ),
-                    )}`}"
+                    href="${addOrUpdateReferrer(
+                      DOMPurify.sanitize(story.href),
+                      story.identity,
+                    )}"
+                    onclick="event.preventDefault(); navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${addOrUpdateReferrer(
+                      DOMPurify.sanitize(story.href),
+                      story.identity,
+                    )}')); window.open('${addOrUpdateReferrer(
+                      DOMPurify.sanitize(story.href),
+                      story.identity,
+                    )}', event.currentTarget.getAttribute('target'));"
                   >
                     <img
                       loading="lazy"
@@ -369,15 +374,20 @@ const row = (
                   !knownBadOgImages.includes(story.metadata.image)
                     ? html`<a
                         data-no-instant
-                        href="${`/outbound?url=${encodeURIComponent(
-                          addOrUpdateReferrer(
-                            DOMPurify.sanitize(story.href),
-                            story.identity,
-                          ),
-                        )}`}"
+                        href="${addOrUpdateReferrer(
+                          DOMPurify.sanitize(story.href),
+                          story.identity,
+                        )}"
                         class="row-image"
                         target="_blank"
                         style="user-select:text; align-self: stretch; margin: 5px 0;"
+                        onclick="event.preventDefault(); navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${addOrUpdateReferrer(
+                          DOMPurify.sanitize(story.href),
+                          story.identity,
+                        )}')); window.open('${addOrUpdateReferrer(
+                          DOMPurify.sanitize(story.href),
+                          story.identity,
+                        )}', event.currentTarget.getAttribute('target'));"
                       >
                         <img
                           loading="lazy"
@@ -396,13 +406,18 @@ const row = (
                         href="${
                           path === "/submit" || path === "/demonstration"
                             ? "javascript:void(0);"
-                            : `/outbound?url=${encodeURIComponent(
-                                addOrUpdateReferrer(
-                                  DOMPurify.sanitize(story.href),
-                                  story.identity,
-                                ),
-                              )}`
+                            : addOrUpdateReferrer(
+                                DOMPurify.sanitize(story.href),
+                                story.identity,
+                              )
                         }"
+                        onclick="event.preventDefault(); navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${addOrUpdateReferrer(
+                          DOMPurify.sanitize(story.href),
+                          story.identity,
+                        )}')); window.open('${addOrUpdateReferrer(
+      DOMPurify.sanitize(story.href),
+      story.identity,
+    )}', event.currentTarget.getAttribute('target'));"
                         data-story-link="/stories/${slugify(
                           DOMPurify.sanitize(story.title),
                         )}?index=0x${story.index}"
