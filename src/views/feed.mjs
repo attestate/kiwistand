@@ -291,7 +291,7 @@ export async function topstories(leaves) {
       score *= upvotePerformance;
 
       const decay = Math.sqrt(itemAge(story.timestamp));
-      score = score / Math.pow(decay, 3);
+      score = score / Math.pow(decay, 6.5);
 
       story.score = score;
       return story;
