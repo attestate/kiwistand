@@ -723,6 +723,19 @@ function initKiwiRotation(selector) {
   setInterval(rotateKiwi, Math.random() * 5000 + 10000);
 }
 
+function makeCommentsVisited() {
+  if (!window.location.pathname.startsWith("/stories")) return;
+
+  const hash = window.location.hash.slice(1);
+  const origin = window.location.href;
+
+  const link0 = `/new?cached=true#${hash}`;
+  const link1 = `/#${hash}`;
+  history.replaceState(null, "", link0);
+  history.replaceState(null, "", link1);
+  history.replaceState(null, "", origin);
+}
+
 async function start() {
   // NOTE: There are clients which had the identity cookie sent to 1 week and
   // they're now encountering the paywall. So in case this happens but their
@@ -733,6 +746,9 @@ async function start() {
   initKiwiRotation(".hnname span img");
 
   storeReferral();
+
+  makeCommentsVisited();
+  window.addEventListener("hashchange", makeCommentsVisited);
 
   updateLinkTargetsForIOSPWA();
 
