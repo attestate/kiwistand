@@ -98,7 +98,7 @@ function generateCommentRow(activity, identity, bgColor, theme) {
                 >
                   <strong>
                     <span>${identity.displayName}</span>
-                    <span> commented on </span>
+                    <span style="font-weight: normal;"> commented on </span>
                     <span
                       >${DOMPurify.sanitize(
                         activity.message.submission_title,
@@ -184,18 +184,18 @@ function generateRow(lastUpdate, theme) {
                     <strong>
                       ${identity.displayName}
                       <span> </span>
-                      ${activity.identities.length > 1
-                        ? html`
-                            <span>and </span>
-                            ${activity.identities.length - 1}
-                            <span> others </span>
-                          `
-                        : ""}
-                      ${activity.verb} your submission</strong
-                    >
+                    </strong>
+                    ${activity.identities.length > 1
+                      ? html`
+                          <span>and </span>
+                          ${activity.identities.length - 1}
+                          <span> others </span>
+                        `
+                      : ""}
+                    ${activity.verb} your submission
                   </p>
                   <p style="margin-top: 5px;">${title.substring(0, 80)}</p>
-                  <p>
+                  <p style="font-weight: bold;">
                     ${activity.metadata?.index && activity.metadata?.title
                       ? DOMPurify.sanitize(activity.metadata.title)
                       : ""}
