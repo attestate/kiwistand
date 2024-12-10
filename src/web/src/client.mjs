@@ -58,7 +58,7 @@ const isDesktop = () => {
 // extension directly.
 if (isDesktop()) {
   wallets.push(rainbowWallet({ chains, projectId }));
-} else if (window.ethereum.isRainbow) {
+} else if (window?.ethereum?.isRainbow) {
   wallets.push(rainbowWallet({ chains, projectId }));
 }
 
