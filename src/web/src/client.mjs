@@ -56,7 +56,11 @@ const isDesktop = () => {
 // So instead, we're now asking mobile users to connect via the WalletConnect
 // dialogue, while we allow Desktop users to connect to their Rainbow wallet
 // extension directly.
-if (isDesktop()) wallets.push(rainbowWallet({ chains, projectId }));
+if (isDesktop()) {
+  wallets.push(rainbowWallet({ chains, projectId }));
+} else if (window.ethereum.isRainbow) {
+  wallets.push(rainbowWallet({ chains, projectId }));
+}
 
 const connectors = connectorsForWallets([
   {
