@@ -6,7 +6,7 @@ import Sidebar from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
 import Header from "./components/header.mjs";
 import Head from "./components/head.mjs";
-import Row from "./components/row.mjs";
+import Row, { iconSVG } from "./components/row.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -119,8 +119,9 @@ export default async function index(theme) {
                         "
                         >
                           Try upvoting by clicking on
-                          <span> </span><span class="votearrow">▲</span> next to
-                          one of the links below:
+                          <span> </span
+                          ><span style="display: block;">${iconSVG}</span>next
+                          to one of the links below:
                         </p>
                         <table style="width: auto; margin: auto;">
                           ${mockStories.map((story, index) =>
