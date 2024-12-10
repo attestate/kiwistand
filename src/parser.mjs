@@ -156,8 +156,18 @@ export const metadata = async (url) => {
     }
   }
 
+  // NOTE: For some domains, adding the title to the submit form is actually
+  // counter productive as these pages' titles are just some filler text, but
+  // not the title we want users to submit.
+  const bannedTitleDomains = [
+    "fxtwitter.com",
+    "twitter.com",
+    "x.com",
+    "youtube.com",
+    "youtu.be",
+  ];
   let output = {};
-  if (ogTitle) {
+  if (ogTitle && !bannedTitleDomains.includes(domain)) {
     output.ogTitle = DOMPurify.sanitize(ogTitle);
   }
   if (domain) {
