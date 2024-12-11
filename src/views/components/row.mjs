@@ -183,10 +183,10 @@ const truncateLongWords = (text, maxLength = 20) => {
   return truncatedWords.join(" ");
 };
 
-export function truncateComment(comment, maxLength = 260) {
+export function truncateComment(comment, maxLength = 180) {
   const emptyLineIndex = comment.indexOf("\n\n");
   if (emptyLineIndex !== -1 && emptyLineIndex < maxLength)
-    return truncateLongWords(comment.slice(0, emptyLineIndex));
+    return truncateLongWords(comment.slice(0, emptyLineIndex)) + "\n...";
 
   const lastLinkStart = comment.lastIndexOf("https://", maxLength);
   if (lastLinkStart !== -1 && lastLinkStart < maxLength) {
@@ -731,7 +731,7 @@ const row = (
                           <span> </span>
                           <div style="padding-left:20px;">
                             <span
-                              style="touch-action: manipulation;user-select: none;"
+                              style="display: block; white-space: pre-wrap; touch-action: manipulation;user-select: none;"
                               >${truncateComment(
                                 DOMPurify.sanitize(story.lastComment.title),
                               )}</span
