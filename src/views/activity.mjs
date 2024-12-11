@@ -173,7 +173,7 @@ function generateRow(lastUpdate, theme) {
                           <img
                             src="${DOMPurify.sanitize(identity.safeAvatar)}"
                             alt="avatar"
-                            style="z-index: ${index}; width: ${size}px; height: ${size}px; border: 1px solid #828282; border-radius: 2px; margin-left: 15px;"
+                            style="width: ${size}px; height: ${size}px; border: 1px solid #828282; border-radius: 2px; margin-left: 15px;"
                           />
                         `,
                       )}
