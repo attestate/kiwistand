@@ -162,7 +162,7 @@ const CommentInput = (props) => {
       >
         <button
           id="button-onboarding"
-          style={{ width: "auto" }}
+          style={{ marginBottom: "10px", width: "auto" }}
           disabled={isLoading || !address || !isEligible}
           onClick={handleSubmit}
         >

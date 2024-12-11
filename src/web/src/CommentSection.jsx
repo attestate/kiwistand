@@ -162,7 +162,7 @@ const CommentsSection = (props) => {
 
   if (!shown) return;
   return (
-    <div style={{ padding: "0 7px 0 7px", fontSize: "1rem" }}>
+    <div style={{ padding: "0 11px 0 11px", fontSize: "1rem" }}>
       {comments.length > 0 &&
         comments.map((comment, index) => (
           <Comment
@@ -172,7 +172,7 @@ const CommentsSection = (props) => {
             storyIndex={storyIndex}
           />
         ))}
-      <CommentInput {...props} style={{ margin: "1rem 0" }} />
+      <CommentInput {...props} style={{ margin: "0 0 1rem 0" }} />
     </div>
   );
 };

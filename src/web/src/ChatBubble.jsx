@@ -84,6 +84,7 @@ const ChatBubble = ({ allowlist, delegations, storyIndex, commentCount }) => {
           userSelect: "none",
           color: "rgba(0,0,0,0.65)",
           fontSize: "8pt",
+          fontWeight: "bold",
         }}
       >
         {commentCount !== 0 ? commentCount : null}

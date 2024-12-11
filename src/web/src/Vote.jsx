@@ -157,7 +157,7 @@ const Vote = (props) => {
               cursor: hasUpvoted ? "not-allowed" : "pointer",
             }}
           >
-            <div style={{ minHeight: "38px", display: "block" }}>
+            <div style={{ minHeight: "42px", display: "block" }}>
               <div
                 className={`votearrow`}
                 style={{
@@ -173,6 +173,7 @@ const Vote = (props) => {
                   style={{
                     userSelect: "none",
                     fontSize: "8pt",
+                    fontWeight: "bold",
                     textAlign: "center",
                   }}
                 >

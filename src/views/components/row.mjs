@@ -276,71 +276,68 @@ const row = (
       <tr style="${invert ? "background-color: black;" : ""}">
         <td>
           <div
-            class="${interactive ? "" : "content-row"} ${
-      invert ? "inverted-row" : ""
-    } ${displayMobileImage ? "content-row-elevated" : ""}"
-            style="${i === 0 ? "margin-top: 17px;" : ""} ${
-      invert ? "display:none;" : ""
-    } ${style}"
+            class="${interactive ? "" : "content-row"} ${invert
+              ? "inverted-row"
+              : ""} ${displayMobileImage ? "content-row-elevated" : ""}"
+            style="${i === 0 ? "margin-top: 17px;" : ""} ${invert
+              ? "display:none;"
+              : ""} ${style}"
           >
-            ${
-              displayMobileImage
-                ? html` <a
-                    data-no-instant
-                    style="display: block; width: 100%;"
-                    class="mobile-row-image"
-                    href="${addOrUpdateReferrer(
-                      DOMPurify.sanitize(story.href),
-                      story.identity,
-                    )}"
-                    onclick="event.preventDefault(); navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${addOrUpdateReferrer(
-                      DOMPurify.sanitize(story.href),
-                      story.identity,
-                    )}')); window.open('${addOrUpdateReferrer(
-                      DOMPurify.sanitize(story.href),
-                      story.identity,
-                    )}', event.currentTarget.getAttribute('target'));"
-                  >
-                    <img
-                      loading="lazy"
-                      style="mask-image: linear-gradient(to top, rgba(0,0,0,0.5), rgba(0,0,0,0.8)); aspect-ratio: 2 / 1; object-fit:cover; margin: 0 7px; border-radius: 2px; width: calc(100% - 18px);"
-                      src="${DOMPurify.sanitize(story.metadata.image)}"
-                  /></a>`
-                : null
-            }
-            <div 
-              class="${
-                displayCommentPreview
-                  ? "with-comment-preview"
-                  : `without-comment-preview without-comment-preview-0x${story.index}`
-              } ${displayMobileImage ? "elevating-row" : ""}"
-              style="display: flex; align-items: center; padding: 3px 0;">
+            ${displayMobileImage
+              ? html` <a
+                  data-no-instant
+                  style="display: block; width: 100%;"
+                  class="mobile-row-image"
+                  href="${addOrUpdateReferrer(
+                    DOMPurify.sanitize(story.href),
+                    story.identity,
+                  )}"
+                  onclick="event.preventDefault(); navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${addOrUpdateReferrer(
+                    DOMPurify.sanitize(story.href),
+                    story.identity,
+                  )}')); window.open('${addOrUpdateReferrer(
+                    DOMPurify.sanitize(story.href),
+                    story.identity,
+                  )}', event.currentTarget.getAttribute('target'));"
+                >
+                  <img
+                    loading="lazy"
+                    style="mask-image: linear-gradient(to top, rgba(0,0,0,0.5), rgba(0,0,0,0.8)); aspect-ratio: 2 / 1; object-fit:cover; margin: 0 11px; border-radius: 2px; width: calc(100% - 26px);"
+                    src="${DOMPurify.sanitize(story.metadata.image)}"
+                /></a>`
+              : null}
+            <div
+              class="information-row ${displayCommentPreview
+                ? "with-comment-preview"
+                : `without-comment-preview without-comment-preview-0x${story.index}`} ${displayMobileImage
+                ? "elevating-row"
+                : ""}"
+              style="display: flex; align-items: center; padding: 3px 0;"
+            >
               <div
                 data-title="${DOMPurify.sanitize(story.title)}"
                 data-href="${DOMPurify.sanitize(story.href)}"
                 data-upvoters="${JSON.stringify(story.upvoters)}"
                 data-isad="${isad}"
-                class="${
-                  displayMobileImage
-                    ? "vote-button-container interaction-container-with-image"
-                    : "vote-button-container"
-                }"
-                style="${
-                  isad ? "opacity: 0.3;" : ""
-                }display: flex; align-self: stretch;"
+                class="${displayMobileImage
+                  ? "vote-button-container interaction-container-with-image"
+                  : "vote-button-container"}"
+                style="${isad
+                  ? "opacity: 0.3;"
+                  : ""}display: flex; align-self: stretch;"
               >
                 <div
                   onclick="const key='--kiwi-news-upvoted-stories';const href='${DOMPurify.sanitize(
                     story.href,
                   )}';const title='${DOMPurify.sanitize(
-      story.title,
-    )}';const stories=JSON.parse(localStorage.getItem(key)||'[]');stories.push({href,title});localStorage.setItem(key,JSON.stringify(stories));window.dispatchEvent(new Event('upvote-storage'));"
+                    story.title,
+                  )}';const stories=JSON.parse(localStorage.getItem(key)||'[]');stories.push({href,title});localStorage.setItem(key,JSON.stringify(stories));window.dispatchEvent(new Event('upvote-storage'));"
                 >
                   <div
                     class="interaction-element"
-                    style="border-radius: 2px; padding: 5px 0; border: var(--border); background-color: var(--bg-off-white); display: flex; align-items: center; justify-content: center; min-width: 49px; margin: 5px 8px 5px 6px; align-self: stretch;"
+                    style="border-radius: 2px; border: var(--border); background-color: var(--bg-off-white); display: flex; align-items: center; justify-content: center; min-width: 49px; margin: 5px 8px 5px 6px; align-self: stretch;"
                   >
-                    <div style="min-height: 40px; display:block;">
+                    <div style="min-height: 42px; display:block;">
                       <div class="votearrowcontainer">
                         <div>
                           <div
@@ -353,7 +350,7 @@ const row = (
                           <div
                             class="upvotes-container"
                             data-href="${story.href}"
-                            style="font-size: 8pt; text-align: center;"
+                            style="font-size: 8pt; font-weight: bold; text-align: center;"
                           >
                             ${story.upvotes ? story.upvotes : "..."}
                           </div>
@@ -366,21 +363,48 @@ const row = (
               <div
                 style="display: flex; align-items: start; flex-grow: 1; gap: 8px;"
               >
-                ${
-                  story.metadata &&
-                  story.metadata.image &&
-                  !interactive &&
-                  !blockedOGImageDomains.includes(extractedDomain) &&
-                  !knownBadOgImages.includes(story.metadata.image)
-                    ? html`<a
+                ${story.metadata &&
+                story.metadata.image &&
+                !interactive &&
+                !blockedOGImageDomains.includes(extractedDomain) &&
+                !knownBadOgImages.includes(story.metadata.image)
+                  ? html`<a
+                      data-no-instant
+                      href="${addOrUpdateReferrer(
+                        DOMPurify.sanitize(story.href),
+                        story.identity,
+                      )}"
+                      class="row-image"
+                      target="_blank"
+                      style="user-select:text; align-self: stretch; margin: 5px 0;"
+                      onclick="event.preventDefault(); navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${addOrUpdateReferrer(
+                        DOMPurify.sanitize(story.href),
+                        story.identity,
+                      )}')); window.open('${addOrUpdateReferrer(
+                        DOMPurify.sanitize(story.href),
+                        story.identity,
+                      )}', event.currentTarget.getAttribute('target'));"
+                    >
+                      <img
+                        loading="lazy"
+                        style="max-height: 61px; border: var(--border-line); border-radius: 2px; width: 110px; object-fit: cover;"
+                        src="${DOMPurify.sanitize(story.metadata.image)}"
+                    /></a>`
+                  : null}
+                <div
+                  class="story-link-container-wrapper"
+                  style="min-height: 59px; display:flex; justify-content: start; flex-direction: column; flex-grow: 1; line-height: 1.3; padding: 3px 3px 5px 0;"
+                >
+                  <span>
+                    <span class="story-link-container">
+                      <a
                         data-no-instant
-                        href="${addOrUpdateReferrer(
-                          DOMPurify.sanitize(story.href),
-                          story.identity,
-                        )}"
-                        class="row-image"
-                        target="_blank"
-                        style="user-select:text; align-self: stretch; margin: 5px 0;"
+                        href="${path === "/submit" || path === "/demonstration"
+                          ? "javascript:void(0);"
+                          : addOrUpdateReferrer(
+                              DOMPurify.sanitize(story.href),
+                              story.identity,
+                            )}"
                         onclick="event.preventDefault(); navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${addOrUpdateReferrer(
                           DOMPurify.sanitize(story.href),
                           story.identity,
@@ -388,376 +412,325 @@ const row = (
                           DOMPurify.sanitize(story.href),
                           story.identity,
                         )}', event.currentTarget.getAttribute('target'));"
-                      >
-                        <img
-                          loading="lazy"
-                          style="max-height: 61px; border: var(--border-line); border-radius: 2px; width: 110px; object-fit: cover;"
-                          src="${DOMPurify.sanitize(story.metadata.image)}"
-                      /></a>`
-                    : null
-                }
-                <div
-                  style="min-height: 59px; display:flex; justify-content: center; flex-direction: column; flex-grow: 1; line-height: 1.3; padding: 8px 3px 5px 0;"
-                >
-                  <span>
-                    <span class="story-link-container">
-                      <a
-                        data-no-instant
-                        href="${
-                          path === "/submit" || path === "/demonstration"
-                            ? "javascript:void(0);"
-                            : addOrUpdateReferrer(
-                                DOMPurify.sanitize(story.href),
-                                story.identity,
-                              )
-                        }"
-                        onclick="event.preventDefault(); navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${addOrUpdateReferrer(
-                          DOMPurify.sanitize(story.href),
-                          story.identity,
-                        )}')); window.open('${addOrUpdateReferrer(
-      DOMPurify.sanitize(story.href),
-      story.identity,
-    )}', event.currentTarget.getAttribute('target'));"
                         data-story-link="/stories/${slugify(
                           DOMPurify.sanitize(story.title),
                         )}?index=0x${story.index}"
-                        target="${
-                          path === "/submit" || path === "/demonstration"
-                            ? "_self"
-                            : "_blank"
-                        }"
+                        target="${path === "/submit" ||
+                        path === "/demonstration"
+                          ? "_self"
+                          : "_blank"}"
                         class="story-link"
                         style="user-select: text; line-height: 15pt; font-size: 13pt;"
                       >
-                        ${
-                          story.isOriginal
-                            ? html`<mark
-                                style="background-color: rgba(255,255,0, 0.05); padding: 0px 2px;"
-                                >${truncateLongWords(
-                                  DOMPurify.sanitize(story.title),
-                                )}</mark
-                              >`
-                            : truncateLongWords(DOMPurify.sanitize(story.title))
-                        }
+                        ${story.isOriginal
+                          ? html`<mark
+                              style="background-color: rgba(255,255,0, 0.05); padding: 0px 2px;"
+                              >${truncateLongWords(
+                                DOMPurify.sanitize(story.title),
+                              )}</mark
+                            >`
+                          : truncateLongWords(DOMPurify.sanitize(story.title))}
                       </a>
                       <span> </span>
                     </span>
                     <span> </span>
                     <span class="story-domain" style="white-space: nowrap;"
-                      >(${
-                        !interactive && (path === "/" || path === "/best")
-                          ? html`<a
-                              href="${path}?domain=${extractedDomain}${period
-                                ? `&period=${period}`
-                                : ""}"
-                              style="color: #828282;"
-                              >${extractedDomain}</a
-                            >`
-                          : extractedDomain
-                      })</span
+                      >(${!interactive && (path === "/" || path === "/best")
+                        ? html`<a
+                            href="${path}?domain=${extractedDomain}${period
+                              ? `&period=${period}`
+                              : ""}"
+                            style="color: #828282;"
+                            >${extractedDomain}</a
+                          >`
+                        : extractedDomain})</span
                     >
                   </span>
-                  <div style="font-size: 10pt; margin-top: 3px;">
-                    <spani style="opacity: 0.8">
-                      ${
-                        path !== "/stories" &&
-                        story.avatars.length > 3 &&
-                        html`
-                          <span>
-                            <div
-                              style="margin-left: ${size /
-                              2}; top: 2px; display: inline-flex; position:relative;"
-                            >
-                              ${story.avatars.slice(0, 5).map(
-                                (avatar, index) => html`
-                                  <img
-                                    loading="lazy"
-                                    src="${avatar}"
-                                    alt="avatar"
-                                    style="z-index: ${index}; width: ${size}px; height:
+                  <div
+                    class="story-subtitle"
+                    style="font-size: 9pt; margin-top: 3px;"
+                  >
+                    <span style="opacity: 0.8">
+                      ${path !== "/stories" &&
+                      story.avatars.length > 3 &&
+                      html`
+                        <span>
+                          <div
+                            style="margin-left: ${size /
+                            2}; top: 2px; display: inline-flex; position:relative;"
+                          >
+                            ${story.avatars.slice(0, 5).map(
+                              (avatar, index) => html`
+                                <img
+                                  loading="lazy"
+                                  src="${avatar}"
+                                  alt="avatar"
+                                  style="z-index: ${index}; width: ${size}px; height:
  ${size}px; border: 1px solid #828282; border-radius: 2px; margin-left: -${size /
-                                    2}px;"
-                                  />
-                                `,
-                              )}
-                            </div>
-                            <span style="opacity:0.6"> • </span>
-                          </span>
-                        `
-                      }
-                      ${
-                        story.index
-                          ? html`
-                              <a
-                                class="meta-link"
-                                style="user-select: text;"
-                                href="/stories/${slugify(
-                                  DOMPurify.sanitize(story.title),
-                                )}?index=0x${story.index}"
-                              >
-                                ${formatDistanceToNowStrict(
-                                  new Date(story.timestamp * 1000),
-                                )}
-                                <span> ago</span>
-                              </a>
-                            `
-                          : html`
+                                  2}px;"
+                                />
+                              `,
+                            )}
+                          </div>
+                          <span style="opacity:0.6"> • </span>
+                        </span>
+                      `}
+                      ${story.index
+                        ? html`
+                            <a
+                              class="meta-link"
+                              style="user-select: text;"
+                              href="/stories/${slugify(
+                                DOMPurify.sanitize(story.title),
+                              )}?index=0x${story.index}"
+                            >
                               ${formatDistanceToNowStrict(
                                 new Date(story.timestamp * 1000),
                               )}
                               <span> ago</span>
-                            `
-                      }
+                            </a>
+                          `
+                        : html`
+                            ${formatDistanceToNowStrict(
+                              new Date(story.timestamp * 1000),
+                            )}
+                            <span> ago</span>
+                          `}
                       <span> by </span>
-                      ${
-                        story.identity
-                          ? html`<a
-                              href="${interactive
-                                ? ""
-                                : story.submitter && story.submitter.ens
-                                ? `/${story.submitter.ens}`
-                                : `/upvotes?address=${story.identity}`}"
-                              class="meta-link"
-                              style="user-select: text; ${recentJoiners &&
-                              recentJoiners.includes(story.identity)
-                                ? `color: ${theme.color};`
-                                : ""}"
-                            >
-                              ${story.displayName}
-                            </a>`
-                          : path === "/demonstration"
-                          ? html`<a class="meta-link" href="javascript:void(0);"
-                              >${story.displayName}</a
-                            >`
-                          : html`<a
-                              target="_blank"
-                              class="meta-link"
-                              style="touch-action: manipulation; user-select: none;"
-                              href="https://paragraph.xyz/@kiwi-updates/kiwi-feedbot-submissions-open"
-                              >${story.displayName}</a
-                            >`
-                      }
-                      ${
-                        story.collateral && story.price
-                          ? html`
-                              <span>
-                                <a
-                                  class="meta-link"
-                                  href="https://github.com/attestate/ad?tab=readme-ov-file#how-does-it-work"
-                                  target="_blank"
-                                >
-                                  <span> </span>
-                                  (sponsored)</a
-                                >
+                      ${story.identity
+                        ? html`<a
+                            href="${interactive
+                              ? ""
+                              : story.submitter && story.submitter.ens
+                              ? `/${story.submitter.ens}`
+                              : `/upvotes?address=${story.identity}`}"
+                            class="meta-link"
+                            style="user-select: text; ${recentJoiners &&
+                            recentJoiners.includes(story.identity)
+                              ? `color: ${theme.color};`
+                              : ""}"
+                          >
+                            ${story.displayName}
+                          </a>`
+                        : path === "/demonstration"
+                        ? html`<a class="meta-link" href="javascript:void(0);"
+                            >${story.displayName}</a
+                          >`
+                        : html`<a
+                            target="_blank"
+                            class="meta-link"
+                            style="touch-action: manipulation; user-select: none;"
+                            href="https://paragraph.xyz/@kiwi-updates/kiwi-feedbot-submissions-open"
+                            >${story.displayName}</a
+                          >`}
+                      ${story.collateral && story.price
+                        ? html`
+                            <span>
+                              <a
+                                class="meta-link"
+                                href="https://github.com/attestate/ad?tab=readme-ov-file#how-does-it-work"
+                                target="_blank"
+                              >
+                                <span> </span>
+                                (sponsored)</a
+                              >
+                              <span style="opacity:0.6"> • </span>
+                              <a
+                                style="display: inline;"
+                                class="meta-link"
+                                href="/submit?isad=true"
+                              >
+                                <span>Price: </span>
+                                ${parseFloat(
+                                  ethers.utils.formatEther(
+                                    story.price.toString(),
+                                  ),
+                                ).toFixed(4)}
+                                <span> </span>
+                                ETH
+                              </a>
+                            </span>
+                          `
+                        : null}
+                      <span>
+                        ${interactive || hideCast || isad
+                          ? null
+                          : html`
+                              <span class="share-container">
                                 <span style="opacity:0.6"> • </span>
                                 <a
-                                  style="display: inline;"
-                                  class="meta-link"
-                                  href="/submit?isad=true"
+                                  href="#"
+                                  class="caster-link share-link"
+                                  title="Share"
+                                  style="color: var(--contrast-color); touch-action: manipulation; user-select: none; white-space: nowrap;"
+                                  onclick="event.preventDefault(); navigator.share({url: 'https://news.kiwistand.com/stories/${slugify(
+                                    DOMPurify.sanitize(story.title),
+                                  )}?index=0x${story.index}' });"
                                 >
-                                  <span>Price: </span>
-                                  ${parseFloat(
-                                    ethers.utils.formatEther(
-                                      story.price.toString(),
-                                    ),
-                                  ).toFixed(4)}
-                                  <span> </span>
-                                  ETH
+                                  ${ShareIcon(
+                                    "padding: 0 3px 1px 0; vertical-align: bottom; height: 13px; width: 13px;",
+                                  )}
+                                  Share Kiwi link
                                 </a>
                               </span>
-                            `
-                          : null
-                      }
-                      <span>
-                        ${
-                          interactive || hideCast || isad
-                            ? null
-                            : html`
-                                <span class="share-container">
-                                  <span style="opacity:0.6"> • </span>
-                                  <a
-                                    href="#"
-                                    class="caster-link share-link"
-                                    title="Share"
-                                    style="color: var(--contrast-color); touch-action: manipulation; user-select: none; white-space: nowrap;"
-                                    onclick="event.preventDefault(); navigator.share({url: 'https://news.kiwistand.com/stories/${slugify(
-                                      DOMPurify.sanitize(story.title),
-                                    )}?index=0x${story.index}' });"
-                                  >
-                                    ${ShareIcon(
-                                      "padding: 0 3px 1px 0; vertical-align: bottom; height: 13px; width: 13px;",
-                                    )}
-                                    Share Kiwi link
-                                  </a>
-                                </span>
-                              `
-                        }
-                        ${
-                          isad ||
-                          interactive ||
-                          hideCast ||
-                          story.displayName === "Feedbot"
-                            ? null
-                            : html`
-                                <span class="inverse-share-container">
-                                  <span style="opacity:0.6"> • </span>
-                                  <a
-                                    href="#"
-                                    class="meta-link share-link"
-                                    title="Share"
-                                    style="color: var(--contrast-color); touch-action: manipulation; user-select: none; white-space: nowrap;"
-                                    onclick="event.preventDefault(); navigator.clipboard.writeText('https://news.kiwistand.com/stories/${slugify(
-                                      DOMPurify.sanitize(story.title),
-                                    )}?index=0x${story.index}'); window.toast.success('Link copied!');"
-                                  >
-                                    ${CopyIcon(
-                                      "padding: 0 3px 1px 0; vertical-align: bottom; height: 13px; width: 13px;",
-                                    )}
-                                    Copy Kiwi link
-                                  </a>
-                                </span>
-                              `
-                        }
+                            `}
+                        ${isad ||
+                        interactive ||
+                        hideCast ||
+                        story.displayName === "Feedbot"
+                          ? null
+                          : html`
+                              <span class="inverse-share-container">
+                                <span style="opacity:0.6"> • </span>
+                                <a
+                                  href="#"
+                                  class="meta-link share-link"
+                                  title="Share"
+                                  style="color: var(--contrast-color); touch-action: manipulation; user-select: none; white-space: nowrap;"
+                                  onclick="event.preventDefault(); navigator.clipboard.writeText('https://news.kiwistand.com/stories/${slugify(
+                                    DOMPurify.sanitize(story.title),
+                                  )}?index=0x${story.index}'); window.toast.success('Link copied!');"
+                                >
+                                  ${CopyIcon(
+                                    "padding: 0 3px 1px 0; vertical-align: bottom; height: 13px; width: 13px;",
+                                  )}
+                                  Copy Kiwi link
+                                </a>
+                              </span>
+                            `}
                       </span>
                     </span>
                   </div>
                 </div>
               </div>
-              ${
-                path !== "/stories" &&
-                path !== "/demonstration" &&
-                path !== "/submit"
-                  ? html`<div
-                      data-story-index="0x${story.index}"
-                      data-comment-count="${commentCount}"
-                      class="${displayMobileImage
-                        ? "interaction-container-with-image chat-bubble-container"
-                        : "chat-bubble-container"}"
-                      style="${isad
-                        ? "opacity: 0.3;"
-                        : ""}display: flex; align-self: stretch;"
-                    >
-                      <a
-                        class="chat-bubble interaction-element"
-                        id="chat-bubble-${story.index}"
-                        href="/stories/${slugify(
-                          DOMPurify.sanitize(story.title),
-                        )}?index=0x${story.index}"
-                        style="margin: 5px; border: var(--border); background-color: var(--bg-off-white); border-radius: 2px; display: ${path ===
-                        "/stories"
-                          ? "none"
-                          : "flex"}; justify-content: center; min-width: 49px; align-items: center; flex-direction: column;"
-                      >
-                        ${ChatsSVG()}
-                        <span
-                          id="comment-count-${story.index}"
-                          style="color: rgba(0,0,0,0.65); font-size: 8pt;"
-                          >${commentCount}</span
-                        >
-                      </a>
-                    </div>`
-                  : ""
-              }
-              ${
-                path === "/stories"
-                  ? html`<div
-                      title="Go to random article"
-                      style="display: flex; align-self: stretch;"
-                    >
-                      <a
-                        class="chat-bubble interaction-element"
-                        href="/random"
-                        style="margin: 5px; border: var(--border); background-color: var(--bg-off-white); border-radius: 2px; display: flex; justify-content: center; min-width: 40px; align-items: center; flex-direction: column;"
-                      >
-                        ${ShuffleSVG}
-                      </a>
-                    </div>`
-                  : ""
-              }
-            </div>
-            ${
-              displayCommentPreview
-                ? html` <div
-                    class="comment-preview comment-preview-0x${story.index} ${displayMobileImage
-                      ? "elevating-comment-preview"
-                      : "comment-preview-no-mobile-image"}"
-                    style="touch-action: manipulation; user-select: none; cursor: pointer; display: flex;"
-                  >
-                    <div
-                      class="interaction-element"
-                      onclick="(function(){history.replaceState(null,'','${path ===
-                      "/"
-                        ? `/new?cached=true#0x${story.lastComment.index}`
-                        : `/#0x${story.lastComment.index}`}');history.replaceState(null,'','${path ===
-                      "/"
-                        ? `/#0x${story.lastComment.index}`
-                        : `/new?cached=true#0x${story.lastComment.index}`}');})(),document.querySelector('.comment-preview-0x${story.index}').style.opacity = 0.5,window.addToQueue(new
- CustomEvent('open-comments-0x${story.index}',{detail:{source:'comment-preview'}}));window.dispatchEvent(new HashChangeEvent('hashchange'));"
-                      style="margin: 0 5px 5px 5px; padding: 11px; border: var(--border); border-top: 2px dotted rgba(219, 105, 141, 0.075); display: flex;width: 100%; background-color: var(--bg-off-white); border-radius: 2px;"
-                    >
-                      <a
-                        class="comment-preview-anchor"
-                        href="${path === "/" ? "" : path}${query}#0x${story
-                          .lastComment.index}"
-                        style="width: 100%; display: flex; pointer-events: none;"
-                      >
-                        <div style="width:90%;">
-                          <div
-                            style="display: flex; align-items: center; gap: 5px; margin-bottom: 3px;"
-                          >
-                            <img
-                              loading="lazy"
-                              src="${DOMPurify.sanitize(
-                                story.lastComment.identity.safeAvatar,
-                              )}"
-                              alt="avatar"
-                              style="border: 1px solid #ccc; width: ${size}px; height: ${size}px; border-radius: 2px;"
-                            />
-                            <span
-                              style="touch-action: manipulation;user-select: none; font-weight: bold;"
-                              >${DOMPurify.sanitize(
-                                story.lastComment.identity.displayName,
-                              )}</span
-                            >
-                            <span style="opacity:0.6"> • </span>
-                            <span style="font-size: 9pt; opacity: 0.9;">
-                              ${formatDistanceToNowStrict(
-                                new Date(story.lastComment.timestamp * 1000),
-                              )}
-                              <span> </span>
-                              ago
-                            </span>
-                          </div>
-                          <span> </span>
-                          <div style="padding-left:20px;">
-                            <span
-                              style="display: block; white-space: pre-wrap; touch-action: manipulation;user-select: none;"
-                              >${truncateComment(
-                                DOMPurify.sanitize(story.lastComment.title),
-                              )}</span
-                            >
-                          </div>
-                          <span> </span>
-                        </div>
-                        <div
-                          style="width:10%; display: flex; align-items: center; justify-content: end; padding-right: 7px;"
-                        >
-                          ${expandSVG}
-                        </div>
-                      </a>
-                    </div>
-                  </div>`
-                : null
-            }
-            ${
-              path !== "/stories"
+              ${path !== "/stories" &&
+              path !== "/demonstration" &&
+              path !== "/submit"
                 ? html`<div
-                    class="comment-section"
-                    data-comment-count="${commentCount}"
                     data-story-index="0x${story.index}"
-                  ></div>`
-                : null
-            }
+                    data-comment-count="${commentCount}"
+                    class="${displayMobileImage
+                      ? "interaction-container-with-image chat-bubble-container"
+                      : "chat-bubble-container"}"
+                    style="${isad
+                      ? "opacity: 0.3;"
+                      : ""}display: flex; align-self: stretch;"
+                  >
+                    <a
+                      class="chat-bubble interaction-element"
+                      id="chat-bubble-${story.index}"
+                      href="/stories/${slugify(
+                        DOMPurify.sanitize(story.title),
+                      )}?index=0x${story.index}"
+                      style="margin: 5px; border: var(--border); background-color: var(--bg-off-white); border-radius: 2px; display: ${path ===
+                      "/stories"
+                        ? "none"
+                        : "flex"}; justify-content: center; min-width: 49px; align-items: center; flex-direction: column;"
+                    >
+                      ${ChatsSVG()}
+                      <span
+                        id="comment-count-${story.index}"
+                        style="color: rgba(0,0,0,0.65); font-size: 8pt; font-weight: bold;"
+                        >${commentCount}</span
+                      >
+                    </a>
+                  </div>`
+                : ""}
+              ${path === "/stories"
+                ? html`<div
+                    title="Go to random article"
+                    style="display: flex; align-self: stretch;"
+                  >
+                    <a
+                      class="chat-bubble interaction-element"
+                      href="/random"
+                      style="margin: 5px; border: var(--border); background-color: var(--bg-off-white); border-radius: 2px; display: flex; justify-content: center; min-width: 40px; align-items: center; flex-direction: column;"
+                    >
+                      ${ShuffleSVG}
+                    </a>
+                  </div>`
+                : ""}
+            </div>
+            ${displayCommentPreview
+              ? html` <div
+                  class="comment-preview comment-preview-0x${story.index} ${displayMobileImage
+                    ? "elevating-comment-preview"
+                    : "comment-preview-no-mobile-image"}"
+                  style="touch-action: manipulation; user-select: none; cursor: pointer; display: flex;"
+                >
+                  <div
+                    class="interaction-element"
+                    onclick="(function(){history.replaceState(null,'','${path ===
+                    "/"
+                      ? `/new?cached=true#0x${story.lastComment.index}`
+                      : `/#0x${story.lastComment.index}`}');history.replaceState(null,'','${path ===
+                    "/"
+                      ? `/#0x${story.lastComment.index}`
+                      : `/new?cached=true#0x${story.lastComment.index}`}');})(),document.querySelector('.comment-preview-0x${story.index}').style.opacity = 0.5,window.addToQueue(new
+ CustomEvent('open-comments-0x${story.index}',{detail:{source:'comment-preview'}}));window.dispatchEvent(new HashChangeEvent('hashchange'));"
+                    style="margin: 0 5px 5px 5px; padding: 11px; border: var(--border); border-top: 2px dotted rgba(219, 105, 141, 0.075); display: flex;width: 100%; background-color: var(--bg-off-white); border-radius: 2px;"
+                  >
+                    <a
+                      class="comment-preview-anchor"
+                      href="${path === "/" ? "" : path}${query}#0x${story
+                        .lastComment.index}"
+                      style="width: 100%; display: flex; pointer-events: none;"
+                    >
+                      <div style="width:90%;">
+                        <div
+                          style="display: flex; align-items: center; gap: 5px; margin-bottom: 3px;"
+                        >
+                          <img
+                            loading="lazy"
+                            src="${DOMPurify.sanitize(
+                              story.lastComment.identity.safeAvatar,
+                            )}"
+                            alt="avatar"
+                            style="border: 1px solid #ccc; width: ${size}px; height: ${size}px; border-radius: 2px;"
+                          />
+                          <span
+                            style="font-size: 9pt; touch-action: manipulation;user-select: none; font-weight: bold;"
+                            >${DOMPurify.sanitize(
+                              story.lastComment.identity.displayName,
+                            )}</span
+                          >
+                          <span style="opacity:0.6"> • </span>
+                          <span style="font-size: 8pt; opacity: 0.9;">
+                            ${formatDistanceToNowStrict(
+                              new Date(story.lastComment.timestamp * 1000),
+                            )}
+                            <span> </span>
+                            ago
+                          </span>
+                        </div>
+                        <span> </span>
+                        <div style="padding-left:20px;">
+                          <span
+                            class="comment-preview-text"
+                            style="display: block; white-space: pre-wrap; touch-action: manipulation;user-select: none;"
+                            >${truncateComment(
+                              DOMPurify.sanitize(story.lastComment.title),
+                            )}</span
+                          >
+                        </div>
+                        <span> </span>
+                      </div>
+                      <div
+                        style="width:10%; display: flex; align-items: center; justify-content: end; padding-right: 7px;"
+                      >
+                        ${expandSVG}
+                      </div>
+                    </a>
+                  </div>
+                </div>`
+              : null}
+            ${path !== "/stories"
+              ? html`<div
+                  class="comment-section"
+                  data-comment-count="${commentCount}"
+                  data-story-index="0x${story.index}"
+                ></div>`
+              : null}
           </div>
         </td>
       </tr>
