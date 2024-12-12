@@ -107,7 +107,7 @@ export default async function index(trie, theme, page, period, domain) {
                 Row(
                   null,
                   "/best",
-                  "margin-bottom: 17px;",
+                  "margin-bottom: 20px;",
                   false,
                   false,
                   period,

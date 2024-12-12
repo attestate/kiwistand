@@ -513,7 +513,7 @@ export default async function (trie, theme, page, domain) {
                 Row(
                   start,
                   "/",
-                  undefined,
+                  "margin-bottom: 20px;",
                   null,
                   null,
                   null,
@@ -528,7 +528,7 @@ export default async function (trie, theme, page, domain) {
                   Row(
                     start,
                     "/",
-                    "margin-bottom: 17px;",
+                    "margin-bottom: 20px;",
                     null,
                     null,
                     null,
@@ -541,7 +541,7 @@ export default async function (trie, theme, page, domain) {
               Row(
                 start,
                 "/",
-                "margin-bottom: 17px;",
+                "margin-bottom: 20px;",
                 null,
                 null,
                 null,
@@ -555,7 +555,7 @@ export default async function (trie, theme, page, domain) {
                   Row(
                     start,
                     "/",
-                    "margin-bottom: 17px;",
+                    "margin-bottom: 20px;",
                     null,
                     null,
                     null,
@@ -570,7 +570,7 @@ export default async function (trie, theme, page, domain) {
                   Row(
                     start,
                     "/",
-                    "margin-bottom: 17px;",
+                    "margin-bottom: 20px;",
                     null,
                     null,
                     null,

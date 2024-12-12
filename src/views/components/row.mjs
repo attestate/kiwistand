@@ -302,7 +302,7 @@ const row = (
                 >
                   <img
                     loading="lazy"
-                    style="mask-image: linear-gradient(to top, rgba(0,0,0,0.5), rgba(0,0,0,0.8)); aspect-ratio: 2 / 1; object-fit:cover; margin: 0 11px; border-radius: 2px; width: calc(100% - 26px);"
+                    style="aspect-ratio: 2 / 1; object-fit:cover; margin: 0 11px; border-radius: 2px; width: calc(100% - 26px);"
                     src="${DOMPurify.sanitize(story.metadata.image)}"
                 /></a>`
               : null}
@@ -393,7 +393,7 @@ const row = (
                   : null}
                 <div
                   class="story-link-container-wrapper"
-                  style="min-height: 59px; display:flex; justify-content: start; flex-direction: column; flex-grow: 1; line-height: 1.3; padding: 3px 3px 5px 0;"
+                  style="min-height: 59px; display:flex; justify-content: start; flex-direction: column; flex-grow: 1; line-height: 1.3; padding: 4px 3px 5px 0;"
                 >
                   <span>
                     <span class="story-link-container">
@@ -553,7 +553,7 @@ const row = (
                           `
                         : null}
                       <span>
-                        ${interactive || hideCast || isad
+                        ${path === "/" || interactive || hideCast || isad
                           ? null
                           : html`
                               <span class="share-container">

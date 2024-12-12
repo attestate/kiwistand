@@ -194,12 +194,16 @@ function generateRow(lastUpdate, theme) {
                       : ""}
                     ${activity.verb} your submission
                   </p>
-                  <p style="margin-top: 5px;">${title.substring(0, 80)}</p>
-                  <p style="font-weight: bold;">
-                    ${activity.metadata?.index && activity.metadata?.title
-                      ? DOMPurify.sanitize(activity.metadata.title)
-                      : ""}
+                  <p style="font-weight: bold; margin: 7px 0 15px 0;">
+                    ${title.substring(0, 80)}
                   </p>
+                  ${activity.metadata?.index && activity.metadata?.title
+                    ? html`
+                        <p style="font-weight: bold;">
+                          ${DOMPurify.sanitize(activity.metadata.title)}
+                        </p>
+                      `
+                    : ""}
                 </div>
               </div>
             </div>

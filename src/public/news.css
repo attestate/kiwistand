@@ -10,13 +10,15 @@
   --header-beige: #fafafa;
   --middle-beige: #f3f3f3;
   --table-bg: #f8f8f7;
+  --table-bg-mobile: rgb(255, 255, 250);
+  --visited-link: #828282;
 }
 
 .notification:link {
   color: black !important;
 }
 .notification:visited {
-  color: #D0D0D0 !important;
+  color: var(--visited-link) !important;
 }
 
 @media screen and (min-width: 1800px) {
@@ -125,7 +127,7 @@ body {
   color: black !important;
 }
 .comment-text-link:visited {
-  color: gray !important;
+  color: var(--visited-link) !important;
 }
 .story-domain a:hover {
   text-decoration: underline;
@@ -225,7 +227,7 @@ body {
      text-decoration:none;
 }
  a:visited, .comment-preview-anchor:visited{
-     color:#828282;
+     color:var(--visited-link);
      text-decoration:none;
 }
  .default {
@@ -451,6 +453,9 @@ body {
 }
 /* mobile device */
  @media only screen and (min-width : 300px) and (max-width : 640px) {
+    #hnmain > table {
+      background-color: var(--table-bg-mobile);
+    }
     .comment-preview-text {
       font-size: 9pt;
     }
@@ -462,7 +467,7 @@ body {
       font-size: 9pt;
     }
     .story-link {
-      font-size: 12pt !important;
+      font-size: 11pt !important;
       font-weight: bold;
     }
     .story-subtitle {
@@ -471,7 +476,7 @@ body {
       font-size: 9pt !important;
     }
     .mobile-row-image img {
-      border: 2px inset rgba(219, 105, 141,0.7);
+      border: 2px inset rgba(219, 105, 141,0.5);
     }
     .comment-section {
       background-color: var(--background-color0);
@@ -492,7 +497,7 @@ body {
       padding-top: 2px !important;
       border-top: none !important;
       margin: 0 11px 5px 11px !important;
-      border-bottom: 4px solid rgba(219, 105, 141, 0.5) !important;
+      border-bottom: 4px solid rgba(219, 105, 141, 0.3) !important;
     }
     .comment-preview-no-mobile-image .interaction-element{
       padding-top: 2px !important;
@@ -504,7 +509,7 @@ body {
       border-bottom: none;
     }
     .elevating-row.without-comment-preview {
-      border-bottom: 4px solid rgba(219, 105, 141, 0.5) !important;
+      border-bottom: 4px solid rgba(219, 105, 141, 0.3) !important;
     }
     .elevating-row.without-comment-preview.no-border {
       border-bottom: none !important;
@@ -512,7 +517,7 @@ body {
     .content-row:not(.content-row-elevated) {
       border: var(--border);
       margin: 0 7px;
-      border-bottom: 4px solid rgba(219, 105, 141, 0.5) !important;
+      border-bottom: 4px solid rgba(219, 105, 141, 0.3) !important;
     }
     #hnmain {
       border: none;
@@ -976,7 +981,7 @@ body {
      color: black;
 }
  .story-link:visited {
-     color: #828282;
+     color: var(--visited-link);
 }
 a.meta-link, span.meta-link {
   cursor: pointer;

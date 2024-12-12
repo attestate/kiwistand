@@ -142,7 +142,7 @@ export default async function (trie, theme) {
                 Row(
                   null,
                   "/new",
-                  "margin-bottom: 17px;",
+                  "margin-bottom: 20px;",
                   null,
                   null,
                   null,
