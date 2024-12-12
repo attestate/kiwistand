@@ -736,6 +736,22 @@ function makeCommentsVisited() {
   history.replaceState(null, "", origin);
 }
 
+function makeUpvoteNotificationsVisited() {
+  if (!window.location.pathname.startsWith("/activity")) return;
+
+  const links = document.querySelectorAll(".upvote-notification");
+  if (!links.length) return;
+
+  const origin = window.location.href;
+
+  for (const link of links) {
+    const href = link.getAttribute("href");
+    history.replaceState(null, "", href);
+  }
+
+  history.replaceState(null, "", origin);
+}
+
 async function start() {
   // NOTE: There are clients which had the identity cookie sent to 1 week and
   // they're now encountering the paywall. So in case this happens but their
@@ -749,6 +765,9 @@ async function start() {
 
   makeCommentsVisited();
   window.addEventListener("hashchange", makeCommentsVisited);
+  window.addEventListener("beforeunload", makeUpvoteNotificationsVisited, {
+    once: true,
+  });
 
   updateLinkTargetsForIOSPWA();
 

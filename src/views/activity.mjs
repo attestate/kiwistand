@@ -148,7 +148,7 @@ function generateRow(lastUpdate, theme) {
               .index}${identities.length > 0
               ? `&upvoter=${identities[identities.length - 1].address}`
               : ""}"
-            class="notification"
+            class="upvote-notification notification"
           >
             <div
               style="display: flex; border-bottom: 1px solid rgba(0,0,0,0.1);"
