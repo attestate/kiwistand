@@ -42,9 +42,9 @@ const Comment = React.forwardRef(({ comment, storyIndex }, ref) => {
         padding: "0.55rem 0.75rem",
         borderRadius: "2px",
         display: "block",
-        marginBottom: "15px",
+        marginBottom: "12px",
         whiteSpace: "pre-wrap",
-        lineHeight: "1.3",
+        lineHeight: "1.2",
         wordBreak: "break-word",
         overflowWrap: "break-word",
       }}
@@ -59,7 +59,12 @@ const Comment = React.forwardRef(({ comment, storyIndex }, ref) => {
         }}
       >
         <a
-          style={{ color: "black" }}
+          style={{
+            marginTop: "-3px",
+            display: "inline-flex",
+            alignItems: "center",
+            color: "black",
+          }}
           className="meta-link"
           href={`/upvotes?address=${comment.identity.address}`}
         >
@@ -70,23 +75,28 @@ const Comment = React.forwardRef(({ comment, storyIndex }, ref) => {
               alt="avatar"
               style={{
                 marginRight: "5px",
-                width: "12px",
-                height: "12px",
+                width: "10px",
+                height: "10px",
                 border: "1px solid #828282",
                 borderRadius: "2px",
               }}
             />
           )}
-          <b>{truncateName(comment.identity.displayName)}</b>
+          <span style={{ fontWeight: "400", fontSize: "11pt" }}>
+            {truncateName(comment.identity.displayName)}
+          </span>
         </a>
-        <span style={{ color: "grey", opacity: "0.6" }}> • </span>
-        <span style={{ color: "grey" }}>
+        <span style={{ fontSize: "10pt", color: "grey", opacity: "0.6" }}>
+          {" "}
+          •{" "}
+        </span>
+        <span style={{ fontSize: "9pt", color: "grey" }}>
           {formatDistanceToNowStrict(new Date(comment.timestamp * 1000))}
           <span> ago</span>
         </span>
       </div>
       <br />
-      <span>
+      <span style={{ fontSize: "11pt", lineHeight: "1.15" }}>
         <Linkify
           options={{
             className: "meta-link",
@@ -146,23 +156,15 @@ const CommentsSection = (props) => {
     })();
   }, [storyIndex]);
 
-  useEffect(() => {
-    if (
-      shown &&
-      comments.length > 1 &&
-      lastCommentRef.current &&
-      source === "comment-preview"
-    ) {
-      lastCommentRef.current.scrollIntoView({
-        behavior: "instant",
-        block: "start",
-      });
-    }
-  }, [shown, comments]);
-
   if (!shown) return;
   return (
-    <div style={{ padding: "0 11px 0 11px", fontSize: "1rem" }}>
+    <div
+      style={{
+        backgroundColor: "var(--table-bg)",
+        padding: "0 11px 0 11px",
+        fontSize: "1rem",
+      }}
+    >
       {comments.length > 0 &&
         comments.map((comment, index) => (
           <Comment

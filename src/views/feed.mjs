@@ -130,10 +130,13 @@ export async function getContestStories() {
   }
 
   const submissions = [];
+  const CUTOFF = new Date("2025-12-12T23:59:59+01:00").getTime();
   for (const href of result.links) {
     try {
       const sub = await getSubmission(null, href, identityFilter);
-      sub.upvoters = sub.upvoters.map(({ identity }) => identity);
+      sub.upvoters = sub.upvoters
+        .filter((vote) => vote.timestamp <= CUTOFF)
+        .map(({ identity }) => identity);
       submissions.push(sub);
     } catch (err) {
       log(`Skipping submission ${href}, err ${err.stack}`);

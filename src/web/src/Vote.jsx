@@ -147,7 +147,7 @@ const Vote = (props) => {
             style={{
               borderRadius: "2px",
               backgroundColor: "var(--bg-off-white)",
-              border: "var(--border)",
+              border: "var(--border-thin)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",

@@ -47,7 +47,7 @@ export default async function (theme) {
         <style>
           /* Base Styles */
           body {
-            font-family: Verdana, Geneva, sans-serif;
+            font-family: var(--font-family);
             line-height: 1.6;
             margin: 0;
             padding: 0;

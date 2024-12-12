@@ -335,7 +335,7 @@ const row = (
                 >
                   <div
                     class="interaction-element"
-                    style="border-radius: 2px; border: var(--border); background-color: var(--bg-off-white); display: flex; align-items: center; justify-content: center; min-width: 49px; margin: 5px 8px 5px 6px; align-self: stretch;"
+                    style="border-radius: 2px; border: var(--border-thin); background-color: var(--bg-off-white); display: flex; align-items: center; justify-content: center; min-width: 49px; margin: 5px 8px 5px 6px; align-self: stretch;"
                   >
                     <div style="min-height: 42px; display:block;">
                       <div class="votearrowcontainer">
@@ -393,7 +393,7 @@ const row = (
                   : null}
                 <div
                   class="story-link-container-wrapper"
-                  style="min-height: 59px; display:flex; justify-content: start; flex-direction: column; flex-grow: 1; line-height: 1.3; padding: 4px 3px 5px 0;"
+                  style="min-height: 59px; display:flex; justify-content: center; flex-direction: column; flex-grow: 1; line-height: 1.3; padding: 4px 3px 5px 0;"
                 >
                   <span>
                     <span class="story-link-container">
@@ -487,16 +487,14 @@ const row = (
                               ${formatDistanceToNowStrict(
                                 new Date(story.timestamp * 1000),
                               )}
-                              <span> ago</span>
                             </a>
                           `
                         : html`
                             ${formatDistanceToNowStrict(
                               new Date(story.timestamp * 1000),
                             )}
-                            <span> ago</span>
                           `}
-                      <span> by </span>
+                      <span style="opacity:0.6"> • </span>
                       ${story.identity
                         ? html`<a
                             href="${interactive
@@ -505,7 +503,7 @@ const row = (
                               ? `/${story.submitter.ens}`
                               : `/upvotes?address=${story.identity}`}"
                             class="meta-link"
-                            style="user-select: text; ${recentJoiners &&
+                            style="font-weight: 500; user-select: text; ${recentJoiners &&
                             recentJoiners.includes(story.identity)
                               ? `color: ${theme.color};`
                               : ""}"
@@ -553,7 +551,11 @@ const row = (
                           `
                         : null}
                       <span>
-                        ${path === "/" || interactive || hideCast || isad
+                        ${path === "/" ||
+                        path === "/new" ||
+                        interactive ||
+                        hideCast ||
+                        isad
                           ? null
                           : html`
                               <span class="share-container">
@@ -622,7 +624,7 @@ const row = (
                       href="/stories/${slugify(
                         DOMPurify.sanitize(story.title),
                       )}?index=0x${story.index}"
-                      style="margin: 5px; border: var(--border); background-color: var(--bg-off-white); border-radius: 2px; display: ${path ===
+                      style="margin: 5px; border: var(--border-thin); background-color: var(--bg-off-white); border-radius: 2px; display: ${path ===
                       "/stories"
                         ? "none"
                         : "flex"}; justify-content: center; min-width: 49px; align-items: center; flex-direction: column;"
@@ -689,13 +691,13 @@ const row = (
                             style="border: 1px solid #ccc; width: ${size}px; height: ${size}px; border-radius: 2px;"
                           />
                           <span
-                            style="font-size: 9pt; touch-action: manipulation;user-select: none; font-weight: bold;"
+                            style="font-size: 10pt; touch-action: manipulation;user-select: none; font-weight: 500;"
                             >${DOMPurify.sanitize(
                               story.lastComment.identity.displayName,
                             )}</span
                           >
                           <span style="opacity:0.6"> • </span>
-                          <span style="font-size: 8pt; opacity: 0.9;">
+                          <span style="font-size: 9pt; opacity: 0.9;">
                             ${formatDistanceToNowStrict(
                               new Date(story.lastComment.timestamp * 1000),
                             )}
