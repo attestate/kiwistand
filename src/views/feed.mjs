@@ -152,7 +152,7 @@ async function getAd() {
     env.OPTIMISM_RPC_HTTP_HOST,
   );
 
-  const contractAddress = "0x2e78Fad843177343Feb2f1d5cb9699A061C59c06";
+  const contractAddress = "0xFfcC6b6c5C066B23992758A4fC408F09d6Cc4EDA";
   const abi = [
     { inputs: [], name: "ErrUnauthorized", type: "error" },
     { inputs: [], name: "ErrValue", type: "error" },

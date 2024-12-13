@@ -405,7 +405,7 @@ const adContractABI = [
     type: "function",
   },
 ];
-const adContractAddress = "0x2e78Fad843177343Feb2f1d5cb9699A061C59c06";
+const adContractAddress = "0xffcc6b6c5c066b23992758a4fc408f09d6cc4eda";
 
 const AdForm = (props) => {
   const titleInputElem = document.getElementById("titleInput");
@@ -428,7 +428,7 @@ const AdForm = (props) => {
   });
 
   const [userPrice, setUserPrice] = useState("");
-  const [minAdPrice, setMinAdPrice] = useState(1000000000000000n);
+  const [minAdPrice, setMinAdPrice] = useState(0n);
 
   const { data: priceData } = useContractRead({
     address: adContractAddress,
@@ -443,7 +443,7 @@ const AdForm = (props) => {
     if (priceData) {
       const [nextPrice] = priceData;
       if (nextPrice > minAdPrice) {
-        setMinAdPrice(nextPrice);
+        setMinAdPrice(nextPrice + 1n);
       }
     }
   }, [priceData]);
@@ -455,12 +455,13 @@ const AdForm = (props) => {
     parsedUserPrice = parseEther(userPrice);
   }
 
+  const transferFee = minAdPrice === 0n ? 0n : minAdPrice - 1n;
   const { config, error } = usePrepareContractWrite({
     address: adContractAddress,
     abi: adContractABI,
     functionName: "set",
     args: [title, url],
-    value: parsedUserPrice,
+    value: parsedUserPrice + transferFee,
     chainId: optimism.id,
   });
 
@@ -503,6 +504,7 @@ const AdForm = (props) => {
 
   const oneEther = parseEther("1000000000000000000");
   const formattedAdPrice = parseFloat(formatEther(minAdPrice));
+  const formattedTransferFee = parseFloat(formatEther(transferFee)).toFixed(5);
   const feeDenominator = 2629746n;
   const dailyFee =
     ((parsedUserPrice * (oneEther / feeDenominator)) / oneEther) *
@@ -511,14 +513,6 @@ const AdForm = (props) => {
     24n;
   const formattedDailyFee = parseFloat(formatEther(dailyFee)).toFixed(5);
 
-  const handleMinClick = (e) => {
-    e.preventDefault();
-    if (balanceData.value < minAdPrice + 1n) {
-      toast.error("Not enough ETH in your connected wallet.");
-      return;
-    }
-    setUserPrice(formatEther(minAdPrice + 1n));
-  };
   const minPriceSet = minAdPrice > parsedUserPrice;
   return (
     <div
@@ -544,22 +538,17 @@ const AdForm = (props) => {
           <p
             style={{
               color: minPriceSet ? "red" : "#828282",
-              marginBottom: 0,
+              fontSize: "14px",
+              paddingTop: "10px",
+              borderTop: "1px solid grey",
             }}
           >
-            Minimum Ad Collateral: {formattedAdPrice} ETH ($
-            {(formattedAdPrice * ethUSD).toFixed(2)})
+            <span style={{ fontWeight: 500 }}>Current price:</span>{" "}
+            {formattedTransferFee} ETH ($
+            {(formattedTransferFee * ethUSD).toFixed(2)})
           </p>
-          <p style={{ marginTop: 0, marginBottom: 0 }}>
-            Daily fee: {formattedDailyFee} ETH ($
-            {(formattedDailyFee * ethUSD).toFixed(
-              formattedDailyFee * ethUSD > 1 ? 2 : 3,
-            )}
-            )
-          </p>
-          <p style={{ marginTop: 0 }}>Fee: 100% of the collateral a month</p>
-          <p style={{ fontSize: "16px", marginTop: 0, marginBottom: 0 }}>
-            Collateral:
+          <p style={{ fontSize: "13px", marginTop: 0, marginBottom: 0 }}>
+            New Price:
           </p>
           <div
             style={{
@@ -586,18 +575,6 @@ const AdForm = (props) => {
                 marginRight: "5px",
               }}
             />
-            {minPriceSet ? (
-              <button
-                onClick={handleMinClick}
-                style={{
-                  fontSize: "10px",
-                  whiteSpace: "nowrap",
-                  marginRight: "1rem",
-                }}
-              >
-                Set minimum
-              </button>
-            ) : null}
             <span style={{ whiteSpace: "nowrap" }}>ETH</span>
           </div>
           <div
@@ -614,7 +591,10 @@ const AdForm = (props) => {
               <p
                 style={{
                   color:
-                    parsedUserPrice > balanceData.value ? "red" : "inherit",
+                    parsedUserPrice > balanceData.value ||
+                    parsedUserPrice + transferFee > balanceData.value
+                      ? "red"
+                      : "inherit",
                   margin: 0,
                 }}
               >
@@ -622,45 +602,46 @@ const AdForm = (props) => {
               </p>
             ) : null}
           </div>
-          <b style={{ marginTop: "0.5rem" }}>What is this?</b>
-          <p style={{ marginTop: 0 }}>
-            Check the forth story on the Kiwi News front page. Notice how it
-            says "(sponsored)" next to the submitter's username? That's because
-            the forth story on Kiwi News is always an ad. Ads are like regular
-            Kiwi News stories except that they don't need to be upvoted to reach
-            the fourth spot on the front page.
+          <p style={{ marginBottom: 0 }}>
+            <span style={{ fontWeight: 500 }}>Daily fee:</span> ~
+            {formattedDailyFee} ETH ($
+            {(formattedDailyFee * ethUSD).toFixed(
+              formattedDailyFee * ethUSD > 1 ? 2 : 3,
+            )}
+            )
           </p>
-          <b style={{ marginTop: 0 }}>How much does it cost?</b>
-          <p style={{ marginTop: 0 }}>
-            Let’s say you put $30 worth of ETH as collateral.
-            <br />
-            <br />
-            We charge you 1/30th of your collateral per day, equally distributed
-            for thirty days. So, displaying the ad will cost $1/day. Other users
-            can outbid you - like in Google Ads - if they put more collateral
-            than you. If that happens, you’ll get your collateral back. So,
-            e.g., someone puts $20 on your 15th day, you would have paid $15 out
-            of $30 for displaying the ad and get your remaining $15 back.
+          <p style={{ marginTop: 0, marginBottom: 0 }}>
+            <span style={{ fontWeight: 500 }}>Transfer fee:</span> ~
+            {formattedTransferFee} ETH ($
+            {(formattedTransferFee * ethUSD).toFixed(2)})
           </p>
-          <b style={{ marginTop: 0 }}>
-            What if I want my collateral back earlier?
-          </b>
-          <p style={{ marginTop: 0 }}>
-            Currently, the contract will just return your collateral when
-            someone else buys the ad. Keep this in mind! We have however admin
-            rights to rescue your collateral if you direly need it back
-            immediately.
+          <p style={{ marginTop: 0, marginBottom: 0 }}>
+            <span style={{ fontWeight: 500 }}>New price:</span>{" "}
+            {parsedUserPrice
+              ? `${formatEther(parsedUserPrice)} ETH ($${(
+                  formatEther(parsedUserPrice) * ethUSD
+                ).toFixed(2)})`
+              : "0 ETH ($0.00)"}
           </p>
-          <b style={{ marginTop: 0 }}>Is this safe?</b>
-          <p style={{ marginTop: 0 }}>
-            The contract has been written by timdaub.eth. Some folks from the
-            Rico Credit System audited the math a while ago. But please bear in
-            mind that it’s still experimental, so don't put more than you can
-            afford to lose.
-          </p>
-          <b style={{ marginTop: 0 }}>I have more questions!</b>
-          <p style={{ marginTop: 0 }}>
-            Reach out on our groupchat or DM @timdaub on telegram.
+          <p
+            style={{
+              color:
+                balanceData?.value &&
+                parsedUserPrice + transferFee > balanceData.value
+                  ? "red"
+                  : "",
+              marginTop: 0,
+            }}
+          >
+            <span
+              style={{
+                fontWeight: 600,
+              }}
+            >
+              Total:
+            </span>{" "}
+            {formatEther(parsedUserPrice + transferFee)} ETH ($
+            {(formatEther(parsedUserPrice + transferFee) * ethUSD).toFixed(2)})
           </p>
           <ConnectButton.Custom>
             {({ account, chain, mounted, openConnectModal }) => {
@@ -669,9 +650,16 @@ const AdForm = (props) => {
               let clickHandler, copy, disabled;
               if (connected) {
                 if (chain.id === optimism.id) {
-                  disabled = isLoading || isValid;
+                  disabled =
+                    isLoading ||
+                    isValid ||
+                    (balanceData?.value &&
+                      parsedUserPrice + transferFee > balanceData.value);
                   copy = isLoading
                     ? "Please sign transaction"
+                    : balanceData?.value &&
+                      parsedUserPrice + transferFee > balanceData.value
+                    ? "Insufficient balance"
                     : "Submit onchain ad";
                   clickHandler = handleAdSubmission;
                 } else {
@@ -707,6 +695,51 @@ const AdForm = (props) => {
               );
             }}
           </ConnectButton.Custom>
+          <b style={{ marginTop: "0.1rem" }}>What is this?</b>
+          <p style={{ marginTop: 0 }}>
+            Check the forth story on the Kiwi News front page. Notice how it
+            says "(sponsored)" next to the submitter's username? That's because
+            the forth story on Kiwi News is always an ad.
+            <br />
+            <br />
+            Ads are like regular Kiwi News stories except that they don't need
+            to be upvoted to reach the fourth spot on the front page.
+          </p>
+          <b style={{ marginTop: 0 }}>How does it work?</b>
+          <p style={{ marginTop: 0 }}>
+            You can set the ad's price, but you have to pay daily fees for
+            renting it at that price. We charge 1/30th of the price per day.
+            <br />
+            <br />
+            Let’s say the ad is free and you make it cost $30, it'll cost you
+            $1/day to display the ad.
+            <br />
+            <br />
+            Others can buy the ad at the current price. When they buy you'll get
+            your left over collateral back and the price at which the ad sold.
+            <br />
+            <br />
+            Say someone bought you ad at day 15 (price $15), then you'll get
+            your $15 worth of collateral back, and $15 from the buyer.
+          </p>
+          <b style={{ marginTop: 0 }}>
+            What if I want my collateral back earlier?
+          </b>
+          <p style={{ marginTop: 0 }}>
+            You can technically buy your own ad and set the new price to 1 Wei.
+            But this means you're going to sell the ad space very cheaply!
+          </p>
+          <b style={{ marginTop: 0 }}>Is this safe?</b>
+          <p style={{ marginTop: 0 }}>
+            The contract has been written by timdaub.eth. Some folks from the
+            Rico Credit System audited the math a while ago. But please bear in
+            mind that it’s still experimental, so don't put more than you can
+            afford to lose.
+          </p>
+          <b style={{ marginTop: 0 }}>I have more questions!</b>
+          <p style={{ marginTop: 0 }}>
+            Reach out on our groupchat or DM @timdaub on telegram.
+          </p>
         </>
       )}
     </div>
