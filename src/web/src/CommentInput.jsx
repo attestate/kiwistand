@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { WagmiConfig, useAccount } from "wagmi";
 import { Wallet } from "@ethersproject/wallet";
@@ -125,6 +125,40 @@ const CommentInput = (props) => {
       button.style.display = "none";
     }
   }
+  const textareaRef = useRef(null);
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      if (e.key !== "r") return;
+
+      const selection = window.getSelection();
+      const selected = selection.toString().trim();
+      if (!selected || !address || (isEligible !== null && !isEligible)) return;
+
+      // Only proceed if selection is within a comment-text span
+      if (
+        !selection.anchorNode?.parentElement?.classList?.contains(
+          "comment-text",
+        )
+      )
+        return;
+
+      const textarea = textareaRef.current;
+      if (!textarea) return;
+
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const quote = `> ${selected}`;
+
+      setText(text.slice(0, start) + quote + text.slice(end));
+
+      setTimeout(() => {
+        textarea.selectionStart = textarea.selectionEnd = start + quote.length;
+      }, 0);
+    };
+
+    document.addEventListener("keydown", handleKeyPress);
+    return () => document.removeEventListener("keydown", handleKeyPress);
+  }, [text, address, isEligible]);
   return (
     <div
       style={{
@@ -133,6 +167,7 @@ const CommentInput = (props) => {
       }}
     >
       <textarea
+        ref={textareaRef}
         onFocus={toggleNavigationItems}
         onBlur={toggleNavigationItems}
         rows="12"

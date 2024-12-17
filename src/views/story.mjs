@@ -343,6 +343,7 @@ export default async function (trie, theme, index, value, referral) {
                                     >Moderated because: "${comment.reason}"</i
                                   >`
                                 : html`<span
+                                    class="comment-text"
                                     dangerouslySetInnerHTML=${{
                                       __html: linkifyStr(
                                         DOMPurify.sanitize(comment.title),

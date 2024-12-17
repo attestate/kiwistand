@@ -96,7 +96,10 @@ const Comment = React.forwardRef(({ comment, storyIndex }, ref) => {
         </span>
       </div>
       <br />
-      <span style={{ fontSize: "11pt", lineHeight: "1.15" }}>
+      <span
+        className="comment-text"
+        style={{ fontSize: "11pt", lineHeight: "1.15" }}
+      >
         <Linkify
           options={{
             className: "meta-link",
