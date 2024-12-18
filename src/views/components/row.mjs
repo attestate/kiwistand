@@ -544,7 +544,7 @@ const row = (
                                   ethers.utils.formatEther(
                                     story.price.toString(),
                                   ),
-                                ).toFixed(10)}
+                                ).toFixed(9)}
                                 <span> </span>
                                 ETH
                               </a>

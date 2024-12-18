@@ -37,7 +37,7 @@ export default function DecayingPrice({ initialPrice }) {
           transition: "color 0.1s",
         }}
       >
-        ↓{(Number(price) / 1e18).toFixed(10)}
+        ↓{(Number(price) / 1e18).toFixed(9)}
       </span>
       <span> ETH</span>
     </>
