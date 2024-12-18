@@ -428,6 +428,7 @@ const AdForm = (props) => {
   });
 
   const [userPrice, setUserPrice] = useState("");
+  const [userPriceETH, setUserPriceETH] = useState("");
   const [minAdPrice, setMinAdPrice] = useState(0n);
 
   const { data: priceData } = useContractRead({
@@ -437,7 +438,10 @@ const AdForm = (props) => {
     chainId: optimism.id,
   });
 
-  useEffect(() => setIsValid(userPrice > minAdPrice), [userPrice, minAdPrice]);
+  useEffect(
+    () => setIsValid(userPriceETH > minAdPrice),
+    [userPriceETH, minAdPrice],
+  );
 
   useEffect(() => {
     if (priceData) {
@@ -449,10 +453,10 @@ const AdForm = (props) => {
   }, [priceData]);
 
   let parsedUserPrice;
-  if (isNaN(userPrice)) {
+  if (isNaN(userPriceETH)) {
     parsedUserPrice = 0n;
   } else {
-    parsedUserPrice = parseEther(userPrice);
+    parsedUserPrice = parseEther(userPriceETH);
   }
 
   const transferFee = minAdPrice === 0n ? 0n : minAdPrice - 1n;
@@ -531,118 +535,125 @@ const AdForm = (props) => {
           onChange={(e) => setIsAd(e.target.checked)}
           style={{ transform: "scale(1.5)" }}
         />
-        {isAd ? "I want to start losing money" : "Submit story as an ad"}
+        Submit story as an ad
       </label>
       {isAd && (
         <>
-          <p
-            style={{
-              color: minPriceSet ? "red" : "#828282",
-              fontSize: "14px",
-              paddingTop: "10px",
-              borderTop: "1px solid grey",
-            }}
-          >
-            <span style={{ fontWeight: 500 }}>Current price:</span>{" "}
-            {formattedTransferFee} ETH ($
-            {(formattedTransferFee * ethUSD).toFixed(2)})
-          </p>
-          <p style={{ fontSize: "13px", marginTop: 0, marginBottom: 0 }}>
-            New Price:
-          </p>
           <div
             style={{
-              backgroundColor: "white",
-              display: "flex",
-              alignItems: "center",
+              backgroundColor: "var(--background-color0)",
+              border: "var(--border)",
+              padding: "16px",
               borderRadius: "2px",
-              border: "1px solid #828282",
-              padding: "5px 10px",
-              boxSizing: "border-box",
+              marginTop: "12px",
             }}
           >
-            <input
-              type="text"
-              placeholder="0.0000"
-              value={userPrice.toString()}
-              onChange={(e) => setUserPrice(e.target.value)}
+            {/* Current Price Display */}
+            <div
               style={{
-                border: "none",
-                outline: "none",
-                width: "100%",
-                fontSize: "16px",
-                padding: "0",
-                marginRight: "5px",
-              }}
-            />
-            <span style={{ whiteSpace: "nowrap" }}>ETH</span>
-          </div>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              fontSize: "0.8rem",
-            }}
-          >
-            <p style={{ margin: 0 }}>
-              ≈ ${(formatEther(parsedUserPrice) * ethUSD).toFixed(2)}
-            </p>
-            {isConnected && balanceData ? (
-              <p
-                style={{
-                  color:
-                    parsedUserPrice > balanceData.value ||
-                    parsedUserPrice + transferFee > balanceData.value
-                      ? "red"
-                      : "inherit",
-                  margin: 0,
-                }}
-              >
-                Balance: {parseFloat(balanceData.formatted).toFixed(4)} ETH
-              </p>
-            ) : null}
-          </div>
-          <p style={{ marginBottom: 0 }}>
-            <span style={{ fontWeight: 500 }}>Daily fee:</span> ~
-            {formattedDailyFee} ETH ($
-            {(formattedDailyFee * ethUSD).toFixed(
-              formattedDailyFee * ethUSD > 1 ? 2 : 3,
-            )}
-            )
-          </p>
-          <p style={{ marginTop: 0, marginBottom: 0 }}>
-            <span style={{ fontWeight: 500 }}>Transfer fee:</span> ~
-            {formattedTransferFee} ETH ($
-            {(formattedTransferFee * ethUSD).toFixed(2)})
-          </p>
-          <p style={{ marginTop: 0, marginBottom: 0 }}>
-            <span style={{ fontWeight: 500 }}>New price:</span>{" "}
-            {parsedUserPrice
-              ? `${formatEther(parsedUserPrice)} ETH ($${(
-                  formatEther(parsedUserPrice) * ethUSD
-                ).toFixed(2)})`
-              : "0 ETH ($0.00)"}
-          </p>
-          <p
-            style={{
-              color:
-                balanceData?.value &&
-                parsedUserPrice + transferFee > balanceData.value
-                  ? "red"
-                  : "",
-              marginTop: 0,
-            }}
-          >
-            <span
-              style={{
-                fontWeight: 600,
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "12px",
+                color: "#666",
+                fontSize: "14px",
               }}
             >
-              Total:
-            </span>{" "}
-            {formatEther(parsedUserPrice + transferFee)} ETH ($
-            {(formatEther(parsedUserPrice + transferFee) * ethUSD).toFixed(2)})
-          </p>
+              <span>Current Price:</span>
+              <span>${(formattedTransferFee * ethUSD).toFixed(2)}</span>
+            </div>
+
+            {/* Price Input Section */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "12px",
+              }}
+            >
+              <span style={{ fontSize: "14px", fontWeight: "bold" }}>
+                Set Your Price
+              </span>
+              <div style={{ display: "flex", alignItems: "center" }}>
+                <span
+                  style={{
+                    fontSize: "14px",
+                    color: "#666",
+                    marginRight: "8px",
+                  }}
+                >
+                  $
+                </span>
+                <input
+                  type="number"
+                  min="1"
+                  step="1"
+                  placeholder={new Intl.NumberFormat(navigator.language, {
+                    style: "decimal",
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  }).format(0)}
+                  value={parseInt(userPrice)}
+                  onChange={(e) => {
+                    const usdValue = e.target.value;
+                    const ethValue = (usdValue / ethUSD).toString();
+                    setUserPrice(usdValue);
+                    setUserPriceETH(ethValue);
+                  }}
+                  style={{
+                    width: "100px",
+                    padding: "6px",
+                    border: "1px solid #ddd",
+                    borderRadius: "4px",
+                    fontSize: "14px",
+                    textAlign: "right",
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Cost Breakdown */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                color: "#666",
+                marginBottom: "12px",
+                fontSize: "14px",
+              }}
+            >
+              <span>Your Daily Cost:</span>
+              <span>${(userPrice / 30).toFixed(2)}</span>
+            </div>
+
+            {/* Total Section */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                borderTop: "1px solid #ddd",
+                paddingTop: "12px",
+                fontSize: "14px",
+              }}
+            >
+              <span style={{ fontWeight: "bold" }}>Total Due:</span>
+              <div style={{ textAlign: "right" }}>
+                <div style={{ fontWeight: "bold" }}>
+                  $
+                  {(
+                    formatEther(parsedUserPrice) * ethUSD +
+                    formattedTransferFee * ethUSD
+                  ).toFixed(2)}
+                </div>
+                <div style={{ fontSize: "13px", color: "#666" }}>
+                  ({formatEther(parsedUserPrice + transferFee).slice(0, 7)} ETH)
+                </div>
+              </div>
+            </div>
+          </div>
           <ConnectButton.Custom>
             {({ account, chain, mounted, openConnectModal }) => {
               const connected = account && chain && mounted;
@@ -659,8 +670,12 @@ const AdForm = (props) => {
                     ? "Please sign transaction"
                     : balanceData?.value &&
                       parsedUserPrice + transferFee > balanceData.value
-                    ? "Insufficient balance"
-                    : "Submit onchain ad";
+                    ? `Insufficient balance (${Number(
+                        formatEther(parsedUserPrice + transferFee),
+                      ).toFixed(5)} ETH)`
+                    : `Place ad (${Number(
+                        formatEther(parsedUserPrice + transferFee),
+                      ).toFixed(5)} ETH)`;
                   clickHandler = handleAdSubmission;
                 } else {
                   disabled = false;
@@ -680,7 +695,11 @@ const AdForm = (props) => {
               }
               return (
                 <>
-                  {isConnected ? <span>Connected with {address}</span> : null}
+                  {isConnected ? (
+                    <span style={{ fontSize: "8pt", marginBottom: "10px" }}>
+                      Connected with {address} <SimpleDisconnectButton />
+                    </span>
+                  ) : null}
                   <button
                     id="button-onboarding"
                     style={{ ...buttonStyles, ...{ marginTop: 0 } }}
@@ -689,8 +708,14 @@ const AdForm = (props) => {
                   >
                     {copy}
                   </button>
+                  <span style={{ fontSize: "10pt" }}>
+                    Others can buy your ad spot by paying your set price. You'll
+                    receive your remaining balance plus their payment.
+                  </span>
                   <br />
-                  <SimpleDisconnectButton />
+                  <br />
+                  <br />
+                  <br />
                 </>
               );
             }}

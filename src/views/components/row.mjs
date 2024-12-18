@@ -540,7 +540,7 @@ const row = (
                                 href="/submit?isad=true"
                               >
                                 <span>Price: </span>
-                                ${parseFloat(
+                                ↓${parseFloat(
                                   ethers.utils.formatEther(
                                     story.price.toString(),
                                   ),
