@@ -531,7 +531,7 @@ const AdForm = (props) => {
           onChange={(e) => setIsAd(e.target.checked)}
           style={{ transform: "scale(1.5)" }}
         />
-        Submit story as an ad
+        {isAd ? "I want to start losing money" : "Submit story as an ad"}
       </label>
       {isAd && (
         <>
