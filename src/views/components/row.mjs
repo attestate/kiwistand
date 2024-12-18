@@ -535,7 +535,8 @@ const row = (
                               <span style="opacity:0.6"> • </span>
                               <a
                                 style="display: inline;"
-                                class="meta-link"
+                                class="decaying-price-link meta-link"
+                                data-price="${story.price.toString()}"
                                 href="/submit?isad=true"
                               >
                                 <span>Price: </span>
@@ -543,7 +544,7 @@ const row = (
                                   ethers.utils.formatEther(
                                     story.price.toString(),
                                   ),
-                                ).toFixed(4)}
+                                ).toFixed(10)}
                                 <span> </span>
                                 ETH
                               </a>

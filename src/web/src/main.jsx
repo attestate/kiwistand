@@ -76,6 +76,20 @@ async function addSubmitButton(allowlist, delegations, toast) {
   }
 }
 
+async function addDecayingPriceLink() {
+  const linkContainer = document.querySelector(".decaying-price-link");
+  if (linkContainer) {
+    const price = linkContainer.getAttribute("data-price");
+    const Link = (await import("./DecayingPrice.jsx")).default;
+
+    createRoot(linkContainer).render(
+      <StrictMode>
+        <Link initialPrice={price} />
+      </StrictMode>,
+    );
+  }
+}
+
 async function addInviteLink(toast) {
   const linkContainer = document.querySelector("#invitelink-container");
   if (linkContainer) {
@@ -800,6 +814,7 @@ async function start() {
   const results1 = await Promise.allSettled([
     addDynamicNavElements(),
     addInviteLink(toast),
+    addDecayingPriceLink(),
     addCommentInput(toast, await allowlistPromise, await delegationsPromise),
     addSubscriptionButton(await allowlistPromise, toast),
     addTGLink(await allowlistPromise),
