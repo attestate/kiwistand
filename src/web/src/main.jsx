@@ -803,7 +803,7 @@ async function start() {
       mainElement: "body",
       // NOTE: If the user is searching in the search drawer, we don't want
       // them to accidentially reload the page
-      shouldPullToRefresh: () => !window.drawerIsOpen,
+      shouldPullToRefresh: () => !window.drawerIsOpen && !window.scrollY,
       onRefresh() {
         window.location.reload();
       },
