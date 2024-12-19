@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import SwipeableDrawer from "@mui/material/SwipeableDrawer";
 import { ChatsSVG } from "./icons.jsx";
+import { isIOS } from "./session.mjs";
 
 const UpvoteSVG = (props) => (
   <svg
@@ -14,6 +15,7 @@ const UpvoteSVG = (props) => (
 
 const SearchInterface = () => {
   const [isOpen, setIsOpen] = useState(false);
+  window.drawerIsOpen = isOpen;
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -98,7 +100,7 @@ const SearchInterface = () => {
         >
           <a
             href={result.url}
-            target="_blank"
+            target={isIOS() ? "_self" : "_blank"}
             style={{
               fontSize: "13pt",
               lineHeight: "1.4",
@@ -158,7 +160,6 @@ const SearchInterface = () => {
           viewBox="0 0 256 256"
           style={{
             fill: "currentColor",
-            stroke: "currentColor",
             width: "1.5rem",
           }}
         >

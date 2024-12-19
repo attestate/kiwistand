@@ -802,6 +802,9 @@ async function start() {
     PullToRefresh.init({
       mainElement: "body",
       onRefresh() {
+        // NOTE: If the user is searching in the search drawer, we don't want
+        // them to accidentially reload the page
+        if (window.drawerIsOpen) return;
         window.location.reload();
       },
     });
