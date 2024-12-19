@@ -494,10 +494,7 @@ export default async function (trie, theme, page, domain) {
               <tr>
                 ${SecondHeader(theme, "top")}
               </tr>
-              <tr
-                style="cursor: pointer; user-select:none;"
-                onclick="document.querySelectorAll('.inverted-row').forEach(el => el.style.display = el.style.display === 'none' ? '' : 'none');"
-              >
+              <tr>
                 <td>
                   <div
                     style="border-bottom: 1px solid black; border-top: 1px solid black; background-color: white; height: 2.3rem;display: flex; justify-content: start; align-items: center; padding-left: 1rem; gap: 1rem; color: black;"
@@ -507,7 +504,14 @@ export default async function (trie, theme, page, domain) {
                     >
                       <img src="devconflictlogo.png" style="height: 25px;" />
                     </span>
-                    <span> Show/Hide submissions </span>
+                    <a
+                      class="meta-link"
+                      style="color: black;"
+                      href="https://paragraph.xyz/@kiwi-updates/devconflict-writing-contest-results"
+                      target="_blank"
+                    >
+                      Results of writers contest!
+                    </a>
                   </div>
                 </td>
               </tr>
