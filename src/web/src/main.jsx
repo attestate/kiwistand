@@ -801,10 +801,10 @@ async function start() {
   if (isRunningPWA() && window.location.pathname !== "/submit") {
     PullToRefresh.init({
       mainElement: "body",
+      // NOTE: If the user is searching in the search drawer, we don't want
+      // them to accidentially reload the page
+      shouldPullToRefresh: () => !window.drawerIsOpen,
       onRefresh() {
-        // NOTE: If the user is searching in the search drawer, we don't want
-        // them to accidentially reload the page
-        if (window.drawerIsOpen) return;
         window.location.reload();
       },
     });
