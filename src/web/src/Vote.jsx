@@ -12,7 +12,7 @@ import NFTModal from "./NFTModal.jsx";
 import theme from "./theme.jsx";
 import { getLocalAccount } from "./session.mjs";
 
-const iconSVG = (
+export const iconSVG = (
   <svg
     style={{ width: "35px" }}
     viewBox="0 0 200 200"

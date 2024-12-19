@@ -306,6 +306,17 @@ async function addConnectedComponents(allowlist, delegations, toast) {
     );
   }
 
+  const searchButton = document.querySelector("#search");
+  if (searchButton) {
+    const Search = (await import("./Search.jsx")).default;
+    searchButton.style = "";
+    createRoot(searchButton).render(
+      <StrictMode>
+        <Search />
+      </StrictMode>,
+    );
+  }
+
   const mobileBellButton = document.querySelector(".mobile-bell-container");
   if (mobileBellButton) {
     const Bell = (await import("./Bell.jsx")).default;

@@ -91,6 +91,7 @@ const header = async (theme, path) => {
                 style="width: 33%; padding: 7px 7px 7px 0; display: flex; justify-content: flex-end;"
               >
                 <div id="bell"></div>
+                <div id="search"></div>
               </div>
             </div>
           </td>
