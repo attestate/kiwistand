@@ -225,6 +225,51 @@ export async function launch(trie, libp2p) {
       .type("text/html")
       .send(await kiwipassmint(reply.locals.theme));
   });
+  app.post("/api/v1/search", async (req, reply) => {
+    let response;
+    try {
+      const apiUrl = "https://knsearch.x4901.xyz/api/v1/search";
+      const requestOptions = {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json; charset=utf-8",
+          "X-API-Key": process.env.KN_SEARCH_API_KEY,
+        },
+        body: JSON.stringify({
+          query: req.body.query,
+          sort: "popularity",
+        }),
+      };
+      response = await fetch(apiUrl, requestOptions);
+    } catch (error) {
+      const code = 500;
+      const httpMessage = "Internal Server Error";
+      const details = "Failed to connect to search service";
+      return sendError(reply, code, httpMessage, details);
+    }
+
+    if (!response.ok) {
+      const code = response.status;
+      const httpMessage = "Search Request Failed";
+      const details = `Search service responded with status ${response.status}`;
+      return sendError(reply, code, httpMessage, details);
+    }
+
+    let data;
+    try {
+      data = await response.json();
+    } catch (error) {
+      const code = 500;
+      const httpMessage = "Internal Server Error";
+      const details = "Failed to parse search results";
+      return sendError(reply, code, httpMessage, details);
+    }
+
+    const code = 200;
+    const httpMessage = "OK";
+    const details = "Search completed successfully";
+    return sendStatus(reply, code, httpMessage, details, data);
+  });
   app.get("/api/v1/sales", async (request, reply) => {
     if (request.query.granularity === "all") {
       const data = await price.getSalesData();
