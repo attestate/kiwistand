@@ -643,7 +643,7 @@ body {
  .sidebar {
      position: fixed;
     /* Fixed position for mobile */
-     z-index: 7;
+     z-index: 11;
      top: 0;
      width: 75%;
      height: 100%;
@@ -973,7 +973,7 @@ body {
      left: 0;
      background-color: rgba(0, 0, 0, 0.5);
     /* Semi-transparent black */
-     z-index: 6;
+     z-index: 10;
     /* Overlay should be on top of everything else */
 }
  .story-link {
