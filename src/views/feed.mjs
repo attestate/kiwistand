@@ -494,41 +494,6 @@ export default async function (trie, theme, page, domain) {
               <tr>
                 ${SecondHeader(theme, "top")}
               </tr>
-              <tr>
-                <td>
-                  <div
-                    style="border-bottom: 1px solid black; border-top: 1px solid black; background-color: white; height: 2.3rem;display: flex; justify-content: start; align-items: center; padding-left: 1rem; gap: 1rem; color: black;"
-                  >
-                    <span
-                      style="height: 2.3rem;display: flex; justify-content: center; align-items: center; gap: 1rem; color: black;"
-                    >
-                      <img src="devconflictlogo.png" style="height: 25px;" />
-                    </span>
-                    <a
-                      class="meta-link"
-                      style="color: black;"
-                      href="https://paragraph.xyz/@kiwi-updates/devconflict-writing-contest-results"
-                      target="_blank"
-                    >
-                      Results of writers contest!
-                    </a>
-                  </div>
-                </td>
-              </tr>
-              ${contestStories &&
-              contestStories.map(
-                Row(
-                  start,
-                  "/",
-                  "margin-bottom: 20px;",
-                  null,
-                  null,
-                  null,
-                  recentJoiners,
-                  true,
-                  currentQuery,
-                ),
-              )}
               ${stories
                 .slice(0, 3)
                 .map(
