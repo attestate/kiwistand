@@ -822,6 +822,7 @@ body {
     }
     footer {
       border-top: var(--border);
+      border-bottom: var(--border);
       padding-bottom: 1rem;
     }
     body {
