@@ -777,12 +777,25 @@ function makeUpvoteNotificationsVisited() {
   history.replaceState(null, "", origin);
 }
 
+const prefetchedUrls = new Set();
+function dynamicPrefetch(url, priority = "auto") {
+  if (prefetchedUrls.has(url)) return;
+  const link = document.createElement("link");
+  link.rel = "prefetch";
+  link.href = url;
+  link.fetchPriority = priority;
+  link.as = "document";
+  document.head.appendChild(link);
+  prefetchedUrls.add(url);
+}
+
 async function start() {
   // NOTE: There are clients which had the identity cookie sent to 1 week and
   // they're now encountering the paywall. So in case this happens but their
   // local storage contains the respective private key, we want them to reload
   // the page. See the logic in CustomConnectButton to follow this flow.
-  window.initialIdentityCookie = getCookie("identity");
+  const identity = getCookie("identity");
+  window.initialIdentityCookie = identity;
 
   initKiwiRotation(".hnname span img");
 
@@ -796,6 +809,18 @@ async function start() {
 
   updateLinkTargetsForIOSPWA();
 
+  if (
+    window.location.pathname === "/" &&
+    !window.location.search.includes("identity=") &&
+    !window.location.search.includes("custom=")
+  ) {
+    const personalizedFeedUrl = identity
+      ? `${window.location.origin}/?identity=${identity}`
+      : `${window.location.origin}/custom=true`;
+    const priority = "high";
+    dynamicPrefetch(personalizedFeedUrl, priority);
+  }
+
   // NOTE: We don't want pull to refresh for the submission page as this could
   // mess up the user's input on an accidential scroll motion.
   if (window.location.pathname !== "/submit") {
@@ -806,8 +831,6 @@ async function start() {
       shouldPullToRefresh: () => !window.drawerIsOpen && !window.scrollY,
       onRefresh: () => {
         if (window.location.pathname === "/") {
-          const identity = getCookie("identity");
-
           if (identity) {
             window.location.href = `/?identity=${identity}`;
           } else {
