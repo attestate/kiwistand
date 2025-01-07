@@ -133,6 +133,7 @@ export function initialize(messages) {
         timestamp INTEGER NOT NULL
       );
       CREATE INDEX IF NOT EXISTS idx_fingerprints_url ON fingerprints(url);
+      CREATE INDEX IF NOT EXISTS idx_fingerprints_hash ON fingerprints(hash);
       CREATE INDEX IF NOT EXISTS idx_url_fingerprints_timestamp ON fingerprints(timestamp);
     `);
   messages.forEach(insertMessage);
