@@ -805,12 +805,16 @@ async function start() {
       // them to accidentially reload the page
       shouldPullToRefresh: () => !window.drawerIsOpen && !window.scrollY,
       onRefresh: () => {
-        const identity = getCookie("identity");
+        if (window.location.pathname === "/") {
+          const identity = getCookie("identity");
 
-        if (identity) {
-          window.location.href = `/?identity=${identity}`;
+          if (identity) {
+            window.location.href = `/?identity=${identity}`;
+          } else {
+            window.location.href = `/?custom=true`;
+          }
         } else {
-          window.location.href = `/?custom=true`;
+          window.location.reload();
         }
       },
     });
