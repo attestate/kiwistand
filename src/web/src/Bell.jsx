@@ -8,6 +8,7 @@ import { fetchNotifications } from "./API.mjs";
 import { getLocalAccount, getCookie } from "./session.mjs";
 import { client, chains } from "./client.mjs";
 
+let wasTitleSet = false;
 const Bell = (props) => {
   let address;
   const account = useAccount();
@@ -25,7 +26,6 @@ const Bell = (props) => {
   const [notificationCount, setNotificationCount] = useState(0);
   const [readNotifications, setReadNotifications] = useState(0);
   const [cacheBuster, setCacheBuster] = useState("");
-  const [documentTitle] = useState(document.title);
   const [isFull, setIsFull] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const link = isEligible
@@ -100,8 +100,9 @@ const Bell = (props) => {
     );
   }
 
-  if (notificationCount > 0 && documentTitle === document.title) {
-    document.title = `[${notificationCount}] ${documentTitle}`;
+  if (notificationCount > 0 && !wasTitleSet) {
+    document.title = `[${notificationCount}] ${document.title}`;
+    wasTitleSet = true;
   }
 
   const disabled = !lastUpdate && readNotifications === 0;
