@@ -28,6 +28,7 @@ import cache, {
   getLastComment,
   getSubmission,
   listNewest,
+  getRecommendations,
 } from "../cache.mjs";
 import * as curation from "./curation.mjs";
 import * as registry from "../chainstate/registry.mjs";
@@ -317,10 +318,17 @@ async function addMetadata(post) {
   };
 }
 
-export async function index(trie, page, domain) {
-  const lookback = sub(new Date(), {
+export async function index(
+  trie,
+  page,
+  domain,
+  lookback = sub(new Date(), {
     weeks: 3,
-  });
+  }),
+  paginate = true,
+  showAd = true,
+  showContest = true,
+) {
   const lookbackUnixTime = Math.floor(lookback.getTime() / 1000);
   const limit = -1;
   let leaves = listNewest(limit, lookbackUnixTime);
@@ -341,7 +349,9 @@ export async function index(trie, page, domain) {
 
   const start = totalStories * page;
   const end = totalStories * (page + 1);
-  storyPromises = storyPromises.slice(start, end);
+  if (paginate) {
+    storyPromises = storyPromises.slice(start, end);
+  }
 
   let writers = [];
   try {
@@ -402,18 +412,23 @@ export async function index(trie, page, domain) {
     .slice(0, 2);
 
   let ad;
-  const adCacheKey = "ad-cache-key";
-  if (cache.get(adCacheKey)) {
-    ad = cache.get(adCacheKey);
-  } else {
-    const adTTLSeconds = 60 * 5;
-    getAd()
-      .then((result) => cache.set(adCacheKey, result, [adTTLSeconds]))
-      .catch((err) => log(`Err in getAd: ${err.stack}`));
+  if (showAd) {
+    const adCacheKey = "ad-cache-key";
+    if (cache.get(adCacheKey)) {
+      ad = cache.get(adCacheKey);
+    } else {
+      const adTTLSeconds = 60 * 5;
+      getAd()
+        .then((result) => cache.set(adCacheKey, result, [adTTLSeconds]))
+        .catch((err) => log(`Err in getAd: ${err.stack}`));
+    }
   }
 
-  const contestStories = await getContestStories();
-  const resolvedContestStories = await resolveIds(contestStories);
+  let resolvedContestStories;
+  if (showContest) {
+    const contestStories = await getContestStories();
+    resolvedContestStories = await resolveIds(contestStories);
+  }
   return {
     contestStories: resolvedContestStories,
     ad,
@@ -447,12 +462,58 @@ const expandSVG = html`<svg
   />
 </svg>`;
 
-export default async function (trie, theme, page, domain) {
+async function recommended(trie, page, domain, identity, hash) {
+  const lookback = sub(new Date(), {
+    weeks: 3,
+  });
+  const paginate = false;
+  const showAd = false;
+  const showContest = false;
+
+  const { ad, originals, stories } = await index(
+    trie,
+    page,
+    domain,
+    lookback,
+    paginate,
+    showAd,
+    showContest,
+  );
+
+  let candidates = await getRecommendations(stories, hash, identity);
+  candidates = candidates.filter(
+    (story) => story.metadata?.image && story.submitter.displayName,
+  );
+  if (candidates.length === 0) {
+    candidates = stories;
+  }
+
+  const totalStories = parseInt(env.TOTAL_STORIES, 10);
+  const start = totalStories * page;
+  const end = totalStories * (page + 1);
+  candidates = candidates.slice(start, end);
+
+  return {
+    contestStories: [],
+    ad,
+    stories: candidates,
+    originals,
+    start,
+  };
+}
+
+export default async function (trie, theme, page, domain, identity, hash) {
   const mints = await registry.mints();
   const path = "/";
   const totalStories = parseInt(env.TOTAL_STORIES, 10);
 
-  const content = await index(trie, page, domain);
+  let content;
+  if (identity || hash) {
+    content = await recommended(trie, page, domain, identity, hash);
+  } else {
+    content = await index(trie, page, domain);
+  }
+
   const { ad, originals, stories, start, contestStories } = content;
 
   let currentQuery = "";

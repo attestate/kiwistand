@@ -69,7 +69,12 @@ import * as frame from "./frame.mjs";
 import * as subscriptions from "./subscriptions.mjs";
 import * as telegram from "./telegram.mjs";
 import * as price from "./price.mjs";
-import { getRandomIndex, getSubmission, trackOutbound } from "./cache.mjs";
+import {
+  getRandomIndex,
+  getSubmission,
+  trackOutbound,
+  getRecommendations,
+} from "./cache.mjs";
 
 const app = express();
 const server = createServer(app);
@@ -171,6 +176,21 @@ export async function launch(trie, libp2p) {
     }
     return reply.redirect(`/stories?index=${index}`);
   });
+  function removeReferrerParams(link) {
+    const url = new URL(link);
+    if (url.hostname.endsWith("mirror.xyz")) {
+      url.searchParams.delete("referrerAddress");
+    } else if (
+      url.hostname.endsWith("paragraph.xyz") ||
+      url.hostname.endsWith("zora.co") ||
+      url.hostname.endsWith("manifold.xyz")
+    ) {
+      url.searchParams.delete("referrer");
+    } else if (url.hostname.endsWith("foundation.app")) {
+      url.searchParams.delete("ref");
+    }
+    return url.toString();
+  }
   app.post("/outbound", async (request, reply) => {
     reply.header("Cache-Control", "no-cache");
     const { url } = request.query;
@@ -182,7 +202,8 @@ export async function launch(trie, libp2p) {
     }
 
     const hash = fingerprint.generate(request);
-    trackOutbound(url, hash);
+    const cleanUrl = removeReferrerParams(url);
+    trackOutbound(cleanUrl, hash);
     return reply.status(204).send();
   });
   app.get("/outbound", async (request, reply) => {
@@ -196,13 +217,9 @@ export async function launch(trie, libp2p) {
     }
 
     const hash = fingerprint.generate(request);
-    trackOutbound(url, hash);
+    const cleanUrl = removeReferrerParams(url);
+    trackOutbound(cleanUrl, hash);
 
-    clients.forEach((client) => {
-      if (client.readyState === ws.WebSocket.OPEN) {
-        client.send(JSON.stringify({ href: url }));
-      }
-    });
     return reply.redirect(url);
   });
   app.get("/friends", async (request, reply) => {
@@ -224,6 +241,46 @@ export async function launch(trie, libp2p) {
       .status(200)
       .type("text/html")
       .send(await kiwipassmint(reply.locals.theme));
+  });
+  app.get("/api/v1/recommended", async (request, reply) => {
+    const page = 0;
+    const domain = "";
+    const pagination = false;
+    const { stories } = await index(trie, page, domain, pagination);
+    const hash = fingerprint.generate(request);
+    const { identity } = request.query;
+
+    if (!stories?.length) {
+      return sendError(
+        reply,
+        404,
+        "No stories found",
+        "Feed returned empty story list",
+      );
+    }
+
+    let candidates = await getRecommendations(stories, hash, identity);
+    candidates = candidates.filter(
+      (story) => story.metadata?.image && story.submitter.displayName,
+    );
+
+    if (!candidates.length) {
+      return sendError(
+        reply,
+        404,
+        "No recommendations",
+        "All stories filtered out",
+      );
+    }
+
+    const numOfStories = parseInt(process.env.TOTAL_STORIES, 10);
+    return sendStatus(
+      reply,
+      200,
+      "Success",
+      "Found recommendation",
+      candidates.slice(0, numOfStories),
+    );
   });
   app.post("/api/v1/search", async (req, reply) => {
     let response;
@@ -583,6 +640,16 @@ export async function launch(trie, libp2p) {
   });
 
   app.get("/", async (request, reply) => {
+    let identity, hash;
+    if (request.query.custom === "true") {
+      hash = fingerprint.generate(request);
+    }
+
+    try {
+      identity = utils.getAddress(request.query.identity);
+      hash = fingerprint.generate(request);
+    } catch (err) {}
+
     let page = parseInt(request.query.page);
     if (isNaN(page) || page < 1) {
       page = 0;
@@ -595,6 +662,8 @@ export async function launch(trie, libp2p) {
         reply.locals.theme,
         page,
         DOMPurify.sanitize(request.query.domain),
+        identity,
+        hash,
       );
     } catch (err) {
       log(`Error in /: ${err.stack}`);

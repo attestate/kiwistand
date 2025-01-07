@@ -156,6 +156,45 @@ export function initializeNotifications() {
    `);
 }
 
+export async function getRecommendations(candidates, fingerprint, identity) {
+  if (identity) {
+    const commentedStories = db
+      .prepare(
+        `
+      SELECT DISTINCT submission_id 
+      FROM comments 
+      WHERE identity = ?
+    `,
+      )
+      .all(identity)
+      .map((row) => row.submission_id);
+
+    candidates = candidates.filter((story) => {
+      return (
+        story.identity !== identity &&
+        !story.upvoters.includes(identity) &&
+        !commentedStories.includes(`kiwi:0x${story.index}`)
+      );
+    });
+  }
+
+  const clickedUrls = db
+    .prepare(
+      `
+    SELECT DISTINCT url 
+    FROM fingerprints 
+    WHERE hash = ?
+  `,
+    )
+    .all(fingerprint)
+    .map((row) => row.url);
+
+  return candidates.filter(
+    (story) =>
+      !clickedUrls.includes(normalizeUrl(story.href, { stripWWW: false })),
+  );
+}
+
 export function getTimestamp(identity) {
   const row = db
     .prepare(`SELECT timestamp FROM notifications WHERE identity = ?`)

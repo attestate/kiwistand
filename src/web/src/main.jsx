@@ -798,14 +798,20 @@ async function start() {
 
   // NOTE: We don't want pull to refresh for the submission page as this could
   // mess up the user's input on an accidential scroll motion.
-  if (isRunningPWA() && window.location.pathname !== "/submit") {
+  if (window.location.pathname !== "/submit") {
     PullToRefresh.init({
       mainElement: "body",
       // NOTE: If the user is searching in the search drawer, we don't want
       // them to accidentially reload the page
       shouldPullToRefresh: () => !window.drawerIsOpen && !window.scrollY,
-      onRefresh() {
-        window.location.reload();
+      onRefresh: () => {
+        const identity = getCookie("identity");
+
+        if (identity) {
+          window.location.href = `/?identity=${identity}`;
+        } else {
+          window.location.href = `/?custom=true`;
+        }
       },
     });
   }
