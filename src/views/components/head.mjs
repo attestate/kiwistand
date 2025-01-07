@@ -11,6 +11,7 @@ export function custom(
   ogTitle = "Kiwi News - handpicked web3 alpha",
   ogDescription = "",
   twitterCard = "summary_large_image",
+  prefetch = [],
 ) {
   ogImage = DOMPurify.sanitize(ogImage);
   ogTitle = DOMPurify.sanitize(ogTitle);
@@ -37,6 +38,11 @@ export function custom(
     <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
     ${PwaLinks()}
     <title>${ogTitle}</title>
+    ${prefetch.map(
+      (url) => html`
+        <link rel="prefetch" href="${url}" as="document" fetchpriority="high" />
+      `,
+    )}
   `;
 }
 const regular = custom();

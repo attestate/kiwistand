@@ -529,12 +529,19 @@ export default async function (trie, theme, page, domain, identity, hash) {
   if (domain) {
     query += `&domain=${domain}`;
   }
+  if (identity && !domain) {
+    query += `&identity=${identity}`;
+  }
   const ogImage = "https://news.kiwistand.com/kiwi_hot_feed_page.png";
+  const title = undefined;
+  const description = undefined;
+  const twitterCard = undefined;
+  const prefetch = [query];
   const recentJoiners = await registry.recents();
   return html`
     <html lang="en" op="news">
       <head>
-        ${custom(ogImage)}
+        ${custom(ogImage, title, description, twitterCard, prefetch)}
         <meta
           name="description"
           content="Kiwi News is the prime feed for hacker engineers building a decentralized future. All our content is handpicked and curated by crypto veterans."
@@ -616,12 +623,20 @@ export default async function (trie, theme, page, domain, identity, hash) {
                 ? ""
                 : html`<tr style="height: 50px">
                     <td>
-                      <a
-                        style="padding: 20px 0 0 20px; font-size: 1.1rem;"
-                        href="${query}"
+                      <div
+                        style="width: 100%; padding: 32px 0; display: flex; justify-content: center;"
                       >
-                        More
-                      </a>
+                        <a
+                          data-no-instant
+                          href=${query}
+                          style="display: flex; align-items: center; gap: 8px; padding: 12px 24px; 
+               background: white; color: #374151; border-radius: 2px; 
+               box-shadow: 0 1px 3px rgba(0,0,0,0.12); border: 1px solid #e5e7eb;
+               text-decoration: none; font-size: 16px;"
+                        >
+                          <span>More Stories</span>
+                        </a>
+                      </div>
                     </td>
                   </tr>`}
             </table>
