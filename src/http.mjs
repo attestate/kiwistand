@@ -242,46 +242,6 @@ export async function launch(trie, libp2p) {
       .type("text/html")
       .send(await kiwipassmint(reply.locals.theme));
   });
-  app.get("/api/v1/recommended", async (request, reply) => {
-    const page = 0;
-    const domain = "";
-    const pagination = false;
-    const { stories } = await index(trie, page, domain, pagination);
-    const hash = fingerprint.generate(request);
-    const { identity } = request.query;
-
-    if (!stories?.length) {
-      return sendError(
-        reply,
-        404,
-        "No stories found",
-        "Feed returned empty story list",
-      );
-    }
-
-    let candidates = await getRecommendations(stories, hash, identity);
-    candidates = candidates.filter(
-      (story) => story.metadata?.image && story.submitter.displayName,
-    );
-
-    if (!candidates.length) {
-      return sendError(
-        reply,
-        404,
-        "No recommendations",
-        "All stories filtered out",
-      );
-    }
-
-    const numOfStories = parseInt(process.env.TOTAL_STORIES, 10);
-    return sendStatus(
-      reply,
-      200,
-      "Success",
-      "Found recommendation",
-      candidates.slice(0, numOfStories),
-    );
-  });
   app.post("/api/v1/search", async (req, reply) => {
     let response;
     try {
