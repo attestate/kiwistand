@@ -112,12 +112,13 @@ export default async function (trie, theme) {
   let items = stories;
   const path = "/new";
   const ogImage = "https://news.kiwistand.com/kiwi_new_feed_page.png";
+  const prefetch = ["/", "/submit", "/best"];
   const recentJoiners = await registry.recents();
   const query = "?cached=true";
   return html`
     <html lang="en" op="news">
       <head>
-        ${custom(ogImage)}
+        ${custom(ogImage, undefined, undefined, undefined, prefetch)}
         <meta
           name="description"
           content="Explore the latest news in the decentralized world on Kiwi News. Stay updated with fresh content handpicked by crypto veterans."

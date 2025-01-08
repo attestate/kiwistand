@@ -536,7 +536,7 @@ export default async function (trie, theme, page, domain, identity, hash) {
   const title = undefined;
   const description = undefined;
   const twitterCard = undefined;
-  const prefetch = [query];
+  const prefetch = [query, "/new?cached=true", "/submit", "/best"];
   const recentJoiners = await registry.recents();
   return html`
     <html lang="en" op="news">

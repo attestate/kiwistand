@@ -119,6 +119,7 @@ const nav = (path) => html`
    -webkit-backdrop-filter: blur(10px);box-shadow: 0 -2px 5px rgba(0,0,0,0.1);"
   >
     <a
+      data-no-instant
       data-icon="home"
       href="/"
       style="flex-direction: column; display: flex; justify-content: center; align-items: center; padding: 10px 0; flex-grow: 1;
@@ -127,6 +128,7 @@ const nav = (path) => html`
       ${path === "/" ? homefull : home}
     </a>
     <a
+      data-no-instant
       data-icon="newest"
       href="/new?cached=true"
       style="flex-direction: column; display: flex; justify-content: center; align-items: center; padding: 10px 0; flex-grow: 1;
@@ -135,6 +137,7 @@ const nav = (path) => html`
       ${path === "/new" ? newestfull : newest()}
     </a>
     <a
+      data-no-instant
       data-icon="submit"
       href="/submit"
       style="flex-direction: column; display: flex; justify-content: center; align-items: center; padding: 10px 0; flex-grow: 1;
@@ -147,7 +150,7 @@ const nav = (path) => html`
       style="flex-direction: column; display: flex; justify-content: center; align-items: center; flex-grow: 1;
  text-decoration: none; color: black;"
     >
-      <a class="mobile-bell" href="/activity">
+      <a data-no-instant class="mobile-bell" href="/activity">
         ${path === "/activity" ? notificationsfull : notifications}
       </a>
     </div>

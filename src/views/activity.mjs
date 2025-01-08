@@ -13,7 +13,7 @@ import * as ens from "../ens.mjs";
 import Header from "./components/header.mjs";
 import Sidebar from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
-import Head from "./components/head.mjs";
+import { prefetchHead } from "./components/head.mjs";
 import { iconSVG } from "./components/row.mjs";
 import * as store from "../store.mjs";
 import * as registry from "../chainstate/registry.mjs";
@@ -248,7 +248,7 @@ export async function page(theme, identity, notifications, lastUpdate) {
   const content = html`
     <html lang="en" op="news">
       <head>
-        ${Head}
+        ${prefetchHead(["/", "/new?cached=true", "/submit"])}
       </head>
       <body
         data-instant-allow-query-string

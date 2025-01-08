@@ -7,6 +7,7 @@ import { eligible } from "@attestate/delegator2";
 import { fetchNotifications } from "./API.mjs";
 import { getLocalAccount, getCookie } from "./session.mjs";
 import { client, chains } from "./client.mjs";
+import { dynamicPrefetch } from "./main.jsx";
 
 let wasTitleSet = false;
 const Bell = (props) => {
@@ -100,6 +101,7 @@ const Bell = (props) => {
     );
   }
 
+  dynamicPrefetch(link);
   if (notificationCount > 0 && !wasTitleSet) {
     document.title = `[${notificationCount}] ${document.title}`;
     wasTitleSet = true;
@@ -108,6 +110,7 @@ const Bell = (props) => {
   const disabled = !lastUpdate && readNotifications === 0;
   return (
     <a
+      data-no-instant
       disabled={disabled}
       title="Notifications"
       href={link}

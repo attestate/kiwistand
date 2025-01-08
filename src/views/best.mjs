@@ -67,11 +67,21 @@ export default async function index(trie, theme, page, period, domain) {
   const totalStories = parseInt(env.TOTAL_STORIES, 10);
   const stories = await getStories(trie, page, period, domain);
   const ogImage = "https://news.kiwistand.com/kiwi_top_feed_page.png";
+  const prefetch = [
+    "/",
+    "/new?cached=true",
+    "/submit",
+    "/best?period=day",
+    "/best?period=week",
+    "/best?period=month",
+    "/best?period=year",
+    "/best?period=all",
+  ];
   const recentJoiners = await registry.recents();
   return html`
     <html lang="en" op="news">
       <head>
-        ${custom(ogImage)}
+        ${custom(ogImage, undefined, undefined, undefined, prefetch)}
         <meta
           name="description"
           content="Explore the latest news in the decentralized world on Kiwi News. Stay updated with fresh content handpicked by crypto veterans."

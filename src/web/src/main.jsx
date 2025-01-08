@@ -778,7 +778,7 @@ function makeUpvoteNotificationsVisited() {
 }
 
 const prefetchedUrls = new Set();
-function dynamicPrefetch(url, priority = "auto") {
+export function dynamicPrefetch(url, priority = "auto") {
   if (prefetchedUrls.has(url)) return;
   const link = document.createElement("link");
   link.rel = "prefetch";

@@ -201,7 +201,7 @@ const secondheader = (theme, site, period, domain) => {
       >
         <div style="display: flex;">
           ${site === "top" || site === "new" || site === "best"
-            ? html` <a class="feed-button-link" href="/">
+            ? html` <a data-no-instant class="feed-button-link" href="/">
                 <button
                   onclick="${animation}"
                   class="feed-button"
@@ -218,7 +218,11 @@ const secondheader = (theme, site, period, domain) => {
               </a>`
             : ""}
           ${site === "top" || site === "new" || site === "best"
-            ? html` <a class="feed-button-link" href="/new?cached=true">
+            ? html` <a
+                data-no-instant
+                class="feed-button-link"
+                href="/new?cached=true"
+              >
                 <button
                   onclick="${animation}"
                   class="feed-button"
@@ -240,7 +244,7 @@ const secondheader = (theme, site, period, domain) => {
               </a>`
             : ""}
           ${site === "top" || site === "new" || site === "best"
-            ? html` <a class="feed-button-link" href="/best">
+            ? html` <a data-no-instant class="feed-button-link" href="/best">
                 <button
                   onclick="${animation}"
                   class="feed-button"
@@ -265,27 +269,42 @@ const secondheader = (theme, site, period, domain) => {
             style="background-color: var(--table-bg); min-height: 40px; display: flex; justify-content: space-between; align-items: center; padding: 0 15px 10px 15px; color: white;"
           >
             <div>
-              <a href="/best?period=all${domain ? `&domain=${domain}` : ""}">
+              <a
+                data-no-instant
+                href="/best?period=all${domain ? `&domain=${domain}` : ""}"
+              >
                 <button style="${periodIconStyle(theme, period, "all")}">
                   <span>All</span>
                 </button>
               </a>
-              <a href="/best?period=year${domain ? `&domain=${domain}` : ""}">
+              <a
+                data-no-instant
+                href="/best?period=year${domain ? `&domain=${domain}` : ""}"
+              >
                 <button style="${periodIconStyle(theme, period, "year")}">
                   <span>Year</span>
                 </button>
               </a>
-              <a href="/best?period=month${domain ? `&domain=${domain}` : ""}">
+              <a
+                data-no-instant
+                href="/best?period=month${domain ? `&domain=${domain}` : ""}"
+              >
                 <button style="${periodIconStyle(theme, period, "month")}">
                   <span>Month</span>
                 </button>
               </a>
-              <a href="/best?period=week${domain ? `&domain=${domain}` : ""}">
+              <a
+                data-no-instant
+                href="/best?period=week${domain ? `&domain=${domain}` : ""}"
+              >
                 <button style="${periodIconStyle(theme, period, "week")}">
                   <span>Week</span>
                 </button>
               </a>
-              <a href="/best?period=day${domain ? `&domain=${domain}` : ""}">
+              <a
+                data-no-instant
+                href="/best?period=day${domain ? `&domain=${domain}` : ""}"
+              >
                 <button style="${periodIconStyle(theme, period, "day")}">
                   <span>Day</span>
                 </button>
