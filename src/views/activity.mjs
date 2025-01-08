@@ -64,7 +64,13 @@ export function truncateComment(comment, maxLength = 260) {
   return comment.slice(0, comment.lastIndexOf(" ", maxLength)) + "...";
 }
 
-function generateCommentRow(activity, identity, bgColor, theme) {
+function linkFromComment(activity) {
+  const [_, index] = activity.message.href.split(":");
+  const link = `/stories?index=${index}&cacheBuster=${activity.message.index}#0x${activity.message.index}`;
+  return link;
+}
+
+function generateCommentRow(activity, identity, bgColor, theme, i) {
   const comment = DOMPurify.sanitize(truncateComment(activity.message.title));
   const avatar = identity.safeAvatar
     ? html`<img
@@ -74,17 +80,15 @@ function generateCommentRow(activity, identity, bgColor, theme) {
       />`
     : "";
 
-  const [_, index] = activity.message.href.split(":");
-  const link = `/stories?index=${index}&cacheBuster=${activity.message.index}#0x${activity.message.index}`;
+  const link = linkFromComment(activity);
 
   return html`
     <tr style="background-color: ${bgColor}">
       <td>
-        <a class="notification" href="${link}">
+        <a data-no-instant="${i < 3}" class="notification" href="${link}">
           <div style="display: flex; border-bottom: 1px solid rgba(0,0,0,0.1);">
             <div
-              style="flex: 0.15; display: flex; align-items: start; justify-content:
- center;"
+              style="flex: 0.15; display: flex; align-items: start; justify-content: center;"
             >
               ${avatar}
             </div>
@@ -127,7 +131,7 @@ function generateRow(lastUpdate, theme) {
 
     if (activity.verb === "commented" || activity.verb === "involved") {
       const identity = activity.identities[0];
-      return generateCommentRow(activity, identity, bgColor, theme);
+      return generateCommentRow(activity, identity, bgColor, theme, i);
     }
 
     const title = DOMPurify.sanitize(
@@ -245,10 +249,11 @@ export async function page(theme, identity, notifications, lastUpdate) {
     </tr>
   `;
   feed = notifications.map(generateRow(lastUpdate, theme));
+  const preloadNotifs = notifications.slice(0, 3).map(linkFromComment);
   const content = html`
     <html lang="en" op="news">
       <head>
-        ${prefetchHead(["/", "/new?cached=true", "/submit"])}
+        ${prefetchHead(["/", "/new?cached=true", "/submit", ...preloadNotifs])}
       </head>
       <body
         data-instant-allow-query-string
