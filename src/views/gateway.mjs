@@ -77,7 +77,7 @@ export default async function (referral) {
                       </a>
                       <br />
                       <span style="color: black;"
-                        >Already have an account?
+                        >Already have a Kiwi Pass?
                         <span> </span>
                         <div
                           style="color: black; font-weight: bold;"

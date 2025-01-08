@@ -17,7 +17,7 @@ export const resolveAvatar = async (address) => {
   const ensResolver = await provider.getResolver(name);
   if (!ensResolver) return;
 
-  return (await ensResolver.getAvatar()).url;
+  return (await ensResolver.getAvatar())?.url;
 };
 
 const Avatar = (props) => {
