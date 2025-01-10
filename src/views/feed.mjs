@@ -43,6 +43,247 @@ const gnosisPoaps = poaps.map((p) => ethers.utils.getAddress(p));
 
 const html = htm.bind(vhtml);
 
+const ContestBanner = html`
+  <div style="width: 100%; margin: 16px 0; font-family: var(--font-family);">
+    <div
+      style="border: 1px dotted rgba(219, 105, 141, 0.5); border-right: none; border-left: none;"
+    >
+      <!-- Header -->
+      <div
+        onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'"
+        style="padding: 16px; background: #F6F6EF; cursor: pointer; display: flex; justify-content: space-between; align-items: center;"
+      >
+        <div style="display: flex; align-items: center; gap: 12px">
+          <div style="width: 16px; height: 16px; background: #8a63d2;"></div>
+          <span style="color: black; font-size: 14px"
+            >"The Future of Farcaster" Contest</span
+          >
+        </div>
+        <!-- Caret Icon -->
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="16"
+          height="16"
+          viewBox="0 0 256 256"
+        >
+          <polyline
+            points="208 96 128 176 48 96"
+            fill="none"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="16"
+          />
+        </svg>
+      </div>
+
+      <!-- Expandable Content -->
+      <div
+        style="display: none; background: white; border-top: 1px dotted rgba(219, 105, 141, 0.5)"
+      >
+        <!-- Key Info Grid -->
+        <div
+          style="display: grid; grid-template-columns: 1fr 1fr; border-bottom: 1px dotted rgba(219, 105, 141, 0.5)"
+        >
+          <div
+            style="padding: 16px; display: flex; align-items: center; gap: 8px; border-right: 1px dotted rgba(219, 105, 141, 0.5)"
+          >
+            <!-- Calendar Icon -->
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 256 256"
+              style="color: #828282"
+            >
+              <rect width="256" height="256" fill="none" />
+              <rect
+                x="40"
+                y="40"
+                width="176"
+                height="176"
+                rx="8"
+                fill="none"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="16"
+              />
+              <line
+                x1="176"
+                y1="24"
+                x2="176"
+                y2="56"
+                fill="none"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="16"
+              />
+              <line
+                x1="80"
+                y1="24"
+                x2="80"
+                y2="56"
+                fill="none"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="16"
+              />
+              <line
+                x1="40"
+                y1="88"
+                x2="216"
+                y2="88"
+                fill="none"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="16"
+              />
+            </svg>
+            <div>
+              <div style="color: black; font-size: 12px">
+                Jan 13 - Jan 31, 2025
+              </div>
+              <div style="color: #828282; font-size: 10px">
+                Submissions period
+              </div>
+            </div>
+          </div>
+          <div
+            style="padding: 16px; display: flex; align-items: center; gap: 8px"
+          >
+            <!-- Trophy Icon -->
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 256 256"
+              style="color: #828282"
+            >
+              <path
+                d="M58,128H48A32,32,0,0,1,16,96V80a8,8,0,0,1,8-8H56"
+                fill="none"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="16"
+              />
+              <path
+                d="M198,128h10a32,32,0,0,0,32-32V80a8,8,0,0,0-8-8H200"
+                fill="none"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="16"
+              />
+              <path
+                d="M56,48H200v63.1c0,39.7-31.75,72.6-71.45,72.9A72,72,0,0,1,56,112Z"
+                fill="none"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="16"
+              />
+            </svg>
+            <div>
+              <div style="color: black; font-size: 12px">Prize Pool: 2 ETH</div>
+              <div style="color: #828282; font-size: 10px">
+                <span>Sponsored by </span>
+                <a
+                  href="https://purple.construction/"
+                  target="_blank"
+                  style="color: #8a63d2; text-decoration: none"
+                  >Purple</a
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="padding: 16px">
+          <!-- Writing Prompts -->
+          <div style="margin-bottom: 24px">
+            <h4
+              style="margin: 0 0 12px 0; font-size: 14px; color: #828282; font-weight: normal"
+            >
+              Writing Prompts
+            </h4>
+            <div style="display: flex; flex-direction: column; gap: 8px">
+              ${[
+                "Which product path to grow Farcaster (agents, gaming, mini-apps, alt clients etc.) has the most potential and why?",
+                "What Farcaster could do marketing-wise to reach new people?",
+                "What's some underdiscussed, high-potential thing that could improve Farcaster?",
+                "How Farcaster could preserve the OG crypto values while growing in scale?",
+              ].map(
+                (prompt) => html`
+                  <div
+                    style="padding: 12px; background: #F6F6EF; border: 1px dotted rgba(219, 105, 141, 0.5)"
+                  >
+                    <span style="color: black; font-size: 12px">${prompt}</span>
+                  </div>
+                `,
+              )}
+            </div>
+          </div>
+
+          <!-- How to Participate -->
+          <div style="margin-bottom: 24px">
+            <h4
+              style="margin: 0 0 12px 0; font-size: 14px; color: #828282; font-weight: normal"
+            >
+              How to Participate
+            </h4>
+            <div style="display: flex; flex-direction: column; gap: 8px">
+              <div
+                style="padding: 12px; background: #F6F6EF; border: 1px dotted rgba(219, 105, 141, 0.5)"
+              >
+                <span style="font-size: 12px; color: black;"
+                  >1. Write on any platform (Farcaster, Paragraph, Mirror,
+                  etc.)</span
+                >
+              </div>
+              <div
+                style="padding: 12px; background: #F6F6EF; border: 1px dotted rgba(219, 105, 141, 0.5)"
+              >
+                <span style="font-size: 12px; color: black;"
+                  >2. Submit your essay to Kiwi</span
+                >
+              </div>
+              <div
+                style="padding: 12px; background: #F6F6EF; border: 1px dotted rgba(219, 105, 141, 0.5)"
+              >
+                <span style="font-size: 12px; color: black;"
+                  >3. Share on Farcaster (@kiwi & @purple) and X (@KiwiNewsHQ)
+                  for extra distribution</span
+                >
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div style="display: flex; justify-content: flex-end; gap: 12px">
+            <a
+              href="#"
+              style="text-decoration: none; padding: 8px 16px; background: rgba(0,0,0,0.2); color: black; font-size: 14px"
+            >
+              Join Writers Chat
+            </a>
+            <a
+              href="https://paragraph.xyz/@kiwi-updates/arena-devconflict-writing-contest"
+              style="text-decoration: none; padding: 8px 16px; background: black; color: white; font-size: 14px"
+            >
+              Learn More
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+`;
+
 // NOTE: Only set this date in synchronicity with the src/launch.mjs date!!
 const cutoffDate = new Date("2024-11-06");
 const thresholdKarma = 3;
