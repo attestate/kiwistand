@@ -14,6 +14,9 @@
   --table-bg-mobile: rgb(255, 255, 250);
   --visited-link: #828282;
 }
+.newsletter-row {
+  margin-bottom: 5px;
+}
 
 .notification:link {
   color: black !important;
@@ -439,6 +442,9 @@ body {
 }
 /* mobile device */
  @media only screen and (min-width : 300px) and (max-width : 640px) {
+    .newsletter-row {
+      margin-bottom: 20px;
+    }
     .share-container {
       font-size: 10pt;
     }

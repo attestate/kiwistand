@@ -743,6 +743,151 @@ async function recommended(trie, page, domain, identity, hash) {
   };
 }
 
+function Newsletter() {
+  return html`
+    <div
+      class="newsletter-row"
+      style="max-width: 100%; background-color: var(--middle-beige); border: 2px dotted rgba(219, 105, 141, 0.5); border-right: none; border-left: none; padding: 1rem; font-family: var(--font-family); box-sizing: border-box;"
+    >
+      <div
+        style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 1rem;"
+      >
+        <div style="flex: 1; margin-right: 1rem;">
+          <h2
+            style="font-size: 1.25rem; font-weight: bold; color: black; margin: 0 0 0.25rem 0;"
+          >
+            Join 1,300+ crypto builders
+          </h2>
+          <p style="color: #828282; font-size: 0.875rem; margin: 0;">
+            Get curated crypto & web3 content delivered to your inbox.
+          </p>
+        </div>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 256 256"
+          style="width: 24px; height: 24px; flex-shrink: 0;"
+        >
+          <rect width="256" height="256" fill="none" />
+          <polyline
+            points="224 56 128 144 32 56"
+            fill="none"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="16"
+          />
+          <path
+            d="M32,56H224a0,0,0,0,1,0,0V192a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8V56A0,0,0,0,1,32,56Z"
+            fill="none"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="16"
+          />
+          <line
+            x1="110.55"
+            y1="128"
+            x2="34.47"
+            y2="197.74"
+            fill="none"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="16"
+          />
+          <line
+            x1="221.53"
+            y1="197.74"
+            x2="145.45"
+            y2="128"
+            fill="none"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="16"
+          />
+        </svg>
+      </div>
+
+      <form
+        style="margin-bottom: 0;"
+        id="subscribe-form"
+        style="display: flex; flex-direction: column; gap: 1rem;"
+        onsubmit="(async function(e) {
+    e.preventDefault();
+    const form = e.target;
+    const email = form.querySelector('input[type=email]').value;
+    const statusMsg = form.querySelector('#status-message');
+    const submitBtn = form.querySelector('button');
+    
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Subscribing...';
+    submitBtn.style.backgroundColor = '#828282';
+    submitBtn.style.borderColor = '#828282';
+    
+    try {
+      const response = await fetch('https://paragraph.xyz/api/blogs/@kiwi-weekly/subscribe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email })
+      });
+
+      if (!response.ok) throw new Error('Subscription failed');
+      
+      statusMsg.style.display = 'block';
+      statusMsg.style.color = 'black';
+      statusMsg.textContent = '✓ Thank you for subscribing!';
+      form.querySelector('input[type=email]').value = '';
+    } catch (err) {
+      statusMsg.style.display = 'block';
+      statusMsg.style.color = 'rgba(219, 105, 141, 0.75)';
+      statusMsg.textContent = 'Something went wrong. Please try again.';
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Subscribe';
+      submitBtn.style.backgroundColor = 'black';
+      submitBtn.style.borderColor = 'black';
+    }
+  })(event)"
+      >
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+          <input
+            type="email"
+            placeholder="Enter your email"
+            style="flex: 1; min-width: 200px; padding: 0.5rem 0.75rem; border: 1px dotted rgba(219, 105, 141, 0.5); background: white; color: black; box-sizing: border-box;"
+            required
+          />
+          <button
+            type="submit"
+            style="padding: 0.5rem 1rem; background: black; color: white; border: 2px dotted rgba(219, 105, 141, 0.5); cursor: pointer; transition: all 0.2s; white-space: nowrap;"
+            onmouseover="this.style.background='white'; this.style.color='black';"
+            onmouseout="this.style.background='black'; this.style.color='white';"
+          >
+            Subscribe
+          </button>
+        </div>
+
+        <div
+          id="status-message"
+          style="display: none; font-size: 0.875rem;"
+        ></div>
+
+        <div
+          style="padding-top: 0.5rem; border-top: 1px dotted rgba(219, 105, 141, 0.3);"
+        >
+          <p style="font-size: 0.75rem; color: #828282; margin: 0;">
+            Join the smartest minds in crypto. Our weekly newsletter includes
+            insights from Vitalik Buterin, Stani Kulechov, and other top
+            builders in the space.
+          </p>
+        </div>
+      </form>
+    </div>
+  `;
+}
+
 export default async function (trie, theme, page, domain, identity, hash) {
   const mints = await registry.mints();
   const path = "/";
@@ -845,6 +990,10 @@ export default async function (trie, theme, page, domain, identity, hash) {
                     currentQuery,
                   )(story, i + 3),
                 )}
+              <tr>
+                <td>${Newsletter()}</td>
+              </tr>
+
               ${stories
                 .slice(8)
                 .map((story, i) =>
