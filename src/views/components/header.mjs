@@ -83,8 +83,9 @@ const header = async (theme, path) => {
               <div class="desktop-nav">
                 <a class="meta-link" href="/">Feed</a>
                 <a class="meta-link" href="/submit">Submit</a>
-                <a class="meta-link" href="/community">Community</a>
+                <a class="meta-link" href="/community">Users</a>
                 <a class="meta-link" href="/profile">Profile</a>
+                <span class="header-disconnect">Logout</span>
               </div>
               <div
                 class="header-bell"

@@ -360,6 +360,17 @@ async function addConnectedComponents(allowlist, delegations, toast) {
       </StrictMode>,
     );
   }
+  const headerdisconnect = document.querySelector(".header-disconnect");
+  if (headerdisconnect) {
+    const { ConnectedSimpleDisconnectButton } = await import(
+      "./Navigation.jsx"
+    );
+    createRoot(headerdisconnect).render(
+      <StrictMode>
+        <ConnectedSimpleDisconnectButton label="Logout" />
+      </StrictMode>,
+    );
+  }
 }
 
 async function addPasskeysDialogue(toast, allowlist) {

@@ -104,26 +104,31 @@ const Profile = (props) => {
 };
 
 export const SimpleDisconnectButton = (props) => {
+  let label = "Disconnect";
+  if (props.label) {
+    label = props.label;
+  }
   return (
     <ConnectButton.Custom>
       {({ account, chain, mounted, openAccountModal }) => {
         const connected = account && chain && mounted;
         return (
           <span
+            className="meta-link"
             style={{
               userSelect: "none",
-              textDecoration: "underline",
               visibility: connected ? "visible" : "hidden",
             }}
             onClick={openAccountModal}
           >
-            Disconnect
+            {label}
           </span>
         );
       }}
     </ConnectButton.Custom>
   );
 };
+
 const DisconnectButton = () => {
   return (
     <ConnectButton.Custom>
