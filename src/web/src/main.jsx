@@ -542,45 +542,6 @@ async function addNFTPrice() {
   }
 }
 
-async function share(toast, index) {
-  const identity = getCookie("identity");
-
-  const FCIcon = (await import("./fcicon.jsx")).default;
-  const toastContent = (
-    <div style={{ display: "flex", alignItems: "center" }}>
-      <a
-        style={{ display: "flex", alignItems: "center" }}
-        href={`https://warpcast.com/~/compose?embeds[]=https://news.kiwistand.com/stories?index=${index}${
-          identity ? `&referral=${identity}` : ""
-        }`}
-        target="_blank"
-      >
-        <FCIcon style={{ height: "15px", color: "white" }} />
-        <span> </span>
-        <span
-          style={{
-            marginLeft: "10px",
-            textDecoration: "underline",
-            color: "white",
-          }}
-        >
-          Share your link on Warpcast
-        </span>
-      </a>
-    </div>
-  );
-
-  const toastId = toast(toastContent, {
-    duration: 10000,
-    style: {
-      position: "relative",
-      top: `60px`,
-      transform: "translate(-50%, -50%)", // You may need to adjust this
-      backgroundColor: "#472a91",
-    },
-  });
-}
-
 async function checkMintStatus(address) {
   const url = new URL(window.location.href);
   if (url.pathname !== "/indexing") return;
@@ -897,7 +858,6 @@ async function start() {
     let index = url.searchParams.get("index");
 
     if (index) {
-      share(toast, index);
       url.searchParams.delete("index");
       window.history.replaceState({}, "", url.href);
     }
