@@ -352,7 +352,8 @@ export default async function (trie, theme, index, value, referral) {
                                       __html: linkifyStr(
                                         DOMPurify.sanitize(comment.title),
                                         {
-                                          className: "meta-link",
+                                          className:
+                                            "meta-link selectable-link",
                                           target: "_blank",
                                           defaultProtocol: "https",
                                           validate: {

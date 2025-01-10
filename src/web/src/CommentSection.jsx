@@ -102,7 +102,7 @@ const Comment = React.forwardRef(({ comment, storyIndex }, ref) => {
       >
         <Linkify
           options={{
-            className: "meta-link",
+            className: "meta-link selectable-link",
             target: isIOS() ? "_self" : "_blank",
             defaultProtocol: "https",
             validate: {
