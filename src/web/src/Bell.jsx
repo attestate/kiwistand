@@ -90,7 +90,8 @@ const Bell = (props) => {
           display: props.mobile ? "inline-flex" : "inline",
           padding: props.mobile ? "" : "10px 10px",
           flexGrow: 1,
-          width: "1.5rem",
+          backgroundColor: "black",
+          color: "white",
         }}
         className={props.mobile ? "mobile-bell" : "bell-button"}
         href="/gateway"
