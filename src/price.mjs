@@ -158,7 +158,7 @@ export function getPrice(salesData, today = new Date()) {
     averages: {
       day30: average30DayMints,
     },
-    price: BigNumber.from("2000000000000000"),
+    price: BigNumber.from("3000000000000"),
   };
 }
 
