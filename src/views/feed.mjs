@@ -145,7 +145,7 @@ const ContestBanner = html`
             </svg>
             <div>
               <div style="color: black; font-size: 12px">
-                Jan 13 - Jan 31, 2025
+                Jan 20 - Feb 10, 2025
               </div>
               <div style="color: #828282; font-size: 10px">
                 Submissions period
@@ -267,12 +267,13 @@ const ContestBanner = html`
           <div style="display: flex; justify-content: flex-end; gap: 12px">
             <a
               href="#"
-              style="text-decoration: none; padding: 8px 16px; background: rgba(0,0,0,0.2); color: black; font-size: 14px"
+              style="display: none; text-decoration: none; padding: 8px 16px; background: rgba(0,0,0,0.2); color: black; font-size: 14px"
             >
               Join Writers Chat
             </a>
             <a
-              href="https://paragraph.xyz/@kiwi-updates/arena-devconflict-writing-contest"
+              href="https://paragraph.xyz/@kiwi-updates/farcaster-2026-writing-contest"
+              target="_blank"
               style="text-decoration: none; padding: 8px 16px; background: black; color: white; font-size: 14px"
             >
               Learn More
@@ -947,6 +948,9 @@ export default async function (trie, theme, page, domain, identity, hash) {
               </tr>
               <tr>
                 ${SecondHeader(theme, "top")}
+              </tr>
+              <tr>
+                <td>${ContestBanner}</td>
               </tr>
               ${stories
                 .slice(0, 3)
