@@ -52,6 +52,11 @@ export function count(messages, endDate) {
     cache.del(key);
   }
   messages = messages.sort((a, b) => a.timestamp - b.timestamp);
+  // TODO: The following code is suboptimal because it relies to give submitters
+  // credit through this submissions map that is only temporarily available at
+  // the time of executing this function, and so if someone wanted to credit
+  // a story submitter with karma, this wouldn't work as we'd have to load the
+  // entire context again.
   const submissions = new Map();
 
   messages.forEach((message) => {
