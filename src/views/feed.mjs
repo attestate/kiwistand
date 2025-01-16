@@ -213,10 +213,11 @@ const ContestBanner = html`
             </h4>
             <div style="display: flex; flex-direction: column; gap: 8px">
               ${[
-                "Which product path to grow Farcaster (agents, gaming, mini-apps, alt clients etc.) has the most potential and why?",
-                "What Farcaster could do marketing-wise to reach new people?",
-                "What's some underdiscussed, high-potential thing that could improve Farcaster?",
-                "How Farcaster could preserve the OG crypto values while growing in scale?",
+                "What updates, tweaks, or features could Farcaster clients do to become better for OGs and newcomers?",
+                "Which Farcaster frontier—agents, games, mini-apps, alt clients, memecoins—has the highest potential to grow the ecosystem?",
+                "How can crypto social legos create experiences that can't be found on web2 social networks?",
+                "How can Farcaster amp up its marketing and growth activities to bring more new users?",
+                "How could Farcaster go big without losing its soul?",
               ].map(
                 (prompt) => html`
                   <div
@@ -266,8 +267,9 @@ const ContestBanner = html`
           <!-- Action Buttons -->
           <div style="display: flex; justify-content: flex-end; gap: 12px">
             <a
-              href="#"
-              style="display: none; text-decoration: none; padding: 8px 16px; background: rgba(0,0,0,0.2); color: black; font-size: 14px"
+              href="https://t.me/+4AgHHzYl5QpmMjc8"
+              target="_blank"
+              style="text-decoration: none; padding: 8px 16px; background: rgba(0,0,0,0.2); color: black; font-size: 14px"
             >
               Join Writers Chat
             </a>
