@@ -288,7 +288,7 @@ const ContestBanner = html`
 `;
 
 // NOTE: Only set this date in synchronicity with the src/launch.mjs date!!
-const cutoffDate = new Date("2024-11-06");
+const cutoffDate = new Date("2025-01-15");
 const thresholdKarma = 3;
 export function identityClassifier(upvoter) {
   let balance = 0;

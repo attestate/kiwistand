@@ -133,5 +133,5 @@ if (!reconcileMode) {
   }, 1800000);
   karma.count(upvotes);
   // NOTE: Only set this date in synchronicity with the src/launch.mjs date!!
-  karma.count(upvotes, new Date("2024-11-06"));
+  karma.count(upvotes, new Date("2025-01-15"));
 }
