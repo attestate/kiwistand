@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 
 function Countdown() {
-  const [time, setTime] = useState(59);
+  const [time, setTime] = useState(20);
 
   useEffect(() => {
     if (time > 0) {
@@ -20,7 +20,7 @@ function Countdown() {
   }
   return (
     <div style={{ marginTop: "10px" }}>
-      Should take a minute... <br />
+      Should only take a few seconds... <br />
       {`0:${time.toString().padStart(2, "0")}`}
     </div>
   );

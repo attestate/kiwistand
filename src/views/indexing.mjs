@@ -100,8 +100,8 @@ export default async function (theme) {
                       </button>
                       <div class="nav-countdown">
                         <div style="margin-top: 10px;">
-                          Should take a minute... <br />
-                          0:59
+                          Should only take a few seconds... <br />
+                          0:20
                         </div>
                       </div>
                     </div>
