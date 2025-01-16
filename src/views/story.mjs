@@ -131,10 +131,7 @@ export function generateList(profiles, submitter) {
                 ${profile.fromSponsorCommunity
                   ? html`,
                       <span> </span>
-                      <img
-                        style="vertical-align: -1px; object-fit: contain; width: 13px; height: 13px;"
-                        src="/gnosis.svg"
-                      />`
+                      <span>🟪</span>`
                   : ""}
                 ${profile.isKiwi ? ", 🥝" : ""})
 

@@ -38,8 +38,8 @@ import Row, { addOrUpdateReferrer, extractDomain } from "./components/row.mjs";
 import * as karma from "../karma.mjs";
 import { metadata } from "../parser.mjs";
 
-import poaps from "./gnosis-poap-addresses.mjs";
-const gnosisPoaps = poaps.map((p) => ethers.utils.getAddress(p));
+import holders from "./holders.mjs";
+const formatedHolders = holders.map((a) => ethers.utils.getAddress(a));
 
 const html = htm.bind(vhtml);
 
@@ -293,6 +293,7 @@ const thresholdKarma = 3;
 export function identityClassifier(upvoter) {
   let balance = 0;
 
+  // TODO: Change to neynar score
   const cacheKey = `gnosis-pay-nft-${upvoter.identity}`;
   if (cache.has(cacheKey)) {
     balance = cache.get(cacheKey);
@@ -305,14 +306,14 @@ export function identityClassifier(upvoter) {
       // noop
     }
   }
-  const hasGnosisPoap = gnosisPoaps.includes(
+  const isHolder = formatedHolders.includes(
     ethers.utils.getAddress(upvoter.identity),
   );
   const karmaScore = karma.resolve(upvoter.identity, cutoffDate);
   const hasGnosisPayNFT = balance > 0;
   return {
     ...upvoter,
-    fromSponsorCommunity: hasGnosisPoap || hasGnosisPayNFT,
+    fromSponsorCommunity: isHolder || hasGnosisPayNFT,
     isKiwi: karmaScore >= thresholdKarma,
   };
 }
