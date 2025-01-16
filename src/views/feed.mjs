@@ -294,14 +294,14 @@ export function identityClassifier(upvoter) {
   let balance = 0;
 
   // TODO: Change to neynar score
-  const cacheKey = `gnosis-pay-nft-${upvoter.identity}`;
+  const cacheKey = `neynar-score-${upvoter.identity}`;
   if (cache.has(cacheKey)) {
     balance = cache.get(cacheKey);
   } else {
     try {
-      getGnosisPayNFT(upvoter.identity)
+      getNeynarScore(upvoter.identity)
         .then((balance) => cache.set(cacheKey, balance))
-        .catch((err) => log(`Error in getGnosisPayNFT: ${err.stack}`));
+        .catch((err) => log(`Error in getNeynarScore: ${err.stack}`));
     } catch (err) {
       // noop
     }
@@ -310,10 +310,12 @@ export function identityClassifier(upvoter) {
     ethers.utils.getAddress(upvoter.identity),
   );
   const karmaScore = karma.resolve(upvoter.identity, cutoffDate);
-  const hasGnosisPayNFT = balance > 0;
+  const hasNeynarScore = balance > 90000;
   return {
     ...upvoter,
-    fromSponsorCommunity: isHolder || hasGnosisPayNFT,
+    isHolder,
+    hasNeynarScore,
+    fromSponsorCommunity: isHolder || hasNeynarScore,
     isKiwi: karmaScore >= thresholdKarma,
   };
 }
@@ -333,14 +335,15 @@ export function identityFilter(upvoter, submitter) {
   throw new Error("Not eligible to upvote");
 }
 
-const provider = new ethers.providers.JsonRpcProvider(env.GNOSIS_RPC_HTTP_HOST);
-export async function getGnosisPayNFT(address) {
-  const contractAddress = "0x88997988a6a5aaf29ba973d298d276fe75fb69ab";
+const provider = new ethers.providers.JsonRpcProvider(env.BASE_RPC_HTTP_HOST);
+
+export async function getNeynarScore(address) {
+  const contractAddress = "0xd3C43A38D1D3E47E9c420a733e439B03FAAdebA8";
   const abi = [
     {
-      inputs: [{ internalType: "address", name: "owner", type: "address" }],
-      name: "balanceOf",
-      outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+      inputs: [{ internalType: "address", name: "verifier", type: "address" }],
+      name: "getScore",
+      outputs: [{ internalType: "uint24", name: "", type: "uint24" }],
       stateMutability: "view",
       type: "function",
     },
@@ -353,15 +356,14 @@ export async function getGnosisPayNFT(address) {
     timeoutId = setTimeout(() => reject(new Error("Timeout")), 5000);
   });
 
-  let balance;
+  let score;
   try {
-    balance = await Promise.race([contract.balanceOf(address), timeout]);
+    score = await Promise.race([contract.getScore(address), timeout]);
   } finally {
     clearTimeout(timeoutId);
   }
 
-  const balanceNumber = balance.toNumber();
-  return balanceNumber;
+  return score;
 }
 
 export async function getContestStories() {
