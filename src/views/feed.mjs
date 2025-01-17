@@ -875,6 +875,7 @@ function Newsletter() {
             Subscribe
           </button>
           <a
+            class="meta-link last-edition-link"
             href="https://paragraph.xyz/@kiwi-weekly"
             target="_blank"
             style="padding: 0.5rem 1rem; background: white; color: black; border: var(--border); cursor: pointer; transition: all 0.2s; white-space: nowrap;
