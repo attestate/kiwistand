@@ -76,7 +76,11 @@ Title Guidelines:
 - If the original title is too long, trim it while keeping the substance
 - Avoid pay-walled article titles unless highly relevant
 - For technical content, be specific about the technology/protocol involved
-- For crypto content, mention relevant chains/protocols where appropriate`;
+- For crypto content, mention relevant chains/protocols where appropriate
+- Always make factual statements and say things like they are
+- Be precise and direct. Be intentional Name names, name handles etc
+
+`;
 
 async function generateClaudeTitle(content) {
   let response;
