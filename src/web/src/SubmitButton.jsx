@@ -69,7 +69,7 @@ const UrlInput = (props) => {
       </label>
       <div style={{ display: "flex", alignItems: "center" }}>
         <input
-          placeholder="https://bitcoin.org/bitcoin.pdf"
+          placeholder="Enter or paste article URL"
           id="urlInput"
           type="text"
           name="link"
@@ -78,11 +78,25 @@ const UrlInput = (props) => {
           required
           style={{
             borderRadius: "2px",
-            border: "1px solid #828282",
+            border:
+              url.length > 2048 ||
+              url.length === 0 ||
+              (!url.startsWith("https://") && !url.startsWith("http://"))
+                ? "2px solid black"
+                : "1px solid green",
+            color:
+              url.length > 2048 ||
+              url.length === 0 ||
+              (!url.startsWith("https://") && !url.startsWith("http://"))
+                ? "black"
+                : "#828282",
+
             flexGrow: 8,
-            padding: "5px 10px",
+            padding: "12px 16px",
             fontSize: "16px",
             boxSizing: "border-box",
+            background: "white",
+            minHeight: "50px",
           }}
           value={url}
           onChange={(e) => setURL(e.target.value)}
@@ -95,7 +109,7 @@ const UrlInput = (props) => {
 const buttonStyles = {
   width: "100%",
   maxWidth: "600px",
-  marginTop: "1rem",
+  marginTop: "2rem",
   padding: "5px",
   fontSize: "16px",
   cursor: "pointer",
@@ -148,6 +162,8 @@ const SubmitButton = (props) => {
             titleInputElem.innerText = title;
             const remaining = 80 - title.length;
             document.querySelector(".remaining").textContent = remaining;
+            document.querySelector(".remaining").style.color =
+              remaining > 0 ? "#828282" : "red";
             setTitle(title);
           }
         })
@@ -218,6 +234,8 @@ const SubmitButton = (props) => {
         setTitle(titleInput.textContent);
         const remaining = 80 - titleInput.textContent.length;
         document.querySelector(".remaining").textContent = remaining;
+        document.querySelector(".remaining").style.color =
+          remaining > 0 ? "#828282" : "red";
       });
     }
 
@@ -326,7 +344,15 @@ const SubmitButton = (props) => {
           id="button-onboarding"
           style={buttonStyles}
           onClick={handleClick}
-          disabled={isLoading || !isEligible}
+          disabled={
+            isLoading ||
+            !isEligible ||
+            title.length > 80 ||
+            url.length > 2048 ||
+            title.length === 0 ||
+            url.length === 0 ||
+            (!url.startsWith("https://") && !url.startsWith("http://"))
+          }
         >
           {isLoading
             ? !localAccount
@@ -525,7 +551,7 @@ const AdForm = (props) => {
         flexDirection: "column",
         gap: "5px",
         maxWidth: "600px",
-        marginTop: "1rem",
+        marginTop: "2rem",
       }}
     >
       <label style={{ display: "flex", gap: "1rem", alignItems: "center" }}>

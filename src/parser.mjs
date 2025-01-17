@@ -165,6 +165,8 @@ export const metadata = async (url) => {
     "x.com",
     "youtube.com",
     "youtu.be",
+    "reuters.com",
+    "xcancel.com",
   ];
   let output = {};
   if (ogTitle && !bannedTitleDomains.includes(domain)) {

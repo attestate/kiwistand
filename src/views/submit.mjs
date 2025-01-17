@@ -88,7 +88,7 @@ export default async function submit(theme, url = "", title = "") {
                         <label for="link" style="${labelStyle}">Link:</label>
                         <div style="display: flex; align-items: center;">
                           <input
-                            placeholder="https://bitcoin.org/bitcoin.pdf"
+                            placeholder="Enter or paste article URL"
                             id="urlInput"
                             type="text"
                             name="link"
@@ -101,7 +101,7 @@ export default async function submit(theme, url = "", title = "") {
                         </div>
                       </div>
                       <div
-                        style="display: flex;flex-direction: column;gap: 5px; max-width: 600px; margin-top: 1rem;"
+                        style="display: flex;flex-direction: column;gap: 5px; max-width: 600px; margin-top: 2rem;"
                       >
                         <label
                           style="display:flex;gap:1rem;align-items:center;"
@@ -115,7 +115,8 @@ export default async function submit(theme, url = "", title = "") {
                       </div>
                       <button
                         id="button-onboarding"
-                        style="width: 100%;max-width: 600px;margin-top: 1rem;padding: 5px;font-size: 16px;cursor: pointer;"
+                        disabled
+                        style="width: 100%;max-width: 600px;margin-top: 2rem;padding: 5px;font-size: 16px;cursor: pointer;"
                       >
                         Loading...
                       </button>
@@ -164,14 +165,16 @@ const labelInputContainerStyle = `
 const labelStyle = `
    font-size: 16px;
  `;
-
 const inputStyle = `
    width: 100%;
-   padding: 5px 10px;
+   padding: 12px 16px;
    font-size: 16px;
    box-sizing: border-box;
-   border: 1px solid rgb(130, 130, 130);
- `;
+   border: 2px solid black;
+   background: white;
+   min-height: 50px;
+   border-radius: 2px;
+`;
 
 const buttonStyle = `
    width: 100%;
@@ -202,15 +205,15 @@ const editableContent = `
    overflow-wrap: anywhere;
    width: 100%;
    max-width: 600px;
-   height: 55px;
-   padding: 5px 10px;
-   font-size: 16px;
+   height: 105px;
+   padding: 20px;
+   font-size: 19px;
    box-sizing: border-box;
    border: 1px solid #828282;
    overflow: auto;
    resize: both;
    white-space: pre-wrap;
-   background-color: white;
+   background-color: #fafafa;
    color: black;
    border-radius: 2px;
  `;
