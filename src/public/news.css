@@ -994,6 +994,9 @@ a.meta-link, span.meta-link {
   color: #828282;
   fill: #828282;
 }
+.meta-link {
+  transition: opacity 0.3s ease-out;
+}
 a.meta-link:hover, span.meta-link:hover {
   text-decoration: underline;
 }

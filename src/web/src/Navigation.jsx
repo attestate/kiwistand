@@ -108,16 +108,24 @@ export const SimpleDisconnectButton = (props) => {
   if (props.label) {
     label = props.label;
   }
+  const [stable, setStable] = useState("loading");
   return (
     <ConnectButton.Custom>
       {({ account, chain, mounted, openAccountModal }) => {
-        const connected = account && chain && mounted;
+        useEffect(() => {
+          const timer = setTimeout(() => {
+            setStable(mounted && account && chain);
+          }, 300);
+          return () => clearTimeout(timer);
+        }, [mounted, account, chain]);
         return (
           <span
             className="meta-link"
             style={{
               userSelect: "none",
-              visibility: connected ? "visible" : "hidden",
+              transition: "opacity 0.3s ease-out",
+              opacity: stable === "loading" || stable ? "1" : "0.2",
+              pointerEvents: stable ? "auto" : "none",
             }}
             onClick={openAccountModal}
           >

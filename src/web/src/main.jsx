@@ -601,7 +601,7 @@ async function checkMintStatus(address) {
   }, 3000);
 }
 
-async function startWatchAccount(allowlist) {
+async function startWatchAccount(allowlist, delegations) {
   const [{ client }, { getAccount }] = await Promise.all([
     import("./client.mjs"),
     import("@wagmi/core"),
@@ -622,6 +622,27 @@ async function startWatchAccount(allowlist) {
     "upvote-storage",
     async () => await processAndSendVotes(signer, account.address),
   );
+
+  const { eligible } = await import("@attestate/delegator2");
+  const isEligible =
+    account.address && eligible(allowlist, delegations, account.address);
+  if (!isEligible) {
+    hideDesktopLinks();
+  }
+}
+
+function hideDesktopLinks() {
+  const desktopNav = document.querySelector(".desktop-nav");
+  const submitLink = desktopNav.querySelector('.meta-link[href="/submit"]');
+  const profileLink = desktopNav.querySelector('.meta-link[href="/profile"]');
+
+  [submitLink, profileLink].forEach((link) => {
+    if (link) {
+      link.style.pointerEvents = "none";
+      link.style.cursor = "default";
+      link.style.opacity = "0.2";
+    }
+  });
 }
 
 async function getSigner(account, allowlist) {
@@ -823,7 +844,7 @@ async function start() {
   const allowlistPromise = fetchAllowList();
   const delegationsPromise = fetchDelegations();
 
-  await startWatchAccount(await allowlistPromise);
+  await startWatchAccount(await allowlistPromise, await delegationsPromise);
 
   const results0 = await Promise.allSettled([
     addDynamicComments(await allowlistPromise, await delegationsPromise, toast),
