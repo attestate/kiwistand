@@ -624,8 +624,15 @@ async function startWatchAccount(allowlist, delegations) {
   );
 
   const { eligible } = await import("@attestate/delegator2");
-  const isEligible =
-    account.address && eligible(allowlist, delegations, account.address);
+  const { getLocalAccount } = await import("./session.mjs");
+  const localAccount = getLocalAccount(account.address, allowlist);
+  let address;
+  if (localAccount) {
+    address = localAccount.identity;
+  } else if (account.isConnected) {
+    address = account.address;
+  }
+  const isEligible = address && eligible(allowlist, delegations, address);
   if (!isEligible) {
     hideDesktopLinks();
   }
