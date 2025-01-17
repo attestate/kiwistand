@@ -8,6 +8,7 @@ import vhtml from "vhtml";
 import { parse as parser } from "node-html-parser";
 import { fetchBuilder, FileSystemCache } from "node-fetch-cache";
 import { useAgent } from "request-filtering-agent";
+import Anthropic from "@anthropic-ai/sdk";
 
 import cache from "./cache.mjs";
 import log from "./logger.mjs";
@@ -27,6 +28,140 @@ const filtered = [
   "kiwinews.io",
   "instagram.com",
 ];
+
+const anthropic = new Anthropic({
+  apiKey: env.ANTHROPIC_API_KEY,
+});
+const twitterFrontends = [
+  "xcancel.com",
+  "nitter.privacydev.net",
+  "nitter.poast.org",
+  "nitter.lucabased.xyz",
+  "nitter.kavin.rocks",
+  "nitter.tiekoetter.com",
+  "nitter.qwik.space",
+  "bird.habedieeh.re",
+  "nitter.lunar.icu",
+  "nitter.moomoo.me",
+  "nitter.kylrth.com",
+  "nitter.io.lol",
+  "nitter.rawbit.ninja",
+  "nitter.holo-mix.com",
+  "twitter.com",
+  "x.com",
+];
+const CLAUDE_DOMAINS = ["warpcast.com", "fxtwitter.com", ...twitterFrontends];
+
+const GUIDELINES = `We have an opportunity to build our own corner of the onchain internet. With awesome people, links, resources, and learning.
+
+Our content focuses on:
+- Technical resources, hacking, and awesome git repos
+- Dune dashboards, reports, data-driven articles
+- Startups, cryptocurrencies, cryptography
+- Networking, privacy, decentralization
+- Hardware, open source, art, economics, game theory
+- Anything else our community finds fascinating, from philosophy through science to infrastructure
+
+Title Guidelines:
+- Maximum 80 characters
+- Use sentence case instead of title case
+- Must be clear and descriptive
+- No sensationalist journalism or clickbait
+- No overly optimized headlines
+- No cliffhanger headlines
+- No fluff headlines
+- No embellishing
+- Must tell exactly what to expect
+- If an article has a good original title, use that
+- If the original title is too long, trim it while keeping the substance
+- Avoid pay-walled article titles unless highly relevant
+- For technical content, be specific about the technology/protocol involved
+- For crypto content, mention relevant chains/protocols where appropriate`;
+
+async function generateClaudeTitle(content) {
+  let response;
+  try {
+    response = await anthropic.messages.create({
+      model: "claude-3-5-haiku-20241022",
+      max_tokens: 100,
+      temperature: 0,
+      tools: [
+        {
+          name: "generate_title",
+          description:
+            "Generate a title following the provided guidelines for our Web3/crypto hacker news platform.",
+          input_schema: {
+            type: "object",
+            properties: {
+              title: {
+                type: "string",
+                description:
+                  "The generated title that follows all provided guidelines",
+              },
+            },
+            required: ["title"],
+          },
+        },
+      ],
+      tool_choice: { type: "tool", name: "generate_title" },
+      messages: [
+        {
+          role: "user",
+          content: `Here are our submission guidelines:\n\n${GUIDELINES}\n\nBased on these guidelines, generate a title for this content:\n\n${content}`,
+        },
+      ],
+    });
+  } catch (error) {
+    console.error("Claude API request failed:", error);
+    return null;
+  }
+
+  try {
+    const toolUse = response.content.find((c) => c.type === "tool_use");
+    if (!toolUse?.input?.title) {
+      console.error("No title found in Claude response");
+      return null;
+    }
+    return toolUse.input.title;
+  } catch (error) {
+    console.error("Error extracting title from response:", error);
+    return null;
+  }
+}
+
+async function extractWarpcastContent(url) {
+  try {
+    const apiUrl = `https://api.neynar.com/v2/farcaster/cast?identifier=${url}&type=url`;
+
+    const response = await fetch(apiUrl, {
+      headers: {
+        accept: "application/json",
+        "X-Api-Key": "NEYNAR_API_DOCS",
+        "User-Agent":
+          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+      },
+    });
+
+    const data = await response.json();
+    return data?.cast?.text || null;
+  } catch (error) {
+    console.error("Neynar API error:", error);
+    return null;
+  }
+}
+
+function extractTwitterContent(html) {
+  const tweetTextMatch = html.match(
+    /data-testid="tweetText"[^>]*>(.*?)<\/div>/s,
+  );
+  if (tweetTextMatch) {
+    return tweetTextMatch[1]
+      .replace(/<[^>]*>/g, " ") // Remove HTML tags
+      .replace(/\s+/g, " ") // Normalize whitespace
+      .trim();
+  }
+  return null;
+}
 
 async function extractCanonicalLink(html) {
   const dom = parser(html);
@@ -94,7 +229,7 @@ export const metadata = async (url) => {
 
   const { hostname } = urlObj;
 
-  if (hostname === "twitter.com" || hostname === "x.com") {
+  if (twitterFrontends.includes(hostname)) {
     urlObj.hostname = "fxtwitter.com";
     url = urlObj.toString();
   }
@@ -166,12 +301,27 @@ export const metadata = async (url) => {
     "youtube.com",
     "youtu.be",
     "reuters.com",
-    "xcancel.com",
+    "warpcast.com",
+    ...twitterFrontends,
   ];
   let output = {};
-  if (ogTitle && !bannedTitleDomains.includes(domain)) {
-    output.ogTitle = DOMPurify.sanitize(ogTitle);
+  if (hostname === "warpcast.com") {
+    const castContent = await extractWarpcastContent(url);
+    if (castContent) {
+      const claudeTitle = await generateClaudeTitle(castContent);
+      if (claudeTitle) {
+        output.ogTitle = claudeTitle;
+      }
+    }
+  } else if (bannedTitleDomains.includes(hostname)) {
+    const claudeTitle = await generateClaudeTitle(ogDescription);
+    if (claudeTitle) {
+      output.ogTitle = claudeTitle;
+    }
+  } else if (ogTitle) {
+    output.ogTitle = ogTitle;
   }
+
   if (domain) {
     output.domain = DOMPurify.sanitize(domain);
   }
