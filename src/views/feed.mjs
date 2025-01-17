@@ -762,10 +762,11 @@ function Newsletter() {
           <h2
             style="font-size: 1.25rem; font-weight: bold; color: black; margin: 0 0 0.25rem 0;"
           >
-            Join 1,300+ crypto builders
+            Ethereum must-reads, every Monday
           </h2>
           <p style="color: #828282; font-size: 0.875rem; margin: 0;">
-            Get curated crypto & web3 content delivered to your inbox.
+            Join 1,300+ builders getting insights from Vitalik, Stani & top
+            minds
           </p>
         </div>
         <svg
@@ -873,22 +874,20 @@ function Newsletter() {
           >
             Subscribe
           </button>
+          <a
+            href="https://paragraph.xyz/@kiwi-weekly"
+            target="_blank"
+            style="padding: 0.5rem 1rem; background: white; color: black; border: var(--border); cursor: pointer; transition: all 0.2s; white-space: nowrap;
+ text-decoration: none;"
+          >
+            Read last edition
+          </a>
         </div>
 
         <div
           id="status-message"
           style="display: none; font-size: 0.875rem;"
         ></div>
-
-        <div
-          style="padding-top: 0.5rem; border-top: 1px dotted rgba(219, 105, 141, 0.3);"
-        >
-          <p style="font-size: 0.75rem; color: #828282; margin: 0;">
-            Join the smartest minds in crypto. Our weekly newsletter includes
-            insights from Vitalik Buterin, Stani Kulechov, and other top
-            builders in the space.
-          </p>
-        </div>
       </form>
     </div>
   `;
@@ -985,7 +984,7 @@ export default async function (trie, theme, page, domain, identity, hash) {
                 currentQuery,
               )(ad)}
               ${stories
-                .slice(3, 8)
+                .slice(3, 5)
                 .map((story, i) =>
                   Row(
                     start,
@@ -1004,7 +1003,7 @@ export default async function (trie, theme, page, domain, identity, hash) {
               </tr>
 
               ${stories
-                .slice(8)
+                .slice(5)
                 .map((story, i) =>
                   Row(
                     start,
