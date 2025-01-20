@@ -6,6 +6,41 @@ import CommentInput from "./CommentInput.jsx";
 import { fetchStory } from "./API.mjs";
 import { isIOS } from "./session.mjs";
 
+function ShareIcon(style) {
+  return (
+    <svg style={style} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+      <rect width="256" height="256" fill="none" />
+      <path
+        d="M176,104h24a8,8,0,0,1,8,8v96a8,8,0,0,1-8,8H56a8,8,0,0,1-8-8V112a8,8,0,0,1,8-8H80"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="24"
+      />
+      <polyline
+        points="88 64 128 24 168 64"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="24"
+      />
+      <line
+        x1="128"
+        y1="24"
+        x2="128"
+        y2="136"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="24"
+      />
+    </svg>
+  );
+}
+
 function truncateName(name) {
   const maxLength = 12;
   if (
@@ -21,6 +56,16 @@ const Comment = React.forwardRef(({ comment, storyIndex }, ref) => {
   const [isTargeted, setIsTargeted] = useState(
     window.location.hash === `#0x${comment.index}`,
   );
+
+  const handleShare = async (e) => {
+    e.preventDefault();
+    const url = `${window.location.origin}${window.location.pathname}?index=0x${storyIndex}#0x${comment.index}`;
+    try {
+      await navigator.share({ url });
+    } catch (err) {
+      if (err.name !== "AbortError") console.error(err);
+    }
+  };
 
   useEffect(() => {
     const handleHashChange = () => {
@@ -91,8 +136,24 @@ const Comment = React.forwardRef(({ comment, storyIndex }, ref) => {
           •{" "}
         </span>
         <span style={{ fontSize: "9pt", color: "grey" }}>
-          {formatDistanceToNowStrict(new Date(comment.timestamp * 1000))}
-          <span> ago</span>
+          <a
+            href="#"
+            className="caster-link share-link"
+            title="Share"
+            style={{ whiteSpace: "nowrap" }}
+            onClick={handleShare}
+          >
+            {ShareIcon({
+              padding: "0 3px 1px 0",
+              verticalAlign: "-3px",
+              height: "13px",
+              width: "13px",
+            })}
+            <span>
+              {formatDistanceToNowStrict(new Date(comment.timestamp * 1000))}
+            </span>
+            <span> ago</span>
+          </a>
         </span>
       </div>
       <br />
