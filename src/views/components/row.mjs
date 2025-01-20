@@ -302,7 +302,7 @@ const row = (
                 >
                   <img
                     loading="lazy"
-                    style="aspect-ratio: 2 / 1; object-fit:cover; margin: 0 11px; border-radius: 2px; width: calc(100% - 26px);"
+                    style="aspect-ratio: 2 / 1; object-fit:cover; margin: 0 11px; border-radius: 2px; width: calc(100% - 24px);"
                     src="${DOMPurify.sanitize(story.metadata.image)}"
                 /></a>`
               : null}
@@ -671,7 +671,7 @@ const row = (
                       ? `/#0x${story.lastComment.index}`
                       : `/new?cached=true#0x${story.lastComment.index}`}');})(),document.querySelector('.comment-preview-0x${story.index}').style.opacity = 0.5,window.addToQueue(new
  CustomEvent('open-comments-0x${story.index}',{detail:{source:'comment-preview'}}));window.dispatchEvent(new HashChangeEvent('hashchange'));"
-                    style="margin: 0 5px 5px 5px; padding: 11px; border: var(--border); border-top: 2px dotted rgba(219, 105, 141, 0.075); display: flex;width: 100%; background-color: var(--bg-off-white); border-radius: 2px;"
+                    style="margin: 0 5px 5px 5px; padding: 11px; border: var(--border); border-top: rgba(166, 110, 78, 0.075); display: flex;width: 100%; background-color: var(--bg-off-white); border-radius: 2px;"
                   >
                     <a
                       class="comment-preview-anchor"

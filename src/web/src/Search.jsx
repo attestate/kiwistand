@@ -144,12 +144,11 @@ const SearchInterface = () => {
         style={{
           padding: "5px",
           border: "none",
-          background: "var(--background-color0)",
+          borderRadius: "2px",
           cursor: "pointer",
-          border: "var(--border)",
-          color: "black", // Explicitly set color
+          color: "black",
           WebkitTapHighlightColor: "transparent",
-          WebkitAppearance: "none", // Reset Safari's default appearance
+          WebkitAppearance: "none",
           appearance: "none",
           "-webkit-text-fill-color": "black",
         }}

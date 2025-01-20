@@ -46,7 +46,7 @@ const html = htm.bind(vhtml);
 const ContestBanner = html`
   <div style="width: 100%; margin: 16px 0; font-family: var(--font-family);">
     <div
-      style="border: 1px dotted rgba(219, 105, 141, 0.5); border-right: none; border-left: none;"
+      style="border: var(--border-thin); border-right: none; border-left: none;"
     >
       <!-- Header -->
       <div
@@ -79,14 +79,14 @@ const ContestBanner = html`
 
       <!-- Expandable Content -->
       <div
-        style="display: none; background: white; border-top: 1px dotted rgba(219, 105, 141, 0.5)"
+        style="display: none; background: white; border-top: var(--border-thin);"
       >
         <!-- Key Info Grid -->
         <div
-          style="display: grid; grid-template-columns: 1fr 1fr; border-bottom: 1px dotted rgba(219, 105, 141, 0.5)"
+          style="display: grid; grid-template-columns: 1fr 1fr; border-bottom: var(--border-thin);"
         >
           <div
-            style="padding: 16px; display: flex; align-items: center; gap: 8px; border-right: 1px dotted rgba(219, 105, 141, 0.5)"
+            style="padding: 16px; display: flex; align-items: center; gap: 8px; border-right: var(--border-thin)"
           >
             <!-- Calendar Icon -->
             <svg
@@ -221,7 +221,7 @@ const ContestBanner = html`
               ].map(
                 (prompt) => html`
                   <div
-                    style="padding: 12px; background: #F6F6EF; border: 1px dotted rgba(219, 105, 141, 0.5)"
+                    style="padding: 12px; background: #F6F6EF; border: var(--border-thin);"
                   >
                     <span style="color: black; font-size: 12px">${prompt}</span>
                   </div>
@@ -239,7 +239,7 @@ const ContestBanner = html`
             </h4>
             <div style="display: flex; flex-direction: column; gap: 8px">
               <div
-                style="padding: 12px; background: #F6F6EF; border: 1px dotted rgba(219, 105, 141, 0.5)"
+                style="padding: 12px; background: #F6F6EF; border: var(--border-thin);"
               >
                 <span style="font-size: 12px; color: black;"
                   >1. Write on any platform (Farcaster, Paragraph, Mirror,
@@ -247,14 +247,14 @@ const ContestBanner = html`
                 >
               </div>
               <div
-                style="padding: 12px; background: #F6F6EF; border: 1px dotted rgba(219, 105, 141, 0.5)"
+                style="padding: 12px; background: #F6F6EF; border: var(--border-thin);"
               >
                 <span style="font-size: 12px; color: black;"
                   >2. Submit your essay to Kiwi</span
                 >
               </div>
               <div
-                style="padding: 12px; background: #F6F6EF; border: 1px dotted rgba(219, 105, 141, 0.5)"
+                style="padding: 12px; background: #F6F6EF; border: var(--border-thin);"
               >
                 <span style="font-size: 12px; color: black;"
                   >3. Share on Farcaster (@kiwi & @purple) and X (@KiwiNewsHQ)
@@ -753,7 +753,7 @@ function Newsletter() {
   return html`
     <div
       class="newsletter-row"
-      style="max-width: 100%; background-color: var(--middle-beige); border: 2px dotted rgba(219, 105, 141, 0.5); border-right: none; border-left: none; padding: 1rem; font-family: var(--font-family); box-sizing: border-box;"
+      style="max-width: 100%; background-color: var(--middle-beige); border: var(--border); border-right: none; border-left: none; padding: 1rem; font-family: var(--font-family); box-sizing: border-box;"
     >
       <div
         style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 1rem;"
@@ -863,12 +863,12 @@ function Newsletter() {
           <input
             type="email"
             placeholder="Enter your email"
-            style="flex: 1; min-width: 200px; padding: 0.5rem 0.75rem; border: 1px dotted rgba(219, 105, 141, 0.5); background: white; color: black; box-sizing: border-box;"
+            style="flex: 1; min-width: 200px; padding: 0.5rem 0.75rem; border-radius: 2px; border: var(--border-thin); background: white; color: black; box-sizing: border-box;"
             required
           />
           <button
             type="submit"
-            style="padding: 0.5rem 1rem; background: black; color: white; border: 2px dotted rgba(219, 105, 141, 0.5); cursor: pointer; transition: all 0.2s; white-space: nowrap;"
+            style="padding: 0.5rem 1rem; background: black; color: white; border: var(--border); cursor: pointer; transition: all 0.2s; white-space: nowrap;"
             onmouseover="this.style.background='white'; this.style.color='black';"
             onmouseout="this.style.background='black'; this.style.color='white';"
           >

@@ -1,19 +1,21 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 :root {
-  --font-family: 'Inter', Verdana, Geneva, sans-serif;
-  --background-color0: #f6f6ef;
-  --background-color1: rgba(255,0,0,0.06);
-  --bg-off-white: #f6f6ef;
-  --contrast-color: rgba(219, 105, 141, 0.75);
-  --border: 2px dotted rgba(219, 105, 141,0.5);
-  --border-thin: 1px dotted rgba(219, 105, 141,0.5);
-  --border-line: 1px solid rgba(219, 105, 141,0.3);
-  --header-beige: #fafafa;
-  --middle-beige: #f3f3f3;
-  --table-bg: #f8f8f7;
-  --table-bg-mobile: rgb(255, 255, 250);
-  --visited-link: #828282;
-}
+   --font-family: 'Inter', Verdana, Geneva, sans-serif;
+   --background-color0: #f6f6ef;
+   --background-color1: rgba(166, 110, 78, 0.06);
+   --bg-off-white: #f6f6ef;
+   --contrast-color: rgba(166, 110, 78, 0.75);
+   --border: 1px dashed rgba(166, 110, 78, 0.8);
+   --border-thin: 1px dashed rgba(166, 110, 78, 0.8);
+   --border-line: 1px solid rgba(166, 110, 78, 0.6);
+   --border-thick: 2px solid rgba(166, 110, 78, 0.55);
+   --border-inset: 1px inset rgba(166, 110, 78, 0.7);
+   --header-beige: #fafafa;
+   --middle-beige: #f3f3f3;
+   --table-bg: #f8f8f7;
+   --table-bg-mobile: rgb(255, 255, 250);
+   --visited-link: #828282;
+ }
 .newsletter-row {
   margin-bottom: 5px;
 }
@@ -478,7 +480,9 @@ body {
       font-size: 12px !important;
     }
     .mobile-row-image img {
-      border: 2px inset rgba(219, 105, 141,0.5);
+      border: var(--border-inset);
+      border-bottom-left-radius: 0px !important;
+      border-bottom-right-radius: 0px !important;
     }
     .comment-section {
       background-color: var(--background-color0);
@@ -499,7 +503,7 @@ body {
       padding-top: 2px !important;
       border-top: none !important;
       margin: 0 11px 5px 11px !important;
-      border-bottom: 4px solid rgba(219, 105, 141, 0.2) !important;
+      border-bottom: var(--border-thick) !important;
     }
     .comment-preview-no-mobile-image .interaction-element{
       padding-top: 2px !important;
@@ -511,7 +515,7 @@ body {
       border-bottom: none;
     }
     .elevating-row.without-comment-preview {
-      border-bottom: 4px solid rgba(219, 105, 141, 0.2) !important;
+      border-bottom: var(--border-thick) !important;
     }
     .elevating-row.without-comment-preview.no-border {
       border-bottom: none !important;
@@ -519,7 +523,7 @@ body {
     .content-row:not(.content-row-elevated) {
       border: var(--border);
       margin: 0 11px;
-      border-bottom: 4px solid rgba(219, 105, 141, 0.2) !important;
+      border-bottom: var(--border-thick) !important;
     }
     #hnmain {
       border: none;
