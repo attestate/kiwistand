@@ -61,7 +61,9 @@ const CommentInput = (props) => {
     e.preventDefault();
     const index = getIndex();
 
-    if (text.length < 15 || text.length > 10_000) {
+    const validMiladyTexts = ["Milady.", "milady.", "milady", "Milady"];
+    const isValidMilady = validMiladyTexts.includes(text);
+    if ((text.length < 15 || text.length > 10_000) && !isValidMilady) {
       toast.error("Comment must be between 15 and 10000 characters.");
       setIsLoading(false);
       return;
