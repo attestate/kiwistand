@@ -43,7 +43,7 @@ const formatedHolders = holders.map((a) => ethers.utils.getAddress(a));
 
 const html = htm.bind(vhtml);
 
-const ContestBanner = html`
+const ContestBanner = (stories) => html`
   <div style="width: 100%; margin: 16px 0; font-family: var(--font-family);">
     <div
       style="border: var(--border-thin); border-right: none; border-left: none;"
@@ -202,7 +202,14 @@ const ContestBanner = html`
             </div>
           </div>
         </div>
-
+        <h4
+          style="margin: 24px 0 12px 16px ; font-size: 14px; color: #828282; font-weight: normal"
+        >
+          Submissions
+        </h4>
+        <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f8f8f7">
+          ${stories}
+        </table>
         <div style="padding: 16px">
           <!-- Writing Prompts -->
           <div style="margin-bottom: 24px">
@@ -955,7 +962,24 @@ export default async function (trie, theme, page, domain, identity, hash) {
                 ${SecondHeader(theme, "top")}
               </tr>
               <tr>
-                <td>${ContestBanner}</td>
+                <td>
+                  ${ContestBanner(
+                    contestStories &&
+                      contestStories.map(
+                        Row(
+                          start,
+                          "/",
+                          "margin-bottom: 20px;",
+                          null,
+                          null,
+                          null,
+                          recentJoiners,
+                          false,
+                          currentQuery,
+                        ),
+                      ),
+                  )}
+                </td>
               </tr>
               ${stories
                 .slice(0, 3)
