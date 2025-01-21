@@ -196,7 +196,14 @@ export const PrimaryActionButton = (props) => {
   );
 };
 
-export const TextConnectButton = (props) => {
+export const TextConnectButton = ({
+  allowlist,
+  delegations,
+  required,
+  style,
+  className,
+  text = "Connect",
+}) => {
   return (
     <ConnectButton.Custom>
       {({ account, chain, mounted, openConnectModal }) => {
@@ -207,7 +214,7 @@ export const TextConnectButton = (props) => {
         // the paywall and this means we'll have to reload the page.
         const localAccount = getLocalAccount(
           account && account.address,
-          props.allowlist,
+          allowlist,
         );
 
         let address;
@@ -217,8 +224,7 @@ export const TextConnectButton = (props) => {
         if (localAccount) {
           address = localAccount.identity;
         }
-        const isEligible =
-          address && eligible(props.allowlist, props.delegations, address);
+        const isEligible = address && eligible(allowlist, delegations, address);
 
         const newIdentityCookie = getCookie("identity");
         if (isEligible && newIdentityCookie && !window.initialIdentityCookie) {
@@ -228,14 +234,18 @@ export const TextConnectButton = (props) => {
           window.location.pathname = "/";
         }
 
-        if ((props.required && !connected) || (!connected && !isEligible)) {
+        if (!isEligible && connected) {
+          window.location.pathname = "/kiwipass-mint";
+        }
+
+        if ((required && !connected) || (!connected && !isEligible)) {
           return (
             <span
-              style={{ color: "black" }}
+              style={{ color: "black", ...style }}
               onClick={openConnectModal}
-              className="meta-link"
+              className={`meta-link ${className}`}
             >
-              Connect
+              {text}
             </span>
           );
         }

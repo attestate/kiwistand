@@ -4,6 +4,7 @@ import { WagmiConfig, useAccount } from "wagmi";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { eligible } from "@attestate/delegator2";
 
+import { TextConnectButton } from "./Navigation.jsx";
 import { fetchNotifications } from "./API.mjs";
 import { getLocalAccount, getCookie } from "./session.mjs";
 import { client, chains } from "./client.mjs";
@@ -83,22 +84,34 @@ const Bell = (props) => {
 
   if (!getCookie("identity") || !isEligible) {
     return (
-      <a
+      <TextConnectButton
+        className={props.mobile ? "mobile-bell" : "bell-button"}
         style={{
+          color: "black",
           textAlign: "center",
-          fontSize: "6pt",
+          fontSize: props.mobile ? "6pt" : "9pt",
           display: props.mobile ? "inline-flex" : "inline",
           padding: props.mobile ? "" : "10px 10px",
           flexGrow: 1,
-          backgroundColor: "black",
-          color: "white",
+          border: props.mobile ? "none" : "3px inset #59321C",
+          backgroundColor: "#E2F266",
         }}
-        className={props.mobile ? "mobile-bell" : "bell-button"}
-        href="/gateway"
-      >
-        Sign {props.mobile && <br />}
-        up
-      </a>
+        allowlist={props.allowlist}
+        delegations={props.delegations}
+        text={
+          <>
+            {props.mobile ? (
+              <span style={{ display: "inline-block", lineHeight: "1" }}>
+                Con-
+                <br />
+                nect
+              </span>
+            ) : (
+              "Connect"
+            )}
+          </>
+        }
+      />
     );
   }
 
