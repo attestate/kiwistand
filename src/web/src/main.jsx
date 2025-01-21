@@ -17,19 +17,18 @@ function storeReferral() {
   }
 }
 
+window.isSidebarOpen = false;
 function handleClick(event) {
   const sidebar = document.querySelector(".sidebar");
   const overlay = document.querySelector("#overlay");
   if (!sidebar) return;
   const isClickOutside = !sidebar.contains(event.target);
-  const isSidebarOpen =
-    sidebar.style.left === "0" || sidebar.style.left === "0px";
   const isSidebarToggle = event.target.closest(".sidebar-toggle") !== null;
   const isClickOnOverlay = event.target === overlay;
 
   if (
     isSidebarToggle ||
-    (isClickOutside && isSidebarOpen) ||
+    (isClickOutside && window.isSidebarOpen) ||
     isClickOnOverlay
   ) {
     toggleSidebar();
@@ -39,22 +38,22 @@ function handleClick(event) {
 function toggleSidebar() {
   const sidebar = document.querySelector(".sidebar");
   const overlay = document.querySelector("#overlay");
-  const isSidebarOpen =
-    sidebar.style.left === "0" || sidebar.style.left === "0px";
   var sidebarWidth;
+  window.isSidebarOpen = !window.isSidebarOpen;
 
   if (window.innerWidth >= 1200) {
-    sidebarWidth = isSidebarOpen ? "-25%" : "0";
+    sidebarWidth = window.isSidebarOpen ? "-25%" : "0";
   } else if (window.innerWidth >= 768 && window.innerWidth < 1200) {
-    sidebarWidth = isSidebarOpen ? "-40%" : "0";
+    sidebarWidth = window.isSidebarOpen ? "-40%" : "0";
   } else {
-    sidebarWidth = isSidebarOpen ? "-75%" : "0";
+    sidebarWidth = window.isSidebarOpen ? "-75%" : "0";
   }
 
   sidebar.style.left = sidebarWidth;
 
   // If the sidebar is open, show the overlay, else hide it
-  overlay.style.display = isSidebarOpen ? "none" : "block";
+  overlay.style.display = window.isSidebarOpen ? "none" : "block";
+  document.body.style.overflow = window.isSidebarOpen ? "auto" : "hidden";
 }
 
 document.addEventListener("click", handleClick);
@@ -828,7 +827,8 @@ async function start() {
       mainElement: "body",
       // NOTE: If the user is searching in the search drawer, we don't want
       // them to accidentially reload the page
-      shouldPullToRefresh: () => !window.drawerIsOpen && !window.scrollY,
+      shouldPullToRefresh: () =>
+        !window.isSidebarOpen && !window.drawerIsOpen && !window.scrollY,
       onRefresh: () => {
         if (window.location.pathname === "/") {
           if (identity) {
