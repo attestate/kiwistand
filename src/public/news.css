@@ -767,10 +767,6 @@ body {
     .content-row {
       margin-bottom: 8px !important;
     }
-    .scaled-hnmain {
-      transform: scale(1.05);
-      transform-origin: center top;
-    }
     .story-link-container-wrapper {
       justify-content: center !important;
     }
