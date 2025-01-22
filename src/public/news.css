@@ -30,6 +30,7 @@
   color: black;
 }
 :target {
+  border: none !important;
   box-shadow: 0 0 0 2px rgb(175, 192, 70, 0.75);
 }
 .inverted-row {

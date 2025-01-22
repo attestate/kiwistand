@@ -82,7 +82,7 @@ const Comment = React.forwardRef(({ comment, storyIndex }, ref) => {
       style={{
         boxShadow: isTargeted ? "0 0 0 2px rgb(175, 192, 70, 0.75)" : undefined,
         color: "black",
-        border: "var(--border)",
+        border: isTargeted ? "none" : "var(--border)",
         backgroundColor: "var(--bg-off-white)",
         padding: "0.55rem 0.75rem",
         borderRadius: "2px",
