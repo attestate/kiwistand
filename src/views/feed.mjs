@@ -300,7 +300,6 @@ const thresholdKarma = 3;
 export function identityClassifier(upvoter) {
   let balance = 0;
 
-  // TODO: Change to neynar score
   const cacheKey = `neynar-score-${upvoter.identity}`;
   if (cache.has(cacheKey)) {
     balance = cache.get(cacheKey);
@@ -558,18 +557,26 @@ export async function topstories(leaves) {
 }
 
 async function addMetadata(post) {
-  let result;
-  try {
-    result = await metadata(post.href);
-  } catch (err) {
-    return null;
+  const url = post.href;
+  const metadataCacheKey = `metadata-${url}`;
+  const cached = cache.get(metadataCacheKey);
+  if (cached) {
+    if (!cached.image) return null;
+    return {
+      ...post,
+      metadata: cached,
+    };
   }
-  if (result && !result.image) return;
 
-  return {
-    ...post,
-    metadata: result,
-  };
+  const metadataTTLSeconds = 60 * 60; // 1 hour
+  metadata(post.href)
+    .then((result) => {
+      if (result && result.image) {
+        cache.set(metadataCacheKey, result, [metadataTTLSeconds]);
+      }
+    })
+    .catch((err) => log(`Metadata fetch failed: ${err.stack}`));
+  return null;
 }
 
 export async function index(
@@ -680,8 +687,15 @@ export async function index(
 
   let resolvedContestStories;
   if (showContest) {
-    const contestStories = await getContestStories();
-    resolvedContestStories = await resolveIds(contestStories);
+    const contestCacheKey = "contest-stories-cache";
+    resolvedContestStories = cache.get(contestCacheKey);
+    if (!resolvedContestStories) {
+      const contestTTL = 60 * 5;
+      getContestStories()
+        .then((stories) => resolveIds(stories))
+        .then((resolved) => cache.set(contestCacheKey, resolved, [contestTTL]))
+        .catch((err) => log(`Error loading contest stories: ${err.stack}`));
+    }
   }
   return {
     contestStories: resolvedContestStories,
