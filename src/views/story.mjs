@@ -322,10 +322,10 @@ export default async function (trie, theme, index, value, referral) {
                                 : "scroll-margin-base"}"
                               style="${comment.flagged
                                 ? "opacity: 0.5"
-                                : ""}; color: black; border: var(--border); background-color: var(--background-color0); padding: 0.55rem 0.75rem; border-radius: 2px;display: block; margin-bottom: 15px; white-space: pre-wrap; line-height: 1.2; word-break: break-word; overflow-wrap: break-word;"
+                                : ""}; color: black; border: var(--border); background-color: var(--background-color0); padding: 0.55rem 0.75rem 0.75rem 0.55rem; border-radius: 2px;display: block; margin-bottom: 15px; white-space: pre-wrap; line-height: 1.2; word-break: break-word; overflow-wrap: break-word;"
                             >
                               <div
-                                style="white-space: nowrap; gap: 3px; margin-bottom: 0.25rem; display: inline-flex; align-items: center;"
+                                style="white-space: nowrap; gap: 3px; margin-bottom: 0.5rem; display: inline-flex; align-items: center;"
                               >
                                 ${comment.avatar
                                   ? html`<img

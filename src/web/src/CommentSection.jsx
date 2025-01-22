@@ -84,7 +84,7 @@ const Comment = React.forwardRef(({ comment, storyIndex }, ref) => {
         color: "black",
         border: isTargeted ? "none" : "var(--border)",
         backgroundColor: "var(--bg-off-white)",
-        padding: "0.55rem 0.75rem",
+        padding: "0.55rem 0.75rem 0.75rem 0.75rem",
         borderRadius: "2px",
         display: "block",
         marginBottom: "12px",
@@ -98,7 +98,7 @@ const Comment = React.forwardRef(({ comment, storyIndex }, ref) => {
         style={{
           whiteSpace: "nowrap",
           gap: "3px",
-          marginBottom: "0.25rem",
+          marginBottom: "0.5rem",
           display: "inline-flex",
           alignItems: "center",
         }}
@@ -127,7 +127,7 @@ const Comment = React.forwardRef(({ comment, storyIndex }, ref) => {
               }}
             />
           )}
-          <span style={{ fontWeight: "400", fontSize: "11pt" }}>
+          <span style={{ fontWeight: "400", fontSize: "10pt" }}>
             {truncateName(comment.identity.displayName)}
           </span>
         </a>
