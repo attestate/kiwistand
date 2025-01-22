@@ -57,9 +57,9 @@ const Comment = React.forwardRef(({ comment, storyIndex }, ref) => {
     window.location.hash === `#0x${comment.index}`,
   );
 
+  const url = `${window.location.origin}/stories?index=${storyIndex}#0x${comment.index}`;
   const handleShare = async (e) => {
     e.preventDefault();
-    const url = `${window.location.origin}${window.location.pathname}?index=0x${storyIndex}#0x${comment.index}`;
     try {
       await navigator.share({ url });
     } catch (err) {
@@ -137,7 +137,7 @@ const Comment = React.forwardRef(({ comment, storyIndex }, ref) => {
         </span>
         <span style={{ fontSize: "9pt", color: "grey" }}>
           <a
-            href="#"
+            href={url}
             className="caster-link share-link"
             title="Share"
             style={{ whiteSpace: "nowrap" }}
