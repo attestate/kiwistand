@@ -220,6 +220,20 @@ const CommentsSection = (props) => {
     })();
   }, [storyIndex]);
 
+  useEffect(() => {
+    if (
+      shown &&
+      comments.length > 1 &&
+      lastCommentRef.current &&
+      source === "comment-preview"
+    ) {
+      lastCommentRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    }
+  }, [shown, comments]);
+
   if (!shown) return;
   return (
     <div

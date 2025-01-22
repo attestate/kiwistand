@@ -317,9 +317,10 @@ export default async function (trie, theme, index, value, referral) {
                           (comment) =>
                             html`<span
                               id="0x${comment.index}"
-                              style="${story?.metadata?.image
-                                ? "scroll-margin-top: calc(50vw + 100px);"
-                                : "scroll-margin-top: 100px;"} ${comment.flagged
+                              class="${story?.metadata?.image
+                                ? "scroll-margin-with-image"
+                                : "scroll-margin-base"}"
+                              style="${comment.flagged
                                 ? "opacity: 0.5"
                                 : ""}; color: black; border: var(--border); background-color: var(--background-color0); padding: 0.55rem 0.75rem; border-radius: 2px;display: block; margin-bottom: 15px; white-space: pre-wrap; line-height: 1.2; word-break: break-word; overflow-wrap: break-word;"
                             >

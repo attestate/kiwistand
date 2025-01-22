@@ -16,10 +16,12 @@
    --table-bg-mobile: rgb(255, 255, 250);
    --visited-link: #828282;
  }
+ .scroll-margin-base, .scroll-margin-with-image {
+   scroll-margin-top: 100px;
+ }
 .newsletter-row {
   margin-bottom: 5px;
 }
-
 .notification:link {
   color: black !important;
 }
@@ -445,9 +447,14 @@ body {
 }
 /* mobile device */
  @media only screen and (min-width : 300px) and (max-width : 640px) {
+    .scroll-margin-base {
+      scroll-margin-top: 140px;
+    }
+    .scroll-margin-with-image {
+      scroll-margin-top: calc(50vw + 100px);
+    }
     .last-edition-link {
      display: none;
-
     }
     .newsletter-row {
       margin-bottom: 20px;
