@@ -312,16 +312,16 @@ export const metadata = async (url) => {
   if (hostname === "warpcast.com") {
     const castContent = await extractWarpcastContent(url);
     if (castContent) {
-      const claudeTitle = await generateClaudeTitle(castContent);
-      if (claudeTitle) {
-        output.ogTitle = claudeTitle;
-      }
+      //const claudeTitle = await generateClaudeTitle(castContent);
+      //if (claudeTitle) {
+      //  output.ogTitle = claudeTitle;
+      //}
     }
   } else if (bannedTitleDomains.includes(hostname)) {
-    const claudeTitle = await generateClaudeTitle(ogDescription);
-    if (claudeTitle) {
-      output.ogTitle = claudeTitle;
-    }
+    //const claudeTitle = await generateClaudeTitle(ogDescription);
+    //if (claudeTitle) {
+    //  output.ogTitle = claudeTitle;
+    //}
   } else if (ogTitle) {
     output.ogTitle = ogTitle;
   }
