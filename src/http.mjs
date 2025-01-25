@@ -487,8 +487,25 @@ export async function launch(trie, libp2p) {
       }
 
       let results;
+      const domain = undefined;
+      const lookback = sub(new Date(), {
+        weeks: 1,
+      });
+      const paginate = true;
+      const showAd = false;
+      const showContest = false;
+      const appCuration = request.query.curation === "true";
       try {
-        results = await index(trie, page);
+        results = await index(
+          trie,
+          page,
+          domain,
+          lookback,
+          paginate,
+          showAd,
+          showContest,
+          appCuration,
+        );
       } catch (err) {
         log(`Error in api/v1/feeds/hot: ${err.stack}`);
       }

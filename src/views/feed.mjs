@@ -589,6 +589,7 @@ export async function index(
   paginate = true,
   showAd = true,
   showContest = true,
+  appCuration = false,
 ) {
   const lookbackUnixTime = Math.floor(lookback.getTime() / 1000);
   const limit = -1;
@@ -602,6 +603,20 @@ export async function index(
   let storyPromises = await topstories(leaves);
   const threshold = 1;
   storyPromises = storyPromises.filter(({ upvotes }) => upvotes > threshold);
+
+  if (appCuration) {
+    let result;
+    const sheetName = "app";
+    try {
+      result = await curation.getSheet(sheetName);
+      storyPromises = storyPromises.filter(
+        ({ href }) => !result.links.includes(href),
+      );
+    } catch (err) {
+      //noop, just continue as nothing every happened
+      log(`app curation filtering failed ${err.stack}`);
+    }
+  }
 
   if (domain)
     storyPromises = storyPromises.filter(
