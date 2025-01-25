@@ -489,9 +489,9 @@ export async function launch(trie, libp2p) {
       let results;
       const domain = undefined;
       const lookback = sub(new Date(), {
-        weeks: 1,
+        weeks: 3,
       });
-      const paginate = true;
+      const paginate = false;
       const showAd = false;
       const showContest = false;
       const appCuration = request.query.curation === "true";

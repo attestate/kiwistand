@@ -599,22 +599,27 @@ export async function index(
   const path = "/";
   leaves = moderation.moderate(leaves, policy, path);
 
-  const totalStories = parseInt(env.TOTAL_STORIES, 10);
   let storyPromises = await topstories(leaves);
   const threshold = 1;
   storyPromises = storyPromises.filter(({ upvotes }) => upvotes > threshold);
 
   if (appCuration) {
-    let result;
     const sheetName = "app";
+    let result;
+
     try {
       result = await curation.getSheet(sheetName);
-      storyPromises = storyPromises.filter(({ href }) =>
-        result.links.includes(href),
-      );
     } catch (err) {
-      //noop, just continue as nothing every happened
-      log(`app curation filtering failed ${err.stack}`);
+      // keep original storyPromises on error
+    }
+
+    if (result?.links) {
+      const links = result.links.map((link) =>
+        normalizeUrl(link, { stripWWW: false }),
+      );
+      storyPromises = storyPromises.filter(({ href }) =>
+        links.includes(normalizeUrl(href, { stripWWW: false })),
+      );
     }
   }
 
@@ -623,6 +628,7 @@ export async function index(
       ({ href }) => extractDomain(href) === domain,
     );
 
+  const totalStories = parseInt(env.TOTAL_STORIES, 10);
   const start = totalStories * page;
   const end = totalStories * (page + 1);
   if (paginate) {
