@@ -609,8 +609,8 @@ export async function index(
     const sheetName = "app";
     try {
       result = await curation.getSheet(sheetName);
-      storyPromises = storyPromises.filter(
-        ({ href }) => !result.links.includes(href),
+      storyPromises = storyPromises.filter(({ href }) =>
+        result.links.includes(href),
       );
     } catch (err) {
       //noop, just continue as nothing every happened
