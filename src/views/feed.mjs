@@ -669,6 +669,10 @@ export async function index(
       const augmentedStory = await addMetadata(story);
       if (augmentedStory) {
         story = augmentedStory;
+        const href = normalizeUrl(story.href, { stripWWW: false });
+        if (href && policy?.images.includes(href) && story.metadata?.image) {
+          delete story.metadata.image;
+        }
       }
 
       stories.push({

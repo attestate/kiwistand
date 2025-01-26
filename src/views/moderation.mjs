@@ -106,72 +106,69 @@ export async function getWriters() {
 }
 
 export async function getLists() {
-  const defaultObj = {
-    addresses: [],
-    titles: {},
-    hrefs: {},
-    links: [],
-    messages: [],
-  };
+  let addresses = [];
+  let titles = {};
+  let hrefs = {};
+  let links = [];
+  let messages = [];
+  let images = [];
 
-  let addrResponse;
   try {
-    addrResponse = await getConfig("banlist_addresses");
+    const addrResponse = await getConfig("banlist_addresses");
+    addresses = addrResponse.map(({ address }) => address.toLowerCase());
   } catch (err) {
     log(`banlist_addresses: Couldn't get config: ${err.toString()}`);
-    return defaultObj;
   }
-  // TODO: Should start using ethers.utils.getAddress
-  const addresses = addrResponse.map(({ address }) => address.toLowerCase());
 
-  let linkResponse;
   try {
-    linkResponse = await getConfig("banlist_links");
+    const linkResponse = await getConfig("banlist_links");
+    links = linkResponse.map(({ link }) => normalizeUrl(link));
   } catch (err) {
     log(`banlist_links: Couldn't get config: ${err.toString()}`);
-    return defaultObj;
   }
-  const links = linkResponse.map(({ link }) => normalizeUrl(link));
 
-  let titleResponse;
   try {
-    titleResponse = await getConfig("moderation_titles");
+    const imagesResponse = await getConfig("banlist_images");
+    images = imagesResponse.map(({ link }) =>
+      normalizeUrl(link, { stripWWW: false }),
+    );
+  } catch (err) {
+    log(`banlist_images: Couldn't get config: ${err.toString()}`);
+  }
+
+  try {
+    const titleResponse = await getConfig("moderation_titles");
+    for (let obj of titleResponse) {
+      if (!obj.link || !obj.title) continue;
+      titles[normalizeUrl(obj.link)] = obj.title;
+    }
   } catch (err) {
     log(`moderation_titles: Couldn't get config: ${err.toString()}`);
-    return defaultObj;
-  }
-  const titles = {};
-  for (let obj of titleResponse) {
-    if (!obj.link || !obj.title) continue;
-    titles[normalizeUrl(obj.link)] = obj.title;
   }
 
-  let hrefResponse;
   try {
-    hrefResponse = await getConfig("moderation_hrefs");
+    const hrefResponse = await getConfig("moderation_hrefs");
+    for (let obj of hrefResponse) {
+      if (!obj.old || !obj.new) continue;
+      hrefs[normalizeUrl(obj.old)] = normalizeUrl(obj.new);
+    }
   } catch (err) {
     log(`moderation_hrefs: Couldn't get config: ${err.toString()}`);
-    return defaultObj;
-  }
-  const hrefs = {};
-  for (let obj of hrefResponse) {
-    if (!obj.old || !obj.new) continue;
-    hrefs[normalizeUrl(obj.old)] = normalizeUrl(obj.new);
   }
 
-  let messages;
   try {
     messages = await getConfig("banlist_messages");
   } catch (err) {
     log(`banlist_messages: Couldn't get config: ${err.toString()}`);
-    return defaultObj;
   }
+
   return {
     hrefs,
     messages,
     titles,
     addresses,
     links,
+    images,
   };
 }
 
