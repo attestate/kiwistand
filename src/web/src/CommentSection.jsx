@@ -164,7 +164,10 @@ const Comment = React.forwardRef(({ comment, storyIndex }, ref) => {
         <Linkify
           options={{
             className: "meta-link selectable-link",
-            target: isIOS() ? "_self" : "_blank",
+            target: (href) => {
+              if (href.startsWith("https://news.kiwistand.com")) return "_self";
+              return isIOS() ? "_self" : "_blank";
+            },
             defaultProtocol: "https",
             validate: {
               url: (value) => /^https:\/\/.*/.test(value),

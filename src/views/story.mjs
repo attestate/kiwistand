@@ -392,7 +392,17 @@ export default async function (trie, theme, index, value, referral) {
                                         {
                                           className:
                                             "meta-link selectable-link",
-                                          target: "_blank",
+                                          target: (href) => {
+                                            if (
+                                              href.startsWith(
+                                                "https://news.kiwistand.com",
+                                              )
+                                            ) {
+                                              return "_self";
+                                            } else {
+                                              return "_blank";
+                                            }
+                                          },
                                           defaultProtocol: "https",
                                           validate: {
                                             url: (value) =>
