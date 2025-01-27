@@ -208,7 +208,11 @@ export function truncateComment(comment, maxLength = 180) {
     const beforeLink = truncateLongWords(
       comment.slice(0, lastLinkStart).trim(),
     );
-    return beforeLink + " " + truncatedLink + "...";
+    if (beforeLink && beforeLink.length > 0) {
+      return beforeLink + " " + truncatedLink + "...";
+    } else {
+      return truncatedLink + "...";
+    }
   }
 
   if (comment.length <= maxLength) return truncateLongWords(comment);
@@ -293,9 +297,7 @@ const row = (
             class="${interactive ? "" : "content-row"} ${invert
               ? "inverted-row"
               : ""} ${displayMobileImage ? "content-row-elevated" : ""}"
-            style="${i === 0 ? "margin-top: 17px;" : ""} ${invert
-              ? "display:none;"
-              : ""} ${style}"
+            style="${invert ? "display:none;" : ""} ${style}"
           >
             ${displayMobileImage
               ? html` <a
