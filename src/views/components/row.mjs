@@ -284,7 +284,9 @@ const row = (
       !knownBadOgImages.includes(story.metadata.image);
     const displayCommentPreview =
       story.lastComment &&
-      story.lastComment.identity.safeAvatar &&
+      (story.lastComment.identity.ens ||
+        story.lastComment.identity.farcaster ||
+        story.lastComment.identity.lens) &&
       differenceInHours(
         new Date(),
         new Date(story.lastComment.timestamp * 1000),
@@ -697,14 +699,15 @@ const row = (
                         <div
                           style="display: flex; align-items: center; gap: 5px; margin-bottom: 3px;"
                         >
-                          <img
+                          ${story.lastComment.identity.safeAvatar &&
+                          html`<img
                             loading="lazy"
                             src="${DOMPurify.sanitize(
                               story.lastComment.identity.safeAvatar,
                             )}"
                             alt="avatar"
                             style="border: 1px solid #ccc; width: ${size}px; height: ${size}px; border-radius: 2px;"
-                          />
+                          />`}
                           <span
                             style="font-size: 10pt; touch-action: manipulation;user-select: none; font-weight: 500;"
                             >${DOMPurify.sanitize(
