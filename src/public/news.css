@@ -997,6 +997,7 @@ body {
 }
  .story-link {
      color: black;
+     font-weight: 500;
 }
  .story-link:visited {
      color: var(--visited-link);

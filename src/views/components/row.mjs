@@ -437,18 +437,6 @@ const row = (
                       </a>
                       <span> </span>
                     </span>
-                    <span> </span>
-                    <span class="story-domain" style="white-space: nowrap;"
-                      >(${!interactive && (path === "/" || path === "/best")
-                        ? html`<a
-                            href="${path}?domain=${extractedDomain}${period
-                              ? `&period=${period}`
-                              : ""}"
-                            style="color: #828282;"
-                            >${extractedDomain}</a
-                          >`
-                        : extractedDomain})</span
-                    >
                   </span>
                   <div
                     class="story-subtitle"
@@ -498,6 +486,12 @@ const row = (
                               new Date(story.timestamp * 1000),
                             )}
                           `}
+                      ${!interactive && (path === "/" || path === "/best")
+                        ? html`
+                            <span style="opacity:0.6"> • </span>
+                            <span>${extractedDomain}</span>
+                          `
+                        : ""}
                       <span style="opacity:0.6"> • </span>
                       ${story.identity
                         ? html`<a
