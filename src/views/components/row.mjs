@@ -91,6 +91,15 @@ const expandSVG = html`
   </svg>
 `;
 
+const pin = html`<svg
+  style="height: 17px; vertical-align: -3px;"
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 256 256"
+>
+  <rect width="256" height="256" fill="none" />
+  <path d="M136,127.42V232a8,8,0,0,1-16,0V127.42a56,56,0,1,1,16,0Z" />
+</svg> `;
+
 const formatDistanceToNowStrict = (date) => {
   return originalFormatDistance(date)
     .replace(/ years?/, "y")
@@ -238,6 +247,7 @@ const row = (
   // as visited, and so since comment previews are only active on / and /new, we
   // don't have to properly set query anywhere else.
   query = "",
+  pinned = false,
 ) => {
   const size = 12;
   return (story, i) => {
@@ -433,7 +443,11 @@ const row = (
                                 DOMPurify.sanitize(story.title),
                               )}</mark
                             >`
-                          : truncateLongWords(DOMPurify.sanitize(story.title))}
+                          : html`${pinned
+                              ? html`${pin} `
+                              : ""}${truncateLongWords(
+                              DOMPurify.sanitize(story.title),
+                            )}`}
                       </a>
                       <span> </span>
                     </span>

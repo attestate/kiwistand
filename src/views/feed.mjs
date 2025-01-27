@@ -695,6 +695,16 @@ export async function index(
         story.submitter.farcaster);
     return hasProperName;
   });
+  let pinnedStory;
+  if (policy?.pinned?.length > 0) {
+    const pinnedUrl = policy.pinned[0];
+    pinnedStory = stories.find(
+      (story) => normalizeUrl(story.href, { stripWWW: false }) === pinnedUrl,
+    );
+    stories = stories.filter(
+      (story) => normalizeUrl(story.href, { stripWWW: false }) !== pinnedUrl,
+    );
+  }
 
   let originals = stories
     .filter((story) => story.isOriginal)
@@ -731,6 +741,7 @@ export async function index(
     }
   }
   return {
+    pinnedStory,
     contestStories: resolvedContestStories,
     ad,
     stories,
@@ -960,7 +971,8 @@ export default async function (trie, theme, page, domain, identity, hash) {
     content = await index(trie, page, domain);
   }
 
-  const { ad, originals, stories, start, contestStories } = content;
+  const { ad, originals, stories, start, contestStories, pinnedStory } =
+    content;
 
   let currentQuery = "";
   if (page && domain) {
@@ -1028,6 +1040,19 @@ export default async function (trie, theme, page, domain, identity, hash) {
                   )}
                 </td>
               </tr>
+              ${pinnedStory &&
+              Row(
+                start,
+                "/",
+                "margin-bottom: 20px;",
+                null,
+                null,
+                null,
+                recentJoiners,
+                false,
+                undefined,
+                true,
+              )(pinnedStory)}
               ${stories
                 .slice(0, 3)
                 .map(

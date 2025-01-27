@@ -106,12 +106,22 @@ export async function getWriters() {
 }
 
 export async function getLists() {
+  let pinned = [];
   let addresses = [];
   let titles = {};
   let hrefs = {};
   let links = [];
   let messages = [];
   let images = [];
+
+  try {
+    const pinnedResponse = await getConfig("pinned");
+    pinned = pinnedResponse.map(({ link }) =>
+      normalizeUrl(link, { stripWWW: false }),
+    );
+  } catch (err) {
+    log(`pinned: Couldn't get config: ${err.toString()}`);
+  }
 
   try {
     const addrResponse = await getConfig("banlist_addresses");
@@ -163,6 +173,7 @@ export async function getLists() {
   }
 
   return {
+    pinned,
     hrefs,
     messages,
     titles,
