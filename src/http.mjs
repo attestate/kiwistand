@@ -68,6 +68,7 @@ import * as karma from "./karma.mjs";
 import * as frame from "./frame.mjs";
 import * as subscriptions from "./subscriptions.mjs";
 import * as telegram from "./telegram.mjs";
+import * as email from "./email.mjs";
 import * as price from "./price.mjs";
 import {
   getRandomIndex,
@@ -307,6 +308,63 @@ export async function launch(trie, libp2p) {
       reply.send(weeklySales);
     }
   });
+  app.get("/unsubscribe/:secret", async (req, res) => {
+    const { secret } = req.params;
+
+    try {
+      const success = await email.unsubscribe(secret);
+      if (!success) {
+        return res.status(404).send("Invalid or expired unsubscribe link");
+      }
+
+      res.send(`
+       <html>
+         <body>
+           <h1>Unsubscribed</h1>
+           <p>You have been successfully unsubscribed from notifications.</p>
+         </body>
+       </html>
+     `);
+    } catch (err) {
+      console.error("Unsubscribe error:", err);
+      res.status(500).send("Error processing unsubscribe request");
+    }
+  });
+
+  app.post("/api/v1/email-notifications", async (request, reply) => {
+    const message = request.body;
+    const testExpr = /.+@.+\..+/;
+
+    if (!message || message.type !== "EMAILAUTH") {
+      return sendError(reply, 400, "Bad Request", "Invalid message type");
+    }
+
+    if (message.title === message.href && !testExpr.test(message.title)) {
+      return sendError(
+        reply,
+        400,
+        "Bad Request",
+        "Title and href must be emails and the same",
+      );
+    }
+    const userEmail = message.title;
+
+    try {
+      const identity = await email.validate(message);
+      await email.addSubscription(identity, userEmail);
+
+      const code = 200;
+      const httpMessage = "OK";
+      const details = "Successfully subscribed to email notifications";
+      return sendStatus(reply, code, httpMessage, details);
+    } catch (err) {
+      const code = 500;
+      const httpMessage = "Internal Server Error";
+      const details = err.toString();
+      return sendError(reply, code, httpMessage, details);
+    }
+  });
+
   app.post("/api/v1/telegram", async (request, reply) => {
     const message = request.body;
     // NOTE: The message here is ALMOST a compliant Kiwi News amplify or

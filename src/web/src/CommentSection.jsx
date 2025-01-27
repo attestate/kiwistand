@@ -1,10 +1,14 @@
 import React, { useRef, useState, useEffect } from "react";
 import { formatDistanceToNowStrict } from "date-fns";
 import Linkify from "linkify-react";
+import { useAccount, WagmiConfig } from "wagmi";
+import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
+import { Wallet } from "@ethersproject/wallet";
 
+import { useProvider, client, chains } from "./client.mjs";
 import CommentInput from "./CommentInput.jsx";
-import { fetchStory } from "./API.mjs";
-import { isIOS } from "./session.mjs";
+import * as API from "./API.mjs";
+import { getLocalAccount, isIOS, isRunningPWA } from "./session.mjs";
 
 function ShareIcon(style) {
   return (
@@ -51,6 +55,124 @@ function truncateName(name) {
     return name;
   return name.slice(0, maxLength) + "...";
 }
+function NotificationOptIn(props) {
+  return (
+    <div
+      style={{
+        padding: "12px",
+        marginBottom: "1rem",
+        backgroundColor: "var(--middle-beige)",
+        border: "var(--border)",
+        borderRadius: "2px",
+      }}
+    >
+      <p
+        style={{
+          fontSize: "11pt",
+          margin: "0 0 8px 0",
+          color: "#666",
+        }}
+      >
+        Get email notifications when someone replies to your comments or
+        submissions
+      </p>
+
+      <WagmiConfig config={client}>
+        <RainbowKitProvider chains={chains}>
+          <EmailNotificationLink {...props} />
+        </RainbowKitProvider>
+      </WagmiConfig>
+    </div>
+  );
+}
+
+const EmailNotificationLink = (props) => {
+  const [status, setStatus] = useState("");
+  const [email, setEmail] = useState("");
+  const account = useAccount();
+  const localAccount = getLocalAccount(account.address, props.allowlist);
+  const provider = useProvider();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    console.log("Submit triggered");
+    setStatus("sending");
+
+    const value = API.messageFab(email, email, "EMAILAUTH");
+
+    let signature;
+    try {
+      const signer = new Wallet(localAccount.privateKey, provider);
+      signature = await signer._signTypedData(
+        API.EIP712_DOMAIN,
+        API.EIP712_TYPES,
+        value,
+      );
+    } catch (err) {
+      console.error("Signing failed:", err);
+      setStatus("error");
+      return;
+    }
+
+    const wait = null;
+    const endpoint = "/api/v1/email-notifications";
+    const port = window.location.port;
+
+    try {
+      const response = await API.send(value, signature, wait, endpoint, port);
+      if (response.status === "success") {
+        setStatus("success");
+        setEmail("");
+      } else {
+        console.error("API error:", response.details);
+        setStatus("error");
+      }
+    } catch (err) {
+      console.error("Network request failed:", err);
+      setStatus("error");
+    }
+  };
+
+  return (
+    <form
+      onSubmit={handleSubmit}
+      style={{
+        display: "flex",
+        gap: "8px",
+      }}
+    >
+      <input
+        type="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        placeholder="Enter your email"
+        style={{
+          flex: 1,
+          padding: "6px 8px",
+          border: "var(--border-thin)",
+          borderRadius: "2px",
+          fontSize: "10pt",
+        }}
+        required
+      />
+      <button
+        type="submit"
+        disabled={status === "sending" || !localAccount}
+        style={{
+          padding: "6px 12px",
+          background: status === "sending" ? "#828282" : "black",
+          color: "white",
+          border: "var(--border)",
+          borderRadius: "2px",
+          cursor: "pointer",
+          fontSize: "10pt",
+        }}
+      >
+        {status === "sending" ? "Subscribing..." : "Subscribe"}
+      </button>
+    </form>
+  );
+};
 
 const Comment = React.forwardRef(({ comment, storyIndex }, ref) => {
   const [isTargeted, setIsTargeted] = useState(
@@ -218,7 +340,7 @@ const CommentsSection = (props) => {
     (async () => {
       if (commentCount === 0) return;
 
-      const story = await fetchStory(storyIndex, commentCount);
+      const story = await API.fetchStory(storyIndex, commentCount);
       if (story && story.comments) setComments(story.comments);
     })();
   }, [storyIndex]);
@@ -246,6 +368,7 @@ const CommentsSection = (props) => {
         fontSize: "1rem",
       }}
     >
+      <NotificationOptIn {...props} />
       {comments.length > 0 &&
         comments.map((comment, index) => (
           <Comment

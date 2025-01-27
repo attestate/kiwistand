@@ -8,16 +8,17 @@ import Database from "better-sqlite3";
 import log from "./logger.mjs";
 import { getSubmission } from "./cache.mjs";
 import { resolve } from "./ens.mjs";
+import * as email from "./email.mjs";
 import { truncateComment } from "./views/activity.mjs";
 
 if (env.NODE_ENV == "production")
   webpush.setVapidDetails(
     "mailto:tim@daubenschuetz.de",
-    process.env.VAPID_PUBLIC_KEY,
-    process.env.VAPID_PRIVATE_KEY,
+    env.VAPID_PUBLIC_KEY,
+    env.VAPID_PRIVATE_KEY,
   );
 
-const DATA_DIR = process.env.DATA_DIR;
+const DATA_DIR = env.DATA_DIR;
 const DB_FILE = path.join(DATA_DIR, "web_push_subscriptions.db");
 
 const db = new Database(DB_FILE);
@@ -62,17 +63,26 @@ export async function triggerNotification(message) {
   const uniqueReceivers = Array.from(new Set(receivers));
 
   const maxChars = 140;
+  const url =
+    `https://news.kiwistand.com/stories?index=0x${submission.index}` +
+    `&cachebuster=0x${message.index}#0x${message.index}`;
+
   await Promise.allSettled(
-    uniqueReceivers.map(
-      async (receiver) =>
-        await send(receiver, {
-          title: `${ensData.displayName} replied`,
-          message: truncateComment(message.title, maxChars),
-          data: {
-            url: `https://news.kiwistand.com/stories?index=0x${submission.index}&cachebuster=0x${message.index}#0x${message.index}`,
-          },
-        }),
-    ),
+    uniqueReceivers.map(async (receiver) => {
+      await send(receiver, {
+        title: `${ensData.displayName} replied`,
+        message: truncateComment(message.title, maxChars),
+        data: {
+          url: `https://news.kiwistand.com/stories?index=0x${submission.index}&cachebuster=0x${message.index}#0x${message.index}`,
+        },
+      });
+      await email.send(receiver, {
+        sender: ensData.displayName,
+        title: `New comment in: ${submission.title}`,
+        message: message.title,
+        data: { url },
+      });
+    }),
   );
 }
 
@@ -92,6 +102,8 @@ export function get(address) {
 }
 
 export async function send(address, payload) {
+  if (env.NODE_ENV !== "production") return;
+
   const subscriptions = get(address);
   if (!subscriptions || subscriptions.length === 0) return;
 
