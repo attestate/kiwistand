@@ -90,7 +90,68 @@ export default async function (theme) {
                       need to add the last part
                     </li>
                     <li>Consider NOT submitting pay-walled articles</li>
+                    <li>Don't end a title with a period or dot</li>
+                    <li>
+                      When introducing a new project or concept, you can use
+                      either:
+                      <ul>
+                        <li>
+                          A dash (-): "ETHStrategy - fully onchain Microstrategy
+                          for Ethereum"
+                        </li>
+                        <li>
+                          A colon (:): "Farcaster 2026: The Game-Changing
+                          Potential of AI Agents"
+                        </li>
+                      </ul>
+                    </li>
+                    <li>
+                      Don't include the hosting platform in titles (e.g.,
+                      "GitHub - bitcoin/bitcoin") as we already show the domain
+                    </li>
                   </ul>
+
+                  <h3>Open Graph Images</h3>
+                  <p>
+                    Open Graph images are a crucial part of the submission.
+                    They're not an afterthought - they're often the first thing
+                    users see.
+                  </p>
+                  <ul>
+                    <li>
+                      Images should be visually appealing and professionally
+                      designed
+                    </li>
+                    <li>
+                      Low-quality, poorly designed, or hastily created images
+                      will be moderated
+                    </li>
+                    <li>The image should meaningfully represent the content</li>
+                  </ul>
+                  <h3>Submitter Requirements</h3>
+                  <p>
+                    To maintain quality and accountability in our community, we
+                    have specific requirements for story submissions:
+                  </p>
+                  <ul>
+                    <li>
+                      Stories will be removed from the front page if the
+                      submitter hasn't connected at least one of:
+                      <ul>
+                        <li>Farcaster account</li>
+                        <li>ENS name</li>
+                        <li>Lens profile</li>
+                      </ul>
+                    </li>
+                    <li>
+                      Submissions from accounts showing only a truncated address
+                      (e.g., 0xA9D2...1A87) will not appear on the front page
+                    </li>
+                  </ul>
+                  <p>
+                    Connect your social accounts to ensure your submissions
+                    remain visible to the community.
+                  </p>
                   <h2>How to upvote?</h2>
                   <p>
                     Within a small community, upvoting carries a lot of weight.

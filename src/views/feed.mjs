@@ -686,7 +686,15 @@ export async function index(
     }
     return stories;
   }
-  const stories = await resolveIds(storyPromises);
+  let stories = await resolveIds(storyPromises);
+  stories = stories.filter((story) => {
+    const hasProperName =
+      story.submitter &&
+      (story.submitter.ens ||
+        story.submitter.lens ||
+        story.submitter.farcaster);
+    return hasProperName;
+  });
 
   let originals = stories
     .filter((story) => story.isOriginal)
