@@ -504,7 +504,8 @@ const row = (
                               new Date(story.timestamp * 1000),
                             )}
                           `}
-                      ${!interactive && (path === "/" || path === "/best")
+                      ${!interactive &&
+                      (path === "/" || path === "/new" || path === "/best")
                         ? html`
                             <span style="opacity:0.6"> • </span>
                             <span>${extractedDomain}</span>
