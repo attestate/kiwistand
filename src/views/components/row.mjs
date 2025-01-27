@@ -190,12 +190,16 @@ export function truncateComment(comment, maxLength = 180) {
 
   const lastLinkStart = comment.lastIndexOf("https://", maxLength);
   if (lastLinkStart !== -1 && lastLinkStart < maxLength) {
-    const breakPoint = comment.lastIndexOf(" ", lastLinkStart);
-    const truncated =
-      breakPoint !== -1
-        ? comment.slice(0, breakPoint) + "..."
-        : comment.slice(0, lastLinkStart) + "...";
-    return truncateLongWords(truncated);
+    const nextSpace = comment.indexOf(" ", lastLinkStart);
+    const linkEnd = nextSpace === -1 ? comment.length : nextSpace;
+    const fullLink = comment.slice(lastLinkStart, linkEnd);
+    const truncatedLink =
+      fullLink.length > 60 ? fullLink.substring(0, 60) + "..." : fullLink;
+
+    const beforeLink = truncateLongWords(
+      comment.slice(0, lastLinkStart).trim(),
+    );
+    return beforeLink + " " + truncatedLink + "...";
   }
 
   if (comment.length <= maxLength) return truncateLongWords(comment);
