@@ -112,7 +112,6 @@ body {
      font-family: var(--font-family);
      font-size:10pt;
      color:#828282;
-     overscroll-behavior: none;
 }
 .story-link-container div {
   display: inline;
