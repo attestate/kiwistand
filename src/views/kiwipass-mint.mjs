@@ -182,7 +182,7 @@ export default async function (theme) {
                             <div style="color: #666; font-size: 14px;">
                               • <b>Mint is now completely free</b><br />
                               • You only pay for network gas fees<br />
-                              • Your wallet will be used to verify your identity
+                              • Your wallet will be used to create an app key
                             </div>
                           </div>
 
