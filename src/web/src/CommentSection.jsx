@@ -175,6 +175,15 @@ const EmailNotificationLink = (props) => {
 };
 
 const Comment = React.forwardRef(({ comment, storyIndex }, ref) => {
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const toggleCollapsed = (e) => {
+    if (e.target.closest("a")) {
+      // The user clicked a link (or anything inside that link)
+      return;
+    }
+    setIsCollapsed((v) => !v);
+  };
+
   const [isTargeted, setIsTargeted] = useState(
     window.location.hash === `#0x${comment.index}`,
   );
@@ -206,7 +215,7 @@ const Comment = React.forwardRef(({ comment, storyIndex }, ref) => {
         color: "black",
         border: isTargeted ? "none" : "var(--border)",
         backgroundColor: "var(--bg-off-white)",
-        padding: "0.55rem 0.75rem 0.75rem 0.75rem",
+        padding: `0 0.75rem ${isCollapsed ? "0px" : "0.75rem"} 0.75rem`,
         borderRadius: "2px",
         display: "block",
         marginBottom: "12px",
@@ -220,10 +229,12 @@ const Comment = React.forwardRef(({ comment, storyIndex }, ref) => {
         style={{
           whiteSpace: "nowrap",
           gap: "3px",
-          marginBottom: "0.5rem",
           display: "inline-flex",
           alignItems: "center",
+          width: "100%",
+          padding: "0.55rem 0 0.45rem 0",
         }}
+        onClick={toggleCollapsed}
       >
         <a
           style={{
@@ -279,27 +290,30 @@ const Comment = React.forwardRef(({ comment, storyIndex }, ref) => {
         </span>
       </div>
       <br />
-      <span
-        className="comment-text"
-        style={{ fontSize: "11pt", lineHeight: "1.15" }}
-      >
-        <Linkify
-          options={{
-            className: "meta-link selectable-link",
-            target: (href) => {
-              if (href.startsWith("https://news.kiwistand.com")) return "_self";
-              return isIOS() ? "_self" : "_blank";
-            },
-            defaultProtocol: "https",
-            validate: {
-              url: (value) => /^https:\/\/.*/.test(value),
-              email: () => false,
-            },
-          }}
+      {!isCollapsed && (
+        <span
+          className="comment-text"
+          style={{ fontSize: "11pt", lineHeight: "1.15" }}
         >
-          {comment.title}
-        </Linkify>
-      </span>
+          <Linkify
+            options={{
+              className: "meta-link selectable-link",
+              target: (href) => {
+                if (href.startsWith("https://news.kiwistand.com"))
+                  return "_self";
+                return isIOS() ? "_self" : "_blank";
+              },
+              defaultProtocol: "https",
+              validate: {
+                url: (value) => /^https:\/\/.*/.test(value),
+                email: () => false,
+              },
+            }}
+          >
+            {comment.title}
+          </Linkify>
+        </span>
+      )}
     </span>
   );
 });
