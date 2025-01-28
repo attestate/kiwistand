@@ -209,7 +209,7 @@ export function truncateComment(comment, maxLength = 180) {
       comment.slice(0, lastLinkStart).trim(),
     );
     if (beforeLink && beforeLink.length > 0) {
-      return beforeLink + " " + truncatedLink + "...";
+      return beforeLink + " " + truncateLongWords(truncatedLink) + "...";
     } else {
       return truncatedLink + "...";
     }
