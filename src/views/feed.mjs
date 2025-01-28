@@ -59,22 +59,36 @@ const ContestBanner = (stories) => html`
             >"The Future of Farcaster" Contest</span
           >
         </div>
-        <!-- Caret Icon -->
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="16"
-          height="16"
-          viewBox="0 0 256 256"
+        <div
+          style="display: flex; align-items: center; gap: 12px; justify-content: flex-end"
         >
-          <polyline
-            points="208 96 128 176 48 96"
-            fill="none"
-            stroke="currentColor"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="16"
-          />
-        </svg>
+          ${stories && stories.length > 0
+            ? html`<div
+                class="contest-entries"
+                style="border: var(--border-thin); padding: 4px 12px; border-radius: 4px;"
+              >
+                <span style="color: black; font-size: 14px"
+                  >${stories.length} entries</span
+                >
+              </div>`
+            : ""}
+          <!-- Caret Icon -->
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 256 256"
+          >
+            <polyline
+              points="208 96 128 176 48 96"
+              fill="none"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="16"
+            />
+          </svg>
+        </div>
       </div>
 
       <!-- Expandable Content -->

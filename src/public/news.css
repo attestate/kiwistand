@@ -452,6 +452,9 @@ body {
     .scroll-margin-with-image {
       scroll-margin-top: calc(50vw + 100px);
     }
+    .contest-entries {
+     display: none;
+    }
     .last-edition-link {
      display: none;
     }
