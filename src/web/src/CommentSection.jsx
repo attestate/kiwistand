@@ -4,6 +4,7 @@ import Linkify from "linkify-react";
 import { useAccount, WagmiConfig } from "wagmi";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { Wallet } from "@ethersproject/wallet";
+import { eligible } from "@attestate/delegator2";
 
 import { useProvider, client, chains } from "./client.mjs";
 import CommentInput from "./CommentInput.jsx";
@@ -55,7 +56,38 @@ function truncateName(name) {
     return name;
   return name.slice(0, maxLength) + "...";
 }
+
 function NotificationOptIn(props) {
+  const account = useAccount();
+  const localAccount = getLocalAccount(account.address, props.allowlist);
+  const provider = useProvider();
+  const [identity, setIdentity] = useState(null);
+  const [signer, setSigner] = useState(null);
+
+  useEffect(() => {
+    async function init() {
+      if (!localAccount || !account) {
+        setIdentity(null);
+        return;
+      }
+
+      const s = new Wallet(localAccount.privateKey, provider);
+      setSigner(s);
+
+      const addr = await s.getAddress();
+      const isEligible = await eligible(
+        props.allowlist,
+        props.delegations,
+        addr,
+      );
+
+      setIdentity(isEligible);
+    }
+
+    init();
+  }, [account?.account]);
+
+  if (!identity) return null;
   return (
     <div
       style={{
@@ -77,11 +109,7 @@ function NotificationOptIn(props) {
         submissions
       </p>
 
-      <WagmiConfig config={client}>
-        <RainbowKitProvider chains={chains}>
-          <EmailNotificationLink {...props} />
-        </RainbowKitProvider>
-      </WagmiConfig>
+      <EmailNotificationLink {...props} />
     </div>
   );
 }
@@ -92,6 +120,10 @@ const EmailNotificationLink = (props) => {
   const account = useAccount();
   const localAccount = getLocalAccount(account.address, props.allowlist);
   const provider = useProvider();
+  const identity =
+    account.address &&
+    localAccount &&
+    eligible(props.allowlist, props.delegations, localAccount.address);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -382,7 +414,11 @@ const CommentsSection = (props) => {
         fontSize: "1rem",
       }}
     >
-      <NotificationOptIn {...props} />
+      <WagmiConfig config={client}>
+        <RainbowKitProvider chains={chains}>
+          <NotificationOptIn {...props} />
+        </RainbowKitProvider>
+      </WagmiConfig>
       {comments.length > 0 &&
         comments.map((comment, index) => (
           <Comment

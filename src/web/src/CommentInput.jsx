@@ -9,6 +9,58 @@ import * as API from "./API.mjs";
 import { getLocalAccount } from "./session.mjs";
 import { client, chains, useProvider, useSigner } from "./client.mjs";
 
+const SiteExplainer = () => {
+  return (
+    <div
+      style={{
+        padding: "12px",
+        marginBottom: "1rem",
+        backgroundColor: "var(--middle-beige)",
+        border: "var(--border)",
+        borderRadius: "2px",
+      }}
+    >
+      <p
+        style={{
+          fontSize: "11pt",
+          margin: "0 0 8px 0",
+          color: "#666",
+        }}
+      >
+        Kiwi is Ethereum Hacker News, built for handpicked, long-form content
+        and deep discussions.
+      </p>
+
+      <p
+        style={{
+          fontSize: "11pt",
+          margin: "0 0 12px 0",
+          color: "#666",
+        }}
+      >
+        Want to leave a comment, upvote this link or join our community of 500+
+        Ethereum builders?
+      </p>
+
+      <a href="/kiwipass-mint">
+        <button
+          style={{
+            padding: "6px 12px",
+            background: "black",
+            color: "white",
+            border: "var(--border)",
+            borderRadius: "2px",
+            cursor: "pointer",
+            fontSize: "10pt",
+          }}
+        >
+          Sign up
+        </button>
+      </a>
+    </div>
+  );
+};
+
 const CommentInput = (props) => {
   const { toast, allowlist, delegations } = props;
 
@@ -161,6 +213,8 @@ const CommentInput = (props) => {
     document.addEventListener("keydown", handleKeyPress);
     return () => document.removeEventListener("keydown", handleKeyPress);
   }, [text, address, isEligible]);
+
+  if (!isEligible) return <SiteExplainer />;
   return (
     <div
       style={{
