@@ -22,6 +22,7 @@ import * as karma from "./karma.mjs";
 import * as newest from "./views/new.mjs";
 import * as feed from "./views/feed.mjs";
 import * as feeds from "./feeds.mjs";
+import * as email from "./email.mjs";
 import * as moderation from "./views/moderation.mjs";
 
 // NOTE: Initializing the lifetime cache as a first order is important as it
@@ -134,4 +135,15 @@ if (!reconcileMode) {
   karma.count(upvotes);
   // NOTE: Only set this date in synchronicity with the src/launch.mjs date!!
   karma.count(upvotes, new Date("2025-01-15"));
+}
+
+if (productionMode && env.POSTMARK_API_KEY) {
+  email
+    .syncSuppressions()
+    .then(() => {
+      log("Postmark suppressions synced successfully.");
+    })
+    .catch((error) => {
+      log(`Error syncing Postmark suppressions: ${error.toString()}`);
+    });
 }

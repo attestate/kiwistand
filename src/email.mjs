@@ -15,7 +15,10 @@ const DATA_DIR = env.DATA_DIR;
 const DB_FILE = path.join(DATA_DIR, "email_subscriptions.db");
 
 const db = new Database(DB_FILE);
-const client = new postmark.ServerClient(env.POSTMARK_API_KEY);
+let client;
+if (env.POSTMARK_API_KEY) {
+  client = new postmark.ServerClient(env.POSTMARK_API_KEY);
+}
 
 db.exec(`
    CREATE TABLE IF NOT EXISTS email_subscriptions (
@@ -34,6 +37,38 @@ db.exec(`
    CREATE UNIQUE INDEX IF NOT EXISTS idx_secret
    ON email_subscriptions (secret)
  `);
+
+export async function syncSuppressions() {
+  if (!client) {
+    log("Skipping syncing suppressions because POSTMARK_API_KEY isn't defined");
+    return;
+  }
+
+  let page = 1;
+  const perPage = 100;
+
+  while (true) {
+    const response = await client.getSuppressions("outbound", {
+      count: perPage,
+      offset: (page - 1) * perPage,
+    });
+
+    const suppressedRecipients = response.Suppressions.map(
+      (s) => s.EmailAddress,
+    );
+
+    const removeStmt = db.prepare(`
+      DELETE FROM email_subscriptions
+      WHERE email IN (${suppressedRecipients.map(() => "?").join(",")})
+    `);
+    removeStmt.run(suppressedRecipients);
+
+    if (suppressedRecipients.length < perPage) {
+      break;
+    }
+    page++;
+  }
+}
 
 export async function validate(message) {
   const signer = id.ecrecover(message, EIP712_MESSAGE);
@@ -69,20 +104,31 @@ export async function byAddress(address) {
 }
 
 export async function send(receiver, { sender, title, message, data }) {
-  if (env.NODE_ENV !== "production") return;
+  if (env.NODE_ENV !== "production" || !client) {
+    log(
+      "Skipping sending email notification because either not production environment or POSTMARK_API_KEY missing",
+    );
+    return;
+  }
 
   const { email, secret } = await byAddress(receiver);
   if (!email || !secret) return;
 
   const unsubscribeUrl = `https://news.kiwistand.com/unsubscribe/${secret}`;
 
-  await client.sendEmail({
-    From: `${sender} <noreply@news.kiwistand.com>`,
-    To: email,
-    Subject: title,
-    TextBody: `${message}\n\nView comment: ${data.url}\n\n\n\nUnsubscribe: ${unsubscribeUrl}`,
-    MessageStream: "outbound",
-  });
+  try {
+    await client.sendEmail({
+      From: `${sender} <noreply@news.kiwistand.com>`,
+      To: email,
+      Subject: title,
+      TextBody: `${message}\n\nView comment: ${data.url}\n\n\n\nUnsubscribe: ${unsubscribeUrl}`,
+      MessageStream: "outbound",
+    });
+  } catch (err) {
+    log(
+      `Error trying to send an email to ${email} from sender ${sender}, error ${err.stack}`,
+    );
+  }
 }
 
 export async function unsubscribe(secret) {
