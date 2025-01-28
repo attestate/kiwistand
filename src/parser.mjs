@@ -307,6 +307,7 @@ export const metadata = async (url) => {
     "reuters.com",
     "www.reuters.com",
     "warpcast.com",
+    "medium.com",
     ...twitterFrontends,
   ];
   let output = {};
