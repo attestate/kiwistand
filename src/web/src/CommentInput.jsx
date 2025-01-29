@@ -201,11 +201,12 @@ const CommentInput = (props) => {
 
       const start = textarea.selectionStart;
       const end = textarea.selectionEnd;
-      const quote = `> ${selected}`;
+      const quote = `> ${selected}\n\n`;
 
       setText(text.slice(0, start) + quote + text.slice(end));
 
       setTimeout(() => {
+        textarea.focus();
         textarea.selectionStart = textarea.selectionEnd = start + quote.length;
       }, 0);
     };
