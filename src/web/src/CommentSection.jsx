@@ -342,7 +342,30 @@ const Comment = React.forwardRef(({ comment, storyIndex }, ref) => {
               },
             }}
           >
-            {comment.title}
+            {comment.title.split("\n").map((line, i) => {
+              if (line.startsWith("> ")) {
+                return (
+                  <div
+                    key={i}
+                    style={{
+                      borderLeft: "3px solid #ccc",
+                      paddingLeft: "10px",
+                      margin: "8px 0 0 0",
+                      color: "#666",
+                    }}
+                  >
+                    {line.substring(2)}
+                  </div>
+                );
+              }
+              // Only wrap in div if it's not an empty line
+              return line.trim() ? (
+                <div key={i}>{line}</div>
+              ) : (
+                // Empty lines create spacing between paragraphs
+                <br key={i} />
+              );
+            })}
           </Linkify>
         </span>
       )}

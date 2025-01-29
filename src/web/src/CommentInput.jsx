@@ -201,7 +201,11 @@ const CommentInput = (props) => {
 
       const start = textarea.selectionStart;
       const end = textarea.selectionEnd;
-      const quote = `> ${selected}\n\n`;
+      const quote =
+        selected
+          .split("\n")
+          .map((line) => `> ${line}`)
+          .join("\n") + "\n\n";
 
       setText(text.slice(0, start) + quote + text.slice(end));
 
