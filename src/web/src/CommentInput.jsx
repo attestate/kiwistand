@@ -12,6 +12,7 @@ import { client, chains, useProvider, useSigner } from "./client.mjs";
 const SiteExplainer = () => {
   return (
     <div
+      className="site-explainer"
       style={{
         padding: "12px",
         marginBottom: "1rem",

@@ -16,6 +16,14 @@
    --table-bg-mobile: rgb(255, 255, 250);
    --visited-link: #828282;
  }
+html.kiwi-ios-app .bottom-nav,
+html.kiwi-ios-app .vote-button-container,
+html.kiwi-ios-app .site-explainer {
+  display: none !important;
+}
+html.kiwi-ios-app .content-container {
+  margin-left: 11px;
+}
  .scroll-margin-base, .scroll-margin-with-image {
    scroll-margin-top: 100px;
  }

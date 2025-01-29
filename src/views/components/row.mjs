@@ -379,6 +379,7 @@ const row = (
                 </div>
               </div>
               <div
+                class="content-container"
                 style="display: flex; align-items: start; flex-grow: 1; gap: 8px;"
               >
                 ${story.metadata &&
