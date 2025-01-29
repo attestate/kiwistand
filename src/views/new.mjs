@@ -78,6 +78,25 @@ export async function recompute() {
     const lastComment = getLastComment(`kiwi:0x${story.index}`);
     if (lastComment && lastComment.identity) {
       lastComment.identity = await ens.resolve(lastComment.identity);
+      const uniqueIdentities = new Set(
+        lastComment.previousParticipants
+          .map((p) => p.identity)
+          .filter((identity) => identity !== lastComment.identity),
+      );
+
+      const resolvedParticipants = await Promise.allSettled(
+        [...uniqueIdentities].map((identity) => ens.resolve(identity)),
+      );
+
+      lastComment.previousParticipants = resolvedParticipants
+        .filter(
+          (result) => result.status === "fulfilled" && result.value.safeAvatar,
+        )
+        .map((result) => ({
+          identity: result.value.identity,
+          safeAvatar: result.value.safeAvatar,
+          displayName: result.value.displayName,
+        }));
     }
 
     const ensData = await ens.resolve(story.identity);

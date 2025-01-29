@@ -698,6 +698,39 @@ const row = (
                       style="width: 100%; display: flex; pointer-events: none;"
                     >
                       <div style="width:90%;">
+                        ${story.lastComment.previousParticipants &&
+                        story.lastComment.previousParticipants.length > 0 &&
+                        html`
+                          <div
+                            style="opacity: 0.7; margin-bottom: 8px; display: flex; align-items: center;"
+                          >
+                            <div
+                              style="margin-left: ${story.lastComment
+                                .previousParticipants.length === 1
+                                ? "29px"
+                                : "44px"};
+                              display: inline-flex; position:relative;"
+                            >
+                              ${story.lastComment.previousParticipants.map(
+                                (participant, index) => html`
+                                  <img
+                                    loading="lazy"
+                                    src="${DOMPurify.sanitize(
+                                      participant.safeAvatar,
+                                    )}"
+                                    alt="previous participant"
+                                    style="z-index: ${index}; width: ${size}px; height: ${size}px; border: 1px solid #828282; border-radius: 2px; margin-left: -${2 *
+                                      size +
+                                    5}px;"
+                                  />
+                                `,
+                              )}
+                            </div>
+                            <span style="font-size: 9pt; color: #666;">
+                              Previous in thread
+                            </span>
+                          </div>
+                        `}
                         <div
                           style="display: flex; align-items: center; gap: 5px; margin-bottom: 3px;"
                         >

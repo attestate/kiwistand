@@ -575,6 +575,22 @@ export function getComments(identity) {
   );
 }
 
+export function getThreadParticipants(submissionId, lastCommentTimestamp) {
+  const participants = db
+    .prepare(
+      `
+      SELECT DISTINCT identity, timestamp 
+      FROM comments 
+      WHERE submission_id = ? 
+        AND timestamp < ? 
+      ORDER BY timestamp ASC
+    `,
+    )
+    .all(submissionId, lastCommentTimestamp);
+
+  return participants;
+}
+
 export function getLastComment(submissionId) {
   const lastComment = db
     .prepare(
@@ -589,11 +605,18 @@ export function getLastComment(submissionId) {
   const { id, submission_id, ...rest } = lastComment;
   const [, index] = id.split("0x");
 
+  // Get previous participants in the thread
+  const previousParticipants = getThreadParticipants(
+    submission_id,
+    lastComment.timestamp,
+  );
+
   return {
     ...rest,
     submissionId: submission_id,
     index,
     type: "comment",
+    previousParticipants,
   };
 }
 
