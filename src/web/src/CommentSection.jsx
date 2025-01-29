@@ -75,11 +75,8 @@ function NotificationOptIn(props) {
       setSigner(s);
 
       const addr = await s.getAddress();
-      const isEligible = await eligible(
-        props.allowlist,
-        props.delegations,
-        addr,
-      );
+      const isEligible =
+        addr && (await eligible(props.allowlist, props.delegations, addr));
 
       setIdentity(isEligible);
     }
@@ -122,7 +119,7 @@ const EmailNotificationLink = (props) => {
   const provider = useProvider();
   const identity =
     account.address &&
-    localAccount &&
+    localAccount?.address &&
     eligible(props.allowlist, props.delegations, localAccount.address);
 
   const handleSubmit = async (e) => {
