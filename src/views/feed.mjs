@@ -67,7 +67,7 @@ const ContestBanner = (stories) => html`
                 class="contest-entries"
                 style="border: var(--border-thin); padding: 4px 12px; border-radius: 4px;"
               >
-                <span style="color: black; font-size: 14px"
+                <span style="color: black; font-size: 12px"
                   >${stories.length} entries</span
                 >
               </div>`
