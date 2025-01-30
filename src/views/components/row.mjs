@@ -705,11 +705,7 @@ const row = (
                             style="opacity: 0.7; margin-bottom: 8px; display: flex; align-items: center;"
                           >
                             <div
-                              style="margin-left: ${story.lastComment
-                                .previousParticipants.length === 1
-                                ? "29px"
-                                : "44px"};
-                              display: inline-flex; position:relative;"
+                              style="display: inline-flex; position:relative;"
                             >
                               ${story.lastComment.previousParticipants.map(
                                 (participant, index) => html`
@@ -719,14 +715,17 @@ const row = (
                                       participant.safeAvatar,
                                     )}"
                                     alt="previous participant"
-                                    style="z-index: ${index}; width: ${size}px; height: ${size}px; border: 1px solid #828282; border-radius: 2px; margin-left: -${2 *
-                                      size +
-                                    5}px;"
+                                    style="z-index: ${index}; width: ${size}px; height: ${size}px; border: 1px solid #828282; border-radius: 2px; margin-left: ${index ===
+                                    0
+                                      ? "0"
+                                      : "5px"};"
                                   />
                                 `,
                               )}
                             </div>
-                            <span style="font-size: 9pt; color: #666;">
+                            <span
+                              style="margin-left: 10px; font-size: 9pt; color: #666;"
+                            >
                               Previous in thread
                             </span>
                           </div>
