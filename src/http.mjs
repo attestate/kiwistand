@@ -13,6 +13,7 @@ import { sub } from "date-fns";
 import DOMPurify from "isomorphic-dompurify";
 import ws from "ws";
 import { createServer } from "http";
+import { FileSystemCache, getCacheKey } from "node-fetch-cache";
 
 import * as registry from "./chainstate/registry.mjs";
 import log from "./logger.mjs";
@@ -306,6 +307,34 @@ export async function launch(trie, libp2p) {
       reply.header("Content-Type", "text/csv");
       reply.header("Content-Disposition", 'attachment; filename="sales.csv"');
       reply.send(weeklySales);
+    }
+  });
+  app.delete("/api/v1/cache", async (req, res) => {
+    const { url } = req.body;
+
+    if (!url) {
+      const code = 400;
+      const message = "Invalid request";
+      const details = "URL required";
+      return sendError(res, code, message, details);
+    }
+
+    const cache = new FileSystemCache({
+      cacheDirectory: path.resolve(env.CACHE_DIR),
+    });
+
+    try {
+      const key = getCacheKey(url);
+      await cache.remove(key);
+
+      const code = 200;
+      const message = "Cache entry removed";
+      const details = "Successfully removed cache entry";
+      return sendStatus(res, code, message, details);
+    } catch (err) {
+      const code = 500;
+      const message = "Cache removal failed";
+      return sendError(res, code, message);
     }
   });
   app.get("/unsubscribe/:secret", async (req, res) => {
