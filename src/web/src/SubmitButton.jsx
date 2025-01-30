@@ -440,6 +440,22 @@ const AdForm = (props) => {
   const [isValid, setIsValid] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { switchNetwork } = useSwitchNetwork();
+  const [referrer, setReferrer] = useState("");
+
+  const buildURL = (baseURL) => {
+    let url;
+    try {
+      url = new URL(baseURL);
+    } catch (err) {
+      return baseURL;
+    }
+
+    if (referrer?.trim()) {
+      const safe = encodeURIComponent(referrer.trim().slice(0, 100));
+      url.searchParams.set("kiwi_news_referrer", safe);
+    }
+    return url.toString();
+  };
 
   const { address, isConnected } = useAccount();
   const { data: balanceData } = useBalance({
@@ -486,11 +502,12 @@ const AdForm = (props) => {
   }
 
   const transferFee = minAdPrice === 0n ? 0n : minAdPrice - 1n;
+  const finalUrl = buildURL(url);
   const { config, error } = usePrepareContractWrite({
     address: adContractAddress,
     abi: adContractABI,
     functionName: "set",
-    args: [title, url],
+    args: [title, finalUrl],
     value: parsedUserPrice + transferFee,
     chainId: optimism.id,
   });
@@ -680,6 +697,33 @@ const AdForm = (props) => {
               </div>
             </div>
           </div>
+          <div style={{ marginTop: "12px", marginBottom: "10px" }}>
+            <label
+              style={{
+                fontSize: "14px",
+                display: "block",
+                marginBottom: "6px",
+              }}
+            >
+              Who referred you? (optional)
+            </label>
+            <input
+              type="text"
+              value={referrer}
+              onChange={(e) => setReferrer(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "6px",
+                border: "1px solid #ddd",
+                borderRadius: "4px",
+              }}
+            />
+            <span style={{ fontSize: "8pt" }}>
+              We share 50% of the ad fee income with the person who is named as
+              the referrer.
+            </span>
+          </div>
+
           <ConnectButton.Custom>
             {({ account, chain, mounted, openConnectModal }) => {
               const connected = account && chain && mounted;
