@@ -7,6 +7,7 @@ import { ChatsSVG } from "./icons.jsx";
 import { client, chains } from "./client.mjs";
 
 const ChatBubble = ({ allowlist, delegations, storyIndex, commentCount }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
   let address;
   const account = useAccount();
   const localAccount = getLocalAccount(account.address, allowlist);
@@ -29,11 +30,22 @@ const ChatBubble = ({ allowlist, delegations, storyIndex, commentCount }) => {
     isDisabled = true;
   }
 
+  useEffect(() => {
+    const toggle = (evt) => {
+      if (evt?.detail?.source === "chat-bubble") return;
+      setIsExpanded(!isExpanded);
+    };
+    window.addEventListener(`open-comments-${storyIndex}`, toggle);
+    return () =>
+      window.removeEventListener(`open-comments-${storyIndex}`, toggle);
+  });
+
   return (
     <a
       disabled={isDisabled}
       onClick={() => {
         if (isDisabled) return;
+        setIsExpanded(!isExpanded);
         window.dispatchEvent(
           new CustomEvent(`open-comments-${storyIndex}`, {
             detail: {
@@ -63,7 +75,7 @@ const ChatBubble = ({ allowlist, delegations, storyIndex, commentCount }) => {
         cursor: isDisabled ? "not-allowed" : "pointer",
         margin: "5px",
         backgroundColor: "var(--bg-off-white)",
-        border: "var(--border-thin)",
+        border: isExpanded ? "1px solid black" : "var(--border-thin)",
         borderRadius: "2px",
         display: "flex",
         alignSelf: "stretch",
@@ -75,14 +87,18 @@ const ChatBubble = ({ allowlist, delegations, storyIndex, commentCount }) => {
     >
       <ChatsSVG
         style={{
-          color: isDisabled ? "grey" : "rgba(0,0,0,0.65)",
+          color: isDisabled
+            ? "grey"
+            : isExpanded
+            ? "black"
+            : "rgba(0,0,0,0.65)",
           width: "25px",
         }}
       />
       <span
         style={{
           userSelect: "none",
-          color: "rgba(0,0,0,0.65)",
+          color: isExpanded ? "black" : "rgba(0,0,0,0.65)",
           fontSize: "8pt",
           fontWeight: "bold",
         }}
