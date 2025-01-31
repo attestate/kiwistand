@@ -57,6 +57,158 @@ function truncateName(name) {
   return name.slice(0, maxLength) + "...";
 }
 
+const EmojiReaction = ({ comment, allowlist, delegations, toast }) => {
+  const [isReacting, setIsReacting] = useState(false);
+  const [kiwis, setKiwis] = useState(
+    comment.reactions?.find((r) => r.emoji === "🥝")?.reactors || [],
+  );
+  const [fires, setFires] = useState(
+    comment.reactions?.find((r) => r.emoji === "🔥")?.reactors || [],
+  );
+  const [eyes, setEyes] = useState(
+    comment.reactions?.find((r) => r.emoji === "👀")?.reactors || [],
+  );
+  const [hundreds, setHundreds] = useState(
+    comment.reactions?.find((r) => r.emoji === "💯")?.reactors || [],
+  );
+  const [laughs, setLaughs] = useState(
+    comment.reactions?.find((r) => r.emoji === "🤭")?.reactors || [],
+  );
+
+  const account = useAccount();
+  const localAccount = getLocalAccount(account.address, allowlist);
+  const provider = useProvider();
+
+  const commonEmojis = ["🥝", "🔥", "👀", "💯", "🤭"];
+  const address = localAccount?.identity;
+  const hasReacted =
+    address &&
+    (kiwis.includes(address) ||
+      fires.includes(address) ||
+      eyes.includes(address) ||
+      hundreds.includes(address) ||
+      laughs.includes(address));
+  const isntLoggedIn = !localAccount?.identity;
+
+  let signer;
+  if (localAccount?.privateKey) {
+    signer = new Wallet(localAccount.privateKey, provider);
+  }
+
+  const handleReaction = async (emoji) => {
+    if (!signer) {
+      toast.error("Please connect your wallet first");
+      return;
+    }
+
+    setIsReacting(true);
+    try {
+      const address = await signer.getAddress();
+      const identity = eligible(allowlist, delegations, address);
+
+      if (!identity) {
+        window.location.pathname = "/gateway";
+        return;
+      }
+
+      const value = API.messageFab(emoji, `kiwi:0x${comment.index}`, "comment");
+
+      const signature = await signer._signTypedData(
+        API.EIP712_DOMAIN,
+        API.EIP712_TYPES,
+        value,
+      );
+
+      const response = await API.send(value, signature);
+
+      if (response.status === "success") {
+        switch (emoji) {
+          case "🥝":
+            setKiwis([...kiwis, identity]);
+            break;
+          case "🔥":
+            setFires([...fires, identity]);
+            break;
+          case "👀":
+            setEyes([...eyes, identity]);
+            break;
+          case "💯":
+            setHundreds([...hundreds, identity]);
+            break;
+          case "🤭":
+            setLaughs([...laughs, identity]);
+            break;
+        }
+        toast.success("Reaction added!");
+      } else {
+        toast.error(response.details || "Failed to add reaction");
+      }
+    } catch (err) {
+      console.error("Reaction error:", err);
+      toast.error("Failed to add reaction");
+    } finally {
+      setIsReacting(false);
+    }
+  };
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexWrap: "wrap",
+        gap: "16px",
+        marginTop: "32px",
+      }}
+    >
+      {commonEmojis.map((emoji) => {
+        const counts = {
+          "🥝": kiwis.length,
+          "🔥": fires.length,
+          "👀": eyes.length,
+          "💯": hundreds.length,
+          "🤭": laughs.length,
+        };
+        const disabled = isReacting || hasReacted;
+
+        return (
+          <button
+            key={emoji}
+            onClick={() => !disabled && handleReaction(emoji)}
+            disabled={isReacting || hasReacted || isntLoggedIn}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              padding: "4px 12px",
+              backgroundColor:
+                hasReacted || isntLoggedIn ? "#f3f3f3" : "var(--bg-off-white)",
+              border:
+                hasReacted || isntLoggedIn
+                  ? "1px solid rgba(0,0,0,0)"
+                  : "var(--border-thin)",
+              borderRadius: "2px",
+              cursor: hasReacted || isntLoggedIn ? "default" : "pointer",
+              color: hasReacted || isntLoggedIn ? "black" : "auto",
+              fontSize: "10pt",
+              WebkitAppearance: "none",
+              opacity: 1,
+              filter: "none",
+            }}
+          >
+            <span style={{ marginRight: counts[emoji] > 0 ? "4px" : "0" }}>
+              {emoji}
+            </span>
+            {counts[emoji] > 0 && (
+              <span style={{ fontSize: "9pt", color: "#666" }}>
+                {counts[emoji]}
+              </span>
+            )}
+          </button>
+        );
+      })}
+    </div>
+  );
+};
+
 function NotificationOptIn(props) {
   const account = useAccount();
   const localAccount = getLocalAccount(account.address, props.allowlist);
@@ -203,172 +355,184 @@ const EmailNotificationLink = (props) => {
   );
 };
 
-const Comment = React.forwardRef(({ comment, storyIndex }, ref) => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
-  const toggleCollapsed = (e) => {
-    if (e.target.closest("a")) {
-      // The user clicked a link (or anything inside that link)
-      return;
-    }
-    setIsCollapsed((v) => !v);
-  };
-
-  const [isTargeted, setIsTargeted] = useState(
-    window.location.hash === `#0x${comment.index}`,
-  );
-
-  const url = `${window.location.origin}/stories?index=${storyIndex}#0x${comment.index}`;
-  const handleShare = async (e) => {
-    e.preventDefault();
-    try {
-      await navigator.share({ url });
-    } catch (err) {
-      if (err.name !== "AbortError") console.error(err);
-    }
-  };
-
-  useEffect(() => {
-    const handleHashChange = () => {
-      setIsTargeted(window.location.hash === `#0x${comment.index}`);
+const Comment = React.forwardRef(
+  ({ comment, storyIndex, allowlist, delegations, toast }, ref) => {
+    const [isCollapsed, setIsCollapsed] = useState(false);
+    const toggleCollapsed = (e) => {
+      if (e.target.closest("a")) {
+        // The user clicked a link (or anything inside that link)
+        return;
+      }
+      setIsCollapsed((v) => !v);
     };
 
-    window.addEventListener("hashchange", handleHashChange);
-    return () => window.removeEventListener("hashchange", handleHashChange);
-  }, [comment.index]);
+    const [isTargeted, setIsTargeted] = useState(
+      window.location.hash === `#0x${comment.index}`,
+    );
 
-  return (
-    <span
-      ref={ref}
-      style={{
-        boxShadow: isTargeted ? "0 0 0 2px rgb(175, 192, 70, 0.75)" : undefined,
-        color: "black",
-        border: isTargeted ? "none" : "var(--border)",
-        backgroundColor: "var(--bg-off-white)",
-        padding: `0 0.75rem ${isCollapsed ? "0px" : "0.75rem"} 0.75rem`,
-        borderRadius: "2px",
-        display: "block",
-        marginBottom: "12px",
-        whiteSpace: "pre-wrap",
-        lineHeight: "1.2",
-        wordBreak: "break-word",
-        overflowWrap: "break-word",
-      }}
-    >
-      <div
+    const url = `${window.location.origin}/stories?index=${storyIndex}#0x${comment.index}`;
+    const handleShare = async (e) => {
+      e.preventDefault();
+      try {
+        await navigator.share({ url });
+      } catch (err) {
+        if (err.name !== "AbortError") console.error(err);
+      }
+    };
+
+    useEffect(() => {
+      const handleHashChange = () => {
+        setIsTargeted(window.location.hash === `#0x${comment.index}`);
+      };
+
+      window.addEventListener("hashchange", handleHashChange);
+      return () => window.removeEventListener("hashchange", handleHashChange);
+    }, [comment.index]);
+
+    return (
+      <span
+        ref={ref}
         style={{
-          whiteSpace: "nowrap",
-          gap: "3px",
-          display: "inline-flex",
-          alignItems: "center",
-          width: "100%",
-          padding: "0.55rem 0 0.45rem 0",
+          boxShadow: isTargeted
+            ? "0 0 0 2px rgb(175, 192, 70, 0.75)"
+            : undefined,
+          color: "black",
+          border: isTargeted ? "none" : "var(--border)",
+          backgroundColor: "var(--bg-off-white)",
+          padding: `0 0.75rem ${isCollapsed ? "0px" : "0.75rem"} 0.75rem`,
+          borderRadius: "2px",
+          display: "block",
+          marginBottom: "12px",
+          whiteSpace: "pre-wrap",
+          lineHeight: "1.2",
+          wordBreak: "break-word",
+          overflowWrap: "break-word",
         }}
-        onClick={toggleCollapsed}
       >
-        <a
+        <div
           style={{
-            marginTop: "-3px",
+            whiteSpace: "nowrap",
+            gap: "3px",
             display: "inline-flex",
             alignItems: "center",
-            color: "black",
+            width: "100%",
+            padding: "0.55rem 0 0.45rem 0",
           }}
-          className="meta-link"
-          href={`/upvotes?address=${comment.identity.address}`}
+          onClick={toggleCollapsed}
         >
-          {comment.identity.safeAvatar && (
-            <img
-              loading="lazy"
-              src={comment.identity.safeAvatar}
-              alt="avatar"
-              style={{
-                marginRight: "5px",
-                width: "10px",
-                height: "10px",
-                border: "1px solid #828282",
-                borderRadius: "2px",
-              }}
-            />
-          )}
-          <span style={{ fontWeight: "400", fontSize: "10pt" }}>
-            {truncateName(comment.identity.displayName)}
-          </span>
-        </a>
-        <span style={{ fontSize: "10pt", color: "grey", opacity: "0.6" }}>
-          {" "}
-          •{" "}
-        </span>
-        <span style={{ fontSize: "9pt", color: "grey" }}>
           <a
-            href={url}
-            className="caster-link share-link"
-            title="Share"
-            style={{ whiteSpace: "nowrap" }}
-            onClick={handleShare}
-          >
-            {ShareIcon({
-              padding: "0 3px 1px 0",
-              verticalAlign: "-3px",
-              height: "13px",
-              width: "13px",
-            })}
-            <span>
-              {formatDistanceToNowStrict(new Date(comment.timestamp * 1000))}
-            </span>
-            <span> ago</span>
-          </a>
-        </span>
-      </div>
-      <br />
-      {!isCollapsed && (
-        <span
-          className="comment-text"
-          style={{ fontSize: "11pt", lineHeight: "1.15" }}
-        >
-          <Linkify
-            options={{
-              className: "meta-link selectable-link",
-              target: (href) => {
-                if (href.startsWith("https://news.kiwistand.com"))
-                  return "_self";
-                return isIOS() ? "_self" : "_blank";
-              },
-              defaultProtocol: "https",
-              validate: {
-                url: (value) => /^https:\/\/.*/.test(value),
-                email: () => false,
-              },
+            style={{
+              marginTop: "-3px",
+              display: "inline-flex",
+              alignItems: "center",
+              color: "black",
             }}
+            className="meta-link"
+            href={`/upvotes?address=${comment.identity.address}`}
           >
-            {comment.title.split("\n").map((line, i) => {
-              if (line.startsWith("> ")) {
-                return (
-                  <div
-                    key={i}
-                    style={{
-                      borderLeft: "3px solid #ccc",
-                      paddingLeft: "10px",
-                      margin: "8px 0 0 0",
-                      color: "#666",
-                    }}
-                  >
-                    {line.substring(2)}
-                  </div>
-                );
-              }
-              // Only wrap in div if it's not an empty line
-              return line.trim() ? (
-                <div key={i}>{line}</div>
-              ) : (
-                // Empty lines create spacing between paragraphs
-                <br key={i} />
-              );
-            })}
-          </Linkify>
-        </span>
-      )}
-    </span>
-  );
-});
+            {comment.identity.safeAvatar && (
+              <img
+                loading="lazy"
+                src={comment.identity.safeAvatar}
+                alt="avatar"
+                style={{
+                  marginRight: "5px",
+                  width: "10px",
+                  height: "10px",
+                  border: "1px solid #828282",
+                  borderRadius: "2px",
+                }}
+              />
+            )}
+            <span style={{ fontWeight: "400", fontSize: "10pt" }}>
+              {truncateName(comment.identity.displayName)}
+            </span>
+          </a>
+          <span style={{ fontSize: "10pt", color: "grey", opacity: "0.6" }}>
+            {" "}
+            •{" "}
+          </span>
+          <span style={{ fontSize: "9pt", color: "grey" }}>
+            <a
+              href={url}
+              className="caster-link share-link"
+              title="Share"
+              style={{ whiteSpace: "nowrap" }}
+              onClick={handleShare}
+            >
+              {ShareIcon({
+                padding: "0 3px 1px 0",
+                verticalAlign: "-3px",
+                height: "13px",
+                width: "13px",
+              })}
+              <span>
+                {formatDistanceToNowStrict(new Date(comment.timestamp * 1000))}
+              </span>
+              <span> ago</span>
+            </a>
+          </span>
+        </div>
+        <br />
+        {!isCollapsed && (
+          <>
+            <span
+              className="comment-text"
+              style={{ fontSize: "11pt", lineHeight: "1.15" }}
+            >
+              <Linkify
+                options={{
+                  className: "meta-link selectable-link",
+                  target: (href) => {
+                    if (href.startsWith("https://news.kiwistand.com"))
+                      return "_self";
+                    return isIOS() ? "_self" : "_blank";
+                  },
+                  defaultProtocol: "https",
+                  validate: {
+                    url: (value) => /^https:\/\/.*/.test(value),
+                    email: () => false,
+                  },
+                }}
+              >
+                {comment.title.split("\n").map((line, i) => {
+                  if (line.startsWith("> ")) {
+                    return (
+                      <div
+                        key={i}
+                        style={{
+                          borderLeft: "3px solid #ccc",
+                          paddingLeft: "10px",
+                          margin: "8px 0 0 0",
+                          color: "#666",
+                        }}
+                      >
+                        {line.substring(2)}
+                      </div>
+                    );
+                  }
+                  // Only wrap in div if it's not an empty line
+                  return line.trim() ? (
+                    <div key={i}>{line}</div>
+                  ) : (
+                    // Empty lines create spacing between paragraphs
+                    <br key={i} />
+                  );
+                })}
+              </Linkify>
+            </span>
+            <EmojiReaction
+              comment={comment}
+              allowlist={allowlist}
+              delegations={delegations}
+              toast={toast}
+            />
+          </>
+        )}
+      </span>
+    );
+  },
+);
 
 const CommentsSection = (props) => {
   const { storyIndex, commentCount } = props;
@@ -437,18 +601,19 @@ const CommentsSection = (props) => {
       <WagmiConfig config={client}>
         <RainbowKitProvider chains={chains}>
           <NotificationOptIn {...props} />
+          {comments.length > 0 &&
+            comments.map((comment, index) => (
+              <Comment
+                {...props}
+                ref={index === comments.length - 1 ? lastCommentRef : null}
+                key={comment.index}
+                comment={comment}
+                storyIndex={storyIndex}
+              />
+            ))}
+          <CommentInput {...props} style={{ margin: "0 0 1rem 0" }} />
         </RainbowKitProvider>
       </WagmiConfig>
-      {comments.length > 0 &&
-        comments.map((comment, index) => (
-          <Comment
-            ref={index === comments.length - 1 ? lastCommentRef : null}
-            key={comment.index}
-            comment={comment}
-            storyIndex={storyIndex}
-          />
-        ))}
-      <CommentInput {...props} style={{ margin: "0 0 1rem 0" }} />
     </div>
   );
 };

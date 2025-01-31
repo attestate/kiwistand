@@ -114,6 +114,7 @@ await Promise.allSettled([
 
 cache.initialize([...upvotes, ...comments]);
 cache.initializeNotifications();
+cache.initializeReactions();
 
 store
   .cache(upvotes, comments)

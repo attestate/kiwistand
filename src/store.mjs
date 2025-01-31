@@ -27,7 +27,7 @@ import { EIP712_MESSAGE } from "./constants.mjs";
 import { elog } from "./utils.mjs";
 import * as messages from "./topics/messages.mjs";
 import { newWalk } from "./WalkController.mjs";
-import { insertMessage } from "./cache.mjs";
+import { insertMessage, isReactionComment } from "./cache.mjs";
 import { triggerNotification } from "./subscriptions.mjs";
 
 const maxReaders = 500;
@@ -41,6 +41,7 @@ const piscina = new Piscina({
 });
 
 export const upvotes = new Set();
+export const reactions = new Set();
 export const commentCounts = new Map();
 
 // TODO: This function is badly named, it should be renamed to
@@ -60,14 +61,27 @@ export function passes(marker) {
   }
   return !exists;
 }
+
+export function passesReaction(marker) {
+  const exists = reactions.has(marker);
+  if (!exists) {
+    reactions.add(marker);
+  }
+  return !exists;
+}
+
 export async function cache(upvotes, comments) {
   log("Caching upvote ids of upvotes, this can take a minute...");
   for (const { identity, href, type } of upvotes) {
     const marker = upvoteID(identity, href, type);
     passes(marker);
   }
-  for (const { href } of comments) {
+  for (const { href, title, identity } of comments) {
     addComment(href);
+    if (isReactionComment(title)) {
+      const reactionMarker = upvoteID(identity, href, "reaction");
+      passesReaction(reactionMarker);
+    }
   }
 }
 
@@ -311,6 +325,15 @@ async function atomicPut(trie, message, identity, accounts, delegations) {
       const err = `Message with index "${index}" already exists in the trie. Skipping.`;
       log(err);
       throw new Error(err);
+    }
+    if (isReactionComment(message.title)) {
+      const reactionMarker = upvoteID(identity, message.href, "reaction");
+      const legit = await passesReaction(reactionMarker);
+      if (!legit) {
+        const err = `Reaction with marker "${reactionMarker}" doesn't pass legitimacy criteria (duplicate). It was probably submitted and accepted before.`;
+        log(err);
+        throw new Error(err);
+      }
     }
   }
 

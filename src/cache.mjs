@@ -157,6 +157,42 @@ export function initializeNotifications() {
    `);
 }
 
+export function initializeReactions() {
+  const tableExists = db
+    .prepare(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name='reactions'",
+    )
+    .get();
+
+  if (tableExists) {
+    log(
+      "Aborting cache.initializeReactions early because table already exists",
+    );
+    return;
+  }
+
+  log("Creating reactions table");
+  db.exec(`
+    CREATE TABLE reactions (
+      id TEXT PRIMARY KEY NOT NULL,
+      comment_id TEXT NOT NULL,
+      timestamp INTEGER NOT NULL,
+      title TEXT NOT NULL,
+      signer TEXT NOT NULL,
+      identity TEXT NOT NULL,
+      FOREIGN KEY(comment_id) REFERENCES comments(id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_reactions_comment_id ON reactions(comment_id);
+    CREATE INDEX IF NOT EXISTS idx_reactions_timestamp ON reactions(timestamp);
+    CREATE INDEX IF NOT EXISTS idx_reactions_identity ON reactions(identity);
+  `);
+}
+
+export function isReactionComment(title) {
+  const trimmedTitle = title.trim();
+  return /^\p{Emoji}+$/u.test(trimmedTitle);
+}
+
 export async function getRecommendations(candidates, fingerprint, identity) {
   if (identity) {
     const commentedStories = db
@@ -704,15 +740,33 @@ export function getSubmission(index, href, identityFilter, hrefs) {
     .all(submission.id)
     .map((comment) => {
       const [, index] = comment.id.split("0x");
+      const originalCommentId = comment.id;
       delete comment.id;
-
       const submissionId = comment.submission_id;
       delete comment.submission_id;
+
+      const reactions = db
+        .prepare(
+          `
+          SELECT title as emoji, COUNT(*) as count, GROUP_CONCAT(identity) as reactors
+          FROM reactions 
+          WHERE comment_id = ?
+          GROUP BY title
+          ORDER BY count DESC, timestamp ASC
+        `,
+        )
+        .all(originalCommentId);
+
       return {
         ...comment,
         submissionId,
         index,
         type: "comment",
+        reactions: reactions.map((reaction) => ({
+          emoji: reaction.emoji,
+          count: reaction.count,
+          reactors: reaction.reactors.split(","),
+        })),
       };
     });
 
@@ -815,6 +869,28 @@ export function insertMessage(message) {
       );
     }
   } else if (type === "comment") {
+    if (isReactionComment(title)) {
+      // Insert reaction
+      const insertReaction = db.prepare(
+        `INSERT INTO reactions (id, comment_id, timestamp, title, signer, identity) VALUES (?, ?, ?, ?, ?, ?)`,
+      );
+      try {
+        insertReaction.run(
+          `kiwi:0x${index}`,
+          href,
+          timestamp,
+          title.trim(),
+          signer,
+          identity,
+        );
+      } catch (err) {
+        log(
+          `Failing to insert reaction "${title}", error: "${err.toString()}"`,
+        );
+      }
+      return;
+    }
+
     // Insert comment
     const insertComment = db.prepare(
       `INSERT INTO comments (id, submission_id, timestamp, title, signer, identity) VALUES (?, ?, ?, ?, ?, ?)`,

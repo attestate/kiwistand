@@ -658,6 +658,7 @@ export async function launch(trie, libp2p) {
     try {
       submission = getSubmission(index);
     } catch (e) {
+      log(`/api/v1/stories: Error in getSubmission: ${err.stack}`);
       const code = 404;
       const httpMessage = "Not Found";
       const details = "Couldn't find the submission";
