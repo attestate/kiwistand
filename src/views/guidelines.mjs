@@ -76,6 +76,7 @@ export default async function (theme) {
                     recommendations:
                   </p>
                   <ul>
+                    <li>No emojis in titles</li>
                     <li>Attempt to submit the original title</li>
                     <li>
                       Trim the title if it's too long without losing substance
