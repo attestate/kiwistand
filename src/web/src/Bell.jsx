@@ -4,7 +4,7 @@ import { WagmiConfig, useAccount } from "wagmi";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { eligible } from "@attestate/delegator2";
 
-import { TextConnectButton } from "./Navigation.jsx";
+import { Connector, TextConnectButton } from "./Navigation.jsx";
 import { fetchNotifications } from "./API.mjs";
 import { getLocalAccount, getCookie } from "./session.mjs";
 import { client, chains } from "./client.mjs";
@@ -175,11 +175,9 @@ const Bell = (props) => {
 
 const Form = (props) => {
   return (
-    <WagmiConfig config={client}>
-      <RainbowKitProvider chains={chains}>
-        <Bell {...props} />
-      </RainbowKitProvider>
-    </WagmiConfig>
+    <Connector>
+      <Bell {...props} />
+    </Connector>
   );
 };
 
