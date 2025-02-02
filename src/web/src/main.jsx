@@ -639,16 +639,18 @@ async function startWatchAccount(allowlist, delegations) {
 
 function hideDesktopLinks() {
   const desktopNav = document.querySelector(".desktop-nav");
-  const submitLink = desktopNav.querySelector('.meta-link[href="/submit"]');
-  const profileLink = desktopNav.querySelector('.meta-link[href="/profile"]');
+  if (desktopNav) {
+    const submitLink = desktopNav.querySelector('.meta-link[href="/submit"]');
+    const profileLink = desktopNav.querySelector('.meta-link[href="/profile"]');
 
-  [submitLink, profileLink].forEach((link) => {
-    if (link) {
-      link.style.pointerEvents = "none";
-      link.style.cursor = "default";
-      link.style.opacity = "0.2";
-    }
-  });
+    [submitLink, profileLink].forEach((link) => {
+      if (link) {
+        link.style.pointerEvents = "none";
+        link.style.cursor = "default";
+        link.style.opacity = "0.2";
+      }
+    });
+  }
 }
 
 async function getSigner(account, allowlist) {
