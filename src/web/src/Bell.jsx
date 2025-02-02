@@ -175,7 +175,7 @@ const Bell = (props) => {
 
 const Form = (props) => {
   return (
-    <Connector>
+    <Connector {...props}>
       <Bell {...props} />
     </Connector>
   );
