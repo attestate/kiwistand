@@ -320,7 +320,7 @@ const row = (
                 >
                   <img
                     loading="lazy"
-                    style="aspect-ratio: 2 / 1; object-fit:cover; margin: 0 11px; border-radius: 2px; width: calc(100% - 24px);"
+                    style="aspect-ratio: 3 / 1; object-fit:cover; margin: 0 11px; border-radius: 2px; width: calc(100% - 24px);"
                     src="${DOMPurify.sanitize(story.metadata.image)}"
                 /></a>`
               : null}
