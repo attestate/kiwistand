@@ -156,6 +156,13 @@ export function listAllowed(getAllowlist) {
       }
     }
 
+    if (request.query.cached === "true") {
+      reply.header(
+        "Cache-Control",
+        "public, s-maxage=1, max-age=1, stale-while-revalidate=1",
+      );
+    }
+
     const code = 200;
     const httpMessage = "OK";
     const details = "Returning allow list";
@@ -165,6 +172,13 @@ export function listAllowed(getAllowlist) {
 
 export function listDelegations(getDelegations) {
   return async (request, reply) => {
+    if (request.query.cached === "true") {
+      reply.header(
+        "Cache-Control",
+        "public, s-maxage=1, max-age=1, stale-while-revalidate=1",
+      );
+    }
+
     const code = 200;
     const httpMessage = "OK";
     const details = "Returning delegations list";

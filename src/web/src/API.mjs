@@ -222,8 +222,9 @@ export async function fetchKarma(identity) {
   }
 }
 
-export async function fetchDelegations() {
-  const url = getApiUrl("/api/v1/delegations", API_PORT);
+export async function fetchDelegations(cached = false) {
+  const url = new URL(getApiUrl("/api/v1/delegations", API_PORT));
+  if (cached) url.searchParams.set("cached", "true");
 
   let response;
   try {
@@ -236,8 +237,9 @@ export async function fetchDelegations() {
   }
 }
 
-export async function fetchAllowList() {
-  const url = getApiUrl("/api/v1/allowlist", API_PORT);
+export async function fetchAllowList(cached = false) {
+  const url = new URL(getApiUrl("/api/v1/allowlist", API_PORT));
+  if (cached) url.searchParams.set("cached", "true");
 
   let response;
   try {

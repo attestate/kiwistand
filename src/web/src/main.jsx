@@ -853,8 +853,9 @@ async function start() {
 
   const { fetchAllowList, fetchDelegations } = await import("./API.mjs");
 
-  const allowlistPromise = fetchAllowList();
-  const delegationsPromise = fetchDelegations();
+  const cached = true;
+  const allowlistPromise = fetchAllowList(cached);
+  const delegationsPromise = fetchDelegations(cached);
 
   await startWatchAccount(await allowlistPromise, await delegationsPromise);
 
