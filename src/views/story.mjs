@@ -202,6 +202,12 @@ export default async function (trie, theme, index, value, referral) {
     data = await metadata(value.href);
   } catch (err) {}
 
+  const policy = await moderation.getLists();
+  const href = normalizeUrl(value.href, { stripWWW: false });
+  if (href && policy?.images.includes(href) && data?.image) {
+    delete data.image;
+  }
+
   const isOriginal = Object.keys(writers).some(
     (domain) =>
       normalizeUrl(value.href).startsWith(domain) &&
@@ -228,7 +234,6 @@ export default async function (trie, theme, index, value, referral) {
     }
   }
 
-  const policy = await moderation.getLists();
   story.comments = moderation.flag(story.comments, policy);
 
   for await (let comment of story.comments) {
