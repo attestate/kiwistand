@@ -8,16 +8,33 @@ import { client, chains, getProvider } from "./client.mjs";
 import { fetchKarma } from "./API.mjs";
 
 export const resolveAvatar = async (address) => {
-  if (!address) return;
+  if (!address) return null;
 
-  const provider = getProvider({ chainId: 1 });
-  const name = await provider.lookupAddress(address);
-  if (!name) return;
+  try {
+    const res = await fetch(
+      `https://api.ensdata.net/${address}?farcaster=true`,
+    );
+    if (!res.ok) return null;
 
-  const ensResolver = await provider.getResolver(name);
-  if (!ensResolver) return;
+    const data = await res.json();
+    if (!data) return null;
 
-  return (await ensResolver.getAvatar())?.url;
+    let safeAvatar = data.avatar_small || data.avatar;
+    if (safeAvatar && !safeAvatar.startsWith("https")) {
+      safeAvatar = data.avatar_url;
+    }
+    if (!safeAvatar && data?.farcaster?.avatar) {
+      safeAvatar = data.farcaster.avatar;
+    }
+    if (!safeAvatar && data?.lensProfile?.avatar) {
+      safeAvatar = data.lensProfile.avatar;
+    }
+
+    return safeAvatar || null;
+  } catch (err) {
+    console.error("Avatar resolution failed:", err);
+    return null;
+  }
 };
 
 const Avatar = (props) => {

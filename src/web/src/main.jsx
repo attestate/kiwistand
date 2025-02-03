@@ -631,10 +631,12 @@ async function startWatchAccount(allowlist, delegations) {
   } else if (account.isConnected) {
     address = account.address;
   }
-  const isEligible = address && eligible(allowlist, delegations, address);
-  if (!isEligible) {
+  const identity = address && eligible(allowlist, delegations, address);
+  if (!identity) {
     hideDesktopLinks();
+    return;
   }
+  dynamicPrefetch(`https://api.ensdata.net/${identity}?farcaster=true`);
 }
 
 function hideDesktopLinks() {
