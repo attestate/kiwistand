@@ -105,7 +105,6 @@ export const RestoreDialogue = (allowlist, delegations, toast) => {
             alignItems: "center",
             fontSize: "15px",
             gap: "4px",
-            border: "1px solid #828282",
             borderRadius: "2px",
             padding: "0.4rem 0.75rem",
             display: "flex",

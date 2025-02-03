@@ -3,12 +3,60 @@ import { useEffect, useState } from "react";
 import { WagmiConfig, useAccount } from "wagmi";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { eligible } from "@attestate/delegator2";
+import SwipeableDrawer from "@mui/material/SwipeableDrawer";
 
 import { Connector, TextConnectButton } from "./Navigation.jsx";
+import { RestoreDialogue } from "./Passkeys.jsx";
 import { fetchNotifications } from "./API.mjs";
-import { getLocalAccount, getCookie } from "./session.mjs";
+import { isIOS, getLocalAccount, getCookie } from "./session.mjs";
 import { client, chains } from "./client.mjs";
 import { dynamicPrefetch } from "./main.jsx";
+
+const IOSAppLogin = ({ allowlist, delegations, toast }) => {
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const PasskeysLogin = RestoreDialogue(allowlist, delegations, toast);
+
+  return (
+    <>
+      <button
+        onClick={() => setIsDrawerOpen(true)}
+        style={{
+          padding: "8px 0",
+          border: "none",
+          borderRadius: "2px",
+          backgroundColor: "#E2F266",
+          color: "black",
+          fontSize: "8pt",
+          cursor: "pointer",
+          width: "100%",
+        }}
+      >
+        Login
+      </button>
+
+      <SwipeableDrawer
+        anchor="bottom"
+        open={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+        onOpen={() => setIsDrawerOpen(true)}
+        disableBackdropTransition={!isIOS()}
+        disableDiscovery={isIOS()}
+      >
+        <div
+          style={{
+            height: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "3rem 0",
+          }}
+        >
+          <PasskeysLogin />
+        </div>
+      </SwipeableDrawer>
+    </>
+  );
+};
 
 let wasTitleSet = false;
 const Bell = (props) => {
@@ -81,8 +129,12 @@ const Bell = (props) => {
   ) {
     return null;
   }
+  const isIOSApp = document.documentElement.classList.contains("kiwi-ios-app");
 
   if (!getCookie("identity") || !isEligible) {
+    if (isIOSApp) {
+      return <IOSAppLogin {...props} />;
+    }
     return (
       <TextConnectButton
         className={props.mobile ? "mobile-bell" : "bell-button"}
