@@ -310,7 +310,7 @@ const row = (
                     DOMPurify.sanitize(story.href),
                     story.identity,
                   )}"
-                  onclick="event.preventDefault(); navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${addOrUpdateReferrer(
+                  onclick="event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${addOrUpdateReferrer(
                     DOMPurify.sanitize(story.href),
                     story.identity,
                   )}')); window.open('${addOrUpdateReferrer(
@@ -396,7 +396,7 @@ const row = (
                       class="row-image"
                       target="_blank"
                       style="user-select:text; align-self: stretch; margin: 5px 0;"
-                      onclick="event.preventDefault(); navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${addOrUpdateReferrer(
+                      onclick="event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${addOrUpdateReferrer(
                         DOMPurify.sanitize(story.href),
                         story.identity,
                       )}')); window.open('${addOrUpdateReferrer(
@@ -424,7 +424,7 @@ const row = (
                               DOMPurify.sanitize(story.href),
                               story.identity,
                             )}"
-                        onclick="event.preventDefault(); navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${addOrUpdateReferrer(
+                        onclick="event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${addOrUpdateReferrer(
                           DOMPurify.sanitize(story.href),
                           story.identity,
                         )}')); window.open('${addOrUpdateReferrer(
