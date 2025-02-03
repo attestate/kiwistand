@@ -10,6 +10,7 @@ import { useProvider, client, chains } from "./client.mjs";
 import CommentInput from "./CommentInput.jsx";
 import * as API from "./API.mjs";
 import { getLocalAccount, isIOS, isRunningPWA } from "./session.mjs";
+import { resolveAvatar } from "./Avatar.jsx";
 
 function ShareIcon(style) {
   return (
@@ -122,6 +123,14 @@ const EmojiReaction = ({ comment, allowlist, delegations, toast }) => {
       const response = await API.send(value, signature);
 
       if (response.status === "success") {
+        toast.success("Reaction added!");
+
+        const avatar = await resolveAvatar(identity);
+        const reaction = comment.reactions.find((r) => r.emoji === emoji);
+        reaction.reactorProfiles = [
+          ...reaction.reactorProfiles,
+          { address: identity, safeAvatar: avatar },
+        ];
         switch (emoji) {
           case "🥝":
             setKiwis([...kiwis, identity]);
@@ -139,7 +148,6 @@ const EmojiReaction = ({ comment, allowlist, delegations, toast }) => {
             setLaughs([...laughs, identity]);
             break;
         }
-        toast.success("Reaction added!");
       } else {
         toast.error(response.details || "Failed to add reaction");
       }
@@ -168,7 +176,27 @@ const EmojiReaction = ({ comment, allowlist, delegations, toast }) => {
           "💯": hundreds.length,
           "🤭": laughs.length,
         };
+        const profiles = {
+          "🥝":
+            comment.reactions?.find((r) => r.emoji === "🥝")?.reactorProfiles ||
+            [],
+          "🔥":
+            comment.reactions?.find((r) => r.emoji === "🔥")?.reactorProfiles ||
+            [],
+          "👀":
+            comment.reactions?.find((r) => r.emoji === "👀")?.reactorProfiles ||
+            [],
+          "💯":
+            comment.reactions?.find((r) => r.emoji === "💯")?.reactorProfiles ||
+            [],
+          "🤭":
+            comment.reactions?.find((r) => r.emoji === "🤭")?.reactorProfiles ||
+            [],
+        };
+
         const disabled = isReacting || hasReacted;
+
+        if (hasReacted && counts[emoji] === 0) return null;
 
         return (
           <button
@@ -197,11 +225,22 @@ const EmojiReaction = ({ comment, allowlist, delegations, toast }) => {
             <span style={{ marginRight: counts[emoji] > 0 ? "4px" : "0" }}>
               {emoji}
             </span>
-            {counts[emoji] > 0 && (
-              <span style={{ fontSize: "9pt", color: "#666" }}>
-                {counts[emoji]}
-              </span>
-            )}
+            {profiles[emoji].map((profile, i) => (
+              <img
+                key={i}
+                loading="lazy"
+                src={profile.safeAvatar}
+                alt="reactor"
+                style={{
+                  zIndex: i,
+                  width: i > 0 ? "13px" : "12px",
+                  height: i > 0 ? "13px" : "12px",
+                  borderRadius: "2px",
+                  border: i > 0 ? "1px solid #f3f3f3" : "1px solid #828282",
+                  marginLeft: i > 0 ? "-4px" : 0,
+                }}
+              />
+            ))}
           </button>
         );
       })}

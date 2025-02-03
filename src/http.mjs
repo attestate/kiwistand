@@ -665,13 +665,37 @@ export async function launch(trie, libp2p) {
       return sendError(reply, code, httpMessage, details);
     }
 
-    const commentRequests = await Promise.allSettled(
-      submission.comments.map(async (comment) => {
-        const identity = await ens.resolve(comment.identity);
-        return { ...comment, identity };
-      }),
+    const identities = new Set();
+    submission.comments.forEach((comment) => {
+      identities.add(comment.identity);
+      comment.reactions.forEach((reaction) => {
+        reaction.reactors.forEach((reactor) => identities.add(reactor));
+      });
+    });
+
+    const profileResults = await Promise.allSettled(
+      Array.from(identities).map((id) => resolve(id)),
     );
-    const enrichedComments = commentRequests.map((result) => result.value);
+
+    const profiles = Object.fromEntries(
+      Array.from(identities).map((id, i) => [
+        id,
+        profileResults[i].status === "fulfilled"
+          ? profileResults[i].value
+          : null,
+      ]),
+    );
+
+    const enrichedComments = submission.comments.map((comment) => ({
+      ...comment,
+      identity: profiles[comment.identity],
+      reactions: comment.reactions.map((reaction) => ({
+        ...reaction,
+        reactorProfiles: reaction.reactors
+          .map((reactor) => profiles[reactor])
+          .filter(Boolean),
+      })),
+    }));
 
     reply.header(
       "Cache-Control",
