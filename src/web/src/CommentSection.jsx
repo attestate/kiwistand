@@ -126,11 +126,12 @@ const EmojiReaction = ({ comment, allowlist, delegations, toast }) => {
         toast.success("Reaction added!");
 
         const avatar = await resolveAvatar(identity);
-        const reaction = comment.reactions.find((r) => r.emoji === emoji);
-        reaction.reactorProfiles = [
-          ...reaction.reactorProfiles,
-          { address: identity, safeAvatar: avatar },
-        ];
+        const newReaction = {
+          emoji,
+          reactorProfiles: [{ address: identity, safeAvatar: avatar }],
+        };
+        comment.reactions.push(newReaction);
+
         switch (emoji) {
           case "🥝":
             setKiwis([...kiwis, identity]);
