@@ -13,6 +13,13 @@ export function custom(
   twitterCard = "summary_large_image",
   prefetch = [],
 ) {
+  if (process.env.NODE_ENV === "production") {
+    prefetch = [
+      ...prefetch,
+      "https://news.kiwistand.com:8443/api/v1/allowlist?cached=true",
+      "https://news.kiwistand.com:8443/api/v1/delegations?cached=true",
+    ];
+  }
   ogImage = DOMPurify.sanitize(ogImage);
   ogTitle = DOMPurify.sanitize(ogTitle);
   ogDescription = DOMPurify.sanitize(ogDescription);
