@@ -9,6 +9,7 @@ import theme from "./theme.jsx";
 import { useProvider, client, chains } from "./client.mjs";
 import { ProgressBar } from "./DelegateButton.jsx";
 import {
+  isIOS,
   getLocalAccount,
   supportsPasskeys,
   setCookie,
@@ -114,8 +115,8 @@ export const RestoreDialogue = (allowlist, delegations, toast) => {
           <PasskeysSVG style={{ color: "white", width: "24px" }} /> Connect with
           Passkeys
         </button>
-        <p style={{ color: "black" }}>
-          (Only works if you previously backed up your app key)
+        <p style={{ color: "black", fontSize: "8pt" }}>
+          (Only works if you previously backed up your app key to iCloud)
         </p>
       </div>
     );
@@ -216,6 +217,9 @@ function BackupKey(props) {
   }
 
   async function create() {
+    if (isIOS()) {
+      alert("Please save your Passkey on the iOS Passwords app.");
+    }
     const id = await generateUserId(localAccount.identity, localAccount.signer);
     const publicKey = {
       challenge: genVal(),
