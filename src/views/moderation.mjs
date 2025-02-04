@@ -10,9 +10,10 @@ import log from "../logger.mjs";
 import { EIP712_MESSAGE } from "../constants.mjs";
 import { fetchCache } from "../utils.mjs";
 
+const oneSec = 1000;
 const cache = new FileSystemCache({
-  cacheDirectory: path.resolve(env.CACHE_DIR),
-  ttl: 60000 * 60, // 60min
+  cacheDirectory: path.resolve(env.CACHE_DIR, "newcache"),
+  ttl: oneSec * 60 * 5, // 5min
 });
 const fetch = fetchBuilder.withCache(cache);
 const fetchStaleWhileRevalidate = fetchCache(fetch, cache);
