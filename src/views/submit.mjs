@@ -27,8 +27,8 @@ export default async function submit(theme, url = "", title = "") {
   }
   const path = "/submit";
   const story = {
-    title: "Bitcoin: A Peer-to-Peer Electronic Cash System",
-    href: "https://bitcoin.org/bitcoin.pdf",
+    title: "Ethereum Whitepaper",
+    href: "https://ethereum.org/en/whitepaper/",
     upvoters: [],
     avatars: [],
     timestamp: new Date() / 1000 - 60,
@@ -68,7 +68,7 @@ export default async function submit(theme, url = "", title = "") {
                         required
                         style="${editableContent}"
                         wrap="soft"
-                        data-placeholder="Bitcoin: A Peer-to-Peer Electronic Cash System"
+                        data-placeholder="Ethereum Whitepaper"
                         onpaste="
                           event.preventDefault();
                           const text = event.clipboardData.getData('text/plain');
@@ -120,6 +120,7 @@ export default async function submit(theme, url = "", title = "") {
                       >
                         Loading...
                       </button>
+                      <p>Please <b>only</b> submit Ethereum-related content</p>
                     </div>
                   </form>
                 </td>

@@ -340,26 +340,31 @@ const SubmitButton = (props) => {
     <div>
       <AdForm toast={toast} isAd={isAd} setIsAd={setIsAd} url={url} />
       {isAd ? null : (
-        <button
-          id="button-onboarding"
-          style={buttonStyles}
-          onClick={handleClick}
-          disabled={
-            isLoading ||
-            !isEligible ||
-            title.length > 80 ||
-            url.length > 2048 ||
-            title.length === 0 ||
-            url.length === 0 ||
-            (!url.startsWith("https://") && !url.startsWith("http://"))
-          }
-        >
-          {isLoading
-            ? !localAccount
-              ? "Please confirm signature..."
-              : "Submitting..."
-            : "Submit"}
-        </button>
+        <>
+          <button
+            id="button-onboarding"
+            style={buttonStyles}
+            onClick={handleClick}
+            disabled={
+              isLoading ||
+              !isEligible ||
+              title.length > 80 ||
+              url.length > 2048 ||
+              title.length === 0 ||
+              url.length === 0 ||
+              (!url.startsWith("https://") && !url.startsWith("http://"))
+            }
+          >
+            {isLoading
+              ? !localAccount
+                ? "Please confirm signature..."
+                : "Submitting..."
+              : "Submit"}
+          </button>
+          <p>
+            Please <b>only</b> submit Ethereum-related content
+          </p>
+        </>
       )}
     </div>
   );
