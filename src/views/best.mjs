@@ -47,7 +47,11 @@ async function getStories(trie, page, period, domain) {
   const totalStories = parseInt(env.TOTAL_STORIES, 10);
   const from = totalStories * page;
   const orderBy = null;
-  const result = getBest(totalStories, from, orderBy, domain, startDatetime);
+  let result = getBest(totalStories, from, orderBy, domain, startDatetime);
+
+  const policy = await moderation.getLists();
+  const path = "/best";
+  result = moderation.moderate(result, policy, path);
 
   let stories = [];
   for await (let story of result) {
