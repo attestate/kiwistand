@@ -38,22 +38,13 @@ export async function recompute() {
   if (inProgress) return;
   inProgress = true;
 
-  let counts = listNewest();
+  const limit = 50;
+  let counts = listNewest(limit);
 
   const path = "/new";
   const config = await moderation.getLists();
   counts = moderation.moderate(counts, config, path);
-  const submittedHrefs = new Set(
-    counts.map((story) => normalizeUrl(story.href)),
-  );
-
-  const feedStories = (await feeds.latest()).filter(
-    (story) => !submittedHrefs.has(normalizeUrl(story.href)),
-  );
-
-  counts = [...counts, ...feedStories];
   let sortedCounts = counts.sort((a, b) => b.timestamp - a.timestamp);
-  let slicedCounts = sortedCounts.slice(0, 40);
 
   let writers = [];
   try {
@@ -63,7 +54,7 @@ export async function recompute() {
   }
 
   let nextStories = [];
-  for await (let story of slicedCounts) {
+  for await (let story of sortedCounts) {
     if (!story.identity || !story.index || !story.upvoters) {
       nextStories.push({
         ...story,
