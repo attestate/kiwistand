@@ -12,9 +12,187 @@ import { isIOS, getLocalAccount, getCookie } from "./session.mjs";
 import { client, chains } from "./client.mjs";
 import { dynamicPrefetch } from "./main.jsx";
 
+const NotificationButton = ({ onEnabled }) => {
+  const [permissionStatus, setPermissionStatus] = useState("default");
+
+  useEffect(() => {
+    const handlePermissionResult = (event) => {
+      setPermissionStatus(event.detail);
+      if (event.detail === "granted" && onEnabled) {
+        onEnabled();
+      }
+    };
+
+    window.addEventListener(
+      "notificationPermissionResult",
+      handlePermissionResult,
+    );
+    return () => {
+      window.removeEventListener(
+        "notificationPermissionResult",
+        handlePermissionResult,
+      );
+    };
+  }, [onEnabled]);
+
+  const handleNotificationRequest = () => {
+    if (window.requestIOSNotifications) {
+      window.requestIOSNotifications();
+    }
+  };
+
+  return (
+    <button
+      onClick={handleNotificationRequest}
+      style={{
+        padding: "6px 12px",
+        background: "black",
+        color: "white",
+        border: "var(--border)",
+        borderRadius: "2px",
+        cursor: "pointer",
+        fontSize: "10pt",
+      }}
+    >
+      {permissionStatus === "granted"
+        ? "Notifications Enabled"
+        : "Enable Notifications"}
+    </button>
+  );
+};
+
 const IOSAppLogin = ({ allowlist, delegations, toast }) => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [currentStep, setCurrentStep] = useState("login");
   const PasskeysLogin = RestoreDialogue(allowlist, delegations, toast);
+
+  const handleLoginSuccess = () => {
+    setCurrentStep("pushNotifications");
+  };
+
+  const handleSkip = () => {
+    if (currentStep === "pushNotifications") {
+      setCurrentStep("emailNotifications");
+    } else if (currentStep === "emailNotifications") {
+      setCurrentStep("complete");
+    }
+  };
+
+  const renderContent = () => {
+    switch (currentStep) {
+      case "login":
+        return (
+          <>
+            <img
+              src="kiwi-icon.webp"
+              alt="Logo"
+              style={{
+                width: "64px",
+                height: "64px",
+                marginBottom: "16px",
+              }}
+            />
+            <h1
+              style={{
+                fontFamily: "var(--font-family)",
+                fontSize: "24px",
+                fontWeight: "600",
+                marginBottom: "24px",
+              }}
+            >
+              Welcome Back
+            </h1>
+            <div style={{ width: "100%", maxWidth: "320px" }}>
+              <PasskeysLogin onSuccess={handleLoginSuccess} />
+              {window.location.protocol === "http:" && (
+                <button
+                  onClick={() => setCurrentStep("pushNotifications")}
+                  style={{
+                    border: "none",
+                    background: "none",
+                    color: "#666",
+                    fontSize: "9pt",
+                    padding: "12px 0",
+                    cursor: "pointer",
+                    width: "100%",
+                  }}
+                >
+                  Skip login (development only)
+                </button>
+              )}
+            </div>
+          </>
+        );
+
+      case "pushNotifications":
+        return (
+          <div
+            style={{ width: "100%", maxWidth: "320px", marginBottom: "3rem" }}
+          >
+            <h1
+              style={{
+                fontFamily: "var(--font-family)",
+                fontSize: "24px",
+                fontWeight: "600",
+                marginBottom: "24px",
+              }}
+            >
+              Stay in the Loop
+            </h1>
+            <p
+              style={{
+                fontSize: "11pt",
+                margin: "0 0 24px 0",
+                color: "#666",
+                lineHeight: "1.5",
+              }}
+            >
+              Get notifications when someone replies to your comments or
+              submissions
+            </p>
+            <NotificationButton
+              onEnabled={() => setCurrentStep("emailNotifications")}
+            />
+          </div>
+        );
+
+      case "complete":
+        return (
+          <div
+            style={{ width: "100%", maxWidth: "320px", textAlign: "center" }}
+          >
+            <h1
+              style={{
+                fontFamily: "var(--font-family)",
+                fontSize: "24px",
+                fontWeight: "600",
+                marginBottom: "24px",
+              }}
+            >
+              You're all set!
+            </h1>
+            <button
+              onClick={() => setIsDrawerOpen(false)}
+              style={{
+                width: "auto",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                fontSize: "15px",
+                gap: "4px",
+                borderRadius: "2px",
+                padding: "0.4rem 0.75rem",
+                justifyContent: "center",
+                margin: "0 auto",
+                backgroundColor: "#E2F266",
+              }}
+            >
+              Explore the app
+            </button>
+          </div>
+        );
+    }
+  };
 
   return (
     <>
@@ -66,6 +244,22 @@ const IOSAppLogin = ({ allowlist, delegations, toast }) => {
             >
               Cancel
             </button>
+            {currentStep !== "login" && currentStep !== "complete" && (
+              <button
+                onClick={handleSkip}
+                style={{
+                  border: "none",
+                  background: "none",
+                  fontSize: "16px",
+                  fontWeight: "500",
+                  color: "var(--full-contrast-color)",
+                  cursor: "pointer",
+                  padding: "8px 16px",
+                }}
+              >
+                Skip
+              </button>
+            )}
           </div>
 
           <div
@@ -79,35 +273,7 @@ const IOSAppLogin = ({ allowlist, delegations, toast }) => {
               gap: "24px",
             }}
           >
-            <img
-              src="kiwi-icon.webp"
-              alt="Logo"
-              style={{
-                width: "64px",
-                height: "64px",
-                marginBottom: "16px",
-              }}
-            />
-
-            <h1
-              style={{
-                fontFamily: "var(--font-family)",
-                fontSize: "24px",
-                fontWeight: "600",
-                marginBottom: "24px",
-              }}
-            >
-              Welcome Back
-            </h1>
-
-            <div
-              style={{
-                width: "100%",
-                maxWidth: "320px",
-              }}
-            >
-              <PasskeysLogin />
-            </div>
+            {renderContent()}
           </div>
         </div>
       </SwipeableDrawer>
