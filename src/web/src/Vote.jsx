@@ -10,7 +10,7 @@ import * as API from "./API.mjs";
 import { useSigner, useProvider, client, chains } from "./client.mjs";
 import NFTModal from "./NFTModal.jsx";
 import theme from "./theme.jsx";
-import { getLocalAccount } from "./session.mjs";
+import { getLocalAccount, isIOSApp } from "./session.mjs";
 
 export const iconSVG = (
   <svg
@@ -123,6 +123,11 @@ const Vote = (props) => {
               const isEligible =
                 signer &&
                 eligible(allowlist, delegations, await signer.getAddress());
+
+              if (!isEligible && isIOSApp()) {
+                toast.error("Login to upvote");
+                return;
+              }
 
               if (!isEligible) {
                 window.location.pathname = "/gateway";

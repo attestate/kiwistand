@@ -59,6 +59,10 @@ export function isIOS() {
   return iOS;
 }
 
+export function isIOSApp() {
+  return document.documentElement.classList.contains("kiwi-ios-app");
+}
+
 export function isFirefox() {
   const ua = navigator.userAgent;
   return !!ua.match(/Firefox/i);
