@@ -42,16 +42,73 @@ const IOSAppLogin = ({ allowlist, delegations, toast }) => {
         disableBackdropTransition={!isIOS()}
         disableDiscovery={isIOS()}
       >
-        <div
-          style={{
-            height: "100%",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "3rem 0",
-          }}
-        >
-          <PasskeysLogin />
+        <div style={{ position: "relative", height: "100%" }}>
+          <div
+            style={{
+              padding: "16px 0 16px 8px",
+              borderBottom: "1px solid rgba(0, 0, 0, 0.1)",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <button
+              onClick={() => setIsDrawerOpen(false)}
+              style={{
+                border: "none",
+                background: "none",
+                fontSize: "16px",
+                fontWeight: "500",
+                color: "var(--full-contrast-color)",
+                cursor: "pointer",
+                padding: "8px 16px",
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+
+          <div
+            style={{
+              height: "calc(100% - 60px)",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "2rem",
+              gap: "24px",
+            }}
+          >
+            <img
+              src="kiwi-icon.webp"
+              alt="Logo"
+              style={{
+                width: "64px",
+                height: "64px",
+                marginBottom: "16px",
+              }}
+            />
+
+            <h1
+              style={{
+                fontFamily: "var(--font-family)",
+                fontSize: "24px",
+                fontWeight: "600",
+                marginBottom: "24px",
+              }}
+            >
+              Welcome Back
+            </h1>
+
+            <div
+              style={{
+                width: "100%",
+                maxWidth: "320px",
+              }}
+            >
+              <PasskeysLogin />
+            </div>
+          </div>
         </div>
       </SwipeableDrawer>
     </>

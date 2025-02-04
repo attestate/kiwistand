@@ -10,6 +10,7 @@
    --border-line: 1px solid rgba(166, 110, 78, 0.6);
    --border-thick: 2px solid rgba(166, 110, 78, 0.55);
    --border-inset: 1px inset rgba(166, 110, 78, 0.7);
+   --full-contrast-color: rgba(166, 110, 78, 1);
    --header-beige: #fafafa;
    --middle-beige: #f3f3f3;
    --table-bg: #f8f8f7;
