@@ -187,15 +187,7 @@ const CommentInput = (props) => {
 
       const selection = window.getSelection();
       const selected = selection.toString().trim();
-      if (!selected || !address || (isEligible !== null && !isEligible)) return;
-
-      // Only proceed if selection is within a comment-text span
-      if (
-        !selection.anchorNode?.parentElement?.classList?.contains(
-          "comment-text",
-        )
-      )
-        return;
+      if (!selected || !address || !isEligible) return;
 
       const textarea = textareaRef.current;
       if (!textarea) return;
