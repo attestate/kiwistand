@@ -197,7 +197,7 @@ const EmojiReaction = ({ comment, allowlist, delegations, toast }) => {
 
         const disabled = isReacting || hasReacted;
 
-        if (hasReacted && counts[emoji] === 0) return null;
+        if ((isntLoggedIn || hasReacted) && counts[emoji] === 0) return null;
 
         return (
           <button
