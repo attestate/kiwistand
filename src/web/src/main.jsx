@@ -376,6 +376,7 @@ async function addPasskeysDialogue(toast, allowlist) {
   const elem = document.querySelector("nav-passkeys-backup");
   if (elem) {
     const Passkeys = (await import("./Passkeys.jsx")).default;
+    const showRedirect = elem.getAttribute("redirect-button") !== "false";
     const RedirectButton = () => {
       return (
         <div
@@ -413,7 +414,7 @@ async function addPasskeysDialogue(toast, allowlist) {
         <Passkeys
           toast={toast}
           allowlist={allowlist}
-          redirectButton={<RedirectButton />}
+          redirectButton={showRedirect ? <RedirectButton /> : null}
         />
       </StrictMode>,
     );
