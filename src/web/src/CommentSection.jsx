@@ -160,6 +160,7 @@ const EmojiReaction = ({ comment, allowlist, delegations, toast }) => {
     }
   };
 
+  if (comment.identity.address === address) return;
   return (
     <div
       style={{
@@ -400,7 +401,6 @@ const Comment = React.forwardRef(
     const [isCollapsed, setIsCollapsed] = useState(false);
     const toggleCollapsed = (e) => {
       if (e.target.closest("a")) {
-        // The user clicked a link (or anything inside that link)
         return;
       }
       setIsCollapsed((v) => !v);
