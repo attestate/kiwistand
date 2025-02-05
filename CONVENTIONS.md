@@ -1,5 +1,9 @@
 # Coding & Design Conventions
 
+This conventions file is written to help
+[aider](https://aider.chat/docs/usage/conventions.html) comply with our
+conventions.
+
 ## 1. JavaScript/ES Style
 
 ### 1.1. Import Organization
