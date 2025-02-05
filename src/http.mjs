@@ -55,6 +55,7 @@ import indexing from "./views/indexing.mjs";
 import invite from "./views/invite.mjs";
 import passkeys from "./views/passkeys.mjs";
 import appOnboarding from "./views/app-onboarding.mjs";
+import appTestflight from "./views/app-testflight.mjs";
 import demonstration from "./views/demonstration.mjs";
 import notifications from "./views/notifications.mjs";
 import pwa from "./views/pwa.mjs";
@@ -934,6 +935,16 @@ export async function launch(trie, libp2p) {
 
   app.get("/app-onboarding", async (request, reply) => {
     const content = await appOnboarding(reply.locals.theme);
+
+    reply.header(
+      "Cache-Control", 
+      "public, s-maxage=86400, max-age=86400, stale-while-revalidate=600000",
+    );
+    return reply.status(200).type("text/html").send(content);
+  });
+
+  app.get("/app-testflight", async (request, reply) => {
+    const content = await appTestflight(reply.locals.theme);
 
     reply.header(
       "Cache-Control", 

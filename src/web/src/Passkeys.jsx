@@ -139,44 +139,58 @@ export const genVal = (size = 32) => {
 const Dialogue = (props) => {
   return (
     <div>
-      <h3
+      <h2
         style={{
-          marginTop: "0",
-          fontSize: "1.2rem",
+          fontSize: "24px",
+          fontWeight: "600",
           color: "black",
-          marginBottom: "20px",
+          marginBottom: "24px",
+          textAlign: "left",
         }}
       >
-        <span>Backup with Passkeys</span>
+        Save your key securely with Passkeys
+      </h2>
+      <h3 style={{ 
+        fontSize: "16px", 
+        fontWeight: "600", 
+        color: "black", 
+        marginBottom: "12px",
+        textAlign: "left"
+      }}>
+        Important requirements:
       </h3>
-      <p
-        style={{
-          fontWeight: "bold",
-          color: "black",
-          marginBottom: "20px",
-          textAlign: "left",
-        }}
-      >
-        Securely save your key using Apple Passkeys to access from all your devices:
-      </p>
-      <ul
-        style={{
-          textAlign: "left",
-          listStyle: "none",
-          paddingLeft: "0",
-          color: "black",
-          marginBottom: "10px",
-        }}
-      >
-        <li>
-          <span style={{ color: theme.color }}>•</span> Encrypted in your 
-          iCloud Keychain
-        </li>
-        <li style={{ marginTop: "5px" }}>
-          <span style={{ color: theme.color }}>•</span> Your private key stays
-          secure on your device
-        </li>
+      <ul style={{ 
+        lineHeight: "1.5", 
+        marginTop: "0", 
+        marginBottom: "20px",
+        paddingLeft: "20px",
+        textAlign: "left" 
+      }}>
+        <li>Use Apple's built-in Passwords app and enable iCloud Passwords in Settings if needed</li>
+        <li>Third-party password managers are not currently supported</li>
       </ul>
+      <details style={{ 
+        marginTop: "15px", 
+        fontSize: "0.9em", 
+        color: "#666",
+        textAlign: "left",
+        background: "white",
+        padding: "15px",
+        borderRadius: "4px"
+      }}>
+        <summary style={{ cursor: "pointer", marginBottom: "10px" }}>Why these requirements?</summary>
+        <p style={{ 
+          marginTop: "10px", 
+          lineHeight: "1.4",
+          paddingLeft: "0",
+          textAlign: "left"
+        }}>
+          Our app uses advanced passkey features that are currently only fully supported by Apple's implementation. 
+          While passkeys work on Android and Windows for basic authentication, some security features 
+          (like end-to-end encrypted sync) may not be available. We're actively monitoring platform support 
+          to expand these features as they become available.
+        </p>
+      </details>
     </div>
   );
 };
@@ -218,7 +232,9 @@ function BackupKey(props) {
 
   async function create() {
     if (isIOS()) {
-      alert("You'll be prompted to save your Passkey in iOS Settings > Passwords");
+      alert(
+        "Please select 'Passwords' app when prompted. For the best security and sync experience, third-party password managers are not currently supported.",
+      );
     }
     const id = await generateUserId(localAccount.identity, localAccount.signer);
     const publicKey = {
@@ -329,10 +345,27 @@ function BackupKey(props) {
             textAlign: "left",
           }}
         >
-          All set! Next time you connect, just tap "Connect with Passkeys" 
-          to instantly access your account.
+          All set! Next time you connect, just tap "Connect with Passkeys" to
+          instantly access your account.
         </p>
-        {props.redirectButton ? props.redirectButton : ""}
+        {props.redirectButton === "false" ? (
+          <a
+            href="/app-testflight"
+            style={{
+              display: "inline-block",
+              padding: "10px 20px",
+              background: "var(--theme-color)",
+              color: "white",
+              textDecoration: "none",
+              borderRadius: "2px",
+              marginTop: "20px",
+            }}
+          >
+            Continue to App Installation →
+          </a>
+        ) : (
+          props.redirectButton
+        )}
       </div>
     );
   } else if (lbResult) {
@@ -383,8 +416,8 @@ function BackupKey(props) {
               id="button-onboarding"
               onClick={store}
             >
-              <PasskeysSVG style={{ color: "white", width: "24px" }} /> Save
-              Key (Step 2/2)
+              <PasskeysSVG style={{ color: "white", width: "24px" }} /> Save Key
+              (Step 2/2)
             </button>
           </span>
           <br />

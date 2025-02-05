@@ -35,19 +35,30 @@ export default async function (theme) {
                   <div
                     style="max-width: 800px; margin: 40px auto; padding: 0 20px;"
                   >
+                    <!-- Header -->
+                    <h1 style="
+                      font-size: 28px; 
+                      font-weight: 600; 
+                      color: black; 
+                      margin-bottom: 16px;
+                      text-align: left;
+                    ">
+                      TestFlight App Setup
+                    </h1>
+                    
                     <!-- Breadcrumb -->
                     <div
-                      style="margin-bottom: 40px; display: flex; align-items: center; gap: 12px;"
+                      style="margin-bottom: 32px; display: flex; align-items: center; gap: 12px;"
                     >
                       <div style="color: black; font-weight: 500;">
-                        iOS App Setup
+                        TestFlight Setup
                       </div>
                       <div style="color: #666;">→</div>
                       <div style="color: black; font-weight: 600;">
                         1. Backup Key
                       </div>
                       <div style="color: #666;">→</div>
-                      <div style="color: #666;">2. Install App</div>
+                      <div style="color: #666;">2. Install Beta App</div>
                     </div>
 
                     <!-- Card Container -->
