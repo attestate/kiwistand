@@ -1,4 +1,4 @@
-# Coding Conventions
+# Coding & Design Conventions
 
 1. JavaScript/ES Style
    1.1. Import Organization
@@ -24,7 +24,8 @@
        const key2 = b
        function(key1, key2)
        ```
-       This ensures every parameter has a clear, named purpose
+       This ensures every parameter has a clear, named purpose and improves code
+       readability
 
 2. Code Quality
    2.1. Comments only for information not expressed in code
@@ -36,6 +37,47 @@
    2.5. Indentation
        - Use 2 spaces for indentation
        - No tabs, convert to spaces (expandtab)
-3. Design
-   3.1. Always design and communicate aesthetically, intentionally and
-   functionally
+
+3. Design & Branding Guidelines
+   3.1. CSS Variables
+       - Always use the authoritative CSS variables defined in
+         src/public/news.css:root
+       - Reference the root variables for colors, borders, fonts and other
+         design tokens
+       - Never hardcode values that are defined in the root variables
+
+   3.2. Typography
+       - Use Inter font family exclusively
+       - Default text color should be black
+       - Implement clear text hierarchy based on content relevance:
+         * Prioritize primary information for immediate comprehension
+         * De-emphasize secondary and tertiary information
+         * Use visual weight and spacing to create natural reading flow
+       - Utilize browser features to reduce visual clutter:
+         * Apply :visited pseudo-class for viewed links
+         * Implement hover states thoughtfully
+       - Desktop links must have text-decoration: underline on hover
+
+   3.3. Components & Layout
+       - Border radius must always be 2px
+       - Primary buttons must follow #button-onboarding style from news.css:
+         * Border radius: 2px
+         * Clear hover states
+         * Consistent padding
+         * Black background with white text in base state
+
+   3.4. Mobile-First Design
+       - Design mobile layouts first
+       - Follow Apple's touch target size recommendations:
+         * Minimum 44x44 points for all touch targets
+         * Maintain adequate spacing between interactive elements
+       - Ensure proper scroll margins for mobile
+       - Use appropriate text sizes for mobile readability
+       - Consider thumb zones in mobile layouts
+
+   3.5. Interaction Design
+       - Clear hover states for interactive elements
+       - Consistent touch feedback on mobile
+       - Use opacity changes to indicate state
+       - Implement proper touch-action handling
+       - Ensure proper user-select behavior
