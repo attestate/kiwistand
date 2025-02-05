@@ -376,8 +376,8 @@ function BackupKey(props) {
             style={{
               display: "inline-block",
               padding: "10px 20px",
-              background: "var(--theme-color)",
-              color: "white",
+              fontWeight: "bold",
+              color: "black",
               textDecoration: "none",
               borderRadius: "2px",
               marginTop: "20px",
