@@ -137,29 +137,6 @@ export const genVal = (size = 32) => {
 };
 
 const Dialogue = (props) => {
-  // If we're not in the app onboarding flow, show a simpler dialogue
-  if (!props.isAppOnboarding) {
-    return (
-      <div>
-        <h2
-          style={{
-            fontSize: "24px",
-            fontWeight: "600",
-            color: "black",
-            marginBottom: "24px",
-            textAlign: "left",
-          }}
-        >
-          Save your key securely with Passkeys
-        </h2>
-        <p style={{ color: "black", marginBottom: "20px", textAlign: "left" }}>
-          Passkeys provide a secure way to store your credentials and sync them across your devices.
-        </p>
-      </div>
-    );
-  }
-
-  // App onboarding specific dialogue with iOS requirements
   return (
     <div>
       <h2
@@ -173,45 +150,60 @@ const Dialogue = (props) => {
       >
         Save your key securely with Passkeys
       </h2>
-      <h3 style={{ 
-        fontSize: "16px", 
-        fontWeight: "600", 
-        color: "black", 
-        marginBottom: "12px",
-        textAlign: "left"
-      }}>
+      <h3
+        style={{
+          fontSize: "16px",
+          fontWeight: "600",
+          color: "black",
+          marginBottom: "12px",
+          textAlign: "left",
+        }}
+      >
         Important requirements:
       </h3>
-      <ul style={{ 
-        lineHeight: "1.5", 
-        marginTop: "0", 
-        marginBottom: "20px",
-        paddingLeft: "20px",
-        textAlign: "left" 
-      }}>
-        <li>Use Apple's built-in Passwords app and enable iCloud Passwords in Settings if needed</li>
+      <ul
+        style={{
+          lineHeight: "1.5",
+          marginTop: "0",
+          marginBottom: "20px",
+          paddingLeft: "20px",
+          textAlign: "left",
+        }}
+      >
+        <li>
+          Use Apple's built-in Passwords app and enable iCloud Passwords in
+          Settings if needed
+        </li>
         <li>Third-party password managers are not currently supported</li>
       </ul>
-      <details style={{ 
-        marginTop: "15px", 
-        fontSize: "0.9em", 
-        color: "#666",
-        textAlign: "left",
-        background: "white",
-        padding: "15px",
-        borderRadius: "4px"
-      }}>
-        <summary style={{ cursor: "pointer", marginBottom: "10px" }}>Why these requirements?</summary>
-        <p style={{ 
-          marginTop: "10px", 
-          lineHeight: "1.4",
-          paddingLeft: "0",
-          textAlign: "left"
-        }}>
-          Our app uses advanced passkey features that are currently only fully supported by Apple's implementation. 
-          While passkeys work on Android and Windows for basic authentication, some security features 
-          (like end-to-end encrypted sync) may not be available. We're actively monitoring platform support 
-          to expand these features as they become available.
+      <details
+        style={{
+          marginTop: "15px",
+          fontSize: "0.9em",
+          color: "#666",
+          textAlign: "left",
+          background: "white",
+          padding: "15px",
+          borderRadius: "4px",
+        }}
+      >
+        <summary style={{ cursor: "pointer", marginBottom: "10px" }}>
+          Why these requirements?
+        </summary>
+        <p
+          style={{
+            marginTop: "10px",
+            lineHeight: "1.4",
+            paddingLeft: "0",
+            textAlign: "left",
+          }}
+        >
+          Our app uses advanced passkey features that are currently only fully
+          supported by Apple's implementation. While passkeys work on Android
+          and Windows for basic authentication, some security features (like
+          end-to-end encrypted sync) may not be available. We're actively
+          monitoring platform support to expand these features as they become
+          available.
         </p>
       </details>
     </div>

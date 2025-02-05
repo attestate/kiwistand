@@ -377,6 +377,7 @@ async function addPasskeysDialogue(toast, allowlist) {
   if (elem) {
     const Passkeys = (await import("./Passkeys.jsx")).default;
     const showRedirect = elem.getAttribute("redirect-button") !== "false";
+    const isAppOnboarding = elem.getAttribute("is-app-onboarding") === "true";
     const RedirectButton = () => {
       return (
         <div
@@ -415,6 +416,7 @@ async function addPasskeysDialogue(toast, allowlist) {
           toast={toast}
           allowlist={allowlist}
           redirectButton={showRedirect ? <RedirectButton /> : null}
+          isAppOnboarding={isAppOnboarding}
         />
       </StrictMode>,
     );
