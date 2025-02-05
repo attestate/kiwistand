@@ -4,6 +4,11 @@ This conventions file is written to help
 [aider](https://aider.chat/docs/usage/conventions.html) comply with our
 conventions.
 
+## Principles
+
+- Always make chirurgical changes. Never try to improve any of the surrounding
+  code, just make the intented change and minimize the change set.
+
 ## 1. JavaScript/ES Style
 
 ### 1.1. Import Organization
@@ -20,6 +25,9 @@ conventions.
 
 ### 1.3. Variable Naming
 - Use single short words as variables over camelCase
+- Within a module or a context you can use quite generic names that then
+  resolve within the name space. E.g. in a module named "email" you can call a
+  function "send" and it then should be used as "email.send"
 
 ### 1.4. Early Returns
 - Return or throw early to avoid nesting
@@ -36,7 +44,12 @@ const key1 = a
 const key2 = b
 function(key1, key2)
 ```
-This ensures every parameter has a clear, named purpose and improves code readability
+This ensures every parameter has a clear, named purpose and improves code
+readability.
+
+### 1.7. Keep functions pure and stateless
+- Don't try to maintain state through complex classes etc., instead write a series
+  of pure functions that all do one thing well.
 
 ## 2. Code Quality
 
@@ -56,6 +69,12 @@ This ensures every parameter has a clear, named purpose and improves code readab
 ### 2.5. Indentation
 - Use 2 spaces for indentation
 - No tabs, convert to spaces (expandtab)
+
+### 2.6. Don't embrace abstractions
+- Abstractions always leak.
+- Tightly act according to scope
+- Abstractions grow naturally through iteration on code through making
+  chirurgical changes. These are acceptable abstractions
 
 ## 3. Design & Branding Guidelines
 
