@@ -137,6 +137,29 @@ export const genVal = (size = 32) => {
 };
 
 const Dialogue = (props) => {
+  // If we're not in the app onboarding flow, show a simpler dialogue
+  if (!props.isAppOnboarding) {
+    return (
+      <div>
+        <h2
+          style={{
+            fontSize: "24px",
+            fontWeight: "600",
+            color: "black",
+            marginBottom: "24px",
+            textAlign: "left",
+          }}
+        >
+          Save your key securely with Passkeys
+        </h2>
+        <p style={{ color: "black", marginBottom: "20px", textAlign: "left" }}>
+          Passkeys provide a secure way to store your credentials and sync them across your devices.
+        </p>
+      </div>
+    );
+  }
+
+  // App onboarding specific dialogue with iOS requirements
   return (
     <div>
       <h2
@@ -324,7 +347,7 @@ function BackupKey(props) {
     return null;
   }
   if (lbResult && lbResult.includes("successful")) {
-    return (
+    const successContent = (
       <div>
         <ProgressBar progress={progress} />
         <h3
@@ -348,7 +371,14 @@ function BackupKey(props) {
           All set! Next time you connect, just tap "Connect with Passkeys" to
           instantly access your account.
         </p>
-        {props.redirectButton === "false" ? (
+      </div>
+    );
+
+    // Only show TestFlight link in app onboarding flow
+    if (props.isAppOnboarding) {
+      return (
+        <div>
+          {successContent}
           <a
             href="/app-testflight"
             style={{
@@ -363,11 +393,11 @@ function BackupKey(props) {
           >
             Continue to App Installation →
           </a>
-        ) : (
-          props.redirectButton
-        )}
-      </div>
-    );
+        </div>
+      );
+    }
+
+    return successContent;
   } else if (lbResult) {
     return (
       <span style={{ color: "black", fontWeight: "bold" }}>{lbResult}</span>
