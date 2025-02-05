@@ -536,7 +536,7 @@ const Comment = React.forwardRef(
                 }}
               >
                 {comment.title.split("\n").map((line, i) => {
-                  if (line.startsWith("> ")) {
+                  if (line.startsWith(">")) {
                     return (
                       <div
                         key={i}
