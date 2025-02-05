@@ -84,7 +84,14 @@ const footer = (theme, path) => html`
         ><br />
       </div>
     </div>
-    <div style="display: flex; justify-content: center;">
+    <div
+      style="display: flex; justify-content: center; align-items: center; gap: 0.5rem;"
+    >
+      <img
+        src="/etherium.png"
+        alt="Powered by Ethereum"
+        style="height: 4.5rem;"
+      />
       <div>
         <span>This instance of Kiwi News is hosted by </span>
         <a
