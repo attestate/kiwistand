@@ -26,3 +26,4 @@ anon-corrupt
   releases.json
   docker-compose-tmp.yml
   
+.aider*
