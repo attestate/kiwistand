@@ -80,7 +80,7 @@ const header = async (theme, path) => {
                   </b>
                 </span>
               </a>
-              <div class="desktop-nav" style="display: flex; flex-wrap: nowrap; white-space: nowrap; gap: 20px;">
+              <div class="desktop-nav">
                 <a class="meta-link" href="/">Feed</a>
                 <a class="meta-link" href="/submit">Submit</a>
                 <a class="meta-link" href="/community">Users</a>

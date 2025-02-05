@@ -366,7 +366,7 @@ async function addConnectedComponents(allowlist, delegations, toast) {
     );
     createRoot(headerdisconnect).render(
       <StrictMode>
-        <ConnectedSimpleDisconnectButton label="Logout" />
+        <ConnectedSimpleDisconnectButton label="Disconnect" />
       </StrictMode>,
     );
   }
