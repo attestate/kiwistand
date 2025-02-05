@@ -80,12 +80,12 @@ const header = async (theme, path) => {
                   </b>
                 </span>
               </a>
-              <div class="desktop-nav">
+              <div class="desktop-nav" style="display: flex; flex-wrap: nowrap; white-space: nowrap; gap: 20px;">
                 <a class="meta-link" href="/">Feed</a>
                 <a class="meta-link" href="/submit">Submit</a>
                 <a class="meta-link" href="/community">Users</a>
                 <a class="meta-link" href="/profile">Profile</a>
-                <span class="header-disconnect">Logout</span>
+                <span class="header-disconnect">Disconnect</span>
               </div>
               <div
                 class="header-bell"
