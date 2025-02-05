@@ -36,3 +36,6 @@
    2.5. Indentation
        - Use 2 spaces for indentation
        - No tabs, convert to spaces (expandtab)
+3. Design
+   3.1. Always design and communicate aesthetically, intentionally and
+   functionally
