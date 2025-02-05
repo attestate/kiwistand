@@ -116,7 +116,7 @@ export const RestoreDialogue = (allowlist, delegations, toast) => {
           Passkeys
         </button>
         <p style={{ color: "black", fontSize: "8pt" }}>
-          (Only works if you previously backed up your app key to iCloud)
+          (Available if you've previously saved your key to iCloud Keychain)
         </p>
       </div>
     );
@@ -157,7 +157,7 @@ const Dialogue = (props) => {
           textAlign: "left",
         }}
       >
-        Securely store your app key with Passkeys for multi-device access:
+        Securely save your key using Apple Passkeys to access from all your devices:
       </p>
       <ul
         style={{
@@ -169,12 +169,12 @@ const Dialogue = (props) => {
         }}
       >
         <li>
-          <span style={{ color: theme.color }}>•</span> Encrypted storage on
-          iCloud.
+          <span style={{ color: theme.color }}>•</span> Encrypted in your 
+          iCloud Keychain
         </li>
         <li style={{ marginTop: "5px" }}>
-          <span style={{ color: theme.color }}>•</span> Your wallet's custody
-          key remains on your device.
+          <span style={{ color: theme.color }}>•</span> Your private key stays
+          secure on your device
         </li>
       </ul>
     </div>
@@ -218,7 +218,7 @@ function BackupKey(props) {
 
   async function create() {
     if (isIOS()) {
-      alert("Please save your Passkey on the iOS Passwords app.");
+      alert("You'll be prompted to save your Passkey in iOS Settings > Passwords");
     }
     const id = await generateUserId(localAccount.identity, localAccount.signer);
     const publicKey = {
@@ -289,7 +289,7 @@ function BackupKey(props) {
       setLbResult("Backup successful!");
     } else {
       setLbResult(
-        "Backup failed. There can be multiple reasons for this. For example, this will happen if you use 1Password or if you don't use iOS 17 yet.",
+        "Backup failed. This can happen if you're using a password manager like 1Password or if you're not on iOS 17+. Please try again using iCloud Keychain.",
       );
     }
 
@@ -329,8 +329,8 @@ function BackupKey(props) {
             textAlign: "left",
           }}
         >
-          Next time you connect your wallet, look out for the "Connect with
-          Passkeys" button!
+          All set! Next time you connect, just tap "Connect with Passkeys" 
+          to instantly access your account.
         </p>
         {props.redirectButton ? props.redirectButton : ""}
       </div>
@@ -359,8 +359,8 @@ function BackupKey(props) {
               id="button-onboarding"
               onClick={create}
             >
-              <PasskeysSVG style={{ color: "white", width: "24px" }} /> Create
-              Passkey (1/2)
+              <PasskeysSVG style={{ color: "white", width: "24px" }} /> Set Up
+              Passkey (Step 1/2)
             </button>
           </span>
           <br />
@@ -383,8 +383,8 @@ function BackupKey(props) {
               id="button-onboarding"
               onClick={store}
             >
-              <PasskeysSVG style={{ color: "white", width: "24px" }} /> Backup
-              key (2/2)
+              <PasskeysSVG style={{ color: "white", width: "24px" }} /> Save
+              Key (Step 2/2)
             </button>
           </span>
           <br />
