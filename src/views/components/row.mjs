@@ -232,7 +232,14 @@ const blockedOGImageDomains = [
   "t.me",
   "soliditylang.org",
   "hey.xyz",
+  "warpcast.com",
+  "xcancel.com",
+  "hackmd.io",
+  "ethresear.ch",
 ];
+
+// Helper function to check if domain is a substack subdomain
+const isSubstackDomain = (domain) => domain.endsWith("substack.com");
 const knownBadOgImages = [
   "https://paragraph.xyz/share/share_img.jpg",
   "https://s.turbifycdn.com/aah/paulgraham/essays-5.gif",
@@ -386,6 +393,7 @@ const row = (
                 story.metadata.image &&
                 !interactive &&
                 !blockedOGImageDomains.includes(extractedDomain) &&
+                !isSubstackDomain(extractedDomain) &&
                 !knownBadOgImages.includes(story.metadata.image)
                   ? html`<a
                       data-no-instant
