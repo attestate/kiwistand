@@ -325,11 +325,17 @@ const row = (
                     story.identity,
                   )}', event.currentTarget.getAttribute('target'));"
                 >
-                  <img
-                    loading="lazy"
-                    style="aspect-ratio: 2 / 1; object-fit:cover; margin: 0 11px; border-radius: 2px; width: calc(100% - 24px);"
-                    src="${DOMPurify.sanitize(story.metadata.image)}"
-                /></a>`
+                  <div style="position: relative;">
+                    <img
+                      loading="lazy"
+                      style="aspect-ratio: 2 / 1; object-fit:cover; margin: 0 11px; border-radius: 2px; width: calc(100% - 24px);"
+                      src="${DOMPurify.sanitize(story.metadata.image)}"
+                    />
+                    <div style="position: absolute; bottom: 8px; left: 19px; background: rgba(255,255,255,0.9); padding: 2px 6px; border-radius: 2px; font-size: 9pt;">
+                      ${extractedDomain}
+                    </div>
+                  </div>
+                </a>`
               : null}
             <div
               class="information-row ${displayCommentPreview
@@ -514,7 +520,8 @@ const row = (
                             )}
                           `}
                       ${!interactive &&
-                      (path === "/" || path === "/new" || path === "/best")
+                      (path === "/" || path === "/new" || path === "/best") &&
+                      !displayMobileImage
                         ? html`
                             <span style="opacity:0.6"> • </span>
                             <span>${extractedDomain}</span>
