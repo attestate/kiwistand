@@ -392,30 +392,32 @@ export default async function (trie, theme, index, value, referral) {
                                 : html`<span
                                     class="comment-text"
                                     dangerouslySetInnerHTML=${{
-                                      __html: linkifyStr(
-                                        DOMPurify.sanitize(comment.title),
-                                        {
-                                          className:
-                                            "meta-link selectable-link",
-                                          target: (href) => {
-                                            if (
-                                              href.startsWith(
+                                      __html: comment.title
+                                        .split("\n")
+                                        .map((line) => {
+                                          if (line.startsWith(">")) {
+                                            return `<div style="border-left: 3px solid #ccc; padding-left: 10px; margin: 8px 0 0 0; color: #666;">${DOMPurify.sanitize(
+                                              line.substring(2),
+                                            )}</div>`;
+                                          }
+                                          return line.trim()
+                                            ? `<div>${DOMPurify.sanitize(
+                                                line,
+                                              )}</div>`
+                                            : "<br/>";
+                                        })
+                                        .join("")
+                                        .replace(
+                                          /(https?:\/\/[^\s<]+)/g,
+                                          (url) =>
+                                            `<a class="meta-link selectable-link" href="${url}" target="${
+                                              url.startsWith(
                                                 "https://news.kiwistand.com",
                                               )
-                                            ) {
-                                              return "_self";
-                                            } else {
-                                              return "_blank";
-                                            }
-                                          },
-                                          defaultProtocol: "https",
-                                          validate: {
-                                            url: (value) =>
-                                              /^https:\/\/.*/.test(value),
-                                            email: () => false,
-                                          },
-                                        },
-                                      ),
+                                                ? "_self"
+                                                : "_blank"
+                                            }">${url}</a>`,
+                                        ),
                                     }}
                                   ></span>`}
                             </span>`,
