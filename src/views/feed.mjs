@@ -729,6 +729,18 @@ export async function index(
         story.submitter.farcaster);
     return hasProperName;
   });
+
+  stories = stories
+    .map((story) => {
+      if (story.metadata?.pagespeed) {
+        // Normalize pagespeed score to 0.5-1.5 range
+        const speedMultiplier = 0.5 + story.metadata.pagespeed / 100;
+        story.score *= speedMultiplier;
+      }
+      return story;
+    })
+    .sort((a, b) => b.score - a.score);
+
   let pinnedStory;
   if (policy?.pinned?.length > 0) {
     const pinnedUrl = policy.pinned[0];

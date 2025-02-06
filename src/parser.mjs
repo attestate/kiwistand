@@ -10,15 +10,33 @@ import { fetchBuilder, FileSystemCache } from "node-fetch-cache";
 import { useAgent } from "request-filtering-agent";
 import Anthropic from "@anthropic-ai/sdk";
 
+import { fetchCache as fetchCacheFactory } from "./utils.mjs";
+
 import cache from "./cache.mjs";
 import log from "./logger.mjs";
 
-const fetch = fetchBuilder.withCache(
-  new FileSystemCache({
-    cacheDirectory: path.resolve(env.CACHE_DIR),
-    ttl: 86400000, // 24 hours
-  }),
-);
+const fetchCache = new FileSystemCache({
+  cacheDirectory: path.resolve(env.CACHE_DIR),
+  ttl: 86400000, // 24 hours
+});
+
+const fetch = fetchBuilder.withCache(fetchCache);
+const fetchStaleWhileRevalidate = fetchCacheFactory(fetch, fetchCache);
+
+export async function getPageSpeedScore(url) {
+  const apiUrl = `https://pagespeedonline.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(
+    url,
+  )}&strategy=MOBILE`;
+
+  try {
+    const response = await fetchStaleWhileRevalidate(apiUrl);
+    const data = await response.json();
+    const score = data?.lighthouseResult?.categories?.performance?.score || 0;
+    return Math.round(score * 100);
+  } catch (err) {
+    return 30;
+  }
+}
 
 const html = htm.bind(vhtml);
 
@@ -350,6 +368,9 @@ export const metadata = async (url) => {
   if (Object.keys(output).length === 0) {
     throw new Error("Insufficient metadata");
   }
+
+  const pagespeed = await getPageSpeedScore(url);
+  output.pagespeed = pagespeed;
 
   return output;
 };
