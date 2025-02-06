@@ -252,6 +252,14 @@ const SubmitButton = (props) => {
     e.preventDefault();
 
     const canonicalURL = url;
+    // Check for emojis in the title
+    const emojiRegex = /[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu;
+    if (emojiRegex.test(title)) {
+      toast.error("Emojis are not allowed in the title.");
+      setIsLoading(false);
+      return;
+    }
+
     const value = API.messageFab(
       title.replace(/(\r\n|\n|\r)/gm, " "),
       canonicalURL,
