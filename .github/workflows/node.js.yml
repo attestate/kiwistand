@@ -20,7 +20,15 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node-version }}
+    - uses: actions/cache@v3
+      with:
+        path: ~/.npm
+        key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-npm-
+
     - run: npm ci
     - run: npm run test
       env: 
         HTTP_MESSAGES_MAX_PAGE_SIZE: "500"
+
