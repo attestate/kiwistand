@@ -1077,13 +1077,19 @@ export async function launch(trie, libp2p) {
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/api/v1/activity", async (request, reply) => {
+    if (!request.query.address) {
+      const code = 400;
+      const httpMessage = "Bad Request";
+      return sendError(reply, code, httpMessage, "Address query parameter required");
+    }
+
     let data;
     const skipDetails = true;
     try {
       data = await activity.data(
         trie,
-        DOMPurify.sanitize(request.cookies.identity || request.query.address),
-        parseInt(request.cookies.lastUpdate, 10),
+        DOMPurify.sanitize(request.query.address),
+        parseInt(request.query.lastUpdate, 10),
         skipDetails,
       );
     } catch (err) {
@@ -1096,7 +1102,7 @@ export async function launch(trie, libp2p) {
     const httpMessage = "OK";
     const details = "Notifications feed";
 
-    reply.header("Cache-Control", "no-cache");
+    reply.header("Cache-Control", "public, s-maxage=5, max-age=0, stale-while-revalidate=3600");
     return sendStatus(reply, code, httpMessage, details, {
       notifications: data.notifications,
       lastServerValue: data.latestValue,
@@ -1143,7 +1149,7 @@ export async function launch(trie, libp2p) {
         true // isQueryParamVersion
       );
       
-      reply.header("Cache-Control", "public, s-maxage=30, max-age=0, stale-while-revalidate=3600");
+      reply.header("Cache-Control", "public, s-maxage=5, max-age=0, stale-while-revalidate=3600");
       return reply.status(200).type("text/html").send(content);
     }
 

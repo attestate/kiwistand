@@ -78,7 +78,8 @@ export async function send(
 }
 
 export async function fetchNotifications(address) {
-  const url = getApiUrl(`/api/v1/activity?address=${address}`);
+  const lastUpdate = parseInt(getCookie("lastUpdate"), 10) || 0;
+  const url = getApiUrl(`/api/v1/activity?address=${address}&lastUpdate=${lastUpdate}`);
 
   const response = await fetch(url, {
     method: "GET",
