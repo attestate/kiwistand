@@ -2,7 +2,7 @@
 
 // NOTE: Throughout this file we use Cloudflare-specific cache control headers:
 // - s-maxage: Controls Cloudflare CDN caching duration
-// - stale-while-revalidate: We implement a custom worker on news.kiwistand.com 
+// - stale-while-revalidate: We implement a custom worker on news.kiwistand.com
 //   to handle stale-while-revalidate since Cloudflare doesn't support this natively
 
 import { env } from "process";
@@ -127,27 +127,28 @@ app.use(cookieParser());
 // NOTE: We use s-maxage for Cloudflare CDN caching, while max-age controls browser caching
 app.get("/.well-known/apple-app-site-association", (req, res) => {
   res.setHeader("Content-Type", "application/json");
-  res.setHeader("Cache-Control", "public, s-maxage=86400, max-age=86400, stale-while-revalidate=600000");
+  res.setHeader(
+    "Cache-Control",
+    "public, s-maxage=86400, max-age=86400, stale-while-revalidate=600000",
+  );
   res.json({
-    "webcredentials": {
-      "apps": [
-        "SKFAD6UPBF.attestate.Kiwi-News-iOS"
-      ]
+    webcredentials: {
+      apps: ["SKFAD6UPBF.attestate.Kiwi-News-iOS"],
     },
-    "applinks": {
-      "apps": [],
-      "details": [
+    applinks: {
+      apps: [],
+      details: [
         {
-          "appIDs": ["SKFAD6UPBF.attestate.Kiwi-News-iOS"],
-          "components": [
+          appIDs: ["SKFAD6UPBF.attestate.Kiwi-News-iOS"],
+          components: [
             {
               "/": "/*",
-              "comment": "Matches all URLs"
-            }
-          ]
-        }
-      ]
-    }
+              comment: "Matches all URLs",
+            },
+          ],
+        },
+      ],
+    },
   });
 });
 
@@ -970,7 +971,7 @@ export async function launch(trie, libp2p) {
     const content = await appOnboarding(reply.locals.theme);
 
     reply.header(
-      "Cache-Control", 
+      "Cache-Control",
       "public, s-maxage=86400, max-age=86400, stale-while-revalidate=600000",
     );
     return reply.status(200).type("text/html").send(content);
@@ -980,7 +981,7 @@ export async function launch(trie, libp2p) {
     const content = await appTestflight(reply.locals.theme);
 
     reply.header(
-      "Cache-Control", 
+      "Cache-Control",
       "public, s-maxage=86400, max-age=86400, stale-while-revalidate=600000",
     );
     return reply.status(200).type("text/html").send(content);
@@ -1104,11 +1105,16 @@ export async function launch(trie, libp2p) {
     });
   });
   app.get("/activity", async (request, reply) => {
+    const address = request.cookies.identity || request.query.address;
+    if (!address) {
+      return reply.redirect(301, `/gateway`);
+    }
+
     let data;
     try {
       data = await activity.data(
         trie,
-        DOMPurify.sanitize(request.cookies.identity || request.query.address),
+        DOMPurify.sanitize(address),
         parseInt(request.cookies.lastUpdate, 10),
       );
     } catch (err) {
@@ -1116,7 +1122,7 @@ export async function launch(trie, libp2p) {
     }
     const content = await activity.page(
       reply.locals.theme,
-      DOMPurify.sanitize(request.cookies.identity || request.query.address),
+      DOMPurify.sanitize(address),
       data.notifications,
       parseInt(request.cookies.lastUpdate, 10),
     );
