@@ -54,10 +54,18 @@ const EmailSubscriptionForm = ({
         const port = window.location.port;
 
         try {
-          const response = await API.send(value, signature, wait, endpoint, port);
+          const response = await API.send(
+            value,
+            signature,
+            wait,
+            endpoint,
+            port,
+          );
           if (response.status !== "success") {
             console.error("API error:", response.details);
-            throw new Error(response.details || "Failed to subscribe to comments");
+            throw new Error(
+              response.details || "Failed to subscribe to comments",
+            );
           }
         } catch (err) {
           console.error("Network request failed:", err);
@@ -280,10 +288,7 @@ const IOSAppLogin = (props) => {
               Welcome Back
             </h1>
             <div style={{ width: "100%", maxWidth: "320px" }}>
-              <PasskeysLogin 
-                onSuccess={handleLoginSuccess} 
-                callback={() => {}}
-              />
+              <PasskeysLogin callback={handleLoginSuccess} />
               {window.location.protocol === "http:" && (
                 <button
                   onClick={() => {
@@ -383,7 +388,13 @@ const IOSAppLogin = (props) => {
               alignItems: "center",
             }}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", width: "100%" }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                width: "100%",
+              }}
+            >
               {currentStep !== "complete" && (
                 <button
                   onClick={handleClose}
