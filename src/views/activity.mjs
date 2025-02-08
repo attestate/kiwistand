@@ -178,7 +178,7 @@ function generateRow(lastUpdate, theme) {
                           <img
                             src="${DOMPurify.sanitize(identity.safeAvatar)}"
                             loading="lazy"
-                            alt="avatar" 
+                            alt="avatar"
                             style="width: ${size}px; height: ${size}px; border: 1px solid #828282; border-radius: 2px; margin-left: 15px;"
                           />
                         `,
@@ -220,7 +220,13 @@ function generateRow(lastUpdate, theme) {
   };
 }
 
-export async function page(theme, identity, notifications, lastUpdate, isQueryParamVersion) {
+export async function page(
+  theme,
+  identity,
+  notifications,
+  lastUpdate,
+  isQueryParamVersion,
+) {
   identity = DOMPurify.sanitize(identity);
   let feed = html`
     <tr>
@@ -256,21 +262,6 @@ export async function page(theme, identity, notifications, lastUpdate, isQueryPa
     <html lang="en" op="news">
       <head>
         ${prefetchHead(["/", "/new?cached=true", "/submit", ...preloadNotifs])}
-        ${isQueryParamVersion ? html`
-          <script>
-            // Update lastUpdate cookie via fetch when using query param version
-            fetch('/api/v1/activity/timestamp', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                address: '${identity}',
-                lastUpdate: ${lastUpdate}
-              })
-            });
-          </script>
-        ` : ''}
       </head>
       <body
         data-instant-allow-query-string
@@ -361,13 +352,14 @@ export async function data(
         };
       });
       const results = await Promise.allSettled(ensPromises);
-      identities.push(...results
-        .filter(result => result.status === 'fulfilled')
-        .map(result => result.value)
+      identities.push(
+        ...results
+          .filter((result) => result.status === "fulfilled")
+          .map((result) => result.value),
       );
     }
     notifications.push({
-      ...activity, 
+      ...activity,
       identities,
     });
   }

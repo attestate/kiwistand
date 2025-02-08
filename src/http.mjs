@@ -1080,7 +1080,12 @@ export async function launch(trie, libp2p) {
     if (!request.query.address) {
       const code = 400;
       const httpMessage = "Bad Request";
-      return sendError(reply, code, httpMessage, "Address query parameter required");
+      return sendError(
+        reply,
+        code,
+        httpMessage,
+        "Address query parameter required",
+      );
     }
 
     let data;
@@ -1102,29 +1107,14 @@ export async function launch(trie, libp2p) {
     const httpMessage = "OK";
     const details = "Notifications feed";
 
-    reply.header("Cache-Control", "public, s-maxage=5, max-age=0, stale-while-revalidate=3600");
+    reply.header(
+      "Cache-Control",
+      "public, s-maxage=5, max-age=0, stale-while-revalidate=3600",
+    );
     return sendStatus(reply, code, httpMessage, details, {
       notifications: data.notifications,
       lastServerValue: data.latestValue,
     });
-  });
-  app.post("/api/v1/activity/timestamp", async (request, reply) => {
-    const { address, lastUpdate } = request.body;
-    try {
-      const latestValue = getTimestamp(address);
-      if (!latestValue || latestValue < lastUpdate) {
-        setTimestamp(address, lastUpdate);
-        reply.cookie("lastUpdate", lastUpdate, {
-          maxAge: 60 * 60 * 24 * 7 * 1000,
-        });
-      }
-      reply.header("Cache-Control", "no-cache");
-      return reply.status(200).json({ status: "success" });
-    } catch (err) {
-      return reply
-        .status(500)
-        .json({ status: "error", message: err.toString() });
-    }
   });
 
   app.get("/activity", async (request, reply) => {
@@ -1146,10 +1136,13 @@ export async function launch(trie, libp2p) {
         DOMPurify.sanitize(request.query.address),
         data.notifications,
         parseInt(request.query.lastUpdate, 10),
-        true // isQueryParamVersion
+        true, // isQueryParamVersion
       );
-      
-      reply.header("Cache-Control", "public, s-maxage=5, max-age=0, stale-while-revalidate=3600");
+
+      reply.header(
+        "Cache-Control",
+        "public, s-maxage=5, max-age=0, stale-while-revalidate=3600",
+      );
       return reply.status(200).type("text/html").send(content);
     }
 
@@ -1175,9 +1168,9 @@ export async function launch(trie, libp2p) {
       DOMPurify.sanitize(address),
       data.notifications,
       parseInt(request.cookies.lastUpdate, 10),
-      false
+      false,
     );
-    
+
     if (data && data.lastUpdate) {
       reply.cookie("lastUpdate", data.lastUpdate, {
         maxAge: 60 * 60 * 24 * 7 * 1000,
