@@ -813,26 +813,6 @@ async function start() {
     once: true,
   });
 
-  // Update lastUpdate timestamp when using query param version of activity page
-  if (window.location.pathname === '/activity' && window.location.search.includes('address=')) {
-    const params = new URLSearchParams(window.location.search);
-    const address = params.get('address');
-    const lastUpdate = params.get('lastUpdate');
-    if (address && lastUpdate) {
-      fetch('/api/v1/activity/timestamp', {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          address,
-          lastUpdate: parseInt(lastUpdate, 10)
-        })
-      });
-    }
-  }
-
   updateLinkTargetsForIOSPWA();
 
   if (
