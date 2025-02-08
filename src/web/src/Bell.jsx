@@ -491,7 +491,7 @@ const Bell = (props) => {
   const link = isEligible
     ? `/activity?address=${address}${
         cacheBuster ? `&cacheBuster=${cacheBuster}` : ""
-      }`
+      }&lastUpdate=${lastUpdate}`
     : "/kiwipass-mint";
 
   const handleClick = () => {

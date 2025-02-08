@@ -8,6 +8,9 @@ conventions.
 
 - Always make chirurgical changes. Never try to improve any of the surrounding
   code, just make the intented change and minimize the change set.
+- Avoid regressions at all costs. If unsure about what to prioritize then take
+  the top five options and rank them based on their impact versus their risk of
+  introducing a regression.
 
 ## 1. JavaScript/ES Style
 

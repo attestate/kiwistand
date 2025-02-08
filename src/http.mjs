@@ -84,6 +84,8 @@ import {
   getSubmission,
   trackOutbound,
   getRecommendations,
+  getTimestamp,
+  setTimestamp,
 } from "./cache.mjs";
 
 const app = express();
@@ -1076,7 +1078,6 @@ export async function launch(trie, libp2p) {
   });
   app.get("/api/v1/activity", async (request, reply) => {
     let data;
-
     const skipDetails = true;
     try {
       data = await activity.data(
@@ -1095,17 +1096,59 @@ export async function launch(trie, libp2p) {
     const httpMessage = "OK";
     const details = "Notifications feed";
 
-    reply.header(
-      "Cache-Control",
-      "public, maxage=10, s-maxage=10, stale-while-revalidate=3600",
-    );
+    reply.header("Cache-Control", "no-cache");
     return sendStatus(reply, code, httpMessage, details, {
       notifications: data.notifications,
       lastServerValue: data.latestValue,
     });
   });
+  app.post("/api/v1/activity/timestamp", async (request, reply) => {
+    const { address, lastUpdate } = request.body;
+    try {
+      const latestValue = getTimestamp(address);
+      if (!latestValue || latestValue < lastUpdate) {
+        setTimestamp(address, lastUpdate);
+        reply.cookie("lastUpdate", lastUpdate, {
+          maxAge: 60 * 60 * 24 * 7 * 1000,
+        });
+      }
+      reply.header("Cache-Control", "no-cache");
+      return reply.status(200).json({ status: "success" });
+    } catch (err) {
+      return reply
+        .status(500)
+        .json({ status: "error", message: err.toString() });
+    }
+  });
+
   app.get("/activity", async (request, reply) => {
-    const address = request.cookies.identity || request.query.address;
+    // Query param version - cacheable, no cookies
+    if (request.query.address) {
+      let data;
+      try {
+        data = await activity.data(
+          trie,
+          DOMPurify.sanitize(request.query.address),
+          parseInt(request.query.lastUpdate, 10),
+        );
+      } catch (err) {
+        return reply.status(400).type("text/plain").send(err.toString());
+      }
+
+      const content = await activity.page(
+        reply.locals.theme,
+        DOMPurify.sanitize(request.query.address),
+        data.notifications,
+        parseInt(request.query.lastUpdate, 10),
+        true // isQueryParamVersion
+      );
+      
+      reply.header("Cache-Control", "public, s-maxage=30, max-age=0, stale-while-revalidate=3600");
+      return reply.status(200).type("text/html").send(content);
+    }
+
+    // Cookie version - not cacheable
+    const address = request.cookies.identity;
     if (!address) {
       return reply.redirect(301, `/gateway`);
     }
@@ -1120,12 +1163,15 @@ export async function launch(trie, libp2p) {
     } catch (err) {
       return reply.status(400).type("text/plain").send(err.toString());
     }
+
     const content = await activity.page(
       reply.locals.theme,
       DOMPurify.sanitize(address),
       data.notifications,
       parseInt(request.cookies.lastUpdate, 10),
+      false
     );
+    
     if (data && data.lastUpdate) {
       reply.cookie("lastUpdate", data.lastUpdate, {
         maxAge: 60 * 60 * 24 * 7 * 1000,

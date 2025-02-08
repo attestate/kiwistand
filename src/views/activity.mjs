@@ -220,7 +220,7 @@ function generateRow(lastUpdate, theme) {
   };
 }
 
-export async function page(theme, identity, notifications, lastUpdate) {
+export async function page(theme, identity, notifications, lastUpdate, isQueryParamVersion) {
   identity = DOMPurify.sanitize(identity);
   let feed = html`
     <tr>
@@ -256,6 +256,21 @@ export async function page(theme, identity, notifications, lastUpdate) {
     <html lang="en" op="news">
       <head>
         ${prefetchHead(["/", "/new?cached=true", "/submit", ...preloadNotifs])}
+        ${isQueryParamVersion ? html`
+          <script>
+            // Update lastUpdate cookie via fetch when using query param version
+            fetch('/api/v1/activity/timestamp', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                address: '${identity}',
+                lastUpdate: ${lastUpdate}
+              })
+            });
+          </script>
+        ` : ''}
       </head>
       <body
         data-instant-allow-query-string
