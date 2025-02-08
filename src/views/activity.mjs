@@ -333,20 +333,24 @@ export async function data(
   activities.sort((a, b) => b.timestamp - a.timestamp);
 
   let notifications = [];
-  for await (let activity of activities) {
+  for (let activity of activities) {
     const identities = [];
     if (!skipDetails) {
-      for await (let identity of activity.identities) {
+      const ensPromises = activity.identities.map(async (identity) => {
         const ensData = await ens.resolve(identity);
-
-        identities.push({
+        return {
           address: identity,
           ...ensData,
-        });
-      }
+        };
+      });
+      const results = await Promise.allSettled(ensPromises);
+      identities.push(...results
+        .filter(result => result.status === 'fulfilled')
+        .map(result => result.value)
+      );
     }
     notifications.push({
-      ...activity,
+      ...activity, 
       identities,
     });
   }
