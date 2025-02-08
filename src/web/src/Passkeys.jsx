@@ -39,7 +39,7 @@ export const toBuffer = (data) => {
 };
 
 export const RestoreDialogue = (allowlist, delegations, toast) => {
-  return () => {
+  return (props) => {
     const provider = useProvider();
     const [featureAvailable, setFeatureAvailable] = useState(false);
     useEffect(() => {
