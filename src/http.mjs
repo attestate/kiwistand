@@ -549,7 +549,7 @@ export async function launch(trie, libp2p) {
 
     let data;
     try {
-      data = await metadata(request.query.url);
+      data = await metadata(request.query.url, request.query.generateTitle === 'true');
     } catch (err) {
       log(`parser.metadata failure: ${err.stack}`);
       const code = 500;

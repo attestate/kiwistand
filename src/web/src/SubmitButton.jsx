@@ -143,7 +143,7 @@ const SubmitButton = (props) => {
         .catch((error) => {
           console.log("Fetch error: ", error);
         });
-      fetch(`/api/v1/metadata?url=${encodeURIComponent(canonicalURL)}`)
+      fetch(`/api/v1/metadata?url=${encodeURIComponent(canonicalURL)}&generateTitle=true`)
         .then((response) => {
           if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);

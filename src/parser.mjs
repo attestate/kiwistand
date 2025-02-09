@@ -97,6 +97,7 @@ Title Guidelines:
 - For crypto content, mention relevant chains/protocols where appropriate
 - Always make factual statements and say things like they are
 - Be precise and direct. Be intentional Name names, name handles etc
+- Make it: "@handle: {what person said on Farcaster or X}"
 
 `;
 
@@ -172,19 +173,6 @@ async function extractWarpcastContent(url) {
   }
 }
 
-function extractTwitterContent(html) {
-  const tweetTextMatch = html.match(
-    /data-testid="tweetText"[^>]*>(.*?)<\/div>/s,
-  );
-  if (tweetTextMatch) {
-    return tweetTextMatch[1]
-      .replace(/<[^>]*>/g, " ") // Remove HTML tags
-      .replace(/\s+/g, " ") // Normalize whitespace
-      .trim();
-  }
-  return null;
-}
-
 async function extractCanonicalLink(html) {
   const dom = parser(html);
   const node = dom.querySelector('link[rel="canonical"]');
@@ -241,7 +229,7 @@ const getYTId = (url) => {
   }
 };
 
-export const metadata = async (url) => {
+export const metadata = async (url, generateTitle = false) => {
   let urlObj;
   try {
     urlObj = new URL(url);
@@ -330,20 +318,26 @@ export const metadata = async (url) => {
     ...twitterFrontends,
   ];
   let output = {};
-  if (hostname === "warpcast.com") {
-    const castContent = await extractWarpcastContent(url);
-    if (castContent) {
-      //const claudeTitle = await generateClaudeTitle(castContent);
-      //if (claudeTitle) {
-      //  output.ogTitle = claudeTitle;
-      //}
+  if (generateTitle) {
+    if (hostname === "warpcast.com") {
+      const castContent = await extractWarpcastContent(url);
+      if (castContent) {
+        const claudeTitle = await generateClaudeTitle(castContent);
+        if (claudeTitle) {
+          output.ogTitle = claudeTitle;
+        }
+      }
+    } else if (twitterFrontends.includes(hostname)) {
+      const tweetAuthor = result.ogTitle || result.twitterCreator;
+      const tweetContent = `Tweet by ${tweetAuthor}: ${ogDescription}`;
+      const claudeTitle = await generateClaudeTitle(tweetContent);
+      if (claudeTitle) {
+        output.ogTitle = claudeTitle;
+      }
     }
-  } else if (bannedTitleDomains.includes(hostname)) {
-    //const claudeTitle = await generateClaudeTitle(ogDescription);
-    //if (claudeTitle) {
-    //  output.ogTitle = claudeTitle;
-    //}
-  } else if (ogTitle) {
+  }
+
+  if (!output.ogTitle && ogTitle) {
     output.ogTitle = ogTitle;
   }
 

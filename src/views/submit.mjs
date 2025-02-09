@@ -14,7 +14,8 @@ export default async function submit(theme, url = "", title = "") {
   if (url && !title) {
     let data;
     try {
-      data = await parser.metadata(url);
+      const generateTitle = true;
+      data = await parser.metadata(url, generateTitle);
     } catch (err) {
       // noop, if the request fails we just continue as though nothing ever happened.
     }
