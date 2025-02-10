@@ -95,12 +95,15 @@ export async function fetchNotifications(address) {
     return [];
   }
 
-  if (
-    (data &&
-      data.data &&
-      data.data.lastServerValue &&
-      lastUpdate <= parseInt(data.data.lastServerValue, 10)) ||
-    (!lastUpdate && data && data.data && data.data.lastServerValue)
+  // Always set lastUpdate cookie on /activity page
+  if (window.location.pathname === '/activity' && data?.data?.notifications?.length > 0) {
+    const latestNotification = data.data.notifications[0];
+    const timestamp = latestNotification.timestamp;
+    console.log("Setting lastUpdate on activity page to:", timestamp);
+    setCookie("lastUpdate", timestamp);
+  } else if (
+    (data?.data?.lastServerValue && lastUpdate <= parseInt(data.data.lastServerValue, 10)) ||
+    (!lastUpdate && data?.data?.lastServerValue)
   ) {
     const value = parseInt(data.data.lastServerValue, 10);
     console.log("Setting lastUpdate in browser to:", value);
