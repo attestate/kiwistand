@@ -840,15 +840,7 @@ async function start() {
         !window.scrollY &&
         !document.documentElement.classList.contains("kiwi-ios-app"),
       onRefresh: () => {
-        if (window.location.pathname === "/") {
-          if (identity) {
-            window.location.href = `/?identity=${identity}`;
-          } else {
-            window.location.href = `/?custom=true`;
-          }
-        } else {
-          window.location.reload();
-        }
+        window.location.reload();
       },
     });
   }
