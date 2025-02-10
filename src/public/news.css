@@ -1021,6 +1021,11 @@ a.meta-link, span.meta-link {
 a.meta-link:hover, span.meta-link:hover {
   text-decoration: underline;
 }
+
+.meta-link.primary-action {
+  color: black;
+  font-weight: 500;
+}
 .selectable-link {
   user-select: auto;
 }
