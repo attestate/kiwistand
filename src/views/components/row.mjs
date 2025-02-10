@@ -328,7 +328,7 @@ const row = (
                 >
                   <div style="position: relative;">
                     <img
-                      loading="lazy"
+                      ${i > 2 ? 'loading="lazy"' : ''}
                       style="aspect-ratio: 2 / 1; object-fit:cover; margin: 0 11px; border-radius: 2px; width: calc(100% - 24px);"
                       src="${DOMPurify.sanitize(story.metadata.image)}"
                     />
@@ -420,7 +420,7 @@ const row = (
                       )}', event.currentTarget.getAttribute('target'));"
                     >
                       <img
-                        loading="lazy"
+                        ${i > 2 ? 'loading="lazy"' : ''}
                         style="max-height: 61px; border: var(--border-line); border-radius: 2px; width: 110px; object-fit: cover;"
                         src="${DOMPurify.sanitize(story.metadata.image)}"
                     /></a>`
@@ -488,7 +488,7 @@ const row = (
                             ${story.avatars.slice(0, 5).map(
                               (avatar, index) => html`
                                 <img
-                                  loading="lazy"
+                                  ${i > 2 ? 'loading="lazy"' : ''}
                                   src="${avatar}"
                                   alt="avatar"
                                   style="z-index: ${index}; width: ${size}px; height:

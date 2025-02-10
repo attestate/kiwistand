@@ -1154,7 +1154,7 @@ export default async function (trie, theme, page, domain, identity, hash) {
                     recentJoiners,
                     false,
                     currentQuery,
-                  )(story, i + 8),
+                  )(story, i + 5),
                 )}
               <tr style="height: 50px">
                 <td>
