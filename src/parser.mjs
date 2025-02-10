@@ -81,7 +81,7 @@ Our content focuses on:
 - Anything else our community finds fascinating, from philosophy through science to infrastructure
 
 Title Guidelines:
-- Maximum 80 characters
+- Maximum 80 characters, not one character more as this will block submission!!!
 - Use sentence case instead of title case
 - Must be clear and descriptive
 - No sensationalist journalism or clickbait
