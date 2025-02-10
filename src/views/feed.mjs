@@ -397,21 +397,25 @@ export async function getContestStories() {
     return [];
   }
 
-  const submissions = [];
   const CUTOFF = new Date("2025-12-12T23:59:59+01:00").getTime();
-  for (const href of result.links) {
+  const submissionPromises = result.links.map(async (href) => {
     try {
       const sub = await getSubmission(null, href, identityFilter);
       sub.upvoters = sub.upvoters
         .filter((vote) => vote.timestamp <= CUTOFF)
         .map(({ identity }) => identity);
-      submissions.push(sub);
+      return sub;
     } catch (err) {
       log(`Skipping submission ${href}, err ${err.stack}`);
+      return null;
     }
-  }
+  });
+  
+  const submissionsResult = await Promise.allSettled(submissionPromises);
+  const submissions = submissionsResult
+    .filter((result) => result.status === "fulfilled" && result.value !== null)
+    .map((result) => result.value);
   submissions.sort((a, b) => b.upvotes - a.upvotes);
-
   return submissions;
 }
 
