@@ -780,10 +780,13 @@ export async function index(
     resolvedContestStories = cache.get(contestCacheKey);
     if (!resolvedContestStories) {
       const contestTTL = 60 * 5;
-      getContestStories()
-        .then((stories) => resolveIds(stories))
-        .then((resolved) => cache.set(contestCacheKey, resolved, [contestTTL]))
-        .catch((err) => log(`Error loading contest stories: ${err.stack}`));
+      try {
+        const stories = await getContestStories();
+        resolvedContestStories = await resolveIds(stories);
+        cache.set(contestCacheKey, resolvedContestStories, [contestTTL]);
+      } catch (err) {
+        log(`Error loading contest stories: ${err.stack}`);
+      }
     }
   }
   return {

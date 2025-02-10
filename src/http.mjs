@@ -91,6 +91,18 @@ import {
 const app = express();
 const server = createServer(app);
 
+let cachedFeed = null;
+(async function updateCachedFeed() {
+  try {
+    cachedFeed = await feed(trie, theme, 0, null, undefined, undefined);
+    log("Cached feed updated");
+  } catch (err) {
+    log("Failed to update cached feed: " + err);
+    cachedFeed = null;
+  }
+  setTimeout(updateCachedFeed, 30000);
+})();
+
 app.set("etag", false);
 app.use((req, res, next) => {
   res.setHeader("Last-Modified", new Date().toUTCString());
@@ -771,27 +783,36 @@ export async function launch(trie, libp2p) {
     if (request.query.custom === "true") {
       hash = fingerprint.generate(request);
     }
-
+  
     try {
       identity = utils.getAddress(request.query.identity);
       hash = fingerprint.generate(request);
     } catch (err) {}
-
+  
     let page = parseInt(request.query.page);
     if (isNaN(page) || page < 1) {
       page = 0;
     }
-
+  
     let content;
     try {
-      content = await feed(
-        trie,
-        reply.locals.theme,
-        page,
-        DOMPurify.sanitize(request.query.domain),
-        identity,
-        hash,
-      );
+      if (!request.query.page &&
+          !request.query.domain &&
+          !request.query.identity &&
+          !request.query.hash &&
+          request.query.custom !== "true" &&
+          cachedFeed) {
+        content = cachedFeed;
+      } else {
+        content = await feed(
+          trie,
+          reply.locals.theme,
+          page,
+          DOMPurify.sanitize(request.query.domain),
+          identity,
+          hash,
+        );
+      }
     } catch (err) {
       log(`Error in /: ${err.stack}`);
       return reply.status(500).send("Internal Server Error");
