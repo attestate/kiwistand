@@ -21,7 +21,7 @@ const fetchStaleWhileRevalidate = fetchCache(fetch, cache);
 const url =
   "https://opensheet.elk.sh/1kh9zHwzekLb7toabpdSfd87pINBpyVU6Q8jLliBXtEc/";
 export async function getConfig(sheet) {
-  const signal = AbortSignal.timeout(5000);
+  const signal = AbortSignal.timeout(10000);
   const response = await fetchStaleWhileRevalidate(url + sheet, { signal });
   if (response.ok) {
     return await response.json();

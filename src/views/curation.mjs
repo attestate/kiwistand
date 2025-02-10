@@ -18,7 +18,7 @@ const url =
   "https://opensheet.elk.sh/1R9zOdQPNo-UZqBNMvvnLig7eabKkTfMLjs1h_RGflaM/";
 
 export async function getSheet(sheetName) {
-  const signal = AbortSignal.timeout(5000);
+  const signal = AbortSignal.timeout(10000);
   const response = await fetchStaleWhileRevalidate(url + sheetName, { signal });
   if (!response.ok) {
     throw new Error("Couldn't fetch the sheet");
