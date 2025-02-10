@@ -829,16 +829,16 @@ async function start() {
 
   // NOTE: We don't want pull to refresh for the submission page as this could
   // mess up the user's input on an accidential scroll motion.
-  if (
-    window.location.pathname !== "/submit" &&
-    !document.documentElement.classList.contains("kiwi-ios-app")
-  ) {
+  if (window.location.pathname !== "/submit") {
     PullToRefresh.init({
       mainElement: "body",
       // NOTE: If the user is searching in the search drawer, we don't want
       // them to accidentially reload the page
       shouldPullToRefresh: () =>
-        !window.isSidebarOpen && !window.drawerIsOpen && !window.scrollY,
+        !window.isSidebarOpen && 
+        !window.drawerIsOpen && 
+        !window.scrollY &&
+        !document.documentElement.classList.contains("kiwi-ios-app"),
       onRefresh: () => {
         if (window.location.pathname === "/") {
           if (identity) {
