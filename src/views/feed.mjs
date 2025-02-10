@@ -525,10 +525,8 @@ const itemAge = (timestamp) => {
 };
 
 function calculateUpvoteClickRatio(story) {
-  const clicks = countOutbounds(
-    addOrUpdateReferrer(story.href, story.identity),
-  );
-  return clicks === 0 ? 0 : story.upvotes / clicks;
+  const clicks = countOutbounds(story.href);
+  return story.upvotes / (clicks + 1);
 }
 
 function meanUpvoteRatio(leaves) {
@@ -550,9 +548,7 @@ export async function topstories(leaves) {
         score = Math.log(story.upvotes);
       }
 
-      const outboundClicks = countOutbounds(
-        addOrUpdateReferrer(story.href, story.identity),
-      );
+      const outboundClicks = countOutbounds(story.href) + 1;
       if (outboundClicks > 0) {
         score = score * 0.9 + 0.1 * Math.log(outboundClicks);
       }
