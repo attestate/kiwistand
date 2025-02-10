@@ -43,14 +43,14 @@ const formatedHolders = holders.map((a) => ethers.utils.getAddress(a));
 
 const html = htm.bind(vhtml);
 
-const ContestBanner = (stories) => html`
+const ContestBanner = (stories, expanded = false) => html`
   <div style="width: 100%; margin: 16px 0; font-family: var(--font-family);">
     <div
       style="border: var(--border-thin); border-right: none; border-left: none;"
     >
       <!-- Header -->
       <div
-        onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'"
+        onclick="var c=this.nextElementSibling; if(c.style.display==='none'){ c.style.display='block'; var url=new window.URL(window.location.href); url.searchParams.set('contest','true'); window.history.replaceState({}, '', url); } else { c.style.display='none'; var url=new window.URL(window.location.href); url.searchParams.delete('contest'); window.history.pushState({}, '', url); }"
         style="padding: 16px; background: #F6F6EF; cursor: pointer; display: flex; justify-content: space-between; align-items: center;"
       >
         <div style="display: flex; align-items: center; gap: 12px">
@@ -93,7 +93,7 @@ const ContestBanner = (stories) => html`
 
       <!-- Expandable Content -->
       <div
-        style="display: none; background: white; border-top: var(--border-thin);"
+        style="display: ${expanded ? 'block' : 'none'}; background: white; border-top: var(--border-thin);"
       >
         <!-- Key Info Grid -->
         <div
@@ -1001,7 +1001,8 @@ function Newsletter() {
   `;
 }
 
-export default async function (trie, theme, page, domain, identity, hash) {
+export default async function (trie, theme, page, domain, identity, hash, contest) {
+  const expandedContest = contest === "true";
   const mints = await registry.mints();
   const path = "/";
   const totalStories = parseInt(env.TOTAL_STORIES, 10);
@@ -1010,7 +1011,7 @@ export default async function (trie, theme, page, domain, identity, hash) {
   if (identity || hash) {
     content = await recommended(trie, page, domain, identity, hash);
   } else {
-    content = await index(trie, page, domain);
+    content = await index(trie, page, domain, undefined, true, true, contest === "true");
   }
 
   const { ad, originals, stories, start, contestStories, pinnedStory } =
@@ -1079,6 +1080,7 @@ export default async function (trie, theme, page, domain, identity, hash) {
                           currentQuery,
                         ),
                       ),
+                    expandedContest
                   )}
                 </td>
               </tr>

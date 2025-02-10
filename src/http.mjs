@@ -791,6 +791,7 @@ export async function launch(trie, libp2p) {
         DOMPurify.sanitize(request.query.domain),
         identity,
         hash,
+        request.query.contest
       );
     } catch (err) {
       log(`Error in /: ${err.stack}`);
