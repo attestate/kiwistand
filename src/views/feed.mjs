@@ -310,7 +310,7 @@ const ContestBanner = (stories) => html`
 
 // NOTE: Only set this date in synchronicity with the src/launch.mjs date!!
 const cutoffDate = new Date("2025-01-15");
-const thresholdKarma = 3;
+const thresholdKarma = 5;
 export function identityClassifier(upvoter) {
   let balance = 0;
 
@@ -410,7 +410,7 @@ export async function getContestStories() {
       return null;
     }
   });
-  
+
   const submissionsResult = await Promise.allSettled(submissionPromises);
   const submissions = submissionsResult
     .filter((result) => result.status === "fulfilled" && result.value !== null)
