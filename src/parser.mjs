@@ -166,7 +166,11 @@ async function extractWarpcastContent(url) {
     });
 
     const data = await response.json();
-    return data?.cast?.text || null;
+    if (!data?.cast) return null;
+    return {
+      text: data.cast.text,
+      author: data.cast.author.username,
+    };
   } catch (error) {
     console.error("Neynar API error:", error);
     return null;
@@ -320,14 +324,18 @@ export const metadata = async (url, generateTitle = false) => {
   let output = {};
   if (generateTitle) {
     if (hostname === "warpcast.com") {
-      const castContent = await extractWarpcastContent(url);
-      if (castContent) {
+      const cast = await extractWarpcastContent(url);
+      if (cast) {
+        const castContent = `Cast by ${cast.author}: ${cast.text}`;
         const claudeTitle = await generateClaudeTitle(castContent);
         if (claudeTitle) {
           output.ogTitle = claudeTitle;
         }
       }
-    } else if (twitterFrontends.includes(hostname)) {
+    } else if (
+      twitterFrontends.includes(hostname) &&
+      !ogDescription?.includes("x.com/i/article/")
+    ) {
       const tweetAuthor = result.ogTitle || result.twitterCreator;
       const tweetContent = `Tweet by ${tweetAuthor}: ${ogDescription}`;
       const claudeTitle = await generateClaudeTitle(tweetContent);
@@ -337,7 +345,7 @@ export const metadata = async (url, generateTitle = false) => {
     }
   }
 
-  if (!output.ogTitle && ogTitle) {
+  if (!output.ogTitle && ogTitle && !bannedTitleDomains.includes(hostname)) {
     output.ogTitle = ogTitle;
   }
 
