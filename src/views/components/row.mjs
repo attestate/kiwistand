@@ -521,11 +521,12 @@ const row = (
                             )}
                           `}
                       ${!interactive &&
-                      (path === "/" || path === "/new" || path === "/best") &&
-                      !displayMobileImage
+                      (path === "/" || path === "/new" || path === "/best")
                         ? html`
-                            <span style="opacity:0.6"> • </span>
-                            <span>${extractedDomain}</span>
+                            <span class="domain-text">
+                              <span style="opacity:0.6"> • </span>
+                              <span>${extractedDomain}</span>
+                            </span>
                           `
                         : ""}
                       <span style="opacity:0.6"> • </span>

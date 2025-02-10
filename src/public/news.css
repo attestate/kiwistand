@@ -445,8 +445,13 @@ body {
 .row-image {
   display: none !important;
 }
+/* Hide domain text in subtitle when showing mobile image */
+.content-row-elevated .story-subtitle .domain-text {
+  display: none;
+}
+
 /* mobile device */
- @media only screen and (min-width : 300px) and (max-width : 640px) {
+@media only screen and (min-width : 300px) and (max-width : 640px) {
     .scroll-margin-base {
       scroll-margin-top: 140px;
     }
@@ -786,6 +791,10 @@ body {
     }
     .row-image {
       display: block !important;
+    }
+    /* Always show domain in subtitle for desktop */
+    .story-subtitle .domain-text {
+      display: inline !important;
     }
     .mobile-center {
       display: none !important;
