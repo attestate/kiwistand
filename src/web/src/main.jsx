@@ -289,6 +289,7 @@ async function addConnectedComponents(allowlist, delegations, toast) {
         <ConnectedTextConnectButton
           allowlist={allowlist}
           delegations={delegations}
+          toast={toast}
         />
       </StrictMode>,
     );
@@ -300,7 +301,7 @@ async function addConnectedComponents(allowlist, delegations, toast) {
     bellButton.style = "";
     createRoot(bellButton).render(
       <StrictMode>
-        <Bell allowlist={allowlist} delegations={delegations} />
+        <Bell toast={toast} allowlist={allowlist} delegations={delegations} />
       </StrictMode>,
     );
   }
@@ -321,7 +322,12 @@ async function addConnectedComponents(allowlist, delegations, toast) {
     const Bell = (await import("./Bell.jsx")).default;
     createRoot(mobileBellButton).render(
       <StrictMode>
-        <Bell mobile allowlist={allowlist} delegations={delegations} />
+        <Bell
+          toast={toast}
+          mobile
+          allowlist={allowlist}
+          delegations={delegations}
+        />
       </StrictMode>,
     );
   }
@@ -331,7 +337,11 @@ async function addConnectedComponents(allowlist, delegations, toast) {
     const { ConnectedProfile } = await import("./Navigation.jsx");
     createRoot(profileLink).render(
       <StrictMode>
-        <ConnectedProfile allowlist={allowlist} delegations={delegations} />
+        <ConnectedProfile
+          toast={toast}
+          allowlist={allowlist}
+          delegations={delegations}
+        />
       </StrictMode>,
     );
   }
@@ -341,7 +351,7 @@ async function addConnectedComponents(allowlist, delegations, toast) {
     const { ConnectedDisconnectButton } = await import("./Navigation.jsx");
     createRoot(disconnect).render(
       <StrictMode>
-        <ConnectedDisconnectButton />
+        <ConnectedDisconnectButton toast={toast} />
       </StrictMode>,
     );
   }
@@ -355,7 +365,7 @@ async function addConnectedComponents(allowlist, delegations, toast) {
     );
     createRoot(simpledisconnect).render(
       <StrictMode>
-        <ConnectedSimpleDisconnectButton />
+        <ConnectedSimpleDisconnectButton toast={toast} />
       </StrictMode>,
     );
   }
@@ -366,7 +376,7 @@ async function addConnectedComponents(allowlist, delegations, toast) {
     );
     createRoot(headerdisconnect).render(
       <StrictMode>
-        <ConnectedSimpleDisconnectButton label="Disconnect" />
+        <ConnectedSimpleDisconnectButton label="Disconnect" toast={toast} />
       </StrictMode>,
     );
   }
