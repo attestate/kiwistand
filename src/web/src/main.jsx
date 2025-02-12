@@ -225,6 +225,25 @@ async function addFriendBuyButton(toast, allowlist) {
   }
 }
 
+async function addEmailSubscriptionForm(allowlist, delegations, toast) {
+  const elem = document.querySelector("email-subscription-form");
+  if (elem) {
+    const { ConnectedEmailSubscriptionForm } = await import("./Bell.jsx");
+    createRoot(elem).render(
+      <StrictMode>
+        <ConnectedEmailSubscriptionForm
+          allowlist={allowlist}
+          delegations={delegations}
+          toast={toast}
+          onSuccess={() => {
+            window.location.href = "/demonstration";
+          }}
+        />
+      </StrictMode>,
+    );
+  }
+}
+
 async function addBuyButton(allowlistPromise, delegationsPromise, toast) {
   const buyButtonContainer = document.querySelector("#buy-button-container");
   if (buyButtonContainer) {
@@ -408,7 +427,7 @@ async function addPasskeysDialogue(toast, allowlist) {
           >
             Your next step:
           </p>
-          <a href="/demonstration">
+          <a href="/email-notifications">
             <button
               className="button-secondary"
               style={{ width: "auto" }}
@@ -608,7 +627,7 @@ async function checkMintStatus(address) {
     if (supportsPasskeys() && (await testPasskeys())) {
       window.location.href = "/passkeys";
     } else {
-      window.location.href = "/demonstration";
+      window.location.href = "/email-notifications";
     }
   }, 3000);
 }
@@ -845,8 +864,8 @@ async function start() {
       // NOTE: If the user is searching in the search drawer, we don't want
       // them to accidentially reload the page
       shouldPullToRefresh: () =>
-        !window.isSidebarOpen && 
-        !window.drawerIsOpen && 
+        !window.isSidebarOpen &&
+        !window.drawerIsOpen &&
         !window.scrollY &&
         !document.documentElement.classList.contains("kiwi-ios-app"),
       onRefresh: () => {
@@ -878,6 +897,11 @@ async function start() {
     addCommentInput(toast, await allowlistPromise, await delegationsPromise),
     addSubscriptionButton(await allowlistPromise, toast),
     addTGLink(await allowlistPromise),
+    addEmailSubscriptionForm(
+      await allowlistPromise,
+      await delegationsPromise,
+      toast,
+    ),
     addPasskeysDialogue(toast, await allowlistPromise),
     addModals(await allowlistPromise, await delegationsPromise, toast),
     addNFTPrice(),

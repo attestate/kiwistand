@@ -343,6 +343,30 @@ function BackupKey(props) {
     return null;
   }
   if (lbResult && lbResult.includes("successful")) {
+    let redirectButton = props.redirectButton ? props.redirectButton : "";
+    if (
+      isIOS() &&
+      window.location.pathname === "/passkeys" &&
+      !props.isAppOnboarding
+    ) {
+      redirectButton = (
+        <a
+          href="/app-testflight"
+          style={{
+            display: "inline-block",
+            padding: "10px 20px",
+            fontWeight: "bold",
+            color: "black",
+            textDecoration: "none",
+            borderRadius: "2px",
+            marginTop: "20px",
+          }}
+        >
+          Continue to App Installation →
+        </a>
+      );
+    }
+
     const successContent = (
       <div>
         <ProgressBar progress={progress} />
@@ -367,10 +391,10 @@ function BackupKey(props) {
           All set! Next time you connect, just tap "Connect with Passkeys" to
           instantly access your account.
         </p>
+        {redirectButton}
       </div>
     );
 
-    // Only show TestFlight link in app onboarding flow
     if (props.isAppOnboarding) {
       return (
         <div>
@@ -392,7 +416,6 @@ function BackupKey(props) {
         </div>
       );
     }
-
     return successContent;
   } else if (lbResult) {
     return (

@@ -188,6 +188,16 @@ const EmailSubscriptionForm = ({
   );
 };
 
+const ConnectedEmailSubscriptionForm = (props) => {
+  return (
+    <Connector {...props}>
+      <EmailSubscriptionForm {...props} />
+    </Connector>
+  );
+};
+
+export { ConnectedEmailSubscriptionForm };
+
 const NotificationButton = ({ onEnabled }) => {
   const [permissionStatus, setPermissionStatus] = useState("default");
 

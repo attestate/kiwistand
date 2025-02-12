@@ -64,6 +64,7 @@ import appOnboarding from "./views/app-onboarding.mjs";
 import appTestflight from "./views/app-testflight.mjs";
 import demonstration from "./views/demonstration.mjs";
 import notifications from "./views/notifications.mjs";
+import emailNotifications from "./views/email-notifications.mjs";
 import pwa from "./views/pwa.mjs";
 import pwaandroid from "./views/pwaandroid.mjs";
 import * as curation from "./views/curation.mjs";
@@ -1049,6 +1050,10 @@ export async function launch(trie, libp2p) {
       "public, s-maxage=86400, max-age=86400, stale-while-revalidate=600000",
     );
     return reply.status(200).type("text/html").send(content);
+  });
+  app.get("/email-notifications", async (request, reply) => {
+    reply.header("Cache-Control", "public, s-maxage=86400, max-age=86400, stale-while-revalidate=600000");
+    return reply.status(200).type("text/html").send(await emailNotifications(reply.locals.theme));
   });
   app.get("/invite", async (request, reply) => {
     const content = await invite(reply.locals.theme);
