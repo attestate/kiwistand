@@ -52,6 +52,11 @@ const SubscriptionButton = (props) => {
   });
 
   const handlePushSubscription = async () => {
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') {
+      console.log("User denied push permission");
+      return;
+    }
     let registration;
     try {
       await navigator.serviceWorker.register("/serviceWorker.js");
