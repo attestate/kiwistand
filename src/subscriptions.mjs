@@ -126,7 +126,7 @@ export async function send(address, payload) {
         );
       } catch (error) {
         log(
-          `Error sending a notification to "${address}", err "${err.toString()}"`,
+          `Error sending a notification to "${address}", err "${error.toString()}"`,
         );
         remove(address, subscription);
       }
