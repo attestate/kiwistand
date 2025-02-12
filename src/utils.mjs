@@ -1,8 +1,10 @@
 import path from "path";
 import { fileURLToPath } from "url";
 
-import { Response } from "node-fetch";
+import { Response, Request } from "node-fetch";
 import { getCacheKey } from "node-fetch-cache";
+
+const staleStore = new Map();
 
 // NOTE: This is an extension of node-fetch-cache where we're loading the
 // to-be-cached data in the background while returning an error to the caller
@@ -15,11 +17,22 @@ export function fetchCache(fetch, cache) {
 
   return async (url, options = {}) => {
     const cacheKey = getCacheKey(url, options);
-    const cachedValue = await cache.get(cacheKey);
+    let cachedValue = await cache.get(cacheKey);
 
     (async () => {
       try {
-        await fetch(url, options);
+        const networkResponse = await fetch(url, options);
+        if (networkResponse.ok) {
+          const buffer = await networkResponse.buffer();
+          // Update the extra stale store with this network response.
+          staleStore.set(cacheKey, {
+            bodyStream: buffer,
+            metaData: {
+              status: networkResponse.status,
+              headers: networkResponse.headers.raw(),
+            },
+          });
+        }
       } catch (error) {
         console.error(`Error fetching and caching data for ${url}:`, error);
       }
@@ -29,6 +42,10 @@ export function fetchCache(fetch, cache) {
       // NOTE: node-fetch-cache doesn't return a node-fetch Response, hence we're
       // casting it to one before handing it back to the business logic.
       return new Response(cachedValue.bodyStream, cachedValue.metaData);
+    }
+    if (staleStore.has(cacheKey)) {
+      const staleValue = staleStore.get(cacheKey);
+      return new Response(staleValue.bodyStream, staleValue.metaData);
     }
 
     throw new Error(`No cached data momentarily available for ${url}`);
