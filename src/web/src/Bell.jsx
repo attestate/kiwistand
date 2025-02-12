@@ -23,6 +23,7 @@ const EmailSubscriptionForm = ({
   const [status, setStatus] = useState("");
   const [subscribeToComments, setSubscribeToComments] = useState(true);
   const [subscribeToNewsletter, setSubscribeToNewsletter] = useState(true);
+  const [subscribeToUpdates, setSubscribeToUpdates] = useState(true);
   const account = useAccount();
   const localAccount = getLocalAccount(account.address, allowlist);
   const provider = useProvider();
@@ -88,6 +89,23 @@ const EmailSubscriptionForm = ({
 
         if (!response.ok) {
           throw new Error("Newsletter subscription failed");
+        }
+      }
+
+      // Subscribe to Kiwi Updates
+      if (subscribeToUpdates) {
+        const response = await fetch(
+          "https://paragraph.xyz/api/blogs/@kiwi-updates/subscribe",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ email }),
+          },
+        );
+        if (!response.ok) {
+          throw new Error("Kiwi Updates subscription failed");
         }
       }
 
@@ -163,6 +181,23 @@ const EmailSubscriptionForm = ({
               style={{ marginRight: "8px" }}
             />
             Subscribe to Kiwi Weekly
+          </label>
+
+          <label
+            style={{
+              display: "flex",
+              alignItems: "center",
+              fontSize: "11pt",
+              color: "#666",
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={subscribeToUpdates}
+              onChange={(e) => setSubscribeToUpdates(e.target.checked)}
+              style={{ marginRight: "8px" }}
+            />
+            Subscribe to Kiwi Updates
           </label>
         </div>
 
