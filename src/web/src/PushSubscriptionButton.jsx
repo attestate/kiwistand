@@ -54,9 +54,8 @@ const SubscriptionButton = (props) => {
   const handlePushSubscription = async () => {
     let registration;
     try {
-      registration = await navigator.serviceWorker.register(
-        "/serviceWorker.js",
-      );
+      await navigator.serviceWorker.register("/serviceWorker.js");
+      registration = await navigator.serviceWorker.ready;
     } catch (err) {
       console.log("Service worker registration failed", err);
       return;
