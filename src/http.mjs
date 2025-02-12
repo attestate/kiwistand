@@ -92,16 +92,6 @@ const app = express();
 const server = createServer(app);
 
 let cachedFeed = null;
-(async function updateCachedFeed() {
-  try {
-    cachedFeed = await feed(trie, theme, 0, null, undefined, undefined);
-    log("Cached feed updated");
-  } catch (err) {
-    log("Failed to update cached feed: " + err);
-    cachedFeed = null;
-  }
-  setTimeout(updateCachedFeed, 30000);
-})();
 
 app.set("etag", false);
 app.use((req, res, next) => {
@@ -200,6 +190,30 @@ function sendStatus(reply, code, message, details, data) {
 export async function launch(trie, libp2p) {
   const wss = new ws.Server({ noServer: true });
   const clients = new Set();
+
+  try {
+    cachedFeed = await feed(trie, theme, 0, null, undefined, undefined);
+    log("Cached feed updated");
+  } catch (err) {
+    log("Failed to update cached feed: " + err);
+    cachedFeed = null;
+  }
+  (function updateCachedFeed() {
+    setTimeout(async () => {
+      const startTime = Date.now();
+      try {
+        const newFeed = await feed(trie, theme, 0, null, undefined, undefined);
+        cachedFeed = newFeed;
+        const elapsed = Date.now() - startTime;
+        log(`Cached feed updated in ${elapsed}ms`);
+      } catch (err) {
+        log("Failed to update cached feed: " + err);
+        // Retain existing cachedFeed to avoid response delays.
+      } finally {
+        updateCachedFeed();
+      }
+    }, 30000);
+  })();
 
   app.use((err, req, res, next) => {
     log(`Express error: "${err.message}", "${err.stack}"`);
