@@ -93,6 +93,16 @@ export function store(address, subscription) {
   stmt.run(address, JSON.stringify(subscription));
 }
 
+export function remove(address, subscription) {
+  const endpoint = subscription.endpoint;
+  const stmt = db.prepare(
+    "DELETE FROM subscriptions WHERE address = ? AND subscription LIKE ?",
+  );
+  // Using a LIKE clause to match the endpoint URL directly, which should work if the URL is unique.
+  const likePattern = `%${endpoint}%`;
+  stmt.run(address, likePattern);
+}
+
 export function get(address) {
   const stmt = db.prepare(
     "SELECT subscription FROM subscriptions WHERE address = ?",
@@ -118,6 +128,7 @@ export async function send(address, payload) {
         log(
           `Error sending a notification to "${address}", err "${err.toString()}"`,
         );
+        remove(address, subscription);
       }
     }),
   );
