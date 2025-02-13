@@ -455,7 +455,6 @@ export const metadata = async (
       fixTitle(submittedTitle)
         .then((compliant) => {
           if (compliant) {
-            console.log(compliant);
             lifetimeCache.set(cacheKey, compliant);
           }
         })
