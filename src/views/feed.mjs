@@ -583,7 +583,9 @@ async function addMetadata(post) {
   }
 
   const metadataTTLSeconds = 60 * 60; // 1 hour
-  metadata(post.href)
+  const generateTitle = false;
+  const submittedTitle = post.title;
+  metadata(post.href, generateTitle, submittedTitle)
     .then((result) => {
       if (result && result.image) {
         cache.set(metadataCacheKey, result, [metadataTTLSeconds]);

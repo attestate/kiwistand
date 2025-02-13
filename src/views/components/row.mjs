@@ -460,13 +460,13 @@ const row = (
                           ? html`<mark
                               style="background-color: rgba(255,255,0, 0.05); padding: 0px 2px;"
                               >${truncateLongWords(
-                                DOMPurify.sanitize(story.title),
+                                DOMPurify.sanitize((story.metadata && story.metadata.compliantTitle) ? story.metadata.compliantTitle : story.title),
                               )}</mark
                             >`
                           : html`${pinned
                               ? html`${pin} `
                               : ""}${truncateLongWords(
-                              DOMPurify.sanitize(story.title),
+                              DOMPurify.sanitize((story.metadata && story.metadata.compliantTitle) ? story.metadata.compliantTitle : story.title),
                             )}`}
                       </a>
                       <span> </span>

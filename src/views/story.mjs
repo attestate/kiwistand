@@ -197,9 +197,10 @@ export default async function (trie, theme, index, value, referral) {
   }
   const path = "/stories";
 
+  const generateTitle = false;
   let data;
   try {
-    data = await metadata(value.href);
+    data = await metadata(value.href, generateTitle, value.title);
   } catch (err) {}
 
   const policy = await moderation.getLists();

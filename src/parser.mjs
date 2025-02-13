@@ -1,5 +1,6 @@
 import { env } from "process";
 import path from "path";
+import normalizeUrl from "normalize-url";
 
 import DOMPurify from "isomorphic-dompurify";
 import ogs from "open-graph-scraper-lite";
@@ -12,7 +13,7 @@ import Anthropic from "@anthropic-ai/sdk";
 
 import { fetchCache as fetchCacheFactory } from "./utils.mjs";
 
-import cache from "./cache.mjs";
+import cache, { lifetimeCache } from "./cache.mjs";
 import log from "./logger.mjs";
 
 const fetchCache = new FileSystemCache({
@@ -69,6 +70,16 @@ const twitterFrontends = [
   "x.com",
 ];
 const CLAUDE_DOMAINS = ["warpcast.com", "fxtwitter.com", ...twitterFrontends];
+
+const TITLE_COMPLIANCE = `
+Format this title according to these rules:
+ 1. Use sentence case (capitalize first word only)
+ 2. Remove any emojis
+ 3. Maximum 80 characters
+ 4. No trailing period
+ 5. Keep any existing dash (-) or colon (:) formatting
+ 6. Format dates as YYYY-MM-DD
+`;
 
 const GUIDELINES = `We have an opportunity to build our own corner of the onchain internet. With awesome people, links, resources, and learning.
 
@@ -148,6 +159,63 @@ async function generateClaudeTitle(content) {
     return toolUse.input.title;
   } catch (error) {
     console.error("Error extracting title from response:", error);
+    return null;
+  }
+}
+
+async function fixTitle(title) {
+  const prompt = `Here are our submission guidelines:\n\n${TITLE_COMPLIANCE}\n\nModify the following title minimally so that it fully complies with these guidelines. Keep all information in the title. Only modify syntactically. Return only a JSON object with a "title" property containing the modified title.\nTitle: "${title}"`;
+  let response;
+  try {
+    response = await anthropic.messages.create({
+      model: "claude-3-5-haiku-20241022",
+      max_tokens: 100,
+      temperature: 0,
+      tools: [
+        {
+          name: "generate_title",
+          description:
+            "Generate a title following the provided guidelines for our Web3/crypto hacker news platform.",
+          input_schema: {
+            type: "object",
+            properties: {
+              title: {
+                type: "string",
+                description:
+                  "The generated title that follows all provided guidelines",
+              },
+            },
+            required: ["title"],
+          },
+        },
+      ],
+      tool_choice: { type: "tool", name: "generate_title" },
+      messages: [
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+    });
+  } catch (error) {
+    console.error("fixTitle API request failed:", error);
+    return null;
+  }
+  try {
+    let toolUse = response.content.find((c) => c.type === "tool_use");
+    if (toolUse && toolUse.input && toolUse.input.title) {
+      return toolUse.input.title;
+    } else if (response.completion && response.completion.trim().length > 0) {
+      console.warn(
+        "No tool_use block found, falling back to response.completion",
+      );
+      return response.completion.trim();
+    } else {
+      console.error("No title found in fixTitle response");
+      return null;
+    }
+  } catch (error) {
+    console.error("Error extracting title in fixTitle:", error);
     return null;
   }
 }
@@ -233,7 +301,11 @@ const getYTId = (url) => {
   }
 };
 
-export const metadata = async (url, generateTitle = false) => {
+export const metadata = async (
+  url,
+  generateTitle = false,
+  submittedTitle = undefined,
+) => {
   let urlObj;
   try {
     urlObj = new URL(url);
@@ -373,6 +445,23 @@ export const metadata = async (url, generateTitle = false) => {
 
   const pagespeed = await getPageSpeedScore(url);
   output.pagespeed = pagespeed;
+
+  if (submittedTitle) {
+    const normalized = normalizeUrl(url, { stripWWW: false });
+    const cacheKey = `compliantTitle-${normalized}`;
+    if (lifetimeCache.has(cacheKey)) {
+      output.compliantTitle = lifetimeCache.get(cacheKey);
+    } else {
+      fixTitle(submittedTitle)
+        .then((compliant) => {
+          if (compliant) {
+            console.log(compliant);
+            lifetimeCache.set(cacheKey, compliant);
+          }
+        })
+        .catch((err) => log(`fixTitle background error: ${err}`));
+    }
+  }
 
   return output;
 };
