@@ -327,11 +327,13 @@ const row = (
                 >
                   <div style="position: relative;">
                     <img
-                      ${i > 2 ? 'loading="lazy"' : ''}
+                      ${i > 2 ? 'loading="lazy"' : ""}
                       style="aspect-ratio: 2 / 1; object-fit:cover; margin: 0 11px; border-radius: 2px; width: calc(100% - 24px);"
                       src="${DOMPurify.sanitize(story.metadata.image)}"
                     />
-                    <div style="position: absolute; bottom: 8px; left: 19px; background: rgba(255,255,255,0.9); padding: 2px 6px; border-radius: 2px; font-size: 9pt;">
+                    <div
+                      style="position: absolute; bottom: 8px; left: 19px; background: rgba(255,255,255,0.9); padding: 2px 6px; border-radius: 2px; font-size: 9pt;"
+                    >
                       ${extractedDomain}
                     </div>
                   </div>
@@ -419,7 +421,7 @@ const row = (
                       )}', event.currentTarget.getAttribute('target'));"
                     >
                       <img
-                        ${i > 2 ? 'loading="lazy"' : ''}
+                        ${i > 2 ? 'loading="lazy"' : ""}
                         style="max-height: 61px; border: var(--border-line); border-radius: 2px; width: 110px; object-fit: cover;"
                         src="${DOMPurify.sanitize(story.metadata.image)}"
                     /></a>`
@@ -459,13 +461,22 @@ const row = (
                           ? html`<mark
                               style="background-color: rgba(255,255,0, 0.05); padding: 0px 2px;"
                               >${truncateLongWords(
-                                DOMPurify.sanitize((story.metadata && story.metadata.compliantTitle) ? story.metadata.compliantTitle : story.title),
+                                DOMPurify.sanitize(
+                                  story.metadata &&
+                                    story.metadata.compliantTitle
+                                    ? story.metadata.compliantTitle
+                                    : story.title,
+                                ),
                               )}</mark
                             >`
                           : html`${pinned
                               ? html`${pin} `
                               : ""}${truncateLongWords(
-                              DOMPurify.sanitize((story.metadata && story.metadata.compliantTitle) ? story.metadata.compliantTitle : story.title),
+                              DOMPurify.sanitize(
+                                story.metadata && story.metadata.compliantTitle
+                                  ? story.metadata.compliantTitle
+                                  : story.title,
+                              ),
                             )}`}
                       </a>
                       <span> </span>
@@ -487,7 +498,7 @@ const row = (
                             ${story.avatars.slice(0, 5).map(
                               (avatar, index) => html`
                                 <img
-                                  ${i > 2 ? 'loading="lazy"' : ''}
+                                  ${i > 2 ? 'loading="lazy"' : ""}
                                   src="${avatar}"
                                   alt="avatar"
                                   style="z-index: ${index}; width: ${size}px; height:
