@@ -99,6 +99,15 @@ export default async function (theme, query) {
                 ${SecondHeader(theme, "search", null, null, sanitizedQuery)}
               </tr>
               ${results.length > 0
+                ? html` <tr>
+                    <td
+                      style="padding: 10px 0 15px 11px; text-align: left; color: #666;"
+                    >
+                      Search results for "${sanitizedQuery}"
+                    </td>
+                  </tr>`
+                : null}
+              ${results.length > 0
                 ? await processSearchResults(results)
                 : html`<tr>
                     <td
