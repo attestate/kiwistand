@@ -1,4 +1,5 @@
 import "vite/modulepreload-polyfill";
+import "./request_monitor.js";
 import "@rainbow-me/rainbowkit/styles.css";
 import PullToRefresh from "pulltorefreshjs";
 import { StrictMode } from "react";
