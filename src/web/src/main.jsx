@@ -335,6 +335,18 @@ async function addConnectedComponents(allowlist, delegations, toast) {
       </StrictMode>,
     );
   }
+  const desktopSearchContainer = document.querySelector(
+    "#static-desktop-search",
+  );
+  if (desktopSearchContainer) {
+    import("./DesktopSearch.jsx").then((module) => {
+      createRoot(desktopSearchContainer).render(
+        <StrictMode>
+          <module.default />
+        </StrictMode>,
+      );
+    });
+  }
 
   const mobileBellButton = document.querySelector(".mobile-bell-container");
   if (mobileBellButton) {

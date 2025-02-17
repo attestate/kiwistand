@@ -50,8 +50,8 @@ const SearchInterface = () => {
       }
 
       const data = await response.json();
-      if (data.status === "success" && data.data?.data) {
-        setResults(data.data.data);
+      if (data.status === "success" && Array.isArray(data.data)) {
+        setResults(data.data);
       } else {
         setResults([]);
       }

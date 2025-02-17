@@ -49,6 +49,7 @@ import community from "./views/community.mjs";
 import stats from "./views/stats.mjs";
 import users from "./views/users.mjs";
 import basics from "./views/basics.mjs";
+import search from "./views/search.mjs";
 import retention from "./views/retention.mjs";
 import * as activity from "./views/activity.mjs";
 import * as comments from "./views/comments.mjs";
@@ -1514,6 +1515,13 @@ export async function launch(trie, libp2p) {
       wss.emit("connection", socket, request);
     });
   });
+  app.get("/search", async (request, reply) => {
+    const query = request.query.q || "";
+    const content = await search(reply.locals.theme, query);
+    reply.header("Cache-Control", "no-cache");
+    return reply.status(200).type("text/html").send(content);
+  });
+
   server.listen(env.HTTP_PORT, () =>
     log(`Launched HTTP server at port "${env.HTTP_PORT}"`),
   );

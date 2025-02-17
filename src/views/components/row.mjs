@@ -488,6 +488,7 @@ const row = (
                   >
                     <span style="opacity: 0.8">
                       ${path !== "/stories" &&
+                      story.avatars &&
                       story.avatars.length > 3 &&
                       html`
                         <span>

@@ -190,134 +190,175 @@ const animation = `
   var intervalId = setInterval(animate, 500);
  `;
 
-const secondheader = (theme, site, period, domain) => {
+const secondheader = (theme, site, period, domain, query) => {
   period = DOMPurify.sanitize(period);
   domain = DOMPurify.sanitize(domain);
   return html`
     <td>
       <div
         class="second-header"
-        style="background-color: var(--table-bg); min-height: 40px; display: flex; justify-content: space-between; align-items: center; padding: 10px 15px 10px 15px; color: white;"
+        style="background-color: var(--table-bg); min-height: 40px; display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; color: white;"
       >
-        <div style="display: flex;">
-          ${site === "top" || site === "new" || site === "best"
-            ? html` <a data-no-instant class="feed-button-link" href="/">
-                <button
-                  onclick="${animation}"
-                  class="feed-button"
-                  style=${`font-variant: small-caps; font-size: 1.01rem; border: none; outline: none; border-radius: 2px; cursor: pointer; padding: 6px 15px; background-color: rgba(0,0,0,${
-                    site === "top" ? "0.2" : "0.1"
-                  }); color: black;`}
-                >
-                  <span
-                    style="font-weight: ${site === "top" ? "bold" : "normal"};"
+        <div style="display: flex; align-items: center;">
+          ${site === "search" ||
+          site === "top" ||
+          site === "new" ||
+          site === "best"
+            ? html`
+                <a data-no-instant class="feed-button-link" href="/">
+                  <button
+                    onclick="${animation}"
+                    class="feed-button"
+                    style=${`font-variant: small-caps; font-size: 1.01rem; border: none; outline: none; border-radius: 2px; cursor: pointer; padding: 6px 15px; background-color: rgba(0,0,0,${
+                      site === "top" ? "0.2" : "0.1"
+                    }); color: black;`}
                   >
-                    ${site === "top" ? fireFullSVG : fireSVG} Hot</span
-                  >
-                </button>
-              </a>`
+                    <span
+                      style="font-weight: ${site === "top"
+                        ? "bold"
+                        : "normal"};"
+                    >
+                      ${site === "top" ? fireFullSVG : fireSVG} Hot
+                    </span>
+                  </button>
+                </a>
+              `
             : ""}
-          ${site === "top" || site === "new" || site === "best"
-            ? html` <a
-                data-no-instant
-                class="feed-button-link"
-                href="/new?cached=true"
-              >
-                <button
-                  onclick="${animation}"
-                  class="feed-button"
-                  style=${`font-variant: small-caps; margin-left: 10px; font-size: 1.01rem; border: none; outline: none; border-radius: 2px; cursor: pointer; padding: 6px 15px; background-color: rgba(0,0,0,${
-                    site === "new" ? "0.2" : "0.1"
-                  }); color: black; position:relative;`}
+          ${site === "search" ||
+          site === "top" ||
+          site === "new" ||
+          site === "best"
+            ? html`
+                <a
+                  data-no-instant
+                  class="feed-button-link"
+                  href="/new?cached=true"
                 >
-                  <span
-                    id="new-dot"
-                    style="display: none; position: absolute; top: -5px; right: -5px; width: 8px; height: 8px; border-radius: 2px; background-color: #228B22;"
-                  ></span>
-                  <span
-                    style="font-weight: ${site === "new" ? "bold" : "normal"};"
+                  <button
+                    onclick="${animation}"
+                    class="feed-button"
+                    style=${`font-variant: small-caps; margin-left: 10px; font-size: 1.01rem; border: none; outline: none; border-radius: 2px; cursor: pointer; padding: 6px 15px; background-color: rgba(0,0,0,${
+                      site === "new" ? "0.2" : "0.1"
+                    }); color: black; position:relative;`}
                   >
-                    ${site === "new" ? broadcastFullSVG : broadcastSVG(style)}
-                    <span> New </span>
-                  </span>
-                </button>
-              </a>`
+                    <span
+                      id="new-dot"
+                      style="display: none; position: absolute; top: -5px; right: -5px; width: 8px; height: 8px; border-radius: 2px; background-color: #228B22;"
+                    ></span>
+                    <span
+                      style="font-weight: ${site === "new"
+                        ? "bold"
+                        : "normal"};"
+                    >
+                      ${site === "new" ? broadcastFullSVG : broadcastSVG(style)}
+                      <span> New </span>
+                    </span>
+                  </button>
+                </a>
+              `
             : ""}
-          ${site === "top" || site === "new" || site === "best"
-            ? html` <a data-no-instant class="feed-button-link" href="/best">
-                <button
-                  onclick="${animation}"
-                  class="feed-button"
-                  style=${`font-variant: small-caps; margin-left: 10px; font-size: 1.01rem; border: none; outline: none; border-radius: 2px; cursor: pointer; padding: 6px 15px; background-color: rgba(0,0,0,${
-                    site === "best" ? "0.2" : "0.1"
-                  }); color: black;`}
-                >
-                  <span
-                    style="font-weight: ${site === "best" ? "bold" : "normal"};"
+          ${site === "search" ||
+          site === "top" ||
+          site === "new" ||
+          site === "best"
+            ? html`
+                <a data-no-instant class="feed-button-link" href="/best">
+                  <button
+                    onclick="${animation}"
+                    class="feed-button"
+                    style=${`font-variant: small-caps; margin-left: 10px; font-size: 1.01rem; border: none; outline: none; border-radius: 2px; cursor: pointer; padding: 6px 15px; background-color: rgba(0,0,0,${
+                      site === "best" ? "0.2" : "0.1"
+                    }); color: black;`}
                   >
-                    ${site === "best" ? trophyFullSVG : trophySVG} Top</span
-                  >
-                </button>
-              </a>`
+                    <span
+                      style="font-weight: ${site === "best"
+                        ? "bold"
+                        : "normal"};"
+                    >
+                      ${site === "best" ? trophyFullSVG : trophySVG} Top
+                    </span>
+                  </button>
+                </a>
+              `
             : ""}
         </div>
+        ${site === "search" ||
+        site === "top" ||
+        site === "new" ||
+        site === "best"
+          ? html`
+              <div
+                id="static-desktop-search"
+                style="display: flex; align-items: center;"
+              >
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  value="${site === "search" ? query : ""}"
+                  disabled
+                  style="width: 200px; height: 32px; padding: 4px 4px 4px 32px; font-size: 1.01rem; font-variant: small-caps; border: var(--border-thin);"
+                />
+              </div>
+            `
+          : ""}
       </div>
-
       ${site === "best"
-        ? html` <div
-            class="second-header"
-            style="background-color: var(--table-bg); min-height: 40px; display: flex; justify-content: space-between; align-items: center; padding: 0 15px 10px 15px; color: white;"
-          >
-            <div>
-              <a
-                data-no-instant
-                href="/best?period=all${domain ? `&domain=${domain}` : ""}"
-              >
-                <button style="${periodIconStyle(theme, period, "all")}">
-                  <span>All</span>
-                </button>
-              </a>
-              <a
-                data-no-instant
-                href="/best?period=year${domain ? `&domain=${domain}` : ""}"
-              >
-                <button style="${periodIconStyle(theme, period, "year")}">
-                  <span>Year</span>
-                </button>
-              </a>
-              <a
-                data-no-instant
-                href="/best?period=month${domain ? `&domain=${domain}` : ""}"
-              >
-                <button style="${periodIconStyle(theme, period, "month")}">
-                  <span>Month</span>
-                </button>
-              </a>
-              <a
-                data-no-instant
-                href="/best?period=week${domain ? `&domain=${domain}` : ""}"
-              >
-                <button style="${periodIconStyle(theme, period, "week")}">
-                  <span>Week</span>
-                </button>
-              </a>
-              <a
-                data-no-instant
-                href="/best?period=day${domain ? `&domain=${domain}` : ""}"
-              >
-                <button style="${periodIconStyle(theme, period, "day")}">
-                  <span>Day</span>
-                </button>
-              </a>
+        ? html`
+            <div
+              class="second-header"
+              style="background-color: var(--table-bg); min-height: 40px; display: flex; justify-content: space-between; align-items: center; padding: 0 15px 10px 15px; color: white;"
+            >
+              <div>
+                <a
+                  data-no-instant
+                  href="/best?period=all${domain ? `&domain=${domain}` : ""}"
+                >
+                  <button style="${periodIconStyle(theme, period, "all")}">
+                    <span>All</span>
+                  </button>
+                </a>
+                <a
+                  data-no-instant
+                  href="/best?period=year${domain ? `&domain=${domain}` : ""}"
+                >
+                  <button style="${periodIconStyle(theme, period, "year")}">
+                    <span>Year</span>
+                  </button>
+                </a>
+                <a
+                  data-no-instant
+                  href="/best?period=month${domain ? `&domain=${domain}` : ""}"
+                >
+                  <button style="${periodIconStyle(theme, period, "month")}">
+                    <span>Month</span>
+                  </button>
+                </a>
+                <a
+                  data-no-instant
+                  href="/best?period=week${domain ? `&domain=${domain}` : ""}"
+                >
+                  <button style="${periodIconStyle(theme, period, "week")}">
+                    <span>Week</span>
+                  </button>
+                </a>
+                <a
+                  data-no-instant
+                  href="/best?period=day${domain ? `&domain=${domain}` : ""}"
+                >
+                  <button style="${periodIconStyle(theme, period, "day")}">
+                    <span>Day</span>
+                  </button>
+                </a>
+              </div>
+              ${domain
+                ? html`<a
+                    style="text-decoration:underline;"
+                    href="/best?period=${period}"
+                    >Clear filter</a
+                  >`
+                : null}
             </div>
-            ${domain
-              ? html`<a
-                  style="text-decoration:underline;"
-                  href="/best?period=${period}"
-                  >Clear filter</a
-                >`
-              : null}
-          </div>`
+          `
         : null}
     </td>
   `;
