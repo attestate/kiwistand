@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { WagmiConfig, useAccount } from "wagmi";
 import { Wallet } from "@ethersproject/wallet";
@@ -62,6 +62,146 @@ const SiteExplainer = () => {
   );
 };
 
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  return isMobile;
+};
+
+const MobileComposer = ({
+  text,
+  setText,
+  onSubmit,
+  onCancel,
+  isLoading,
+  characterLimit,
+}) => {
+  const [viewportHeight, setViewportHeight] = useState(
+    window.visualViewport ? window.visualViewport.height : window.innerHeight
+  );
+  useEffect(() => {
+    function updateHeight() {
+      setViewportHeight(
+        window.visualViewport ? window.visualViewport.height : window.innerHeight
+      );
+    }
+    updateHeight();
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", updateHeight);
+    } else {
+      window.addEventListener("resize", updateHeight);
+    }
+    return () => {
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener("resize", updateHeight);
+      } else {
+        window.removeEventListener("resize", updateHeight);
+      }
+    };
+  }, []);
+  return (
+    <div
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        backgroundColor: "white",
+        zIndex: 1000,
+        display: "flex",
+        flexDirection: "column",
+        overscrollBehavior: "none",
+        WebkitOverflowScrolling: "touch",
+        width: "100%",
+        height: viewportHeight,
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          padding: "1rem",
+          borderBottom: "var(--border)",
+          position: "sticky",
+          top: 0,
+          backgroundColor: "white",
+          zIndex: 2,
+        }}
+      >
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onCancel();
+            document.activeElement && document.activeElement.blur();
+          }}
+          style={{
+            background: "none",
+            border: "none",
+            fontSize: "1rem",
+            cursor: "pointer",
+          }}
+        >
+          Cancel
+        </button>
+        <button
+          onClick={onSubmit}
+          disabled={isLoading}
+          style={{
+            background: "black",
+            color: "white",
+            border: "none",
+            padding: "0.5rem 1rem",
+            borderRadius: "2px",
+            fontSize: "0.9rem",
+            cursor: "pointer",
+          }}
+        >
+          {isLoading ? "Submitting..." : "Submit"}
+        </button>
+      </div>
+      <textarea
+        autoFocus
+        style={{
+          flex: 1,
+          border: "none",
+          padding: "1rem",
+          fontSize: "1rem",
+          resize: "none",
+          width: "100%",
+          outline: "none",
+        }}
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+      />
+      <div
+        style={{
+          padding: "0.5rem 1rem",
+          borderTop: "var(--border)",
+          fontSize: "0.8rem",
+          color: "#666",
+          position: "sticky",
+          bottom: 0,
+          backgroundColor: "white",
+          zIndex: 2,
+        }}
+      >
+        {(characterLimit - text.length).toLocaleString()} characters remaining
+      </div>
+    </div>
+  );
+};
+
 const CommentInput = (props) => {
   const { toast, allowlist, delegations } = props;
 
@@ -104,9 +244,34 @@ const CommentInput = (props) => {
     `-kiwi-news-comment-${address}-${getIndex()}`,
   );
   const [text, setText] = useState(existingComment || "");
+  const [showMobileComposer, setShowMobileComposer] = useState(false);
+  const [disableAutoOpen, setDisableAutoOpen] = useState(false);
+  const isMobile = useIsMobile();
   useEffect(() => {
     localStorage.setItem(`-kiwi-news-comment-${address}-${getIndex()}`, text);
   }, [text]);
+
+  useEffect(() => {
+    if (showMobileComposer) {
+      document.body.style.overflow = "hidden";
+      document.documentElement.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
+    }
+  }, [showMobileComposer]);
+
+  useEffect(() => {
+    function preventTouch(e) {
+      if (showMobileComposer) {
+        e.preventDefault();
+      }
+    }
+    document.addEventListener("touchmove", preventTouch, { passive: false });
+    return () => {
+      document.removeEventListener("touchmove", preventTouch);
+    };
+  }, [showMobileComposer]);
 
   const [isLoading, setIsLoading] = useState(false);
   const handleSubmit = async (e) => {
@@ -220,45 +385,71 @@ const CommentInput = (props) => {
         ...props.style,
       }}
     >
-      <textarea
-        ref={textareaRef}
-        onFocus={toggleNavigationItems}
-        onBlur={toggleNavigationItems}
-        rows="12"
-        cols="80"
-        style={{
-          display: "block",
-          width: "100%",
-          border: "var(--border)",
-          fontSize: "1rem",
-          borderRadius: "2px",
-        }}
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        disabled={isLoading || !address || !isEligible}
-      ></textarea>
-      <span>
-        Characters remaining: {(characterLimit - text.length).toLocaleString()}
-      </span>
-      <br />
-      <br />
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        <button
-          id="button-onboarding"
-          style={{ marginBottom: "10px", width: "auto" }}
-          disabled={isLoading || !address || !isEligible}
-          onClick={handleSubmit}
-        >
-          {isLoading ? "Submitting..." : "Add comment"}
-        </button>
-        <CommentGuidelines />
-      </div>
+      {showMobileComposer && isMobile ? (
+        <MobileComposer
+          text={text}
+          setText={setText}
+          onSubmit={handleSubmit}
+          onCancel={() => {
+            setShowMobileComposer(false);
+            setDisableAutoOpen(true);
+            setTimeout(() => setDisableAutoOpen(false), 300);
+          }}
+          isLoading={isLoading}
+          characterLimit={characterLimit}
+        />
+      ) : (
+        <>
+          <textarea
+            ref={textareaRef}
+            onFocus={(e) => {
+              if (isMobile) {
+                if (disableAutoOpen) return;
+                e.preventDefault();
+                setShowMobileComposer(true);
+              } else {
+                toggleNavigationItems();
+              }
+            }}
+            onBlur={!isMobile ? toggleNavigationItems : undefined}
+            rows="12"
+            cols="80"
+            style={{
+              display: "block",
+              width: "100%",
+              border: "var(--border)",
+              fontSize: "1rem",
+              borderRadius: "2px",
+            }}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            disabled={isLoading || !address || !isEligible}
+          ></textarea>
+          <span>
+            Characters remaining:{" "}
+            {(characterLimit - text.length).toLocaleString()}
+          </span>
+          <br />
+          <br />
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <button
+              id="button-onboarding"
+              style={{ marginBottom: "10px", width: "auto" }}
+              disabled={isLoading || !address || !isEligible}
+              onClick={handleSubmit}
+            >
+              {isLoading ? "Submitting..." : "Add comment"}
+            </button>
+            <CommentGuidelines />
+          </div>
+        </>
+      )}
     </div>
   );
 };
