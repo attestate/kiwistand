@@ -110,6 +110,7 @@ const MobileComposer = ({
   }, []);
   return (
     <div
+      onTouchMove={(e) => e.preventDefault()}
       style={{
         position: "fixed",
         top: 0,
@@ -120,6 +121,8 @@ const MobileComposer = ({
         display: "flex",
         flexDirection: "column",
         width: "100%",
+        touchAction: "none",
+        overscrollBehavior: "none",
         height: viewportHeight,
       }}
     >
@@ -180,6 +183,7 @@ const MobileComposer = ({
           width: "100%",
           height: "100%",
           overflowY: "auto",
+          touchAction: "auto",
         }}
         onTouchMove={(e) => e.stopPropagation()}
         value={text}
@@ -261,15 +265,41 @@ const CommentInput = (props) => {
       document.documentElement.style.overflow = "";
     }
 
-    function preventTouch(e) {
-      // Only prevent if the target is not the textarea
-      if (showMobileComposer && e.target.tagName !== 'TEXTAREA') {
+    function preventScroll(e) {
+      if (!showMobileComposer) return;
+
+      // Stop propagation to prevent underlying page from scrolling.
+      e.stopPropagation();
+
+      if (e.target.tagName === 'TEXTAREA') {
+        const textarea = e.target;
+        // Prevent scrolling if the textarea is empty.
+        if (textarea.value.trim() === "") {
+          e.preventDefault();
+          return;
+        }
+        const isScrollable = textarea.scrollHeight > textarea.clientHeight;
+        const isAtTop = textarea.scrollTop === 0;
+        const isAtBottom = textarea.scrollTop + textarea.clientHeight === textarea.scrollHeight;
+
+        // Prevent scroll if content fits or we're at the bounds.
+        if (!isScrollable ||
+            (isAtTop && e.deltaY < 0) ||
+            (isAtBottom && e.deltaY > 0)) {
+          e.preventDefault();
+        }
+      } else {
         e.preventDefault();
       }
     }
-    document.addEventListener("touchmove", preventTouch, { passive: false });
+
+    // Handle both touch and mouse wheel events
+    document.addEventListener("touchmove", preventScroll, { passive: false, capture: true });
+    document.addEventListener("wheel", preventScroll, { passive: false, capture: true });
+    
     return () => {
-      document.removeEventListener("touchmove", preventTouch);
+      document.removeEventListener("touchmove", preventScroll, { capture: true });
+      document.removeEventListener("wheel", preventScroll, { capture: true });
     };
   }, [showMobileComposer]);
 
