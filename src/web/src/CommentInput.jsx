@@ -173,6 +173,11 @@ const MobileComposer = ({
       </div>
       <textarea
         autoFocus
+        onPaste={(e) => {
+          setTimeout(() => {
+            setText(e.target.value);
+          }, 0);
+        }}
         style={{
           flex: 1,
           border: "none",
