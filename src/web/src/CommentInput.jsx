@@ -119,8 +119,6 @@ const MobileComposer = ({
         zIndex: 1000,
         display: "flex",
         flexDirection: "column",
-        overscrollBehavior: "none",
-        WebkitOverflowScrolling: "touch",
         width: "100%",
         height: viewportHeight,
       }}
@@ -178,9 +176,12 @@ const MobileComposer = ({
           padding: "1rem",
           fontSize: "1rem",
           resize: "none",
-          width: "100%",
           outline: "none",
+          width: "100%",
+          height: "100%",
+          overflowY: "auto",
         }}
+        onTouchMove={(e) => e.stopPropagation()}
         value={text}
         onChange={(e) => setText(e.target.value)}
       />
@@ -259,11 +260,10 @@ const CommentInput = (props) => {
       document.body.style.overflow = "";
       document.documentElement.style.overflow = "";
     }
-  }, [showMobileComposer]);
 
-  useEffect(() => {
     function preventTouch(e) {
-      if (showMobileComposer) {
+      // Only prevent if the target is not the textarea
+      if (showMobileComposer && e.target.tagName !== 'TEXTAREA') {
         e.preventDefault();
       }
     }
@@ -272,6 +272,7 @@ const CommentInput = (props) => {
       document.removeEventListener("touchmove", preventTouch);
     };
   }, [showMobileComposer]);
+
 
   const [isLoading, setIsLoading] = useState(false);
   const handleSubmit = async (e) => {
