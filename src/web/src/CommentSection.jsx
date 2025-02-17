@@ -95,6 +95,20 @@ const EmojiReaction = ({ comment, allowlist, delegations, toast }) => {
   if (localAccount?.privateKey) {
     signer = new Wallet(localAccount.privateKey, provider);
   }
+  const [preResolvedAvatar, setPreResolvedAvatar] = useState(null);
+  useEffect(() => {
+    async function fetchAvatar() {
+      if (signer) {
+        const addr = await signer.getAddress();
+        const identityResolved = eligible(allowlist, delegations, addr);
+        if (identityResolved) {
+          const resolved = await resolveAvatar(identityResolved);
+          setPreResolvedAvatar(resolved);
+        }
+      }
+    }
+    fetchAvatar();
+  }, [signer, allowlist, delegations]);
 
   const handleReaction = async (emoji) => {
     if (!signer) {
@@ -120,35 +134,36 @@ const EmojiReaction = ({ comment, allowlist, delegations, toast }) => {
         value,
       );
 
-      const response = await API.send(value, signature);
+      // Optimistically update UI with reaction immediately using pre-resolved avatar if available
+      const resolvedAvatar = preResolvedAvatar || await resolveAvatar(identity);
+      const newReaction = {
+        emoji,
+        reactorProfiles: [{ address: identity, safeAvatar: resolvedAvatar }],
+      };
+      comment.reactions.push(newReaction);
 
+      switch (emoji) {
+        case "🥝":
+          setKiwis([...kiwis, identity]);
+          break;
+        case "🔥":
+          setFires([...fires, identity]);
+          break;
+        case "👀":
+          setEyes([...eyes, identity]);
+          break;
+        case "💯":
+          setHundreds([...hundreds, identity]);
+          break;
+        case "🤭":
+          setLaughs([...laughs, identity]);
+          break;
+      }
+
+      // Send reaction in background
+      const response = await API.send(value, signature);
       if (response.status === "success") {
         toast.success("Reaction added!");
-
-        const avatar = await resolveAvatar(identity);
-        const newReaction = {
-          emoji,
-          reactorProfiles: [{ address: identity, safeAvatar: avatar }],
-        };
-        comment.reactions.push(newReaction);
-
-        switch (emoji) {
-          case "🥝":
-            setKiwis([...kiwis, identity]);
-            break;
-          case "🔥":
-            setFires([...fires, identity]);
-            break;
-          case "👀":
-            setEyes([...eyes, identity]);
-            break;
-          case "💯":
-            setHundreds([...hundreds, identity]);
-            break;
-          case "🤭":
-            setLaughs([...laughs, identity]);
-            break;
-        }
       } else {
         toast.error(response.details || "Failed to add reaction");
       }
