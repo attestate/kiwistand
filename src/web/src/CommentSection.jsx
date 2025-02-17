@@ -11,6 +11,7 @@ import CommentInput from "./CommentInput.jsx";
 import * as API from "./API.mjs";
 import { getLocalAccount, isIOS, isRunningPWA } from "./session.mjs";
 import { resolveAvatar } from "./Avatar.jsx";
+import { dynamicPrefetch } from "./main.jsx";
 
 function ShareIcon(style) {
   return (
@@ -104,6 +105,7 @@ const EmojiReaction = ({ comment, allowlist, delegations, toast }) => {
         if (identityResolved) {
           const resolved = await resolveAvatar(identityResolved);
           setPreResolvedAvatar(resolved);
+          dynamicPrefetch(resolved);
         }
       }
     }
