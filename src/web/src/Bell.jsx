@@ -284,7 +284,7 @@ const NotificationButton = ({ onEnabled }) => {
 
 const IOSAppLogin = (props) => {
   const { allowlist, delegations, toast } = props;
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(true);
   const [currentStep, setCurrentStep] = useState("login");
   const PasskeysLogin = RestoreDialogue(allowlist, delegations, toast);
 
