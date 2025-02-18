@@ -2,7 +2,7 @@
   // NOTE: This script monitors <img> elements for extremely delayed loading.
   // If an image takes longer than DEFAULT_IMAGE_TIMEOUT to load,
   // its src attribute will be cleared to stop the hanging request.
-  const DEFAULT_IMAGE_TIMEOUT = 5000;
+  const DEFAULT_IMAGE_TIMEOUT = 10000;
 
   function handleImage(img) {
     if (!img.dataset.timeoutSet) {

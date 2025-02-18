@@ -581,6 +581,53 @@ async function addAvatar(allowlist) {
   }
 }
 
+async function addStoryEmojiReactions(allowlist, delegations, toast) {
+  const reactionContainers = document.querySelectorAll(".reactions-container");
+  if (reactionContainers && reactionContainers.length > 0) {
+    const [commentSection, wagmi, rainbowKit, clientConfig] = await Promise.all([
+      import("./CommentSection.jsx"),
+      import("wagmi"), 
+      import("@rainbow-me/rainbowkit"),
+      import("./client.mjs"),
+    ]);
+
+    const { EmojiReaction } = commentSection;
+    const { WagmiConfig } = wagmi;
+    const { RainbowKitProvider } = rainbowKit;
+    const { client, chains } = clientConfig;
+
+    reactionContainers.forEach((container) => {
+      const commentData = container.getAttribute("data-comment");
+      if (commentData) {
+        const comment = JSON.parse(commentData);
+        const root = createRoot(container);
+          
+        // Keep existing content as fallback while React loads
+        const existingContent = container.innerHTML;
+          
+        // Prepare the React component
+        const reactComponent = (
+          <StrictMode>
+            <WagmiConfig config={client}>
+              <RainbowKitProvider chains={chains}>
+                <EmojiReaction
+                  comment={comment}
+                  allowlist={allowlist}
+                  delegations={delegations}
+                  toast={toast}
+                />
+              </RainbowKitProvider>
+            </WagmiConfig>
+          </StrictMode>
+        );
+
+        // Render React component while preserving existing content
+        root.render(reactComponent);
+      }
+    });
+  }
+}
+
 async function addNFTPrice() {
   const nftPriceElements = document.querySelectorAll("nft-price");
   if (nftPriceElements && nftPriceElements.length > 0) {
@@ -906,6 +953,11 @@ async function start() {
   const results1 = await Promise.allSettled([
     addDynamicNavElements(),
     addInviteLink(toast),
+    addStoryEmojiReactions(
+      await allowlistPromise,
+      await delegationsPromise,
+      toast,
+    ),
     addDecayingPriceLink(),
     addCommentInput(toast, await allowlistPromise, await delegationsPromise),
     addSubscriptionButton(await allowlistPromise, toast),

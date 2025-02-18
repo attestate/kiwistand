@@ -59,7 +59,7 @@ function truncateName(name) {
   return name.slice(0, maxLength) + "...";
 }
 
-const EmojiReaction = ({ comment, allowlist, delegations, toast }) => {
+export const EmojiReaction = ({ comment, allowlist, delegations, toast }) => {
   const [isReacting, setIsReacting] = useState(false);
   const [kiwis, setKiwis] = useState(
     comment.reactions?.find((r) => r.emoji === "🥝")?.reactors || [],
@@ -137,12 +137,19 @@ const EmojiReaction = ({ comment, allowlist, delegations, toast }) => {
       );
 
       // Optimistically update UI with reaction immediately using pre-resolved avatar if available
-      const resolvedAvatar = preResolvedAvatar || await resolveAvatar(identity);
-      const newReaction = {
-        emoji,
-        reactorProfiles: [{ address: identity, safeAvatar: resolvedAvatar }],
-      };
-      comment.reactions.push(newReaction);
+      const resolvedAvatar =
+        preResolvedAvatar || (await resolveAvatar(identity));
+      const existingReaction = comment.reactions.find(
+        (r) => r.emoji === emoji && Array.isArray(r.reactorProfiles)
+      );
+      if (existingReaction) {
+        existingReaction.reactorProfiles.push({ address: identity, safeAvatar: resolvedAvatar });
+      } else {
+        comment.reactions.push({
+          emoji,
+          reactorProfiles: [{ address: identity, safeAvatar: resolvedAvatar }],
+        });
+      }
 
       switch (emoji) {
         case "🥝":
