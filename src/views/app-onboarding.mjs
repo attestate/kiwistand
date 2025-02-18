@@ -36,16 +36,18 @@ export default async function (theme) {
                     style="max-width: 800px; margin: 40px auto; padding: 0 20px;"
                   >
                     <!-- Header -->
-                    <h1 style="
+                    <h1
+                      style="
                       font-size: 28px; 
                       font-weight: 600; 
                       color: black; 
                       margin-bottom: 16px;
                       text-align: left;
-                    ">
+                    "
+                    >
                       TestFlight App Setup
                     </h1>
-                    
+
                     <!-- Breadcrumb -->
                     <div
                       style="margin-bottom: 32px; display: flex; align-items: center; gap: 12px;"
@@ -63,17 +65,14 @@ export default async function (theme) {
 
                     <!-- Card Container -->
                     <div
-                      style="border: 1px dotted rgba(219, 105, 141, 0.5); background: white;"
+                      style="text-align: center; max-width: 500px; margin: 0 auto;"
                     >
-                      <!-- Content Section -->
-                      <div style="padding: 32px;">
-                        <div
-                          style="text-align: center; max-width: 500px; margin: 0 auto;"
-                        >
-                          <div class="delegate-button" redirect-button="false" is-app-onboarding="true">
-                            ...loading
-                          </div>
-                        </div>
+                      <div
+                        class="delegate-button"
+                        redirect-button="false"
+                        is-app-onboarding="true"
+                      >
+                        ...loading
                       </div>
                     </div>
                   </div>
