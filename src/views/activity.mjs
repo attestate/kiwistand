@@ -228,35 +228,21 @@ export async function page(
   isQueryParamVersion,
 ) {
   identity = DOMPurify.sanitize(identity);
-  let feed = html`
-    <tr>
-      <td
-        class="feed-container"
-        style="text-align: center; vertical-align: middle; min-height: 100vh; padding: 20px; color: #828282;"
-      >
-        <svg
-          viewBox="0 0 512 512"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="#505050"
-          class="kiwi-svg"
+  let feed;
+  if (notifications.length === 0) {
+    feed = html`
+      <tr>
+        <td
+          class="feed-container"
+          style="text-align: center; vertical-align: middle; min-height: 100vh; padding: 20px; color: #828282;"
         >
-          <path
-            d="M251.615 74.23c-77.058.06-152.457 51.774-181.7 89.022C1.473 250.43-36.964 427.192 244.208 381.209c82.987-13.571 135.481-92.932 146.56-163.43 39.376 13.812 99.225-2.416 100.503-38.236 1.713-48.028-82.63-99.395-130.756-60.74-33.239-32.311-71.268-44.602-108.9-44.573zm189.384 101.54a9 9 0 0 1 9 9 9 9 0 0 1-9 9 9 9 0 0 1-9-9 9 9 0 0 1 9-9zm27.278 56.154c-8.908 4.545-18.736 7.692-29.059 9.242 21.96 44.054 29.427 92.59 45.61 138.432 2.761-32.499 2.588-94.97-16.551-147.674zM238.494 401.426a239.162 239.162 0 0 1-18.141 3.78l21.887 45.798c-18.37-.055-38.017.352-58.946 1.387l-11.842-44.215c-6.45-.31-12.826-.9-19.105-1.764l12.598 47.041c-7.103.46-14.296.969-21.664 1.578l1.484 17.938c76.27-6.31 137.96-4.22 183.404-.008l1.66-17.922c-19.613-1.818-42.188-3.236-67.525-3.793z"
-          />
-        </svg>
-        <p class="notification-text">
-          😢 Don't be sad kiwi! There are no new notifications for you yet! But
-          you can submit some links and your upvotes will appear on this site!
-          <span> </span>
-          <a href="/submit" style="color: #828282; text-decoration: underline;"
-            >Submit a link now!</a
-          >
-          😊
-        </p>
-      </td>
-    </tr>
-  `;
-  feed = notifications.map(generateRow(lastUpdate, theme));
+          <p>No notifications yet</p>
+        </td>
+      </tr>
+    `;
+  } else {
+    feed = notifications.map(generateRow(lastUpdate, theme));
+  }
   const preloadNotifs = notifications.slice(0, 3).map(linkFromComment);
   const content = html`
     <html lang="en" op="news">
@@ -279,6 +265,69 @@ export async function page(
                 <td>
                   <push-subscription-button data-wrapper="true">
                   </push-subscription-button>
+                </td>
+              </tr>
+              <tr>
+                <td
+                  style="text-align: center; padding: 1rem; background-color: #f0f0f0; font-size: 0.8rem; color: #333;"
+                >
+                  <span
+                    style="vertical-align: middle; display: inline-flex; align-items: center; flex-wrap: wrap; justify-content: center;"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 256 256"
+                      style="height: 12px; width: 12px; margin-right: 0.5rem;"
+                    >
+                      <rect width="256" height="256" fill="none" />
+                      <path
+                        d="M92.69,216H48a8,8,0,0,1-8-8V163.31a8,8,0,0,1,2.34-5.65L165.66,34.34a8,8,0,0,1,11.31,0L221.66,79a8,8,0,0,1,0,11.31L98.34,213.66A8,8,0,0,1,92.69,216Z"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="16"
+                      />
+                      <line
+                        x1="136"
+                        y1="64"
+                        x2="192"
+                        y2="120"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="16"
+                      />
+                      <line
+                        x1="164"
+                        y1="92"
+                        x2="68"
+                        y2="188"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="16"
+                      />
+                      <line
+                        x1="95.49"
+                        y1="215.49"
+                        x2="40.51"
+                        y2="160.51"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="16"
+                      />
+                    </svg>
+                    <strong>Notifications:</strong>
+                    <span style="margin-left: 0.5rem;"
+                      >Receive alerts when you submit a story or when someone
+                      replies to your comment.</span
+                    >
+                  </span>
                 </td>
               </tr>
               ${feed}
