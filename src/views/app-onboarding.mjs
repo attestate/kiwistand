@@ -70,9 +70,9 @@ export default async function (theme) {
                         <div
                           style="text-align: center; max-width: 500px; margin: 0 auto;"
                         >
-                          <nav-passkeys-backup redirect-button="false" is-app-onboarding="true">
+                          <div class="delegate-button" redirect-button="false" is-app-onboarding="true">
                             ...loading
-                          </nav-passkeys-backup>
+                          </div>
                         </div>
                       </div>
                     </div>

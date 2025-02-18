@@ -288,12 +288,18 @@ async function addDelegateButton(allowlist, delegations, toast) {
   const delegateButtonContainer = document.querySelector(".delegate-button");
   if (delegateButtonContainer) {
     const DelegateButton = (await import("./DelegateButton.jsx")).default;
+    const showRedirect =
+      delegateButtonContainer.getAttribute("redirect-button") !== "false";
+    const isAppOnboarding =
+      delegateButtonContainer.getAttribute("is-app-onboarding") === "true";
     createRoot(delegateButtonContainer).render(
       <StrictMode>
         <DelegateButton
           allowlist={allowlist}
           delegations={delegations}
           toast={toast}
+          showRedirect={showRedirect}
+          isAppOnboarding={isAppOnboarding}
         />
       </StrictMode>,
     );
@@ -584,12 +590,14 @@ async function addAvatar(allowlist) {
 async function addStoryEmojiReactions(allowlist, delegations, toast) {
   const reactionContainers = document.querySelectorAll(".reactions-container");
   if (reactionContainers && reactionContainers.length > 0) {
-    const [commentSection, wagmi, rainbowKit, clientConfig] = await Promise.all([
-      import("./CommentSection.jsx"),
-      import("wagmi"), 
-      import("@rainbow-me/rainbowkit"),
-      import("./client.mjs"),
-    ]);
+    const [commentSection, wagmi, rainbowKit, clientConfig] = await Promise.all(
+      [
+        import("./CommentSection.jsx"),
+        import("wagmi"),
+        import("@rainbow-me/rainbowkit"),
+        import("./client.mjs"),
+      ],
+    );
 
     const { EmojiReaction } = commentSection;
     const { WagmiConfig } = wagmi;
@@ -601,10 +609,10 @@ async function addStoryEmojiReactions(allowlist, delegations, toast) {
       if (commentData) {
         const comment = JSON.parse(commentData);
         const root = createRoot(container);
-          
+
         // Keep existing content as fallback while React loads
         const existingContent = container.innerHTML;
-          
+
         // Prepare the React component
         const reactComponent = (
           <StrictMode>

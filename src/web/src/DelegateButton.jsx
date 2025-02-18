@@ -330,7 +330,8 @@ const DelegateButton = (props) => {
           allowlist={props.allowlist}
           toast={props.toast}
           callback={props.callback}
-          redirectButton={skipButton}
+          redirectButton={props.showRedirect || skipButton}
+          isAppOnboarding={props.isAppOnboarding}
         />
       );
     } else if (window.location.pathname === "/start") {
