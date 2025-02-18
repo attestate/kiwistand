@@ -893,6 +893,20 @@ export function dynamicPrefetch(url, priority = "auto") {
 }
 
 async function start() {
+  // Spinner overlay initialization
+  if (!document.getElementById('spinner-overlay')) {
+    const overlay = document.createElement('div');
+    overlay.id = 'spinner-overlay';
+    overlay.style.display = 'none';
+    overlay.style.position = 'fixed';
+    overlay.style.top = '0';
+    overlay.style.left = '0';
+    overlay.style.width = '100%';
+    overlay.style.height = '100%';
+    overlay.style.background = 'rgba(255,255,255,0.7)';
+    overlay.style.zIndex = '9999';
+    document.body.appendChild(overlay);
+  }
   // NOTE: There are clients which had the identity cookie sent to 1 week and
   // they're now encountering the paywall. So in case this happens but their
   // local storage contains the respective private key, we want them to reload

@@ -541,6 +541,7 @@ const Bell = (props) => {
 
   const handleClick = () => {
     setIsFull(!isFull);
+    document.getElementById('spinner-overlay').style.display='block';
   };
 
   useEffect(() => {

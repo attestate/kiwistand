@@ -207,7 +207,7 @@ const secondheader = (theme, site, period, domain, query) => {
             ? html`
                 <a data-no-instant class="feed-button-link" href="/">
                   <button
-                    onclick="${animation}"
+                    onclick="document.getElementById('spinner-overlay').style.display='block'; ${animation}"
                     class="feed-button"
                     style=${`font-variant: small-caps; font-size: 1.01rem; border: none; outline: none; border-radius: 2px; cursor: pointer; padding: 6px 15px; background-color: rgba(0,0,0,${
                       site === "top" ? "0.2" : "0.1"
@@ -235,7 +235,7 @@ const secondheader = (theme, site, period, domain, query) => {
                   href="/new?cached=true"
                 >
                   <button
-                    onclick="${animation}"
+                    onclick="document.getElementById('spinner-overlay').style.display='block'; ${animation}"
                     class="feed-button"
                     style=${`font-variant: small-caps; margin-left: 10px; font-size: 1.01rem; border: none; outline: none; border-radius: 2px; cursor: pointer; padding: 6px 15px; background-color: rgba(0,0,0,${
                       site === "new" ? "0.2" : "0.1"
@@ -264,7 +264,7 @@ const secondheader = (theme, site, period, domain, query) => {
             ? html`
                 <a data-no-instant class="feed-button-link" href="/best">
                   <button
-                    onclick="${animation}"
+                    onclick="document.getElementById('spinner-overlay').style.display='block'; ${animation}"
                     class="feed-button"
                     style=${`font-variant: small-caps; margin-left: 10px; font-size: 1.01rem; border: none; outline: none; border-radius: 2px; cursor: pointer; padding: 6px 15px; background-color: rgba(0,0,0,${
                       site === "best" ? "0.2" : "0.1"
@@ -313,7 +313,7 @@ const secondheader = (theme, site, period, domain, query) => {
                   data-no-instant
                   href="/best?period=all${domain ? `&domain=${domain}` : ""}"
                 >
-                  <button style="${periodIconStyle(theme, period, "all")}">
+                  <button onclick="document.getElementById('spinner-overlay').style.display='block'" style="${periodIconStyle(theme, period, "all")}">
                     <span>All</span>
                   </button>
                 </a>
@@ -321,7 +321,7 @@ const secondheader = (theme, site, period, domain, query) => {
                   data-no-instant
                   href="/best?period=year${domain ? `&domain=${domain}` : ""}"
                 >
-                  <button style="${periodIconStyle(theme, period, "year")}">
+                  <button onclick="document.getElementById('spinner-overlay').style.display='block'" style="${periodIconStyle(theme, period, "year")}">
                     <span>Year</span>
                   </button>
                 </a>
@@ -329,7 +329,7 @@ const secondheader = (theme, site, period, domain, query) => {
                   data-no-instant
                   href="/best?period=month${domain ? `&domain=${domain}` : ""}"
                 >
-                  <button style="${periodIconStyle(theme, period, "month")}">
+                  <button onclick="document.getElementById('spinner-overlay').style.display='block'" style="${periodIconStyle(theme, period, "month")}">
                     <span>Month</span>
                   </button>
                 </a>
@@ -337,7 +337,7 @@ const secondheader = (theme, site, period, domain, query) => {
                   data-no-instant
                   href="/best?period=week${domain ? `&domain=${domain}` : ""}"
                 >
-                  <button style="${periodIconStyle(theme, period, "week")}">
+                  <button onclick="document.getElementById('spinner-overlay').style.display='block'" style="${periodIconStyle(theme, period, "week")}">
                     <span>Week</span>
                   </button>
                 </a>
@@ -345,7 +345,7 @@ const secondheader = (theme, site, period, domain, query) => {
                   data-no-instant
                   href="/best?period=day${domain ? `&domain=${domain}` : ""}"
                 >
-                  <button style="${periodIconStyle(theme, period, "day")}">
+                  <button onclick="document.getElementById('spinner-overlay').style.display='block'" style="${periodIconStyle(theme, period, "day")}">
                     <span>Day</span>
                   </button>
                 </a>

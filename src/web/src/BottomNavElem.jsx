@@ -178,6 +178,7 @@ const BottomNavElem = ({ icon }) => {
 
   const handleClick = () => {
     setIsFull(!isFull);
+    document.getElementById('spinner-overlay').style.display='block';
   };
 
   const { pathname } = window.location;
