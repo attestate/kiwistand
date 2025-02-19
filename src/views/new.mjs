@@ -132,7 +132,7 @@ export default async function (trie, theme) {
   let items = stories;
   const path = "/new";
   const ogImage = "https://news.kiwistand.com/kiwi_new_feed_page.png";
-  const prefetch = ["/", "/submit", "/best"];
+  const prefetch = ["/", "/submit", "/best", "/community"];
   const recentJoiners = await registry.recents();
   const query = "?cached=true";
   return html`
