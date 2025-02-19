@@ -577,7 +577,10 @@ export async function launch(trie, libp2p) {
 
     let data;
     try {
-      data = await metadata(request.query.url, request.query.generateTitle === 'true');
+      data = await metadata(
+        request.query.url,
+        request.query.generateTitle === "true",
+      );
     } catch (err) {
       log(`parser.metadata failure: ${err.stack}`);
       const code = 500;
@@ -799,25 +802,27 @@ export async function launch(trie, libp2p) {
     if (request.query.custom === "true") {
       hash = fingerprint.generate(request);
     }
-  
+
     try {
       identity = utils.getAddress(request.query.identity);
       hash = fingerprint.generate(request);
     } catch (err) {}
-  
+
     let page = parseInt(request.query.page);
     if (isNaN(page) || page < 1) {
       page = 0;
     }
-  
+
     let content;
     try {
-      if (!request.query.page &&
-          !request.query.domain &&
-          !request.query.identity &&
-          !request.query.hash &&
-          request.query.custom !== "true" &&
-          cachedFeed) {
+      if (
+        !request.query.page &&
+        !request.query.domain &&
+        !request.query.identity &&
+        !request.query.hash &&
+        request.query.custom !== "true" &&
+        cachedFeed
+      ) {
         content = cachedFeed;
       } else {
         content = await feed(
@@ -1053,8 +1058,14 @@ export async function launch(trie, libp2p) {
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/email-notifications", async (request, reply) => {
-    reply.header("Cache-Control", "public, s-maxage=86400, max-age=86400, stale-while-revalidate=600000");
-    return reply.status(200).type("text/html").send(await emailNotifications(reply.locals.theme));
+    reply.header(
+      "Cache-Control",
+      "public, s-maxage=86400, max-age=86400, stale-while-revalidate=600000",
+    );
+    return reply
+      .status(200)
+      .type("text/html")
+      .send(await emailNotifications(reply.locals.theme));
   });
   app.get("/invite", async (request, reply) => {
     const content = await invite(reply.locals.theme);
