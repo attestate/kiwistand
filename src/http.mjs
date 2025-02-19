@@ -948,14 +948,12 @@ export async function launch(trie, libp2p) {
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/community", async (request, reply) => {
-    const content = await community(
-      trie,
-      reply.locals.theme,
-      request.query,
-      DOMPurify.sanitize(request.cookies.identity),
-    );
+    const content = await community(trie, reply.locals.theme, request.query);
 
-    reply.header("Cache-Control", "private, must-revalidate");
+    reply.header(
+      "Cache-Control",
+      "public, s-maxage=86400, max-age=86400, stale-while-revalidate=604800",
+    );
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/price", async (request, reply) => {

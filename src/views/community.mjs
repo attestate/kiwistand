@@ -82,50 +82,7 @@ function toSparks(wei) {
   return ethers.utils.commify(wei / 1000000000000n);
 }
 
-async function points(identity) {
-  const points = await karma.resolve(identity);
-  let rank = await karma.rank(identity);
-  if (rank === 0) {
-    const allowlist = Array.from(await registry.allowlist());
-    rank = allowlist.length;
-  }
-  const ogImage = "https://news.kiwistand.com/kiwi_community_page.png";
-  return html`
-    <div
-      style="margin: 1rem; border: var(--border); border-radius: 2px; background-color: rgba(0,0,0,0.05);"
-    >
-      <div
-        style="display: flex; justify-content: space-between; align-items: center; padding:
- 1rem 2rem 0 1rem;"
-      >
-        <span
-          style="padding: 0 0 1rem 0; border: var(--border); border-radius: 2px; background-color: rgba(0,0,0,0.05);"
-        >
-          <span
-            style="padding: 1rem 1rem 0 1rem; font-weight: bold; font-size: 2rem;"
-            class="kiwi-number"
-            >${points.toLocaleString("en-US")}</span
-          >
-          <br />
-          <span style="font-family: monospace; padding: 0 1rem 1rem 1rem;"
-            >Your points</span
-          >
-        </span>
-        <span style="font-size: 3rem;">🥝</span>
-      </div>
-      <div
-        style="font-family: monospace; border: var(--border); border-radius: 2px; background-color: rgba(0,0,0,0.05);display: flex; justify-content: space-between; align-items: center; margin: 1rem; padding: 1rem;"
-      >
-        <span style="font-weight: bold; font-size: 1.25rem; color:black;"
-          >Your Rank</span
-        >
-        <span style="font-size: 2rem;">#${rank.toLocaleString("en-US")}</span>
-      </div>
-    </div>
-  `;
-}
-
-export default async function (trie, theme, query, identity) {
+export default async function (trie, theme, query) {
   let page = parseInt(query.page);
   if (isNaN(page) || page < 1) {
     page = 0;
@@ -275,7 +232,6 @@ export default async function (trie, theme, query, identity) {
               </tr>
               <tr>
                 <td>
-                  ${identity ? await points(identity) : null}
                   <p style="color: black; padding: 5px 1rem; font-size: 14pt;">
                     <b>COMMUNITY</b>
                   </p>
