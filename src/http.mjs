@@ -17,6 +17,8 @@ import htm from "htm";
 import "express-async-errors";
 import { sub } from "date-fns";
 import DOMPurify from "isomorphic-dompurify";
+import slugify from "slugify";
+slugify.extend({ "′": "", "'": "", "'": "" });
 import ws from "ws";
 import { createServer } from "http";
 import { FileSystemCache, getCacheKey } from "node-fetch-cache";
@@ -768,7 +770,7 @@ export async function launch(trie, libp2p) {
 
     reply.header(
       "Cache-Control",
-      "public, s-maxage=10, max-age=10, stale-while-revalidate=31536000",
+      "public, s-maxage=300, max-age=300, stale-while-revalidate=31536000",
     );
     const code = 200;
     const httpMessage = "OK";
@@ -845,17 +847,6 @@ export async function launch(trie, libp2p) {
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/stories/:slug?", async (request, reply) => {
-    if (request.params.slug) {
-      // NOTE: The slug is used to make the story URL more human readable, at
-      // the same time though, the slug is really just cosmetical as the index
-      // always informs about the actual origin of a domain
-      reply.header("Cache-Control", "public, max-age=31536000, immutable");
-      const qp = new URLSearchParams(request.query);
-      qp.delete("t");
-      const queryParams = qp.toString();
-      return reply.redirect(308, `/stories?${queryParams}`);
-    }
-
     let referral;
     try {
       referral = utils.getAddress(request.query.referral);
@@ -866,6 +857,14 @@ export async function launch(trie, libp2p) {
       submission = await generateStory(request.query.index);
     } catch (err) {
       return reply.status(404).type("text/plain").send(err.message);
+    }
+
+    const expectedSlug = slugify(DOMPurify.sanitize(submission.title));
+    if (request.params.slug !== expectedSlug) {
+      const qp = new URLSearchParams(request.query);
+      qp.delete("t");
+      const queryParams = qp.toString();
+      return reply.redirect(308, `/stories/${expectedSlug}?${queryParams}`);
     }
 
     const hexIndex = request.query.index.substring(2);

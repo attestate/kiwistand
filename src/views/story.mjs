@@ -302,6 +302,7 @@ export default async function (trie, theme, index, value, referral) {
   return html`
     <html lang="en" op="news">
       <head>
+        <base href="/" />
         ${head.custom(ogImage, value.title, ogDescription, undefined, [
           "/",
           "/new?cached=true",
