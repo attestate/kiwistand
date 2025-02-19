@@ -853,7 +853,7 @@ export async function launch(trie, libp2p) {
       const qp = new URLSearchParams(request.query);
       qp.delete("t");
       const queryParams = qp.toString();
-      return reply.redirect(`/stories?${queryParams}`);
+      return reply.redirect(308, `/stories?${queryParams}`);
     }
 
     let referral;
