@@ -17,6 +17,8 @@ import * as moderation from "./moderation.mjs";
 import * as registry from "../chainstate/registry.mjs";
 import { getLastComment, listNewest } from "../cache.mjs";
 import Row, { extractDomain } from "./components/row.mjs";
+import log from "../logger.mjs";
+import { purgeCache } from "../cloudflarePurge.mjs";
 import * as feeds from "../feeds.mjs";
 
 const html = htm.bind(vhtml);
@@ -114,6 +116,14 @@ export async function recompute() {
   }
   stories = nextStories;
   inProgress = false;
+  try {
+    // Purge Cloudflare cache for the "/new" page so that new submissions show immediately.
+    await purgeCache("https://news.kiwistand.com/new");
+    await purgeCache("https://news.kiwistand.com/new?cached=true");
+    log("Cloudflare cache purged for /new and /new?cached=true");
+  } catch (error) {
+    log("Cloudflare cache purge skipped: " + error.message);
+  }
 }
 
 export default async function (trie, theme) {
