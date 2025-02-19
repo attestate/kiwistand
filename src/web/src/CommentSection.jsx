@@ -493,6 +493,7 @@ const Comment = React.forwardRef(
             }}
             className="meta-link"
             href={`/upvotes?address=${comment.identity.address}`}
+            onClick={() => document.getElementById('spinner-overlay').style.display='block'}
           >
             {comment.identity.safeAvatar && (
               <img

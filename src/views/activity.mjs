@@ -86,7 +86,7 @@ function generateCommentRow(activity, identity, bgColor, theme, i) {
   return html`
     <tr style="background-color: ${bgColor}">
       <td>
-        <a data-no-instant="${i < 3}" class="notification" href="${link}">
+        <a data-no-instant="${i < 3}" class="notification" href="${link}" onclick="document.getElementById('spinner-overlay').style.display='block'">
           <div style="display: flex; border-bottom: 1px solid rgba(0,0,0,0.1);">
             <div
               style="flex: 0.15; display: flex; align-items: start; justify-content: center;"
@@ -154,6 +154,7 @@ function generateRow(lastUpdate, theme) {
               ? `&upvoter=${identities[identities.length - 1].address}`
               : ""}"
             class="upvote-notification notification"
+            onclick="document.getElementById('spinner-overlay').style.display='block'"
           >
             <div
               style="display: flex; border-bottom: 1px solid rgba(0,0,0,0.1);"

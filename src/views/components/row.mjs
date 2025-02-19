@@ -561,6 +561,7 @@ const row = (
                               href="/stories/${slugify(
                                 DOMPurify.sanitize(story.title),
                               )}?index=0x${story.index}"
+                              onclick="document.getElementById('spinner-overlay').style.display='block'"
                             >
                               ${formatDistanceToNowStrict(
                                 new Date(story.timestamp * 1000),
@@ -590,6 +591,7 @@ const row = (
                               ? `/${story.submitter.ens}`
                               : `/upvotes?address=${story.identity}`}"
                             class="meta-link"
+                            onclick="document.getElementById('spinner-overlay').style.display='block'"
                             style="font-weight: 500; user-select: text; ${recentJoiners &&
                             recentJoiners.includes(story.identity)
                               ? `color: ${theme.color};`
@@ -712,6 +714,7 @@ const row = (
                       href="/stories/${slugify(
                         DOMPurify.sanitize(story.title),
                       )}?index=0x${story.index}"
+                      onclick="document.getElementById('spinner-overlay').style.display='block'"
                       style="margin: 5px; border: var(--border-thin); background-color: var(--bg-off-white); border-radius: 2px; display: ${path ===
                       "/stories"
                         ? "none"
