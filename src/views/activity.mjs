@@ -66,7 +66,7 @@ export function truncateComment(comment, maxLength = 260) {
 
 function linkFromComment(activity) {
   const [_, index] = activity.message.href.split(":");
-  const link = `/stories?index=${index}&cacheBuster=${activity.message.index}#0x${activity.message.index}`;
+  const link = `/stories?index=${index}#0x${activity.message.index}`;
   return link;
 }
 
@@ -86,7 +86,12 @@ function generateCommentRow(activity, identity, bgColor, theme, i) {
   return html`
     <tr style="background-color: ${bgColor}">
       <td>
-        <a data-no-instant="${i < 3}" class="notification" href="${link}" onclick="document.getElementById('spinner-overlay').style.display='block'">
+        <a
+          data-no-instant="${i < 3}"
+          class="notification"
+          href="${link}"
+          onclick="document.getElementById('spinner-overlay').style.display='block'"
+        >
           <div style="display: flex; border-bottom: 1px solid rgba(0,0,0,0.1);">
             <div
               style="flex: 0.15; display: flex; align-items: start; justify-content: center;"

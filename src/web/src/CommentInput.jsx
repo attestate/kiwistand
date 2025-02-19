@@ -356,7 +356,6 @@ const CommentInput = (props) => {
 
     const nextPage = new URL(path, window.location.origin);
     if (response?.data?.index) {
-      nextPage.searchParams.set("cachebuster", response.data.index);
       nextPage.hash = `#${response.data.index}`;
     }
     window.location.href = nextPage.href;

@@ -27,6 +27,7 @@ import { EIP712_MESSAGE } from "./constants.mjs";
 import { elog } from "./utils.mjs";
 import * as messages from "./topics/messages.mjs";
 import { newWalk } from "./WalkController.mjs";
+import { purgeCache } from "./cloudflarePurge.mjs";
 import { insertMessage, isReactionComment } from "./cache.mjs";
 import { triggerNotification } from "./subscriptions.mjs";
 
@@ -344,6 +345,12 @@ async function atomicPut(trie, message, identity, accounts, delegations) {
       const enhancer = enhance(accounts, delegations, cacheEnabled);
       const enhancedMessage = await enhancer(message);
       insertMessage(enhancedMessage);
+      const [, commentIndex] = message.href.split(":");
+      purgeCache(`https://news.kiwistand.com/stories?index=${commentIndex}`)
+        .then(() => {})
+        .catch((err) => {
+          log(`Failed to purge Cloudflare cache: ${err}`);
+        });
       await triggerNotification(enhancedMessage);
     } catch (err) {
       // NOTE: insertMessage is just a cache, so if this operation fails, we

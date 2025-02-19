@@ -63,9 +63,7 @@ export async function triggerNotification(message) {
   const uniqueReceivers = Array.from(new Set(receivers));
 
   const maxChars = 140;
-  const url =
-    `https://news.kiwistand.com/stories?index=0x${submission.index}` +
-    `&cachebuster=0x${message.index}#0x${message.index}`;
+  const url = `https://news.kiwistand.com/stories?index=0x${submission.index}#0x${message.index}`;
 
   await Promise.allSettled(
     uniqueReceivers.map(async (receiver) => {
@@ -73,7 +71,7 @@ export async function triggerNotification(message) {
         title: `${ensData.displayName} replied`,
         message: truncateComment(message.title, maxChars),
         data: {
-          url: `https://news.kiwistand.com/stories?index=0x${submission.index}&cachebuster=0x${message.index}#0x${message.index}`,
+          url,
         },
       });
       await email.send(receiver, {
