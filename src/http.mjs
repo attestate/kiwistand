@@ -897,7 +897,7 @@ export async function launch(trie, libp2p) {
     if (request.query.cached) {
       reply.header(
         "Cache-Control",
-        "public, s-maxage=30, max-age=30, stale-while-revalidate=60",
+        "public, s-maxage=30, max-age=30, stale-while-revalidate=3600",
       );
     } else {
       reply.header("Cache-Control", "no-cache");
