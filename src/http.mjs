@@ -850,7 +850,9 @@ export async function launch(trie, libp2p) {
       // the same time though, the slug is really just cosmetical as the index
       // always informs about the actual origin of a domain
       reply.header("Cache-Control", "public, max-age=31536000, immutable");
-      const queryParams = new URLSearchParams(request.query).toString();
+      const qp = new URLSearchParams(request.query);
+      qp.delete("t");
+      const queryParams = qp.toString();
       return reply.redirect(`/stories?${queryParams}`);
     }
 
