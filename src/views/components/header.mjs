@@ -31,6 +31,7 @@ const header = async (theme, path) => {
                 <a
                   style="display: flex; align-items: center; gap: 0.5rem; color: black;"
                   href="/"
+                  onclick="document.getElementById('spinner-overlay').style.display='block'"
                 >
                   <img
                     style="filter: saturate(90%); width: 35px; height: 35px;"
