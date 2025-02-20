@@ -346,11 +346,13 @@ async function atomicPut(trie, message, identity, accounts, delegations) {
       const enhancedMessage = await enhancer(message);
       insertMessage(enhancedMessage);
       const [, commentIndex] = message.href.split(":");
-      purgeCache(`https://news.kiwistand.com/stories?index=${commentIndex}`)
-        .then(() => {})
-        .catch((err) => {
-          log(`Failed to purge Cloudflare cache: ${err}`);
-        });
+      try {
+        await purgeCache(
+          `https://news.kiwistand.com/stories?index=${commentIndex}`,
+        );
+      } catch (err) {
+        log(`Failed to purge Cloudflare cache: ${err}`);
+      }
       await triggerNotification(enhancedMessage);
     } catch (err) {
       // NOTE: insertMessage is just a cache, so if this operation fails, we
