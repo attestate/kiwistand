@@ -398,6 +398,7 @@ const CommentInput = (props) => {
   const textareaRef = useRef(null);
   useEffect(() => {
     const handleKeyPress = (e) => {
+      if (document.activeElement && document.activeElement.tagName === "TEXTAREA") return;
       if (e.key !== "r") return;
 
       const selection = window.getSelection();
