@@ -4,7 +4,7 @@ function gtag() {
 }
 gtag("js", new Date());
 
-const key = "G-21BKTD0NKN";
+const key = "G-21BKTD0NKN"; // Measurement ID for Google Analytics; this tag is used in gtag("config", ...)
 gtag("config", key);
 
 const isPWA = window.matchMedia("(display-mode: standalone)").matches;
@@ -17,3 +17,11 @@ gtag("config", key, {
   pwa_mode: isPWA ? "Standalone" : "Not Standalone",
   uses_delegation: usesDelegation ? "Delegation" : "Wallet Connection",
 });
+// By configuring the measurement ID with gtag("config", key),
+// all subsequent events automatically use that key.
+// Therefore, there is no need to add a "send_to" parameter in trackEvent.
+window.trackEvent = function(eventName, params) {
+  if (typeof gtag === "function") {
+    gtag("event", eventName, params);
+  }
+};

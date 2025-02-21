@@ -411,6 +411,11 @@ const Button = (props) => {
     // is canceled by the user.
     if (isSuccess && data.hash !== "null") {
       setLocalStorageKey(signer.privateKey);
+      if (window.trackEvent && typeof window.trackEvent === "function") {
+        window.trackEvent("conversion", {
+          conversion_label: "NFT Purchase",
+        });
+      }
       window.location.href = `/indexing?address=${from.address}&transactionHash=${data.hash}`;
     }
   }, [isSuccess]);
