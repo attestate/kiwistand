@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import posthog from 'posthog-js';
+import posthog from "posthog-js";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { WagmiConfig, useAccount } from "wagmi";
 import { Wallet } from "@ethersproject/wallet";
@@ -87,12 +87,14 @@ const MobileComposer = ({
   characterLimit,
 }) => {
   const [viewportHeight, setViewportHeight] = useState(
-    window.visualViewport ? window.visualViewport.height : window.innerHeight
+    window.visualViewport ? window.visualViewport.height : window.innerHeight,
   );
   useEffect(() => {
     function updateHeight() {
       setViewportHeight(
-        window.visualViewport ? window.visualViewport.height : window.innerHeight
+        window.visualViewport
+          ? window.visualViewport.height
+          : window.innerHeight,
       );
     }
     updateHeight();
@@ -277,7 +279,7 @@ const CommentInput = (props) => {
       // Stop propagation to prevent underlying page from scrolling.
       e.stopPropagation();
 
-      if (e.target.tagName === 'TEXTAREA') {
+      if (e.target.tagName === "TEXTAREA") {
         const textarea = e.target;
         // Prevent scrolling if the textarea is empty.
         if (textarea.value.trim() === "") {
@@ -286,12 +288,15 @@ const CommentInput = (props) => {
         }
         const isScrollable = textarea.scrollHeight > textarea.clientHeight;
         const isAtTop = textarea.scrollTop === 0;
-        const isAtBottom = textarea.scrollTop + textarea.clientHeight === textarea.scrollHeight;
+        const isAtBottom =
+          textarea.scrollTop + textarea.clientHeight === textarea.scrollHeight;
 
         // Prevent scroll if content fits or we're at the bounds.
-        if (!isScrollable ||
-            (isAtTop && e.deltaY < 0) ||
-            (isAtBottom && e.deltaY > 0)) {
+        if (
+          !isScrollable ||
+          (isAtTop && e.deltaY < 0) ||
+          (isAtBottom && e.deltaY > 0)
+        ) {
           e.preventDefault();
         }
       } else {
@@ -300,15 +305,22 @@ const CommentInput = (props) => {
     }
 
     // Handle both touch and mouse wheel events
-    document.addEventListener("touchmove", preventScroll, { passive: false, capture: true });
-    document.addEventListener("wheel", preventScroll, { passive: false, capture: true });
-    
+    document.addEventListener("touchmove", preventScroll, {
+      passive: false,
+      capture: true,
+    });
+    document.addEventListener("wheel", preventScroll, {
+      passive: false,
+      capture: true,
+    });
+
     return () => {
-      document.removeEventListener("touchmove", preventScroll, { capture: true });
+      document.removeEventListener("touchmove", preventScroll, {
+        capture: true,
+      });
       document.removeEventListener("wheel", preventScroll, { capture: true });
     };
   }, [showMobileComposer]);
-
 
   const [isLoading, setIsLoading] = useState(false);
   const handleSubmit = async (e) => {
