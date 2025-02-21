@@ -22,6 +22,7 @@ import canonicalize from "canonicalize";
 
 import log from "./logger.mjs";
 import LMDB from "./lmdb.mjs";
+import { getSlug } from "./utils.mjs";
 import { verify, ecrecover, toDigest, cacheResultAsync } from "./id.mjs";
 import { EIP712_MESSAGE } from "./constants.mjs";
 import { elog } from "./utils.mjs";
@@ -347,9 +348,9 @@ async function atomicPut(trie, message, identity, accounts, delegations) {
       insertMessage(enhancedMessage);
       const [, commentIndex] = message.href.split(":");
       try {
-        await purgeCache(
-          `https://news.kiwistand.com/stories?index=${commentIndex}`,
-        );
+        await purgeCache(`https://news.kiwistand.com/stories?index=${commentIndex}`);
+        await purgeCache(`https://news.kiwistand.com/stories/${getSlug(message.title)}?index=${commentIndex}`);
+        await purgeCache(`https://news.kiwistand.com/api/v1/stories?index=${commentIndex}`);
       } catch (err) {
         log(`Failed to purge Cloudflare cache: ${err}`);
       }

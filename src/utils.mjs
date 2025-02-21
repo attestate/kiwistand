@@ -3,6 +3,9 @@ import { fileURLToPath } from "url";
 
 import { Response, Request } from "node-fetch";
 import { getCacheKey } from "node-fetch-cache";
+import DOMPurify from "isomorphic-dompurify";
+import slugify from "slugify";
+slugify.extend({ "′": "", "'": "", "'": "" });
 
 const staleStore = new Map();
 
@@ -50,6 +53,10 @@ export function fetchCache(fetch, cache) {
 
     throw new Error(`No cached data momentarily available for ${url}`);
   };
+}
+
+export function getSlug(title) {
+  return slugify(DOMPurify.sanitize(title));
 }
 
 let lastCall;

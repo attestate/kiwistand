@@ -17,8 +17,7 @@ import htm from "htm";
 import "express-async-errors";
 import { sub } from "date-fns";
 import DOMPurify from "isomorphic-dompurify";
-import slugify from "slugify";
-slugify.extend({ "′": "", "'": "", "'": "" });
+import { getSlug } from "./utils.mjs";
 import ws from "ws";
 import { createServer } from "http";
 import { FileSystemCache, getCacheKey } from "node-fetch-cache";
@@ -859,7 +858,7 @@ export async function launch(trie, libp2p) {
       return reply.status(404).type("text/plain").send(err.message);
     }
 
-    const expectedSlug = slugify(DOMPurify.sanitize(submission.title));
+    const expectedSlug = getSlug(submission.title);
     if (request.params.slug !== expectedSlug) {
       const qp = new URLSearchParams(request.query);
       qp.delete("t");
