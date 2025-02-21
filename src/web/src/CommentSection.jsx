@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect } from "react";
+import posthog from "posthog-js";
 import { formatDistanceToNowStrict } from "date-fns";
 import Linkify from "linkify-react";
 import { useAccount, WagmiConfig } from "wagmi";
@@ -140,10 +141,13 @@ export const EmojiReaction = ({ comment, allowlist, delegations, toast }) => {
       const resolvedAvatar =
         preResolvedAvatar || (await resolveAvatar(identity));
       const existingReaction = comment.reactions.find(
-        (r) => r.emoji === emoji && Array.isArray(r.reactorProfiles)
+        (r) => r.emoji === emoji && Array.isArray(r.reactorProfiles),
       );
       if (existingReaction) {
-        existingReaction.reactorProfiles.push({ address: identity, safeAvatar: resolvedAvatar });
+        existingReaction.reactorProfiles.push({
+          address: identity,
+          safeAvatar: resolvedAvatar,
+        });
       } else {
         comment.reactions.push({
           emoji,
@@ -173,6 +177,9 @@ export const EmojiReaction = ({ comment, allowlist, delegations, toast }) => {
       const response = await API.send(value, signature);
       if (response.status === "success") {
         toast.success("Reaction added!");
+        posthog.capture("emoji_reaction", {
+          emoji: emoji,
+        });
       } else {
         toast.error(response.details || "Failed to add reaction");
       }
@@ -493,7 +500,10 @@ const Comment = React.forwardRef(
             }}
             className="meta-link"
             href={`/upvotes?address=${comment.identity.address}`}
-            onClick={() => document.getElementById('spinner-overlay').style.display='block'}
+            onClick={() =>
+              (document.getElementById("spinner-overlay").style.display =
+                "block")
+            }
           >
             {comment.identity.safeAvatar && (
               <img

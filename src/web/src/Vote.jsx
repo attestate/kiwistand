@@ -1,5 +1,6 @@
 // @format
 import { useState, useEffect } from "react";
+import posthog from 'posthog-js';
 import { useAccount, WagmiConfig } from "wagmi";
 import { Wallet } from "@ethersproject/wallet";
 import { RainbowKitProvider, ConnectButton } from "@rainbow-me/rainbowkit";
@@ -96,6 +97,7 @@ const Vote = (props) => {
     let message;
     if (response.status === "success") {
       toast.success("Thanks for your upvote!");
+      posthog.capture("upvote");
       setUpvotes(upvotes + 1);
     } else if (response.details.includes("You must mint")) {
       // NOTE: This should technically never happen, but if it does we pop open

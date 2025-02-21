@@ -6,6 +6,7 @@ import {
   useNetwork,
   useSwitchNetwork,
 } from "wagmi";
+import posthog from "posthog-js";
 import { useMemo, useEffect, useState } from "react";
 import { Wallet } from "@ethersproject/wallet";
 import { optimism } from "wagmi/chains";
@@ -253,7 +254,9 @@ const DelegateButton = (props) => {
     isSuccess: isWriteSuccess,
   } = useContractWrite(config);
   const isSuccess = isWriteSuccess && data && data.hash !== "null";
-  if (isSuccess) setKey(getNewKey().privateKey);
+  if (isSuccess) {
+    setKey(getNewKey().privateKey);
+  }
 
   const handleClick = () => {
     removeItem();
@@ -279,6 +282,7 @@ const DelegateButton = (props) => {
               props.callback &&
               typeof props.callback === "function"
             ) {
+              posthog.capture("delegation_performed");
               props.callback();
               // NOTE: We have to reload the page here because the Vote
               // component isn't reloading based on the updates in the

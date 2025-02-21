@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import posthog from 'posthog-js';
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { WagmiConfig, useAccount } from "wagmi";
 import { Wallet } from "@ethersproject/wallet";
@@ -352,6 +353,7 @@ const CommentInput = (props) => {
     const path = `/stories?index=${getIndex()}`;
     fetch(path);
     toast.success("Thanks for submitting your comment. Reloading...");
+    posthog.capture("comment_created");
     localStorage.removeItem(`-kiwi-news-comment-${address}-${getIndex()}`);
 
     const nextPage = new URL(path, window.location.origin);
