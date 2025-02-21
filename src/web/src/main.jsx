@@ -7,6 +7,11 @@ import { createRoot } from "react-dom/client";
 
 import { isIOS, isRunningPWA, getCookie, getLocalAccount } from "./session.mjs";
 import theme from "./theme.jsx";
+import posthog from 'posthog-js';
+posthog.init('phc_F3mfkyH5tKKSVxnMbJf0ALcPA98s92s3Jw8a7eqpBGw', {
+    api_host: 'https://eu.i.posthog.com',
+    person_profiles: 'identified_only' // or 'always' to create profiles for anonymous users as well
+});
 
 function storeReferral() {
   if (!localStorage.getItem("--kiwi-news-original-referral")) {
