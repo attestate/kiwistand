@@ -24,6 +24,7 @@ import {
 
 import { getLocalAccount } from "./session.mjs";
 import theme from "./theme.jsx";
+import posthog from 'posthog-js';
 import { fetchPrice, fetchLeaderboard } from "./API.mjs";
 import { getProvider, useProvider, client, chains } from "./client.mjs";
 
@@ -181,6 +182,11 @@ const BuyButton = (props) => {
   const { switchNetwork } = useSwitchNetwork();
   const { discountEligible, allowlist, delegations, toast } = props;
   const from = useAccount();
+  useEffect(() => {
+    if (from && from.address) {
+      posthog.identify(from.address);
+    }
+  }, [from]);
   const provider = useProvider();
   const [key, setKey] = useState(null);
   const [payload, setPayload] = useState(null);
@@ -411,11 +417,11 @@ const Button = (props) => {
     // is canceled by the user.
     if (isSuccess && data.hash !== "null") {
       setLocalStorageKey(signer.privateKey);
-      if (window.trackEvent && typeof window.trackEvent === "function") {
-        window.trackEvent("conversion", {
-          conversion_label: "NFT Purchase",
-        });
-      }
+      posthog.capture("user_signed_up", {
+        address: from.address,
+        transactionHash: data.hash
+      });
+      // Removed Google Analytics conversion tracking for onboarding
       window.location.href = `/indexing?address=${from.address}&transactionHash=${data.hash}`;
     }
   }, [isSuccess]);

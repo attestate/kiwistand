@@ -737,7 +737,9 @@ async function startWatchAccount(allowlist, delegations) {
     address = account.address;
   }
   const identity = address && eligible(allowlist, delegations, address);
-  if (!identity) {
+  if (identity) {
+    posthog.identify(identity);
+  } else {
     hideDesktopLinks();
     return;
   }
