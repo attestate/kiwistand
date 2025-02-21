@@ -113,20 +113,21 @@ const MobileComposer = ({
   }, []);
   return (
     <div
-      onTouchMove={(e) => e.preventDefault()}
+      onTouchMove={(e) => { if (!e.target.closest("textarea")) { e.preventDefault(); } }}
       style={{
         position: "fixed",
         top: 0,
         left: 0,
         right: 0,
+        bottom: 0,
         backgroundColor: "white",
         zIndex: 1000,
         display: "flex",
         flexDirection: "column",
         width: "100%",
+        overflow: "hidden",
         touchAction: "none",
         overscrollBehavior: "none",
-        height: viewportHeight,
       }}
     >
       <div
@@ -275,29 +276,36 @@ const CommentInput = (props) => {
 
     function preventScroll(e) {
       if (!showMobileComposer) return;
-
+      
       // Stop propagation to prevent underlying page from scrolling.
       e.stopPropagation();
-
-      if (e.target.tagName === "TEXTAREA") {
-        const textarea = e.target;
+      
+      // For touchmove events inside a textarea (e.g. selection handles), allow native behavior.
+      if (e.type === "touchmove" && e.target.closest("textarea")) {
+        return;
+      }
+      
+      if (e.target.closest("textarea")) {
+        const textarea = e.target.closest("textarea");
         // Prevent scrolling if the textarea is empty.
         if (textarea.value.trim() === "") {
           e.preventDefault();
           return;
         }
-        const isScrollable = textarea.scrollHeight > textarea.clientHeight;
-        const isAtTop = textarea.scrollTop === 0;
-        const isAtBottom =
-          textarea.scrollTop + textarea.clientHeight === textarea.scrollHeight;
-
-        // Prevent scroll if content fits or we're at the bounds.
-        if (
-          !isScrollable ||
-          (isAtTop && e.deltaY < 0) ||
-          (isAtBottom && e.deltaY > 0)
-        ) {
-          e.preventDefault();
+        if (e.type === "wheel") {
+          const isScrollable = textarea.scrollHeight > textarea.clientHeight;
+          const isAtTop = textarea.scrollTop === 0;
+          const isAtBottom =
+            textarea.scrollTop + textarea.clientHeight === textarea.scrollHeight;
+      
+          // Prevent scroll if content fits or we're at the bounds.
+          if (
+            !isScrollable ||
+            (isAtTop && e.deltaY < 0) ||
+            (isAtBottom && e.deltaY > 0)
+          ) {
+            e.preventDefault();
+          }
         }
       } else {
         e.preventDefault();
