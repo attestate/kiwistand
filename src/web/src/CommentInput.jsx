@@ -410,12 +410,21 @@ const CommentInput = (props) => {
 
       const start = textarea.selectionStart;
       const end = textarea.selectionEnd;
+      const before = text.slice(0, start);
+      const prefix = before.length === 0 
+        ? "" 
+        : before.endsWith("\n\n") 
+          ? "" 
+          : before.endsWith("\n") 
+            ? "\n" 
+            : "\n\n";
       const quote =
+        prefix +
         selected
           .split("\n")
           .map((line) => `> ${line}`)
           .join("\n") + "\n\n";
-
+      
       setText(text.slice(0, start) + quote + text.slice(end));
 
       setTimeout(() => {
