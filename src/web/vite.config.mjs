@@ -1,4 +1,5 @@
 import { defineConfig } from "vite";
+import fs from "fs";
 import react from "@vitejs/plugin-react-swc";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
 
@@ -25,7 +26,19 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       cors: true,
-      origin: "http://localhost:4000",
+      https:
+        fs.existsSync("../../certificates/key.pem") &&
+        process.env.CUSTOM_PROTOCOL === "https://"
+          ? {
+              key: fs.readFileSync("../../certificates/key.pem"),
+              cert: fs.readFileSync("../../certificates/cert.pem"),
+              rejectUnauthorized: false,
+            }
+          : false,
+      origin:
+        process.env.CUSTOM_PROTOCOL === "https://"
+          ? "https://kazoo.local:5173"
+          : "http://kazoo.local:5173",
     },
     plugins: [react(), nodePolyfills()],
   };

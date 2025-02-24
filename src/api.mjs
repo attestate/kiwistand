@@ -37,6 +37,16 @@ function getSSLOptions() {
       cert: fs.readFileSync(env.SSL_CERT_PATH, "utf8"),
     };
   }
+  if (
+    env.CUSTOM_PROTOCOL === "https://" &&
+    fs.existsSync("certificates/key.pem") &&
+    fs.existsSync("certificates/cert.pem")
+  ) {
+    return {
+      key: fs.readFileSync("certificates/key.pem", "utf8"),
+      cert: fs.readFileSync("certificates/cert.pem", "utf8"),
+    };
+  }
   return null;
 }
 

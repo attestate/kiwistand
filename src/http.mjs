@@ -19,7 +19,9 @@ import { sub } from "date-fns";
 import DOMPurify from "isomorphic-dompurify";
 import { getSlug } from "./utils.mjs";
 import ws from "ws";
-import { createServer } from "http";
+import https from "https";
+import fs from "fs";
+import { createServer as createHttpServer } from "http";
 import { FileSystemCache, getCacheKey } from "node-fetch-cache";
 
 import * as registry from "./chainstate/registry.mjs";
@@ -92,7 +94,17 @@ import {
 } from "./cache.mjs";
 
 const app = express();
-const server = createServer(app);
+let server;
+if (env.CUSTOM_PROTOCOL === "https://") {
+  const options = {
+    key: fs.readFileSync("certificates/key.pem"),
+    cert: fs.readFileSync("certificates/cert.pem"),
+    rejectUnauthorized: false,
+  };
+  server = https.createServer(options, app);
+} else {
+  server = createHttpServer(app);
+}
 
 let cachedFeed = null;
 
@@ -1532,6 +1544,6 @@ export async function launch(trie, libp2p) {
   });
 
   server.listen(env.HTTP_PORT, () =>
-    log(`Launched HTTP server at port "${env.HTTP_PORT}"`),
+    log(`Launched HTTPS server at PORT: ${env.HTTP_PORT}`),
   );
 }
