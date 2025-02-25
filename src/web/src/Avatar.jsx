@@ -50,17 +50,44 @@ const Avatar = (props) => {
 
   const [avatar, setAvatar] = useState("");
   const [points, setPoints] = useState(0);
+  const [karmaDiff, setKarmaDiff] = useState(0);
+
+  // Initialize karmaDiff from sessionStorage on component mount
+  useEffect(() => {
+    if (address) {
+      const sessionDiff = sessionStorage.getItem(`karmaDiff-${address}`);
+      if (sessionDiff) {
+        setKarmaDiff(parseInt(sessionDiff, 10));
+      }
+    }
+  }, [address]);
 
   useEffect(() => {
     const getAvatar = async () => {
       const avatarUrl = await resolveAvatar(address);
       setAvatar(avatarUrl);
     };
+
     const getPoints = async () => {
       if (!address) return;
 
       const data = await fetchKarma(address);
       if (data && data.karma) {
+        // Get previous karma from localStorage
+        const prevKarma = localStorage.getItem(`karma-${address}`);
+        const prevKarmaNum = prevKarma ? parseInt(prevKarma, 10) : data.karma;
+
+        // Calculate difference
+        const diff = data.karma - prevKarmaNum;
+        if (diff > 0) {
+          setKarmaDiff(diff);
+          // Store the diff in sessionStorage to persist across page navigation
+          sessionStorage.setItem(`karmaDiff-${address}`, diff.toString());
+        }
+
+        // Store current karma for next time
+        localStorage.setItem(`karma-${address}`, data.karma.toString());
+
         setPoints(data.karma);
       }
     };
@@ -105,16 +132,44 @@ const Avatar = (props) => {
                 border: "1px solid #828282",
               }}
             />
-            <span
+            <div
               style={{
-                fontWeight: "bold",
-                fontSize: "8px",
-                marginTop: "-2px",
-                color: "black",
+                marginTop: "3px",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                lineHeight: "1",
               }}
             >
-              {points.toString()}
-            </span>
+              <span
+                style={{
+                  fontWeight: "bold",
+                  fontSize: "8px",
+                  marginTop: "-2px",
+                  color: "black",
+                }}
+              >
+                {points.toString()}
+              </span>
+              {karmaDiff > 0 && (
+                <span
+                  onClick={() => {
+                    setKarmaDiff(0);
+                    sessionStorage.removeItem(`karmaDiff-${address}`);
+                  }}
+                  style={{
+                    fontWeight: "bold",
+                    fontSize: "8px",
+                    marginTop: "0px",
+                    color: "#00b67a",
+                    cursor: "pointer",
+                  }}
+                  title="Click to dismiss"
+                >
+                  +{karmaDiff}
+                </span>
+              )}
+            </div>
           </div>
         </div>
       </div>

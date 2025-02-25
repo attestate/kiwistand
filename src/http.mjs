@@ -638,10 +638,10 @@ export async function launch(trie, libp2p) {
     const code = 200;
     const httpMessage = "OK";
     const details = `Karma`;
-    // Reduce cache time to ensure more up-to-date karma values
+    // Keep cache time low but allow longer stale-while-revalidate for better performance
     reply.header(
       "Cache-Control",
-      "public, s-maxage=300, max-age=300, stale-while-revalidate=600",
+      "public, s-maxage=300, max-age=60, stale-while-revalidate=86400",
     );
     return sendStatus(reply, code, httpMessage, details, {
       address,
