@@ -15,6 +15,8 @@ import Sidebar from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
 import { prefetchHead } from "./components/head.mjs";
 import { iconSVG } from "./components/row.mjs";
+// Define the brand green color directly
+const theme = { color: "#00b67a" };
 import * as store from "../store.mjs";
 import * as registry from "../chainstate/registry.mjs";
 import * as id from "../id.mjs";
@@ -165,11 +167,20 @@ function generateRow(lastUpdate, theme) {
               style="display: flex; border-bottom: 1px solid rgba(0,0,0,0.1);"
             >
               <div
-                class="votearrow"
-                style="font-size: 1.5rem; flex: 0.15; display: flex; align-items: center; justify-content: center; color: ${theme.color};"
-                title="upvote"
+                style="flex: 0.15; display: flex; flex-direction: column; align-items: center; justify-content: center;"
               >
-                ${iconSVG}
+                <div
+                  class="votearrow"
+                  style="font-size: 1.5rem; display: flex; align-items: center; justify-content: center; color: ${theme.color};"
+                  title="upvote"
+                >
+                  ${iconSVG}
+                </div>
+                <div
+                  style="font-size: 0.7rem; font-weight: bold; color: ${theme.color}; margin-top: -5px;"
+                >
+                  +1 🥝
+                </div>
               </div>
               <div
                 style="padding-top: 10px; flex: 0.85; display: flex; flex-direction: column;"
