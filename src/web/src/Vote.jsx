@@ -68,7 +68,7 @@ const KarmaAnimation = ({ active }) => {
     <div 
       key={animationKey}
       className="karma-animation"
-      style={{ color: theme.color }}
+      style={{ color: theme.color, whiteSpace: "nowrap" }}
     >
       +1 🥝
     </div>
