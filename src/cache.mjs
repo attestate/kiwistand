@@ -415,14 +415,17 @@ export function calculateKarmaFromDB(identity, endDate) {
       totalKarma += 1;
       
       // Count upvotes for this submission
-      const upvotesQuery = `
+      let upvotesQuery = `
         SELECT COUNT(*) as count
         FROM upvotes u
-        WHERE u.href = ? ${dateFilter ? dateFilter.replace('s.timestamp', 'u.timestamp').replace('AND', '') : ''}
+        WHERE u.href = ?
       `;
       
       const upvoteParams = [submission.href];
+      
+      // Add timestamp filter if needed
       if (endDate) {
+        upvotesQuery += " AND u.timestamp <= ?";
         upvoteParams.push(Math.floor(endDate.getTime() / 1000));
       }
       
