@@ -133,9 +133,6 @@ if (!reconcileMode) {
   setInterval(async () => {
     await Promise.all([feeds.recompute(urls), newest.recompute(trie)]);
   }, 1800000);
-  karma.count(upvotes);
-  // NOTE: Only set this date in synchronicity with the src/launch.mjs date!!
-  karma.count(upvotes, new Date("2025-01-15"));
 }
 
 if (productionMode && env.POSTMARK_API_KEY) {

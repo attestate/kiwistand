@@ -1,10 +1,12 @@
 import normalizeUrl from "normalize-url";
 import { format } from "date-fns";
 
-import { lifetimeCache as cache } from "./cache.mjs";
+import { lifetimeCache as cache, calculateKarmaFromDB, getKarmaRanking } from "./cache.mjs";
+import log from "./logger.mjs";
 
 const karmaPrefix = `karma-present`;
 
+// Legacy functions for backward compatibility
 function increment(identity, prefix) {
   let user = cache.get(`${prefix}-${identity}`);
   if (user) {
@@ -28,6 +30,16 @@ function record(identity, prefix) {
 }
 
 export function resolve(identity, endDate) {
+  // First try to get fresh karma from the database
+  try {
+    const dbKarma = calculateKarmaFromDB(identity, endDate);
+    return dbKarma;
+  } catch (err) {
+    log(`Error in karma.resolve using DB: ${err.toString()}`);
+    // Fall back to cache if DB query fails
+  }
+  
+  // Fall back to cached karma if DB is unavailable or query fails
   let prefix = karmaPrefix;
   if (endDate) {
     prefix = datePrefix(endDate);
@@ -90,6 +102,18 @@ export function rank(identity) {
 }
 
 export function ranking() {
+  try {
+    // Get top karma users directly from database
+    const results = getKarmaRanking();
+    if (results && results.length > 0) {
+      return results;
+    }
+  } catch (err) {
+    log(`Error in karma.ranking using DB: ${err.toString()}`);
+    // Fall back to cache-based ranking
+  }
+  
+  // Fall back to cache-based ranking
   const list = [];
   for (const [identity, data] of Object.entries(all())) {
     if (data && data.points) {

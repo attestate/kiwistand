@@ -385,6 +385,92 @@ export function getNumberOfOnlineUsers() {
   return uniqueIdentities.size;
 }
 
+// Calculate karma directly from SQLite database
+export function calculateKarmaFromDB(identity, endDate) {
+  try {
+    let dateFilter = "";
+    let params = [identity];
+    
+    if (endDate) {
+      const endTimestamp = Math.floor(endDate.getTime() / 1000);
+      dateFilter = "AND timestamp <= ?";
+      params.push(endTimestamp);
+    }
+    
+    // Count submissions
+    const submissionsQuery = `
+      SELECT COUNT(*) as count, href
+      FROM submissions 
+      WHERE identity = ? ${dateFilter}
+      GROUP BY href
+    `;
+    
+    const submissions = db.prepare(submissionsQuery).all(params);
+    
+    // For each submission, count upvotes
+    let totalKarma = 0;
+    
+    for (const submission of submissions) {
+      // Each submission gives 1 base point
+      totalKarma += 1;
+      
+      // Count upvotes for this submission
+      const upvotesQuery = `
+        SELECT COUNT(*) as count
+        FROM upvotes
+        WHERE href = ? ${dateFilter.replace('AND', '')}
+      `;
+      
+      const upvoteParams = [submission.href];
+      if (endDate) {
+        upvoteParams.push(Math.floor(endDate.getTime() / 1000));
+      }
+      
+      const upvotes = db.prepare(upvotesQuery).get(upvoteParams);
+      totalKarma += upvotes.count;
+    }
+    
+    return totalKarma;
+  } catch (err) {
+    log(`Error calculating karma from DB: ${err.toString()}`);
+    return 0;
+  }
+}
+
+// Get top karma users directly from database
+export function getKarmaRanking() {
+  try {
+    const query = `
+      WITH submission_counts AS (
+        SELECT identity, COUNT(*) as submission_count
+        FROM submissions
+        GROUP BY identity
+      ),
+      upvote_counts AS (
+        SELECT s.identity, COUNT(*) as upvote_count
+        FROM submissions s
+        JOIN upvotes u ON s.href = u.href
+        GROUP BY s.identity
+      )
+      SELECT 
+        COALESCE(sc.identity, uc.identity) as identity,
+        COALESCE(sc.submission_count, 0) + COALESCE(uc.upvote_count, 0) as karma
+      FROM submission_counts sc
+      FULL OUTER JOIN upvote_counts uc ON sc.identity = uc.identity
+      ORDER BY karma DESC
+    `;
+    
+    const results = db.prepare(query).all();
+    return results.map(row => ({
+      identity: row.identity,
+      karma: row.karma
+    }));
+  } catch (err) {
+    log(`Error in getKarmaRanking: ${err.toString()}`);
+    return [];
+  }
+}
+
 export function getBest(amount, from, orderBy, domain, startDatetime) {
   let orderClause = "upvotesCount DESC";
   if (orderBy === "new") {
