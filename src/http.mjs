@@ -1424,7 +1424,7 @@ export async function launch(trie, libp2p) {
     if (profile && profile.ens) {
       reply.header(
         "Cache-Control",
-        "public, s-maxage=86400, max-age=86400, stale-while-revalidate=86400",
+        "public, s-maxage=86400, max-age=86400, stale-while-revalidate=259200",
       );
       return reply.redirect(308, `/${profile.ens}`);
     }
@@ -1439,19 +1439,22 @@ export async function launch(trie, libp2p) {
     );
 
     if (request.query.mode === "new") {
+      // For "new" mode, use shorter cache time but longer stale period
       reply.header(
         "Cache-Control",
-        "public, s-maxage=86400, max-age=86400, stale-while-revalidate=600000",
+        "public, s-maxage=3600, max-age=1800, stale-while-revalidate=259200",
       );
     } else if (!request.query.mode || request.query.mode == "top") {
+      // For "top" mode, we can cache longer with a very long stale period
       reply.header(
         "Cache-Control",
-        "public, s-maxage=86400, max-age=86400, stale-while-revalidate=86400",
+        "public, s-maxage=43200, max-age=21600, stale-while-revalidate=432000",
       );
     } else {
+      // Fallback for any other modes
       reply.header(
         "Cache-Control",
-        "public, s-maxage=3600, max-age=3600, stale-while-revalidate=60",
+        "public, s-maxage=3600, max-age=1800, stale-while-revalidate=86400",
       );
     }
 
@@ -1517,10 +1520,18 @@ export async function launch(trie, libp2p) {
       return next(err);
     }
 
-    reply.header(
-      "Cache-Control",
-      "public, s-maxage=86400, max-age=86400, stale-while-revalidate=600000",
-    );
+    // For ENS profiles, use similar caching strategy as upvotes but with longer max-age
+    if (request.query.mode === "new") {
+      reply.header(
+        "Cache-Control",
+        "public, s-maxage=7200, max-age=3600, stale-while-revalidate=259200",
+      );
+    } else {
+      reply.header(
+        "Cache-Control",
+        "public, s-maxage=43200, max-age=21600, stale-while-revalidate=432000",
+      );
+    }
     return reply.status(200).type("text/html").send(content);
   });
 
