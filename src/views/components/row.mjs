@@ -556,7 +556,7 @@ const row = (
                               class="meta-link"
                               style="user-select: text;"
                               href="/stories/${getSlug(story.title)}?index=0x${story.index}"
-                              onclick="document.getElementById('spinner-overlay').style.display='block'"
+                              onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
                             >
                               ${formatDistanceToNowStrict(
                                 new Date(story.timestamp * 1000),
@@ -703,7 +703,7 @@ const row = (
                       class="chat-bubble interaction-element"
                       id="chat-bubble-${story.index}"
                       href="/stories/${getSlug(story.title)}?index=0x${story.index}"
-                      onclick="document.getElementById('spinner-overlay').style.display='block'"
+                      onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
                       style="margin: 5px; border: var(--border-thin); background-color: var(--bg-off-white); border-radius: 2px; display: ${path ===
                       "/stories"
                         ? "none"

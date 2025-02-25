@@ -31,7 +31,7 @@ const header = async (theme, path) => {
                 <a
                   style="display: flex; align-items: center; gap: 0.5rem; color: black;"
                   href="/"
-                  onclick="document.getElementById('spinner-overlay').style.display='block'"
+                  onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
                 >
                   <img
                     style="filter: saturate(90%); width: 35px; height: 35px;"
@@ -82,10 +82,10 @@ const header = async (theme, path) => {
                 </span>
               </a>
               <div class="desktop-nav">
-                <a class="meta-link" href="/" data-no-instant onclick="document.getElementById('spinner-overlay').style.display='block'">Feed</a>
-                <a class="meta-link primary-action" href="/submit" data-no-instant onclick="document.getElementById('spinner-overlay').style.display='block'">Submit</a>
-                <a class="meta-link" href="/community" data-no-instant onclick="document.getElementById('spinner-overlay').style.display='block'">Users</a>
-                <a class="meta-link" href="/profile" data-no-instant onclick="document.getElementById('spinner-overlay').style.display='block'">Profile</a>
+                <a class="meta-link" href="/" data-no-instant onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'">Feed</a>
+                <a class="meta-link primary-action" href="/submit" data-no-instant onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'">Submit</a>
+                <a class="meta-link" href="/community" data-no-instant onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'">Users</a>
+                <a class="meta-link" href="/profile" data-no-instant onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'">Profile</a>
                 <span class="header-disconnect">Disconnect</span>
               </div>
               <div

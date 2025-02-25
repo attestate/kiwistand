@@ -90,7 +90,7 @@ function generateCommentRow(activity, identity, bgColor, theme, i) {
           data-no-instant="${i < 3}"
           class="notification"
           href="${link}"
-          onclick="document.getElementById('spinner-overlay').style.display='block'"
+          onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
         >
           <div style="display: flex; border-bottom: 1px solid rgba(0,0,0,0.1);">
             <div
@@ -159,7 +159,7 @@ function generateRow(lastUpdate, theme) {
               ? `&upvoter=${identities[identities.length - 1].address}`
               : ""}"
             class="upvote-notification notification"
-            onclick="document.getElementById('spinner-overlay').style.display='block'"
+            onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
           >
             <div
               style="display: flex; border-bottom: 1px solid rgba(0,0,0,0.1);"

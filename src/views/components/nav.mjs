@@ -122,7 +122,7 @@ const nav = (path) => html`
       data-no-instant
       data-icon="home"
       href="/"
-      onclick="document.getElementById('spinner-overlay').style.display='block'"
+      onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
       style="flex-direction: column; display: flex; justify-content: center; align-items: center; padding: 10px 0; flex-grow: 1;
  text-decoration: none; color: black; height: 30px;"
     >
@@ -132,7 +132,7 @@ const nav = (path) => html`
       data-no-instant
       data-icon="newest"
       href="/new?cached=true"
-      onclick="document.getElementById('spinner-overlay').style.display='block'"
+      onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
       style="flex-direction: column; display: flex; justify-content: center; align-items: center; padding: 10px 0; flex-grow: 1;
  text-decoration: none; color: black; height: 30px;"
     >
@@ -142,7 +142,7 @@ const nav = (path) => html`
       data-no-instant
       data-icon="submit"
       href="/submit"
-      onclick="document.getElementById('spinner-overlay').style.display='block'"
+      onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
       style="flex-direction: column; display: flex; justify-content: center; align-items: center; padding: 10px 0; flex-grow: 1;
  text-decoration: none; color: black; height: 30px;"
     >
