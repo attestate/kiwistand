@@ -117,6 +117,7 @@ function SimpleModal(props) {
         style={{
           border: "none",
         }}
+        isAppOnboarding={false}
       />
     </Modal>
   );

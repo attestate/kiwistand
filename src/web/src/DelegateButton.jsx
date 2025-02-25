@@ -303,7 +303,8 @@ const DelegateButton = (props) => {
   const localAccount = getLocalAccount(from.address, props.allowlist);
   if (
     localAccount &&
-    eligible(props.allowlist, props.delegations, localAccount.identity)
+    eligible(props.allowlist, props.delegations, localAccount.identity) &&
+    props.isAppOnboarding // Only switch to Passkeys immediately if in app onboarding flow
   ) {
     return (
       <Passkeys
