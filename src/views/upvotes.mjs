@@ -237,7 +237,7 @@ export default async function (
                         href="https://etherscan.io/address/${ensData.address}"
                       >
                         ${ensData.displayName}
-                        <span> (${points.toString()} 🥝)</span>
+                        <span> (<nav-karma data-address="${identity}" data-initial="${points.toString()}">${points.toString()}</nav-karma> 🥝)</span>
                       </a>
                     </span>
                     <span style="font-size: 0.8rem;">

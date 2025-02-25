@@ -657,6 +657,26 @@ async function addNFTPrice() {
   }
 }
 
+async function addKarmaElements() {
+  const karmaElements = document.querySelectorAll("nav-karma");
+  if (karmaElements && karmaElements.length > 0) {
+    const Karma = (await import("./Karma.jsx")).default;
+    karmaElements.forEach((element) => {
+      const address = element.getAttribute("data-address");
+      const initial = element.getAttribute("data-initial");
+      const initialContent = element.textContent.trim();
+      
+      createRoot(element).render(
+        <StrictMode>
+          <Karma address={address} initial={initial}>
+            {initialContent}
+          </Karma>
+        </StrictMode>,
+      );
+    });
+  }
+}
+
 async function checkMintStatus(address) {
   const url = new URL(window.location.href);
   if (url.pathname !== "/indexing") return;
@@ -999,6 +1019,7 @@ async function start() {
     addPasskeysDialogue(toast, await allowlistPromise),
     addModals(await allowlistPromise, await delegationsPromise, toast),
     addNFTPrice(),
+    addKarmaElements(),
     addMinuteCountdown(),
     addAvatar(await allowlistPromise),
     addDelegateButton(await allowlistPromise, await delegationsPromise, toast),
