@@ -1,5 +1,6 @@
 // @format
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+
 import posthog from 'posthog-js';
 import { useAccount, WagmiConfig } from "wagmi";
 import { Wallet } from "@ethersproject/wallet";
@@ -52,9 +53,33 @@ const Container = (props) => {
   );
 };
 
+const KarmaAnimation = ({ active }) => {
+  const [animationKey, setAnimationKey] = useState(0);
+  
+  useEffect(() => {
+    if (active) {
+      setAnimationKey(prev => prev + 1);
+    }
+  }, [active]);
+
+  if (!active) return null;
+  
+  return (
+    <div 
+      key={animationKey}
+      className="karma-animation"
+      style={{ color: theme.color }}
+    >
+      +1 🥝
+    </div>
+  );
+};
+
 const Vote = (props) => {
   const { allowlist, delegations, toast, isad } = props;
   const value = API.messageFab(props.title, props.href);
+  const [showKarmaAnimation, setShowKarmaAnimation] = useState(false);
+  const animationContainerRef = useRef(null);
 
   let address;
   const account = useAccount();
@@ -83,7 +108,14 @@ const Vote = (props) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Set upvoted state immediately for better UX
     setHasUpvoted(true);
+    
+    // Show animation immediately when button is clicked
+    setShowKarmaAnimation(true);
+    // Reset animation after it completes
+    setTimeout(() => setShowKarmaAnimation(false), 700);
 
     if (!isLocal) toast("Please sign the message in your wallet");
     const signature = await signer._signTypedData(
@@ -96,17 +128,20 @@ const Vote = (props) => {
     console.log(response);
     let message;
     if (response.status === "success") {
+      // Update UI state
+      setUpvotes(upvotes + 1);
       toast.success("Thanks for your upvote!");
       posthog.capture("upvote");
-      setUpvotes(upvotes + 1);
     } else if (response.details.includes("You must mint")) {
       // NOTE: This should technically never happen, but if it does we pop open
       // the modal to buy the NFT.
       props.setIsOpen(true);
       setHasUpvoted(false);
+      setShowKarmaAnimation(false); // Hide animation on error
       return;
     } else if (response.status === "error") {
       setHasUpvoted(false);
+      setShowKarmaAnimation(false); // Hide animation on error
       toast.error(`Sad Kiwi :( "${response.details}"`);
       return;
     }
@@ -118,6 +153,7 @@ const Vote = (props) => {
         const connected = account && chain && mounted;
         return (
           <div
+            ref={animationContainerRef}
             onClick={async (e) => {
               if (hasUpvoted || isad || window.location.pathname === "/submit")
                 return;
@@ -162,8 +198,10 @@ const Vote = (props) => {
               margin: "5px 8px 5px 6px",
               alignSelf: "stretch",
               cursor: hasUpvoted ? "not-allowed" : "pointer",
+              position: "relative", // For positioning the animation
             }}
           >
+            <KarmaAnimation active={showKarmaAnimation} />
             <div style={{ minHeight: "42px", display: "block" }}>
               <div
                 className={`votearrow`}

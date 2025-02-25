@@ -1062,6 +1062,29 @@ a.meta-link:hover, span.meta-link:hover {
   background-color: rgba(0, 0, 0, 0.2) !important;
 }
 
+@keyframes karma-float {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -30px);
+  }
+}
+
+.karma-animation {
+  position: absolute;
+  top: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-weight: bold;
+  font-size: 14px;
+  pointer-events: none;
+  z-index: 100;
+  text-shadow: 0px 0px 2px white;
+  animation: karma-float 0.7s ease-out forwards;
+}
  
 #top-bar {
   top: 0;
