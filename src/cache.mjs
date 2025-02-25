@@ -393,15 +393,15 @@ export function calculateKarmaFromDB(identity, endDate) {
     
     if (endDate) {
       const endTimestamp = Math.floor(endDate.getTime() / 1000);
-      dateFilter = "AND timestamp <= ?";
+      dateFilter = "AND s.timestamp <= ?";
       params.push(endTimestamp);
     }
     
     // Count submissions
     const submissionsQuery = `
       SELECT COUNT(*) as count, href
-      FROM submissions 
-      WHERE identity = ? ${dateFilter}
+      FROM submissions s
+      WHERE s.identity = ? ${dateFilter}
       GROUP BY href
     `;
     
@@ -417,8 +417,8 @@ export function calculateKarmaFromDB(identity, endDate) {
       // Count upvotes for this submission
       const upvotesQuery = `
         SELECT COUNT(*) as count
-        FROM upvotes
-        WHERE href = ? ${dateFilter.replace('AND', '')}
+        FROM upvotes u
+        WHERE u.href = ? ${dateFilter ? dateFilter.replace('s.timestamp', 'u.timestamp').replace('AND', '') : ''}
       `;
       
       const upvoteParams = [submission.href];
@@ -453,10 +453,20 @@ export function getKarmaRanking() {
         GROUP BY s.identity
       )
       SELECT 
-        COALESCE(sc.identity, uc.identity) as identity,
+        sc.identity as identity,
         COALESCE(sc.submission_count, 0) + COALESCE(uc.upvote_count, 0) as karma
       FROM submission_counts sc
-      FULL OUTER JOIN upvote_counts uc ON sc.identity = uc.identity
+      LEFT JOIN upvote_counts uc ON sc.identity = uc.identity
+      
+      UNION
+      
+      SELECT 
+        uc.identity as identity,
+        COALESCE(sc.submission_count, 0) + COALESCE(uc.upvote_count, 0) as karma
+      FROM upvote_counts uc
+      LEFT JOIN submission_counts sc ON uc.identity = sc.identity
+      WHERE sc.identity IS NULL
+      
       ORDER BY karma DESC
     `;
     
