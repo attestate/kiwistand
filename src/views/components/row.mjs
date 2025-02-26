@@ -293,10 +293,6 @@ const row = (
       (story.lastComment.identity.ens ||
         story.lastComment.identity.farcaster ||
         story.lastComment.identity.lens) &&
-      differenceInHours(
-        new Date(),
-        new Date(story.lastComment.timestamp * 1000),
-      ) < 20 &&
       !invert;
     return html`
       <tr style="${invert ? "background-color: black;" : ""}">
