@@ -234,6 +234,9 @@ const BuyButton = (props) => {
         if (balance > 0) {
           // We have a balance, try to prepare the config
           try {
+            // Show success toast when ETH arrives
+            toast.success(`We've just sent you some ETH to cover your transaction fees!`);
+            
             const newConfig = await prepare(key);
             if (newConfig) {
               setConfig(newConfig);
