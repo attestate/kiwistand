@@ -235,7 +235,14 @@ export const TextConnectButton = ({
         }
 
         if (!isEligible && connected) {
-          window.location.pathname = "/kiwipass-mint";
+          // Check if we've already redirected this user in the current session
+          const hasBeenRedirected = sessionStorage.getItem('redirectedToKiwipassMint');
+          
+          if (!hasBeenRedirected) {
+            // Mark that we've redirected this user
+            sessionStorage.setItem('redirectedToKiwipassMint', 'true');
+            window.location.pathname = "/kiwipass-mint";
+          }
         }
 
         if ((required && !connected) || (!connected && !isEligible)) {
