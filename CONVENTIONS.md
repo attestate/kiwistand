@@ -42,6 +42,8 @@ conventions.
 
 ### 1.5. Error Handling
 - One statement per try {} block in try/catch
+- Only try catch statements for which we expect an error to be thrown and for
+  which we want to adjust the program flow
 
 ### 1.6. Function Parameter Declaration
 Always declare parameters as variables first for clarity:
