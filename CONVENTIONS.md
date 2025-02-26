@@ -8,6 +8,8 @@ conventions.
 
 - Always make chirurgical changes. Never try to improve any of the surrounding
   code, just make the intented change and minimize the change set.
+- Keep the change set to achieve something minimal and elegant. We highly
+  prefer a narrow solution and then to iterate on it.
 - Avoid regressions at all costs. If unsure about what to prioritize then take
   the top five options and rank them based on their impact versus their risk of
   introducing a regression.
@@ -22,9 +24,10 @@ conventions.
 
 ### 1.2. Async Code Patterns
 - Prefer async/await for sequential operations
+- Use Promises (then and catch) if there is a code block that can be executed
+  without having to await its result
 - Use Promise.allSettled for parallel operations
 - Never use Promise.all (fails entire chain on single error)
-- Consider promises when blocking would harm performance
 
 ### 1.3. Variable Naming
 - Use single short words as variables over camelCase
@@ -51,8 +54,8 @@ This ensures every parameter has a clear, named purpose and improves code
 readability.
 
 ### 1.7. Keep functions pure and stateless
-- Don't try to maintain state through complex classes etc., instead write a series
-  of pure functions that all do one thing well.
+- Don't try to maintain state through complex classes etc., instead write a
+  series of pure functions that all do one thing well.
 
 ## 2. Code Quality
 
