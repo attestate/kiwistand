@@ -60,6 +60,14 @@ readability.
 - Don't try to maintain state through complex classes etc., instead write a
   series of pure functions that all do one thing well.
 
+### 1.8. Don't use setInterval to call functions with a frequency
+- One issue with using setInterval to repeately calling a function is that if
+  the function's execution time is longer than the defined interval, then we'll
+  stack function calls on top of each other.
+- An alternative therefore is to run a function, then sleep for a while and run
+  the function again. This way we can ensure that a function is only ever
+  called once.
+
 ## 2. Code Quality
 
 ### 2.1. Comments
