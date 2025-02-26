@@ -128,11 +128,12 @@ store
 
 if (!reconcileMode) {
   const urls = await moderation.getFeeds();
-  newest.recompute(trie).then(() => log("Feeds computed"));
-  // TODO: Unclear if this is still necessary
-  setInterval(async () => {
-    await Promise.all([feeds.recompute(urls), newest.recompute(trie)]);
-  }, 1800000);
+  await feeds.recompute(urls);
+  await newest.recompute(trie).then(() => log("/new computed with feeds")),
+    // TODO: Unclear if this is still necessary
+    setInterval(async () => {
+      await Promise.all([feeds.recompute(urls), newest.recompute(trie)]);
+    }, 1800000);
 }
 
 if (productionMode && env.POSTMARK_API_KEY) {

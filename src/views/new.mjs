@@ -114,7 +114,44 @@ export async function recompute() {
       isOriginal,
     });
   }
-  stories = nextStories;
+
+  // Add RSS feed items to the list, but only if they don't duplicate user submissions
+  const feedItems = feeds.latest();
+  
+  // Create a set of normalized URLs from user submissions to check for duplicates
+  const existingUrls = new Set();
+  for (const story of nextStories) {
+    if (story.href) {
+      existingUrls.add(normalizeUrl(story.href, { stripWWW: true }));
+    }
+  }
+  
+  // Add feed items that don't duplicate existing stories
+  for (const item of feedItems) {
+    const itemHref = item.href || item.url;
+    if (!itemHref) continue;
+    
+    const normalizedItemUrl = normalizeUrl(itemHref, { stripWWW: true });
+    
+    // Only add feed items that don't duplicate existing stories
+    if (!existingUrls.has(normalizedItemUrl)) {
+      nextStories.push({
+        ...item,
+        upvotes: 1,
+        upvoters: [],
+        index: null, // Feedbot items don't have an index
+        displayName: "Feedbot", // Required for row.mjs
+        identity: null, // Required for row.mjs
+        avatars: [], // Required for row.mjs
+        isOriginal: false, // Required for row.mjs
+        href: itemHref, // Use the original href/url
+        date: item.date, // Keep original date
+        timestamp: item.date || item.timestamp, // Ensure timestamp is set
+      });
+    }
+  }
+
+  stories = nextStories.sort((a, b) => b.timestamp - a.timestamp);
   inProgress = false;
   try {
     // Purge Cloudflare cache for the "/new" page so that new submissions show immediately.

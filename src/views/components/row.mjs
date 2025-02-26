@@ -446,7 +446,9 @@ const row = (
                           DOMPurify.sanitize(story.href),
                           story.identity,
                         )}', event.currentTarget.getAttribute('target'));"
-                        data-story-link="/stories/${getSlug(story.title)}?index=0x${story.index}"
+                        data-story-link="/stories/${getSlug(
+                          story.title,
+                        )}?index=0x${story.index}"
                         target="${path === "/submit" ||
                         path === "/demonstration"
                           ? "_self"
@@ -555,7 +557,9 @@ const row = (
                             <a
                               class="meta-link"
                               style="user-select: text;"
-                              href="/stories/${getSlug(story.title)}?index=0x${story.index}"
+                              href="/stories/${getSlug(
+                                story.title,
+                              )}?index=0x${story.index}"
                               onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
                             >
                               ${formatDistanceToNowStrict(
@@ -598,6 +602,27 @@ const row = (
                         ? html`<a class="meta-link" href="javascript:void(0);"
                             >${story.displayName}</a
                           >`
+                        : story.displayName === "Feedbot"
+                        ? html`<span
+                            class="meta-link"
+                            style="touch-action: manipulation; user-select: none; display: inline-flex; align-items: center; vertical-align: -1px;"
+                          >
+                            <svg
+                              style="width: 12px; height: 12px; margin-right: 4px; vertical-align: -1px;"
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="0 0 256 256"
+                            >
+                              <rect width="256" height="256" fill="none" />
+                              <path
+                                d="M88,64a.12.12,0,0,0-.12.12A.12.12,0,0,0,88,64Z"
+                                opacity="0.2"
+                              />
+                              <path
+                                d="M216,48H40A16,16,0,0,0,24,64V192a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V64A16,16,0,0,0,216,48ZM40,64H216v32H40ZM216,192H40V112H216v80Zm-16-24a8,8,0,0,1-8,8H152a8,8,0,0,1,0-16h40A8,8,0,0,1,200,168Zm0-32a8,8,0,0,1-8,8H104a8,8,0,0,1,0-16h88A8,8,0,0,1,200,136Z"
+                              />
+                            </svg>
+                            ${story.displayName}
+                          </span>`
                         : html`<a
                             target="_blank"
                             class="meta-link"
@@ -650,7 +675,9 @@ const row = (
                                   class="caster-link share-link"
                                   title="Share"
                                   style="color: var(--contrast-color); touch-action: manipulation; user-select: none; white-space: nowrap;"
-                                  onclick="event.preventDefault(); navigator.share({url: 'https://news.kiwistand.com/stories/${getSlug(story.title)}?index=0x${story.index}' });"
+                                  onclick="event.preventDefault(); navigator.share({url: 'https://news.kiwistand.com/stories/${getSlug(
+                                    story.title,
+                                  )}?index=0x${story.index}' });"
                                 >
                                   ${ShareIcon(
                                     "padding: 0 3px 1px 0; vertical-align: bottom; height: 13px; width: 13px;",
@@ -672,7 +699,9 @@ const row = (
                                   class="meta-link share-link"
                                   title="Share"
                                   style="color: var(--contrast-color); touch-action: manipulation; user-select: none; white-space: nowrap;"
-                                  onclick="event.preventDefault(); navigator.clipboard.writeText('https://news.kiwistand.com/stories/${getSlug(story.title)}?index=0x${story.index}'); window.toast.success('Link copied!');"
+                                  onclick="event.preventDefault(); navigator.clipboard.writeText('https://news.kiwistand.com/stories/${getSlug(
+                                    story.title,
+                                  )}?index=0x${story.index}'); window.toast.success('Link copied!');"
                                 >
                                   ${CopyIcon(
                                     "padding: 0 3px 1px 0; vertical-align: bottom; height: 13px; width: 13px;",
@@ -702,7 +731,9 @@ const row = (
                     <a
                       class="chat-bubble interaction-element"
                       id="chat-bubble-${story.index}"
-                      href="/stories/${getSlug(story.title)}?index=0x${story.index}"
+                      href="/stories/${getSlug(
+                        story.title,
+                      )}?index=0x${story.index}"
                       onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
                       style="margin: 5px; border: var(--border-thin); background-color: var(--bg-off-white); border-radius: 2px; display: ${path ===
                       "/stories"
