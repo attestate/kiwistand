@@ -586,7 +586,7 @@ const row = (
                               ? `/${story.submitter.ens}`
                               : `/upvotes?address=${story.identity}`}"
                             class="meta-link"
-                            onclick="document.getElementById('spinner-overlay').style.display='block'"
+                            onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
                             style="font-weight: 500; user-select: text; ${recentJoiners &&
                             recentJoiners.includes(story.identity)
                               ? `color: ${theme.color};`
