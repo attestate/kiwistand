@@ -72,13 +72,6 @@ export async function prepare(key) {
   }
   if (!preferredChainId) {
     let error = `Need at least ${formatEther(price)} ETH on Optimism`;
-
-    if (balance.base > price) {
-      error = `Bridge:${base.id}:${price}`;
-    }
-    if (balance.arbitrum > price) {
-      error = `Bridge:${arbitrum.id}:${price}`;
-    }
     throw new Error(error);
   }
 
@@ -405,49 +398,14 @@ const BuyButton = (props) => {
       (error.toString().includes("insufficient funds") ||
         error.code === -32603 ||
         error.code === "INSUFFICIENT_FUNDS")) ||
-    (error && error.toString().includes("Need at least")) ||
-    (error && error.toString().includes("Bridge:"))
+    (error && error.toString().includes("Need at least"))
   ) {
-    // If we've already requested from the faucet but still don't have enough,
-    // show the bridge option as fallback
-    let button = (
+    // Show a message indicating we're getting the user ready
+    const button = (
       <button className="buy-button" disabled>
         Getting you ready...
       </button>
     );
-    const ETHSymbol = "0x0000000000000000000000000000000000000000";
-    let link = `https://jumper.exchange/?toChain=10&toToken=${ETHSymbol}`;
-
-    const match = error.toString().match(/Bridge:(\w+):(\d+)/);
-    if (match) {
-      let [, fromChain, price] = match;
-      fromChain = parseInt(fromChain, 10);
-
-      let chainName = "";
-      if (fromChain === base.id) {
-        chainName += "from Base";
-      } else if (fromChain === arbitrum.id) {
-        chainName += "from Arbitrum";
-      }
-
-      const gasReserve = 1000000000000000n;
-      const fromAmount = BigInt(price) + gasReserve;
-      link += `&fromAmount=${formatEther(
-        fromAmount,
-      )}&fromChain=${fromChain}&fromToken=${ETHSymbol}`;
-      button = (
-        <>
-          <a href={link} target="_blank">
-            <button className="buy-button">
-              Bridge ETH {chainName} to Optimism (Jumper)
-            </button>
-          </a>
-          <p>
-            Once you're done bridging, <b>come back and reload this page</b>
-          </p>
-        </>
-      );
-    }
 
     return (
       <div
