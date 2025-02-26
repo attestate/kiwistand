@@ -281,6 +281,11 @@ const BuyButton = (props) => {
       setConfig(null);
 
       try {
+        if (!chain) {
+          setError(new Error("Waiting for network connection..."));
+          return;
+        }
+        
         const config = await prepare(key);
         setConfig(config);
         setError(null);
@@ -317,7 +322,7 @@ const BuyButton = (props) => {
     generate();
   }, [
     key,
-    chain.id,
+    chain?.id,
     discountEligible,
     from.address,
     faucetRequested,
@@ -526,15 +531,11 @@ const Button = (props) => {
   }, [isSuccess]);
 
   if (isSuccess && data.hash !== "null") {
-    const etherscan =
-      chainId === mainnet.id ? "etherscan.io" : "optimistic.etherscan.io";
     return (
       <div>
-        <a target="_blank" href={`https://${etherscan}/tx/${data.hash}`}>
-          <button className="buy-button">
-            Thanks for joining! (view on Etherscan)
-          </button>
-        </a>
+        <button className="buy-button" disabled>
+          Success! Redirecting...
+        </button>
       </div>
     );
   }
