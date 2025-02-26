@@ -197,6 +197,23 @@ export async function fetchLeaderboard() {
   }
 }
 
+export async function requestFaucet(address) {
+  try {
+    const response = await fetch('/api/v1/faucet', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ address }),
+    });
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Error requesting from faucet:', error);
+    return { status: 'error', message: error.message };
+  }
+}
+
 export async function fetchStory(id, commentCount) {
   let response;
 

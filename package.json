@@ -51,6 +51,8 @@
     "@attestate/delegator2": "0.5.1",
     "@chainsafe/libp2p-gossipsub": "5.2.1",
     "@chainsafe/libp2p-noise": "10.2.0",
+    "@ethersproject/providers": "5.7.2",
+    "@ethersproject/wallet": "5.7.0",
     "@ethereumjs/rlp": "4.0.1",
     "@ethereumjs/trie": "5.0.4",
     "@libp2p/bootstrap": "5.0.0",

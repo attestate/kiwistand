@@ -13,6 +13,7 @@ import morgan from "morgan";
 import express from "express";
 import cookieParser from "cookie-parser";
 import { utils } from "ethers";
+import { handleFaucetRequest } from "./faucet.mjs";
 import htm from "htm";
 import "express-async-errors";
 import { sub } from "date-fns";
@@ -181,7 +182,7 @@ app.use(loadTheme);
 // NOTE: sendError and sendStatus are duplicated here (compare with
 // /src/api.mjs) because eventually we wanna rip apart the Kiwi News website
 // from the node software.
-function sendError(reply, code, message, details) {
+export function sendError(reply, code, message, details) {
   log(`http error: "${code}", "${message}", "${details}"`);
   return reply.status(code).json({
     status: "error",
@@ -191,7 +192,7 @@ function sendError(reply, code, message, details) {
   });
 }
 
-function sendStatus(reply, code, message, details, data) {
+export function sendStatus(reply, code, message, details, data) {
   const obj = {
     status: "success",
     code,
@@ -1553,6 +1554,11 @@ export async function launch(trie, libp2p) {
     const content = await search(reply.locals.theme, query);
     reply.header("Cache-Control", "no-cache");
     return reply.status(200).type("text/html").send(content);
+  });
+  
+  app.post("/api/v1/faucet", async (request, reply) => {
+    reply.header("Cache-Control", "no-cache");
+    return handleFaucetRequest(request, reply);
   });
 
   server.listen(env.HTTP_PORT, () =>
