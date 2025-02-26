@@ -19,6 +19,8 @@ const DesktopSearch = () => {
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
+      // Show spinner before navigation
+      document.getElementById('spinner-overlay').style.display = 'block';
       window.location.href = "/search?q=" + encodeURIComponent(e.target.value);
     }
   };
