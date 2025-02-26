@@ -3,6 +3,15 @@ import SwipeableDrawer from "@mui/material/SwipeableDrawer";
 import { ChatsSVG } from "./icons.jsx";
 import { isIOS } from "./session.mjs";
 
+// List of paths where the search component should be hidden
+const HIDDEN_PATHS = [
+  '/indexing',
+  '/passkeys',
+  '/demonstration',
+  '/email-notifications',
+  '/invite'
+];
+
 const UpvoteSVG = (props) => (
   <svg
     style={props.style}
@@ -36,6 +45,12 @@ const SearchInterface = () => {
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
+
+  // Check if current path is in the hidden paths list
+  const shouldHideSearch = () => {
+    const currentPath = window.location.pathname;
+    return HIDDEN_PATHS.some(path => currentPath === path);
+  };
 
   const handleSearch = (value) => {
     if (value.trim()) {
@@ -102,7 +117,8 @@ const SearchInterface = () => {
     </div>
   );
 
-  if (!isMobile) return null;
+  // Hide if not mobile or if on a path where search should be hidden
+  if (!isMobile || shouldHideSearch()) return null;
 
   return (
     <>
