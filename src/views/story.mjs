@@ -517,7 +517,7 @@ export default async function (trie, theme, index, value, referral) {
                   </tr>`
                 : null}
               <tr>
-                <td>
+                <td style="padding-top: 20px;">
                   <nav-comment-input data-story-index="0x${index}">
                     <div style="margin: 0 1rem 1rem 1rem;">
                       <textarea
