@@ -78,9 +78,6 @@ export async function paginate(users, allowlist, page, search) {
   };
 }
 
-function toSparks(wei) {
-  return ethers.utils.commify(wei / 1000000000000n);
-}
 
 export default async function (trie, theme, query) {
   let page = parseInt(query.page);
@@ -92,7 +89,6 @@ export default async function (trie, theme, query) {
   const users = karma.ranking();
   const allowlist = Array.from(await registry.allowlist());
 
-  const revenueMap = await registry.aggregateRevenue();
 
   const { usersData, totalPages, pageSize } = await paginate(
     users,
@@ -304,21 +300,6 @@ export default async function (trie, theme, query) {
                           </div>
 
                           <div class="user-karma">
-                            ${revenueMap[ensData.address] &&
-                            BigInt(revenueMap[ensData.address]) >
-                              100000000000000n
-                              ? html`<a href="/referral"
-                                  ><span
-                                    id="spark-container"
-                                    style="border-bottom: 2px dotted; margin-right: 0.5rem;"
-                                  >
-                                    ✧
-                                    ${toSparks(
-                                      revenueMap[ensData.address] || "0",
-                                    )}
-                                  </span></a
-                                >`
-                              : null}
                             <span
                               style="display: inline-block; min-width: 75px;"
                               >${karma.toLocaleString()} ${theme.emoji}</span
