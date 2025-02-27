@@ -240,16 +240,16 @@ export async function descend(trie, level, exclude = []) {
     ];
   }
 
+  // Convert exclude array to a Set for O(1) lookups instead of O(n)
+  const excludeSet = new Set(exclude.map(buffer => buffer.toString('hex')));
+  
   let nodes = [];
   const onFound = (_, node, key, walkController, currentLevel) => {
     const nodeHash = hash(node);
-    // TODO: Would be better if this was a set where all the hashes are included
-    // e.g. as strings? It seems very slow to look up something using find.
-    const match = exclude.find((markedNode) => isEqual(markedNode, nodeHash));
-    // NOTE: The idea of the "exclude" array is that it contains nodes that
-    // have matched on the remote trie, and so we don't have to send them along
-    // in a future comparison. Hence, if we have a match, we simply return.
-    if (match) return;
+    
+    // Use Set for faster lookups
+    const nodeHashHex = nodeHash.toString('hex');
+    if (excludeSet.has(nodeHashHex)) return;
 
     if (currentLevel === 0) {
       if (level !== 0 && node instanceof LeafNode) {
@@ -257,6 +257,11 @@ export async function descend(trie, level, exclude = []) {
         key = Buffer.concat(fragments);
       } else {
         key = nibblesToBuffer(key);
+      }
+
+      // Yield to the event loop periodically during heavy processing
+      if (nodes.length % 100 === 0) {
+        setImmediate(() => {}); // Non-blocking yield
       }
 
       nodes.push({
