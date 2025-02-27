@@ -374,15 +374,26 @@ async function atomicPut(trie, message, identity, accounts, delegations) {
       const enhancer = enhance(accounts, delegations, cacheEnabled);
       const enhancedMessage = await enhancer(message);
       insertMessage(enhancedMessage);
-      const [, commentIndex] = message.href.split(":");
-      try {
+      
+      // Only purge cache for comments, not for upvotes
+      if (message.type === "comment") {
+        const [, commentIndex] = message.href.split(":");
+        // Purge the main stories page synchronously so the user can see their comment
         await purgeCache(`https://news.kiwistand.com/stories?index=${commentIndex}`);
-        await purgeCache(`https://news.kiwistand.com/stories/${getSlug(message.title)}?index=${commentIndex}`);
-        await purgeCache(`https://news.kiwistand.com/api/v1/stories?index=${commentIndex}`);
-      } catch (err) {
-        log(`Failed to purge Cloudflare cache: ${err}`);
+        
+        // Purge other caches asynchronously
+        purgeCache(`https://news.kiwistand.com/stories/${getSlug(message.title)}?index=${commentIndex}`)
+          .catch(err => log(`Failed to purge Cloudflare cache: ${err}`));
+        purgeCache(`https://news.kiwistand.com/api/v1/stories?index=${commentIndex}`)
+          .catch(err => log(`Failed to purge Cloudflare cache: ${err}`));
       }
-      await triggerNotification(enhancedMessage);
+      
+      // Trigger notifications asynchronously with promise chain
+      triggerNotification(enhancedMessage)
+        .then(() => {
+          // Notification sent successfully
+        })
+        .catch(err => log(`Failed to trigger notification: ${err}`));
     } catch (err) {
       // NOTE: insertMessage is just a cache, so if this operation fails, we
       // want the protocol to continue to execute as normally.
