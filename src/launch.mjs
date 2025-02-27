@@ -24,6 +24,7 @@ import * as feed from "./views/feed.mjs";
 import * as feeds from "./feeds.mjs";
 import * as email from "./email.mjs";
 import * as moderation from "./views/moderation.mjs";
+import diskcheck from "./diskcheck.mjs";
 
 // NOTE: Initializing the lifetime cache as a first order is important as it
 // is widely used throughout the application.
@@ -36,6 +37,12 @@ if (reconcileMode) {
   log(
     `In reconciliation mode, syncing with the chain and reconciling with the p2p network are enabled. The product backend/frontends are disabled.`,
   );
+}
+
+// NOTE: This will crash the program intentionally when disk space is lower
+// than some percentage necessary for it to work well.
+if (productionMode) {
+  diskcheck();
 }
 
 const trie = await store.create();
