@@ -74,15 +74,31 @@ export function passesReaction(marker) {
 
 export async function cache(upvotes, comments) {
   log("Caching upvote ids of upvotes, this can take a minute...");
-  for (const { identity, href, type } of upvotes) {
+
+  // Process upvotes with periodic yields
+  for (let i = 0; i < upvotes.length; i++) {
+    const { identity, href, type } = upvotes[i];
     const marker = upvoteID(identity, href, type);
     passes(marker);
+
+    // Yield to the event loop every 100 items
+    if (i % 100 === 0 && i > 0) {
+      await new Promise((resolve) => setImmediate(resolve));
+    }
   }
-  for (const { href, title, identity } of comments) {
+
+  // Process comments with periodic yields
+  for (let i = 0; i < comments.length; i++) {
+    const { href, title, identity } = comments[i];
     addComment(href);
     if (isReactionComment(title)) {
       const reactionMarker = upvoteID(identity, href, "reaction");
       passesReaction(reactionMarker);
+    }
+
+    // Yield to the event loop every 100 items
+    if (i % 100 === 0 && i > 0) {
+      await new Promise((resolve) => setImmediate(resolve));
     }
   }
 }
@@ -196,7 +212,14 @@ export async function compare(localTrie, remotes) {
   const match = [];
   const missing = [];
   const mismatch = [];
-  for (let remoteNode of remotes) {
+  for (let i = 0; i < remotes.length; i++) {
+    const remoteNode = remotes[i];
+
+    // Yield to the event loop periodically
+    if (i % 50 === 0 && i > 0) {
+      await new Promise((resolve) => setImmediate(resolve));
+    }
+
     // NOTE: In case the level:0 is being compared and we're having to deal
     // with the root node.
     if (remoteNode.level === 0 && isEqual(localTrie.root(), remoteNode.hash)) {
@@ -241,14 +264,14 @@ export async function descend(trie, level, exclude = []) {
   }
 
   // Convert exclude array to a Set for O(1) lookups instead of O(n)
-  const excludeSet = new Set(exclude.map(buffer => buffer.toString('hex')));
-  
+  const excludeSet = new Set(exclude.map((buffer) => buffer.toString("hex")));
+
   let nodes = [];
   const onFound = (_, node, key, walkController, currentLevel) => {
     const nodeHash = hash(node);
-    
+
     // Use Set for faster lookups
-    const nodeHashHex = nodeHash.toString('hex');
+    const nodeHashHex = nodeHash.toString("hex");
     if (excludeSet.has(nodeHashHex)) return;
 
     if (currentLevel === 0) {
@@ -261,7 +284,7 @@ export async function descend(trie, level, exclude = []) {
 
       // Yield to the event loop periodically during heavy processing
       if (nodes.length % 100 === 0) {
-        setImmediate(() => {}); // Non-blocking yield
+        setImmediate(resolve);
       }
 
       nodes.push({
@@ -647,6 +670,11 @@ export async function leaves(
       break;
     }
 
+    // Yield to the event loop periodically during heavy processing
+    if (nodes.length % 100 === 0) {
+      await new Promise((resolve) => setImmediate(resolve));
+    }
+
     const value = decode(node.value());
     if (parser) {
       const parsed = parser(value);
@@ -684,6 +712,9 @@ export async function leaves(
   return nodes;
 }
 
+// Track the number of nodes processed to periodically yield to the event loop
+let nodesProcessed = 0;
+
 /**
  * @param {Trie} trie
  * @param {Buffer | Buffer[]} nodeRef
@@ -696,6 +727,12 @@ async function* walkTrieDfs(trie, nodeRef, key) {
     nodeRef.equals(trie.EMPTY_TRIE_ROOT)
   ) {
     return;
+  }
+
+  // Yield to the event loop periodically during heavy processing
+  nodesProcessed++;
+  if (nodesProcessed % 100 === 0) {
+    await new Promise((resolve) => setImmediate(resolve));
   }
 
   const node = await trie.lookupNode(nodeRef);
