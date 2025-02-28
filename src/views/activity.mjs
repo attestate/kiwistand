@@ -24,6 +24,7 @@ import * as moderation from "./moderation.mjs";
 import cache, {
   getUpvotes,
   getComments,
+  getReactionsToComments,
   getTimestamp,
   setTimestamp,
 } from "../cache.mjs";
@@ -140,6 +141,73 @@ function generateRow(lastUpdate, theme) {
     if (activity.verb === "commented" || activity.verb === "involved") {
       const identity = activity.identities[0];
       return generateCommentRow(activity, identity, bgColor, theme, i);
+    } else if (activity.verb === "reacted") {
+      const identity = activity.identities[0];
+      const emoji = activity.emoji;
+      const commentTitle = activity.message.comment_title;
+      const submissionTitle = activity.message.submission_title;
+      const commentId = activity.message.commentId;
+      const submissionId = activity.message.submissionId;
+
+      // Extract the index from the submission ID (format: kiwi:0x...)
+      const submissionIndex = submissionId.split(":")[1];
+
+      return html`
+        <tr style="background-color: ${bgColor};">
+          <td>
+            <a
+              data-no-instant="${i < 3}"
+              class="notification"
+              href="/stories?index=${submissionIndex}#${commentId}"
+              onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
+            >
+              <div
+                style="display: flex; border-bottom: 1px solid rgba(0,0,0,0.1);"
+              >
+                <div
+                  style="flex: 0.15; display: flex; flex-direction: column; align-items: center; justify-content: center;"
+                >
+                  <div
+                    style="font-size: 2rem; display: flex; align-items: center; justify-content: center;"
+                  >
+                    ${emoji}
+                  </div>
+                </div>
+                <div
+                  style="padding-top: 10px; flex: 0.85; display: flex; flex-direction: column;"
+                >
+                  <div style="font-size: 0.9rem; margin-right: 1rem;">
+                    <p
+                      class="notification-title"
+                      style="margin-top: 8px; margin-bottom: 2px;"
+                    >
+                      <strong>
+                        <span>${identity.displayName}</span>
+                        <span style="font-weight: normal;"> reacted with</span>
+                        <span style="font-size: 1.2em;"> ${emoji} </span>
+                        <span style="font-weight: normal;">
+                          to your comment on
+                        </span>
+                        <span> </span>
+                        <span>${DOMPurify.sanitize(submissionTitle)}</span>
+                      </strong>
+                    </p>
+                    <p
+                      style="line-height: 1.2; white-space: pre-wrap; margin: 5px 0 1rem 0; word-break: break-word;"
+                    >
+                      <span style="text-align: justify; color: #666;"
+                        >${DOMPurify.sanitize(
+                          truncateComment(commentTitle),
+                        )}</span
+                      >
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </a>
+          </td>
+        </tr>
+      `;
     }
 
     const title = DOMPurify.sanitize(
@@ -384,6 +452,7 @@ export async function data(
 
   let leaves = getUpvotes(identity);
   let comments = getComments(identity);
+  let reactions = getReactionsToComments(identity);
 
   const path = "/activity";
   leaves = moderation.moderate(leaves, config, path);
@@ -401,6 +470,16 @@ export async function data(
       message: comment,
       timestamp: comment.timestamp,
       identities: [comment.identity],
+    });
+  });
+
+  reactions.map((reaction) => {
+    activities.push({
+      verb: "reacted",
+      message: reaction,
+      timestamp: reaction.timestamp,
+      identities: [reaction.identity],
+      emoji: reaction.title,
     });
   });
 

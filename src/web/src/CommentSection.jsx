@@ -191,7 +191,8 @@ export const EmojiReaction = ({ comment, allowlist, delegations, toast }) => {
     }
   };
 
-  if (comment.identity.address === address) return;
+  // Don't allow reacting to your own comments, but do show reactions you've received
+  const isOwnComment = comment.identity.address === address;
   return (
     <div
       style={{
@@ -227,28 +228,30 @@ export const EmojiReaction = ({ comment, allowlist, delegations, toast }) => {
             [],
         };
 
-        const disabled = isReacting || hasReacted;
+        const disabled = isReacting || hasReacted || isOwnComment;
 
-        if ((isntLoggedIn || hasReacted) && counts[emoji] === 0) return null;
+        // Show reaction if there are reactions to display
+        // Don't show empty reaction buttons on your own comments
+        if (counts[emoji] === 0 && (isntLoggedIn || hasReacted || isOwnComment)) return null;
 
         return (
           <button
             key={emoji}
             onClick={() => !disabled && handleReaction(emoji)}
-            disabled={isReacting || hasReacted || isntLoggedIn}
+            disabled={disabled || isntLoggedIn}
             style={{
               display: "inline-flex",
               alignItems: "center",
               padding: "4px 12px",
               backgroundColor:
-                hasReacted || isntLoggedIn ? "#f3f3f3" : "var(--bg-off-white)",
+                disabled || isntLoggedIn ? "#f3f3f3" : "var(--bg-off-white)",
               border:
-                hasReacted || isntLoggedIn
+                disabled || isntLoggedIn
                   ? "1px solid rgba(0,0,0,0)"
                   : "var(--border-thin)",
               borderRadius: "2px",
-              cursor: hasReacted || isntLoggedIn ? "default" : "pointer",
-              color: hasReacted || isntLoggedIn ? "black" : "auto",
+              cursor: disabled || isntLoggedIn ? "default" : "pointer",
+              color: disabled || isntLoggedIn ? "black" : "auto",
               fontSize: "10pt",
               WebkitAppearance: "none",
               opacity: 1,

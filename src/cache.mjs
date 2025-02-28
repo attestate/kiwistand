@@ -634,6 +634,50 @@ export function getAllComments() {
     });
 }
 
+export function getReactionsToComments(identity) {
+  const threeWeeksAgo = Math.floor(Date.now() / 1000) - 1814400;
+  
+  // Get reactions to the user's comments
+  const reactions = db
+    .prepare(
+      `
+      SELECT 
+        r.*,
+        c.title AS comment_title,
+        s.title AS submission_title,
+        s.id AS submission_id
+      FROM 
+        reactions r
+      JOIN 
+        comments c ON r.comment_id = c.id
+      JOIN
+        submissions s ON c.submission_id = s.id
+      WHERE 
+        c.identity = ? AND 
+        r.identity != ? AND
+        r.timestamp >= ?
+      ORDER BY
+        r.timestamp DESC
+    `)
+    .all(identity, identity, threeWeeksAgo)
+    .map((reaction) => {
+      const commentId = reaction.comment_id;
+      const submissionId = reaction.submission_id;
+      delete reaction.comment_id;
+      delete reaction.submission_id;
+
+      return {
+        ...reaction,
+        commentId,
+        submissionId,
+        index: reaction.id.split("0x")[1],
+        type: "reaction"
+      };
+    });
+
+  return reactions;
+}
+
 export function getComments(identity) {
   const threeWeeksAgo = Math.floor(Date.now() / 1000) - 1814400;
   const comments = db
