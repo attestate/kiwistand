@@ -473,14 +473,9 @@ export async function data(
     });
   });
 
-  reactions
-    .filter(reaction => {
-      // Skip reactions from users without avatars
-      const identity = reaction.identity;
-      const ensData = cache.get(`ens-${identity}`);
-      return ensData && ensData.safeAvatar;
-    })
-    .map((reaction) => {
+  // Process reactions - only include them if we'll resolve ENS data later
+  if (!skipDetails) {
+    reactions.map((reaction) => {
       activities.push({
         verb: "reacted",
         message: reaction,
@@ -489,6 +484,7 @@ export async function data(
         emoji: reaction.title,
       });
     });
+  }
 
   activities.sort((a, b) => b.timestamp - a.timestamp);
 
@@ -510,6 +506,14 @@ export async function data(
           .map((result) => result.value),
       );
     }
+    
+    // Skip reaction activities if the reactor doesn't have an avatar
+    if (activity.verb === "reacted") {
+      if (identities.length === 0 || !identities.some(identity => identity.safeAvatar)) {
+        continue;
+      }
+    }
+    
     notifications.push({
       ...activity,
       identities,
