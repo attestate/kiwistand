@@ -473,15 +473,22 @@ export async function data(
     });
   });
 
-  reactions.map((reaction) => {
-    activities.push({
-      verb: "reacted",
-      message: reaction,
-      timestamp: reaction.timestamp,
-      identities: [reaction.identity],
-      emoji: reaction.title,
+  reactions
+    .filter(reaction => {
+      // Skip reactions from users without avatars
+      const identity = reaction.identity;
+      const ensData = cache.get(`ens-${identity}`);
+      return ensData && ensData.safeAvatar;
+    })
+    .map((reaction) => {
+      activities.push({
+        verb: "reacted",
+        message: reaction,
+        timestamp: reaction.timestamp,
+        identities: [reaction.identity],
+        emoji: reaction.title,
+      });
     });
-  });
 
   activities.sort((a, b) => b.timestamp - a.timestamp);
 
