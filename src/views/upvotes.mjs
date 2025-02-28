@@ -7,6 +7,8 @@ import normalizeUrl from "normalize-url";
 import { formatDistanceToNow } from "date-fns";
 import { utils } from "ethers";
 import DOMPurify from "isomorphic-dompurify";
+import { createCanvas, loadImage } from "canvas";
+import { drawContributions } from "github-contributions-canvas";
 
 import Header from "./components/header.mjs";
 import { trophySVG, broadcastSVG } from "./components/secondheader.mjs";
@@ -17,9 +19,9 @@ import * as store from "../store.mjs";
 import * as ens from "../ens.mjs";
 import * as moderation from "./moderation.mjs";
 import * as karma from "../karma.mjs";
+import * as preview from "../preview.mjs";
 import Row from "./components/row.mjs";
-import cache from "../cache.mjs";
-import { getSubmissions } from "../cache.mjs";
+import { getSubmissions, getContributionsData } from "../cache.mjs";
 import { metadata } from "../parser.mjs";
 import { truncate } from "../utils.mjs";
 import {
@@ -65,7 +67,31 @@ const Post = (post) => html`
   </a>
 `;
 
+async function generateProfile(username, avatar) {
+  try {
+    const body = preview.writersFrame(username, avatar);
+    await preview.generate(username, body);
+  } catch (err) {
+    const body = preview.writersFrame(username);
+    await preview.generate(username, body);
+  }
+}
 
+function contributionsChart(identity) {
+  const contributions = getContributionsData(identity);
+  const width = 1200;
+  const height = 630;
+
+  const canvas = createCanvas(width, height);
+  drawContributions(canvas, {
+    skipHeader: true,
+    data: contributions,
+    themeName: "standard",
+  });
+
+  const buffer = canvas.toBuffer().toString("base64");
+  return `data:image/png;base64,${buffer}`;
+}
 
 export default async function (
   trie,
@@ -78,36 +104,18 @@ export default async function (
   if (!utils.isAddress(identity)) {
     return html`Not a valid address`;
   }
-  
-  // Set a timeout for ENS resolution
-  const ENS_TIMEOUT_MS = 1000;
-  let ensData;
-  try {
-    const ensPromise = ens.resolve(identity);
-    ensData = await Promise.race([
-      ensPromise,
-      new Promise((resolve) => {
-        setTimeout(() => {
-          resolve({
-            displayName: identity.substring(0, 6) + '...' + identity.substring(identity.length - 4),
-            safeAvatar: null,
-            address: identity,
-            description: ''
-          });
-        }, ENS_TIMEOUT_MS);
-      })
-    ]);
-  } catch (err) {
-    // Fallback if ENS resolution fails
-    ensData = {
-      displayName: identity.substring(0, 6) + '...' + identity.substring(identity.length - 4),
-      safeAvatar: null,
-      address: identity,
-      description: ''
-    };
-  }
+  const chartSrc = contributionsChart(identity);
+  const ensData = await ens.resolve(identity);
 
   let ogImage = ensData.safeAvatar;
+  if (ensData.ens && ensData.safeAvatar) {
+    generateProfile(ensData.ens, ensData.safeAvatar);
+    if (enabledFrame) {
+      ogImage = `https://news.kiwistand.com/previews/${DOMPurify.sanitize(
+        ensData.ens,
+      )}.jpg`;
+    }
+  }
 
   const totalStories = 10;
   const start = totalStories * page;
@@ -126,8 +134,7 @@ export default async function (
     // noop
   }
 
-  // Limit to a reasonable number of posts (100 instead of 1,000,000)
-  const opPostsLimit = 100;
+  const opPostsLimit = 1000000;
   const opPostsStart = 0;
   let originalPosts = getSubmissions(
     identity,
@@ -144,86 +151,34 @@ export default async function (
   );
 
   async function enhance(leaf) {
-    // Cache key for this leaf's enhanced data
-    const cacheKey = `enhanced-leaf-${leaf.identity}`;
-    const cachedData = cache.get(cacheKey);
-    if (cachedData) {
-      return cachedData;
+    const ensData = await ens.resolve(leaf.identity);
+
+    let avatars = [];
+    for await (let upvoter of leaf.upvoters.slice(0, 5)) {
+      const profile = await ens.resolve(upvoter);
+      if (profile.safeAvatar) {
+        avatars.push(profile.safeAvatar);
+      }
     }
-    
-    // Set a timeout for ENS resolution to prevent long waits
-    const ENS_TIMEOUT_MS = 500;
-    let ensData;
-    try {
-      const ensPromise = ens.resolve(leaf.identity);
-      ensData = await Promise.race([
-        ensPromise,
-        new Promise((resolve) => {
-          setTimeout(() => {
-            resolve({
-              displayName: leaf.identity.substring(0, 6) + '...' + leaf.identity.substring(leaf.identity.length - 4),
-            });
-          }, ENS_TIMEOUT_MS);
-        })
-      ]);
-    } catch (err) {
-      // Fallback if ENS resolution fails
-      ensData = {
-        displayName: leaf.identity.substring(0, 6) + '...' + leaf.identity.substring(leaf.identity.length - 4),
-      };
-    }
-    
     const isOriginal = Object.keys(writers).some(
       (domain) =>
         normalizeUrl(leaf.href).startsWith(domain) &&
         writers[domain] === leaf.identity,
     );
-    
-    const result = {
+    return {
       ...leaf,
       displayName: ensData.displayName,
-      avatars: [], // No longer fetching avatars
+      avatars: avatars,
       isOriginal,
     };
-    
-    // Cache the enhanced data for 1 hour
-    cache.set(cacheKey, result, 3600);
-    
-    return result;
   }
 
-  // Process stories with a timeout
-  const STORIES_TIMEOUT_MS = 1500;
-  let stories = [];
-  try {
-    const storiesPromise = Promise.all(storyPromises.map(enhance));
-    stories = await Promise.race([
-      storiesPromise,
-      new Promise(resolve => setTimeout(() => resolve([]), STORIES_TIMEOUT_MS))
-    ]);
-  } catch (err) {
-    console.error("Error enhancing stories:", err);
-    // Return empty array on error
-    stories = [];
-  }
+  const stories = await Promise.all(storyPromises.map(enhance));
 
   async function addMetadata(post) {
-    // Use cache for metadata
-    const cacheKey = `post-metadata-${post.href}`;
-    const cachedMetadata = cache.get(cacheKey);
-    
-    if (cachedMetadata) {
-      return {
-        ...post,
-        metadata: cachedMetadata
-      };
-    }
-    
     let result;
     try {
       result = await metadata(post.href);
-      // Cache the result for 24 hours
-      cache.set(cacheKey, result, 24 * 3600);
     } catch (err) {
       return null;
     }
@@ -232,39 +187,10 @@ export default async function (
       metadata: result,
     };
   }
-  
-  // Set a timeout for posts loading to avoid blocking the page
-  const POSTS_TIMEOUT_MS = 500; // Only wait 500ms max for posts
-  
-  // Use Promise.race to either get posts or timeout
-  let posts = [];
-  try {
-    const postsPromise = (async () => {
-      // Only process the first 3 posts
-      const postsToProcess = originalPosts.slice(0, 3);
-      const loadedPosts = [];
-      
-      // Process posts sequentially
-      for (const post of postsToProcess) {
-        const postWithMetadata = await addMetadata(post);
-        if (postWithMetadata) {
-          loadedPosts.push(postWithMetadata);
-        }
-        // Stop once we have 3 posts
-        if (loadedPosts.length >= 3) break;
-      }
-      return loadedPosts;
-    })();
-    
-    const timeoutPromise = new Promise(resolve => {
-      setTimeout(() => resolve([]), POSTS_TIMEOUT_MS);
-    });
-    
-    posts = await Promise.race([postsPromise, timeoutPromise]);
-  } catch (err) {
-    console.error("Error loading posts:", err);
-    posts = []; // Fallback to empty posts on error
-  }
+  const posts = (await Promise.allSettled(originalPosts.map(addMetadata)))
+    .filter(({ status, value }) => status === "fulfilled" && !!value)
+    .map(({ value }) => value)
+    .slice(0, 3);
 
   const description = ensData.description
     ? ensData.description
@@ -377,19 +303,32 @@ export default async function (
                   </div>
                 </td>
               </tr>
-              ${posts && posts.length > 0
+              <tr>
+                <td>
+                  <img src="${chartSrc}" style="width: 100%;" />
+                </td>
+              </tr>
+              ${posts.length > 0
                 ? html`<tr>
                     <td>
                       <hr />
-                      <b style="font-size: 16px; padding: 5px 15px; color: black;">
-                        <span>LATEST POSTS</span>
-                      </b>
+                      ${stories.length > 0
+                        ? html`<b
+                            style="font-size: 16px; padding: 5px 15px; color: black;"
+                          >
+                            <span>LATEST POSTS</span>
+                          </b>`
+                        : ""}
                       ${posts.map(Post)}
                     </td>
-                  </tr>
-                  <tr style="height: 15px;">
-                    <td></td>
                   </tr>`
+                : ""}
+              ${posts.length > 0
+                ? html`
+                    <tr style="height: 15px;">
+                      <td></td>
+                    </tr>
+                  `
                 : ""}
               <tr>
                 <td>
