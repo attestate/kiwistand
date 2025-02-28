@@ -261,22 +261,24 @@ export const EmojiReaction = ({ comment, allowlist, delegations, toast }) => {
             <span style={{ marginRight: counts[emoji] > 0 ? "4px" : "0" }}>
               {emoji}
             </span>
-            {profiles[emoji].map((profile, i) => (
-              <img
-                key={i}
-                loading="lazy"
-                src={profile.safeAvatar}
-                alt="reactor"
-                style={{
-                  zIndex: i,
-                  width: i > 0 ? "13px" : "12px",
-                  height: i > 0 ? "13px" : "12px",
-                  borderRadius: "2px",
-                  border: i > 0 ? "1px solid #f3f3f3" : "1px solid #828282",
-                  marginLeft: i > 0 ? "-4px" : 0,
-                }}
-              />
-            ))}
+            {profiles[emoji]
+              .filter(profile => profile.safeAvatar)
+              .map((profile, i) => (
+                <img
+                  key={i}
+                  loading="lazy"
+                  src={profile.safeAvatar}
+                  alt="reactor"
+                  style={{
+                    zIndex: i,
+                    width: i > 0 ? "13px" : "12px",
+                    height: i > 0 ? "13px" : "12px",
+                    borderRadius: "2px",
+                    border: i > 0 ? "1px solid #f3f3f3" : "1px solid #828282",
+                    marginLeft: i > 0 ? "-4px" : 0,
+                  }}
+                />
+              ))}
           </button>
         );
       })}

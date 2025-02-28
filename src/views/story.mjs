@@ -484,27 +484,29 @@ export default async function (trie, theme, index, value, referral) {
                                                   : "0"}"
                                                 >${emoji}</span
                                               >
-                                              ${reaction?.reactorProfiles?.map(
-                                                (profile, i) => html`
-                                                  <img
-                                                    loading="lazy"
-                                                    src="${profile.safeAvatar}"
-                                                    alt="reactor"
-                                                    style="z-index: ${i}; width: ${i >
-                                                    0
-                                                      ? "13px"
-                                                      : "12px"}; height: ${i > 0
-                                                      ? "13px"
-                                                      : "12px"}; border-radius: 2px; border: ${i >
-                                                    0
-                                                      ? "1px solid #f3f3f3"
-                                                      : "1px solid #828282"}; margin-left: ${i >
-                                                    0
-                                                      ? "-4px"
-                                                      : "0"};"
-                                                  />
-                                                `,
-                                              )}
+                                              ${reaction?.reactorProfiles
+                                                ?.filter(profile => profile.safeAvatar)
+                                                .map(
+                                                  (profile, i) => html`
+                                                    <img
+                                                      loading="lazy"
+                                                      src="${profile.safeAvatar}"
+                                                      alt="reactor"
+                                                      style="z-index: ${i}; width: ${i >
+                                                      0
+                                                        ? "13px"
+                                                        : "12px"}; height: ${i > 0
+                                                        ? "13px"
+                                                        : "12px"}; border-radius: 2px; border: ${i >
+                                                      0
+                                                        ? "1px solid #f3f3f3"
+                                                        : "1px solid #828282"}; margin-left: ${i >
+                                                      0
+                                                        ? "-4px"
+                                                        : "0"};"
+                                                    />
+                                                  `,
+                                                )}
                                             </div>
                                           `;
                                         },
