@@ -638,20 +638,6 @@ const sidebar = (path) => html`
         <span>Wiki</span>
       </div>
     </a>
-    <a
-      title="Learn"
-      href="/onboarding-reader"
-      style="${path === "/onboarding-reader"
-        ? " font-weight: bold; background-color: rgba(0,0,0,0.1);"
-        : "font-weight: normal"}; color: black; text-decoration: none; display: block;"
-    >
-      <div style="display: flex; align-items: center;">
-        <div class="svg-container">
-          ${path === "/onboarding-reader" ? onboardingfull : onboarding}
-        </div>
-        <span>Learn</span>
-      </div>
-    </a>
     <div id="nav-disconnect">
       <a
         title="Disconnect"
