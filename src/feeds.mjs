@@ -58,7 +58,7 @@ export async function recompute(feedUrls) {
 }
 
 export function latest() {
-  const cutoffDate = subDays(new Date(), 1);
+  const cutoffDate = subDays(new Date(), 3);
   const cutoffTimestamp = cutoffDate.getTime() / 1000;
 
   let articles = [...stories];
