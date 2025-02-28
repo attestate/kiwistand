@@ -479,7 +479,7 @@ export default async function (trie, theme, index, value, referral) {
                                             >
                                               <span
                                                 style="margin-right: ${reaction
-                                                  ?.reactors?.length
+                                                  ?.reactorProfiles?.filter(profile => profile.safeAvatar)?.length
                                                   ? "4px"
                                                   : "0"}"
                                                 >${emoji}</span

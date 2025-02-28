@@ -165,12 +165,26 @@ function generateRow(lastUpdate, theme) {
                 style="display: flex; border-bottom: 1px solid rgba(0,0,0,0.1);"
               >
                 <div
-                  style="flex: 0.15; display: flex; flex-direction: column; align-items: center; justify-content: center;"
+                  style="flex: 0.15; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative;"
                 >
-                  <div
-                    style="font-size: 2rem; display: flex; align-items: center; justify-content: center;"
-                  >
-                    ${emoji}
+                  <div style="position: relative; width: 48px; height: 48px;">
+                    ${identity.safeAvatar ? html`
+                      <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
+                        <img
+                          src="${DOMPurify.sanitize(identity.safeAvatar)}"
+                          loading="lazy"
+                          alt="reactor avatar"
+                          style="width: 36px; height: 36px; border: 1px solid #828282; border-radius: 2px; background-color: white; box-shadow: 0 0 3px rgba(0,0,0,0.2);"
+                        />
+                      </div>
+                      <div style="position: absolute; bottom: -5px; right: -5px;">
+                        <span style="font-size: 1.2rem;">${emoji}</span>
+                      </div>
+                    ` : html`
+                      <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
+                        <span style="font-size: 2rem;">${emoji}</span>
+                      </div>
+                    `}
                   </div>
                 </div>
                 <div
