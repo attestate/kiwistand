@@ -168,7 +168,7 @@ const Vote = (props) => {
               }
 
               if (!isEligible) {
-                window.location.pathname = "/gateway";
+                toast.error("Connect your wallet to sign up");
                 return;
               }
 
