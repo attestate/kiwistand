@@ -7,21 +7,11 @@ import { createRoot } from "react-dom/client";
 
 import { isIOS, isRunningPWA, getCookie, getLocalAccount } from "./session.mjs";
 import theme from "./theme.jsx";
-import posthog from 'posthog-js';
-posthog.init('phc_F3mfkyH5tKKSVxnMbJf0ALcPA98s92s3Jw8a7eqpBGw', {
-    api_host: 'https://eu.i.posthog.com',
-    person_profiles: 'identified_only' // or 'always' to create profiles for anonymous users as well
+import posthog from "posthog-js";
+posthog.init("phc_F3mfkyH5tKKSVxnMbJf0ALcPA98s92s3Jw8a7eqpBGw", {
+  api_host: "https://eu.i.posthog.com",
+  person_profiles: "identified_only", // or 'always' to create profiles for anonymous users as well
 });
-
-function storeReferral() {
-  if (!localStorage.getItem("--kiwi-news-original-referral")) {
-    const urlParams = new URLSearchParams(window.location.search);
-    const referral = urlParams.get("referral");
-    if (referral) {
-      localStorage.setItem("--kiwi-news-original-referral", referral);
-    }
-  }
-}
 
 window.isSidebarOpen = false;
 function handleClick(event) {
@@ -665,7 +655,7 @@ async function addKarmaElements() {
       const address = element.getAttribute("data-address");
       const initial = element.getAttribute("data-initial");
       const initialContent = element.textContent.trim();
-      
+
       createRoot(element).render(
         <StrictMode>
           <Karma address={address} initial={initial}>
@@ -921,17 +911,17 @@ export function dynamicPrefetch(url, priority = "auto") {
 
 async function start() {
   // Spinner overlay initialization
-  if (!document.getElementById('spinner-overlay')) {
-    const overlay = document.createElement('div');
-    overlay.id = 'spinner-overlay';
-    overlay.style.display = 'none';
-    overlay.style.position = 'fixed';
-    overlay.style.top = '0';
-    overlay.style.left = '0';
-    overlay.style.width = '100%';
-    overlay.style.height = '100%';
-    overlay.style.background = 'rgba(255,255,255,0.7)';
-    overlay.style.zIndex = '9999';
+  if (!document.getElementById("spinner-overlay")) {
+    const overlay = document.createElement("div");
+    overlay.id = "spinner-overlay";
+    overlay.style.display = "none";
+    overlay.style.position = "fixed";
+    overlay.style.top = "0";
+    overlay.style.left = "0";
+    overlay.style.width = "100%";
+    overlay.style.height = "100%";
+    overlay.style.background = "rgba(255,255,255,0.7)";
+    overlay.style.zIndex = "9999";
     document.body.appendChild(overlay);
   }
   // NOTE: There are clients which had the identity cookie sent to 1 week and
@@ -941,9 +931,9 @@ async function start() {
   const identity = getCookie("identity");
   window.initialIdentityCookie = identity;
 
-  initKiwiRotation(".hnname span img");
-
-  storeReferral();
+  window.addEventListener("DOMContentLoaded", () => {
+    initKiwiRotation(".hnname span img");
+  });
 
   makeCommentsVisited();
   window.addEventListener("hashchange", makeCommentsVisited);
@@ -952,18 +942,6 @@ async function start() {
   });
 
   updateLinkTargetsForIOSPWA();
-
-  if (
-    window.location.pathname === "/" &&
-    !window.location.search.includes("identity=") &&
-    !window.location.search.includes("custom=")
-  ) {
-    const personalizedFeedUrl = identity
-      ? `${window.location.origin}/?identity=${identity}`
-      : `${window.location.origin}/custom=true`;
-    const priority = "high";
-    dynamicPrefetch(personalizedFeedUrl, priority);
-  }
 
   // NOTE: We don't want pull to refresh for the submission page as this could
   // mess up the user's input on an accidential scroll motion.
