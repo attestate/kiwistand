@@ -494,7 +494,7 @@ const row = (
                             ${story.avatars.slice(0, 5).map(
                               (avatar, index) => html`
                                 <img
-                                  ${i > 2 ? 'loading="lazy"' : ""}
+                                  loading="lazy"
                                   src="${avatar}"
                                   alt="avatar"
                                   style="z-index: ${index}; width: ${size}px; height:
