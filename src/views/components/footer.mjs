@@ -106,10 +106,10 @@ const footer = (theme, path) => html`
 
     ${scripts}
     <script
-      async
+      defer
       src="https://www.googletagmanager.com/gtag/js?id=G-21BKTD0NKN"
     ></script>
-    <script src="ga.js"></script>
+    <script defer src="ga.js"></script>
     <script src="instantpage.js" type="module"></script>
     <nav-signup-dialogue />
   </footer>
