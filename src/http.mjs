@@ -125,7 +125,10 @@ app.use(
   express.static("src/public/assets", {
     setHeaders: (res, pathName) => {
       if (env.NODE_ENV === "production") {
-        res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+        res.setHeader(
+          "Cache-Control",
+          "public, max-age=604800, s-maxage=604800, immutable, stale-while-revalidate=2592000",
+        );
       }
     },
   }),
@@ -136,7 +139,10 @@ app.use(
     setHeaders: (res, pathName) => {
       if (env.NODE_ENV !== "production") return;
       if (!/\/assets\//.test(pathName)) {
-        res.setHeader("Cache-Control", "public, max-age=86400");
+        res.setHeader(
+          "Cache-Control",
+          "public, max-age=86400, s-maxage=604800, immutable, stale-while-revalidate=2592000",
+        );
       }
     },
   }),
@@ -1555,7 +1561,7 @@ export async function launch(trie, libp2p) {
     reply.header("Cache-Control", "no-cache");
     return reply.status(200).type("text/html").send(content);
   });
-  
+
   app.post("/api/v1/faucet", async (request, reply) => {
     reply.header("Cache-Control", "no-cache");
     return handleFaucetRequest(request, reply);

@@ -110,7 +110,7 @@ const footer = (theme, path) => html`
       src="https://www.googletagmanager.com/gtag/js?id=G-21BKTD0NKN"
     ></script>
     <script defer src="ga.js"></script>
-    <script defer src="instantpage.js" type="module"></script>
+    <script async src="instantpage.js" type="module"></script>
     <nav-signup-dialogue />
   </footer>
 `;
