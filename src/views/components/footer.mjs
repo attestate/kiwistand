@@ -29,10 +29,19 @@ function loadManifest() {
 let scripts;
 if (env.NODE_ENV === "production") {
   const manifest = loadManifest();
-  scripts = html`
-    <link rel="stylesheet" href="${manifest["src/main.css"].css}" />
-    <script type="module" src="${manifest["src/main.jsx"].file}"></script>
-  `;
+  
+  // Check if CSS path exists in the manifest
+  const cssLink = manifest["src/main.css"] && manifest["src/main.css"].css 
+    ? html`<link rel="stylesheet" href="${manifest["src/main.css"].css}" />` 
+    : '';
+  
+  // Check if JS path exists in the manifest
+  const jsScript = manifest["src/main.jsx"] && manifest["src/main.jsx"].file
+    ? html`<script type="module" src="${manifest["src/main.jsx"].file}"></script>` 
+    : '';
+  
+  // Combine the elements
+  scripts = html`${cssLink}${jsScript}`;
 } else {
   // NOTE: There can be cases where you want to test the development build with
   // vite hot reloading and then it's best to define your machine's host name
