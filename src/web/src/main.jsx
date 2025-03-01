@@ -1,6 +1,5 @@
 import "vite/modulepreload-polyfill";
 import "./request_monitor.js";
-import "@rainbow-me/rainbowkit/styles.css";
 import PullToRefresh from "pulltorefreshjs";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
@@ -973,6 +972,7 @@ async function start() {
   await startWatchAccount(await allowlistPromise, await delegationsPromise);
 
   const results0 = await Promise.allSettled([
+    import("@rainbow-me/rainbowkit/styles.css"), // Load styles in parallel
     addDynamicComments(await allowlistPromise, await delegationsPromise, toast),
     addVotes(await allowlistPromise, await delegationsPromise, toast),
   ]);
