@@ -68,6 +68,10 @@ readability.
   the function again. This way we can ensure that a function is only ever
   called once.
 
+### No unasked fallbacks
+- Unless when specifically asked, don't add fallbacks when destructuring or
+  accessing properties
+
 ## 2. Code Quality
 
 ### 2.1. Comments
