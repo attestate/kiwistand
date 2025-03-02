@@ -8,7 +8,7 @@ import { Wallet } from "@ethersproject/wallet";
 import { eligible } from "@attestate/delegator2";
 
 import { useProvider, client, chains } from "./client.mjs";
-import CommentInput from "./CommentInput.jsx";
+import CommentInput, { getSlug } from "./CommentInput.jsx";
 import * as API from "./API.mjs";
 import { getLocalAccount, isIOS, isRunningPWA } from "./session.mjs";
 import { resolveAvatar } from "./Avatar.jsx";
@@ -446,7 +446,8 @@ const Comment = React.forwardRef(
       window.location.hash === `#0x${comment.index}`,
     );
 
-    const url = `${window.location.origin}/stories?index=${storyIndex}#0x${comment.index}`;
+    const slug = getSlug(props.submission.title);
+    const url = `${window.location.origin}/stories/${slug}?index=${storyIndex}#0x${comment.index}`;
     const handleShare = async (e) => {
       e.preventDefault();
       try {
