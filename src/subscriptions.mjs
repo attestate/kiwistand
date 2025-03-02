@@ -10,6 +10,7 @@ import { getSubmission } from "./cache.mjs";
 import { resolve } from "./ens.mjs";
 import * as email from "./email.mjs";
 import { truncateComment } from "./views/activity.mjs";
+import { getSlug } from "./utils.mjs";
 
 if (env.NODE_ENV == "production")
   webpush.setVapidDetails(
@@ -63,7 +64,8 @@ export async function triggerNotification(message) {
   const uniqueReceivers = Array.from(new Set(receivers));
 
   const maxChars = 140;
-  const url = `https://news.kiwistand.com/stories?index=0x${submission.index}#0x${message.index}`;
+  const slug = getSlug(submission.title);
+  const url = `https://news.kiwistand.com/stories/${slug}?index=0x${submission.index}#0x${message.index}`;
 
   await Promise.allSettled(
     uniqueReceivers.map(async (receiver) => {
