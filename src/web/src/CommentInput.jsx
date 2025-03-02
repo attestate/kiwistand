@@ -5,10 +5,20 @@ import { WagmiConfig, useAccount } from "wagmi";
 import { Wallet } from "@ethersproject/wallet";
 import { eligible } from "@attestate/delegator2";
 import Drawer from "react-bottom-drawer";
+import slugify from "slugify";
+import DOMPurify from "isomorphic-dompurify";
 
 import * as API from "./API.mjs";
 import { getLocalAccount } from "./session.mjs";
 import { client, chains, useProvider, useSigner } from "./client.mjs";
+
+// Configure slugify extension
+slugify.extend({ "′": "", "'": "", "'": "" });
+
+// Implement getSlug exactly as in src/utils.mjs
+export function getSlug(title) {
+  return slugify(DOMPurify.sanitize(title));
+}
 
 const SiteExplainer = () => {
   return (
@@ -113,7 +123,11 @@ const MobileComposer = ({
   }, []);
   return (
     <div
-      onTouchMove={(e) => { if (!e.target.closest("textarea")) { e.preventDefault(); } }}
+      onTouchMove={(e) => {
+        if (!e.target.closest("textarea")) {
+          e.preventDefault();
+        }
+      }}
       style={{
         position: "fixed",
         top: 0,
@@ -276,15 +290,15 @@ const CommentInput = (props) => {
 
     function preventScroll(e) {
       if (!showMobileComposer) return;
-      
+
       // Stop propagation to prevent underlying page from scrolling.
       e.stopPropagation();
-      
+
       // For touchmove events inside a textarea (e.g. selection handles), allow native behavior.
       if (e.type === "touchmove" && e.target.closest("textarea")) {
         return;
       }
-      
+
       if (e.target.closest("textarea")) {
         const textarea = e.target.closest("textarea");
         // Prevent scrolling if the textarea is empty.
@@ -296,8 +310,9 @@ const CommentInput = (props) => {
           const isScrollable = textarea.scrollHeight > textarea.clientHeight;
           const isAtTop = textarea.scrollTop === 0;
           const isAtBottom =
-            textarea.scrollTop + textarea.clientHeight === textarea.scrollHeight;
-      
+            textarea.scrollTop + textarea.clientHeight ===
+            textarea.scrollHeight;
+
           // Prevent scroll if content fits or we're at the bounds.
           if (
             !isScrollable ||
@@ -370,11 +385,12 @@ const CommentInput = (props) => {
     // NOTE: We fetch the current page here in JavaScript to (hopefully)
     // produce a cache revalidation that then makes the new comment fastly
     // available to all other users.
-    const path = `/stories?index=${getIndex()}`;
+    const slug = getSlug(props.submission.title);
+    const path = `/stories/${slug}?index=${index}`;
     fetch(path);
     toast.success("Thanks for submitting your comment. Reloading...");
     posthog.capture("comment_created");
-    localStorage.removeItem(`-kiwi-news-comment-${address}-${getIndex()}`);
+    localStorage.removeItem(`-kiwi-news-comment-${address}-${index}`);
 
     const nextPage = new URL(path, window.location.origin);
     if (response?.data?.index) {
@@ -406,7 +422,11 @@ const CommentInput = (props) => {
   const textareaRef = useRef(null);
   useEffect(() => {
     const handleKeyPress = (e) => {
-      if (document.activeElement && document.activeElement.tagName === "TEXTAREA") return;
+      if (
+        document.activeElement &&
+        document.activeElement.tagName === "TEXTAREA"
+      )
+        return;
       if (e.key !== "r") return;
 
       const selection = window.getSelection();
@@ -419,20 +439,22 @@ const CommentInput = (props) => {
       const start = textarea.selectionStart;
       const end = textarea.selectionEnd;
       const before = text.slice(0, start);
-      const prefix = before.length === 0 
-        ? "" 
-        : before.endsWith("\n\n") 
-          ? "" 
-          : before.endsWith("\n") 
-            ? "\n" 
-            : "\n\n";
+      const prefix =
+        before.length === 0
+          ? ""
+          : before.endsWith("\n\n")
+          ? ""
+          : before.endsWith("\n")
+          ? "\n"
+          : "\n\n";
       const quote =
         prefix +
         selected
           .split("\n")
           .map((line) => `> ${line}`)
-          .join("\n") + "\n\n";
-      
+          .join("\n") +
+        "\n\n";
+
       setText(text.slice(0, start) + quote + text.slice(end));
 
       setTimeout(() => {
