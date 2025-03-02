@@ -15,6 +15,7 @@ import Sidebar from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
 import { prefetchHead } from "./components/head.mjs";
 import { iconSVG } from "./components/row.mjs";
+import { getSlug } from "../utils.mjs";
 // Define the brand green color directly
 const theme = { color: "#00b67a" };
 import * as store from "../store.mjs";
@@ -72,12 +73,14 @@ function linkFromComment(activity) {
   if (activity.verb === "reacted") {
     const submissionIndex = activity.message.submissionId.split(":")[1];
     const commentId = activity.message.commentId.split(":")[1];
-    return `/stories?index=${submissionIndex}#${commentId}`;
+    const slug = getSlug(activity.message.submission_title);
+    return `/stories/${slug}?index=${submissionIndex}#${commentId}`;
   }
 
   // For regular comments
   const [_, index] = activity.message.href.split(":");
-  const link = `/stories?index=${index}#0x${activity.message.index}`;
+  const slug = getSlug(activity.message.submission_title);
+  const link = `/stories/${slug}?index=${index}#0x${activity.message.index}`;
   return link;
 }
 
@@ -166,9 +169,9 @@ function generateRow(lastUpdate, theme) {
             <a
               data-no-instant="${i < 3}"
               class="notification"
-              href="/stories?index=${submissionIndex}#${commentId.split(
-                ":",
-              )[1]}"
+              href="/stories/${getSlug(
+                submissionTitle,
+              )}?index=${submissionIndex}#${commentId.split(":")[1]}"
               onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
             >
               <div
@@ -242,9 +245,7 @@ function generateRow(lastUpdate, theme) {
       `;
     }
 
-    const title = DOMPurify.sanitize(
-      activity.message.title || activity.message.href,
-    );
+    const title = DOMPurify.sanitize(activity.message.title);
     const identity = activity.identities[activity.identities.length - 1];
     const size = 28;
     const identities = activity.identities
@@ -256,7 +257,7 @@ function generateRow(lastUpdate, theme) {
       <tr style="background-color: ${bgColor};">
         <td>
           <a
-            href="/stories?index=0x${activity.message
+            href="/stories/${getSlug(title)}?index=0x${activity.message
               .index}${identities.length > 0
               ? `&upvoter=${identities[identities.length - 1].address}`
               : ""}"
