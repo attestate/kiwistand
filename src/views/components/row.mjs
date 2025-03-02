@@ -691,7 +691,9 @@ const row = (
                               <span class="inverse-share-container">
                                 <span style="opacity:0.6"> • </span>
                                 <a
-                                  href="#"
+                                  href="https://news.kiwistand.com/stories/${getSlug(
+                                    story.title,
+                                  )}?index=0x${story.index}"
                                   class="meta-link share-link"
                                   title="Share"
                                   style="color: var(--contrast-color); touch-action: manipulation; user-select: none; white-space: nowrap;"
