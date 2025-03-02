@@ -322,7 +322,7 @@ const row = (
                 >
                   <div style="position: relative;">
                     <img
-                      ${i > 2 ? 'loading="lazy"' : ""}
+                      ${path === "/stories" ? 'loading="lazy"' : i > 2 ? 'loading="lazy"' : ""}
                       style="aspect-ratio: 2 / 1; object-fit:cover; margin: 0 11px; border-radius: 2px; width: calc(100% - 24px);"
                       src="${DOMPurify.sanitize(story.metadata.image)}"
                     />
@@ -416,7 +416,7 @@ const row = (
                       )}', event.currentTarget.getAttribute('target'));"
                     >
                       <img
-                        ${i > 2 ? 'loading="lazy"' : ""}
+                        ${path === "/stories" ? 'loading="lazy"' : i > 2 ? 'loading="lazy"' : ""}
                         style="max-height: 61px; border: var(--border-line); border-radius: 2px; width: 110px; object-fit: cover;"
                         src="${DOMPurify.sanitize(story.metadata.image)}"
                     /></a>`
