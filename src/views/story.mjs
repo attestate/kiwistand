@@ -29,7 +29,7 @@ import log from "../logger.mjs";
 import { EIP712_MESSAGE } from "../constants.mjs";
 import Row, { extractDomain } from "./components/row.mjs";
 import * as karma from "../karma.mjs";
-import { truncateName } from "../utils.mjs";
+import { truncateName, getSlug } from "../utils.mjs";
 import { identityClassifier } from "./feed.mjs";
 import { metadata, render } from "../parser.mjs";
 import { getSubmission } from "../cache.mjs";
@@ -298,9 +298,9 @@ export default async function (trie, theme, index, value, referral) {
       ? data.ogDescription
       : "Kiwi News is the prime feed for hacker engineers building a decentralized future. All our content is handpicked and curated by crypto veterans.";
   const recentJoiners = await registry.recents();
-  const link = `https://news.kiwistand.com/stories?index=0x${index}${
-    referral ? `&referral=${referral}` : ""
-  }`;
+  const link = `https://news.kiwistand.com/stories/${getSlug(
+    value.title,
+  )}?index=0x${index}${referral ? `&referral=${referral}` : ""}`;
   return html`
     <html lang="en" op="news">
       <head>
@@ -403,7 +403,9 @@ export default async function (trie, theme, index, value, referral) {
                                     class="caster-link share-link"
                                     title="Share"
                                     style="white-space: nowrap;"
-                                    onclick="event.preventDefault(); navigator.share({url: 'https://news.kiwistand.com/stories?index=0x${index}#0x${comment.index}'});"
+                                    onclick="event.preventDefault(); navigator.share({url: 'https://news.kiwistand.com/stories/${getSlug(
+                                      value.title,
+                                    )}?index=0x${index}#0x${comment.index}'});"
                                   >
                                     ${ShareIcon(
                                       "padding: 0 3px 1px 0; vertical-align: middle; height: 13px; width: 13px;",
@@ -480,14 +482,19 @@ export default async function (trie, theme, index, value, referral) {
                                               style="margin-top: 32px; display: inline-flex; align-items: center; padding: 4px 12px; background-color: var(--bg-off-white); border: var(--border-thin); border-radius: 2px; font-size: 10pt;"
                                             >
                                               <span
-                                                style="margin-right: ${reaction
-                                                  ?.reactorProfiles?.filter(profile => profile.safeAvatar)?.length
+                                                style="margin-right: ${reaction?.reactorProfiles?.filter(
+                                                  (profile) =>
+                                                    profile.safeAvatar,
+                                                )?.length
                                                   ? "4px"
                                                   : "0"}"
                                                 >${emoji}</span
                                               >
                                               ${reaction?.reactorProfiles
-                                                ?.filter(profile => profile.safeAvatar)
+                                                ?.filter(
+                                                  (profile) =>
+                                                    profile.safeAvatar,
+                                                )
                                                 .map(
                                                   (profile, i) => html`
                                                     <img
@@ -497,7 +504,8 @@ export default async function (trie, theme, index, value, referral) {
                                                       style="z-index: ${i}; width: ${i >
                                                       0
                                                         ? "13px"
-                                                        : "12px"}; height: ${i > 0
+                                                        : "12px"}; height: ${i >
+                                                      0
                                                         ? "13px"
                                                         : "12px"}; border-radius: 2px; border: ${i >
                                                       0
