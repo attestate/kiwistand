@@ -99,6 +99,7 @@ export function generateList(profiles, submitter) {
         >
           ${submitter.safeAvatar
             ? html`<img
+                loading="lazy"
                 src="${submitter.safeAvatar}"
                 alt="avatar"
                 style="object-fit: contain; width: 15px; height: 15px; border: 1px solid #828282; border-radius: 2px;"
@@ -120,6 +121,7 @@ export function generateList(profiles, submitter) {
             >
               ${profile.avatar
                 ? html`<img
+                    loading="lazy"
                     src="${profile.avatar}"
                     alt="avatar"
                     style="object-fit: contain; width: 15px; height: 15px; border: 1px solid #828282; border-radius: 2px;"
