@@ -385,8 +385,7 @@ const CommentInput = (props) => {
     // NOTE: We fetch the current page here in JavaScript to (hopefully)
     // produce a cache revalidation that then makes the new comment fastly
     // available to all other users.
-    const slug = getSlug(props.submission.title);
-    const path = `/stories/${slug}?index=${index}`;
+    const path = `/stories?index=${index}`;
     fetch(path);
     toast.success("Thanks for submitting your comment. Reloading...");
     posthog.capture("comment_created");
