@@ -688,7 +688,7 @@ export async function launch(trie, libp2p) {
       }
       reply.header(
         "Cache-Control",
-        "public, s-maxage=300, max-age=300,  must-revalidate, stale-while-revalidate=30",
+        "public, s-maxage=20, max-age=20,  must-revalidate, stale-while-revalidate=86400",
       );
       stories = results.stories;
     } else if (request.params.name === "new") {
@@ -861,7 +861,7 @@ export async function launch(trie, libp2p) {
     }
     reply.header(
       "Cache-Control",
-      "public, s-maxage=5, max-age=5, stale-while-revalidate=60",
+      "public, s-maxage=20, max-age=20, stale-while-revalidate=86400",
     );
     return reply.status(200).type("text/html").send(content);
   });
@@ -922,7 +922,7 @@ export async function launch(trie, libp2p) {
     if (request.query.cached) {
       reply.header(
         "Cache-Control",
-        "public, s-maxage=30, max-age=30, stale-while-revalidate=3600",
+        "public, s-maxage=30, max-age=30, stale-while-revalidate=86400",
       );
     } else {
       reply.header("Cache-Control", "no-cache");
