@@ -8,6 +8,8 @@
 import { env } from "process";
 import { readFile } from "fs/promises";
 import path, { basename } from "path";
+import cluster from "cluster";
+import os from "os";
 
 import morgan from "morgan";
 import express from "express";
@@ -19,7 +21,6 @@ import "express-async-errors";
 import { sub } from "date-fns";
 import DOMPurify from "isomorphic-dompurify";
 import { getSlug } from "./utils.mjs";
-import ws from "ws";
 import https from "https";
 import fs from "fs";
 import { createServer as createHttpServer } from "http";
@@ -209,10 +210,28 @@ export function sendStatus(reply, code, message, details, data) {
   return reply.status(code).json(obj);
 }
 
-export async function launch(trie, libp2p) {
-  const wss = new ws.Server({ noServer: true });
-  const clients = new Set();
+// Define routes that are safe for clustering (read-heavy)
+const CLUSTERED_ROUTES = [
+  "/",
+  "/new",
+  "/best",
+  "/stories",
+  "/upvotes",
+  "/api/v1/stories",
+  "/api/v1/feeds",
+];
 
+// Function to check if a route should be clustered
+function isClusteredRoute(path) {
+  return CLUSTERED_ROUTES.some(
+    (route) =>
+      path === route ||
+      path.startsWith(`${route}/`) ||
+      path.match(/\/[^\/]+\.eth(\?|$)/), // ENS resolution routes
+  );
+}
+
+export async function launch(trie) {
   try {
     cachedFeed = await feed(trie, theme, 0, null, undefined, undefined);
     log("Cached feed updated");
@@ -240,6 +259,10 @@ export async function launch(trie, libp2p) {
   app.use((err, req, res, next) => {
     log(`Express error: "${err.message}", "${err.stack}"`);
     res.status(500).send("Internal Server Error");
+  });
+
+  app.use((req, res, next) => {
+    next();
   });
 
   // NOTE: If you're reading this as an external contributor, yes the
@@ -1542,19 +1565,6 @@ export async function launch(trie, libp2p) {
     return reply.status(200).type("text/html").send(content);
   });
 
-  wss.on("connection", (ws) => {
-    clients.add(ws);
-
-    ws.on("close", () => {
-      clients.delete(ws);
-    });
-  });
-
-  server.on("upgrade", (request, socket, head) => {
-    wss.handleUpgrade(request, socket, head, (socket) => {
-      wss.emit("connection", socket, request);
-    });
-  });
   app.get("/search", async (request, reply) => {
     const query = request.query.q || "";
     const content = await search(reply.locals.theme, query);
@@ -1567,7 +1577,70 @@ export async function launch(trie, libp2p) {
     return handleFaucetRequest(request, reply);
   });
 
-  server.listen(env.HTTP_PORT, () =>
-    log(`Launched HTTPS server at PORT: ${env.HTTP_PORT}`),
-  );
+  // In a clustered environment, we need to be careful about which worker listens
+  const appPort = process.env.HTTP_PORT;
+  if (cluster.isWorker) {
+    // Only the PRIMARY worker should listen on the application port
+    if (process.env.WORKER_TYPE === "PRIMARY") {
+      server.listen(appPort, () =>
+        log(`PRIMARY Worker ${process.pid} listening on PORT: ${appPort}`),
+      );
+    } else {
+      log(
+        `CLUSTERED Worker ${process.pid} not binding to port (handled by PRIMARY worker)`,
+      );
+    }
+  } else {
+    log(
+      `Primary ${process.pid} is not listening directly (workers will handle connections)`,
+    );
+  }
+}
+
+// New clustered launch function
+export async function launchWithClustering(trie) {
+  if (cluster.isPrimary) {
+    log(`Primary ${process.pid} is starting workers`);
+
+    // Fork workers for clustered routes
+    const numCPUs = os.cpus().length - 1; // Reserve one core for primary worker
+    for (let i = 0; i < Math.max(1, numCPUs); i++) {
+      cluster.fork(
+        Object.assign({}, process.env, { WORKER_TYPE: "CLUSTERED" }),
+      );
+    }
+
+    // Fork a single worker for non-clustered routes
+    cluster.fork(Object.assign({}, process.env, { WORKER_TYPE: "PRIMARY" }));
+
+    // Set up event handlers for worker management
+    cluster.on("exit", (worker, code, signal) => {
+      log(
+        `Worker ${worker.process.pid} died with code: ${code}, signal: ${signal}`,
+      );
+
+      // Use a safer approach to access the environment variable
+      const workerType = worker.process.env
+        ? worker.process.env.WORKER_TYPE
+        : "PRIMARY";
+
+      // Replace the dead worker with the same type
+      cluster.fork(
+        Object.assign({}, process.env, {
+          WORKER_TYPE: workerType || "PRIMARY",
+        }),
+      );
+    });
+
+    // Primary process doesn't call launch() to avoid binding to the port
+  } else {
+    log(
+      `Worker ${process.pid} started as ${
+        process.env.WORKER_TYPE || "unknown"
+      } with PORT ${process.env.HTTP_PORT}`,
+    );
+
+    // Launch the HTTP server in each worker
+    await launch(trie);
+  }
 }

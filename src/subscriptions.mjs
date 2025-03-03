@@ -32,6 +32,7 @@ db.exec(`
  `);
 db.exec(`
     PRAGMA foreign_keys=off;
+    DROP TABLE IF EXISTS subscriptions_temp;
     CREATE TABLE subscriptions_temp AS SELECT * FROM subscriptions;
     DROP TABLE subscriptions;
     CREATE TABLE subscriptions (

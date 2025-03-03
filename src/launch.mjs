@@ -25,10 +25,13 @@ import * as feeds from "./feeds.mjs";
 import * as email from "./email.mjs";
 import * as moderation from "./views/moderation.mjs";
 import diskcheck from "./diskcheck.mjs";
+import cluster from "cluster";
 
 // NOTE: Initializing the lifetime cache as a first order is important as it
 // is widely used throughout the application.
-cache.initializeLtCache();
+if (cluster.isPrimary) {
+  cache.initializeLtCache();
+}
 
 const reconcileMode = env.NODE_ENV === "reconcile";
 const productionMode = env.NODE_ENV === "production";
@@ -41,36 +44,40 @@ if (reconcileMode) {
 
 // NOTE: This will crash the program intentionally when disk space is lower
 // than some percentage necessary for it to work well.
-if (productionMode) {
+if (productionMode && cluster.isPrimary) {
   diskcheck();
 }
 
 const trie = await store.create();
 
-const node = await start(config);
-
-await api.launch(trie, node);
-
-if (!reconcileMode) {
-  await http.launch(trie, node);
+if (!cluster.isPrimary) {
+  await http.launchWithClustering(trie);
 }
 
-crawl(mintCrawlPath);
-crawl(delegateCrawlPath);
+if (cluster.isPrimary) {
+  const node = await start(config);
+  await api.launch(trie);
+  if (!reconcileMode) {
+    await http.launchWithClustering(trie);
+  }
 
-// NOTE: We're passing in the trie here as we don't want to make it globally
-// available to run more than one node in the tests
-messages.handlers.message = messages.handlers.message(trie);
-roots.handlers.message = roots.handlers.message(trie, node);
+  crawl(mintCrawlPath);
+  crawl(delegateCrawlPath);
 
-await subscribe(
-  node,
-  handlers.node,
-  handlers.connection,
-  handlers.protocol,
-  [messages, roots],
-  trie,
-);
+  // NOTE: We're passing in the trie here as we don't want to make it globally
+  // available to run more than one node in the tests
+  messages.handlers.message = messages.handlers.message(trie);
+  roots.handlers.message = roots.handlers.message(trie, node);
+
+  await subscribe(
+    node,
+    handlers.node,
+    handlers.connection,
+    handlers.protocol,
+    [messages, roots],
+    trie,
+  );
+}
 
 // NOTE: This request queries all messages in the database to enable caching
 // when calling ecrecover on messages' signatures.
@@ -143,7 +150,7 @@ if (!reconcileMode) {
     }, 1800000);
 }
 
-if (productionMode && env.POSTMARK_API_KEY) {
+if (cluster.isPrimary && productionMode && env.POSTMARK_API_KEY) {
   email
     .syncSuppressions()
     .then(() => {
