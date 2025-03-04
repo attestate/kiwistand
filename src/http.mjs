@@ -8,10 +8,13 @@
 import { env } from "process";
 import { readFile } from "fs/promises";
 import path, { basename } from "path";
+import cluster from "cluster";
+import os from "os";
 
 import morgan from "morgan";
 import express from "express";
 import cookieParser from "cookie-parser";
+import { createProxyMiddleware } from "http-proxy-middleware";
 import { utils } from "ethers";
 import { handleFaucetRequest } from "./faucet.mjs";
 import htm from "htm";
@@ -209,9 +212,92 @@ export function sendStatus(reply, code, message, details, data) {
   return reply.status(code).json(obj);
 }
 
-export async function launch(trie, libp2p) {
-  const wss = new ws.Server({ noServer: true });
-  const clients = new Set();
+// Send an IPC message to all worker processes
+export function sendToCluster(message) {
+  if (!cluster.isPrimary) {
+    // Workers can't send to other workers directly
+    return;
+  }
+
+  log(`Sending IPC message to workers: ${message}`);
+
+  // Send to all workers
+  for (const id in cluster.workers) {
+    cluster.workers[id].send(message);
+  }
+}
+
+// Handle IPC messages from the primary process
+export function handleClusterMessage(trie, recompute) {
+  return (message) => {
+    if (message === "recompute-new-feed") {
+      log(`Worker ${process.pid} received recompute-new-feed message`);
+      recompute(trie).catch((err) => {
+        log(
+          `Error in worker ${
+            process.pid
+          } recomputing new feed: ${err.toString()}`,
+        );
+      });
+    }
+  };
+}
+
+export async function launch(trie, libp2p, isPrimary = true) {
+  // Set up IPC message handling for worker processes
+  if (!isPrimary && cluster.worker) {
+    // Listen for messages from the primary process
+    process.on("message", handleClusterMessage(trie, newAPI.recompute));
+    log(`Worker ${process.pid} ready to receive IPC messages`);
+  }
+
+  // Routes that can be handled by the worker cluster
+  const workerRoutes = [
+    "/friends",
+    "/kiwipass-mint",
+    "/api/v1/karma",
+    "/api/v1/feeds",
+    "/api/v1/stories",
+    "/gateway",
+    "/",
+    "/stories",
+    "/best",
+    "/community",
+    "/price",
+    "/retention",
+    "/users",
+    "/basics",
+    "/stats",
+    "/about",
+    "/passkeys",
+    "/app-onboarding",
+    "/app-testflight",
+    "/pwaandroid",
+    "/pwa",
+    "/notifications",
+    "/demonstration",
+    "/email-notifications",
+    "/invite",
+    "/indexing",
+    "/start",
+    "/settings",
+    "/why",
+    "/subscribe",
+    "/privacy-policy",
+    "/guidelines",
+    "/onboarding",
+    "/whattosubmit",
+    "/referral",
+    "/onboarding-reader",
+    "/onboarding-curator",
+    "/onboarding-submitter",
+    "/welcome",
+    "/kiwipass",
+    "/shortcut",
+    "/profile",
+    "/upvotes",
+    "/submit",
+  ];
 
   try {
     cachedFeed = await feed(trie, theme, 0, null, undefined, undefined);
@@ -241,6 +327,66 @@ export async function launch(trie, libp2p) {
     log(`Express error: "${err.message}", "${err.stack}"`);
     res.status(500).send("Internal Server Error");
   });
+
+  // Set up proxy middleware in primary process
+  if (isPrimary && cluster.isPrimary) {
+    log("Setting up worker proxy middleware");
+
+    // Create regex patterns for worker routes
+    const workerPathRegex = new RegExp(`^(${workerRoutes.join("|")})`, "i");
+
+    // Set up ports for each worker
+    const workers = [];
+    const startPort = parseInt(env.HTTP_PORT) + 1;
+
+    for (let i = 0; i < (Number(env.WORKER_COUNT) || os.cpus().length); i++) {
+      workers.push(`http://localhost:${startPort + i}`);
+    }
+
+    // Simple round-robin load balancer
+    let currentWorker = 0;
+
+    // Add proxy middleware for routes that should go to workers
+    app.use((req, res, next) => {
+      if (
+        (req.path === "/new" && req.query.cached !== "true") ||
+        req.path.slice(1).endsWith(".eth")
+      ) {
+        return next();
+      }
+
+      if (workerPathRegex.test(req.path)) {
+        // Get next worker in round-robin fashion
+        const target = workers[currentWorker];
+        currentWorker = (currentWorker + 1) % workers.length;
+
+        log(`Proxying ${req.method} ${req.url} to worker at ${target}`);
+
+        const proxy = createProxyMiddleware({
+          target,
+          changeOrigin: true,
+          ws: false,
+          logLevel: "warn",
+          pathRewrite: (path, req) => path, // keep path unchanged
+        });
+
+        return proxy(req, res, next);
+      }
+
+      // If not a worker route, continue with normal processing
+      next();
+    });
+  }
+  // If we're a worker, adjust the port
+  else if (!isPrimary) {
+    // Calculate worker's port offset
+    const workerIndex = cluster.worker.id - 1;
+    const workerPort = parseInt(env.HTTP_PORT) + 1 + workerIndex;
+
+    // Override HTTP_PORT for this worker
+    env.HTTP_PORT = workerPort;
+    log(`Worker ${process.pid} using port ${workerPort}`);
+  }
 
   // NOTE: If you're reading this as an external contributor, yes the
   // fingerprint.mjs file isn't distributed along with the other code because
@@ -1542,19 +1688,6 @@ export async function launch(trie, libp2p) {
     return reply.status(200).type("text/html").send(content);
   });
 
-  wss.on("connection", (ws) => {
-    clients.add(ws);
-
-    ws.on("close", () => {
-      clients.delete(ws);
-    });
-  });
-
-  server.on("upgrade", (request, socket, head) => {
-    wss.handleUpgrade(request, socket, head, (socket) => {
-      wss.emit("connection", socket, request);
-    });
-  });
   app.get("/search", async (request, reply) => {
     const query = request.query.q || "";
     const content = await search(reply.locals.theme, query);
