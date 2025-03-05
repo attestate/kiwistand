@@ -298,9 +298,10 @@ export default async function (trie, theme, index, value, referral) {
       ? data.ogDescription
       : "Kiwi News is the prime feed for hacker engineers building a decentralized future. All our content is handpicked and curated by crypto veterans.";
   const recentJoiners = await registry.recents();
-  const link = `https://news.kiwistand.com/stories/${getSlug(
-    value.title,
-  )}?index=0x${index}${referral ? `&referral=${referral}` : ""}`;
+  const slug = getSlug(value.title);
+  const link = `https://news.kiwistand.com/stories/${slug}?index=0x${index}${referral ? `&referral=${referral}` : ""}`;
+  const canonicalUrl = `https://news.kiwistand.com/stories/${slug}?index=0x${index}`;
+  
   return html`
     <html lang="en" op="news">
       <head>
@@ -309,7 +310,7 @@ export default async function (trie, theme, index, value, referral) {
           "/",
           "/new?cached=true",
           "/submit",
-        ])}
+        ], canonicalUrl)}
         ${frame.header(referral, link, ogImage)}
       </head>
       <body

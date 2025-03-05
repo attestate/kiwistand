@@ -12,6 +12,7 @@ export function custom(
   ogDescription = "",
   twitterCard = "summary_large_image",
   prefetch = [],
+  canonicalUrl = null,
 ) {
   if (process.env.NODE_ENV === "production") {
     prefetch = [
@@ -61,6 +62,7 @@ export function custom(
     <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
     ${PwaLinks()}
     <title>${ogTitle}</title>
+    ${canonicalUrl ? html`<link rel="canonical" href="${canonicalUrl}" />` : null}
     ${prefetch.map(
       (url) => html`
         <link rel="prefetch" href="${url}" as="document" fetchpriority="high" />
