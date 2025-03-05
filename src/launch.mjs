@@ -40,6 +40,7 @@ if (cluster.isPrimary) {
   // NOTE: Initializing the lifetime cache as a first order is important as it
   // is widely used throughout the application.
   cache.initializeLtCache();
+  cache.initializeImpressions();
 
   if (reconcileMode) {
     log(`Running in reconciliation mode`);

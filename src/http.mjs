@@ -92,6 +92,7 @@ import {
   getRandomIndex,
   getSubmission,
   trackOutbound,
+  trackImpression,
   getRecommendations,
   getTimestamp,
   setTimestamp,
@@ -438,6 +439,22 @@ export async function launch(trie, libp2p, isPrimary = true) {
     const hash = fingerprint.generate(request);
     const cleanUrl = removeReferrerParams(url);
     trackOutbound(cleanUrl, hash);
+    return reply.status(204).send();
+  });
+
+  app.post("/impression", async (request, reply) => {
+    reply.header("Cache-Control", "no-cache");
+    const { url } = request.query;
+    if (!url) {
+      return reply.status(400).send("URL parameter is required");
+    }
+    if (!fingerprint) {
+      return reply.status(204).send();
+    }
+
+    const hash = fingerprint.generate(request);
+    const cleanUrl = removeReferrerParams(url);
+    trackImpression(cleanUrl, hash);
     return reply.status(204).send();
   });
   app.get("/outbound", async (request, reply) => {

@@ -908,6 +908,67 @@ export function dynamicPrefetch(url, priority = "auto") {
   prefetchedUrls.add(url);
 }
 
+function trackLinkImpressions() {
+  // Find all story links
+  const storyLinks = document.querySelectorAll(".story-link");
+  if (storyLinks.length === 0) return;
+
+  // Get current hostname for comparison
+  const currentHostname = window.location.hostname;
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const link = entry.target;
+          const href = link.getAttribute("href");
+
+          if (!href) return;
+
+          if (
+            href.startsWith("javascript:") ||
+            href.startsWith("/") ||
+            href.startsWith("#") ||
+            href.startsWith("mailto:") ||
+            href.startsWith("tel:") ||
+            !href.includes("://")
+          )
+            return;
+
+          try {
+            const linkUrl = new URL(href);
+            if (linkUrl.hostname === currentHostname) return;
+          } catch (e) {
+            return;
+          }
+
+          // Check if this URL has already been tracked in this session
+          const storageKey = `impression_${href}`;
+          if (sessionStorage.getItem(storageKey)) return;
+
+          // Mark this URL as tracked in this session
+          sessionStorage.setItem(storageKey, "tracked");
+
+          // Send impression beacon
+          try {
+            navigator.sendBeacon(
+              "/impression?url=" + encodeURIComponent(href)
+            );
+          } catch (err) {
+            console.log("Error tracking impression:", err);
+          }
+
+          // Stop observing this link
+          observer.unobserve(link);
+        }
+      });
+    },
+    { threshold: 0.5 }, // Link must be 50% visible to count as an impression
+  );
+
+  storyLinks.forEach((link) => observer.observe(link));
+}
+
 async function start() {
   // Spinner overlay initialization
   if (!document.getElementById("spinner-overlay")) {
@@ -923,6 +984,9 @@ async function start() {
     overlay.style.zIndex = "9999";
     document.body.appendChild(overlay);
   }
+
+  // Initialize link impression tracking
+  trackLinkImpressions();
   // NOTE: There are clients which had the identity cookie sent to 1 week and
   // they're now encountering the paywall. So in case this happens but their
   // local storage contains the respective private key, we want them to reload

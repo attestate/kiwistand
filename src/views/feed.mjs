@@ -24,6 +24,7 @@ import * as store from "../store.mjs";
 import * as id from "../id.mjs";
 import * as moderation from "./moderation.mjs";
 import cache, {
+  countImpressions,
   countOutbounds,
   getLastComment,
   getSubmission,
@@ -42,7 +43,6 @@ import holders from "./holders.mjs";
 const formatedHolders = holders.map((a) => ethers.utils.getAddress(a));
 
 const html = htm.bind(vhtml);
-
 
 // NOTE: Only set this date in synchronicity with the src/launch.mjs date!!
 const cutoffDate = new Date("2025-01-15");
@@ -121,7 +121,6 @@ export async function getNeynarScore(address) {
 
   return score;
 }
-
 
 async function getAd() {
   const provider = new ethers.providers.JsonRpcProvider(
@@ -232,19 +231,66 @@ const itemAge = (timestamp) => {
   return ageInMinutes;
 };
 
-function calculateUpvoteClickRatio(story) {
+// Calculate click-through rate (CTR) for a story
+export function calculateCTR(story) {
+  // Get normalized clicks and impressions counts
   const clicks = countOutbounds(story.href);
-  return story.upvotes / (clicks + 1);
+  const impressions = countImpressions(story.href);
+
+  // Only calculate CTR if we have impressions, otherwise throw
+  if (impressions > 0) {
+    return clicks / impressions;
+  }
+
+  throw new Error("No impressions available for CTR calculation");
+}
+
+// Calculate upvote-to-click ratio
+export function calculateUpvoteClickRatio(story) {
+  const clicks = countOutbounds(story.href);
+  const upvotes = story.upvotes;
+
+  if (clicks > 0) {
+    return upvotes / clicks;
+  }
+  throw new Error("No clicks available for CTR calculation");
+}
+
+function meanCTR(leaves) {
+  const ctrs = [];
+  for (let leaf of leaves) {
+    try {
+      const ctr = calculateCTR(leaf);
+      ctrs.push(ctr);
+    } catch (err) {
+      // noop
+    }
+  }
+  const sumCTRs = ctrs.reduce((sum, ctr) => sum + ctr, 0);
+  if (ctrs.length > 0) {
+    return sumCTRs / ctrs.length;
+  }
+  throw new Error("CTRs length is not available");
 }
 
 function meanUpvoteRatio(leaves) {
-  const ratios = leaves.map((story) => calculateUpvoteClickRatio(story));
+  const ratios = [];
+  for (let leaf of leaves) {
+    try {
+      const ratio = calculateUpvoteClickRatio(leaf);
+      ratios.push(ratio);
+    } catch (err) {
+      // noop
+    }
+  }
   const sumRatios = ratios.reduce((sum, ratio) => sum + ratio, 0);
-  return ratios.length > 0 ? sumRatios / ratios.length : 0;
+  if (ratios.length > 0) {
+    return sumRatios / ratios.length;
+  }
+  throw new Error("Ratios length is not available");
 }
 
 export async function topstories(leaves) {
-  const upvoteRatio = meanUpvoteRatio(leaves);
   return leaves
     .map((story) => {
       const commentCount =
@@ -261,9 +307,26 @@ export async function topstories(leaves) {
         score = score * 0.9 + 0.1 * Math.log(outboundClicks);
       }
 
-      const storyRatio = calculateUpvoteClickRatio(story);
-      const upvotePerformance = storyRatio / upvoteRatio;
-      score *= upvotePerformance;
+      try {
+        const upvoteRatio = meanUpvoteRatio(leaves);
+        const storyRatio = calculateUpvoteClickRatio(story);
+        const upvotePerformance = storyRatio / upvoteRatio;
+        score *= upvotePerformance;
+      } catch (e) {
+        // If Upvote-Click ratio can't be calculated, we just keep the current
+        // score
+      }
+
+      // Try to apply CTR adjustment if available
+      try {
+        const meanCtrValue = meanCTR(leaves);
+        const ctr = calculateCTR(story);
+        // Apply CTR performance relative to mean
+        const ctrPerformance = ctr / meanCtrValue;
+        score *= ctrPerformance;
+      } catch (e) {
+        // If CTR can't be calculated, we just keep the current score
+      }
 
       const decay = Math.sqrt(itemAge(story.timestamp));
       score = score / Math.pow(decay, 6.5);

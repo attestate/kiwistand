@@ -61,6 +61,32 @@ export function initializeLtCache() {
   return false;
 }
 
+export function initializeImpressions() {
+  const exists = db
+    .prepare(
+      `SELECT name FROM sqlite_master WHERE type='table' AND name='impressions'`,
+    )
+    .get();
+  if (exists) {
+    log(
+      "Aborting cache.initializeImpressions early because table already exists",
+    );
+    return true;
+  }
+
+  log("Creating impressions table");
+  db.exec(`CREATE TABLE IF NOT EXISTS impressions (
+     id INTEGER PRIMARY KEY AUTOINCREMENT,
+     url TEXT NOT NULL,
+     hash TEXT NOT NULL,
+     timestamp INTEGER NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS idx_impressions_url ON impressions(url);
+  CREATE INDEX IF NOT EXISTS idx_impressions_hash ON impressions(hash);
+  CREATE INDEX IF NOT EXISTS idx_impressions_timestamp ON impressions(timestamp);`);
+  return false;
+}
+
 export function initialize(messages) {
   let isSetup = true;
   const tables = ["fingerprints", "submissions", "upvotes", "comments"];
@@ -356,6 +382,21 @@ export function countOutbounds(url, hours = 24) {
   return result.uniqueHashCount;
 }
 
+export function countImpressions(url, hours = 24) {
+  const normalizedUrl = normalizeUrl(url, {
+    stripWWW: false,
+  });
+  const cutoffTimestamp = Math.floor(Date.now() / 1000 - hours * 60 * 60);
+
+  const query = db.prepare(`
+     SELECT COUNT(DISTINCT hash) AS uniqueHashCount
+     FROM impressions 
+     WHERE url = ? AND timestamp >= ?
+   `);
+  const result = query.get(normalizedUrl, cutoffTimestamp);
+  return result ? result.uniqueHashCount : 0;
+}
+
 export function trackOutbound(url, hash) {
   const normalizedUrl = normalizeUrl(url, {
     stripWWW: false,
@@ -363,6 +404,17 @@ export function trackOutbound(url, hash) {
   const timestamp = Math.floor(Date.now() / 1000);
   const insert = db.prepare(
     `INSERT INTO fingerprints(url, hash, timestamp) VALUES (?,?,?)`,
+  );
+  insert.run(normalizedUrl, hash, timestamp);
+}
+
+export function trackImpression(url, hash) {
+  const normalizedUrl = normalizeUrl(url, {
+    stripWWW: false,
+  });
+  const timestamp = Math.floor(Date.now() / 1000);
+  const insert = db.prepare(
+    `INSERT INTO impressions(url, hash, timestamp) VALUES (?,?,?)`,
   );
   insert.run(normalizedUrl, hash, timestamp);
 }
