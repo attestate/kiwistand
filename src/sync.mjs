@@ -390,7 +390,12 @@ export function receive(peerFab, trie, expectResponse, handler) {
     } catch (err) {
       elog(err, "receive: error in fromWire");
       peerFab.set();
-      return stream.close();
+      try {
+        await stream.close(); // Properly await the stream close
+      } catch (closeErr) {
+        elog(closeErr, "receive: error closing stream after fromWire error");
+      }
+      return;
     }
 
     let response;
@@ -404,7 +409,12 @@ export function receive(peerFab, trie, expectResponse, handler) {
         )}"`,
       );
       peerFab.set();
-      return stream.close();
+      try {
+        await stream.close();
+      } catch (closeErr) {
+        elog(closeErr, "receive: unexpected error closing stream");
+      }
+      return;
     }
 
     if (expectResponse && !response) {
@@ -412,7 +422,12 @@ export function receive(peerFab, trie, expectResponse, handler) {
         "receive: Failed to handle response from remote. Can't generate answer, closing stream.",
       );
       peerFab.set();
-      return stream.close();
+      try {
+        await stream.close();
+      } catch (closeErr) {
+        elog(closeErr, "receive: unexpected error closing stream");
+      }
+      return;
     }
     try {
       await toWire(response, stream.sink);
