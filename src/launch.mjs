@@ -164,12 +164,10 @@ store
   });
 
 if (!reconcileMode) {
-  const urls = await moderation.getFeeds();
-  await feeds.recompute(urls);
-  await newest.recompute(trie).then(() => log("/new computed with feeds"));
+  await newest.recompute(trie).then(() => log("/new computed"));
   // TODO: Unclear if this is still necessary
   setInterval(async () => {
-    await Promise.all([feeds.recompute(urls), newest.recompute(trie)]);
+    await Promise.all([newest.recompute(trie)]);
   }, 1800000);
 }
 
