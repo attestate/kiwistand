@@ -14,7 +14,6 @@ import { utils } from "ethers";
 import log from "./logger.mjs";
 import * as store from "./store.mjs";
 import { SCHEMATA } from "./constants.mjs";
-import { sendToCluster } from "./http.mjs";
 import * as registry from "./chainstate/registry.mjs";
 import * as newest from "./views/new.mjs";
 import { generateStory } from "./views/story.mjs";
@@ -101,9 +100,6 @@ export function handleMessage(
       return sendError(reply, code, httpMessage, err.toString());
     }
 
-    // Send message to all worker processes to recompute their new feed
-    sendToCluster('recompute-new-feed');
-    
     if (request.query && request.query.wait && request.query.wait === "true") {
       await newest.recompute(trie);
     } else {
