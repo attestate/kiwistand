@@ -1,7 +1,6 @@
 // @format
-import process, { env } from "process";
+import { env } from "process";
 import { resolve } from "path";
-import cluster from "cluster";
 
 import Piscina from "piscina";
 import fastq from "fastq";
@@ -52,28 +51,6 @@ export const commentCounts = new Map();
 export function addComment(storyId) {
   const count = commentCounts.get(storyId) || 0;
   commentCounts.set(storyId, count + 1);
-
-  sendCommentUpdateToWorkers(storyId);
-}
-
-function sendCommentUpdateToWorkers(storyId) {
-  if (!cluster.isPrimary) return;
-
-  for (const id in cluster.workers) {
-    cluster.workers[id].send({
-      type: "increment-comment-count",
-      storyId,
-    });
-  }
-}
-
-if (cluster.worker) {
-  process.on("message", (message) => {
-    if (message.type === "increment-comment-count") {
-      addComment(message.storyId);
-      log(`Worker ${process.pid} updated comment count for ${message.storyId}`);
-    }
-  });
 }
 //
 // TODO: This function would benefit from constraining operation only to
