@@ -1,0 +1,110 @@
+name: Node.js CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x]
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+        
+    - name: Cache Node.js modules
+      uses: actions/cache@v3
+      with:
+        path: |
+          node_modules
+          src/web/node_modules
+          ~/.npm
+        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Run tests
+      run: npm run test
+      env: 
+        HTTP_MESSAGES_MAX_PAGE_SIZE: "500"
+        
+    - name: Build frontend bundle for analysis
+      run: |
+        cd src/web
+        npm ci
+        npm run build
+    
+    - name: Analyze bundle size
+      id: bundle-analysis
+      run: |
+        cd src/web
+        npx bundlesize
+        echo "BUNDLE_SIZE=$(du -sh dist | cut -f1)" >> $GITHUB_ENV
+        
+    - name: Performance testing
+      id: performance-test
+      run: |
+        # Install performance testing tool
+        npm install -g lighthouse
+        
+        # Start server in background
+        npm run dev:bootstrap &
+        SERVER_PID=$!
+        
+        # Wait for server to be ready
+        sleep 10
+        
+        # Run lighthouse performance test
+        lighthouse http://localhost:3000 --output json --output-path ./lighthouse-report.json --chrome-flags="--headless --no-sandbox"
+        
+        # Extract performance score
+        PERFORMANCE_SCORE=$(jq '.categories.performance.score * 100' lighthouse-report.json)
+        echo "PERFORMANCE_SCORE=$PERFORMANCE_SCORE" >> $GITHUB_ENV
+        
+        # Kill server
+        kill $SERVER_PID
+        
+    - name: Comment on PR
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v6
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const bundleSize = process.env.BUNDLE_SIZE;
+          const perfScore = process.env.PERFORMANCE_SCORE;
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: `## Build Results
+            
+            ### Bundle Size: ${bundleSize}
+            
+            ### Performance Score: ${perfScore}/100
+            
+            [View full Lighthouse report in the workflow artifacts](${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID})
+            `
+          });
+          
+    - name: Save reports as artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: performance-reports
+        path: |
+          lighthouse-report.json
+          src/web/dist/stats.json
