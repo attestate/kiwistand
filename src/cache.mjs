@@ -367,33 +367,31 @@ export function getHashesPerDateRange(startDate, endDate) {
   return { dates, counts };
 }
 
-export function countOutbounds(url, hours = 24) {
+export function countOutbounds(url) {
   const normalizedUrl = normalizeUrl(url, {
     stripWWW: false,
   });
-  const cutoffTimestamp = Math.floor(Date.now() / 1000 - hours * 60 * 60);
 
   const query = db.prepare(`
      SELECT COUNT(DISTINCT hash) AS uniqueHashCount
      FROM fingerprints 
-     WHERE url = ? AND timestamp >= ?
+     WHERE url = ?
    `);
-  const result = query.get(normalizedUrl, cutoffTimestamp);
+  const result = query.get(normalizedUrl);
   return result.uniqueHashCount;
 }
 
-export function countImpressions(url, hours = 24) {
+export function countImpressions(url) {
   const normalizedUrl = normalizeUrl(url, {
     stripWWW: false,
   });
-  const cutoffTimestamp = Math.floor(Date.now() / 1000 - hours * 60 * 60);
 
   const query = db.prepare(`
      SELECT COUNT(DISTINCT hash) AS uniqueHashCount
      FROM impressions 
-     WHERE url = ? AND timestamp >= ?
+     WHERE url = ?
    `);
-  const result = query.get(normalizedUrl, cutoffTimestamp);
+  const result = query.get(normalizedUrl);
   return result ? result.uniqueHashCount : 0;
 }
 
@@ -442,13 +440,13 @@ export function calculateKarmaFromDB(identity, endDate) {
   try {
     let dateFilter = "";
     let params = [identity];
-    
+
     if (endDate) {
       const endTimestamp = Math.floor(endDate.getTime() / 1000);
       dateFilter = "AND s.timestamp <= ?";
       params.push(endTimestamp);
     }
-    
+
     // Count submissions
     const submissionsQuery = `
       SELECT COUNT(*) as count, href
@@ -456,35 +454,35 @@ export function calculateKarmaFromDB(identity, endDate) {
       WHERE s.identity = ? ${dateFilter}
       GROUP BY href
     `;
-    
+
     const submissions = db.prepare(submissionsQuery).all(params);
-    
+
     // For each submission, count upvotes
     let totalKarma = 0;
-    
+
     for (const submission of submissions) {
       // Each submission gives 1 base point
       totalKarma += 1;
-      
+
       // Count upvotes for this submission
       let upvotesQuery = `
         SELECT COUNT(*) as count
         FROM upvotes u
         WHERE u.href = ?
       `;
-      
+
       const upvoteParams = [submission.href];
-      
+
       // Add timestamp filter if needed
       if (endDate) {
         upvotesQuery += " AND u.timestamp <= ?";
         upvoteParams.push(Math.floor(endDate.getTime() / 1000));
       }
-      
+
       const upvotes = db.prepare(upvotesQuery).get(upvoteParams);
       totalKarma += upvotes.count;
     }
-    
+
     return totalKarma;
   } catch (err) {
     log(`Error calculating karma from DB: ${err.toString()}`);
@@ -524,11 +522,11 @@ export function getKarmaRanking() {
       
       ORDER BY karma DESC
     `;
-    
+
     const results = db.prepare(query).all();
-    return results.map(row => ({
+    return results.map((row) => ({
       identity: row.identity,
-      karma: row.karma
+      karma: row.karma,
     }));
   } catch (err) {
     log(`Error in getKarmaRanking: ${err.toString()}`);
@@ -688,7 +686,7 @@ export function getAllComments() {
 
 export function getReactionsToComments(identity) {
   const threeWeeksAgo = Math.floor(Date.now() / 1000) - 1814400;
-  
+
   // Get reactions to the user's comments
   const reactions = db
     .prepare(
@@ -710,7 +708,8 @@ export function getReactionsToComments(identity) {
         r.timestamp >= ?
       ORDER BY
         r.timestamp DESC
-    `)
+    `,
+    )
     .all(identity, identity, threeWeeksAgo)
     .map((reaction) => {
       const commentId = reaction.comment_id;
@@ -723,7 +722,7 @@ export function getReactionsToComments(identity) {
         commentId,
         submissionId,
         index: reaction.id.split("0x")[1],
-        type: "reaction"
+        type: "reaction",
       };
     });
 

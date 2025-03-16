@@ -311,7 +311,17 @@ export async function topstories(leaves) {
         const upvoteRatio = meanUpvoteRatio(leaves);
         const storyRatio = calculateUpvoteClickRatio(story);
         const upvotePerformance = storyRatio / upvoteRatio;
-        score *= upvotePerformance;
+
+        const clicks = countOutbounds(story.href);
+        const sampleSize = story.upvotes + clicks;
+        const confidenceFactor = Math.pow(
+          Math.min(1, sampleSize / 1_000_000),
+          2,
+        );
+
+        const adjustedPerformance = upvotePerformance * confidenceFactor;
+
+        score *= adjustedPerformance;
       } catch (e) {
         // If Upvote-Click ratio can't be calculated, we just keep the current
         // score
@@ -321,17 +331,32 @@ export async function topstories(leaves) {
       try {
         const meanCtrValue = meanCTR(leaves);
         const ctr = calculateCTR(story);
-        // Apply CTR performance relative to mean
         const ctrPerformance = ctr / meanCtrValue;
-        score *= ctrPerformance;
+
+        const impressions = countImpressions(story.href);
+        const confidenceFactor = Math.pow(
+          Math.min(1, impressions / 1_000_000),
+          2,
+        );
+
+        const adjustedPerformance = ctrPerformance * confidenceFactor;
+
+        score *= adjustedPerformance;
       } catch (e) {
         // If CTR can't be calculated, we just keep the current score
       }
 
+      const scoreBeforeDecay = score;
+      const storyAgeInDays = itemAge(story.timestamp) / (60 * 24); // Convert minutes to days
       const decay = Math.sqrt(itemAge(story.timestamp));
-      score = score / Math.pow(decay, 6.5);
 
-      story.score = score;
+      if (storyAgeInDays < 5) {
+        score = score / Math.pow(decay, 5);
+      } else {
+        score = score / Math.pow(decay, storyAgeInDays);
+      }
+
+      story.score = score * 10000000;
       return story;
     })
     .sort((a, b) => b.score - a.score);
@@ -382,8 +407,17 @@ export async function index(
   leaves = moderation.moderate(leaves, policy, path);
 
   let storyPromises = await topstories(leaves);
-  const threshold = 1;
-  storyPromises = storyPromises.filter(({ upvotes }) => upvotes > threshold);
+  storyPromises = storyPromises.filter(({ index, upvotes, timestamp }) => {
+    const storyAgeInDays = itemAge(timestamp) / (60 * 24);
+    const commentCount = store.commentCounts.get(`kiwi:0x${index}`) || 0;
+    if (page === 0 && storyAgeInDays > 7) {
+      return false;
+    } else if (storyAgeInDays === 0) {
+      return upvotes > 1;
+    } else if (storyAgeInDays > 1) {
+      return upvotes + commentCount > 3;
+    }
+  });
 
   if (appCuration) {
     const sheetName = "app";
