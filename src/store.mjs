@@ -49,11 +49,13 @@ export const commentCounts = new Map();
 
 // TODO: This function is badly named, it should be renamed to
 // "incrementCommentsCount"
-export function addComment(storyId) {
+export function addComment(storyId, sync = false) {
   const count = commentCounts.get(storyId) || 0;
   commentCounts.set(storyId, count + 1);
 
-  sendCommentUpdateToWorkers(storyId);
+  if (sync) {
+    sendCommentUpdateToWorkers(storyId);
+  }
 }
 
 function sendCommentUpdateToWorkers(storyId) {
@@ -70,7 +72,8 @@ function sendCommentUpdateToWorkers(storyId) {
 if (cluster.worker) {
   process.on("message", (message) => {
     if (message.type === "increment-comment-count") {
-      addComment(message.storyId);
+      const sync = false;
+      addComment(message.storyId, sync);
       log(`Worker ${process.pid} updated comment count for ${message.storyId}`);
     }
   });
@@ -113,7 +116,8 @@ export async function cache(upvotes, comments) {
   // Process comments with periodic yields
   for (let i = 0; i < comments.length; i++) {
     const { href, title, identity } = comments[i];
-    addComment(href);
+    const sync = false;
+    addComment(href, sync);
     if (isReactionComment(title)) {
       const reactionMarker = upvoteID(identity, href, "reaction");
       passesReaction(reactionMarker);
@@ -436,7 +440,8 @@ async function atomicPut(trie, message, identity, accounts, delegations) {
     }
     // TODO: Remove and replace with SQLite implementation
     if (message.type === "comment") {
-      addComment(message.href);
+      const syncCount = true;
+      addComment(message.href, syncCount);
     }
   } catch (err) {
     if (message.type !== "amplify") {
