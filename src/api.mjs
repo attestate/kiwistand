@@ -109,7 +109,8 @@ export function handleMessage(
     let submission;
     if (message.type === "amplify") {
       try {
-        await generateStory(`0x${index}`);
+        const wait = true;
+        await generateStory(`0x${index}`, wait);
       } catch (err) {
         // NOTE: This can fail if the message is an upvote, not a submission.
       }
