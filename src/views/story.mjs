@@ -228,20 +228,26 @@ export default async function (trie, theme, index, value, referral) {
     isOriginal,
   };
 
+  const upvoterProfileResults = await Promise.allSettled(
+    story.upvoters.map((upvoter) => ens.resolve(upvoter.identity)),
+  );
+
   let profiles = [];
   let avatars = [];
-  for await (let upvoter of story.upvoters) {
-    const profile = await ens.resolve(upvoter.identity);
-    profiles.push({
-      ...upvoter,
-      name: profile.displayName,
-      avatar: profile.safeAvatar ? profile.safeAvatar : "/pfp.png",
-      address: profile.address,
-    });
-    if (profile.safeAvatar) {
-      avatars.push(profile.safeAvatar);
+  story.upvoters.forEach((upvoter, index) => {
+    if (upvoterProfileResults[index].status === "fulfilled") {
+      const profile = upvoterProfileResults[index].value;
+      profiles.push({
+        ...upvoter,
+        name: profile.displayName,
+        avatar: profile.safeAvatar ? profile.safeAvatar : "/pfp.png",
+        address: profile.address,
+      });
+      if (profile.safeAvatar) {
+        avatars.push(profile.safeAvatar);
+      }
     }
-  }
+  });
 
   story.comments = moderation.flag(story.comments, policy);
 
@@ -305,18 +311,23 @@ export default async function (trie, theme, index, value, referral) {
       : "Kiwi News is the prime feed for hacker engineers building a decentralized future. All our content is handpicked and curated by crypto veterans.";
   const recentJoiners = await registry.recents();
   const slug = getSlug(value.title);
-  const link = `https://news.kiwistand.com/stories/${slug}?index=0x${index}${referral ? `&referral=${referral}` : ""}`;
+  const link = `https://news.kiwistand.com/stories/${slug}?index=0x${index}${
+    referral ? `&referral=${referral}` : ""
+  }`;
   const canonicalUrl = `https://news.kiwistand.com/stories/${slug}?index=0x${index}`;
-  
+
   return html`
     <html lang="en" op="news">
       <head>
         <base href="/" />
-        ${head.custom(ogImage, value.title, ogDescription, undefined, [
-          "/",
-          "/new?cached=true",
-          "/submit",
-        ], canonicalUrl)}
+        ${head.custom(
+          ogImage,
+          value.title,
+          ogDescription,
+          undefined,
+          ["/", "/new?cached=true", "/submit"],
+          canonicalUrl,
+        )}
         ${frame.header(referral, link, ogImage)}
       </head>
       <body
