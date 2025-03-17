@@ -29,7 +29,7 @@ import { EIP712_MESSAGE } from "./constants.mjs";
 import { elog } from "./utils.mjs";
 import * as messages from "./topics/messages.mjs";
 import { newWalk } from "./WalkController.mjs";
-import { purgeCache } from "./cloudflarePurge.mjs";
+import { purgeCache, invalidateActivityCaches } from "./cloudflarePurge.mjs";
 import { insertMessage, isReactionComment } from "./cache.mjs";
 import { triggerNotification } from "./subscriptions.mjs";
 
@@ -407,13 +407,18 @@ async function atomicPut(trie, message, identity, accounts, delegations) {
         const [, commentIndex] = message.href.split(":");
         // Purge the main stories page synchronously so the user can see their
         // comment
+        // FIX: At the moment, when the message is an emoji reaction then we'll
+        // invalidate a non existent comment index, but for now that's fine.
         await purgeCache(
           `https://news.kiwistand.com/stories?index=${commentIndex}`,
         );
 
         leaf(trie, Buffer.from(commentIndex.substring(2), "hex"), JSON.parse)
           .then((story) => {
-            if (story && story.title) {
+            // NOTE: We must filter for comments of comments here because their
+            // title property is the comment content and not the title of the
+            // story.
+            if (story && story.title && story.type !== "comment") {
               return purgeCache(
                 `https://news.kiwistand.com/stories/${getSlug(
                   story.title,
@@ -432,6 +437,9 @@ async function atomicPut(trie, message, identity, accounts, delegations) {
           `https://news.kiwistand.com/api/v1/stories?index=${commentIndex}`,
         ).catch((err) => log(`Failed to purge Cloudflare cache: ${err}`));
       }
+
+      // Invalidate activity caches for all affected users (async)
+      invalidateActivityCaches(message);
 
       // Trigger notifications asynchronously with promise chain
       triggerNotification(enhancedMessage)

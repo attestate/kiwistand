@@ -530,19 +530,19 @@ const Bell = (props) => {
   const [lastUpdate, setLastUpdate] = useState(localLastUpdate);
   const [notificationCount, setNotificationCount] = useState(0);
   const [readNotifications, setReadNotifications] = useState(0);
-  const [cacheBuster, setCacheBuster] = useState("");
   const [isFull, setIsFull] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const link = isEligible
-    ? `/activity?address=${address}${
-        cacheBuster ? `&cacheBuster=${cacheBuster}` : ""
-      }&lastUpdate=${lastUpdate}`
-    : "/kiwipass-mint";
+  const link = isEligible ? `/activity?address=${address}` : "/kiwipass-mint";
 
   const handleClick = () => {
     setIsFull(!isFull);
-    if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {
-      document.getElementById('spinner-overlay').style.display='block';
+    if (
+      !event.ctrlKey &&
+      !event.metaKey &&
+      !event.shiftKey &&
+      event.button !== 1
+    ) {
+      document.getElementById("spinner-overlay").style.display = "block";
     }
   };
 
@@ -560,9 +560,6 @@ const Bell = (props) => {
         const newNotifications = notifications
           .filter((elem) => elem.timestamp > localLastUpdate)
           .sort((a, b) => b.timestamp - a.timestamp);
-        if (newNotifications.length > 0) {
-          setCacheBuster(`0x${newNotifications[0].message.index}`);
-        }
         setNotificationCount(newNotifications.length);
       } finally {
         setIsLoading(false);

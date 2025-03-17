@@ -219,6 +219,24 @@ export function isReactionComment(title) {
   return /^\p{Emoji}+$/u.test(trimmedTitle);
 }
 
+export function getCommentAuthorById(commentId) {
+  try {
+    const [, commentHex] = commentId.split(":");
+    
+    const query = `
+      SELECT identity 
+      FROM comments 
+      WHERE id = ?
+    `;
+    
+    const row = db.prepare(query).get(`kiwi:${commentHex}`);
+    return row ? row.identity : null;
+  } catch (error) {
+    log(`Error in getCommentAuthorById: ${error}`);
+    return null;
+  }
+}
+
 export async function getRecommendations(candidates, fingerprint, identity) {
   if (identity) {
     const commentedStories = db

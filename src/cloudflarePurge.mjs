@@ -1,5 +1,11 @@
 import fetch from "node-fetch";
 import log from "./logger.mjs";
+import normalizeUrl from "normalize-url";
+import {
+  getCommentAuthorById,
+  getSubmission,
+  isReactionComment,
+} from "./cache.mjs";
 
 /**
  * Purges Cloudflare cache for the specified URL.
@@ -38,4 +44,85 @@ export async function purgeCache(url) {
   }
   log(`Successfully purged: ${url}`);
   return data;
+}
+
+/**
+ * Invalidates activity page caches for all users affected by a new message.
+ * @param {Object} message - The message object
+ */
+export function invalidateActivityCaches(message) {
+  if (message.type === "amplify") {
+    invalidateUpvoteActivityCaches(message);
+  } else if (message.type === "comment") {
+    invalidateCommentActivityCaches(message);
+  }
+}
+
+function invalidateNotifications(address) {
+  purgeCache(`https://news.kiwistand.com/activity?address=${address}`).catch(
+    (err) => log(`Failed to purge activity cache: ${err}`),
+  );
+  purgeCache(
+    `https://news.kiwistand.com/api/v1/activity?address=${address}`,
+  ).catch((err) => log(`Failed to purge activity cache: ${err}`));
+}
+
+/**
+ * Invalidates activity caches when an upvote is added
+ */
+function invalidateUpvoteActivityCaches(message) {
+  try {
+    const normalizedHref = normalizeUrl(message.href, { stripWWW: false });
+
+    // Get the submission to find its author
+    const submission = getSubmission(null, normalizedHref);
+    if (submission && submission.identity) {
+      invalidateNotifications(submission.identity);
+    }
+  } catch (error) {
+    log(`Error invalidating upvote activity cache: ${error}`);
+  }
+}
+
+/**
+ * Invalidates activity caches when a comment or emoji reaction is added
+ */
+function invalidateCommentActivityCaches(message) {
+  try {
+    // For emoji reactions, find the comment author
+    if (isReactionComment(message.title)) {
+      const commentId = message.href;
+      const commentAuthor = getCommentAuthorById(commentId);
+
+      if (commentAuthor) {
+        invalidateNotifications(commentAuthor);
+      }
+      return;
+    }
+
+    // Regular comment - invalidate submission author and all previous commenters
+    const [, submissionIndex] = message.href.split(":");
+    const submission = getSubmission(submissionIndex);
+
+    if (!submission) return;
+
+    // Get all involved addresses (submission author + commenters)
+    const addresses = new Set();
+
+    if (submission.identity) {
+      addresses.add(submission.identity);
+    }
+
+    if (submission.comments && Array.isArray(submission.comments)) {
+      submission.comments.forEach((comment) => {
+        if (comment.identity) {
+          addresses.add(comment.identity);
+        }
+      });
+    }
+
+    addresses.forEach((address) => invalidateNotifications(address));
+  } catch (error) {
+    log(`Error invalidating comment activity cache: ${error}`);
+  }
 }
