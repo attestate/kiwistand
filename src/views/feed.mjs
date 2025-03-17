@@ -37,7 +37,7 @@ import log from "../logger.mjs";
 import { EIP712_MESSAGE } from "../constants.mjs";
 import Row, { addOrUpdateReferrer, extractDomain } from "./components/row.mjs";
 import * as karma from "../karma.mjs";
-import { metadata } from "../parser.mjs";
+import { cachedMetadata } from "../parser.mjs";
 
 import holders from "./holders.mjs";
 const formatedHolders = holders.map((a) => ethers.utils.getAddress(a));
@@ -363,28 +363,11 @@ export async function topstories(leaves) {
 }
 
 async function addMetadata(post) {
-  const url = post.href;
-  const metadataCacheKey = `metadata-${url}`;
-  const cached = cache.get(metadataCacheKey);
-  if (cached) {
-    if (!cached.image) return null;
-    return {
-      ...post,
-      metadata: cached,
-    };
-  }
-
-  const metadataTTLSeconds = 60 * 60; // 1 hour
-  const generateTitle = false;
-  const submittedTitle = post.title;
-  metadata(post.href, generateTitle, submittedTitle)
-    .then((result) => {
-      if (result && result.image) {
-        cache.set(metadataCacheKey, result, [metadataTTLSeconds]);
-      }
-    })
-    .catch((err) => log(`Metadata fetch failed: ${err.stack}`));
-  return null;
+  const data = cachedMetadata(post.href);
+  return {
+    ...post,
+    metadata: data,
+  };
 }
 
 export async function index(
