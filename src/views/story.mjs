@@ -31,7 +31,7 @@ import Row, { extractDomain } from "./components/row.mjs";
 import * as karma from "../karma.mjs";
 import { truncateName, getSlug } from "../utils.mjs";
 import { identityClassifier } from "./feed.mjs";
-import { metadata, render } from "../parser.mjs";
+import { render, cachedMetadata } from "../parser.mjs";
 import { getSubmission } from "../cache.mjs";
 import * as preview from "../preview.mjs";
 import * as frame from "../frame.mjs";
@@ -205,11 +205,7 @@ export default async function (trie, theme, index, value, referral) {
   }
   const path = "/stories";
 
-  const generateTitle = false;
-  let data;
-  try {
-    data = await metadata(value.href, generateTitle, value.title);
-  } catch (err) {}
+  let data = cachedMetadata(value.href, false, value.title);
 
   const policy = await moderation.getLists();
   const href = normalizeUrl(value.href, { stripWWW: false });

@@ -301,6 +301,32 @@ const getYTId = (url) => {
   }
 };
 
+export const cachedMetadata = (url, generateTitle = false, submittedTitle = undefined) => {
+  // Normalize the URL for consistent cache keys
+  const normalizedUrl = normalizeUrl(url, { stripWWW: false });
+  
+  // Check if we have the data in cache
+  if (cache.has(normalizedUrl)) {
+    // Return cached data without fetching again
+    return cache.get(normalizedUrl);
+  }
+  
+  // If not in cache, return empty object and trigger background fetch
+  metadata(url, generateTitle, submittedTitle)
+    .then(freshData => {
+      if (freshData) {
+        cache.set(normalizedUrl, freshData);
+        log(`Stored metadata in cache for ${normalizedUrl}`);
+      }
+    })
+    .catch(err => {
+      log(`Metadata fetch failed for ${url}: ${err}`);
+    });
+  
+  // Return empty object immediately since we have nothing cached
+  return {};
+};
+
 export const metadata = async (
   url,
   generateTitle = false,
