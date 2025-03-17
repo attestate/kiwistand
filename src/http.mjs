@@ -952,7 +952,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
 
     reply.header(
       "Cache-Control",
-      "public, s-maxage=300, max-age=300, stale-while-revalidate=31536000",
+      "public, s-maxage=86400, max-age=86400, stale-while-revalidate=31536000",
     );
     const code = 200;
     const httpMessage = "OK";
@@ -1059,7 +1059,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
     );
     reply.header(
       "Cache-Control",
-      "public, s-maxage=10, max-age=10, stale-while-revalidate=31536000",
+      "public, s-maxage=86400, max-age=86400, stale-while-revalidate=31536000",
     );
     return reply.status(200).type("text/html").send(content);
   });
