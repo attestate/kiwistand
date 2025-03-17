@@ -375,7 +375,7 @@ const CommentInput = (props) => {
       return;
     }
 
-    const wait = false;
+    const wait = true;
     const response = await API.send(value, signature, wait);
     if (response && response.status === "error") {
       toast.error("Failed to submit your comment.");
@@ -386,7 +386,6 @@ const CommentInput = (props) => {
     // produce a cache revalidation that then makes the new comment fastly
     // available to all other users.
     const path = `/stories?index=${index}`;
-    fetch(path);
     toast.success("Thanks for submitting your comment. Reloading...");
     posthog.capture("comment_created");
     localStorage.removeItem(`-kiwi-news-comment-${address}-${index}`);
