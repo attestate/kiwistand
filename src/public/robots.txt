@@ -2,3 +2,4 @@ User-agent: *
 Disallow: /outbound
 Disallow: /best?*domain=
 Disallow: /?*domain=
+Disallow: /*.eth?*
