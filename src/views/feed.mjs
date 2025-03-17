@@ -395,9 +395,9 @@ export async function index(
     const commentCount = store.commentCounts.get(`kiwi:0x${index}`) || 0;
     if (page === 0 && storyAgeInDays > 7) {
       return false;
-    } else if (storyAgeInDays === 0) {
+    } else if (storyAgeInDays <= 2) {
       return upvotes > 1;
-    } else if (storyAgeInDays > 1) {
+    } else if (storyAgeInDays > 2) {
       return upvotes + commentCount > 3;
     }
   });
