@@ -28,13 +28,14 @@ export async function purgeCache(url) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`
+      Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify(body)
+    body: JSON.stringify(body),
   });
   const data = await response.json();
   if (!data.success) {
     throw new Error(`Failed to purge cache: ${JSON.stringify(data)}`);
   }
+  log(`Successfully purged: ${url}`);
   return data;
 }

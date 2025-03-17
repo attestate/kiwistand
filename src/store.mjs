@@ -405,17 +405,29 @@ async function atomicPut(trie, message, identity, accounts, delegations) {
       // Only purge cache for comments, not for upvotes
       if (message.type === "comment") {
         const [, commentIndex] = message.href.split(":");
-        // Purge the main stories page synchronously so the user can see their comment
+        // Purge the main stories page synchronously so the user can see their
+        // comment
         await purgeCache(
           `https://news.kiwistand.com/stories?index=${commentIndex}`,
         );
 
-        // Purge other caches asynchronously
-        purgeCache(
-          `https://news.kiwistand.com/stories/${getSlug(
-            message.title,
-          )}?index=${commentIndex}`,
-        ).catch((err) => log(`Failed to purge Cloudflare cache: ${err}`));
+        leaf(trie, Buffer.from(commentIndex.substring(2), "hex"), JSON.parse)
+          .then((story) => {
+            if (story && story.title) {
+              return purgeCache(
+                `https://news.kiwistand.com/stories/${getSlug(
+                  story.title,
+                )}?index=${commentIndex}`,
+              );
+            }
+          })
+          .catch((err) =>
+            log(
+              `Failed to get story title for cache purging: ${err.toString()}`,
+            ),
+          );
+
+        // API endpoint purge can still be async
         purgeCache(
           `https://news.kiwistand.com/api/v1/stories?index=${commentIndex}`,
         ).catch((err) => log(`Failed to purge Cloudflare cache: ${err}`));
