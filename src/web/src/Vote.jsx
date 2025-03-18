@@ -140,9 +140,15 @@ const Vote = (props) => {
       setShowKarmaAnimation(false); // Hide animation on error
       return;
     } else if (response.status === "error") {
-      setHasUpvoted(false);
-      setShowKarmaAnimation(false); // Hide animation on error
-      toast.error(`Sad Kiwi :( "${response.details}"`);
+      if (response.details.includes("doesn't pass legitimacy criteria (duplicate)") ||
+          response.details.includes("probably submitted and accepted before")) {
+        // This is a duplicate vote - keep upvoted state true
+        toast.success("Your vote was already recorded! The feed may need to refresh to show it. 🥝");
+      } else {
+        setHasUpvoted(false);
+        setShowKarmaAnimation(false); // Hide animation on error
+        toast.error(`Sad Kiwi :( "${response.details}"`);
+      }
       return;
     }
   };
