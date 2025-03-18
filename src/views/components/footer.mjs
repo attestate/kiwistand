@@ -102,6 +102,7 @@ const footer = (theme, path) => html`
       style="display: flex; justify-content: center; align-items: center; gap: 0.5rem;"
     >
       <img
+        loading="lazy"
         src="/etherium.webp"
         alt="Powered by Ethereum"
         style="height: 4.5rem;"
