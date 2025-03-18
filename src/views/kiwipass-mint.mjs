@@ -122,6 +122,7 @@ export default async function (theme) {
                               style="background: #1B4332; border-radius: 4px; padding: 20px;"
                             >
                               <img
+                                loading="lazy"
                                 src="KiwiPass.webp"
                                 alt="Kiwi Pass"
                                 style="width: 100%; height: auto; display: block;"
@@ -152,6 +153,7 @@ export default async function (theme) {
                               .map(
                                 (data) => html`
                                   <img
+                                    loading="lazy"
                                     src="${data.avatarUrl}"
                                     alt="${data.address}"
                                     style="width: 32px; height: 32px; border: 1px dotted rgba(219, 105, 141, 0.5); border-radius: 2px;"

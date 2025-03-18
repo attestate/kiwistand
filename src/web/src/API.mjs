@@ -154,21 +154,13 @@ const abi = [
 ];
 
 export async function fetchPrice() {
-  const saleDetails = await readContract({
-    address,
-    abi,
-    functionName: "saleDetails",
-    chainId: optimism.id,
-  });
-
   let response;
+  const publicSalePrice = BigInt("3000000000000");
   try {
-    response = await fetch(`/api/v1/price`);
-    const data = await response.json();
-    const current = BigInt(data.data.price);
+    const current = BigInt("3000000000000");
     const prices = {
-      min: saleDetails.publicSalePrice + 1n,
-      minPlusFee: saleDetails.publicSalePrice + 777000000000000n,
+      min: publicSalePrice + 1n,
+      minPlusFee: publicSalePrice + 777000000000000n,
       current,
     };
     if (prices.current <= prices.min) {

@@ -8,7 +8,7 @@ import {
 import { Contract } from "@ethersproject/contracts";
 import { Provider } from "@ethersproject/providers";
 import { parseEther, formatEther } from "viem";
-import { mainnet, optimism, base, arbitrum } from "wagmi/chains";
+import { mainnet, optimism } from "wagmi/chains";
 import { Wallet } from "@ethersproject/wallet";
 import { getAddress } from "@ethersproject/address";
 import { eligible, create } from "@attestate/delegator2";
@@ -39,10 +39,7 @@ export async function prepare(key) {
   if (code !== "0x") throw new Error("Smart accounts aren't supported");
 
   const balance = {
-    mainnet: (await fetchBalance({ address, chainId: mainnet.id })).value,
     optimism: (await fetchBalance({ address, chainId: optimism.id })).value,
-    base: (await fetchBalance({ address, chainId: base.id })).value,
-    arbitrum: (await fetchBalance({ address, chainId: arbitrum.id })).value,
   };
 
   let price = await fetchPrice();
@@ -64,11 +61,6 @@ export async function prepare(key) {
   let preferredChainId = null;
   if (balance.optimism > price) {
     preferredChainId = optimism.id;
-  } else if (balance.mainnet > price) {
-    // NOTE: We used to refer people to mint on Ethereum L1, but nowadays
-    // most people have Ether on an L2 which makes bridging and minting far
-    // cheaper.
-    // preferredChainId = mainnet.id;
   }
   if (!preferredChainId) {
     let error = `Need at least ${formatEther(price)} ETH on Optimism`;
@@ -102,26 +94,7 @@ export async function prepare(key) {
   }
 
   let config;
-  if (preferredChainId === mainnet.id) {
-    const isCreation = false;
-    const gasLimit = 280_000;
-    const opProvider = getProvider({ chainId: optimism.id });
-    const contract = new Contract(addressDelegator, abiDelegator, opProvider);
-    const data = contract.interface.encodeFunctionData("setup", [
-      payload,
-      recipients,
-      values,
-    ]);
-
-    config = await prepareWriteContract({
-      address: optimismPortal,
-      abi: abiOptimismPortal,
-      functionName: "depositTransaction",
-      args: [addressDelegator, price, gasLimit, isCreation, data],
-      value: price,
-      chainId: mainnet.id,
-    });
-  } else if (preferredChainId === optimism.id) {
+  if (preferredChainId === optimism.id) {
     config = await prepareWriteContract({
       address: addressDelegator,
       abi: abiDelegator,
@@ -237,7 +210,9 @@ const BuyButton = (props) => {
             const newConfig = await prepare(key);
             if (newConfig) {
               // Only show toast after successful prepare
-              toast.success(`We've just sent you some ETH to cover your transaction fees!`);
+              toast.success(
+                `We've just sent you some ETH to cover your transaction fees!`,
+              );
               setConfig(newConfig);
               setError(null);
               setIsFundingInProgress(false);
@@ -280,7 +255,7 @@ const BuyButton = (props) => {
           setError(new Error("Waiting for network connection..."));
           return;
         }
-        
+
         const config = await prepare(key);
         setConfig(config);
         setError(null);
