@@ -295,7 +295,10 @@ const row = (
         !knownBadOgImages.includes(story.metadata.image)) ||
       (isCloudflareImage(story.href) &&
         !interactive &&
-        (path === "/" || path === "/stories" || path === "/new" || path === "/best"));
+        (path === "/" ||
+          path === "/stories" ||
+          path === "/new" ||
+          path === "/best"));
     const displayCommentPreview =
       story.lastComment &&
       (story.lastComment.identity.ens ||
@@ -335,7 +338,11 @@ const row = (
                         : i > 2
                         ? 'loading="lazy"'
                         : ""}
-                      style="aspect-ratio: 2 / 1; object-fit:cover; margin: 0 11px; border-radius: 2px; width: calc(100% - 24px);"
+                      style="aspect-ratio: 2 / 1; object-fit:${isCloudflareImage(
+                        story.href,
+                      )
+                        ? "contain"
+                        : "cover"}; margin: 0 11px; border-radius: 2px; width: calc(100% - 24px);"
                       src="${isCloudflareImage(story.href)
                         ? DOMPurify.sanitize(
                             story.href.includes("?")
@@ -443,7 +450,11 @@ const row = (
                           : i > 2
                           ? 'loading="lazy"'
                           : ""}
-                        style="max-height: 61px; border: var(--border-line); border-radius: 2px; width: 110px; object-fit: cover;"
+                        style="max-height: 61px; border: var(--border-line); border-radius: 2px; width: 110px; object-fit: ${isCloudflareImage(
+                          story.href,
+                        )
+                          ? "contain"
+                          : "cover"};"
                         src="${isCloudflareImage(story.href)
                           ? DOMPurify.sanitize(
                               story.href.includes("?")
@@ -465,7 +476,9 @@ const row = (
                         href="${path === "/submit" || path === "/demonstration"
                           ? "javascript:void(0);"
                           : isCloudflareImage(story.href) && story.index
-                          ? `/stories/${getSlug(story.title)}?index=0x${story.index}`
+                          ? `/stories/${getSlug(story.title)}?index=0x${
+                              story.index
+                            }`
                           : addOrUpdateReferrer(
                               DOMPurify.sanitize(story.href),
                               story.identity,
@@ -482,7 +495,9 @@ const row = (
                         data-story-link="/stories/${getSlug(
                           story.title,
                         )}?index=0x${story.index}"
-                        target="${path === "/submit" || path === "/demonstration" || (isCloudflareImage(story.href) && story.index)
+                        target="${path === "/submit" ||
+                        path === "/demonstration" ||
+                        (isCloudflareImage(story.href) && story.index)
                           ? "_self"
                           : "_blank"}"
                         class="story-link"
