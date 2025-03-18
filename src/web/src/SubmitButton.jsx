@@ -35,8 +35,9 @@ function safeExtractDomain(link) {
 }
 
 const UrlInput = (props) => {
-  const { url, setURL } = props;
+  const { url, setURL, toast } = props;
   const [checkedURLs, setCheckedURLs] = useState(new Set());
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     if (
@@ -46,6 +47,7 @@ const UrlInput = (props) => {
       fetchMetadata(url);
     }
   }, [url]);
+
   const fetchMetadata = async (url) => {
     try {
       const response = await fetch(`/api/v1/metadata?url=${url}`);
@@ -57,6 +59,55 @@ const UrlInput = (props) => {
       }
     } catch (error) {
       console.error("Error fetching metadata:", error);
+    }
+  };
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Only allow image files
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file");
+      return;
+    }
+
+    setIsUploading(true);
+
+    try {
+      // Step 1: Get upload URL from our backend
+      const tokenResponse = await fetch("/api/v1/image-upload-token");
+      if (!tokenResponse.ok) throw new Error("Failed to get upload token");
+
+      const tokenData = await tokenResponse.json();
+      const { uploadURL } = tokenData.data;
+
+      // Step 2: Upload file directly to Cloudflare
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const uploadResponse = await fetch(uploadURL, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!uploadResponse.ok) throw new Error("Failed to upload image");
+
+      // Step 3: Generate the final image URL
+      // The URL pattern for Cloudflare Images is:
+      // https://imagedelivery.net/[account hash]/[image id]/[variant]
+      const imageId = tokenData.data.id;
+      const accountHash = uploadURL.split("/").slice(-2)[0];
+      const imageUrl = `https://imagedelivery.net/${accountHash}/${imageId}/public`;
+
+      // Set the URL in the input field
+      setURL(imageUrl);
+      toast.success("Image uploaded successfully");
+    } catch (error) {
+      console.error("Upload error:", error);
+      toast.error("Error uploading image: " + error.message);
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -91,7 +142,7 @@ const UrlInput = (props) => {
                 ? "black"
                 : "#828282",
 
-            flexGrow: 8,
+            width: "80%",
             padding: "12px 16px",
             fontSize: "16px",
             boxSizing: "border-box",
@@ -101,6 +152,33 @@ const UrlInput = (props) => {
           value={url}
           onChange={(e) => setURL(e.target.value)}
         />
+        <input
+          type="file"
+          id="imageUpload"
+          accept="image/*"
+          onChange={handleImageUpload}
+          style={{ display: "none" }}
+        />
+        <label
+          htmlFor="imageUpload"
+          style={{
+            marginLeft: "10px",
+            padding: "0 16px",
+            backgroundColor: "#000",
+            color: "#fff",
+            borderRadius: "2px",
+            cursor: "pointer",
+            fontSize: "14px",
+            height: "50px" /* Match exactly the height of the URL input */,
+            boxSizing: "border-box",
+            display: "flex",
+            textAlign: "center",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          {isUploading ? "Uploading..." : "Upload Image"}
+        </label>
       </div>
     </div>
   );
@@ -129,6 +207,14 @@ const SubmitButton = (props) => {
     const embedPreview = document.getElementById("embed-preview");
 
     const canonicalURL = url;
+
+    if (canonicalURL.includes("imagedelivery.net")) {
+      embedPreview.innerHTML = `<img src="${DOMPurify.sanitize(
+        canonicalURL.includes('?') ? canonicalURL : canonicalURL + '?format=auto&width=800&quality=80'
+      )}" style="border: 1px solid black; max-width: 100%; max-height: 500px; display: block; margin: 0 auto;" alt="Uploaded image" />`;
+      return;
+    }
+
     if (canonicalURL) {
       fetch(`/api/v1/parse?url=${encodeURIComponent(canonicalURL)}`)
         .then((response) => {
@@ -143,7 +229,11 @@ const SubmitButton = (props) => {
         .catch((error) => {
           console.log("Fetch error: ", error);
         });
-      fetch(`/api/v1/metadata?url=${encodeURIComponent(canonicalURL)}&generateTitle=true`)
+      fetch(
+        `/api/v1/metadata?url=${encodeURIComponent(
+          canonicalURL,
+        )}&generateTitle=true`,
+      )
         .then((response) => {
           if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -861,7 +951,7 @@ const Form = (props) => {
   return (
     <WagmiConfig config={client}>
       <RainbowKitProvider chains={chains}>
-        <UrlInput url={url} setURL={setURL} />
+        <UrlInput url={url} setURL={setURL} toast={toast} />
         <SubmitButton {...props} url={url} />
       </RainbowKitProvider>
     </WagmiConfig>

@@ -10,6 +10,7 @@ import { readFile } from "fs/promises";
 import path, { basename } from "path";
 import cluster from "cluster";
 import os from "os";
+import Cloudflare from "cloudflare";
 
 import morgan from "morgan";
 import express from "express";
@@ -1715,6 +1716,71 @@ export async function launch(trie, libp2p, isPrimary = true) {
   app.post("/api/v1/faucet", async (request, reply) => {
     reply.header("Cache-Control", "no-cache");
     return handleFaucetRequest(request, reply);
+  });
+
+  app.get("/api/v1/image-upload-token", async (request, reply) => {
+    reply.header("Cache-Control", "no-cache");
+
+    // Check if we have the required environment variables
+    if (!env.CF_API_TOKEN || !env.CF_ACCOUNT_ID) {
+      log(
+        `Missing required environment variables: CF_API_TOKEN or CF_ACCOUNT_ID`,
+      );
+      const code = 500;
+      const httpMessage = "Internal Server Error";
+      const details = "Missing Cloudflare API credentials";
+      return sendError(reply, code, httpMessage, details);
+    }
+
+    // Create Cloudflare client
+    let client;
+    try {
+      client = new Cloudflare({
+        apiToken: env.CF_API_TOKEN,
+      });
+      log(
+        `Successfully created Cloudflare client for account ID: ${env.CF_ACCOUNT_ID}`,
+      );
+    } catch (err) {
+      log(`Error creating Cloudflare client: ${err.toString()}`);
+      const code = 500;
+      const httpMessage = "Internal Server Error";
+      const details = "Failed to initialize Cloudflare client";
+      return sendError(reply, code, httpMessage, details);
+    }
+
+    // Request a direct upload URL
+    let directUpload;
+    try {
+      directUpload = await client.images.v2.directUploads.create({
+        account_id: env.CF_ACCOUNT_ID,
+      });
+      log(`Successfully requested direct upload URL from Cloudflare`);
+    } catch (err) {
+      log(`Error requesting direct upload URL: ${err.toString()}`);
+      const code = 500;
+      const httpMessage = "Internal Server Error";
+      const details = "Failed to request upload URL from Cloudflare";
+      return sendError(reply, code, httpMessage, details);
+    }
+
+    // Validate the response
+    if (!directUpload || !directUpload.uploadURL) {
+      log(`Invalid response from Cloudflare - missing uploadURL`);
+      const code = 500;
+      const httpMessage = "Internal Server Error";
+      const details = "Received invalid response from Cloudflare";
+      return sendError(reply, code, httpMessage, details);
+    }
+
+    // Return successful response
+    const code = 200;
+    const httpMessage = "OK";
+    const details = "Generated upload URL";
+    return sendStatus(reply, code, httpMessage, details, {
+      uploadURL: directUpload.uploadURL,
+      id: directUpload.id,
+    });
   });
 
   server.listen(env.HTTP_PORT, () =>

@@ -99,6 +99,32 @@ export default async function submit(theme, url = "", title = "") {
                             style="${inputStyle}"
                             value="${url}"
                           />
+                          <input
+                            type="file"
+                            id="imageUpload"
+                            accept="image/*"
+                            style="display: none;"
+                          />
+                          <label
+                            for="imageUpload"
+                            style="
+                              margin-left: 10px;
+                              padding: 0 16px;
+                              background-color: #000;
+                              color: #fff;
+                              border-radius: 2px;
+                              cursor: pointer;
+                              font-size: 14px;
+                              height: 50px;
+                              box-sizing: border-box;
+                              display: flex;
+                              align-items: center;
+                              justify-content: center;
+                              text-align: center;
+                            "
+                          >
+                            Upload Image
+                          </label>
                         </div>
                       </div>
                       <div
@@ -168,7 +194,7 @@ const labelStyle = `
    font-size: 16px;
  `;
 const inputStyle = `
-   width: 100%;
+   width: 80%;
    padding: 12px 16px;
    font-size: 16px;
    box-sizing: border-box;

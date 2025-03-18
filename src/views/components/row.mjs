@@ -244,6 +244,11 @@ const knownBadOgImages = [
   "https://s.turbifycdn.com/aah/paulgraham/essays-5.gif",
 ];
 
+// Helper function to detect Cloudflare Images URLs
+const isCloudflareImage = (url) => {
+  return url && typeof url === "string" && url.includes("imagedelivery.net");
+};
+
 const row = (
   start = 0,
   path,
@@ -282,12 +287,15 @@ const row = (
     const extractedDomain = extractDomain(DOMPurify.sanitize(story.href));
     const isad = !!story.collateral;
     const displayMobileImage =
-      story.metadata &&
-      story.metadata.image &&
-      !interactive &&
-      (path === "/" || path === "/stories") &&
-      !blockedOGImageDomains.includes(extractedDomain) &&
-      !knownBadOgImages.includes(story.metadata.image);
+      (story.metadata &&
+        story.metadata.image &&
+        !interactive &&
+        (path === "/" || path === "/stories") &&
+        !blockedOGImageDomains.includes(extractedDomain) &&
+        !knownBadOgImages.includes(story.metadata.image)) ||
+      (isCloudflareImage(story.href) &&
+        !interactive &&
+        (path === "/" || path === "/stories" || path === "/new" || path === "/best"));
     const displayCommentPreview =
       story.lastComment &&
       (story.lastComment.identity.ens ||
@@ -322,15 +330,28 @@ const row = (
                 >
                   <div style="position: relative;">
                     <img
-                      ${path === "/stories" ? 'loading="lazy"' : i > 2 ? 'loading="lazy"' : ""}
+                      ${path === "/stories"
+                        ? 'loading="lazy"'
+                        : i > 2
+                        ? 'loading="lazy"'
+                        : ""}
                       style="aspect-ratio: 2 / 1; object-fit:cover; margin: 0 11px; border-radius: 2px; width: calc(100% - 24px);"
-                      src="${DOMPurify.sanitize(story.metadata.image)}"
+                      src="${isCloudflareImage(story.href)
+                        ? DOMPurify.sanitize(
+                            story.href.includes("?")
+                              ? story.href
+                              : story.href +
+                                  "?format=auto&width=600&quality=80&fit=cover",
+                          )
+                        : DOMPurify.sanitize(story.metadata.image)}"
                     />
-                    <div
-                      style="position: absolute; bottom: 8px; left: 19px; background: rgba(255,255,255,0.9); padding: 2px 6px; border-radius: 2px; font-size: 9pt;"
-                    >
-                      ${extractedDomain}
-                    </div>
+                    ${isCloudflareImage(story.href)
+                      ? null
+                      : html`<div
+                          style="position: absolute; bottom: 8px; left: 19px; background: rgba(255,255,255,0.9); padding: 2px 6px; border-radius: 2px; font-size: 9pt;"
+                        >
+                          ${extractedDomain}
+                        </div>`}
                   </div>
                 </a>`
               : null}
@@ -392,12 +413,13 @@ const row = (
                 class="content-container"
                 style="display: flex; align-items: start; flex-grow: 1; gap: 8px;"
               >
-                ${story.metadata &&
-                story.metadata.image &&
-                !interactive &&
-                !blockedOGImageDomains.includes(extractedDomain) &&
-                !isSubstackDomain(extractedDomain) &&
-                !knownBadOgImages.includes(story.metadata.image)
+                ${(story.metadata &&
+                  story.metadata.image &&
+                  !interactive &&
+                  !blockedOGImageDomains.includes(extractedDomain) &&
+                  !isSubstackDomain(extractedDomain) &&
+                  !knownBadOgImages.includes(story.metadata.image)) ||
+                (isCloudflareImage(story.href) && !interactive)
                   ? html`<a
                       data-no-instant
                       href="${addOrUpdateReferrer(
@@ -416,9 +438,20 @@ const row = (
                       )}', event.currentTarget.getAttribute('target'));"
                     >
                       <img
-                        ${path === "/stories" ? 'loading="lazy"' : i > 2 ? 'loading="lazy"' : ""}
+                        ${path === "/stories"
+                          ? 'loading="lazy"'
+                          : i > 2
+                          ? 'loading="lazy"'
+                          : ""}
                         style="max-height: 61px; border: var(--border-line); border-radius: 2px; width: 110px; object-fit: cover;"
-                        src="${DOMPurify.sanitize(story.metadata.image)}"
+                        src="${isCloudflareImage(story.href)
+                          ? DOMPurify.sanitize(
+                              story.href.includes("?")
+                                ? story.href
+                                : story.href +
+                                    "?format=auto&width=220&quality=80&fit=cover",
+                            )
+                          : DOMPurify.sanitize(story.metadata.image)}"
                     /></a>`
                   : null}
                 <div
@@ -431,22 +464,25 @@ const row = (
                         data-no-instant
                         href="${path === "/submit" || path === "/demonstration"
                           ? "javascript:void(0);"
+                          : isCloudflareImage(story.href) && story.index
+                          ? `/stories/${getSlug(story.title)}?index=0x${story.index}`
                           : addOrUpdateReferrer(
                               DOMPurify.sanitize(story.href),
                               story.identity,
                             )}"
-                        onclick="event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${addOrUpdateReferrer(
-                          DOMPurify.sanitize(story.href),
-                          story.identity,
-                        )}')); window.open('${addOrUpdateReferrer(
-                          DOMPurify.sanitize(story.href),
-                          story.identity,
-                        )}', event.currentTarget.getAttribute('target'));"
+                        onclick="${isCloudflareImage(story.href) && story.index
+                          ? "if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
+                          : `event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${addOrUpdateReferrer(
+                              DOMPurify.sanitize(story.href),
+                              story.identity,
+                            )}')); window.open('${addOrUpdateReferrer(
+                              DOMPurify.sanitize(story.href),
+                              story.identity,
+                            )}', event.currentTarget.getAttribute('target'));`}"
                         data-story-link="/stories/${getSlug(
                           story.title,
                         )}?index=0x${story.index}"
-                        target="${path === "/submit" ||
-                        path === "/demonstration"
+                        target="${path === "/submit" || path === "/demonstration" || (isCloudflareImage(story.href) && story.index)
                           ? "_self"
                           : "_blank"}"
                         class="story-link"
@@ -569,7 +605,8 @@ const row = (
                             )}
                           `}
                       ${!interactive &&
-                      (path === "/" || path === "/new" || path === "/best")
+                      (path === "/" || path === "/new" || path === "/best") &&
+                      !isCloudflareImage(story.href)
                         ? html`
                             <span class="domain-text">
                               <span style="opacity:0.6"> • </span>
