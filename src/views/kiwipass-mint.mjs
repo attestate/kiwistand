@@ -122,7 +122,7 @@ export default async function (theme) {
                               style="background: #1B4332; border-radius: 4px; padding: 20px;"
                             >
                               <img
-                                src="KiwiPass.png"
+                                src="KiwiPass.webp"
                                 alt="Kiwi Pass"
                                 style="width: 100%; height: auto; display: block;"
                               />
