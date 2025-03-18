@@ -29,17 +29,22 @@ function loadManifest() {
 let scripts;
 if (env.NODE_ENV === "production") {
   const manifest = loadManifest();
-  
+
   // Check if CSS path exists in the manifest
-  const cssLink = manifest["src/main.css"] && manifest["src/main.css"].css 
-    ? html`<link rel="stylesheet" href="${manifest["src/main.css"].css}" />` 
-    : '';
-  
+  const cssLink =
+    manifest["src/main.css"] && manifest["src/main.css"].css
+      ? html`<link rel="stylesheet" href="${manifest["src/main.css"].css}" />`
+      : "";
+
   // Check if JS path exists in the manifest
-  const jsScript = manifest["src/main.jsx"] && manifest["src/main.jsx"].file
-    ? html`<script type="module" src="${manifest["src/main.jsx"].file}"></script>` 
-    : '';
-  
+  const jsScript =
+    manifest["src/main.jsx"] && manifest["src/main.jsx"].file
+      ? html`<script
+          type="module"
+          src="${manifest["src/main.jsx"].file}"
+        ></script>`
+      : "";
+
   // Combine the elements
   scripts = html`${cssLink}${jsScript}`;
 } else {
@@ -97,7 +102,7 @@ const footer = (theme, path) => html`
       style="display: flex; justify-content: center; align-items: center; gap: 0.5rem;"
     >
       <img
-        src="/etherium.png"
+        src="/etherium.webp"
         alt="Powered by Ethereum"
         style="height: 4.5rem;"
       />
