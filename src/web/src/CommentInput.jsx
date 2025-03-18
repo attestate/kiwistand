@@ -375,7 +375,7 @@ const CommentInput = (props) => {
       return;
     }
 
-    const wait = true;
+    const wait = false;
     const response = await API.send(value, signature, wait);
     if (response && response.status === "error") {
       toast.error("Failed to submit your comment.");
