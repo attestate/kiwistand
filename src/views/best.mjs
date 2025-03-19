@@ -22,7 +22,6 @@ import { custom } from "./components/head.mjs";
 import * as store from "../store.mjs";
 import * as id from "../id.mjs";
 import * as moderation from "./moderation.mjs";
-import * as registry from "../chainstate/registry.mjs";
 import log from "../logger.mjs";
 import { EIP712_MESSAGE } from "../constants.mjs";
 import Row, { extractDomain } from "./components/row.mjs";
@@ -81,7 +80,6 @@ export default async function index(trie, theme, page, period, domain) {
     "/best?period=year",
     "/best?period=all",
   ];
-  const recentJoiners = await registry.recents();
   return html`
     <html lang="en" op="news">
       <head>
@@ -125,7 +123,6 @@ export default async function index(trie, theme, page, period, domain) {
                   false,
                   false,
                   period,
-                  recentJoiners,
                 ),
               )}
               <tr class="spacer" style="height:15px"></tr>

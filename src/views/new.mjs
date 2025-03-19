@@ -14,7 +14,6 @@ import Footer from "./components/footer.mjs";
 import { custom } from "./components/head.mjs";
 import * as store from "../store.mjs";
 import * as moderation from "./moderation.mjs";
-import * as registry from "../chainstate/registry.mjs";
 import { getLastComment, listNewest } from "../cache.mjs";
 import Row, { extractDomain } from "./components/row.mjs";
 import log from "../logger.mjs";
@@ -127,13 +126,10 @@ export async function recompute() {
 }
 
 export default async function (trie, theme) {
-  const mints = await registry.mints();
-
   let items = stories;
   const path = "/new";
   const ogImage = "https://news.kiwistand.com/kiwi_new_feed_page.png";
   const prefetch = ["/", "/submit", "/best", "/community"];
-  const recentJoiners = await registry.recents();
   const query = "?cached=true";
   return html`
     <html lang="en" op="news">
@@ -167,7 +163,6 @@ export default async function (trie, theme) {
                   null,
                   null,
                   null,
-                  recentJoiners,
                   false,
                   query,
                 ),

@@ -32,7 +32,6 @@ import cache, {
   getRecommendations,
 } from "../cache.mjs";
 import * as curation from "./curation.mjs";
-import * as registry from "../chainstate/registry.mjs";
 import log from "../logger.mjs";
 import { EIP712_MESSAGE } from "../constants.mjs";
 import Row, { addOrUpdateReferrer, extractDomain } from "./components/row.mjs";
@@ -775,7 +774,6 @@ function Newsletter() {
 }
 
 export default async function (trie, theme, page, domain, identity, hash) {
-  const mints = await registry.mints();
   const path = "/";
   const totalStories = parseInt(env.TOTAL_STORIES, 10);
 
@@ -815,7 +813,6 @@ export default async function (trie, theme, page, domain, identity, hash) {
     "/best",
     "/community",
   ];
-  const recentJoiners = await registry.recents();
   return html`
     <html lang="en" op="news">
       <head>
@@ -848,7 +845,6 @@ export default async function (trie, theme, page, domain, identity, hash) {
                 null,
                 null,
                 null,
-                recentJoiners,
                 false,
                 undefined,
                 true,
@@ -863,7 +859,6 @@ export default async function (trie, theme, page, domain, identity, hash) {
                     null,
                     null,
                     null,
-                    recentJoiners,
                     false,
                     currentQuery,
                   ),
@@ -876,7 +871,6 @@ export default async function (trie, theme, page, domain, identity, hash) {
                 null,
                 null,
                 null,
-                recentJoiners,
                 false,
                 currentQuery,
               )(ad)}
@@ -890,7 +884,6 @@ export default async function (trie, theme, page, domain, identity, hash) {
                     null,
                     null,
                     null,
-                    recentJoiners,
                     false,
                     currentQuery,
                   )(story, i + 3),
@@ -909,7 +902,6 @@ export default async function (trie, theme, page, domain, identity, hash) {
                     null,
                     null,
                     null,
-                    recentJoiners,
                     false,
                     currentQuery,
                   )(story, i + 5),

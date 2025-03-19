@@ -19,7 +19,6 @@ import { getSlug } from "../utils.mjs";
 // Define the brand green color directly
 const theme = { color: "#00b67a" };
 import * as store from "../store.mjs";
-import * as registry from "../chainstate/registry.mjs";
 import * as id from "../id.mjs";
 import * as moderation from "./moderation.mjs";
 import cache, {

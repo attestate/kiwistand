@@ -80,20 +80,6 @@ export function augmentWithMainnet(opAccounts) {
   return opAccounts;
 }
 
-export async function recents() {
-  const everyone = await accounts();
-  const recentJoiners = [];
-  for (const [address, { start }] of Object.entries(everyone)) {
-    const today = new Date();
-    const parsedStart = new Date(start * 1000);
-    const diff = differenceInDays(today, parsedStart);
-    if (diff < 7) {
-      recentJoiners.push(address);
-    }
-  }
-  return recentJoiners;
-}
-
 let cachedAccounts = {};
 await refreshAccounts();
 export async function accounts() {

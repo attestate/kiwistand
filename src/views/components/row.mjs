@@ -256,7 +256,6 @@ const row = (
   interactive,
   hideCast,
   period,
-  recentJoiners,
   invert = false,
   // NOTE: query is currently only used when we want to mark a comment preview
   // as visited, and so since comment previews are only active on / and /new, we
@@ -635,10 +634,7 @@ const row = (
                               : `/upvotes?address=${story.identity}`}"
                             class="meta-link"
                             onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
-                            style="font-weight: 500; user-select: text; ${recentJoiners &&
-                            recentJoiners.includes(story.identity)
-                              ? `color: ${theme.color};`
-                              : ""}"
+                            style="font-weight: 500; user-select: text;"
                           >
                             ${story.displayName}
                           </a>`

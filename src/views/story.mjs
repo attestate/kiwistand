@@ -24,7 +24,6 @@ import * as head from "./components/head.mjs";
 import * as store from "../store.mjs";
 import * as id from "../id.mjs";
 import * as moderation from "./moderation.mjs";
-import * as registry from "../chainstate/registry.mjs";
 import log from "../logger.mjs";
 import { EIP712_MESSAGE } from "../constants.mjs";
 import Row, { extractDomain } from "./components/row.mjs";
@@ -305,7 +304,6 @@ export default async function (trie, theme, index, value, referral) {
     data && data.ogDescription
       ? data.ogDescription
       : "Kiwi News is the prime feed for hacker engineers building a decentralized future. All our content is handpicked and curated by crypto veterans.";
-  const recentJoiners = await registry.recents();
   const slug = getSlug(value.title);
   const link = `https://news.kiwistand.com/stories/${slug}?index=0x${index}${
     referral ? `&referral=${referral}` : ""
@@ -350,7 +348,6 @@ export default async function (trie, theme, index, value, referral) {
                   null,
                   null,
                   null,
-                  recentJoiners,
                 )({ ...story, index })}
               </thead>
               <tr>
