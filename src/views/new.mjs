@@ -38,7 +38,7 @@ export async function recompute() {
   if (inProgress) return;
   inProgress = true;
 
-  const limit = 50;
+  const limit = 25;
   let counts = listNewest(limit);
 
   const path = "/new";
@@ -54,71 +54,78 @@ export async function recompute() {
   }
 
   let nextStories = [];
-  for await (let story of sortedCounts) {
-    if (!story.identity || !story.index || !story.upvoters) {
+  await Promise.allSettled(
+    sortedCounts.map(async (story) => {
+      if (!story.identity || !story.index || !story.upvoters) {
+        nextStories.push({
+          ...story,
+          displayName: "Feedbot",
+          avatars: [],
+          upvoters: [],
+          isOriginal: false,
+        });
+        return;
+      }
+
+      const lastComment = getLastComment(`kiwi:0x${story.index}`);
+      if (lastComment && lastComment.identity) {
+        lastComment.identity = await ens.resolve(lastComment.identity);
+        const uniqueIdentities = new Set(
+          lastComment.previousParticipants
+            .map((p) => p.identity)
+            .filter((identity) => identity !== lastComment.identity),
+        );
+
+        const resolvedParticipants = await Promise.allSettled(
+          [...uniqueIdentities].map((identity) => ens.resolve(identity)),
+        );
+
+        lastComment.previousParticipants = resolvedParticipants
+          .filter(
+            (result) =>
+              result.status === "fulfilled" && result.value.safeAvatar,
+          )
+          .map((result) => ({
+            identity: result.value.identity,
+            safeAvatar: result.value.safeAvatar,
+            displayName: result.value.displayName,
+          }));
+      }
+
+      const ensData = await ens.resolve(story.identity);
+
+      let avatars = [];
+      await Promise.allSettled(
+        story.upvoters.slice(0, 5).map(async (upvoter) => {
+          const profile = await ens.resolve(upvoter);
+          if (profile.safeAvatar) {
+            avatars.push(profile.safeAvatar);
+          }
+        }),
+      );
+      const isOriginal = Object.keys(writers).some(
+        (domain) =>
+          normalizeUrl(story.href).startsWith(domain) &&
+          writers[domain] === story.identity,
+      );
       nextStories.push({
         ...story,
-        displayName: "Feedbot",
-        avatars: [],
-        upvoters: [],
-        isOriginal: false,
+        lastComment,
+        displayName: ensData.displayName,
+        avatars: avatars,
+        isOriginal,
       });
-      continue;
-    }
-
-    const lastComment = getLastComment(`kiwi:0x${story.index}`);
-    if (lastComment && lastComment.identity) {
-      lastComment.identity = await ens.resolve(lastComment.identity);
-      const uniqueIdentities = new Set(
-        lastComment.previousParticipants
-          .map((p) => p.identity)
-          .filter((identity) => identity !== lastComment.identity),
-      );
-
-      const resolvedParticipants = await Promise.allSettled(
-        [...uniqueIdentities].map((identity) => ens.resolve(identity)),
-      );
-
-      lastComment.previousParticipants = resolvedParticipants
-        .filter(
-          (result) => result.status === "fulfilled" && result.value.safeAvatar,
-        )
-        .map((result) => ({
-          identity: result.value.identity,
-          safeAvatar: result.value.safeAvatar,
-          displayName: result.value.displayName,
-        }));
-    }
-
-    const ensData = await ens.resolve(story.identity);
-
-    let avatars = [];
-    for await (let upvoter of story.upvoters.slice(0, 5)) {
-      const profile = await ens.resolve(upvoter);
-      if (profile.safeAvatar) {
-        avatars.push(profile.safeAvatar);
-      }
-    }
-    const isOriginal = Object.keys(writers).some(
-      (domain) =>
-        normalizeUrl(story.href).startsWith(domain) &&
-        writers[domain] === story.identity,
-    );
-    nextStories.push({
-      ...story,
-      lastComment,
-      displayName: ensData.displayName,
-      avatars: avatars,
-      isOriginal,
-    });
-  }
+    }),
+  );
 
   stories = nextStories.sort((a, b) => b.timestamp - a.timestamp);
   inProgress = false;
   try {
     // Purge Cloudflare cache for the "/new" page so that new submissions show immediately.
-    await purgeCache("https://news.kiwistand.com/new");
-    await purgeCache("https://news.kiwistand.com/new?cached=true");
+    await Promise.allSettled([
+      purgeCache("https://news.kiwistand.com/new"),
+      purgeCache("https://news.kiwistand.com/new?cached=true"),
+    ]);
     log("Cloudflare cache purged for /new and /new?cached=true");
   } catch (error) {
     log("Cloudflare cache purge skipped: " + error.message);
