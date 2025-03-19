@@ -7,15 +7,17 @@ import { providers, utils } from "ethers";
 
 import { allowlist } from "./chainstate/registry.mjs";
 import { fetchCache } from "./utils.mjs";
+import cache from "./cache.mjs";
+import log from "./logger.mjs";
 
 const provider = new providers.JsonRpcProvider(env.RPC_HTTP_HOST);
 
-const cache = new FileSystemCache({
+const fsCache = new FileSystemCache({
   cacheDirectory: path.resolve(env.CACHE_DIR),
   ttl: 86400000 * 5, // 72 hours
 });
-const fetch = fetchBuilder.withCache(cache);
-const fetchStaleWhileRevalidate = fetchCache(fetch, cache);
+const fetch = fetchBuilder.withCache(fsCache);
+const fetchStaleWhileRevalidate = fetchCache(fetch, fsCache);
 
 export async function toAddress(name) {
   const address = await provider.resolveName(name);
@@ -159,38 +161,75 @@ async function fetchENSData(address) {
   }
 }
 
+// Create a prefix for ENS cache entries to ensure uniqueness
+const ENS_CACHE_PREFIX = "ens-profile-";
+
 export async function resolve(address) {
-  const ensProfile = await fetchENSData(address);
-  const lensProfile = await fetchLensData(address);
+  // Create a unique cache key with prefix to avoid collisions
+  const cacheKey = `${ENS_CACHE_PREFIX}${address.toLowerCase()}`;
 
-  let safeAvatar = ensProfile.avatar_small
-    ? ensProfile.avatar_small
-    : ensProfile.avatar;
-  if (safeAvatar && !safeAvatar.startsWith("https")) {
-    safeAvatar = ensProfile.avatar_url;
-  }
-  if (!safeAvatar && ensProfile?.farcaster?.avatar) {
-    safeAvatar = ensProfile.farcaster.avatar;
-  }
-  if (!safeAvatar && lensProfile?.avatar) {
-    safeAvatar = lensProfile.avatar;
+  // Check if we have the data in cache
+  if (cache.has(cacheKey)) {
+    return cache.get(cacheKey);
   }
 
-  let displayName = DOMPurify.sanitize(ensProfile.ens);
-  if (!displayName && ensProfile?.farcaster?.username) {
-    displayName = `@${DOMPurify.sanitize(ensProfile.farcaster.username)}`;
-  }
-  if (!displayName && lensProfile?.username) {
-    displayName = `${DOMPurify.sanitize(lensProfile.username)}`;
-  }
-  if (!displayName) {
-    displayName = ensProfile.truncatedAddress;
-  }
-  const profile = {
-    safeAvatar: DOMPurify.sanitize(safeAvatar),
-    ...ensProfile,
-    lens: lensProfile,
-    displayName,
+  // Create minimal profile for immediate return
+  const truncatedAddress =
+    address.slice(0, 6) +
+    "..." +
+    address.slice(address.length - 4, address.length);
+  const minimalProfile = {
+    address,
+    truncatedAddress,
+    displayName: truncatedAddress,
+    safeAvatar: null,
   };
-  return profile;
+
+  // Trigger background fetch and update cache when done - don't await
+  (async () => {
+    try {
+      const ensProfile = await fetchENSData(address);
+      const lensProfile = await fetchLensData(address);
+
+      let safeAvatar = ensProfile.avatar_small
+        ? ensProfile.avatar_small
+        : ensProfile.avatar;
+      if (safeAvatar && !safeAvatar.startsWith("https")) {
+        safeAvatar = ensProfile.avatar_url;
+      }
+      if (!safeAvatar && ensProfile?.farcaster?.avatar) {
+        safeAvatar = ensProfile.farcaster.avatar;
+      }
+      if (!safeAvatar && lensProfile?.avatar) {
+        safeAvatar = lensProfile.avatar;
+      }
+
+      let displayName = DOMPurify.sanitize(ensProfile.ens);
+      if (!displayName && ensProfile?.farcaster?.username) {
+        displayName = `@${DOMPurify.sanitize(ensProfile.farcaster.username)}`;
+      }
+      if (!displayName && lensProfile?.username) {
+        displayName = `${DOMPurify.sanitize(lensProfile.username)}`;
+      }
+      if (!displayName) {
+        displayName = ensProfile.truncatedAddress;
+      }
+
+      const completeProfile = {
+        safeAvatar: DOMPurify.sanitize(safeAvatar),
+        ...ensProfile,
+        lens: lensProfile,
+        displayName,
+      };
+
+      // Update cache with complete profile
+      cache.set(cacheKey, completeProfile);
+      log(`Updated ENS cache for ${address}`);
+    } catch (err) {
+      log(`Background ENS resolution failed for ${address}: ${err}`);
+    }
+  })().catch((err) => log(`Error in ENS background fetch: ${err}`));
+
+  // Return minimal profile immediately
+  return minimalProfile;
 }
