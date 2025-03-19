@@ -333,11 +333,7 @@ const row = (
                 >
                   <div style="position: relative;">
                     <img
-                      ${path === "/stories"
-                        ? 'loading="lazy"'
-                        : i > 2
-                        ? 'loading="lazy"'
-                        : ""}
+                      loading="lazy"
                       style="aspect-ratio: 2 / 1; object-fit:${isCloudflareImage(
                         story.href,
                       )
@@ -345,10 +341,12 @@ const row = (
                         : "cover"}; margin: 0 11px; border-radius: 2px; width: calc(100% - 24px);"
                       src="${isCloudflareImage(story.href)
                         ? DOMPurify.sanitize(
-                            story.href.includes("?")
-                              ? story.href
-                              : story.href +
-                                  "?format=auto&width=600&quality=80&fit=cover",
+                            story.href.endsWith("/public")
+                              ? story.href.replace(
+                                  "/public",
+                                  "/w=600,q=80,fit=cover,f=auto",
+                                )
+                              : story.href + "/w=600,q=80,fit=cover,f=auto",
                           )
                         : DOMPurify.sanitize(story.metadata.image)}"
                     />
@@ -445,11 +443,7 @@ const row = (
                       )}', event.currentTarget.getAttribute('target'));"
                     >
                       <img
-                        ${path === "/stories"
-                          ? 'loading="lazy"'
-                          : i > 2
-                          ? 'loading="lazy"'
-                          : ""}
+                        loading="lazy"
                         style="max-height: 61px; border: var(--border-line); border-radius: 2px; width: 110px; object-fit: ${isCloudflareImage(
                           story.href,
                         )
@@ -457,10 +451,12 @@ const row = (
                           : "cover"};"
                         src="${isCloudflareImage(story.href)
                           ? DOMPurify.sanitize(
-                              story.href.includes("?")
-                                ? story.href
-                                : story.href +
-                                    "?format=auto&width=220&quality=80&fit=cover",
+                              story.href.endsWith("/public")
+                                ? story.href.replace(
+                                    "/public",
+                                    "/w=220,q=80,fit=cover,f=auto",
+                                  )
+                                : story.href + "/w=220,q=80,fit=cover,f=auto",
                             )
                           : DOMPurify.sanitize(story.metadata.image)}"
                     /></a>`

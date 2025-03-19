@@ -98,7 +98,7 @@ const UrlInput = (props) => {
       // https://imagedelivery.net/[account hash]/[image id]/[variant]
       const imageId = tokenData.data.id;
       const accountHash = uploadURL.split("/").slice(-2)[0];
-      const imageUrl = `https://imagedelivery.net/${accountHash}/${imageId}/public`;
+      const imageUrl = `https://imagedelivery.net/${accountHash}/${imageId}/`;
 
       // Set the URL in the input field
       setURL(imageUrl);
@@ -210,7 +210,9 @@ const SubmitButton = (props) => {
 
     if (canonicalURL.includes("imagedelivery.net")) {
       embedPreview.innerHTML = `<img src="${DOMPurify.sanitize(
-        canonicalURL.includes('?') ? canonicalURL : canonicalURL + '?format=auto&width=800&quality=80'
+        canonicalURL.includes("/public") 
+          ? canonicalURL
+          : canonicalURL + "/public",
       )}" style="border: 1px solid black; max-width: 100%; max-height: 500px; display: block; margin: 0 auto;" alt="Uploaded image" />`;
       return;
     }
