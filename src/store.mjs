@@ -402,13 +402,11 @@ async function atomicPut(trie, message, identity, accounts, delegations) {
       const enhancedMessage = await enhancer(message);
       insertMessage(enhancedMessage);
 
-      // Only purge cache for comments, not for upvotes
-      if (message.type === "comment") {
+      // Only purge cache for regular comments, not for upvotes or emoji reactions
+      if (message.type === "comment" && !isReactionComment(message.title)) {
         const [, commentIndex] = message.href.split(":");
         // Purge the main stories page synchronously so the user can see their
         // comment
-        // FIX: At the moment, when the message is an emoji reaction then we'll
-        // invalidate a non existent comment index, but for now that's fine.
         await purgeCache(
           `https://news.kiwistand.com/stories?index=${commentIndex}`,
         );
