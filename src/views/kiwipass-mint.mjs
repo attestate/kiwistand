@@ -16,24 +16,13 @@ async function getENSAvatars(addresses) {
   for (const address of addresses) {
     const ensData = await ens.resolve(address);
 
-    avatarData.push({
-      address,
-      avatarUrl: ensData.safeAvatar,
-    });
+    avatarData.push(ensData);
   }
 
   return avatarData;
 }
 
-const addresses = [
-  "yashbora.eth",
-  "ccarella.eth",
-  "mishaderidder.eth",
-  "annoushka.eth",
-  "cerv1.eth",
-];
-
-const avatarData = await getENSAvatars(addresses);
+const addresses = ["ccarella.eth", "mishaderidder.eth", "cerv1.eth"];
 
 const path = "/kiwipass-mint";
 
@@ -42,6 +31,7 @@ const html = htm.bind(vhtml);
 const ogImage = "https://news.kiwistand.com/kiwipass_mint_page.png";
 
 export default async function (theme) {
+  const avatarData = await getENSAvatars(addresses);
   const html = htm.bind(vhtml);
 
   return html`
@@ -154,7 +144,7 @@ export default async function (theme) {
                                 (data) => html`
                                   <img
                                     loading="lazy"
-                                    src="${data.avatarUrl}"
+                                    src="${data.safeAvatar}"
                                     alt="${data.address}"
                                     style="width: 32px; height: 32px; border: 1px dotted rgba(219, 105, 141, 0.5); border-radius: 2px;"
                                   />
