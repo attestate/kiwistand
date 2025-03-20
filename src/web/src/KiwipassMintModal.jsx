@@ -2,9 +2,13 @@ import { useState, useEffect } from "react";
 import Modal from "react-modal";
 import { useAccount } from "wagmi";
 import { eligible } from "@attestate/delegator2";
+import { fetchBalance } from "@wagmi/core";
+import { optimism } from "wagmi/chains";
+import { parseEther } from "viem";
 
 import { Connector } from "./Navigation.jsx";
 import { getLocalAccount } from "./session.mjs";
+import { requestFaucet } from "./API.mjs";
 
 if (document.querySelector("nav-kiwipass-modal")) {
   Modal.setAppElement("nav-kiwipass-modal");
@@ -13,8 +17,46 @@ if (document.querySelector("nav-kiwipass-modal")) {
 function SimpleModal(props) {
   const [showModal, setShowModal] = useState(null);
   const account = useAccount();
+  const [faucetRequested, setFaucetRequested] = useState(false);
 
   const { toast, allowlist, delegations } = props;
+
+  // Add useEffect to check balance and silently request funds from faucet if needed
+  useEffect(() => {
+    const checkBalanceAndRequestFaucet = async () => {
+      // Only proceed if user is connected and hasn't requested faucet yet
+      if (!account.address || faucetRequested || !account.isConnected) {
+        return;
+      }
+
+      try {
+        // Check user's balance on Optimism
+        const balance = await fetchBalance({ 
+          address: account.address, 
+          chainId: optimism.id 
+        });
+        
+        // Faucet sends 0.000005 ETH (from faucet.mjs)
+        const faucetAmount = parseEther("0.000005");
+        
+        // Only request from faucet if balance is less than what the faucet sends
+        if (balance.value < faucetAmount) {
+          setFaucetRequested(true);
+          
+          // Silently request funds without notification
+          await requestFaucet(account.address);
+          console.log("Faucet requested silently for:", account.address);
+        } else {
+          console.log("User already has sufficient funds, skipping faucet request");
+          setFaucetRequested(true); // Mark as requested to avoid checking again
+        }
+      } catch (err) {
+        console.log("Error in faucet check:", err);
+      }
+    };
+
+    checkBalanceAndRequestFaucet();
+  }, [account.address, account.isConnected, faucetRequested]);
 
   function openModal() {
     if (
