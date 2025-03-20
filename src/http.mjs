@@ -334,9 +334,6 @@ export async function launch(trie, libp2p, isPrimary = true) {
   if (isPrimary && cluster.isPrimary) {
     log("Setting up worker proxy middleware");
 
-    // Create regex patterns for worker routes
-    const workerPathRegex = new RegExp(`^(${workerRoutes.join("|")})`, "i");
-
     // Set up ports for each worker
     const workers = [];
     const startPort = parseInt(env.HTTP_PORT) + 1;
@@ -357,7 +354,22 @@ export async function launch(trie, libp2p, isPrimary = true) {
         return next();
       }
 
-      if (workerPathRegex.test(req.path)) {
+      // Check if path should be handled by worker with direct path matching
+      let shouldProxy = false;
+      for (const route of workerRoutes) {
+        // For root path, only match exactly
+        if (route === "/" && req.path === "/") {
+          shouldProxy = true;
+          break;
+        }
+        // For all other routes, match the exact path
+        else if (route === req.path) {
+          shouldProxy = true;
+          break;
+        }
+      }
+
+      if (shouldProxy) {
         // Get next worker in round-robin fashion
         const target = workers[currentWorker];
         currentWorker = (currentWorker + 1) % workers.length;
