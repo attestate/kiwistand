@@ -234,16 +234,7 @@ export const TextConnectButton = ({
           window.location.pathname = "/";
         }
 
-        if (!isEligible && connected) {
-          // Check if we've already redirected this user in the current session
-          const hasBeenRedirected = sessionStorage.getItem('redirectedToKiwipassMint');
-          
-          if (!hasBeenRedirected) {
-            // Mark that we've redirected this user
-            sessionStorage.setItem('redirectedToKiwipassMint', 'true');
-            window.location.pathname = "/kiwipass-mint";
-          }
-        }
+        // Modal will handle showing UI for non-eligible users
 
         if ((required && !connected) || (!connected && !isEligible)) {
           return (
@@ -349,7 +340,9 @@ export const ConnectedConnectButton = (props) => (
   </Connector>
 );
 export const ConnectedTextConnectButton = (props) => (
-  <Connector {...props}>
-    <TextConnectButton {...props} />
-  </Connector>
+  <>
+    <Connector {...props}>
+      <TextConnectButton {...props} />
+    </Connector>
+  </>
 );

@@ -315,15 +315,20 @@ async function addConnectedComponents(allowlist, delegations, toast) {
     );
   }
 
-  const bellButton = document.querySelector("#bell");
-  if (bellButton) {
-    const Bell = (await import("./Bell.jsx")).default;
-    bellButton.style = "";
-    createRoot(bellButton).render(
-      <StrictMode>
-        <Bell toast={toast} allowlist={allowlist} delegations={delegations} />
-      </StrictMode>,
-    );
+  // Check if we're on mobile based on the breakpoint in news.css (max-width: 640px)
+  const isMobileView = window.innerWidth <= 640;
+
+  if (!isMobileView) {
+    const bellButton = document.querySelector("#bell");
+    if (bellButton) {
+      const Bell = (await import("./Bell.jsx")).default;
+      bellButton.style = "";
+      createRoot(bellButton).render(
+        <StrictMode>
+          <Bell toast={toast} allowlist={allowlist} delegations={delegations} />
+        </StrictMode>,
+      );
+    }
   }
 
   const searchButton = document.querySelector("#search");
@@ -349,19 +354,21 @@ async function addConnectedComponents(allowlist, delegations, toast) {
     });
   }
 
-  const mobileBellButton = document.querySelector(".mobile-bell-container");
-  if (mobileBellButton) {
-    const Bell = (await import("./Bell.jsx")).default;
-    createRoot(mobileBellButton).render(
-      <StrictMode>
-        <Bell
-          toast={toast}
-          mobile
-          allowlist={allowlist}
-          delegations={delegations}
-        />
-      </StrictMode>,
-    );
+  if (isMobileView) {
+    const mobileBellButton = document.querySelector(".mobile-bell-container");
+    if (mobileBellButton) {
+      const Bell = (await import("./Bell.jsx")).default;
+      createRoot(mobileBellButton).render(
+        <StrictMode>
+          <Bell
+            toast={toast}
+            mobile
+            allowlist={allowlist}
+            delegations={delegations}
+          />
+        </StrictMode>,
+      );
+    }
   }
 
   const profileLink = document.querySelector("#nav-profile");
@@ -951,9 +958,7 @@ function trackLinkImpressions() {
 
           // Send impression beacon
           try {
-            navigator.sendBeacon(
-              "/impression?url=" + encodeURIComponent(href)
-            );
+            navigator.sendBeacon("/impression?url=" + encodeURIComponent(href));
           } catch (err) {
             console.log("Error tracking impression:", err);
           }

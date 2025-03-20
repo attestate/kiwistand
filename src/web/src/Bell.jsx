@@ -12,6 +12,7 @@ import * as API from "./API.mjs";
 import { isIOS, getLocalAccount, getCookie } from "./session.mjs";
 import { client, chains, useProvider } from "./client.mjs";
 import { dynamicPrefetch } from "./main.jsx";
+import KiwipassMintModal from "./KiwipassMintModal.jsx";
 
 const EmailSubscriptionForm = ({
   onSuccess,
@@ -683,6 +684,7 @@ const Bell = (props) => {
 const Form = (props) => {
   return (
     <Connector {...props}>
+      <KiwipassMintModal {...props} />
       <Bell {...props} />
     </Connector>
   );
