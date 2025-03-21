@@ -28,7 +28,7 @@ import log from "../logger.mjs";
 import { EIP712_MESSAGE } from "../constants.mjs";
 import Row, { extractDomain } from "./components/row.mjs";
 import * as karma from "../karma.mjs";
-import { truncateName, getSlug } from "../utils.mjs";
+import { truncateName, getSlug, isCloudflareImage } from "../utils.mjs";
 import { identityClassifier } from "./feed.mjs";
 import { render, cachedMetadata } from "../parser.mjs";
 import { getSubmission } from "../cache.mjs";
@@ -299,7 +299,17 @@ export default async function (trie, theme, index, value, referral) {
   const start = 0;
   const style = "";
 
-  let ogImage = `https://news.kiwistand.com/previews/${index}.jpg`;
+  let ogImage;
+  if (isCloudflareImage(value.href)) {
+    // Use Cloudflare image URL directly with appropriate parameters for OG image
+    ogImage = value.href.endsWith("/public")
+      ? value.href.replace("/public", "/w=1200,q=80,fit=cover,f=auto")
+      : value.href + "/w=1200,q=80,fit=cover,f=auto";
+  } else {
+    // Fall back to the generated preview
+    ogImage = `https://news.kiwistand.com/previews/${index}.jpg`;
+  }
+  
   const ogDescription =
     data && data.ogDescription
       ? data.ogDescription

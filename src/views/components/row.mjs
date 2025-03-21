@@ -7,7 +7,7 @@ import {
 import { URL } from "url";
 import DOMPurify from "isomorphic-dompurify";
 import ethers from "ethers";
-import { getSlug } from "../../utils.mjs";
+import { getSlug, isCloudflareImage } from "../../utils.mjs";
 
 import { commentCounts } from "../../store.mjs";
 import ShareIcon from "./shareicon.mjs";
@@ -243,11 +243,6 @@ const knownBadOgImages = [
   "https://paragraph.xyz/share/share_img.jpg",
   "https://s.turbifycdn.com/aah/paulgraham/essays-5.gif",
 ];
-
-// Helper function to detect Cloudflare Images URLs
-const isCloudflareImage = (url) => {
-  return url && typeof url === "string" && url.includes("imagedelivery.net");
-};
 
 const row = (
   start = 0,

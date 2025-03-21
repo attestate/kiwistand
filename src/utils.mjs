@@ -101,6 +101,10 @@ export function truncateName(name) {
   return name.slice(0, maxLength) + "...";
 }
 
+export function isCloudflareImage(url) {
+  return url && typeof url === "string" && url.includes("imagedelivery.net");
+}
+
 export function appdir() {
   return path.resolve(dirname(), "../");
 }
