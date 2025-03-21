@@ -482,7 +482,7 @@ const Button = (props) => {
         disabled={!write || isLoading}
         onClick={() => write?.()}
       >
-        {!isLoading && <div>Buy Kiwi Pass on {name}</div>}
+        {!isLoading && <div>Mint Kiwi Pass on {name}</div>}
         {isLoading && <div>Please sign transaction</div>}
       </button>
     </div>
