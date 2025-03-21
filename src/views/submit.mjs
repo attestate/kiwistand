@@ -104,13 +104,14 @@ export default async function submit(theme, url = "", title = "") {
                             id="imageUpload"
                             accept="image/*"
                             style="display: none;"
+                            disabled
                           />
                           <label
                             for="imageUpload"
                             style="
                               margin-left: 10px;
                               padding: 0 16px;
-                              background-color: #000;
+                              background-color: grey;
                               color: #fff;
                               border-radius: 2px;
                               cursor: pointer;
