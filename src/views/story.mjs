@@ -38,7 +38,7 @@ import ShareIcon from "./components/shareicon.mjs";
 
 const html = htm.bind(vhtml);
 
-export async function generateStory(index, wait = false) {
+export async function generateStory(index) {
   const hexRegex = /^0x[a-fA-F0-9]{72}$/;
 
   if (!hexRegex.test(index)) {
@@ -71,22 +71,16 @@ export async function generateStory(index, wait = false) {
     submitter: ensData,
   };
   const hexIndex = index.substring(2);
-  let body;
   try {
-    body = preview.story(
+    const body = preview.story(
       value.title,
       value.submitter.displayName,
       value.submitter.safeAvatar,
     );
+    await preview.generate(hexIndex, body);
   } catch (err) {
-    body = preview.story(value.title, value.submitter.displayName);
-  } finally {
-    if (wait) {
-      await preview.generate(hexIndex, body);
-    } else
-      preview.generate(hexIndex, body).catch((err) => {
-        log(`Failed to generate preview for ${hexIndex}: ${err.stack}`);
-      });
+    const body = preview.story(value.title, value.submitter.displayName);
+    await preview.generate(hexIndex, body);
   }
 
   return submission;
