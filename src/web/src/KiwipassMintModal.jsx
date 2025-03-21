@@ -31,23 +31,25 @@ function SimpleModal(props) {
 
       try {
         // Check user's balance on Optimism
-        const balance = await fetchBalance({ 
-          address: account.address, 
-          chainId: optimism.id 
+        const balance = await fetchBalance({
+          address: account.address,
+          chainId: optimism.id,
         });
-        
+
         // Faucet sends 0.000005 ETH (from faucet.mjs)
         const faucetAmount = parseEther("0.000005");
-        
+
         // Only request from faucet if balance is less than what the faucet sends
         if (balance.value < faucetAmount) {
           setFaucetRequested(true);
-          
+
           // Silently request funds without notification
           await requestFaucet(account.address);
           console.log("Faucet requested silently for:", account.address);
         } else {
-          console.log("User already has sufficient funds, skipping faucet request");
+          console.log(
+            "User already has sufficient funds, skipping faucet request",
+          );
           setFaucetRequested(true); // Mark as requested to avoid checking again
         }
       } catch (err) {
@@ -62,7 +64,16 @@ function SimpleModal(props) {
     if (
       !account.isConnected ||
       window.location.pathname === "/gateway" ||
-      window.location.pathname === "/kiwipass-mint"
+      window.location.pathname === "/kiwipass-mint" ||
+      window.location.pathname === "/app-onboarding" ||
+      window.location.pathname === "/app-testflight" ||
+      window.location.pathname === "/demonstration" ||
+      window.location.pathname === "/email-notifications" ||
+      window.location.pathname === "/invite" ||
+      window.location.pathname === "/notifications" ||
+      window.location.pathname === "/passkeys" ||
+      window.location.pathname === "/whattosubmit" ||
+      window.location.pathname === "/indexing"
     ) {
       closeModal();
       return;
