@@ -489,7 +489,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
   app.get("/friends", async (request, reply) => {
     reply.header(
       "Cache-Control",
-      "public, s-maxage=3600, max-age=3600, stale-while-revalidate=86400",
+      "public, s-maxage=3600, max-age=0, stale-while-revalidate=86400",
     );
     return reply
       .status(200)
@@ -499,7 +499,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
   app.get("/kiwipass-mint", async (request, reply) => {
     reply.header(
       "Cache-Control",
-      "public, s-maxage=86400, max-age=86400, stale-while-revalidate=604800",
+      "public, s-maxage=86400, max-age=0, stale-while-revalidate=604800",
     );
     return reply
       .status(200)
@@ -824,7 +824,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
     // Keep cache time low but allow longer stale-while-revalidate for better performance
     reply.header(
       "Cache-Control",
-      "public, s-maxage=300, max-age=60, stale-while-revalidate=86400",
+      "public, s-maxage=300, max-age=0, stale-while-revalidate=86400",
     );
     return sendStatus(reply, code, httpMessage, details, {
       address,
@@ -864,7 +864,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
       }
       reply.header(
         "Cache-Control",
-        "public, s-maxage=20, max-age=20,  must-revalidate, stale-while-revalidate=86400",
+        "public, s-maxage=20, max-age=0,  must-revalidate, stale-while-revalidate=86400",
       );
       stories = results.stories;
     } else if (request.params.name === "new") {
@@ -878,7 +878,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
     } else if (request.params.name === "best") {
       reply.header(
         "Cache-Control",
-        "public, s-maxage=3600, max-age=3600, must-revalidate, stale-while-revalidate=86400",
+        "public, s-maxage=3600, max-age=0, must-revalidate, stale-while-revalidate=86400",
       );
 
       let page = parseInt(request.query.page);
@@ -965,7 +965,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
 
     reply.header(
       "Cache-Control",
-      "public, s-maxage=86400, max-age=86400, stale-while-revalidate=31536000",
+      "public, s-maxage=86400, max-age=0, stale-while-revalidate=31536000",
     );
     const code = 200;
     const httpMessage = "OK";
@@ -986,7 +986,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
 
     reply.header(
       "Cache-Control",
-      "public, s-maxage=86400, max-age=86400, stale-while-revalidate=259200",
+      "public, s-maxage=86400, max-age=0, stale-while-revalidate=259200",
     );
     return reply
       .status(200)
@@ -1037,7 +1037,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
     }
     reply.header(
       "Cache-Control",
-      "public, s-maxage=20, max-age=20, stale-while-revalidate=86400",
+      "public, s-maxage=20, max-age=0, stale-while-revalidate=86400",
     );
     return reply.status(200).type("text/html").send(content);
   });
@@ -1072,7 +1072,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
     );
     reply.header(
       "Cache-Control",
-      "public, s-maxage=86400, max-age=86400, stale-while-revalidate=31536000",
+      "public, s-maxage=86400, max-age=0, stale-while-revalidate=31536000",
     );
     return reply.status(200).type("text/html").send(content);
   });
@@ -1098,7 +1098,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
     if (request.query.cached) {
       reply.header(
         "Cache-Control",
-        "public, s-maxage=30, max-age=30, stale-while-revalidate=86400",
+        "public, s-maxage=30, max-age=0, stale-while-revalidate=86400",
       );
     } else {
       reply.header("Cache-Control", "no-cache");
@@ -1137,7 +1137,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
 
     reply.header(
       "Cache-Control",
-      "public, s-maxage=3600, max-age=3600, stale-while-revalidate=2592000",
+      "public, s-maxage=3600, max-age=0, stale-while-revalidate=2592000",
     );
     return reply.status(200).type("text/html").send(content);
   });
@@ -1146,7 +1146,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
 
     reply.header(
       "Cache-Control",
-      "public, s-maxage=86400, max-age=86400, stale-while-revalidate=604800",
+      "public, s-maxage=86400, max-age=0, stale-while-revalidate=604800",
     );
     return reply.status(200).type("text/html").send(content);
   });
@@ -1158,7 +1158,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
     const content = await retention(trie, reply.locals.theme);
     reply.header(
       "Cache-Control",
-      "public, max-age=3600, no-transform, must-revalidate, stale-while-revalidate=120",
+      "public, max-age=0, no-transform, must-revalidate, stale-while-revalidate=120",
     );
     return reply.status(200).type("text/html").send(content);
   });
@@ -1166,7 +1166,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
     const content = await users(trie, reply.locals.theme);
     reply.header(
       "Cache-Control",
-      "public, max-age=3600, no-transform, must-revalidate, stale-while-revalidate=120",
+      "public, max-age=0, no-transform, must-revalidate, stale-while-revalidate=120",
     );
     return reply.status(200).type("text/html").send(content);
   });
@@ -1174,7 +1174,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
     const content = await basics(trie, reply.locals.theme);
     reply.header(
       "Cache-Control",
-      "public, max-age=3600, no-transform, must-revalidate, stale-while-revalidate=120",
+      "public, max-age=0, no-transform, must-revalidate, stale-while-revalidate=120",
     );
     return reply.status(200).type("text/html").send(content);
   });
@@ -1182,7 +1182,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
     const content = await stats(trie, reply.locals.theme);
     reply.header(
       "Cache-Control",
-      "public, max-age=3600, no-transform, must-revalidate, stale-while-revalidate=120",
+      "public, max-age=0, no-transform, must-revalidate, stale-while-revalidate=120",
     );
     return reply.status(200).type("text/html").send(content);
   });
@@ -1191,7 +1191,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
 
     reply.header(
       "Cache-Control",
-      "public, s-maxage=86400, max-age=86400, stale-while-revalidate=600000",
+      "public, s-maxage=86400, max-age=0, stale-while-revalidate=600000",
     );
     return reply.status(200).type("text/html").send(content);
   });
@@ -1200,7 +1200,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
 
     reply.header(
       "Cache-Control",
-      "public, s-maxage=86400, max-age=86400, stale-while-revalidate=600000",
+      "public, s-maxage=86400, max-age=0, stale-while-revalidate=600000",
     );
     return reply.status(200).type("text/html").send(content);
   });
@@ -1210,7 +1210,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
 
     reply.header(
       "Cache-Control",
-      "public, s-maxage=86400, max-age=86400, stale-while-revalidate=600000",
+      "public, s-maxage=86400, max-age=0, stale-while-revalidate=600000",
     );
     return reply.status(200).type("text/html").send(content);
   });
@@ -1220,26 +1220,26 @@ export async function launch(trie, libp2p, isPrimary = true) {
 
     reply.header(
       "Cache-Control",
-      "public, s-maxage=86400, max-age=86400, stale-while-revalidate=600000",
+      "public, s-maxage=86400, max-age=0, stale-while-revalidate=600000",
     );
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/pwaandroid", async (request, reply) => {
     const content = await pwaandroid(reply.locals.theme);
 
-    reply.header("Cache-Control", "public, max-age=86400");
+    reply.header("Cache-Control", "public, max-age=0");
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/pwa", async (request, reply) => {
     const content = await pwa(reply.locals.theme);
 
-    reply.header("Cache-Control", "public, max-age=86400");
+    reply.header("Cache-Control", "public, max-age=0");
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/notifications", async (request, reply) => {
     const content = await notifications(reply.locals.theme);
 
-    reply.header("Cache-Control", "public, max-age=86400");
+    reply.header("Cache-Control", "public, max-age=0");
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/demonstration", async (request, reply) => {
@@ -1247,14 +1247,14 @@ export async function launch(trie, libp2p, isPrimary = true) {
 
     reply.header(
       "Cache-Control",
-      "public, s-maxage=86400, max-age=86400, stale-while-revalidate=600000",
+      "public, s-maxage=86400, max-age=0, stale-while-revalidate=600000",
     );
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/email-notifications", async (request, reply) => {
     reply.header(
       "Cache-Control",
-      "public, s-maxage=86400, max-age=86400, stale-while-revalidate=600000",
+      "public, s-maxage=86400, max-age=0, stale-while-revalidate=600000",
     );
     return reply
       .status(200)
@@ -1266,7 +1266,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
 
     reply.header(
       "Cache-Control",
-      "public, s-maxage=86400, max-age=86400, stale-while-revalidate=600000",
+      "public, s-maxage=86400, max-age=0, stale-while-revalidate=600000",
     );
     return reply.status(200).type("text/html").send(content);
   });
@@ -1275,7 +1275,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
 
     reply.header(
       "Cache-Control",
-      "public, s-maxage=86400, max-age=86400, stale-while-revalidate=600000",
+      "public, s-maxage=86400, max-age=0, stale-while-revalidate=600000",
     );
     return reply.status(200).type("text/html").send(content);
   });
@@ -1284,7 +1284,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
 
     reply.header(
       "Cache-Control",
-      "public, s-maxage=86400, max-age=86400, stale-while-revalidate=600000",
+      "public, s-maxage=86400, max-age=0, stale-while-revalidate=600000",
     );
     return reply.status(200).type("text/html").send(content);
   });
@@ -1296,14 +1296,14 @@ export async function launch(trie, libp2p, isPrimary = true) {
 
     reply.header(
       "Cache-Control",
-      "public, max-age=3600, no-transform, must-revalidate, stale-while-revalidate=86400",
+      "public, max-age=0, no-transform, must-revalidate, stale-while-revalidate=86400",
     );
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/why", async (request, reply) => {
     const content = await why(reply.locals.theme, request.cookies.identity);
 
-    reply.header("Cache-Control", "public, max-age=86400");
+    reply.header("Cache-Control", "public, max-age=0");
     return reply.status(200).type("text/html").send(content);
   });
   // TODO: Remove this page after having removed its links from the page for a
@@ -1355,7 +1355,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
 
     reply.header(
       "Cache-Control",
-      "public, s-maxage=86400, max-age=86400, stale-while-revalidate=604800",
+      "public, s-maxage=86400, max-age=0, stale-while-revalidate=604800",
     );
     return sendStatus(reply, code, httpMessage, details, {
       notifications: data.notifications,
@@ -1387,7 +1387,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
 
       reply.header(
         "Cache-Control",
-        "public, s-maxage=86400, max-age=86400, stale-while-revalidate=604800",
+        "public, s-maxage=0, max-age=0, stale-while-revalidate=604800",
       );
       return reply.status(200).type("text/html").send(content);
     }
@@ -1428,7 +1428,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
   app.get("/subscribe", async (request, reply) => {
     reply.header(
       "Cache-Control",
-      "public, s-maxage=86400, max-age=86400, stale-while-revalidate=600000",
+      "public, s-maxage=86400, max-age=0, stale-while-revalidate=600000",
     );
     return reply
       .status(200)
@@ -1438,7 +1438,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
   app.get("/privacy-policy", async (request, reply) => {
     reply.header(
       "Cache-Control",
-      "public, s-maxage=86400, max-age=86400, stale-while-revalidate=600000",
+      "public, s-maxage=86400, max-age=0, stale-while-revalidate=600000",
     );
     return reply
       .status(200)
@@ -1448,7 +1448,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
   app.get("/guidelines", async (request, reply) => {
     reply.header(
       "Cache-Control",
-      "public, s-maxage=86400, max-age=86400, stale-while-revalidate=600000",
+      "public, s-maxage=86400, max-age=0, stale-while-revalidate=600000",
     );
     return reply
       .status(200)
@@ -1458,7 +1458,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
   app.get("/onboarding", async (request, reply) => {
     reply.header(
       "Cache-Control",
-      "public, s-maxage=3600, max-age=3600, stale-while-revalidate=864000",
+      "public, s-maxage=3600, max-age=0, stale-while-revalidate=864000",
     );
     return reply
       .status(200)
@@ -1473,7 +1473,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
   app.get("/whattosubmit", async (request, reply) => {
     reply.header(
       "Cache-Control",
-      "public, s-maxage=86400, max-age=86400, stale-while-revalidate=600000",
+      "public, s-maxage=86400, max-age=0, stale-while-revalidate=600000",
     );
     return reply
       .status(200)
@@ -1483,7 +1483,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
   app.get("/referral", async (request, reply) => {
     reply.header(
       "Cache-Control",
-      "public, s-maxage=3600, max-age=3600, stale-while-revalidate=864000",
+      "public, s-maxage=3600, max-age=0, stale-while-revalidate=864000",
     );
     return reply
       .status(200)
@@ -1493,7 +1493,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
   app.get("/onboarding-reader", async (request, reply) => {
     reply.header(
       "Cache-Control",
-      "public, s-maxage=3600, max-age=3600, stale-while-revalidate=864000",
+      "public, s-maxage=3600, max-age=0, stale-while-revalidate=864000",
     );
     return reply
       .status(200)
@@ -1508,7 +1508,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
   app.get("/onboarding-curator", async (request, reply) => {
     reply.header(
       "Cache-Control",
-      "public, s-maxage=3600, max-age=3600, stale-while-revalidate=864000",
+      "public, s-maxage=3600, max-age=0, stale-while-revalidate=864000",
     );
     return reply
       .status(200)
@@ -1523,7 +1523,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
   app.get("/onboarding-submitter", async (request, reply) => {
     reply.header(
       "Cache-Control",
-      "public, s-maxage=3600, max-age=3600, stale-while-revalidate=864000",
+      "public, s-maxage=3600, max-age=0, stale-while-revalidate=864000",
     );
     return reply
       .status(200)
@@ -1552,7 +1552,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
   app.get("/shortcut", async (request, reply) => {
     reply.header(
       "Cache-Control",
-      "public, s-maxage=86400, max-age=86400, stale-while-revalidate=600000",
+      "public, s-maxage=86400, max-age=0, stale-while-revalidate=600000",
     );
     return reply
       .status(200)
@@ -1607,7 +1607,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
     if (profile && profile.ens) {
       reply.header(
         "Cache-Control",
-        "public, s-maxage=86400, max-age=86400, stale-while-revalidate=259200",
+        "public, s-maxage=86400, max-age=0, stale-while-revalidate=259200",
       );
       return reply.redirect(308, `/${profile.ens}`);
     }
@@ -1625,19 +1625,19 @@ export async function launch(trie, libp2p, isPrimary = true) {
       // For "new" mode, use shorter cache time but longer stale period
       reply.header(
         "Cache-Control",
-        "public, s-maxage=3600, max-age=1800, stale-while-revalidate=259200",
+        "public, s-maxage=3600, max-age=0, stale-while-revalidate=259200",
       );
     } else if (!request.query.mode || request.query.mode == "top") {
       // For "top" mode, we can cache longer with a very long stale period
       reply.header(
         "Cache-Control",
-        "public, s-maxage=43200, max-age=21600, stale-while-revalidate=432000",
+        "public, s-maxage=43200, max-age=0, stale-while-revalidate=432000",
       );
     } else {
       // Fallback for any other modes
       reply.header(
         "Cache-Control",
-        "public, s-maxage=3600, max-age=1800, stale-while-revalidate=86400",
+        "public, s-maxage=3600, max-age=0, stale-while-revalidate=86400",
       );
     }
 
@@ -1659,13 +1659,13 @@ export async function launch(trie, libp2p, isPrimary = true) {
     if (url || title) {
       reply.header(
         "Cache-Control",
-        "public, s-maxage=18000, max-age=18000, must-revalidate",
+        "public, s-maxage=18000, max-age=0, must-revalidate",
       );
     } else {
       // NOTE: If url and title aren't present
       reply.header(
         "Cache-Control",
-        "public, s-maxage=86400, max-age=86400, stale-while-revalidate=600000",
+        "public, s-maxage=86400, max-age=0, stale-while-revalidate=600000",
       );
     }
 
@@ -1707,12 +1707,12 @@ export async function launch(trie, libp2p, isPrimary = true) {
     if (request.query.mode === "new") {
       reply.header(
         "Cache-Control",
-        "public, s-maxage=7200, max-age=3600, stale-while-revalidate=259200",
+        "public, s-maxage=7200, max-age=0, stale-while-revalidate=259200",
       );
     } else {
       reply.header(
         "Cache-Control",
-        "public, s-maxage=43200, max-age=21600, stale-while-revalidate=432000",
+        "public, s-maxage=43200, max-age=0, stale-while-revalidate=432000",
       );
     }
     return reply.status(200).type("text/html").send(content);
