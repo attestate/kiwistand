@@ -13,22 +13,6 @@ posthog.init("phc_F3mfkyH5tKKSVxnMbJf0ALcPA98s92s3Jw8a7eqpBGw", {
 });
 
 window.isSidebarOpen = false;
-function handleClick(event) {
-  const sidebar = document.querySelector(".sidebar");
-  const overlay = document.querySelector("#overlay");
-  if (!sidebar) return;
-  const isClickOutside = !sidebar.contains(event.target);
-  const isSidebarToggle = event.target.closest(".sidebar-toggle") !== null;
-  const isClickOnOverlay = event.target === overlay;
-
-  if (
-    isSidebarToggle ||
-    (isClickOutside && window.isSidebarOpen) ||
-    isClickOnOverlay
-  ) {
-    toggleSidebar();
-  }
-}
 
 function toggleSidebar() {
   const sidebar = document.querySelector(".sidebar");
@@ -51,7 +35,20 @@ function toggleSidebar() {
   document.body.style.overflow = window.isSidebarOpen ? "auto" : "hidden";
 }
 
-document.addEventListener("click", handleClick);
+// Instead of a document-wide click handler, add specific handlers
+document.addEventListener("DOMContentLoaded", () => {
+  // Add click handler for sidebar toggle buttons
+  const toggleButtons = document.querySelectorAll(".sidebar-toggle");
+  toggleButtons.forEach(button => {
+    button.addEventListener("click", toggleSidebar);
+  });
+  
+  // Add click handler for overlay to close sidebar
+  const overlay = document.querySelector("#overlay");
+  if (overlay) {
+    overlay.addEventListener("click", toggleSidebar);
+  }
+});
 
 async function addSubmitButton(allowlist, delegations, toast) {
   const submitButtonContainer = document.getElementById("submit-button");
