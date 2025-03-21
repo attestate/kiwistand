@@ -490,6 +490,7 @@ const row = (
                         data-story-link="/stories/${getSlug(
                           story.title,
                         )}?index=0x${story.index}"
+                        data-external-link="${DOMPurify.sanitize(story.href)}"
                         target="${path === "/submit" ||
                         path === "/demonstration" ||
                         (isCloudflareImage(story.href) && story.index)

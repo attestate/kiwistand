@@ -928,19 +928,28 @@ function trackLinkImpressions() {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
           const link = entry.target;
-          const href = link.getAttribute("href");
+          let href = link.getAttribute("href");
 
           if (!href) return;
 
           if (
+            href.startsWith("/stories") &&
+            link.hasAttribute("data-external-link")
+          ) {
+            const externalLink = link.getAttribute("data-external-link");
+            if (externalLink && externalLink.includes("imagedelivery.net")) {
+              href = externalLink;
+            }
+          } else if (
             href.startsWith("javascript:") ||
             href.startsWith("/") ||
             href.startsWith("#") ||
             href.startsWith("mailto:") ||
             href.startsWith("tel:") ||
             !href.includes("://")
-          )
+          ) {
             return;
+          }
 
           try {
             const linkUrl = new URL(href);
