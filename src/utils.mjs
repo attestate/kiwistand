@@ -5,7 +5,7 @@ import { Response, Request } from "node-fetch";
 import { getCacheKey } from "node-fetch-cache";
 import DOMPurify from "isomorphic-dompurify";
 import slugify from "slugify";
-slugify.extend({ "′": "", "'": "", "'": "" });
+slugify.extend({ "′": "", "'": "", "'": "", "\"": "" });
 
 const staleStore = new Map();
 
