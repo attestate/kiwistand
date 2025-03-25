@@ -10,7 +10,7 @@ import * as karma from "../../karma.mjs";
 
 const html = htm.bind(vhtml);
 
-const header = async (theme, path) => {
+const header = (theme, path) => {
   return html` <td style="height: 70px;">
     <nav-nft-modal />
     <nav-delegation-modal />
@@ -82,10 +82,34 @@ const header = async (theme, path) => {
                 </span>
               </a>
               <div class="desktop-nav">
-                <a class="meta-link" href="/" data-no-instant onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'">Feed</a>
-                <a class="meta-link primary-action" href="/submit" data-no-instant onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'">Submit</a>
-                <a class="meta-link" href="/community" data-no-instant onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'">Users</a>
-                <a class="meta-link" href="/profile" data-no-instant onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'">Profile</a>
+                <a
+                  class="meta-link"
+                  href="/"
+                  data-no-instant
+                  onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
+                  >Feed</a
+                >
+                <a
+                  class="meta-link primary-action"
+                  href="/submit"
+                  data-no-instant
+                  onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
+                  >Submit</a
+                >
+                <a
+                  class="meta-link"
+                  href="/community"
+                  data-no-instant
+                  onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
+                  >Users</a
+                >
+                <a
+                  class="meta-link"
+                  href="/profile"
+                  data-no-instant
+                  onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
+                  >Profile</a
+                >
                 <span class="header-disconnect">Disconnect</span>
               </div>
               <div

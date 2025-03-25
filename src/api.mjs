@@ -17,7 +17,7 @@ import { SCHEMATA } from "./constants.mjs";
 import { sendToCluster } from "./http.mjs";
 import * as registry from "./chainstate/registry.mjs";
 import * as newest from "./views/new.mjs";
-import { generateStory } from "./views/story.mjs";
+import { generatePreview } from "./views/story.mjs";
 import { getSubmission } from "./cache.mjs";
 
 const ajv = new Ajv();
@@ -102,8 +102,8 @@ export function handleMessage(
     }
 
     // Send message to all worker processes to recompute their new feed
-    sendToCluster('recompute-new-feed');
-    
+    sendToCluster("recompute-new-feed");
+
     if (request.query && request.query.wait && request.query.wait === "true") {
       await newest.recompute(trie);
     } else {
@@ -113,7 +113,7 @@ export function handleMessage(
     let submission;
     if (message.type === "amplify") {
       try {
-        await generateStory(`0x${index}`);
+        await generatePreview(`0x${index}`);
       } catch (err) {
         // NOTE: This can fail if the message is an upvote, not a submission.
       }

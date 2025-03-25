@@ -64,6 +64,19 @@ export async function generateStory(index) {
     throw new Error("Index wasn't found");
   }
 
+  return submission;
+}
+
+export async function generatePreview(index) {
+  let submission;
+  try {
+    submission = getSubmission(index);
+  } catch (err) {
+    log(
+      `Requested index "${index}" but didn't find because of error "${err.toString()}"`,
+    );
+    throw new Error("Index wasn't found");
+  }
   const ensData = await ens.resolve(submission.identity);
   const value = {
     ...submission,
@@ -82,8 +95,6 @@ export async function generateStory(index) {
     const body = preview.story(value.title, value.submitter.displayName);
     await preview.generate(hexIndex, body);
   }
-
-  return submission;
 }
 
 export function generateList(profiles, submitter) {
@@ -190,12 +201,6 @@ export function generateList(profiles, submitter) {
 }
 
 export default async function (trie, theme, index, value, referral) {
-  let writers = [];
-  try {
-    writers = await moderation.getWriters();
-  } catch (err) {
-    // noop
-  }
   const path = "/stories";
 
   let data = cachedMetadata(value.href, false, value.title);
@@ -206,15 +211,9 @@ export default async function (trie, theme, index, value, referral) {
     delete data.image;
   }
 
-  const isOriginal = Object.keys(writers).some(
-    (domain) =>
-      normalizeUrl(value.href).startsWith(domain) &&
-      writers[domain] === value.identity,
-  );
   const story = {
     ...value,
     metadata: data,
-    isOriginal,
   };
 
   const upvoterProfileResults = await Promise.allSettled(
@@ -303,7 +302,7 @@ export default async function (trie, theme, index, value, referral) {
     // Fall back to the generated preview
     ogImage = `https://news.kiwistand.com/previews/${index}.jpg`;
   }
-  
+
   const ogDescription =
     data && data.ogDescription
       ? data.ogDescription
@@ -339,7 +338,7 @@ export default async function (trie, theme, index, value, referral) {
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
               <thead>
                 <tr>
-                  ${await Header(theme)}
+                  ${Header(theme)}
                 </tr>
               </thead>
               <thead
