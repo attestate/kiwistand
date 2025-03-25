@@ -625,8 +625,6 @@ const row = (
                         ? html`<a
                             href="${interactive
                               ? ""
-                              : story.submitter && story.submitter.ens
-                              ? `/${story.submitter.ens}`
                               : `/upvotes?address=${story.identity}`}"
                             class="meta-link"
                             onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"

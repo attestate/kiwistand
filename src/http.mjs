@@ -1603,14 +1603,6 @@ export async function launch(trie, libp2p, isPrimary = true) {
         .type("text/plain")
         .send("No valid Ethereum address");
     }
-    const profile = await resolve(request.query.address);
-    if (profile && profile.ens) {
-      reply.header(
-        "Cache-Control",
-        "public, s-maxage=86400, max-age=0, stale-while-revalidate=259200",
-      );
-      return reply.redirect(308, `/${profile.ens}`);
-    }
 
     const content = await getProfile(
       trie,
@@ -1618,28 +1610,12 @@ export async function launch(trie, libp2p, isPrimary = true) {
       request.query.address,
       DOMPurify.sanitize(request.query.page),
       DOMPurify.sanitize(request.query.mode),
-      request.query.frame === "true",
     );
 
-    if (request.query.mode === "new") {
-      // For "new" mode, use shorter cache time but longer stale period
-      reply.header(
-        "Cache-Control",
-        "public, s-maxage=3600, max-age=0, stale-while-revalidate=259200",
-      );
-    } else if (!request.query.mode || request.query.mode == "top") {
-      // For "top" mode, we can cache longer with a very long stale period
-      reply.header(
-        "Cache-Control",
-        "public, s-maxage=43200, max-age=0, stale-while-revalidate=432000",
-      );
-    } else {
-      // Fallback for any other modes
-      reply.header(
-        "Cache-Control",
-        "public, s-maxage=3600, max-age=0, stale-while-revalidate=86400",
-      );
-    }
+    reply.header(
+      "Cache-Control",
+      "public, s-maxage=86400, max-age=0, stale-while-revalidate=259200",
+    );
 
     return reply.status(200).type("text/html").send(content);
   });
