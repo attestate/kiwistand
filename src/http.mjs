@@ -1590,10 +1590,6 @@ export async function launch(trie, libp2p, isPrimary = true) {
       // NOTE: We redirect to community in case the user isn't logged in
       return reply.redirect(301, `/gateway`);
     }
-    const profile = await resolve(request.cookies.identity);
-    if (profile.ens) {
-      return reply.redirect(301, `/${profile.ens}`);
-    }
     return reply.redirect(301, `/upvotes?address=${request.cookies.identity}`);
   });
   app.get("/upvotes", async (request, reply) => {
