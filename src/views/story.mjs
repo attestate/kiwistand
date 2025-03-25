@@ -45,18 +45,9 @@ export async function generateStory(index) {
     throw new Error("Index wasn't found");
   }
 
-  const sheetName = "contest";
-  let links;
-  try {
-    const result = await curation.getSheet(sheetName);
-    links = result.links;
-  } catch (err) {
-    log(`Error getting contest submissions ${err.stack}`);
-  }
-
   let submission;
   try {
-    submission = getSubmission(index, null, identityClassifier, links);
+    submission = getSubmission(index);
   } catch (err) {
     log(
       `Requested index "${index}" but didn't find because of error "${err.toString()}"`,
@@ -205,12 +196,6 @@ export default async function (trie, theme, index, value, referral) {
 
   let data = cachedMetadata(value.href, false, value.title);
 
-  const policy = await moderation.getLists();
-  const href = normalizeUrl(value.href, { stripWWW: false });
-  if (href && policy?.images.includes(href) && data?.image) {
-    delete data.image;
-  }
-
   const story = {
     ...value,
     metadata: data,
@@ -236,8 +221,6 @@ export default async function (trie, theme, index, value, referral) {
       }
     }
   });
-
-  story.comments = moderation.flag(story.comments, policy);
 
   // Collect all identities that need resolving
   const identities = new Set();
