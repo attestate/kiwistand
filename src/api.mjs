@@ -18,7 +18,7 @@ import { sendToCluster } from "./http.mjs";
 import * as registry from "./chainstate/registry.mjs";
 import * as newest from "./views/new.mjs";
 import { generatePreview } from "./views/story.mjs";
-import { getSubmission } from "./cache.mjs";
+import { getSubmission, isReactionComment } from "./cache.mjs";
 
 const ajv = new Ajv();
 addFormats(ajv);
@@ -81,9 +81,19 @@ export function handleMessage(
 ) {
   return async (request, reply) => {
     const message = request.body;
-    const allowlist = await getAllowlist();
-    const delegations = await getDelegations();
-    const accounts = await getAccounts();
+    const [allowlistResult, delegationsResult, accountsResult] =
+      await Promise.allSettled([
+        getAllowlist(),
+        getDelegations(),
+        getAccounts(),
+      ]);
+
+    const allowlist =
+      allowlistResult.status === "fulfilled" ? allowlistResult.value : {};
+    const delegations =
+      delegationsResult.status === "fulfilled" ? delegationsResult.value : {};
+    const accounts =
+      accountsResult.status === "fulfilled" ? accountsResult.value : {};
 
     let index;
     try {
@@ -96,52 +106,98 @@ export function handleMessage(
         accounts,
       );
     } catch (err) {
-      const code = 400;
-      const httpMessage = "Bad Request";
-      return sendError(reply, code, httpMessage, err.toString());
-    }
-
-    // Send message to all worker processes to recompute their new feed
-    sendToCluster("recompute-new-feed");
-
-    if (request.query && request.query.wait && request.query.wait === "true") {
-      await newest.recompute(trie);
-    } else {
-      newest.recompute(trie);
-    }
-
-    let submission;
-    if (message.type === "amplify") {
-      try {
-        await generatePreview(`0x${index}`);
-      } catch (err) {
-        // NOTE: This can fail if the message is an upvote, not a submission.
+      // NOTE: If the user has submitted this very link we're redirecting them
+      // to their original submission
+      if (
+        err
+          .toString()
+          .includes("doesn't pass legitimacy criteria (duplicate)") &&
+        message.type === "amplify"
+      ) {
+        try {
+          const index = null;
+          const submission = getSubmission(index, message.href);
+          const code = 200;
+          const httpMessage = "OK";
+          const details = "Resubmission detected";
+          const response = {
+            index: `0x${submission.index}`,
+            isResubmission: true,
+          };
+          return sendStatus(reply, code, httpMessage, details, response);
+        } catch (err) {
+          log(
+            `Error handling resubmission in api after not passing legitimacy critera ${err.stack}`,
+          );
+        }
+      } else {
+        const code = 400;
+        const httpMessage = "Bad Request";
+        return sendError(reply, code, httpMessage, err.toString());
       }
+    }
 
+    // We're only checking if a supposed submission is an upvote here if the
+    // wait parameter is set.
+    if (message.type === "amplify" && request?.query?.wait === "true") {
+      let submission;
       try {
         const index = null;
         submission = getSubmission(index, message.href);
       } catch (err) {
-        // NOTE: We can ignore the error here if it's being thrown
+        log(
+          `Error handling resubmission in api after finding that submission request is just an upvote ${err.stack}`,
+        );
       }
+      if (submission && submission.upvotes > 1) {
+        const code = 200;
+        const httpMessage = "OK";
+        const details = "Resubmission detected";
+        const response = {
+          index: `0x${submission.index}`,
+          isResubmission: true,
+        };
+        return sendStatus(reply, code, httpMessage, details, response);
+      }
+    }
+
+    // NOTE: We only want to recomput the new feed if:
+    //
+    // - The message is a submission. When a message of type amplify reaches
+    // this point of the function execution, we're already sure that it's a
+    // submission
+    //
+    // - The message is a comment, but not an emoji reaction.
+    if (
+      message.type === "amplify" ||
+      (message.type === "comment" && !isReactionComment(message.title))
+    ) {
+      sendToCluster("recompute-new-feed");
+
+      if (request?.query?.wait === "true") {
+        await newest.recompute(trie);
+      } else {
+        newest.recompute(trie);
+      }
+    }
+
+    // NOTE: It's ok to not generate a preview if we've previously detected a
+    // resubmission. In this case the preview was already generated.
+    if (message.type === "amplify") {
+      // NOTE: We're making this part non-blocking as we don't want the
+      // submitting user to having to wait on this call.
+      generatePreview(`0x${index}`).catch((err) => {
+        // NOTE: This can fail if the message is an upvote, not a submission.
+      });
     }
 
     const code = 200;
     const httpMessage = "OK";
     const details = "Message included";
-
-    let response;
-    if (submission && submission.upvotes > 1) {
-      response = {
-        index: `0x${submission.index}`,
-        isResubmission: true,
-      };
-    } else {
-      response = {
-        index: `0x${index}`,
-        isResubmission: false,
-      };
-    }
+    const response = {
+      index: `0x${index}`,
+      isResubmission: false,
+    };
     return sendStatus(reply, code, httpMessage, details, response);
   };
 }

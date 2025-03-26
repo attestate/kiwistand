@@ -40,22 +40,21 @@ export async function recompute() {
 
   const limit = 25;
   let counts = listNewest(limit);
-
   const path = "/new";
-  const config = await moderation.getLists();
-  counts = moderation.moderate(counts, config, path);
-  let sortedCounts = counts.sort((a, b) => b.timestamp - a.timestamp);
 
-  let writers = [];
-  try {
-    writers = await moderation.getWriters();
-  } catch (err) {
-    // noop
-  }
+  const [listsResult, writersResult] = await Promise.allSettled([
+    moderation.getLists(),
+    moderation.getWriters(),
+  ]);
+
+  const config = listsResult.status === "fulfilled" ? listsResult.value : {};
+  let writers = writersResult.status === "fulfilled" ? writersResult.value : [];
+
+  counts = moderation.moderate(counts, config, path);
 
   let nextStories = [];
   await Promise.allSettled(
-    sortedCounts.map(async (story) => {
+    counts.map(async (story) => {
       if (!story.identity || !story.index || !story.upvoters) {
         nextStories.push({
           ...story,
@@ -120,16 +119,9 @@ export async function recompute() {
 
   stories = nextStories.sort((a, b) => b.timestamp - a.timestamp);
   inProgress = false;
-  try {
-    // Purge Cloudflare cache for the "/new" page so that new submissions show immediately.
-    await Promise.allSettled([
-      purgeCache("https://news.kiwistand.com/new"),
-      purgeCache("https://news.kiwistand.com/new?cached=true"),
-    ]);
-    log("Cloudflare cache purged for /new and /new?cached=true");
-  } catch (error) {
-    log("Cloudflare cache purge skipped: " + error.message);
-  }
+  purgeCache("https://news.kiwistand.com/new?cached=true").catch((err) =>
+    log(`Error refreshing /new?cached=true`),
+  );
 }
 
 export default async function (trie, theme) {
@@ -157,7 +149,7 @@ export default async function (trie, theme) {
           <div id="hnmain" class="scaled-hnmain">
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
               <tr>
-                ${await Header(theme)}
+                ${Header(theme)}
               </tr>
               <tr>
                 ${SecondHeader(theme, "new")}
