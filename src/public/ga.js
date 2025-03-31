@@ -4,8 +4,21 @@ function gtag() {
 }
 gtag("js", new Date());
 
+// Set default consent to 'denied' until user consents
+gtag('consent', 'default', {
+  'analytics_storage': 'denied'
+});
+
 const key = "G-21BKTD0NKN"; // Measurement ID for Google Analytics; this tag is used in gtag("config", ...)
 gtag("config", key);
+
+// Initialize but respect consent
+const analyticsConsent = localStorage.getItem('kiwi-analytics-consent');
+if (analyticsConsent === 'true') {
+  gtag('consent', 'update', {
+    'analytics_storage': 'granted'
+  });
+}
 
 const isPWA = window.matchMedia("(display-mode: standalone)").matches;
 const schema = /^-kiwi-news-(0x[a-fA-F0-9]{40})-key$/;

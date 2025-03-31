@@ -7,10 +7,16 @@ import { createRoot } from "react-dom/client";
 import { isIOS, isRunningPWA, getCookie, getLocalAccount } from "./session.mjs";
 import theme from "./theme.jsx";
 import posthog from "posthog-js";
-posthog.init("phc_F3mfkyH5tKKSVxnMbJf0ALcPA98s92s3Jw8a7eqpBGw", {
-  api_host: "https://eu.i.posthog.com",
-  person_profiles: "identified_only", // or 'always' to create profiles for anonymous users as well
-});
+window.posthog = posthog; // Make available globally but don't initialize
+
+// Only initialize if consent already exists
+const analyticsConsent = localStorage.getItem('kiwi-analytics-consent');
+if (analyticsConsent === 'true') {
+  posthog.init("phc_F3mfkyH5tKKSVxnMbJf0ALcPA98s92s3Jw8a7eqpBGw", {
+    api_host: "https://eu.i.posthog.com",
+    person_profiles: "identified_only", // or 'always' to create profiles for anonymous users as well
+  });
+}
 
 window.isSidebarOpen = false;
 
@@ -559,6 +565,21 @@ async function addToaster() {
   return toast;
 }
 
+async function addAnalyticsConsent() {
+  if (!document.getElementById('analytics-consent-container')) {
+    const container = document.createElement('div');
+    container.id = 'analytics-consent-container';
+    document.body.appendChild(container);
+  }
+  
+  const AnalyticsConsent = (await import('./AnalyticsConsent.jsx')).default;
+  createRoot(document.getElementById('analytics-consent-container')).render(
+    <StrictMode>
+      <AnalyticsConsent />
+    </StrictMode>
+  );
+}
+
 async function addMinuteCountdown() {
   const elem = document.querySelector(".nav-countdown");
   if (elem) {
@@ -1037,6 +1058,9 @@ async function start() {
 
   const toast = await addToaster();
   window.toast = toast;
+  
+  // Add the analytics consent banner
+  await addAnalyticsConsent();
 
   const { fetchAllowList, fetchDelegations } = await import("./API.mjs");
 
