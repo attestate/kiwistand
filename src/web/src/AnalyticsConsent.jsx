@@ -8,8 +8,13 @@ export default function AnalyticsConsent() {
     // Check if analytics consent was already decided
     const analyticsConsent = localStorage.getItem('kiwi-analytics-consent');
     if (analyticsConsent === null) {
+      // Analytics are enabled by default, but we still show the banner
       setVisible(true);
-    } else if (analyticsConsent === 'true') {
+      enableAnalytics(); // Enable analytics by default
+    } else if (analyticsConsent === 'false') {
+      // User has explicitly opted out before, so don't enable analytics
+    } else {
+      // User has explicitly accepted
       enableAnalytics();
     }
     
@@ -42,12 +47,24 @@ export default function AnalyticsConsent() {
   const acceptAnalytics = () => {
     localStorage.setItem('kiwi-analytics-consent', 'true');
     setVisible(false);
-    enableAnalytics();
+    // Analytics are already enabled by default
   };
 
   const declineAnalytics = () => {
     localStorage.setItem('kiwi-analytics-consent', 'false');
     setVisible(false);
+    
+    // Disable analytics
+    if (window.gtag) {
+      window.gtag('consent', 'update', {
+        analytics_storage: 'denied'
+      });
+    }
+    
+    // Disable PostHog
+    if (window.posthog) {
+      window.posthog.opt_out_capturing();
+    }
   };
 
   if (!visible) return null;
@@ -75,7 +92,7 @@ export default function AnalyticsConsent() {
       }}>
         <div>
           <p style={{ margin: 0, fontSize: '14px' }}>
-            We use analytics cookies to improve our site. 
+            We use analytics cookies to improve our site. You can opt out if you prefer.
             See our <a href="/privacy-policy">Privacy Policy</a>.
           </p>
         </div>
@@ -103,7 +120,7 @@ export default function AnalyticsConsent() {
               e.currentTarget.style.backgroundColor = 'white';
             }}
           >
-            Decline
+            Opt Out
           </button>
           <button 
             onClick={acceptAnalytics}
@@ -125,7 +142,7 @@ export default function AnalyticsConsent() {
               e.currentTarget.style.color = 'white';
             }}
           >
-            Accept
+            Continue
           </button>
         </div>
       </div>

@@ -9,12 +9,12 @@ import theme from "./theme.jsx";
 import posthog from "posthog-js";
 window.posthog = posthog; // Make available globally but don't initialize
 
-// Only initialize if consent already exists
+// Initialize PostHog by default unless user has explicitly opted out
 const analyticsConsent = localStorage.getItem('kiwi-analytics-consent');
-if (analyticsConsent === 'true') {
+if (analyticsConsent !== 'false') { // Initialize unless explicitly opted out
   posthog.init("phc_F3mfkyH5tKKSVxnMbJf0ALcPA98s92s3Jw8a7eqpBGw", {
     api_host: "https://eu.i.posthog.com",
-    person_profiles: "identified_only", // or 'always' to create profiles for anonymous users as well
+    person_profiles: "identified_only",
   });
 }
 

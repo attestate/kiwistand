@@ -4,19 +4,19 @@ function gtag() {
 }
 gtag("js", new Date());
 
-// Set default consent to 'denied' until user consents
+// Set default consent to 'granted' (opt-out approach)
 gtag('consent', 'default', {
-  'analytics_storage': 'denied'
+  'analytics_storage': 'granted'
 });
 
 const key = "G-21BKTD0NKN"; // Measurement ID for Google Analytics; this tag is used in gtag("config", ...)
 gtag("config", key);
 
-// Initialize but respect consent
+// Check if user has explicitly opted out
 const analyticsConsent = localStorage.getItem('kiwi-analytics-consent');
-if (analyticsConsent === 'true') {
+if (analyticsConsent === 'false') {
   gtag('consent', 'update', {
-    'analytics_storage': 'granted'
+    'analytics_storage': 'denied'
   });
 }
 
