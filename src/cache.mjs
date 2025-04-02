@@ -413,6 +413,28 @@ export function countImpressions(url) {
   return result ? result.uniqueHashCount : 0;
 }
 
+export function getImpressionsWithTimestamps(startTimestamp, endTimestamp) {
+  const query = db.prepare(`
+    SELECT url, hash, timestamp
+    FROM impressions
+    WHERE timestamp >= ? AND timestamp <= ?
+    ORDER BY timestamp
+  `);
+  
+  return query.all(startTimestamp, endTimestamp);
+}
+
+export function getOutboundsWithTimestamps(startTimestamp, endTimestamp) {
+  const query = db.prepare(`
+    SELECT url, hash, timestamp
+    FROM fingerprints
+    WHERE timestamp >= ? AND timestamp <= ?
+    ORDER BY timestamp
+  `);
+  
+  return query.all(startTimestamp, endTimestamp);
+}
+
 export function trackOutbound(url, hash) {
   const normalizedUrl = normalizeUrl(url, {
     stripWWW: false,
