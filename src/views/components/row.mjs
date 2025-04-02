@@ -305,8 +305,12 @@ const row = (
           <div
             class="${interactive ? "" : "content-row"} ${invert
               ? "inverted-row"
-              : ""} ${displayMobileImage ? "content-row-elevated" : ""}"
-            style="${invert ? "display:none;" : ""} ${style}"
+              : ""} ${displayMobileImage ? "content-row-elevated" : ""} ${isad
+              ? "sponsored-row"
+              : ""}"
+            style="${invert ? "display:none;" : ""} ${style} ${isad
+              ? "background-color: rgba(245, 247, 250, 0.9); border-left: 3px solid rgb(175, 192, 70);"
+              : ""}"
           >
             ${displayMobileImage
               ? html` <a
@@ -524,6 +528,12 @@ const row = (
                     style="font-size: 9pt; margin-top: 3px;"
                   >
                     <span style="opacity: 0.8">
+                      ${isad
+                        ? html` <span>
+                            <span style="font-weight: 500;">Sponsored</span>
+                            <span style="opacity:0.6"> • </span>
+                          </span>`
+                        : null}
                       ${path !== "/stories" &&
                       story.avatars &&
                       story.avatars.length > 3 &&
@@ -667,14 +677,6 @@ const row = (
                       ${story.collateral && story.price
                         ? html`
                             <span>
-                              <a
-                                class="meta-link"
-                                href="https://github.com/attestate/ad?tab=readme-ov-file#how-does-it-work"
-                                target="_blank"
-                              >
-                                <span> </span>
-                                (sponsored)</a
-                              >
                               <span style="opacity:0.6"> • </span>
                               <a
                                 style="display: inline;"
@@ -690,6 +692,24 @@ const row = (
                                 ).toFixed(9)}
                                 <span> </span>
                                 ETH
+                              </a>
+                              <span style="opacity:0.6"> • </span>
+                              <a
+                                href="/submit?isad=true"
+                                class="meta-link"
+                                style="color: rgb(175, 192, 70); font-weight: 500;"
+                                onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
+                              >
+                                Run your own ad
+                              </a>
+                              <span style="opacity:0.6"> • </span>
+                              <a
+                                href="/adstats"
+                                class="meta-link"
+                                style="color: rgba(175, 192, 70, 0.75); font-weight: normal;"
+                                onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
+                              >
+                                See Performance
                               </a>
                             </span>
                           `

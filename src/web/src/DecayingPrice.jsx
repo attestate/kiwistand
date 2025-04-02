@@ -35,6 +35,10 @@ export default function DecayingPrice({ initialPrice }) {
           color: flash ? "#ff0000" : "inherit",
           textShadow: flash ? "0 0 10px rgba(255,0,0,0.5)" : "none",
           transition: "color 0.1s",
+          display: "inline-block",
+          minWidth: "85px",
+          textAlign: "right",
+          fontFamily: "monospace"
         }}
       >
         ↓{(Number(price) / 1e18).toFixed(9)}
