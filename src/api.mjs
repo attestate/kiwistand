@@ -24,7 +24,36 @@ const ajv = new Ajv();
 addFormats(ajv);
 const api = express.Router();
 api.use(express.json());
-api.use(cors());
+
+// Optimal CORS configuration with caching for both browsers and CDNs
+const corsOptions = {
+  // Cache preflight requests for 24 hours in browsers via CORS-specific header
+  maxAge: 86400,
+  
+  // This ensures the preflight continuation so we can add our own headers
+  preflightContinue: true
+};
+
+// Use CORS with the options
+api.use(cors(corsOptions));
+
+// Add Cache-Control headers for CDN caching
+api.use((req, res, next) => {
+  if (req.method === 'OPTIONS') {
+    // Enable caching at all levels:
+    // - s-maxage for Cloudflare CDN
+    // - max-age for browser HTTP cache
+    // - stale-while-revalidate for background revalidation
+    // - Access-Control-Max-Age (added by CORS middleware) for browser CORS cache
+    res.setHeader('Cache-Control', 'public, s-maxage=86400, max-age=86400, stale-while-revalidate=604800');
+    // Ensure responses are varied by origin to prevent CORS issues
+    res.setHeader('Vary', 'Origin');
+    res.end();
+  } else {
+    next();
+  }
+});
+
 api.use(
   morgan(
     ':remote-addr - :remote-user ":method :url" :status ":referrer" ":user-agent"',
@@ -122,7 +151,6 @@ export function handleMessage(
           const details = "Resubmission detected";
           const response = {
             index: `0x${submission.index}`,
-            isResubmission: true,
           };
           return sendStatus(reply, code, httpMessage, details, response);
         } catch (err) {
@@ -138,7 +166,10 @@ export function handleMessage(
     }
 
     // We're only checking if a supposed submission is an upvote here if the
-    // wait parameter is set.
+    // wait parameter is set. We necessarily have to check this for an upvote
+    // intentioned to be a submission as we'd otherwise lead to the single
+    // story page indexed by the upvoting message, and not neccesary by the
+    // submitting message.
     if (message.type === "amplify" && request?.query?.wait === "true") {
       let submission;
       try {
@@ -155,13 +186,12 @@ export function handleMessage(
         const details = "Resubmission detected";
         const response = {
           index: `0x${submission.index}`,
-          isResubmission: true,
         };
         return sendStatus(reply, code, httpMessage, details, response);
       }
     }
 
-    // NOTE: We only want to recomput the new feed if:
+    // NOTE: We only want to recompute the new feed if:
     //
     // - The message is a submission. When a message of type amplify reaches
     // this point of the function execution, we're already sure that it's a
@@ -173,12 +203,9 @@ export function handleMessage(
       (message.type === "comment" && !isReactionComment(message.title))
     ) {
       sendToCluster("recompute-new-feed");
-
-      if (request?.query?.wait === "true") {
-        await newest.recompute(trie);
-      } else {
-        newest.recompute(trie);
-      }
+      newest
+        .recompute(trie)
+        .catch((err) => log(`Recomputation of new feed failed`));
     }
 
     // NOTE: It's ok to not generate a preview if we've previously detected a
@@ -196,7 +223,6 @@ export function handleMessage(
     const details = "Message included";
     const response = {
       index: `0x${index}`,
-      isResubmission: false,
     };
     return sendStatus(reply, code, httpMessage, details, response);
   };
