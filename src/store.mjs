@@ -403,13 +403,22 @@ async function atomicPut(trie, message, identity, accounts, delegations) {
       insertMessage(enhancedMessage);
 
       // Only purge cache for regular comments, not for upvotes or emoji reactions
-      if (message.type === "comment" && !isReactionComment(message.title)) {
+      if (message.type === "comment") {
         const [, commentIndex] = message.href.split(":");
-        // Purge the main stories page synchronously so the user can see their
-        // comment
-        await purgeCache(
-          `https://news.kiwistand.com/stories?index=${commentIndex}`,
-        );
+
+        if (isReactionComment(message.title)) {
+          // NOTE: We're purging in a non-blocking way if the comment is an
+          // emoji reaction.
+          purgeCache(
+            `https://news.kiwistand.com/stories?index=${commentIndex}`,
+          ).catch((err) => log(`Failed to purge CF cache: ${err}`));
+        } else {
+          // Purge the main stories page synchronously so the user can see their
+          // comment when submitting a comment
+          await purgeCache(
+            `https://news.kiwistand.com/stories?index=${commentIndex}`,
+          );
+        }
 
         leaf(trie, Buffer.from(commentIndex.substring(2), "hex"), JSON.parse)
           .then((story) => {

@@ -14,12 +14,18 @@ import { RainbowKitProvider, ConnectButton } from "@rainbow-me/rainbowkit";
 import { eligible } from "@attestate/delegator2";
 import DOMPurify from "isomorphic-dompurify";
 import { optimism } from "wagmi/chains";
+import slugify from "slugify";
+slugify.extend({ "′": "", "'": "", "'": "", '"': "" });
 
 import * as API from "./API.mjs";
 import { useSigner, useProvider, client, chains } from "./client.mjs";
 import NFTModal from "./NFTModal.jsx";
 import { getLocalAccount } from "./session.mjs";
 import { SimpleDisconnectButton } from "./Navigation.jsx";
+
+export function getSlug(title) {
+  return slugify(DOMPurify.sanitize(title));
+}
 
 function safeExtractDomain(link) {
   let parsedUrl;
@@ -396,8 +402,7 @@ const SubmitButton = (props) => {
       return;
     }
 
-    let redirectTo = "/new";
-    let wait = true;
+    const wait = true;
     const domain = safeExtractDomain(canonicalURL);
     const response = await API.send(value, signature, wait);
 
@@ -422,17 +427,10 @@ const SubmitButton = (props) => {
       return;
     }
 
-    let nextPage;
-    if (response?.data?.index && response?.data?.isResubmission) {
-      redirectTo = "/stories";
-      nextPage = new URL(window.location.origin + redirectTo);
-      nextPage.searchParams.set("index", response.data.index);
-    } else if (response?.data?.index) {
-      nextPage = new URL(window.location.origin + redirectTo);
-      nextPage.searchParams.set("index", response.data.index);
-    } else {
-      nextPage = new URL(window.location.origin + redirectTo);
-    }
+    const nextPage = new URL(
+      window.location.origin + `/stories/${getSlug(title)}`,
+    );
+    nextPage.searchParams.set("index", response.data.index);
     window.location.href = nextPage.href;
   };
 
