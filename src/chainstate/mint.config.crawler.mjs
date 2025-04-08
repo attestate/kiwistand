@@ -24,7 +24,7 @@ export default {
       coordinator: {
         archive: false,
         module: blockLogs.state,
-        interval: 1000 * 5,
+        interval: 1000 * 15,
       },
       extractor: {
         module: blockLogs.extractor,

@@ -13,7 +13,19 @@ const { aggregate } = blockLogs.loader;
 import mainnet from "./mainnet-mints.mjs";
 
 let cachedDelegations = {};
-await refreshDelegations();
+
+// Simple initialization function
+export async function initialize() {
+  console.log(`[PID ${process.pid}] Initializing registry data...`);
+  console.time(`[PID ${process.pid}] Registry initialization`);
+  
+  await refreshDelegations();
+  await refreshAccounts();
+  
+  console.timeEnd(`[PID ${process.pid}] Registry initialization`);
+  return true;
+}
+
 export async function delegations() {
   return cachedDelegations;
 }
@@ -81,7 +93,7 @@ export function augmentWithMainnet(opAccounts) {
 }
 
 let cachedAccounts = {};
-await refreshAccounts();
+
 export async function accounts() {
   return cachedAccounts;
 }

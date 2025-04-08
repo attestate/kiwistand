@@ -249,6 +249,11 @@ export function handleClusterMessage(trie, recompute) {
 export async function launch(trie, libp2p, isPrimary = true) {
   // Set up IPC message handling for worker processes
   if (!isPrimary && cluster.worker) {
+    // Initialize registry at worker startup
+    log(`Worker ${process.pid} initializing registry data...`);
+    await registry.initialize();
+    log(`Worker ${process.pid} registry initialized`);
+    
     // Listen for messages from the primary process
     process.on("message", handleClusterMessage(trie, newAPI.recompute));
     log(`Worker ${process.pid} ready to receive IPC messages`);
@@ -333,6 +338,10 @@ export async function launch(trie, libp2p, isPrimary = true) {
 
   // Set up proxy middleware in primary process
   if (isPrimary && cluster.isPrimary) {
+    log(`Primary process ${process.pid} initializing registry data...`);
+    await registry.initialize();
+    log(`Primary process ${process.pid} registry initialized`);
+    
     log("Setting up worker proxy middleware");
 
     // Set up ports for each worker
