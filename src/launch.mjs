@@ -152,16 +152,20 @@ await Promise.allSettled([
 cache.initialize([...upvotes, ...comments]);
 cache.initializeNotifications();
 cache.initializeReactions();
+cache.addCompoundIndexes();
 
-store
-  .cache(upvotes, comments)
-  .then(() => log("store cached"))
-  .catch((err) => {
-    log(
-      `launch: An irrecoverable error during upvote caching occurred. "${err.stack}`,
-    );
-    exit(1);
-  });
+// Make upvote caching non-blocking to improve startup time
+setImmediate(() => {
+  store
+    .cache(upvotes, comments)
+    .then(() => log("store cached"))
+    .catch((err) => {
+      log(
+        `launch: An irrecoverable error during upvote caching occurred. "${err.stack}`,
+      );
+      exit(1);
+    });
+});
 
 if (!reconcileMode) {
   // Make feed computation during startup non-blocking

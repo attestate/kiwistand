@@ -1063,6 +1063,29 @@ export function listNewest(limit = 30, lookbackUnixTime) {
   return submissionsWithUpvotes;
 }
 
+export function addCompoundIndexes() {
+  log("Creating compound indexes for database optimization");
+  try {
+    db.exec(`
+      -- Comments table indexes
+      CREATE INDEX IF NOT EXISTS idx_comments_identity_timestamp ON comments(identity, timestamp);
+      CREATE INDEX IF NOT EXISTS idx_comments_submission_id_identity ON comments(submission_id, identity);
+      CREATE INDEX IF NOT EXISTS idx_comments_identity_submission_id ON comments(identity, submission_id);
+      CREATE INDEX IF NOT EXISTS idx_comments_submission_id_timestamp ON comments(submission_id, timestamp);
+      
+      -- Reactions table indexes
+      CREATE INDEX IF NOT EXISTS idx_reactions_comment_id_identity ON reactions(comment_id, identity);
+      CREATE INDEX IF NOT EXISTS idx_reactions_identity_timestamp ON reactions(identity, timestamp);
+      
+      -- Upvotes table indexes
+      CREATE INDEX IF NOT EXISTS idx_upvotes_href_identity ON upvotes(href, identity);
+    `);
+    log("Successfully created compound indexes");
+  } catch (error) {
+    log(`Error creating compound indexes: ${error.toString()}`);
+  }
+}
+
 export function insertMessage(message) {
   const { type, href, index, title, timestamp, signature, signer, identity } =
     message;
