@@ -203,18 +203,23 @@ export function handleMessage(
       (message.type === "comment" && !isReactionComment(message.title))
     ) {
       sendToCluster("recompute-new-feed");
-      newest
-        .recompute(trie)
-        .catch((err) => log(`Recomputation of new feed failed`));
+      // Use setImmediate to make recomputation truly asynchronous
+      // This prevents blocking the API response while doing heavy computation
+      setImmediate(() => {
+        newest
+          .recompute(trie)
+          .catch((err) => log(`Recomputation of new feed failed`));
+      });
     }
 
     // NOTE: It's ok to not generate a preview if we've previously detected a
     // resubmission. In this case the preview was already generated.
     if (message.type === "amplify") {
-      // NOTE: We're making this part non-blocking as we don't want the
-      // submitting user to having to wait on this call.
-      generatePreview(`0x${index}`).catch((err) => {
-        // NOTE: This can fail if the message is an upvote, not a submission.
+      // Use setImmediate to ensure all preview generation work is truly non-blocking
+      setImmediate(() => {
+        generatePreview(`0x${index}`).catch((err) => {
+          // NOTE: This can fail if the message is an upvote, not a submission.
+        });
       });
     }
 

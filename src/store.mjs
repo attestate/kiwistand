@@ -445,15 +445,21 @@ async function atomicPut(trie, message, identity, accounts, delegations) {
         ).catch((err) => log(`Failed to purge Cloudflare cache: ${err}`));
       }
 
-      // Invalidate activity caches for all affected users (async)
-      invalidateActivityCaches(message);
+      // Invalidate activity caches for all affected users in a truly non-blocking way
+      // This contains synchronous getSubmission calls that can be slow
+      setImmediate(() => {
+        invalidateActivityCaches(message);
+      });
 
-      // Trigger notifications asynchronously with promise chain
-      triggerNotification(enhancedMessage)
-        .then(() => {
-          // Notification sent successfully
-        })
-        .catch((err) => log(`Failed to trigger notification: ${err}`));
+      // Trigger notifications in a truly non-blocking way
+      // This also contains potentially slow operations
+      setImmediate(() => {
+        triggerNotification(enhancedMessage)
+          .then(() => {
+            // Notification sent successfully
+          })
+          .catch((err) => log(`Failed to trigger notification: ${err}`));
+      });
     } catch (err) {
       // NOTE: insertMessage is just a cache, so if this operation fails, we
       // want the protocol to continue to execute as normally.

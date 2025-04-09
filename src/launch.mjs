@@ -164,7 +164,10 @@ store
   });
 
 if (!reconcileMode) {
-  await newest.recompute(trie).then(() => log("/new computed"));
+  // Make feed computation during startup non-blocking
+  setImmediate(() => {
+    newest.recompute(trie).then(() => log("/new computed"));
+  });
   // TODO: Unclear if this is still necessary
   setInterval(async () => {
     await Promise.all([newest.recompute(trie)]);
