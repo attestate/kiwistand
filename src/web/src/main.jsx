@@ -731,11 +731,7 @@ async function checkMintStatus(address) {
 
     console.log("Mint has been picked up by the node.");
     clearInterval(intervalId);
-    if (supportsPasskeys() && (await testPasskeys())) {
-      window.location.href = "/passkeys";
-    } else {
-      window.location.href = "/email-notifications";
-    }
+    window.location.href = "/";
   }, 3000);
 }
 
