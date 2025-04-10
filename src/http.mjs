@@ -101,17 +101,8 @@ import {
 } from "./cache.mjs";
 
 const app = express();
-let server;
-if (env.CUSTOM_PROTOCOL === "https://") {
-  const options = {
-    key: fs.readFileSync("certificates/key.pem"),
-    cert: fs.readFileSync("certificates/cert.pem"),
-    rejectUnauthorized: false,
-  };
-  server = https.createServer(options, app);
-} else {
-  server = createHttpServer(app);
-}
+// Always use HTTP for internal servers since SSL is terminated at the load balancer
+const server = createHttpServer(app);
 
 let cachedFeed = null;
 

@@ -5,6 +5,9 @@ import { createProxyMiddleware } from "http-proxy-middleware";
 import cluster from "cluster";
 import os from "os";
 import log from "./logger.mjs";
+import https from "https";
+import fs from "fs";
+import { createServer as createHttpServer } from "http";
 
 // Routes that should be handled by worker processes
 const workerRoutes = [
@@ -135,17 +138,38 @@ async function startLoadBalancer() {
     return primaryProxy(req, res, next);
   });
 
-  // Start the load balancer
+  // Start the load balancer with SSL if configured
   const port = env.HTTP_PORT;
-  app.listen(port, () => {
-    log(`Load balancer started on port ${port}`);
-    log(`Primary process expected on port ${primaryPort}`);
-    log(
-      `Routing to ${workerCount} workers on ports ${workerBasePort}-${
-        workerBasePort + workerCount - 1
-      }`,
-    );
-  });
+  
+  let server;
+  if (env.CUSTOM_PROTOCOL === "https://") {
+    const options = {
+      key: fs.readFileSync("certificates/key.pem"),
+      cert: fs.readFileSync("certificates/cert.pem"),
+      rejectUnauthorized: false,
+    };
+    server = https.createServer(options, app);
+    server.listen(port, () => {
+      log(`Load balancer started with HTTPS on port ${port}`);
+      log(`Primary process expected on port ${primaryPort}`);
+      log(
+        `Routing to ${workerCount} workers on ports ${workerBasePort}-${
+          workerBasePort + workerCount - 1
+        }`
+      );
+    });
+  } else {
+    server = createHttpServer(app);
+    server.listen(port, () => {
+      log(`Load balancer started on port ${port}`);
+      log(`Primary process expected on port ${primaryPort}`);
+      log(
+        `Routing to ${workerCount} workers on ports ${workerBasePort}-${
+          workerBasePort + workerCount - 1
+        }`
+      );
+    });
+  }
 }
 
 // Only run the load balancer if this file is called directly
