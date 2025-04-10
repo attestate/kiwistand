@@ -247,13 +247,16 @@ export function handleClusterMessage(trie, recompute) {
 }
 
 export async function launch(trie, libp2p, isPrimary = true) {
+  // Store the original HTTP_PORT value to use as the base for all port calculations
+  const originalPort = parseInt(env.HTTP_PORT);
+
   // Set up IPC message handling for worker processes
   if (!isPrimary && cluster.worker) {
     // Initialize registry at worker startup
     log(`Worker ${process.pid} initializing registry data...`);
     await registry.initialize();
     log(`Worker ${process.pid} registry initialized`);
-    
+
     // Listen for messages from the primary process
     process.on("message", handleClusterMessage(trie, newAPI.recompute));
     log(`Worker ${process.pid} ready to receive IPC messages`);
@@ -292,13 +295,19 @@ export async function launch(trie, libp2p, isPrimary = true) {
   if (isPrimary && cluster.isPrimary) {
     log(`Primary process ${process.pid} initializing registry data...`);
     await registry.initialize();
+
+    // Set port for primary process (originalPort + 1)
+    const primaryPort = originalPort + 1;
+    env.HTTP_PORT = primaryPort;
+
+    log(`Primary launching on port ${env.HTTP_PORT}`);
     log(`Primary process ${process.pid} registry initialized`);
   }
   // If we're a worker, adjust the port
   else if (!isPrimary) {
-    // Calculate worker's port offset
+    // Calculate worker's port offset based on original port
     const workerIndex = cluster.worker.id - 1;
-    const workerPort = parseInt(env.HTTP_PORT) + 1 + workerIndex;
+    const workerPort = originalPort + 1 + workerIndex;
 
     // Override HTTP_PORT for this worker
     env.HTTP_PORT = workerPort;
