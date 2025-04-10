@@ -4,17 +4,13 @@ module.exports = {
   apps: [
     {
       name: "kiwinews-load-balancer",
-      script: "./src/load-balancer.mjs",
+      script: "npm",
+      args: "run start:load-balancer",
       env: {
         NODE_PATH: "./node_modules",
         NODE_ENV: "production",
-        THEME: "kiwi",
-        HTTP_PORT: 3000,
-        API_PORT: 8443,
-        DATA_DIR: "bootstrap",
-        BIND_ADDRESS_V4: "0.0.0.0",
+        HTTP_PORT: "3000",
       },
-      node_args: "-r dotenv/config --max-old-space-size=2048",
     },
     {
       name: "kiwinews-primary",
@@ -23,7 +19,7 @@ module.exports = {
         NODE_PATH: "./node_modules",
         NODE_ENV: "production",
         THEME: "kiwi",
-        HTTP_PORT: 3001,
+        HTTP_PORT: 3000,
         API_PORT: 8443,
         DATA_DIR: "bootstrap",
         BIND_ADDRESS_V4: "0.0.0.0",
