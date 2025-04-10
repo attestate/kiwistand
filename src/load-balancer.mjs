@@ -85,9 +85,7 @@ async function startLoadBalancer() {
       if (route === "/" && req.path === "/") {
         shouldProxy = true;
         break;
-      }
-      // For exact path match
-      else if (route === req.path) {
+      } else if (route === req.path) {
         shouldProxy = true;
         break;
       }
