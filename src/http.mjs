@@ -259,54 +259,6 @@ export async function launch(trie, libp2p, isPrimary = true) {
     log(`Worker ${process.pid} ready to receive IPC messages`);
   }
 
-  // Routes that can be handled by the worker cluster
-  const workerRoutes = [
-    "/friends",
-    "/kiwipass-mint",
-    "/api/v1/karma",
-    "/api/v1/feeds",
-    "/api/v1/stories",
-    "/gateway",
-    "/",
-    "/stories",
-    "/best",
-    "/community",
-    "/price",
-    "/retention",
-    "/users",
-    "/basics",
-    "/stats",
-    "/about",
-    "/passkeys",
-    "/app-onboarding",
-    "/app-testflight",
-    "/pwaandroid",
-    "/pwa",
-    "/notifications",
-    "/demonstration",
-    "/email-notifications",
-    "/invite",
-    "/indexing",
-    "/start",
-    "/settings",
-    "/why",
-    "/subscribe",
-    "/privacy-policy",
-    "/guidelines",
-    "/onboarding",
-    "/whattosubmit",
-    "/referral",
-    "/onboarding-reader",
-    "/onboarding-curator",
-    "/onboarding-submitter",
-    "/welcome",
-    "/kiwipass",
-    "/shortcut",
-    "/profile",
-    "/upvotes",
-    "/submit",
-  ];
-
   try {
     cachedFeed = await feed(trie, theme, 0, null, undefined, undefined);
     log("Cached feed updated");
@@ -336,70 +288,11 @@ export async function launch(trie, libp2p, isPrimary = true) {
     res.status(500).send("Internal Server Error");
   });
 
-  // Set up proxy middleware in primary process
+  // Initialize registry in primary process
   if (isPrimary && cluster.isPrimary) {
     log(`Primary process ${process.pid} initializing registry data...`);
     await registry.initialize();
     log(`Primary process ${process.pid} registry initialized`);
-    
-    log("Setting up worker proxy middleware");
-
-    // Set up ports for each worker
-    const workers = [];
-    const startPort = parseInt(env.HTTP_PORT) + 1;
-
-    for (let i = 0; i < (Number(env.WORKER_COUNT) || os.cpus().length); i++) {
-      workers.push(`http://localhost:${startPort + i}`);
-    }
-
-    // Simple round-robin load balancer
-    let currentWorker = 0;
-
-    // Add proxy middleware for routes that should go to workers
-    app.use((req, res, next) => {
-      if (
-        (req.path === "/new" && req.query.cached !== "true") ||
-        req.path.slice(1).endsWith(".eth")
-      ) {
-        return next();
-      }
-
-      // Check if path should be handled by worker with direct path matching
-      let shouldProxy = false;
-      for (const route of workerRoutes) {
-        // For root path, only match exactly
-        if (route === "/" && req.path === "/") {
-          shouldProxy = true;
-          break;
-        }
-        // For all other routes, match the exact path
-        else if (route === req.path) {
-          shouldProxy = true;
-          break;
-        }
-      }
-
-      if (shouldProxy) {
-        // Get next worker in round-robin fashion
-        const target = workers[currentWorker];
-        currentWorker = (currentWorker + 1) % workers.length;
-
-        log(`Proxying ${req.method} ${req.url} to worker at ${target}`);
-
-        const proxy = createProxyMiddleware({
-          target,
-          changeOrigin: true,
-          ws: false,
-          logLevel: "warn",
-          pathRewrite: (path, req) => path, // keep path unchanged
-        });
-
-        return proxy(req, res, next);
-      }
-
-      // If not a worker route, continue with normal processing
-      next();
-    });
   }
   // If we're a worker, adjust the port
   else if (!isPrimary) {
