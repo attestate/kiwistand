@@ -24,6 +24,106 @@ import {
   braveWallet,
   rainbowWallet,
 } from "@rainbow-me/rainbowkit/wallets";
+import { Connector } from "wagmi";
+import { createWalletClient, custom } from "viem";
+import { IOSWalletProvider } from "./iosWalletProvider";
+
+// Proper wagmi connector implementation for iOS wallet
+class IOSWalletConnector extends Connector {
+  id = "iosCoinbaseWallet";
+  name = "Coinbase Wallet";
+  ready = true;
+
+  constructor({ chains, options }) {
+    super({ chains, options });
+    this.provider = new IOSWalletProvider();
+  }
+
+  async connect({ chainId } = {}) {
+    try {
+      const accounts = await this.provider.request({
+        method: "eth_requestAccounts",
+      });
+      const account = accounts[0];
+
+      return {
+        account,
+        chain: { id: 10, unsupported: false }, // Use Optimism (10)
+        provider: this.provider,
+      };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async disconnect() {
+    // Nothing to do since iOS app handles connection
+    return;
+  }
+
+  async getAccount() {
+    const accounts = await this.provider.request({ method: "eth_accounts" });
+    return accounts[0];
+  }
+
+  async getChainId() {
+    return 10; // Default to Optimism (10)
+  }
+
+  async getProvider({ chainId } = {}) {
+    return this.provider;
+  }
+
+  async getWalletClient({ chainId } = {}) {
+    const [account, provider] = await Promise.all([
+      this.getAccount(),
+      this.getProvider({ chainId }),
+    ]);
+    return createWalletClient({
+      account,
+      chain: { id: chainId || 10, unsupported: false },
+      transport: custom(provider),
+    });
+  }
+
+  async isAuthorized() {
+    try {
+      const accounts = await this.provider.request({ method: "eth_accounts" });
+      return accounts.length > 0;
+    } catch {
+      return false;
+    }
+  }
+
+  // This is called when switching chains
+  async switchChain(chainId) {
+    // If the requested chain is Optimism (10), just pretend we switched
+    if (chainId === 10) {
+      return this.chains.find((x) => x.id === chainId);
+    }
+
+    // For other chains, throw an error indicating this iOS wallet only supports Optimism
+    throw new Error("This wallet connection only supports Optimism");
+  }
+
+  onAccountsChanged(accounts) {
+    if (accounts.length === 0) {
+      this.emit("disconnect");
+    } else {
+      this.emit("change", { account: accounts[0] });
+    }
+  }
+
+  onChainChanged(chainId) {
+    const id = Number(chainId);
+    const unsupported = this.isChainUnsupported(id);
+    this.emit("change", { chain: { id, unsupported } });
+  }
+
+  onDisconnect(error) {
+    this.emit("disconnect");
+  }
+}
 //import { infuraProvider } from "wagmi/providers/infura";
 
 const config = configureChains(
@@ -36,14 +136,10 @@ export const chains = config.chains;
 const projectId = "cd46d2fcf6d171fb7c017129868fa211";
 const appName = "Kiwi News";
 
-const wallets = [
-  injectedWallet({ chains }),
-  walletConnectWallet({ projectId, chains }),
-  safeWallet({ chains }),
-  coinbaseWallet({ appName, chains }),
-  metaMaskWallet({ chains, projectId }),
-  braveWallet({ chains }),
-];
+// Check if we're in the iOS app by looking for the CSS class
+export const isInIOSApp =
+  typeof document !== "undefined" &&
+  document.documentElement.classList.contains("kiwi-ios-app");
 
 const isDesktop = () => {
   return (
@@ -51,23 +147,68 @@ const isDesktop = () => {
     window.innerWidth > 800
   );
 };
-// NOTE: We've had issues with iOS Rainbow wallet users clicking on the Rainbow
-// link but then not being taken to Rainbow wallet on their mobile devices.
-// So instead, we're now asking mobile users to connect via the WalletConnect
-// dialogue, while we allow Desktop users to connect to their Rainbow wallet
-// extension directly.
-if (isDesktop()) {
-  wallets.push(rainbowWallet({ chains, projectId }));
-} else if (window?.ethereum?.isRainbow) {
-  wallets.push(rainbowWallet({ chains, projectId }));
+
+// Create connectors based on environment
+const connectors = isInIOSApp
+  ? createIOSOnlyConnectors()
+  : createStandardConnectors();
+
+function createIOSOnlyConnectors() {
+  // When in iOS app, only use the iOS wallet connector
+  const iosConnector = new IOSWalletConnector({
+    chains,
+    options: { name: "Coinbase Wallet" },
+  });
+
+  return connectorsForWallets([
+    {
+      groupName: "Coinbase Wallet",
+      wallets: [
+        {
+          id: "ios-coinbase-wallet",
+          name: "Coinbase Wallet",
+          iconUrl: "coinbase_wallet_appicon.png",
+          iconBackground: "#2c5ff6",
+          createConnector: () => {
+            return {
+              connector: iosConnector,
+            };
+          },
+        },
+      ],
+    },
+  ]);
 }
 
-const connectors = connectorsForWallets([
-  {
-    groupName: "Popular",
-    wallets,
-  },
-]);
+function createStandardConnectors() {
+  // When not in iOS app, use all the regular wallet options
+  const wallets = [
+    injectedWallet({ chains }),
+    walletConnectWallet({ projectId, chains }),
+    safeWallet({ chains }),
+    coinbaseWallet({ appName, chains }),
+    metaMaskWallet({ chains, projectId }),
+    braveWallet({ chains }),
+  ];
+
+  // NOTE: We've had issues with iOS Rainbow wallet users clicking on the Rainbow
+  // link but then not being taken to Rainbow wallet on their mobile devices.
+  // So instead, we're now asking mobile users to connect via the WalletConnect
+  // dialogue, while we allow Desktop users to connect to their Rainbow wallet
+  // extension directly.
+  if (isDesktop()) {
+    wallets.push(rainbowWallet({ chains, projectId }));
+  } else if (window?.ethereum?.isRainbow) {
+    wallets.push(rainbowWallet({ chains, projectId }));
+  }
+
+  return connectorsForWallets([
+    {
+      groupName: "Popular",
+      wallets,
+    },
+  ]);
+}
 
 export const client = createConfig({
   autoConnect: true,
