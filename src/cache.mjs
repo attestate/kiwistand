@@ -222,13 +222,13 @@ export function isReactionComment(title) {
 export function getCommentAuthorById(commentId) {
   try {
     const [, commentHex] = commentId.split(":");
-    
+
     const query = `
       SELECT identity 
       FROM comments 
       WHERE id = ?
     `;
-    
+
     const row = db.prepare(query).get(`kiwi:${commentHex}`);
     return row ? row.identity : null;
   } catch (error) {
@@ -420,7 +420,7 @@ export function getImpressionsWithTimestamps(startTimestamp, endTimestamp) {
     WHERE timestamp >= ? AND timestamp <= ?
     ORDER BY timestamp
   `);
-  
+
   return query.all(startTimestamp, endTimestamp);
 }
 
@@ -431,7 +431,7 @@ export function getOutboundsWithTimestamps(startTimestamp, endTimestamp) {
     WHERE timestamp >= ? AND timestamp <= ?
     ORDER BY timestamp
   `);
-  
+
   return query.all(startTimestamp, endTimestamp);
 }
 
@@ -680,11 +680,11 @@ export function getUpvotes(identity) {
      SELECT u.*
      FROM upvotes u
      JOIN submissions s ON u.href = s.href
-     WHERE s.identity = ? AND u.timestamp >= ?
+     WHERE s.identity = ? AND u.timestamp >= ? AND s.timestamp >= ?
    `;
   const upvotes = db
     .prepare(query)
-    .all(identity, threeWeeksAgo)
+    .all(identity, threeWeeksAgo, threeWeeksAgo)
     .map((upvote) => ({
       ...upvote,
       index: upvote.id.split("0x")[1],

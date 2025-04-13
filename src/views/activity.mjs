@@ -477,7 +477,6 @@ export async function data(
     setTimestamp(identity, latestValue);
   }
 
-  const config = await moderation.getLists();
   const cutoff = sub(new Date(), {
     weeks: 2,
   });
@@ -487,11 +486,6 @@ export async function data(
   let reactions = getReactionsToComments(identity);
 
   const path = "/activity";
-  leaves = moderation.moderate(leaves, config, path);
-  comments = moderation
-    .flag(comments, config)
-    .filter((comment) => !comment.flagged);
-
   const activities = generateFeed(leaves).filter(
     (activity) => activity.verb === "upvoted",
   );
@@ -521,46 +515,48 @@ export async function data(
   activities.sort((a, b) => b.timestamp - a.timestamp);
 
   let notifications = [];
-  for (let activity of activities) {
-    const identities = [];
-    if (!skipDetails) {
-      const ensPromises = activity.identities.map(async (identity) => {
-        const ensData = await ens.resolve(identity);
-        return {
-          address: identity,
-          ...ensData,
-        };
-      });
-      const results = await Promise.allSettled(ensPromises);
-      identities.push(
-        ...results
-          .filter((result) => result.status === "fulfilled")
-          .map((result) => result.value),
-      );
-    }
-
-    // Skip reaction activities if the reactor doesn't have an avatar
-    if (activity.verb === "reacted") {
-      if (
-        identities.length === 0 ||
-        !identities.some((identity) => identity.safeAvatar)
-      ) {
-        continue;
+  await Promise.allSettled(
+    activities.slice(0, 20).map(async (activity) => {
+      const identities = [];
+      if (!skipDetails) {
+        const ensPromises = activity.identities.map(async (identity) => {
+          const ensData = await ens.resolve(identity);
+          return {
+            address: identity,
+            ...ensData,
+          };
+        });
+        const results = await Promise.allSettled(ensPromises);
+        identities.push(
+          ...results
+            .filter((result) => result.status === "fulfilled")
+            .map((result) => result.value),
+        );
       }
-    }
 
-    notifications.push({
-      ...activity,
-      identities,
-    });
-  }
+      // Skip reaction activities if the reactor doesn't have an avatar
+      if (activity.verb === "reacted") {
+        if (
+          identities.length === 0 ||
+          !identities.some((identity) => identity.safeAvatar)
+        ) {
+          return;
+        }
+      }
+
+      notifications.push({
+        ...activity,
+        identities,
+      });
+    }),
+  );
 
   let lastUpdate = "0";
   if (notifications.length > 0) {
     lastUpdate = notifications[0].timestamp;
   }
   return {
-    notifications: notifications.slice(0, 20),
+    notifications: notifications,
     lastUpdate,
     latestValue,
   };

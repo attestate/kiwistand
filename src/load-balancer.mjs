@@ -11,6 +11,7 @@ import { createServer as createHttpServer } from "http";
 
 // Routes that should be handled by worker processes
 const workerRoutes = [
+  "/api/v1/activity",
   "/friends",
   "/kiwipass-mint",
   "/api/v1/karma",
@@ -140,7 +141,7 @@ async function startLoadBalancer() {
 
   // Start the load balancer with SSL if configured
   const port = env.HTTP_PORT;
-  
+
   let server;
   if (env.CUSTOM_PROTOCOL === "https://") {
     const options = {
@@ -155,7 +156,7 @@ async function startLoadBalancer() {
       log(
         `Routing to ${workerCount} workers on ports ${workerBasePort}-${
           workerBasePort + workerCount - 1
-        }`
+        }`,
       );
     });
   } else {
@@ -166,7 +167,7 @@ async function startLoadBalancer() {
       log(
         `Routing to ${workerCount} workers on ports ${workerBasePort}-${
           workerBasePort + workerCount - 1
-        }`
+        }`,
       );
     });
   }
