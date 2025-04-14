@@ -11,6 +11,7 @@ import DOMPurify from "isomorphic-dompurify";
 import * as API from "./API.mjs";
 import { getLocalAccount } from "./session.mjs";
 import { client, chains, useProvider, useSigner } from "./client.mjs";
+import { resolveAvatar } from "./Avatar.jsx";
 
 // Configure slugify extension
 slugify.extend({ "′": "", "'": "", "'": "" });
@@ -258,6 +259,7 @@ const CommentInput = (props) => {
   const result = useSigner();
 
   const [isEligible, setIsEligible] = useState(null);
+  const [preResolvedAvatar, setPreResolvedAvatar] = useState(null);
 
   useEffect(() => {
     const loadData = async () => {
@@ -267,6 +269,17 @@ const CommentInput = (props) => {
     };
     loadData();
   });
+  
+  // Pre-resolve avatar for optimistic UI updates
+  useEffect(() => {
+    async function fetchAvatar() {
+      if (address) {
+        const resolved = await resolveAvatar(address);
+        setPreResolvedAvatar(resolved);
+      }
+    }
+    fetchAvatar();
+  }, [address]);
 
   let signer;
   if (localAccount && localAccount.privateKey) {
@@ -383,9 +396,9 @@ const CommentInput = (props) => {
       index: commentId,
       title: text,
       identity: {
-        address: localAccount.identity,
-        displayName: localAccount.displayName || truncateName(localAccount.identity),
-        safeAvatar: null // We'll skip avatar for simplicity
+        address: address,
+        displayName: localAccount.displayName || truncateName(address),
+        safeAvatar: preResolvedAvatar // Include the pre-resolved avatar
       },
       timestamp: value.timestamp,
       reactions: []
