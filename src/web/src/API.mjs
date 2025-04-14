@@ -74,6 +74,10 @@ export async function send(
         "Content-Type": "application/json",
       },
       body,
+      // NOTE: In case the user navigates away before their message was
+      // received at the server, the keepalive parameter makes sure that the
+      // message is delivered.
+      keepalive: true,
     });
   } catch (err) {
     console.error(err);
