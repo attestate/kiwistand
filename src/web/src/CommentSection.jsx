@@ -691,7 +691,12 @@ const CommentsSection = (props) => {
                 storyIndex={storyIndex}
               />
             ))}
-          <CommentInput {...props} style={{ margin: "0 0 1rem 0" }} />
+          <CommentInput 
+            {...props} 
+            comments={comments}
+            setComments={setComments}
+            style={{ margin: "0 0 1rem 0" }} 
+          />
         </RainbowKitProvider>
       </WagmiConfig>
     </div>

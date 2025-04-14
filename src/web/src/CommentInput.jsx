@@ -20,6 +20,17 @@ export function getSlug(title) {
   return slugify(DOMPurify.sanitize(title));
 }
 
+function truncateName(name) {
+  const maxLength = 12;
+  if (
+    !name ||
+    (name && name.length <= maxLength) ||
+    (name && name.length === 0)
+  )
+    return name;
+  return name.slice(0, maxLength) + "...";
+}
+
 const SiteExplainer = () => {
   return (
     <div
@@ -347,8 +358,8 @@ const CommentInput = (props) => {
 
   const [isLoading, setIsLoading] = useState(false);
   const handleSubmit = async (e) => {
-    setIsLoading(true);
     e.preventDefault();
+    setIsLoading(true);
     const index = getIndex();
 
     const validMiladyTexts = ["Milady.", "milady.", "milady", "Milady"];
@@ -358,43 +369,57 @@ const CommentInput = (props) => {
       setIsLoading(false);
       return;
     }
+    
+    // Create message with a timestamp
     const type = "comment";
     const value = API.messageFab(text, `kiwi:${index}`, type);
-
-    let signature;
+    
+    // Use toDigest to calculate the actual ID that will be used on the server
+    const digestResult = API.toDigest(value);
+    const commentId = digestResult.index;
+    
+    // Create the new comment object
+    const newComment = {
+      index: commentId,
+      title: text,
+      identity: {
+        address: localAccount.identity,
+        displayName: localAccount.displayName || truncateName(localAccount.identity),
+        safeAvatar: null // We'll skip avatar for simplicity
+      },
+      timestamp: value.timestamp,
+      reactions: []
+    };
+    
+    // Add to UI immediately
+    props.setComments([...props.comments, newComment]);
+    
+    // Clear input
+    setText("");
+    localStorage.removeItem(`-kiwi-news-comment-${address}-${index}`);
+    
+    if (showMobileComposer) {
+      setShowMobileComposer(false);
+    }
+    
     try {
-      signature = await signer._signTypedData(
+      // Sign and send in background
+      const signature = await signer._signTypedData(
         API.EIP712_DOMAIN,
         API.EIP712_TYPES,
         value,
       );
+      
+      // Fire and forget API call
+      API.send(value, signature, false);
+      toast.success("Comment added successfully!");
+      posthog.capture("comment_created");
     } catch (err) {
-      console.log(err);
-      toast.error(`Error! Sad Kiwi! "${err.message}"`);
-      setIsLoading(false);
-      return;
+      console.error(err);
+      toast.error(`Error: ${err.message}`);
     }
-
-    const wait = false;
-    const response = await API.send(value, signature, wait);
-    if (response && response.status === "error") {
-      toast.error("Failed to submit your comment.");
-      return;
-    }
-
-    // NOTE: We fetch the current page here in JavaScript to (hopefully)
-    // produce a cache revalidation that then makes the new comment fastly
-    // available to all other users.
-    const path = `/stories?index=${index}`;
-    toast.success("Thanks for submitting your comment. Reloading...");
-    posthog.capture("comment_created");
-    localStorage.removeItem(`-kiwi-news-comment-${address}-${index}`);
-
-    const nextPage = new URL(path, window.location.origin);
-    if (response?.data?.index) {
-      nextPage.hash = `#${response.data.index}`;
-    }
-    window.location.href = nextPage.href;
+    
+    setIsLoading(false);
   };
 
   const characterLimit = 10_000;
