@@ -1,6 +1,10 @@
 // @format
 import { readContract } from "@wagmi/core";
 import { mainnet, optimism } from "wagmi/chains";
+import { keccak256 } from "ethereum-cryptography/keccak.js";
+import { toHex } from "ethereum-cryptography/utils.js";
+import { encode } from "cbor-x";
+import canonicalize from "canonicalize";
 
 import { getCookie, setCookie } from "./session.mjs";
 
@@ -25,6 +29,18 @@ export function messageFab(title, href, type = "amplify") {
     href,
     type,
     timestamp: Math.floor(Date.now() / 1000),
+  };
+}
+
+export function toDigest(value) {
+  const copy = canonicalize({ ...value });
+  const canonical = encode(copy);
+  const digest = toHex(keccak256(canonical));
+  const index = `${value.timestamp.toString(16)}${digest}`;
+  return {
+    digest,
+    canonical,
+    index,
   };
 }
 
