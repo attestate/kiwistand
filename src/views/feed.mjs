@@ -806,13 +806,7 @@ export default async function (trie, theme, page, domain, identity, hash) {
   const title = undefined;
   const description = undefined;
   const twitterCard = undefined;
-  const prefetch = [
-    query,
-    "/new?cached=true",
-    "/submit",
-    "/best",
-    "/community",
-  ];
+  const prefetch = ["/new?cached=true", "/submit", "/best", "/community"];
   return html`
     <html lang="en" op="news">
       <head>
@@ -906,24 +900,6 @@ export default async function (trie, theme, page, domain, identity, hash) {
                     currentQuery,
                   )(story, i + 5),
                 )}
-              <tr style="height: 50px">
-                <td>
-                  <div
-                    style="width: 100%; padding: 32px 0; display: flex; justify-content: center;"
-                  >
-                    <a
-                      data-no-instant
-                      href=${query}
-                      style="display: flex; align-items: center; gap: 8px; padding: 12px 24px; 
-               background: white; color: #374151; border-radius: 2px; 
-               box-shadow: 0 1px 3px rgba(0,0,0,0.12); border: 1px solid #e5e7eb;
-               text-decoration: none; font-size: 16px;"
-                    >
-                      <span>More Stories</span>
-                    </a>
-                  </div>
-                </td>
-              </tr>
             </table>
             ${Footer(theme, path)}
           </div>
