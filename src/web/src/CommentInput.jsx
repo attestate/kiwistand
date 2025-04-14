@@ -260,6 +260,7 @@ const CommentInput = (props) => {
 
   const [isEligible, setIsEligible] = useState(null);
   const [preResolvedAvatar, setPreResolvedAvatar] = useState(null);
+  const [preResolvedName, setPreResolvedName] = useState(null);
 
   useEffect(() => {
     const loadData = async () => {
@@ -270,16 +271,47 @@ const CommentInput = (props) => {
     loadData();
   });
   
-  // Pre-resolve avatar for optimistic UI updates
+  // Pre-resolve profile (name and avatar) for optimistic UI updates
   useEffect(() => {
-    async function fetchAvatar() {
+    async function fetchProfile() {
       if (address) {
-        const resolved = await resolveAvatar(address);
-        setPreResolvedAvatar(resolved);
+        // Set initial fallback state immediately
+        setPreResolvedName(truncateName(address));
+        setPreResolvedAvatar(null);
+        try {
+          const response = await fetch(`/api/v1/profile/${address}`);
+          // Check if the request was successful
+          if (!response.ok) {
+             // Log HTTP errors but keep the fallback state
+             console.error(`HTTP error fetching profile! status: ${response.status}`);
+             // No state change needed here, fallback is already set
+             return;
+          }
+          const result = await response.json();
+          // Check if the API call itself was successful
+          if (result.status === 'success' && result.data) {
+            const profile = result.data;
+            // Update state with fetched data, keeping fallback if data is missing
+            setPreResolvedName(profile.displayName || truncateName(address));
+            setPreResolvedAvatar(profile.safeAvatar || null);
+          } else {
+            // Log API errors but keep the fallback state
+            console.error("API error fetching profile:", result.details || 'Unknown API error');
+            // No state change needed here, fallback is already set
+          }
+        } catch (error) {
+           // Log network or other fetch errors but keep the fallback state
+           console.error("Network/fetch error fetching profile:", error);
+           // No state change needed here, fallback is already set
+        }
+      } else {
+        // Clear state if address is not available
+        setPreResolvedName(null);
+        setPreResolvedAvatar(null);
       }
     }
-    fetchAvatar();
-  }, [address]);
+    fetchProfile();
+  }, [address]); // Re-run effect when address changes
 
   let signer;
   if (localAccount && localAccount.privateKey) {
@@ -375,6 +407,7 @@ const CommentInput = (props) => {
     setIsLoading(true);
     const index = getIndex();
 
+    // --- Validation ---
     const validMiladyTexts = ["Milady.", "milady.", "milady", "Milady"];
     const isValidMilady = validMiladyTexts.includes(text);
     if ((text.length < 15 || text.length > 10_000) && !isValidMilady) {
@@ -382,57 +415,107 @@ const CommentInput = (props) => {
       setIsLoading(false);
       return;
     }
-    
-    // Create message with a timestamp
+
+    // --- Message Creation ---
     const type = "comment";
     const value = API.messageFab(text, `kiwi:${index}`, type);
-    
-    // Use toDigest to calculate the actual ID that will be used on the server
-    const digestResult = API.toDigest(value);
-    const commentId = digestResult.index;
-    
-    // Create the new comment object
-    const newComment = {
-      index: commentId,
-      title: text,
-      identity: {
-        address: address,
-        displayName: localAccount.displayName || truncateName(address),
-        safeAvatar: preResolvedAvatar // Include the pre-resolved avatar
-      },
-      timestamp: value.timestamp,
-      reactions: []
-    };
-    
-    // Add to UI immediately
-    props.setComments([...props.comments, newComment]);
-    
-    // Clear input
-    setText("");
-    localStorage.removeItem(`-kiwi-news-comment-${address}-${index}`);
-    
-    if (showMobileComposer) {
-      setShowMobileComposer(false);
+
+    // --- Conditional Handling ---
+    if (props.setComments && typeof props.setComments === 'function') {
+      // OPTIMISTIC PATH (Feed Page - CommentSection provides props)
+
+      // Calculate ID locally
+      const digestResult = API.toDigest(value);
+      const commentId = digestResult.index;
+
+      // Create optimistic comment object
+      // Ensure props.comments is treated as an array, even if initially empty
+      const currentComments = Array.isArray(props.comments) ? props.comments : [];
+      const newComment = {
+        index: commentId,
+        title: text,
+        identity: {
+          address: address,
+          displayName: preResolvedName, // Use pre-resolved data
+          safeAvatar: preResolvedAvatar // Use pre-resolved data
+        },
+        timestamp: value.timestamp,
+        reactions: []
+      };
+
+      // Add to UI immediately
+      props.setComments([...currentComments, newComment]); // Use currentComments
+
+      // Clear input
+      setText("");
+      localStorage.removeItem(`-kiwi-news-comment-${address}-${index}`);
+
+      if (showMobileComposer) {
+        setShowMobileComposer(false);
+      }
+
+      // Sign and send in background (fire-and-forget)
+      try {
+        const signature = await signer._signTypedData(
+          API.EIP712_DOMAIN,
+          API.EIP712_TYPES,
+          value,
+        );
+        API.send(value, signature, false); // Fire and forget
+        toast.success("Comment added successfully!"); // Confirmation of *sending*
+        posthog.capture("comment_created");
+      } catch (err) {
+        console.error("Signing/Sending error (optimistic path):", err);
+        toast.error(`Error: ${err.message}`);
+        // Consider removing the optimistic comment here if signing/initial send fails
+      } finally {
+         setIsLoading(false);
+      }
+
+    } else {
+      // RELOAD PATH (Story Page - Standalone mounting, no setComments prop)
+
+      try {
+        // Sign the message
+        const signature = await signer._signTypedData(
+          API.EIP712_DOMAIN,
+          API.EIP712_TYPES,
+          value,
+        );
+
+        // Send and WAIT for server response
+        const wait = true; // Wait for server confirmation
+        const response = await API.send(value, signature, wait);
+
+        if (response && response.status === "error") {
+          toast.error(`Failed to submit comment: ${response.details || 'Unknown server error'}`);
+          setIsLoading(false);
+          return;
+        }
+
+        // Success! Clear local state and reload
+        toast.success("Comment submitted successfully!");
+        posthog.capture("comment_created");
+        localStorage.removeItem(`-kiwi-news-comment-${address}-${index}`);
+        setText(""); // Clear input
+
+        // Construct reload URL (potentially with hash for new comment)
+        const path = `/stories?index=${index}`;
+        const nextPage = new URL(path, window.location.origin);
+        if (response?.data?.index) {
+           // Use the index confirmed by the server
+           nextPage.hash = `#${response.data.index}`; // Only add #, index already has 0x
+        }
+        window.location.href = nextPage.href; // Perform reload/redirect
+
+        // No need to call setIsLoading(false) here as the page reloads
+
+      } catch (err) {
+        console.error("Signing/Sending error (reload path):", err);
+        toast.error(`Error: ${err.message}`);
+        setIsLoading(false);
+      }
     }
-    
-    try {
-      // Sign and send in background
-      const signature = await signer._signTypedData(
-        API.EIP712_DOMAIN,
-        API.EIP712_TYPES,
-        value,
-      );
-      
-      // Fire and forget API call
-      API.send(value, signature, false);
-      toast.success("Comment added successfully!");
-      posthog.capture("comment_created");
-    } catch (err) {
-      console.error(err);
-      toast.error(`Error: ${err.message}`);
-    }
-    
-    setIsLoading(false);
   };
 
   const characterLimit = 10_000;
