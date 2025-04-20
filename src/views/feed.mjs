@@ -11,6 +11,7 @@ import {
   differenceInSeconds,
   differenceInMinutes,
   isBefore,
+  getUnixTime, // Added for prediction timestamp comparison
 } from "date-fns";
 import DOMPurify from "isomorphic-dompurify";
 
@@ -32,16 +33,24 @@ import cache, {
   getRecommendations,
 } from "../cache.mjs";
 import * as curation from "./curation.mjs";
-import log from "../logger.mjs";
+import log from "../logger.mjs"; // Use original logger here
 import { EIP712_MESSAGE } from "../constants.mjs";
 import Row, { addOrUpdateReferrer, extractDomain } from "./components/row.mjs";
 import * as karma from "../karma.mjs";
 import { cachedMetadata } from "../parser.mjs";
+// Assuming prediction function exists here
+import { getPredictedEngagement } from "../prediction.mjs";
 
 import holders from "./holders.mjs";
 const formatedHolders = holders.map((a) => ethers.utils.getAddress(a));
 
 const html = htm.bind(vhtml);
+
+// --- Prediction Configuration ---
+const PREDICTION_NEWNESS_THRESHOLD_SECONDS = 24 * 60 * 60; // 24 hours
+const PREDICTION_LOW_ENGAGEMENT_UPVOTES = 2;
+const NUM_STORIES_TO_REPLACE_WITH_PREDICTIONS = 3;
+// --- End Prediction Configuration ---
 
 // NOTE: Only set this date in synchronicity with the src/launch.mjs date!!
 const cutoffDate = new Date("2025-01-15");
@@ -216,6 +225,8 @@ async function getAd() {
     submitter,
     displayName: submitter.displayName,
     timestamp,
+    // Ads don't have a score
+    score: null,
   };
   const augmentedPost = await addMetadata(post);
   if (augmentedPost) {
@@ -388,8 +399,10 @@ export async function index(
   const path = "/";
   leaves = moderation.moderate(leaves, policy, path);
 
-  let storyPromises = await topstories(leaves);
-  storyPromises = storyPromises.filter(({ index, upvotes, timestamp }) => {
+  // 1. Calculate initial ranking based on ACTUAL engagement
+  let rankedStories = await topstories(leaves);
+
+  rankedStories = rankedStories.filter(({ index, upvotes, timestamp }) => {
     const storyAgeInDays = itemAge(timestamp) / (60 * 24);
     const commentCount = store.commentCounts.get(`kiwi:0x${index}`) || 0;
     if (page === 0 && storyAgeInDays > 7) {
@@ -401,6 +414,7 @@ export async function index(
     }
   });
 
+  // Apply app curation if needed
   if (appCuration) {
     const sheetName = "app";
     let result;
@@ -415,22 +429,111 @@ export async function index(
       const links = result.links.map((link) =>
         normalizeUrl(link, { stripWWW: false }),
       );
-      storyPromises = storyPromises.filter(({ href }) =>
+      rankedStories = rankedStories.filter(({ href }) =>
         links.includes(normalizeUrl(href, { stripWWW: false })),
       );
     }
   }
 
+  // Apply domain filter if needed
   if (domain)
-    storyPromises = storyPromises.filter(
+    rankedStories = rankedStories.filter(
       ({ href }) => extractDomain(href) === domain,
     );
 
+  // 2. Paginate the normally ranked stories
   const totalStories = parseInt(env.TOTAL_STORIES, 10);
   const start = totalStories * page;
   const end = totalStories * (page + 1);
+  let pageStories = [];
   if (paginate) {
-    storyPromises = storyPromises.slice(start, end);
+    pageStories = rankedStories.slice(start, end);
+  } else {
+    pageStories = rankedStories; // Use all if not paginating
+  }
+
+  // 3. Prediction Injection Logic (Page 0 ONLY)
+  if (page === 0 && paginate && pageStories.length > 0) {
+    const now = getUnixTime(new Date());
+    const candidates = leaves.filter(
+      (story) =>
+        now - story.timestamp < PREDICTION_NEWNESS_THRESHOLD_SECONDS &&
+        story.upvotes <= PREDICTION_LOW_ENGAGEMENT_UPVOTES,
+    );
+
+    if (candidates.length > 0) {
+      const predictionPromises = candidates.map(async (story) => {
+        const prediction = await getPredictedEngagement(story);
+        return { story, prediction };
+      });
+      const results = await Promise.allSettled(predictionPromises);
+
+      const predicted = results
+        .filter(
+          (r) =>
+            r.status === "fulfilled" &&
+            r.value.prediction &&
+            !r.value.prediction.predictionError,
+        )
+        .map((r) => {
+          const { story, prediction } = r.value;
+          // Simple predicted score: upvotes + comments
+          const score =
+            prediction.predictedUpvotes + prediction.predictedComments;
+          // Keep original story object, just add predictedScore for sorting
+          return { ...story, predictedScore: score };
+        });
+
+      if (predicted.length > 0) {
+        // Sort all predicted stories first
+        predicted.sort((a, b) => b.predictedScore - a.predictedScore);
+        // Select only the top N candidates for ENS resolution
+        const topCandidates = predicted.slice(0, NUM_STORIES_TO_REPLACE_WITH_PREDICTIONS);
+
+        // Resolve submitter ENS only for the top candidates
+        const resolvedTopPromises = topCandidates.map(async (item) => {
+          const submitter = await ens.resolve(item.identity);
+          const hasProperName =
+            submitter &&
+            (submitter.ens || submitter.lens || submitter.farcaster);
+          // Return the original item plus resolution info
+          return { ...item, submitter, hasProperName };
+        });
+        const resolvedTopResults = await Promise.allSettled(
+          resolvedTopPromises,
+        );
+
+        // Filter the resolved top candidates to get the final list to inject
+        const top = resolvedTopResults
+          .filter(
+            (r) => r.status === "fulfilled" && r.value.hasProperName,
+          )
+          .map((r) => r.value); // These are the stories we will actually inject
+
+        const numToReplace = top.length; // Replace only as many as we found valid top stories
+
+        if (numToReplace > 0) {
+          const sortedByAge = [...pageStories].sort(
+            (a, b) => a.timestamp - b.timestamp,
+          );
+          const oldest = sortedByAge
+            .slice(0, numToReplace) // Match the number to remove
+            .map((s) => s.index);
+
+          const oldestSet = new Set(oldest);
+          const topSet = new Set(top.map((s) => s.index));
+
+          // Filter out the oldest stories AND any potential duplicates from top
+          pageStories = pageStories.filter(
+            (s) => !oldestSet.has(s.index) && !topSet.has(s.index),
+          );
+          // Add the top predicted stories (they retain their original 'score' from topstories)
+          pageStories.push(...top);
+          // Re-sort the page by the original 'score' from topstories
+          pageStories.sort((a, b) => b.score - a.score);
+        }
+      }
+    }
   }
 
   let writers = [];
@@ -442,8 +545,10 @@ export async function index(
 
   async function resolveIds(storyPromises) {
     const stories = [];
-    for await (let story of storyPromises) {
-      const ensData = await ens.resolve(story.identity);
+    for await (let story of storyPromises) { // Now processes pageStories
+      // Re-resolve ENS data here if needed, or use pre-resolved data if available
+      // The 'top' injected stories already have 'submitter' resolved from the injection logic
+      const ensData = story.submitter || (await ens.resolve(story.identity));
 
       let avatars = [];
       for await (let upvoter of story.upvoters.slice(0, 5)) {
@@ -497,15 +602,17 @@ export async function index(
         ...story,
         lastComment,
         displayName: ensData.displayName,
-        submitter: ensData,
+        submitter: ensData, // Ensure submitter data is consistent
         avatars: avatars,
         isOriginal,
       });
     }
     return stories;
   }
-  let stories = await resolveIds(storyPromises);
-  stories = stories.filter((story) => {
+  let stories = await resolveIds(pageStories);
+
+  stories = stories.filter((story) => { // Filter based on resolved submitter name
+    // This check might be redundant for injected stories now, but harmless
     const hasProperName =
       story.submitter &&
       (story.submitter.ens ||
@@ -514,6 +621,7 @@ export async function index(
     return hasProperName;
   });
 
+  // Apply pagespeed boost and final sort
   stories = stories
     .map((story) => {
       if (story.metadata?.pagespeed) {
@@ -525,6 +633,7 @@ export async function index(
     })
     .sort((a, b) => b.score - a.score);
 
+  // Handle pinned story
   let pinnedStory;
   if (policy?.pinned?.length > 0) {
     const pinnedUrl = policy.pinned[0];
@@ -536,6 +645,7 @@ export async function index(
     );
   }
 
+  // Handle originals
   let originals = stories
     .filter((story) => story.isOriginal)
     .slice(0, 6)
@@ -545,6 +655,7 @@ export async function index(
     .map(({ value }) => value)
     .slice(0, 2);
 
+  // Handle Ad
   let ad;
   if (showAd) {
     const adCacheKey = "ad-cache-key";
@@ -558,6 +669,7 @@ export async function index(
     }
   }
 
+  // Return final data
   return {
     pinnedStory,
     ad,
