@@ -761,9 +761,60 @@ function Newsletter() {
   `;
 }
 
+// Add this new function to render the support banner
+function SupportBanner(monthlyUrl, annualUrl) {
+  const title = "Support Independent Web3 News";
+  // You can refine this text
+  const text =
+    "Help keep Kiwi News open, unbiased, and sustainable. Become a patron today!";
+  const monthlyText = "$15 / Month";
+  const annualText = "$150 / Year";
+
+  return html`
+    <div
+      style="padding: 1rem; border: var(--border); border-left: none; border-right: none; margin-bottom: 20px; background-color: var(--light-beige); font-family: var(--font-family); box-sizing: border-box;"
+    >
+      <h3
+        style="margin: 0 0 0.5rem 0; font-size: 1.1rem; font-weight: bold; color: black;"
+      >
+        ${title}
+      </h3>
+      <p style="margin: 0 0 1rem 0; font-size: 0.9rem; color: #505050;">
+        ${text}
+      </p>
+      <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+        <a
+          href="${monthlyUrl}"
+          target="_blank"
+          rel="noopener noreferrer"
+          style="padding: 0.5rem 1rem; background: black; color: white; border: var(--border); border-radius: 2px; text-decoration: none; cursor: pointer; transition: all 0.2s; white-space: nowrap; font-size: 0.875rem;"
+          onmouseover="this.style.background='white'; this.style.color='black';"
+          onmouseout="this.style.background='black'; this.style.color='white';"
+        >
+          ${monthlyText}
+        </a>
+        <a
+          href="${annualUrl}"
+          target="_blank"
+          rel="noopener noreferrer"
+          style="padding: 0.5rem 1rem; background: white; color: black; border: var(--border); border-radius: 2px; text-decoration: none; cursor: pointer; transition: all 0.2s; white-space: nowrap; font-size: 0.875rem;"
+          onmouseover="this.style.background='#f0f0f0'; this.style.color='black';"
+          onmouseout="this.style.background='white'; this.style.color='black';"
+        >
+          ${annualText}
+        </a>
+      </div>
+    </div>
+  `;
+}
+
 export default async function (trie, theme, page, domain, identity, hash) {
   const path = "/";
   const totalStories = parseInt(env.TOTAL_STORIES, 10);
+
+  // Define the Stripe URLs
+  const monthlyStripeUrl = "https://buy.stripe.com/8wMbKneOG5km7aE001";
+  const annualStripeUrl = "https://buy.stripe.com/6oE5lZbCu8wy3Ys28a";
 
   let content;
   if (identity || hash) {
@@ -819,6 +870,11 @@ export default async function (trie, theme, page, domain, identity, hash) {
               <tr>
                 ${SecondHeader(theme, "top")}
               </tr>
+              <tr>
+                <td style="padding: 0;">
+                  ${SupportBanner(monthlyStripeUrl, annualStripeUrl)}
+                </td>
+              </tr>
               ${pinnedStory &&
               Row(
                 start,
@@ -829,7 +885,7 @@ export default async function (trie, theme, page, domain, identity, hash) {
                 null,
                 false,
                 undefined,
-                true,
+                true, // isPinned = true
               )(pinnedStory)}
               ${stories
                 .slice(0, 4) // Show first 4 stories before newsletter
@@ -846,7 +902,9 @@ export default async function (trie, theme, page, domain, identity, hash) {
                   ),
                 )}
               <tr>
-                <td>${Newsletter()}</td>
+                <td style="padding: 0;">
+                  ${Newsletter()}
+                </td>
               </tr>
               ${stories
                 .slice(4) // Show remaining stories after newsletter
