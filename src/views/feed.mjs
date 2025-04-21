@@ -130,111 +130,6 @@ export async function getNeynarScore(address) {
   return score;
 }
 
-async function getAd() {
-  const provider = new ethers.providers.JsonRpcProvider(
-    env.OPTIMISM_RPC_HTTP_HOST,
-  );
-
-  const contractAddress = "0xFfcC6b6c5C066B23992758A4fC408F09d6Cc4EDA";
-  const abi = [
-    { inputs: [], name: "ErrUnauthorized", type: "error" },
-    { inputs: [], name: "ErrValue", type: "error" },
-    {
-      inputs: [],
-      name: "collateral",
-      outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
-      stateMutability: "view",
-      type: "function",
-    },
-    {
-      inputs: [],
-      name: "controller",
-      outputs: [{ internalType: "address", name: "", type: "address" }],
-      stateMutability: "view",
-      type: "function",
-    },
-    {
-      inputs: [],
-      name: "href",
-      outputs: [{ internalType: "string", name: "", type: "string" }],
-      stateMutability: "view",
-      type: "function",
-    },
-    {
-      inputs: [],
-      name: "price",
-      outputs: [
-        { internalType: "uint256", name: "nextPrice", type: "uint256" },
-        { internalType: "uint256", name: "taxes", type: "uint256" },
-      ],
-      stateMutability: "view",
-      type: "function",
-    },
-    {
-      inputs: [],
-      name: "ragequit",
-      outputs: [],
-      stateMutability: "nonpayable",
-      type: "function",
-    },
-    {
-      inputs: [
-        { internalType: "string", name: "_title", type: "string" },
-        { internalType: "string", name: "_href", type: "string" },
-      ],
-      name: "set",
-      outputs: [],
-      stateMutability: "payable",
-      type: "function",
-    },
-    {
-      inputs: [],
-      name: "timestamp",
-      outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
-      stateMutability: "view",
-      type: "function",
-    },
-    {
-      inputs: [],
-      name: "title",
-      outputs: [{ internalType: "string", name: "", type: "string" }],
-      stateMutability: "view",
-      type: "function",
-    },
-  ];
-
-  const contract = new ethers.Contract(contractAddress, abi, provider);
-  const title = (await contract.title()).slice(0, 80);
-  const href = await contract.href();
-  const timestamp = await contract.timestamp();
-  const identity = await contract.controller();
-  const collateral = await contract.collateral();
-  const [price, taxes] = await contract.price();
-  const submitter = await ens.resolve(identity);
-
-  let post = {
-    upvotes: 0,
-    upvoters: [],
-    avatars: [],
-    title,
-    href,
-    collateral,
-    price,
-    taxes,
-    identity,
-    submitter,
-    displayName: submitter.displayName,
-    timestamp,
-    // Ads don't have a score
-    score: null,
-  };
-  const augmentedPost = await addMetadata(post);
-  if (augmentedPost) {
-    post = augmentedPost;
-  }
-  return post;
-}
-
 const itemAge = (timestamp) => {
   const now = new Date();
   const ageInMinutes = differenceInMinutes(now, new Date(timestamp * 1000));
@@ -388,7 +283,6 @@ export async function index(
     weeks: 3,
   }),
   paginate = true,
-  showAd = true,
   appCuration = false,
 ) {
   const lookbackUnixTime = Math.floor(lookback.getTime() / 1000);
@@ -655,24 +549,9 @@ export async function index(
     .map(({ value }) => value)
     .slice(0, 2);
 
-  // Handle Ad
-  let ad;
-  if (showAd) {
-    const adCacheKey = "ad-cache-key";
-    if (cache.get(adCacheKey)) {
-      ad = cache.get(adCacheKey);
-    } else {
-      const adTTLSeconds = 60 * 5;
-      getAd()
-        .then((result) => cache.set(adCacheKey, result, [adTTLSeconds]))
-        .catch((err) => log(`Err in getAd: ${err.stack}`));
-    }
-  }
-
   // Return final data
   return {
     pinnedStory,
-    ad,
     stories,
     originals,
     start,
@@ -708,15 +587,13 @@ async function recommended(trie, page, domain, identity, hash) {
     weeks: 3,
   });
   const paginate = false;
-  const showAd = false;
 
-  const { ad, originals, stories } = await index(
+  const { originals, stories } = await index(
     trie,
     page,
     domain,
     lookback,
     paginate,
-    showAd,
   );
 
   let candidates = await getRecommendations(stories, hash, identity);
@@ -733,7 +610,6 @@ async function recommended(trie, page, domain, identity, hash) {
   candidates = candidates.slice(start, end);
 
   return {
-    ad,
     stories: candidates,
     originals,
     start,
@@ -896,7 +772,7 @@ export default async function (trie, theme, page, domain, identity, hash) {
     content = await index(trie, page, domain);
   }
 
-  const { ad, originals, stories, start, pinnedStory } = content;
+  const { originals, stories, start, pinnedStory } = content;
 
   let currentQuery = "";
   if (page && domain) {
@@ -956,7 +832,7 @@ export default async function (trie, theme, page, domain, identity, hash) {
                 true,
               )(pinnedStory)}
               ${stories
-                .slice(0, 3)
+                .slice(0, 4) // Show first 4 stories before newsletter
                 .map(
                   Row(
                     start,
@@ -969,37 +845,11 @@ export default async function (trie, theme, page, domain, identity, hash) {
                     currentQuery,
                   ),
                 )}
-              ${ad &&
-              Row(
-                start,
-                "/",
-                "margin-bottom: 20px;",
-                null,
-                null,
-                null,
-                false,
-                currentQuery,
-              )(ad)}
-              ${stories
-                .slice(3, 5)
-                .map((story, i) =>
-                  Row(
-                    start,
-                    "/",
-                    "margin-bottom: 20px;",
-                    null,
-                    null,
-                    null,
-                    false,
-                    currentQuery,
-                  )(story, i + 3),
-                )}
               <tr>
                 <td>${Newsletter()}</td>
               </tr>
-
               ${stories
-                .slice(5)
+                .slice(4) // Show remaining stories after newsletter
                 .map((story, i) =>
                   Row(
                     start,
@@ -1010,7 +860,7 @@ export default async function (trie, theme, page, domain, identity, hash) {
                     null,
                     false,
                     currentQuery,
-                  )(story, i + 5),
+                  )(story, i + 4), // Adjust index offset
                 )}
             </table>
             ${Footer(theme, path)}

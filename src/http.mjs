@@ -59,7 +59,6 @@ import users from "./views/users.mjs";
 import basics from "./views/basics.mjs";
 import search from "./views/search.mjs";
 import retention from "./views/retention.mjs";
-import adstats from "./views/adstats.mjs";
 import * as activity from "./views/activity.mjs";
 import * as comments from "./views/comments.mjs";
 import about from "./views/about.mjs";
@@ -1111,14 +1110,6 @@ export async function launch(trie, libp2p, isPrimary = true) {
     return reply.status(200).type("text/html").send(content);
   });
 
-  app.get("/adstats", async (request, reply) => {
-    const content = await adstats(trie, reply.locals.theme);
-    reply.header(
-      "Cache-Control",
-      "public, s-maxage=3600, max-age=0, stale-while-revalidate=86400",
-    );
-    return reply.status(200).type("text/html").send(content);
-  });
   app.get("/basics", async (request, reply) => {
     const content = await basics(trie, reply.locals.theme);
     reply.header(

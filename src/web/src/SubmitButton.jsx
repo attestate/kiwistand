@@ -1,19 +1,12 @@
 import { useEffect, useState } from "react";
 import { Wallet } from "@ethersproject/wallet";
-import { formatEther, parseEther, formatUnits } from "viem";
 import {
   useAccount,
-  useBalance,
   WagmiConfig,
-  useContractRead,
-  useContractWrite,
-  usePrepareContractWrite,
-  useSwitchNetwork,
 } from "wagmi";
 import { RainbowKitProvider, ConnectButton } from "@rainbow-me/rainbowkit";
 import { eligible } from "@attestate/delegator2";
 import DOMPurify from "isomorphic-dompurify";
-import { optimism } from "wagmi/chains";
 import slugify from "slugify";
 slugify.extend({ "′": "", "'": "", "'": "", '"': "" });
 
@@ -205,9 +198,10 @@ const SubmitButton = (props) => {
   const [title, setTitle] = useState("");
   const [remainingChars, setRemainingChars] = useState(80);
 
-  const params = new URLSearchParams(window.location.search);
-  const adParam = params.get("isad") === "true";
-  const [isAd, setIsAd] = useState(adParam);
+  // Ad related state removed
+  // const params = new URLSearchParams(window.location.search);
+  // const adParam = params.get("isad") === "true";
+  // const [isAd, setIsAd] = useState(adParam);
 
   useEffect(() => {
     const embedPreview = document.getElementById("embed-preview");
@@ -436,513 +430,37 @@ const SubmitButton = (props) => {
 
   return (
     <div>
-      <AdForm toast={toast} isAd={isAd} setIsAd={setIsAd} url={url} />
-      {isAd ? null : (
-        <>
-          <button
-            id="button-onboarding"
-            style={buttonStyles}
-            onClick={handleClick}
-            disabled={
-              isLoading ||
-              !isEligible ||
-              title.length > 80 ||
-              url.length > 2048 ||
-              title.length === 0 ||
-              url.length === 0 ||
-              (!url.startsWith("https://") && !url.startsWith("http://"))
-            }
-          >
-            {isLoading
-              ? !localAccount
-                ? "Please confirm signature..."
-                : "Submitting..."
-              : "Submit"}
-          </button>
-          <p>
-            Please <b>only</b> submit Ethereum-related content
-          </p>
-        </>
-      )}
+      {/* AdForm removed */}
+      <>
+        <button
+          id="button-onboarding"
+          style={buttonStyles}
+          onClick={handleClick}
+          disabled={
+            isLoading ||
+            !isEligible ||
+            title.length > 80 ||
+            url.length > 2048 ||
+            title.length === 0 ||
+            url.length === 0 ||
+            (!url.startsWith("https://") && !url.startsWith("http://"))
+          }
+        >
+          {isLoading
+            ? !localAccount
+              ? "Please confirm signature..."
+              : "Submitting..."
+            : "Submit"}
+        </button>
+        <p>
+          Please <b>only</b> submit Ethereum-related content
+        </p>
+      </>
     </div>
   );
 };
 
-const adContractABI = [
-  { inputs: [], name: "ErrUnauthorized", type: "error" },
-  { inputs: [], name: "ErrValue", type: "error" },
-  {
-    inputs: [],
-    name: "collateral",
-    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "controller",
-    outputs: [{ internalType: "address", name: "", type: "address" }],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "href",
-    outputs: [{ internalType: "string", name: "", type: "string" }],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "price",
-    outputs: [
-      { internalType: "uint256", name: "nextPrice", type: "uint256" },
-      { internalType: "uint256", name: "taxes", type: "uint256" },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "ragequit",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      { internalType: "string", name: "_title", type: "string" },
-      { internalType: "string", name: "_href", type: "string" },
-    ],
-    name: "set",
-    outputs: [],
-    stateMutability: "payable",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "timestamp",
-    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "title",
-    outputs: [{ internalType: "string", name: "", type: "string" }],
-    stateMutability: "view",
-    type: "function",
-  },
-];
-const adContractAddress = "0xffcc6b6c5c066b23992758a4fc408f09d6cc4eda";
-
-const AdForm = (props) => {
-  const titleInputElem = document.getElementById("titleInput");
-  const title = titleInputElem.innerText;
-  const { isAd, setIsAd, url, toast } = props;
-  const [isValid, setIsValid] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const { switchNetwork } = useSwitchNetwork();
-  const [referrer, setReferrer] = useState("");
-
-  const buildURL = (baseURL) => {
-    let url;
-    try {
-      url = new URL(baseURL);
-    } catch (err) {
-      return baseURL;
-    }
-
-    if (referrer?.trim()) {
-      const safe = encodeURIComponent(referrer.trim().slice(0, 100));
-      url.searchParams.set("kiwi_news_referrer", safe);
-    }
-    return url.toString();
-  };
-
-  const { address, isConnected } = useAccount();
-  const { data: balanceData } = useBalance({
-    address: address,
-  });
-  const [ethUSD, setETHUSD] = useState(0);
-  useEffect(() => {
-    (async () => {
-      const price = await API.fetchEthUsdPrice();
-      setETHUSD(parseFloat(formatUnits(price, 8)));
-    })();
-  });
-
-  const [userPrice, setUserPrice] = useState("");
-  const [userPriceETH, setUserPriceETH] = useState("");
-  const [minAdPrice, setMinAdPrice] = useState(0n);
-
-  const { data: priceData } = useContractRead({
-    address: adContractAddress,
-    abi: adContractABI,
-    functionName: "price",
-    chainId: optimism.id,
-  });
-
-  useEffect(
-    () => setIsValid(userPriceETH > minAdPrice),
-    [userPriceETH, minAdPrice],
-  );
-
-  useEffect(() => {
-    if (priceData) {
-      const [nextPrice] = priceData;
-      if (nextPrice > minAdPrice) {
-        setMinAdPrice(nextPrice + 1n);
-      }
-    }
-  }, [priceData]);
-
-  let parsedUserPrice;
-  if (isNaN(userPriceETH)) {
-    parsedUserPrice = 0n;
-  } else {
-    parsedUserPrice = parseEther(userPriceETH);
-  }
-
-  const transferFee = minAdPrice === 0n ? 0n : minAdPrice - 1n;
-  const finalUrl = buildURL(url);
-  const { config, error } = usePrepareContractWrite({
-    address: adContractAddress,
-    abi: adContractABI,
-    functionName: "set",
-    args: [title, finalUrl],
-    value: parsedUserPrice + transferFee,
-    chainId: optimism.id,
-  });
-
-  const { writeAsync } = useContractWrite(config);
-  const handleAdSubmission = async (e) => {
-    e.preventDefault();
-
-    if (title.length > 80 || url.length > 2048) {
-      toast.error(
-        "The title should be no more than 80 characters, and the URL should be no more than 2048 characters.",
-      );
-      setIsLoading(false);
-      return;
-    }
-    if (title.length === 0) {
-      toast.error("Please add a title.");
-      setIsLoading(false);
-      return;
-    }
-    if (
-      url.length === 0 ||
-      (!url.startsWith("https://") && !url.startsWith("http://"))
-    ) {
-      toast.error("Please add a valid link.");
-      setIsLoading(false);
-      return;
-    }
-    setIsLoading(true);
-    if (writeAsync) {
-      try {
-        await writeAsync();
-        toast.success("Submitted onchain...");
-        window.location.href = "/";
-      } catch (err) {
-        console.log(err);
-        setIsLoading(false);
-      }
-    }
-  };
-
-  const oneEther = parseEther("1000000000000000000");
-  const formattedAdPrice = parseFloat(formatEther(minAdPrice));
-  const formattedTransferFee = parseFloat(formatEther(transferFee)).toFixed(5);
-  const feeDenominator = 2629746n;
-  const dailyFee =
-    ((parsedUserPrice * (oneEther / feeDenominator)) / oneEther) *
-    60n *
-    60n *
-    24n;
-  const formattedDailyFee = parseFloat(formatEther(dailyFee)).toFixed(5);
-
-  const minPriceSet = minAdPrice > parsedUserPrice;
-  return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "5px",
-        maxWidth: "600px",
-        marginTop: "2rem",
-      }}
-    >
-      <label style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
-        <input
-          type="checkbox"
-          checked={isAd}
-          onChange={(e) => setIsAd(e.target.checked)}
-          style={{ transform: "scale(1.5)" }}
-        />
-        Submit story as an ad
-      </label>
-      {isAd && (
-        <>
-          <div
-            style={{
-              backgroundColor: "var(--background-color0)",
-              border: "var(--border)",
-              padding: "16px",
-              borderRadius: "2px",
-              marginTop: "12px",
-            }}
-          >
-            {/* Current Price Display */}
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: "12px",
-                color: "#666",
-                fontSize: "14px",
-              }}
-            >
-              <span>Current Price:</span>
-              <span>${(formattedTransferFee * ethUSD).toFixed(2)}</span>
-            </div>
-
-            {/* Price Input Section */}
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: "12px",
-              }}
-            >
-              <span style={{ fontSize: "14px", fontWeight: "bold" }}>
-                Set Your Price
-              </span>
-              <div style={{ display: "flex", alignItems: "center" }}>
-                <span
-                  style={{
-                    fontSize: "14px",
-                    color: "#666",
-                    marginRight: "8px",
-                  }}
-                >
-                  $
-                </span>
-                <input
-                  type="number"
-                  min="1"
-                  step="1"
-                  placeholder={new Intl.NumberFormat(navigator.language, {
-                    style: "decimal",
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  }).format(0)}
-                  value={parseInt(userPrice)}
-                  onChange={(e) => {
-                    const usdValue = e.target.value;
-                    const ethValue = (usdValue / ethUSD).toString();
-                    setUserPrice(usdValue);
-                    setUserPriceETH(ethValue);
-                  }}
-                  style={{
-                    width: "100px",
-                    padding: "6px",
-                    border: "1px solid #ddd",
-                    borderRadius: "4px",
-                    fontSize: "14px",
-                    textAlign: "right",
-                  }}
-                />
-              </div>
-            </div>
-
-            {/* Cost Breakdown */}
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                color: "#666",
-                marginBottom: "12px",
-                fontSize: "14px",
-              }}
-            >
-              <span>Your Daily Cost:</span>
-              <span>${(userPrice / 30).toFixed(2)}</span>
-            </div>
-
-            {/* Total Section */}
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                borderTop: "1px solid #ddd",
-                paddingTop: "12px",
-                fontSize: "14px",
-              }}
-            >
-              <span style={{ fontWeight: "bold" }}>Total Due:</span>
-              <div style={{ textAlign: "right" }}>
-                <div style={{ fontWeight: "bold" }}>
-                  $
-                  {(
-                    formatEther(parsedUserPrice) * ethUSD +
-                    formattedTransferFee * ethUSD
-                  ).toFixed(2)}
-                </div>
-                <div style={{ fontSize: "13px", color: "#666" }}>
-                  ({formatEther(parsedUserPrice + transferFee).slice(0, 7)} ETH)
-                </div>
-              </div>
-            </div>
-          </div>
-          <div style={{ marginTop: "12px", marginBottom: "10px" }}>
-            <label
-              style={{
-                fontSize: "14px",
-                display: "block",
-                marginBottom: "6px",
-              }}
-            >
-              Who referred you? (optional)
-            </label>
-            <input
-              type="text"
-              value={referrer}
-              onChange={(e) => setReferrer(e.target.value)}
-              style={{
-                width: "100%",
-                padding: "6px",
-                border: "1px solid #ddd",
-                borderRadius: "4px",
-              }}
-            />
-            <span style={{ fontSize: "8pt" }}>
-              We share 50% of the ad fee income with the person who is named as
-              the referrer.
-            </span>
-          </div>
-
-          <ConnectButton.Custom>
-            {({ account, chain, mounted, openConnectModal }) => {
-              const connected = account && chain && mounted;
-
-              let clickHandler, copy, disabled;
-              if (connected) {
-                if (chain.id === optimism.id) {
-                  disabled =
-                    isLoading ||
-                    isValid ||
-                    (balanceData?.value &&
-                      parsedUserPrice + transferFee > balanceData.value);
-                  copy = isLoading
-                    ? "Please sign transaction"
-                    : balanceData?.value &&
-                      parsedUserPrice + transferFee > balanceData.value
-                    ? `Insufficient balance (${Number(
-                        formatEther(parsedUserPrice + transferFee),
-                      ).toFixed(5)} ETH)`
-                    : `Place ad (${Number(
-                        formatEther(parsedUserPrice + transferFee),
-                      ).toFixed(5)} ETH)`;
-                  clickHandler = handleAdSubmission;
-                } else {
-                  disabled = false;
-                  copy = "Switch to OP Mainnet";
-                  clickHandler = (e) => {
-                    e.preventDefault();
-                    switchNetwork?.(optimism.id);
-                  };
-                }
-              } else {
-                copy = "Connect Wallet";
-                disabled = false;
-                clickHandler = (e) => {
-                  e.preventDefault();
-                  openConnectModal();
-                };
-              }
-              return (
-                <>
-                  {isConnected ? (
-                    <span style={{ fontSize: "8pt", marginBottom: "10px" }}>
-                      Connected with {address} <SimpleDisconnectButton />
-                    </span>
-                  ) : null}
-                  <button
-                    id="button-onboarding"
-                    style={{ ...buttonStyles, ...{ marginTop: 0 } }}
-                    onClick={clickHandler}
-                    disabled={disabled}
-                  >
-                    {copy}
-                  </button>
-                  <span style={{ fontSize: "10pt" }}>
-                    Others can buy your ad spot by paying your set price. You'll
-                    receive your remaining balance plus their payment.
-                  </span>
-                  <br />
-                  <br />
-                  <br />
-                  <br />
-                </>
-              );
-            }}
-          </ConnectButton.Custom>
-          <b style={{ marginTop: "0.1rem" }}>What is this?</b>
-          <p style={{ marginTop: 0 }}>
-            Check the forth story on the Kiwi News front page. Notice how it
-            says "(sponsored)" next to the submitter's username? That's because
-            the forth story on Kiwi News is always an ad.
-            <br />
-            <br />
-            Ads are like regular Kiwi News stories except that they don't need
-            to be upvoted to reach the fourth spot on the front page.
-          </p>
-          <b style={{ marginTop: 0 }}>How does it work?</b>
-          <p style={{ marginTop: 0 }}>
-            You can set the ad's price, but you have to pay daily fees for
-            renting it at that price. We charge 1/30th of the price per day.
-            <br />
-            <br />
-            Let’s say the ad is free and you make it cost $30, it'll cost you
-            $1/day to display the ad.
-            <br />
-            <br />
-            Others can buy the ad at the current price. When they buy you'll get
-            your left over collateral back and the price at which the ad sold.
-            <br />
-            <br />
-            Say someone bought you ad at day 15 (price $15), then you'll get
-            your $15 worth of collateral back, and $15 from the buyer.
-          </p>
-          <b style={{ marginTop: 0 }}>
-            What if I want my collateral back earlier?
-          </b>
-          <p style={{ marginTop: 0 }}>
-            You can technically buy your own ad and set the new price to 1 Wei.
-            But this means you're going to sell the ad space very cheaply!
-          </p>
-          <b style={{ marginTop: 0 }}>Is this safe?</b>
-          <p style={{ marginTop: 0 }}>
-            The contract has been written by timdaub.eth. Some folks from the
-            Rico Credit System audited the math a while ago. But please bear in
-            mind that it’s still experimental, so don't put more than you can
-            afford to lose.
-          </p>
-          <b style={{ marginTop: 0 }}>I have more questions!</b>
-          <p style={{ marginTop: 0 }}>
-            Reach out on our groupchat or DM @timdaub on telegram.
-          </p>
-        </>
-      )}
-    </div>
-  );
-};
+// AdForm component and related constants/imports removed
 
 const Form = (props) => {
   const urlInput = document.getElementById("urlInput");

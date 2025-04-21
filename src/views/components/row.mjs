@@ -279,7 +279,6 @@ const row = (
       outboundsLookbackHours,
     );
     const extractedDomain = extractDomain(DOMPurify.sanitize(story.href));
-    const isad = !!story.collateral;
     const displayMobileImage =
       (story.metadata &&
         story.metadata.image &&
@@ -305,12 +304,8 @@ const row = (
           <div
             class="${interactive ? "" : "content-row"} ${invert
               ? "inverted-row"
-              : ""} ${displayMobileImage ? "content-row-elevated" : ""} ${isad
-              ? "sponsored-row"
-              : ""}"
-            style="${invert ? "display:none;" : ""} ${style} ${isad
-              ? "background-color: rgba(245, 247, 250, 0.9); border-left: 3px solid rgb(175, 192, 70);"
-              : ""}"
+              : ""} ${displayMobileImage ? "content-row-elevated" : ""}"
+            style="${invert ? "display:none;" : ""} ${style}"
           >
             ${displayMobileImage
               ? html` <a
@@ -370,13 +365,10 @@ const row = (
                 data-title="${DOMPurify.sanitize(story.title)}"
                 data-href="${DOMPurify.sanitize(story.href)}"
                 data-upvoters="${JSON.stringify(story.upvoters)}"
-                data-isad="${isad}"
                 class="${displayMobileImage
                   ? "vote-button-container interaction-container-with-image"
                   : "vote-button-container"}"
-                style="${isad
-                  ? "opacity: 0.3;"
-                  : ""}display: flex; align-self: stretch;"
+                style="display: flex; align-self: stretch;"
               >
                 <div
                   onclick="const key='--kiwi-news-upvoted-stories';const href='${DOMPurify.sanitize(
@@ -528,12 +520,6 @@ const row = (
                     style="font-size: 9pt; margin-top: 3px;"
                   >
                     <span style="opacity: 0.8">
-                      ${isad
-                        ? html` <span>
-                            <span style="font-weight: 500;">Sponsored</span>
-                            <span style="opacity:0.6"> • </span>
-                          </span>`
-                        : null}
                       ${path !== "/stories" &&
                       story.avatars &&
                       story.avatars.length > 3 &&
@@ -674,52 +660,11 @@ const row = (
                             href="https://paragraph.xyz/@kiwi-updates/kiwi-feedbot-submissions-open"
                             >${story.displayName}</a
                           >`}
-                      ${story.collateral && story.price
-                        ? html`
-                            <span>
-                              <span style="opacity:0.6"> • </span>
-                              <a
-                                style="display: inline;"
-                                class="decaying-price-link meta-link"
-                                data-price="${story.price.toString()}"
-                                href="/submit?isad=true"
-                              >
-                                <span>Price: </span>
-                                ↓${parseFloat(
-                                  ethers.utils.formatEther(
-                                    story.price.toString(),
-                                  ),
-                                ).toFixed(9)}
-                                <span> </span>
-                                ETH
-                              </a>
-                              <span style="opacity:0.6"> • </span>
-                              <a
-                                href="/submit?isad=true"
-                                class="meta-link"
-                                style="color: rgb(175, 192, 70); font-weight: 500;"
-                                onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
-                              >
-                                Run your own ad
-                              </a>
-                              <span style="opacity:0.6"> • </span>
-                              <a
-                                href="/adstats"
-                                class="meta-link"
-                                style="color: rgba(175, 192, 70, 0.75); font-weight: normal;"
-                                onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
-                              >
-                                See Performance
-                              </a>
-                            </span>
-                          `
-                        : null}
                       <span>
                         ${path === "/" ||
                         path === "/new" ||
                         interactive ||
-                        hideCast ||
-                        isad
+                        hideCast
                           ? null
                           : html`
                               <span class="share-container">
@@ -740,8 +685,7 @@ const row = (
                                 </a>
                               </span>
                             `}
-                        ${isad ||
-                        interactive ||
+                        ${interactive ||
                         hideCast ||
                         story.displayName === "Feedbot"
                           ? null
@@ -780,9 +724,7 @@ const row = (
                     class="${displayMobileImage
                       ? "interaction-container-with-image chat-bubble-container"
                       : "chat-bubble-container"}"
-                    style="${isad
-                      ? "opacity: 0.3;"
-                      : ""}display: flex; align-self: stretch;"
+                    style="display: flex; align-self: stretch;"
                   >
                     <a
                       class="chat-bubble interaction-element"
