@@ -1,9 +1,6 @@
 import { useEffect, useState } from "react";
 import { Wallet } from "@ethersproject/wallet";
-import {
-  useAccount,
-  WagmiConfig,
-} from "wagmi";
+import { useAccount, WagmiConfig } from "wagmi";
 import { RainbowKitProvider, ConnectButton } from "@rainbow-me/rainbowkit";
 import { eligible } from "@attestate/delegator2";
 import DOMPurify from "isomorphic-dompurify";
@@ -452,9 +449,6 @@ const SubmitButton = (props) => {
               : "Submitting..."
             : "Submit"}
         </button>
-        <p>
-          Please <b>only</b> submit Ethereum-related content
-        </p>
       </>
     </div>
   );

@@ -128,7 +128,6 @@ export default async function submit(theme, url = "", title = "") {
                           </label>
                         </div>
                       </div>
-                      {/* Ad checkbox removed */}
                       <button
                         id="button-onboarding"
                         disabled
