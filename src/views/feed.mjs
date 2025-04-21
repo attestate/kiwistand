@@ -11,7 +11,7 @@ import {
   differenceInSeconds,
   differenceInMinutes,
   isBefore,
-  getUnixTime, // Added for prediction timestamp comparison
+  getUnixTime,
 } from "date-fns";
 import DOMPurify from "isomorphic-dompurify";
 
@@ -30,7 +30,7 @@ import cache, {
   getLastComment,
   getSubmission,
   listNewest,
-  getRecommendations,
+  // Removed getRecommendations import
 } from "../cache.mjs";
 import * as curation from "./curation.mjs";
 import log from "../logger.mjs"; // Use original logger here
@@ -49,7 +49,6 @@ const html = htm.bind(vhtml);
 // --- Prediction Configuration ---
 const PREDICTION_NEWNESS_THRESHOLD_SECONDS = 24 * 60 * 60; // 24 hours
 const PREDICTION_LOW_ENGAGEMENT_UPVOTES = 2;
-const NUM_STORIES_TO_REPLACE_WITH_PREDICTIONS = 3;
 // --- End Prediction Configuration ---
 
 // NOTE: Only set this date in synchronicity with the src/launch.mjs date!!
@@ -287,38 +286,41 @@ export async function index(
 ) {
   const lookbackUnixTime = Math.floor(lookback.getTime() / 1000);
   const limit = -1;
-  let leaves = listNewest(limit, lookbackUnixTime);
+  let leaves = listNewest(limit, lookbackUnixTime); // Raw leaves for prediction candidates later
 
   const policy = await moderation.getLists();
   const path = "/";
-  leaves = moderation.moderate(leaves, policy, path);
+  let moderatedLeaves = moderation.moderate(leaves, policy, path); // Use a different var name
 
   // 1. Calculate initial ranking based on ACTUAL engagement
-  let rankedStories = await topstories(leaves);
+  let rankedStories = await topstories(moderatedLeaves); // Use moderated leaves
 
+  // 2. Filter ranked stories based on age/engagement rules
   rankedStories = rankedStories.filter(({ index, upvotes, timestamp }) => {
     const storyAgeInDays = itemAge(timestamp) / (60 * 24);
     const commentCount = store.commentCounts.get(`kiwi:0x${index}`) || 0;
+    // Keep stories > 7 days old out of page 0 initially, but allow them on other pages
     if (page === 0 && storyAgeInDays > 7) {
       return false;
-    } else if (storyAgeInDays <= 2) {
+    }
+    // General engagement filter (applied after ranking)
+    if (storyAgeInDays <= 2) {
       return upvotes > 1;
-    } else if (storyAgeInDays > 2) {
+    } else {
+      // storyAgeInDays > 2
       return upvotes + commentCount > 3;
     }
   });
 
-  // Apply app curation if needed
+  // 3. Apply app curation if needed
   if (appCuration) {
     const sheetName = "app";
     let result;
-
     try {
       result = await curation.getSheet(sheetName);
     } catch (err) {
-      // keep original storyPromises on error
+      // keep original rankedStories on error
     }
-
     if (result?.links) {
       const links = result.links.map((link) =>
         normalizeUrl(link, { stripWWW: false }),
@@ -329,13 +331,13 @@ export async function index(
     }
   }
 
-  // Apply domain filter if needed
+  // 4. Apply domain filter if needed
   if (domain)
     rankedStories = rankedStories.filter(
       ({ href }) => extractDomain(href) === domain,
     );
 
-  // 2. Paginate the normally ranked stories
+  // 5. Paginate the normally ranked stories
   const totalStories = parseInt(env.TOTAL_STORIES, 10);
   const start = totalStories * page;
   const end = totalStories * (page + 1);
@@ -346,90 +348,7 @@ export async function index(
     pageStories = rankedStories; // Use all if not paginating
   }
 
-  // 3. Prediction Injection Logic (Page 0 ONLY)
-  if (page === 0 && paginate && pageStories.length > 0) {
-    const now = getUnixTime(new Date());
-    const candidates = leaves.filter(
-      (story) =>
-        now - story.timestamp < PREDICTION_NEWNESS_THRESHOLD_SECONDS &&
-        story.upvotes <= PREDICTION_LOW_ENGAGEMENT_UPVOTES,
-    );
-
-    if (candidates.length > 0) {
-      const predictionPromises = candidates.map(async (story) => {
-        const prediction = await getPredictedEngagement(story);
-        return { story, prediction };
-      });
-      const results = await Promise.allSettled(predictionPromises);
-
-      const predicted = results
-        .filter(
-          (r) =>
-            r.status === "fulfilled" &&
-            r.value.prediction &&
-            !r.value.prediction.predictionError,
-        )
-        .map((r) => {
-          const { story, prediction } = r.value;
-          // Simple predicted score: upvotes + comments
-          const score =
-            prediction.predictedUpvotes + prediction.predictedComments;
-          // Keep original story object, just add predictedScore for sorting
-          return { ...story, predictedScore: score };
-        });
-
-      if (predicted.length > 0) {
-        // Sort all predicted stories first
-        predicted.sort((a, b) => b.predictedScore - a.predictedScore);
-        // Select only the top N candidates for ENS resolution
-        const topCandidates = predicted.slice(0, NUM_STORIES_TO_REPLACE_WITH_PREDICTIONS);
-
-        // Resolve submitter ENS only for the top candidates
-        const resolvedTopPromises = topCandidates.map(async (item) => {
-          const submitter = await ens.resolve(item.identity);
-          const hasProperName =
-            submitter &&
-            (submitter.ens || submitter.lens || submitter.farcaster);
-          // Return the original item plus resolution info
-          return { ...item, submitter, hasProperName };
-        });
-        const resolvedTopResults = await Promise.allSettled(
-          resolvedTopPromises,
-        );
-
-        // Filter the resolved top candidates to get the final list to inject
-        const top = resolvedTopResults
-          .filter(
-            (r) => r.status === "fulfilled" && r.value.hasProperName,
-          )
-          .map((r) => r.value); // These are the stories we will actually inject
-
-        const numToReplace = top.length; // Replace only as many as we found valid top stories
-
-        if (numToReplace > 0) {
-          const sortedByAge = [...pageStories].sort(
-            (a, b) => a.timestamp - b.timestamp,
-          );
-          const oldest = sortedByAge
-            .slice(0, numToReplace) // Match the number to remove
-            .map((s) => s.index);
-
-          const oldestSet = new Set(oldest);
-          const topSet = new Set(top.map((s) => s.index));
-
-          // Filter out the oldest stories AND any potential duplicates from top
-          pageStories = pageStories.filter(
-            (s) => !oldestSet.has(s.index) && !topSet.has(s.index),
-          );
-          // Add the top predicted stories (they retain their original 'score' from topstories)
-          pageStories.push(...top);
-          // Re-sort the page by the original 'score' from topstories
-          pageStories.sort((a, b) => b.score - a.score);
-        }
-      }
-    }
-  }
-
+  // 6. Resolve IDs, add metadata for the current page
   let writers = [];
   try {
     writers = await moderation.getWriters();
@@ -439,10 +358,8 @@ export async function index(
 
   async function resolveIds(storyPromises) {
     const stories = [];
-    for await (let story of storyPromises) { // Now processes pageStories
-      // Re-resolve ENS data here if needed, or use pre-resolved data if available
-      // The 'top' injected stories already have 'submitter' resolved from the injection logic
-      const ensData = story.submitter || (await ens.resolve(story.identity));
+    for await (let story of storyPromises) {
+      const ensData = await ens.resolve(story.identity); // Resolve ENS for all stories on page
 
       let avatars = [];
       for await (let upvoter of story.upvoters.slice(0, 5)) {
@@ -460,11 +377,9 @@ export async function index(
             .map((p) => p.identity)
             .filter((identity) => identity !== lastComment.identity),
         );
-
         const resolvedParticipants = await Promise.allSettled(
           [...uniqueIdentities].map((identity) => ens.resolve(identity)),
         );
-
         lastComment.previousParticipants = resolvedParticipants
           .filter(
             (result) =>
@@ -483,7 +398,7 @@ export async function index(
           writers[domain] === story.identity,
       );
 
-      const augmentedStory = await addMetadata(story);
+      const augmentedStory = await addMetadata(story); // Add metadata (like pagespeed)
       if (augmentedStory) {
         story = augmentedStory;
         const href = normalizeUrl(story.href, { stripWWW: false });
@@ -496,17 +411,17 @@ export async function index(
         ...story,
         lastComment,
         displayName: ensData.displayName,
-        submitter: ensData, // Ensure submitter data is consistent
+        submitter: ensData,
         avatars: avatars,
         isOriginal,
       });
     }
     return stories;
   }
-  let stories = await resolveIds(pageStories);
+  let stories = await resolveIds(pageStories); // Process the current page
 
-  stories = stories.filter((story) => { // Filter based on resolved submitter name
-    // This check might be redundant for injected stories now, but harmless
+  // 7. Filter based on resolved submitter name
+  stories = stories.filter((story) => {
     const hasProperName =
       story.submitter &&
       (story.submitter.ens ||
@@ -515,44 +430,183 @@ export async function index(
     return hasProperName;
   });
 
-  // Apply pagespeed boost and final sort
+  // 8. Apply pagespeed boost and FINAL SORT before prediction injection
   stories = stories
     .map((story) => {
       if (story.metadata?.pagespeed) {
-        // Normalize pagespeed score to 0.5-1.5 range
         const speedMultiplier = 0.5 + story.metadata.pagespeed / 100;
-        story.score *= speedMultiplier;
+        story.score = (story.score || 0) * speedMultiplier;
       }
       return story;
     })
-    .sort((a, b) => b.score - a.score);
+    .sort((a, b) => (b.score || 0) - (a.score || 0)); // Sort by potentially boosted score
 
-  // Handle pinned story
-  let pinnedStory;
-  if (policy?.pinned?.length > 0) {
-    const pinnedUrl = policy.pinned[0];
-    pinnedStory = stories.find(
-      (story) => normalizeUrl(story.href, { stripWWW: false }) === pinnedUrl,
-    );
-    stories = stories.filter(
-      (story) => normalizeUrl(story.href, { stripWWW: false }) !== pinnedUrl,
-    );
+  // 9. Prediction Injection Logic (Page 0 ONLY - applied AFTER final sort)
+  if (page === 0 && paginate && stories.length > 0) {
+    const fiveDaysInSeconds = 5 * 24 * 60 * 60; // Changed back to 5 days
+    const nowTimestampForAge = getUnixTime(new Date());
+
+    // Find indices of old stories *within the current sorted 'stories' array*
+    const oldStoryIndices = stories
+      .map((story, index) => ({ story, index })) // Keep track of original index
+      .filter(
+        ({ story }) => nowTimestampForAge - story.timestamp > fiveDaysInSeconds, // Use 5 days
+      )
+      .map(({ index }) => index); // Get just the indices
+
+    const numPotentialSlots = oldStoryIndices.length;
+
+    if (numPotentialSlots > 0) {
+      // Find candidates for prediction (new, low engagement, not already on page)
+      // Use the original 'leaves' list for candidates
+      const candidates = leaves.filter(
+        (leaf) =>
+          nowTimestampForAge - leaf.timestamp <
+            PREDICTION_NEWNESS_THRESHOLD_SECONDS &&
+          leaf.upvotes <= PREDICTION_LOW_ENGAGEMENT_UPVOTES &&
+          !stories.some((ps) => ps.index === leaf.index), // Ensure candidate isn't already on the final page list
+      );
+
+      if (candidates.length > 0) {
+        const predictionPromises = candidates.map(async (story) => {
+          const prediction = await getPredictedEngagement(story);
+          // Also pre-resolve ENS and add metadata for potential replacements here
+          const submitter = await ens.resolve(story.identity);
+          const metadata = cachedMetadata(story.href);
+          return { story: { ...story, submitter, metadata }, prediction }; // Combine story, resolved data, and prediction
+        });
+        const results = await Promise.allSettled(predictionPromises);
+
+        const predicted = results
+          .filter(
+            (r) =>
+              r.status === "fulfilled" &&
+              r.value.prediction &&
+              !r.value.prediction.predictionError &&
+              r.value.story.submitter && // Ensure submitter was resolved
+              (r.value.story.submitter.ens ||
+                r.value.story.submitter.lens ||
+                r.value.story.submitter.farcaster), // Ensure submitter has a proper name
+          )
+          .map((r) => {
+            const { story, prediction } = r.value;
+            const predictedScore =
+              prediction.predictedUpvotes + prediction.predictedComments;
+            // Return the fully resolved story object with predictedScore
+            return { ...story, predictedScore };
+          });
+
+        if (predicted.length > 0) {
+          // Sort predicted stories by their predicted score (desc)
+          predicted.sort((a, b) => b.predictedScore - a.predictedScore);
+
+          const numToActuallyReplace = Math.min(
+            numPotentialSlots,
+            predicted.length,
+          );
+
+          if (numToActuallyReplace > 0) {
+            // Select the indices of the highest-ranked old stories to replace
+            const indicesToReplace = oldStoryIndices.slice(
+              0,
+              numToActuallyReplace,
+            );
+            // Select the top predicted stories to use as replacements
+            const replacementStories = predicted.slice(0, numToActuallyReplace);
+
+            // Pre-resolve additional data (avatars, lastComment) for replacement stories
+            const finalReplacementPromises = replacementStories.map(
+              async (story) => {
+                let avatars = [];
+                for await (let upvoter of story.upvoters.slice(0, 5)) {
+                  const profile = await ens.resolve(upvoter);
+                  if (profile.safeAvatar) avatars.push(profile.safeAvatar);
+                }
+                const lastComment = getLastComment(`kiwi:0x${story.index}`);
+                if (lastComment && lastComment.identity) {
+                  lastComment.identity = await ens.resolve(
+                    lastComment.identity,
+                  );
+                  // Resolve participants if needed (simplified here)
+                }
+                const isOriginal = Object.keys(writers).some(
+                  (d) =>
+                    normalizeUrl(story.href).startsWith(d) &&
+                    writers[d] === story.identity,
+                );
+                // Apply pagespeed boost to the predicted story's score if applicable
+                if (story.metadata?.pagespeed) {
+                  const speedMultiplier = 0.5 + story.metadata.pagespeed / 100;
+                  // Note: Predicted stories don't have an original 'score' from topstories.
+                  // We might need a different way to handle score or just use 0.
+                  story.score = 0 * speedMultiplier; // Or some base score?
+                } else {
+                  story.score = 0; // Ensure score property exists
+                }
+
+                return {
+                  ...story,
+                  avatars,
+                  lastComment,
+                  isOriginal,
+                  displayName: story.submitter.displayName, // Already resolved
+                };
+              },
+            );
+            const finalReplacementStories = (
+              await Promise.allSettled(finalReplacementPromises)
+            )
+              .filter((r) => r.status === "fulfilled")
+              .map((r) => r.value);
+
+            // Ensure we still have enough valid final replacements
+            const numFinalReplacements = Math.min(
+              indicesToReplace.length,
+              finalReplacementStories.length,
+            );
+
+            if (numFinalReplacements > 0) {
+              // Create a map from the array index to the final replacement story
+              const replacementMap = new Map();
+              for (let i = 0; i < numFinalReplacements; i++) {
+                replacementMap.set(
+                  indicesToReplace[i],
+                  finalReplacementStories[i],
+                );
+              }
+
+              // Build the final stories array using the map
+              stories = stories.map((originalStory, index) => {
+                return replacementMap.get(index) || originalStory;
+              });
+            }
+          }
+        }
+      }
+    }
   }
 
-  // Handle originals
-  let originals = stories
-    .filter((story) => story.isOriginal)
-    .slice(0, 6)
-    .map(addMetadata);
-  originals = (await Promise.allSettled(originals))
-    .filter(({ status, value }) => status === "fulfilled" && !!value)
-    .map(({ value }) => value)
-    .slice(0, 2);
+  // 10. Handle pinned story (after potential replacements)
+  let pinnedStory;
+  if (policy?.pinned?.length > 0 && page === 0) {
+    const pinnedUrl = policy.pinned[0];
+    const pinnedIndex = stories.findIndex(
+      (story) => normalizeUrl(story.href, { stripWWW: false }) === pinnedUrl,
+    );
+    if (pinnedIndex !== -1) {
+      [pinnedStory] = stories.splice(pinnedIndex, 1); // Remove from list and store
+    }
+  }
+
+  // 11. Handle originals (after potential replacements and pin removal)
+  // Note: Originals might have been replaced by predictions if they were old.
+  // We filter from the *final* stories list.
+  let originals = stories.filter((story) => story.isOriginal).slice(0, 2); // Take top 2 originals *remaining* in the list
 
   // Return final data
   return {
-    pinnedStory,
-    stories,
+    pinnedStory, // This will be rendered separately at the top
+    stories, // This is the main list, potentially modified by predictions, pin removed
     originals,
     start,
   };
@@ -582,39 +636,7 @@ const expandSVG = html`<svg
   />
 </svg>`;
 
-async function recommended(trie, page, domain, identity, hash) {
-  const lookback = sub(new Date(), {
-    weeks: 3,
-  });
-  const paginate = false;
-
-  const { originals, stories } = await index(
-    trie,
-    page,
-    domain,
-    lookback,
-    paginate,
-  );
-
-  let candidates = await getRecommendations(stories, hash, identity);
-  candidates = candidates.filter(
-    (story) => story.metadata?.image && story.submitter.displayName,
-  );
-  if (candidates.length === 0) {
-    candidates = stories;
-  }
-
-  const totalStories = parseInt(env.TOTAL_STORIES, 10);
-  const start = totalStories * page;
-  const end = totalStories * (page + 1);
-  candidates = candidates.slice(start, end);
-
-  return {
-    stories: candidates,
-    originals,
-    start,
-  };
-}
+// Removed the entire recommended function
 
 function Newsletter() {
   return html`
@@ -816,13 +838,10 @@ export default async function (trie, theme, page, domain, identity, hash) {
   const monthlyStripeUrl = "https://buy.stripe.com/8wMbKneOG5km7aE001";
   const annualStripeUrl = "https://buy.stripe.com/6oE5lZbCu8wy3Ys28a";
 
-  let content;
-  if (identity || hash) {
-    content = await recommended(trie, page, domain, identity, hash);
-  } else {
-    content = await index(trie, page, domain);
-  }
+  // Always call the standard index function, regardless of identity/hash
+  const content = await index(trie, page, domain);
 
+  // Destructure content
   const { originals, stories, start, pinnedStory } = content;
 
   let currentQuery = "";
@@ -834,13 +853,13 @@ export default async function (trie, theme, page, domain, identity, hash) {
     currentQuery += `?domain=${domain}`;
   }
 
+  // Construct query for the 'More' link (next page)
   let query = `?page=${page + 1}`;
   if (domain) {
     query += `&domain=${domain}`;
   }
-  if (identity && !domain) {
-    query += `&identity=${identity}`;
-  }
+  // Removed adding identity to the query string
+
   const ogImage = "https://news.kiwistand.com/kiwi_hot_feed_page.png";
   const title = undefined;
   const description = undefined;
@@ -875,23 +894,26 @@ export default async function (trie, theme, page, domain, identity, hash) {
                   ${SupportBanner(monthlyStripeUrl, annualStripeUrl)}
                 </td>
               </tr>
-              ${pinnedStory &&
-              Row(
-                start,
-                "/",
-                "margin-bottom: 20px;",
-                null,
-                null,
-                null,
-                false,
-                undefined,
-                true, // isPinned = true
-              )(pinnedStory)}
-              ${stories
+              ${
+                // Render pinned story only if it exists
+                pinnedStory &&
+                Row(
+                  start, // Use start index from content
+                  "/",
+                  "margin-bottom: 20px;",
+                  null,
+                  null,
+                  null,
+                  false,
+                  undefined,
+                  true, // isPinned = true
+                )(pinnedStory)
+              }
+              ${stories // Render the main list of stories
                 .slice(0, 4) // Show first 4 stories before newsletter
                 .map(
                   Row(
-                    start,
+                    start, // Use start index from content
                     "/",
                     "margin-bottom: 20px;",
                     null,
@@ -902,23 +924,22 @@ export default async function (trie, theme, page, domain, identity, hash) {
                   ),
                 )}
               <tr>
-                <td style="padding: 0;">
-                  ${Newsletter()}
-                </td>
+                <td style="padding: 0;">${Newsletter()}</td>
               </tr>
-              ${stories
-                .slice(4) // Show remaining stories after newsletter
-                .map((story, i) =>
-                  Row(
-                    start,
-                    "/",
-                    "margin-bottom: 20px;",
-                    null,
-                    null,
-                    null,
-                    false,
-                    currentQuery,
-                  )(story, i + 4), // Adjust index offset
+              ${stories // Render remaining stories after newsletter
+                .slice(4)
+                .map(
+                  (story, i) =>
+                    Row(
+                      start, // Use start index from content
+                      "/",
+                      "margin-bottom: 20px;",
+                      null,
+                      null,
+                      null,
+                      false,
+                      currentQuery,
+                    )(story, i + 4), // Adjust index offset
                 )}
             </table>
             ${Footer(theme, path)}
