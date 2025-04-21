@@ -136,7 +136,6 @@ export default async function submit(theme, url = "", title = "") {
                       >
                         Loading...
                       </button>
-                      <p>Please <b>only</b> submit Ethereum-related content</p>
                     </div>
                   </form>
                 </td>
