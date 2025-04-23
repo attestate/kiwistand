@@ -616,6 +616,12 @@ const row = (
                             </span>
                           `
                         : ""}
+                      ${story.impressions && story.impressions > 100
+                        ? html`
+                            <span style="opacity:0.6"> • </span>
+                            <span>${story.impressions} views</span>
+                          `
+                        : ""}
                       <span style="opacity:0.6"> • </span>
                       ${story.identity
                         ? html`<a

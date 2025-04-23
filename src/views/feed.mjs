@@ -407,8 +407,11 @@ export async function index(
         }
       }
 
+      const impressions = countImpressions(story.href); // Get impressions count
+
       stories.push({
         ...story,
+        impressions, // Add impressions to the story object
         lastComment,
         displayName: ensData.displayName,
         submitter: ensData,
@@ -473,7 +476,8 @@ export async function index(
           // Also pre-resolve ENS and add metadata for potential replacements here
           const submitter = await ens.resolve(story.identity);
           const metadata = cachedMetadata(story.href);
-          return { story: { ...story, submitter, metadata }, prediction }; // Combine story, resolved data, and prediction
+          const impressions = countImpressions(story.href); // Get impressions for candidate
+          return { story: { ...story, submitter, metadata, impressions }, prediction }; // Combine story, resolved data, and prediction
         });
         const results = await Promise.allSettled(predictionPromises);
 
@@ -544,6 +548,7 @@ export async function index(
                   story.score = 0; // Ensure score property exists
                 }
 
+                // Impressions already added when creating candidates
                 return {
                   ...story,
                   avatars,
