@@ -446,14 +446,15 @@ export async function index(
 
   // 9. Prediction Injection Logic (Page 0 ONLY - applied AFTER final sort)
   if (page === 0 && paginate && stories.length > 0) {
-    const fiveDaysInSeconds = 5 * 24 * 60 * 60; // Changed back to 5 days
+    // Change the threshold from 3 days to 2 days
+    const twoDaysInSeconds = 2 * 24 * 60 * 60; // Changed from 3 days
     const nowTimestampForAge = getUnixTime(new Date());
 
     // Find indices of old stories *within the current sorted 'stories' array*
     const oldStoryIndices = stories
       .map((story, index) => ({ story, index })) // Keep track of original index
       .filter(
-        ({ story }) => nowTimestampForAge - story.timestamp > fiveDaysInSeconds, // Use 5 days
+        ({ story }) => nowTimestampForAge - story.timestamp > twoDaysInSeconds, // Use 2 days threshold
       )
       .map(({ index }) => index); // Get just the indices
 
