@@ -482,7 +482,7 @@ export async function index(
         });
         const results = await Promise.allSettled(predictionPromises);
 
-        const predicted = results
+        let predicted = results
           .filter(
             (r) =>
               r.status === "fulfilled" &&
@@ -500,6 +500,12 @@ export async function index(
             // Return the fully resolved story object with predictedScore
             return { ...story, predictedScore };
           });
+
+        // --- MODERATE PREDICTED STORIES ---
+        if (predicted.length > 0) {
+          predicted = moderation.moderate(predicted, policy, path);
+        }
+        // --- END MODERATION ---
 
         if (predicted.length > 0) {
           // Sort predicted stories by their predicted score (desc)
