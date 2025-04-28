@@ -615,10 +615,17 @@ export async function index(
   // We filter from the *final* stories list.
   let originals = stories.filter((story) => story.isOriginal).slice(0, 2); // Take top 2 originals *remaining* in the list
 
+  // 12. FINAL FILTER: Remove stories older than 2 days
+  const twoDaysInSeconds = 2 * 24 * 60 * 60;
+  const nowTimestamp = getUnixTime(new Date());
+  stories = stories.filter(
+    (story) => nowTimestamp - story.timestamp <= twoDaysInSeconds,
+  );
+
   // Return final data
   return {
     pinnedStory, // This will be rendered separately at the top
-    stories, // This is the main list, potentially modified by predictions, pin removed
+    stories, // This is the main list, potentially modified by predictions, pin removed, and finally filtered by age
     originals,
     start,
   };
