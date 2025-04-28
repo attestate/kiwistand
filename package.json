@@ -25,7 +25,10 @@
     "dev:anon": "cross-env NODE_ENV=dev API_PORT=8443 HTTP_PORT=4000 DATA_DIR=anon BIND_ADDRESS_V4=\"0.0.0.0\" PORT=0 IS_BOOTSTRAP_NODE=false USE_EPHEMERAL_ID=true npm run dev",
     "dev:anon:ssl": "cross-env NODE_ENV=dev API_PORT=8443 HTTP_PORT=4000 DATA_DIR=anon CUSTOM_PROTOCOL=https:// BIND_ADDRESS_V4=\"0.0.0.0\" PORT=0 IS_BOOTSTRAP_NODE=false USE_EPHEMERAL_ID=true npm run dev:ssl",
     "migration:1": "node -r dotenv/config scripts/migration1.mjs",
-    "sync": "node -r dotenv/config ./src/gen_db.mjs"
+    "sync": "node -r dotenv/config ./src/gen_db.mjs",
+    "simulate:telegram-bot": "cross-env SIMULATION_MODE=true node -r dotenv/config ./src/telegram_bot.mjs",
+    "run:telegram-bot": "node -r dotenv/config ./src/telegram_bot.mjs",
+    "test:bot-submission": "node -r dotenv/config ./scripts/test_submission.mjs"
   },
   "repository": {
     "type": "git",
@@ -62,6 +65,7 @@
     "@libp2p/peer-id": "1.1.16",
     "@libp2p/pubsub-peer-discovery": "8.0.0",
     "@libp2p/tcp": "6.0.4",
+    "@tensorflow/tfjs-node": "4.22.0",
     "ajv": "8.12.0",
     "ajv-formats": "2.1.1",
     "alchemy-sdk": "3.5.6",
@@ -85,6 +89,7 @@
     "fastq": "1.17.1",
     "github-contributions-canvas": "0.7.0",
     "htm": "3.1.1",
+    "html-entities": "2.6.0",
     "http-proxy-middleware": "3.0.3",
     "isbot": "3.7.0",
     "isomorphic-dompurify": "2.12.0",
@@ -115,8 +120,7 @@
     "svg-line-chart": "0.4.1",
     "vhtml": "2.2.0",
     "web-push": "3.6.7",
-    "ws": "8.18.0",
-    "@tensorflow/tfjs-node": "4.22.0"
+    "ws": "8.18.0"
   },
   "devDependencies": {
     "ava": "3.15.0",

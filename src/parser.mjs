@@ -81,6 +81,60 @@ Format this title according to these rules:
  6. Format dates as YYYY-MM-DD
 `;
 
+// Added Kiwi News Submission Guidelines
+const KIWI_NEWS_GUIDELINES = `
+Why guidelines are important
+We have an opportunity to build our own corner of the onchain internet. With awesome people, links, resources, and learning. To ensure this corner is valuable, we need to follow some submission guidelines.
+
+What to submit?
+On topic:
+Anything that gratifies the intellectual curiosities of builders, engineers, hackers, and craftspeople in the community.
+
+That includes:
+
+Technical resources, hacking, and awesome git repos
+Dune dashboards, reports, data-driven articles
+Startups, cryptocurrencies, cryptography
+Networking, privacy, decentralization
+Hardware, open source, art, economics, game theory
+Anything else our community might find fascinating, covering any subject from philosophy, literature, and pop culture, through science, and health, up to society and infrastructure
+Off topic:
+Sensationalist journalism for the sake of ad revenue (including overly optimized click-bait, rage-bait, fluff headlines, clickthrough optimized headlines, cliffhanger headlines, posts with no substance)
+Mediocre resources
+Old stories we all read and that have been widely shared elsewhere
+Shilling (you know what this means)
+
+How to submit?
+A good headline tells you exactly what to expect without embellishing or optimizing for clickthrough. Some recommendations:
+
+No emojis in titles
+Attempt to submit the original title
+Trim the title if it's too long without losing substance
+Avoid Title Casing Because It Looks Like Spam (and it's terrible to read)
+Avoid Upworthy and Buzzfeed style titles along the lines of, "Fiat Crisis with Balaji (shocking!)" - there's no need to add the last part
+Consider NOT submitting pay-walled articles
+Don't end a title with a period or dot
+When introducing a new project or concept, you can use either:
+A dash (-): "ETHStrategy - fully onchain Microstrategy for Ethereum"
+A colon (:): "Farcaster 2026: The Game-Changing Potential of AI Agents"
+Don't include the hosting platform in titles (e.g., "GitHub - bitcoin/bitcoin") as we already show the domain
+Open Graph Images
+Open Graph images are a crucial part of the submission. They're not an afterthought - they're often the first thing users see.
+
+Images should be visually appealing and professionally designed
+Low-quality, poorly designed, or hastily created images will be moderated
+The image should meaningfully represent the content
+Submitter Requirements
+To maintain quality and accountability in our community, we have specific requirements for story submissions:
+
+Stories will be removed from the front page if the submitter hasn't connected at least one of:
+Farcaster account
+ENS name
+Lens profile
+Submissions from accounts showing only a truncated address (e.g., 0xA9D2...1A87) will not appear on the front page
+Connect your social accounts to ensure your submissions remain visible to the community.
+`;
+
 const GUIDELINES = `We have an opportunity to build our own corner of the onchain internet. With awesome people, links, resources, and learning.
 
 Our content focuses on:
@@ -304,13 +358,13 @@ const getYTId = (url) => {
 export const cachedMetadata = (url, generateTitle = false, submittedTitle = undefined) => {
   // Normalize the URL for consistent cache keys
   const normalizedUrl = normalizeUrl(url, { stripWWW: false });
-  
+
   // Check if we have the data in cache
   if (cache.has(normalizedUrl)) {
     // Return cached data without fetching again
     return cache.get(normalizedUrl);
   }
-  
+
   // If not in cache, return empty object and trigger background fetch
   metadata(url, generateTitle, submittedTitle)
     .then(freshData => {
@@ -322,7 +376,7 @@ export const cachedMetadata = (url, generateTitle = false, submittedTitle = unde
     .catch(err => {
       log(`Metadata fetch failed for ${url}: ${err}`);
     });
-  
+
   // Return empty object immediately since we have nothing cached
   return {};
 };
@@ -490,6 +544,76 @@ export const metadata = async (
 
   return output;
 };
+
+/**
+ * Checks if a link is relevant to Kiwi News using Claude Haiku.
+ * @param {string} link - The URL to check.
+ * @param {object} [telegramWebpage] - Optional metadata from Telegram API (webpage object).
+ * @param {string} [telegramWebpage.title] - Title from Telegram.
+ * @param {string} [telegramWebpage.description] - Description from Telegram.
+ * @returns {Promise<boolean>} - True if the link is deemed relevant.
+ */
+export async function isRelevantToKiwiNews(link, telegramWebpage = {}) {
+  const normalizedUrl = normalizeUrl(link, { stripWWW: false });
+  const cacheKey = `relevance-${normalizedUrl}`;
+
+  // Check cache first
+  const cachedRelevance = lifetimeCache.get(cacheKey);
+  if (cachedRelevance !== null) {
+    log(`Relevance cache hit for ${link}: ${cachedRelevance}`);
+    return cachedRelevance;
+  }
+
+  log(`Checking relevance with Claude for: ${link}`);
+
+  let context = `URL: ${link}\n`;
+  if (telegramWebpage?.title) { // Check if telegramWebpage exists before accessing properties
+    context += `Telegram Title: ${telegramWebpage.title}\n`;
+  }
+  if (telegramWebpage?.description) { // Check if telegramWebpage exists
+    context += `Telegram Description: ${telegramWebpage.description}\n`;
+  }
+
+  // Simple prompt asking for a yes/no decision based on guidelines
+  const prompt = `Here are the Kiwi News submission guidelines:\n\n${KIWI_NEWS_GUIDELINES}\n\nBased *only* on these guidelines, is the content described below likely to be "On topic" and suitable for submission to Kiwi News? Answer with only "YES" or "NO".\n\nContent Context:\n${context}`;
+
+  let responseText = "NO"; // Default to NO if anything fails
+  try {
+    const response = await anthropic.messages.create({
+      model: "claude-3-5-haiku-20241022",
+      max_tokens: 10, // Just need YES or NO
+      temperature: 0, // Deterministic
+      messages: [
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+    });
+
+    // Extract the text content, expecting "YES" or "NO"
+    if (response.content && response.content.length > 0 && response.content[0].type === 'text') {
+      responseText = response.content[0].text.trim().toUpperCase();
+    } else {
+        log(`Claude relevance check for ${link} produced unexpected response format: ${JSON.stringify(response)}`);
+    }
+
+  } catch (error) {
+    log(`Claude relevance check API request failed for ${link}: ${error}`);
+    // Keep default "NO"
+  }
+
+  // *** FIX: Check if the response STARTS WITH "YES" ***
+  const isRelevant = responseText.startsWith("YES");
+  // Add clear log before returning
+  log(`Claude relevance raw response: "${responseText}". Final decision for ${link}: ${isRelevant}`);
+
+  // Cache the result
+  lifetimeCache.set(cacheKey, isRelevant);
+
+  return isRelevant;
+}
+
 
 function safeExtractDomain(link) {
   let parsedUrl;
