@@ -31,6 +31,8 @@ const USER_AGENT = "KiwiNewsTelegramBot/1.0"; // Set a custom user agent
 const SIMULATION_MODE = env.SIMULATION_MODE === "true"; // Check for simulation mode
 // Set back to 18 minutes for production
 const MAX_POST_AGE_MINUTES = 18; // Only process posts newer than this
+const RETRY_DELAY_MS = 20000; // 20 seconds delay between retries
+const MAX_FETCH_RETRIES = 2; // Initial attempt + 2 retries = 3 total attempts
 
 // --- Create insecure HTTPS agent ---
 // WARNING: Only use this for localhost connections where cert name mismatch is expected!
@@ -67,40 +69,64 @@ function messageFab(title, href, type = "amplify") {
 
 // --- Helper Functions ---
 
-// *** REMOVED isWithinAllowedTime function ***
-
 /**
- * Fetches latest posts from the specified Telegram channel.
+ * Fetches latest posts from the specified Telegram channel, with simple retries on FLOOD_WAIT.
  * @param {string} channel - The Telegram channel name.
  * @param {number} limit - Maximum number of posts to fetch.
  * @returns {Promise<Array<object>>} - A promise resolving to an array of post objects.
  */
 async function fetchTelegramPosts(channel, limit) {
   const url = `${TELEGRAM_API_BASE}/json/${channel}?limit=${limit}`;
-  log(`Fetching Telegram posts for [${channel}] from: ${url}`);
-  try {
-    const response = await fetch(url, {
-      headers: { "User-Agent": USER_AGENT },
-      timeout: 15000, // 15 second timeout
-    });
-    if (!response.ok) {
-        const errorBody = await response.text();
-        // Check for specific flood wait error
-        if (response.status === 420 && errorBody.includes("FLOOD_WAIT")) {
-            log(`Rate limit hit for channel ${channel}: ${errorBody}. Skipping this run.`);
-            // Return empty array to gracefully handle rate limit
-            return [];
+  let attempts = 0;
+
+  while (attempts <= MAX_FETCH_RETRIES) {
+    attempts++;
+    log(`Fetching Telegram posts for [${channel}] from: ${url} (Attempt ${attempts})`);
+    try {
+      const response = await fetch(url, {
+        headers: { "User-Agent": USER_AGENT },
+        timeout: 15000, // 15 second timeout
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // The API wraps the posts in a 'messages' array
+        return data?.messages || [];
+      }
+
+      // Handle non-OK responses
+      const errorBody = await response.text();
+      // Check for specific flood wait error (HTTP 420)
+      if (response.status === 420 && errorBody.includes("FLOOD_WAIT")) {
+        log(`Rate limit hit for channel ${channel} (Attempt ${attempts}): ${errorBody}.`);
+        if (attempts > MAX_FETCH_RETRIES) {
+          log(`Max retries reached for channel ${channel}. Skipping this run.`);
+          return []; // Give up after max retries
         }
+        log(`Waiting ${RETRY_DELAY_MS / 1000} seconds before retry...`);
+        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS));
+        // Continue to the next iteration of the while loop
+      } else {
+        // Throw other non-OK errors immediately
         throw new Error(`HTTP error ${response.status}: ${errorBody}`);
+      }
+    } catch (error) {
+      // Handle fetch errors (network issues, timeouts, etc.)
+      log(`Error fetching Telegram posts for ${channel} (Attempt ${attempts}): ${error.message}`);
+      if (attempts > MAX_FETCH_RETRIES) {
+        log(`Max retries reached after fetch error for channel ${channel}. Skipping this run.`);
+        return []; // Give up after max retries
+      }
+      // Optional: could add a shorter delay here for network errors if desired
+      log(`Waiting ${RETRY_DELAY_MS / 1000} seconds before retry after fetch error...`);
+      await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS));
     }
-    const data = await response.json();
-    // The API wraps the posts in a 'messages' array
-    return data?.messages || [];
-  } catch (error) {
-    log(`Error fetching Telegram posts for ${channel}: ${error.message}`);
-    return [];
   }
+
+  // Should not be reached if logic is correct, but return empty array as fallback
+  return [];
 }
+
 
 /**
  * Extracts and cleans URLs from a Telegram post object.
