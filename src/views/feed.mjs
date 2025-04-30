@@ -47,7 +47,7 @@ const formatedHolders = holders.map((a) => ethers.utils.getAddress(a));
 const html = htm.bind(vhtml);
 
 // --- Prediction Configuration ---
-const PREDICTION_NEWNESS_THRESHOLD_SECONDS = 24 * 60 * 60; // 24 hours
+const PREDICTION_NEWNESS_THRESHOLD_SECONDS = 10 * 60 * 60; // 10 hours
 const PREDICTION_LOW_ENGAGEMENT_UPVOTES = 2;
 const PREDICTION_REPLACEMENT_COUNT = 10; // Number of oldest stories to replace
 // --- End Prediction Configuration ---
