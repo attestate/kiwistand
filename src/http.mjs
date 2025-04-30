@@ -23,7 +23,6 @@ import "express-async-errors";
 import { sub } from "date-fns";
 import DOMPurify from "isomorphic-dompurify";
 import { getSlug } from "./utils.mjs";
-import ws from "ws";
 import https from "https";
 import fs from "fs";
 import { createServer as createHttpServer } from "http";
@@ -45,7 +44,6 @@ import join from "./views/join.mjs";
 import kiwipass from "./views/kiwipass.mjs";
 import gateway from "./views/gateway.mjs";
 import kiwipassmint from "./views/kiwipass-mint.mjs";
-import friends from "./views/friends.mjs";
 import whattosubmit from "./views/whattosubmit.mjs";
 import onboardingReader from "./views/onboarding-reader.mjs";
 import onboardingCurator from "./views/onboarding-curator.mjs";
@@ -374,16 +372,6 @@ export async function launch(trie, libp2p, isPrimary = true) {
     trackOutbound(cleanUrl, hash);
 
     return reply.redirect(url);
-  });
-  app.get("/friends", async (request, reply) => {
-    reply.header(
-      "Cache-Control",
-      "public, s-maxage=3600, max-age=0, stale-while-revalidate=86400",
-    );
-    return reply
-      .status(200)
-      .type("text/html")
-      .send(await friends(reply.locals.theme));
   });
   app.get("/kiwipass-mint", async (request, reply) => {
     reply.header(
