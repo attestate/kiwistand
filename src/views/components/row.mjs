@@ -279,25 +279,49 @@ const row = (
       outboundsLookbackHours,
     );
     const extractedDomain = extractDomain(DOMPurify.sanitize(story.href));
-    const displayMobileImage =
+
+    // Check if the story itself is older than 12 hours
+    const isStoryOlderThan12Hours =
+      differenceInHours(new Date(), new Date(story.timestamp * 1000)) > 12;
+
+    // Check if the image is a Cloudflare image
+    const isCloudflare = isCloudflareImage(story.href);
+
+    // Condition for displaying mobile image:
+    // - Must have image data (metadata or cloudflare)
+    // - Must not be interactive
+    // - Must not be a blocked domain/image
+    // - Must be on allowed paths
+    // - If on main feed ('/'), story must NOT be older than 12 hours UNLESS it's a Cloudflare image
+    const hasImageData =
       (story.metadata &&
         story.metadata.image &&
-        !interactive &&
-        (path === "/" || path === "/stories") &&
         !blockedOGImageDomains.includes(extractedDomain) &&
         !knownBadOgImages.includes(story.metadata.image)) ||
-      (isCloudflareImage(story.href) &&
-        !interactive &&
-        (path === "/" ||
-          path === "/stories" ||
-          path === "/new" ||
-          path === "/best"));
+      isCloudflare;
+
+    const displayMobileImage =
+      (path !== "/" || !isStoryOlderThan12Hours || isCloudflare) && // Path/Age/Cloudflare check
+      hasImageData &&
+      !interactive &&
+      (path === "/" || // Allow on root if not older than 12h OR is Cloudflare
+        path === "/stories" ||
+        path === "/new" ||
+        path === "/best"); // Allow on other specific paths regardless of age
+
+    // Condition for displaying comment preview:
+    // - Must have a last comment
+    // - Last comment must have a resolved identity (ens/fc/lens)
+    // - Must not be inverted
+    // - If on main feed ('/'), story must NOT be older than 12 hours (Cloudflare status doesn't matter here)
     const displayCommentPreview =
       story.lastComment &&
       (story.lastComment.identity.ens ||
         story.lastComment.identity.farcaster ||
         story.lastComment.identity.lens) &&
-      !invert;
+      !invert &&
+      (path !== "/" || !isStoryOlderThan12Hours); // Path/Age check (no Cloudflare exception)
+
     return html`
       <tr style="${invert ? "background-color: black;" : ""}">
         <td>
@@ -327,12 +351,10 @@ const row = (
                   <div style="position: relative;">
                     <img
                       loading="lazy"
-                      style="aspect-ratio: 2 / 1; object-fit:${isCloudflareImage(
-                        story.href,
-                      )
+                      style="aspect-ratio: 2 / 1; object-fit:${isCloudflare
                         ? "contain"
                         : "cover"}; margin: 0 11px; border-radius: 2px; width: calc(100% - 24px);"
-                      src="${isCloudflareImage(story.href)
+                      src="${isCloudflare
                         ? DOMPurify.sanitize(
                             story.href.endsWith("/public")
                               ? story.href.replace(
@@ -343,7 +365,7 @@ const row = (
                           )
                         : DOMPurify.sanitize(story.metadata.image)}"
                     />
-                    ${isCloudflareImage(story.href)
+                    ${isCloudflare
                       ? null
                       : html`<div
                           style="position: absolute; bottom: 8px; left: 19px; background: rgba(255,255,255,0.9); padding: 2px 6px; border-radius: 2px; font-size: 9pt;"
@@ -408,13 +430,10 @@ const row = (
                 class="content-container"
                 style="display: flex; align-items: start; flex-grow: 1; gap: 8px;"
               >
-                ${(story.metadata &&
-                  story.metadata.image &&
-                  !interactive &&
-                  !blockedOGImageDomains.includes(extractedDomain) &&
-                  !isSubstackDomain(extractedDomain) &&
-                  !knownBadOgImages.includes(story.metadata.image)) ||
-                (isCloudflareImage(story.href) && !interactive)
+                ${(path !== "/" || !isStoryOlderThan12Hours || isCloudflare) && // Path/Age/Cloudflare check
+                hasImageData &&
+                !interactive &&
+                !isSubstackDomain(extractedDomain) // Keep substack check specific to desktop?
                   ? html`<a
                       data-no-instant
                       href="${addOrUpdateReferrer(
@@ -434,12 +453,10 @@ const row = (
                     >
                       <img
                         loading="lazy"
-                        style="max-height: 61px; border: var(--border-line); border-radius: 2px; width: 110px; object-fit: ${isCloudflareImage(
-                          story.href,
-                        )
+                        style="max-height: 61px; border: var(--border-line); border-radius: 2px; width: 110px; object-fit: ${isCloudflare
                           ? "contain"
                           : "cover"};"
-                        src="${isCloudflareImage(story.href)
+                        src="${isCloudflare
                           ? DOMPurify.sanitize(
                               story.href.endsWith("/public")
                                 ? story.href.replace(
@@ -461,7 +478,7 @@ const row = (
                         data-no-instant
                         href="${path === "/submit" || path === "/demonstration"
                           ? "javascript:void(0);"
-                          : isCloudflareImage(story.href) && story.index
+                          : isCloudflare && story.index
                           ? `/stories/${getSlug(story.title)}?index=0x${
                               story.index
                             }`
@@ -469,7 +486,7 @@ const row = (
                               DOMPurify.sanitize(story.href),
                               story.identity,
                             )}"
-                        onclick="${isCloudflareImage(story.href) && story.index
+                        onclick="${isCloudflare && story.index
                           ? "if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
                           : `event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${addOrUpdateReferrer(
                               DOMPurify.sanitize(story.href),
@@ -484,7 +501,7 @@ const row = (
                         data-external-link="${DOMPurify.sanitize(story.href)}"
                         target="${path === "/submit" ||
                         path === "/demonstration" ||
-                        (isCloudflareImage(story.href) && story.index)
+                        (isCloudflare && story.index)
                           ? "_self"
                           : "_blank"}"
                         class="story-link"
@@ -608,7 +625,7 @@ const row = (
                           `}
                       ${!interactive &&
                       (path === "/" || path === "/new" || path === "/best") &&
-                      !isCloudflareImage(story.href)
+                      !isCloudflare
                         ? html`
                             <span class="domain-text">
                               <span style="opacity:0.6"> • </span>
