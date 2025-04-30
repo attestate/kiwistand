@@ -49,7 +49,7 @@ const html = htm.bind(vhtml);
 // --- Prediction Configuration ---
 const PREDICTION_NEWNESS_THRESHOLD_SECONDS = 24 * 60 * 60; // 24 hours
 const PREDICTION_LOW_ENGAGEMENT_UPVOTES = 2;
-const PREDICTION_REPLACEMENT_COUNT = 5; // Number of oldest stories to replace
+const PREDICTION_REPLACEMENT_COUNT = 10; // Number of oldest stories to replace
 // --- End Prediction Configuration ---
 
 // NOTE: Only set this date in synchronicity with the src/launch.mjs date!!
@@ -485,7 +485,10 @@ export async function index(
           const submitter = await ens.resolve(story.identity);
           const metadata = cachedMetadata(story.href);
           const impressions = countImpressions(story.href); // Get impressions for candidate
-          return { story: { ...story, submitter, metadata, impressions }, prediction }; // Combine story, resolved data, and prediction
+          return {
+            story: { ...story, submitter, metadata, impressions },
+            prediction,
+          }; // Combine story, resolved data, and prediction
         });
         const results = await Promise.allSettled(predictionPromises);
 
