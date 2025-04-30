@@ -41,54 +41,6 @@ function takeMedian(incomeData) {
     : (incomes[mid - 1] + incomes[mid]) / 2;
 }
 
-export function calcWeeklyIncome(transactions) {
-  const incomeByWeek = transactions.reduce((acc, { timestamp, valueEUR }) => {
-    const date = new Date(timestamp);
-    const weekStart = startOfWeek(date, { weekStartsOn: 1 });
-    const weekYearKey = format(weekStart, "yyyy-MM-dd");
-    if (!acc[weekYearKey]) {
-      acc[weekYearKey] = {
-        week: weekYearKey,
-        income: 0,
-        nftSold: 0,
-        averagePrice: 0,
-        date: weekYearKey,
-      };
-    }
-    acc[weekYearKey].income += parseFloat(valueEUR);
-    acc[weekYearKey].nftSold += 1;
-    acc[weekYearKey].averagePrice =
-      acc[weekYearKey].income / acc[weekYearKey].nftSold;
-    return acc;
-  }, {});
-
-  const weeksSorted = Object.keys(incomeByWeek).sort();
-  const nthWeekHeader = weeksSorted.map((_, index) => index); // nth week starting from 0
-  const dateHeader = weeksSorted; // Dates are already in 'yyyy-MM-dd' format
-  const incomeRow = [
-    "Income (EUR)",
-    ...weeksSorted.map((week) => incomeByWeek[week].income.toFixed(2)),
-  ];
-  const soldRow = [
-    "NFTs Sold",
-    ...weeksSorted.map((week) => incomeByWeek[week].nftSold),
-  ];
-  const averagePriceRow = [
-    "Average Price (EUR)",
-    ...weeksSorted.map((week) => incomeByWeek[week].averagePrice.toFixed(2)),
-  ];
-
-  const csv = [
-    ["Nth week", ...nthWeekHeader].join("\t"),
-    ["Date", ...dateHeader].join("\t"),
-    incomeRow.join("\t"),
-    soldRow.join("\t"),
-    averagePriceRow.join("\t"),
-  ].join("\n");
-
-  return csv;
-}
-
 function calcMonthlyIncome(transactions) {
   const incomeByMonth = transactions.reduce((acc, { timestamp, valueEUR }) => {
     const month = format(new Date(timestamp), "MMMM yyyy");
@@ -324,27 +276,6 @@ export async function getReferralReward(mints) {
     reward: referralRewardEth,
     percentageOff,
   };
-}
-
-export async function getSalesData() {
-  const today = new Date();
-  const mints = await registry.mints();
-  const prices = await fetchEURPrice(today);
-  const opensPerDay = extractDateAndOpen(prices);
-
-  const data = mints.map(({ timestamp, value }) => {
-    const parsedTimestamp = new Date(1000 * parseInt(timestamp, 16));
-    const valueETH = ethers.utils.formatEther(value);
-    const ETHEUR = opensPerDay[format(parsedTimestamp, "MM/dd/yyyy")];
-
-    return {
-      timestamp: parsedTimestamp.toISOString(),
-      valueETH,
-      valueEUR: (valueETH * ETHEUR).toFixed(2),
-    };
-  });
-
-  return data;
 }
 
 export async function chart(theme) {

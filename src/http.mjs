@@ -414,26 +414,6 @@ export async function launch(trie, libp2p, isPrimary = true) {
     const details = "Search completed successfully";
     return sendStatus(reply, code, httpMessage, details, data);
   });
-  app.get("/api/v1/sales", async (request, reply) => {
-    if (request.query.granularity === "all") {
-      const data = await price.getSalesData();
-      const csv = [
-        Object.keys([0]).join(","),
-        ...data.map((row) => Object.values(row).join(",")),
-      ].join("\n");
-
-      reply.header("Content-Type", "text/csv");
-      reply.header("Content-Disposition", 'attachment; filename="sales.csv"');
-      reply.send(csv);
-    }
-    if (request.query.granularity === "week") {
-      const sales = await price.getSalesData();
-      const weeklySales = price.calcWeeklyIncome(sales);
-      reply.header("Content-Type", "text/csv");
-      reply.header("Content-Disposition", 'attachment; filename="sales.csv"');
-      reply.send(weeklySales);
-    }
-  });
   app.delete("/api/v1/cache", async (req, res) => {
     const { url } = req.body;
 
