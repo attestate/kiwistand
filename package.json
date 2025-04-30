@@ -51,7 +51,7 @@
   "homepage": "https://github.com/attestate/kiwistand#readme",
   "dependencies": {
     "@anthropic-ai/sdk": "0.33.1",
-    "@attestate/crawler": "0.6.2",
+    "@attestate/crawler": "0.6.3",
     "@attestate/crawler-call-block-logs": "0.5.1",
     "@attestate/delegator2": "0.5.1",
     "@chainsafe/libp2p-gossipsub": "5.2.1",
