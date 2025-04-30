@@ -680,7 +680,6 @@ const CommentsSection = (props) => {
     >
       <WagmiConfig config={client}>
         <RainbowKitProvider chains={chains}>
-          <NotificationOptIn {...props} />
           {comments.length > 0 &&
             comments.map((comment, index) => (
               <Comment
@@ -691,6 +690,7 @@ const CommentsSection = (props) => {
                 storyIndex={storyIndex}
               />
             ))}
+          <NotificationOptIn {...props} />
           <CommentInput 
             {...props} 
             comments={comments}
