@@ -33,8 +33,6 @@ import privacy from "./views/privacy.mjs";
 import guidelines from "./views/guidelines.mjs";
 import onboarding from "./views/onboarding.mjs";
 import referral from "./views/referral.mjs";
-import join from "./views/join.mjs";
-import kiwipass from "./views/kiwipass.mjs";
 import gateway from "./views/gateway.mjs";
 import kiwipassmint from "./views/kiwipass-mint.mjs";
 import whattosubmit from "./views/whattosubmit.mjs";
@@ -49,13 +47,8 @@ import stats from "./views/stats.mjs";
 import users from "./views/users.mjs";
 import basics from "./views/basics.mjs";
 import search from "./views/search.mjs";
-import retention from "./views/retention.mjs";
 import * as activity from "./views/activity.mjs";
-import * as comments from "./views/comments.mjs";
-import about from "./views/about.mjs";
-import why from "./views/why.mjs";
 import submit from "./views/submit.mjs";
-import settings from "./views/settings.mjs";
 import start from "./views/start.mjs";
 import indexing from "./views/indexing.mjs";
 import invite from "./views/invite.mjs";
@@ -73,11 +66,7 @@ import * as subscriptions from "./subscriptions.mjs";
 import * as telegram from "./telegram.mjs";
 import * as email from "./email.mjs";
 import * as price from "./price.mjs";
-import {
-  getSubmission,
-  trackOutbound,
-  trackImpression,
-} from "./cache.mjs";
+import { getSubmission, trackOutbound, trackImpression } from "./cache.mjs";
 
 const app = express();
 // Always use HTTP for internal servers since SSL is terminated at the load balancer
@@ -950,15 +939,6 @@ export async function launch(trie, libp2p, isPrimary = true) {
     );
     return reply.status(200).type("text/html").send(content);
   });
-  // NOTE: During the process of combining the feed and the editor's picks, we
-  // decided to expose people to the community pick's tab right from the front
-  // page, which is why while deprecating the /feed, we're forwarding to root.
-  app.get("/feed", function (req, res) {
-    res.redirect(301, "/");
-  });
-  app.get("/dau", function (req, res) {
-    res.redirect(301, "/stats");
-  });
   app.get("/new", async (request, reply) => {
     const content = await newest(trie, reply.locals.theme);
     let timestamp;
@@ -979,9 +959,6 @@ export async function launch(trie, libp2p, isPrimary = true) {
     }
 
     return reply.status(200).type("text/html").send(content);
-  });
-  app.get("/alltime", function (req, res) {
-    return res.redirect(301, "/best?period=all");
   });
   app.get("/best", async (request, reply) => {
     let page = parseInt(request.query.page);
@@ -1028,14 +1005,6 @@ export async function launch(trie, libp2p, isPrimary = true) {
     const content = await price.chart(reply.locals.theme);
     return reply.status(200).type("text/html").send(content);
   });
-  app.get("/retention", async (request, reply) => {
-    const content = await retention(trie, reply.locals.theme);
-    reply.header(
-      "Cache-Control",
-      "public, max-age=0, no-transform, must-revalidate, stale-while-revalidate=120",
-    );
-    return reply.status(200).type("text/html").send(content);
-  });
   app.get("/users", async (request, reply) => {
     const content = await users(trie, reply.locals.theme);
     reply.header(
@@ -1058,15 +1027,6 @@ export async function launch(trie, libp2p, isPrimary = true) {
     reply.header(
       "Cache-Control",
       "public, max-age=0, no-transform, must-revalidate, stale-while-revalidate=120",
-    );
-    return reply.status(200).type("text/html").send(content);
-  });
-  app.get("/about", async (request, reply) => {
-    const content = await about(reply.locals.theme);
-
-    reply.header(
-      "Cache-Control",
-      "public, s-maxage=86400, max-age=0, stale-while-revalidate=600000",
     );
     return reply.status(200).type("text/html").send(content);
   });
@@ -1148,40 +1108,6 @@ export async function launch(trie, libp2p, isPrimary = true) {
     reply.header(
       "Cache-Control",
       "public, s-maxage=86400, max-age=0, stale-while-revalidate=600000",
-    );
-    return reply.status(200).type("text/html").send(content);
-  });
-  app.get("/settings", async (request, reply) => {
-    const content = await settings(
-      reply.locals.theme,
-      DOMPurify.sanitize(request.cookies.identity),
-    );
-
-    reply.header(
-      "Cache-Control",
-      "public, max-age=0, no-transform, must-revalidate, stale-while-revalidate=86400",
-    );
-    return reply.status(200).type("text/html").send(content);
-  });
-  app.get("/why", async (request, reply) => {
-    const content = await why(reply.locals.theme, request.cookies.identity);
-
-    reply.header("Cache-Control", "public, max-age=0");
-    return reply.status(200).type("text/html").send(content);
-  });
-  // TODO: Remove this page after having removed its links from the page for a
-  // few days or weeks
-  app.get("/comments", async (request, reply) => {
-    let data;
-    try {
-      data = await comments.data();
-    } catch (err) {
-      return reply.status(400).type("text/plain").send(err.toString());
-    }
-    const content = await comments.page(reply.locals.theme, data.notifications);
-    reply.header(
-      "Cache-Control",
-      "public, max-age=10, no-transform, must-revalidate, stale-while-revalidate=3600",
     );
     return reply.status(200).type("text/html").send(content);
   });
@@ -1397,20 +1323,6 @@ export async function launch(trie, libp2p, isPrimary = true) {
           DOMPurify.sanitize(request.cookies.identity),
         ),
       );
-  });
-  app.get("/welcome", async (request, reply) => {
-    reply.header("Cache-Control", "public, must-revalidate");
-    return reply
-      .status(200)
-      .type("text/html")
-      .send(await join(reply.locals.theme));
-  });
-  app.get("/kiwipass", async (request, reply) => {
-    reply.header("Cache-Control", "public, must-revalidate");
-    return reply
-      .status(200)
-      .type("text/html")
-      .send(await kiwipass(reply.locals.theme));
   });
   app.get("/shortcut", async (request, reply) => {
     reply.header(
