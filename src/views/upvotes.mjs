@@ -7,8 +7,6 @@ import normalizeUrl from "normalize-url";
 import { formatDistanceToNow } from "date-fns";
 import { utils } from "ethers";
 import DOMPurify from "isomorphic-dompurify";
-import { createCanvas, loadImage } from "canvas";
-import { drawContributions } from "github-contributions-canvas";
 
 import Header from "./components/header.mjs";
 import { trophySVG, broadcastSVG } from "./components/secondheader.mjs";

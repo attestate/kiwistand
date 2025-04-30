@@ -58,7 +58,6 @@
     "@chainsafe/libp2p-noise": "10.2.0",
     "@ethereumjs/rlp": "4.0.1",
     "@ethereumjs/trie": "5.0.4",
-    "@ethersproject/providers": "5.7.2",
     "@ethersproject/wallet": "5.7.0",
     "@libp2p/bootstrap": "5.0.0",
     "@libp2p/mplex": "7.1.0",
@@ -68,10 +67,8 @@
     "@tensorflow/tfjs-node": "4.22.0",
     "ajv": "8.12.0",
     "ajv-formats": "2.1.1",
-    "alchemy-sdk": "3.5.6",
     "better-sqlite3": "9.4.0",
     "canonicalize": "2.0.0",
-    "canvas": "2.11.2",
     "cbor-x": "1.5.1",
     "cloudflare": "4.2.0",
     "cookie-parser": "1.4.6",
@@ -87,7 +84,6 @@
     "express": "4.18.2",
     "express-async-errors": "3.1.1",
     "fastq": "1.17.1",
-    "github-contributions-canvas": "0.7.0",
     "htm": "3.1.1",
     "html-entities": "2.6.0",
     "http-proxy-middleware": "3.0.3",
@@ -118,16 +114,13 @@
     "slugify": "1.6.6",
     "svg-line-chart": "0.4.1",
     "vhtml": "2.2.0",
-    "web-push": "3.6.7",
-    "ws": "8.18.0"
+    "web-push": "3.6.7"
   },
   "devDependencies": {
     "ava": "3.15.0",
-    "chokidar": "3.5.3",
     "concurrently": "8.0.1",
     "csv-parser": "3.2.0",
     "csv-writer": "1.6.0",
-    "terser": "5.17.1",
     "vite": "4.3.1"
   },
   "ava": {
