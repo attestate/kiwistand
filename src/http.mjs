@@ -90,7 +90,6 @@ import * as telegram from "./telegram.mjs";
 import * as email from "./email.mjs";
 import * as price from "./price.mjs";
 import {
-  getRandomIndex,
   getSubmission,
   trackOutbound,
   trackImpression,
@@ -316,16 +315,6 @@ export async function launch(trie, libp2p, isPrimary = true) {
   } catch (err) {
     fingerprint = await import("./fingerprint_example.mjs");
   }
-  app.get("/random", async (request, reply) => {
-    reply.header("Cache-Control", "no-cache");
-    let index;
-    try {
-      index = getRandomIndex();
-    } catch (err) {
-      return reply.status(404).send("Not Found");
-    }
-    return reply.redirect(`/stories?index=${index}`);
-  });
   function removeReferrerParams(link) {
     const url = new URL(link);
     if (url.hostname.endsWith("mirror.xyz")) {
@@ -824,7 +813,12 @@ export async function launch(trie, libp2p, isPrimary = true) {
     try {
       address = utils.getAddress(request.params.address);
     } catch (err) {
-      return sendError(reply, 400, "Bad Request", "Invalid Ethereum address provided.");
+      return sendError(
+        reply,
+        400,
+        "Bad Request",
+        "Invalid Ethereum address provided.",
+      );
     }
 
     try {
@@ -835,8 +829,13 @@ export async function launch(trie, libp2p, isPrimary = true) {
       // full data in the background. The minimal profile is sufficient
       // for optimistic updates. If it had an error structure, handle it.
       if (profile && profile.error) {
-         // Use 404 for consistency with how ens.resolve handles errors internally
-         return sendError(reply, 404, "Not Found", profile.message || "Failed to resolve profile.");
+        // Use 404 for consistency with how ens.resolve handles errors internally
+        return sendError(
+          reply,
+          404,
+          "Not Found",
+          profile.message || "Failed to resolve profile.",
+        );
       }
 
       // Set long caching headers:
@@ -845,14 +844,24 @@ export async function launch(trie, libp2p, isPrimary = true) {
       // stale-while-revalidate=604800 (7 days) allows serving stale while revalidating
       reply.header(
         "Cache-Control",
-        "public, s-maxage=86400, max-age=3600, stale-while-revalidate=604800"
+        "public, s-maxage=86400, max-age=3600, stale-while-revalidate=604800",
       );
-      return sendStatus(reply, 200, "OK", "Profile resolved successfully", profile);
-
+      return sendStatus(
+        reply,
+        200,
+        "OK",
+        "Profile resolved successfully",
+        profile,
+      );
     } catch (err) {
       // Catch unexpected errors during the resolution process
       log(`Error resolving profile for ${address}: ${err}`);
-      return sendError(reply, 500, "Internal Server Error", "Failed to resolve profile data.");
+      return sendError(
+        reply,
+        500,
+        "Internal Server Error",
+        "Failed to resolve profile data.",
+      );
     }
   });
 

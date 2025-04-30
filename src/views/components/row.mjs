@@ -753,20 +753,6 @@ const row = (
                     </a>
                   </div>`
                 : ""}
-              ${path === "/stories"
-                ? html`<div
-                    title="Go to random article"
-                    style="display: flex; align-self: stretch;"
-                  >
-                    <a
-                      class="chat-bubble interaction-element"
-                      href="/random"
-                      style="margin: 5px; border: var(--border); background-color: var(--bg-off-white); border-radius: 2px; display: flex; justify-content: center; min-width: 40px; align-items: center; flex-direction: column;"
-                    >
-                      ${ShuffleSVG}
-                    </a>
-                  </div>`
-                : ""}
             </div>
             ${displayCommentPreview
               ? html` <div

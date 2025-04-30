@@ -299,17 +299,6 @@ export function setTimestamp(identity, timestamp) {
   ).run(identity, timestamp);
 }
 
-export function getRandomIndex() {
-  const row = db
-    .prepare(`SELECT id FROM submissions ORDER BY RANDOM() LIMIT 1`)
-    .get();
-  if (!row) {
-    throw new Error("Nothing found in db");
-  }
-  const [, index] = row.id.split("kiwi:");
-  return index;
-}
-
 export function getContributionsData(identity) {
   const endDate = new Date();
   const startDate = new Date(new Date().getFullYear(), 0, 1);
