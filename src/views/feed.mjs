@@ -49,6 +49,7 @@ const html = htm.bind(vhtml);
 // --- Prediction Configuration ---
 const PREDICTION_NEWNESS_THRESHOLD_SECONDS = 24 * 60 * 60; // 24 hours
 const PREDICTION_LOW_ENGAGEMENT_UPVOTES = 2;
+const PREDICTION_REPLACEMENT_COUNT = 5; // Number of oldest stories to replace
 // --- End Prediction Configuration ---
 
 // NOTE: Only set this date in synchronicity with the src/launch.mjs date!!
@@ -446,23 +447,29 @@ export async function index(
 
   // 9. Prediction Injection Logic (Page 0 ONLY - applied AFTER final sort)
   if (page === 0 && paginate && stories.length > 0) {
-    // Change the threshold from 3 days to 2 days
-    const twoDaysInSeconds = 2 * 24 * 60 * 60; // Changed from 3 days
-    const nowTimestampForAge = getUnixTime(new Date());
+    // --- Find the indices of the N oldest stories in the current list ---
+    const storiesWithOriginalIndex = stories.map((story, index) => ({
+      ...story,
+      originalIndex: index,
+    }));
 
-    // Find indices of old stories *within the current sorted 'stories' array*
-    const oldStoryIndices = stories
-      .map((story, index) => ({ story, index })) // Keep track of original index
-      .filter(
-        ({ story }) => nowTimestampForAge - story.timestamp > twoDaysInSeconds, // Use 2 days threshold
-      )
-      .map(({ index }) => index); // Get just the indices
+    storiesWithOriginalIndex.sort((a, b) => a.timestamp - b.timestamp); // Sort by timestamp ascending (oldest first)
 
-    const numPotentialSlots = oldStoryIndices.length;
+    const numStoriesToConsider = Math.min(
+      stories.length,
+      PREDICTION_REPLACEMENT_COUNT,
+    );
+    const oldestStoryIndices = storiesWithOriginalIndex
+      .slice(0, numStoriesToConsider)
+      .map((story) => story.originalIndex); // Get original indices of the N oldest
+
+    const numPotentialSlots = oldestStoryIndices.length;
+    // --- End finding oldest stories ---
 
     if (numPotentialSlots > 0) {
       // Find candidates for prediction (new, low engagement, not already on page)
       // Use the original 'leaves' list for candidates
+      const nowTimestampForAge = getUnixTime(new Date());
       const candidates = leaves.filter(
         (leaf) =>
           nowTimestampForAge - leaf.timestamp <
@@ -517,8 +524,8 @@ export async function index(
           );
 
           if (numToActuallyReplace > 0) {
-            // Select the indices of the highest-ranked old stories to replace
-            const indicesToReplace = oldStoryIndices.slice(
+            // Select the indices of the oldest stories to replace (already sorted by age implicitly)
+            const indicesToReplace = oldestStoryIndices.slice(
               0,
               numToActuallyReplace,
             );
@@ -578,11 +585,11 @@ export async function index(
             );
 
             if (numFinalReplacements > 0) {
-              // Create a map from the array index to the final replacement story
+              // Create a map from the original array index to the final replacement story
               const replacementMap = new Map();
               for (let i = 0; i < numFinalReplacements; i++) {
                 replacementMap.set(
-                  indicesToReplace[i],
+                  indicesToReplace[i], // Use the original index of the story being replaced
                   finalReplacementStories[i],
                 );
               }
