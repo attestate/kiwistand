@@ -74,8 +74,6 @@ import appTestflight from "./views/app-testflight.mjs";
 import demonstration from "./views/demonstration.mjs";
 import notifications from "./views/notifications.mjs";
 import emailNotifications from "./views/email-notifications.mjs";
-import pwa from "./views/pwa.mjs";
-import pwaandroid from "./views/pwaandroid.mjs";
 import * as curation from "./views/curation.mjs";
 import * as moderation from "./views/moderation.mjs";
 import { parse, metadata } from "./parser.mjs";
@@ -1171,18 +1169,6 @@ export async function launch(trie, libp2p, isPrimary = true) {
       "Cache-Control",
       "public, s-maxage=86400, max-age=0, stale-while-revalidate=600000",
     );
-    return reply.status(200).type("text/html").send(content);
-  });
-  app.get("/pwaandroid", async (request, reply) => {
-    const content = await pwaandroid(reply.locals.theme);
-
-    reply.header("Cache-Control", "public, max-age=0");
-    return reply.status(200).type("text/html").send(content);
-  });
-  app.get("/pwa", async (request, reply) => {
-    const content = await pwa(reply.locals.theme);
-
-    reply.header("Cache-Control", "public, max-age=0");
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/notifications", async (request, reply) => {
