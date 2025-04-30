@@ -103,6 +103,7 @@ Sensationalist journalism for the sake of ad revenue (including overly optimized
 Mediocre resources
 Old stories we all read and that have been widely shared elsewhere
 Shilling (you know what this means)
+Fund raise announcements of projects which are not closely associated with Ethereum
 
 How to submit?
 A good headline tells you exactly what to expect without embellishing or optimizing for clickthrough. Some recommendations:
@@ -355,7 +356,11 @@ const getYTId = (url) => {
   }
 };
 
-export const cachedMetadata = (url, generateTitle = false, submittedTitle = undefined) => {
+export const cachedMetadata = (
+  url,
+  generateTitle = false,
+  submittedTitle = undefined,
+) => {
   // Normalize the URL for consistent cache keys
   const normalizedUrl = normalizeUrl(url, { stripWWW: false });
 
@@ -367,13 +372,13 @@ export const cachedMetadata = (url, generateTitle = false, submittedTitle = unde
 
   // If not in cache, return empty object and trigger background fetch
   metadata(url, generateTitle, submittedTitle)
-    .then(freshData => {
+    .then((freshData) => {
       if (freshData) {
         cache.set(normalizedUrl, freshData);
         log(`Stored metadata in cache for ${normalizedUrl}`);
       }
     })
-    .catch(err => {
+    .catch((err) => {
       log(`Metadata fetch failed for ${url}: ${err}`);
     });
 
@@ -567,10 +572,12 @@ export async function isRelevantToKiwiNews(link, telegramWebpage = {}) {
   log(`Checking relevance with Claude for: ${link}`);
 
   let context = `URL: ${link}\n`;
-  if (telegramWebpage?.title) { // Check if telegramWebpage exists before accessing properties
+  if (telegramWebpage?.title) {
+    // Check if telegramWebpage exists before accessing properties
     context += `Telegram Title: ${telegramWebpage.title}\n`;
   }
-  if (telegramWebpage?.description) { // Check if telegramWebpage exists
+  if (telegramWebpage?.description) {
+    // Check if telegramWebpage exists
     context += `Telegram Description: ${telegramWebpage.description}\n`;
   }
 
@@ -592,12 +599,19 @@ export async function isRelevantToKiwiNews(link, telegramWebpage = {}) {
     });
 
     // Extract the text content, expecting "YES" or "NO"
-    if (response.content && response.content.length > 0 && response.content[0].type === 'text') {
+    if (
+      response.content &&
+      response.content.length > 0 &&
+      response.content[0].type === "text"
+    ) {
       responseText = response.content[0].text.trim().toUpperCase();
     } else {
-        log(`Claude relevance check for ${link} produced unexpected response format: ${JSON.stringify(response)}`);
+      log(
+        `Claude relevance check for ${link} produced unexpected response format: ${JSON.stringify(
+          response,
+        )}`,
+      );
     }
-
   } catch (error) {
     log(`Claude relevance check API request failed for ${link}: ${error}`);
     // Keep default "NO"
@@ -606,14 +620,15 @@ export async function isRelevantToKiwiNews(link, telegramWebpage = {}) {
   // *** FIX: Check if the response STARTS WITH "YES" ***
   const isRelevant = responseText.startsWith("YES");
   // Add clear log before returning
-  log(`Claude relevance raw response: "${responseText}". Final decision for ${link}: ${isRelevant}`);
+  log(
+    `Claude relevance raw response: "${responseText}". Final decision for ${link}: ${isRelevant}`,
+  );
 
   // Cache the result
   lifetimeCache.set(cacheKey, isRelevant);
 
   return isRelevant;
 }
-
 
 function safeExtractDomain(link) {
   let parsedUrl;
