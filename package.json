@@ -113,7 +113,6 @@
     "postmark": "4.0.5",
     "preact": "10.18.1",
     "request-filtering-agent": "2.0.1",
-    "rss-parser": "3.13.0",
     "satori": "0.10.9",
     "sharp": "0.32.6",
     "slugify": "1.6.6",

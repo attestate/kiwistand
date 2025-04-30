@@ -22,8 +22,6 @@ import delegateCrawlPath from "./chainstate/delegate.config.crawler.mjs";
 import * as registry from "./chainstate/registry.mjs";
 import * as karma from "./karma.mjs";
 import * as newest from "./views/new.mjs";
-import * as feed from "./views/feed.mjs";
-import * as feeds from "./feeds.mjs";
 import * as email from "./email.mjs";
 import * as moderation from "./views/moderation.mjs";
 import diskcheck from "./diskcheck.mjs";
