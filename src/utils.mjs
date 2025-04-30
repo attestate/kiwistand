@@ -5,35 +5,44 @@ import { Response, Request } from "node-fetch";
 import { getCacheKey } from "node-fetch-cache";
 import DOMPurify from "isomorphic-dompurify";
 import slugify from "slugify";
-slugify.extend({ "′": "", "'": "", "'": "", "\"": "" });
+import cache from "./cache.mjs"; // Import the default cache
 
-const staleStore = new Map();
+slugify.extend({ "′": "", "'": "", "'": "", "\"": "" });
 
 // NOTE: This is an extension of node-fetch-cache where we're loading the
 // to-be-cached data in the background while returning an error to the caller
 // in the meantime. What this does is that it stops blocking requests from
 // being resolved, for example, in the ens module.
-export function fetchCache(fetch, cache) {
-  if (!fetch || !cache) {
-    throw new Error("fetch and cache must be passed to fetchCache");
+export function fetchCache(fetch, fileSystemCache) { // Renamed 'cache' param to avoid conflict
+  if (!fetch || !fileSystemCache) {
+    throw new Error("fetch and fileSystemCache must be passed to fetchCache");
   }
 
   return async (url, options = {}) => {
     const cacheKey = getCacheKey(url, options);
-    let cachedValue = await cache.get(cacheKey);
+    // Try getting from the file system cache first
+    let cachedValue = await fileSystemCache.get(cacheKey);
 
     (async () => {
       try {
         const networkResponse = await fetch(url, options);
         if (networkResponse.ok) {
           const buffer = await networkResponse.buffer();
-          // Update the extra stale store with this network response.
-          staleStore.set(cacheKey, {
+          // Update the default in-memory cache (LRU) with this network response.
+          cache.set(cacheKey, { // Use default cache.set
             bodyStream: buffer,
             metaData: {
               status: networkResponse.status,
               headers: networkResponse.headers.raw(),
             },
+          });
+          // Also update the file system cache for longer persistence
+          await fileSystemCache.set(cacheKey, {
+             bodyStream: buffer,
+             metaData: {
+               status: networkResponse.status,
+               headers: networkResponse.headers.raw(),
+             },
           });
         }
       } catch (error) {
@@ -46,8 +55,9 @@ export function fetchCache(fetch, cache) {
       // casting it to one before handing it back to the business logic.
       return new Response(cachedValue.bodyStream, cachedValue.metaData);
     }
-    if (staleStore.has(cacheKey)) {
-      const staleValue = staleStore.get(cacheKey);
+    // If file system cache missed, try the default in-memory cache (LRU)
+    const staleValue = cache.get(cacheKey); // Use default cache.get
+    if (staleValue) {
       return new Response(staleValue.bodyStream, staleValue.metaData);
     }
 

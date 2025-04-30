@@ -1,6 +1,10 @@
-import NodeCache from "node-cache";
-const cache = new NodeCache({ stdTTL: 60 * 60 });
+import { LRUCache } from "lru-cache"; // Import LRUCache
+// Use LRUCache with a size limit for consistent memory management
+const cache = new LRUCache({
+  max: 10000 // Limit to 10,000 entries using LRU eviction
+});
 export default cache;
+
 
 import { join } from "path";
 
