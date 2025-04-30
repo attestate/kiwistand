@@ -291,6 +291,13 @@ async function submitLink(link, signer) {
     return false;
   }
 
+  // *** Firewall/Block Check ***
+  if (finalTitle === "Access Denied" || finalTitle === "Just a moment...") {
+    log(`Firewall/block detected for link ${link} (Title: "${finalTitle}"). Aborting submission.`);
+    return false;
+  }
+  // *** End Firewall/Block Check ***
+
   // Step 4: Prepare and sign the message
   const message = messageFab(finalTitle, link);
 
