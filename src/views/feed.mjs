@@ -802,143 +802,15 @@ function Newsletter() {
   `;
 }
 
-// Original Support Banner (Stripe)
-function SupportBanner(monthlyUrl, annualUrl) {
-  const title = "Support Independent Web3 News";
-  const text =
-    "Help keep Kiwi News open, unbiased, and sustainable. Become a patron today!";
-  const monthlyText = "$15 / Month";
-  const annualText = "$150 / Year";
+// Removed SupportBanner function
 
-  return html`
-    <div
-      style="padding: 1rem; border: var(--border); border-left: none; border-right: none; margin-bottom: 20px; background-color: var(--light-beige); font-family: var(--font-family); box-sizing: border-box;"
-    >
-      <h3
-        style="margin: 0 0 0.5rem 0; font-size: 1.1rem; font-weight: bold; color: black;"
-      >
-        ${title}
-      </h3>
-      <p style="margin: 0 0 1rem 0; font-size: 0.9rem; color: #505050;">
-        ${text}
-      </p>
-      <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-        <a
-          href="${monthlyUrl}"
-          target="_blank"
-          rel="noopener noreferrer"
-          style="padding: 0.5rem 1rem; background: black; color: white; border: var(--border); border-radius: 2px; text-decoration: none; cursor: pointer; transition: all 0.2s; white-space: nowrap; font-size: 0.875rem;"
-          onmouseover="this.style.background='white'; this.style.color='black';"
-          onmouseout="this.style.background='black'; this.style.color='white';"
-        >
-          ${monthlyText}
-        </a>
-        <a
-          href="${annualUrl}"
-          target="_blank"
-          rel="noopener noreferrer"
-          style="padding: 0.5rem 1rem; background: white; color: black; border: var(--border); border-radius: 2px; text-decoration: none; cursor: pointer; transition: all 0.2s; white-space: nowrap; font-size: 0.875rem;"
-          onmouseover="this.style.background='#f0f0f0'; this.style.color='black';"
-          onmouseout="this.style.background='white'; this.style.color='black';"
-        >
-          ${annualText}
-        </a>
-      </div>
-    </div>
-  `;
-}
-
-// New Railgun Donation Banner (Dark Theme)
-function RailgunDonationBanner() {
-  const title = "Support Kiwi News Anonymously";
-  const text = "Use Railgun to send a private 0zk donation.";
-  // TODO: Replace empty strings with actual Railgun addresses
-  const timdaubAddress =
-    "0zk1qy2fs4lmjgvk3lpjcnvlnnqsjqdzaqary3a6jrev97zs6a0lgx0mdrv7j6fe3z53ll8h6vnmuxsndqawy9n238m32c53uaypsqs0g9pjg67ug3253c3p2lphy2y";
-  const macBudkowskiAddress =
-    "0zk1qy0gsas9w85e3wvpsskxfc247ldrltxsk3m0pu3lmzre8x8sxpl6mrv7j6fe3z53lu0al8qx26q3t49nus8rfumyxvcdn7fga3h7nanwa2hxgzmgj6t2q88vntf";
-
-  // Helper function for the copy-to-clipboard logic
-  const copyScript = (address, buttonId) => `
-    navigator.clipboard.writeText('${address}').then(() => {
-      const button = document.getElementById('${buttonId}');
-      const originalText = button.innerText;
-      button.innerText = 'Copied!';
-      button.disabled = true; // Optionally disable after copying
-      setTimeout(() => {
-        button.innerText = originalText;
-        button.disabled = false; // Re-enable after timeout
-       }, 2000);
-    }).catch(err => {
-      console.error('Failed to copy address: ', err);
-      // Optionally provide user feedback about the failure
-    });
-  `;
-
-  // Define button styles using flex properties for responsiveness
-  const buttonStyle = `
-    padding: 0.5rem 1rem; 
-    background: white; 
-    color: black; 
-    border: 1px solid #555; 
-    border-radius: 2px; 
-    cursor: pointer; 
-    transition: all 0.2s; 
-    white-space: nowrap; 
-    font-size: 0.875rem; 
-    font-weight: 500;
-    flex-grow: 1; /* Allow button to grow */
-    flex-basis: 200px; /* Suggest a base width, allows wrapping */
-    text-align: center; /* Center text */
-    box-sizing: border-box; /* Include padding and border in element's total width and height */
-  `;
-
-  const buttonHoverStyle = `this.style.background='#f0f0f0';`;
-  const buttonMouseOutStyle = `this.style.background='white';`;
-
-  return html`
-    <div
-      style="padding: 1rem; border: 1px solid #333; border-left: none; border-right: none; margin-bottom: 20px; background-color: rgb(21, 21, 23); color: #D1D5DB; font-family: var(--font-family); box-sizing: border-box;"
-    >
-      <h3
-        style="margin: 0 0 0.5rem 0; font-size: 1.1rem; font-weight: bold; color: #FFFFFF;"
-      >
-        ${title}
-      </h3>
-      <p style="margin: 0 0 1rem 0; font-size: 0.9rem; color: #D1D5DB;">
-        ${text}
-      </p>
-      <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-        <button
-          id="copy-btn-tim"
-          onclick="${copyScript(timdaubAddress, "copy-btn-tim")}"
-          style="${buttonStyle}"
-          onmouseover="${buttonHoverStyle}"
-          onmouseout="${buttonMouseOutStyle}"
-        >
-          Copy timdaub.eth Railgun Address
-        </button>
-        <button
-          id="copy-btn-mac"
-          onclick="${copyScript(macBudkowskiAddress, "copy-btn-mac")}"
-          style="${buttonStyle}"
-          onmouseover="${buttonHoverStyle}"
-          onmouseout="${buttonMouseOutStyle}"
-        >
-          Copy macbudkowski.eth Railgun Address
-        </button>
-      </div>
-    </div>
-  `;
-}
+// Removed RailgunDonationBanner function
 
 export default async function (trie, theme, page, domain, identity, hash) {
   const path = "/";
   const totalStories = parseInt(env.TOTAL_STORIES, 10);
 
-  // Define the Stripe URLs
-  const monthlyStripeUrl = "https://buy.stripe.com/8wMbKneOG5km7aE001";
-  const annualStripeUrl = "https://buy.stripe.com/6oE5lZbCu8wy3Ys28a";
+  // Removed Stripe URLs
 
   // Always call the standard index function, regardless of identity/hash
   const content = await index(trie, page, domain);
@@ -962,11 +834,7 @@ export default async function (trie, theme, page, domain, identity, hash) {
   }
   // Removed adding identity to the query string
 
-  // A/B Test for Support Banner
-  const showRailgunBanner = Math.random() < 0.5; // 50/50 chance
-  const supportBannerComponent = showRailgunBanner
-    ? RailgunDonationBanner()
-    : SupportBanner(monthlyStripeUrl, annualStripeUrl);
+  // Removed A/B Test for Support Banner and supportBannerComponent variable
 
   const ogImage = "https://news.kiwistand.com/kiwi_hot_feed_page.png";
   const title = undefined;
@@ -997,12 +865,7 @@ export default async function (trie, theme, page, domain, identity, hash) {
               <tr>
                 ${SecondHeader(theme, "top")}
               </tr>
-              <tr>
-                <td style="padding: 0;">
-                  ${supportBannerComponent}
-                  <!-- Render the chosen banner -->
-                </td>
-              </tr>
+              <!-- Removed the table row that rendered the support banner -->
               ${
                 // Render pinned story only if it exists
                 pinnedStory &&
