@@ -103,6 +103,7 @@ export async function fetchNotifications(address) {
 
   const response = await fetch(url, {
     method: "GET",
+    keepalive: true,
   });
 
   let data;
