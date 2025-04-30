@@ -33,7 +33,6 @@ import { identityClassifier } from "./feed.mjs";
 import { render, cachedMetadata } from "../parser.mjs";
 import { getSubmission } from "../cache.mjs";
 import * as preview from "../preview.mjs";
-import * as frame from "../frame.mjs";
 import ShareIcon from "./components/shareicon.mjs";
 
 const html = htm.bind(vhtml);
@@ -291,9 +290,6 @@ export default async function (trie, theme, index, value, referral) {
       ? data.ogDescription
       : "Kiwi News is the prime feed for hacker engineers building a decentralized future. All our content is handpicked and curated by crypto veterans.";
   const slug = getSlug(value.title);
-  const link = `https://news.kiwistand.com/stories/${slug}?index=0x${index}${
-    referral ? `&referral=${referral}` : ""
-  }`;
   const canonicalUrl = `https://news.kiwistand.com/stories/${slug}?index=0x${index}`;
 
   return html`
@@ -308,7 +304,6 @@ export default async function (trie, theme, index, value, referral) {
           ["/", "/new?cached=true", "/submit"],
           canonicalUrl,
         )}
-        ${frame.header(referral, link, ogImage)}
       </head>
       <body
         data-instant-allow-query-string

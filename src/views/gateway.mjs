@@ -9,7 +9,6 @@ import { ethereum } from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
 import Head from "./components/head.mjs";
 import * as ens from "../ens.mjs";
-import * as frame from "../frame.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -17,7 +16,7 @@ export default async function (referral) {
   return html`
     <html lang="en" op="news">
       <head>
-        ${Head} ${frame.header(referral)}
+        ${Head}
       </head>
       <body ontouchstart="">
         <nav-delegation-modal />

@@ -69,7 +69,6 @@ import { parse, metadata } from "./parser.mjs";
 import { toAddress, resolve } from "./ens.mjs";
 import * as ens from "./ens.mjs";
 import * as karma from "./karma.mjs";
-import * as frame from "./frame.mjs";
 import * as subscriptions from "./subscriptions.mjs";
 import * as telegram from "./telegram.mjs";
 import * as email from "./email.mjs";
@@ -530,31 +529,6 @@ export async function launch(trie, libp2p, isPrimary = true) {
     const httpMessage = "OK";
     const details = "Successfully generated Telegram link.";
     return sendStatus(reply, code, httpMessage, details, { link: inviteLink });
-  });
-  app.post("/api/v1/mint/success", async (request, reply) => {
-    const content = frame.callback(request.body?.untrustedData?.transactionId);
-    const code = 200;
-    reply.header("Cache-Control", "no-cache");
-    return reply.status(code).type("text/html").send(content);
-  });
-  app.post("/api/v1/mint/:referral?", async (request, reply) => {
-    let referral;
-    try {
-      referral = utils.getAddress(request.params.referral);
-    } catch (err) {}
-
-    let data;
-    try {
-      data = await frame.buy(referral);
-    } catch (err) {
-      const code = 500;
-      const httpMessage = "Internal Server Error";
-      const details = err.toString();
-      return sendError(reply, code, httpMessage, details);
-    }
-    const code = 200;
-    reply.header("Cache-Control", "no-cache");
-    return reply.status(code).json(data);
   });
   app.post("/api/v1/subscriptions/:address", async (request, reply) => {
     function isValidWebPushSubscription(subscription) {
