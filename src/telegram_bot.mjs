@@ -5,8 +5,8 @@ import { encode } from "cbor-x";
 import canonicalize from "canonicalize";
 import { env } from "process";
 import fetch from "node-fetch"; // Ensure node-fetch is installed or use native fetch
-import { decode } from 'html-entities'; // Import html-entities library
-import https from 'https'; // <-- Import https module
+import { decode } from "html-entities"; // Import html-entities library
+import https from "https"; // <-- Import https module
 
 // Import the new relevance checker and metadata function
 import { metadata, isRelevantToKiwiNews } from "./parser.mjs";
@@ -30,9 +30,11 @@ const SUBMIT_LIMIT = 5; // Max links to submit per run per channel
 const USER_AGENT = "KiwiNewsTelegramBot/1.0"; // Set a custom user agent
 const SIMULATION_MODE = env.SIMULATION_MODE === "true"; // Check for simulation mode
 // Set back to 18 minutes for production
-const MAX_POST_AGE_MINUTES = 18; // Only process posts newer than this
+const MAX_POST_AGE_MINUTES = 80; // Only process posts newer than this
 const RETRY_DELAY_MS = 20000; // 20 seconds delay between retries
 const MAX_FETCH_RETRIES = 2; // Initial attempt + 2 retries = 3 total attempts
+const REDIRECT_TIMEOUT_MS = 8000; // 8 second timeout for resolving redirects and fetching HTML
+const HTML_FETCH_TIMEOUT_MS = 8000; // Timeout specifically for fetching HTML content
 
 // --- Create insecure HTTPS agent ---
 // WARNING: Only use this for localhost connections where cert name mismatch is expected!
@@ -81,7 +83,9 @@ async function fetchTelegramPosts(channel, limit) {
 
   while (attempts <= MAX_FETCH_RETRIES) {
     attempts++;
-    log(`Fetching Telegram posts for [${channel}] from: ${url} (Attempt ${attempts})`);
+    log(
+      `Fetching Telegram posts for [${channel}] from: ${url} (Attempt ${attempts})`,
+    );
     try {
       const response = await fetch(url, {
         headers: { "User-Agent": USER_AGENT },
@@ -98,13 +102,15 @@ async function fetchTelegramPosts(channel, limit) {
       const errorBody = await response.text();
       // Check for specific flood wait error (HTTP 420)
       if (response.status === 420 && errorBody.includes("FLOOD_WAIT")) {
-        log(`Rate limit hit for channel ${channel} (Attempt ${attempts}): ${errorBody}.`);
+        log(
+          `Rate limit hit for channel ${channel} (Attempt ${attempts}): ${errorBody}.`,
+        );
         if (attempts > MAX_FETCH_RETRIES) {
           log(`Max retries reached for channel ${channel}. Skipping this run.`);
           return []; // Give up after max retries
         }
         log(`Waiting ${RETRY_DELAY_MS / 1000} seconds before retry...`);
-        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS));
+        await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS));
         // Continue to the next iteration of the while loop
       } else {
         // Throw other non-OK errors immediately
@@ -112,21 +118,28 @@ async function fetchTelegramPosts(channel, limit) {
       }
     } catch (error) {
       // Handle fetch errors (network issues, timeouts, etc.)
-      log(`Error fetching Telegram posts for ${channel} (Attempt ${attempts}): ${error.message}`);
+      log(
+        `Error fetching Telegram posts for ${channel} (Attempt ${attempts}): ${error.message}`,
+      );
       if (attempts > MAX_FETCH_RETRIES) {
-        log(`Max retries reached after fetch error for channel ${channel}. Skipping this run.`);
+        log(
+          `Max retries reached after fetch error for channel ${channel}. Skipping this run.`,
+        );
         return []; // Give up after max retries
       }
       // Optional: could add a shorter delay here for network errors if desired
-      log(`Waiting ${RETRY_DELAY_MS / 1000} seconds before retry after fetch error...`);
-      await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS));
+      log(
+        `Waiting ${
+          RETRY_DELAY_MS / 1000
+        } seconds before retry after fetch error...`,
+      );
+      await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS));
     }
   }
 
   // Should not be reached if logic is correct, but return empty array as fallback
   return [];
 }
-
 
 /**
  * Extracts and cleans URLs from a Telegram post object.
@@ -141,32 +154,37 @@ function extractLinksFromPost(post) {
 
   // Function to clean and add a potential link
   const addCleanLink = (link) => {
-      if (!link) return;
-      try {
-          // Decode HTML entities (e.g., &amp; -> &)
-          let cleanedLink = decode(link.trim());
+    if (!link) return;
+    try {
+      // Decode HTML entities (e.g., &amp; -> &)
+      let cleanedLink = decode(link.trim());
 
-          // Remove trailing characters that are likely not part of the URL
-          cleanedLink = cleanedLink.replace(/[.,!?)\]}"'>]+$/, '');
+      // Remove trailing characters that are likely not part of the URL
+      cleanedLink = cleanedLink.replace(/[.,!?)\]}"'>]+$/, "");
 
-          // Basic validation and hostname check
-          if (cleanedLink.startsWith('http://') || cleanedLink.startsWith('https://')) {
-              const urlObject = new URL(cleanedLink);
+      // Basic validation and hostname check
+      if (
+        cleanedLink.startsWith("http://") ||
+        cleanedLink.startsWith("https://")
+      ) {
+        const urlObject = new URL(cleanedLink);
 
-              // *** WORKAROUND: Convert vxtwitter.com to fxtwitter.com ***
-              if (urlObject.hostname === 'vxtwitter.com') {
-                  log(`Converting vxtwitter link: ${cleanedLink}`);
-                  urlObject.hostname = 'fxtwitter.com';
-                  cleanedLink = urlObject.toString();
-                  log(`Converted to fxtwitter link: ${cleanedLink}`);
-              }
-              // *** END WORKAROUND ***
+        // *** WORKAROUND: Convert vxtwitter.com to fxtwitter.com ***
+        if (urlObject.hostname === "vxtwitter.com") {
+          log(`Converting vxtwitter link: ${cleanedLink}`);
+          urlObject.hostname = "fxtwitter.com";
+          cleanedLink = urlObject.toString();
+          log(`Converted to fxtwitter link: ${cleanedLink}`);
+        }
+        // *** END WORKAROUND ***
 
-              links.add(cleanedLink);
-          }
-      } catch (error) {
-          log(`Skipping invalid extracted link fragment "${link}": ${error.message}`);
+        links.add(cleanedLink);
       }
+    } catch (error) {
+      log(
+        `Skipping invalid extracted link fragment "${link}": ${error.message}`,
+      );
+    }
   };
 
   // Check main text
@@ -184,10 +202,13 @@ function extractLinksFromPost(post) {
         addCleanLink(entity.url);
       }
       // Check for plain 'url' entities as well
-      if (entity.type === 'url') {
-          // Extract the URL text from the message using offset and length
-          const urlText = post.message.substring(entity.offset, entity.offset + entity.length);
-          addCleanLink(urlText);
+      if (entity.type === "url") {
+        // Extract the URL text from the message using offset and length
+        const urlText = post.message.substring(
+          entity.offset,
+          entity.offset + entity.length,
+        );
+        addCleanLink(urlText);
       }
     });
   }
@@ -200,7 +221,6 @@ function extractLinksFromPost(post) {
   return Array.from(links);
 }
 
-
 /**
  * Creates an Ethers Wallet instance from a private key.
  * Returns null if the key is invalid or missing.
@@ -211,7 +231,7 @@ function getSigner(privateKey) {
   if (!privateKey) {
     // It's okay to not have a key in simulation mode
     if (!SIMULATION_MODE) {
-        log(`Error creating signer: TELEGRAM_BOT_PRIVATE_KEY is missing.`);
+      log(`Error creating signer: TELEGRAM_BOT_PRIVATE_KEY is missing.`);
     }
     return null;
   }
@@ -226,7 +246,7 @@ function getSigner(privateKey) {
 /**
  * Submits a link to the Kiwi News backend API or simulates submission.
  * Leverages src/parser.mjs for title generation and compliance.
- * @param {string} link - The URL to submit.
+ * @param {string} link - The URL to submit (should be the final resolved URL if applicable).
  * @param {Wallet | null} signer - The Ethers Wallet instance for signing, or null if in simulation without key.
  * @returns {Promise<boolean>} - True if submission was successful/simulated or already submitted.
  */
@@ -245,7 +265,7 @@ async function submitLink(link, signer) {
   try {
     // Step 1: Get initial metadata and potentially generated title
     log(`Fetching initial metadata for ${link} (generateTitle=true)`);
-    // Pass the potentially transformed link (e.g., fxtwitter) to metadata
+    // Pass the potentially transformed link (e.g., fxtwitter, api.leviathannews, protos.com) to metadata
     initialMeta = await metadata(link, true);
     log(`Initial metadata result for ${link}:`, initialMeta);
 
@@ -268,17 +288,18 @@ async function submitLink(link, signer) {
     finalTitle = complianceMeta?.compliantTitle; // Use compliant title if fixTitle provided one
 
     if (finalTitle) {
-        log(`Using compliant title: "${finalTitle}"`);
+      log(`Using compliant title: "${finalTitle}"`);
     } else {
-        // If no compliant title, use the candidate title and truncate if needed
-        finalTitle = titleCandidate;
-        if (finalTitle.length > 80) {
-            log(`Warning: Candidate title exceeds 80 chars, truncating.`);
-            finalTitle = finalTitle.substring(0, 80);
-        }
-        log(`Using candidate title (compliance check passed or failed): "${finalTitle}"`);
+      // If no compliant title, use the candidate title and truncate if needed
+      finalTitle = titleCandidate;
+      if (finalTitle.length > 80) {
+        log(`Warning: Candidate title exceeds 80 chars, truncating.`);
+        finalTitle = finalTitle.substring(0, 80);
+      }
+      log(
+        `Using candidate title (compliance check passed or failed): "${finalTitle}"`,
+      );
     }
-
   } catch (error) {
     log(`Error during metadata/title processing for ${link}: ${error.message}`);
     log(error.stack); // Log stack trace for debugging
@@ -293,13 +314,15 @@ async function submitLink(link, signer) {
 
   // *** Firewall/Block Check ***
   if (finalTitle === "Access Denied" || finalTitle === "Just a moment...") {
-    log(`Firewall/block detected for link ${link} (Title: "${finalTitle}"). Aborting submission.`);
+    log(
+      `Firewall/block detected for link ${link} (Title: "${finalTitle}"). Aborting submission.`,
+    );
     return false;
   }
   // *** End Firewall/Block Check ***
 
   // Step 4: Prepare and sign the message
-  const message = messageFab(finalTitle, link);
+  const message = messageFab(finalTitle, link); // Use the FINAL link here
 
   let signature = "0xSIMULATION_NO_SIGNATURE"; // Default for simulation without key
   let body; // To store the final JSON payload string
@@ -309,20 +332,22 @@ async function submitLink(link, signer) {
     log(`[SIMULATION MODE] Preparing payload for link: ${link}`);
     // Only try to sign if a signer exists (i.e., key was provided)
     if (signer) {
-        try {
-            const domainToSign = { ...EIP712_DOMAIN };
-            signature = await signer._signTypedData(
-              domainToSign,
-              EIP712_TYPES,
-              message, // Use the message with the final title
-            );
-            log(`[SIMULATION MODE] Signed message for ${link}`);
-        } catch (error) {
-            log(`[SIMULATION MODE] Error signing message for ${link}: ${error.message}`);
-            signature = "0xSIMULATION_SIGNING_ERROR";
-        }
+      try {
+        const domainToSign = { ...EIP712_DOMAIN };
+        signature = await signer._signTypedData(
+          domainToSign,
+          EIP712_TYPES,
+          message, // Use the message with the final title and final link
+        );
+        log(`[SIMULATION MODE] Signed message for ${link}`);
+      } catch (error) {
+        log(
+          `[SIMULATION MODE] Error signing message for ${link}: ${error.message}`,
+        );
+        signature = "0xSIMULATION_SIGNING_ERROR";
+      }
     } else {
-        log(`[SIMULATION MODE] Skipping signature (no private key provided).`);
+      log(`[SIMULATION MODE] Skipping signature (no private key provided).`);
     }
     // Construct the final payload JSON object
     const payload = { ...message, signature };
@@ -339,12 +364,14 @@ async function submitLink(link, signer) {
   // --- Production Mode Logic ---
   // If we are here, it's NOT simulation mode, so signer MUST exist
   if (!signer) {
-      log(`Error submitting link ${link}: Signer is required in production mode.`);
-      return false; // Should have been caught earlier, but double-check
+    log(
+      `Error submitting link ${link}: Signer is required in production mode.`,
+    );
+    return false; // Should have been caught earlier, but double-check
   }
 
   try {
-    // Sign the message with the final title
+    // Sign the message with the final title and final link
     const domainToSign = { ...EIP712_DOMAIN };
     signature = await signer._signTypedData(
       domainToSign,
@@ -426,16 +453,17 @@ export async function runTelegramBot() {
 
   // --- Target Channel Check ---
   if (PROCESS_INDEX === undefined || PROCESS_INDEX === null) {
-      log("Error: PROCESS_INDEX environment variable not set.");
-      return;
+    log("Error: PROCESS_INDEX environment variable not set.");
+    return;
   }
   if (!TARGET_CHANNEL) {
-      log(`Error: Target channel environment variable ${TARGET_CHANNEL_ENV_VAR} not set for index ${PROCESS_INDEX}.`);
-      return;
+    log(
+      `Error: Target channel environment variable ${TARGET_CHANNEL_ENV_VAR} not set for index ${PROCESS_INDEX}.`,
+    );
+    return;
   }
   log(`Process Index: ${PROCESS_INDEX}, Targeting channel: ${TARGET_CHANNEL}`);
   // --- End Target Channel Check ---
-
 
   // --- Time Check REMOVED ---
 
@@ -453,11 +481,12 @@ export async function runTelegramBot() {
   }
   // BOT_PRIVATE_KEY is only required if NOT in simulation mode
   if (!SIMULATION_MODE && !BOT_PRIVATE_KEY) {
-    log("Error: TELEGRAM_BOT_PRIVATE_KEY environment variable not set (required for production mode).");
+    log(
+      "Error: TELEGRAM_BOT_PRIVATE_KEY environment variable not set (required for production mode).",
+    );
     return;
   }
   // --- End Environment Variable Checks ---
-
 
   const signer = getSigner(BOT_PRIVATE_KEY);
   // In production mode, signer must be valid
@@ -466,17 +495,18 @@ export async function runTelegramBot() {
     return; // Error logged in getSigner
   }
   if (signer) {
-      log(`Signer created for address: ${signer.address}`);
+    log(`Signer created for address: ${signer.address}`);
   } else if (SIMULATION_MODE) {
-      log(`Running simulation without a signer.`);
+    log(`Running simulation without a signer.`);
   }
-
 
   let totalSubmittedCount = 0;
   // Calculate the cutoff time for filtering posts
   const nowSeconds = Math.floor(Date.now() / 1000);
-  const cutoffTimestamp = nowSeconds - (MAX_POST_AGE_MINUTES * 60);
-  log(`Processing posts newer than timestamp: ${cutoffTimestamp} (${MAX_POST_AGE_MINUTES} minutes ago)`);
+  const cutoffTimestamp = nowSeconds - MAX_POST_AGE_MINUTES * 60;
+  log(
+    `Processing posts newer than timestamp: ${cutoffTimestamp} (${MAX_POST_AGE_MINUTES} minutes ago)`,
+  );
 
   // Process only the target channel
   const channel = TARGET_CHANNEL;
@@ -487,85 +517,177 @@ export async function runTelegramBot() {
     log(`No posts fetched or processed for channel ${channel}.`);
     // Don't exit here, just log completion below
   } else {
-      log(`Fetched ${posts.length} posts from Telegram for channel ${channel}.`);
+    log(`Fetched ${posts.length} posts from Telegram for channel ${channel}.`);
 
-      let submittedCountPerChannel = 0;
-      const processedLinks = new Set(); // Avoid processing same link multiple times within one run
+    let submittedCountPerChannel = 0;
+    const processedLinks = new Set(); // Avoid processing same link multiple times within one run
 
-      // Process posts chronologically (oldest first) to mimic reading order
-      for (const post of posts.reverse()) {
+    // Process posts chronologically (oldest first) to mimic reading order
+    for (const post of posts.reverse()) {
+      // --- Time Filter ---
+      if (post.date < cutoffTimestamp) {
+        // Since posts are reversed (oldest first), we should *continue*
+        // checking newer posts in the batch even if this one is too old.
+        log(
+          `Post ${post.id || "N/A"} from ${new Date(
+            post.date * 1000,
+          ).toISOString()} is older than cutoff, skipping.`,
+        );
+        continue; // Skip this post and check the next (newer) one
+      }
+      // --- End Time Filter ---
 
-        // --- Time Filter ---
-        if (post.date < cutoffTimestamp) {
-            // Since posts are reversed (oldest first), we should *continue*
-            // checking newer posts in the batch even if this one is too old.
-            log(`Post ${post.id || 'N/A'} from ${new Date(post.date * 1000).toISOString()} is older than cutoff, skipping.`);
-            continue; // Skip this post and check the next (newer) one
-        }
-        // --- End Time Filter ---
+      if (submittedCountPerChannel >= SUBMIT_LIMIT) {
+        log(
+          `Submission limit (${SUBMIT_LIMIT}) reached for channel ${channel}.`,
+        );
+        break; // Stop processing if limit reached for this channel
+      }
 
+      const links = extractLinksFromPost(post);
+      // Only log if links were actually found
+      if (links.length > 0) {
+        log(
+          `Extracted links from post ${
+            post.id || "N/A"
+          } in ${channel}: ${JSON.stringify(links)}`,
+        );
+      }
 
-        if (submittedCountPerChannel >= SUBMIT_LIMIT) {
+      for (const originalLink of links) {
+        // Renamed link -> originalLink
+        if (submittedCountPerChannel >= SUBMIT_LIMIT) break;
+
+        let currentLink = originalLink; // Use this for processing, may be updated
+
+        // --- Leviathan Redirect Handling ---
+        if (originalLink.startsWith("https://leviathannews.xyz/redirect/")) {
           log(
-            `Submission limit (${SUBMIT_LIMIT}) reached for channel ${channel}.`,
+            `Leviathan redirect detected: ${originalLink}. Attempting to resolve HTTP redirect...`,
           );
-          break; // Stop processing if limit reached for this channel
-        }
-
-        const links = extractLinksFromPost(post);
-        // Only log if links were actually found
-        if (links.length > 0) {
-            log(
-              `Extracted links from post ${
-                post.id || "N/A"
-              } in ${channel}: ${JSON.stringify(links)}`,
-            );
-        }
-
-
-        for (const link of links) {
-          if (submittedCountPerChannel >= SUBMIT_LIMIT) break;
-          if (processedLinks.has(link)) continue; // Skip if already processed in this run
-
-          processedLinks.add(link);
-
-          // Use the new relevance check function, passing Telegram metadata if available
-          const telegramWebpage = post?.media?.webpage;
-          let isRelevant = false;
           try {
-              // *** Prepare context object for isRelevantToKiwiNews ***
-              const relevanceContext = {
-                  title: telegramWebpage?.title,
-                  description: telegramWebpage?.description
-              };
-              // Pass the cleaned link and the context object
-              isRelevant = await isRelevantToKiwiNews(link, relevanceContext);
-              // Log moved inside isRelevantToKiwiNews for clarity
-          } catch (error) {
-              log(`Error during relevance check for ${link}: ${error}`);
-              // Keep isRelevant = false
-          }
+            const response = await fetch(originalLink, {
+              method: "HEAD", // Use HEAD to avoid downloading body
+              redirect: "follow", // Tell fetch to handle HTTP redirects
+              headers: { "User-Agent": USER_AGENT },
+              timeout: REDIRECT_TIMEOUT_MS,
+            });
 
-          if (isRelevant) {
-            log(`Link IS relevant, proceeding to submit/simulate: ${link}`); // Clear confirmation
-            // Pass signer (which might be null in simulation)
-            const success = await submitLink(link, signer);
-            if (success) {
-              submittedCountPerChannel++;
-              totalSubmittedCount++;
+            if (response.ok && response.url !== originalLink) {
+              currentLink = response.url; // Update currentLink to the intermediate URL
+              log(
+                `Resolved Leviathan HTTP redirect: ${originalLink} -> ${currentLink}`,
+              );
+
+              // --- Leviathan Meta-Refresh Handling (Nested) ---
+              if (currentLink.startsWith('https://api.leviathannews.xyz/redirect/')) {
+                  log(`Attempting to resolve meta-refresh for intermediate link: ${currentLink}`);
+                  try {
+                      // Fetch the HTML content of the intermediate page
+                      const htmlResponse = await fetch(currentLink, {
+                          headers: { 'User-Agent': USER_AGENT },
+                          timeout: HTML_FETCH_TIMEOUT_MS, // Use specific timeout
+                      });
+                      if (!htmlResponse.ok) {
+                          throw new Error(`HTTP error ${htmlResponse.status} fetching HTML`);
+                      }
+                      const htmlContent = await htmlResponse.text();
+
+                      // Parse HTML for meta-refresh tag using regex
+                      // Regex: <meta http-equiv="refresh" content="0;url=URL_HERE"> (case-insensitive, handles quotes/spacing)
+                      const metaRefreshRegex = /<meta\s+http-equiv\s*=\s*["']?refresh["']?\s+content\s*=\s*["']?\d+\s*;\s*url=([^"'>\s]+)["']?\s*\/?>/i;
+                      const match = htmlContent.match(metaRefreshRegex);
+
+                      if (match && match[1]) {
+                          // Extract, decode HTML entities (like &amp;), and trim
+                          const finalUrl = decode(match[1].trim());
+                          // Basic validation of the extracted URL
+                          if (finalUrl.startsWith('http://') || finalUrl.startsWith('https://')) {
+                               log(`Resolved meta-refresh redirect: ${currentLink} -> ${finalUrl}`);
+                               currentLink = finalUrl; // Update to the FINAL URL
+                          } else {
+                               log(`Warning: Invalid meta-refresh URL extracted: "${finalUrl}". Using intermediate link: ${currentLink}`);
+                          }
+                      } else {
+                          log(`No valid meta-refresh tag found on ${currentLink}. Using intermediate link.`);
+                      }
+                  } catch (error) {
+                      log(`Error resolving meta-refresh for ${currentLink}: ${error.message}. Using intermediate link.`);
+                      // Do not 'continue', proceed with the intermediate link (currentLink)
+                  }
+              }
+              // --- End Leviathan Meta-Refresh Handling ---
+
+            } else if (response.url === originalLink) {
+              log(
+                `Warning: Leviathan HTTP redirect resolution for ${originalLink} resulted in the same URL. Skipping.`,
+              );
+              continue; // Skip this link if resolution didn't change the URL
+            } else {
+              log(
+                `Warning: Failed to resolve Leviathan HTTP redirect for ${originalLink}. Status: ${response.status}. Skipping.`,
+              );
+              continue; // Skip this link if fetch failed
             }
-            // Add a small delay to avoid overwhelming the backend or hitting rate limits
-            // Consider adding a small delay even between checks to be nicer to Claude API
-            await new Promise((resolve) => setTimeout(resolve, 500));
-          } else {
-            // Logged inside isRelevantToKiwiNews or if error occurred
-            log(`Link is NOT relevant, skipping: ${link}`); // Clear confirmation
+          } catch (error) {
+            log(
+              `Error resolving Leviathan HTTP redirect for ${originalLink}: ${error.message}. Skipping.`,
+            );
+            continue; // Skip this link on error
           }
+        }
+        // --- End Leviathan Redirect Handling ---
+
+        // Use currentLink (original or resolved via HTTP and potentially meta-refresh) for subsequent checks
+        if (processedLinks.has(currentLink)) {
+            log(`Skipping already processed link in this run: ${currentLink}`);
+            continue;
+        }
+
+        processedLinks.add(currentLink); // Add the link we are actually processing
+
+        // Use the new relevance check function, passing Telegram metadata if available
+        const telegramWebpage = post?.media?.webpage;
+        let isRelevant = false;
+        try {
+          // *** Prepare context object for isRelevantToKiwiNews ***
+          const relevanceContext = {
+            title: telegramWebpage?.title,
+            description: telegramWebpage?.description,
+          };
+          // Pass the potentially FINAL resolved currentLink and the context object
+          isRelevant = await isRelevantToKiwiNews(
+            currentLink,
+            relevanceContext,
+          );
+          // Log moved inside isRelevantToKiwiNews for clarity
+        } catch (error) {
+          log(`Error during relevance check for ${currentLink}: ${error}`);
+          // Keep isRelevant = false
+        }
+
+        if (isRelevant) {
+          log(
+            `Link IS relevant, proceeding to submit/simulate: ${currentLink}`,
+          ); // Clear confirmation
+          // Pass signer (which might be null in simulation) and the potentially FINAL resolved currentLink
+          const success = await submitLink(currentLink, signer);
+          if (success) {
+            submittedCountPerChannel++;
+            totalSubmittedCount++;
+          }
+          // Add a small delay to avoid overwhelming the backend or hitting rate limits
+          // Consider adding a small delay even between checks to be nicer to Claude API
+          await new Promise((resolve) => setTimeout(resolve, 500));
+        } else {
+          // Logged inside isRelevantToKiwiNews or if error occurred
+          log(`Link is NOT relevant, skipping: ${currentLink}`); // Clear confirmation
         }
       }
-      log(
-        `Finished processing channel ${channel}. Submitted ${submittedCountPerChannel} new links.`,
-      );
+    }
+    log(
+      `Finished processing channel ${channel}. Submitted ${submittedCountPerChannel} new links.`,
+    );
   } // End of else block for processing posts
 
   log(
