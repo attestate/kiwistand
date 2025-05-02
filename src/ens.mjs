@@ -93,7 +93,7 @@ async function fetchLensData(address) {
   };
 }
 
-async function fetchENSData(address) {
+export async function fetchENSData(address) {
   let endpoint = "https://ensdata.net/";
   if (env.ENSDATA_KEY) {
     // NOTE: If you're coming across this environment variable and you're

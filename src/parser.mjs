@@ -516,9 +516,8 @@ export const metadata = async (
     }
   }
   if (ogDescription) {
-    output.ogDescription = DOMPurify.sanitize(
-      `${ogDescription.substring(0, 150)}...`,
-    );
+    // Store the original, potentially longer description in the output object
+    output.ogDescription = DOMPurify.sanitize(ogDescription);
   }
   if (canonicalLink) {
     output.canonicalLink = DOMPurify.sanitize(canonicalLink);
@@ -553,12 +552,12 @@ export const metadata = async (
 /**
  * Checks if a link is relevant to Kiwi News using Claude Haiku.
  * @param {string} link - The URL to check.
- * @param {object} [telegramWebpage] - Optional metadata from Telegram API (webpage object).
- * @param {string} [telegramWebpage.title] - Title from Telegram.
- * @param {string} [telegramWebpage.description] - Description from Telegram.
+ * @param {object} [metadataContext] - Optional metadata context.
+ * @param {string} [metadataContext.title] - Title from OG, Telegram, etc.
+ * @param {string} [metadataContext.description] - Description from OG, Telegram, etc.
  * @returns {Promise<boolean>} - True if the link is deemed relevant.
  */
-export async function isRelevantToKiwiNews(link, telegramWebpage = {}) {
+export async function isRelevantToKiwiNews(link, metadataContext = {}) { // Changed parameter name
   const normalizedUrl = normalizeUrl(link, { stripWWW: false });
   const cacheKey = `relevance-${normalizedUrl}`;
 
@@ -572,13 +571,14 @@ export async function isRelevantToKiwiNews(link, telegramWebpage = {}) {
   log(`Checking relevance with Claude for: ${link}`);
 
   let context = `URL: ${link}\n`;
-  if (telegramWebpage?.title) {
-    // Check if telegramWebpage exists before accessing properties
-    context += `Telegram Title: ${telegramWebpage.title}\n`;
+  // Use the generic metadataContext object
+  if (metadataContext?.title) {
+    context += `Title: ${metadataContext.title}\n`; // Use generic 'Title'
   }
-  if (telegramWebpage?.description) {
-    // Check if telegramWebpage exists
-    context += `Telegram Description: ${telegramWebpage.description}\n`;
+  if (metadataContext?.description) {
+    // Use the potentially longer description for better context
+    const descSnippet = metadataContext.description.substring(0, 300); // Take more context
+    context += `Description: ${descSnippet}${metadataContext.description.length > 300 ? '...' : ''}\n`; // Use generic 'Description'
   }
 
   // Simple prompt asking for a yes/no decision based on guidelines
@@ -656,7 +656,8 @@ export const render = (ogTitle, domain, ogDescription, image) => html`
       <div style="font-size: 0.9rem; color: #000; margin-bottom: 0.5rem;">
         ${ogTitle}
       </div>
-      <div style="font-size: 0.7rem;">${ogDescription}</div>
+      {/* Render the truncated description here */}
+      <div style="font-size: 0.7rem;">${ogDescription ? `${ogDescription.substring(0, 150)}...` : ''}</div>
     </div>
     ${image
       ? html`<div

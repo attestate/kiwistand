@@ -7,13 +7,14 @@ import DOMPurify from "isomorphic-dompurify";
 import slugify from "slugify";
 import cache from "./cache.mjs"; // Import the default cache
 
-slugify.extend({ "′": "", "'": "", "'": "", "\"": "" });
+slugify.extend({ "′": "", "'": "", "'": "", '"': "" });
 
 // NOTE: This is an extension of node-fetch-cache where we're loading the
 // to-be-cached data in the background while returning an error to the caller
 // in the meantime. What this does is that it stops blocking requests from
 // being resolved, for example, in the ens module.
-export function fetchCache(fetch, fileSystemCache) { // Renamed 'cache' param to avoid conflict
+export function fetchCache(fetch, fileSystemCache) {
+  // Renamed 'cache' param to avoid conflict
   if (!fetch || !fileSystemCache) {
     throw new Error("fetch and fileSystemCache must be passed to fetchCache");
   }
@@ -29,20 +30,13 @@ export function fetchCache(fetch, fileSystemCache) { // Renamed 'cache' param to
         if (networkResponse.ok) {
           const buffer = await networkResponse.buffer();
           // Update the default in-memory cache (LRU) with this network response.
-          cache.set(cacheKey, { // Use default cache.set
+          cache.set(cacheKey, {
+            // Use default cache.set
             bodyStream: buffer,
             metaData: {
               status: networkResponse.status,
               headers: networkResponse.headers.raw(),
             },
-          });
-          // Also update the file system cache for longer persistence
-          await fileSystemCache.set(cacheKey, {
-             bodyStream: buffer,
-             metaData: {
-               status: networkResponse.status,
-               headers: networkResponse.headers.raw(),
-             },
           });
         }
       } catch (error) {

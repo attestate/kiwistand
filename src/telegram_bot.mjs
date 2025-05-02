@@ -533,8 +533,13 @@ export async function runTelegramBot() {
           const telegramWebpage = post?.media?.webpage;
           let isRelevant = false;
           try {
-              // Pass the cleaned link to the relevance checker
-              isRelevant = await isRelevantToKiwiNews(link, telegramWebpage);
+              // *** Prepare context object for isRelevantToKiwiNews ***
+              const relevanceContext = {
+                  title: telegramWebpage?.title,
+                  description: telegramWebpage?.description
+              };
+              // Pass the cleaned link and the context object
+              isRelevant = await isRelevantToKiwiNews(link, relevanceContext);
               // Log moved inside isRelevantToKiwiNews for clarity
           } catch (error) {
               log(`Error during relevance check for ${link}: ${error}`);
