@@ -30,7 +30,7 @@ const SUBMIT_LIMIT = 5; // Max links to submit per run per channel
 const USER_AGENT = "KiwiNewsTelegramBot/1.0"; // Set a custom user agent
 const SIMULATION_MODE = env.SIMULATION_MODE === "true"; // Check for simulation mode
 // Set back to 18 minutes for production
-const MAX_POST_AGE_MINUTES = 80; // Only process posts newer than this
+const MAX_POST_AGE_MINUTES = 18; // Only process posts newer than this
 const RETRY_DELAY_MS = 20000; // 20 seconds delay between retries
 const MAX_FETCH_RETRIES = 2; // Initial attempt + 2 retries = 3 total attempts
 const REDIRECT_TIMEOUT_MS = 8000; // 8 second timeout for resolving redirects and fetching HTML
@@ -580,44 +580,63 @@ export async function runTelegramBot() {
               );
 
               // --- Leviathan Meta-Refresh Handling (Nested) ---
-              if (currentLink.startsWith('https://api.leviathannews.xyz/redirect/')) {
-                  log(`Attempting to resolve meta-refresh for intermediate link: ${currentLink}`);
-                  try {
-                      // Fetch the HTML content of the intermediate page
-                      const htmlResponse = await fetch(currentLink, {
-                          headers: { 'User-Agent': USER_AGENT },
-                          timeout: HTML_FETCH_TIMEOUT_MS, // Use specific timeout
-                      });
-                      if (!htmlResponse.ok) {
-                          throw new Error(`HTTP error ${htmlResponse.status} fetching HTML`);
-                      }
-                      const htmlContent = await htmlResponse.text();
-
-                      // Parse HTML for meta-refresh tag using regex
-                      // Regex: <meta http-equiv="refresh" content="0;url=URL_HERE"> (case-insensitive, handles quotes/spacing)
-                      const metaRefreshRegex = /<meta\s+http-equiv\s*=\s*["']?refresh["']?\s+content\s*=\s*["']?\d+\s*;\s*url=([^"'>\s]+)["']?\s*\/?>/i;
-                      const match = htmlContent.match(metaRefreshRegex);
-
-                      if (match && match[1]) {
-                          // Extract, decode HTML entities (like &amp;), and trim
-                          const finalUrl = decode(match[1].trim());
-                          // Basic validation of the extracted URL
-                          if (finalUrl.startsWith('http://') || finalUrl.startsWith('https://')) {
-                               log(`Resolved meta-refresh redirect: ${currentLink} -> ${finalUrl}`);
-                               currentLink = finalUrl; // Update to the FINAL URL
-                          } else {
-                               log(`Warning: Invalid meta-refresh URL extracted: "${finalUrl}". Using intermediate link: ${currentLink}`);
-                          }
-                      } else {
-                          log(`No valid meta-refresh tag found on ${currentLink}. Using intermediate link.`);
-                      }
-                  } catch (error) {
-                      log(`Error resolving meta-refresh for ${currentLink}: ${error.message}. Using intermediate link.`);
-                      // Do not 'continue', proceed with the intermediate link (currentLink)
+              if (
+                currentLink.startsWith(
+                  "https://api.leviathannews.xyz/redirect/",
+                )
+              ) {
+                log(
+                  `Attempting to resolve meta-refresh for intermediate link: ${currentLink}`,
+                );
+                try {
+                  // Fetch the HTML content of the intermediate page
+                  const htmlResponse = await fetch(currentLink, {
+                    headers: { "User-Agent": USER_AGENT },
+                    timeout: HTML_FETCH_TIMEOUT_MS, // Use specific timeout
+                  });
+                  if (!htmlResponse.ok) {
+                    throw new Error(
+                      `HTTP error ${htmlResponse.status} fetching HTML`,
+                    );
                   }
+                  const htmlContent = await htmlResponse.text();
+
+                  // Parse HTML for meta-refresh tag using regex
+                  // Regex: <meta http-equiv="refresh" content="0;url=URL_HERE"> (case-insensitive, handles quotes/spacing)
+                  const metaRefreshRegex =
+                    /<meta\s+http-equiv\s*=\s*["']?refresh["']?\s+content\s*=\s*["']?\d+\s*;\s*url=([^"'>\s]+)["']?\s*\/?>/i;
+                  const match = htmlContent.match(metaRefreshRegex);
+
+                  if (match && match[1]) {
+                    // Extract, decode HTML entities (like &amp;), and trim
+                    const finalUrl = decode(match[1].trim());
+                    // Basic validation of the extracted URL
+                    if (
+                      finalUrl.startsWith("http://") ||
+                      finalUrl.startsWith("https://")
+                    ) {
+                      log(
+                        `Resolved meta-refresh redirect: ${currentLink} -> ${finalUrl}`,
+                      );
+                      currentLink = finalUrl; // Update to the FINAL URL
+                    } else {
+                      log(
+                        `Warning: Invalid meta-refresh URL extracted: "${finalUrl}". Using intermediate link: ${currentLink}`,
+                      );
+                    }
+                  } else {
+                    log(
+                      `No valid meta-refresh tag found on ${currentLink}. Using intermediate link.`,
+                    );
+                  }
+                } catch (error) {
+                  log(
+                    `Error resolving meta-refresh for ${currentLink}: ${error.message}. Using intermediate link.`,
+                  );
+                  // Do not 'continue', proceed with the intermediate link (currentLink)
+                }
               }
               // --- End Leviathan Meta-Refresh Handling ---
-
             } else if (response.url === originalLink) {
               log(
                 `Warning: Leviathan HTTP redirect resolution for ${originalLink} resulted in the same URL. Skipping.`,
@@ -640,8 +659,8 @@ export async function runTelegramBot() {
 
         // Use currentLink (original or resolved via HTTP and potentially meta-refresh) for subsequent checks
         if (processedLinks.has(currentLink)) {
-            log(`Skipping already processed link in this run: ${currentLink}`);
-            continue;
+          log(`Skipping already processed link in this run: ${currentLink}`);
+          continue;
         }
 
         processedLinks.add(currentLink); // Add the link we are actually processing
