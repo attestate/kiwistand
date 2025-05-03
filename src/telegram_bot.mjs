@@ -30,7 +30,7 @@ const SUBMIT_LIMIT = 5; // Max links to submit per run per channel
 const USER_AGENT = "KiwiNewsTelegramBot/1.0"; // Set a custom user agent
 const SIMULATION_MODE = env.SIMULATION_MODE === "true"; // Check for simulation mode
 // Set back to 18 minutes for production
-const MAX_POST_AGE_MINUTES = 18; // Only process posts newer than this
+const MAX_POST_AGE_MINUTES = 25; // Only process posts newer than this
 const RETRY_DELAY_MS = 20000; // 20 seconds delay between retries
 const MAX_FETCH_RETRIES = 2; // Initial attempt + 2 retries = 3 total attempts
 const REDIRECT_TIMEOUT_MS = 8000; // 8 second timeout for resolving redirects and fetching HTML
@@ -520,7 +520,7 @@ export async function runTelegramBot() {
     log(`Fetched ${posts.length} posts from Telegram for channel ${channel}.`);
 
     let submittedCountPerChannel = 0;
-    const processedLinks = new Set(); // Avoid processing same link multiple times within one run
+    const processedLinks = new Set(); // Still useful to avoid reprocessing across runs if cache fails
 
     // Process posts chronologically (oldest first) to mimic reading order
     for (const post of posts.reverse()) {
@@ -537,30 +537,28 @@ export async function runTelegramBot() {
       }
       // --- End Time Filter ---
 
+      // Check overall submission limit before processing the post
       if (submittedCountPerChannel >= SUBMIT_LIMIT) {
         log(
           `Submission limit (${SUBMIT_LIMIT}) reached for channel ${channel}.`,
         );
-        break; // Stop processing if limit reached for this channel
+        break; // Stop processing more posts if limit reached
       }
 
       const links = extractLinksFromPost(post);
-      // Only log if links were actually found
-      if (links.length > 0) {
-        log(
-          `Extracted links from post ${
-            post.id || "N/A"
-          } in ${channel}: ${JSON.stringify(links)}`,
-        );
-      }
 
-      for (const originalLink of links) {
-        // Renamed link -> originalLink
-        if (submittedCountPerChannel >= SUBMIT_LIMIT) break;
+      // --- Process Only the First Link ---
+      if (links.length > 0) {
+        const originalLink = links[0]; // Take only the first link
+        log(
+          `Processing first extracted link from post ${
+            post.id || "N/A"
+          }: ${originalLink}`,
+        );
 
         let currentLink = originalLink; // Use this for processing, may be updated
 
-        // --- Leviathan Redirect Handling ---
+        // --- Leviathan Redirect Handling (Applied to the first link) ---
         if (originalLink.startsWith("https://leviathannews.xyz/redirect/")) {
           log(
             `Leviathan redirect detected: ${originalLink}. Attempting to resolve HTTP redirect...`,
@@ -639,20 +637,20 @@ export async function runTelegramBot() {
               // --- End Leviathan Meta-Refresh Handling ---
             } else if (response.url === originalLink) {
               log(
-                `Warning: Leviathan HTTP redirect resolution for ${originalLink} resulted in the same URL. Skipping.`,
+                `Warning: Leviathan HTTP redirect resolution for ${originalLink} resulted in the same URL. Skipping post's link.`,
               );
-              continue; // Skip this link if resolution didn't change the URL
+              continue; // Skip processing this post's link
             } else {
               log(
-                `Warning: Failed to resolve Leviathan HTTP redirect for ${originalLink}. Status: ${response.status}. Skipping.`,
+                `Warning: Failed to resolve Leviathan HTTP redirect for ${originalLink}. Status: ${response.status}. Skipping post's link.`,
               );
-              continue; // Skip this link if fetch failed
+              continue; // Skip processing this post's link
             }
           } catch (error) {
             log(
-              `Error resolving Leviathan HTTP redirect for ${originalLink}: ${error.message}. Skipping.`,
+              `Error resolving Leviathan HTTP redirect for ${originalLink}: ${error.message}. Skipping post's link.`,
             );
-            continue; // Skip this link on error
+            continue; // Skip processing this post's link
           }
         }
         // --- End Leviathan Redirect Handling ---
@@ -660,7 +658,7 @@ export async function runTelegramBot() {
         // Use currentLink (original or resolved via HTTP and potentially meta-refresh) for subsequent checks
         if (processedLinks.has(currentLink)) {
           log(`Skipping already processed link in this run: ${currentLink}`);
-          continue;
+          continue; // Skip this post if its link was already processed in this run
         }
 
         processedLinks.add(currentLink); // Add the link we are actually processing
@@ -692,7 +690,7 @@ export async function runTelegramBot() {
           // Pass signer (which might be null in simulation) and the potentially FINAL resolved currentLink
           const success = await submitLink(currentLink, signer);
           if (success) {
-            submittedCountPerChannel++;
+            submittedCountPerChannel++; // Increment count for the channel
             totalSubmittedCount++;
           }
           // Add a small delay to avoid overwhelming the backend or hitting rate limits
@@ -702,8 +700,12 @@ export async function runTelegramBot() {
           // Logged inside isRelevantToKiwiNews or if error occurred
           log(`Link is NOT relevant, skipping: ${currentLink}`); // Clear confirmation
         }
+      } else {
+        // Log if no links were extracted from a post that passed the time filter
+        log(`No links extracted from post ${post.id || "N/A"}.`);
       }
-    }
+      // --- End Process Only the First Link ---
+    } // End loop through posts
     log(
       `Finished processing channel ${channel}. Submitted ${submittedCountPerChannel} new links.`,
     );
