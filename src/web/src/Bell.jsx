@@ -1,5 +1,5 @@
 // @format
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { WagmiConfig, useAccount } from "wagmi";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { eligible } from "@attestate/delegator2";
@@ -173,6 +173,7 @@ const EmailSubscriptionForm = ({
               alignItems: "center",
               fontSize: "11pt",
               color: "#666",
+              marginBottom: "12px", // Added margin for spacing
             }}
           >
             <input
@@ -304,7 +305,7 @@ const Bell = (props) => {
   const [isLoading, setIsLoading] = useState(false);
   const link = isEligible ? `/activity?address=${address}` : "/kiwipass-mint";
 
-  const handleClick = () => {
+  const handleClick = (event) => { // Added event parameter
     setIsFull(!isFull);
     if (
       !event.ctrlKey &&
@@ -337,7 +338,7 @@ const Bell = (props) => {
     };
 
     fetchAndUpdateNotifications();
-  }, [address]);
+  }, [address]); // Removed isLoading from dependency array to avoid potential loop
 
   if (
     (isEligible && !lastUpdate && readNotifications === 0) ||
@@ -352,42 +353,79 @@ const Bell = (props) => {
     window.location.pathname === "/start" ||
     window.location.pathname === "/friends"
   ) {
+    // Render nothing for these specific paths or conditions
+    // For mobile nav consistency, we might want to render *something*
+    // but for now, adhering to original logic.
+    // If a placeholder is needed on mobile, return null conditionally based on props.mobile
     return null;
   }
 
+  // Render Connect Button if not connected/eligible
   if (!getCookie("identity") || !isEligible) {
+    const mobileConnectStyle = props.mobile
+      ? {
+          display: "flex", // Changed to flex for column layout
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          color: "black",
+          textAlign: "center",
+          fontSize: "9pt", // Adjusted size slightly
+          padding: "0", // Remove padding for tighter fit
+          flexGrow: 1,
+          border: "none",
+          backgroundColor: "transparent", // No background needed
+          textDecoration: "none", // Ensure no underline
+          height: "100%", // Fill container height
+        }
+      : {
+          // Desktop styles remain the same
+          color: "black",
+          textAlign: "center",
+          fontSize: "9pt",
+          display: "inline",
+          padding: "10px 10px",
+          border: "3px inset #59321C",
+          backgroundColor: "#E2F266",
+        };
+
     return (
       <TextConnectButton
         className={props.mobile ? "mobile-bell" : "bell-button"}
-        style={{
-          color: "black",
-          textAlign: "center",
-          fontSize: props.mobile ? "6pt" : "9pt",
-          display: props.mobile ? "inline-flex" : "inline",
-          padding: props.mobile ? "" : "10px 10px",
-          flexGrow: 1,
-          border: props.mobile ? "none" : "3px inset #59321C",
-          backgroundColor: "#E2F266",
-        }}
+        style={mobileConnectStyle}
         allowlist={props.allowlist}
         delegations={props.delegations}
         text={
-          <>
-            {props.mobile ? (
-              <span style={{ display: "inline-block", lineHeight: "1" }}>
-                Con-
-                <br />
-                nect
-              </span>
-            ) : (
-              "Connect"
-            )}
-          </>
+          props.mobile ? (
+            // Using Fragment to group elements for flex layout
+            <>
+              <svg
+                style={{ width: "24px", height: "24px" }} // Added style for size
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 256 256"
+              >
+                <rect width="256" height="256" fill="none" />
+                <path
+                  d="M40,56V184a16,16,0,0,0,16,16H216a8,8,0,0,0,8-8V80a8,8,0,0,0-8-8H56A16,16,0,0,1,40,56h0A16,16,0,0,1,56,40H192"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="16"
+                />
+                <circle cx="180" cy="132" r="12" />
+              </svg>
+              <span style={{ fontSize: "9px", marginTop: "2px" }}>Connect</span>
+            </>
+          ) : (
+            "Connect" // Desktop text
+          )
         }
       />
     );
   }
 
+  // Render Bell Icon if connected/eligible
   dynamicPrefetch(link);
   if (notificationCount > 0 && !wasTitleSet) {
     document.title = `[${notificationCount}] ${document.title}`;
@@ -395,6 +433,31 @@ const Bell = (props) => {
   }
 
   const disabled = !lastUpdate && readNotifications === 0;
+
+  const mobileBellStyle = props.mobile
+    ? {
+        padding: "0", // Remove padding
+        backgroundColor: "transparent", // No background
+        border: "none", // No border
+        display: "flex", // Use flex for layout
+        flexDirection: "column", // Stack icon and text vertically
+        alignItems: "center", // Center items horizontally
+        justifyContent: "center", // Center items vertically
+        position: "relative",
+        textDecoration: "none", // Remove underline from link
+        color: "black", // Ensure text color is black
+        height: "100%", // Fill container height
+      }
+    : {
+        // Desktop styles
+        padding: "10px 10px",
+        backgroundColor: "var(--bg-off-white)",
+        border: "var(--border)",
+        borderRadius: "2px",
+        display: "inline-flex",
+        position: "relative",
+      };
+
   return (
     <a
       data-no-instant
@@ -403,43 +466,50 @@ const Bell = (props) => {
       href={link}
       className={props.mobile ? "mobile-bell" : "bell-button"}
       onClick={handleClick}
-      style={{
-        padding: props.mobile ? "" : "10px 10px",
-        backgroundColor: props.mobile ? "" : "var(--bg-off-white)",
-        border: props.mobile ? "" : "var(--border)",
-        borderRadius: "2px",
-        display: "inline-flex",
-        position: "relative",
-      }}
+      style={mobileBellStyle}
     >
-      {isFull || window.location.pathname === "/activity" ? (
-        <BellSVGFull mobile={props.mobile} />
-      ) : (
-        <BellSVG
-          mobile={props.mobile}
-          style={disabled ? { color: "grey" } : {}}
-        />
-      )}
-      {notificationCount > 0 && (
-        <span
-          style={{
-            position: "absolute",
-            top: props.mobile ? "8px" : "5px",
-            right: props.mobile ? "32px" : "8px",
-            backgroundColor: "red",
-            borderRadius: "2px",
-            color: "white",
-            padding: "1px",
-            fontSize: "8px",
-            fontWeight: "bold",
-            minWidth: "13px",
-            height: "13px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          {notificationCount}
+      <div
+        style={
+          props.mobile
+            ? { position: "relative", display: "inline-block" }
+            : {}
+        }
+      >
+        {isFull || window.location.pathname === "/activity" ? (
+          <BellSVGFull mobile={props.mobile} />
+        ) : (
+          <BellSVG
+            mobile={props.mobile}
+            style={disabled ? { color: "grey" } : {}}
+          />
+        )}
+        {notificationCount > 0 && (
+          <span
+            style={{
+              position: "absolute",
+              top: props.mobile ? "-2px" : "5px", // Adjusted position for mobile
+              right: props.mobile ? "-5px" : "8px", // Adjusted position for mobile
+              backgroundColor: "red",
+              borderRadius: "50%", // Make it round
+              color: "white",
+              padding: "1px",
+              fontSize: "8px",
+              fontWeight: "bold",
+              minWidth: "13px", // Keep min width
+              height: "13px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              lineHeight: "1", // Ensure text fits vertically
+            }}
+          >
+            {notificationCount}
+          </span>
+        )}
+      </div>
+      {props.mobile && (
+        <span style={{ fontSize: "9px", marginTop: "2px" }}>
+          Notifications
         </span>
       )}
     </a>
@@ -447,6 +517,8 @@ const Bell = (props) => {
 };
 
 const Form = (props) => {
+  // This component seems to wrap Bell for desktop scenarios or modals
+  // Ensure Bell receives the mobile prop correctly if Form is used in mobile layout
   return (
     <Connector {...props}>
       <KiwipassMintModal {...props} />
@@ -455,16 +527,19 @@ const Form = (props) => {
   );
 };
 
-export default Form;
+export default Form; // Assuming Form is the intended export for general use
+
+// Export Bell directly if it's used standalone elsewhere
+export { Bell };
 
 const BellSVGFull = (props) => (
   <svg
     style={
       props.mobile
-        ? {}
+        ? { width: "24px", height: "24px" } // Explicit size for mobile
         : {
             color: "black",
-            width: "1.5rem",
+            width: "1.5rem", // Desktop size
           }
     }
     xmlns="http://www.w3.org/2000/svg"
@@ -478,10 +553,10 @@ const BellSVG = (props) => (
   <svg
     style={
       props.mobile
-        ? { ...props.style }
+        ? { width: "24px", height: "24px", ...props.style } // Explicit size for mobile
         : {
             color: "black",
-            width: "1.5rem",
+            width: "1.5rem", // Desktop size
             ...props.style,
           }
     }

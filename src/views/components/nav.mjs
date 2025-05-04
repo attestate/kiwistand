@@ -123,41 +123,47 @@ const nav = (path) => html`
       data-icon="home"
       href="/"
       onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
-      style="flex-direction: column; display: flex; justify-content: center; align-items: center; padding: 10px 0; flex-grow: 1;
- text-decoration: none; color: black; height: 30px;"
+      style="flex-direction: column; display: flex; justify-content: center; align-items: center; width: 25%;
+ text-decoration: none; color: black; height: 45px;"
     >
       ${path === "/" ? homefull : home}
+      <span style="font-size: 9px; margin-top: 2px;">Home</span>
     </a>
     <a
       data-no-instant
       data-icon="newest"
       href="/new?cached=true"
       onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
-      style="flex-direction: column; display: flex; justify-content: center; align-items: center; padding: 10px 0; flex-grow: 1;
- text-decoration: none; color: black; height: 30px;"
+      style="flex-direction: column; display: flex; justify-content: center; align-items: center; width: 25%;
+ text-decoration: none; color: black; height: 45px;"
     >
       ${path === "/new" ? newestfull : newest()}
+      <span style="font-size: 9px; margin-top: 2px;">New</span>
     </a>
     <a
       data-no-instant
       data-icon="submit"
       href="/submit"
       onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
-      style="flex-direction: column; display: flex; justify-content: center; align-items: center; padding: 10px 0; flex-grow: 1;
- text-decoration: none; color: black; height: 30px;"
+      style="flex-direction: column; display: flex; justify-content: center; align-items: center; width: 25%;
+ text-decoration: none; color: black; height: 45px;"
     >
       ${path === "/submit" ? submitfull : submit}
+      <span style="font-size: 9px; margin-top: 2px;">Submit</span>
     </a>
     <div
       class="mobile-bell-container"
-      style="flex-direction: column; display: flex; justify-content: center; align-items: center; flex-grow: 1;
- text-decoration: none; color: black;"
+      style="flex-direction: column; display: flex; justify-content: center; align-items: center; width: 25%;
+ text-decoration: none; color: black; height: 45px;"
     >
-      <a data-no-instant class="mobile-bell" href="/activity">
-        ${path === "/activity" ? notificationsfull : notifications}
-      </a>
+      ${"\u00A0"}<!-- Add non-breaking space to stabilize initial layout -->
+      <BellComponentPlaceholder />
     </div>
   </div>
 `;
+
+// NOTE: The actual Bell component rendering happens via React hydration.
+// The placeholder above is just for structure visualization.
+// The Bell component itself needs to render the text "Notifications" or "Connect" below the icon.
 
 export default nav;

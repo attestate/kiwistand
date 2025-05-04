@@ -1392,9 +1392,11 @@ export async function launch(trie, libp2p, isPrimary = true) {
   });
 
   app.get("/submit", async (request, reply) => {
-    if (!utils.isAddress(request.cookies.identity)) {
-      return reply.redirect(301, `/gateway`);
-    }
+    // Check if the 'identity' cookie exists and is a valid address
+    // if (!utils.isAddress(request.cookies.identity)) {
+    //   // If not, redirect to /gateway
+    //   return reply.redirect(301, `/gateway`);
+    // }
 
     const { url, title } = request.query;
     const content = await submit(

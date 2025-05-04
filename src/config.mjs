@@ -13,7 +13,7 @@ const { BIND_ADDRESS_V4, PORT } = env;
 const DEFAULT_PORT = "53462";
 const config = {
   peerId: {},
-  transports: [tcp()],
+  transports: [tcp({ portMapper: false })], // Disable UPnP/NAT-PMP in TCP
   streamMuxers: [mplex()],
   connectionEncryption: [noise()],
   pubsub: gossipsub({
@@ -25,6 +25,10 @@ const config = {
     listen: [`/ip4/${BIND_ADDRESS_V4}/tcp/${PORT}`],
   },
   peerDiscovery: [],
+  // Add this top-level option to disable all NAT traversal
+  nat: {
+    enabled: false,
+  },
 };
 
 let IS_BOOTSTRAP_NODE = env.IS_BOOTSTRAP_NODE === "true" ? true : false;

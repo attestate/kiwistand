@@ -176,10 +176,15 @@ const commentsfull = (props) => (
 const BottomNavElem = ({ icon }) => {
   const [isFull, setIsFull] = useState(false);
 
-  const handleClick = () => {
+  const handleClick = (event) => { // Added event parameter
     setIsFull(!isFull);
-    if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {
-      document.getElementById('spinner-overlay').style.display='block';
+    if (
+      !event.ctrlKey &&
+      !event.metaKey &&
+      !event.shiftKey &&
+      event.button !== 1
+    ) {
+      document.getElementById("spinner-overlay").style.display = "block";
     }
   };
 
@@ -190,9 +195,21 @@ const BottomNavElem = ({ icon }) => {
     submit: pathname === "/submit" ? submitfull : isFull ? submitfull : submit,
   };
 
-  const IconComponent = iconMap[icon];
+  const textMap = {
+    home: "Home",
+    newest: "New",
+    submit: "Submit",
+  };
 
-  return <IconComponent onClick={handleClick} />;
+  const IconComponent = iconMap[icon];
+  const textLabel = textMap[icon];
+
+  return (
+    <React.Fragment>
+      <IconComponent onClick={handleClick} />
+      <span style={{ fontSize: "9px", marginTop: "2px" }}>{textLabel}</span>
+    </React.Fragment>
+  );
 };
 
 export default BottomNavElem;
