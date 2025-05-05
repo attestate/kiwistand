@@ -1,7 +1,7 @@
 // @format
 import { useState, useEffect, useRef } from "react";
 
-import posthog from 'posthog-js';
+import posthog from "posthog-js";
 import { useAccount, WagmiConfig } from "wagmi";
 import { Wallet } from "@ethersproject/wallet";
 import { RainbowKitProvider, ConnectButton } from "@rainbow-me/rainbowkit";
@@ -55,17 +55,17 @@ const Container = (props) => {
 
 const KarmaAnimation = ({ active }) => {
   const [animationKey, setAnimationKey] = useState(0);
-  
+
   useEffect(() => {
     if (active) {
-      setAnimationKey(prev => prev + 1);
+      setAnimationKey((prev) => prev + 1);
     }
   }, [active]);
 
   if (!active) return null;
-  
+
   return (
-    <div 
+    <div
       key={animationKey}
       className="karma-animation"
       style={{ color: theme.color, whiteSpace: "nowrap" }}
@@ -108,10 +108,10 @@ const Vote = (props) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Set upvoted state immediately for better UX
     setHasUpvoted(true);
-    
+
     // Show animation immediately when button is clicked
     setShowKarmaAnimation(true);
     // Reset animation after it completes
@@ -140,10 +140,16 @@ const Vote = (props) => {
       setShowKarmaAnimation(false); // Hide animation on error
       return;
     } else if (response.status === "error") {
-      if (response.details.includes("doesn't pass legitimacy criteria (duplicate)") ||
-          response.details.includes("probably submitted and accepted before")) {
+      if (
+        response.details.includes(
+          "doesn't pass legitimacy criteria (duplicate)",
+        ) ||
+        response.details.includes("probably submitted and accepted before")
+      ) {
         // This is a duplicate vote - keep upvoted state true
-        toast.success("Your vote was already recorded! The feed may need to refresh to show it. 🥝");
+        toast.success(
+          "Your vote was already recorded! The feed may need to refresh to show it. 🥝",
+        );
       } else {
         setHasUpvoted(false);
         setShowKarmaAnimation(false); // Hide animation on error
@@ -219,18 +225,6 @@ const Vote = (props) => {
               >
                 {hasUpvoted ? iconFullSVG : iconSVG}
               </div>
-              {props.editorPicks !== "true" ? (
-                <div
-                  style={{
-                    userSelect: "none",
-                    fontSize: "8pt",
-                    fontWeight: "bold",
-                    textAlign: "center",
-                  }}
-                >
-                  {isad ? "..." : upvotes}
-                </div>
-              ) : null}
             </div>
           </div>
         );

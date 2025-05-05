@@ -413,13 +413,6 @@ const row = (
                           >
                             ${iconSVG}
                           </div>
-                          <div
-                            class="upvotes-container"
-                            data-href="${story.href}"
-                            style="font-size: 8pt; font-weight: bold; text-align: center;"
-                          >
-                            ${story.upvotes ? story.upvotes : "..."}
-                          </div>
                         </div>
                       </div>
                     </div>
