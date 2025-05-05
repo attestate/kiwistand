@@ -280,7 +280,7 @@ export async function index(
   page,
   domain,
   lookback = sub(new Date(), {
-    weeks: 3,
+    days: 3,
   }),
   paginate = true,
   appCuration = false,
