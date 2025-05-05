@@ -275,6 +275,7 @@ export async function compare(localTrie, remotes) {
 }
 
 export async function descend(trie, level, exclude = []) {
+  await new Promise((resolve) => setImmediate(resolve));
   const emptyRoot = Buffer.from(
     "56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
     "hex",
@@ -307,11 +308,6 @@ export async function descend(trie, level, exclude = []) {
         key = Buffer.concat(fragments);
       } else {
         key = nibblesToBuffer(key);
-      }
-
-      // Yield to the event loop periodically during heavy processing
-      if (nodes.length % 100 === 0) {
-        setImmediate(resolve);
       }
 
       nodes.push({
@@ -744,6 +740,9 @@ export async function leaves(
   let pointer = 0;
   log(`leaves: Trie root "${root.toString("hex")}"`);
   for await (const [node] of walkTrieDfs(trie, root, [])) {
+    // Yield to the event loop at the beginning of each iteration
+    await new Promise((resolve) => setImmediate(resolve));
+
     if (Number.isInteger(amount) && nodes.length >= amount) {
       break;
     }
@@ -790,15 +789,15 @@ export async function leaves(
   return nodes;
 }
 
-// Track the number of nodes processed to periodically yield to the event loop
-let nodesProcessed = 0;
-
 /**
  * @param {Trie} trie
  * @param {Buffer | Buffer[]} nodeRef
  * @param {number[]} key
  */
 async function* walkTrieDfs(trie, nodeRef, key) {
+  // Yield to the event loop at the beginning of each generator step
+  await new Promise((resolve) => setImmediate(resolve));
+
   if (
     // nodeRefs derived from BranchNode.getChildren can be arrays of buffers, but the root ref is always a single buffer
     Buffer.isBuffer(nodeRef) &&
@@ -807,13 +806,7 @@ async function* walkTrieDfs(trie, nodeRef, key) {
     return;
   }
 
-  // Yield to the event loop periodically during heavy processing
-  nodesProcessed++;
-  if (nodesProcessed % 100 === 0) {
-    await new Promise((resolve) => setImmediate(resolve));
-  }
-
-  const node = await trie.lookupNode(nodeRef);
+  const node = await trie.lookupNode(nodeRef); // <<< Async DB lookup (shouldn't block)
 
   if (node instanceof LeafNode) {
     yield [node, key];
