@@ -13,7 +13,9 @@ const { aggregate } = blockLogs.loader;
 
 import mainnet from "./mainnet-mints.mjs";
 import log from "../logger.mjs";
+import { purgeCache } from "../cloudflarePurge.mjs";
 
+const baseURL = `https://news.kiwistand.com:8443`;
 let cachedDelegations = {};
 let lastDelegationsChecksum = null; // Added checksum state
 
@@ -86,6 +88,7 @@ export async function refreshDelegations() {
   cachedDelegations = organize(logs);
   lastDelegationsChecksum = currentChecksum;
   await db.close();
+  await purgeCache(`${baseURL}/api/v1/delegations?cached=true`);
 }
 
 // NOTE: For the purpose of set reconciliation, we must know the first moment
@@ -158,6 +161,7 @@ export async function refreshAccounts() {
   cachedAccounts = result;
   lastAccountsChecksum = currentChecksum;
   await db.close();
+  await purgeCache(`${baseURL}/api/v1/allowlist?cached=true`);
 }
 
 export async function allowlist() {

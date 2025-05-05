@@ -29,9 +29,9 @@ api.use(express.json());
 const corsOptions = {
   // Cache preflight requests for 24 hours in browsers via CORS-specific header
   maxAge: 86400,
-  
+
   // This ensures the preflight continuation so we can add our own headers
-  preflightContinue: true
+  preflightContinue: true,
 };
 
 // Use CORS with the options
@@ -39,15 +39,18 @@ api.use(cors(corsOptions));
 
 // Add Cache-Control headers for CDN caching
 api.use((req, res, next) => {
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     // Enable caching at all levels:
     // - s-maxage for Cloudflare CDN
     // - max-age for browser HTTP cache
     // - stale-while-revalidate for background revalidation
     // - Access-Control-Max-Age (added by CORS middleware) for browser CORS cache
-    res.setHeader('Cache-Control', 'public, s-maxage=86400, max-age=86400, stale-while-revalidate=604800');
+    res.setHeader(
+      "Cache-Control",
+      "public, s-maxage=86400, max-age=86400, stale-while-revalidate=604800",
+    );
     // Ensure responses are varied by origin to prevent CORS issues
-    res.setHeader('Vary', 'Origin');
+    res.setHeader("Vary", "Origin");
     res.end();
   } else {
     next();
@@ -260,7 +263,7 @@ export function listAllowed(getAllowlist) {
     if (request.query.cached === "true") {
       reply.header(
         "Cache-Control",
-        "public, s-maxage=1, max-age=1, stale-while-revalidate=1",
+        "public, s-maxage=86400, stale-while-revalidate=604800",
       );
     }
 
@@ -276,7 +279,7 @@ export function listDelegations(getDelegations) {
     if (request.query.cached === "true") {
       reply.header(
         "Cache-Control",
-        "public, s-maxage=1, max-age=1, stale-while-revalidate=1",
+        "public, s-maxage=86400, stale-while-revalidate=604800",
       );
     }
 
