@@ -1,6 +1,7 @@
 // @format
 import { resolve } from "path";
 import { createHash } from "crypto";
+import canonicalize from "canonicalize"; // Added import
 
 import { differenceInDays } from "date-fns";
 import { utils } from "ethers";
@@ -11,19 +12,40 @@ import * as blockLogs from "@attestate/crawler-call-block-logs";
 const { aggregate } = blockLogs.loader;
 
 import mainnet from "./mainnet-mints.mjs";
+import log from "../logger.mjs";
 
 let cachedDelegations = {};
+let lastDelegationsChecksum = null; // Added checksum state
+
+let lastAccountsChecksum = null; // Added checksum state
 
 // Simple initialization function
 export async function initialize() {
-  console.log(`[PID ${process.pid}] Initializing registry data...`);
+  log(`[PID ${process.pid}] Initializing registry data...`);
   console.time(`[PID ${process.pid}] Registry initialization`);
-  
+
   await refreshDelegations();
   await refreshAccounts();
-  
+
   console.timeEnd(`[PID ${process.pid}] Registry initialization`);
   return true;
+}
+
+/**
+ * Calculates a SHA-256 checksum for the given data using canonicalization.
+ * @param {*} data - The data to checksum (typically an array of objects).
+ * @returns {string} - The hex representation of the SHA-256 checksum.
+ */
+function calculateCanonicalChecksum(data) {
+  const canonicalString = canonicalize(data);
+  if (canonicalString === undefined) {
+    log("Canonicalize returned undefined, using empty string for checksum.");
+    // SHA-256 hash of an empty string
+    return "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
+  }
+  const hash = createHash("sha256");
+  hash.update(canonicalString);
+  return hash.digest("hex");
 }
 
 export async function delegations() {
@@ -36,6 +58,14 @@ export async function refreshDelegations() {
   const name = database.order("list-delegations-2");
   const subdb = db.openDB(name);
   const all = await database.all(subdb, "");
+
+  const currentChecksum = calculateCanonicalChecksum(all);
+  if (currentChecksum === lastDelegationsChecksum) {
+    log(`Didn't find any new delegations to process, skipping refresh`);
+    await db.close();
+    return;
+  }
+
   // NOTE: Since a revocation alters the set of addresses with permissions to
   // store data on the network, and since the revocation essentially gives a
   // user the option to remove an address from the delegation mapping
@@ -54,6 +84,8 @@ export async function refreshDelegations() {
     .filter(({ data }) => BigInt(data[2]) % 2n !== 0n);
 
   cachedDelegations = organize(logs);
+  lastDelegationsChecksum = currentChecksum;
+  await db.close();
 }
 
 // NOTE: For the purpose of set reconciliation, we must know the first moment
@@ -108,6 +140,14 @@ export async function refreshAccounts() {
   const name = database.order("op-call-block-logs");
   const subdb = db.openDB(name);
   const optimism = await database.all(subdb, "");
+
+  const currentChecksum = calculateCanonicalChecksum(optimism);
+  if (currentChecksum === lastAccountsChecksum) {
+    log(`Didn't find any new accounts to process, skipping refresh`);
+    await db.close();
+    return;
+  }
+
   const transformed = optimism.map(({ value }) => ({
     ...value,
     timestamp: parseInt(value.timestamp, 16),
@@ -116,6 +156,8 @@ export async function refreshAccounts() {
   const result = augmentWithMainnet(accounts);
 
   cachedAccounts = result;
+  lastAccountsChecksum = currentChecksum;
+  await db.close();
 }
 
 export async function allowlist() {
@@ -190,5 +232,6 @@ export async function mints() {
         value,
       };
     });
+  await db.close();
   return withoutDuplicates;
 }
