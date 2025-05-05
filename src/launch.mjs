@@ -5,6 +5,7 @@ import os from "os";
 
 import { boot as crawl } from "@attestate/crawler";
 import { subWeeks } from "date-fns";
+import blockedAt from "blocked-at"; // Import blocked-at
 
 import { start, subscribe } from "./index.mjs";
 import log from "./logger.mjs";
@@ -25,6 +26,20 @@ import * as newest from "./views/new.mjs";
 import * as email from "./email.mjs";
 import * as moderation from "./views/moderation.mjs";
 import diskcheck from "./diskcheck.mjs";
+
+// Initialize blocked-at monitoring
+// Adjust threshold (milliseconds) as needed. Start higher (e.g., 100ms)
+// and lower it if needed, considering the performance overhead.
+// Set debug: true for more verbose output if necessary.
+blockedAt(
+  (time, stack, { type, resource } = {}) => {
+    log(`Event loop blocked for ${time}ms. Originating stack trace:`);
+    const stackString = stack.join("\n");
+    log(stackString);
+    if (time > 1000 && !stackString.includes("launch")) process.exit();
+  },
+  { threshold: 50, debug: false },
+); // 50ms threshold
 
 const reconcileMode = env.NODE_ENV === "reconcile";
 const productionMode = env.NODE_ENV === "production";
