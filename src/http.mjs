@@ -893,6 +893,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
           identity,
           hash,
         );
+        cachedFeed = content;
       }
     } catch (err) {
       log(`Error in /: ${err.stack}`);
