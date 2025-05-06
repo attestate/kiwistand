@@ -15,7 +15,7 @@ import log from "./logger.mjs"; // Added logger for consistency
 // Farcaster specific
 const TARGET_FIDS = [
   188665, 7258, 7237, 557, 1287, 617, 1890, 880, 3, 7479, 3621, 4407, 680, 5650,
-  143, 347, 5694,
+  143, 347, 5694, 308433,
 ];
 const FEED_SERVICE_BASE_URL = "https://feeds.fcstr.xyz";
 
