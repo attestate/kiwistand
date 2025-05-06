@@ -21,6 +21,7 @@ import {
   safeWallet,
   coinbaseWallet,
   metaMaskWallet,
+  trustWallet,
   braveWallet,
   rainbowWallet,
 } from "@rainbow-me/rainbowkit/wallets";
@@ -48,7 +49,7 @@ class IOSWalletConnector extends Connector {
 
       // The iOS wallet provider is assumed to connect to Optimism by default.
       const connectedChainId = 10; // Optimism ID
-      const chain = this.chains.find(c => c.id === connectedChainId);
+      const chain = this.chains.find((c) => c.id === connectedChainId);
 
       if (!chain) {
         console.warn(
@@ -95,7 +96,7 @@ class IOSWalletConnector extends Connector {
       this.getProvider({ chainId }),
     ]);
     const targetChainId = chainId || 10; // Default to Optimism
-    const chain = this.chains.find(c => c.id === targetChainId);
+    const chain = this.chains.find((c) => c.id === targetChainId);
 
     if (!chain) {
       console.warn(
@@ -138,7 +139,9 @@ class IOSWalletConnector extends Connector {
         );
       }
       // Notify wagmi of the "change". Wagmi expects the connector to handle this.
-      this.emit("change", { chain: { id: targetChain.id, unsupported: false } });
+      this.emit("change", {
+        chain: { id: targetChain.id, unsupported: false },
+      });
       return targetChain; // Return the full chain object
     }
 
@@ -196,9 +199,10 @@ const connectors = isInIOSApp
 function createIOSOnlyConnectors() {
   // When not in iOS app, use all the regular wallet options
   const wallets = [
-    walletConnectWallet({ projectId, chains }),
     rainbowWallet({ chains, projectId }),
     createMWPConnector(),
+    metaMaskWallet({ chains, projectId }),
+    trustWallet({ chains, projectId }),
   ];
 
   return connectorsForWallets([
