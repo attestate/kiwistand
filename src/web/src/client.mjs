@@ -154,30 +154,38 @@ const connectors = isInIOSApp
   : createStandardConnectors();
 
 function createIOSOnlyConnectors() {
+  // When not in iOS app, use all the regular wallet options
+  const wallets = [
+    walletConnectWallet({ projectId, chains }),
+    rainbowWallet({ chains, projectId }),
+    //createMWPConnector(),
+  ];
+
+  return connectorsForWallets([
+    {
+      groupName: "Popular",
+      wallets,
+    },
+  ]);
+}
+function createMWPConnector() {
   // When in iOS app, only use the iOS wallet connector
   const iosConnector = new IOSWalletConnector({
     chains,
     options: { name: "Coinbase Wallet" },
   });
 
-  return connectorsForWallets([
-    {
-      groupName: "Coinbase Wallet",
-      wallets: [
-        {
-          id: "ios-coinbase-wallet",
-          name: "Coinbase Wallet",
-          iconUrl: "coinbase_wallet_appicon.png",
-          iconBackground: "#2c5ff6",
-          createConnector: () => {
-            return {
-              connector: iosConnector,
-            };
-          },
-        },
-      ],
+  return {
+    id: "ios-coinbase-wallet",
+    name: "Coinbase Wallet",
+    iconUrl: "coinbase_wallet_appicon.png",
+    iconBackground: "#2c5ff6",
+    createConnector: () => {
+      return {
+        connector: iosConnector,
+      };
     },
-  ]);
+  };
 }
 
 function createStandardConnectors() {

@@ -305,7 +305,8 @@ const Bell = (props) => {
   const [isLoading, setIsLoading] = useState(false);
   const link = isEligible ? `/activity?address=${address}` : "/kiwipass-mint";
 
-  const handleClick = (event) => { // Added event parameter
+  const handleClick = (event) => {
+    // Added event parameter
     setIsFull(!isFull);
     if (
       !event.ctrlKey &&
@@ -339,6 +340,61 @@ const Bell = (props) => {
 
     fetchAndUpdateNotifications();
   }, [address]); // Removed isLoading from dependency array to avoid potential loop
+
+  const mobileBellStyle = props.mobile
+    ? {
+        padding: "0", // Remove padding
+        backgroundColor: "transparent", // No background
+        border: "none", // No border
+        display: "flex", // Use flex for layout
+        flexDirection: "column", // Stack icon and text vertically
+        alignItems: "center", // Center items horizontally
+        justifyContent: "center", // Center items vertically
+        position: "relative",
+        textDecoration: "none", // Remove underline from link
+        color: "black", // Ensure text color is black
+        height: "100%", // Fill container height
+      }
+    : {
+        // Desktop styles
+        padding: "10px 10px",
+        backgroundColor: "var(--bg-off-white)",
+        border: "var(--border)",
+        borderRadius: "2px",
+        display: "inline-flex",
+        position: "relative",
+      };
+
+  if (
+    props.mobile &&
+    !isEligible &&
+    !getCookie("identity") &&
+    account?.isConnected
+  ) {
+    return (
+      <a
+        style={mobileBellStyle}
+        title="Sign up"
+        href="/kiwipass-mint"
+        className="mobile-bell"
+      >
+        <div
+          style={
+            props.mobile
+              ? { position: "relative", display: "inline-block" }
+              : {}
+          }
+        >
+          {window.location.pathname === "/kiwipass-mint" ? (
+            <PersonFullSVG />
+          ) : (
+            <PersonSVG />
+          )}
+        </div>
+        <span style={{ fontSize: "9px", marginTop: "2px" }}>Sign up</span>
+      </a>
+    );
+  }
 
   if (
     (isEligible && !lastUpdate && readNotifications === 0) ||
@@ -434,30 +490,6 @@ const Bell = (props) => {
 
   const disabled = !lastUpdate && readNotifications === 0;
 
-  const mobileBellStyle = props.mobile
-    ? {
-        padding: "0", // Remove padding
-        backgroundColor: "transparent", // No background
-        border: "none", // No border
-        display: "flex", // Use flex for layout
-        flexDirection: "column", // Stack icon and text vertically
-        alignItems: "center", // Center items horizontally
-        justifyContent: "center", // Center items vertically
-        position: "relative",
-        textDecoration: "none", // Remove underline from link
-        color: "black", // Ensure text color is black
-        height: "100%", // Fill container height
-      }
-    : {
-        // Desktop styles
-        padding: "10px 10px",
-        backgroundColor: "var(--bg-off-white)",
-        border: "var(--border)",
-        borderRadius: "2px",
-        display: "inline-flex",
-        position: "relative",
-      };
-
   return (
     <a
       data-no-instant
@@ -470,9 +502,7 @@ const Bell = (props) => {
     >
       <div
         style={
-          props.mobile
-            ? { position: "relative", display: "inline-block" }
-            : {}
+          props.mobile ? { position: "relative", display: "inline-block" } : {}
         }
       >
         {isFull || window.location.pathname === "/activity" ? (
@@ -508,9 +538,7 @@ const Bell = (props) => {
         )}
       </div>
       {props.mobile && (
-        <span style={{ fontSize: "9px", marginTop: "2px" }}>
-          Notifications
-        </span>
+        <span style={{ fontSize: "9px", marginTop: "2px" }}>Notifications</span>
       )}
     </a>
   );
@@ -580,5 +608,44 @@ const BellSVG = (props) => (
       strokeLinejoin="round"
       strokeWidth="16"
     />
+  </svg>
+);
+
+const PersonSVG = () => (
+  <svg
+    style={{ width: "24px", height: "24px" }}
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 256 256"
+  >
+    <rect width="256" height="256" fill="none" />
+    <circle
+      cx="128"
+      cy="96"
+      r="64"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="16"
+    />
+    <path
+      d="M32,216c19.37-33.47,54.55-56,96-56s76.63,22.53,96,56"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="16"
+    />
+  </svg>
+);
+
+const PersonFullSVG = () => (
+  <svg
+    style={{ width: "24px", height: "24px" }}
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 256 256"
+  >
+    <rect width="256" height="256" fill="none" />
+    <path d="M230.93,220a8,8,0,0,1-6.93,4H32a8,8,0,0,1-6.92-12c15.23-26.33,38.7-45.21,66.09-54.16a72,72,0,1,1,73.66,0c27.39,8.95,50.86,27.83,66.09,54.16A8,8,0,0,1,230.93,220Z" />
   </svg>
 );
