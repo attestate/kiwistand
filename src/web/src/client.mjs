@@ -46,9 +46,24 @@ class IOSWalletConnector extends Connector {
       });
       const account = accounts[0];
 
+      // The iOS wallet provider is assumed to connect to Optimism by default.
+      const connectedChainId = 10; // Optimism ID
+      const chain = this.chains.find(c => c.id === connectedChainId);
+
+      if (!chain) {
+        console.warn(
+          `IOSWalletConnector: Optimism chain (ID ${connectedChainId}) not found in configured chains. Using minimal chain object for connect.`,
+        );
+        return {
+          account,
+          chain: { id: connectedChainId, unsupported: false },
+          provider: this.provider,
+        };
+      }
+
       return {
         account,
-        chain: { id: 10, unsupported: false }, // Use Optimism (10)
+        chain, // Return the full chain object
         provider: this.provider,
       };
     } catch (error) {
@@ -79,9 +94,23 @@ class IOSWalletConnector extends Connector {
       this.getAccount(),
       this.getProvider({ chainId }),
     ]);
+    const targetChainId = chainId || 10; // Default to Optimism
+    const chain = this.chains.find(c => c.id === targetChainId);
+
+    if (!chain) {
+      console.warn(
+        `IOSWalletConnector: Chain with ID ${targetChainId} not found in connector's configured chains. Using minimal chain object for getWalletClient.`,
+      );
+      return createWalletClient({
+        account,
+        chain: { id: targetChainId, unsupported: false }, // Minimal chain object as fallback
+        transport: custom(provider),
+      });
+    }
+
     return createWalletClient({
       account,
-      chain: { id: chainId || 10, unsupported: false },
+      chain, // Use the full chain object
       transport: custom(provider),
     });
   }
@@ -97,9 +126,20 @@ class IOSWalletConnector extends Connector {
 
   // This is called when switching chains
   async switchChain(chainId) {
-    // If the requested chain is Optimism (10), just pretend we switched
+    // If the requested chain is Optimism (10), "switch" to it.
     if (chainId === 10) {
-      return this.chains.find((x) => x.id === chainId);
+      const targetChain = this.chains.find((x) => x.id === chainId);
+      if (!targetChain) {
+        console.error(
+          `IOSWalletConnector: Optimism chain (ID 10) not found in connector's configured chains during switchChain.`,
+        );
+        throw new Error(
+          `Configuration error: Optimism chain (ID 10) not found.`,
+        );
+      }
+      // Notify wagmi of the "change". Wagmi expects the connector to handle this.
+      this.emit("change", { chain: { id: targetChain.id, unsupported: false } });
+      return targetChain; // Return the full chain object
     }
 
     // For other chains, throw an error indicating this iOS wallet only supports Optimism
