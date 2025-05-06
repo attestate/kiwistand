@@ -316,7 +316,7 @@ export default async function (trie, theme, index, value, referral) {
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
               <thead>
                 <tr>
-                  ${Header(theme)}
+                  ${Header(theme, path)}
                 </tr>
               </thead>
               <thead

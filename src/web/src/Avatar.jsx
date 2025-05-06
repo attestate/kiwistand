@@ -38,6 +38,25 @@ export const resolveAvatar = async (address) => {
 };
 
 const Avatar = (props) => {
+  const isStoryPage = window.location.pathname.startsWith("/stories");
+
+  const handleBackClick = (event) => {
+    // Always prevent the default link behavior when JS is active
+    event.preventDefault();
+    if (
+      window.history.length > 1 &&
+      document.referrer &&
+      document.referrer.startsWith(window.location.origin)
+    ) {
+      // If there's history within the app, go back
+      window.history.back();
+    } else {
+      // Otherwise, explicitly navigate to the root page
+      window.location.href = "/";
+    }
+  };
+
+  // --- Logic for Non-Story Pages ---
   let address;
   const account = useAccount();
   const localAccount = getLocalAccount(account.address, props.allowlist);
@@ -95,6 +114,53 @@ const Avatar = (props) => {
     getPoints();
     getAvatar();
   }, [address, account.isConnected]);
+
+  if (isStoryPage) {
+    // Render Back button with client-side logic, matching server-side structure
+    // Container div does NOT have sidebar-toggle class
+    return (
+      <div
+        style={{
+          // Minimal container styling, no background, ensure it fills the slot
+          display: "flex",
+          alignItems: "center",
+          padding: "0 7px", // Match server-side padding for consistency
+          height: "100%",
+          width: "100%",
+        }}
+      >
+        <a
+          href="/"
+          onClick={handleBackClick}
+          style={{
+            color: "black",
+            textDecoration: "none",
+            fontSize: "11pt",
+            display: "inline-flex",
+            alignItems: "center",
+            minHeight: "44px",
+            minWidth: "44px",
+            padding: "0 5px",
+            userSelect: "none",
+          }}
+        >
+          <svg
+            height="21px"
+            viewBox="0 0 13 21"
+            style={{ marginRight: "6px" }}
+            stroke="currentColor"
+            strokeWidth="2.5"
+            fill="none"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <polyline points="11.5 1.5 1.5 10.5 11.5 19.5" />
+          </svg>
+          <span style={{ marginTop: "1px" }}>Back</span>
+        </a>
+      </div>
+    );
+  }
 
   if (avatar && points) {
     return (

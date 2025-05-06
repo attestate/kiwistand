@@ -905,7 +905,7 @@ body {
          border-bottom-left-radius: 2px;
          margin-left:3vw;
     }
-     .sidebar-toggle {
+     .sidebar-toggle, .story-back-button {
          display: none;
     }
     #mySidebar {

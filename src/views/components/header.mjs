@@ -11,6 +11,7 @@ import * as karma from "../../karma.mjs";
 const html = htm.bind(vhtml);
 
 const header = (theme, path) => {
+  const isStoryPage = path === "/stories";
   return html` <td style="height: 70px;">
     <nav-nft-modal />
     <nav-delegation-modal />
@@ -40,29 +41,63 @@ const header = (theme, path) => {
                   Kiwi News</a
                 >
               </div>
-              <nav-header-avatar class="sidebar-toggle" style="width: 33%;">
-                <div
-                  style="padding: 0 13px 0 7px; background: rgba(0, 0, 0, 0.05); border-radius: 2px; display: ${path ===
-                  "/kiwipass-mint"
-                    ? "none"
-                    : "flex"}; align-items: center;"
-                >
-                  <div
-                    style="display: flex; cursor: pointer; align-items: center; justify-content: left; padding: 7px 0 7px 7px;"
-                  >
-                    <svg
-                      style="padding-top: 2px;"
-                      viewBox="0 0 100 80"
-                      width="20"
-                      height="20"
-                    >
-                      <rect width="100" height="10"></rect>
-                      <rect y="30" width="100" height="10"></rect>
-                      <rect y="60" width="100" height="10"></rect>
-                    </svg>
-                    <span style="color: black; margin-left: 10px;">Menu</span>
-                  </div>
-                </div>
+              <nav-header-avatar
+                class="${isStoryPage ? "story-back-button" : "sidebar-toggle"}"
+                style="width: 33%;"
+              >
+                ${isStoryPage
+                  ? // Static Back button for story pages (server-side)
+                    html`
+                      <div
+                        style="display: flex; align-items: center; padding: 0 7px; height: 100%; width: 100%;"
+                      >
+                        <a
+                          href="/"
+                          style="color: black; text-decoration: none; font-size: 11pt; display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; padding: 0 5px;"
+                        >
+                          <svg
+                            height="21px"
+                            viewBox="0 0 13 21"
+                            style="margin-right: 6px;"
+                            stroke="currentColor"
+                            stroke-width="2.5"
+                            fill="none"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          >
+                            <polyline points="11.5 1.5 1.5 10.5 11.5 19.5" />
+                          </svg>
+                          <span style="margin-top: 1px;">Back</span>
+                        </a>
+                      </div>
+                    `
+                  : // Default Menu button for non-story pages (React will replace if logged in)
+                    html`
+                      <div
+                        style="padding: 0 13px 0 7px; background: rgba(0, 0, 0, 0.05); border-radius: 2px; display: ${path ===
+                        "/kiwipass-mint"
+                          ? "none"
+                          : "flex"}; align-items: center;"
+                      >
+                        <div
+                          style="display: flex; cursor: pointer; align-items: center; justify-content: left; padding: 7px 0 7px 7px;"
+                        >
+                          <svg
+                            style="padding-top: 2px;"
+                            viewBox="0 0 100 80"
+                            width="20"
+                            height="20"
+                          >
+                            <rect width="100" height="10"></rect>
+                            <rect y="30" width="100" height="10"></rect>
+                            <rect y="60" width="100" height="10"></rect>
+                          </svg>
+                          <span style="color: black; margin-left: 10px;"
+                            >Menu</span
+                          >
+                        </div>
+                      </div>
+                    `}
               </nav-header-avatar>
 
               <a
