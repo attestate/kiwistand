@@ -557,7 +557,8 @@ export const metadata = async (
  * @param {string} [metadataContext.description] - Description from OG, Telegram, etc.
  * @returns {Promise<boolean>} - True if the link is deemed relevant.
  */
-export async function isRelevantToKiwiNews(link, metadataContext = {}) { // Changed parameter name
+export async function isRelevantToKiwiNews(link, metadataContext = {}) {
+  // Changed parameter name
   const normalizedUrl = normalizeUrl(link, { stripWWW: false });
   const cacheKey = `relevance-${normalizedUrl}`;
 
@@ -578,7 +579,9 @@ export async function isRelevantToKiwiNews(link, metadataContext = {}) { // Chan
   if (metadataContext?.description) {
     // Use the potentially longer description for better context
     const descSnippet = metadataContext.description.substring(0, 300); // Take more context
-    context += `Description: ${descSnippet}${metadataContext.description.length > 300 ? '...' : ''}\n`; // Use generic 'Description'
+    context += `Description: ${descSnippet}${
+      metadataContext.description.length > 300 ? "..." : ""
+    }\n`; // Use generic 'Description'
   }
 
   // Simple prompt asking for a yes/no decision based on guidelines
@@ -656,8 +659,9 @@ export const render = (ogTitle, domain, ogDescription, image) => html`
       <div style="font-size: 0.9rem; color: #000; margin-bottom: 0.5rem;">
         ${ogTitle}
       </div>
-      {/* Render the truncated description here */}
-      <div style="font-size: 0.7rem;">${ogDescription ? `${ogDescription.substring(0, 150)}...` : ''}</div>
+      <div style="font-size: 0.7rem;">
+        ${ogDescription ? `${ogDescription.substring(0, 150)}...` : ""}
+      </div>
     </div>
     ${image
       ? html`<div
