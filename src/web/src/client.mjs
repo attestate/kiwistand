@@ -158,7 +158,7 @@ function createIOSOnlyConnectors() {
   const wallets = [
     walletConnectWallet({ projectId, chains }),
     rainbowWallet({ chains, projectId }),
-    //createMWPConnector(),
+    createMWPConnector(),
   ];
 
   return connectorsForWallets([
@@ -177,7 +177,7 @@ function createMWPConnector() {
 
   return {
     id: "ios-coinbase-wallet",
-    name: "Coinbase Wallet",
+    name: "Coinbase",
     iconUrl: "coinbase_wallet_appicon.png",
     iconBackground: "#2c5ff6",
     createConnector: () => {
