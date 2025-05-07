@@ -162,7 +162,7 @@ export async function fetchENSData(address) {
 }
 
 // Create a prefix for ENS cache entries to ensure uniqueness
-const ENS_CACHE_PREFIX = "ens-profile-";
+export const ENS_CACHE_PREFIX = "ens-profile-";
 
 export async function resolve(address) {
   // Create a unique cache key with prefix to avoid collisions

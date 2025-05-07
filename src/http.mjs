@@ -59,7 +59,7 @@ import demonstration from "./views/demonstration.mjs";
 import notifications from "./views/notifications.mjs";
 import emailNotifications from "./views/email-notifications.mjs";
 import { parse, metadata } from "./parser.mjs";
-import { toAddress, resolve } from "./ens.mjs";
+import { toAddress, resolve, ENS_CACHE_PREFIX } from "./ens.mjs";
 import * as ens from "./ens.mjs";
 import * as karma from "./karma.mjs";
 import * as subscriptions from "./subscriptions.mjs";
@@ -67,6 +67,7 @@ import * as telegram from "./telegram.mjs";
 import * as email from "./email.mjs";
 import * as price from "./price.mjs";
 import { getSubmission, trackOutbound, trackImpression } from "./cache.mjs";
+import appCache from "./cache.mjs"; // For LRU cache used by ENS profiles
 
 const app = express();
 // Always use HTTP for internal servers since SSL is terminated at the load balancer
@@ -402,6 +403,111 @@ export async function launch(trie, libp2p, isPrimary = true) {
     const details = "Search completed successfully";
     return sendStatus(reply, code, httpMessage, details, data);
   });
+
+  // Endpoint for clearing profile-specific caches
+  app.get("/api/v1/cache/profile", async (req, res) => {
+    const { address: rawAddress } = req.query;
+
+    if (!rawAddress) {
+      return sendError(
+        res,
+        400,
+        "Bad Request",
+        "Address query parameter is required.",
+      );
+    }
+
+    let address;
+    try {
+      address = utils.getAddress(rawAddress); // Validates and normalizes
+    } catch (err) {
+      return sendError(
+        res,
+        400,
+        "Bad Request",
+        `Invalid Ethereum address provided: ${rawAddress}`,
+      );
+    }
+
+    let lruProfileHandled = false; // Tracks if the LRU operation was attempted without throwing an error
+    let lruProfileExistedAndCleared = false; // Tracks if the item was actually found and deleted
+
+    let fsCacheEntriesProcessed = 0;
+    let fsCacheErrors = [];
+
+    // 1. Clear processed ENS profile from LRU Cache
+    const ensProfileLruKey = `${ENS_CACHE_PREFIX}${address.toLowerCase()}`;
+    try {
+      if (appCache.has(ensProfileLruKey)) {
+        appCache.delete(ensProfileLruKey);
+        log(`Cleared ENS profile from LRU cache for key: ${ensProfileLruKey}`);
+        lruProfileExistedAndCleared = true;
+      } else {
+        log(
+          `ENS profile key not found in LRU cache (no action needed): ${ensProfileLruKey}`,
+        );
+      }
+      lruProfileHandled = true;
+    } catch (err) {
+      log(
+        `Error during ENS profile LRU cache operation for key ${ensProfileLruKey}: ${err.toString()}`,
+      );
+      // lruProfileHandled remains false
+    }
+
+    // 2. Clear related raw data from FileSystemCache
+    const fsHttpCache = new FileSystemCache({
+      cacheDirectory: path.resolve(env.CACHE_DIR),
+    });
+
+    const potentialEnsDataUrls = [];
+    potentialEnsDataUrls.push(`https://ensdata.net/${address}?farcaster=true`);
+    if (env.ENSDATA_KEY) {
+      potentialEnsDataUrls.push(
+        `https://ensdata.net/${env.ENSDATA_KEY}/${address}?farcaster=true`,
+      );
+    }
+
+    for (const urlToClear of potentialEnsDataUrls) {
+      try {
+        const fsCacheKey = getCacheKey(urlToClear);
+        await fsHttpCache.remove(fsCacheKey);
+        log(
+          `Processed removal from FileSystemCache for URL: ${urlToClear} (key: ${fsCacheKey})`,
+        );
+        fsCacheEntriesProcessed++;
+      } catch (err) {
+        const errorMsg = `Failed to process FileSystemCache removal for URL ${urlToClear}: ${err.toString()}`;
+        log(errorMsg);
+        fsCacheErrors.push(errorMsg);
+      }
+    }
+
+    let responseStatus = 200;
+    let responseMessage = "Profile cache clearing process completed.";
+    let responseDetails = `LRU Profile Cache for ${address}: `;
+
+    if (lruProfileHandled) {
+      responseDetails += lruProfileExistedAndCleared ? "Cleared. " : "Was not present. ";
+    } else {
+      responseDetails += "Error during operation. ";
+      responseStatus = 500; 
+      responseMessage = "Profile cache clearing encountered critical issues with LRU cache.";
+    }
+
+    responseDetails += `FileSystemCache for ${address}-related URLs: ${fsCacheEntriesProcessed} entries processed.`;
+    if (fsCacheErrors.length > 0) {
+      responseDetails += ` FS Cache Issues: ${fsCacheErrors.join("; ")}`;
+      // If LRU was fine but FS had errors, status remains 200 but with error details.
+    }
+
+    if (responseStatus === 200) {
+      return sendStatus(res, responseStatus, responseMessage, responseDetails.trim());
+    } else {
+      return sendError(res, responseStatus, responseMessage, responseDetails.trim());
+    }
+  });
+
   app.delete("/api/v1/cache", async (req, res) => {
     const { url } = req.body;
 
