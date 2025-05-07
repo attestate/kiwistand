@@ -32,6 +32,7 @@ const header = (theme, path) => {
                 <a
                   style="display: flex; align-items: center; gap: 0.5rem; color: black;"
                   href="/"
+                  onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
                 >
                   <img
                     style="filter: saturate(90%); width: 35px; height: 35px;"
