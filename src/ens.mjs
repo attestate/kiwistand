@@ -94,16 +94,17 @@ async function fetchLensData(address) {
 }
 
 export async function fetchENSData(address) {
-  let endpoint = "https://ensdata.net/";
-  if (env.ENSDATA_KEY) {
-    // NOTE: If you're coming across this environment variable and you're
-    // wondering why it wasn't documented, this is because its only meant to be
-    // used by the Kiwi News production server.
-    endpoint += env.ENSDATA_KEY + "/";
-  }
+  const endpoint = "https://api.ensdata.net/";
 
   try {
-    const url = `${endpoint}${address}?farcaster=true`;
+    let url = `${endpoint}${address}?farcaster=true`;
+    if (env.ENSDATA_KEY) {
+      // NOTE: If you're coming across this environment variable and you're
+      // wondering why it wasn't documented, this is because its only meant to be
+      // used by the Kiwi News production server.
+      url += `&special=env.ENSDATA_KEY`;
+    }
+
     const signal = AbortSignal.timeout(5000);
     const response = await fetchStaleWhileRevalidate(url, { signal });
     const data = await response.json();
