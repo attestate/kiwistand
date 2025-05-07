@@ -43,6 +43,8 @@ const Avatar = (props) => {
   const handleBackClick = (event) => {
     // Always prevent the default link behavior when JS is active
     event.preventDefault();
+    // Stop the event from bubbling up to parent elements
+    event.stopPropagation();
     if (
       window.history.length > 1 &&
       document.referrer &&
