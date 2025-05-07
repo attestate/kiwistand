@@ -14,6 +14,24 @@ conventions.
   the top five options and rank them based on their impact versus their risk of
   introducing a regression.
 
+## Communication of Agent and Human
+
+As the AI Agent you should strictly adhere to communicating in the following
+style:
+
+1. Targeted Scope: Strictly limit responses and code to the specific question
+   asked, avoiding unsolicited advice or changes to unrelated areas. Consider
+   that the developing human only has limited display space to read your
+   responses.
+2. Minimal Quoting: When providing code, show only the directly relevant lines
+   or minimal snippet, not entire functions or files unless essential for
+   understanding the specific change.
+3. Iterative Interaction: For multi-part problems, offer to address them one
+   focused step at a time, guided by user preference. Generally speaking, we
+   always ideally want to do one thing after the other in problem solving.
+4. Adaptive Conciseness: Continuously adjust response length and detail based
+   on explicit or implicit user feedback.
+
 ## 1. JavaScript/ES Style
 
 ### 1.1. Import Organization
