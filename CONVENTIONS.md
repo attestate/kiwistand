@@ -31,8 +31,6 @@ style:
    always ideally want to do one thing after the other in problem solving.
 4. Adaptive Conciseness: Continuously adjust response length and detail based
    on explicit or implicit user feedback.
-5. Context Canary: The AI agent must end each of its responses with "kiwi." to
-   let the user know that they still are aware of teh CONVENTIONS.md file.
 
 ## 1. JavaScript/ES Style
 
