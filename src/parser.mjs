@@ -102,42 +102,20 @@ Startups, cryptocurrencies, cryptography
 Networking, privacy, decentralization
 Hardware, open source, art, economics, game theory
 Anything else our community might find fascinating, covering any subject from philosophy, literature, and pop culture, through science, and health, up to society and infrastructure
+The latest tweets from all our ${twitterFrontends.join(" ")}
+
 Off topic:
 Sensationalist journalism for the sake of ad revenue (including overly optimized click-bait, rage-bait, fluff headlines, clickthrough optimized headlines, cliffhanger headlines, posts with no substance)
 Mediocre resources
 Old stories we all read and that have been widely shared elsewhere
-Shilling (you know what this means)
+Shilling if it's for the wrong projects (you know what this means)
 Fund raise announcements of projects which are not closely associated with Ethereum
 
-How to submit?
-A good headline tells you exactly what to expect without embellishing or optimizing for clickthrough. Some recommendations:
 
-No emojis in titles
-Attempt to submit the original title
-Trim the title if it's too long without losing substance
-Avoid Title Casing Because It Looks Like Spam (and it's terrible to read)
-Avoid Upworthy and Buzzfeed style titles along the lines of, "Fiat Crisis with Balaji (shocking!)" - there's no need to add the last part
-Consider NOT submitting pay-walled articles
-Don't end a title with a period or dot
-When introducing a new project or concept, you can use either:
-A dash (-): "ETHStrategy - fully onchain Microstrategy for Ethereum"
-A colon (:): "Farcaster 2026: The Game-Changing Potential of AI Agents"
-Don't include the hosting platform in titles (e.g., "GitHub - bitcoin/bitcoin") as we already show the domain
-Open Graph Images
-Open Graph images are a crucial part of the submission. They're not an afterthought - they're often the first thing users see.
+Which projects can be shilled?
 
-Images should be visually appealing and professionally designed
-Low-quality, poorly designed, or hastily created images will be moderated
-The image should meaningfully represent the content
-Submitter Requirements
-To maintain quality and accountability in our community, we have specific requirements for story submissions:
-
-Stories will be removed from the front page if the submitter hasn't connected at least one of:
-Farcaster account
-ENS name
-Lens profile
-Submissions from accounts showing only a truncated address (e.g., 0xA9D2...1A87) will not appear on the front page
-Connect your social accounts to ensure your submissions remain visible to the community.
+- Ethereum and all its ecosystem projects
+- If there are neutral articles about Bitcoin, Solana, and other high quality, earnest and technically sophisticated projects, they may also be posted
 `;
 
 const GUIDELINES = `We have an opportunity to build our own corner of the onchain internet. With awesome people, links, resources, and learning.
@@ -405,7 +383,7 @@ export const metadata = async (
   const { hostname } = urlObj;
 
   if (twitterFrontends.includes(hostname)) {
-    urlObj.hostname = "fxtwitter.com";
+    urlObj.hostname = "vxtwitter.com";
     url = urlObj.toString();
   }
 
@@ -556,37 +534,58 @@ export const metadata = async (
 /**
  * Checks if a link is relevant to Kiwi News using Claude Haiku.
  * @param {string} link - The URL to check.
- * @param {object} [metadataContext] - Optional metadata context.
+ * @param {object} [metadataContext] - Optional metadata context from the caller (e.g., Telegram).
  * @param {string} [metadataContext.title] - Title from OG, Telegram, etc.
  * @param {string} [metadataContext.description] - Description from OG, Telegram, etc.
  * @returns {Promise<boolean>} - True if the link is deemed relevant.
  */
 export async function isRelevantToKiwiNews(link, metadataContext = {}) {
-  // Changed parameter name
   const normalizedUrl = normalizeUrl(link, { stripWWW: false });
   const cacheKey = `relevance-${normalizedUrl}`;
 
-  // Check cache first
-  const cachedRelevance = lifetimeCache.get(cacheKey);
-  if (cachedRelevance !== null) {
-    log(`Relevance cache hit for ${link}: ${cachedRelevance}`);
+  // Check LRU cache first
+  const cachedRelevance = cache.get(cacheKey);
+  if (cachedRelevance !== undefined) {
+    // LRUCache returns undefined for a cache miss
+    log(`Relevance LRU cache hit for ${link}: ${cachedRelevance}`);
     return cachedRelevance;
   }
 
-  log(`Checking relevance with Claude for: ${link}`);
+  // Fetch metadata, generating title and processing submittedTitle (from metadataContext.title)
+  let fetchedMeta = {};
+  try {
+    // Pass metadataContext.title as submittedTitle to the metadata function
+    fetchedMeta = await metadata(link, true, metadataContext.title);
+  } catch (error) {
+    log(
+      `Error fetching metadata in isRelevantToKiwiNews for ${link}: ${error.message}`,
+    );
+    // Proceed with empty fetchedMeta, fallbacks will be used
+  }
 
   let context = `URL: ${link}\n`;
-  // Use the generic metadataContext object
-  if (metadataContext?.title) {
-    context += `Title: ${metadataContext.title}\n`; // Use generic 'Title'
+
+  // Prioritize title from fetchedMeta (compliantTitle, then ogTitle), then fallback to metadataContext.title
+  const titleForClaude =
+    fetchedMeta.compliantTitle || fetchedMeta.ogTitle || metadataContext.title;
+  if (titleForClaude) {
+    context += `Title: ${titleForClaude}\n`;
   }
-  if (metadataContext?.description) {
-    // Use the potentially longer description for better context
-    const descSnippet = metadataContext.description.substring(0, 300); // Take more context
+
+  // Prioritize description from fetchedMeta, then fallback to metadataContext.description
+  const descriptionForClaude =
+    fetchedMeta.ogDescription || metadataContext.description;
+  if (descriptionForClaude) {
+    const descSnippet = descriptionForClaude.substring(0, 300);
     context += `Description: ${descSnippet}${
-      metadataContext.description.length > 300 ? "..." : ""
-    }\n`; // Use generic 'Description'
+      descriptionForClaude.length > 300 ? "..." : ""
+    }\n`;
   }
+  log(
+    `Relevance LRU cache miss. Checking relevance with Claude for: ${JSON.stringify(
+      context,
+    )}`,
+  );
 
   // Simple prompt asking for a yes/no decision based on guidelines
   const prompt = `Here are the Kiwi News submission guidelines:\n\n${KIWI_NEWS_GUIDELINES}\n\nBased *only* on these guidelines, is the content described below likely to be "On topic" and suitable for submission to Kiwi News? Answer with only "YES" or "NO".\n\nContent Context:\n${context}`;
@@ -595,7 +594,7 @@ export async function isRelevantToKiwiNews(link, metadataContext = {}) {
   try {
     const response = await anthropic.messages.create({
       model: "claude-3-5-haiku-20241022",
-      max_tokens: 10, // Just need YES or NO
+      max_tokens: 200, // Just need YES or NO
       temperature: 0, // Deterministic
       messages: [
         {
@@ -631,8 +630,8 @@ export async function isRelevantToKiwiNews(link, metadataContext = {}) {
     `Claude relevance raw response: "${responseText}". Final decision for ${link}: ${isRelevant}`,
   );
 
-  // Cache the result
-  lifetimeCache.set(cacheKey, isRelevant);
+  // Cache the result in LRU cache
+  cache.set(cacheKey, isRelevant);
 
   return isRelevant;
 }

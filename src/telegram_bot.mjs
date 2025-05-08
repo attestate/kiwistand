@@ -169,15 +169,6 @@ function extractLinksFromPost(post) {
       ) {
         const urlObject = new URL(cleanedLink);
 
-        // *** WORKAROUND: Convert vxtwitter.com to fxtwitter.com ***
-        if (urlObject.hostname === "vxtwitter.com") {
-          log(`Converting vxtwitter link: ${cleanedLink}`);
-          urlObject.hostname = "fxtwitter.com";
-          cleanedLink = urlObject.toString();
-          log(`Converted to fxtwitter link: ${cleanedLink}`);
-        }
-        // *** END WORKAROUND ***
-
         links.add(cleanedLink);
       }
     } catch (error) {
