@@ -389,7 +389,7 @@ export const metadata = async (
   const { hostname } = urlObj;
 
   if (twitterFrontends.includes(hostname)) {
-    urlObj.hostname = "vxtwitter.com";
+    urlObj.hostname = "fxtwitter.com";
     url = urlObj.toString();
   }
 
