@@ -12,7 +12,7 @@ jobs:
     steps:
       - name: Install curl
         run: |
-          apt-get update && apt-get install -y curl
+          sudo apt-get update && sudo apt-get install -y curl
       - name: Check Age Header
         env:
           # This secret needs to be created in your GitHub repository settings
