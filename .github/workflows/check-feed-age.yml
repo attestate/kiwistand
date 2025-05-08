@@ -1,0 +1,85 @@
+name: Check Feed Age
+
+on:
+  schedule:
+    # Runs every minute
+    - cron: '*/1 * * * *'
+  workflow_dispatch: # Allows manual triggering
+
+jobs:
+  check_feed_age:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install curl
+        run: |
+          apt-get update && apt-get install -y curl
+      - name: Check Age Header
+        env:
+          # This secret needs to be created in your GitHub repository settings
+          BYPASS_TOKEN: ${{ secrets.FEED_CHECK_BYPASS_TOKEN }}
+        run: |
+          FEED_URL="https://news.kiwistand.com"
+          MAX_AGE_SECONDS=120
+          # Common browser User-Agent
+          USER_AGENT="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+          CUSTOM_BYPASS_HEADER_NAME="X-Feed-Check-Bypass"
+
+          if [ -z "$BYPASS_TOKEN" ]; then
+            echo "Error: FEED_CHECK_BYPASS_TOKEN is not set in GitHub secrets."
+            echo "Please add it to your repository's Actions secrets."
+            exit 1
+          fi
+
+          echo "Fetching headers from $FEED_URL"
+          # Perform a GET request, follow redirects (-L), dump headers to stdout (-D -), discard body (-o /dev/null)
+          HEADERS=$(curl -sS -L -D - -o /dev/null \
+            -A "$USER_AGENT" \
+            -H "$CUSTOM_BYPASS_HEADER_NAME: $BYPASS_TOKEN" \
+            "$FEED_URL")
+
+          # Check if curl command itself failed
+          CURL_EXIT_CODE=$?
+          if [ $CURL_EXIT_CODE -ne 0 ] || [ -z "$HEADERS" ]; then
+            echo "Error: Failed to fetch headers from $FEED_URL (curl exit code: $CURL_EXIT_CODE) or received empty response."
+            echo "Curl output (if any):"
+            echo "$HEADERS"
+            exit 1
+          fi
+
+          echo "Headers:"
+          echo "$HEADERS"
+
+          # Check HTTP status code from headers
+          HTTP_STATUS=$(echo "$HEADERS" | head -n 1 | awk '{print $2}')
+          if [[ ! "$HTTP_STATUS" =~ ^2[0-9]{2}$ ]]; then
+            echo "Error: Received non-2xx HTTP status: $HTTP_STATUS. This might indicate Cloudflare is still blocking or an issue with the URL."
+            exit 1
+          fi
+
+          # Extract Age and CF-Cache-Status headers
+          AGE_HEADER_VALUE=$(echo "$HEADERS" | grep -i '^age:' | awk '{print $2}' | tr -d '\r' || true)
+          CF_CACHE_STATUS=$(echo "$HEADERS" | grep -i '^cf-cache-status:' | awk '{print $2}' | tr -d '\r' | tr '[:lower:]' '[:upper:]' || true) # Normalize to uppercase
+
+          echo "CF-Cache-Status: $CF_CACHE_STATUS" # Log for information
+
+          # MODIFIED BEHAVIOR: Fail if Age header is missing, regardless of CF-Cache-Status
+          if [ -z "$AGE_HEADER_VALUE" ]; then
+            echo "Error: Age header not found in the response. This is a critical failure."
+            exit 1
+          fi
+
+          # Ensure AGE_HEADER_VALUE is a number
+          if ! [[ "$AGE_HEADER_VALUE" =~ ^[0-9]+$ ]]; then
+            echo "Error: Age header value '$AGE_HEADER_VALUE' is not a valid number (received: '$AGE_HEADER_VALUE')."
+            exit 1
+          fi
+
+          echo "Extracted Age: $AGE_HEADER_VALUE seconds"
+          echo "Maximum allowed Age: $MAX_AGE_SECONDS seconds"
+
+          if [ "$AGE_HEADER_VALUE" -gt "$MAX_AGE_SECONDS" ]; then
+            echo "Error: Feed age ($AGE_HEADER_VALUE seconds) exceeds the maximum allowed age ($MAX_AGE_SECONDS seconds)."
+            exit 1
+          else
+            echo "Feed age is within the acceptable limit."
+          fi
