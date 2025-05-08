@@ -83,6 +83,7 @@ Format this title according to these rules:
  4. No trailing period
  5. Keep any existing dash (-) or colon (:) formatting
  6. Format dates as YYYY-MM-DD
+ 7. Don't include the hosting platform in titles (e.g., "GitHub - bitcoin/bitcoin") as we already show the domain (DO: e.g. "bitcoin/bitcoin")
 `;
 
 // Added Kiwi News Submission Guidelines
@@ -93,6 +94,7 @@ We have an opportunity to build our own corner of the onchain internet. With awe
 What to submit?
 On topic:
 Anything that gratifies the intellectual curiosities of builders, engineers, hackers, and craftspeople in the community.
+We are an Ethereum-first community, but other resources are interesting to us as well.
 
 That includes:
 
@@ -100,22 +102,26 @@ Technical resources, hacking, and awesome git repos
 Dune dashboards, reports, data-driven articles
 Startups, cryptocurrencies, cryptography
 Networking, privacy, decentralization
-Hardware, open source, art, economics, game theory
+Hardware, open source, art, economics, game theory, privacy
 Anything else our community might find fascinating, covering any subject from philosophy, literature, and pop culture, through science, and health, up to society and infrastructure
-The latest tweets from all our ${twitterFrontends.join(" ")}
+The latest tweets from all our ${twitterFrontends.join(
+  " ",
+)} if they comply with all the other rules.
 
 Off topic:
 Sensationalist journalism for the sake of ad revenue (including overly optimized click-bait, rage-bait, fluff headlines, clickthrough optimized headlines, cliffhanger headlines, posts with no substance)
 Mediocre resources
 Old stories we all read and that have been widely shared elsewhere
-Shilling if it's for the wrong projects (you know what this means)
+Shilling if it's for the wrong projects, e.g., Cardano, BNB, centralized projects, scams, KOL-promoted fake projects
 Fund raise announcements of projects which are not closely associated with Ethereum
 
+# Are promotional/shilling links allowed?
 
-Which projects can be shilled?
+Generally no. But for Ethereum and Ethereum-based projects which have a long standing history of legitimacy, it's fine. But it's really
+important that we only allow promotions of the right projects: Projects
 
-- Ethereum and all its ecosystem projects
-- If there are neutral articles about Bitcoin, Solana, and other high quality, earnest and technically sophisticated projects, they may also be posted
+Bitcoin, Ethereum, USDT, Solana, USDC, Lido, Chainlink, Sky, USDC, Circle, USDC, Monero, Coinbase, Base, Farcaster, Warpcast, Uniswap, Aave, TRUMP, Arbitrum, Worldcoin, Maker, Optimism, Railgun, Railway, Curve, ENS, Paragraph, Zora, Flashbots, Unichain, ZKsync, Starknet, Scroll, Gnosis, GHO, EURC, Monerium, Gnosis Pay, Celo, It's super important to strictly adhere to this list and only diverge if it happens to be non exhaustive with regards to Ethereum-related projects which haven't accidentially been mentioned.
+It may also be fine if highly trustworthy individuals from the Ethereum community say something.
 `;
 
 const GUIDELINES = `We have an opportunity to build our own corner of the onchain internet. With awesome people, links, resources, and learning.

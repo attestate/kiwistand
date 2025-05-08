@@ -109,25 +109,14 @@ async function submitLink(link, signer, initialMeta) {
   let finalTitle;
 
   try {
-    // Step 1: Determine the candidate title from pre-fetched metadata
-    titleCandidate = initialMeta?.ogTitle; // Use generated/OG title if available
-
-    if (!titleCandidate) {
-      // This check should ideally be redundant if relevance check passed, but good safety net
-      log(
-        `No usable title found in pre-fetched metadata for ${link}. Skipping submission.`,
-      );
-      return false;
-    }
-    log(`Using initial title as candidate: "${titleCandidate}"`);
-
+    titleCandidate = initialMeta?.ogTitle;
     // Step 2: Check compliance and get final title
     log(`Checking compliance for candidate title: "${titleCandidate}"`);
     // Call metadata again, passing the candidate title to trigger fixTitle logic
     const complianceMeta = await metadata(link, false, titleCandidate);
     log(`Compliance metadata result for ${link}:`, complianceMeta);
 
-    finalTitle = complianceMeta?.compliantTitle; // Use compliant title if fixTitle provided one
+    finalTitle = complianceMeta?.compliantTitle || complianceMeta?.ogTitle; // Use compliant title if fixTitle provided one
 
     if (finalTitle) {
       log(`Using compliant title: "${finalTitle}"`);

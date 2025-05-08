@@ -261,7 +261,7 @@ async function submitLink(link, signer) {
     log(`Initial metadata result for ${link}:`, initialMeta);
 
     // Step 2: Determine the candidate title - *** CRITICAL CHECK ***
-    titleCandidate = initialMeta?.ogTitle; // Use generated/OG title if available
+    titleCandidate = initialMeta?.compliantTitle || initialMeta?.ogTitle; // Use generated/OG title if available
 
     // *** If no title could be generated or found from OG tags, ABORT ***
     if (!titleCandidate) {
@@ -269,14 +269,6 @@ async function submitLink(link, signer) {
       return false; // Do not proceed without a title
     }
     log(`Using initial title as candidate: "${titleCandidate}"`);
-
-    // Step 3: Check compliance and get final title
-    log(`Checking compliance for candidate title: "${titleCandidate}"`);
-    // Call metadata again, passing the candidate title to trigger fixTitle logic
-    const complianceMeta = await metadata(link, false, titleCandidate);
-    log(`Compliance metadata result for ${link}:`, complianceMeta);
-
-    finalTitle = complianceMeta?.compliantTitle; // Use compliant title if fixTitle provided one
 
     if (finalTitle) {
       log(`Using compliant title: "${finalTitle}"`);
