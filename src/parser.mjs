@@ -51,8 +51,10 @@ const filtered = [
 const anthropic = new Anthropic({
   apiKey: env.ANTHROPIC_API_KEY,
 });
+// Added fxtwitter.com here so Claude title‐gen runs on fxtwitter links too
 const twitterFrontends = [
   "xcancel.com",
+  "nitter.net",
   "nitter.privacydev.net",
   "nitter.poast.org",
   "nitter.lucabased.xyz",
@@ -68,6 +70,8 @@ const twitterFrontends = [
   "nitter.holo-mix.com",
   "twitter.com",
   "x.com",
+  "fxtwitter.com",
+  "vxtwitter.com",
 ];
 const CLAUDE_DOMAINS = ["warpcast.com", "fxtwitter.com", ...twitterFrontends];
 
