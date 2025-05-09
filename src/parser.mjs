@@ -120,7 +120,7 @@ Fund raise announcements of projects which are not closely associated with Ether
 Generally no. But for Ethereum and Ethereum-based projects which have a long standing history of legitimacy, it's fine. But it's really
 important that we only allow promotions of the right projects: Projects
 
-Bitcoin, Ethereum, USDT, Solana, USDC, Lido, Chainlink, Sky, USDC, Circle, USDC, Monero, Coinbase, Base, Farcaster, Warpcast, Uniswap, Aave, TRUMP, Arbitrum, Worldcoin, Maker, Optimism, Railgun, Railway, Curve, ENS, Paragraph, Zora, Flashbots, Unichain, ZKsync, Starknet, Scroll, Gnosis, GHO, EURC, Monerium, Gnosis Pay, Celo, It's super important to strictly adhere to this list and only diverge if it happens to be non exhaustive with regards to Ethereum-related projects which haven't accidentially been mentioned.
+Bitcoin, Ethereum, USDT, Solana, USDC, Lido, Chainlink, Sky, USDT, Circle, USDC, Monero, Coinbase, Base, Farcaster, Warpcast, Uniswap, Aave, TRUMP, Arbitrum, Worldcoin, Maker, Optimism, Railgun, Railway, Curve, ENS, Paragraph, Zora, Flashbots, Unichain, ZKsync, Starknet, Scroll, Gnosis, GHO, EURC, Monerium, Gnosis Pay, Celo, It's super important to strictly adhere to this list and only diverge if it happens to be non exhaustive with regards to Ethereum-related projects which haven't accidentially been mentioned.
 It may also be fine if highly trustworthy individuals from the Ethereum community say something.
 `;
 
@@ -132,6 +132,7 @@ Our content focuses on:
 - Startups, cryptocurrencies, cryptography
 - Networking, privacy, decentralization
 - Hardware, open source, art, economics, game theory
+- AI, if it directly helps devs ship faster (code‑, infra‑, or data‑related) or impacts crypto or core web infra
 - Anything else our community finds fascinating, from philosophy through science to infrastructure
 
 Title Guidelines:
