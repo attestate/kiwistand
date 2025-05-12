@@ -168,8 +168,17 @@ function extractLinksFromPost(post) {
         cleanedLink.startsWith("https://")
       ) {
         const urlObject = new URL(cleanedLink);
+        const hostname = urlObject.hostname.toLowerCase();
 
-        links.add(cleanedLink);
+        // Canonicalize Twitter/X links by removing query string and hash
+        if (hostname === 'twitter.com' || hostname === 'x.com') {
+          // Reconstruct URL with only protocol, hostname, and pathname
+          const canonicalLink = `${urlObject.protocol}//${urlObject.hostname}${urlObject.pathname}`;
+          links.add(canonicalLink);
+        } else {
+          // Add non-Twitter/X links exactly as cleaned, without further normalization
+          links.add(cleanedLink);
+        }
       }
     } catch (error) {
       log(

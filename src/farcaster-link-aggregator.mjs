@@ -349,12 +349,16 @@ function extractLinksFromFeed(feedItems, username, linkCounts) {
               continue;
             }
 
-            // Normalize URL
-            const normalizedUrl = `${
-              parsedUrl.protocol
-            }//${hostname}${parsedUrl.pathname.replace(/\/$/, "")}${
-              parsedUrl.search
-            }${parsedUrl.hash}`;
+            let normalizedUrl;
+            // Canonicalize Twitter/X links by removing query string and hash
+            if (hostname === 'twitter.com' || hostname === 'x.com') {
+              // Reconstruct URL with only protocol, hostname, and pathname
+              normalizedUrl = `${parsedUrl.protocol}//${parsedUrl.hostname}${parsedUrl.pathname}`;
+            } else {
+              // Use the cleaned link directly for non-Twitter/X URLs
+              normalizedUrl = cleanedLink;
+            }
+
 
             // *** Store the link, increment count, and add user ***
             if (!linkCounts[normalizedUrl]) {
