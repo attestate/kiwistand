@@ -3,6 +3,17 @@ import "./request_monitor.js";
 import PullToRefresh from "pulltorefreshjs";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import sdk from "@farcaster/frame-sdk";
+
+async function initFarcasterFrame() {
+  // 1) Tell the host we’re live (no-op if not in a Farcaster client)
+  try {
+    await sdk.actions.ready();
+  } catch {}
+  // 2) Wire up the button (guarded)
+  const btn = document.getElementById("frame-add-btn");
+  if (btn) btn.addEventListener("click", () => sdk.actions.addFrame());
+}
 
 import { isIOS, isRunningPWA, getCookie, getLocalAccount } from "./session.mjs";
 import theme from "./theme.jsx";
@@ -998,6 +1009,9 @@ function trackLinkImpressions() {
 }
 
 async function start() {
+  initFarcasterFrame()
+    .then()
+    .catch((err) => console.log(err));
   // Spinner overlay initialization
   if (!document.getElementById("spinner-overlay")) {
     const overlay = document.createElement("div");

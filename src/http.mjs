@@ -66,10 +66,28 @@ import * as subscriptions from "./subscriptions.mjs";
 import * as telegram from "./telegram.mjs";
 import * as email from "./email.mjs";
 import * as price from "./price.mjs";
-import { getSubmission, trackOutbound, trackImpression } from "./cache.mjs";
+import { getSubmission, trackOutbound, trackImpression, countOutbounds } from "./cache.mjs";
 import appCache from "./cache.mjs"; // For LRU cache used by ENS profiles
+import frameSubscribe from "./views/frame-subscribe.mjs";
 
 const app = express();
+
+// Redirect route for click-tracking
+app.get("/redirect/:index", (req, res) => {
+  let sub;
+  try {
+    sub = getSubmission(req.params.index);
+  } catch {
+    return res.status(404).send("Not found");
+  }
+  // record outbound fingerprint
+  const hash = fingerprint.generate(req);
+  trackOutbound(sub.href, hash);
+  // immediate redirect
+  res.redirect(302, sub.href);
+});
+
+//
 // Always use HTTP for internal servers since SSL is terminated at the load balancer
 const server = createHttpServer(app);
 
@@ -142,6 +160,35 @@ app.get("/.well-known/apple-app-site-association", (req, res) => {
       ],
     },
   });
+});
+// Serve Farcaster Mini App manifest
+app.get("/.well-known/farcaster.json", (req, res) => {
+  res.setHeader("Content-Type", "application/json");
+  res.setHeader(
+    "Cache-Control",
+    "public, s-maxage=86400, max-age=86400, stale-while-revalidate=600000",
+  );
+  res.json({
+    accountAssociation: {},
+    frame: {
+      version: "1",
+      name: "Kiwi News",
+      iconUrl: "https://news.kiwistand.com/pwa_icon.png",
+      homeUrl: "https://news.kiwistand.com/miniapp",
+      splashImageUrl: "https://news.kiwistand.com/pwa_maskable_icon.png",
+      splashBackgroundColor: "#0F3106",
+      webhookUrl: env.NEYNAR_NOTIFICATIONS_WEBHOOK,
+    },
+  });
+});
+
+// Mini App landing page
+app.get("/miniapp", async (req, res) => {
+  res.setHeader("Cache-Control", "public, max-age=0");
+  res
+    .status(200)
+    .type("text/html")
+    .send(await frameSubscribe(theme));
 });
 
 function loadTheme(req, res, next) {
