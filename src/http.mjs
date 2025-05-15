@@ -164,20 +164,25 @@ app.get("/.well-known/apple-app-site-association", (req, res) => {
 // Serve Farcaster Mini App manifest
 app.get("/.well-known/farcaster.json", (req, res) => {
   res.setHeader("Content-Type", "application/json");
-  res.setHeader(
-    "Cache-Control",
-    "public, s-maxage=86400, max-age=86400, stale-while-revalidate=600000",
-  );
   res.json({
-    accountAssociation: {},
+    accountAssociation: {
+      header:
+        "eyJmaWQiOjU3MDgsInR5cGUiOiJjdXN0b2R5Iiwia2V5IjoiMHg5OTg5Y0ExMmVmRWY5ZjljRGE5NjQ1RTU0NDMyMzE4OTFDRjRGYjdhIn0",
+      payload: "eyJkb21haW4iOiJuZXdzLmtpd2lzdGFuZC5jb20ifQ",
+      signature:
+        "MHhlYzA1NGU1NmE4Mjg2MTQ1NmI1M2RlN2VhNDM5MGM0NDQzMjQxN2U1OTcyNDc3NzNjYWQ2MzE4YmZhYzQwYzU2NmRhNTJjOWYyYmM1YzRiMTYxNDViMTk3MDVjZTY1Y2I2NzM5MTdlMGUxMjE1YWMwNWUzZmEzYThjNjdlOTZiNTFj",
+    },
     frame: {
       version: "1",
       name: "Kiwi News",
       iconUrl: "https://news.kiwistand.com/pwa_icon.png",
-      homeUrl: "https://news.kiwistand.com/miniapp",
-      splashImageUrl: "https://news.kiwistand.com/pwa_maskable_icon.png",
+      homeUrl: "https://news.kiwistand.com/?miniapp=true",
+      imageUrl: "https://news.kiwistand.com/kiwi_top_feed_page.png",
+      buttonTitle: "🥝 Start",
+      splashImageUrl: "https://news.kiwistand.com/fc-splash.png",
       splashBackgroundColor: "#0F3106",
       webhookUrl: env.NEYNAR_NOTIFICATIONS_WEBHOOK,
+      primaryCategory: "news-media",
     },
   });
 });

@@ -1012,6 +1012,10 @@ async function start() {
   initFarcasterFrame()
     .then()
     .catch((err) => console.log(err));
+  const urlParams = new URL(window.location.href).searchParams;
+  if (urlParams.get('miniapp') === 'true') {
+    sdk.actions.addFrame();
+  }
   // Spinner overlay initialization
   if (!document.getElementById("spinner-overlay")) {
     const overlay = document.createElement("div");

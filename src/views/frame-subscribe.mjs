@@ -15,10 +15,6 @@ export default async function frameSubscribe(theme) {
     <html lang="en" op="news">
       <head>
         ${custom()}
-        <meta
-          name="fc:frame"
-          content='{"version":"next","imageUrl":"https://news.kiwistand.com/pwa_maskable_icon.png","button":{"title":"Add Kiwi News","action":{"type":"launch_frame"}}}'
-        />
       </head>
       <body ontouchstart="">
         <div class="container">

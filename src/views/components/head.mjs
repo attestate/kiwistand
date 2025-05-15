@@ -24,14 +24,6 @@ export function custom(
   ogImage = DOMPurify.sanitize(ogImage);
   ogTitle = DOMPurify.sanitize(ogTitle);
   ogDescription = DOMPurify.sanitize(ogDescription);
-  const fcFrame = {
-    version: "next",
-    imageUrl: "https://news.kiwistand.com/pwa_maskable_icon.png",
-    button: {
-      title: "Open Kiwi News",
-      action: { type: "launch_frame" },
-    },
-  };
   return html`
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -56,6 +48,20 @@ export function custom(
       content="width=device-width, initial-scale=1, maximum-scale=1,
  user-scalable=0 viewport-fit=cover"
     />
+    <meta
+      name="fc:frame"
+      content="${JSON.stringify({
+        version: "next",
+        imageUrl: "https://news.kiwistand.com/pwa_maskable_icon.png",
+        button: {
+          title: "Add Kiwi News",
+          action: {
+            type: "launch_frame",
+            url: "https://news.kiwistand.com/?miniapp=true",
+          },
+        },
+      })}"
+    />
     ${ogImage ? html`<meta property="og:image" content="${ogImage}" />` : null}
     ${ogImage
       ? html`<meta property="twitter:image" content="${ogImage}" />`
@@ -69,9 +75,10 @@ export function custom(
     <link rel="stylesheet" href="news.css" />
     <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
     ${PwaLinks()}
-    <meta name="fc:frame" content='${JSON.stringify(fcFrame)}' />
     <title>${ogTitle}</title>
-    ${canonicalUrl ? html`<link rel="canonical" href="${canonicalUrl}" />` : null}
+    ${canonicalUrl
+      ? html`<link rel="canonical" href="${canonicalUrl}" />`
+      : null}
     ${prefetch.map(
       (url) => html`
         <link rel="prefetch" href="${url}" as="document" fetchpriority="high" />
