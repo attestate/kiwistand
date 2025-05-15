@@ -5,6 +5,18 @@ import DOMPurify from "isomorphic-dompurify";
 import PwaLinks from "./pwaLinks.mjs";
 
 const html = htm.bind(vhtml);
+const embedMetaContent = JSON.stringify({
+  version: "next",
+  imageUrl: "https://news.kiwistand.com/pwa_maskable_icon.png",
+  button: {
+    title: "Add Kiwi News",
+    action: {
+      name: "Kiwi News"
+      type: "launch_frame",
+      url: "https://news.kiwistand.com/?miniapp=true",
+    },
+  },
+});
 
 export function custom(
   ogImage = "https://news.kiwistand.com/preview.jpeg",
@@ -48,20 +60,7 @@ export function custom(
       content="width=device-width, initial-scale=1, maximum-scale=1,
  user-scalable=0 viewport-fit=cover"
     />
-    <meta
-      name="fc:frame"
-      content="${JSON.stringify({
-        version: "next",
-        imageUrl: "https://news.kiwistand.com/pwa_maskable_icon.png",
-        button: {
-          title: "Add Kiwi News",
-          action: {
-            type: "launch_frame",
-            url: "https://news.kiwistand.com/?miniapp=true",
-          },
-        },
-      })}"
-    />
+    <meta name="fc:frame" content='${embedMetaContent}'/>
     ${ogImage ? html`<meta property="og:image" content="${ogImage}" />` : null}
     ${ogImage
       ? html`<meta property="twitter:image" content="${ogImage}" />`
