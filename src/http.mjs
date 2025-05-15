@@ -66,9 +66,16 @@ import * as subscriptions from "./subscriptions.mjs";
 import * as telegram from "./telegram.mjs";
 import * as email from "./email.mjs";
 import * as price from "./price.mjs";
-import { getSubmission, trackOutbound, trackImpression, countOutbounds } from "./cache.mjs";
+import {
+  getSubmission,
+  trackOutbound,
+  trackImpression,
+  countOutbounds,
+} from "./cache.mjs";
 import appCache from "./cache.mjs"; // For LRU cache used by ENS profiles
 import frameSubscribe from "./views/frame-subscribe.mjs";
+import { sendNotification } from "./neynar.mjs";
+import { timingSafeEqual } from "crypto";
 
 const app = express();
 
@@ -118,6 +125,35 @@ app.use(
 );
 app.use(express.json());
 app.use(cookieParser());
+
+// Route for Neynar notifications
+app.post("/api/v1/neynar/notify", async (req, res) => {
+  const apiKey = req.header("x-admin-key") || "";
+  const adminKey = process.env.ADMIN_KEY || "";
+  const apiKeyBuf = Buffer.from(apiKey);
+  const adminKeyBuf = Buffer.from(adminKey);
+  if (
+    apiKeyBuf.length !== adminKeyBuf.length ||
+    !timingSafeEqual(apiKeyBuf, adminKeyBuf)
+  ) {
+    return res.status(401).json({ status: "error", message: "Unauthorized" });
+  }
+  const { target_url, body, title } = req.body;
+  if (!target_url || !body || !title) {
+    return sendError(
+      res,
+      400,
+      "Bad Request",
+      "target_url and body, title required",
+    );
+  }
+  try {
+    const resp = await sendNotification(target_url, body, title);
+    return res.json(resp);
+  } catch (err) {
+    return sendError(res, 500, "Internal Server Error", err.toString());
+  }
+});
 
 // NOTE: We use s-maxage for Cloudflare CDN caching, while max-age controls browser caching
 app.get("/.well-known/apple-app-site-association", (req, res) => {

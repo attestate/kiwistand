@@ -9,7 +9,7 @@ const embedMetaContent = JSON.stringify({
   version: "next",
   imageUrl: "https://news.kiwistand.com/pwa_maskable_icon.png",
   button: {
-    title: "Add Kiwi News",
+    title: "Open Kiwi News",
     action: {
       name: "Kiwi News",
       type: "launch_frame",

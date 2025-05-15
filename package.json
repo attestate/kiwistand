@@ -43,7 +43,7 @@
     "ethereum"
   ],
   "engines": {
-    "node": ">=18.0.0 <19.0.0"
+    "node": "19.9.0"
   },
   "author": "The Kiwi News Developers",
   "license": "GPL-3.0-only",
@@ -67,6 +67,7 @@
     "@libp2p/peer-id": "1.1.16",
     "@libp2p/pubsub-peer-discovery": "8.0.0",
     "@libp2p/tcp": "6.0.4",
+    "@neynar/nodejs-sdk": "2.41.0",
     "@tensorflow/tfjs-node": "4.22.0",
     "ajv": "8.12.0",
     "ajv-formats": "2.1.1",
