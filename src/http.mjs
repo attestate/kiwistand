@@ -72,21 +72,6 @@ import frameSubscribe from "./views/frame-subscribe.mjs";
 
 const app = express();
 
-// Redirect route for click-tracking
-app.get("/redirect/:index", (req, res) => {
-  let sub;
-  try {
-    sub = getSubmission(req.params.index);
-  } catch {
-    return res.status(404).send("Not found");
-  }
-  // record outbound fingerprint
-  const hash = fingerprint.generate(req);
-  trackOutbound(sub.href, hash);
-  // immediate redirect
-  res.redirect(302, sub.href);
-});
-
 //
 // Always use HTTP for internal servers since SSL is terminated at the load balancer
 const server = createHttpServer(app);
@@ -353,6 +338,20 @@ export async function launch(trie, libp2p, isPrimary = true) {
     }
     return url.toString();
   }
+
+  app.get("/redirect/:index", (req, res) => {
+    let sub;
+    try {
+      sub = getSubmission(req.params.index);
+    } catch {
+      return res.status(404).send("Not found");
+    }
+    // record outbound fingerprint
+    const hash = fingerprint.generate(req);
+    trackOutbound(sub.href, hash);
+    // immediate redirect
+    res.redirect(302, sub.href);
+  });
   app.post("/outbound", async (request, reply) => {
     reply.header("Cache-Control", "no-cache");
     const { url } = request.query;

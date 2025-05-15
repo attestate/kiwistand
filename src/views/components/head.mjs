@@ -11,7 +11,7 @@ const embedMetaContent = JSON.stringify({
   button: {
     title: "Add Kiwi News",
     action: {
-      name: "Kiwi News"
+      name: "Kiwi News",
       type: "launch_frame",
       url: "https://news.kiwistand.com/?miniapp=true",
     },
@@ -60,7 +60,7 @@ export function custom(
       content="width=device-width, initial-scale=1, maximum-scale=1,
  user-scalable=0 viewport-fit=cover"
     />
-    <meta name="fc:frame" content='${embedMetaContent}'/>
+    <meta name="fc:frame" content="${embedMetaContent}" />
     ${ogImage ? html`<meta property="og:image" content="${ogImage}" />` : null}
     ${ogImage
       ? html`<meta property="twitter:image" content="${ogImage}" />`
