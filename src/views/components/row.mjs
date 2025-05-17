@@ -353,13 +353,14 @@ const row = (
                     DOMPurify.sanitize(story.href),
                     story.identity,
                   )}"
+                  target="_blank"
                   onclick="event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${addOrUpdateReferrer(
                     DOMPurify.sanitize(story.href),
                     story.identity,
                   )}')); window.open('${addOrUpdateReferrer(
                     DOMPurify.sanitize(story.href),
                     story.identity,
-                  )}', '_blank');"
+                  )}', event.currentTarget.getAttribute('target'));"
                   style="text-decoration:none; color:inherit; display:block;"
                 >
                   <div

@@ -873,7 +873,7 @@ async function processAndSendVotes(signer, identity) {
 function updateLinkTargetsForIOSPWA() {
   if (isIOS()) {
     const links = document.querySelectorAll(
-      ".story-link-container a, .mobile-row-image",
+      ".story-link-container a, .mobile-row-image, .tweet-preview-container",
     );
     links.forEach((link) => link.setAttribute("target", "_self"));
   }
