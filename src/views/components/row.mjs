@@ -16,6 +16,7 @@ import FCIcon from "./farcastericon.mjs";
 import theme from "../../theme.mjs";
 import { countOutbounds } from "../../cache.mjs";
 import log from "../../logger.mjs";
+import { twitterFrontends } from "../../parser.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -279,6 +280,12 @@ const row = (
       outboundsLookbackHours,
     );
     const extractedDomain = extractDomain(DOMPurify.sanitize(story.href));
+    // Use the twitterFrontends list from parser.mjs for comprehensive coverage
+    const isTweet = twitterFrontends.some((domain) => {
+      return (
+        extractedDomain === domain || extractedDomain.endsWith(`.${domain}`)
+      );
+    });
 
     // Check if the story itself is older than 12 hours
     const isStoryOlderThan12Hours =
@@ -300,8 +307,15 @@ const row = (
         !knownBadOgImages.includes(story.metadata.image)) ||
       isCloudflare;
 
+    // Check if we have what we need to render a tweet preview
+    const canRenderTweetPreview = 
+      isTweet && 
+      story.metadata && 
+      story.metadata.ogDescription;
+
     const displayMobileImage =
-      (path !== "/" || !isStoryOlderThan12Hours || isCloudflare) && // Path/Age/Cloudflare check
+      !canRenderTweetPreview && // Don't use regular mobile image if we can render a tweet preview
+      (path !== "/" || isTweet || isCloudflare) && // Path/Age/Cloudflare check
       hasImageData &&
       !interactive &&
       (path === "/" || // Allow on root if not older than 12h OR is Cloudflare
@@ -328,10 +342,70 @@ const row = (
           <div
             class="${interactive ? "" : "content-row"} ${invert
               ? "inverted-row"
-              : ""} ${displayMobileImage ? "content-row-elevated" : ""}"
+              : ""} ${displayMobileImage || canRenderTweetPreview ? "content-row-elevated" : ""}"
             style="${invert ? "display:none;" : ""} ${style}"
           >
-            ${displayMobileImage
+            ${canRenderTweetPreview
+              ? html`<a
+                  class="tweet-preview-container"
+                  data-no-instant
+                  href="${addOrUpdateReferrer(
+                    DOMPurify.sanitize(story.href),
+                    story.identity,
+                  )}"
+                  onclick="event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${addOrUpdateReferrer(
+                    DOMPurify.sanitize(story.href),
+                    story.identity,
+                  )}')); window.open('${addOrUpdateReferrer(
+                    DOMPurify.sanitize(story.href),
+                    story.identity,
+                  )}', '_blank');"
+                  style="text-decoration:none; color:inherit; display:block;"
+                >
+                  <div
+                    style="border:var(--border); background:var(--background-color0); padding:14px; border-radius:0; margin:0 11px 2px; aspect-ratio:2 / 1; overflow:hidden; position:relative; display:flex; flex-direction:column;"
+                  >
+                    <div
+                      style="display:flex; align-items:center; margin-bottom:10px;"
+                    >
+                      <div
+                        style="color:var(--subtle-color, #666); font-size:15px; font-weight:bold; margin-right:6px;"
+                      >
+                        𝕏
+                      </div>
+                      <div
+                        style="flex:1; font-weight:500; color:var(--contrast-color); font-size:14px;"
+                      >
+                        @${story.metadata.twitterCreator
+                          ? story.metadata.twitterCreator
+                              .toLowerCase()
+                              .replace(/[^a-z0-9_]/g, "")
+                          : "x"}
+                      </div>
+                    </div>
+                    <div
+                      style="font-size:15px; line-height:1.5; flex:1; overflow:hidden; white-space:pre-wrap; word-wrap:break-word;"
+                    >
+                      ${DOMPurify.sanitize(story.metadata.ogDescription || "")
+                        .slice(0, 240)
+                        .split(/(\bhttps?:\/\/[^\s]+)/g)
+                        .map((part) => {
+                          if (part.match(/^\bhttps?:\/\//)) {
+                            // This is a URL part
+                            return part.length > 30
+                              ? part.substring(0, 30) + "..."
+                              : part;
+                          }
+                          return part;
+                        })
+                        .join("")}${(story.metadata.ogDescription || "")
+                        .length > 240
+                        ? "..."
+                        : ""}
+                    </div>
+                  </div>
+                </a>`
+              : displayMobileImage
               ? html` <a
                   data-no-instant
                   style="display: block; width: 100%;"
@@ -378,7 +452,7 @@ const row = (
             <div
               class="information-row ${displayCommentPreview
                 ? "with-comment-preview"
-                : `without-comment-preview without-comment-preview-0x${story.index}`} ${displayMobileImage
+                : `without-comment-preview without-comment-preview-0x${story.index}`} ${displayMobileImage || canRenderTweetPreview
                 ? "elevating-row"
                 : ""}"
               style="display: flex; align-items: center; padding: 3px 0;"
@@ -387,7 +461,7 @@ const row = (
                 data-title="${DOMPurify.sanitize(story.title)}"
                 data-href="${DOMPurify.sanitize(story.href)}"
                 data-upvoters="${JSON.stringify(story.upvoters)}"
-                class="${displayMobileImage
+                class="${displayMobileImage || canRenderTweetPreview
                   ? "vote-button-container interaction-container-with-image"
                   : "vote-button-container"}"
                 style="display: flex; align-self: stretch;"
@@ -737,7 +811,7 @@ const row = (
                 ? html`<div
                     data-story-index="0x${story.index}"
                     data-comment-count="${commentCount}"
-                    class="${displayMobileImage
+                    class="${displayMobileImage || canRenderTweetPreview
                       ? "interaction-container-with-image chat-bubble-container"
                       : "chat-bubble-container"}"
                     style="display: flex; align-self: stretch;"
@@ -766,7 +840,7 @@ const row = (
             </div>
             ${displayCommentPreview
               ? html` <div
-                  class="comment-preview comment-preview-0x${story.index} ${displayMobileImage
+                  class="comment-preview comment-preview-0x${story.index} ${displayMobileImage || canRenderTweetPreview
                     ? "elevating-comment-preview"
                     : "comment-preview-no-mobile-image"}"
                   style="touch-action: manipulation; user-select: none; cursor: pointer; display: flex;"

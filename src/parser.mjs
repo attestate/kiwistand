@@ -52,7 +52,7 @@ const anthropic = new Anthropic({
   apiKey: env.ANTHROPIC_API_KEY,
 });
 // Added fxtwitter.com here so Claude title‐gen runs on fxtwitter links too
-const twitterFrontends = [
+export const twitterFrontends = [
   "xcancel.com",
   "nitter.net",
   "nitter.privacydev.net",
@@ -502,6 +502,9 @@ export const metadata = async (
     if (exists) {
       output.image = DOMPurify.sanitize(image);
     }
+  }
+  if (result.twitterCreator) {
+    output.twitterCreator = DOMPurify.sanitize(result.twitterCreator);
   }
   if (ogDescription) {
     // Store the original, potentially longer description in the output object

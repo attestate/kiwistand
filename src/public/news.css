@@ -449,8 +449,17 @@ body {
   display: none;
 }
 
+/* Hide tweet preview on desktop */
+.tweet-preview-container {
+  display: none !important;
+}
+
 /* mobile device */
 @media only screen and (min-width : 300px) and (max-width : 640px) {
+  /* Show tweet preview only on mobile */
+  .tweet-preview-container {
+    display: block !important;
+  }
     .scroll-margin-base {
       scroll-margin-top: 140px;
     }
