@@ -13,6 +13,7 @@ import Cloudflare from "cloudflare";
 import morgan from "morgan";
 import express from "express";
 import cookieParser from "cookie-parser";
+import compression from "compression";
 import { utils } from "ethers";
 import { handleFaucetRequest } from "./faucet.mjs";
 import "express-async-errors";
@@ -84,6 +85,21 @@ const app = express();
 const server = createHttpServer(app);
 
 let cachedFeed = null;
+
+// Enable compression for all responses
+app.use(compression({
+  // Set compression level (0-9, where 9 is maximum compression)
+  level: 6,
+  // Only compress responses larger than 10 KB
+  threshold: 10 * 1024,
+  // Don't compress responses that have the no-transform header
+  filter: (req, res) => {
+    if (res.getHeader('Content-Type')?.includes('image/')) {
+      return false;
+    }
+    return compression.filter(req, res);
+  }
+}));
 
 app.set("etag", false);
 app.use((req, res, next) => {
