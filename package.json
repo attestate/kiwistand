@@ -7,6 +7,7 @@
     "clean:assets": "rm src/public/assets/*",
     "build": "npm run clean:assets && cd src/web && NODE_ENV=production npm run build",
     "test": "DEBUG=\"-@attestate/delegator2*\" ava --timeout=30s --serial --verbose",
+    "test:compression": "NODE_TLS_REJECT_UNAUTHORIZED=0 ava test/compression_test.mjs --timeout=30s --verbose",
     "connect": "ssh root@91.107.210.214",
     "deploy": "npm run build && npm run rsync",
     "rsync": "rsync -avz . root@91.107.210.214:./kiwistand --exclude=src/iOS --exclude=certificates --exclude=anonlocal --exclude=cache --exclude=docs --exclude=anon --exclude \"node_modules\" --exclude=\".git\" --exclude=bootstrap --exclude=data",

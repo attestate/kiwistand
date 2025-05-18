@@ -21,6 +21,9 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
     - run: npm ci
+    # Install node-fetch for compression tests
+    - run: npm install node-fetch@2
+    # Run all tests
     - run: npm run test
       env: 
         HTTP_MESSAGES_MAX_PAGE_SIZE: "500"

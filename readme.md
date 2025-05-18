@@ -68,6 +68,20 @@ npm run dev:bootstrap
 npm run dev:anon:local
 ```
 
+## Testing
+
+Run all tests:
+```bash
+npm test
+```
+
+Run compression tests specifically:
+```bash
+npm run test:compression   # Test against 91.107.210.214
+```
+
+For more information about compression testing, see [test/README-compression.md](test/README-compression.md).
+
 ## How does the protocol work
 
 - [Building decentralized social networks | Tim Daubenschütz at zusocial in Istanbul](https://www.youtube.com/watch?v=Rys5UEi2SWg)

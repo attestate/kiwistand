@@ -6,6 +6,7 @@ import https from "https";
 import express from "express";
 import "express-async-errors";
 import cors from "cors";
+import compression from "compression";
 import Ajv from "ajv";
 import addFormats from "ajv-formats";
 import morgan from "morgan";
@@ -24,6 +25,21 @@ const ajv = new Ajv();
 addFormats(ajv);
 const api = express.Router();
 api.use(express.json());
+
+// Enable compression for all API responses
+api.use(compression({
+  // Set compression level (0-9, where 9 is maximum compression)
+  level: 6,
+  // Only compress responses larger than 10 KB
+  threshold: 10 * 1024,
+  // Don't compress responses that have the no-transform header
+  filter: (req, res) => {
+    if (res.getHeader('Content-Type')?.includes('image/')) {
+      return false;
+    }
+    return compression.filter(req, res);
+  }
+}));
 
 // Optimal CORS configuration with caching for both browsers and CDNs
 const corsOptions = {

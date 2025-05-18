@@ -1,4 +1,5 @@
 src/iOS
+.claude
 node_modules
 certificates
 src/public/previews

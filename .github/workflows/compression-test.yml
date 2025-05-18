@@ -1,0 +1,46 @@
+name: Home Feed Compression Test
+
+on:
+  schedule:
+    # Run every 6 hours
+    - cron: '0 */6 * * *'
+  # Allow manual trigger
+  workflow_dispatch:
+  # Run on pull requests to main
+  pull_request:
+    branches: [ main ]
+  # Run on pushes to main
+  push:
+    branches: [ main ]
+
+jobs:
+  test-compression:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18.x]
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Install node-fetch (needed for compression tests)
+      run: npm install node-fetch@2
+      
+    - name: Run compression tests
+      run: npm run test:compression
+      
+    # Send notification if test fails (GitHub will send an email by default)
+    - name: Send Notification on Failure
+      if: failure()
+      run: |
+        echo "::error::Home feed compression test failed! CloudFlare background revalidation may stop working."
+        echo "::error::Please check if compression is enabled on the server."
