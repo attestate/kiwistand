@@ -25,13 +25,16 @@
     "dev:anon:local": "cross-env API_PORT=8443 HTTP_PORT=4001 DATA_DIR=anonlocal BIND_ADDRESS_V4=\"127.0.0.1\" PORT=0 IS_BOOTSTRAP_NODE=false USE_EPHEMERAL_ID=true npm run dev",
     "dev:anon": "cross-env NODE_ENV=dev API_PORT=8443 HTTP_PORT=4000 DATA_DIR=anon BIND_ADDRESS_V4=\"0.0.0.0\" PORT=0 IS_BOOTSTRAP_NODE=false USE_EPHEMERAL_ID=true npm run dev",
     "dev:anon:ssl": "cross-env NODE_ENV=dev API_PORT=8443 HTTP_PORT=4000 DATA_DIR=anon CUSTOM_PROTOCOL=https:// BIND_ADDRESS_V4=\"0.0.0.0\" PORT=0 IS_BOOTSTRAP_NODE=false USE_EPHEMERAL_ID=true npm run dev:ssl",
+    "dev:staging": "nodemon --watch src/views --exec 'cross-env NODE_ENV=dev API_PORT=8443 HTTP_PORT=443 DATA_DIR=anon BIND_ADDRESS_V4=\"0.0.0.0\" PORT=0 IS_BOOTSTRAP_NODE=false USE_EPHEMERAL_ID=true npm run dev'",
     "migration:1": "node -r dotenv/config scripts/migration1.mjs",
     "sync": "node -r dotenv/config ./src/gen_db.mjs",
     "simulate:telegram-bot": "cross-env SIMULATION_MODE=true node -r dotenv/config ./src/telegram_bot.mjs",
     "run:telegram-bot": "node -r dotenv/config ./src/telegram_bot.mjs",
     "simulate:farcaster-aggregator": "cross-env SIMULATION_MODE=true node -r dotenv/config ./src/farcaster-link-aggregator.mjs",
     "run:farcaster-aggregator": "node -r dotenv/config ./src/farcaster-link-aggregator.mjs",
-    "test:bot-submission": "node -r dotenv/config ./scripts/test_submission.mjs"
+    "test:bot-submission": "node -r dotenv/config ./scripts/test_submission.mjs",
+    "tunnel": "ssh -R 8443:localhost:8443 -R 5173:localhost:5173 -R 443:localhost:443 -o ServerAliveInterval=60 -N root@157.90.170.215",
+    "watch:staging": "cross-env CUSTOM_HOST_NAME=\"staging.kiwistand.com:5173\" CUSTOM_PROTOCOL=\"https://\" npm run dev:staging"
   },
   "repository": {
     "type": "git",

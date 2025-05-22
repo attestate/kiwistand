@@ -287,8 +287,6 @@ const NotificationButton = ({ onEnabled }) => {
 
 let wasTitleSet = false;
 const Bell = (props) => {
-  const [inMiniApp, setInMiniApp] = useState(false);
-  useEffect(() => { sdk.isInMiniApp().then(setInMiniApp); }, []);
   let address;
   const account = useAccount();
   const localAccount = getLocalAccount(account.address, props.allowlist);
@@ -419,27 +417,8 @@ const Bell = (props) => {
     return null;
   }
 
-    // Render disabled connect if inside a Mini App frame
-    if (inMiniApp) {
-      return (
-        <button
-          disabled
-          style={{
-            color: "grey",
-            cursor: "not-allowed",
-            padding: props.mobile ? "0" : "10px 10px",
-            backgroundColor: props.mobile ? "transparent" : "var(--bg-off-white)",
-            border: props.mobile ? "none" : "var(--border)",
-            borderRadius: "2px",
-            fontSize: props.mobile ? "9px" : "9pt",
-          }}
-        >
-          Connect
-        </button>
-      );
-    }
-    // Render Connect Button if not connected/eligible
-    if (!getCookie("identity") || !isEligible) {
+  // Render Connect Button if not connected/eligible
+  if (!getCookie("identity") || !isEligible) {
     const mobileConnectStyle = props.mobile
       ? {
           display: "flex", // Changed to flex for column layout

@@ -27,19 +27,21 @@ const api = express.Router();
 api.use(express.json());
 
 // Enable compression for all API responses
-api.use(compression({
-  // Set compression level (0-9, where 9 is maximum compression)
-  level: 6,
-  // Only compress responses larger than 10 KB
-  threshold: 10 * 1024,
-  // Don't compress responses that have the no-transform header
-  filter: (req, res) => {
-    if (res.getHeader('Content-Type')?.includes('image/')) {
-      return false;
-    }
-    return compression.filter(req, res);
-  }
-}));
+api.use(
+  compression({
+    // Set compression level (0-9, where 9 is maximum compression)
+    level: 6,
+    // Only compress responses larger than 10 KB
+    threshold: 10 * 1024,
+    // Don't compress responses that have the no-transform header
+    filter: (req, res) => {
+      if (res.getHeader("Content-Type")?.includes("image/")) {
+        return false;
+      }
+      return compression.filter(req, res);
+    },
+  }),
+);
 
 // Optimal CORS configuration with caching for both browsers and CDNs
 const corsOptions = {
@@ -84,6 +86,17 @@ function getSSLOptions() {
     return {
       key: fs.readFileSync(env.SSL_KEY_PATH, "utf8"),
       cert: fs.readFileSync(env.SSL_CERT_PATH, "utf8"),
+    };
+  }
+  if (
+    env.CUSTOM_PROTOCOL === "https://" &&
+    env.CUSTOM_HOST_NAME === "staging.kiwistand.com:5173" &&
+    fs.existsSync("staging.kiwistand.com/key.pem") &&
+    fs.existsSync("staging.kiwistand.com/cert.pem")
+  ) {
+    return {
+      key: fs.readFileSync("staging.kiwistand.com/key.pem", "utf8"),
+      cert: fs.readFileSync("staging.kiwistand.com/cert.pem", "utf8"),
     };
   }
   if (

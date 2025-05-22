@@ -143,7 +143,28 @@ async function startLoadBalancer() {
   const port = env.HTTP_PORT;
 
   let server;
-  if (env.CUSTOM_PROTOCOL === "https://") {
+  if (
+    env.CUSTOM_PROTOCOL === "https://" &&
+    env.CUSTOM_HOST_NAME === "staging.kiwistand.com:5173" &&
+    fs.existsSync("staging.kiwistand.com/key.pem") &&
+    fs.existsSync("staging.kiwistand.com/cert.pem")
+  ) {
+    const options = {
+      key: fs.readFileSync("staging.kiwistand.com/key.pem", "utf8"),
+      cert: fs.readFileSync("staging.kiwistand.com/cert.pem", "utf8"),
+      rejectUnauthorized: false,
+    };
+    server = https.createServer(options, app);
+    server.listen(port, () => {
+      log(`Load balancer started with HTTPS on port ${port}`);
+      log(`Primary process expected on port ${primaryPort}`);
+      log(
+        `Routing to ${workerCount} workers on ports ${workerBasePort}-${
+          workerBasePort + workerCount - 1
+        }`,
+      );
+    });
+  } else if (env.CUSTOM_PROTOCOL === "https://") {
     const options = {
       key: fs.readFileSync("certificates/key.pem"),
       cert: fs.readFileSync("certificates/cert.pem"),

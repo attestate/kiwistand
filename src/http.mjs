@@ -87,19 +87,21 @@ const server = createHttpServer(app);
 let cachedFeed = null;
 
 // Enable compression for all responses
-app.use(compression({
-  // Set compression level (0-9, where 9 is maximum compression)
-  level: 6,
-  // Only compress responses larger than 10 KB
-  threshold: 10 * 1024,
-  // Don't compress responses that have the no-transform header
-  filter: (req, res) => {
-    if (res.getHeader('Content-Type')?.includes('image/')) {
-      return false;
-    }
-    return compression.filter(req, res);
-  }
-}));
+app.use(
+  compression({
+    // Set compression level (0-9, where 9 is maximum compression)
+    level: 6,
+    // Only compress responses larger than 10 KB
+    threshold: 10 * 1024,
+    // Don't compress responses that have the no-transform header
+    filter: (req, res) => {
+      if (res.getHeader("Content-Type")?.includes("image/")) {
+        return false;
+      }
+      return compression.filter(req, res);
+    },
+  }),
+);
 
 app.set("etag", false);
 app.use((req, res, next) => {
@@ -198,25 +200,46 @@ app.get("/.well-known/apple-app-site-association", (req, res) => {
     },
   });
 });
+
+let domain = "https://news.kiwistand.com";
+let hostname, port;
+if (env.CUSTOM_PROTOCOL && env.CUSTOM_HOST_NAME) {
+  const [a, b] = env.CUSTOM_HOST_NAME.split(":");
+  hostname = a;
+  port = b;
+  domain = `${env.CUSTOM_PROTOCOL}${hostname}`;
+}
+console.log(domain);
+const accountAssociation = {
+  "https://news.kiwistand.com": {
+    header:
+      "eyJmaWQiOjU3MDgsInR5cGUiOiJjdXN0b2R5Iiwia2V5IjoiMHg5OTg5Y0ExMmVmRWY5ZjljRGE5NjQ1RTU0NDMyMzE4OTFDRjRGYjdhIn0",
+    payload: "eyJkb21haW4iOiJuZXdzLmtpd2lzdGFuZC5jb20ifQ",
+    signature:
+      "MHhlYzA1NGU1NmE4Mjg2MTQ1NmI1M2RlN2VhNDM5MGM0NDQzMjQxN2U1OTcyNDc3NzNjYWQ2MzE4YmZhYzQwYzU2NmRhNTJjOWYyYmM1YzRiMTYxNDViMTk3MDVjZTY1Y2I2NzM5MTdlMGUxMjE1YWMwNWUzZmEzYThjNjdlOTZiNTFj",
+  },
+  "https://staging.kiwistand.com": {
+    header:
+      "eyJmaWQiOjU3MDgsInR5cGUiOiJjdXN0b2R5Iiwia2V5IjoiMHg5OTg5Y0ExMmVmRWY5ZjljRGE5NjQ1RTU0NDMyMzE4OTFDRjRGYjdhIn0",
+    payload: "eyJkb21haW4iOiJzdGFnaW5nLmtpd2lzdGFuZC5jb20ifQ",
+    signature:
+      "MHhhY2NjYWMwM2Y1YWQxN2ZiZDI3MjEzNmFjN2E1YzFkZWM0MmIzZjAwNjNkYjdhZDU0ZGY0NDhkNjMzMjNlNGM3MTNkZTg1MGM3ODA2YjNiMTlhY2U5MDdiMGFhNTZhNzE5NzkwZThlMWFhNDhlZjE2MzE4ZGM2NzlhM2IyN2QwZDFj",
+  },
+};
+
 // Serve Farcaster Mini App manifest
 app.get("/.well-known/farcaster.json", (req, res) => {
   res.setHeader("Content-Type", "application/json");
   res.json({
-    accountAssociation: {
-      header:
-        "eyJmaWQiOjU3MDgsInR5cGUiOiJjdXN0b2R5Iiwia2V5IjoiMHg5OTg5Y0ExMmVmRWY5ZjljRGE5NjQ1RTU0NDMyMzE4OTFDRjRGYjdhIn0",
-      payload: "eyJkb21haW4iOiJuZXdzLmtpd2lzdGFuZC5jb20ifQ",
-      signature:
-        "MHhlYzA1NGU1NmE4Mjg2MTQ1NmI1M2RlN2VhNDM5MGM0NDQzMjQxN2U1OTcyNDc3NzNjYWQ2MzE4YmZhYzQwYzU2NmRhNTJjOWYyYmM1YzRiMTYxNDViMTk3MDVjZTY1Y2I2NzM5MTdlMGUxMjE1YWMwNWUzZmEzYThjNjdlOTZiNTFj",
-    },
+    accountAssociation: accountAssociation[domain],
     frame: {
       version: "1",
       name: "Kiwi News",
-      iconUrl: "https://news.kiwistand.com/pwa_icon.png",
-      homeUrl: "https://news.kiwistand.com/?miniapp=true",
-      imageUrl: "https://news.kiwistand.com/kiwi_top_feed_page.png",
+      iconUrl: `${domain}/pwa_icon.png`,
+      homeUrl: `${domain}/?miniapp=true`,
+      imageUrl: `${domain}/kiwi_top_feed_page.png`,
       buttonTitle: "🥝 Start",
-      splashImageUrl: "https://news.kiwistand.com/fc-splash.png",
+      splashImageUrl: `${domain}/fc-splash.png`,
       splashBackgroundColor: "#0F3106",
       webhookUrl: env.NEYNAR_NOTIFICATIONS_WEBHOOK,
       primaryCategory: "news-media",
@@ -591,11 +614,14 @@ export async function launch(trie, libp2p, isPrimary = true) {
     let responseDetails = `LRU Profile Cache for ${address}: `;
 
     if (lruProfileHandled) {
-      responseDetails += lruProfileExistedAndCleared ? "Cleared. " : "Was not present. ";
+      responseDetails += lruProfileExistedAndCleared
+        ? "Cleared. "
+        : "Was not present. ";
     } else {
       responseDetails += "Error during operation. ";
-      responseStatus = 500; 
-      responseMessage = "Profile cache clearing encountered critical issues with LRU cache.";
+      responseStatus = 500;
+      responseMessage =
+        "Profile cache clearing encountered critical issues with LRU cache.";
     }
 
     responseDetails += `FileSystemCache for ${address}-related URLs: ${fsCacheEntriesProcessed} entries processed.`;
@@ -605,9 +631,19 @@ export async function launch(trie, libp2p, isPrimary = true) {
     }
 
     if (responseStatus === 200) {
-      return sendStatus(res, responseStatus, responseMessage, responseDetails.trim());
+      return sendStatus(
+        res,
+        responseStatus,
+        responseMessage,
+        responseDetails.trim(),
+      );
     } else {
-      return sendError(res, responseStatus, responseMessage, responseDetails.trim());
+      return sendError(
+        res,
+        responseStatus,
+        responseMessage,
+        responseDetails.trim(),
+      );
     }
   });
 

@@ -3,6 +3,24 @@ import fs from "fs";
 import react from "@vitejs/plugin-react-swc";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
 
+let https = false;
+if (
+  process.env.CUSTOM_HOST_NAME === "staging.kiwistand.com:5173" &&
+  process.env.CUSTOM_PROTOCOL === "https://"
+) {
+  https = {
+    key: fs.readFileSync("../../staging.kiwistand.com/key.pem"),
+    cert: fs.readFileSync("../../staging.kiwistand.com/cert.pem"),
+    rejectUnauthorized: false,
+  };
+} else if (process.env.CUSTOM_PROTOCOL === "https://") {
+  https = {
+    key: fs.readFileSync("../../certificates/key.pem"),
+    cert: fs.readFileSync("../../certificates/cert.pem"),
+    rejectUnauthorized: false,
+  };
+}
+
 export default defineConfig(({ mode }) => {
   return {
     build: {
@@ -26,15 +44,7 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       cors: true,
-      https:
-        fs.existsSync("../../certificates/key.pem") &&
-        process.env.CUSTOM_PROTOCOL === "https://"
-          ? {
-              key: fs.readFileSync("../../certificates/key.pem"),
-              cert: fs.readFileSync("../../certificates/cert.pem"),
-              rejectUnauthorized: false,
-            }
-          : false,
+      https,
       origin:
         process.env.CUSTOM_PROTOCOL === "https://"
           ? "https://kazoo.local:5173"
