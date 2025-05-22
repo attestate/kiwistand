@@ -107,6 +107,12 @@ export async function fetchENSData(address) {
 
     const signal = AbortSignal.timeout(5000);
     const response = await fetchStaleWhileRevalidate(url, { signal });
+    
+    // Don't cache error responses
+    if (!response.ok) {
+      throw new Error(`ENS API returned ${response.status}: ${response.statusText}`);
+    }
+    
     const data = await response.json();
     try {
       utils.getAddress(address);
