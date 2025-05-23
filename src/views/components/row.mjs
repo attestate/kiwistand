@@ -233,6 +233,7 @@ const blockedOGImageDomains = [
   "soliditylang.org",
   "hey.xyz",
   "warpcast.com",
+  "farcaster.xyz",
   "xcancel.com",
   "hackmd.io",
   "ethresear.ch",
@@ -308,10 +309,8 @@ const row = (
       isCloudflare;
 
     // Check if we have what we need to render a tweet preview
-    const canRenderTweetPreview = 
-      isTweet && 
-      story.metadata && 
-      story.metadata.ogDescription;
+    const canRenderTweetPreview =
+      isTweet && story.metadata && story.metadata.ogDescription;
 
     const displayMobileImage =
       !canRenderTweetPreview && // Don't use regular mobile image if we can render a tweet preview
@@ -342,7 +341,9 @@ const row = (
           <div
             class="${interactive ? "" : "content-row"} ${invert
               ? "inverted-row"
-              : ""} ${displayMobileImage || canRenderTweetPreview ? "content-row-elevated" : ""}"
+              : ""} ${displayMobileImage || canRenderTweetPreview
+              ? "content-row-elevated"
+              : ""}"
             style="${invert ? "display:none;" : ""} ${style}"
           >
             ${canRenderTweetPreview
@@ -453,7 +454,8 @@ const row = (
             <div
               class="information-row ${displayCommentPreview
                 ? "with-comment-preview"
-                : `without-comment-preview without-comment-preview-0x${story.index}`} ${displayMobileImage || canRenderTweetPreview
+                : `without-comment-preview without-comment-preview-0x${story.index}`} ${displayMobileImage ||
+              canRenderTweetPreview
                 ? "elevating-row"
                 : ""}"
               style="display: flex; align-items: center; padding: 3px 0;"
@@ -841,7 +843,8 @@ const row = (
             </div>
             ${displayCommentPreview
               ? html` <div
-                  class="comment-preview comment-preview-0x${story.index} ${displayMobileImage || canRenderTweetPreview
+                  class="comment-preview comment-preview-0x${story.index} ${displayMobileImage ||
+                  canRenderTweetPreview
                     ? "elevating-comment-preview"
                     : "comment-preview-no-mobile-image"}"
                   style="touch-action: manipulation; user-select: none; cursor: pointer; display: flex;"
