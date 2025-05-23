@@ -139,9 +139,9 @@ export default async function (trie, theme, identity) {
                         : ""}
                       ${ensData.farcaster && ensData.farcaster.username
                         ? SocialButton(
-                            `https://warpcast.com/${ensData.farcaster.username}`,
+                            `https://farcaster.xyz/${ensData.farcaster.username}`,
                             warpcastSvg(),
-                            "Warpcast",
+                            "Farcaster",
                           )
                         : ""}
                       ${ensData.lens && ensData.lens.id
