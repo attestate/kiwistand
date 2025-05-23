@@ -73,7 +73,7 @@ export const twitterFrontends = [
   "fxtwitter.com",
   "vxtwitter.com",
 ];
-const CLAUDE_DOMAINS = ["warpcast.com", "fxtwitter.com", ...twitterFrontends];
+const CLAUDE_DOMAINS = ["farcaster.xyz", "fxtwitter.com", ...twitterFrontends];
 
 const TITLE_COMPLIANCE = `
 Format this title according to these rules:
@@ -463,13 +463,13 @@ export const metadata = async (
     "youtu.be",
     "reuters.com",
     "www.reuters.com",
-    "warpcast.com",
+    "farcaster.xyz",
     "medium.com",
     ...twitterFrontends,
   ];
   let output = {};
   if (generateTitle) {
-    if (hostname === "warpcast.com") {
+    if (hostname === "farcaster.xyz") {
       const cast = await extractWarpcastContent(url);
       if (cast) {
         const castContent = `Cast by ${cast.author}: ${cast.text}`;
