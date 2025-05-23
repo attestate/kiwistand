@@ -345,20 +345,22 @@ function extractLinksFromFeed(feedItems, username, linkCounts) {
               .replace(/^www\./, "");
 
             // Skip feed service's own links or common platform links
-            if (hostname === "feeds.fcstr.xyz" || hostname === "warpcast.com") {
+            if (
+              hostname === "feeds.fcstr.xyz" ||
+              hostname === "farcaster.xyz"
+            ) {
               continue;
             }
 
             let normalizedUrl;
             // Canonicalize Twitter/X links by removing query string and hash
-            if (hostname === 'twitter.com' || hostname === 'x.com') {
+            if (hostname === "twitter.com" || hostname === "x.com") {
               // Reconstruct URL with only protocol, hostname, and pathname
               normalizedUrl = `${parsedUrl.protocol}//${parsedUrl.hostname}${parsedUrl.pathname}`;
             } else {
               // Use the cleaned link directly for non-Twitter/X URLs
               normalizedUrl = cleanedLink;
             }
-
 
             // *** Store the link, increment count, and add user ***
             if (!linkCounts[normalizedUrl]) {
