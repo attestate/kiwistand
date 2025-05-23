@@ -612,20 +612,6 @@ const sidebar = (path) => html`
       </div>
     </a>
     <a
-      title="Subscribe"
-      href="/subscribe"
-      style="${path === "/subscribe"
-        ? " font-weight: bold; background-color: rgba(0,0,0,0.1);"
-        : "font-weight: normal"}; color: black; text-decoration: none; display: block;"
-    >
-      <div style="display: flex; align-items: center;">
-        <div class="svg-container">
-          ${path === "/subscribe" ? envelopefull : envelope}
-        </div>
-        <span>Subscribe</span>
-      </div>
-    </a>
-    <a
       title="Wiki"
       href="https://kiwistand.github.io/kiwi-docs/"
       target="_blank"

@@ -41,7 +41,6 @@ import onboardingReader from "./views/onboarding-reader.mjs";
 import onboardingCurator from "./views/onboarding-curator.mjs";
 import onboardingSubmitter from "./views/onboarding-submitter.mjs";
 import shortcut from "./views/shortcut.mjs";
-import subscribe from "./views/subscribe.mjs";
 import upvotes from "./views/upvotes.mjs";
 import community from "./views/community.mjs";
 import stats from "./views/stats.mjs";
@@ -1459,16 +1458,6 @@ export async function launch(trie, libp2p, isPrimary = true) {
     }
     reply.header("Cache-Control", "no-cache");
     return reply.status(200).type("text/html").send(content);
-  });
-  app.get("/subscribe", async (request, reply) => {
-    reply.header(
-      "Cache-Control",
-      "public, s-maxage=86400, max-age=0, stale-while-revalidate=600000",
-    );
-    return reply
-      .status(200)
-      .type("text/html")
-      .send(await subscribe(reply.locals.theme));
   });
   app.get("/privacy-policy", async (request, reply) => {
     reply.header(
