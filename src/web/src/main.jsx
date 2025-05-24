@@ -15,6 +15,45 @@ async function initFarcasterFrame() {
   if (btn) btn.addEventListener("click", () => sdk.actions.addFrame());
 }
 
+async function applySafeAreaInsets() {
+  console.log('applySafeAreaInsets called');
+  
+  // Check if we're running in a mini app context
+  const isMiniApp = await sdk.isInMiniApp();
+  console.log('isMiniApp:', isMiniApp);
+  
+  if (!isMiniApp) {
+    console.log('Not in mini app, returning');
+    return;
+  }
+
+  try {
+    console.log('Getting context...');
+    const context = await sdk.context;
+    console.log('Context:', context);
+    
+    const { safeAreaInsets } = context.client;
+    console.log('Safe area insets:', safeAreaInsets);
+    
+    if (safeAreaInsets && safeAreaInsets.bottom > 0) {
+      console.log('Applying bottom inset to bottom navigation:', safeAreaInsets.bottom);
+      
+      // Apply bottom inset to bottom navigation
+      const bottomNav = document.querySelector('.bottom-nav');
+      if (bottomNav) {
+        bottomNav.style.paddingBottom = `${safeAreaInsets.bottom}px`;
+        console.log('Bottom nav padding applied:', safeAreaInsets.bottom);
+      } else {
+        console.log('Bottom nav element not found');
+      }
+    } else {
+      console.log('No bottom safe area inset needed');
+    }
+  } catch (error) {
+    console.log('Could not apply safe area insets:', error);
+  }
+}
+
 import { isIOS, isRunningPWA, getCookie, getLocalAccount } from "./session.mjs";
 import theme from "./theme.jsx";
 import posthog from "posthog-js";
@@ -958,6 +997,13 @@ async function start() {
   initFarcasterFrame()
     .then()
     .catch((err) => console.log(err));
+  
+  // Apply safe area insets for mini app context
+  console.log('Starting applySafeAreaInsets...');
+  applySafeAreaInsets()
+    .then(() => console.log('applySafeAreaInsets completed'))
+    .catch((err) => console.log('applySafeAreaInsets error:', err));
+    
   const urlParams = new URL(window.location.href).searchParams;
   if (urlParams.get('miniapp') === 'true') {
     sdk.actions.addFrame();
