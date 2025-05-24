@@ -14,7 +14,6 @@ import { create, eligible } from "@attestate/delegator2";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import useLocalStorageState from "use-local-storage-state";
 
-import Passkeys from "./Passkeys.jsx";
 import { useProvider, chains, client } from "./client.mjs";
 import { CheckmarkSVG } from "./icons.jsx";
 import theme from "./theme.jsx";
@@ -24,7 +23,7 @@ import {
 } from "./Navigation.jsx";
 import { resolveAvatar } from "./Avatar.jsx";
 import { fetchDelegations } from "./API.mjs";
-import { supportsPasskeys, getLocalAccount } from "./session.mjs";
+import { getLocalAccount } from "./session.mjs";
 
 const abi = [
   {
@@ -277,11 +276,7 @@ const DelegateButton = (props) => {
           if (Object.keys(delegations).includes(wallet.address)) {
             setIndexedDelegation(true);
             clearInterval(intervalId);
-            if (
-              !supportsPasskeys() &&
-              props.callback &&
-              typeof props.callback === "function"
-            ) {
+            if (props.callback && typeof props.callback === "function") {
               posthog.capture("delegation_performed");
               props.callback();
               // NOTE: We have to reload the page here because the Vote
@@ -301,21 +296,6 @@ const DelegateButton = (props) => {
   }, [key, wallet, from.address, props]);
 
   const localAccount = getLocalAccount(from.address, props.allowlist);
-  if (
-    localAccount &&
-    eligible(props.allowlist, props.delegations, localAccount.identity) &&
-    props.isAppOnboarding // Only switch to Passkeys immediately if in app onboarding flow
-  ) {
-    return (
-      <Passkeys
-        allowlist={props.allowlist}
-        toast={props.toast}
-        callback={props.callback}
-        redirectButton={props.showRedirect}
-        isAppOnboarding={props.isAppOnboarding}
-      />
-    );
-  }
 
   if (!from.address) {
     return (
@@ -332,34 +312,11 @@ const DelegateButton = (props) => {
   }
 
   if (key && wallet) {
-    if (supportsPasskeys() && indexedDelegation) {
-      const skipButton = (
-        <a
-          style={{ textDecoration: "underline" }}
-          onClick={() => {
-            props.callback();
-            window.location.pathname = "/";
-          }}
-          href="/"
-          class="meta-link"
-        >
-          I don't want to backup! Skip dialogue
-        </a>
-      );
-      return (
-        <Passkeys
-          allowlist={props.allowlist}
-          toast={props.toast}
-          callback={props.callback}
-          redirectButton={props.showRedirect || skipButton}
-          isAppOnboarding={props.isAppOnboarding}
-        />
-      );
-    } else if (window.location.pathname === "/start") {
+    if (window.location.pathname === "/start") {
       const delegate = key && wallet ? wallet.address : getNewKey().address;
       window.location.href = `/indexing?address=${from.address}&delegate=${delegate}`;
     } else {
-      const progress = !supportsPasskeys() && indexedDelegation ? 3 : 1;
+      const progress = indexedDelegation ? 3 : 1;
       return (
         <div>
           <ProgressBar progress={progress} />

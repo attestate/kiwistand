@@ -435,56 +435,6 @@ async function addConnectedComponents(allowlist, delegations, toast) {
   }
 }
 
-async function addPasskeysDialogue(toast, allowlist) {
-  const elem = document.querySelector("nav-passkeys-backup");
-  if (elem) {
-    const Passkeys = (await import("./Passkeys.jsx")).default;
-    const showRedirect = elem.getAttribute("redirect-button") !== "false";
-    const isAppOnboarding = elem.getAttribute("is-app-onboarding") === "true";
-    const RedirectButton = () => {
-      return (
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-          }}
-        >
-          <p
-            style={{
-              color: "black",
-              padding: "1rem 3rem 1rem 3rem",
-              fontSize: "1rem",
-              textAlign: "center",
-              marginTop: "1rem",
-            }}
-          >
-            Your next step:
-          </p>
-          <a href="/email-notifications">
-            <button
-              className="button-secondary"
-              style={{ width: "auto" }}
-              id="button-onboarding"
-            >
-              Continue
-            </button>
-          </a>
-        </div>
-      );
-    };
-    createRoot(elem).render(
-      <StrictMode>
-        <Passkeys
-          toast={toast}
-          allowlist={allowlist}
-          redirectButton={showRedirect ? <RedirectButton /> : null}
-          isAppOnboarding={isAppOnboarding}
-        />
-      </StrictMode>,
-    );
-  }
-}
 
 async function addTGLink(allowlist) {
   const elem = document.querySelector("nav-invite-link");
@@ -718,10 +668,6 @@ async function checkMintStatus(address) {
     delegate = new Wallet(delegatePk).address;
   }
 
-  const [{ supportsPasskeys }, { testPasskeys }] = await Promise.all([
-    import("./session.mjs"),
-    import("./Passkeys.jsx"),
-  ]);
   const intervalId = setInterval(async () => {
     const [allowList, delegations] = await Promise.all([
       fetchAllowList(),
@@ -1107,7 +1053,6 @@ async function start() {
       await delegationsPromise,
       toast,
     ),
-    addPasskeysDialogue(toast, await allowlistPromise),
     addModals(await allowlistPromise, await delegationsPromise, toast),
     addNFTPrice(),
     addKarmaElements(),

@@ -110,11 +110,6 @@ export default async function (theme) {
                       browser's local storage.
                     </li>
                     <li>
-                      <strong>WebAuthn/Passkeys:</strong> We support secure
-                      authentication using WebAuthn, which may store credential
-                      data on your device.
-                    </li>
-                    <li>
                       <strong>Usage Fingerprinting:</strong> We use a
                       privacy-preserving method to count unique interactions
                       with content (such as clicks and impressions). This helps

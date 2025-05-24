@@ -7,7 +7,6 @@ import SwipeableDrawer from "@mui/material/SwipeableDrawer";
 import { Wallet } from "@ethersproject/wallet";
 
 import { Connector, TextConnectButton } from "./Navigation.jsx";
-import { RestoreDialogue } from "./Passkeys.jsx";
 import * as API from "./API.mjs";
 import { isIOS, getLocalAccount, getCookie } from "./session.mjs";
 import { client, chains, useProvider } from "./client.mjs";
@@ -403,7 +402,6 @@ const Bell = (props) => {
     window.location.pathname === "/kiwipass-mint" ||
     window.location.pathname === "/demonstration" ||
     window.location.pathname === "/invite" ||
-    window.location.pathname === "/passkeys" ||
     window.location.pathname === "/notifications" ||
     window.location.pathname === "/whattosubmit" ||
     window.location.pathname === "/pwa" ||

@@ -3,7 +3,6 @@ import { RainbowKitProvider, ConnectButton } from "@rainbow-me/rainbowkit";
 import { useEffect, useState } from "react";
 import { eligible } from "@attestate/delegator2";
 
-import { RestoreDialogue } from "./Passkeys.jsx";
 import { client, chains } from "./client.mjs";
 import { EthereumSVG } from "./icons.jsx";
 import {
@@ -304,13 +303,7 @@ export const Connector = (props) => {
   return (
     <WagmiConfig config={client}>
       <RainbowKitProvider
-        appInfo={{
-          disclaimer: RestoreDialogue(
-            props.allowlist,
-            props.delegations,
-            props.toast,
-          ),
-        }}
+        appInfo={{}}
         chains={chains}
       >
         {props.children}

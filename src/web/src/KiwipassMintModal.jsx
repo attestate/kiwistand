@@ -71,7 +71,6 @@ function SimpleModal(props) {
       window.location.pathname === "/email-notifications" ||
       window.location.pathname === "/invite" ||
       window.location.pathname === "/notifications" ||
-      window.location.pathname === "/passkeys" ||
       window.location.pathname === "/whattosubmit" ||
       window.location.pathname === "/indexing"
     ) {

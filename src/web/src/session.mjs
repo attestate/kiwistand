@@ -87,9 +87,6 @@ export function isChromeOnIOS() {
   return iOS && chrome;
 }
 
-export function supportsPasskeys() {
-  return !isAndroid() && !isLinux() && !isFirefox();
-}
 
 export function isAndroid() {
   const ua = navigator.userAgent;

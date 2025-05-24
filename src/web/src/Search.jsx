@@ -6,7 +6,6 @@ import { isIOS } from "./session.mjs";
 // List of paths where the search component should be hidden
 const HIDDEN_PATHS = [
   '/indexing',
-  '/passkeys',
   '/demonstration',
   '/email-notifications',
   '/invite'
