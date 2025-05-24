@@ -28,6 +28,7 @@ import {
 import { Connector } from "wagmi";
 import { createWalletClient, custom } from "viem";
 import { IOSWalletProvider } from "./iosWalletProvider";
+import FrameSDK from "@farcaster/frame-sdk";
 
 // Proper wagmi connector implementation for iOS wallet
 class IOSWalletConnector extends Connector {
@@ -167,6 +168,194 @@ class IOSWalletConnector extends Connector {
     this.emit("disconnect");
   }
 }
+
+// Farcaster Frame connector implementation for wagmi 1.x
+class FarcasterFrameConnector extends Connector {
+  id = "farcaster";
+  name = "Farcaster";
+  ready = true;
+
+  constructor({ chains, options }) {
+    super({ chains, options });
+  }
+
+  async connect({ chainId } = {}) {
+    try {
+      const provider = await this.getProvider();
+      const accounts = await provider.request({
+        method: "eth_requestAccounts",
+      });
+      const account = accounts[0];
+
+      let targetChainId = chainId;
+      if (!targetChainId) {
+        // Use the first configured chain or default to optimism
+        targetChainId = this.chains[0]?.id || 10;
+      }
+
+      const chain = this.chains.find((c) => c.id === targetChainId);
+      if (!chain) {
+        console.warn(
+          `FarcasterFrameConnector: Chain with ID ${targetChainId} not found in configured chains.`,
+        );
+        return {
+          account,
+          chain: { id: targetChainId, unsupported: false },
+          provider,
+        };
+      }
+
+      // Set up event listeners
+      this.setupProviderEvents(provider);
+
+      let currentChainId = await this.getChainId();
+      if (targetChainId && currentChainId !== targetChainId) {
+        try {
+          await this.switchChain(targetChainId);
+          currentChainId = targetChainId;
+        } catch (error) {
+          console.warn("Could not switch to target chain:", error);
+        }
+      }
+
+      return {
+        account,
+        chain,
+        provider,
+      };
+    } catch (error) {
+      console.error("Farcaster connect error:", error);
+      throw error;
+    }
+  }
+
+  setupProviderEvents(provider) {
+    if (this.#accountsChangedListener) {
+      provider.removeListener("accountsChanged", this.#accountsChangedListener);
+    }
+    if (this.#chainChangedListener) {
+      provider.removeListener("chainChanged", this.#chainChangedListener);
+    }
+    if (this.#disconnectListener) {
+      provider.removeListener("disconnect", this.#disconnectListener);
+    }
+
+    this.#accountsChangedListener = this.onAccountsChanged.bind(this);
+    this.#chainChangedListener = this.onChainChanged.bind(this);
+    this.#disconnectListener = this.onDisconnect.bind(this);
+
+    provider.on("accountsChanged", this.#accountsChangedListener);
+    provider.on("chainChanged", this.#chainChangedListener);
+    provider.on("disconnect", this.#disconnectListener);
+  }
+
+  #accountsChangedListener = null;
+  #chainChangedListener = null;
+  #disconnectListener = null;
+
+  async disconnect() {
+    const provider = await this.getProvider();
+    
+    if (this.#accountsChangedListener) {
+      provider.removeListener("accountsChanged", this.#accountsChangedListener);
+      this.#accountsChangedListener = null;
+    }
+    if (this.#chainChangedListener) {
+      provider.removeListener("chainChanged", this.#chainChangedListener);
+      this.#chainChangedListener = null;
+    }
+    if (this.#disconnectListener) {
+      provider.removeListener("disconnect", this.#disconnectListener);
+      this.#disconnectListener = null;
+    }
+  }
+
+  async getAccount() {
+    const provider = await this.getProvider();
+    const accounts = await provider.request({ method: "eth_accounts" });
+    return accounts[0];
+  }
+
+  async getChainId() {
+    const provider = await this.getProvider();
+    const hexChainId = await provider.request({ method: "eth_chainId" });
+    return parseInt(hexChainId, 16);
+  }
+
+  async getProvider({ chainId } = {}) {
+    return FrameSDK.wallet.ethProvider;
+  }
+
+  async getWalletClient({ chainId } = {}) {
+    const [account, provider] = await Promise.all([
+      this.getAccount(),
+      this.getProvider({ chainId }),
+    ]);
+    const targetChainId = chainId || (await this.getChainId());
+    const chain = this.chains.find((c) => c.id === targetChainId);
+
+    if (!chain) {
+      console.warn(
+        `FarcasterFrameConnector: Chain with ID ${targetChainId} not found in connector's configured chains.`,
+      );
+      return createWalletClient({
+        account,
+        chain: { id: targetChainId, unsupported: false },
+        transport: custom(provider),
+      });
+    }
+
+    return createWalletClient({
+      account,
+      chain,
+      transport: custom(provider),
+    });
+  }
+
+  async isAuthorized() {
+    try {
+      const accounts = await this.getAccount();
+      return !!accounts;
+    } catch {
+      return false;
+    }
+  }
+
+  async switchChain(chainId) {
+    const provider = await this.getProvider();
+    const chain = this.chains.find((x) => x.id === chainId);
+    if (!chain) {
+      throw new Error(`Chain with id ${chainId} not found`);
+    }
+
+    await provider.request({
+      method: "wallet_switchEthereumChain",
+      params: [{ chainId: `0x${chainId.toString(16)}` }],
+    });
+
+    this.emit("change", { chain: { id: chainId, unsupported: false } });
+    return chain;
+  }
+
+  onAccountsChanged(accounts) {
+    if (accounts.length === 0) {
+      this.emit("disconnect");
+    } else {
+      this.emit("change", { account: accounts[0] });
+    }
+  }
+
+  onChainChanged(chainId) {
+    const id = parseInt(chainId, 16);
+    const unsupported = this.isChainUnsupported(id);
+    this.emit("change", { chain: { id, unsupported } });
+  }
+
+  onDisconnect() {
+    this.emit("disconnect");
+  }
+}
+
 //import { infuraProvider } from "wagmi/providers/infura";
 
 const config = configureChains(
@@ -183,6 +372,18 @@ const appName = "Kiwi News";
 export const isInIOSApp =
   typeof document !== "undefined" &&
   document.documentElement.classList.contains("kiwi-ios-app");
+
+// Check if we're in a Farcaster Frame context
+export const isInFarcasterFrame = () => {
+  if (typeof window === "undefined") return false;
+  
+  // Check if the Farcaster Frame SDK is available and initialized
+  try {
+    return !!(FrameSDK && FrameSDK.wallet && FrameSDK.wallet.ethProvider);
+  } catch {
+    return false;
+  }
+};
 
 const isDesktop = () => {
   return (
@@ -204,6 +405,11 @@ function createIOSOnlyConnectors() {
     metaMaskWallet({ chains, projectId }),
     trustWallet({ chains, projectId }),
   ];
+
+  // Add Farcaster connector if we're in a Farcaster Frame context
+  if (isInFarcasterFrame()) {
+    wallets.unshift(createFarcasterFrameConnector());
+  }
 
   return connectorsForWallets([
     {
@@ -232,6 +438,25 @@ function createMWPConnector() {
   };
 }
 
+function createFarcasterFrameConnector() {
+  const farcasterConnector = new FarcasterFrameConnector({
+    chains,
+    options: { name: "Farcaster" },
+  });
+
+  return {
+    id: "farcaster",
+    name: "Farcaster",
+    iconUrl: "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/055c25d6-7fe7-4a49-abf9-49772021cf00/original",
+    iconBackground: "#7C65C1",
+    createConnector: () => {
+      return {
+        connector: farcasterConnector,
+      };
+    },
+  };
+}
+
 function createStandardConnectors() {
   // When not in iOS app, use all the regular wallet options
   const wallets = [
@@ -242,6 +467,11 @@ function createStandardConnectors() {
     metaMaskWallet({ chains, projectId }),
     braveWallet({ chains }),
   ];
+
+  // Add Farcaster connector if we're in a Farcaster Frame context
+  if (isInFarcasterFrame()) {
+    wallets.unshift(createFarcasterFrameConnector());
+  }
 
   // NOTE: We've had issues with iOS Rainbow wallet users clicking on the Rainbow
   // link but then not being taken to Rainbow wallet on their mobile devices.
