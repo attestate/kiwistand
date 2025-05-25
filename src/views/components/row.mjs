@@ -359,7 +359,7 @@ const row = (
                   onclick="event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${addOrUpdateReferrer(
                     DOMPurify.sanitize(story.href),
                     story.identity,
-                  )}')); if (window.sdk && window.sdk.actions && window.sdk.actions.openUrl) { window.sdk.actions.openUrl('${addOrUpdateReferrer(
+                  )}')); if (window.ReactNativeWebView || window !== window.parent) { window.sdk.actions.openUrl('${addOrUpdateReferrer(
                     DOMPurify.sanitize(story.href),
                     story.identity,
                   )}'); } else { window.open('${addOrUpdateReferrer(
@@ -423,7 +423,7 @@ const row = (
                   onclick="event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${addOrUpdateReferrer(
                     DOMPurify.sanitize(story.href),
                     story.identity,
-                  )}')); if (window.sdk && window.sdk.actions && window.sdk.actions.openUrl) { window.sdk.actions.openUrl('${addOrUpdateReferrer(
+                  )}')); if (window.ReactNativeWebView || window !== window.parent) { window.sdk.actions.openUrl('${addOrUpdateReferrer(
                     DOMPurify.sanitize(story.href),
                     story.identity,
                   )}'); } else { window.open('${addOrUpdateReferrer(
@@ -523,7 +523,7 @@ const row = (
                       onclick="event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${addOrUpdateReferrer(
                         DOMPurify.sanitize(story.href),
                         story.identity,
-                      )}')); if (window.sdk && window.sdk.actions && window.sdk.actions.openUrl) { window.sdk.actions.openUrl('${addOrUpdateReferrer(
+                      )}')); if (window.ReactNativeWebView || window !== window.parent) { window.sdk.actions.openUrl('${addOrUpdateReferrer(
                         DOMPurify.sanitize(story.href),
                         story.identity,
                       )}'); } else { window.open('${addOrUpdateReferrer(
@@ -571,7 +571,7 @@ const row = (
                           : `event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${addOrUpdateReferrer(
                               DOMPurify.sanitize(story.href),
                               story.identity,
-                            )}')); if (window.sdk && window.sdk.actions && window.sdk.actions.openUrl) { window.sdk.actions.openUrl('${addOrUpdateReferrer(
+                            )}')); if (window.ReactNativeWebView || window !== window.parent) { window.sdk.actions.openUrl('${addOrUpdateReferrer(
                               DOMPurify.sanitize(story.href),
                               story.identity,
                             )}'); } else { window.open('${addOrUpdateReferrer(
