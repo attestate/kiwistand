@@ -237,6 +237,7 @@ const blockedOGImageDomains = [
   "xcancel.com",
   "hackmd.io",
   "ethresear.ch",
+  "paulgraham.com",
 ];
 
 // Helper function to check if domain is a substack subdomain
