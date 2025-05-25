@@ -225,6 +225,11 @@ const accountAssociation = {
   },
 };
 
+const frameName = {
+  "https://news.kiwistand.com": "Kiwi News",
+  "https://staging.kiwistand.com": "125135986987",
+};
+
 // Serve Farcaster Mini App manifest
 app.get("/.well-known/farcaster.json", (req, res) => {
   res.setHeader("Content-Type", "application/json");
@@ -232,7 +237,7 @@ app.get("/.well-known/farcaster.json", (req, res) => {
     accountAssociation: accountAssociation[domain],
     frame: {
       version: "1",
-      name: "Kiwi News",
+      name: frameName[domain],
       iconUrl: `${domain}/pwa_icon.png`,
       homeUrl: `${domain}/?miniapp=true`,
       imageUrl: `${domain}/kiwi_top_feed_page.png`,
