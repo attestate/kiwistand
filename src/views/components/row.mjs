@@ -359,10 +359,7 @@ const row = (
                   onclick="event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${addOrUpdateReferrer(
                     DOMPurify.sanitize(story.href),
                     story.identity,
-                  )}')); if (window.ReactNativeWebView) { window.parent.postMessage({type: 'frameEvent', event: {type: 'openUrl', url: '${addOrUpdateReferrer(
-                    DOMPurify.sanitize(story.href),
-                    story.identity,
-                  )}'}}, '*'); } else if (window.sdk && window.sdk.actions && window.sdk.actions.openUrl) { window.sdk.actions.openUrl('${addOrUpdateReferrer(
+                  )}')); if (window.sdk && window.sdk.actions && window.sdk.actions.openUrl) { window.sdk.actions.openUrl('${addOrUpdateReferrer(
                     DOMPurify.sanitize(story.href),
                     story.identity,
                   )}'); } else { window.open('${addOrUpdateReferrer(
@@ -426,10 +423,7 @@ const row = (
                   onclick="event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${addOrUpdateReferrer(
                     DOMPurify.sanitize(story.href),
                     story.identity,
-                  )}')); if (window.ReactNativeWebView) { window.parent.postMessage({type: 'frameEvent', event: {type: 'openUrl', url: '${addOrUpdateReferrer(
-                    DOMPurify.sanitize(story.href),
-                    story.identity,
-                  )}'}}, '*'); } else if (window.sdk && window.sdk.actions && window.sdk.actions.openUrl) { window.sdk.actions.openUrl('${addOrUpdateReferrer(
+                  )}')); if (window.sdk && window.sdk.actions && window.sdk.actions.openUrl) { window.sdk.actions.openUrl('${addOrUpdateReferrer(
                     DOMPurify.sanitize(story.href),
                     story.identity,
                   )}'); } else { window.open('${addOrUpdateReferrer(
@@ -529,10 +523,7 @@ const row = (
                       onclick="event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${addOrUpdateReferrer(
                         DOMPurify.sanitize(story.href),
                         story.identity,
-                      )}')); if (window.ReactNativeWebView) { window.parent.postMessage({type: 'frameEvent', event: {type: 'openUrl', url: '${addOrUpdateReferrer(
-                        DOMPurify.sanitize(story.href),
-                        story.identity,
-                      )}'}}, '*'); } else if (window.sdk && window.sdk.actions && window.sdk.actions.openUrl) { window.sdk.actions.openUrl('${addOrUpdateReferrer(
+                      )}')); if (window.sdk && window.sdk.actions && window.sdk.actions.openUrl) { window.sdk.actions.openUrl('${addOrUpdateReferrer(
                         DOMPurify.sanitize(story.href),
                         story.identity,
                       )}'); } else { window.open('${addOrUpdateReferrer(
@@ -580,10 +571,7 @@ const row = (
                           : `event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${addOrUpdateReferrer(
                               DOMPurify.sanitize(story.href),
                               story.identity,
-                            )}')); if (window.ReactNativeWebView) { window.parent.postMessage({type: 'frameEvent', event: {type: 'openUrl', url: '${addOrUpdateReferrer(
-                              DOMPurify.sanitize(story.href),
-                              story.identity,
-                            )}'}}, '*'); } else if (window.sdk && window.sdk.actions && window.sdk.actions.openUrl) { window.sdk.actions.openUrl('${addOrUpdateReferrer(
+                            )}')); if (window.sdk && window.sdk.actions && window.sdk.actions.openUrl) { window.sdk.actions.openUrl('${addOrUpdateReferrer(
                               DOMPurify.sanitize(story.href),
                               story.identity,
                             )}'); } else { window.open('${addOrUpdateReferrer(
