@@ -55,7 +55,6 @@ async function fetchNeynarData(address) {
     }
 
     const data = await response.json();
-    console.log(`Neynar fetch response for ${address}:`, JSON.stringify(data, null, 2));
     
     // API returns data in format: {"0x...": [user_object]}
     const userData = data[address.toLowerCase()];
