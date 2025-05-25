@@ -9,6 +9,7 @@ import { allowlist } from "./chainstate/registry.mjs";
 import { fetchCache } from "./utils.mjs";
 import cache from "./cache.mjs";
 import log from "./logger.mjs";
+import { fetchBulkUsersByEthAddress } from "./neynar.mjs";
 
 const provider = new providers.JsonRpcProvider(env.RPC_HTTP_HOST);
 
@@ -23,6 +24,65 @@ export async function toAddress(name) {
   const address = await provider.resolveName(name);
   if (address) return address;
   throw new Error("Couldn't convert to address");
+}
+
+async function fetchNeynarData(address) {
+  try {
+    utils.getAddress(address);
+  } catch (err) {
+    return;
+  }
+
+  if (!env.NEYNAR_API_KEY) {
+    return;
+  }
+
+  try {
+    const url = `https://api.neynar.com/v2/farcaster/user/bulk-by-address?addresses=${address}`;
+    const signal = AbortSignal.timeout(5000);
+    const response = await fetchStaleWhileRevalidate(url, {
+      signal,
+      headers: {
+        'x-api-key': env.NEYNAR_API_KEY
+      }
+    });
+
+    if (!response.ok) {
+      if (response.status === 429) {
+        log(`Neynar rate limit exceeded for ${address}`);
+      }
+      return;
+    }
+
+    const data = await response.json();
+    console.log(`Neynar fetch response for ${address}:`, JSON.stringify(data, null, 2));
+    
+    // API returns data in format: {"0x...": [user_object]}
+    const userData = data[address.toLowerCase()];
+    if (!userData || !userData.length) {
+      return;
+    }
+
+    const user = userData[0];
+    return {
+      farcaster: {
+        fid: user.fid,
+        username: user.username,
+        display_name: user.display_name,
+        pfp_url: user.pfp_url,
+        bio: user.profile?.bio?.text,
+        displayName: user.display_name,
+        avatar: user.pfp_url,
+        follower_count: user.follower_count,
+        following_count: user.following_count,
+        verified_addresses: user.verifications,
+        power_badge: user.power_badge,
+      },
+    };
+  } catch (err) {
+    log(`Failed to fetch Neynar data for ${address}: ${err}`);
+    return;
+  }
 }
 
 async function fetchLensData(address) {
@@ -108,12 +168,14 @@ export async function fetchENSData(address) {
     const signal = AbortSignal.timeout(5000);
     const response = await fetchStaleWhileRevalidate(url, { signal });
     
-    // Don't cache error responses
-    if (!response.ok) {
-      throw new Error(`ENS API returned ${response.status}: ${response.statusText}`);
-    }
-    
     const data = await response.json();
+    
+    // Check if ENS returned an error in the JSON response
+    if (data.error || !response.ok) {
+      throw new Error(
+        data.message || `ENS API returned ${response.status}: ${response.statusText}`,
+      );
+    }
     try {
       utils.getAddress(address);
     } catch (err) {
@@ -151,6 +213,31 @@ export async function fetchENSData(address) {
     };
   } catch (error) {
     console.error(`Failed to fetch ENS data for address: ${address}`, error);
+
+    // Try Neynar as fallback
+    try {
+      const neynarData = await fetchNeynarData(address);
+      if (neynarData) {
+        const truncatedAddress =
+          address.slice(0, 6) +
+          "..." +
+          address.slice(address.length - 4, address.length);
+
+        return {
+          ...neynarData,
+          address,
+          truncatedAddress,
+          displayName: neynarData.farcaster.username
+            ? `@${neynarData.farcaster.username}`
+            : truncatedAddress,
+        };
+      }
+    } catch (neynarError) {
+      console.error(
+        `Neynar fallback also failed for address: ${address}`,
+        neynarError,
+      );
+    }
 
     const truncatedAddress =
       address.slice(0, 6) +
@@ -198,6 +285,12 @@ export async function resolve(address) {
       const ensProfile = await fetchENSData(address);
       const lensProfile = await fetchLensData(address);
 
+      // If ENS failed and didn't return Neynar data, try Neynar independently
+      let neynarProfile = null;
+      if (ensProfile.error && !ensProfile.farcaster) {
+        neynarProfile = await fetchNeynarData(address);
+      }
+
       let safeAvatar = ensProfile.avatar_small
         ? ensProfile.avatar_small
         : ensProfile.avatar;
@@ -207,6 +300,9 @@ export async function resolve(address) {
       if (!safeAvatar && ensProfile?.farcaster?.avatar) {
         safeAvatar = ensProfile.farcaster.avatar;
       }
+      if (!safeAvatar && neynarProfile?.farcaster?.avatar) {
+        safeAvatar = neynarProfile.farcaster.avatar;
+      }
       if (!safeAvatar && lensProfile?.avatar) {
         safeAvatar = lensProfile.avatar;
       }
@@ -214,6 +310,11 @@ export async function resolve(address) {
       let displayName = DOMPurify.sanitize(ensProfile.ens);
       if (!displayName && ensProfile?.farcaster?.username) {
         displayName = `@${DOMPurify.sanitize(ensProfile.farcaster.username)}`;
+      }
+      if (!displayName && neynarProfile?.farcaster?.username) {
+        displayName = `@${DOMPurify.sanitize(
+          neynarProfile.farcaster.username,
+        )}`;
       }
       if (!displayName && lensProfile?.username) {
         displayName = `${DOMPurify.sanitize(lensProfile.username)}`;
@@ -225,6 +326,7 @@ export async function resolve(address) {
       const completeProfile = {
         safeAvatar: DOMPurify.sanitize(safeAvatar),
         ...ensProfile,
+        ...(neynarProfile && { neynar: neynarProfile }),
         lens: lensProfile,
         displayName,
       };

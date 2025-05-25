@@ -30,7 +30,8 @@ db.exec(`
      subscription JSON
    )
  `);
-db.exec(`
+try {
+  db.exec(`
     PRAGMA foreign_keys=off;
     CREATE TABLE subscriptions_temp AS SELECT * FROM subscriptions;
     DROP TABLE subscriptions;
@@ -41,7 +42,13 @@ db.exec(`
     INSERT INTO subscriptions SELECT address, subscription FROM subscriptions_temp;
     DROP TABLE subscriptions_temp;
     PRAGMA foreign_keys=on;
- `);
+  `);
+} catch (err) {
+  // Migration already completed or temp table exists
+  if (!err.message.includes('already exists')) {
+    throw err;
+  }
+}
 
 db.exec(`
     CREATE INDEX IF NOT EXISTS idx_address_subscription ON subscriptions (address,
