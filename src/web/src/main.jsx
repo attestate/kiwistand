@@ -5,6 +5,9 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import sdk from "@farcaster/frame-sdk";
 
+// Make SDK available globally for use in other parts of the app
+window.sdk = sdk;
+
 async function initFarcasterFrame() {
   // 1) Tell the host we’re live (no-op if not in a Farcaster client)
   try {

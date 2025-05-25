@@ -359,10 +359,16 @@ const row = (
                   onclick="event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${addOrUpdateReferrer(
                     DOMPurify.sanitize(story.href),
                     story.identity,
-                  )}')); window.open('${addOrUpdateReferrer(
+                  )}')); if (window.ReactNativeWebView) { window.parent.postMessage({type: 'frameEvent', event: {type: 'openUrl', url: '${addOrUpdateReferrer(
                     DOMPurify.sanitize(story.href),
                     story.identity,
-                  )}', event.currentTarget.getAttribute('target'));"
+                  )}'}}, '*'); } else if (window.sdk && window.sdk.actions && window.sdk.actions.openUrl) { window.sdk.actions.openUrl('${addOrUpdateReferrer(
+                    DOMPurify.sanitize(story.href),
+                    story.identity,
+                  )}'); } else { window.open('${addOrUpdateReferrer(
+                    DOMPurify.sanitize(story.href),
+                    story.identity,
+                  )}', event.currentTarget.getAttribute('target')); }"
                   style="text-decoration:none; color:inherit; display:block;"
                 >
                   <div
@@ -420,10 +426,16 @@ const row = (
                   onclick="event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${addOrUpdateReferrer(
                     DOMPurify.sanitize(story.href),
                     story.identity,
-                  )}')); window.open('${addOrUpdateReferrer(
+                  )}')); if (window.ReactNativeWebView) { window.parent.postMessage({type: 'frameEvent', event: {type: 'openUrl', url: '${addOrUpdateReferrer(
                     DOMPurify.sanitize(story.href),
                     story.identity,
-                  )}', event.currentTarget.getAttribute('target'));"
+                  )}'}}, '*'); } else if (window.sdk && window.sdk.actions && window.sdk.actions.openUrl) { window.sdk.actions.openUrl('${addOrUpdateReferrer(
+                    DOMPurify.sanitize(story.href),
+                    story.identity,
+                  )}'); } else { window.open('${addOrUpdateReferrer(
+                    DOMPurify.sanitize(story.href),
+                    story.identity,
+                  )}', event.currentTarget.getAttribute('target')); }"
                 >
                   <div style="position: relative;">
                     <img
@@ -517,10 +529,16 @@ const row = (
                       onclick="event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${addOrUpdateReferrer(
                         DOMPurify.sanitize(story.href),
                         story.identity,
-                      )}')); window.open('${addOrUpdateReferrer(
+                      )}')); if (window.ReactNativeWebView) { window.parent.postMessage({type: 'frameEvent', event: {type: 'openUrl', url: '${addOrUpdateReferrer(
                         DOMPurify.sanitize(story.href),
                         story.identity,
-                      )}', event.currentTarget.getAttribute('target'));"
+                      )}'}}, '*'); } else if (window.sdk && window.sdk.actions && window.sdk.actions.openUrl) { window.sdk.actions.openUrl('${addOrUpdateReferrer(
+                        DOMPurify.sanitize(story.href),
+                        story.identity,
+                      )}'); } else { window.open('${addOrUpdateReferrer(
+                        DOMPurify.sanitize(story.href),
+                        story.identity,
+                      )}', event.currentTarget.getAttribute('target')); }"
                     >
                       <img
                         loading="lazy"
@@ -562,10 +580,16 @@ const row = (
                           : `event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${addOrUpdateReferrer(
                               DOMPurify.sanitize(story.href),
                               story.identity,
-                            )}')); window.open('${addOrUpdateReferrer(
+                            )}')); if (window.ReactNativeWebView) { window.parent.postMessage({type: 'frameEvent', event: {type: 'openUrl', url: '${addOrUpdateReferrer(
                               DOMPurify.sanitize(story.href),
                               story.identity,
-                            )}', event.currentTarget.getAttribute('target'));`}"
+                            )}'}}, '*'); } else if (window.sdk && window.sdk.actions && window.sdk.actions.openUrl) { window.sdk.actions.openUrl('${addOrUpdateReferrer(
+                              DOMPurify.sanitize(story.href),
+                              story.identity,
+                            )}'); } else { window.open('${addOrUpdateReferrer(
+                              DOMPurify.sanitize(story.href),
+                              story.identity,
+                            )}', event.currentTarget.getAttribute('target')); }`}"
                         data-story-link="/stories/${getSlug(
                           story.title,
                         )}?index=0x${story.index}"
