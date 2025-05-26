@@ -379,12 +379,6 @@ export async function page(
                 ${await Header(theme)}
               </tr>
               <tr>
-                <td>
-                  <push-subscription-button data-wrapper="true">
-                  </push-subscription-button>
-                </td>
-              </tr>
-              <tr>
                 <td
                   style="text-align: center; padding: 1rem; background-color: #f0f0f0; font-size: 0.8rem; color: #333;"
                 >

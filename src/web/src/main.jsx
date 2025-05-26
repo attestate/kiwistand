@@ -490,24 +490,6 @@ async function addTGLink(allowlist) {
   }
 }
 
-async function addSubscriptionButton(allowlist, toast) {
-  const button = document.querySelector("push-subscription-button");
-  if (button) {
-    const PushSubscriptionButton = (
-      await import("./PushSubscriptionButton.jsx")
-    ).default;
-    const wrapper = button.getAttribute("data-wrapper") === "true";
-    createRoot(button).render(
-      <StrictMode>
-        <PushSubscriptionButton
-          toast={toast}
-          wrapper={wrapper}
-          allowlist={allowlist}
-        />
-      </StrictMode>,
-    );
-  }
-}
 
 async function addModals(allowlist, delegations, toast) {
   const nftmodal = document.querySelector("nav-nft-modal");
@@ -1095,7 +1077,6 @@ async function start() {
     ),
     addDecayingPriceLink(),
     addCommentInput(toast, await allowlistPromise, await delegationsPromise),
-    addSubscriptionButton(await allowlistPromise, toast),
     addTGLink(await allowlistPromise),
     addEmailSubscriptionForm(
       await allowlistPromise,

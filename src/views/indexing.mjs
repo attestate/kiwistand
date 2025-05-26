@@ -83,9 +83,6 @@ export default async function (theme) {
                     <div
                       style="margin-top: 2rem; display: flex; align-items: center; justify-content: center; flex-direction: column; max-width: 20rem;"
                     >
-                      <push-subscription-button data-wrapper="false">
-                        ...loading
-                      </push-subscription-button>
                     </div>
                     <div
                       style="position: fixed; right: 20px; bottom: 20px; z-index: 100; text-align: center;"

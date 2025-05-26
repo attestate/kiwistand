@@ -58,9 +58,6 @@ export default async function (theme) {
                         new comments on your story. No spam, we promise!
                       </p>
                       <br />
-                      <push-subscription-button data-wrapper="false">
-                        ...loading
-                      </push-subscription-button>
                     </div>
                   </div>
                 </td>
