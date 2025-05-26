@@ -70,6 +70,7 @@ import {
   trackOutbound,
   trackImpression,
   countOutbounds,
+  storeMiniAppUpvote,
 } from "./cache.mjs";
 import appCache from "./cache.mjs"; // For LRU cache used by ENS profiles
 import frameSubscribe from "./views/frame-subscribe.mjs";
@@ -1707,6 +1708,48 @@ export async function launch(trie, libp2p, isPrimary = true) {
   app.post("/api/v1/faucet", async (request, reply) => {
     reply.header("Cache-Control", "no-cache");
     return handleFaucetRequest(request, reply);
+  });
+
+  app.post("/api/v1/miniapp-upvote", async (request, reply) => {
+    reply.header("Cache-Control", "no-cache");
+    
+    const message = request.body;
+    
+    // Validate mini app signature format
+    if (!message.signature || !message.signature.startsWith("miniapp:")) {
+      return sendError(reply, 400, "Invalid Signature", "Invalid mini app signature format");
+    }
+    
+    const fid = message.signature.replace("miniapp:", "");
+    if (!/^\d+$/.test(fid)) {
+      return sendError(reply, 400, "Invalid FID", "Invalid FID in signature");
+    }
+    
+    // Validate message structure
+    if (!message.title || !message.href || !message.timestamp || !message.walletAddress) {
+      return sendError(reply, 400, "Invalid Message", "Missing required message fields");
+    }
+    
+    // Validate wallet address format
+    if (!message.walletAddress.match(/^0x[a-fA-F0-9]{40}$/)) {
+      return sendError(reply, 400, "Invalid Wallet", "Invalid Ethereum wallet address format");
+    }
+    
+    try {
+      // Store mini app upvote with wallet address as identity
+      await storeMiniAppUpvote({
+        fid: parseInt(fid, 10),
+        href: message.href,
+        title: message.title,
+        timestamp: message.timestamp,
+        walletAddress: message.walletAddress,
+      });
+      
+      return sendStatus(reply, 200, "OK", "Mini app upvote recorded successfully");
+    } catch (error) {
+      log(`Mini app upvote error: ${error.message}`);
+      return sendError(reply, 500, "Internal Server Error", error.message);
+    }
   });
 
   app.get("/api/v1/image-upload-token", async (request, reply) => {

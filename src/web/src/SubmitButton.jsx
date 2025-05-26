@@ -8,7 +8,7 @@ import slugify from "slugify";
 slugify.extend({ "′": "", "'": "", "'": "", '"': "" });
 
 import * as API from "./API.mjs";
-import { useSigner, useProvider, client, chains } from "./client.mjs";
+import { useSigner, useProvider, client, chains, isInFarcasterFrame } from "./client.mjs";
 import NFTModal from "./NFTModal.jsx";
 import { getLocalAccount } from "./session.mjs";
 import { SimpleDisconnectButton } from "./Navigation.jsx";
@@ -459,6 +459,48 @@ const SubmitButton = (props) => {
 const Form = (props) => {
   const urlInput = document.getElementById("urlInput");
   const [url, setURL] = useState(urlInput.value);
+  const [isMiniApp, setIsMiniApp] = useState(false);
+
+  useEffect(() => {
+    const checkMiniApp = async () => {
+      let miniAppDetected = false;
+      try {
+        if (isInFarcasterFrame() && window.sdk) {
+          miniAppDetected = await window.sdk.isInMiniApp();
+        }
+      } catch (err) {
+        miniAppDetected = false;
+      }
+      setIsMiniApp(miniAppDetected);
+    };
+    
+    checkMiniApp();
+  }, []);
+
+  if (isMiniApp) {
+    return (
+      <div style={{
+        padding: "1rem",
+        margin: "1rem",
+        background: "#fff3cd",
+        border: "1px solid #856404",
+        borderRadius: "4px",
+        color: "#856404"
+      }}>
+        <h3 style={{ marginTop: 0 }}>Submission not available in mini app</h3>
+        <p>Story submission is not currently supported in Farcaster mini apps. Please use the main Kiwi News website to submit stories.</p>
+        <p>
+          <a 
+            href="https://news.kiwistand.com/submit" 
+            target="_blank" 
+            style={{ color: "#856404", textDecoration: "underline" }}
+          >
+            Open Kiwi News in browser
+          </a>
+        </p>
+      </div>
+    );
+  }
 
   return (
     <WagmiConfig config={client}>

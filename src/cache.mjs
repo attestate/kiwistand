@@ -15,6 +15,7 @@ import normalizeUrl from "normalize-url";
 import { ethers } from "ethers";
 
 import log from "./logger.mjs";
+import { toDigest } from "./id.mjs";
 
 const dbPath = join(process.env.CACHE_DIR, "database.db");
 const db = new Database(dbPath);
@@ -1159,5 +1160,43 @@ export function insertMessage(message) {
     }
   } else {
     throw new Error("Unsupported message type");
+  }
+}
+
+export async function storeMiniAppUpvote({ fid, href, title, timestamp, walletAddress }) {
+  try {
+    // Create a message object similar to protocol messages for consistent hashing
+    const messageForDigest = {
+      title,
+      href,
+      type: "amplify",
+      timestamp,
+      fid, // Include FID to make it unique from protocol messages
+    };
+    
+    // Generate proper index using the same digest function as protocol
+    const { index } = toDigest(messageForDigest);
+    const id = `kiwi:0x${index}`;
+    
+    // Store in upvotes table with miniapp signature format
+    const dummySigner = `miniapp:${fid}`;
+    
+    const stmt = db.prepare(`
+      INSERT OR IGNORE INTO upvotes 
+      (id, href, timestamp, title, signer, identity) 
+      VALUES (?, ?, ?, ?, ?, ?)
+    `);
+    
+    const result = stmt.run(id, href, timestamp, title, dummySigner, walletAddress);
+    
+    if (result.changes === 0) {
+      throw new Error("Duplicate mini app upvote");
+    }
+    
+    log(`Stored mini app upvote: FID ${fid} (${walletAddress}) for ${href}`);
+    return { success: true, id };
+  } catch (error) {
+    log(`Error storing mini app upvote: ${error.message}`);
+    throw error;
   }
 }

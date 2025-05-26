@@ -353,3 +353,21 @@ export async function fetchEthUsdPrice() {
     return null;
   }
 }
+
+export async function sendMiniAppUpvote(value, fid, walletAddress) {
+  const body = {
+    ...value,
+    signature: `miniapp:${fid}`,
+    walletAddress: walletAddress
+  };
+
+  const response = await fetch("/api/v1/miniapp-upvote", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+
+  return await response.json();
+}

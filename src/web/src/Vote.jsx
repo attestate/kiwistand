@@ -9,7 +9,7 @@ import { eligible } from "@attestate/delegator2";
 import DOMPurify from "isomorphic-dompurify";
 
 import * as API from "./API.mjs";
-import { useSigner, useProvider, client, chains } from "./client.mjs";
+import { useSigner, useProvider, client, chains, isInFarcasterFrame } from "./client.mjs";
 import NFTModal from "./NFTModal.jsx";
 import theme from "./theme.jsx";
 import { getLocalAccount, isIOSApp } from "./session.mjs";
@@ -109,6 +109,28 @@ const Vote = (props) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Check if we're in a Farcaster mini app
+    let isMiniApp = false;
+    try {
+      if (isInFarcasterFrame() && window.sdk) {
+        isMiniApp = await window.sdk.isInMiniApp();
+      }
+    } catch (err) {
+      console.log("Mini app detection failed:", err);
+      isMiniApp = false;
+    }
+
+    // Check wallet connection for both mini app and traditional users
+    if (!isMiniApp && !signer) {
+      toast.error("Please connect your wallet to upvote");
+      return;
+    }
+    
+    if (isMiniApp && !account.isConnected) {
+      toast.error("Please connect your wallet to upvote");
+      return;
+    }
+
     // Set upvoted state immediately for better UX
     setHasUpvoted(true);
 
@@ -117,13 +139,68 @@ const Vote = (props) => {
     // Reset animation after it completes
     setTimeout(() => setShowKarmaAnimation(false), 700);
 
-    if (!isLocal) toast("Please sign the message in your wallet");
-    const signature = await signer._signTypedData(
-      API.EIP712_DOMAIN,
-      API.EIP712_TYPES,
-      value,
-    );
-    const response = await API.send(value, signature);
+    let response;
+    
+    if (isMiniApp) {
+      // Mini app upvote flow - use FID instead of signature
+      try {
+        const context = await window.sdk.context;
+        const fid = context.user.fid;
+        
+        if (!fid) {
+          throw new Error("No FID available in context");
+        }
+        
+        // Get the user's connected wallet address from Wagmi (the proper way)
+        let walletAddress = null;
+        
+        // For mini apps, use the current account's address from useAccount hook
+        if (account.isConnected && account.address) {
+          walletAddress = account.address;
+          console.log("Found wallet via Wagmi useAccount:", walletAddress);
+        } else {
+          // Fallback: try to get from Ethereum provider
+          try {
+            const provider = await window.sdk.wallet.getEthereumProvider();
+            const accounts = await provider.request({
+              method: "eth_requestAccounts",
+            });
+            if (accounts && accounts.length > 0) {
+              walletAddress = accounts[0];
+              console.log("Found wallet via SDK Ethereum provider:", walletAddress);
+            }
+          } catch (providerError) {
+            console.log("Failed to get wallet from SDK provider:", providerError);
+          }
+        }
+        
+        console.log("Account state:", { isConnected: account.isConnected, address: account.address });
+        console.log("Final wallet address:", walletAddress);
+        
+        if (!walletAddress) {
+          throw new Error("No connected wallet found in Farcaster mini app");
+        }
+        
+        toast("Submitting your upvote...");
+        
+        response = await API.sendMiniAppUpvote(value, fid, walletAddress);
+      } catch (err) {
+        console.error("Mini app upvote error:", err);
+        setHasUpvoted(false);
+        setShowKarmaAnimation(false);
+        toast.error("Unable to access Farcaster context");
+        return;
+      }
+    } else {
+      // Traditional wallet signature flow
+      if (!isLocal) toast("Please sign the message in your wallet");
+      const signature = await signer._signTypedData(
+        API.EIP712_DOMAIN,
+        API.EIP712_TYPES,
+        value,
+      );
+      response = await API.send(value, signature);
+    }
 
     console.log(response);
     let message;
@@ -170,9 +247,34 @@ const Vote = (props) => {
               if (hasUpvoted || isad || window.location.pathname === "/submit")
                 return;
 
-              const isEligible =
-                signer &&
-                eligible(allowlist, delegations, await signer.getAddress());
+              // Check if we're in a mini app - use conservative detection
+              let isMiniApp = false;
+              try {
+                if (isInFarcasterFrame() && window.sdk) {
+                  isMiniApp = await window.sdk.isInMiniApp();
+                }
+              } catch (err) {
+                console.log("Mini app detection failed in vote eligibility check:", err);
+                isMiniApp = false;
+              }
+              
+              let isEligible = false;
+              
+              if (isMiniApp) {
+                // For mini apps, check if we have FID context
+                try {
+                  const context = await window.sdk.context;
+                  isEligible = !!context.user.fid;
+                } catch (err) {
+                  console.error("Failed to get mini app context:", err);
+                  isEligible = false;
+                }
+              } else {
+                // Traditional eligibility check for wallet users
+                isEligible =
+                  signer &&
+                  eligible(allowlist, delegations, await signer.getAddress());
+              }
 
               if (!isEligible && isIOSApp()) {
                 toast.error("Login to upvote");
@@ -180,7 +282,11 @@ const Vote = (props) => {
               }
 
               if (!isEligible) {
-                toast.error("Connect your wallet to sign up");
+                if (isMiniApp) {
+                  toast.error("Unable to access your Farcaster profile");
+                } else {
+                  toast.error("Connect your wallet to sign up");
+                }
                 return;
               }
 

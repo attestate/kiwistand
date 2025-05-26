@@ -4,7 +4,7 @@ import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { eligible } from "@attestate/delegator2";
 
 import { getLocalAccount } from "./session.mjs";
-import { client, chains, getProvider } from "./client.mjs";
+import { client, chains, getProvider, isInFarcasterFrame } from "./client.mjs";
 import { fetchKarma } from "./API.mjs";
 
 export const resolveAvatar = async (address) => {
@@ -51,11 +51,21 @@ const Avatar = (props) => {
   let address;
   const account = useAccount();
   const localAccount = getLocalAccount(account.address, props.allowlist);
+  
+  // Check if we're in a mini app and get the connected wallet address
+  // Note: Using conservative detection for UI - if frame detection passes, we assume mini app for UI purposes
+  const isMiniAppForUI = isInFarcasterFrame() && window.sdk;
+  
   if (account.isConnected) {
     address = account.address;
   }
   if (localAccount) {
     address = localAccount.identity;
+  }
+  
+  // For mini apps, ensure we use the connected address even without allowlist eligibility
+  if (isMiniAppForUI && account.isConnected && !address) {
+    address = account.address;
   }
 
   const [avatar, setAvatar] = useState("");
@@ -153,7 +163,8 @@ const Avatar = (props) => {
     );
   }
 
-  if (avatar && points) {
+  // Only show avatar if we actually have an avatar image AND (points OR connected address)
+  if (avatar && (points > 0 || address)) {
     return (
       <div
         style={{
@@ -206,7 +217,7 @@ const Avatar = (props) => {
                   color: "black",
                 }}
               >
-                {points.toString()}
+                {points > 0 ? points.toString() : "0"}
               </span>
               {karmaDiff > 0 && (
                 <span

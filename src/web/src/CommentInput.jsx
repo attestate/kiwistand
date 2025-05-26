@@ -330,10 +330,27 @@ const CommentInput = (props) => {
   const [text, setText] = useState(existingComment || "");
   const [showMobileComposer, setShowMobileComposer] = useState(false);
   const [disableAutoOpen, setDisableAutoOpen] = useState(false);
+  const [isMiniApp, setIsMiniApp] = useState(false);
   const isMobile = useIsMobile();
   useEffect(() => {
     localStorage.setItem(`-kiwi-news-comment-${address}-${getIndex()}`, text);
   }, [text]);
+
+  useEffect(() => {
+    const checkMiniApp = async () => {
+      let miniAppDetected = false;
+      try {
+        if (isInFarcasterFrame() && window.sdk) {
+          miniAppDetected = await window.sdk.isInMiniApp();
+        }
+      } catch (err) {
+        miniAppDetected = false;
+      }
+      setIsMiniApp(miniAppDetected);
+    };
+    
+    checkMiniApp();
+  }, []);
 
   useEffect(() => {
     if (showMobileComposer) {
@@ -585,7 +602,36 @@ const CommentInput = (props) => {
     return () => document.removeEventListener("keydown", handleKeyPress);
   }, [text, address, isEligible]);
 
+  if (isMiniApp) {
+    return (
+      <div
+        style={{
+          margin: "0 1rem 1rem 1rem",
+          padding: "1rem",
+          background: "#fff3cd",
+          border: "1px solid #856404",
+          borderRadius: "4px",
+          color: "#856404",
+          ...props.style,
+        }}
+      >
+        <h4 style={{ marginTop: 0 }}>Comments not available in mini app</h4>
+        <p>Commenting is not currently supported in Farcaster mini apps. Please use the main Kiwi News website to leave comments.</p>
+        <p>
+          <a 
+            href={`https://news.kiwistand.com/stories?index=${getIndex()}`}
+            target="_blank" 
+            style={{ color: "#856404", textDecoration: "underline" }}
+          >
+            Open story in browser
+          </a>
+        </p>
+      </div>
+    );
+  }
+  
   if (!isEligible) return <SiteExplainer />;
+  
   return (
     <div
       style={{
