@@ -60,9 +60,13 @@ function SimpleModal(props) {
     checkBalanceAndRequestFaucet();
   }, [account.address, account.isConnected, faucetRequested]);
 
-  function openModal() {
+  async function openModal() {
+    // Check if we're in a mini app context
+    const isMiniApp = window.sdk ? await window.sdk.isInMiniApp() : false;
+    
     if (
       !account.isConnected ||
+      isMiniApp ||
       window.location.pathname === "/gateway" ||
       window.location.pathname === "/kiwipass-mint" ||
       window.location.pathname === "/app-onboarding" ||
@@ -106,7 +110,7 @@ function SimpleModal(props) {
   }
 
   useEffect(() => {
-    openModal();
+    openModal().catch(console.error);
   }, [account.address, account.isConnected]);
 
   const customStyles = {
