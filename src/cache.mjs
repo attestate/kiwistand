@@ -1165,10 +1165,23 @@ export function insertMessage(message) {
 
 export async function storeMiniAppUpvote({ fid, href, title, timestamp, walletAddress }) {
   try {
+    // Normalize the URL to prevent duplicate upvotes on same story
+    const normalizedHref = normalizeUrl(href, { stripWWW: false });
+    
+    // Check if this user has already upvoted this normalized URL
+    const existingUpvote = db.prepare(`
+      SELECT id FROM upvotes 
+      WHERE identity = ? AND href = ? AND signer LIKE 'miniapp:%'
+    `).get(walletAddress, normalizedHref);
+    
+    if (existingUpvote) {
+      throw new Error("User has already upvoted this story");
+    }
+    
     // Create a message object similar to protocol messages for consistent hashing
     const messageForDigest = {
       title,
-      href,
+      href: normalizedHref, // Use normalized URL for consistency
       type: "amplify",
       timestamp,
       fid, // Include FID to make it unique from protocol messages
@@ -1187,7 +1200,7 @@ export async function storeMiniAppUpvote({ fid, href, title, timestamp, walletAd
       VALUES (?, ?, ?, ?, ?, ?)
     `);
     
-    const result = stmt.run(id, href, timestamp, title, dummySigner, walletAddress);
+    const result = stmt.run(id, normalizedHref, timestamp, title, dummySigner, walletAddress);
     
     if (result.changes === 0) {
       throw new Error("Duplicate mini app upvote");
