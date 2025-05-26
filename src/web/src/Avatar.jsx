@@ -11,26 +11,15 @@ export const resolveAvatar = async (address) => {
   if (!address) return null;
 
   try {
-    const res = await fetch(
-      `https://api.ensdata.net/${address}?farcaster=true`,
-    );
+    // Use the existing /api/v1/profile endpoint that properly resolves avatars
+    const res = await fetch(`/api/v1/profile/${address}`);
     if (!res.ok) return null;
 
-    const data = await res.json();
-    if (!data) return null;
+    const response = await res.json();
+    if (!response?.data) return null;
 
-    let safeAvatar = data.avatar_small || data.avatar;
-    if (safeAvatar && !safeAvatar.startsWith("https")) {
-      safeAvatar = data.avatar_url;
-    }
-    if (!safeAvatar && data?.farcaster?.avatar) {
-      safeAvatar = data.farcaster.avatar;
-    }
-    if (!safeAvatar && data?.lensProfile?.avatar) {
-      safeAvatar = data.lensProfile.avatar;
-    }
-
-    return safeAvatar || null;
+    // The profile endpoint returns a safeAvatar that's already properly processed
+    return response.data.safeAvatar || null;
   } catch (err) {
     console.error("Avatar resolution failed:", err);
     return null;
