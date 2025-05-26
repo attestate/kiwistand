@@ -76,6 +76,7 @@ import appCache from "./cache.mjs"; // For LRU cache used by ENS profiles
 import frameSubscribe from "./views/frame-subscribe.mjs";
 import { sendNotification } from "./neynar.mjs";
 import { timingSafeEqual } from "crypto";
+import { invalidateActivityCaches } from "./cloudflarePurge.mjs";
 
 const app = express();
 
@@ -1743,6 +1744,23 @@ export async function launch(trie, libp2p, isPrimary = true) {
         title: message.title,
         timestamp: message.timestamp,
         walletAddress: message.walletAddress,
+      });
+      
+      // Trigger feed recomputation (same as protocol upvotes)
+      sendToCluster("recompute-new-feed");
+      setImmediate(() => {
+        newAPI
+          .recompute()
+          .catch((err) => log(`Recomputation of new feed failed after mini app upvote`));
+      });
+      
+      // Invalidate activity caches for story author (same as protocol upvotes)
+      invalidateActivityCaches({
+        type: "amplify",
+        href: message.href,
+        title: message.title,
+        timestamp: message.timestamp,
+        identity: message.walletAddress
       });
       
       return sendStatus(reply, 200, "OK", "Mini app upvote recorded successfully");
