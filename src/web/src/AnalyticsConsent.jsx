@@ -5,18 +5,32 @@ export default function AnalyticsConsent() {
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 641);
   
   useEffect(() => {
-    // Check if analytics consent was already decided
-    const analyticsConsent = localStorage.getItem('kiwi-analytics-consent');
-    if (analyticsConsent === null) {
-      // Analytics are enabled by default, but we still show the banner
-      setVisible(true);
-      enableAnalytics(); // Enable analytics by default
-    } else if (analyticsConsent === 'false') {
-      // User has explicitly opted out before, so don't enable analytics
-    } else {
-      // User has explicitly accepted
-      enableAnalytics();
-    }
+    const checkConsentAndMiniApp = async () => {
+      // Check if we're in a mini app context
+      const isMiniApp = window.sdk ? await window.sdk.isInMiniApp() : false;
+      
+      // Check if analytics consent was already decided
+      const analyticsConsent = localStorage.getItem('kiwi-analytics-consent');
+      
+      if (isMiniApp) {
+        // Don't show analytics consent banner in mini app, but enable analytics by default
+        enableAnalytics();
+        return;
+      }
+      
+      if (analyticsConsent === null) {
+        // Analytics are enabled by default, but we still show the banner
+        setVisible(true);
+        enableAnalytics(); // Enable analytics by default
+      } else if (analyticsConsent === 'false') {
+        // User has explicitly opted out before, so don't enable analytics
+      } else {
+        // User has explicitly accepted
+        enableAnalytics();
+      }
+    };
+    
+    checkConsentAndMiniApp().catch(console.error);
     
     // Add window resize listener to detect desktop/mobile
     const handleResize = () => {
