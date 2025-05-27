@@ -463,21 +463,10 @@ export async function launch(trie, libp2p, isPrimary = true) {
     trackImpression(cleanUrl, hash);
     return reply.status(204).send();
   });
+  // Disabled GET outbound tracking due to spam abuse - POST still works for sendBeacon
   app.get("/outbound", async (request, reply) => {
     reply.header("Cache-Control", "no-cache");
-    const { url } = request.query;
-    if (!url) {
-      return reply.status(400).send("URL parameter is required");
-    }
-    if (!fingerprint) {
-      return reply.redirect(url);
-    }
-
-    const hash = fingerprint.generate(request);
-    const cleanUrl = removeReferrerParams(url);
-    trackOutbound(cleanUrl, hash);
-
-    return reply.redirect(url);
+    return reply.status(404).send("GET outbound tracking disabled");
   });
   app.get("/kiwipass-mint", async (request, reply) => {
     reply.header(
