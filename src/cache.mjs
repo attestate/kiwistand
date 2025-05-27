@@ -1213,3 +1213,28 @@ export async function storeMiniAppUpvote({ fid, href, title, timestamp, walletAd
     throw error;
   }
 }
+
+export async function getMiniAppUpvotes() {
+  try {
+    const stmt = db.prepare(`
+      SELECT href, timestamp, title, signer, identity 
+      FROM upvotes 
+      WHERE signer LIKE 'miniapp:%'
+      ORDER BY timestamp DESC
+    `);
+    
+    const upvotes = stmt.all();
+    
+    return upvotes.map(upvote => ({
+      href: upvote.href,
+      timestamp: upvote.timestamp,
+      title: upvote.title,
+      signer: upvote.signer,
+      identity: upvote.identity,
+      type: "amplify"
+    }));
+  } catch (error) {
+    log(`Error getting mini app upvotes: ${error.message}`);
+    return [];
+  }
+}

@@ -14,6 +14,7 @@ import Head from "./components/head.mjs";
 import * as store from "../store.mjs";
 import * as registry from "../chainstate/registry.mjs";
 import * as ens from "../ens.mjs";
+import { getMiniAppUpvotes } from "../cache.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -187,8 +188,12 @@ export default async function (trie, theme) {
   );
 
   const cacheEnabled = true;
+  
+  // Get mini app upvotes from cache
+  const miniAppUpvotes = await getMiniAppUpvotes();
+  
   const messagesWithAddresses = await Promise.all(
-    [...messages, ...comments].filter((msg) => {
+    [...messages, ...comments, ...miniAppUpvotes].filter((msg) => {
       const messageDate = new Date(msg.timestamp * 1000);
       const cutOffDate = new Date(2023, 3); // months are 0-indexed in JS, so 3 is April
       return messageDate >= cutOffDate;

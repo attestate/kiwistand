@@ -13,7 +13,7 @@ import Sidebar from "./components/sidebar.mjs";
 import Head from "./components/head.mjs";
 import * as store from "../store.mjs";
 import * as registry from "../chainstate/registry.mjs";
-import { getHashesPerDateRange } from "../cache.mjs";
+import { getHashesPerDateRange, getMiniAppUpvotes } from "../cache.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -193,14 +193,17 @@ export default async function (trie, theme) {
 
   const cacheEnabled = true;
 
-  const messagesWithAddresses = await makeAsync((messages, comments) => {
-    return [...messages, ...comments].filter((msg) => {
+  // Get mini app upvotes from cache
+  const miniAppUpvotes = await getMiniAppUpvotes();
+
+  const messagesWithAddresses = await makeAsync((messages, comments, miniAppUpvotes) => {
+    return [...messages, ...comments, ...miniAppUpvotes].filter((msg) => {
       const messageDate = new Date(msg.timestamp * 1000);
       // NOTE: months are 0-indexed in JS, so 3 is April
       const cutOffDate = new Date(2023, 3);
       return messageDate >= cutOffDate;
     });
-  })(messages, comments);
+  })(messages, comments, miniAppUpvotes);
 
   const dauData = calculateDAU(messagesWithAddresses);
   const mauData = calculateMAU(messagesWithAddresses);
