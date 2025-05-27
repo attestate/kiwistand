@@ -59,6 +59,8 @@ export default async function (trie, theme, identity) {
           `${ensData.displayName} (${points.toString()} 🥝) on Kiwi News`,
           description,
           twitterCard,
+          [], // prefetch
+          `https://news.kiwistand.com/upvotes?address=${identity}`, // canonical URL
         )}
       </head>
       <body ontouchstart="">

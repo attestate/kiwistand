@@ -1560,24 +1560,12 @@ export async function launch(trie, libp2p, isPrimary = true) {
     trie,
     theme,
     address,
-    page,
-    mode,
     enabledFrame = false,
   ) {
-    let activeMode = "top";
-    if (mode === "new") activeMode = "new";
-
-    page = parseInt(page);
-    if (isNaN(page) || page < 1) {
-      page = 0;
-    }
     const content = await upvotes(
       trie,
       theme,
       address,
-      page,
-      activeMode,
-      enabledFrame,
     );
     return content;
   }
@@ -1600,8 +1588,6 @@ export async function launch(trie, libp2p, isPrimary = true) {
       trie,
       reply.locals.theme,
       request.query.address,
-      DOMPurify.sanitize(request.query.page),
-      DOMPurify.sanitize(request.query.mode),
     );
 
     reply.header(
@@ -1665,26 +1651,17 @@ export async function launch(trie, libp2p, isPrimary = true) {
         trie,
         reply.locals.theme,
         address,
-        DOMPurify.sanitize(request.query.page),
-        DOMPurify.sanitize(request.query.mode),
         request.query.frame === "true",
       );
     } catch (err) {
       return next(err);
     }
 
-    // For ENS profiles, use similar caching strategy as upvotes but with longer max-age
-    if (request.query.mode === "new") {
-      reply.header(
-        "Cache-Control",
-        "public, s-maxage=7200, max-age=0, stale-while-revalidate=259200",
-      );
-    } else {
-      reply.header(
-        "Cache-Control",
-        "public, s-maxage=43200, max-age=0, stale-while-revalidate=432000",
-      );
-    }
+    // For ENS profiles, use simplified caching strategy
+    reply.header(
+      "Cache-Control",
+      "public, s-maxage=43200, max-age=0, stale-while-revalidate=432000",
+    );
     return reply.status(200).type("text/html").send(content);
   });
 
