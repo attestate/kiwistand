@@ -87,108 +87,6 @@ export async function generatePreview(index) {
   }
 }
 
-export function generateList(profiles, submitter) {
-  profiles.shift();
-  return html`
-    <ul
-      style="border: var(--border); border-radius: 2px; margin: 17px 1rem 0 1rem; background-color: var(--background-color0); padding: 0.3rem 0 0.65rem 0.65rem; list-style: none;"
-    >
-      <li style="position: relative;">
-        <p
-          style="display: flex; align-items: center; gap: 3px; flex: 1; margin: 0; padding: 2px 0; font-size: 14px; color: #6b7280;"
-        >
-          ${submitter.safeAvatar
-            ? html`<img
-                loading="lazy"
-                src="${submitter.safeAvatar}"
-                alt="avatar"
-                style="object-fit: contain; width: 15px; height: 15px; border: 1px solid #828282; border-radius: 2px;"
-              />`
-            : null}
-          <span> </span>
-          <a href="/upvotes?address=${submitter.address}"
-            >${submitter.displayName}
-            <span> (${karma.resolve(submitter.address).toString()})</span>
-            <span> submitted</span></a
-          >
-        </p>
-      </li>
-      ${profiles.map(
-        (profile, i) => html`
-          <li style="position: relative;">
-            <p
-              style="display: flex; align-items: center; gap: 3px; flex: 1; margin: 0; padding: 2px 0; font-size: 14px; color: #6b7280;"
-            >
-              ${profile.avatar
-                ? html`<img
-                    loading="lazy"
-                    src="${profile.avatar}"
-                    alt="avatar"
-                    style="object-fit: contain; width: 15px; height: 15px; border: 1px solid #828282; border-radius: 2px;"
-                  />`
-                : null}
-              <span> </span>
-              <a href="/upvotes?address=${profile.address}"
-                >${profile.name} (${karma.resolve(profile.address).toString()}
-                ${profile.isHolder
-                  ? html`,
-                      <span> </span>
-                      <img
-                        style="vertical-align: -1px; object-fit: contain; width: 13px; height: 13px;"
-                        src="/purple.png"
-                      /> `
-                  : ""}
-                ${profile.hasNeynarScore
-                  ? html`,
-                      <span> </span>
-                      <svg
-                        style="vertical-align: -5px; width: 19px; height: 19px; fill: black;"
-                        viewBox="0 0 386 212"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path
-                          fill-rule="evenodd"
-                          clip-rule="evenodd"
-                          d="M296.117 105.956C296.117 124.397 291.406 141.738 283.122 156.84C251.315 153.193 214.882 146.231 176.708 136.002C157.462 130.845 139.014 125.19 121.687 119.217L121.684 119.211C121.608 119.186 121.532 119.162 121.457 119.137C120.735 118.888 120.015 118.638 119.296 118.388C99.509 111.09 86.699 94.1747 88.0967 77.4086L88.3406 77.474L88.1342 77.2676C100.644 32.6882 141.585 0 190.161 0C248.679 0 296.117 47.4383 296.117 105.956Z"
-                          fill="#8465cb"
-                        />
-                        <path
-                          fill-rule="evenodd"
-                          clip-rule="evenodd"
-                          d="M87.8174 133.487C96.3636 127.567 107.762 124.858 119.599 126.513C137.14 132.384 155.625 137.958 174.806 143.098C211.41 152.905 246.608 160.076 278.439 164.576C259.453 193.109 227.003 211.912 190.162 211.912C141.166 211.912 99.9383 178.657 87.8174 133.487Z"
-                          fill="#8465cb"
-                        />
-                        <path
-                          fill-rule="evenodd"
-                          clip-rule="evenodd"
-                          d="M332.519 103.755C321.364 97.7279 308.474 91.6405 294.18 85.6757C293.509 82.2142 292.669 78.813 291.67 75.4807C308.512 82.2947 323.635 89.32 336.549 96.2973C352.652 104.998 365.535 113.737 374.032 122.045C382.244 130.074 387.598 138.946 385.287 147.572C382.976 156.197 373.903 161.203 362.776 164.051C351.264 166.997 335.737 168.124 317.441 167.607C305.611 167.273 292.521 166.248 278.462 164.542C280.177 161.963 281.781 159.305 283.27 156.573C295.647 157.983 307.189 158.838 317.681 159.134C335.628 159.641 350.26 158.504 360.675 155.839C371.475 153.075 376.096 149.121 377.099 145.378C378.102 141.635 376.077 135.899 368.106 128.106C360.419 120.59 348.316 112.29 332.519 103.755ZM68.3867 24.4435C83.0172 24.8568 99.5732 26.3267 117.506 28.8333C114.956 31.2364 112.526 33.7646 110.224 36.408C94.9262 34.4396 80.7758 33.2734 68.1474 32.9166C50.1998 32.4096 35.5676 33.5463 25.1532 36.2117C14.3533 38.9758 9.73156 42.93 8.72861 46.6731C7.72565 50.4161 9.75111 56.1514 17.722 63.9451C25.4085 71.4606 37.5119 79.7612 53.3085 88.2959C53.5673 88.4357 53.8269 88.5755 54.0875 88.7153C52.801 89.4638 51.8999 90.4073 51.4199 91.5526C50.7592 93.1292 50.9306 95.0068 51.8566 97.1312C50.988 96.6718 50.1289 96.2125 49.2793 95.7535C33.1759 87.053 20.2927 78.3137 11.796 70.0059C3.5838 61.9763 -1.77034 53.1049 0.540919 44.4792C2.85218 35.8534 11.9247 30.8477 23.0515 27.9999C34.5637 25.0535 50.0906 23.9266 68.3867 24.4435Z"
-                          fill="#8465cb"
-                        />
-                        <ellipse
-                          cx="45.9011"
-                          cy="88.9788"
-                          rx="29.0149"
-                          ry="4.44343"
-                          transform="rotate(29.2824 45.9011 88.9788)"
-                          fill="#8465cb"
-                        />
-                      </svg> `
-                  : ""}
-                ${profile.isKiwi ? ", 🥝" : ""})
-
-                <span>
-                  <span> </span>
-                  upvoted
-                </span></a
-              >
-            </p>
-          </li>
-        `,
-      )}
-    </ul>
-  `;
-}
 
 export default async function (trie, theme, index, value, referral) {
   const path = "/stories";
@@ -200,26 +98,6 @@ export default async function (trie, theme, index, value, referral) {
     metadata: data,
   };
 
-  const upvoterProfileResults = await Promise.allSettled(
-    story.upvoters.map((upvoter) => ens.resolve(upvoter.identity)),
-  );
-
-  let profiles = [];
-  let avatars = [];
-  story.upvoters.forEach((upvoter, index) => {
-    if (upvoterProfileResults[index].status === "fulfilled") {
-      const profile = upvoterProfileResults[index].value;
-      profiles.push({
-        ...upvoter,
-        name: profile.displayName,
-        avatar: profile.safeAvatar ? profile.safeAvatar : "/pfp.png",
-        address: profile.address,
-      });
-      if (profile.safeAvatar) {
-        avatars.push(profile.safeAvatar);
-      }
-    }
-  });
 
   // Collect all identities that need resolving
   const identities = new Set();
@@ -260,8 +138,6 @@ export default async function (trie, theme, index, value, referral) {
         .filter(Boolean),
     }));
   }
-  const actions = profiles.sort((a, b) => a.timestamp - b.timestamp);
-  story.avatars = avatars;
   // NOTE: store.post returns upvoters as objects of "identity" and "timestamp"
   // property so that we can zip them with tipping actions. But the row component
   // expects upvoters to be a string array of Ethereum addresses.
@@ -331,13 +207,6 @@ export default async function (trie, theme, index, value, referral) {
                   null,
                 )({ ...story, index })}
               </thead>
-              <tr>
-                <td>
-                  ${actions.length > 3
-                    ? generateList(actions, story.submitter)
-                    : ""}
-                </td>
-              </tr>
               ${story.comments.length > 0
                 ? html`<tr>
                     <td>
