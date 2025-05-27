@@ -615,22 +615,17 @@ const CommentInput = (props) => {
           ...props.style,
         }}
       >
-        <h4 style={{ marginTop: 0 }}>Comments not available in mini app</h4>
-        <p>Commenting is not currently supported in Farcaster mini apps. Please use the main Kiwi News website to leave comments.</p>
-        <p>
-          <a 
-            href={`https://news.kiwistand.com/stories?index=${getIndex()}`}
-            target="_blank" 
-            style={{ color: "#856404", textDecoration: "underline" }}
-          >
-            Open story in browser
-          </a>
-        </p>
+        <h4 style={{ marginTop: 0 }}>Comments coming soon</h4>
+        <p>Commenting is not currently supported in Farcaster mini apps but will be available soon.</p>
       </div>
     );
   }
   
-  if (!isEligible) return <SiteExplainer />;
+  if (isEligible === false && !isMiniApp) return <SiteExplainer />;
+  
+  if (isEligible === false && isMiniApp) {
+    return null;
+  }
   
   return (
     <div
