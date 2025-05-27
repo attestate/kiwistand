@@ -487,17 +487,8 @@ const Form = (props) => {
         borderRadius: "4px",
         color: "#856404"
       }}>
-        <h3 style={{ marginTop: 0 }}>Submission not available in mini app</h3>
-        <p>Story submission is not currently supported in Farcaster mini apps. Please use the main Kiwi News website to submit stories.</p>
-        <p>
-          <a 
-            href="https://news.kiwistand.com/submit" 
-            target="_blank" 
-            style={{ color: "#856404", textDecoration: "underline" }}
-          >
-            Open Kiwi News in browser
-          </a>
-        </p>
+        <h3 style={{ marginTop: 0 }}>Submission coming soon</h3>
+        <p>Story submission is not currently supported in Farcaster mini apps but will be available soon.</p>
       </div>
     );
   }
