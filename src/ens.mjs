@@ -261,9 +261,13 @@ export async function resolve(address) {
   // Create a unique cache key with prefix to avoid collisions
   const cacheKey = `${ENS_CACHE_PREFIX}${address.toLowerCase()}`;
 
-  // Check if we have the data in cache
+  // Check if we have complete data in cache (not just minimal profile)
   if (cache.has(cacheKey)) {
-    return cache.get(cacheKey);
+    const cached = cache.get(cacheKey);
+    // Only return cached data if it's been fully resolved (has ENS, Farcaster, or Lens data)
+    if (cached.ens || cached.farcaster || cached.lens || cached.neynar) {
+      return cached;
+    }
   }
 
   // Create minimal profile for immediate return
