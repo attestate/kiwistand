@@ -26,7 +26,7 @@ import {
   rainbowWallet,
 } from "@rainbow-me/rainbowkit/wallets";
 import { Connector } from "wagmi";
-import { createWalletClient, custom } from "viem";
+import { createWalletClient, custom, getAddress } from "viem";
 import { IOSWalletProvider } from "./iosWalletProvider";
 import FrameSDK from "@farcaster/frame-sdk";
 
@@ -80,7 +80,7 @@ class IOSWalletConnector extends Connector {
 
   async getAccount() {
     const accounts = await this.provider.request({ method: "eth_accounts" });
-    return accounts[0];
+    return getAddress(accounts[0]);
   }
 
   async getChainId() {
@@ -185,7 +185,8 @@ class FarcasterFrameConnector extends Connector {
       const accounts = await provider.request({
         method: "eth_requestAccounts",
       });
-      const account = accounts[0];
+      console.log("FarcasterFrameConnector.connect accounts", { accounts, firstAccount: accounts[0], type: typeof accounts[0] });
+      const account = getAddress(accounts[0]);
 
       let targetChainId = chainId;
       if (!targetChainId) {
@@ -273,7 +274,9 @@ class FarcasterFrameConnector extends Connector {
   async getAccount() {
     const provider = await this.getProvider();
     const accounts = await provider.request({ method: "eth_accounts" });
-    return accounts[0];
+    const checksummed = getAddress(accounts[0]);
+    console.log("FarcasterFrameConnector.getAccount() called", { raw: accounts[0], checksummed });
+    return checksummed;
   }
 
   async getChainId() {
@@ -341,7 +344,8 @@ class FarcasterFrameConnector extends Connector {
     if (accounts.length === 0) {
       this.emit("disconnect");
     } else {
-      this.emit("change", { account: accounts[0] });
+      console.log("FarcasterFrameConnector.onAccountsChanged", { accounts, firstAccount: accounts[0], type: typeof accounts[0] });
+      this.emit("change", { account: getAddress(accounts[0]) });
     }
   }
 
