@@ -93,7 +93,7 @@ We have an opportunity to build our own corner of the onchain internet. With awe
 
 What to submit?
 On topic:
-Anything that gratifies the intellectual curiosities of builders, engineers, hackers, and craftspeople in the community.
+Anything that gratifies the intellectual curiosities of builders, engineers, hackers.
 We are an Ethereum-first community, but other resources are interesting to us as well.
 
 That includes:
@@ -102,17 +102,19 @@ Technical resources, hacking, and awesome git repos
 Dune dashboards, reports, data-driven articles
 Startups, cryptocurrencies, cryptography
 Networking, privacy, decentralization
-Hardware, open source, art, economics, game theory, privacy
-Anything else our community might find fascinating, covering any subject from philosophy, literature, and pop culture, through science, and health, up to society and infrastructure
-The latest tweets from all our ${twitterFrontends.join(
-  " ",
-)} if they comply with all the other rules.
+Hardware, open source, economics, game theory, privacy
 
-Off topic:
+For tweet-style content, it'll come from multiple places: ${twitterFrontends.join(
+  " ",
+)}. Tweet-style content that is super short should most likely NOT be submitted. Usually if it is low effort r just a random person's point of view.
+Consider the above rules. We are a tech, hacker community. We don't want everyone's random thoughts. Especially not if they're low-effort.
+
+
+Other off topic submissions include: 
 Sensationalist journalism for the sake of ad revenue (including overly optimized click-bait, rage-bait, fluff headlines, clickthrough optimized headlines, cliffhanger headlines, posts with no substance)
 Mediocre resources
 Old stories we all read and that have been widely shared elsewhere
-Shilling if it's for the wrong projects, e.g., Cardano, BNB, centralized projects, scams, KOL-promoted fake projects
+Shilling if it's for the wrong projects, e.g., HYPE, HYPERLIQUID, Cardano, BNB, centralized projects, scams, KOL-promoted fake projects
 Fund raise announcements of projects which are not closely associated with Ethereum
 
 # Are promotional/shilling links allowed?
@@ -122,6 +124,10 @@ important that we only allow promotions of the right projects: Projects
 
 Bitcoin, Ethereum, USDT, Solana, USDC, Lido, Chainlink, Sky, USDT, Circle, USDC, Monero, Coinbase, Base, Farcaster, Warpcast, Uniswap, Aave, TRUMP, Arbitrum, Worldcoin, Maker, Optimism, Railgun, Railway, Curve, ENS, Paragraph, Zora, Flashbots, Unichain, ZKsync, Starknet, Scroll, Gnosis, GHO, EURC, Monerium, Gnosis Pay, Celo, It's super important to strictly adhere to this list and only diverge if it happens to be non exhaustive with regards to Ethereum-related projects which haven't accidentially been mentioned.
 It may also be fine if highly trustworthy individuals from the Ethereum community say something.
+
+For shilling more generally: No content that is specifically direct to retards
+in the Crypto Twitter community which tend to just use false advertisement to
+promote bad articles.
 `;
 
 const GUIDELINES = `We have an opportunity to build our own corner of the onchain internet. With awesome people, links, resources, and learning.
@@ -160,7 +166,7 @@ async function generateClaudeTitle(content) {
   let response;
   try {
     response = await anthropic.messages.create({
-      model: "claude-3-5-haiku-20241022",
+      model: "claude-sonnet-4-20250514",
       max_tokens: 100,
       temperature: 0,
       tools: [
@@ -212,7 +218,7 @@ async function fixTitle(title) {
   let response;
   try {
     response = await anthropic.messages.create({
-      model: "claude-3-5-haiku-20241022",
+      model: "claude-sonnet-4-20250514",
       max_tokens: 100,
       temperature: 0,
       tools: [
@@ -603,7 +609,7 @@ export async function isRelevantToKiwiNews(link, metadataContext = {}) {
   let responseText = "NO"; // Default to NO if anything fails
   try {
     const response = await anthropic.messages.create({
-      model: "claude-3-5-haiku-20241022",
+      model: "claude-sonnet-4-20250514",
       max_tokens: 200, // Just need YES or NO
       temperature: 0, // Deterministic
       messages: [
