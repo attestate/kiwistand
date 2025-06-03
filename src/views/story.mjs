@@ -34,6 +34,7 @@ import { render, cachedMetadata } from "../parser.mjs";
 import { getSubmission } from "../cache.mjs";
 import * as preview from "../preview.mjs";
 import ShareIcon from "./components/shareicon.mjs";
+import { warpcastSvg } from "./components/socialNetworkIcons.mjs";
 
 const html = htm.bind(vhtml);
 
