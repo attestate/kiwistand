@@ -407,7 +407,7 @@ const row = (
                             return part;
                           })
                           .join(""),
-                        25
+                        25,
                       )}${(story.metadata.ogDescription || "").length > 240
                         ? "..."
                         : ""}
@@ -832,16 +832,38 @@ const row = (
                     style="display: flex; align-self: stretch;"
                   >
                     <a
-                      href="https://warpcast.com/~/compose?text=${encodeURIComponent(DOMPurify.sanitize(story.title))}&embeds[]=${encodeURIComponent(`https://news.kiwistand.com/stories/${getSlug(story.title)}?index=0x${story.index}`)}"
+                      href="https://warpcast.com/~/compose?text=${encodeURIComponent(
+                        DOMPurify.sanitize(story.title),
+                      )}&embeds[]=${encodeURIComponent(
+                        `https://news.kiwistand.com/stories/${getSlug(
+                          story.title,
+                        )}?index=0x${story.index}`,
+                      )}"
                       target="_blank"
                       class="interaction-element"
                       title="Share to Farcaster"
-                      style="border-radius: 2px; border: var(--border-thin); background-color: #7c65c1; display: flex; align-items: center; justify-content: center; min-width: 49px; margin: 5px 8px 5px 6px; align-self: stretch; cursor: pointer; text-decoration: none;"
-                      onclick="event.preventDefault(); if (window.ReactNativeWebView || window !== window.parent) { window.sdk.actions.openUrl('https://warpcast.com/~/compose?text=${encodeURIComponent(DOMPurify.sanitize(story.title))}&embeds[]=${encodeURIComponent(`https://news.kiwistand.com/stories/${getSlug(story.title)}?index=0x${story.index}`)}'); } else { window.open('https://warpcast.com/~/compose?text=${encodeURIComponent(DOMPurify.sanitize(story.title))}&embeds[]=${encodeURIComponent(`https://news.kiwistand.com/stories/${getSlug(story.title)}?index=0x${story.index}`)}', '_blank'); }"
+                      style="border-radius: 2px; border: var(--border-thin); background-color: rgba(124, 101, 193, 0.5); display: flex; align-items: center; justify-content: center; min-width: 49px; margin: 5px 8px 5px 6px; align-self: stretch; cursor: pointer; text-decoration: none;"
+                      onclick="event.preventDefault(); if (window.ReactNativeWebView || window !== window.parent) { window.sdk.actions.openUrl('https://warpcast.com/~/compose?text=${encodeURIComponent(
+                        DOMPurify.sanitize(story.title),
+                      )}&embeds[]=${encodeURIComponent(
+                        `https://news.kiwistand.com/stories/${getSlug(
+                          story.title,
+                        )}?index=0x${story.index}`,
+                      )}'); } else { window.open('https://warpcast.com/~/compose?text=${encodeURIComponent(
+                        DOMPurify.sanitize(story.title),
+                      )}&embeds[]=${encodeURIComponent(
+                        `https://news.kiwistand.com/stories/${getSlug(
+                          story.title,
+                        )}?index=0x${story.index}`,
+                      )}', '_blank'); }"
                     >
                       <div style="min-height: 42px; display:block;">
-                        <div style="display: flex; align-items: center; justify-content: center; height: 100%;">
-                          ${warpcastSvg("width: 24px; height: 24px; color: white;")}
+                        <div
+                          style="display: flex; align-items: center; justify-content: center; height: 100%;"
+                        >
+                          ${warpcastSvg(
+                            "width: 24px; height: 24px; color: white;",
+                          )}
                         </div>
                       </div>
                     </a>
