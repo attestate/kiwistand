@@ -23,7 +23,7 @@ export function custom(
       action: {
         name: "Kiwi News",
         type: "launch_frame",
-        url: "https://news.kiwistand.com/?miniapp=true",
+        url: canonicalUrl || "https://news.kiwistand.com/?miniapp=true",
       },
     },
   });
