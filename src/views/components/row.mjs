@@ -390,22 +390,24 @@ const row = (
                       </div>
                     </div>
                     <div
-                      style="font-size:15px; line-height:1.5; flex:1; overflow:hidden; white-space:pre-wrap; word-wrap:break-word;"
+                      style="font-size:15px; line-height:1.5; flex:1; overflow:hidden; white-space:pre-wrap; word-wrap:break-word; word-break:break-word;"
                     >
-                      ${DOMPurify.sanitize(story.metadata.ogDescription || "")
-                        .slice(0, 240)
-                        .split(/(\bhttps?:\/\/[^\s]+)/g)
-                        .map((part) => {
-                          if (part.match(/^\bhttps?:\/\//)) {
-                            // This is a URL part
-                            return part.length > 30
-                              ? part.substring(0, 30) + "..."
-                              : part;
-                          }
-                          return part;
-                        })
-                        .join("")}${(story.metadata.ogDescription || "")
-                        .length > 240
+                      ${truncateLongWords(
+                        DOMPurify.sanitize(story.metadata.ogDescription || "")
+                          .slice(0, 240)
+                          .split(/(\bhttps?:\/\/[^\s]+)/g)
+                          .map((part) => {
+                            if (part.match(/^\bhttps?:\/\//)) {
+                              // This is a URL part
+                              return part.length > 30
+                                ? part.substring(0, 30) + "..."
+                                : part;
+                            }
+                            return part;
+                          })
+                          .join(""),
+                        25
+                      )}${(story.metadata.ogDescription || "").length > 240
                         ? "..."
                         : ""}
                     </div>
@@ -944,7 +946,7 @@ const row = (
                         <div style="padding-left:20px;">
                           <span
                             class="comment-preview-text"
-                            style="display: block; white-space: pre-wrap; touch-action: manipulation;user-select: none;"
+                            style="display: block; white-space: pre-wrap; word-break: break-word; touch-action: manipulation;user-select: none;"
                             >${truncateComment(
                               DOMPurify.sanitize(story.lastComment.title),
                             )}</span
