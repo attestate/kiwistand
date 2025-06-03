@@ -80,10 +80,12 @@ export async function generatePreview(index) {
       value.submitter.displayName,
       value.submitter.safeAvatar,
     );
-    await preview.generate(hexIndex, body);
+    await preview.generate(hexIndex, body); // Generate OG image (1200x630)
+    await preview.generate(hexIndex, body, true); // Generate frame image (1200x800)
   } catch (err) {
     const body = preview.story(value.title, value.submitter.displayName);
-    await preview.generate(hexIndex, body);
+    await preview.generate(hexIndex, body); // Generate OG image (1200x630)
+    await preview.generate(hexIndex, body, true); // Generate frame image (1200x800)
   }
 }
 
@@ -97,7 +99,6 @@ export default async function (trie, theme, index, value, referral) {
     ...value,
     metadata: data,
   };
-
 
   // Collect all identities that need resolving
   const identities = new Set();
@@ -147,6 +148,23 @@ export default async function (trie, theme, index, value, referral) {
   story.submitter = ensData;
   story.displayName = ensData.displayName;
 
+  // Ensure frame preview exists for Farcaster embeds (after ENS resolution)
+  if (!isCloudflareImage(value.href)) {
+    const hexIndex = index.substring(2);
+    try {
+      const body = preview.story(
+        value.title,
+        story.submitter.displayName,
+        story.submitter.safeAvatar,
+      );
+      await preview.generate(hexIndex, body, true); // Generate frame version if missing
+    } catch (err) {
+      // Fallback without avatar if there's an error
+      const body = preview.story(value.title, story.submitter.displayName);
+      await preview.generate(hexIndex, body, true);
+    }
+  }
+
   const start = 0;
   const style = "";
 
@@ -161,12 +179,24 @@ export default async function (trie, theme, index, value, referral) {
     ogImage = `https://news.kiwistand.com/previews/${index}.jpg`;
   }
 
+  // Generate frame-specific image URL for Farcaster embeds only
+  let baseUrl = "https://news.kiwistand.com";
+  if (env.CUSTOM_HOST_NAME && env.CUSTOM_PROTOCOL) {
+    // Remove port for public URLs like meta tags
+    const hostWithoutPort = env.CUSTOM_HOST_NAME.split(':')[0];
+    baseUrl = `${env.CUSTOM_PROTOCOL}${hostWithoutPort}`;
+  }
+  
+  const frameImage = isCloudflareImage(value.href) 
+    ? ogImage  // Use same for Cloudflare images
+    : `${baseUrl}/previews/${index.substring(2)}-frame.jpg`;
+
   const ogDescription =
     data && data.ogDescription
       ? data.ogDescription
       : "Kiwi News is the prime feed for hacker engineers building a decentralized future. All our content is handpicked and curated by crypto veterans.";
   const slug = getSlug(value.title);
-  const canonicalUrl = `https://news.kiwistand.com/stories/${slug}?index=0x${index}`;
+  const canonicalUrl = `${baseUrl}/stories/${slug}?index=0x${index}`;
 
   return html`
     <html lang="en" op="news">
@@ -179,6 +209,7 @@ export default async function (trie, theme, index, value, referral) {
           undefined,
           ["/", "/new?cached=true", "/submit"],
           canonicalUrl,
+          frameImage,
         )}
       </head>
       <body

@@ -5,18 +5,6 @@ import DOMPurify from "isomorphic-dompurify";
 import PwaLinks from "./pwaLinks.mjs";
 
 const html = htm.bind(vhtml);
-const embedMetaContent = JSON.stringify({
-  version: "next",
-  imageUrl: "https://news.kiwistand.com/pwa_maskable_icon.png",
-  button: {
-    title: "Open Kiwi News",
-    action: {
-      name: "Kiwi News",
-      type: "launch_frame",
-      url: "https://news.kiwistand.com/?miniapp=true",
-    },
-  },
-});
 
 export function custom(
   ogImage = "https://news.kiwistand.com/preview.jpeg",
@@ -25,7 +13,20 @@ export function custom(
   twitterCard = "summary_large_image",
   prefetch = [],
   canonicalUrl = null,
+  frameImage = null,
 ) {
+  const embedMetaContent = JSON.stringify({
+    version: "next",
+    imageUrl: frameImage || ogImage,
+    button: {
+      title: "Open Kiwi News",
+      action: {
+        name: "Kiwi News",
+        type: "launch_frame",
+        url: "https://news.kiwistand.com/?miniapp=true",
+      },
+    },
+  });
   if (process.env.NODE_ENV === "production") {
     prefetch = [
       ...prefetch,

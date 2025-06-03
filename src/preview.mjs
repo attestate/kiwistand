@@ -160,8 +160,93 @@ export function story(title, displayName, avatar) {
   `;
 }
 
-export async function generate(name, body) {
-  const filePath = resolve(`./src/public/previews/${name}.jpg`);
+export function storyFrame(title, displayName, avatar) {
+  title = title.replace(emojiMatcher, "");
+  return html`
+    <div
+      style=${{
+        height: "100%",
+        width: "100%",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        backgroundColor: "#F6F6EF",
+        color: "#828282",
+        padding: "2rem",
+      }}
+    >
+      <p
+        style=${{
+          fontFamily: "VerdanaBold",
+          fontSize: "3.5rem",
+          color: "black",
+          padding: "1rem",
+          lineHeight: 1.1,
+          margin: "0 0 1rem 0",
+          backgroundColor: "rgba(0,0,0,0.1)",
+          borderRadius: "2px",
+          border: "2px solid rgba(0,0,0,0.1)",
+          textAlign: "center",
+        }}
+      >
+        ${title}
+      </p>
+      <div
+        style=${{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "1rem",
+        }}
+      >
+        ${avatar
+          ? html`
+              <img
+                style=${{
+                  height: "2.5rem",
+                  width: "2.5rem",
+                  borderRadius: "2px",
+                  border: "2px solid black",
+                }}
+                src="${cfTransform(avatar, 300)}"
+              />
+            `
+          : null}
+        <div
+          style=${{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+          }}
+        >
+          <p
+            style=${{
+              fontSize: "1.5rem",
+              margin: "0 0 0.2rem 0",
+              color: "black",
+            }}
+          >
+            submitted by
+          </p>
+          <p
+            style=${{
+              fontFamily: "VerdanaBold",
+              color: "black",
+              fontSize: "2rem",
+              margin: 0,
+            }}
+          >
+            ${displayName}
+          </p>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+export async function generate(name, body, isFrame = false) {
+  const suffix = isFrame ? "-frame" : "";
+  const filePath = resolve(`./src/public/previews/${name}${suffix}.jpg`);
 
   try {
     await access(filePath);
@@ -185,9 +270,11 @@ export async function generate(name, body) {
     style: "normal",
   };
 
+  // Farcaster frames must be 3:2 aspect ratio per docs, OG images use 1.91:1
+  const dimensions = isFrame ? { width: 1200, height: 800 } : { width: 1200, height: 630 };
+  
   const svgData = await satori(body, {
-    width: 1200,
-    height: 630,
+    ...dimensions,
     fonts: [verdana, verdanaBold],
   });
   await sharp(Buffer.from(svgData))
