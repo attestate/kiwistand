@@ -28,11 +28,11 @@ export async function fetchBulkUsersByEthAddress(address) {
   }
 }
 
-export async function sendNotification(target_url, body, title) {
+export async function sendNotification(target_url, body, title, targetFids = []) {
   const notification = { title, body, target_url };
   try {
     const resp = await client.publishFrameNotifications({
-      targetFids: [],
+      targetFids,
       notification,
     });
     return resp;
@@ -46,5 +46,26 @@ export async function sendNotification(target_url, body, title) {
       };
     }
     throw error;
+  }
+}
+
+export async function getFidsFromAddresses(addresses) {
+  if (!addresses || addresses.length === 0) return [];
+  
+  try {
+    const resp = await client.fetchBulkUsersByEthOrSolAddress({addresses});
+    const fids = [];
+    
+    for (const address of addresses) {
+      const userData = resp[address.toLowerCase()];
+      if (userData && userData.length > 0) {
+        fids.push(userData[0].fid);
+      }
+    }
+    
+    return fids;
+  } catch (error) {
+    console.error("Error fetching FIDs from addresses:", error);
+    return [];
   }
 }

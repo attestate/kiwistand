@@ -11,6 +11,7 @@ import { resolve } from "./ens.mjs";
 import * as email from "./email.mjs";
 import { truncateComment } from "./views/activity.mjs";
 import { getSlug } from "./utils.mjs";
+import { sendNotification, getFidsFromAddresses } from "./neynar.mjs";
 
 if (env.NODE_ENV == "production")
   webpush.setVapidDetails(
@@ -73,6 +74,32 @@ export async function triggerNotification(message) {
   const maxChars = 140;
   const slug = getSlug(submission.title);
   const url = `https://news.kiwistand.com/stories/${slug}?index=0x${submission.index}#0x${message.index}`;
+
+  // Get FIDs for Neynar notifications
+  let targetFids = [];
+  try {
+    targetFids = await getFidsFromAddresses(uniqueReceivers);
+  } catch (err) {
+    log(`Failed to get FIDs for Neynar notifications: ${err}`);
+  }
+
+  // Send Neynar notifications if we have FIDs
+  if (targetFids.length > 0) {
+    try {
+      const fcTitle = "New comment"; // Max 32 chars
+      const fcBody = `${ensData.displayName}: ${truncateComment(message.title, 128 - ensData.displayName.length - 2)}`; // Max 128 chars total
+      
+      await sendNotification(
+        url,
+        fcBody,
+        fcTitle,
+        targetFids
+      );
+      log(`Sent Neynar notifications to ${targetFids.length} FIDs`);
+    } catch (err) {
+      log(`Failed to send Neynar notifications: ${err}`);
+    }
+  }
 
   await Promise.allSettled(
     uniqueReceivers.map(async (receiver) => {
