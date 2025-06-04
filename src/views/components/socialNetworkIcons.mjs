@@ -8,7 +8,11 @@ const defaultIconStyle = "width: 16px;";
 
 export function SocialButton(url, icon, text, isImg) {
   url = DOMPurify.sanitize(url);
-  return html`<a target="_blank" href="${url}">
+  return html`<a 
+    target="_blank" 
+    href="javascript:void(0);"
+    onclick="if (window.ReactNativeWebView || window !== window.parent) { window.sdk.actions.openUrl('${url}'); } else { window.open('${url}', '_blank'); }"
+  >
     <button
       class="feed-button"
       style="display: flex; align-items: center; gap: 5px;  font-size: 0.9rem; border-radius: 2px; cursor: pointer; padding: 5px 10px; background-color: transparent; border: 1px solid #828282; color: #828282;"
