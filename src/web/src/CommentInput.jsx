@@ -7,6 +7,7 @@ import { eligible } from "@attestate/delegator2";
 import Drawer from "react-bottom-drawer";
 import slugify from "slugify";
 import DOMPurify from "isomorphic-dompurify";
+import { sdk } from "@farcaster/frame-sdk";
 
 import * as API from "./API.mjs";
 import { getLocalAccount } from "./session.mjs";
@@ -186,7 +187,16 @@ const MobileComposer = ({
           Cancel
         </button>
         <button
-          onClick={onSubmit}
+          onClick={async (e) => {
+            // Add haptic feedback for comment submission
+            try {
+              await sdk.haptics.impactOccurred('light');
+            } catch (error) {
+              // Silently fail if haptics not supported
+            }
+            
+            onSubmit(e);
+          }}
           disabled={isLoading}
           style={{
             background: "black",
@@ -692,7 +702,16 @@ const CommentInput = (props) => {
               id="button-onboarding"
               style={{ marginBottom: "10px", width: "auto" }}
               disabled={isLoading || !address || !isEligible}
-              onClick={handleSubmit}
+              onClick={async (e) => {
+                // Add haptic feedback for comment submission
+                try {
+                  await sdk.haptics.impactOccurred('light');
+                } catch (error) {
+                  // Silently fail if haptics not supported
+                }
+                
+                handleSubmit(e);
+              }}
             >
               {isLoading ? "Submitting..." : "Add comment"}
             </button>

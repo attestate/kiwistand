@@ -5,6 +5,7 @@ import { RainbowKitProvider, ConnectButton } from "@rainbow-me/rainbowkit";
 import { eligible } from "@attestate/delegator2";
 import DOMPurify from "isomorphic-dompurify";
 import slugify from "slugify";
+import { sdk } from "@farcaster/frame-sdk";
 slugify.extend({ "′": "", "'": "", "'": "", '"': "" });
 
 import * as API from "./API.mjs";
@@ -470,7 +471,16 @@ const SubmitButton = (props) => {
         <button
           id="button-onboarding"
           style={buttonStyles}
-          onClick={handleClick}
+          onClick={async (e) => {
+            // Add haptic feedback for submit action
+            try {
+              await sdk.haptics.impactOccurred('medium');
+            } catch (error) {
+              // Silently fail if haptics not supported
+            }
+            
+            handleClick(e);
+          }}
           disabled={
             isLoading ||
             !isEligible ||

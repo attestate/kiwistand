@@ -7,6 +7,7 @@ import { Wallet } from "@ethersproject/wallet";
 import { RainbowKitProvider, ConnectButton } from "@rainbow-me/rainbowkit";
 import { eligible } from "@attestate/delegator2";
 import DOMPurify from "isomorphic-dompurify";
+import { sdk } from "@farcaster/frame-sdk";
 
 import * as API from "./API.mjs";
 import { useSigner, useProvider, client, chains, isInFarcasterFrame } from "./client.mjs";
@@ -126,10 +127,6 @@ const Vote = (props) => {
       return;
     }
     
-    if (isMiniApp && !account.isConnected) {
-      toast.error("Please connect your wallet to upvote");
-      return;
-    }
 
     // Set upvoted state immediately for better UX
     setHasUpvoted(true);
@@ -302,6 +299,13 @@ const Vote = (props) => {
                 return;
               }
 
+              // Add haptic feedback for vote action
+              try {
+                await sdk.haptics.impactOccurred('medium');
+              } catch (error) {
+                // Silently fail if haptics not supported
+              }
+              
               handleSubmit(e);
             }}
             className={hasUpvoted ? "" : "interaction-element"}
