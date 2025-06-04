@@ -279,7 +279,7 @@ export default async function (trie, theme, index, value, referral) {
                                   <span> • </span>
                                   <a
                                     class="meta-link"
-                                    href="/stories?index=0x${index}#0x${comment.index}"
+                                    href="/stories/${getSlug(value.title)}?index=0x${index}#0x${comment.index}"
                                   >
                                     <span>
                                       ${formatDistanceToNowStrict(

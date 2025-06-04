@@ -402,38 +402,28 @@ async function atomicPut(trie, message, identity, accounts, delegations) {
       if (message.type === "comment") {
         const [, commentIndex] = message.href.split(":");
 
-        if (isReactionComment(message.title)) {
-          // NOTE: We're purging in a non-blocking way if the comment is an
-          // emoji reaction.
-          purgeCache(
-            `https://news.kiwistand.com/stories?index=${commentIndex}`,
-          ).catch((err) => log(`Failed to purge CF cache: ${err}`));
-        } else {
-          // Purge the main stories page synchronously so the user can see their
-          // comment when submitting a comment
-          await purgeCache(
-            `https://news.kiwistand.com/stories?index=${commentIndex}`,
-          );
+        // Purge the slug-based story page synchronously so users can see their 
+        // comment or emoji reaction immediately
+        try {
+          const story = await leaf(trie, Buffer.from(commentIndex.substring(2), "hex"), JSON.parse);
+          // NOTE: We must filter for comments of comments here because their
+          // title property is the comment content and not the title of the
+          // story.
+          if (story && story.title && story.type !== "comment") {
+            await purgeCache(
+              `https://news.kiwistand.com/stories/${getSlug(
+                story.title,
+              )}?index=${commentIndex}`,
+            );
+          }
+        } catch (err) {
+          log(`Failed to get story title for cache purging: ${err.toString()}`);
         }
 
-        leaf(trie, Buffer.from(commentIndex.substring(2), "hex"), JSON.parse)
-          .then((story) => {
-            // NOTE: We must filter for comments of comments here because their
-            // title property is the comment content and not the title of the
-            // story.
-            if (story && story.title && story.type !== "comment") {
-              return purgeCache(
-                `https://news.kiwistand.com/stories/${getSlug(
-                  story.title,
-                )}?index=${commentIndex}`,
-              );
-            }
-          })
-          .catch((err) =>
-            log(
-              `Failed to get story title for cache purging: ${err.toString()}`,
-            ),
-          );
+        // Also purge legacy format asynchronously for any cached old URLs
+        purgeCache(
+          `https://news.kiwistand.com/stories?index=${commentIndex}`,
+        ).catch((err) => log(`Failed to purge legacy stories cache: ${err}`));
 
         // API endpoint purge can still be async
         purgeCache(

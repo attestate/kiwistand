@@ -341,10 +341,31 @@ const CommentInput = (props) => {
   const [showMobileComposer, setShowMobileComposer] = useState(false);
   const [disableAutoOpen, setDisableAutoOpen] = useState(false);
   const [isMiniApp, setIsMiniApp] = useState(false);
+  const [storyTitle, setStoryTitle] = useState(null);
   const isMobile = useIsMobile();
   useEffect(() => {
     localStorage.setItem(`-kiwi-news-comment-${address}-${getIndex()}`, text);
   }, [text]);
+
+  // Fetch story title on component load for slug generation
+  useEffect(() => {
+    const fetchStoryTitle = async () => {
+      try {
+        const index = getIndex();
+        const storyResponse = await fetch(`/api/v1/stories?index=${index}`);
+        if (storyResponse.ok) {
+          const storyData = await storyResponse.json();
+          if (storyData.data && storyData.data[0] && storyData.data[0].title) {
+            setStoryTitle(storyData.data[0].title);
+          }
+        }
+      } catch (err) {
+        console.log("Failed to fetch story title for slug generation");
+      }
+    };
+
+    fetchStoryTitle();
+  }, []);
 
   useEffect(() => {
     const checkMiniApp = async () => {
@@ -526,8 +547,13 @@ const CommentInput = (props) => {
         localStorage.removeItem(`-kiwi-news-comment-${address}-${index}`);
         setText(""); // Clear input
 
-        // Construct reload URL (potentially with hash for new comment)
-        const path = `/stories?index=${index}`;
+        // Construct reload URL using pre-fetched story title
+        let path = `/stories?index=${index}`; // fallback
+        if (storyTitle) {
+          const slug = getSlug(storyTitle);
+          path = `/stories/${slug}?index=${index}`;
+        }
+        
         const nextPage = new URL(path, window.location.origin);
         if (response?.data?.index) {
            // Use the index confirmed by the server

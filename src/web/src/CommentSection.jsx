@@ -13,6 +13,7 @@ import * as API from "./API.mjs";
 import { getLocalAccount, isIOS, isRunningPWA } from "./session.mjs";
 import { resolveAvatar } from "./Avatar.jsx";
 import { dynamicPrefetch } from "./main.jsx";
+import { getSlug } from "./CommentInput.jsx"; // Import getSlug from CommentInput
 
 function ShareIcon(style) {
   return (
@@ -433,7 +434,7 @@ const EmailNotificationLink = (props) => {
 };
 
 const Comment = React.forwardRef(
-  ({ comment, storyIndex, allowlist, delegations, toast }, ref) => {
+  ({ comment, storyIndex, storyTitle, allowlist, delegations, toast }, ref) => {
     const [isCollapsed, setIsCollapsed] = useState(false);
     const toggleCollapsed = (e) => {
       if (e.target.closest("a")) {
@@ -446,7 +447,10 @@ const Comment = React.forwardRef(
       window.location.hash === `#0x${comment.index}`,
     );
 
-    const url = `${window.location.origin}/stories?index=${storyIndex}#0x${comment.index}`;
+    // Generate proper slug URL if we have the story title, otherwise fallback
+    const url = storyTitle 
+      ? `${window.location.origin}/stories/${getSlug(storyTitle)}?index=${storyIndex}#0x${comment.index}`
+      : `${window.location.origin}/stories?index=${storyIndex}#0x${comment.index}`;
     const handleShare = async (e) => {
       e.preventDefault();
       try {
@@ -620,6 +624,7 @@ const CommentsSection = (props) => {
   const [shown, setShown] = useState(false);
   const lastCommentRef = useRef(null);
   const [source, setSource] = useState(null);
+  const [storyTitle, setStoryTitle] = useState(null);
 
   useEffect(() => {
     const toggle = (evt) => {
@@ -652,6 +657,7 @@ const CommentsSection = (props) => {
 
       const story = await API.fetchStory(storyIndex, commentCount);
       if (story && story.comments) setComments(story.comments);
+      if (story && story.title) setStoryTitle(story.title);
     })();
   }, [storyIndex]);
 
@@ -688,6 +694,7 @@ const CommentsSection = (props) => {
                 key={comment.index}
                 comment={comment}
                 storyIndex={storyIndex}
+                storyTitle={storyTitle}
               />
             ))}
           <NotificationOptIn {...props} />
