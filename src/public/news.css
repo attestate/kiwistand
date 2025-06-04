@@ -107,6 +107,9 @@ button, a, .interaction-element {
   display: flex;
   align-self: stretch;
 }
+html {
+  background-color: #f9f9f9;
+}
 body {
      margin: 0;
      font-family: var(--font-family);
