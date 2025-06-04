@@ -5,7 +5,6 @@ import { eligible } from "@attestate/delegator2";
 
 import { Connector } from "./Navigation.jsx";
 import { getLocalAccount } from "./session.mjs";
-import { isInFarcasterFrame } from "./client.mjs";
 import DelegateButton from "./DelegateButton.jsx";
 
 if (document.querySelector("nav-delegation-modal")) {
@@ -18,24 +17,7 @@ function SimpleModal(props) {
 
   const { toast, allowlist, delegations } = props;
 
-  async function openModal() {
-    // Skip delegation modal for mini apps - they should accept any interaction
-    let isMiniApp = false;
-    try {
-      // Use the same conservative detection as Vote component
-      if (isInFarcasterFrame() && window.sdk) {
-        isMiniApp = await window.sdk.isInMiniApp();
-      }
-    } catch (err) {
-      console.log("Mini app detection failed in DelegationModal:", err);
-      isMiniApp = false;
-    }
-    
-    if (isMiniApp) {
-      closeModal();
-      return;
-    }
-
+  function openModal() {
     if (
       !account.isConnected ||
       (window.location.pathname !== "/" &&
@@ -62,9 +44,7 @@ function SimpleModal(props) {
   }
 
   useEffect(() => {
-    openModal().catch(err => {
-      console.error("Error in openModal:", err);
-    });
+    openModal();
   }, [account.address, account.isConnected]);
 
   const customStyles = {

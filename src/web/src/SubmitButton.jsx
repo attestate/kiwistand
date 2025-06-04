@@ -425,6 +425,44 @@ const SubmitButton = (props) => {
     window.location.href = nextPage.href;
   };
 
+  if (!isEligible && account.isConnected) {
+    return (
+      <div>
+        <div style={{
+          padding: "1rem",
+          margin: "1rem 0",
+          background: "#fff3cd",
+          border: "1px solid #856404",
+          borderRadius: "4px",
+          color: "#856404",
+          maxWidth: "600px"
+        }}>
+          <h3 style={{ marginTop: 0 }}>Kiwi Pass Required</h3>
+          <p>Only Kiwi Pass holders can submit stories to Kiwi News. Get your Kiwi Pass to start curating the best crypto content!</p>
+          <p>
+            <a 
+              href="/kiwipass-mint" 
+              style={{ 
+                color: "#856404", 
+                textDecoration: "underline",
+                fontWeight: "bold" 
+              }}
+            >
+              Get your Kiwi Pass →
+            </a>
+          </p>
+        </div>
+        <button
+          id="button-onboarding"
+          style={{...buttonStyles, opacity: 0.5, cursor: "not-allowed"}}
+          disabled={true}
+        >
+          Submit (Kiwi Pass Required)
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div>
       {/* AdForm removed */}
@@ -459,39 +497,6 @@ const SubmitButton = (props) => {
 const Form = (props) => {
   const urlInput = document.getElementById("urlInput");
   const [url, setURL] = useState(urlInput.value);
-  const [isMiniApp, setIsMiniApp] = useState(false);
-
-  useEffect(() => {
-    const checkMiniApp = async () => {
-      let miniAppDetected = false;
-      try {
-        if (isInFarcasterFrame() && window.sdk) {
-          miniAppDetected = await window.sdk.isInMiniApp();
-        }
-      } catch (err) {
-        miniAppDetected = false;
-      }
-      setIsMiniApp(miniAppDetected);
-    };
-    
-    checkMiniApp();
-  }, []);
-
-  if (isMiniApp) {
-    return (
-      <div style={{
-        padding: "1rem",
-        margin: "1rem",
-        background: "#fff3cd",
-        border: "1px solid #856404",
-        borderRadius: "4px",
-        color: "#856404"
-      }}>
-        <h3 style={{ marginTop: 0 }}>Submission coming soon</h3>
-        <p>Story submission is not currently supported in Farcaster mini apps but will be available soon.</p>
-      </div>
-    );
-  }
 
   return (
     <WagmiConfig config={client}>
