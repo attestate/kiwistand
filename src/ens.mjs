@@ -9,7 +9,6 @@ import { allowlist } from "./chainstate/registry.mjs";
 import { fetchCache } from "./utils.mjs";
 import cache from "./cache.mjs";
 import log from "./logger.mjs";
-import { fetchBulkUsersByEthAddress } from "./neynar.mjs";
 
 const provider = new providers.JsonRpcProvider(env.RPC_HTTP_HOST);
 
@@ -258,8 +257,9 @@ export async function fetchENSData(address) {
 export const ENS_CACHE_PREFIX = "ens-profile-";
 
 export async function resolve(address) {
-  // Create a unique cache key with prefix to avoid collisions
-  const cacheKey = `${ENS_CACHE_PREFIX}${address.toLowerCase()}`;
+  // Normalize address for consistent cache keys and API calls
+  const normalizedAddress = address.toLowerCase();
+  const cacheKey = `${ENS_CACHE_PREFIX}${normalizedAddress}`;
 
   // Check if we have complete data in cache (not just minimal profile)
   if (cache.has(cacheKey)) {
@@ -285,13 +285,13 @@ export async function resolve(address) {
   // Trigger background fetch and update cache when done - don't await
   (async () => {
     try {
-      const ensProfile = await fetchENSData(address);
-      const lensProfile = await fetchLensData(address);
+      const ensProfile = await fetchENSData(normalizedAddress);
+      const lensProfile = await fetchLensData(normalizedAddress);
 
       // If ENS failed and didn't return Neynar data, try Neynar independently
       let neynarProfile = null;
       if (ensProfile.error && !ensProfile.farcaster) {
-        neynarProfile = await fetchNeynarData(address);
+        neynarProfile = await fetchNeynarData(normalizedAddress);
       }
 
       let safeAvatar = ensProfile.avatar_small

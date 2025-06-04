@@ -11,22 +11,6 @@ const config = new Configuration({
 
 const client = new NeynarAPIClient(config);
 
-export async function fetchBulkUsersByEthAddress(address) {
-  try {
-    const resp = await client.fetchBulkUsersByEthOrSolAddress({addresses: [address]});
-    return resp;
-  } catch (error) {
-    if (isApiErrorResponse(error)) {
-      return {
-        status: "error",
-        code: error.response.status,
-        message: "API Error",
-        details: error.response.data,
-      };
-    }
-    throw error;
-  }
-}
 
 export async function sendNotification(target_url, body, title, targetFids = []) {
   const notification = { title, body, target_url };
