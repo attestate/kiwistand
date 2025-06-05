@@ -403,21 +403,6 @@ export async function launch(trie, libp2p, isPrimary = true) {
   } catch (err) {
     fingerprint = await import("./fingerprint_example.mjs");
   }
-  function removeReferrerParams(link) {
-    const url = new URL(link);
-    if (url.hostname.endsWith("mirror.xyz")) {
-      url.searchParams.delete("referrerAddress");
-    } else if (
-      url.hostname.endsWith("paragraph.xyz") ||
-      url.hostname.endsWith("zora.co") ||
-      url.hostname.endsWith("manifold.xyz")
-    ) {
-      url.searchParams.delete("referrer");
-    } else if (url.hostname.endsWith("foundation.app")) {
-      url.searchParams.delete("ref");
-    }
-    return url.toString();
-  }
 
   app.get("/redirect/:index", (req, res) => {
     let sub;
@@ -443,8 +428,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
     }
 
     const hash = fingerprint.generate(request);
-    const cleanUrl = removeReferrerParams(url);
-    trackOutbound(cleanUrl, hash);
+    trackOutbound(url, hash);
     return reply.status(204).send();
   });
 
@@ -459,8 +443,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
     }
 
     const hash = fingerprint.generate(request);
-    const cleanUrl = removeReferrerParams(url);
-    trackImpression(cleanUrl, hash);
+    trackImpression(url, hash);
     return reply.status(204).send();
   });
   // Disabled GET outbound tracking due to spam abuse - POST still works for sendBeacon

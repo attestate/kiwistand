@@ -167,23 +167,6 @@ export function extractDomain(link) {
   return tld;
 }
 
-export function addOrUpdateReferrer(link, address) {
-  if (!address) return link;
-
-  const url = new URL(link);
-  if (url.hostname.endsWith("mirror.xyz")) {
-    url.searchParams.set("referrerAddress", address);
-  } else if (
-    url.hostname.endsWith("paragraph.xyz") ||
-    url.hostname.endsWith("zora.co") ||
-    url.hostname.endsWith("manifold.xyz")
-  ) {
-    url.searchParams.set("referrer", address);
-  } else if (url.hostname.endsWith("foundation.app")) {
-    url.searchParams.set("ref", address);
-  }
-  return url.toString();
-}
 
 const truncateLongWords = (text, maxLength = 20) => {
   const words = text.split(" ");
@@ -279,7 +262,7 @@ const row = (
     const commentCount = commentCounts.get(submissionId) || 0;
     const outboundsLookbackHours = 24 * 5;
     const clicks = countOutbounds(
-      addOrUpdateReferrer(story.href, story.identity),
+      story.href,
       outboundsLookbackHours,
     );
     const extractedDomain = extractDomain(DOMPurify.sanitize(story.href));
@@ -352,21 +335,9 @@ const row = (
               ? html`<a
                   class="tweet-preview-container"
                   data-no-instant
-                  href="${addOrUpdateReferrer(
-                    DOMPurify.sanitize(story.href),
-                    story.identity,
-                  )}"
+                  href="${DOMPurify.sanitize(story.href)}"
                   target="_blank"
-                  onclick="event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${addOrUpdateReferrer(
-                    DOMPurify.sanitize(story.href),
-                    story.identity,
-                  )}')); if (window.ReactNativeWebView || window !== window.parent) { window.sdk.actions.openUrl('${addOrUpdateReferrer(
-                    DOMPurify.sanitize(story.href),
-                    story.identity,
-                  )}'); } else { window.open('${addOrUpdateReferrer(
-                    DOMPurify.sanitize(story.href),
-                    story.identity,
-                  )}', event.currentTarget.getAttribute('target')); }"
+                  onclick="event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${DOMPurify.sanitize(story.href)}')); if (window.ReactNativeWebView || window !== window.parent) { window.sdk.actions.openUrl('${DOMPurify.sanitize(story.href)}'); } else { window.open('${DOMPurify.sanitize(story.href)}', event.currentTarget.getAttribute('target')); }"
                   style="text-decoration:none; color:inherit; display:block;"
                 >
                   <div
@@ -419,20 +390,8 @@ const row = (
                   data-no-instant
                   style="display: block; width: 100%;"
                   class="mobile-row-image"
-                  href="${addOrUpdateReferrer(
-                    DOMPurify.sanitize(story.href),
-                    story.identity,
-                  )}"
-                  onclick="event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${addOrUpdateReferrer(
-                    DOMPurify.sanitize(story.href),
-                    story.identity,
-                  )}')); if (window.ReactNativeWebView || window !== window.parent) { window.sdk.actions.openUrl('${addOrUpdateReferrer(
-                    DOMPurify.sanitize(story.href),
-                    story.identity,
-                  )}'); } else { window.open('${addOrUpdateReferrer(
-                    DOMPurify.sanitize(story.href),
-                    story.identity,
-                  )}', event.currentTarget.getAttribute('target')); }"
+                  href="${DOMPurify.sanitize(story.href)}"
+                  onclick="event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${DOMPurify.sanitize(story.href)}')); if (window.ReactNativeWebView || window !== window.parent) { window.sdk.actions.openUrl('${DOMPurify.sanitize(story.href)}'); } else { window.open('${DOMPurify.sanitize(story.href)}', event.currentTarget.getAttribute('target')); }"
                 >
                   <div style="position: relative;">
                     <img
@@ -516,23 +475,11 @@ const row = (
                 !isSubstackDomain(extractedDomain) // Keep substack check specific to desktop?
                   ? html`<a
                       data-no-instant
-                      href="${addOrUpdateReferrer(
-                        DOMPurify.sanitize(story.href),
-                        story.identity,
-                      )}"
+                      href="${DOMPurify.sanitize(story.href)}"
                       class="row-image"
                       target="_blank"
                       style="user-select:text; align-self: stretch; margin: 5px 0;"
-                      onclick="event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${addOrUpdateReferrer(
-                        DOMPurify.sanitize(story.href),
-                        story.identity,
-                      )}')); if (window.ReactNativeWebView || window !== window.parent) { window.sdk.actions.openUrl('${addOrUpdateReferrer(
-                        DOMPurify.sanitize(story.href),
-                        story.identity,
-                      )}'); } else { window.open('${addOrUpdateReferrer(
-                        DOMPurify.sanitize(story.href),
-                        story.identity,
-                      )}', event.currentTarget.getAttribute('target')); }"
+                      onclick="event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${DOMPurify.sanitize(story.href)}')); if (window.ReactNativeWebView || window !== window.parent) { window.sdk.actions.openUrl('${DOMPurify.sanitize(story.href)}'); } else { window.open('${DOMPurify.sanitize(story.href)}', event.currentTarget.getAttribute('target')); }"
                     >
                       <img
                         loading="lazy"
@@ -565,22 +512,10 @@ const row = (
                           ? `/stories/${getSlug(story.title)}?index=0x${
                               story.index
                             }`
-                          : addOrUpdateReferrer(
-                              DOMPurify.sanitize(story.href),
-                              story.identity,
-                            )}"
+                          : DOMPurify.sanitize(story.href)}"
                         onclick="${isCloudflare && story.index
                           ? "if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
-                          : `event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${addOrUpdateReferrer(
-                              DOMPurify.sanitize(story.href),
-                              story.identity,
-                            )}')); if (window.ReactNativeWebView || window !== window.parent) { window.sdk.actions.openUrl('${addOrUpdateReferrer(
-                              DOMPurify.sanitize(story.href),
-                              story.identity,
-                            )}'); } else { window.open('${addOrUpdateReferrer(
-                              DOMPurify.sanitize(story.href),
-                              story.identity,
-                            )}', event.currentTarget.getAttribute('target')); }`}"
+                          : `event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${DOMPurify.sanitize(story.href)}')); if (window.ReactNativeWebView || window !== window.parent) { window.sdk.actions.openUrl('${DOMPurify.sanitize(story.href)}'); } else { window.open('${DOMPurify.sanitize(story.href)}', event.currentTarget.getAttribute('target')); }`}"
                         data-story-link="/stories/${getSlug(
                           story.title,
                         )}?index=0x${story.index}"
