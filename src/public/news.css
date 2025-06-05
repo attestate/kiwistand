@@ -457,10 +457,171 @@ body {
   display: none !important;
 }
 
+/* Hide farcaster preview on desktop */
+.farcaster-preview-container {
+  display: none !important;
+}
+
+/* Farcaster embed styles */
+.farcaster-embed-container * {
+  box-sizing: border-box;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.farcaster-embed-container {
+  position: relative;
+  padding: 1rem !important;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  border: var(--border);
+  border-radius: 2px;
+  margin: 0 11px 2px;
+  background: var(--background-color0);
+}
+
+.farcaster-embed-metadata {
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  grid-gap: 0.75rem;
+  align-items: center;
+  line-height: 1.2;
+  container: metadata / inline-size;
+}
+
+.farcaster-embed-timestamp {
+  grid-column: 1 / -1;
+  opacity: 0.5;
+  font-size: 0.75rem;
+  line-height: 1.25rem;
+}
+
+@container metadata (min-width: 260px) {
+  .farcaster-embed-metadata {
+    grid-template-columns: 40px 1.5fr 1fr;
+  }
+
+  .farcaster-embed-timestamp {
+    grid-column: 3;
+    text-align: right;
+  }
+}
+
+.farcaster-embed-author-avatar-container {
+  width: 40px;
+  height: 40px;
+  border-radius: 2px;
+  overflow: hidden;
+  border: 1px solid #ccc;
+}
+
+.farcaster-embed-author-avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.farcaster-embed-author p {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+.farcaster-embed-author-username {
+  opacity: 0.5;
+}
+
+.farcaster-embed-body {
+  margin-top: 0.75rem !important;
+}
+
+.farcaster-embed-body p {
+  font-size: 1rem;
+  line-height: 1.5rem;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+.farcaster-embed-stats {
+  margin-top: 0.75rem !important;
+  margin-bottom: -0.25rem !important;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  container: stats / inline-size;
+}
+
+.farcaster-embed-stats ul {
+  display: flex;
+  gap: 1rem;
+  list-style-type: none;
+}
+
+.farcaster-embed-stats-link {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  line-height: 1.25rem;
+  opacity: 0.5;
+  text-decoration: none;
+  color: inherit;
+}
+
+.farcaster-embed-farcaster-icon {
+  display: flex;
+}
+
+.farcaster-embed-farcaster-link {
+  display: inline-block;
+  transition: transform 0.15s ease-out;
+  text-decoration: none;
+}
+
+.farcaster-embed-farcaster-link:hover {
+  transform: scale(1.1);
+}
+
+/* Tweet embed styles */
+.tweet-embed-container {
+  position: relative;
+  padding: 1rem !important;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  border: var(--border);
+  border-radius: 2px;
+  margin: 0 11px 2px;
+  background: var(--background-color0);
+}
+
+.tweet-embed-header {
+  margin-bottom: 0.75rem;
+}
+
+.tweet-embed-body {
+  margin-top: 0.75rem !important;
+}
+
+.tweet-embed-body p {
+  font-size: 1rem;
+  line-height: 1.5rem;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+
 /* mobile device */
 @media only screen and (min-width : 300px) and (max-width : 640px) {
   /* Show tweet preview only on mobile */
   .tweet-preview-container {
+    display: block !important;
+  }
+  
+  /* Show farcaster preview only on mobile */
+  .farcaster-preview-container {
     display: block !important;
   }
     .scroll-margin-base {

@@ -287,7 +287,12 @@ async function extractWarpcastContent(url) {
     if (!data?.cast) return null;
     return {
       text: data.cast.text,
-      author: data.cast.author.username,
+      author: {
+        username: data.cast.author.username,
+        displayName: data.cast.author.display_name,
+        pfp: data.cast.author.pfp_url,
+      },
+      timestamp: data.cast.timestamp,
     };
   } catch (error) {
     console.error("Neynar API error:", error);
@@ -474,17 +479,30 @@ export const metadata = async (
     ...twitterFrontends,
   ];
   let output = {};
-  if (generateTitle) {
-    if (hostname === "farcaster.xyz") {
-      const cast = await extractWarpcastContent(url);
-      if (cast) {
-        const castContent = `Cast by ${cast.author}: ${cast.text}`;
+  
+  // Always extract Farcaster cast data for preview, regardless of generateTitle
+  if (hostname === "farcaster.xyz") {
+    const cast = await extractWarpcastContent(url);
+    if (cast) {
+      // Store cast data for preview component
+      output.farcasterCast = {
+        author: cast.author,
+        text: cast.text,
+      };
+      
+      // Only generate title if requested
+      if (generateTitle) {
+        const castContent = `Cast by ${cast.author.username}: ${cast.text}`;
         const claudeTitle = await generateClaudeTitle(castContent);
         if (claudeTitle) {
           output.ogTitle = claudeTitle;
         }
       }
-    } else if (
+    }
+  }
+  
+  if (generateTitle) {
+    if (
       twitterFrontends.includes(hostname) &&
       !ogDescription?.includes("x.com/i/article/")
     ) {

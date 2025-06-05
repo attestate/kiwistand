@@ -273,6 +273,13 @@ const row = (
       );
     });
 
+    // Check if this is a Farcaster cast (only actual cast URLs)
+    const isFarcasterCast = extractedDomain === "warpcast.com" || 
+      (story.href.includes("farcaster.xyz/") && 
+       !story.href.includes("miniapps.farcaster.xyz") && 
+       !story.href.includes("docs.farcaster.xyz") &&
+       !story.href.includes("api.farcaster.xyz"));
+
     // Check if the story itself is older than 12 hours
     const isStoryOlderThan12Hours =
       differenceInHours(new Date(), new Date(story.timestamp * 1000)) > 12;
@@ -300,8 +307,16 @@ const row = (
       story.metadata.ogDescription &&
       (path !== "/" || !isStoryOlderThan12Hours); // Don't show tweet previews for old stories on homepage
 
+    // Check if we have what we need to render a Farcaster cast preview
+    const canRenderFarcasterPreview =
+      isFarcasterCast && 
+      story.metadata && 
+      (story.metadata.farcasterCast || story.metadata.ogDescription) &&
+      (path !== "/" || !isStoryOlderThan12Hours); // Don't show cast previews for old stories on homepage
+
     const displayMobileImage =
       !canRenderTweetPreview && // Don't use regular mobile image if we can render a tweet preview
+      !canRenderFarcasterPreview && // Don't use regular mobile image if we can render a Farcaster preview
       (path !== "/" || !isStoryOlderThan12Hours || isCloudflare) && // Path/Age/Cloudflare check
       hasImageData &&
       !interactive &&
@@ -329,7 +344,7 @@ const row = (
           <div
             class="${interactive ? "" : "content-row"} ${invert
               ? "inverted-row"
-              : ""} ${displayMobileImage || canRenderTweetPreview
+              : ""} ${displayMobileImage || canRenderTweetPreview || canRenderFarcasterPreview
               ? "content-row-elevated"
               : ""}"
             style="${invert ? "display:none;" : ""} ${style}"
@@ -343,48 +358,98 @@ const row = (
                   onclick="event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${DOMPurify.sanitize(story.href)}')); if (window.ReactNativeWebView || window !== window.parent) { window.sdk.actions.openUrl('${DOMPurify.sanitize(story.href)}'); } else { window.open('${DOMPurify.sanitize(story.href)}', event.currentTarget.getAttribute('target')); }"
                   style="text-decoration:none; color:inherit; display:block;"
                 >
-                  <div
-                    style="border:var(--border); background:var(--background-color0); padding:14px; border-radius:0; margin:0 11px 2px; aspect-ratio:2 / 1; overflow:hidden; position:relative; display:flex; flex-direction:column;"
-                  >
-                    <div
-                      style="display:flex; align-items:center; margin-bottom:10px;"
-                    >
-                      <div
-                        style="color:var(--subtle-color, #666); font-size:15px; font-weight:bold; margin-right:6px;"
-                      >
-                        𝕏
+                  <div class="tweet-embed-container">
+                    <div>
+                      <div class="tweet-embed-header">
+                        <div style="display:flex; align-items:center; margin-bottom:12px;">
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="#000" style="margin-right:8px;">
+                            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                          </svg>
+                          <span style="font-weight:500; color:var(--contrast-color); font-size:14px;">${story.metadata.twitterCreator || "Tweet"}</span>
+                          <span style="margin-left:auto; opacity:0.5; font-size:12px;">${formatDistanceToNowStrict(new Date(story.timestamp * 1000))}</span>
+                        </div>
                       </div>
-                      <div
-                        style="flex:1; font-weight:500; color:var(--contrast-color); font-size:14px;"
-                      >
-                        @${story.metadata.twitterCreator
-                          ? story.metadata.twitterCreator
-                              .toLowerCase()
-                              .replace(/[^a-z0-9_]/g, "")
-                          : "x"}
-                      </div>
-                    </div>
-                    <div
-                      style="font-size:15px; line-height:1.5; flex:1; overflow:hidden; white-space:pre-wrap; word-wrap:break-word; word-break:break-word;"
-                    >
-                      ${truncateLongWords(
-                        DOMPurify.sanitize(story.metadata.ogDescription || "")
-                          .slice(0, 240)
+                      <div class="tweet-embed-body">
+                        <p>${DOMPurify.sanitize(story.metadata.ogDescription || "")
+                          .slice(0, 280)
                           .split(/(\bhttps?:\/\/[^\s]+)/g)
                           .map((part) => {
                             if (part.match(/^\bhttps?:\/\//)) {
-                              // This is a URL part
-                              return part.length > 30
-                                ? part.substring(0, 30) + "..."
-                                : part;
+                              return part.length > 30 ? part.substring(0, 30) + "..." : part;
                             }
                             return part;
                           })
-                          .join(""),
-                        25,
-                      )}${(story.metadata.ogDescription || "").length > 240
-                        ? "..."
-                        : ""}
+                          .join("")}${(story.metadata.ogDescription || "").length > 280 ? "..." : ""}</p>
+                      </div>
+                    </div>
+                  </div>
+                </a>`
+              : canRenderFarcasterPreview
+              ? html`<a
+                  class="farcaster-preview-container"
+                  data-no-instant
+                  href="${DOMPurify.sanitize(story.href)}"
+                  target="_blank"
+                  onclick="event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${DOMPurify.sanitize(story.href)}')); if (window.ReactNativeWebView || window !== window.parent) { window.sdk.actions.openUrl('${DOMPurify.sanitize(story.href)}'); } else { window.open('${DOMPurify.sanitize(story.href)}', event.currentTarget.getAttribute('target')); }"
+                  style="text-decoration:none; color:inherit; display:block;"
+                >
+                  <div class="farcaster-embed-container">
+                    <div>
+                      <div class="farcaster-embed-metadata">
+                        <div class="farcaster-embed-author-avatar-container">
+                          ${story.metadata.farcasterCast?.author?.pfp 
+                            ? html`<img
+                                src="${DOMPurify.sanitize(story.metadata.farcasterCast.author.pfp)}"
+                                alt="${DOMPurify.sanitize(story.metadata.farcasterCast.author.displayName || story.metadata.farcasterCast.author.username)}"
+                                width="40"
+                                height="40"
+                                class="farcaster-embed-author-avatar"
+                              />`
+                            : html`<svg
+                                width="24"
+                                height="24"
+                                viewBox="0 0 1000 1000"
+                                xmlns="http://www.w3.org/2000/svg"
+                                style="color: #8A63D2;"
+                              >
+                                <path
+                                  d="M257.778 155.556H742.222V844.444H671.111V528.889H257.778V155.556Z"
+                                  fill="currentColor"
+                                />
+                                <path
+                                  d="M128.889 528.889H257.778V844.444H128.889V528.889Z"
+                                  fill="currentColor"
+                                />
+                              </svg>`}
+                        </div>
+                        <div class="farcaster-embed-author">
+                          <p class="farcaster-embed-author-display-name">${story.metadata.farcasterCast?.author?.displayName || story.metadata.ogTitle || "Cast"}</p>
+                          <p class="farcaster-embed-author-username">@${story.metadata.farcasterCast?.author?.username || "farcaster"}</p>
+                        </div>
+                      </div>
+                      <div class="farcaster-embed-body">
+                        <p>${story.metadata.farcasterCast?.text 
+                          ? DOMPurify.sanitize(story.metadata.farcasterCast.text)
+                              .slice(0, 280)
+                              .split(/(\bhttps?:\/\/[^\s]+)/g)
+                              .map((part) => {
+                                if (part.match(/^\bhttps?:\/\//)) {
+                                  return part.length > 30 ? part.substring(0, 30) + "..." : part;
+                                }
+                                return part;
+                              })
+                              .join("") + (story.metadata.farcasterCast.text.length > 280 ? "..." : "")
+                          : DOMPurify.sanitize(story.metadata.ogDescription || "")
+                              .slice(0, 280)
+                              .split(/(\bhttps?:\/\/[^\s]+)/g)
+                              .map((part) => {
+                                if (part.match(/^\bhttps?:\/\//)) {
+                                  return part.length > 30 ? part.substring(0, 30) + "..." : part;
+                                }
+                                return part;
+                              })
+                              .join("") + ((story.metadata.ogDescription || "").length > 280 ? "..." : "")}</p>
+                      </div>
                     </div>
                   </div>
                 </a>`
@@ -427,7 +492,7 @@ const row = (
               class="information-row ${displayCommentPreview
                 ? "with-comment-preview"
                 : `without-comment-preview without-comment-preview-0x${story.index}`} ${displayMobileImage ||
-              canRenderTweetPreview
+              canRenderTweetPreview || canRenderFarcasterPreview
                 ? "elevating-row"
                 : ""}"
               style="display: flex; align-items: center; padding: 3px 0;"
@@ -436,7 +501,7 @@ const row = (
                 data-title="${DOMPurify.sanitize(story.title)}"
                 data-href="${DOMPurify.sanitize(story.href)}"
                 data-upvoters="${JSON.stringify(story.upvoters)}"
-                class="${displayMobileImage || canRenderTweetPreview
+                class="${displayMobileImage || canRenderTweetPreview || canRenderFarcasterPreview
                   ? "vote-button-container interaction-container-with-image"
                   : "vote-button-container"}"
                 style="display: flex; align-self: stretch;"
@@ -764,7 +829,7 @@ const row = (
               </div>
               ${path === "/stories"
                 ? html`<div
-                    class="${displayMobileImage || canRenderTweetPreview
+                    class="${displayMobileImage || canRenderTweetPreview || canRenderFarcasterPreview
                       ? "interaction-container-with-image"
                       : ""}"
                     style="display: flex; align-self: stretch;"
@@ -813,7 +878,7 @@ const row = (
                 ? html`<div
                     data-story-index="0x${story.index}"
                     data-comment-count="${commentCount}"
-                    class="${displayMobileImage || canRenderTweetPreview
+                    class="${displayMobileImage || canRenderTweetPreview || canRenderFarcasterPreview
                       ? "interaction-container-with-image chat-bubble-container"
                       : "chat-bubble-container"}"
                     style="display: flex; align-self: stretch;"
@@ -843,7 +908,7 @@ const row = (
             ${displayCommentPreview
               ? html` <div
                   class="comment-preview comment-preview-0x${story.index} ${displayMobileImage ||
-                  canRenderTweetPreview
+                  canRenderTweetPreview || canRenderFarcasterPreview
                     ? "elevating-comment-preview"
                     : "comment-preview-no-mobile-image"}"
                   style="touch-action: manipulation; user-select: none; cursor: pointer; display: flex;"
