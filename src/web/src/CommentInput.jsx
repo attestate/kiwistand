@@ -342,7 +342,6 @@ const CommentInput = (props) => {
   const [text, setText] = useState(existingComment || "");
   const [showMobileComposer, setShowMobileComposer] = useState(false);
   const [disableAutoOpen, setDisableAutoOpen] = useState(false);
-  const [isMiniApp, setIsMiniApp] = useState(false);
   const [storyTitle, setStoryTitle] = useState(null);
   const isMobile = useIsMobile();
   useEffect(() => {
@@ -369,21 +368,6 @@ const CommentInput = (props) => {
     fetchStoryTitle();
   }, []);
 
-  useEffect(() => {
-    const checkMiniApp = async () => {
-      let miniAppDetected = false;
-      try {
-        if (isInFarcasterFrame() && window.sdk) {
-          miniAppDetected = await window.sdk.isInMiniApp();
-        }
-      } catch (err) {
-        miniAppDetected = false;
-      }
-      setIsMiniApp(miniAppDetected);
-    };
-    
-    checkMiniApp();
-  }, []);
 
   useEffect(() => {
     if (showMobileComposer) {
@@ -640,30 +624,8 @@ const CommentInput = (props) => {
     return () => document.removeEventListener("keydown", handleKeyPress);
   }, [text, address, isEligible]);
 
-  if (isMiniApp) {
-    return (
-      <div
-        style={{
-          margin: "0 1rem 1rem 1rem",
-          padding: "1rem",
-          background: "#fff3cd",
-          border: "1px solid #856404",
-          borderRadius: "4px",
-          color: "#856404",
-          ...props.style,
-        }}
-      >
-        <h4 style={{ marginTop: 0 }}>Comments coming soon</h4>
-        <p>Commenting is not currently supported in Farcaster mini apps but will be available soon.</p>
-      </div>
-    );
-  }
   
-  if (isEligible === false && !isMiniApp) return <SiteExplainer />;
-  
-  if (isEligible === false && isMiniApp) {
-    return null;
-  }
+  if (isEligible === false) return <SiteExplainer />;
   
   return (
     <div
