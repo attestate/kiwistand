@@ -83,8 +83,8 @@ export async function triggerNotification(message) {
     log(`Failed to get FIDs for Neynar notifications: ${err}`);
   }
 
-  // Send Neynar notifications if we have FIDs
-  if (targetFids.length > 0) {
+  // Send Neynar notifications if we have FIDs (production only)
+  if (targetFids.length > 0 && env.NODE_ENV === "production") {
     try {
       const fcTitle = "New comment"; // Max 32 chars
       const fcBody = `${ensData.displayName}: ${truncateComment(message.title, 128 - ensData.displayName.length - 2)}`; // Max 128 chars total
