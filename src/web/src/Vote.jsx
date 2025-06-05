@@ -299,11 +299,13 @@ const Vote = (props) => {
                 return;
               }
 
-              // Add haptic feedback for vote action
-              try {
-                await sdk.haptics.impactOccurred('medium');
-              } catch (error) {
-                // Silently fail if haptics not supported
+              // Add haptic feedback for vote action only in frames
+              if (isInFarcasterFrame()) {
+                try {
+                  await sdk.haptics.impactOccurred('medium');
+                } catch (error) {
+                  // Silently fail if haptics not supported
+                }
               }
               
               handleSubmit(e);

@@ -472,11 +472,13 @@ const SubmitButton = (props) => {
           id="button-onboarding"
           style={buttonStyles}
           onClick={async (e) => {
-            // Add haptic feedback for submit action
-            try {
-              await sdk.haptics.impactOccurred('medium');
-            } catch (error) {
-              // Silently fail if haptics not supported
+            // Add haptic feedback for submit action only in frames
+            if (isInFarcasterFrame()) {
+              try {
+                await sdk.haptics.impactOccurred('medium');
+              } catch (error) {
+                // Silently fail if haptics not supported
+              }
             }
             
             handleClick(e);

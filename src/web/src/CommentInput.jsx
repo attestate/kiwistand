@@ -11,7 +11,7 @@ import { sdk } from "@farcaster/frame-sdk";
 
 import * as API from "./API.mjs";
 import { getLocalAccount } from "./session.mjs";
-import { client, chains, useProvider, useSigner } from "./client.mjs";
+import { client, chains, useProvider, useSigner, isInFarcasterFrame } from "./client.mjs";
 import { resolveAvatar } from "./Avatar.jsx";
 
 // Configure slugify extension
@@ -188,11 +188,13 @@ const MobileComposer = ({
         </button>
         <button
           onClick={async (e) => {
-            // Add haptic feedback for comment submission
-            try {
-              await sdk.haptics.impactOccurred('light');
-            } catch (error) {
-              // Silently fail if haptics not supported
+            // Add haptic feedback for comment submission only in frames
+            if (isInFarcasterFrame()) {
+              try {
+                await sdk.haptics.impactOccurred('light');
+              } catch (error) {
+                // Silently fail if haptics not supported
+              }
             }
             
             onSubmit(e);
@@ -729,11 +731,13 @@ const CommentInput = (props) => {
               style={{ marginBottom: "10px", width: "auto" }}
               disabled={isLoading || !address || !isEligible}
               onClick={async (e) => {
-                // Add haptic feedback for comment submission
-                try {
-                  await sdk.haptics.impactOccurred('light');
-                } catch (error) {
-                  // Silently fail if haptics not supported
+                // Add haptic feedback for comment submission only in frames
+                if (isInFarcasterFrame()) {
+                  try {
+                    await sdk.haptics.impactOccurred('light');
+                  } catch (error) {
+                    // Silently fail if haptics not supported
+                  }
                 }
                 
                 handleSubmit(e);
