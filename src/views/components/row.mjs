@@ -710,7 +710,7 @@ const row = (
                             )}
                           `}
                       ${!interactive &&
-                      (path === "/" || path === "/new" || path === "/best") &&
+                      (path === "/" || path === "/new" || path === "/best" || path === "/stories") &&
                       !isCloudflare
                         ? html`
                             <span class="domain-text">
