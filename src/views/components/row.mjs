@@ -295,11 +295,14 @@ const row = (
 
     // Check if we have what we need to render a tweet preview
     const canRenderTweetPreview =
-      isTweet && story.metadata && story.metadata.ogDescription;
+      isTweet && 
+      story.metadata && 
+      story.metadata.ogDescription &&
+      (path !== "/" || !isStoryOlderThan12Hours); // Don't show tweet previews for old stories on homepage
 
     const displayMobileImage =
       !canRenderTweetPreview && // Don't use regular mobile image if we can render a tweet preview
-      (path !== "/" || isTweet || isCloudflare) && // Path/Age/Cloudflare check
+      (path !== "/" || !isStoryOlderThan12Hours || isCloudflare) && // Path/Age/Cloudflare check
       hasImageData &&
       !interactive &&
       (path === "/" || // Allow on root if not older than 12h OR is Cloudflare
