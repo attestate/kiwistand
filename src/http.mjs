@@ -77,6 +77,7 @@ import frameSubscribe from "./views/frame-subscribe.mjs";
 import { sendNotification } from "./neynar.mjs";
 import { timingSafeEqual } from "crypto";
 import { invalidateActivityCaches } from "./cloudflarePurge.mjs";
+import { getCastByHashAndConstructUrl } from "./parser.mjs";
 
 const app = express();
 
@@ -248,6 +249,7 @@ app.get("/.well-known/farcaster.json", (req, res) => {
       splashBackgroundColor: "#0F3106",
       webhookUrl: env.NEYNAR_NOTIFICATIONS_WEBHOOK,
       primaryCategory: "news-media",
+      castShareUrl: `${domain}/submit`,
     },
   });
 });
@@ -1588,7 +1590,13 @@ export async function launch(trie, libp2p, isPrimary = true) {
     //   return reply.redirect(301, `/gateway`);
     // }
 
-    const { url, title } = request.query;
+    let { url, title, castHash } = request.query;
+    
+    // Handle Farcaster share extension: convert castHash to Farcaster URL
+    if (castHash && !url) {
+      url = await getCastByHashAndConstructUrl(DOMPurify.sanitize(castHash));
+    }
+
     const content = await submit(
       reply.locals.theme,
       DOMPurify.sanitize(url),

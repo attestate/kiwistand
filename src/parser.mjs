@@ -270,14 +270,14 @@ async function fixTitle(title) {
   }
 }
 
-async function extractWarpcastContent(url) {
+export async function extractWarpcastContent(identifier, type = "url") {
   try {
-    const apiUrl = `https://api.neynar.com/v2/farcaster/cast?identifier=${url}&type=url`;
+    const apiUrl = `https://api.neynar.com/v2/farcaster/cast?identifier=${identifier}&type=${type}`;
 
     const response = await fetch(apiUrl, {
       headers: {
         accept: "application/json",
-        "X-Api-Key": "NEYNAR_API_DOCS",
+        "X-Api-Key": env.NEYNAR_API_KEY,
         "User-Agent":
           "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
       },
@@ -298,6 +298,22 @@ async function extractWarpcastContent(url) {
     console.error("Neynar API error:", error);
     return null;
   }
+}
+
+export async function getCastByHashAndConstructUrl(castHash) {
+  // Fetch cast data from Neynar API and construct proper Farcaster URL
+  // Format: https://farcaster.xyz/{username}/{shortHash}
+  if (!castHash) return null;
+
+  const cast = await extractWarpcastContent(castHash, "hash");
+
+  if (cast && cast.author.username) {
+    // Truncate hash to first 8 chars after 0x for Farcaster URL format
+    const shortHash = castHash.slice(0, 10);
+    return `https://farcaster.xyz/${cast.author.username}/${shortHash}`;
+  }
+
+  return null;
 }
 
 async function extractCanonicalLink(html) {
@@ -479,17 +495,17 @@ export const metadata = async (
     ...twitterFrontends,
   ];
   let output = {};
-  
+
   // Always extract Farcaster cast data for preview, regardless of generateTitle
   if (hostname === "farcaster.xyz") {
-    const cast = await extractWarpcastContent(url);
+    const cast = await extractWarpcastContent(url, "url");
     if (cast) {
       // Store cast data for preview component
       output.farcasterCast = {
         author: cast.author,
         text: cast.text,
       };
-      
+
       // Only generate title if requested
       if (generateTitle) {
         const castContent = `Cast by ${cast.author.username}: ${cast.text}`;
@@ -498,9 +514,11 @@ export const metadata = async (
           output.ogTitle = claudeTitle;
         }
       }
+    } else {
+      log(`No cast data returned for URL: ${url}`);
     }
   }
-  
+
   if (generateTitle) {
     if (
       twitterFrontends.includes(hostname) &&

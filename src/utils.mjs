@@ -125,3 +125,4 @@ export function elog(err, msg) {
     console.error(`Error wasn't defined in elog: ${err}`);
   }
 }
+
