@@ -293,6 +293,7 @@ function NotificationOptIn(props) {
   const provider = useProvider();
   const [identity, setIdentity] = useState(null);
   const [signer, setSigner] = useState(null);
+  const [isMiniApp, setIsMiniApp] = useState(false);
 
   useEffect(() => {
     async function init() {
@@ -314,7 +315,19 @@ function NotificationOptIn(props) {
     init();
   }, [account?.account]);
 
-  if (!identity) return null;
+  useEffect(() => {
+    async function checkMiniApp() {
+      try {
+        const miniAppStatus = await window.sdk?.isInMiniApp();
+        setIsMiniApp(miniAppStatus);
+      } catch (error) {
+        setIsMiniApp(false);
+      }
+    }
+    checkMiniApp();
+  }, []);
+
+  if (!identity || isMiniApp) return null;
   return (
     <div
       style={{
