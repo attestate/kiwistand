@@ -9,7 +9,13 @@ import { sdk } from "@farcaster/frame-sdk";
 slugify.extend({ "′": "", "'": "", "'": "", '"': "" });
 
 import * as API from "./API.mjs";
-import { useSigner, useProvider, client, chains, isInFarcasterFrame } from "./client.mjs";
+import {
+  useSigner,
+  useProvider,
+  client,
+  chains,
+  isInFarcasterFrame,
+} from "./client.mjs";
 import NFTModal from "./NFTModal.jsx";
 import { getLocalAccount } from "./session.mjs";
 import { SimpleDisconnectButton } from "./Navigation.jsx";
@@ -429,24 +435,29 @@ const SubmitButton = (props) => {
   if (!isEligible && account.isConnected) {
     return (
       <div>
-        <div style={{
-          padding: "1rem",
-          margin: "1rem 0",
-          background: "#fff3cd",
-          border: "1px solid #856404",
-          borderRadius: "4px",
-          color: "#856404",
-          maxWidth: "600px"
-        }}>
+        <div
+          style={{
+            padding: "1rem",
+            margin: "1rem 0",
+            background: "#fff3cd",
+            border: "1px solid #856404",
+            borderRadius: "4px",
+            color: "#856404",
+            maxWidth: "600px",
+          }}
+        >
           <h3 style={{ marginTop: 0 }}>Kiwi Pass Required</h3>
-          <p>Only Kiwi Pass holders can submit stories to Kiwi News. Get your Kiwi Pass to start curating the best crypto content!</p>
           <p>
-            <a 
-              href="/kiwipass-mint" 
-              style={{ 
-                color: "#856404", 
+            Only Kiwi Pass holders can submit stories to Kiwi News. Get your
+            Kiwi Pass to start curating the best crypto content!
+          </p>
+          <p>
+            <a
+              href="/kiwipass-mint"
+              style={{
+                color: "#856404",
                 textDecoration: "underline",
-                fontWeight: "bold" 
+                fontWeight: "bold",
               }}
             >
               Get your Kiwi Pass →
@@ -455,7 +466,7 @@ const SubmitButton = (props) => {
         </div>
         <button
           id="button-onboarding"
-          style={{...buttonStyles, opacity: 0.5, cursor: "not-allowed"}}
+          style={{ ...buttonStyles, opacity: 0.5, cursor: "not-allowed" }}
           disabled={true}
         >
           Submit (Kiwi Pass Required)
@@ -466,7 +477,6 @@ const SubmitButton = (props) => {
 
   return (
     <div>
-      {/* AdForm removed */}
       <>
         <button
           id="button-onboarding"
@@ -475,12 +485,12 @@ const SubmitButton = (props) => {
             // Add haptic feedback for submit action only in frames
             if (isInFarcasterFrame()) {
               try {
-                await sdk.haptics.impactOccurred('medium');
+                await sdk.haptics.impactOccurred("medium");
               } catch (error) {
                 // Silently fail if haptics not supported
               }
             }
-            
+
             handleClick(e);
           }}
           disabled={

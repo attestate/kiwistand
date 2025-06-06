@@ -56,7 +56,7 @@ export default async function submit(theme, url = "", title = "") {
               ${Row(rowNumber, "/submit", rowStyle, interactive)(story)}
               <tr>
                 <td>
-                  <form style="${formContainerStyle}">
+                  <form style="${formContainerStyle}" onsubmit="event.preventDefault(); return false;">
                     <div style="${labelInputContainerStyle}">
                       <label for="title" style="${labelStyle}">Title:</label>
                       <div
