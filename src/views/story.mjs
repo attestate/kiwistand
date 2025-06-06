@@ -228,7 +228,7 @@ export default async function (trie, theme, index, value, referral) {
                 </tr>
               </thead>
               <thead
-                style="background-color: #ebebe6; position: sticky; top: 0; z-index: 9;"
+                style="background-color: #ebebe6;"
               >
                 ${Row(
                   start,
