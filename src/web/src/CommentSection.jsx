@@ -581,10 +581,24 @@ const Comment = React.forwardRef(
                 options={{
                   className: "meta-link selectable-link",
                   target: (href) => {
-                    if (href.startsWith("https://news.kiwistand.com"))
+                    if (href.startsWith("https://news.kiwistand.com") || 
+                        href.startsWith("https://staging.kiwistand.com"))
                       return "_self";
                     return isIOS() ? "_self" : "_blank";
                   },
+                  attributes: (href) => ({
+                    onClick: (e) => {
+                      const isInternal = href.startsWith("https://news.kiwistand.com") || 
+                                        href.startsWith("https://staging.kiwistand.com");
+                      
+                      if ((window.ReactNativeWebView || window !== window.parent) && !isInternal) {
+                        e.preventDefault();
+                        if (window.sdk?.actions?.openUrl) {
+                          window.sdk.actions.openUrl(href);
+                        }
+                      }
+                    },
+                  }),
                   defaultProtocol: "https",
                   validate: {
                     url: (value) => /^https:\/\/.*/.test(value),

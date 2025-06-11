@@ -337,14 +337,17 @@ export default async function (trie, theme, index, value, referral) {
                                           .join("")
                                           .replace(
                                             /(https?:\/\/[^\s<]+)/g,
-                                            (url) =>
-                                              `<a class="meta-link selectable-link" href="${url}" target="${
-                                                url.startsWith(
-                                                  "https://news.kiwistand.com",
-                                                )
-                                                  ? "_self"
-                                                  : "_blank"
-                                              }">${url}</a>`,
+                                            (url) => {
+                                              const isInternal = url.startsWith("https://news.kiwistand.com") || 
+                                                                url.startsWith("https://staging.kiwistand.com");
+                                              return `<a class="meta-link selectable-link" href="${url}" target="${
+                                                isInternal ? "_self" : "_blank"
+                                              }" onclick="${
+                                                !isInternal 
+                                                  ? `if (window.ReactNativeWebView || window !== window.parent) { event.preventDefault(); window.sdk.actions.openUrl('${url}'); }`
+                                                  : ""
+                                              }">${url}</a>`;
+                                            }
                                           ),
                                       }}
                                     ></span>
