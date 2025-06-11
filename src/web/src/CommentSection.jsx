@@ -588,13 +588,14 @@ const Comment = React.forwardRef(
                   },
                   attributes: (href) => ({
                     onClick: (e) => {
-                      const isInternal = href.startsWith("https://news.kiwistand.com") || 
-                                        href.startsWith("https://staging.kiwistand.com");
+                      const sanitizedHref = DOMPurify.sanitize(href);
+                      const isInternal = sanitizedHref.startsWith("https://news.kiwistand.com") || 
+                                        sanitizedHref.startsWith("https://staging.kiwistand.com");
                       
                       if ((window.ReactNativeWebView || window !== window.parent) && !isInternal) {
                         e.preventDefault();
                         if (window.sdk?.actions?.openUrl) {
-                          window.sdk.actions.openUrl(href);
+                          window.sdk.actions.openUrl(sanitizedHref);
                         }
                       }
                     },

@@ -338,15 +338,16 @@ export default async function (trie, theme, index, value, referral) {
                                           .replace(
                                             /(https?:\/\/[^\s<]+)/g,
                                             (url) => {
-                                              const isInternal = url.startsWith("https://news.kiwistand.com") || 
-                                                                url.startsWith("https://staging.kiwistand.com");
-                                              return `<a class="meta-link selectable-link" href="${url}" target="${
+                                              const sanitizedUrl = DOMPurify.sanitize(url);
+                                              const isInternal = sanitizedUrl.startsWith("https://news.kiwistand.com") || 
+                                                                sanitizedUrl.startsWith("https://staging.kiwistand.com");
+                                              return `<a class="meta-link selectable-link" href="${sanitizedUrl}" target="${
                                                 isInternal ? "_self" : "_blank"
                                               }" onclick="${
                                                 !isInternal 
-                                                  ? `if (window.ReactNativeWebView || window !== window.parent) { event.preventDefault(); window.sdk.actions.openUrl('${url}'); }`
+                                                  ? `if (window.ReactNativeWebView || window !== window.parent) { event.preventDefault(); window.sdk.actions.openUrl('${sanitizedUrl}'); }`
                                                   : ""
-                                              }">${url}</a>`;
+                                              }">${sanitizedUrl}</a>`;
                                             }
                                           ),
                                       }}
