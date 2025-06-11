@@ -7,7 +7,16 @@ import DOMPurify from "isomorphic-dompurify";
 import slugify from "slugify";
 import cache from "./cache.mjs"; // Import the default cache
 
-slugify.extend({ "′": "", "'": "", "'": "", '"': "" });
+slugify.extend({ 
+  "\u2032": "", // prime
+  "\u2018": "", // left single quotation mark
+  "\u2019": "", // right single quotation mark
+  "\u201C": "", // left double quotation mark
+  "\u201D": "", // right double quotation mark
+  "\u201E": "", // double low-9 quotation mark
+  "'": "",      // straight single quote
+  '"': ""       // straight double quote
+});
 
 // NOTE: This is an extension of node-fetch-cache where we're loading the
 // to-be-cached data in the background while returning an error to the caller
