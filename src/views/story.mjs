@@ -143,11 +143,36 @@ export default async function (trie, theme, index, value, referral) {
   // NOTE: store.post returns upvoters as objects of "identity" and "timestamp"
   // property so that we can zip them with tipping actions. But the row component
   // expects upvoters to be a string array of Ethereum addresses.
+  const upvotersWithTimestamp = story.upvoters; // Keep the full objects for social proof
   story.upvoters = story.upvoters.map(({ identity }) => identity);
 
   const ensData = await ens.resolve(story.identity);
   story.submitter = ensData;
   story.displayName = ensData.displayName;
+
+  // Resolve upvoter profiles for social proof section
+  const upvoterProfiles = [];
+  for (const upvoter of upvotersWithTimestamp) {
+    // Skip the story submitter
+    if (upvoter.identity === story.identity) {
+      continue;
+    }
+    
+    const profile = await ens.resolve(upvoter.identity);
+    // Only include profiles with proper names (ENS, Farcaster, or Lens) AND high Neynar scores
+    if (profile && 
+        (profile.ens || profile.farcaster || profile.lens) && 
+        profile.neynarScore && 
+        profile.neynarScore >= 0.6) { // Only show curators with score >= 0.6
+      upvoterProfiles.push({
+        ...profile,
+        timestamp: upvoter.timestamp,
+        neynarScore: profile.neynarScore
+      });
+    }
+  }
+  // Sort by neynarScore descending
+  upvoterProfiles.sort((a, b) => b.neynarScore - a.neynarScore);
 
   // Ensure frame preview exists for Farcaster embeds (after ENS resolution)
   if (!isCloudflareImage(value.href)) {
@@ -239,6 +264,47 @@ export default async function (trie, theme, index, value, referral) {
                   null,
                 )({ ...story, index })}
               </thead>
+              ${upvoterProfiles.length > 0
+                ? html`<tr>
+                    <td>
+                      <div style="padding: 1rem; background-color: #f8f8f8; border-bottom: 1px solid #e0e0e0;">
+                        <div style="font-size: 11pt; font-weight: 500; margin-bottom: 0.75rem; color: #333;">
+                          Recommended by ${upvoterProfiles.length} ${upvoterProfiles.length === 1 ? 'curator' : 'curators'}
+                        </div>
+                        <div style="display: flex; flex-wrap: wrap; gap: 12px;">
+                          ${upvoterProfiles.slice(0, 20).map(
+                            (upvoter) =>
+                              html`<a
+                                href="/upvotes?address=${upvoter.address}"
+                                style="display: flex; align-items: center; text-decoration: none; color: inherit; background-color: white; padding: 6px 10px; border: 1px solid #e0e0e0; border-radius: 4px; transition: all 0.2s;"
+                                onmouseover="this.style.borderColor='#828282'; this.style.backgroundColor='#fafafa';"
+                                onmouseout="this.style.borderColor='#e0e0e0'; this.style.backgroundColor='white';"
+                              >
+                                ${upvoter.safeAvatar
+                                  ? html`<img
+                                      loading="lazy"
+                                      src="${upvoter.safeAvatar}"
+                                      alt="${upvoter.displayName}"
+                                      style="width: 20px; height: 20px; border-radius: 2px; margin-right: 6px;"
+                                    />`
+                                  : null}
+                                <span style="font-size: 10pt; color: #333;">
+                                  ${upvoter.displayName}
+                                </span>
+                              </a>`,
+                          )}
+                          ${upvoterProfiles.length > 20
+                            ? html`<div
+                                style="display: flex; align-items: center; padding: 6px 10px; color: #666; font-size: 10pt;"
+                              >
+                                +${upvoterProfiles.length - 20} more
+                              </div>`
+                            : null}
+                        </div>
+                      </div>
+                    </td>
+                  </tr>`
+                : null}
               ${story.comments.length > 0
                 ? html`<tr>
                     <td>

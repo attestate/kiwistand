@@ -384,12 +384,20 @@ export async function index(
       const ensData = await ens.resolve(story.identity); // Resolve ENS for all stories on page
 
       let avatars = [];
-      for await (let upvoter of story.upvoters.slice(0, 5)) {
+      let upvoterProfiles = [];
+      for await (let upvoter of story.upvoters) {
         const profile = await ens.resolve(upvoter);
         if (profile.safeAvatar) {
-          avatars.push(profile.safeAvatar);
+          upvoterProfiles.push({
+            avatar: profile.safeAvatar,
+            address: upvoter,
+            neynarScore: profile.neynarScore || 0
+          });
         }
       }
+      // Sort by neynarScore descending and take top 5
+      upvoterProfiles.sort((a, b) => b.neynarScore - a.neynarScore);
+      avatars = upvoterProfiles.slice(0, 5).map(p => p.avatar);
 
       const lastComment = getLastComment(`kiwi:0x${story.index}`);
       if (lastComment && lastComment.identity) {

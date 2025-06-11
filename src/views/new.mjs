@@ -94,14 +94,22 @@ export async function recompute() {
       const ensData = await ens.resolve(story.identity);
 
       let avatars = [];
+      let upvoterProfiles = [];
       await Promise.allSettled(
-        story.upvoters.slice(0, 5).map(async (upvoter) => {
+        story.upvoters.map(async (upvoter) => {
           const profile = await ens.resolve(upvoter);
           if (profile.safeAvatar) {
-            avatars.push(profile.safeAvatar);
+            upvoterProfiles.push({
+              avatar: profile.safeAvatar,
+              address: upvoter,
+              neynarScore: profile.neynarScore || 0
+            });
           }
         }),
       );
+      // Sort by neynarScore descending and take top 5
+      upvoterProfiles.sort((a, b) => b.neynarScore - a.neynarScore);
+      avatars = upvoterProfiles.slice(0, 5).map(p => p.avatar);
       const isOriginal = Object.keys(writers).some(
         (domain) =>
           normalizeUrl(story.href).startsWith(domain) &&
