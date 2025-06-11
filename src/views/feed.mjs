@@ -201,7 +201,7 @@ async function calculateNeynarUpvotes(upvoters) {
     try {
       const profile = await ens.resolve(upvoter);
       const neynarScore = profile.neynarScore || 0;
-      const upvoteValue = 1 + (neynarScore / 100000);
+      const upvoteValue = 1 + neynarScore;
       weightedUpvotes += upvoteValue;
     } catch (err) {
       weightedUpvotes += 1; // fallback to 1 if resolution fails
