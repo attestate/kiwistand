@@ -195,16 +195,32 @@ function meanUpvoteRatio(leaves) {
   throw new Error("Ratios length is not available");
 }
 
+async function calculateNeynarUpvotes(upvoters) {
+  let weightedUpvotes = 0;
+  for (const upvoter of upvoters) {
+    try {
+      const profile = await ens.resolve(upvoter);
+      const neynarScore = profile.neynarScore || 0;
+      const upvoteValue = 1 + (neynarScore / 100000);
+      weightedUpvotes += upvoteValue;
+    } catch (err) {
+      weightedUpvotes += 1; // fallback to 1 if resolution fails
+    }
+  }
+  return weightedUpvotes;
+}
+
 export async function topstories(leaves) {
-  return leaves
-    .map((story) => {
+  return Promise.allSettled(leaves
+    .map(async (story) => {
       const commentCount =
         store.commentCounts.get(`kiwi:0x${story.index}`) || 0;
+      const upvotes = await calculateNeynarUpvotes(story.upvoters);
       let score;
-      if (story.upvotes > 2) {
-        score = Math.log(story.upvotes * 0.4 + commentCount * 0.6);
+      if (upvotes > 2) {
+        score = Math.log(upvotes * 0.4 + commentCount * 0.6);
       } else {
-        score = Math.log(story.upvotes);
+        score = Math.log(upvotes);
       }
 
       const outboundClicks = countOutbounds(story.href) + 1;
@@ -218,7 +234,7 @@ export async function topstories(leaves) {
         const upvotePerformance = storyRatio / upvoteRatio;
 
         const clicks = countOutbounds(story.href);
-        const sampleSize = story.upvotes + clicks;
+        const sampleSize = upvotes + clicks;
         const confidenceFactor = Math.pow(
           Math.min(1, sampleSize / 1_000_000),
           2,
@@ -263,8 +279,12 @@ export async function topstories(leaves) {
 
       story.score = score * 10000000;
       return story;
-    })
-    .sort((a, b) => b.score - a.score);
+    }))
+    .then(results => results
+      .filter(result => result.status === 'fulfilled')
+      .map(result => result.value)
+      .sort((a, b) => b.score - a.score)
+    );
 }
 
 async function addMetadata(post) {
@@ -274,6 +294,7 @@ async function addMetadata(post) {
     metadata: data,
   };
 }
+
 
 export async function index(
   trie,

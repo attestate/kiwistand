@@ -25,6 +25,7 @@ export async function toAddress(name) {
   throw new Error("Couldn't convert to address");
 }
 
+
 async function fetchNeynarData(address) {
   try {
     utils.getAddress(address);
@@ -75,6 +76,7 @@ async function fetchNeynarData(address) {
         following_count: user.following_count,
         verified_addresses: user.verifications,
         power_badge: user.power_badge,
+        score: user.score, // Neynar quality score
       },
     };
   } catch (err) {
@@ -294,6 +296,14 @@ export async function resolve(address) {
         neynarProfile = await fetchNeynarData(normalizedAddress);
       }
 
+      // Get Neynar score from API data (if available)
+      let neynarScore = 0;
+      if (ensProfile?.farcaster?.score) {
+        neynarScore = ensProfile.farcaster.score;
+      } else if (neynarProfile?.farcaster?.score) {
+        neynarScore = neynarProfile.farcaster.score;
+      }
+
       let safeAvatar = ensProfile.avatar_small
         ? ensProfile.avatar_small
         : ensProfile.avatar;
@@ -332,6 +342,7 @@ export async function resolve(address) {
         ...(neynarProfile && { neynar: neynarProfile }),
         lens: lensProfile,
         displayName,
+        neynarScore,
       };
 
       // Update cache with complete profile
