@@ -19,6 +19,7 @@ import {
 import NFTModal from "./NFTModal.jsx";
 import { getLocalAccount } from "./session.mjs";
 import { SimpleDisconnectButton } from "./Navigation.jsx";
+import ShareModal from "./ShareModal.jsx";
 
 export function getSlug(title) {
   return slugify(DOMPurify.sanitize(title));
@@ -201,6 +202,8 @@ const SubmitButton = (props) => {
   const [isLoading, setIsLoading] = useState(false);
   const [title, setTitle] = useState("");
   const [remainingChars, setRemainingChars] = useState(80);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [storyData, setStoryData] = useState(null);
 
   // Ad related state removed
   // const params = new URLSearchParams(window.location.search);
@@ -418,18 +421,37 @@ const SubmitButton = (props) => {
       toast.success(
         "You've voted on this link already earlier, redirecting...",
       );
+      const nextPage = new URL(
+        window.location.origin + `/stories/${getSlug(title)}`,
+      );
+      nextPage.searchParams.set("index", response.data.index);
+      window.location.href = nextPage.href;
+      return;
     } else if (response.status === "error") {
       toast.error(
         "Unexpected error during submission. Please report this to the team!",
       );
+      setIsLoading(false);
       return;
     }
 
-    const nextPage = new URL(
+    // Show share modal only in Farcaster frames, otherwise redirect
+    const storyUrl = new URL(
       window.location.origin + `/stories/${getSlug(title)}`,
     );
-    nextPage.searchParams.set("index", response.data.index);
-    window.location.href = nextPage.href;
+    storyUrl.searchParams.set("index", response.data.index);
+
+    if (window.ReactNativeWebView || window !== window.parent) {
+      setStoryData({
+        title,
+        url: canonicalURL,
+        storyUrl: storyUrl.href,
+      });
+      setShowShareModal(true);
+      setIsLoading(false);
+    } else {
+      window.location.href = storyUrl.href;
+    }
   };
 
   if (!isEligible && account.isConnected) {
@@ -475,6 +497,20 @@ const SubmitButton = (props) => {
     );
   }
 
+  const handleShareModalClose = () => {
+    setShowShareModal(false);
+    // Clear form after closing modal
+    setTitle("");
+    const titleInput = document.getElementById("titleInput");
+    if (titleInput) {
+      titleInput.textContent = "";
+    }
+    const urlInput = document.getElementById("urlInput");
+    if (urlInput) {
+      urlInput.value = "";
+    }
+  };
+
   return (
     <div>
       <>
@@ -510,6 +546,15 @@ const SubmitButton = (props) => {
             : "Submit"}
         </button>
       </>
+      {showShareModal && storyData && (
+        <ShareModal
+          isOpen={showShareModal}
+          onClose={handleShareModalClose}
+          title={storyData.title}
+          url={storyData.url}
+          storyUrl={storyData.storyUrl}
+        />
+      )}
     </div>
   );
 };
