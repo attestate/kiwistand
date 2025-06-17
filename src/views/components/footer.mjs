@@ -101,12 +101,14 @@ const footer = (theme, path) => html`
     <div
       style="display: flex; justify-content: center; align-items: center; gap: 0.5rem;"
     >
-      <img
-        loading="lazy"
-        src="/etherium.webp"
-        alt="Powered by Ethereum"
-        style="height: 4.5rem;"
-      />
+      <a href="https://etherium.foundation/" target="_blank">
+        <img
+          loading="lazy"
+          src="/etherium.webp"
+          alt="Powered by Ethereum"
+          style="height: 4.5rem;"
+        />
+      </a>
       <div>
         <span>This instance of Kiwi News is hosted by </span>
         <a
