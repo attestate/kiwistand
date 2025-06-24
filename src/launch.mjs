@@ -130,23 +130,42 @@ const accounts = await registry.accounts();
 const delegations = await registry.delegations();
 const href = null;
 
-let upvotes, comments;
-await Promise.allSettled([
-  store
-    .posts(
-      trie,
-      from,
-      amount,
-      parser,
-      startDatetime,
-      accounts,
-      delegations,
-      href,
-      "amplify",
-    )
-    .then((result) => (upvotes = result))
-    .catch((error) => console.error("Amplify posts error:", error)),
-  store
+let upvotes = [], comments = [];
+if (cluster.isPrimary) {
+  // Primary needs both upvotes and comments
+  await Promise.allSettled([
+    store
+      .posts(
+        trie,
+        from,
+        amount,
+        parser,
+        startDatetime,
+        accounts,
+        delegations,
+        href,
+        "amplify",
+      )
+      .then((result) => (upvotes = result))
+      .catch((error) => console.error("Amplify posts error:", error)),
+    store
+      .posts(
+        trie,
+        from,
+        amount,
+        parser,
+        startDatetime,
+        accounts,
+        delegations,
+        href,
+        "comment",
+      )
+      .then((result) => (comments = result))
+      .catch((error) => console.error("Comment posts error:", error)),
+  ]);
+} else {
+  // Workers only need comments for counts
+  await store
     .posts(
       trie,
       from,
@@ -159,8 +178,8 @@ await Promise.allSettled([
       "comment",
     )
     .then((result) => (comments = result))
-    .catch((error) => console.error("Comment posts error:", error)),
-]);
+    .catch((error) => console.error("Comment posts error:", error));
+}
 
 cache.initialize([...upvotes, ...comments]);
 cache.initializeNotifications();
@@ -169,15 +188,25 @@ cache.addCompoundIndexes();
 
 // Make upvote caching non-blocking to improve startup time
 setImmediate(() => {
-  store
-    .cache(upvotes, comments)
-    .then(() => log("store cached"))
-    .catch((err) => {
-      log(
-        `launch: An irrecoverable error during upvote caching occurred. "${err.stack}`,
-      );
-      exit(1);
-    });
+  if (cluster.isPrimary) {
+    // Primary builds full validation sets
+    store
+      .cache(upvotes, comments)
+      .then(() => log("store cached"))
+      .catch((err) => {
+        log(
+          `launch: An irrecoverable error during upvote caching occurred. "${err.stack}`,
+        );
+        exit(1);
+      });
+  } else {
+    // Workers only need comment counts
+    for (const comment of comments) {
+      const sync = false;
+      store.addComment(comment.href, sync);
+    }
+    log("Worker comment counts cached");
+  }
 });
 
 if (!reconcileMode) {
