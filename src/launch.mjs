@@ -43,10 +43,7 @@ import diskcheck from "./diskcheck.mjs";
 
 const reconcileMode = env.NODE_ENV === "reconcile";
 const productionMode = env.NODE_ENV === "production";
-const devMode = env.NODE_ENV === "dev";
-// Use fewer workers in dev mode for faster startup
-const defaultWorkers = devMode ? 2 : os.cpus().length;
-const numWorkers = Number(env.WORKER_COUNT) || defaultWorkers;
+const numWorkers = Number(env.WORKER_COUNT) || os.cpus().length;
 
 const trie = await store.create();
 

@@ -61,10 +61,8 @@ const workerRoutes = [
 async function startLoadBalancer() {
   const app = express();
 
-  // Configure the number of workers - match launch.mjs logic
-  const devMode = env.NODE_ENV === "dev";
-  const defaultWorkers = devMode ? 2 : os.cpus().length;
-  const workerCount = Number(env.WORKER_COUNT) || defaultWorkers;
+  // Configure the number of workers
+  const workerCount = Number(env.WORKER_COUNT) || os.cpus().length;
 
   // Set up ports for the primary and worker processes
   const originalPort = parseInt(env.HTTP_PORT);
