@@ -10,6 +10,7 @@ import { parse as parser } from "node-html-parser";
 import { fetchBuilder, FileSystemCache } from "node-fetch-cache";
 import { useAgent } from "request-filtering-agent";
 import Anthropic from "@anthropic-ai/sdk";
+import sharp from "sharp";
 
 import { fetchCache as fetchCacheFactory } from "./utils.mjs";
 
@@ -543,7 +544,17 @@ export const metadata = async (
   if (image && image.startsWith("https://")) {
     const exists = await checkOgImage(image);
     if (exists) {
-      output.image = DOMPurify.sanitize(image);
+      // Check if image is meaningful before including it
+      const isMeaningful = await isImageMeaningful(
+        image,
+        output.ogTitle || ogTitle,
+        ogDescription
+      );
+      if (isMeaningful) {
+        output.image = DOMPurify.sanitize(image);
+      } else {
+        log(`Image rejected by quality assessment: ${image}`);
+      }
     }
   }
   if (result.twitterCreator) {
@@ -686,6 +697,147 @@ export async function isRelevantToKiwiNews(link, metadataContext = {}) {
   cache.set(cacheKey, isRelevant);
 
   return isRelevant;
+}
+
+/**
+ * Assesses if an image meaningfully adds to an article using Claude.
+ * Resizes image to 200x200px to minimize API costs.
+ * @param {string} imageUrl - The URL of the image to assess.
+ * @param {string} articleTitle - The title of the article.
+ * @param {string} articleDescription - The description of the article.
+ * @returns {Promise<boolean>} - True if the image is meaningful and should be shown.
+ */
+export async function isImageMeaningful(imageUrl, articleTitle, articleDescription) {
+  const normalizedUrl = normalizeUrl(imageUrl, { stripWWW: false });
+  const cacheKey = `image-quality-${normalizedUrl}`;
+
+  // Check cache first
+  const cachedResult = cache.get(cacheKey);
+  if (cachedResult !== undefined) {
+    log(`Image quality cache hit for ${imageUrl}: ${cachedResult}`);
+    return cachedResult;
+  }
+
+  try {
+    // Fetch the image
+    const signal = AbortSignal.timeout(10000);
+    const response = await fetch(imageUrl, {
+      agent: useAgent(imageUrl),
+      signal,
+      headers: {
+        "User-Agent": env.USER_AGENT,
+      },
+    });
+
+    if (!response.ok) {
+      log(`Failed to fetch image ${imageUrl}: ${response.status}`);
+      cache.set(cacheKey, false);
+      return false;
+    }
+
+    const buffer = await response.arrayBuffer();
+    log(`Fetched image ${imageUrl}, size: ${buffer.byteLength} bytes`);
+    
+    // Resize image to 200x200px to minimize Claude API costs
+    const resizedBuffer = await sharp(Buffer.from(buffer))
+      .resize(200, 200, {
+        fit: 'inside',
+        withoutEnlargement: true
+      })
+      .jpeg({ quality: 80 })
+      .toBuffer();
+    
+    log(`Resized image to ${resizedBuffer.length} bytes`);
+
+    // Convert to base64
+    const base64Image = resizedBuffer.toString('base64');
+
+    // Prepare context for Claude
+    let context = "";
+    if (articleTitle) {
+      context += `Article Title: ${articleTitle}\n`;
+    }
+    if (articleDescription) {
+      const descSnippet = articleDescription.substring(0, 200);
+      context += `Article Description: ${descSnippet}${articleDescription.length > 200 ? "..." : ""}\n`;
+    }
+
+    const prompt = `You are curating images for a beautiful tech/crypto news feed. We want a visually appealing feed with meaningful, high-quality images.
+
+${context}
+
+Consider:
+1. Does this image make the feed more beautiful and engaging?
+2. Is it visually appealing and high-quality?
+3. Does it add meaningful visual context to the article?
+
+REJECT these ugly/low-value images:
+- Company logos as the main image (extremely ugly in feeds!)
+- Generic icons or app icons
+- Low-resolution or pixelated images
+- Generic abstract patterns or backgrounds
+- Default forum avatars or profile pictures
+- Bland technical diagrams that are just decorative
+- Screenshots of walls of text
+- Generic stock photos that don't relate to content
+
+ACCEPT these beautiful/meaningful images:
+- High-quality photos related to the article
+- Beautiful artwork or game visuals when relevant
+- Clean, informative infographics or diagrams
+- Compelling screenshots that show interesting UI/features
+- Photos of people/events mentioned in the article
+- Visually striking images that enhance the story
+- Well-designed technical illustrations
+
+Think: "Would this image make someone want to click and read more?" If it's just a boring logo or generic image, reject it.
+
+Answer with only "YES" (show the image) or "NO" (hide the image).`;
+
+    const response_claude = await anthropic.messages.create({
+      model: "claude-3-5-sonnet-20241022",
+      max_tokens: 10,
+      temperature: 0,
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "image",
+              source: {
+                type: "base64",
+                media_type: "image/jpeg",
+                data: base64Image
+              }
+            },
+            {
+              type: "text",
+              text: prompt
+            }
+          ]
+        }
+      ]
+    });
+
+    // Extract response
+    let responseText = "NO"; // Default to NO if parsing fails
+    if (response_claude.content && response_claude.content.length > 0 && response_claude.content[0].type === "text") {
+      responseText = response_claude.content[0].text.trim().toUpperCase();
+    }
+
+    const isMeaningful = responseText.startsWith("YES");
+    log(`Claude image assessment for ${imageUrl}: ${responseText} -> ${isMeaningful}`);
+
+    // Cache the result
+    cache.set(cacheKey, isMeaningful);
+    return isMeaningful;
+
+  } catch (error) {
+    log(`Error assessing image ${imageUrl}: ${error.message}`);
+    // On error, default to not showing the image
+    cache.set(cacheKey, false);
+    return false;
+  }
 }
 
 function safeExtractDomain(link) {
