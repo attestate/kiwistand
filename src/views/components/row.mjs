@@ -304,39 +304,34 @@ const row = (
     const canRenderTweetPreview =
       isTweet && 
       story.metadata && 
-      story.metadata.ogDescription &&
-      (path !== "/" || !isStoryOlderThan12Hours); // Don't show tweet previews for old stories on homepage
+      story.metadata.ogDescription;
 
     // Check if we have what we need to render a Farcaster cast preview
     const canRenderFarcasterPreview =
       isFarcasterCast && 
       story.metadata && 
-      (story.metadata.farcasterCast || story.metadata.ogDescription) &&
-      (path !== "/" || !isStoryOlderThan12Hours); // Don't show cast previews for old stories on homepage
+      (story.metadata.farcasterCast || story.metadata.ogDescription);
 
     const displayMobileImage =
       !canRenderTweetPreview && // Don't use regular mobile image if we can render a tweet preview
       !canRenderFarcasterPreview && // Don't use regular mobile image if we can render a Farcaster preview
-      (path !== "/" || !isStoryOlderThan12Hours || isCloudflare) && // Path/Age/Cloudflare check
       hasImageData &&
       !interactive &&
-      (path === "/" || // Allow on root if not older than 12h OR is Cloudflare
+      (path === "/" || 
         path === "/stories" ||
         path === "/new" ||
-        path === "/best"); // Allow on other specific paths regardless of age
+        path === "/best");
 
     // Condition for displaying comment preview:
     // - Must have a last comment
     // - Last comment must have a resolved identity (ens/fc/lens)
     // - Must not be inverted
-    // - If on main feed ('/'), story must NOT be older than 12 hours (Cloudflare status doesn't matter here)
     const displayCommentPreview =
       story.lastComment &&
       (story.lastComment.identity.ens ||
         story.lastComment.identity.farcaster ||
         story.lastComment.identity.lens) &&
-      !invert &&
-      (path !== "/" || !isStoryOlderThan12Hours); // Path/Age check (no Cloudflare exception)
+      !invert;
 
     return html`
       <tr style="${invert ? "background-color: black;" : ""}">
@@ -533,8 +528,7 @@ const row = (
                 class="content-container"
                 style="display: flex; align-items: start; flex-grow: 1; gap: 8px;"
               >
-                ${(path !== "/" || !isStoryOlderThan12Hours || isCloudflare) && // Path/Age/Cloudflare check
-                hasImageData &&
+                ${hasImageData &&
                 !interactive &&
                 !isSubstackDomain(extractedDomain) // Keep substack check specific to desktop?
                   ? html`<a
