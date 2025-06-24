@@ -89,11 +89,11 @@ export default function AnalyticsConsent() {
       bottom: isDesktop ? 0 : 'calc(50px + env(safe-area-inset-bottom, 0px))', // Positioned above bottom nav on mobile
       left: 0,
       right: 0,
-      backgroundColor: '#f6f6ef',
-      borderTop: '1px solid #ff6600',
+      backgroundColor: 'var(--header-beige)',
+      borderTop: '1px solid var(--button-primary-bg)',
       padding: '12px 15px',
       zIndex: 1000,
-      boxShadow: '0 -2px 5px rgba(0, 0, 0, 0.05)'
+      boxShadow: '0 -2px 5px var(--shadow-color)'
     }}>
       <div style={{
         maxWidth: '1200px',
@@ -105,9 +105,9 @@ export default function AnalyticsConsent() {
         gap: isDesktop ? '0' : '10px'
       }}>
         <div>
-          <p style={{ margin: 0, fontSize: '14px' }}>
+          <p style={{ margin: 0, fontSize: '14px', color: 'var(--text-primary)' }}>
             We use analytics cookies to improve our site. You can opt out if you prefer.
-            See our <a href="/privacy-policy">Privacy Policy</a>.
+            See our <a href="/privacy-policy" style={{ color: 'var(--link-color)' }}>Privacy Policy</a>.
           </p>
         </div>
         <div style={{ 
@@ -119,19 +119,19 @@ export default function AnalyticsConsent() {
           <button 
             onClick={declineAnalytics}
             style={{
-              backgroundColor: 'white',
-              color: 'black',
-              border: '1px solid #c6c6c6',
+              backgroundColor: 'var(--bg-off-white)',
+              color: 'var(--text-primary)',
+              border: 'var(--border-thin)',
               padding: '8px 12px',
               cursor: 'pointer',
               fontSize: '14px',
               transition: 'all 0.2s'
             }}
             onMouseOver={(e) => {
-              e.currentTarget.style.backgroundColor = '#f0f0f0';
+              e.currentTarget.style.backgroundColor = 'var(--hover-bg)';
             }}
             onMouseOut={(e) => {
-              e.currentTarget.style.backgroundColor = 'white';
+              e.currentTarget.style.backgroundColor = 'var(--bg-off-white)';
             }}
           >
             Opt Out
@@ -139,21 +139,21 @@ export default function AnalyticsConsent() {
           <button 
             onClick={acceptAnalytics}
             style={{
-              backgroundColor: 'black',
-              color: 'white',
-              border: '1px solid #c6c6c6',
+              backgroundColor: 'var(--button-primary-bg)',
+              color: 'var(--button-primary-text)',
+              border: 'var(--border-thin)',
               padding: '8px 12px',
               cursor: 'pointer',
               fontSize: '14px',
               transition: 'all 0.2s'
             }}
             onMouseOver={(e) => {
-              e.currentTarget.style.backgroundColor = 'white';
-              e.currentTarget.style.color = 'black';
+              e.currentTarget.style.backgroundColor = 'var(--button-hover-bg)';
+              e.currentTarget.style.color = 'var(--button-hover-text)';
             }}
             onMouseOut={(e) => {
-              e.currentTarget.style.backgroundColor = 'black';
-              e.currentTarget.style.color = 'white';
+              e.currentTarget.style.backgroundColor = 'var(--button-primary-bg)';
+              e.currentTarget.style.color = 'var(--button-primary-text)';
             }}
           >
             Continue

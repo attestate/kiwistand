@@ -90,14 +90,14 @@ function generateCommentRow(activity, identity, bgColor, theme, i) {
         src="${DOMPurify.sanitize(identity.safeAvatar)}"
         loading="lazy"
         alt="avatar"
-        style="border: 1px solid #828282; width: 28px; height: 28px; border-radius: 2px; margin-top: 1.5rem;"
+        style="border: 1px solid var(--text-secondary); width: 28px; height: 28px; border-radius: 2px; margin-top: 1.5rem;"
       />`
     : "";
 
   const link = linkFromComment(activity);
 
   return html`
-    <tr style="background-color: ${bgColor}">
+    <tr class="activity-row" style="background-color: ${bgColor}">
       <td>
         <a
           data-no-instant="${i < 3}"
@@ -105,7 +105,7 @@ function generateCommentRow(activity, identity, bgColor, theme, i) {
           href="${link}"
           onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
         >
-          <div style="display: flex; border-bottom: 1px solid rgba(0,0,0,0.1);">
+          <div class="activity-content-wrapper" style="display: flex;">
             <div
               style="flex: 0.15; display: flex; align-items: start; justify-content: center;"
             >
@@ -146,7 +146,7 @@ function generateCommentRow(activity, identity, bgColor, theme, i) {
 function generateRow(lastUpdate, theme) {
   return (activity, i) => {
     const bgColor =
-      lastUpdate < activity.timestamp ? "rgba(255,255,255,0.3)" : "none";
+      lastUpdate < activity.timestamp ? "var(--activity-row-hover)" : "none";
 
     if (activity.verb === "commented" || activity.verb === "involved") {
       const identity = activity.identities[0];
@@ -163,7 +163,7 @@ function generateRow(lastUpdate, theme) {
       const submissionIndex = submissionId.split(":")[1];
 
       return html`
-        <tr style="background-color: ${bgColor};">
+        <tr class="activity-row" style="background-color: ${bgColor};">
           <td>
             <a
               data-no-instant="${i < 3}"
@@ -174,7 +174,8 @@ function generateRow(lastUpdate, theme) {
               onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
             >
               <div
-                style="display: flex; border-bottom: 1px solid rgba(0,0,0,0.1);"
+                class="activity-content-wrapper"
+                style="display: flex;"
               >
                 <div
                   style="flex: 0.15; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative;"
@@ -189,7 +190,7 @@ function generateRow(lastUpdate, theme) {
                               src="${DOMPurify.sanitize(identity.safeAvatar)}"
                               loading="lazy"
                               alt="reactor avatar"
-                              style="width: 36px; height: 36px; border: 1px solid #828282; border-radius: 2px; background-color: white; box-shadow: 0 0 3px rgba(0,0,0,0.2);"
+                              style="width: 36px; height: 36px; border: 1px solid var(--text-secondary); border-radius: 2px; background-color: var(--background-color0); box-shadow: 0 0 3px var(--shadow-color);"
                             />
                           </div>
                           <div
@@ -229,7 +230,7 @@ function generateRow(lastUpdate, theme) {
                     <p
                       style="line-height: 1.2; white-space: pre-wrap; margin: 5px 0 1rem 0; word-break: break-word;"
                     >
-                      <span style="text-align: justify; color: #666;"
+                      <span style="text-align: justify; color: var(--text-muted);"
                         >${DOMPurify.sanitize(
                           truncateComment(commentTitle),
                         )}</span
@@ -253,7 +254,7 @@ function generateRow(lastUpdate, theme) {
       .slice(0, 5);
 
     return html`
-      <tr style="background-color: ${bgColor};">
+      <tr class="activity-row" style="background-color: ${bgColor};">
         <td>
           <a
             href="/stories/${getSlug(title)}?index=0x${activity.message
@@ -264,20 +265,29 @@ function generateRow(lastUpdate, theme) {
             onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
           >
             <div
-              style="display: flex; border-bottom: 1px solid rgba(0,0,0,0.1);"
+              class="activity-content-wrapper"
+              style="display: flex;"
             >
               <div
                 style="flex: 0.15; display: flex; flex-direction: column; align-items: center; justify-content: center;"
               >
                 <div
                   class="votearrow"
-                  style="font-size: 1.5rem; display: flex; align-items: center; justify-content: center; color: ${theme.color};"
+                  style="font-size: 1.5rem; display: flex; align-items: center; justify-content: center; color: var(--text-primary);"
                   title="upvote"
                 >
-                  ${iconSVG}
+                  <svg
+                    style="width: 35px; fill: var(--text-primary);"
+                    viewBox="0 0 200 200"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M99.84 52.0801L55.04 96.8001L68.44 110.04L90.36 88.0401L90.3747 148H109.8V88.0401L131.84 110.04L144.96 96.8001L100.24 52.0801H99.84Z"
+                    />
+                  </svg>
                 </div>
                 <div
-                  style="font-size: 0.7rem; font-weight: bold; color: ${theme.color}; margin-top: -5px;"
+                  style="font-size: 0.7rem; font-weight: bold; color: var(--text-primary); margin-top: -5px;"
                 >
                   +1 🥝
                 </div>
@@ -296,7 +306,7 @@ function generateRow(lastUpdate, theme) {
                             src="${DOMPurify.sanitize(identity.safeAvatar)}"
                             loading="lazy"
                             alt="avatar"
-                            style="width: ${size}px; height: ${size}px; border: 1px solid #828282; border-radius: 2px; margin-left: 15px;"
+                            style="width: ${size}px; height: ${size}px; border: 1px solid var(--text-secondary); border-radius: 2px; margin-left: 15px;"
                           />
                         `,
                       )}
@@ -348,10 +358,10 @@ export async function page(
   let feed;
   if (notifications.length === 0) {
     feed = html`
-      <tr>
+      <tr class="activity-row">
         <td
           class="feed-container"
-          style="text-align: center; vertical-align: middle; min-height: 100vh; padding: 20px; color: #828282;"
+          style="text-align: center; vertical-align: middle; min-height: 100vh; padding: 20px; color: var(--text-muted);"
         >
           <p>No notifications yet</p>
         </td>
@@ -374,13 +384,13 @@ export async function page(
         <div class="container">
           ${Sidebar()}
           <div id="hnmain" class="scaled-hnmain">
-            <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
+            <table border="0" cellpadding="0" cellspacing="0" bgcolor="var(--table-bg)">
               <tr>
                 ${await Header(theme)}
               </tr>
               <tr>
                 <td
-                  style="text-align: center; padding: 1rem; background-color: #f0f0f0; font-size: 0.8rem; color: #333;"
+                  style="text-align: center; padding: 1rem; background-color: var(--activity-row-bg-alt); font-size: 0.8rem; color: var(--text-primary); border-bottom: var(--activity-border);"
                 >
                   <span
                     style="vertical-align: middle; display: inline-flex; align-items: center; flex-wrap: wrap; justify-content: center;"
@@ -388,7 +398,7 @@ export async function page(
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       viewBox="0 0 256 256"
-                      style="height: 12px; width: 12px; margin-right: 0.5rem;"
+                      style="height: 12px; width: 12px; margin-right: 0.5rem; fill: var(--text-primary);"
                     >
                       <rect width="256" height="256" fill="none" />
                       <path

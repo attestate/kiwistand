@@ -65,7 +65,7 @@ export default async function (theme) {
                     margin-left: auto;
                     margin-right: auto;
                     text-align: center;
-                    color: black;margin-top: 4rem; margin-bottom: 0; padding-bottom: 0;"
+                    color: var(--text-primary);margin-top: 4rem; margin-bottom: 0; padding-bottom: 0;"
                     >
                       You're <i>almost</i> set!
                     </h1>
@@ -73,12 +73,12 @@ export default async function (theme) {
                       style="display: flex; align-items: center; justify-content: center; flex-direction: column; max-width: 20rem;"
                     >
                       <p
-                        style="color: black; font-size: 1.1rem; text-align: center;"
+                        style="color: var(--text-primary); font-size: 1.1rem; text-align: center;"
                       >
                         Please do <b>NOT</b> close this site!
                       </p>
 
-                      <p>We're indexing your transaction...</p>
+                      <p style="color: var(--text-secondary);">We're indexing your transaction...</p>
                     </div>
                     <div
                       style="margin-top: 2rem; display: flex; align-items: center; justify-content: center; flex-direction: column; max-width: 20rem;"
@@ -88,15 +88,15 @@ export default async function (theme) {
                       style="position: fixed; right: 20px; bottom: 20px; z-index: 100; text-align: center;"
                     >
                       <button
-                        style="background-color: grey; color: white; padding: 0.5rem 1rem; display: inline-flex; align-items: center; justify-content: center; gap: 10px; font-size: 1.2rem; cursor: pointer; border-radius: 2px;"
+                        style="background-color: var(--button-hover-bg); color: var(--text-primary); padding: 0.5rem 1rem; display: inline-flex; align-items: center; justify-content: center; gap: 10px; font-size: 1.2rem; cursor: pointer; border-radius: 2px; border: var(--border);"
                       >
                         Next
                         <span
-                          style="border: 4px solid #fff; border-top: 4px solid ${theme.color}; border-radius: 50%; width: 20px; height: 20px; animation: spin 2s linear infinite;"
+                          style="border: 4px solid var(--text-muted); border-top: 4px solid ${theme.color}; border-radius: 50%; width: 20px; height: 20px; animation: spin 2s linear infinite;"
                         ></span>
                       </button>
                       <div class="nav-countdown">
-                        <div style="margin-top: 10px;">
+                        <div style="margin-top: 10px; color: var(--text-secondary);">
                           Should only take a few seconds... <br />
                           0:20
                         </div>

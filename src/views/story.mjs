@@ -253,7 +253,7 @@ export default async function (trie, theme, index, value, referral) {
                 </tr>
               </thead>
               <thead
-                style="background-color: #ebebe6;"
+                style="background-color: var(--header-beige);"
               >
                 ${Row(
                   start,
@@ -267,8 +267,8 @@ export default async function (trie, theme, index, value, referral) {
               ${upvoterProfiles.length > 0
                 ? html`<tr>
                     <td>
-                      <div style="padding: 1rem; background-color: #f8f8f8; border-bottom: 1px solid #e0e0e0;">
-                        <div style="font-size: 11pt; font-weight: 500; margin-bottom: 0.75rem; color: #333;">
+                      <div style="padding: 1rem; background-color: var(--bg-off-white); border-bottom: 1px solid var(--border-line);">
+                        <div style="font-size: 11pt; font-weight: 500; margin-bottom: 0.75rem; color: var(--text-primary);">
                           Recommended by ${upvoterProfiles.length} ${upvoterProfiles.length === 1 ? 'curator' : 'curators'}
                         </div>
                         <div style="display: flex; flex-wrap: wrap; gap: 12px;">
@@ -276,9 +276,9 @@ export default async function (trie, theme, index, value, referral) {
                             (upvoter) =>
                               html`<a
                                 href="/upvotes?address=${upvoter.address}"
-                                style="display: flex; align-items: center; text-decoration: none; color: inherit; background-color: white; padding: 6px 10px; border: 1px solid #e0e0e0; border-radius: 4px; transition: all 0.2s;"
-                                onmouseover="this.style.borderColor='#828282'; this.style.backgroundColor='#fafafa';"
-                                onmouseout="this.style.borderColor='#e0e0e0'; this.style.backgroundColor='white';"
+                                style="display: flex; align-items: center; text-decoration: none; color: inherit; background-color: var(--header-beige); padding: 6px 10px; border: 1px solid var(--border-line); border-radius: 4px; transition: all 0.2s;"
+                                onmouseover="this.style.borderColor='var(--text-secondary)'; this.style.backgroundColor='var(--hover-bg)';"
+                                onmouseout="this.style.borderColor='var(--border-line)'; this.style.backgroundColor='var(--header-beige)';"
                               >
                                 ${upvoter.safeAvatar
                                   ? html`<img
@@ -288,14 +288,14 @@ export default async function (trie, theme, index, value, referral) {
                                       style="width: 20px; height: 20px; border-radius: 2px; margin-right: 6px;"
                                     />`
                                   : null}
-                                <span style="font-size: 10pt; color: #333;">
+                                <span style="font-size: 10pt; color: var(--text-primary);">
                                   ${upvoter.displayName}
                                 </span>
                               </a>`,
                           )}
                           ${upvoterProfiles.length > 20
                             ? html`<div
-                                style="display: flex; align-items: center; padding: 6px 10px; color: #666; font-size: 10pt;"
+                                style="display: flex; align-items: center; padding: 6px 10px; color: var(--text-secondary); font-size: 10pt;"
                               >
                                 +${upvoterProfiles.length - 20} more
                               </div>`
@@ -318,7 +318,7 @@ export default async function (trie, theme, index, value, referral) {
                                 : "scroll-margin-base"}"
                               style="${comment.flagged
                                 ? "opacity: 0.5"
-                                : ""}; color: black; border: var(--border); background-color: var(--background-color0); padding: 0.55rem 0.75rem 0.75rem 0.55rem; border-radius: 2px;display: block; margin-bottom: 15px; white-space: pre-wrap; line-height: 1.2; word-break: break-word; overflow-wrap: break-word;"
+                                : ""}; color: var(--text-secondary); border: var(--border); background-color: var(--background-color0); padding: 0.55rem 0.75rem 0.75rem 0.55rem; border-radius: 2px;display: block; margin-bottom: 15px; white-space: pre-wrap; line-height: 1.2; word-break: break-word; overflow-wrap: break-word;"
                             >
                               <div
                                 style="white-space: nowrap; gap: 3px; margin-bottom: 0.5rem; display: inline-flex; align-items: center;"
@@ -334,7 +334,7 @@ export default async function (trie, theme, index, value, referral) {
                                 <b
                                   >${!comment.flagged
                                     ? html`<a
-                                        style="color: black;"
+                                        style="color: var(--text-primary);"
                                         href="/upvotes?address=${comment
                                           .identity.address}"
                                         >${truncateName(comment.displayName)}</a
@@ -390,7 +390,7 @@ export default async function (trie, theme, index, value, referral) {
                                           .split("\n")
                                           .map((line) => {
                                             if (line.startsWith(">")) {
-                                              return `<div style="border-left: 3px solid #ccc; padding-left: 10px; margin: 8px 0 0 0; color: #666;">${DOMPurify.sanitize(
+                                              return `<div style="border-left: 3px solid var(--text-muted); padding-left: 10px; margin: 8px 0 0 0; color: var(--text-muted);">${DOMPurify.sanitize(
                                                 line.substring(2),
                                               )}</div>`;
                                             }
@@ -442,7 +442,7 @@ export default async function (trie, theme, index, value, referral) {
                                             );
                                           return html`
                                             <div
-                                              style="margin-top: 32px; display: inline-flex; align-items: center; padding: 4px 12px; background-color: var(--bg-off-white); border: var(--border-thin); border-radius: 2px; font-size: 10pt;"
+                                              style="margin-top: 32px; display: inline-flex; align-items: center; padding: 4px 12px; background-color: var(--background-color0); border: var(--border-thin); border-radius: 2px; font-size: 10pt;"
                                             >
                                               <span
                                                 style="margin-right: ${reaction?.reactorProfiles?.filter(
@@ -472,8 +472,8 @@ export default async function (trie, theme, index, value, referral) {
                                                         ? "13px"
                                                         : "12px"}; border-radius: 2px; border: ${i >
                                                       0
-                                                        ? "1px solid #f3f3f3"
-                                                        : "1px solid #828282"}; margin-left: ${i >
+                                                        ? "1px solid var(--border-line)"
+                                                        : "1px solid var(--text-secondary)"}; margin-left: ${i >
                                                       0
                                                         ? "-4px"
                                                         : "0"};"

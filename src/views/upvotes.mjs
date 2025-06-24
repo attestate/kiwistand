@@ -74,7 +74,7 @@ export default async function (trie, theme, identity) {
               <tr>
                 <td>
                   <div
-                    style="max-width: 96vw; margin: 4vw 2vw; overflow-wrap: break-word; color: black; font-size: 16px; line-height: 1.5;"
+                    style="max-width: 96vw; margin: 4vw 2vw; overflow-wrap: break-word; font-size: 16px; line-height: 1.5;"
                   >
                     <span
                       style="margin-bottom: 10px; font-weight: bold; display: flex; align-items: center; gap: 10px;"
@@ -83,7 +83,7 @@ export default async function (trie, theme, identity) {
                       html` <a href="${ensData.safeAvatar}" target="_blank">
                         <img
                           src="${ensData.safeAvatar}"
-                          style="border: 1px solid #828282; width: 30px; height: 30px; border-radius: 2px;"
+                          style="border: 1px solid rgba(130, 130, 130, 0.3); width: 30px; height: 30px; border-radius: 2px;"
                       /></a>`}
                       <a
                         target="_blank"

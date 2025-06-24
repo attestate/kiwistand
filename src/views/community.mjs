@@ -17,7 +17,7 @@ import * as registry from "../chainstate/registry.mjs";
 
 const html = htm.bind(vhtml);
 
-const iconsStyles = "color: black; width: 20px;";
+const iconsStyles = "color: var(--text-primary); width: 20px;";
 
 async function resolveUsers(users) {
   const resolvedUsers = await Promise.allSettled(
@@ -228,7 +228,7 @@ export default async function (trie, theme, query) {
               </tr>
               <tr>
                 <td>
-                  <p style="color: black; padding: 5px 1rem; font-size: 14pt;">
+                  <p style="color: var(--text-primary); padding: 5px 1rem; font-size: 14pt;">
                     <b>COMMUNITY</b>
                   </p>
                   <form class="search-container">

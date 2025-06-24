@@ -35,7 +35,7 @@ export const iconSVG = html`
 
 const expandSVG = html`
   <svg
-    style="color:black; height: 1rem;"
+    style="height: 1rem;"
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 256 256"
   >
@@ -113,7 +113,7 @@ const formatDistanceToNowStrict = (date) => {
 };
 
 const ShuffleSVG = html`<svg
-  style="width: 24px; color: black;"
+  style="width: 24px;"
   xmlns="http://www.w3.org/2000/svg"
   viewBox="0 0 256 256"
 >
@@ -334,7 +334,7 @@ const row = (
       !invert;
 
     return html`
-      <tr style="${invert ? "background-color: black;" : ""}">
+      <tr style="${invert ? "background-color: var(--text-muted);" : ""}">
         <td>
           <div
             class="${interactive ? "" : "content-row"} ${invert
@@ -476,7 +476,7 @@ const row = (
                     ${isCloudflare
                       ? null
                       : html`<div
-                          style="position: absolute; bottom: 8px; left: 19px; background: rgba(255,255,255,0.9); padding: 2px 6px; border-radius: 2px; font-size: 9pt;"
+                          style="position: absolute; bottom: 8px; left: 19px; background: var(--background-color0); padding: 2px 6px; border-radius: 2px; font-size: 9pt; color: var(--text-primary); border: 1px solid var(--border-line);"
                         >
                           ${extractedDomain}
                         </div>`}
@@ -513,7 +513,7 @@ const row = (
                         <div>
                           <div
                             class="votearrow"
-                            style="color: rgb(130, 130, 130); cursor: pointer;"
+                            style="color: var(--text-secondary); cursor: pointer;"
                             title="upvote"
                           >
                             ${iconSVG}
@@ -632,7 +632,7 @@ const row = (
                                   src="${avatar}"
                                   alt="avatar"
                                   style="z-index: ${index}; width: ${size}px; height:
- ${size}px; border: 1px solid #828282; border-radius: 2px; margin-left: -${size /
+ ${size}px; border: 1px solid var(--text-muted); border-radius: 2px; margin-left: -${size /
                                   2}px;"
                                 />
                               `,
@@ -879,7 +879,7 @@ const row = (
                       ${ChatsSVG()}
                       <span
                         id="comment-count-${story.index}"
-                        style="color: rgba(0,0,0,0.65); font-size: 8pt; font-weight: bold;"
+                        style="color: var(--text-muted); font-size: 8pt; font-weight: bold;"
                         >${commentCount}</span
                       >
                     </a>
@@ -930,7 +930,7 @@ const row = (
                                       participant.safeAvatar,
                                     )}"
                                     alt="previous participant"
-                                    style="z-index: ${index}; width: ${size}px; height: ${size}px; border: 1px solid #828282; border-radius: 2px; margin-left: ${index ===
+                                    style="z-index: ${index}; width: ${size}px; height: ${size}px; border: 1px solid var(--text-muted); border-radius: 2px; margin-left: ${index ===
                                     0
                                       ? "0"
                                       : "5px"};"
@@ -939,7 +939,7 @@ const row = (
                               )}
                             </div>
                             <span
-                              style="margin-left: 10px; font-size: 9pt; color: #666;"
+                              style="margin-left: 10px; font-size: 9pt; color: var(--text-muted);"
                             >
                               Previous in thread
                             </span>
@@ -955,7 +955,7 @@ const row = (
                               story.lastComment.identity.safeAvatar,
                             )}"
                             alt="avatar"
-                            style="border: 1px solid #ccc; width: ${size}px; height: ${size}px; border-radius: 2px;"
+                            style="border: 1px solid var(--text-secondary); width: ${size}px; height: ${size}px; border-radius: 2px;"
                           />`}
                           <span
                             style="font-size: 10pt; touch-action: manipulation;user-select: none; font-weight: 500;"
@@ -1008,7 +1008,7 @@ const row = (
 };
 
 export const ChatsSVG = (
-  style = "color: rgba(0,0,0,0.65); width: 25px;",
+  style = "color: var(--text-muted); width: 25px;",
 ) => html`
   <svg
     style="${style}"

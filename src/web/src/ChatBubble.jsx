@@ -75,7 +75,7 @@ const ChatBubble = ({ allowlist, delegations, storyIndex, commentCount }) => {
         cursor: isDisabled ? "not-allowed" : "pointer",
         margin: "5px",
         backgroundColor: "var(--bg-off-white)",
-        border: isExpanded ? "1px solid black" : "var(--border-thin)",
+        border: isExpanded ? "1px solid var(--button-primary-bg)" : "var(--border-thin)",
         borderRadius: "2px",
         display: "flex",
         alignSelf: "stretch",
@@ -88,17 +88,17 @@ const ChatBubble = ({ allowlist, delegations, storyIndex, commentCount }) => {
       <ChatsSVG
         style={{
           color: isDisabled
-            ? "grey"
+            ? "var(--text-muted)"
             : isExpanded
-            ? "black"
-            : "rgba(0,0,0,0.65)",
+            ? "var(--button-primary-bg)"
+            : "var(--text-secondary)",
           width: "25px",
         }}
       />
       <span
         style={{
           userSelect: "none",
-          color: isExpanded ? "black" : "rgba(0,0,0,0.65)",
+          color: isExpanded ? "var(--button-primary-bg)" : "var(--text-secondary)",
           fontSize: "8pt",
           fontWeight: "bold",
         }}

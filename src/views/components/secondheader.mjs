@@ -175,8 +175,8 @@ export const fireSVG = html`
 `;
 
 const periodIconStyle = (theme, period, category) =>
-  `${period === category ? "black" : "#828282"}; color: ${
-    period === category ? "black" : "#828282"
+  `${period === category ? "var(--text-primary)" : "var(--text-muted)"}; color: ${
+    period === category ? "var(--text-primary)" : "var(--text-muted)"
   }; font-weight: bold; border: none; text-decoration: underline; font-size: 1.01rem; border-radius: 2px; cursor: pointer; padding: 5px 15px; background-color: transparent;;`;
 
 const animation = `
@@ -197,7 +197,7 @@ const secondheader = (theme, site, period, domain, query) => {
     <td>
       <div
         class="second-header"
-        style="background-color: var(--table-bg); min-height: 40px; display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; color: white;"
+        style="background-color: var(--table-bg); min-height: 40px; display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; color: var(--text-primary);"
       >
         <div style="display: flex; align-items: center;">
           ${site === "search" ||
@@ -209,9 +209,11 @@ const secondheader = (theme, site, period, domain, query) => {
                   <button
                     onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {document.getElementById('spinner-overlay').style.display='block'; ${animation}}"
                     class="feed-button"
-                    style=${`font-variant: small-caps; font-size: 1.01rem; border: none; outline: none; border-radius: 2px; cursor: pointer; padding: 6px 15px; background-color: rgba(0,0,0,${
-                      site === "top" ? "0.2" : "0.1"
-                    }); color: black;`}
+                    style=${`font-variant: small-caps; font-size: 1.01rem; border: 1px solid ${
+                      site === "top" ? "#a66e4e" : "rgba(166, 110, 78, 0.5)"
+                    }; outline: none; border-radius: 2px; cursor: pointer; padding: 6px 15px; background-color: ${
+                      site === "top" ? "#a66e4e" : "rgba(166, 110, 78, 0.25)"
+                    }; color: ${site === "top" ? "#000000" : "var(--text-primary)"};`}
                   >
                     <span
                       style="font-weight: ${site === "top"
@@ -237,13 +239,15 @@ const secondheader = (theme, site, period, domain, query) => {
                   <button
                     onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {document.getElementById('spinner-overlay').style.display='block'; ${animation}}"
                     class="feed-button"
-                    style=${`font-variant: small-caps; margin-left: 10px; font-size: 1.01rem; border: none; outline: none; border-radius: 2px; cursor: pointer; padding: 6px 15px; background-color: rgba(0,0,0,${
-                      site === "new" ? "0.2" : "0.1"
-                    }); color: black; position:relative;`}
+                    style=${`font-variant: small-caps; margin-left: 10px; font-size: 1.01rem; border: 1px solid ${
+                      site === "new" ? "#a66e4e" : "rgba(166, 110, 78, 0.5)"
+                    }; outline: none; border-radius: 2px; cursor: pointer; padding: 6px 15px; background-color: ${
+                      site === "new" ? "#a66e4e" : "rgba(166, 110, 78, 0.25)"
+                    }; color: ${site === "new" ? "#000000" : "var(--text-primary)"}; position:relative;`}
                   >
                     <span
                       id="new-dot"
-                      style="display: none; position: absolute; top: -5px; right: -5px; width: 8px; height: 8px; border-radius: 2px; background-color: #228B22;"
+                      style="display: none; position: absolute; top: -5px; right: -5px; width: 8px; height: 8px; border-radius: 2px; background-color: var(--highlight-color);"
                     ></span>
                     <span
                       style="font-weight: ${site === "new"
@@ -266,9 +270,11 @@ const secondheader = (theme, site, period, domain, query) => {
                   <button
                     onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {document.getElementById('spinner-overlay').style.display='block'; ${animation}}"
                     class="feed-button"
-                    style=${`font-variant: small-caps; margin-left: 10px; font-size: 1.01rem; border: none; outline: none; border-radius: 2px; cursor: pointer; padding: 6px 15px; background-color: rgba(0,0,0,${
-                      site === "best" ? "0.2" : "0.1"
-                    }); color: black;`}
+                    style=${`font-variant: small-caps; margin-left: 10px; font-size: 1.01rem; border: 1px solid ${
+                      site === "best" ? "#a66e4e" : "rgba(166, 110, 78, 0.5)"
+                    }; outline: none; border-radius: 2px; cursor: pointer; padding: 6px 15px; background-color: ${
+                      site === "best" ? "#a66e4e" : "rgba(166, 110, 78, 0.25)"
+                    }; color: ${site === "best" ? "#000000" : "var(--text-primary)"};`}
                   >
                     <span
                       style="font-weight: ${site === "best"
@@ -306,7 +312,7 @@ const secondheader = (theme, site, period, domain, query) => {
         ? html`
             <div
               class="second-header"
-              style="background-color: var(--table-bg); min-height: 40px; display: flex; justify-content: space-between; align-items: center; padding: 0 15px 10px 15px; color: white;"
+              style="background-color: var(--table-bg); min-height: 40px; display: flex; justify-content: space-between; align-items: center; padding: 0 15px 10px 15px; color: var(--text-primary);"
             >
               <div>
                 <a

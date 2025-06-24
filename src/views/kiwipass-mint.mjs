@@ -51,8 +51,8 @@ export default async function (theme) {
             margin: 0;
           }
           .buy-button {
-            background-color: black;
-            color: white;
+            background-color: var(--button-primary-bg);
+            color: var(--button-primary-text);
             padding: 12px 24px;
             border: none;
             border-radius: 2px;
@@ -63,15 +63,35 @@ export default async function (theme) {
             display: inline-block;
             text-align: center;
           }
+          .buy-button:hover {
+            outline: 1px solid var(--button-hover-text);
+            color: var(--button-hover-text) !important;
+            border-color: var(--button-hover-text) !important;
+            background-color: var(--button-hover-bg) !important;
+          }
           .buy-button:disabled {
-            background-color: #666;
+            background-color: var(--text-muted);
             cursor: not-allowed;
+          }
+          .buy-button:disabled:hover {
+            outline: none;
+            background-color: var(--text-muted);
+            color: var(--text-primary);
+          }
+          .kiwipass-gradient-outer {
+            background: linear-gradient(to bottom, var(--sidebar-bg), var(--header-beige));
+          }
+          .kiwipass-gradient-middle {
+            background: var(--header-beige);
+          }
+          .kiwipass-gradient-inner {
+            background: var(--sidebar-bg);
           }
         </style>
 
         <div class="container">
           ${Sidebar(path)}
-          <div id="hnmain" style="border: 1px dotted rgba(219, 105, 141, 0.5);">
+          <div id="hnmain" style="border: var(--border);">
             <table
               border="0"
               cellpadding="0"
@@ -89,27 +109,30 @@ export default async function (theme) {
                   >
                     <!-- Title Section -->
                     <h1
-                      style="font-size: 32px; color: black; margin: 0 0 40px 0; font-weight: 600;"
+                      style="font-size: 32px; color: var(--text-primary); margin: 0 0 40px 0; font-weight: 600;"
                     >
                       Join the Kiwi Community
                     </h1>
 
                     <!-- Card Container -->
                     <div
-                      style="border: 1px dotted rgba(219, 105, 141, 0.5); background: white;"
+                      style="border: var(--border); background: var(--table-bg);"
                     >
                       <!-- Pass Image with layered background -->
                       <div
-                        style="padding: 40px; background: linear-gradient(to bottom, #1B4332, #2A5A32);"
+                        class="kiwipass-gradient-outer"
+                        style="padding: 40px;"
                       >
                         <div
                           style="max-width: 400px; margin: 0 auto; position: relative;"
                         >
                           <div
-                            style="background: #2A5A32; border-radius: 8px; padding: 20px;"
+                            class="kiwipass-gradient-middle"
+                            style="border-radius: 8px; padding: 20px;"
                           >
                             <div
-                              style="background: #1B4332; border-radius: 4px; padding: 20px;"
+                              class="kiwipass-gradient-inner"
+                              style="border-radius: 4px; padding: 20px;"
                             >
                               <img
                                 loading="lazy"
@@ -128,7 +151,7 @@ export default async function (theme) {
                           style="text-align: center; max-width: 500px; margin: 0 auto;"
                         >
                           <p
-                            style="font-size: 18px; color: black; margin: 0 0 24px 0;"
+                            style="font-size: 18px; color: var(--text-primary); margin: 0 0 24px 0;"
                           >
                             Become a Kiwi user and unlock exclusive access to
                             our community
@@ -146,12 +169,12 @@ export default async function (theme) {
                                     loading="lazy"
                                     src="${data.safeAvatar}"
                                     alt="${data.address}"
-                                    style="width: 32px; height: 32px; border: 1px dotted rgba(219, 105, 141, 0.5); border-radius: 2px;"
+                                    style="width: 32px; height: 32px; border: var(--border); border-radius: 2px;"
                                   />
                                 `,
                               )}
                             <div style="text-align: left;">
-                              <div style="font-weight: 500; color: black;">
+                              <div style="font-weight: 500; color: var(--text-primary);">
                                 800+ members
                               </div>
                               <div
@@ -164,14 +187,14 @@ export default async function (theme) {
 
                           <!-- Important Notice Box -->
                           <div
-                            style="background: var(--header-beige); border: 1px dotted rgba(219, 105, 141, 0.5); padding: 16px; margin-bottom: 32px; text-align: left;"
+                            style="background: var(--header-beige); border: var(--border); padding: 16px; margin-bottom: 32px; text-align: left;"
                           >
                             <div
-                              style="font-weight: 500; color: black; margin-bottom: 8px;"
+                              style="font-weight: 500; color: var(--text-primary); margin-bottom: 8px;"
                             >
                               Important
                             </div>
-                            <div style="color: #666; font-size: 14px;">
+                            <div style="color: var(--text-secondary); font-size: 14px;">
                               • <b>Mint is now completely free</b><br />
                               • You only pay for network gas fees<br />
                               • Your wallet will be used to create an app key
@@ -197,7 +220,7 @@ export default async function (theme) {
 
                       <!-- Footer Links -->
                       <div
-                        style="border-top: 1px dotted rgba(219, 105, 141, 0.5); padding: 20px; background: white;"
+                        style="border-top: var(--border); padding: 20px; background: var(--table-bg);"
                       >
                         <div
                           style="text-align: center; color: var(--visited-link); font-size: 14px;"

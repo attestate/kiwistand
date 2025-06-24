@@ -118,7 +118,7 @@ const UrlInput = (props) => {
   return (
     <div style={{ maxWidth: "600px" }}>
       <label
-        style={{ marginBottom: "5px", display: "block", fontSize: "16px" }}
+        style={{ marginBottom: "5px", display: "block", fontSize: "16px", color: "var(--text-primary)" }}
       >
         Link:
       </label>
@@ -137,20 +137,14 @@ const UrlInput = (props) => {
               url.length > 2048 ||
               url.length === 0 ||
               (!url.startsWith("https://") && !url.startsWith("http://"))
-                ? "2px solid black"
-                : "1px solid green",
-            color:
-              url.length > 2048 ||
-              url.length === 0 ||
-              (!url.startsWith("https://") && !url.startsWith("http://"))
-                ? "black"
-                : "#828282",
-
+                ? "var(--border-thick)"
+                : "1px solid var(--link-hover)",
+            color: "var(--text-primary)",
             width: "80%",
             padding: "12px 16px",
             fontSize: "16px",
             boxSizing: "border-box",
-            background: "white",
+            background: "var(--bg-off-white)",
             minHeight: "50px",
           }}
           value={url}
@@ -168,8 +162,8 @@ const UrlInput = (props) => {
           style={{
             marginLeft: "10px",
             padding: "0 16px",
-            backgroundColor: "#000",
-            color: "#fff",
+            backgroundColor: "var(--button-primary-bg)",
+            color: "var(--button-primary-text)",
             borderRadius: "2px",
             cursor: "pointer",
             fontSize: "14px",
@@ -195,6 +189,10 @@ const buttonStyles = {
   padding: "5px",
   fontSize: "16px",
   cursor: "pointer",
+  backgroundColor: "var(--button-primary-bg)",
+  color: "var(--button-primary-text)",
+  border: "var(--border-thin)",
+  borderRadius: "2px",
 };
 
 const SubmitButton = (props) => {
@@ -220,7 +218,7 @@ const SubmitButton = (props) => {
         canonicalURL.includes("/public")
           ? canonicalURL
           : canonicalURL + "/public",
-      )}" style="border: 1px solid black; max-width: 100%; max-height: 500px; display: block; margin: 0 auto;" alt="Uploaded image" />`;
+      )}" style="border: var(--border-thin); max-width: 100%; max-height: 500px; display: block; margin: 0 auto;" alt="Uploaded image" />`;
       return;
     }
 
@@ -262,7 +260,7 @@ const SubmitButton = (props) => {
             const remaining = 80 - title.length;
             document.querySelector(".remaining").textContent = remaining;
             document.querySelector(".remaining").style.color =
-              remaining > 0 ? "#828282" : "red";
+              remaining > 0 ? "var(--text-secondary)" : "var(--link-hover)";
             setTitle(title);
           }
         })
@@ -334,7 +332,7 @@ const SubmitButton = (props) => {
         const remaining = 80 - titleInput.textContent.length;
         document.querySelector(".remaining").textContent = remaining;
         document.querySelector(".remaining").style.color =
-          remaining > 0 ? "#828282" : "red";
+          remaining > 0 ? "var(--text-secondary)" : "var(--link-hover)";
       });
     }
 
@@ -461,10 +459,10 @@ const SubmitButton = (props) => {
           style={{
             padding: "1rem",
             margin: "1rem 0",
-            background: "#fff3cd",
-            border: "1px solid #856404",
+            background: "var(--activity-row-bg-alt)",
+            border: "var(--border-thin)",
             borderRadius: "4px",
-            color: "#856404",
+            color: "var(--text-secondary)",
             maxWidth: "600px",
           }}
         >
@@ -477,7 +475,7 @@ const SubmitButton = (props) => {
             <a
               href="/kiwipass-mint"
               style={{
-                color: "#856404",
+                color: "var(--link-hover)",
                 textDecoration: "underline",
                 fontWeight: "bold",
               }}

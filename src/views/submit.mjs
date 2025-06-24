@@ -77,7 +77,7 @@ export default async function submit(theme, url = "", title = "") {
                       >
                         ${title}
                       </div>
-                      <span style="font-size: 0.8rem;">
+                      <span style="font-size: 0.8rem; color: var(--text-secondary);">
                         <span>Characters remaining: </span>
                         <span class="remaining"
                           >${80 - title.length}</span
@@ -111,8 +111,8 @@ export default async function submit(theme, url = "", title = "") {
                             style="
                               margin-left: 10px;
                               padding: 0 16px;
-                              background-color: grey;
-                              color: #fff;
+                              background-color: var(--button-primary-bg);
+                              color: var(--button-primary-text);
                               border-radius: 2px;
                               cursor: pointer;
                               font-size: 14px;
@@ -131,7 +131,7 @@ export default async function submit(theme, url = "", title = "") {
                       <button
                         id="button-onboarding"
                         disabled
-                        style="width: 100%;max-width: 600px;margin-top: 2rem;padding: 5px;font-size: 16px;cursor: pointer;"
+                        style="width: 100%;max-width: 600px;margin-top: 2rem;padding: 5px;font-size: 16px;cursor: pointer;background-color: var(--button-primary-bg);color: var(--button-primary-text);border: var(--border-thin);border-radius: 2px;"
                       >
                         Loading...
                       </button>
@@ -179,14 +179,16 @@ const labelInputContainerStyle = `
 
 const labelStyle = `
    font-size: 16px;
+   color: var(--text-primary);
  `;
 const inputStyle = `
    width: 80%;
    padding: 12px 16px;
    font-size: 16px;
    box-sizing: border-box;
-   border: 2px solid black;
-   background: white;
+   border: var(--border-thick);
+   background: var(--bg-off-white);
+   color: var(--text-primary);
    min-height: 50px;
    border-radius: 2px;
 `;
@@ -224,12 +226,12 @@ const editableContent = `
    padding: 20px;
    font-size: 19px;
    box-sizing: border-box;
-   border: 1px solid #828282;
+   border: var(--border-thin);
    overflow: auto;
    resize: both;
    white-space: pre-wrap;
-   background-color: #fafafa;
-   color: black;
+   background-color: var(--bg-off-white);
+   color: var(--text-primary);
    border-radius: 2px;
  `;
 

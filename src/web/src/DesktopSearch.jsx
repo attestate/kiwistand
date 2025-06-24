@@ -43,7 +43,7 @@ const DesktopSearch = () => {
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 256 256"
-            style={{ width: "1.2rem", color: "black" }}
+            style={{ width: "1.2rem", color: "var(--text-primary)" }}
           >
             <rect width="256" height="256" fill="none" />
             <circle
@@ -86,6 +86,8 @@ const DesktopSearch = () => {
             fontSize: "1.01rem",
             fontVariant: "small-caps",
             border: "var(--border-thin)",
+            backgroundColor: "var(--middle-beige)",
+            color: "var(--text-primary)",
           }}
           onKeyDown={handleKeyDown}
         />

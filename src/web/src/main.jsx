@@ -997,14 +997,6 @@ async function start() {
   if (!document.getElementById("spinner-overlay")) {
     const overlay = document.createElement("div");
     overlay.id = "spinner-overlay";
-    overlay.style.display = "none";
-    overlay.style.position = "fixed";
-    overlay.style.top = "0";
-    overlay.style.left = "0";
-    overlay.style.width = "100%";
-    overlay.style.height = "100%";
-    overlay.style.background = "rgba(255,255,255,0.7)";
-    overlay.style.zIndex = "9999";
     document.body.appendChild(overlay);
   }
 

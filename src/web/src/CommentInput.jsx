@@ -49,7 +49,7 @@ const SiteExplainer = () => {
         style={{
           fontSize: "11pt",
           margin: "0 0 8px 0",
-          color: "#666",
+          color: "var(--text-secondary)",
         }}
       >
         Kiwi is Ethereum Hacker News, built for handpicked, long-form content
@@ -60,7 +60,7 @@ const SiteExplainer = () => {
         style={{
           fontSize: "11pt",
           margin: "0 0 12px 0",
-          color: "#666",
+          color: "var(--text-secondary)",
         }}
       >
         Want to leave a comment, upvote this link or join our community of 500+

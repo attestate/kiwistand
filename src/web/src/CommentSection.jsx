@@ -252,7 +252,7 @@ export const EmojiReaction = ({ comment, allowlist, delegations, toast }) => {
                   : "var(--border-thin)",
               borderRadius: "2px",
               cursor: disabled || isntLoggedIn ? "default" : "pointer",
-              color: disabled || isntLoggedIn ? "black" : "auto",
+              color: disabled || isntLoggedIn ? "var(--text-primary)" : "auto",
               fontSize: "10pt",
               WebkitAppearance: "none",
               opacity: 1,
@@ -275,7 +275,7 @@ export const EmojiReaction = ({ comment, allowlist, delegations, toast }) => {
                     width: i > 0 ? "13px" : "12px",
                     height: i > 0 ? "13px" : "12px",
                     borderRadius: "2px",
-                    border: i > 0 ? "1px solid #f3f3f3" : "1px solid #828282",
+                    border: i > 0 ? "1px solid var(--middle-beige)" : "1px solid var(--text-secondary)",
                     marginLeft: i > 0 ? "-4px" : 0,
                   }}
                 />
@@ -342,7 +342,7 @@ function NotificationOptIn(props) {
         style={{
           fontSize: "11pt",
           margin: "0 0 8px 0",
-          color: "#666",
+          color: "var(--text-muted)",
         }}
       >
         Get email notifications when someone replies to your comments or
@@ -432,8 +432,8 @@ const EmailNotificationLink = (props) => {
         disabled={status === "sending" || !localAccount}
         style={{
           padding: "6px 12px",
-          background: status === "sending" ? "#828282" : "black",
-          color: "white",
+          background: status === "sending" ? "var(--text-secondary)" : "var(--button-primary-bg)",
+          color: "var(--button-primary-text)",
           border: "var(--border)",
           borderRadius: "2px",
           cursor: "pointer",
@@ -487,10 +487,10 @@ const Comment = React.forwardRef(
         ref={ref}
         style={{
           boxShadow: isTargeted
-            ? "0 0 0 2px rgb(175, 192, 70, 0.75)"
+            ? "0 0 0 2px var(--highlight-color)"
             : undefined,
-          color: "black",
-          border: isTargeted ? "none" : "var(--border)",
+          color: "var(--text-secondary)",
+          border: isTargeted ? "2px solid transparent" : "var(--border)",
           backgroundColor: "var(--bg-off-white)",
           padding: `0 0.75rem ${isCollapsed ? "0px" : "0.75rem"} 0.75rem`,
           borderRadius: "2px",
@@ -518,7 +518,7 @@ const Comment = React.forwardRef(
               marginTop: "-3px",
               display: "inline-flex",
               alignItems: "center",
-              color: "black",
+              color: "var(--text-primary)",
             }}
             className="meta-link"
             href={`/upvotes?address=${comment.identity.address}`}
@@ -536,7 +536,7 @@ const Comment = React.forwardRef(
                   marginRight: "5px",
                   width: "10px",
                   height: "10px",
-                  border: "1px solid #828282",
+                  border: "1px solid var(--text-secondary)",
                   borderRadius: "2px",
                 }}
               />
@@ -545,11 +545,11 @@ const Comment = React.forwardRef(
               {truncateName(comment.identity.displayName)}
             </span>
           </a>
-          <span style={{ fontSize: "10pt", color: "grey", opacity: "0.6" }}>
+          <span style={{ fontSize: "10pt", color: "var(--text-muted)", opacity: "0.6" }}>
             {" "}
             •{" "}
           </span>
-          <span style={{ fontSize: "9pt", color: "grey" }}>
+          <span style={{ fontSize: "9pt", color: "var(--text-muted)" }}>
             <a
               href={url}
               className="caster-link share-link"
@@ -613,10 +613,10 @@ const Comment = React.forwardRef(
                       <div
                         key={i}
                         style={{
-                          borderLeft: "3px solid #ccc",
+                          borderLeft: "3px solid var(--text-muted)",
                           paddingLeft: "10px",
                           margin: "8px 0 0 0",
-                          color: "#666",
+                          color: "var(--text-muted)",
                         }}
                       >
                         {line.substring(2)}
@@ -708,7 +708,7 @@ const CommentsSection = (props) => {
     <div
       style={{
         backgroundColor: "var(--table-bg)",
-        padding: "0 11px 0 11px",
+        padding: "8px 11px 0 11px",
         fontSize: "1rem",
       }}
     >

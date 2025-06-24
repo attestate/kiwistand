@@ -209,7 +209,7 @@ const EmailSubscriptionForm = ({
             disabled={status === "sending"}
             style={{
               padding: "8px 16px",
-              background: status === "sending" ? "#828282" : "black",
+              background: status === "sending" ? "#828282" : "var(--button-primary-bg)",
               color: "white",
               border: "none",
               borderRadius: "2px",
@@ -269,7 +269,7 @@ const NotificationButton = ({ onEnabled }) => {
       onClick={handleNotificationRequest}
       style={{
         padding: "6px 12px",
-        background: "black",
+        background: "var(--button-primary-bg)",
         color: "white",
         border: "var(--border)",
         borderRadius: "2px",
@@ -352,7 +352,7 @@ const Bell = (props) => {
         justifyContent: "center", // Center items vertically
         position: "relative",
         textDecoration: "none", // Remove underline from link
-        color: "black", // Ensure text color is black
+        color: "var(--text-primary)", // Ensure text color uses theme variable
         height: "100%", // Fill container height
       }
     : {
@@ -423,7 +423,7 @@ const Bell = (props) => {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          color: "black",
+          color: "var(--text-primary)",
           textAlign: "center",
           fontSize: "9pt", // Adjusted size slightly
           padding: "0", // Remove padding for tighter fit
@@ -435,7 +435,7 @@ const Bell = (props) => {
         }
       : {
           // Desktop styles remain the same
-          color: "black",
+          color: "var(--text-primary)",
           textAlign: "center",
           fontSize: "9pt",
           display: "inline",
@@ -565,7 +565,7 @@ const BellSVGFull = (props) => (
       props.mobile
         ? { width: "24px", height: "24px" } // Explicit size for mobile
         : {
-            color: "black",
+            color: "var(--text-primary)",
             width: "1.5rem", // Desktop size
           }
     }
@@ -573,7 +573,7 @@ const BellSVGFull = (props) => (
     viewBox="0 0 256 256"
   >
     <rect width="256" height="256" fill="none" />
-    <path d="M221.8,175.94C216.25,166.38,208,139.33,208,104a80,80,0,1,0-160,0c0,35.34-8.26,62.38-13.81,71.94A16,16,0,0,0,48,200H88.81a40,40,0,0,0,78.38,0H208a16,16,0,0,0,13.8-24.06ZM128,216a24,24,0,0,1-22.62-16h45.24A24,24,0,0,1,128,216Z" />
+    <path fill="currentColor" d="M221.8,175.94C216.25,166.38,208,139.33,208,104a80,80,0,1,0-160,0c0,35.34-8.26,62.38-13.81,71.94A16,16,0,0,0,48,200H88.81a40,40,0,0,0,78.38,0H208a16,16,0,0,0,13.8-24.06ZM128,216a24,24,0,0,1-22.62-16h45.24A24,24,0,0,1,128,216Z" />
   </svg>
 );
 const BellSVG = (props) => (
@@ -582,7 +582,7 @@ const BellSVG = (props) => (
       props.mobile
         ? { width: "24px", height: "24px", ...props.style } // Explicit size for mobile
         : {
-            color: "black",
+            color: "var(--text-primary)",
             width: "1.5rem", // Desktop size
             ...props.style,
           }
@@ -645,6 +645,6 @@ const PersonFullSVG = () => (
     viewBox="0 0 256 256"
   >
     <rect width="256" height="256" fill="none" />
-    <path d="M230.93,220a8,8,0,0,1-6.93,4H32a8,8,0,0,1-6.92-12c15.23-26.33,38.7-45.21,66.09-54.16a72,72,0,1,1,73.66,0c27.39,8.95,50.86,27.83,66.09,54.16A8,8,0,0,1,230.93,220Z" />
+    <path fill="currentColor" d="M230.93,220a8,8,0,0,1-6.93,4H32a8,8,0,0,1-6.92-12c15.23-26.33,38.7-45.21,66.09-54.16a72,72,0,1,1,73.66,0c27.39,8.95,50.86,27.83,66.09,54.16A8,8,0,0,1,230.93,220Z" />
   </svg>
 );

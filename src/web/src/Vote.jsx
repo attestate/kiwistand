@@ -330,7 +330,7 @@ const Vote = (props) => {
               <div
                 className={`votearrow`}
                 style={{
-                  fill: hasUpvoted ? theme.color : "#828282",
+                  fill: hasUpvoted ? theme.color : "var(--text-secondary)",
                   cursor: hasUpvoted ? "not-allowed" : "pointer",
                 }}
                 title="upvote"

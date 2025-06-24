@@ -103,11 +103,11 @@ const SearchInterface = () => {
             }}
           >
             <span style={{ display: "flex", alignItems: "center", gap: "2px" }}>
-              <UpvoteSVG style={{ width: "25px", fill: "rgba(0,0,0,0.75)" }} />
+              <UpvoteSVG style={{ width: "25px", fill: "var(--text-secondary)" }} />
               {result.votes || 0}
             </span>
             <span style={{ display: "flex", alignItems: "center", gap: "2px" }}>
-              <ChatsSVG style={{ width: "20px", color: "black" }} />
+              <ChatsSVG style={{ width: "20px", color: "var(--text-primary)" }} />
               {result.comments || 0}
             </span>
           </div>
@@ -128,11 +128,12 @@ const SearchInterface = () => {
           border: "none",
           borderRadius: "2px",
           cursor: "pointer",
-          color: "black",
+          color: "var(--text-primary)",
+          backgroundColor: "transparent",
           WebkitTapHighlightColor: "transparent",
           WebkitAppearance: "none",
           appearance: "none",
-          "-webkit-text-fill-color": "black",
+          "-webkit-text-fill-color": "var(--text-primary)",
         }}
         aria-label="Open search"
       >
@@ -216,7 +217,7 @@ const SearchInterface = () => {
                   fontSize: "16px",
                   border: "var(--border-thin)",
                   borderRadius: "2px",
-                  backgroundColor: "white",
+                  backgroundColor: "var(--bg-off-white)",
                   fontFamily: "var(--font-family)",
                   outline: "none",
                 }}
@@ -227,8 +228,8 @@ const SearchInterface = () => {
                 style={{
                   flex: "1",
                   padding: "8px 12px",
-                  background: "black",
-                  color: "white",
+                  background: "var(--button-primary-bg)",
+                  color: "var(--button-primary-text)",
                   border: "var(--border)",
                   borderRadius: "2px",
                   cursor: "pointer",

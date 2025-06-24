@@ -55,25 +55,25 @@ export const ProgressBar = (props) => {
       <div
         style={{
           flex: 1,
-          backgroundColor: progress >= 0 ? theme.color : "black",
+          backgroundColor: progress >= 0 ? theme.color : "var(--text-muted)",
         }}
       ></div>
       <div
         style={{
           flex: 1,
-          backgroundColor: progress >= 1 ? theme.color : "black",
+          backgroundColor: progress >= 1 ? theme.color : "var(--text-muted)",
         }}
       ></div>
       <div
         style={{
           flex: 1,
-          backgroundColor: progress >= 2 ? theme.color : "black",
+          backgroundColor: progress >= 2 ? theme.color : "var(--text-muted)",
         }}
       ></div>
       <div
         style={{
           flex: 1,
-          backgroundColor: progress >= 3 ? theme.color : "black",
+          backgroundColor: progress >= 3 ? theme.color : "var(--text-muted)",
         }}
       ></div>
     </div>
@@ -93,7 +93,7 @@ const ConnectionDialogue = (props) => {
         style={{
           marginTop: "0",
           fontSize: "1.2rem",
-          color: "black",
+          color: "var(--text-primary)",
           marginBottom: "10px",
           textAlign: "left",
         }}
@@ -108,7 +108,7 @@ const ConnectionDialogue = (props) => {
         <p
           style={{
             fontWeight: "bold",
-            color: "black",
+            color: "var(--text-primary)",
             marginBottom: "10px",
             textAlign: "left",
           }}
@@ -119,7 +119,7 @@ const ConnectionDialogue = (props) => {
       ) : props.account && props.account.isConnected ? (
         <p
           style={{
-            color: "black",
+            color: "var(--text-primary)",
             marginBottom: "10px",
             textAlign: "left",
           }}
@@ -130,7 +130,7 @@ const ConnectionDialogue = (props) => {
         <p
           style={{
             fontWeight: "bold",
-            color: "black",
+            color: "var(--text-primary)",
             marginBottom: "20px",
             textAlign: "left",
           }}
@@ -145,10 +145,9 @@ const ConnectionDialogue = (props) => {
         style={{
           textAlign: "left",
           listStyle: "none",
-          paddingLeft: "0",
-          color: "black",
-          marginBottom: "35px",
           paddingLeft: "5px",
+          color: "var(--text-primary)",
+          marginBottom: "35px",
           fontSize: "0.9rem",
         }}
       >
@@ -325,7 +324,7 @@ const DelegateButton = (props) => {
               marginTop: 0,
               marginBottom: 0,
               fontSize: "1.2rem",
-              color: "black",
+              color: "var(--text-primary)",
             }}
           >
             {indexedDelegation
@@ -385,8 +384,9 @@ const DelegateButton = (props) => {
           <button
             style={{
               width: "auto",
-              backgroundColor: isLoading ? "grey" : "black",
-              border: isLoading ? "1px solid grey" : "1px solid black",
+              backgroundColor: isLoading ? "var(--text-muted)" : "var(--button-primary-bg)",
+              border: isLoading ? "1px solid var(--text-muted)" : "1px solid var(--button-primary-bg)",
+              color: isLoading ? "var(--text-primary)" : "var(--button-primary-text)",
             }}
             className="buy-button"
             id="button-onboarding"
@@ -410,8 +410,8 @@ const Form = (props) => {
       <RainbowKitProvider chains={chains}>
         <div
           style={{
-            border: "1px solid rgba(0,0,0,0.1)",
-            backgroundColor: "#E6E6DF",
+            border: "var(--border)",
+            backgroundColor: "var(--background-color0)",
             maxWidth: "315px",
             display: "inline-block",
             padding: "20px 15px",

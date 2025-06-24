@@ -30,7 +30,7 @@ const header = (theme, path) => {
             >
               <div class="kn-banner-desk">
                 <a
-                  style="display: flex; align-items: center; gap: 0.5rem; color: black;"
+                  style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-primary);"
                   href="/"
                   onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
                 >
@@ -53,7 +53,7 @@ const header = (theme, path) => {
                       >
                         <a
                           href="/"
-                          style="color: black; text-decoration: none; font-size: 11pt; display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; padding: 0 5px;"
+                          style="color: var(--text-primary); text-decoration: none; font-size: 11pt; display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; padding: 0 5px;"
                         >
                           <svg
                             height="21px"
@@ -92,7 +92,7 @@ const header = (theme, path) => {
                             <rect y="30" width="100" height="10"></rect>
                             <rect y="60" width="100" height="10"></rect>
                           </svg>
-                          <span style="color: black; margin-left: 10px;"
+                          <span style="color: var(--text-primary); margin-left: 10px;"
                             >Menu</span
                           >
                         </div>

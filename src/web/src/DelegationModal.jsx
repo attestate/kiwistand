@@ -49,13 +49,13 @@ function SimpleModal(props) {
 
   const customStyles = {
     overlay: {
-      backgroundColor: "rgba(0, 0, 0, 0.5)",
+      backgroundColor: "var(--overlay-bg)",
       zIndex: 6,
     },
     content: {
       fontSize: "1.025rem",
-      backgroundColor: "#e6e6df",
-      border: "1px solid #828282",
+      backgroundColor: "var(--background-color0)",
+      border: "var(--border)",
       overflow: "auto",
       WebkitOverflowScrolling: "touch",
       borderRadius: "2px",
@@ -74,6 +74,7 @@ function SimpleModal(props) {
       alignItems: "center",
       justifyContent: "center",
       flexDirection: "column",
+      color: "var(--text-primary)",
     },
   };
 
