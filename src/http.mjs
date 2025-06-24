@@ -341,13 +341,19 @@ export async function launch(trie, libp2p, isPrimary = true) {
     log(`Worker ${process.pid} ready to receive IPC messages`);
   }
 
-  try {
-    cachedFeed = await feed(trie, theme, 0, null, undefined, undefined);
-    log("Cached feed updated");
-  } catch (err) {
-    log("Failed to update cached feed: " + err);
-    cachedFeed = null;
-  }
+  // Start computing the feed in the background to avoid blocking server startup
+  // The first request to / might be slower if the feed isn't ready yet
+  setImmediate(async () => {
+    try {
+      console.time("initial-feed-computation");
+      cachedFeed = await feed(trie, theme, 0, null, undefined, undefined);
+      console.timeEnd("initial-feed-computation");
+      log("Initial cached feed ready");
+    } catch (err) {
+      log("Failed to compute initial cached feed: " + err);
+      cachedFeed = null;
+    }
+  });
   (function updateCachedFeed() {
     setTimeout(async () => {
       const startTime = Date.now();
