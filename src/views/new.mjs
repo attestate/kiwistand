@@ -14,12 +14,21 @@ import Footer from "./components/footer.mjs";
 import { custom } from "./components/head.mjs";
 import * as store from "../store.mjs";
 import * as moderation from "./moderation.mjs";
-import { getLastComment, listNewest } from "../cache.mjs";
+import { getLastComment, listNewest, countImpressions } from "../cache.mjs";
 import Row, { extractDomain } from "./components/row.mjs";
 import log from "../logger.mjs";
 import { purgeCache } from "../cloudflarePurge.mjs";
+import { cachedMetadata } from "../parser.mjs";
 
 const html = htm.bind(vhtml);
+
+async function addMetadata(post) {
+  const data = cachedMetadata(post.href);
+  return {
+    ...post,
+    metadata: data,
+  };
+}
 
 let stories = [];
 export function getStories() {
@@ -115,10 +124,23 @@ export async function recompute() {
           normalizeUrl(story.href).startsWith(domain) &&
           writers[domain] === story.identity,
       );
+      
+      const augmentedStory = await addMetadata(story);
+      let finalStory = augmentedStory || story;
+      
+      const href = normalizeUrl(finalStory.href, { stripWWW: false });
+      if (href && config?.images?.includes(href) && finalStory.metadata?.image) {
+        delete finalStory.metadata.image;
+      }
+      
+      const impressions = countImpressions(finalStory.href);
+      
       nextStories.push({
-        ...story,
+        ...finalStory,
+        impressions,
         lastComment,
         displayName: ensData.displayName,
+        submitter: ensData,
         avatars: avatars,
         isOriginal,
       });
