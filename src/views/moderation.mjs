@@ -106,81 +106,106 @@ export async function getWriters() {
   return writers;
 }
 
+// Cache for moderation lists in dev mode
+let moderationCache = null;
+let cacheTimestamp = 0;
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
 export async function getLists() {
+  // Use cache in dev mode
+  if (env.NODE_ENV === "dev" && moderationCache && Date.now() - cacheTimestamp < CACHE_TTL) {
+    return moderationCache;
+  }
+
+  // Parallelize all getConfig calls
+  const [
+    pinnedResult,
+    addressesResult,
+    linksResult,
+    imagesResult,
+    titlesResult,
+    hrefsResult,
+    messagesResult,
+    labelsResult
+  ] = await Promise.allSettled([
+    getConfig("pinned"),
+    getConfig("banlist_addresses"),
+    getConfig("banlist_links"),
+    getConfig("banlist_images"),
+    getConfig("moderation_titles"),
+    getConfig("moderation_hrefs"),
+    getConfig("banlist_messages"),
+    getLabels()
+  ]);
+
+  // Process results
   let pinned = [];
+  if (pinnedResult.status === "fulfilled") {
+    pinned = pinnedResult.value.map(({ link }) =>
+      normalizeUrl(link, { stripWWW: false }),
+    );
+  } else {
+    log(`pinned: Couldn't get config: ${pinnedResult.reason}`);
+  }
+
   let addresses = [];
-  let titles = {};
-  let hrefs = {};
+  if (addressesResult.status === "fulfilled") {
+    addresses = addressesResult.value.map(({ address }) => address.toLowerCase());
+  } else {
+    log(`banlist_addresses: Couldn't get config: ${addressesResult.reason}`);
+  }
+
   let links = [];
-  let messages = [];
+  if (linksResult.status === "fulfilled") {
+    links = linksResult.value.map(({ link }) => normalizeUrl(link));
+  } else {
+    log(`banlist_links: Couldn't get config: ${linksResult.reason}`);
+  }
+
   let images = [];
-
-  try {
-    const pinnedResponse = await getConfig("pinned");
-    pinned = pinnedResponse.map(({ link }) =>
+  if (imagesResult.status === "fulfilled") {
+    images = imagesResult.value.map(({ link }) =>
       normalizeUrl(link, { stripWWW: false }),
     );
-  } catch (err) {
-    log(`pinned: Couldn't get config: ${err.toString()}`);
+  } else {
+    log(`banlist_images: Couldn't get config: ${imagesResult.reason}`);
   }
 
-  try {
-    const addrResponse = await getConfig("banlist_addresses");
-    addresses = addrResponse.map(({ address }) => address.toLowerCase());
-  } catch (err) {
-    log(`banlist_addresses: Couldn't get config: ${err.toString()}`);
-  }
-
-  try {
-    const linkResponse = await getConfig("banlist_links");
-    links = linkResponse.map(({ link }) => normalizeUrl(link));
-  } catch (err) {
-    log(`banlist_links: Couldn't get config: ${err.toString()}`);
-  }
-
-  try {
-    const imagesResponse = await getConfig("banlist_images");
-    images = imagesResponse.map(({ link }) =>
-      normalizeUrl(link, { stripWWW: false }),
-    );
-  } catch (err) {
-    log(`banlist_images: Couldn't get config: ${err.toString()}`);
-  }
-
-  try {
-    const titleResponse = await getConfig("moderation_titles");
-    for (let obj of titleResponse) {
+  let titles = {};
+  if (titlesResult.status === "fulfilled") {
+    for (let obj of titlesResult.value) {
       if (!obj.link || !obj.title) continue;
       titles[normalizeUrl(obj.link)] = obj.title;
     }
-  } catch (err) {
-    log(`moderation_titles: Couldn't get config: ${err.toString()}`);
+  } else {
+    log(`moderation_titles: Couldn't get config: ${titlesResult.reason}`);
   }
 
-  try {
-    const hrefResponse = await getConfig("moderation_hrefs");
-    for (let obj of hrefResponse) {
+  let hrefs = {};
+  if (hrefsResult.status === "fulfilled") {
+    for (let obj of hrefsResult.value) {
       if (!obj.old || !obj.new) continue;
       hrefs[normalizeUrl(obj.old)] = normalizeUrl(obj.new);
     }
-  } catch (err) {
-    log(`moderation_hrefs: Couldn't get config: ${err.toString()}`);
+  } else {
+    log(`moderation_hrefs: Couldn't get config: ${hrefsResult.reason}`);
   }
 
-  try {
-    messages = await getConfig("banlist_messages");
-  } catch (err) {
-    log(`banlist_messages: Couldn't get config: ${err.toString()}`);
+  let messages = [];
+  if (messagesResult.status === "fulfilled") {
+    messages = messagesResult.value;
+  } else {
+    log(`banlist_messages: Couldn't get config: ${messagesResult.reason}`);
   }
 
   let labels = {};
-  try {
-    labels = await getLabels();
-  } catch (err) {
-    log(`labels: Couldn't get config: ${err.toString()}`);
+  if (labelsResult.status === "fulfilled") {
+    labels = labelsResult.value;
+  } else {
+    log(`labels: Couldn't get config: ${labelsResult.reason}`);
   }
 
-  return {
+  const result = {
     pinned,
     hrefs,
     messages,
@@ -190,6 +215,14 @@ export async function getLists() {
     images,
     labels,
   };
+
+  // Cache result in dev mode
+  if (env.NODE_ENV === "dev") {
+    moderationCache = result;
+    cacheTimestamp = Date.now();
+  }
+
+  return result;
 }
 
 export function flag(leaves, config) {
