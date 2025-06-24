@@ -461,7 +461,7 @@ const row = (
                       loading="lazy"
                       style="aspect-ratio: 2 / 1; object-fit:${isCloudflare
                         ? "contain"
-                        : "cover"}; margin: 0 11px; border-radius: 2px; width: calc(100% - 24px);"
+                        : "cover"}; margin: 0; border-radius: 0; width: 100%;"
                       src="${isCloudflare
                         ? DOMPurify.sanitize(
                             story.href.endsWith("/public")
@@ -476,7 +476,7 @@ const row = (
                     ${isCloudflare
                       ? null
                       : html`<div
-                          style="position: absolute; bottom: 8px; left: 19px; background: var(--background-color0); padding: 2px 6px; border-radius: 2px; font-size: 9pt; color: var(--text-primary); border: 1px solid var(--border-line);"
+                          style="position: absolute; bottom: 8px; left: 8px; background: var(--background-color0); padding: 2px 6px; border-radius: 0; font-size: 9pt; color: var(--text-primary);"
                         >
                           ${extractedDomain}
                         </div>`}
@@ -506,7 +506,7 @@ const row = (
                 >
                   <div
                     class="interaction-element"
-                    style="border-radius: 2px; border: var(--border-thin); background-color: var(--bg-off-white); display: flex; align-items: center; justify-content: center; min-width: 49px; margin: 5px 8px 5px 6px; align-self: stretch;"
+                    style="border-radius: 0; background-color: var(--bg-off-white); display: flex; align-items: center; justify-content: center; min-width: 49px; margin: 5px 8px 5px 6px; align-self: stretch;"
                   >
                     <div style="min-height: 42px; display:block;">
                       <div class="votearrowcontainer">
@@ -541,7 +541,7 @@ const row = (
                     >
                       <img
                         loading="lazy"
-                        style="max-height: 61px; border: var(--border-line); border-radius: 2px; width: 110px; object-fit: ${isCloudflare
+                        style="max-height: 61px; border-radius: 0; width: 110px; object-fit: ${isCloudflare
                           ? "contain"
                           : "cover"};"
                         src="${isCloudflare
@@ -632,7 +632,7 @@ const row = (
                                   src="${avatar}"
                                   alt="avatar"
                                   style="z-index: ${index}; width: ${size}px; height:
- ${size}px; border: 1px solid var(--text-muted); border-radius: 2px; margin-left: -${size /
+ ${size}px; border-radius: 0; margin-left: -${size /
                                   2}px;"
                                 />
                               `,
@@ -645,7 +645,7 @@ const row = (
                         ? html`
                             ${story.label === "FUD"
                               ? html`<span
-                                  style="vertical-align: -2px; font-size: 8pt; background-color:#FFEB3B; color:#000; padding:2px 4px; border-radius:2px; margin-right:4px; display:inline-flex; align-items:center;"
+                                  style="vertical-align: -2px; font-size: 8pt; background-color:#FFEB3B; color:#000; padding:2px 4px; border-radius:0; margin-right:4px; display:inline-flex; align-items:center;"
                                   ><svg
                                     xmlns="http://www.w3.org/2000/svg"
                                     viewBox="0 0 256 256"
@@ -838,7 +838,7 @@ const row = (
                       data-story-title="${DOMPurify.sanitize(story.title)}"
                       data-story-slug="${getSlug(story.title)}"
                       data-story-index="0x${story.index}"
-                      style="border-radius: 2px; border: var(--border-thin); background-color: rgba(124, 101, 193, 0.5); display: flex; align-items: center; justify-content: center; min-width: 49px; margin: 5px 8px 5px 6px; align-self: stretch; cursor: pointer; text-decoration: none;"
+                      style="border-radius: 0; background-color: rgba(124, 101, 193, 0.5); display: flex; align-items: center; justify-content: center; min-width: 49px; margin: 5px 8px 5px 6px; align-self: stretch; cursor: pointer; text-decoration: none;"
                       onclick="event.preventDefault(); const title = this.getAttribute('data-story-title'); const slug = this.getAttribute('data-story-slug'); const index = this.getAttribute('data-story-index'); const kiwiUrl = 'https://news.kiwistand.com/stories/' + slug + '?index=' + index; const url = 'https://warpcast.com/~/compose?text=' + encodeURIComponent(title) + '&embeds[]=' + encodeURIComponent(kiwiUrl); if (window.ReactNativeWebView || window !== window.parent) { window.sdk.actions.openUrl(url); } else { window.open(url, '_blank'); }"
                     >
                       <div style="min-height: 42px; display:block;">
@@ -871,7 +871,7 @@ const row = (
                         story.title,
                       )}?index=0x${story.index}"
                       onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
-                      style="margin: 5px; border: var(--border-thin); background-color: var(--bg-off-white); border-radius: 2px; display: ${path ===
+                      style="margin: 5px; background-color: var(--bg-off-white); border-radius: 0; display: ${path ===
                       "/stories"
                         ? "none"
                         : "flex"}; justify-content: center; min-width: 49px; align-items: center; flex-direction: column;"
@@ -904,7 +904,7 @@ const row = (
                       ? `/#0x${story.lastComment.index}`
                       : `/new?cached=true#0x${story.lastComment.index}`}');})(),document.querySelector('.comment-preview-0x${story.index}').style.opacity = 0.5,window.addToQueue(new
  CustomEvent('open-comments-0x${story.index}',{detail:{source:'comment-preview'}}));window.dispatchEvent(new HashChangeEvent('hashchange'));"
-                    style="margin: 0 5px 5px 5px; padding: 11px; border: var(--border); border-top: rgba(166, 110, 78, 0.075); display: flex;width: 100%; background-color: var(--bg-off-white); border-radius: 2px;"
+                    style="margin: 0 5px 5px 5px; padding: 11px; display: flex;width: 100%; background-color: var(--bg-off-white); border-radius: 0;"
                   >
                     <a
                       class="comment-preview-anchor"
@@ -930,7 +930,7 @@ const row = (
                                       participant.safeAvatar,
                                     )}"
                                     alt="previous participant"
-                                    style="z-index: ${index}; width: ${size}px; height: ${size}px; border: 1px solid var(--text-muted); border-radius: 2px; margin-left: ${index ===
+                                    style="z-index: ${index}; width: ${size}px; height: ${size}px; border-radius: 0; margin-left: ${index ===
                                     0
                                       ? "0"
                                       : "5px"};"
@@ -955,7 +955,7 @@ const row = (
                               story.lastComment.identity.safeAvatar,
                             )}"
                             alt="avatar"
-                            style="border: 1px solid var(--text-secondary); width: ${size}px; height: ${size}px; border-radius: 2px;"
+                            style="width: ${size}px; height: ${size}px; border-radius: 0;"
                           />`}
                           <span
                             style="font-size: 10pt; touch-action: manipulation;user-select: none; font-weight: 500;"

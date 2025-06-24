@@ -4,11 +4,11 @@
    --background-color1: rgba(166, 110, 78, 0.15);
    --bg-off-white: #1a1814;
    --contrast-color: rgba(255, 255, 255, 0.85);
-   --border: 1px dashed rgba(166, 110, 78, 0.5);
-   --border-thin: 1px dashed rgba(166, 110, 78, 0.5);
-   --border-line: 1px solid rgba(166, 110, 78, 0.4);
-   --border-thick: 2px solid rgba(166, 110, 78, 0.6);
-   --border-inset: 1px inset rgba(166, 110, 78, 0.5);
+   --border: 1px solid rgba(166, 110, 78, 0.15);
+   --border-thin: 1px solid rgba(166, 110, 78, 0.1);
+   --border-line: 1px solid rgba(166, 110, 78, 0.08);
+   --border-thick: 1px solid rgba(166, 110, 78, 0.08);
+   --border-inset: none;
    --full-contrast-color: rgba(255, 255, 255, 0.9);
    --header-beige: #2a2824;
    --middle-beige: #211f1b;
@@ -18,9 +18,9 @@
   
   /* Activity page specific */
   --activity-row-bg: #1e1c18;
-  --activity-row-bg-alt: rgba(166, 110, 78, 0.06);
-  --activity-border: 1px solid rgba(166, 110, 78, 0.25);
-  --activity-row-hover: rgba(166, 110, 78, 0.1);
+  --activity-row-bg-alt: rgba(166, 110, 78, 0.08);
+  --activity-border: 1px solid rgba(166, 110, 78, 0.08);
+  --activity-row-hover: rgba(166, 110, 78, 0.15);
   
   /* Text colors */
   --text-primary: #f0f0f0;
@@ -39,7 +39,7 @@
   --hover-bg: rgba(166, 110, 78, 0.15);
   --active-bg: rgba(166, 110, 78, 0.2);
   --button-primary-bg: #a66e4e;
-  --button-primary-text: #000000;
+  --button-primary-text: #ffffff;
   --button-hover-bg: rgba(166, 110, 78, 0.25);
   --button-hover-text: #f0f0f0;
   
@@ -53,7 +53,8 @@
    scroll-margin-top: 100px;
  }
 .newsletter-row {
-  margin-bottom: 5px;
+  padding: 5px 0;
+  border-bottom: 1px solid rgba(166, 110, 78, 0.08);
 }
 .notification:link {
   color: var(--text-primary) !important;
@@ -63,6 +64,7 @@
 }
 .comment-preview-anchor {
   color: var(--text-primary);
+  text-decoration: none;
 }
 :target {
   border: none !important;
@@ -112,7 +114,7 @@
   border-top-left-radius: 2px !important;
   border-top-right-radius: 2px !important;
   background: var(--drawer-bg) !important;
-  border-top: 1px solid var(--text-muted) !important;
+  border-top: 1px solid rgba(166, 110, 78, 0.08) !important;
 }
 
 .vote-button-container:active,
@@ -127,14 +129,34 @@
   transform: scale(0.95);
   transition: transform 0.1s ease;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.comment-preview {
+  border-bottom: 1px solid rgba(166, 110, 78, 0.08);
+  transition: background-color 0.2s ease;
+  box-sizing: border-box;
+  padding: 6px 0;
+}
+.comment-preview:hover {
+  background-color: rgba(166, 110, 78, 0.04);
+}
+/* Prevent double hover effect when comment preview is also an interaction element */
+.comment-preview.interaction-element:hover {
+  background-color: rgba(166, 110, 78, 0.04) !important;
+}
+/* Ensure child elements don't add their own hover effects */
+.comment-preview:hover * {
+  background-color: transparent !important;
 }
 .comment-preview:active {
   touch-action: manipulation;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 button, a, .interaction-element {
   touch-action: manipulation;
   user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .chat-bubble-container,
@@ -245,6 +267,7 @@ body {
      font-family: var(--font-family);
      font-size:10pt;
      color: var(--text-secondary);
+     padding: 4px 8px;
 }
  .subtext td {
      font-family: var(--font-family);
@@ -315,14 +338,18 @@ body {
  .subtext a:link, .subtext a:visited {
      color: var(--text-secondary);
 }
- .subtext a:hover {
-     text-decoration:underline;
+@media (hover: hover) {
+   .subtext a:hover {
+       text-decoration:underline;
+  }
 }
  .comhead a:link, .subtext a:visited {
      color: var(--text-secondary);
 }
- .comhead a:hover {
-     text-decoration:underline;
+@media (hover: hover) {
+   .comhead a:hover {
+       text-decoration:underline;
+  }
 }
  .hnmore a:link, a:visited {
      color: var(--text-secondary);
@@ -343,8 +370,10 @@ body {
      white-space: pre-wrap;
      overflow-wrap:anywhere;
 }
- pre:hover {
-     overflow:auto 
+@media (hover: hover) {
+   pre:hover {
+       overflow:auto 
+  }
 }
 .votearrow {
   color: var(--text-secondary);
@@ -494,10 +523,18 @@ body {
 }
 .row-image {
   display: none !important;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 /* Hide domain text in subtitle when showing mobile image */
 .content-row-elevated .story-subtitle .domain-text {
   display: none;
+}
+
+/* Ensure mobile images fill the full width properly */
+.content-row-elevated .mobile-row-image {
+  margin: 0 -1px;
+  width: calc(100% + 2px);
 }
 
 /* Hide tweet preview on desktop */
@@ -508,6 +545,22 @@ body {
 /* Hide farcaster preview on desktop */
 .farcaster-preview-container {
   display: none !important;
+}
+
+/* Prevent active state propagation on mobile */
+@media only screen and (max-width: 640px) {
+  .content-row-elevated:active,
+  .elevating-row:active,
+  .information-row:active {
+    background-color: var(--background-color0) !important;
+  }
+  
+  /* Prevent hover state propagation for parent containers */
+  .content-row-elevated:hover,
+  .elevating-row:hover,
+  .information-row:hover {
+    background-color: var(--background-color0) !important;
+  }
 }
 
 /* Farcaster embed styles */
@@ -524,11 +577,14 @@ body {
   flex-direction: column;
   justify-content: space-between;
   height: 100%;
-  border: var(--border);
-  border-radius: 2px;
-  margin: 0 11px 2px;
+  border: none;
+  border-bottom: 1px solid rgba(166, 110, 78, 0.08);
+  margin: 0;
   background: var(--background-color0);
+  overflow: hidden;
 }
+
+/* Subtle purple indicator for Farcaster - removed the ::before pseudo-element */
 
 .farcaster-embed-metadata {
   display: grid;
@@ -560,9 +616,9 @@ body {
 .farcaster-embed-author-avatar-container {
   width: 40px;
   height: 40px;
-  border-radius: 2px;
+  border-radius: 0;
   overflow: hidden;
-  border: 1px solid var(--text-secondary);
+  border: 1px solid rgba(166, 110, 78, 0.2);
 }
 
 .farcaster-embed-author-avatar {
@@ -577,7 +633,8 @@ body {
 }
 
 .farcaster-embed-author-username {
-  opacity: 0.5;
+  opacity: 0.7;
+  color: var(--text-secondary);
 }
 
 .farcaster-embed-body {
@@ -617,8 +674,14 @@ body {
   color: inherit;
 }
 
+.farcaster-embed-stats-link:hover {
+  opacity: 0.8;
+  color: var(--text-secondary);
+}
+
 .farcaster-embed-farcaster-icon {
   display: flex;
+  color: var(--text-secondary);
 }
 
 .farcaster-embed-farcaster-link {
@@ -639,9 +702,9 @@ body {
   flex-direction: column;
   justify-content: space-between;
   height: 100%;
-  border: var(--border);
-  border-radius: 2px;
-  margin: 0 11px 2px;
+  border: none;
+  border-bottom: 1px solid rgba(166, 110, 78, 0.08);
+  margin: 0;
   background: var(--background-color0);
 }
 
@@ -661,8 +724,62 @@ body {
 }
 
 
+/* Twitter-like row styling for desktop */
+@media only screen and (min-width: 641px) {
+  .content-row {
+    border-bottom: 1px solid rgba(166, 110, 78, 0.08);
+    position: relative;
+    padding: 4px 0;
+  }
+  
+  .content-row:last-child {
+    border-bottom: none;
+  }
+  
+  /* Prevent parent row hover from affecting comment previews */
+  .content-row:hover,
+  .elevating-row:hover,
+  .content-row-elevated:hover {
+    background-color: transparent !important;
+  }
+}
+
+/* Prevent background interaction on mobile when tapping elements */
+@media only screen and (max-width: 640px) {
+  /* Isolate interaction elements from background */
+  .interaction-element {
+    position: relative;
+    z-index: 2;
+    isolation: isolate;
+  }
+  
+  /* Prevent background color changes on parent elements */
+  .content-row-elevated,
+  .elevating-row,
+  .information-row {
+    pointer-events: none;
+  }
+  
+  /* Re-enable pointer events on children that need interaction */
+  .content-row-elevated > *,
+  .elevating-row > *,
+  .information-row > * {
+    pointer-events: auto;
+  }
+  
+  /* Ensure comment previews don't affect parent backgrounds */
+  .comment-preview .interaction-element {
+    isolation: isolate;
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
 /* mobile device */
 @media only screen and (min-width : 300px) and (max-width : 640px) {
+  /* Consistent spacing for first content row after header */
+  .content-row:first-of-type {
+    padding-top: 6px;
+  }
   /* Show tweet preview only on mobile */
   .tweet-preview-container {
     display: block !important;
@@ -671,6 +788,7 @@ body {
   /* Show farcaster preview only on mobile */
   .farcaster-preview-container {
     display: block !important;
+    margin: 0 -1px;
   }
     .scroll-margin-base {
       scroll-margin-top: 140px;
@@ -685,7 +803,8 @@ body {
      display: none;
     }
     .newsletter-row {
-      margin-bottom: 20px;
+      padding: 6px 0;
+      border-bottom: 1px solid rgba(166, 110, 78, 0.08);
     }
     .share-container {
       font-size: 10pt;
@@ -693,13 +812,30 @@ body {
     #hnmain > table {
       background-color: var(--table-bg-mobile);
     }
+    .comment-preview {
+      border: none;
+      border-bottom: 1px solid rgba(166, 110, 78, 0.08);
+      background-color: transparent;
+      margin: 0;
+      padding: 6px 0;
+      isolation: isolate;
+      position: relative;
+      z-index: 2;
+    }
+    /* Ensure last comment preview in a row has clean edges */
+    .comment-preview:last-child {
+      border-right: none !important;
+      margin-right: 0 !important;
+    }
     .comment-preview-text {
       font-size: 10pt;
-      line-height: 1.3;
+      line-height: 1.4;
+      padding: 0.5rem 0.75rem;
+      opacity: 0.85;
     }
     .information-row {
       background-color: var(--background-color0);
-      padding: 8px 0 !important;
+      padding: 6px 0 !important;
     }
     .story-domain {
       font-size: 9pt;
@@ -715,64 +851,114 @@ body {
       margin-top: 5px !important;
       font-size: 12px !important;
     }
+    .mobile-row-image {
+      display: block;
+      width: 100%;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
     .mobile-row-image img {
       border: var(--border-inset);
-      border-bottom-left-radius: 0px !important;
-      border-bottom-right-radius: 0px !important;
+      border-radius: 0;
+      width: 100%;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      pointer-events: none;
+    }
+    .elevating-row .mobile-row-image img {
+      border-top-left-radius: 0;
+      border-top-right-radius: 0;
     }
     .comment-section {
       background-color: var(--background-color0);
     }
     .content-row-elevated {
-      padding-bottom: 5px;
+      padding-bottom: 4px;
+      background-color: var(--background-color0);
+    }
+    .content-row-elevated .mobile-row-image {
+      margin-top: -5px;
     }
     .elevating-row {
       background: var(--background-color0);
       position: relative;
-      margin: 0 11px 10px 11px;
-      border-radius: 2px;
-      border: var(--border);
-      border-top: none;
+      padding: 6px 0;
+      border-bottom: 1px solid rgba(166, 110, 78, 0.08);
+      overflow: hidden;
+    }
+    
+    /* Remove double border for farcaster previews */
+    .elevating-row .farcaster-preview-container {
       margin-bottom: 0;
     }
+    
+    .elevating-row .farcaster-embed-container {
+      border: none;
+      border-bottom: 1px solid rgba(166, 110, 78, 0.08);
+      margin: 0;
+    }
     .elevating-comment-preview .interaction-element{
-      padding-top: 2px !important;
-      border-top: none !important;
-      margin: 0 11px 5px 11px !important;
-      border-bottom: var(--border-thick) !important;
+      padding: 6px 0 !important;
+      border: none !important;
+      border-bottom: 1px solid rgba(166, 110, 78, 0.08) !important;
+      margin: 0 !important;
+      border-radius: 0;
+      box-sizing: border-box;
+      background-color: transparent;
     }
     .comment-preview-no-mobile-image .interaction-element{
-      padding-top: 2px !important;
+      padding: 6px 0 !important;
       border: none !important;
+      border-bottom: 1px solid rgba(166, 110, 78, 0.08) !important;
       margin: 0 !important;
-      border-bottom: none;
+      border-radius: 0;
+      box-sizing: border-box;
+      background-color: transparent;
     }
     .with-comment-preview {
       border-bottom: none;
     }
-    .elevating-row.without-comment-preview {
-      border-bottom: var(--border-thick) !important;
+    
+    /* Make comment preview part of parent row visually */
+    .content-row .comment-preview {
+      box-shadow: none;
+      border: none;
+      border-bottom: 1px solid rgba(166, 110, 78, 0.08);
+      background-color: transparent;
+      padding: 6px 0;
     }
-    .elevating-row.without-comment-preview.no-border {
-      border-bottom: none !important;
+    
+    /* Twitter-like mobile row separation */
+    #hnmain table tr.athing {
+      background-color: var(--table-bg-mobile);
+      border-bottom: 1px solid rgba(166, 110, 78, 0.08);
+      position: relative;
     }
     .content-row:not(.content-row-elevated) {
-      border: var(--border);
-      margin: 0 11px;
-      border-bottom: var(--border-thick) !important;
+      border: none;
+      border-bottom: 1px solid rgba(166, 110, 78, 0.08);
+      padding: 6px 0;
+      position: relative;
+    }
+    
+    .content-row:not(.content-row-elevated):last-child {
+      border-bottom: none;
     }
     #hnmain {
       border: none;
     }
     .second-header {
       background-color: var(--middle-beige) !important;
-      border-bottom: var(--border-line);
+      border-bottom: 1px solid rgba(166, 110, 78, 0.08);
     }
     .third-header td div {
       background-color: var(--table-bg) !important;
-      border-bottom: var(--border-thick);
+      border-bottom: 1px solid rgba(166, 110, 78, 0.08);
       padding-bottom: 8px;
-      margin-bottom: 8px;
+      margin-bottom: 0;
     }
     .gateway-container {
       padding: 0 5vw !important;
@@ -944,7 +1130,7 @@ body {
 }
  #mySidebar > hr {
      border: none;
-     border-top: var(--border-line);
+     border-top: 1px solid rgba(166, 110, 78, 0.08);
 }
  .sidebar-toggle {
      display: flex;
@@ -983,7 +1169,7 @@ body {
     rgba(42, 40, 36, 0.97) 50%,
     rgba(42, 40, 36, 0) 100%
   );
-  border-top: var(--border-line);
+  border-top: 1px solid rgba(166, 110, 78, 0.08);
   box-shadow: 0 -2px 5px var(--shadow-color);
 }
 @media (display-mode: standalone) {
@@ -1005,17 +1191,23 @@ body {
 .mobile-bell-container > a > svg {
   color: var(--text-primary);
   width: 1.65rem;
+  height: 1.65rem;
+  display: block;
 }
 .mobile-bell-container > div {
   height: 100%;
   width: 100%;
   display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 
 .mobile-bell {
   width: 100%;
   height: 100%;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
 }
@@ -1027,7 +1219,10 @@ body {
 /* Media query for larger screens */
  @media (min-width: 641px) {
     .content-row {
-      margin-bottom: 8px !important;
+      padding: 4px 0;
+    }
+    td {
+      padding: 4px 8px;
     }
     .story-link-container-wrapper {
       justify-content: center !important;
@@ -1093,21 +1288,37 @@ body {
     }
     #hnmain > table:first-of-type > tbody > tr:first-of-type {
          background-color: var(--header-beige) !important;
-         border-bottom: var(--border-line);
+         border-bottom: 1px solid rgba(166, 110, 78, 0.08);
     }
     #hnmain > table {
       border-left: none;
       border-right: none;
     }
+    
+    /* Twitter-like row separation for main story rows */
+    #hnmain table tr.athing {
+      border-bottom: 1px solid rgba(166, 110, 78, 0.08);
+    }
+    
+    /* Spacer row styling - minimal */
+    #hnmain table tr.spacer {
+      height: 0 !important;
+    }
+    
+    #hnmain table tr.spacer td {
+      height: 0 !important;
+      padding: 0 !important;
+      line-height: 0 !important;
+    }
     .second-header {
       background-color: var(--middle-beige) !important;
-      border-bottom: var(--border-line);
+      border-bottom: 1px solid rgba(166, 110, 78, 0.08);
     }
     .third-header td div {
       background-color: var(--table-bg) !important;
-      border-bottom: var(--border-thick);
+      border-bottom: 1px solid rgba(166, 110, 78, 0.08);
       padding-bottom: 8px;
-      margin-bottom: 8px;
+      margin-bottom: 0;
     }
     footer {
       background-color: var(--header-beige) !important;
@@ -1169,8 +1380,8 @@ body {
     }
     #mySidebar {
       padding-right: 0.8rem;
-      border-left: var(--border-line);
-      border-bottom: var(--border-line);
+      border-left: 1px solid rgba(166, 110, 78, 0.08);
+      border-bottom: 1px solid rgba(166, 110, 78, 0.08);
       border-bottom-left-radius: 2px;
       background: var(--sidebar-bg);
     }
@@ -1338,9 +1549,16 @@ a.meta-link:hover, span.meta-link:hover {
   display: flex;
   align-self: stretch;
 }
+.interaction-element {
+  box-sizing: border-box;
+}
 .interaction-element:hover {
   cursor:pointer !important;
   background-color: var(--hover-bg) !important;
+}
+/* Exception: interaction elements inside comment previews use comment preview hover */
+.comment-preview .interaction-element:hover {
+  background-color: transparent !important;
 }
 
 .bell-button:hover{
@@ -1511,36 +1729,32 @@ a.meta-link:hover, span.meta-link:hover {
   height: 3.5rem;
 }
 
-/* Activity page styles */
+/* Activity page styles - Twitter-like */
 .activity-row {
-  border-bottom: var(--activity-border);
+  border-bottom: 1px solid rgba(166, 110, 78, 0.08);
   transition: background-color 0.2s ease;
-  min-height: 80px;
+  min-height: 60px;
+  position: relative;
 }
 
-.activity-row:nth-child(even) {
-  background-color: var(--activity-row-bg-alt);
+.activity-row:last-child {
+  border-bottom: none;
 }
 
 .activity-row:hover {
-  background-color: var(--activity-row-hover);
+  background-color: rgba(166, 110, 78, 0.04);
+  transition: background-color 0.2s ease;
 }
 
 .activity-row td {
-  padding: 0.75rem 1rem;
+  padding: 0.5rem 0.75rem;
 }
 
 .activity-row .notification,
 .activity-row .upvote-notification {
   display: block;
-  padding: 1.25rem 1rem;
+  padding: 0.75rem 0.5rem;
   text-decoration: none;
-  transition: background-color 0.2s ease;
-}
-
-.activity-row .notification:hover,
-.activity-row .upvote-notification:hover {
-  background-color: var(--activity-row-hover);
 }
 
 /* Remove the inline border-bottom from activity items */
@@ -1551,37 +1765,61 @@ a.meta-link:hover, span.meta-link:hover {
 
 /* Add padding and spacing for activity content */
 .activity-content-wrapper {
-  padding: 1rem 0;
+  padding: 0.25rem 0;
 }
 
-/* Ensure last row doesn't have border */
-.activity-row:last-child {
-  border-bottom: none;
+/* Improve icon spacing in activity rows */
+.activity-content-wrapper > div:first-child {
+  padding-right: 1rem;
+  flex: 0 0 auto;
+  min-width: 60px;
+}
+
+.activity-content-wrapper > div:last-child {
+  padding-left: 0.5rem;
+  flex: 1 1 auto;
+}
+
+
+/* Twitter-like row enhancements */
+.story-row {
+  position: relative;
+  padding: 4px 0;
 }
 
 /* Mobile specific adjustments */
 @media only screen and (max-width: 640px) {
   .activity-row .notification,
   .activity-row .upvote-notification {
-    padding: 1rem 0.75rem;
+    padding: 0.5rem 0.25rem;
   }
   
   .activity-row {
-    border-bottom: var(--border-thick);
-    min-height: 70px;
+    border-bottom: 1px solid rgba(166, 110, 78, 0.08);
+    min-height: 50px;
+    padding: 0;
+  }
+  
+  .activity-row:last-child {
+    border-bottom: none;
   }
   
   .activity-row td {
-    padding: 0.5rem 0.75rem;
+    padding: 0.4rem 0.5rem;
   }
 }
 
 /* Pull to refresh styles for dark mode */
 .ptr-element {
   color: var(--text-primary) !important;
+  background-color: var(--background-color0) !important;
 }
 
 .ptr-element .genericon {
+  color: var(--text-primary) !important;
+}
+
+.ptr-element .genericon-next:before {
   color: var(--text-primary) !important;
 }
 
@@ -1595,4 +1833,164 @@ a.meta-link:hover, span.meta-link:hover {
 .ptr-loading,
 .ptr-refresh {
   color: var(--text-primary) !important;
+}
+
+/* Override any inline styles that might set black text */
+.ptr-element * {
+  color: var(--text-primary) !important;
+}
+
+/* Story page specific fixes */
+#hnmain table tr td {
+  background-color: var(--background-color0);
+}
+
+/* Fix gaps above OG images */
+.content-row-elevated {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+/* Remove gaps between story row and other sections */
+#hnmain table thead + tr td,
+#hnmain table tr + tr td {
+  padding-top: 0;
+}
+
+/* Ensure consistent background for story pages */
+body.story-page #hnmain table {
+  background-color: var(--background-color0) !important;
+}
+
+/* Info box styling for better contrast */
+.info-box {
+  background-color: var(--middle-beige);
+  border: 1px solid var(--border-line);
+  border-radius: 4px;
+  padding: 1rem;
+  margin: 0 1rem 1rem 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.info-box h3 {
+  color: var(--text-primary);
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.info-box p {
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Fix background color for the upvoter profiles section */
+.upvoter-profiles-section {
+  background-color: var(--middle-beige) !important;
+  margin: 0 !important;
+  padding: 1rem !important;
+}
+
+/* Story page specific row fixes */
+.story-page thead {
+  background-color: var(--background-color0) !important;
+}
+
+.story-page .content-row {
+  background-color: var(--background-color0) !important;
+  padding-top: 0 !important;
+  margin-top: 0 !important;
+}
+
+/* Fix gaps in story page table structure */
+.story-page #hnmain table {
+  border-spacing: 0;
+  border-collapse: collapse;
+}
+
+.story-page #hnmain table td {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+/* Ensure smooth transition between sections */
+.story-page thead + tbody tr:first-child td,
+.story-page thead + tr td {
+  padding-top: 0 !important;
+}
+
+/* Emoji reaction button styles */
+.emoji-reaction-button {
+  background-color: rgba(166, 110, 78, 0.15) !important;
+  border: 1px solid rgba(166, 110, 78, 0.3) !important;
+  transition: all 0.2s ease !important;
+}
+
+.emoji-reaction-button:hover:not(:disabled) {
+  background-color: rgba(166, 110, 78, 0.25) !important;
+  border-color: rgba(166, 110, 78, 0.5) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+.emoji-reaction-button:active:not(:disabled) {
+  transform: translateY(0) scale(0.95) !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+}
+
+.emoji-reaction-button:disabled {
+  opacity: 0.6 !important;
+  background-color: rgba(166, 110, 78, 0.1) !important;
+  border-color: rgba(166, 110, 78, 0.2) !important;
+  cursor: not-allowed !important;
+}
+
+/* Story page specific fixes for background and gaps */
+body.story-page {
+  background-color: var(--background-color0) !important;
+}
+
+body.story-page #hnmain {
+  background-color: var(--background-color0) !important;
+}
+
+body.story-page #hnmain table {
+  background-color: var(--background-color0) !important;
+  border-spacing: 0;
+  border-collapse: collapse;
+}
+
+body.story-page #hnmain table tr,
+body.story-page #hnmain table td,
+body.story-page #hnmain table thead {
+  background-color: var(--background-color0) !important;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+/* Remove all gaps between sections */
+body.story-page thead + tr td,
+body.story-page tr + tr td {
+  padding-top: 0 !important;
+}
+
+/* Fix elevated content row gaps */
+body.story-page .content-row-elevated {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+  background-color: var(--background-color0) !important;
+}
+
+/* Remove gaps above images */
+body.story-page .mobile-row-image,
+body.story-page .row-image {
+  margin-top: 0 !important;
+}
+
+/* Ensure comment section has no gaps */
+body.story-page .comment-section {
+  background-color: var(--background-color0) !important;
+  margin-top: 0 !important;
+  padding-top: 0 !important;
 }
