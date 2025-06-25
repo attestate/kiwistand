@@ -387,6 +387,12 @@ const Vote = (props) => {
             style={{
               cursor: hasUpvoted ? "not-allowed" : "pointer",
               position: "relative", // For positioning the animation
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              minWidth: "49px",
+              minHeight: "42px",
+              alignSelf: "stretch",
             }}
           >
             <KarmaAnimation active={showKarmaAnimation} />
@@ -395,6 +401,9 @@ const Vote = (props) => {
               style={{
                 fill: hasUpvoted ? "#ff6600" : "var(--text-secondary)",
                 cursor: hasUpvoted ? "not-allowed" : "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
               }}
               title="upvote"
             >
