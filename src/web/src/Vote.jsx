@@ -10,7 +10,13 @@ import DOMPurify from "isomorphic-dompurify";
 import { sdk } from "@farcaster/frame-sdk";
 
 import * as API from "./API.mjs";
-import { useSigner, useProvider, client, chains, isInFarcasterFrame } from "./client.mjs";
+import {
+  useSigner,
+  useProvider,
+  client,
+  chains,
+  isInFarcasterFrame,
+} from "./client.mjs";
 import NFTModal from "./NFTModal.jsx";
 import theme from "./theme.jsx";
 import { getLocalAccount, isIOSApp } from "./session.mjs";
@@ -94,20 +100,22 @@ const Vote = (props) => {
 
   const provider = useProvider();
   const result = useSigner();
-  
+
   // Check if story is in upvoted stories localStorage
   const isInUpvotedStorage = () => {
     try {
       const storiesString = localStorage.getItem("--kiwi-news-upvoted-stories");
       if (!storiesString) return false;
       const upvotedStories = JSON.parse(storiesString);
-      return Array.isArray(upvotedStories) && 
-             upvotedStories.some(story => story.href === props.href);
+      return (
+        Array.isArray(upvotedStories) &&
+        upvotedStories.some((story) => story.href === props.href)
+      );
     } catch {
       return false;
     }
   };
-  
+
   const [hasUpvoted, setHasUpvoted] = useState(
     props.upvoters.includes(address) || isInUpvotedStorage(),
   );
@@ -120,13 +128,17 @@ const Vote = (props) => {
   } else {
     signer = result;
   }
-  
+
   // Apply upvoted styling on mount if already upvoted
   useEffect(() => {
     if (hasUpvoted && animationContainerRef.current) {
-      const voteContainer = animationContainerRef.current.closest(".vote-button-container");
+      const voteContainer = animationContainerRef.current.closest(
+        ".vote-button-container",
+      );
       if (voteContainer) {
-        const contentRow = voteContainer.closest(".content-row, .content-row-elevated");
+        const contentRow = voteContainer.closest(
+          ".content-row, .content-row-elevated",
+        );
         if (contentRow) {
           contentRow.classList.add("upvoted-story");
         }
@@ -153,7 +165,6 @@ const Vote = (props) => {
       toast.error("Please connect your wallet to upvote");
       return;
     }
-    
 
     // Set upvoted state immediately for better UX
     setHasUpvoted(true);
@@ -164,20 +175,20 @@ const Vote = (props) => {
     setTimeout(() => setShowKarmaAnimation(false), 700);
 
     let response;
-    
+
     if (isMiniApp) {
       // Mini app upvote flow - use FID instead of signature
       try {
         const context = await window.sdk.context;
         const fid = context.user.fid;
-        
+
         if (!fid) {
           throw new Error("No FID available in context");
         }
-        
+
         // Get the user's connected wallet address from Wagmi (the proper way)
         let walletAddress = null;
-        
+
         // For mini apps, use the current account's address from useAccount hook
         if (account.isConnected && account.address) {
           walletAddress = account.address;
@@ -191,22 +202,31 @@ const Vote = (props) => {
             });
             if (accounts && accounts.length > 0) {
               walletAddress = accounts[0];
-              console.log("Found wallet via SDK Ethereum provider:", walletAddress);
+              console.log(
+                "Found wallet via SDK Ethereum provider:",
+                walletAddress,
+              );
             }
           } catch (providerError) {
-            console.log("Failed to get wallet from SDK provider:", providerError);
+            console.log(
+              "Failed to get wallet from SDK provider:",
+              providerError,
+            );
           }
         }
-        
-        console.log("Account state:", { isConnected: account.isConnected, address: account.address });
+
+        console.log("Account state:", {
+          isConnected: account.isConnected,
+          address: account.address,
+        });
         console.log("Final wallet address:", walletAddress);
-        
+
         if (!walletAddress) {
           throw new Error("No connected wallet found in Farcaster mini app");
         }
-        
+
         toast("Submitting your upvote...");
-        
+
         response = await API.sendMiniAppUpvote(value, fid, walletAddress);
       } catch (err) {
         console.error("Mini app upvote error:", err);
@@ -233,11 +253,13 @@ const Vote = (props) => {
       setUpvotes(upvotes + 1);
       toast.success("Thanks for your upvote!");
       posthog.capture("upvote");
-      
+
       // Add upvoted styling to the parent row
       const voteContainer = e.currentTarget.closest(".vote-button-container");
       if (voteContainer) {
-        const contentRow = voteContainer.closest(".content-row, .content-row-elevated");
+        const contentRow = voteContainer.closest(
+          ".content-row, .content-row-elevated",
+        );
         if (contentRow) {
           contentRow.classList.add("upvoted-story");
         }
@@ -260,11 +282,13 @@ const Vote = (props) => {
         toast.success(
           "Your vote was already recorded! The feed may need to refresh to show it. 🥝",
         );
-        
+
         // Still add upvoted styling to the parent row for duplicate votes
         const voteContainer = e.currentTarget.closest(".vote-button-container");
         if (voteContainer) {
-          const contentRow = voteContainer.closest(".content-row, .content-row-elevated");
+          const contentRow = voteContainer.closest(
+            ".content-row, .content-row-elevated",
+          );
           if (contentRow) {
             contentRow.classList.add("upvoted-story");
           }
@@ -296,12 +320,15 @@ const Vote = (props) => {
                   isMiniApp = await window.sdk.isInMiniApp();
                 }
               } catch (err) {
-                console.log("Mini app detection failed in vote eligibility check:", err);
+                console.log(
+                  "Mini app detection failed in vote eligibility check:",
+                  err,
+                );
                 isMiniApp = false;
               }
-              
+
               let isEligible = false;
-              
+
               if (isMiniApp) {
                 // For mini apps, check if we have FID context
                 try {
@@ -347,41 +374,31 @@ const Vote = (props) => {
               // Add haptic feedback for vote action only in frames
               if (isInFarcasterFrame()) {
                 try {
-                  await sdk.haptics.impactOccurred('medium');
+                  await sdk.haptics.impactOccurred("medium");
                 } catch (error) {
                   // Silently fail if haptics not supported
                 }
               }
-              
+
               handleSubmit(e);
             }}
-            className={`${hasUpvoted ? "upvoted-arrow-container" : "interaction-element"} upvote-interaction`}
+            className="interaction-element upvote-interaction"
+            data-upvoted={hasUpvoted}
             style={{
-              borderRadius: "2px",
-              backgroundColor: "var(--bg-off-white)",
-              border: "var(--border-thin)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              minWidth: "49px",
-              minHeight: "42px",
-              alignSelf: "stretch",
               cursor: hasUpvoted ? "not-allowed" : "pointer",
               position: "relative", // For positioning the animation
             }}
           >
             <KarmaAnimation active={showKarmaAnimation} />
-            <div style={{ minHeight: "42px", display: "block" }}>
-              <div
-                className={`votearrow`}
-                style={{
-                  fill: hasUpvoted ? "#ff6600" : "var(--text-secondary)",
-                  cursor: hasUpvoted ? "not-allowed" : "pointer",
-                }}
-                title="upvote"
-              >
-                {hasUpvoted ? iconFullSVG : iconSVG}
-              </div>
+            <div
+              className={`votearrow`}
+              style={{
+                fill: hasUpvoted ? "#ff6600" : "var(--text-secondary)",
+                cursor: hasUpvoted ? "not-allowed" : "pointer",
+              }}
+              title="upvote"
+            >
+              {hasUpvoted ? iconFullSVG : iconSVG}
             </div>
           </div>
         );
