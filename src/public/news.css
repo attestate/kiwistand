@@ -4,11 +4,11 @@
    --background-color1: rgba(166, 110, 78, 0.06);
    --bg-off-white: #f6f6ef;
    --contrast-color: rgba(166, 110, 78, 0.75);
-   --border: none;
-   --border-thin: none;
-   --border-line: 1px solid rgba(166, 110, 78, 0.6);
-   --border-thick: 2px solid rgba(166, 110, 78, 0.55);
-   --border-inset: 1px inset rgba(166, 110, 78, 0.7);
+   --border: 1px solid rgba(166, 110, 78, 0.15);
+   --border-thin: 1px solid rgba(166, 110, 78, 0.1);
+   --border-line: 1px solid rgba(166, 110, 78, 0.15);
+   --border-thick: 1px solid rgba(166, 110, 78, 0.2);
+   --border-inset: 1px inset rgba(166, 110, 78, 0.15);
    --full-contrast-color: rgba(166, 110, 78, 1);
    --header-beige: #fafafa;
    --middle-beige: #f3f3f3;
@@ -953,6 +953,8 @@ body {
 /* Media query for larger screens */
  @media (min-width: 641px) {
     .content-row {
+      border-bottom: var(--border-thin);
+      padding-bottom: 8px;
       margin-bottom: 8px !important;
     }
     .story-link-container-wrapper {
@@ -1007,6 +1009,8 @@ body {
     #hnmain {
       width: 70ch;
       border-radius: 2px;
+      border-left: var(--border-thin);
+      border-right: var(--border-thin);
     }
     #bell {
       display: block;
@@ -1021,8 +1025,7 @@ body {
          background-color: var(--header-beige) !important;
     }
     #hnmain > table {
-      border-left: none;
-      border-right: none;
+      width: 100%;
     }
     .second-header, .third-header td div, footer {
       background-color: var(--header-beige) !important;
