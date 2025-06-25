@@ -35,7 +35,7 @@ import cache, {
 import * as curation from "./curation.mjs";
 import log from "../logger.mjs"; // Use original logger here
 import { EIP712_MESSAGE } from "../constants.mjs";
-import Row, { extractDomain } from "./components/row.mjs";
+import Row, { extractDomain, upvoteCheckScript } from "./components/row.mjs";
 import * as karma from "../karma.mjs";
 import { cachedMetadata } from "../parser.mjs";
 // Assuming prediction function exists here
@@ -802,6 +802,7 @@ export default async function (trie, theme, page, domain, identity, hash) {
             ${Footer(theme, path)}
           </div>
         </div>
+        ${upvoteCheckScript()}
       </body>
     </html>
   `;

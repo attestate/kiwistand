@@ -71,8 +71,8 @@ const SiteExplainer = () => {
         <button
           style={{
             padding: "6px 12px",
-            background: "black",
-            color: "white",
+            background: "var(--button-primary-bg)",
+            color: "var(--button-primary-text)",
             border: "var(--border)",
             borderRadius: "2px",
             cursor: "pointer",
@@ -147,7 +147,7 @@ const MobileComposer = ({
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: "white",
+        backgroundColor: "var(--body-bg)",
         zIndex: 1000,
         display: "flex",
         flexDirection: "column",
@@ -166,7 +166,7 @@ const MobileComposer = ({
           borderBottom: "var(--border)",
           position: "sticky",
           top: 0,
-          backgroundColor: "white",
+          backgroundColor: "var(--body-bg)",
           zIndex: 2,
         }}
       >
@@ -182,6 +182,7 @@ const MobileComposer = ({
             border: "none",
             fontSize: "1rem",
             cursor: "pointer",
+            color: "var(--text-primary)",
           }}
         >
           Cancel
@@ -201,13 +202,14 @@ const MobileComposer = ({
           }}
           disabled={isLoading}
           style={{
-            background: "black",
-            color: "white",
-            border: "none",
+            background: isLoading ? "var(--text-secondary)" : "var(--button-primary-bg)",
+            color: "var(--button-primary-text)",
+            border: "var(--border)",
             padding: "0.5rem 1rem",
             borderRadius: "2px",
             fontSize: "0.9rem",
-            cursor: "pointer",
+            cursor: isLoading ? "not-allowed" : "pointer",
+            opacity: isLoading ? 0.7 : 1,
           }}
         >
           {isLoading ? "Submitting..." : "Submit"}
@@ -231,6 +233,8 @@ const MobileComposer = ({
           height: "100%",
           overflowY: "auto",
           touchAction: "auto",
+          backgroundColor: "rgba(166, 110, 78, 0.08)",
+          color: "var(--text-primary)",
         }}
         onTouchMove={(e) => e.stopPropagation()}
         value={text}
@@ -241,10 +245,10 @@ const MobileComposer = ({
           padding: "0.5rem 1rem",
           borderTop: "var(--border)",
           fontSize: "0.8rem",
-          color: "#666",
+          color: "var(--text-muted)",
           position: "sticky",
           bottom: 0,
-          backgroundColor: "white",
+          backgroundColor: "var(--body-bg)",
           zIndex: 2,
         }}
       >
@@ -666,10 +670,15 @@ const CommentInput = (props) => {
             style={{
               display: "block",
               width: "100%",
-              border: "var(--border)",
+              border: "var(--border-thin)",
               fontSize: "1rem",
               borderRadius: "2px",
               resize: "vertical",
+              backgroundColor: "rgba(166, 110, 78, 0.08)",
+              color: "var(--text-primary)",
+              fontFamily: "var(--font-family)",
+              padding: "8px",
+              outline: "none",
             }}
             value={text}
             onChange={(e) => setText(e.target.value)}

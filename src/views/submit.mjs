@@ -186,8 +186,8 @@ const inputStyle = `
    padding: 12px 16px;
    font-size: 16px;
    box-sizing: border-box;
-   border: var(--border-thick);
-   background: var(--bg-off-white);
+   border: var(--border-input);
+   background-color: rgba(166, 110, 78, 0.08) !important;
    color: var(--text-primary);
    min-height: 50px;
    border-radius: 2px;
@@ -226,11 +226,11 @@ const editableContent = `
    padding: 20px;
    font-size: 19px;
    box-sizing: border-box;
-   border: var(--border-thin);
+   border: var(--border-input-thin);
    overflow: auto;
    resize: both;
    white-space: pre-wrap;
-   background-color: var(--bg-off-white);
+   background-color: rgba(166, 110, 78, 0.08);
    color: var(--text-primary);
    border-radius: 2px;
  `;

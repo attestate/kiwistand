@@ -90,7 +90,7 @@ function generateCommentRow(activity, identity, bgColor, theme, i) {
         src="${DOMPurify.sanitize(identity.safeAvatar)}"
         loading="lazy"
         alt="avatar"
-        style="border: 1px solid var(--text-secondary); width: 28px; height: 28px; border-radius: 2px; margin-top: 1.5rem;"
+        style="border: 1px solid var(--text-secondary); width: 28px; height: 28px; border-radius: 2px;"
       />`
     : "";
 
@@ -107,7 +107,7 @@ function generateCommentRow(activity, identity, bgColor, theme, i) {
         >
           <div class="activity-content-wrapper" style="display: flex;">
             <div
-              style="flex: 0.15; display: flex; align-items: start; justify-content: center;"
+              style="flex: 0.15; display: flex; align-items: start; justify-content: center; padding-top: 10px;"
             >
               ${avatar}
             </div>
@@ -117,7 +117,6 @@ function generateCommentRow(activity, identity, bgColor, theme, i) {
               <div style="font-size: 0.9rem; margin-right: 1rem;">
                 <p
                   class="notification-title"
-                  style="margin-top: 8px; margin-bottom: 2px;"
                 >
                   <strong>
                     <span>${identity.displayName}</span>
@@ -130,7 +129,7 @@ function generateCommentRow(activity, identity, bgColor, theme, i) {
                   </strong>
                 </p>
                 <p
-                  style="line-height: 1.2; white-space: pre-wrap; margin: 5px 0 1rem 0; word-break: break-word;"
+                  style="white-space: pre-wrap; word-break: break-word;"
                 >
                   <span style="text-align: justify;">${comment}</span>
                 </p>
@@ -178,7 +177,7 @@ function generateRow(lastUpdate, theme) {
                 style="display: flex;"
               >
                 <div
-                  style="flex: 0.15; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative;"
+                  style="flex: 0.15; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; padding-top: 10px;"
                 >
                   <div style="position: relative; width: 48px; height: 48px;">
                     ${identity.safeAvatar
@@ -214,7 +213,6 @@ function generateRow(lastUpdate, theme) {
                   <div style="font-size: 0.9rem; margin-right: 1rem;">
                     <p
                       class="notification-title"
-                      style="margin-top: 8px; margin-bottom: 2px;"
                     >
                       <strong>
                         <span>${identity.displayName}</span>
@@ -228,7 +226,7 @@ function generateRow(lastUpdate, theme) {
                       </strong>
                     </p>
                     <p
-                      style="line-height: 1.2; white-space: pre-wrap; margin: 5px 0 1rem 0; word-break: break-word;"
+                      style="white-space: pre-wrap; word-break: break-word;"
                     >
                       <span style="text-align: justify; color: var(--text-muted);"
                         >${DOMPurify.sanitize(
@@ -269,7 +267,7 @@ function generateRow(lastUpdate, theme) {
               style="display: flex;"
             >
               <div
-                style="flex: 0.15; display: flex; flex-direction: column; align-items: center; justify-content: center;"
+                style="flex: 0.15; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-top: 10px;"
               >
                 <div
                   class="votearrow"
@@ -306,14 +304,14 @@ function generateRow(lastUpdate, theme) {
                             src="${DOMPurify.sanitize(identity.safeAvatar)}"
                             loading="lazy"
                             alt="avatar"
-                            style="width: ${size}px; height: ${size}px; border: 1px solid var(--text-secondary); border-radius: 2px; margin-left: 15px;"
+                            style="width: ${size}px; height: ${size}px; border: 1px solid var(--text-secondary); border-radius: 2px; margin-left: 15px; margin-top: 5px;"
                           />
                         `,
                       )}
                     </div>`
                   : ""}
                 <div style="font-size: 0.9rem; margin-right: 1rem;">
-                  <p style="margin-top: 8px; margin-bottom: 2px;">
+                  <p style="margin-bottom: 0.25rem;">
                     <strong>
                       ${identity.displayName}
                       <span> </span>
@@ -327,7 +325,7 @@ function generateRow(lastUpdate, theme) {
                       : ""}
                     ${activity.verb} your submission
                   </p>
-                  <p style="font-weight: bold; margin: 7px 0 15px 0;">
+                  <p style="font-weight: bold; margin-bottom: 0.5rem;">
                     ${title.substring(0, 80)}
                   </p>
                   ${activity.metadata?.index && activity.metadata?.title

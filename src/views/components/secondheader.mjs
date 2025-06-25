@@ -197,7 +197,7 @@ const secondheader = (theme, site, period, domain, query) => {
     <td>
       <div
         class="second-header"
-        style="background-color: var(--table-bg); min-height: 40px; display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; color: var(--text-primary);"
+        style="background-color: var(--table-bg); min-height: 40px; display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; color: var(--text-primary);"
       >
         <div style="display: flex; align-items: center;">
           ${site === "search" ||
@@ -312,7 +312,7 @@ const secondheader = (theme, site, period, domain, query) => {
         ? html`
             <div
               class="second-header"
-              style="background-color: var(--table-bg); min-height: 40px; display: flex; justify-content: space-between; align-items: center; padding: 0 15px 10px 15px; color: var(--text-primary);"
+              style="background-color: var(--table-bg); min-height: 40px; display: flex; justify-content: space-between; align-items: center; padding: 0 14px 10px 14px; color: var(--text-primary);"
             >
               <div>
                 <a

@@ -15,7 +15,7 @@ import { custom } from "./components/head.mjs";
 import * as store from "../store.mjs";
 import * as moderation from "./moderation.mjs";
 import { getLastComment, listNewest, countImpressions } from "../cache.mjs";
-import Row, { extractDomain } from "./components/row.mjs";
+import Row, { extractDomain, upvoteCheckScript } from "./components/row.mjs";
 import log from "../logger.mjs";
 import { purgeCache } from "../cloudflarePurge.mjs";
 import { cachedMetadata } from "../parser.mjs";
@@ -200,6 +200,7 @@ export default async function (trie, theme) {
             ${Footer(theme, "/new")}
           </div>
         </div>
+        ${upvoteCheckScript()}
       </body>
     </html>
   `;

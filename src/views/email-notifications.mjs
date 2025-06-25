@@ -44,8 +44,7 @@ export default async function (theme) {
               <tr>
                 <td>
                   <div style="height: 100vh; flex-direction: column; display: flex; justify-content: center; align-items: center;">
-                    <div style="display: flex; justify-content: center; flex-direction: column; max-width: 20rem;">
-                      <h1>Email Notifications Subscription</h1>
+                    <div style="display: flex; justify-content: center; flex-direction: column; align-items: center;">
                       <email-subscription-form></email-subscription-form>
                       <div style="text-align: center; margin-top: 16px;">
                         <a href="/demonstration" class="button-secondary" style="width: auto; text-decoration: underline; background: none; border: none;">Skip</a>

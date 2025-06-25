@@ -96,6 +96,9 @@ function toggleSidebar() {
 
 // Instead of a document-wide click handler, add specific handlers
 document.addEventListener("DOMContentLoaded", () => {
+  // Apply upvoted styling immediately on DOM load
+  applyUpvotedStyling();
+  
   // Add click handler for sidebar toggle buttons
   const toggleButtons = document.querySelectorAll(".sidebar-toggle");
   toggleButtons.forEach(button => {
@@ -260,6 +263,51 @@ async function addVotes(allowlist, delegations, toast) {
   );
 
   voteArrows.forEach((arrow) => observer.observe(arrow));
+  
+  // Apply upvoted styling
+  applyUpvotedStyling();
+}
+
+function applyUpvotedStyling() {
+  const storiesString = localStorage.getItem("--kiwi-news-upvoted-stories");
+  if (!storiesString) return;
+  
+  try {
+    const upvotedStories = JSON.parse(storiesString);
+    if (!Array.isArray(upvotedStories)) return;
+    
+    // Create a Set of upvoted hrefs for efficient lookup
+    const upvotedHrefs = new Set(upvotedStories.map(story => story.href));
+    
+    // Find all vote button containers and check if their href is upvoted
+    const voteContainers = document.querySelectorAll(".vote-button-container");
+    voteContainers.forEach(container => {
+      const href = container.getAttribute("data-href");
+      if (href && upvotedHrefs.has(href)) {
+        // Find the parent content-row or content-row-elevated
+        const contentRow = container.closest(".content-row, .content-row-elevated");
+        if (contentRow) {
+          contentRow.classList.add("upvoted-story");
+        }
+        
+        // Also style the vote button itself
+        const upvoteButton = container.querySelector(".upvote-interaction");
+        if (upvoteButton) {
+          upvoteButton.classList.add("upvoted-arrow-container");
+          upvoteButton.style.backgroundColor = "rgba(255, 102, 0, 0.15)";
+          upvoteButton.style.border = "1px solid rgba(255, 102, 0, 0.3)";
+          
+          // Also update the arrow fill color
+          const arrow = upvoteButton.querySelector(".votearrow");
+          if (arrow) {
+            arrow.style.fill = "#ff6600";
+          }
+        }
+      }
+    });
+  } catch (err) {
+    console.error("Error applying upvoted styling:", err);
+  }
 }
 
 async function addFriendBuyButton(toast, allowlist) {
@@ -735,7 +783,10 @@ async function startWatchAccount(allowlist, delegations) {
   await processAndSendVotes(signer, account.address);
   window.addEventListener(
     "upvote-storage",
-    async () => await processAndSendVotes(signer, account.address),
+    async () => {
+      await processAndSendVotes(signer, account.address);
+      applyUpvotedStyling(); // Update styling immediately after voting
+    },
   );
 
   const { eligible } = await import("@attestate/delegator2");

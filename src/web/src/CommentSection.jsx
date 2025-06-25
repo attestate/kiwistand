@@ -196,11 +196,14 @@ export const EmojiReaction = ({ comment, allowlist, delegations, toast }) => {
   const isOwnComment = comment.identity.address === address;
   return (
     <div
+      className="comment-emoji-reactions"
       style={{
         display: "flex",
-        flexWrap: "wrap",
-        gap: "16px",
+        flexWrap: "nowrap",
+        gap: "8px",
         marginTop: "32px",
+        overflowX: "auto",
+        WebkitOverflowScrolling: "touch",
       }}
     >
       {commonEmojis.map((emoji) => {
@@ -240,10 +243,11 @@ export const EmojiReaction = ({ comment, allowlist, delegations, toast }) => {
             key={emoji}
             onClick={() => !disabled && handleReaction(emoji)}
             disabled={disabled || isntLoggedIn}
+            className="emoji-reaction-button"
             style={{
               display: "inline-flex",
               alignItems: "center",
-              padding: "4px 12px",
+              padding: "3px 8px",
               backgroundColor:
                 disabled || isntLoggedIn ? "#f3f3f3" : "var(--bg-off-white)",
               border:
@@ -257,6 +261,8 @@ export const EmojiReaction = ({ comment, allowlist, delegations, toast }) => {
               WebkitAppearance: "none",
               opacity: 1,
               filter: "none",
+              flexShrink: 0,
+              whiteSpace: "nowrap",
             }}
           >
             <span style={{ marginRight: counts[emoji] > 0 ? "4px" : "0" }}>
@@ -272,11 +278,11 @@ export const EmojiReaction = ({ comment, allowlist, delegations, toast }) => {
                   alt="reactor"
                   style={{
                     zIndex: i,
-                    width: i > 0 ? "13px" : "12px",
-                    height: i > 0 ? "13px" : "12px",
+                    width: "10px",
+                    height: "10px",
                     borderRadius: "2px",
                     border: i > 0 ? "1px solid var(--middle-beige)" : "1px solid var(--text-secondary)",
-                    marginLeft: i > 0 ? "-4px" : 0,
+                    marginLeft: i > 0 ? "-3px" : 0,
                   }}
                 />
               ))}
@@ -330,6 +336,7 @@ function NotificationOptIn(props) {
   if (!identity || isMiniApp) return null;
   return (
     <div
+      className="notification-opt-in"
       style={{
         padding: "12px",
         marginBottom: "1rem",
@@ -483,68 +490,68 @@ const Comment = React.forwardRef(
     }, [comment.index]);
 
     return (
-      <span
+      <div
         ref={ref}
+        className="comment-section-item story-page-comment"
         style={{
           boxShadow: isTargeted
             ? "0 0 0 2px var(--highlight-color)"
             : undefined,
           color: "var(--text-secondary)",
-          border: isTargeted ? "2px solid transparent" : "var(--border)",
+          border: "var(--border)",
+          borderLeft: isTargeted ? "none" : undefined,
+          borderRight: isTargeted ? "none" : undefined,
           backgroundColor: "var(--bg-off-white)",
-          padding: `0 0.75rem ${isCollapsed ? "0px" : "0.75rem"} 0.75rem`,
+          padding: `0.75rem`,
           borderRadius: "2px",
-          display: "block",
+          display: "flex",
           marginBottom: "12px",
-          whiteSpace: "pre-wrap",
-          lineHeight: "1.2",
-          wordBreak: "break-word",
-          overflowWrap: "break-word",
+          alignItems: "flex-start",
         }}
       >
-        <div
-          style={{
-            whiteSpace: "nowrap",
-            gap: "3px",
-            display: "inline-flex",
-            alignItems: "center",
-            width: "100%",
-            padding: "0.55rem 0 0.45rem 0",
-          }}
-          onClick={toggleCollapsed}
-        >
-          <a
+        {/* Left column: Avatar */}
+        <div style={{ width: "32px", flexShrink: 0, marginRight: "14px", display: "flex", alignItems: "flex-start" }}>
+          {comment.identity.safeAvatar && (
+            <img
+              loading="lazy"
+              src={comment.identity.safeAvatar}
+              alt="avatar"
+              style={{
+                width: "32px",
+                height: "32px",
+                borderRadius: "0",
+              }}
+            />
+          )}
+        </div>
+        
+        {/* Right column: Content */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div
             style={{
-              marginTop: "-3px",
-              display: "inline-flex",
+              display: "flex",
               alignItems: "center",
-              color: "var(--text-primary)",
+              flexWrap: "wrap",
+              gap: "5px",
+              marginBottom: "4px",
             }}
-            className="meta-link"
-            href={`/upvotes?address=${comment.identity.address}`}
-            onClick={() =>
-              (document.getElementById("spinner-overlay").style.display =
-                "block")
-            }
+            onClick={toggleCollapsed}
           >
-            {comment.identity.safeAvatar && (
-              <img
-                loading="lazy"
-                src={comment.identity.safeAvatar}
-                alt="avatar"
-                style={{
-                  marginRight: "5px",
-                  width: "10px",
-                  height: "10px",
-                  border: "1px solid var(--text-secondary)",
-                  borderRadius: "2px",
-                }}
-              />
-            )}
-            <span style={{ fontWeight: "400", fontSize: "10pt" }}>
+            <a
+              style={{
+                color: "var(--text-primary)",
+                fontWeight: "500",
+                fontSize: "10pt",
+              }}
+              className="meta-link"
+              href={`/upvotes?address=${comment.identity.address}`}
+              onClick={() =>
+                (document.getElementById("spinner-overlay").style.display =
+                  "block")
+              }
+            >
               {truncateName(comment.identity.displayName)}
-            </span>
-          </a>
+            </a>
           <span style={{ fontSize: "10pt", color: "var(--text-muted)", opacity: "0.6" }}>
             {" "}
             •{" "}
@@ -569,9 +576,8 @@ const Comment = React.forwardRef(
               <span> ago</span>
             </a>
           </span>
-        </div>
-        <br />
-        {!isCollapsed && (
+          </div>
+          {!isCollapsed && (
           <>
             <span
               className="comment-text"
@@ -641,7 +647,8 @@ const Comment = React.forwardRef(
             />
           </>
         )}
-      </span>
+        </div>
+      </div>
     );
   },
 );
@@ -706,9 +713,10 @@ const CommentsSection = (props) => {
   if (!shown) return;
   return (
     <div
+      className="comment-section-container story-page-comments-section"
       style={{
         backgroundColor: "var(--table-bg)",
-        padding: "8px 11px 0 11px",
+        padding: "8px 0 0 0",
         fontSize: "1rem",
       }}
     >
@@ -726,12 +734,14 @@ const CommentsSection = (props) => {
               />
             ))}
           <NotificationOptIn {...props} />
-          <CommentInput 
-            {...props} 
-            comments={comments}
-            setComments={setComments}
-            style={{ margin: "0 0 1rem 0" }} 
-          />
+          <div className="story-page-comment-input">
+            <CommentInput 
+              {...props} 
+              comments={comments}
+              setComments={setComments}
+              style={{ margin: "0 0 1rem 0" }} 
+            />
+          </div>
         </RainbowKitProvider>
       </WagmiConfig>
     </div>

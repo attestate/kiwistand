@@ -120,7 +120,15 @@ const EmailSubscriptionForm = ({
   };
 
   return (
-    <div style={{ width: "100%", maxWidth: "320px", marginBottom: "3rem" }}>
+    <div style={{ 
+      width: "100%", 
+      maxWidth: "320px", 
+      marginBottom: "3rem",
+      backgroundColor: "var(--bg-off-white)",
+      border: "var(--border-thin)",
+      borderRadius: "2px",
+      padding: "24px"
+    }}>
       <h1
         style={{
           fontFamily: "var(--font-family)",
@@ -144,6 +152,8 @@ const EmailSubscriptionForm = ({
             border: "var(--border-thin)",
             borderRadius: "2px",
             fontSize: "11pt",
+            backgroundColor: "rgba(166, 110, 78, 0.08) !important",
+            color: "var(--text-primary)",
           }}
           required
         />

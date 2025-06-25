@@ -16,7 +16,7 @@ const header = (theme, path) => {
     <nav-nft-modal />
     <nav-delegation-modal />
     <table
-      style="padding:5px 7px 5px 7px;"
+      style="padding:5px 8px 5px 8px;"
       width="100%"
       cellspacing="0"
       cellpadding="0"
@@ -49,7 +49,7 @@ const header = (theme, path) => {
                   ? // Static Back button for story pages (server-side)
                     html`
                       <div
-                        style="display: flex; align-items: center; padding: 0 7px; height: 100%; width: 100%;"
+                        style="display: flex; align-items: center; padding: 0; height: 100%; width: 100%;"
                       >
                         <a
                           href="/"

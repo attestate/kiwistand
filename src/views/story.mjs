@@ -26,7 +26,7 @@ import * as id from "../id.mjs";
 import * as moderation from "./moderation.mjs";
 import log from "../logger.mjs";
 import { EIP712_MESSAGE } from "../constants.mjs";
-import Row, { extractDomain } from "./components/row.mjs";
+import Row, { extractDomain, upvoteCheckScript } from "./components/row.mjs";
 import * as karma from "../karma.mjs";
 import { truncateName, getSlug, isCloudflareImage } from "../utils.mjs";
 import { identityClassifier } from "./feed.mjs";
@@ -239,13 +239,14 @@ export default async function (trie, theme, index, value, referral) {
         )}
       </head>
       <body
+        class="story-page"
         data-instant-allow-query-string
         data-instant-allow-external-links
         ontouchstart=""
       >
         <div class="container">
           ${Sidebar(path)}
-          <div id="hnmain" class="scaled-hnmain">
+          <div id="hnmain">
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
               <thead>
                 <tr>
@@ -258,7 +259,7 @@ export default async function (trie, theme, index, value, referral) {
                 ${Row(
                   start,
                   "/stories",
-                  style,
+                  "story-page-row",
                   null,
                   null,
                   null,
@@ -267,7 +268,7 @@ export default async function (trie, theme, index, value, referral) {
               ${upvoterProfiles.length > 0
                 ? html`<tr>
                     <td>
-                      <div style="padding: 1rem; background-color: var(--bg-off-white); border-bottom: 1px solid var(--border-line);">
+                      <div class="story-page-upvoter-profiles" style="padding: 1rem 14px; background-color: var(--bg-off-white); border-bottom: 1px solid var(--border-line);">
                         <div style="font-size: 11pt; font-weight: 500; margin-bottom: 0.75rem; color: var(--text-primary);">
                           Recommended by ${upvoterProfiles.length} ${upvoterProfiles.length === 1 ? 'curator' : 'curators'}
                         </div>
@@ -307,84 +308,92 @@ export default async function (trie, theme, index, value, referral) {
                 : null}
               ${story.comments.length > 0
                 ? html`<tr>
-                    <td>
-                      <div style="padding: 1rem 1rem 0 1rem; font-size: 1rem;">
+                    <td style="padding: 0;">
+                      <div class="story-page-comments-section" style="padding: 1rem 0 0 0; font-size: 1rem;">
                         ${story.comments.map(
                           (comment) =>
-                            html`<span
+                            html`<div
                               id="0x${comment.index}"
                               class="${story?.metadata?.image
                                 ? "scroll-margin-with-image"
-                                : "scroll-margin-base"}"
+                                : "scroll-margin-base"} story-page-comment"
                               style="${comment.flagged
                                 ? "opacity: 0.5"
-                                : ""}; color: var(--text-secondary); border: var(--border); background-color: var(--background-color0); padding: 0.55rem 0.75rem 0.75rem 0.55rem; border-radius: 2px;display: block; margin-bottom: 15px; white-space: pre-wrap; line-height: 1.2; word-break: break-word; overflow-wrap: break-word;"
+                                : ""}; color: var(--text-secondary); border: var(--border); background-color: var(--background-color0); padding: 0.75rem; border-radius: 2px; display: flex; margin-bottom: 12px; align-items: flex-start;"
                             >
-                              <div
-                                style="white-space: nowrap; gap: 3px; margin-bottom: 0.5rem; display: inline-flex; align-items: center;"
-                              >
+                              <!-- Left column: Avatar -->
+                              <div style="width: 32px; flex-shrink: 0; margin-right: 12px; display: flex; align-items: flex-start;">
                                 ${comment.avatar
                                   ? html`<img
                                       loading="lazy"
                                       src="${comment.avatar}"
                                       alt="avatar"
-                                      style="margin-right: 5px; width: 12px; height:12px; border: 1px solid #828282; border-radius: 2px;"
+                                      style="width: 32px; height: 32px; border-radius: 0;"
                                     />`
                                   : null}
-                                <b
-                                  >${!comment.flagged
-                                    ? html`<a
-                                        style="color: var(--text-primary);"
-                                        href="/upvotes?address=${comment
-                                          .identity.address}"
-                                        >${truncateName(comment.displayName)}</a
-                                      >`
-                                    : truncateName(comment.displayName)}</b
-                                >
-                                <span class="inverse-share-container">
-                                  <span> • </span>
-                                  <a
-                                    class="meta-link"
-                                    href="/stories/${getSlug(value.title)}?index=0x${index}#0x${comment.index}"
-                                  >
-                                    <span>
-                                      ${formatDistanceToNowStrict(
-                                        new Date(comment.timestamp * 1000),
-                                      )}
-                                    </span>
-                                    <span> ago</span>
-                                  </a>
-                                </span>
-                                <span class="share-container">
-                                  <span> • </span>
-                                  <a
-                                    href="#"
-                                    class="caster-link share-link"
-                                    title="Share"
-                                    style="white-space: nowrap;"
-                                    onclick="event.preventDefault(); navigator.share({url: 'https://news.kiwistand.com/stories/${getSlug(
-                                      value.title,
-                                    )}?index=0x${index}#0x${comment.index}'});"
-                                  >
-                                    ${ShareIcon(
-                                      "padding: 0 3px 1px 0; vertical-align: middle; height: 13px; width: 13px;",
-                                    )}
-                                    <span>
-                                      ${formatDistanceToNowStrict(
-                                        new Date(comment.timestamp * 1000),
-                                      )}
-                                    </span>
-                                    <span> ago</span>
-                                  </a>
-                                </span>
                               </div>
-                              <br />
+                              
+                              <!-- Right column: Content -->
+                              <div style="flex: 1; min-width: 0;">
+                                <div
+                                  style="display: flex; align-items: center; flex-wrap: wrap; gap: 5px; margin-bottom: 4px;"
+                                >
+                                  <b
+                                    >${!comment.flagged
+                                      ? html`<a
+                                          style="color: var(--text-primary); font-weight: 500; font-size: 10pt;"
+                                          class="meta-link"
+                                          href="/upvotes?address=${comment
+                                            .identity.address}"
+                                          >${truncateName(comment.displayName)}</a
+                                        >`
+                                      : truncateName(comment.displayName)}</b
+                                  >
+                                  <span style="font-size: 10pt; color: var(--text-muted); opacity: 0.6;"> • </span>
+                                  <span style="font-size: 9pt; color: var(--text-muted);">
+                                    <span class="inverse-share-container">
+                                      <a
+                                        class="meta-link"
+                                        href="/stories/${getSlug(value.title)}?index=0x${index}#0x${comment.index}"
+                                      >
+                                        <span>
+                                          ${formatDistanceToNowStrict(
+                                            new Date(comment.timestamp * 1000),
+                                          )}
+                                        </span>
+                                        <span> ago</span>
+                                      </a>
+                                    </span>
+                                    <span class="share-container">
+                                      <a
+                                        href="#"
+                                        class="caster-link share-link"
+                                        title="Share"
+                                        style="white-space: nowrap;"
+                                        onclick="event.preventDefault(); navigator.share({url: 'https://news.kiwistand.com/stories/${getSlug(
+                                          value.title,
+                                        )}?index=0x${index}#0x${comment.index}'});"
+                                      >
+                                        ${ShareIcon(
+                                          "padding: 0 3px 1px 0; vertical-align: -3px; height: 13px; width: 13px;",
+                                        )}
+                                        <span>
+                                          ${formatDistanceToNowStrict(
+                                            new Date(comment.timestamp * 1000),
+                                          )}
+                                        </span>
+                                        <span> ago</span>
+                                      </a>
+                                    </span>
+                                  </span>
+                                </div>
                               ${comment.flagged && comment.reason
                                 ? html`<i
                                     >Moderated because: "${comment.reason}"</i
                                   >`
                                 : html`<span
                                       class="comment-text"
+                                      style="font-size: 11pt; line-height: 1.15;"
                                       dangerouslySetInnerHTML=${{
                                         __html: comment.title
                                           .split("\n")
@@ -419,7 +428,7 @@ export default async function (trie, theme, index, value, referral) {
                                       }}
                                     ></span>
                                     <div
-                                      class="reactions-container"
+                                      class="reactions-container comment-emoji-reactions"
                                       data-comment-index="${comment.index}"
                                       data-comment="${JSON.stringify({
                                         ...comment,
@@ -432,7 +441,7 @@ export default async function (trie, theme, index, value, referral) {
                                             reaction.reactorProfiles,
                                         })),
                                       })}"
-                                      style="display: flex; flex-wrap: wrap; gap: 16px; min-height: 59px;"
+                                      style="display: flex; flex-wrap: nowrap; gap: 8px; margin-top: 32px; overflow-x: auto; -webkit-overflow-scrolling: touch;"
                                     >
                                       ${["🥝", "🔥", "👀", "💯", "🤭"].map(
                                         (emoji) => {
@@ -442,7 +451,8 @@ export default async function (trie, theme, index, value, referral) {
                                             );
                                           return html`
                                             <div
-                                              style="margin-top: 32px; display: inline-flex; align-items: center; padding: 4px 12px; background-color: var(--background-color0); border: var(--border-thin); border-radius: 2px; font-size: 10pt;"
+                                              class="emoji-reaction-button"
+                                              style="display: inline-flex; align-items: center; padding: 3px 8px; background-color: var(--background-color0); border: var(--border-thin); border-radius: 2px; font-size: 10pt; flex-shrink: 0; white-space: nowrap;"
                                             >
                                               <span
                                                 style="margin-right: ${reaction?.reactorProfiles?.filter(
@@ -464,18 +474,12 @@ export default async function (trie, theme, index, value, referral) {
                                                       loading="lazy"
                                                       src="${profile.safeAvatar}"
                                                       alt="reactor"
-                                                      style="z-index: ${i}; width: ${i >
+                                                      style="z-index: ${i}; width: 10px; height: 10px; border-radius: 2px; border: ${i >
                                                       0
-                                                        ? "13px"
-                                                        : "12px"}; height: ${i >
-                                                      0
-                                                        ? "13px"
-                                                        : "12px"}; border-radius: 2px; border: ${i >
-                                                      0
-                                                        ? "1px solid var(--border-line)"
+                                                        ? "1px solid var(--middle-beige)"
                                                         : "1px solid var(--text-secondary)"}; margin-left: ${i >
                                                       0
-                                                        ? "-4px"
+                                                        ? "-3px"
                                                         : "0"};"
                                                     />
                                                   `,
@@ -485,16 +489,17 @@ export default async function (trie, theme, index, value, referral) {
                                         },
                                       )}
                                     </div>`}
-                            </span>`,
+                              </div>
+                            </div>`,
                         )}
                       </div>
                     </td>
                   </tr>`
                 : null}
               <tr>
-                <td style="padding-top: 20px;">
+                <td style="padding: 0;">
                   <nav-comment-input data-story-index="0x${index}">
-                    <div style="margin: 0 1rem 1rem 1rem;">
+                    <div style="margin: 20px 0 1rem 0;" class="comment-input-container story-page-comment-input">
                       <textarea
                         style="font-size: 1rem; border: 1px solid #828282; display:block;width:100%;"
                         rows="12"
@@ -519,6 +524,7 @@ export default async function (trie, theme, index, value, referral) {
             ${Footer(theme, path)}
           </div>
         </div>
+        ${upvoteCheckScript()}
       </body>
     </html>
   `;

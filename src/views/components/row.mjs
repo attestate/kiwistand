@@ -341,8 +341,8 @@ const row = (
               ? "inverted-row"
               : ""} ${displayMobileImage || canRenderTweetPreview || canRenderFarcasterPreview
               ? "content-row-elevated"
-              : ""}"
-            style="${invert ? "display:none;" : ""} ${style}"
+              : ""} ${style}"
+            style="${invert ? "display:none;" : ""}"
           >
             ${canRenderTweetPreview
               ? html`<a
@@ -396,8 +396,8 @@ const row = (
                             ? html`<img
                                 src="${DOMPurify.sanitize(story.metadata.farcasterCast.author.pfp)}"
                                 alt="${DOMPurify.sanitize(story.metadata.farcasterCast.author.displayName || story.metadata.farcasterCast.author.username)}"
-                                width="40"
-                                height="40"
+                                width="32"
+                                height="32"
                                 class="farcaster-embed-author-avatar"
                               />`
                             : html`<svg
@@ -490,36 +490,46 @@ const row = (
               canRenderTweetPreview || canRenderFarcasterPreview
                 ? "elevating-row"
                 : ""}"
-              style="display: flex; align-items: center; padding: 3px 0;"
+              style="display: flex; align-items: stretch; padding: 3px 0;"
             >
               <div
                 data-title="${DOMPurify.sanitize(story.title)}"
                 data-href="${DOMPurify.sanitize(story.href)}"
                 data-upvoters="${JSON.stringify(story.upvoters)}"
-                class="${displayMobileImage || canRenderTweetPreview || canRenderFarcasterPreview
-                  ? "vote-button-container interaction-container-with-image"
-                  : "vote-button-container"}"
+                class="vote-button-container${displayMobileImage || canRenderTweetPreview || canRenderFarcasterPreview
+                  ? " interaction-container-with-image"
+                  : ""}"
                 style="display: flex; align-self: stretch;"
               >
                 <div
-                  onclick="const key='--kiwi-news-upvoted-stories';const href=this.parentElement.parentElement.getAttribute('data-href');const title=this.parentElement.parentElement.getAttribute('data-title');const stories=JSON.parse(localStorage.getItem(key)||'[]');stories.push({href,title});localStorage.setItem(key,JSON.stringify(stories));window.dispatchEvent(new Event('upvote-storage'));"
+                  class="interaction-element upvote-interaction"
+                  data-story-href="${DOMPurify.sanitize(story.href)}"
+                  style="display: flex; align-items: center; justify-content: center; min-width: 49px; min-height: 42px; align-self: stretch; border-radius: 2px; background-color: var(--bg-off-white); border: var(--border-thin);"
+                  onclick="const key='--kiwi-news-upvoted-stories';const href=this.parentElement.getAttribute('data-href');const title=this.parentElement.getAttribute('data-title');const stories=JSON.parse(localStorage.getItem(key)||'[]');if(!stories.some(s=>s.href===href)){stories.push({href,title});localStorage.setItem(key,JSON.stringify(stories));window.dispatchEvent(new Event('upvote-storage'));const contentRow=this.closest('.content-row,.content-row-elevated');if(contentRow)contentRow.classList.add('upvoted-story');this.style.backgroundColor='rgba(255, 102, 0, 0.15)';this.style.border='1px solid rgba(255, 102, 0, 0.3)';const arrow=this.querySelector('.votearrow');if(arrow)arrow.style.fill='#ff6600';}"
                 >
-                  <div
-                    class="interaction-element"
-                    style="border-radius: 0; background-color: var(--bg-off-white); display: flex; align-items: center; justify-content: center; min-width: 49px; margin: 5px 8px 5px 6px; align-self: stretch;"
-                  >
-                    <div style="min-height: 42px; display:block;">
-                      <div class="votearrowcontainer">
-                        <div>
-                          <div
-                            class="votearrow"
-                            style="color: var(--text-secondary); cursor: pointer;"
-                            title="upvote"
-                          >
-                            ${iconSVG}
-                          </div>
-                        </div>
-                      </div>
+                  <script>
+                    (function(){
+                      const key='--kiwi-news-upvoted-stories';
+                      const href='${DOMPurify.sanitize(story.href)}';
+                      const stories=JSON.parse(localStorage.getItem(key)||'[]');
+                      if(stories.some(s=>s.href===href)){
+                        const btn=document.currentScript.parentElement;
+                        btn.style.backgroundColor='rgba(255, 102, 0, 0.15)';
+                        btn.style.border='1px solid rgba(255, 102, 0, 0.3)';
+                        const contentRow=btn.closest('.content-row,.content-row-elevated');
+                        if(contentRow)contentRow.classList.add('upvoted-story');
+                        const arrow=btn.querySelector('.votearrow');
+                        if(arrow)arrow.style.fill='#ff6600';
+                      }
+                    })();
+                  </script>
+                  <div style="min-height: 42px; display: block;">
+                    <div
+                      class="votearrow"
+                      style="fill: var(--text-secondary); cursor: pointer;"
+                      title="upvote"
+                    >
+                      ${iconSVG}
                     </div>
                   </div>
                 </div>
@@ -558,7 +568,7 @@ const row = (
                   : null}
                 <div
                   class="story-link-container-wrapper"
-                  style="min-height: 59px; display:flex; justify-content: center; flex-direction: column; flex-grow: 1; line-height: 1.3; padding: 4px 3px 5px 0;"
+                  style="min-height: 59px; display:flex; justify-content: center; flex-direction: column; flex-grow: 1; line-height: 1.3; padding: 4px 0 5px 0;"
                 >
                   <span>
                     <span class="story-link-container">
@@ -838,7 +848,7 @@ const row = (
                       data-story-title="${DOMPurify.sanitize(story.title)}"
                       data-story-slug="${getSlug(story.title)}"
                       data-story-index="0x${story.index}"
-                      style="border-radius: 0; background-color: rgba(124, 101, 193, 0.5); display: flex; align-items: center; justify-content: center; min-width: 49px; margin: 5px 8px 5px 6px; align-self: stretch; cursor: pointer; text-decoration: none;"
+                      style="background-color: rgba(124, 101, 193, 0.5); display: flex; align-items: center; justify-content: center; min-width: 49px; margin: 5px 6px 5px 8px; align-self: stretch; cursor: pointer; text-decoration: none; border-radius: 2px; border: var(--border-thin);"
                       onclick="event.preventDefault(); const title = this.getAttribute('data-story-title'); const slug = this.getAttribute('data-story-slug'); const index = this.getAttribute('data-story-index'); const kiwiUrl = 'https://news.kiwistand.com/stories/' + slug + '?index=' + index; const url = 'https://warpcast.com/~/compose?text=' + encodeURIComponent(title) + '&embeds[]=' + encodeURIComponent(kiwiUrl); if (window.ReactNativeWebView || window !== window.parent) { window.sdk.actions.openUrl(url); } else { window.open(url, '_blank'); }"
                     >
                       <div style="min-height: 42px; display:block;">
@@ -859,10 +869,10 @@ const row = (
                 ? html`<div
                     data-story-index="0x${story.index}"
                     data-comment-count="${commentCount}"
-                    class="${displayMobileImage || canRenderTweetPreview || canRenderFarcasterPreview
-                      ? "interaction-container-with-image chat-bubble-container"
-                      : "chat-bubble-container"}"
-                    style="display: flex; align-self: stretch;"
+                    class="chat-bubble-container${displayMobileImage || canRenderTweetPreview || canRenderFarcasterPreview
+                      ? " interaction-container-with-image"
+                      : ""}"
+                    style="display: flex; align-self: stretch; align-items: stretch;"
                   >
                     <a
                       class="chat-bubble interaction-element"
@@ -871,10 +881,10 @@ const row = (
                         story.title,
                       )}?index=0x${story.index}"
                       onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
-                      style="margin: 5px; background-color: var(--bg-off-white); border-radius: 0; display: ${path ===
+                      style="display: ${path ===
                       "/stories"
                         ? "none"
-                        : "flex"}; justify-content: center; min-width: 49px; align-items: center; flex-direction: column;"
+                        : "flex"}; justify-content: center; min-width: 49px; min-height: 42px; align-items: center; flex-direction: column; align-self: stretch; border-radius: 2px; background-color: var(--bg-off-white); border: var(--border-thin);"
                     >
                       ${ChatsSVG()}
                       <span
@@ -892,8 +902,9 @@ const row = (
                   canRenderTweetPreview || canRenderFarcasterPreview
                     ? "elevating-comment-preview"
                     : "comment-preview-no-mobile-image"}"
-                  style="touch-action: manipulation; user-select: none; cursor: pointer; display: flex;"
+                  style="touch-action: manipulation; user-select: none; display: flex; margin: 5px 6px 5px 6px;"
                 >
+                  <!-- Main content area -->
                   <div
                     class="interaction-element"
                     onclick="(function(){history.replaceState(null,'','${path ===
@@ -904,21 +915,71 @@ const row = (
                       ? `/#0x${story.lastComment.index}`
                       : `/new?cached=true#0x${story.lastComment.index}`}');})(),document.querySelector('.comment-preview-0x${story.index}').style.opacity = 0.5,window.addToQueue(new
  CustomEvent('open-comments-0x${story.index}',{detail:{source:'comment-preview'}}));window.dispatchEvent(new HashChangeEvent('hashchange'));"
-                    style="margin: 0 5px 5px 5px; padding: 11px; display: flex;width: 100%; background-color: var(--bg-off-white); border-radius: 0;"
+                    style="padding: 8px 14px; display: flex; flex: 1; cursor: pointer;"
                   >
-                    <a
+                    <div
                       class="comment-preview-anchor"
-                      href="${path === "/" ? "" : path}${query}#0x${story
-                        .lastComment.index}"
-                      style="width: 100%; display: flex; pointer-events: none;"
+                      style="width: 100%; display: flex; align-items: flex-start; pointer-events: none;"
                     >
-                      <div style="width:90%;">
+                      <!-- Twitter-style two-column layout -->
+                      <!-- Left column: Avatar (fixed width) -->
+                      <div style="width: 32px; flex-shrink: 0; margin-right: 14px; display: flex; align-items: flex-start;">
+                        ${story.lastComment.identity.safeAvatar &&
+                        html`<img
+                          loading="lazy"
+                          src="${DOMPurify.sanitize(
+                            story.lastComment.identity.safeAvatar,
+                          )}"
+                          alt="avatar"
+                          style="width: 32px; height: 32px; border-radius: 0;"
+                        />`}
+                      </div>
+                      
+                      <!-- Right column: Content -->
+                      <div style="flex: 1; min-width: 0;">
+                        <!-- Name and time on same line -->
+                        <div
+                          style="display: flex; align-items: center; flex-wrap: wrap; gap: 5px; margin-bottom: 0px; margin-top: -5px;"
+                        >
+                          <span
+                            style="font-size: 10pt; touch-action: manipulation;user-select: none; font-weight: 500;"
+                            >${DOMPurify.sanitize(
+                              story.lastComment.identity.displayName,
+                            )}</span
+                          >
+                          <span style="opacity:0.6; font-size: 9pt;"> • </span>
+                          <span style="font-size: 9pt; opacity: 0.9;">
+                            ${formatDistanceToNowStrict(
+                              new Date(story.lastComment.timestamp * 1000),
+                            )}
+                            <span> </span>
+                            ago
+                          </span>
+                        </div>
+                        
+                        <!-- Comment text -->
+                        <div>
+                          <span
+                            class="comment-preview-text"
+                            style="display: block; white-space: pre-wrap; word-break: break-word; touch-action: manipulation;user-select: none;"
+                            >${truncateComment(
+                              DOMPurify.sanitize(story.lastComment.title),
+                            )}</span
+                          >
+                        </div>
+                        
+                        <!-- Previous participants (moved below comment, more subtle) -->
                         ${story.lastComment.previousParticipants &&
                         story.lastComment.previousParticipants.length > 0 &&
                         html`
                           <div
-                            style="opacity: 0.7; margin-bottom: 8px; display: flex; align-items: center;"
+                            style="opacity: 0.5; margin-top: 6px; display: flex; align-items: center; font-size: 8pt;"
                           >
+                            <span
+                              style="color: var(--text-muted); margin-right: 6px;"
+                            >
+                              Thread:
+                            </span>
                             <div
                               style="display: inline-flex; position:relative;"
                             >
@@ -930,66 +991,38 @@ const row = (
                                       participant.safeAvatar,
                                     )}"
                                     alt="previous participant"
-                                    style="z-index: ${index}; width: ${size}px; height: ${size}px; border-radius: 0; margin-left: ${index ===
+                                    style="z-index: ${index}; width: ${size - 2}px; height: ${size - 2}px; border-radius: 0; margin-left: ${index ===
                                     0
                                       ? "0"
-                                      : "5px"};"
+                                      : "-3px"};"
                                   />
                                 `,
                               )}
                             </div>
-                            <span
-                              style="margin-left: 10px; font-size: 9pt; color: var(--text-muted);"
-                            >
-                              Previous in thread
-                            </span>
                           </div>
                         `}
-                        <div
-                          style="display: flex; align-items: center; gap: 5px; margin-bottom: 3px;"
-                        >
-                          ${story.lastComment.identity.safeAvatar &&
-                          html`<img
-                            loading="lazy"
-                            src="${DOMPurify.sanitize(
-                              story.lastComment.identity.safeAvatar,
-                            )}"
-                            alt="avatar"
-                            style="width: ${size}px; height: ${size}px; border-radius: 0;"
-                          />`}
-                          <span
-                            style="font-size: 10pt; touch-action: manipulation;user-select: none; font-weight: 500;"
-                            >${DOMPurify.sanitize(
-                              story.lastComment.identity.displayName,
-                            )}</span
-                          >
-                          <span style="opacity:0.6"> • </span>
-                          <span style="font-size: 9pt; opacity: 0.9;">
-                            ${formatDistanceToNowStrict(
-                              new Date(story.lastComment.timestamp * 1000),
-                            )}
-                            <span> </span>
-                            ago
-                          </span>
-                        </div>
-                        <span> </span>
-                        <div style="padding-left:20px;">
-                          <span
-                            class="comment-preview-text"
-                            style="display: block; white-space: pre-wrap; word-break: break-word; touch-action: manipulation;user-select: none;"
-                            >${truncateComment(
-                              DOMPurify.sanitize(story.lastComment.title),
-                            )}</span
-                          >
-                        </div>
-                        <span> </span>
                       </div>
-                      <div
-                        style="width:10%; display: flex; align-items: center; justify-content: end; padding-right: 7px;"
-                      >
-                        ${expandSVG}
-                      </div>
-                    </a>
+                    </div>
+                  </div>
+                  
+                  <!-- Separate expand button column -->
+                  <div
+                    class="comment-preview-expand-button"
+                    onclick="(function(){history.replaceState(null,'','${path ===
+                    "/"
+                      ? `/new?cached=true#0x${story.lastComment.index}`
+                      : `/#0x${story.lastComment.index}`}');history.replaceState(null,'','${path ===
+                    "/"
+                      ? `/#0x${story.lastComment.index}`
+                      : `/new?cached=true#0x${story.lastComment.index}`}');})(),document.querySelector('.comment-preview-0x${story.index}').style.opacity = 0.5,window.addToQueue(new
+ CustomEvent('open-comments-0x${story.index}',{detail:{source:'comment-preview'}}));window.dispatchEvent(new HashChangeEvent('hashchange'));"
+                    style="flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 0 16px; border-left: 1px solid rgba(166, 110, 78, 0.15); cursor: pointer; background: transparent;"
+                    title="Expand comment thread"
+                  >
+                    <div style="color: var(--text-muted); display: flex; flex-direction: column; align-items: center;">
+                      ${expandSVG}
+                      <span style="font-size: 8pt; margin-top: 4px; font-weight: 500;">Expand</span>
+                    </div>
                   </div>
                 </div>`
               : null}
@@ -1034,4 +1067,29 @@ export const ChatsSVG = (
     />
   </svg>
 `;
+// Add script to check localStorage for upvoted stories on page load
+export const upvoteCheckScript = () => html`
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const key = '--kiwi-news-upvoted-stories';
+    try {
+      const stories = JSON.parse(localStorage.getItem(key) || '[]');
+      stories.forEach(story => {
+        const voteBtn = document.querySelector('[data-story-href="' + story.href + '"]');
+        if (voteBtn) {
+          voteBtn.style.backgroundColor = 'rgba(255, 102, 0, 0.15)';
+          voteBtn.style.border = '1px solid rgba(255, 102, 0, 0.3)';
+          const arrow = voteBtn.querySelector('.votearrow');
+          if (arrow) arrow.style.fill = '#ff6600';
+          const contentRow = voteBtn.closest('.content-row, .content-row-elevated');
+          if (contentRow) contentRow.classList.add('upvoted-story');
+        }
+      });
+    } catch (e) {
+      console.error('Error checking upvoted stories:', e);
+    }
+  });
+</script>
+`;
+
 export default row;

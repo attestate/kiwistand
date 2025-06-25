@@ -8,6 +8,8 @@
    --border-thin: 1px solid rgba(166, 110, 78, 0.1);
    --border-line: 1px solid rgba(166, 110, 78, 0.08);
    --border-thick: 1px solid rgba(166, 110, 78, 0.08);
+   --border-input: 1px solid rgba(166, 110, 78, 0.4);
+   --border-input-thin: 1px solid rgba(166, 110, 78, 0.35);
    --border-inset: none;
    --full-contrast-color: rgba(255, 255, 255, 0.9);
    --header-beige: #2a2824;
@@ -19,7 +21,7 @@
   /* Activity page specific */
   --activity-row-bg: #1e1c18;
   --activity-row-bg-alt: rgba(166, 110, 78, 0.08);
-  --activity-border: 1px solid rgba(166, 110, 78, 0.08);
+  --activity-border: 1px solid rgba(255, 102, 0, 0.3);
   --activity-row-hover: rgba(166, 110, 78, 0.15);
   
   /* Text colors */
@@ -53,7 +55,7 @@
    scroll-margin-top: 100px;
  }
 .newsletter-row {
-  padding: 5px 0;
+  padding: 12px 0;
   border-bottom: 1px solid rgba(166, 110, 78, 0.08);
 }
 .notification:link {
@@ -68,8 +70,6 @@
 }
 :target {
   border: none !important;
-  box-shadow: 0 0 0 2px var(--highlight-color) !important;
-  background-color: rgba(166, 110, 78, 0.1) !important;
   outline: none !important;
 }
 
@@ -79,9 +79,35 @@
 .comment-tree:target,
 [id^="comment-"]:target {
   border: none !important;
-  box-shadow: 0 0 0 2px var(--highlight-color) !important;
-  background-color: rgba(166, 110, 78, 0.1) !important;
   outline: none !important;
+}
+
+/* Fix targeted comment borders - remove left/right borders */
+.comment-section-item:target {
+  border-left: none !important;
+  border-right: none !important;
+}
+
+/* Remove left/right borders from targeted comments on mobile */
+@media only screen and (max-width: 640px) {
+  [id^="comment-"]:target {
+    border-left: none !important;
+    border-right: none !important;
+  }
+  
+  .comment-section-item:target {
+    border-left: none !important;
+    border-right: none !important;
+  }
+  
+  /* Ensure all comment-related elements lose borders when targeted */
+  .comment-section [id^="comment-"]:target,
+  .comment-section .comment-section-item:target,
+  [id^="comment-"]:target .comment-section-item {
+    border-left: none !important;
+    border-right: none !important;
+    border-radius: 0 !important;
+  }
 }
 .inverted-row {
   filter: invert(100%) brightness(2);
@@ -107,8 +133,10 @@
   display: inline-block;
   margin: 5px 0;
 }
-.footer-table a:hover {
-  text-decoration: underline;
+@media (hover: hover) {
+  .footer-table a:hover {
+    text-decoration: underline;
+  }
 }
 .drawer {
   border-top-left-radius: 2px !important;
@@ -133,26 +161,59 @@
 }
 .comment-preview {
   border-bottom: 1px solid rgba(166, 110, 78, 0.08);
-  transition: background-color 0.2s ease;
   box-sizing: border-box;
-  padding: 6px 0;
+  padding: 1px 0;
 }
-.comment-preview:hover {
-  background-color: rgba(166, 110, 78, 0.04);
-}
-/* Prevent double hover effect when comment preview is also an interaction element */
-.comment-preview.interaction-element:hover {
-  background-color: rgba(166, 110, 78, 0.04) !important;
-}
-/* Ensure child elements don't add their own hover effects */
-.comment-preview:hover * {
-  background-color: transparent !important;
+/* Desktop comment preview styling - borders on left/right */
+@media (min-width: 641px) {
+  .comment-preview {
+    border-left: var(--border);
+    border-right: var(--border);
+    border-radius: 2px;
+  }
 }
 .comment-preview:active {
   touch-action: manipulation;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
+
+/* Only highlight comment preview on interaction-element hover, not entire row */
+@media (hover: hover) {
+  .comment-preview .interaction-element:hover {
+    background-color: rgba(166, 110, 78, 0.08) !important;
+  }
+}
+
+/* Comment preview expand button styles */
+.comment-preview-expand-button {
+  transition: all 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.comment-preview-expand-button svg {
+  width: 20px;
+  height: 20px;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+.comment-preview-expand-button span {
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+/* Desktop: Align expand button left border with chat bubble right edge */
+@media (min-width: 641px) {
+  .comment-preview-expand-button {
+    margin-left: -1px; /* Slight adjustment to align borders perfectly */
+  }
+  
+  /* Ensure the expand button's left border aligns with the chat bubble icon */
+  .comment-preview {
+    margin-left: 14px !important; /* Align with vote button left edge */
+    margin-right: 14px !important; /* Align with chat bubble right edge */
+  }
+}
+
 button, a, .interaction-element {
   touch-action: manipulation;
   user-select: none;
@@ -169,6 +230,12 @@ button, a, .interaction-element {
 #nav-submit:active,
 #nav-settings:active {
   -webkit-tap-highlight-color: transparent;
+}
+
+.chat-bubble-container {
+  display: flex;
+  align-self: stretch;
+  align-items: stretch;
 }
 
 .chat-bubble-container div {
@@ -194,8 +261,10 @@ body {
 .comment-text-link:visited {
   color: var(--visited-link) !important;
 }
-.story-domain a:hover {
-  text-decoration: underline;
+@media (hover: hover) {
+  .story-domain a:hover {
+    text-decoration: underline;
+  }
 }
 .share-container {
    display: none;
@@ -222,12 +291,14 @@ body {
 .submit-button {
   box-sizing: border-box;
 }
-.submit-button:hover {
-  outline: 2px solid var(--button-hover-text);
-  background-color: var(--button-hover-bg) !important;
-}
-.submit-button svg:hover {
-  color: var(--button-hover-text) !important;
+@media (hover: hover) {
+  .submit-button:hover {
+    outline: 2px solid var(--button-hover-text);
+    background-color: var(--button-hover-bg) !important;
+  }
+  .submit-button svg:hover {
+    color: var(--button-hover-text) !important;
+  }
 }
 .submit-button:active {
   transform: scale(0.95);
@@ -237,9 +308,11 @@ body {
   box-sizing: border-box;
   cursor: pointer;
 }
-.feed-button:hover{
-  background-color: rgba(166, 110, 78, 0.35) !important;
-  border-color: #a66e4e !important;
+@media (hover: hover) {
+  .feed-button:hover{
+    background-color: rgba(166, 110, 78, 0.35) !important;
+    border-color: #a66e4e !important;
+  }
 }
 .feed-button:active {
   transform: scale(0.95);
@@ -247,6 +320,9 @@ body {
 .container {
   display: flex;
   justify-content: center;
+  padding: 0 20px;
+  width: 100%;
+  box-sizing: border-box;
 }
  @keyframes pulsate {
    0% {
@@ -267,7 +343,7 @@ body {
      font-family: var(--font-family);
      font-size:10pt;
      color: var(--text-secondary);
-     padding: 4px 8px;
+     padding: 2px 8px;
 }
  .subtext td {
      font-family: var(--font-family);
@@ -281,6 +357,15 @@ body {
      font-family:monospace;
      font-size:10pt;
 }
+ input[type="text"],
+ input[type="url"],
+ input[type="email"],
+ input[type="number"] {
+     border: var(--border-input);
+     background-color: rgba(166, 110, 78, 0.08) !important;
+     color: var(--text-primary);
+     border-radius: 2px;
+}
  input[type=\"submit\"] {
      font-family: var(--font-family);
 }
@@ -288,6 +373,30 @@ body {
      font-family:monospace;
      font-size:10pt;
      resize:both;
+     border: var(--border-input-thin);
+     background-color: rgba(166, 110, 78, 0.08);
+     color: var(--text-primary);
+     border-radius: 2px;
+}
+ [contenteditable="true"] {
+     border: var(--border-input-thin);
+     background-color: rgba(166, 110, 78, 0.08);
+     color: var(--text-primary);
+     border-radius: 2px;
+}
+ input:focus,
+ textarea:focus,
+ [contenteditable="true"]:focus {
+     outline: 2px solid rgba(166, 110, 78, 0.5);
+     outline-offset: -1px;
+     border-color: rgba(166, 110, 78, 0.5);
+}
+@media (hover: hover) {
+   input:hover,
+   textarea:hover,
+   [contenteditable="true"]:hover {
+       border-color: rgba(166, 110, 78, 0.45);
+  }
 }
  a:link {
      color: var(--link-color);
@@ -318,14 +427,16 @@ body {
      font-size: 14pt;
      color: var(--text-primary);
      line-height:normal;
-     margin: 3px 5px;
+     margin: 2px 5px;
 }
  .hnname {
      margin-right: 5px;
 }
  #hnmain {
      min-width: 70ch;
+     max-width: 70ch;
 }
+
  .title a {
      word-break: break-word;
 }
@@ -376,7 +487,12 @@ body {
   }
 }
 .votearrow {
-  color: var(--text-secondary);
+  color: #4caf50;
+  font-size: 1.5rem;
+}
+
+.votearrow.voted {
+  color: #ff6600;
   font-size: 1.5rem;
 }
 .pulsate {
@@ -475,17 +591,19 @@ body {
     width: 50%;
     display: inline-block;
   }
-  #button-onboarding:hover svg {
-    color: var(--button-hover-text) !important;
-  }
-  .primary-action-button:hover,
-  #button-onboarding:hover,
-  .buy-button:hover,
-  .friend-buy-button:hover {
-    outline: 1px solid var(--button-hover-text);
-    color: var(--button-hover-text) !important;
-    border-color: var(--button-hover-text) !important;
-    background-color: var(--button-hover-bg) !important;
+  @media (hover: hover) {
+    #button-onboarding:hover svg {
+      color: var(--button-hover-text) !important;
+    }
+    .primary-action-button:hover,
+    #button-onboarding:hover,
+    .buy-button:hover,
+    .friend-buy-button:hover {
+      outline: 1px solid var(--button-hover-text);
+      color: var(--button-hover-text) !important;
+      border-color: var(--button-hover-text) !important;
+      background-color: var(--button-hover-bg) !important;
+    }
   }
   .primary-action-button:active,
   #button-onboarding:active,
@@ -503,8 +621,10 @@ body {
     background-color: transparent;
     color: var(--text-primary);
   }
-  #button-onboarding.button-secondary:hover{
-    background-color: transparent !important;
+  @media (hover: hover) {
+    #button-onboarding.button-secondary:hover{
+      background-color: transparent !important;
+    }
   }
 
     #hnmain {
@@ -526,6 +646,25 @@ body {
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
 }
+
+/* Desktop: Ensure OG images have proper spacing after JS render */
+@media (min-width: 641px) {
+  .content-row-elevated,
+  .elevating-row {
+    padding: 1px 0;
+  }
+  
+  .row-image {
+    display: block !important;
+  }
+  
+  /* Ensure OG images maintain proper aspect ratio and spacing */
+  .row-image img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+  }
+}
 /* Hide domain text in subtitle when showing mobile image */
 .content-row-elevated .story-subtitle .domain-text {
   display: none;
@@ -533,8 +672,32 @@ body {
 
 /* Ensure mobile images fill the full width properly */
 .content-row-elevated .mobile-row-image {
-  margin: 0 -1px;
-  width: calc(100% + 2px);
+  margin: 0;
+  width: 100%;
+  line-height: 0;
+  font-size: 0;
+}
+
+/* Mobile specific adjustments for OG images to align with border edges */
+@media only screen and (max-width: 640px) {
+  .elevating-row .mobile-row-image {
+    margin: 0;
+    width: 100%;
+    padding: 0;
+    display: block;
+    line-height: 0;
+  }
+  
+  .elevating-row .mobile-row-image img {
+    border: none;
+    border-radius: 0;
+    width: 100%;
+    height: auto;
+    margin: 0;
+    padding: 0;
+    display: block;
+    vertical-align: bottom;
+  }
 }
 
 /* Hide tweet preview on desktop */
@@ -560,6 +723,7 @@ body {
   .elevating-row:hover,
   .information-row:hover {
     background-color: var(--background-color0) !important;
+    border-bottom: 1px solid rgba(166, 110, 78, 0.08) !important;
   }
 }
 
@@ -572,15 +736,14 @@ body {
 
 .farcaster-embed-container {
   position: relative;
-  padding: 1rem !important;
+  padding: 12px 8px !important;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   height: 100%;
   border: none;
-  border-bottom: 1px solid rgba(166, 110, 78, 0.08);
   margin: 0;
-  background: var(--background-color0);
+  background: rgba(138, 99, 210, 0.05);
   overflow: hidden;
 }
 
@@ -614,8 +777,8 @@ body {
 }
 
 .farcaster-embed-author-avatar-container {
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   border-radius: 0;
   overflow: hidden;
   border: 1px solid rgba(166, 110, 78, 0.2);
@@ -638,7 +801,7 @@ body {
 }
 
 .farcaster-embed-body {
-  margin-top: 0.75rem !important;
+  margin-top: 0.5rem !important;
 }
 
 .farcaster-embed-body p {
@@ -649,7 +812,7 @@ body {
 }
 
 .farcaster-embed-stats {
-  margin-top: 0.75rem !important;
+  margin-top: 0.5rem !important;
   margin-bottom: -0.25rem !important;
   display: flex;
   align-items: center;
@@ -674,9 +837,11 @@ body {
   color: inherit;
 }
 
-.farcaster-embed-stats-link:hover {
-  opacity: 0.8;
-  color: var(--text-secondary);
+@media (hover: hover) {
+  .farcaster-embed-stats-link:hover {
+    opacity: 0.8;
+    color: var(--text-secondary);
+  }
 }
 
 .farcaster-embed-farcaster-icon {
@@ -690,8 +855,10 @@ body {
   text-decoration: none;
 }
 
-.farcaster-embed-farcaster-link:hover {
-  transform: scale(1.1);
+@media (hover: hover) {
+  .farcaster-embed-farcaster-link:hover {
+    transform: scale(1.1);
+  }
 }
 
 /* Tweet embed styles */
@@ -703,9 +870,8 @@ body {
   justify-content: space-between;
   height: 100%;
   border: none;
-  border-bottom: 1px solid rgba(166, 110, 78, 0.08);
   margin: 0;
-  background: var(--background-color0);
+  background: rgba(29, 161, 242, 0.05); /* Subtle Twitter blue background */
 }
 
 .tweet-embed-header {
@@ -729,7 +895,7 @@ body {
   .content-row {
     border-bottom: 1px solid rgba(166, 110, 78, 0.08);
     position: relative;
-    padding: 4px 0;
+    padding: 8px 0;
   }
   
   .content-row:last-child {
@@ -749,7 +915,7 @@ body {
   /* Isolate interaction elements from background */
   .interaction-element {
     position: relative;
-    z-index: 2;
+    z-index: 1;
     isolation: isolate;
   }
   
@@ -774,11 +940,193 @@ body {
   }
 }
 
+/* Mobile vote button margin overrides */
+@media only screen and (max-width: 640px) {
+  /* Force containers to flex properly */
+  .vote-button-container,
+  .chat-bubble-container {
+    display: flex !important;
+    align-self: stretch !important;
+    align-items: stretch !important;
+  }
+  
+  /* Override inline styles for mobile */
+  .vote-button-container .interaction-element.upvote-interaction {
+    margin: 5px 4px 5px 0 !important;
+    min-height: 42px !important;
+    height: 100% !important;
+    align-self: stretch !important;
+  }
+  
+  /* Chat bubble mobile margins - align with vote button */
+  .chat-bubble-container .chat-bubble {
+    margin: 5px 8px 5px 6px !important; /* Same as vote button to align left edge */
+    min-height: 42px !important;
+    height: 100% !important;
+    align-self: stretch !important;
+  }
+  
+  /* Elevated (with image) interactions should have the same mobile margins */
+  .interaction-container-with-image .interaction-element.upvote-interaction {
+    margin: 5px 4px 5px 0 !important;
+    min-height: 42px !important;
+    height: 100% !important;
+    align-self: stretch !important;
+  }
+  
+  .interaction-container-with-image .chat-bubble {
+    margin: 5px 8px 5px 6px !important; /* Same as vote button to align left edge */
+    min-height: 42px !important;
+    height: 100% !important;
+    align-self: stretch !important;
+  }
+}
+
+/* Story page mobile comment styles */
+@media only screen and (max-width: 640px) {
+  /* Remove left/right borders on mobile for story page comments */
+  .story-page-comment {
+    border-left: none !important;
+    border-right: none !important;
+    border-radius: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+  
+  /* Also remove borders from story page comment items */
+  .story-page .comment-section-item {
+    border-left: none !important;
+    border-right: none !important;
+    border-radius: 0 !important;
+  }
+  
+  /* Remove borders from targeted comments on story pages */
+  .story-page [id^="comment-"]:target,
+  .story-page .comment-section-item:target {
+    border-left: none !important;
+    border-right: none !important;
+    border-radius: 0 !important;
+  }
+  
+  /* Comment input container should be full width */
+  .story-page-comment-input {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+  }
+  
+  .story-page-comment-input textarea {
+    width: 100% !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+    border-left: none !important;
+    border-right: none !important;
+    border-radius: 0 !important;
+  }
+  
+  /* Remove double line between last comment and composer */
+  .story-page-comments-section .story-page-comment:last-child {
+    margin-bottom: 0 !important;
+  }
+  
+  /* Make comment input look seamless with comments above */
+  .story-page-comment-input > div {
+    margin-top: 0 !important;
+  }
+  
+  /* Remove extra spacing in comment input area */
+  .comment-input-container br {
+    display: none !important;
+  }
+  
+  /* Comments section padding adjustment */
+  .story-page-comments-section {
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+  }
+  
+  /* Activity page row spacing */
+  .activity-row {
+    padding: 6px 0 !important;
+    min-height: 16px !important;
+  }
+  
+  .activity-row td {
+    padding: 1px 8px !important;
+  }
+  
+  /* Activity row borders - orange like regular rows */
+  .activity-row {
+    border-bottom: var(--activity-border) !important;
+  }
+  
+  .activity-row:last-child {
+    border-bottom: none !important;
+  }
+}
+
 /* mobile device */
 @media only screen and (min-width : 300px) and (max-width : 640px) {
+  /* Ensure avatar/menu aligns properly on mobile with vote button */
+  nav-header-avatar {
+    padding-left: 6px !important; /* Match vote button left margin */
+  }
+  
+  /* Align search icon with vote button left edge */
+  #search {
+    padding-left: 6px !important; /* Match vote button left margin */
+    margin-left: 0 !important;
+  }
+  
+  .header-bell {
+    padding-left: 0 !important;
+    padding-right: 6px !important; /* Add right padding to match */
+  }
+  /* Align mobile back button on story pages with vote button left edge */
+  .story-back-button {
+    padding-left: 6px !important; /* Match vote button left margin */
+  }
+  /* Disable all hover effects on mobile */
+  .interaction-element:hover,
+  .activity-row:hover,
+  .content-row:hover,
+  .elevating-row:hover,
+  .content-row-elevated:hover,
+  .information-row:hover,
+  .bell-button:hover,
+  .submit-button:hover,
+  .feed-button:hover,
+  .vote-button-container:hover,
+  .sidebar a:hover,
+  .filter-tab:hover,
+  .ethereum-logo-container:hover,
+  .emoji-reaction-button:hover,
+  .farcaster-embed-stats-link:hover,
+  .farcaster-embed-farcaster-link:hover,
+  a.meta-link:hover,
+  span.meta-link:hover,
+  a.caster-link:hover,
+  .story-domain a:hover,
+  #top-bar button:hover,
+  .comment-preview:hover,
+  .comment-preview:active,
+  .comment-preview .interaction-element:hover,
+  .comment-preview .interaction-element:active,
+  .comment-preview-expand-button:hover,
+  .comment-preview-expand-button:active {
+    background-color: transparent !important;
+    color: inherit !important;
+    text-decoration: none !important;
+    transform: none !important;
+    outline: none !important;
+    border-color: inherit !important;
+    opacity: inherit !important;
+    border-bottom: none !important;
+  }
   /* Consistent spacing for first content row after header */
   .content-row:first-of-type {
-    padding-top: 6px;
+    padding-top: 3px;
   }
   /* Show tweet preview only on mobile */
   .tweet-preview-container {
@@ -788,7 +1136,12 @@ body {
   /* Show farcaster preview only on mobile */
   .farcaster-preview-container {
     display: block !important;
-    margin: 0 -1px;
+    margin: 0;
+  }
+  
+  /* Align Farcaster embed padding with vote/chat icons on mobile */
+  .farcaster-preview-container .farcaster-embed-container {
+    padding: 12px 6px 12px 6px !important;
   }
     .scroll-margin-base {
       scroll-margin-top: 140px;
@@ -803,7 +1156,7 @@ body {
      display: none;
     }
     .newsletter-row {
-      padding: 6px 0;
+      padding: 1px 0;
       border-bottom: 1px solid rgba(166, 110, 78, 0.08);
     }
     .share-container {
@@ -815,12 +1168,28 @@ body {
     .comment-preview {
       border: none;
       border-bottom: 1px solid rgba(166, 110, 78, 0.08);
-      background-color: transparent;
       margin: 0;
-      padding: 6px 0;
+      padding: 1px 0;
       isolation: isolate;
       position: relative;
-      z-index: 2;
+      z-index: 1;
+    }
+    /* Prevent any hover effects on comment previews on mobile */
+    .comment-preview:hover,
+    .comment-preview:active,
+    .comment-preview:focus {
+      background-color: transparent !important;
+      border-bottom: 1px solid rgba(166, 110, 78, 0.08) !important;
+    }
+    .comment-preview .interaction-element:hover,
+    .comment-preview .interaction-element:active,
+    .comment-preview .interaction-element:focus {
+      background-color: transparent !important;
+    }
+    .comment-preview-expand-button:hover,
+    .comment-preview-expand-button:active,
+    .comment-preview-expand-button:focus {
+      background: transparent !important;
     }
     /* Ensure last comment preview in a row has clean edges */
     .comment-preview:last-child {
@@ -830,12 +1199,17 @@ body {
     .comment-preview-text {
       font-size: 10pt;
       line-height: 1.4;
-      padding: 0.5rem 0.75rem;
       opacity: 0.85;
     }
     .information-row {
       background-color: var(--background-color0);
-      padding: 6px 0 !important;
+      padding: 3px 0 !important;
+      border-bottom: 1px solid rgba(166, 110, 78, 0.08);
+    }
+    
+    /* Override border for rows with comment preview */
+    .information-row.with-comment-preview {
+      border-bottom: none;
     }
     .story-domain {
       font-size: 9pt;
@@ -856,38 +1230,43 @@ body {
       width: 100%;
       margin: 0;
       padding: 0;
+      line-height: 0;
       -webkit-tap-highlight-color: transparent;
       touch-action: manipulation;
     }
     .mobile-row-image img {
-      border: var(--border-inset);
+      border: none;
       border-radius: 0;
       width: 100%;
+      height: auto;
       margin: 0;
       padding: 0;
+      display: block;
+      vertical-align: bottom;
       -webkit-tap-highlight-color: transparent;
       pointer-events: none;
     }
     .elevating-row .mobile-row-image img {
-      border-top-left-radius: 0;
-      border-top-right-radius: 0;
+      border-radius: 0;
     }
     .comment-section {
       background-color: var(--background-color0);
     }
     .content-row-elevated {
-      padding-bottom: 4px;
+      padding: 8px 0;
       background-color: var(--background-color0);
+      line-height: 0;
     }
     .content-row-elevated .mobile-row-image {
-      margin-top: -5px;
+      margin-top: 0;
     }
     .elevating-row {
       background: var(--background-color0);
       position: relative;
-      padding: 6px 0;
+      padding: 8px 0;
       border-bottom: 1px solid rgba(166, 110, 78, 0.08);
-      overflow: hidden;
+      border-radius: 0;
+      overflow: visible;
     }
     
     /* Remove double border for farcaster previews */
@@ -901,25 +1280,45 @@ body {
       margin: 0;
     }
     .elevating-comment-preview .interaction-element{
-      padding: 6px 0 !important;
-      border: none !important;
-      border-bottom: 1px solid rgba(166, 110, 78, 0.08) !important;
-      margin: 0 !important;
-      border-radius: 0;
+      padding: 6px 10px !important;
+      margin: 5px 6px 5px 6px !important;
       box-sizing: border-box;
-      background-color: transparent;
     }
     .comment-preview-no-mobile-image .interaction-element{
-      padding: 6px 0 !important;
-      border: none !important;
-      border-bottom: 1px solid rgba(166, 110, 78, 0.08) !important;
-      margin: 0 !important;
-      border-radius: 0;
+      padding: 6px 10px !important;
+      margin: 5px 6px 5px 6px !important;
       box-sizing: border-box;
-      background-color: transparent;
     }
     .with-comment-preview {
       border-bottom: none;
+    }
+    
+    /* Ensure elevating rows maintain border even with comment preview */
+    .elevating-row.with-comment-preview {
+      border-bottom: 1px solid rgba(166, 110, 78, 0.08);
+    }
+    
+    /* Content rows should always have border unless they have a comment preview */
+    .content-row .information-row:not(.with-comment-preview) {
+      border-bottom: 1px solid rgba(166, 110, 78, 0.08);
+    }
+    
+    /* Fix double borders when comment preview row is followed by regular row */
+    tr:has(.comment-preview) + tr .content-row {
+      border-top: none !important;
+    }
+    
+    /* Ensure standard rows without images or previews have borders */
+    .content-row:not(.content-row-elevated) .information-row.without-comment-preview {
+      border-bottom: 1px solid rgba(166, 110, 78, 0.08) !important;
+    }
+    
+    /* Prevent white border appearing on row hover on mobile */
+    .information-row:hover,
+    .elevating-row:hover,
+    .content-row:hover,
+    .content-row-elevated:hover {
+      border-bottom: 1px solid rgba(166, 110, 78, 0.08) !important;
     }
     
     /* Make comment preview part of parent row visually */
@@ -927,8 +1326,7 @@ body {
       box-shadow: none;
       border: none;
       border-bottom: 1px solid rgba(166, 110, 78, 0.08);
-      background-color: transparent;
-      padding: 6px 0;
+      padding: 1px 0;
     }
     
     /* Twitter-like mobile row separation */
@@ -937,18 +1335,54 @@ body {
       border-bottom: 1px solid rgba(166, 110, 78, 0.08);
       position: relative;
     }
+    
+    /* Ensure all table rows have borders on mobile */
+    #hnmain table tr {
+      border-bottom: 1px solid rgba(166, 110, 78, 0.08);
+    }
+    
+    #hnmain table tr:last-child {
+      border-bottom: none;
+    }
     .content-row:not(.content-row-elevated) {
       border: none;
       border-bottom: 1px solid rgba(166, 110, 78, 0.08);
-      padding: 6px 0;
+      padding: 1px 0;
       position: relative;
     }
     
     .content-row:not(.content-row-elevated):last-child {
       border-bottom: none;
     }
+    
+    /* Ensure all information rows have border-bottom on mobile */
+    .information-row {
+      border-bottom: 1px solid rgba(166, 110, 78, 0.08);
+    }
+    
+    /* Ensure rows without comment preview still have border */
+    .information-row.without-comment-preview {
+      border-bottom: 1px solid rgba(166, 110, 78, 0.08);
+    }
+    
+    /* Mobile-specific expand button styles - match chat bubble width */
+    .comment-preview-expand-button {
+      min-width: 49px !important;
+      padding: 0 12px !important;
+    }
+    .comment-preview-expand-button span {
+      font-size: 7pt !important;
+    }
+    
     #hnmain {
       border: none;
+    }
+    /* Ensure consistent margins on mobile for story pages */
+    .story-page .upvoter-profiles-section,
+    .story-page .comment-input-section,
+    .story-page .info-box {
+      margin-left: 1rem !important;
+      margin-right: 1rem !important;
     }
     .second-header {
       background-color: var(--middle-beige) !important;
@@ -957,8 +1391,12 @@ body {
     .third-header td div {
       background-color: var(--table-bg) !important;
       border-bottom: 1px solid rgba(166, 110, 78, 0.08);
-      padding-bottom: 8px;
+      padding-bottom: 3px;
       margin-bottom: 0;
+      margin-left: -1rem;
+      margin-right: -1rem;
+      padding-left: 1rem;
+      padding-right: 1rem;
     }
     .gateway-container {
       padding: 0 5vw !important;
@@ -987,6 +1425,9 @@ body {
      #hnmain {
          width: 100%;
          min-width: 0;
+    }
+    .container {
+         padding: 0;
     }
     #boxmain {
          width: 100%;
@@ -1049,9 +1490,11 @@ body {
          display: block;
          margin-bottom: 9px;
     }
-     input[type='text'], input[type='number'], textarea {
+     input[type='text'], input[type='url'], input[type='email'], input[type='number'], textarea {
          font-size: 16px;
          width: 90%;
+         border: var(--border-input);
+         background-color: rgba(166, 110, 78, 0.08) !important;
     }
 }
 /* Navigation */
@@ -1100,6 +1543,87 @@ body {
      border-right: none;
      padding-top: 35%;
 }
+/* Fix for image gap issues in elevating rows */
+.elevating-row img,
+.content-row-elevated img {
+  max-width: 100%;
+  width: 100%;
+  height: auto;
+  display: block;
+  line-height: 0;
+  font-size: 0;
+  vertical-align: bottom;
+}
+
+/* Ensure no gaps in elevating row containers */
+.elevating-row *,
+.content-row-elevated * {
+  line-height: normal;
+}
+
+.elevating-row .mobile-row-image,
+.content-row-elevated .mobile-row-image {
+  line-height: 0;
+  font-size: 0;
+}
+
+/* Prevent layout shift for elevated rows by reserving space */
+.elevating-row .vote-button-container .interaction-element,
+.content-row-elevated .vote-button-container .interaction-element {
+  min-height: 59px; /* Match the min-height of story-link-container-wrapper */
+}
+
+/* Ensure consistent interaction element dimensions */
+.interaction-element {
+  min-height: 42px;
+  min-width: 49px;
+}
+
+/* Vote button consistent margins */
+.vote-button-container {
+  display: flex;
+  align-self: stretch;
+  align-items: stretch;
+}
+
+.vote-button-container .interaction-element.upvote-interaction {
+  margin: 5px 8px 5px 6px;
+  min-height: 42px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Chat bubble consistent margins */
+.chat-bubble-container .chat-bubble {
+  margin: 5px 6px 5px 8px;
+  min-height: 42px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
+/* Desktop: Ensure avatar/menu aligns with vote button edge */
+@media (min-width: 641px) {
+  nav-header-avatar {
+    padding-left: 14px !important; /* 8px table padding + 6px to align with vote button */
+  }
+  
+  /* Align mobile back button on story pages with vote button */
+  .story-back-button {
+    padding-left: 14px !important;
+  }
+  
+  /* Ensure consistent alignment for upload button with vote button edge */
+  #nav-submit,
+  a[href="/submit"] {
+    margin-left: 7px !important; /* Compensate for existing padding */
+  }
+}
+
 /* Media query for medium screens */
  @media (min-width: 641px) {
     .gateway-container {
@@ -1161,16 +1685,19 @@ body {
 }
 
 .bottom-nav {
-  padding-top: 8px;
+  display: flex;
+  align-items: center;
+  height: 50px;
+  padding-top: 4px;
   padding-bottom: calc(env(safe-area-inset-bottom, 0px));
-  background: linear-gradient(
-    to top,
-    var(--header-beige) 0%,
-    rgba(42, 40, 36, 0.97) 50%,
-    rgba(42, 40, 36, 0) 100%
-  );
+  background: var(--header-beige);
   border-top: 1px solid rgba(166, 110, 78, 0.08);
   box-shadow: 0 -2px 5px var(--shadow-color);
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
 }
 @media (display-mode: standalone) {
    .submit-button {
@@ -1185,14 +1712,51 @@ body {
  }
 .bottom-nav > a {
   color: var(--text-primary);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
 }
 .bottom-nav > a > svg,
 .mobile-bell-container > div > a > svg,
 .mobile-bell-container > a > svg {
-  color: var(--text-primary);
+  color: #ff6600 !important;
   width: 1.65rem;
   height: 1.65rem;
   display: block;
+  transition: color 0.2s ease;
+}
+/* Active state for bottom nav items - slightly darker orange */
+.bottom-nav > a:active > svg,
+.mobile-bell-container > div > a:active > svg,
+.mobile-bell-container > a:active > svg {
+  color: #cc5200 !important;
+}
+
+/* Hover state for bottom nav items - subtle orange */
+@media (hover: hover) {
+  .bottom-nav > a:hover > svg,
+  .mobile-bell-container > div > a:hover > svg,
+  .mobile-bell-container > a:hover > svg {
+    color: rgba(255, 102, 0, 0.9) !important;
+  }
+}
+
+/* Upvoted arrow container styling */
+.upvoted-arrow-container {
+  background-color: rgba(255, 102, 0, 0.15) !important;
+  border: 1px solid rgba(255, 102, 0, 0.3) !important;
+}
+
+/* Upvoted arrow SVG fill color */
+.upvoted-arrow-container .votearrow {
+  fill: #ff6600 !important;
+}
+
+/* Apply upvoted styling to parent row when container has upvoted class */
+.vote-button-container.upvoted-story-container ~ * {
+  /* This ensures the parent row gets the upvoted-story class styling */
 }
 .mobile-bell-container > div {
   height: 100%;
@@ -1216,13 +1780,39 @@ body {
   display: none;
 }
 
+/* Desktop: Align vote button left edge properly */
+@media (min-width: 641px) {
+  /* Main feed vote buttons - consistent margins for all contexts */
+  .vote-button-container:not(.interaction-container-with-image) .interaction-element.upvote-interaction {
+    margin: 5px 8px 5px 14px !important; /* 8px + 6px to create consistent left alignment */
+  }
+  
+  /* Chat bubble symmetric alignment - consistent margins */
+  .chat-bubble-container:not(.interaction-container-with-image) .chat-bubble {
+    margin: 5px 14px 5px 8px !important;
+  }
+  
+  /* Elevated containers (with images/previews) keep standard margins */
+  .vote-button-container.interaction-container-with-image .interaction-element.upvote-interaction {
+    margin: 5px 8px 5px 6px !important;
+  }
+  
+  .chat-bubble-container.interaction-container-with-image .chat-bubble {
+    margin: 5px 6px 5px 8px !important;
+  }
+}
+
 /* Media query for larger screens */
  @media (min-width: 641px) {
     .content-row {
-      padding: 4px 0;
+      padding: 1px 0;
+      border-bottom: 1px solid rgba(166, 110, 78, 0.08);
+    }
+    .content-row:last-child {
+      border-bottom: none;
     }
     td {
-      padding: 4px 8px;
+      padding: 2px 8px;
     }
     .story-link-container-wrapper {
       justify-content: center !important;
@@ -1242,6 +1832,11 @@ body {
     }
     .header-bell {
       width: 20% !important;
+      min-height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 14px !important; /* Match the left edge alignment (8px table + 6px) */
     }
     .desktop-nav {
       width: 47%;
@@ -1317,7 +1912,7 @@ body {
     .third-header td div {
       background-color: var(--table-bg) !important;
       border-bottom: 1px solid rgba(166, 110, 78, 0.08);
-      padding-bottom: 8px;
+      padding-bottom: 3px;
       margin-bottom: 0;
     }
     footer {
@@ -1347,7 +1942,7 @@ body {
     }
     .kn-banner-desk {
       width: 33%;
-      margin-left: 1rem;
+      margin-left: 14px; /* Align with vote button left edge */
       display: block;
       color: var(--text-primary);
       font-size: 1.1rem;
@@ -1356,7 +1951,7 @@ body {
      .sidebar .kiwi-logo {
          display: block;
          font-size: 1.9rem;
-         margin: 14px 14px 14px 10px !important;
+         margin: 14px 14px 14px 14px !important; /* Align left edge with vote button */
          color: var(--text-primary) !important;
     }
      .sidebar {
@@ -1409,11 +2004,11 @@ body {
       margin: 0 0.25rem 0 0.75rem;
       font-size: 1rem;
     }
-    .sidebar a, .sidebar-div {
+    .sidebar a:not(.kiwi-logo), .sidebar-div {
       font-size: 2em;
       margin-left: 0 !important;
       margin-right: 0 !important;
-      padding-left: 1rem !important;
+      padding-left: 14px !important; /* Match vote button left edge */
       color: var(--text-primary);
       fill: var(--text-primary);
     }
@@ -1437,8 +2032,8 @@ body {
     }
 }
  .sidebar a {
-    padding: 0.3rem 0 0.3rem 0;
-    margin: 0.3rem 0 0 0;
+    padding: 0.2rem 0 0.2rem 0;
+    margin: 0.2rem 0 0 0;
     font-size: 1.7rem;
     font-variant: small-caps;
     min-width: 140px;
@@ -1480,8 +2075,8 @@ body {
     }
 }
  .sidebar-div {
-     padding: 0.3rem 0 0.3rem 0;
-     margin: 0.3rem 10px 0 0;
+     padding: 0.2rem 0 0.2rem 0;
+     margin: 0.2rem 10px 0 0;
      color: var(--text-primary);
      text-decoration: none;
      display: block;
@@ -1523,8 +2118,10 @@ a.meta-link, span.meta-link {
 .meta-link {
   transition: opacity 0.3s ease-out;
 }
-a.meta-link:hover, span.meta-link:hover {
-  text-decoration: underline;
+@media (hover: hover) {
+  a.meta-link:hover, span.meta-link:hover {
+    text-decoration: underline;
+  }
 }
 
 .meta-link.primary-action {
@@ -1538,31 +2135,198 @@ a.meta-link:hover, span.meta-link:hover {
      color: var(--text-secondary);
      fill: var(--text-secondary);
 }
- a.caster-link:hover {
-     color: #8b5cf6;
-     fill: #8b5cf6;
-     cursor: pointer;
+@media (hover: hover) {
+   a.caster-link:hover {
+       color: #8b5cf6;
+       fill: #8b5cf6;
+       cursor: pointer;
+  }
 }
 
 .vote-button-container > div {
   min-height: 100%;
   display: flex;
   align-self: stretch;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Ensure vote buttons stay below navbar */
+.vote-button-container {
+  position: relative;
+  z-index: 1;
+}
+
+.votearrow {
+  position: relative;
+  z-index: 1;
 }
 .interaction-element {
   box-sizing: border-box;
 }
-.interaction-element:hover {
-  cursor:pointer !important;
+
+/* Style vote and chat icons similar to filter tabs */
+.vote-button-container .interaction-element,
+.chat-bubble.interaction-element {
   background-color: var(--hover-bg) !important;
-}
-/* Exception: interaction elements inside comment previews use comment preview hover */
-.comment-preview .interaction-element:hover {
-  background-color: transparent !important;
+  border: var(--border-thin) !important;
+  border-radius: 2px !important;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
 }
 
-.bell-button:hover{
-  background-color: var(--hover-bg) !important;
+/* Ensure consistent sizing for interaction elements */
+.interaction-element.upvote-interaction,
+.chat-bubble.interaction-element {
+  min-width: 49px;
+  min-height: 42px;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-direction: column;
+}
+
+/* Ensure vote arrow container maintains size */
+.votearrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Ensure chat bubble maintains consistent layout */
+.chat-bubble svg {
+  color: var(--text-muted);
+  width: 25px;
+}
+
+.chat-bubble span {
+  color: var(--text-muted);
+  font-size: 8pt;
+  font-weight: bold;
+}
+@media (hover: hover) {
+  .interaction-element:hover {
+    cursor:pointer !important;
+    background-color: var(--hover-bg) !important;
+  }
+  /* Vote and chat hover states similar to filter tabs */
+  .vote-button-container .interaction-element:hover,
+  .chat-bubble.interaction-element:hover {
+    background-color: rgba(166, 110, 78, 0.25) !important;
+    border-color: rgba(166, 110, 78, 0.6) !important;
+  }
+
+  .bell-button:hover{
+    background-color: var(--hover-bg) !important;
+  }
+}
+
+/* Fix bell icon layout shift by reserving space */
+#bell {
+  min-width: 40px;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Skeleton loader for bell while it's loading */
+#bell:empty {
+  background: linear-gradient(90deg, rgba(166, 110, 78, 0.1) 25%, rgba(166, 110, 78, 0.2) 50%, rgba(166, 110, 78, 0.1) 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+  border-radius: 2px;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Ensure bell button has consistent dimensions */
+.bell-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  min-height: 40px;
+}
+
+/* Reserve space for search button as well */
+#search {
+  min-width: 40px;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Align header search icon with vote button left edge on desktop */
+@media (min-width: 641px) {
+  .header-bell {
+    padding-left: 6px !important; /* Align with vote button edge */
+    padding-right: 14px !important; /* Match left edge alignment for right side */
+  }
+  
+  /* Ensure bell icon aligns with right edge */
+  #bell {
+    margin-right: 0 !important;
+  }
+  
+  /* Ensure search icon also aligns properly */
+  #search {
+    margin-left: 8px;
+  }
+}
+
+/* Skeleton loader for search while it's loading */
+#search:empty {
+  background: linear-gradient(90deg, rgba(166, 110, 78, 0.1) 25%, rgba(166, 110, 78, 0.2) 50%, rgba(166, 110, 78, 0.1) 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+  border-radius: 2px;
+}
+
+/* Desktop-specific adjustments for bell and search */
+@media (min-width: 641px) {
+  #bell {
+    min-width: 32px;
+    min-height: 32px;
+  }
+  
+  /* Hide search button on desktop since we have desktop search in second header */
+  #search {
+    display: none;
+  }
+  
+  .bell-button {
+    min-width: auto;
+    min-height: auto;
+    padding: 8px 10px;
+  }
+  
+  /* Adjust icon sizes within buttons */
+  #bell svg,
+  .bell-button svg {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+  
+  /* Align second header content with vote button edge */
+  .second-header table {
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+  }
+  
+  /* Align third header content */
+  .third-header td > div {
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+  }
 }
 
 @keyframes karma-float {
@@ -1621,9 +2385,11 @@ a.meta-link:hover, span.meta-link:hover {
   transition: background-color 0.3s;
   margin-left: 10px;
 }
-#top-bar button:hover {
-  background-color: var(--button-hover-bg);
-  color: var(--button-hover-text);
+@media (hover: hover) {
+  #top-bar button:hover {
+    background-color: var(--button-hover-bg);
+    color: var(--button-hover-text);
+  }
 }
 #close-button {
   cursor: pointer;
@@ -1640,15 +2406,17 @@ a.meta-link:hover, span.meta-link:hover {
   margin: 0 4px;
 }
 
-.filter-tab:hover {
-  background-color: rgba(166, 110, 78, 0.25);
-  border-color: rgba(166, 110, 78, 0.6);
+@media (hover: hover) {
+  .filter-tab:hover {
+    background-color: rgba(166, 110, 78, 0.25);
+    border-color: rgba(166, 110, 78, 0.6);
+  }
 }
 
 .filter-tab.active {
   background-color: rgba(166, 110, 78, 0.3);
   border: 1px solid rgba(166, 110, 78, 0.6);
-  border-bottom: 3px solid var(--button-primary-bg);
+  border-bottom: 1px solid rgba(166, 110, 78, 0.5);
   font-weight: 600;
 }
 
@@ -1660,8 +2428,10 @@ a.meta-link:hover, span.meta-link:hover {
   padding: 2px 4px;
 }
 
-.filter-tab:hover a {
-  color: var(--text-primary) !important;
+@media (hover: hover) {
+  .filter-tab:hover a {
+    color: var(--text-primary) !important;
+  }
 }
 
 .filter-tab.active a {
@@ -1719,8 +2489,10 @@ a.meta-link:hover, span.meta-link:hover {
   transition: background-color 0.2s ease;
 }
 
-.ethereum-logo-container:hover {
-  background-color: rgba(166, 110, 78, 0.15);
+@media (hover: hover) {
+  .ethereum-logo-container:hover {
+    background-color: rgba(166, 110, 78, 0.15);
+  }
 }
 
 .ethereum-logo-container img,
@@ -1731,29 +2503,34 @@ a.meta-link:hover, span.meta-link:hover {
 
 /* Activity page styles - Twitter-like */
 .activity-row {
-  border-bottom: 1px solid rgba(166, 110, 78, 0.08);
+  border-bottom: var(--activity-border);
   transition: background-color 0.2s ease;
-  min-height: 60px;
+  min-height: 20px;
   position: relative;
+  line-height: 1.1;
+  padding: 8px 0;
+  font-size: 9pt;
 }
 
 .activity-row:last-child {
   border-bottom: none;
 }
 
-.activity-row:hover {
-  background-color: rgba(166, 110, 78, 0.04);
-  transition: background-color 0.2s ease;
+@media (hover: hover) {
+  .activity-row:hover {
+    background-color: rgba(166, 110, 78, 0.04);
+    transition: background-color 0.2s ease;
+  }
 }
 
 .activity-row td {
-  padding: 0.5rem 0.75rem;
+  padding: 2px 8px;
 }
 
 .activity-row .notification,
 .activity-row .upvote-notification {
   display: block;
-  padding: 0.75rem 0.5rem;
+  padding: 8px 0;
   text-decoration: none;
 }
 
@@ -1765,18 +2542,18 @@ a.meta-link:hover, span.meta-link:hover {
 
 /* Add padding and spacing for activity content */
 .activity-content-wrapper {
-  padding: 0.25rem 0;
+  padding: 8px 0;
 }
 
 /* Improve icon spacing in activity rows */
 .activity-content-wrapper > div:first-child {
-  padding-right: 1rem;
+  padding-right: 0.25rem;
   flex: 0 0 auto;
-  min-width: 60px;
+  min-width: 30px;
 }
 
 .activity-content-wrapper > div:last-child {
-  padding-left: 0.5rem;
+  padding-left: 0.25rem;
   flex: 1 1 auto;
 }
 
@@ -1784,20 +2561,53 @@ a.meta-link:hover, span.meta-link:hover {
 /* Twitter-like row enhancements */
 .story-row {
   position: relative;
-  padding: 4px 0;
+  padding: 1px 0;
+}
+
+/* Compact activity page overrides - allow some breathing room */
+.activity-row * {
+  margin: 0;
+  line-height: 1.4;
+}
+
+.activity-row p {
+  margin-top: 0.5rem !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.activity-row .notification-title {
+  margin-top: 0 !important;
+  margin-bottom: 0.25rem !important;
+}
+
+.activity-row svg {
+  width: 1rem !important;
+  height: 1rem !important;
+  vertical-align: middle;
+}
+
+/* Compact vote buttons in activity rows */
+.activity-row .vote-button-container {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.activity-row .votearrow {
+  font-size: 1rem !important;
+  margin: 0 !important;
 }
 
 /* Mobile specific adjustments */
 @media only screen and (max-width: 640px) {
   .activity-row .notification,
   .activity-row .upvote-notification {
-    padding: 0.5rem 0.25rem;
+    padding: 8px 0;
   }
   
   .activity-row {
     border-bottom: 1px solid rgba(166, 110, 78, 0.08);
-    min-height: 50px;
-    padding: 0;
+    min-height: 18px;
+    padding: 1px 0;
   }
   
   .activity-row:last-child {
@@ -1805,7 +2615,7 @@ a.meta-link:hover, span.meta-link:hover {
   }
   
   .activity-row td {
-    padding: 0.4rem 0.5rem;
+    padding: 2px 8px;
   }
 }
 
@@ -1840,6 +2650,26 @@ a.meta-link:hover, span.meta-link:hover {
   color: var(--text-primary) !important;
 }
 
+/* Upvoted stories - no background highlight, just arrow styling */
+.upvoted-story .information-row,
+.upvoted-story .elevating-row {
+  background-color: transparent !important;
+}
+
+/* Upvoted arrow background highlight */
+.upvoted-story .vote-button-container .interaction-element {
+  background-color: rgba(255, 102, 0, 0.15) !important;
+  border-color: rgba(255, 102, 0, 0.3) !important;
+}
+
+/* Upvoted arrow hover state */
+@media (hover: hover) {
+  .upvoted-story .vote-button-container .interaction-element:hover {
+    background-color: rgba(255, 102, 0, 0.25) !important;
+    border-color: rgba(255, 102, 0, 0.5) !important;
+  }
+}
+
 /* Story page specific fixes */
 #hnmain table tr td {
   background-color: var(--background-color0);
@@ -1857,6 +2687,16 @@ a.meta-link:hover, span.meta-link:hover {
   padding-top: 0;
 }
 
+/* Story page vote button alignment - ensure consistent margins */
+.story-page-row .vote-button-container .interaction-element.upvote-interaction {
+  margin: 5px 8px 5px 6px !important;
+}
+
+/* Story page with OG images - maintain layout */
+.story-page-row.content-row-elevated .vote-button-container .interaction-element.upvote-interaction {
+  margin: 5px 8px 5px 6px !important;
+}
+
 /* Ensure consistent background for story pages */
 body.story-page #hnmain table {
   background-color: var(--background-color0) !important;
@@ -1865,10 +2705,13 @@ body.story-page #hnmain table {
 /* Info box styling for better contrast */
 .info-box {
   background-color: var(--middle-beige);
-  border: 1px solid var(--border-line);
-  border-radius: 4px;
+  border-top: 1px solid var(--border-line);
+  border-bottom: 1px solid var(--border-line);
+  border-left: none;
+  border-right: none;
+  border-radius: 0;
   padding: 1rem;
-  margin: 0 1rem 1rem 1rem;
+  margin: 0 1rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
 
@@ -1920,6 +2763,14 @@ body.story-page #hnmain table {
   padding-top: 0 !important;
 }
 
+/* Ensure consistent margins for all story page sections */
+.story-page .upvoter-profiles-section,
+.story-page .comment-input-section,
+.story-page .info-box {
+  margin-left: 1rem !important;
+  margin-right: 1rem !important;
+}
+
 /* Emoji reaction button styles */
 .emoji-reaction-button {
   background-color: rgba(166, 110, 78, 0.15) !important;
@@ -1927,11 +2778,55 @@ body.story-page #hnmain table {
   transition: all 0.2s ease !important;
 }
 
-.emoji-reaction-button:hover:not(:disabled) {
-  background-color: rgba(166, 110, 78, 0.25) !important;
-  border-color: rgba(166, 110, 78, 0.5) !important;
-  transform: translateY(-1px) !important;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+/* Emoji reaction container in comments */
+.comment-emoji-reactions {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  gap: 8px !important;
+  margin-top: 32px !important;
+  max-width: 100% !important;
+}
+
+/* Prevent emoji reactions from wrapping on mobile */
+@media only screen and (max-width: 640px) {
+  .comment-emoji-reactions {
+    gap: 6px !important;
+  }
+  
+  .comment-emoji-reactions button,
+  .comment-emoji-reactions .emoji-reaction-button {
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
+    padding: 3px 6px !important;
+    font-size: 9pt !important;
+  }
+  
+  .comment-emoji-reactions img {
+    width: 9px !important;
+    height: 9px !important;
+  }
+}
+
+/* Hide horizontal scrollbar on emoji reactions but keep functionality */
+.comment-emoji-reactions::-webkit-scrollbar {
+  height: 0;
+  width: 0;
+}
+
+/* Ensure emoji reaction container doesn't break layout */
+.reactions-container {
+  max-width: 100%;
+}
+
+@media (hover: hover) {
+  .emoji-reaction-button:hover:not(:disabled) {
+    background-color: rgba(166, 110, 78, 0.25) !important;
+    border-color: rgba(166, 110, 78, 0.5) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+  }
 }
 
 .emoji-reaction-button:active:not(:disabled) {
@@ -1949,6 +2844,63 @@ body.story-page #hnmain table {
 /* Story page specific fixes for background and gaps */
 body.story-page {
   background-color: var(--background-color0) !important;
+}
+
+/* Ensure proper alignment for story page sections on desktop */
+@media (min-width: 641px) {
+  /* Align story page td elements with vote button */
+  .scaled-hnmain td {
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+  }
+  
+  /* Story page specific td overrides */
+  .story-page-row td {
+    padding: 8px 14px !important;
+  }
+  
+  /* Larger screens */
+  @media screen and (min-width: 1600px) {
+    .scaled-hnmain td {
+      padding-left: 34px !important;
+      padding-right: 34px !important;
+    }
+    
+    .story-page-row td {
+      padding: 8px 34px !important;
+    }
+  }
+}
+
+/* Story page emoji reactions should not wrap */
+body.story-page .comment-emoji-reactions {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+/* Ensure consistent left/right alignment for all main content elements */
+@media (min-width: 641px) {
+  /* All main content sections align with vote button (14px from edge) */
+  .story-page-upvoter-profiles,
+  .comment-section-container,
+  .story-page .info-box,
+  .story-page .comment-input-section {
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+  }
+}
+
+@media only screen and (max-width: 640px) {
+  /* Mobile: All main content sections align with vote button (6px from edge) */
+  .story-page-upvoter-profiles,
+  .comment-section-container,
+  .story-page .info-box,
+  .story-page .comment-input-section {
+    padding-left: 6px !important;
+    padding-right: 6px !important;
+  }
 }
 
 body.story-page #hnmain {
@@ -1993,4 +2945,272 @@ body.story-page .comment-section {
   background-color: var(--background-color0) !important;
   margin-top: 0 !important;
   padding-top: 0 !important;
+}
+
+/* iOS Safari specific fixes for upvote button spacing */
+@supports (-webkit-touch-callout: none) {
+  /* iOS Safari only */
+  .vote-button-container {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+  
+  .vote-button-container > div {
+    padding: 0;
+  }
+  
+  .votearrow {
+    margin-right: 0;
+  }
+  
+  /* Additional spacing for upvote text on iOS Safari */
+  .vote-button-container + td,
+  .votelinks + td {
+    padding-left: 8px !important;
+  }
+  
+  /* Activity page specific iOS Safari fixes */
+  .activity-row .vote-button-container {
+    padding: 1px 2px !important;
+  }
+  
+  /* Mobile specific iOS Safari adjustments */
+  @media only screen and (max-width: 640px) {
+    .vote-button-container {
+      padding-left: 0 !important;
+      padding-right: 0 !important;
+    }
+    
+    .vote-button-container + td {
+      padding-left: 8px !important;
+    }
+  }
+}
+
+/* Comment section margin alignment */
+.comment-section-container {
+  padding: 1rem 0 !important;
+  max-width: 100%;
+}
+
+/* Desktop: align comments with vote button left edge */
+@media (min-width: 641px) {
+  .comment-section-container {
+    padding: 1rem 14px !important; /* 8px (td padding) + 6px (vote button left margin) = 14px */
+  }
+  
+  /* Individual comments already have their own padding, no additional margins needed */
+  .comment-section-container > span {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+  
+  .comment-section-item {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    border-left: var(--border) !important; /* Add borders for desktop */
+    border-right: var(--border) !important;
+    border-radius: 2px !important; /* Keep border radius for desktop */
+  }
+}
+
+/* Mobile: remove all margins so comments start at viewport edge */
+@media only screen and (max-width: 640px) {
+  .comment-section-container {
+    padding: 1rem 0 !important; /* Remove horizontal padding on mobile */
+  }
+  
+  /* Ensure individual comments have no horizontal margins on mobile */
+  .comment-section-container > span {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+  
+  /* Full-width comments on mobile - extend to screen edges */
+  .comment-section-item {
+    border-left: none !important;
+    border-right: none !important;
+    border-radius: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+  
+  /* Full-width notification opt-in on mobile */
+  .notification-opt-in {
+    border-left: none !important;
+    border-right: none !important;
+    border-radius: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+  
+  /* Story page specific overrides for mobile */
+  .story-page .comment-section {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+  
+  /* Align "Recommended by curator" section on mobile */
+  .story-page-upvoter-profiles {
+    padding: 1rem 6px !important; /* Match vote button mobile margins */
+  }
+  
+  /* Full-width comment previews on mobile */
+  .comment-preview {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    border-left: none !important;
+    border-right: none !important;
+    border-radius: 0 !important;
+  }
+}
+
+/* Story page margin consistency fixes - removed in favor of more specific rules */
+
+/* Mobile: Full-width comments on story page - moved to consolidated rules above */
+
+/* Desktop story page adjustments */
+@media (min-width: 641px) {
+  /* Story page vote buttons should match main feed */
+  .story-page-row .vote-button-container:not(.interaction-container-with-image) .interaction-element.upvote-interaction {
+    margin: 5px 8px 5px 14px !important; /* 8px + 6px to align with comments */
+  }
+  
+  .story-page-row .chat-bubble-container:not(.interaction-container-with-image) .chat-bubble {
+    margin: 5px 14px 5px 8px !important; /* Symmetric with vote button */
+  }
+  
+  /* Elevated story rows */
+  .story-page-row .vote-button-container.interaction-container-with-image .interaction-element.upvote-interaction {
+    margin: 5px 8px 5px 6px !important;
+  }
+  
+  .story-page-row .chat-bubble-container.interaction-container-with-image .chat-bubble {
+    margin: 5px 6px 5px 8px !important;
+  }
+  
+  /* Ensure story page content aligns with comments */
+  .story-page-row .content-container {
+    padding-right: 14px;
+  }
+  
+  /* Align "Recommended by curator" section on desktop */
+  .story-page-upvoter-profiles {
+    padding: 1rem 14px !important; /* Match vote button and comment section alignment */
+  }
+  
+  /* Remove borders from story page comments on desktop */
+  .story-page .story-page-comment {
+    border-left: none !important;
+    border-right: none !important;
+    border-radius: 0 !important;
+  }
+}
+
+/* Mobile story page adjustments */
+@media only screen and (max-width: 640px) {
+  .story-page-row .vote-button-container .interaction-element.upvote-interaction {
+    margin: 5px 4px 5px 0 !important; /* Match main feed mobile margins */
+  }
+  
+  .story-page-row .chat-bubble-container .chat-bubble {
+    margin: 5px 0 5px 4px !important; /* Match main feed mobile margins */
+  }
+}
+/* Desktop alignment and border fixes for Kiwi News */
+
+/* Desktop: Fix chat bubble and vote button alignment to match second header */
+@media (min-width: 641px) {
+  /* Ensure ALL vote buttons align at 14px from left edge */
+  .vote-button-container .interaction-element,
+  .interaction-container-with-image .interaction-element.upvote-interaction {
+    margin-left: 14px !important;
+  }
+  
+  /* Ensure ALL chat bubbles align at 14px from right edge */
+  .chat-bubble.interaction-element,
+  .interaction-container-with-image .chat-bubble {
+    margin-right: 14px !important;
+  }
+  
+  /* Remove any extra padding that might misalign chat bubbles */
+  .chat-bubble-container {
+    padding-right: 0 !important;
+  }
+  
+  /* Bell icon alignment with right edge - handled in main desktop rule above */
+  
+  #bell {
+    margin-right: 0 !important;
+  }
+  
+  /* Comment previews should have borders on desktop */
+  .comment-preview {
+    border-left: var(--border) !important;
+    border-right: var(--border) !important;
+    border-radius: 2px !important;
+  }
+  
+  /* Comments should have borders on desktop */
+  .comment-section-item {
+    border-left: var(--border) !important;
+    border-right: var(--border) !important;
+    border-radius: 2px !important;
+  }
+  
+  /* Remove borders from story page comments on desktop */
+  .story-page .story-page-comment {
+    border-left: none !important;
+    border-right: none !important;
+    border-radius: 0 !important;
+  }
+  
+  /* Notification opt-in should have borders on desktop */
+  .notification-opt-in {
+    border-left: var(--border) !important;
+    border-right: var(--border) !important;
+    border-radius: 2px !important;
+  }
+}
+
+/* Mobile: Remove borders for full-width components */
+@media only screen and (max-width: 640px) {
+  /* Comment previews edge-to-edge on mobile */
+  .comment-preview {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    border-left: none !important;
+    border-right: none !important;
+    border-radius: 0 !important;
+  }
+  
+  /* Comments edge-to-edge on mobile */
+  .comment-section-item {
+    border-left: none !important;
+    border-right: none !important;
+    border-radius: 0 !important;
+  }
+  
+  /* Story page comments edge-to-edge on mobile */
+  .story-page .story-page-comment {
+    border-left: none !important;
+    border-right: none !important;
+    border-radius: 0 !important;
+  }
+  
+  /* Notification opt-in edge-to-edge on mobile */
+  .notification-opt-in {
+    border-left: none !important;
+    border-right: none !important;
+    border-radius: 0 !important;
+  }
+  
+  /* Info box (Kiwi News component) edge-to-edge on mobile */
+  .info-box {
+    border-left: none !important;
+    border-right: none !important;
+    border-radius: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
 }

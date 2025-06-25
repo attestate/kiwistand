@@ -94,8 +94,22 @@ const Vote = (props) => {
 
   const provider = useProvider();
   const result = useSigner();
+  
+  // Check if story is in upvoted stories localStorage
+  const isInUpvotedStorage = () => {
+    try {
+      const storiesString = localStorage.getItem("--kiwi-news-upvoted-stories");
+      if (!storiesString) return false;
+      const upvotedStories = JSON.parse(storiesString);
+      return Array.isArray(upvotedStories) && 
+             upvotedStories.some(story => story.href === props.href);
+    } catch {
+      return false;
+    }
+  };
+  
   const [hasUpvoted, setHasUpvoted] = useState(
-    props.upvoters.includes(address),
+    props.upvoters.includes(address) || isInUpvotedStorage(),
   );
   const [upvotes, setUpvotes] = useState(props.upvoters.length);
 
@@ -106,6 +120,19 @@ const Vote = (props) => {
   } else {
     signer = result;
   }
+  
+  // Apply upvoted styling on mount if already upvoted
+  useEffect(() => {
+    if (hasUpvoted && animationContainerRef.current) {
+      const voteContainer = animationContainerRef.current.closest(".vote-button-container");
+      if (voteContainer) {
+        const contentRow = voteContainer.closest(".content-row, .content-row-elevated");
+        if (contentRow) {
+          contentRow.classList.add("upvoted-story");
+        }
+      }
+    }
+  }, [hasUpvoted]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -206,6 +233,15 @@ const Vote = (props) => {
       setUpvotes(upvotes + 1);
       toast.success("Thanks for your upvote!");
       posthog.capture("upvote");
+      
+      // Add upvoted styling to the parent row
+      const voteContainer = e.currentTarget.closest(".vote-button-container");
+      if (voteContainer) {
+        const contentRow = voteContainer.closest(".content-row, .content-row-elevated");
+        if (contentRow) {
+          contentRow.classList.add("upvoted-story");
+        }
+      }
     } else if (response.details.includes("You must mint")) {
       // NOTE: This should technically never happen, but if it does we pop open
       // the modal to buy the NFT.
@@ -224,6 +260,15 @@ const Vote = (props) => {
         toast.success(
           "Your vote was already recorded! The feed may need to refresh to show it. 🥝",
         );
+        
+        // Still add upvoted styling to the parent row for duplicate votes
+        const voteContainer = e.currentTarget.closest(".vote-button-container");
+        if (voteContainer) {
+          const contentRow = voteContainer.closest(".content-row, .content-row-elevated");
+          if (contentRow) {
+            contentRow.classList.add("upvoted-story");
+          }
+        }
       } else {
         setHasUpvoted(false);
         setShowKarmaAnimation(false); // Hide animation on error
@@ -310,16 +355,16 @@ const Vote = (props) => {
               
               handleSubmit(e);
             }}
-            className={hasUpvoted ? "" : "interaction-element"}
+            className={`${hasUpvoted ? "upvoted-arrow-container" : "interaction-element"} upvote-interaction`}
             style={{
               borderRadius: "2px",
-              backgroundColor: "var(--bg-off-white)",
-              border: "var(--border-thin)",
+              backgroundColor: hasUpvoted ? "rgba(255, 102, 0, 0.15)" : "var(--bg-off-white)",
+              border: hasUpvoted ? "1px solid rgba(255, 102, 0, 0.3)" : "var(--border-thin)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               minWidth: "49px",
-              margin: "5px 8px 5px 6px",
+              minHeight: "42px",
               alignSelf: "stretch",
               cursor: hasUpvoted ? "not-allowed" : "pointer",
               position: "relative", // For positioning the animation
@@ -330,7 +375,7 @@ const Vote = (props) => {
               <div
                 className={`votearrow`}
                 style={{
-                  fill: hasUpvoted ? theme.color : "var(--text-secondary)",
+                  fill: hasUpvoted ? "#ff6600" : "var(--text-secondary)",
                   cursor: hasUpvoted ? "not-allowed" : "pointer",
                 }}
                 title="upvote"

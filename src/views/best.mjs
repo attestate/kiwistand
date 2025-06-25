@@ -24,7 +24,7 @@ import * as id from "../id.mjs";
 import * as moderation from "./moderation.mjs";
 import log from "../logger.mjs";
 import { EIP712_MESSAGE } from "../constants.mjs";
-import Row, { extractDomain } from "./components/row.mjs";
+import Row, { extractDomain, upvoteCheckScript } from "./components/row.mjs";
 import { getBest } from "../cache.mjs";
 
 const html = htm.bind(vhtml);
@@ -169,6 +169,7 @@ export default async function index(trie, theme, page, period, domain) {
             ${Footer(theme, "/best")}
           </div>
         </div>
+        ${upvoteCheckScript()}
       </body>
     </html>
   `;

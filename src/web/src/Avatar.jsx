@@ -180,7 +180,7 @@ const Avatar = (props) => {
             cursor: "pointer",
             alignItems: "center",
             justifyContent: "left",
-            padding: "12px 0 7px 7px",
+            padding: "12px 0 7px 0", // Remove left padding - CSS will handle alignment
           }}
         >
           <div
@@ -248,7 +248,7 @@ const Avatar = (props) => {
         style={{
           display: "flex",
           alignItems: "center",
-          padding: "0 13px 0 7px",
+          padding: "0 13px 0 0", // Remove left padding - CSS will handle alignment
           background: "var(--hover-bg)",
           borderRadius: "2px",
         }}
