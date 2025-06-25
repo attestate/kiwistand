@@ -580,7 +580,7 @@ const row = (
                 <div
                   class="interaction-element upvote-interaction"
                   data-story-href="${DOMPurify.sanitize(story.href)}"
-                  style="display: flex; align-items: center; justify-content: center; min-width: 49px; min-height: 42px; align-self: stretch; border-radius: 2px; background-color: var(--bg-off-white); border: var(--border-thin); box-sizing: border-box; margin: 5px 8px 5px 0;"
+                  style="display: flex; align-items: center; justify-content: center; min-width: 49px; min-height: 42px; align-self: stretch; border-radius: 2px; background-color: var(--bg-off-white); border: none; box-sizing: border-box; margin: 5px 8px 5px 0;"
                   onclick="const key='--kiwi-news-upvoted-stories';const href=this.parentElement.getAttribute('data-href');const title=this.parentElement.getAttribute('data-title');const stories=JSON.parse(localStorage.getItem(key)||'[]');if(!stories.some(s=>s.href===href)){stories.push({href,title});localStorage.setItem(key,JSON.stringify(stories));window.dispatchEvent(new Event('upvote-storage'));const contentRow=this.closest('.content-row,.content-row-elevated');if(contentRow)contentRow.classList.add('upvoted-story');this.style.backgroundColor='rgba(255, 102, 0, 0.15)';this.style.border='1px solid rgba(255, 102, 0, 0.3)';const arrow=this.querySelector('.votearrow');if(arrow)arrow.style.fill='#ff6600';this.setAttribute('data-upvoted','true');}"
                 >
                   <div style="min-height: 42px; display: block;">
@@ -924,7 +924,7 @@ const row = (
                       data-story-title="${DOMPurify.sanitize(story.title)}"
                       data-story-slug="${getSlug(story.title)}"
                       data-story-index="0x${story.index}"
-                      style="background-color: rgba(124, 101, 193, 0.5); display: flex; align-items: center; justify-content: center; min-width: 49px; margin: 5px 6px 5px 8px; align-self: stretch; cursor: pointer; text-decoration: none; border-radius: 2px; border: var(--border-thin);"
+                      style="background-color: rgba(124, 101, 193, 0.5); display: flex; align-items: center; justify-content: center; min-width: 49px; margin: 5px 6px 5px 8px; align-self: stretch; cursor: pointer; text-decoration: none; border-radius: 2px; border: none;"
                       onclick="event.preventDefault(); const title = this.getAttribute('data-story-title'); const slug = this.getAttribute('data-story-slug'); const index = this.getAttribute('data-story-index'); const kiwiUrl = 'https://news.kiwistand.com/stories/' + slug + '?index=' + index; const url = 'https://warpcast.com/~/compose?text=' + encodeURIComponent(title) + '&embeds[]=' + encodeURIComponent(kiwiUrl); if (window.ReactNativeWebView || window !== window.parent) { window.sdk.actions.openUrl(url); } else { window.open(url, '_blank'); }"
                     >
                       <div style="min-height: 42px; display:block;">

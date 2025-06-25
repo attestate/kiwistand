@@ -19,7 +19,7 @@ export default async function (theme) {
       <body ontouchstart="">
         <div class="container">
           ${Sidebar(path)}
-          <div id="hnmain" style="border: 1px dotted rgba(219, 105, 141, 0.5);">
+          <div id="hnmain" style="border: 1px solid rgba(219, 105, 141, 0.5);">
             <table
               border="0"
               cellpadding="0"
