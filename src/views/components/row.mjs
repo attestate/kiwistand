@@ -506,7 +506,7 @@ const row = (
                 >
                   <div
                     class="interaction-element"
-                    style="border-radius: 2px; border: var(--border-thin); background-color: var(--bg-off-white); display: flex; align-items: center; justify-content: center; min-width: 49px; margin: 5px 8px 5px 6px; align-self: stretch;"
+                    style="border-radius: 2px; border: none; background-color: var(--bg-off-white); display: flex; align-items: center; justify-content: center; min-width: 49px; margin: 5px 8px 5px 6px; align-self: stretch;"
                   >
                     <div style="min-height: 42px; display:block;">
                       <div class="votearrowcontainer">
@@ -838,7 +838,7 @@ const row = (
                       data-story-title="${DOMPurify.sanitize(story.title)}"
                       data-story-slug="${getSlug(story.title)}"
                       data-story-index="0x${story.index}"
-                      style="border-radius: 2px; border: var(--border-thin); background-color: rgba(124, 101, 193, 0.5); display: flex; align-items: center; justify-content: center; min-width: 49px; margin: 5px 8px 5px 6px; align-self: stretch; cursor: pointer; text-decoration: none;"
+                      style="border-radius: 2px; border: none; background-color: rgba(124, 101, 193, 0.5); display: flex; align-items: center; justify-content: center; min-width: 49px; margin: 5px 8px 5px 6px; align-self: stretch; cursor: pointer; text-decoration: none;"
                       onclick="event.preventDefault(); const title = this.getAttribute('data-story-title'); const slug = this.getAttribute('data-story-slug'); const index = this.getAttribute('data-story-index'); const kiwiUrl = 'https://news.kiwistand.com/stories/' + slug + '?index=' + index; const url = 'https://warpcast.com/~/compose?text=' + encodeURIComponent(title) + '&embeds[]=' + encodeURIComponent(kiwiUrl); if (window.ReactNativeWebView || window !== window.parent) { window.sdk.actions.openUrl(url); } else { window.open(url, '_blank'); }"
                     >
                       <div style="min-height: 42px; display:block;">
@@ -871,7 +871,7 @@ const row = (
                         story.title,
                       )}?index=0x${story.index}"
                       onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
-                      style="margin: 5px; border: var(--border-thin); background-color: var(--bg-off-white); border-radius: 2px; display: ${path ===
+                      style="margin: 5px; border: none; background-color: var(--bg-off-white); border-radius: 2px; display: ${path ===
                       "/stories"
                         ? "none"
                         : "flex"}; justify-content: center; min-width: 49px; align-items: center; flex-direction: column;"
