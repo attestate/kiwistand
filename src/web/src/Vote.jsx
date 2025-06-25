@@ -358,8 +358,8 @@ const Vote = (props) => {
             className={`${hasUpvoted ? "upvoted-arrow-container" : "interaction-element"} upvote-interaction`}
             style={{
               borderRadius: "2px",
-              backgroundColor: hasUpvoted ? "rgba(255, 102, 0, 0.15)" : "var(--bg-off-white)",
-              border: hasUpvoted ? "1px solid rgba(255, 102, 0, 0.3)" : "var(--border-thin)",
+              backgroundColor: "var(--bg-off-white)",
+              border: "var(--border-thin)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",

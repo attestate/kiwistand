@@ -51,6 +51,13 @@
   --overlay-bg: rgba(0, 0, 0, 0.7);
   --spinner-overlay-bg: rgba(0, 0, 0, 0.8);
  }
+
+/* Prevent pre-render orange state for upvoted stories - avoid layout shift */
+.upvote-interaction[data-upvoted="true"] {
+  background-color: var(--bg-off-white) !important;
+  border: var(--border-thin) !important;
+}
+
  .scroll-margin-base, .scroll-margin-with-image {
    scroll-margin-top: 100px;
  }
@@ -164,13 +171,13 @@
   box-sizing: border-box;
   padding: 1px 0;
 }
-/* Desktop comment preview styling - borders on left/right */
-@media (min-width: 641px) {
-  .comment-preview {
-    border-left: var(--border);
-    border-right: var(--border);
-    border-radius: 2px;
-  }
+/* Remove desktop comment preview borders - use mobile style everywhere */
+.comment-preview {
+  border: none;
+  border-bottom: 1px solid rgba(166, 110, 78, 0.08);
+  border-radius: 0;
+  margin: 0;
+  padding: 1px 0;
 }
 .comment-preview:active {
   touch-action: manipulation;
@@ -178,11 +185,9 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Only highlight comment preview on interaction-element hover, not entire row */
-@media (hover: hover) {
-  .comment-preview .interaction-element:hover {
-    background-color: rgba(166, 110, 78, 0.08) !important;
-  }
+/* Remove comment preview hover effects */
+.comment-preview .interaction-element {
+  cursor: pointer;
 }
 
 /* Comment preview expand button styles */
@@ -201,17 +206,24 @@
   transition: opacity 0.2s ease;
 }
 
-/* Desktop: Align expand button left border with chat bubble right edge */
-@media (min-width: 641px) {
-  .comment-preview-expand-button {
-    margin-left: -1px; /* Slight adjustment to align borders perfectly */
-  }
-  
-  /* Ensure the expand button's left border aligns with the chat bubble icon */
-  .comment-preview {
-    margin-left: 14px !important; /* Align with vote button left edge */
-    margin-right: 14px !important; /* Align with chat bubble right edge */
-  }
+/* Use mobile expand button style everywhere */
+.comment-preview-expand-button {
+  min-width: 49px !important;
+  padding: 0 12px !important;
+}
+
+.comment-preview-expand-button span {
+  font-size: 7pt !important;
+}
+
+/* Full width comment previews like mobile */
+.comment-preview {
+  width: 100% !important;
+  margin: 0 !important;
+}
+
+.comment-section .comment-preview {
+  width: 100% !important;
 }
 
 button, a, .interaction-element {
@@ -391,12 +403,9 @@ body {
      outline-offset: -1px;
      border-color: rgba(166, 110, 78, 0.5);
 }
-@media (hover: hover) {
-   input:hover,
-   textarea:hover,
-   [contenteditable="true"]:hover {
-       border-color: rgba(166, 110, 78, 0.45);
-  }
+/* Remove input hover effects */
+input, textarea, [contenteditable="true"] {
+  cursor: text;
 }
  a:link {
      color: var(--link-color);
@@ -591,19 +600,12 @@ body {
     width: 50%;
     display: inline-block;
   }
-  @media (hover: hover) {
-    #button-onboarding:hover svg {
-      color: var(--button-hover-text) !important;
-    }
-    .primary-action-button:hover,
-    #button-onboarding:hover,
-    .buy-button:hover,
-    .friend-buy-button:hover {
-      outline: 1px solid var(--button-hover-text);
-      color: var(--button-hover-text) !important;
-      border-color: var(--button-hover-text) !important;
-      background-color: var(--button-hover-bg) !important;
-    }
+  /* Remove button hover effects */
+  .primary-action-button,
+  #button-onboarding,
+  .buy-button,
+  .friend-buy-button {
+    cursor: pointer;
   }
   .primary-action-button:active,
   #button-onboarding:active,
@@ -621,10 +623,9 @@ body {
     background-color: transparent;
     color: var(--text-primary);
   }
-  @media (hover: hover) {
-    #button-onboarding.button-secondary:hover{
-      background-color: transparent !important;
-    }
+  /* Remove secondary button hover effects */
+  #button-onboarding.button-secondary {
+    cursor: pointer;
   }
 
     #hnmain {
@@ -647,23 +648,22 @@ body {
   touch-action: manipulation;
 }
 
-/* Desktop: Ensure OG images have proper spacing after JS render */
-@media (min-width: 641px) {
-  .content-row-elevated,
-  .elevating-row {
-    padding: 1px 0;
-  }
-  
-  .row-image {
-    display: block !important;
-  }
-  
-  /* Ensure OG images maintain proper aspect ratio and spacing */
-  .row-image img {
-    display: block;
-    max-width: 100%;
-    height: auto;
-  }
+/* Remove all desktop-specific layouts - use mobile layout everywhere */
+.vote-button-container:not(.interaction-container-with-image) .interaction-element.upvote-interaction {
+  margin: 5px 4px 5px 0 !important;
+}
+
+.chat-bubble-container:not(.interaction-container-with-image) .chat-bubble {
+  margin: 5px 8px 5px 6px !important;
+}
+
+.content-row-elevated,
+.elevating-row {
+  padding: 8px 0;
+}
+
+.row-image {
+  display: none !important;
 }
 /* Hide domain text in subtitle when showing mobile image */
 .content-row-elevated .story-subtitle .domain-text {
@@ -700,31 +700,30 @@ body {
   }
 }
 
-/* Hide tweet preview on desktop */
+/* Show tweet preview on all screen sizes */
 .tweet-preview-container {
-  display: none !important;
+  display: block !important;
 }
 
-/* Hide farcaster preview on desktop */
+/* Show farcaster preview on all screen sizes */
 .farcaster-preview-container {
-  display: none !important;
+  display: block !important;
+  margin: 0;
 }
 
-/* Prevent active state propagation on mobile */
-@media only screen and (max-width: 640px) {
-  .content-row-elevated:active,
-  .elevating-row:active,
-  .information-row:active {
-    background-color: var(--background-color0) !important;
-  }
-  
-  /* Prevent hover state propagation for parent containers */
-  .content-row-elevated:hover,
-  .elevating-row:hover,
-  .information-row:hover {
-    background-color: var(--background-color0) !important;
-    border-bottom: 1px solid rgba(166, 110, 78, 0.08) !important;
-  }
+/* Prevent active state propagation on all screen sizes */
+.content-row-elevated:active,
+.elevating-row:active,
+.information-row:active {
+  background-color: var(--background-color0) !important;
+}
+
+/* Prevent hover state propagation for parent containers */
+.content-row-elevated:hover,
+.elevating-row:hover,
+.information-row:hover {
+  background-color: var(--background-color0) !important;
+  border-bottom: 1px solid rgba(166, 110, 78, 0.08) !important;
 }
 
 /* Farcaster embed styles */
@@ -837,11 +836,10 @@ body {
   color: inherit;
 }
 
-@media (hover: hover) {
-  .farcaster-embed-stats-link:hover {
-    opacity: 0.8;
-    color: var(--text-secondary);
-  }
+/* Remove farcaster embed hover effects */
+.farcaster-embed-stats-link {
+  cursor: pointer;
+  color: inherit;
 }
 
 .farcaster-embed-farcaster-icon {
@@ -855,10 +853,9 @@ body {
   text-decoration: none;
 }
 
-@media (hover: hover) {
-  .farcaster-embed-farcaster-link:hover {
-    transform: scale(1.1);
-  }
+/* Remove farcaster link hover effects */
+.farcaster-embed-farcaster-link {
+  cursor: pointer;
 }
 
 /* Tweet embed styles */
@@ -890,24 +887,24 @@ body {
 }
 
 
-/* Twitter-like row styling for desktop */
-@media only screen and (min-width: 641px) {
-  .content-row {
-    border-bottom: 1px solid rgba(166, 110, 78, 0.08);
-    position: relative;
-    padding: 8px 0;
-  }
-  
-  .content-row:last-child {
-    border-bottom: none;
-  }
-  
-  /* Prevent parent row hover from affecting comment previews */
-  .content-row:hover,
-  .elevating-row:hover,
-  .content-row-elevated:hover {
-    background-color: transparent !important;
-  }
+/* Use mobile row styling everywhere */
+.content-row {
+  border: none;
+  border-bottom: 1px solid rgba(166, 110, 78, 0.08);
+  padding: 1px 0;
+  position: relative;
+}
+
+.content-row:last-child {
+  border-bottom: none;
+}
+
+/* Prevent hover effects like mobile */
+.content-row:hover,
+.elevating-row:hover,
+.content-row-elevated:hover {
+  background-color: var(--background-color0) !important;
+  border-bottom: 1px solid rgba(166, 110, 78, 0.08) !important;
 }
 
 /* Prevent background interaction on mobile when tapping elements */
@@ -1046,14 +1043,14 @@ body {
     padding-right: 14px !important;
   }
   
-  /* Activity page row spacing */
+  /* Activity page row spacing - reduced like mobile */
   .activity-row {
-    padding: 6px 0 !important;
-    min-height: 16px !important;
+    padding: 4px 0 !important;
+    min-height: 14px !important;
   }
   
   .activity-row td {
-    padding: 1px 8px !important;
+    padding: 1px 6px !important;
   }
   
   /* Activity row borders - orange like regular rows */
@@ -1222,7 +1219,7 @@ body {
     }
     .story-subtitle {
       opacity: 0.9;
-      margin-top: 5px !important;
+      margin-top: 8px !important;
       font-size: 12px !important;
     }
     .mobile-row-image {
@@ -1303,9 +1300,21 @@ body {
       border-bottom: 1px solid rgba(166, 110, 78, 0.08);
     }
     
-    /* Fix double borders when comment preview row is followed by regular row */
+    /* Remove double borders between comments and rows */
     tr:has(.comment-preview) + tr .content-row {
       border-top: none !important;
+    }
+    
+    .comment-section-item + .comment-section-item {
+      border-top: none !important;
+    }
+    
+    .comment-tree .comment-section-item {
+      border-bottom: 1px solid rgba(166, 110, 78, 0.08) !important;
+    }
+    
+    .comment-tree .comment-section-item:last-child {
+      border-bottom: none !important;
     }
     
     /* Ensure standard rows without images or previews have borders */
@@ -1520,14 +1529,13 @@ body {
      max-width: 70%;
      margin: 0 auto;
 }
- @media (min-width: 641px) {
-     .feed-container {
-         max-width: 60%;
-         margin: 0 auto;
-    }
-     .kiwi-svg {
-         max-width: 40%;
-    }
+/* Remove desktop feed container styles - use mobile everywhere */
+.feed-container {
+  max-width: 100%;
+  margin: 0;
+}
+.kiwi-svg {
+  max-width: 60%;
 }
  .sidebar {
      position: fixed;
@@ -1579,7 +1587,7 @@ body {
   min-width: 49px;
 }
 
-/* Vote button consistent margins */
+/* Vote button consistent margins - add spacing between vote and title */
 .vote-button-container {
   display: flex;
   align-self: stretch;
@@ -1587,7 +1595,7 @@ body {
 }
 
 .vote-button-container .interaction-element.upvote-interaction {
-  margin: 5px 8px 5px 6px;
+  margin: 5px 8px 5px 0;
   min-height: 42px;
   height: 100%;
   display: flex;
@@ -1597,7 +1605,7 @@ body {
 
 /* Chat bubble consistent margins */
 .chat-bubble-container .chat-bubble {
-  margin: 5px 6px 5px 8px;
+  margin: 5px 8px 5px 6px;
   min-height: 42px;
   height: 100%;
   display: flex;
@@ -1606,51 +1614,51 @@ body {
   flex-direction: column;
 }
 
-/* Desktop: Ensure avatar/menu aligns with vote button edge */
-@media (min-width: 641px) {
-  nav-header-avatar {
-    padding-left: 14px !important; /* 8px table padding + 6px to align with vote button */
-  }
-  
-  /* Align mobile back button on story pages with vote button */
-  .story-back-button {
-    padding-left: 14px !important;
-  }
-  
-  /* Ensure consistent alignment for upload button with vote button edge */
-  #nav-submit,
-  a[href="/submit"] {
-    margin-left: 7px !important; /* Compensate for existing padding */
-  }
+/* Use mobile avatar/menu alignment everywhere */
+nav-header-avatar {
+  padding-left: 6px !important;
 }
 
-/* Media query for medium screens */
- @media (min-width: 641px) {
-    .gateway-container {
-      padding: 0 5vw !important;
-    }
-    .gateway-container img, .gateway-banner {
-      max-width: 55% !important;
-    }
-    .gateway-banner {
-      margin-top: 5rem;
-    }
-    footer {
-      padding-bottom: 100px;
-    }
-    .notification-bar {
-      bottom: 51px !important;
-    }
-    .third-header, #bell {
-      display: none;
-    }
-     .sidebar {
-         width: 40%;
-        /* modified width for medium screens */
-         position: fixed;
-        /* Static position for medium screens */
-         padding-top: 15%;
-    }
+.story-back-button {
+  padding-left: 0 !important;
+}
+
+#nav-submit,
+a[href="/submit"] {
+  margin-left: 0 !important;
+}
+
+/* Use mobile styles everywhere */
+.gateway-container {
+  padding: 0 5vw !important;
+}
+.gateway-container img, .gateway-banner {
+  max-width: 80% !important;
+}
+.gateway-banner {
+  margin-top: -20rem;
+}
+footer {
+  padding-bottom: 100px;
+}
+.notification-bar {
+  bottom: 51px !important;
+}
+.third-header, #bell {
+  display: none;
+}
+.sidebar {
+  position: fixed;
+  z-index: 11;
+  top: 0;
+  width: 75%;
+  height: 100%;
+  left: -75%;
+  background-color: var(--header-beige);
+  overflow-x: hidden;
+  transition: 0.5s;
+  border-right: none;
+  padding-top: 35%;
 }
  #mySidebar > hr {
      border: none;
@@ -1727,6 +1735,11 @@ body {
   display: block;
   transition: color 0.2s ease;
 }
+
+/* Make bell button orange on mobile */
+.mobile-bell-container svg {
+  color: #ff6600 !important;
+}
 /* Active state for bottom nav items - slightly darker orange */
 .bottom-nav > a:active > svg,
 .mobile-bell-container > div > a:active > svg,
@@ -1780,256 +1793,170 @@ body {
   display: none;
 }
 
-/* Desktop: Align vote button left edge properly */
-@media (min-width: 641px) {
-  /* Main feed vote buttons - consistent margins for all contexts */
-  .vote-button-container:not(.interaction-container-with-image) .interaction-element.upvote-interaction {
-    margin: 5px 8px 5px 14px !important; /* 8px + 6px to create consistent left alignment */
-  }
-  
-  /* Chat bubble symmetric alignment - consistent margins */
-  .chat-bubble-container:not(.interaction-container-with-image) .chat-bubble {
-    margin: 5px 14px 5px 8px !important;
-  }
-  
-  /* Elevated containers (with images/previews) keep standard margins */
-  .vote-button-container.interaction-container-with-image .interaction-element.upvote-interaction {
-    margin: 5px 8px 5px 6px !important;
-  }
-  
-  .chat-bubble-container.interaction-container-with-image .chat-bubble {
-    margin: 5px 6px 5px 8px !important;
-  }
+/* Use mobile vote button margins everywhere */
+.vote-button-container:not(.interaction-container-with-image) .interaction-element.upvote-interaction {
+  margin: 5px 4px 5px 0 !important;
 }
 
-/* Media query for larger screens */
- @media (min-width: 641px) {
-    .content-row {
-      padding: 1px 0;
-      border-bottom: 1px solid rgba(166, 110, 78, 0.08);
-    }
-    .content-row:last-child {
-      border-bottom: none;
-    }
-    td {
-      padding: 2px 8px;
-    }
-    .story-link-container-wrapper {
-      justify-content: center !important;
-    }
-    .mobile-row-image {
-      display: none !important;
-    }
-    .row-image {
-      display: block !important;
-    }
-    /* Always show domain in subtitle for desktop */
-    .story-subtitle .domain-text {
-      display: inline !important;
-    }
-    .mobile-center {
-      display: none !important;
-    }
-    .header-bell {
-      width: 20% !important;
-      min-height: 32px;
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      padding-right: 14px !important; /* Match the left edge alignment (8px table + 6px) */
-    }
-    .desktop-nav {
-      width: 47%;
-      display: flex;
-      justify-content: space-between;
-      margin-top: 5px;
-      white-space: nowrap;
-      gap: 20px;
-    }
-    .desktop-nav a, .desktop-nav span {
-      flex-shrink: 0;
-    }
-    .sidebar {
-      display: none;
-    }
-    .gateway-banner {
-      max-width: 400px !important;
-      margin-top: 5rem;
-    }
-    .gateway-container img {
-      max-width: 45% !important;
-    }
-    .feed-button:hover {
-      background-color: var(--hover-bg) !important;
-    }
-    .story-link:not(.redacted):hover {
-      text-decoration: underline;
-    }
-    .notification-bar {
-      bottom: 0px !important;
-    }
-    #hnmain {
-      width: 70ch;
-      border-radius: 2px;
-    }
-    #bell {
-      display: block;
-    }
-    .third-header {
-      display: table-row;
-    }
-    .bottom-nav {
-      display: none !important;
-    }
-    #hnmain > table:first-of-type > tbody > tr:first-of-type {
-         background-color: var(--header-beige) !important;
-         border-bottom: 1px solid rgba(166, 110, 78, 0.08);
-    }
-    #hnmain > table {
-      border-left: none;
-      border-right: none;
-    }
-    
-    /* Twitter-like row separation for main story rows */
-    #hnmain table tr.athing {
-      border-bottom: 1px solid rgba(166, 110, 78, 0.08);
-    }
-    
-    /* Spacer row styling - minimal */
-    #hnmain table tr.spacer {
-      height: 0 !important;
-    }
-    
-    #hnmain table tr.spacer td {
-      height: 0 !important;
-      padding: 0 !important;
-      line-height: 0 !important;
-    }
-    .second-header {
-      background-color: var(--middle-beige) !important;
-      border-bottom: 1px solid rgba(166, 110, 78, 0.08);
-    }
-    .third-header td div {
-      background-color: var(--table-bg) !important;
-      border-bottom: 1px solid rgba(166, 110, 78, 0.08);
-      padding-bottom: 3px;
-      margin-bottom: 0;
-    }
-    footer {
-      background-color: var(--header-beige) !important;
-    }
-    footer {
-      border-top: var(--border);
-      border-bottom: var(--border);
-      padding-bottom: 1rem;
-    }
-    body {
-      background-color: var(--body-bg);
-    }
-    .submit-button {
-         display: none;
-    }
-     .sidebar a[href="/submit"] {
-         display: block;
-    }
-     .container {
-         display: flex;
-         justify-content: center;
-         align-items: stretch;
-    }
-     .pagetop {
-         display: none 
-    }
-    .kn-banner-desk {
-      width: 33%;
-      margin-left: 14px; /* Align with vote button left edge */
-      display: block;
-      color: var(--text-primary);
-      font-size: 1.1rem;
-      font-weight: bold;
-    }
-     .sidebar .kiwi-logo {
-         display: block;
-         font-size: 1.9rem;
-         margin: 14px 14px 14px 14px !important; /* Align left edge with vote button */
-         color: var(--text-primary) !important;
-    }
-     .sidebar {
-         z-index: 6;
-         overflow: hidden;
-         background-color: var(--sidebar-bg);
-         min-width: 75px;
-         height: 100vh;
-         border-right: none;
-         width: auto;
-        /* modified width for large screens */
-         position: sticky;
-        /* Static position for large screens */
-         top: 0;
-         padding-top: 0;
-         border-bottom-left-radius: 2px;
-         margin-left:3vw;
-    }
-     .sidebar-toggle, .story-back-button {
-         display: none;
-    }
-    #mySidebar {
-      padding-right: 0.8rem;
-      border-left: 1px solid rgba(166, 110, 78, 0.08);
-      border-bottom: 1px solid rgba(166, 110, 78, 0.08);
-      border-bottom-left-radius: 2px;
-      background: var(--sidebar-bg);
-    }
-     #mySidebar > hr {
-      display: none;
-    }
-    #hnmain {
-      border-bottom-right-radius: 2px;
-      border-right: var(--border);
-    }
-    .svg-container svg {
-      width: 1.75rem;
-    }
-    .svg-container svg:hover{
-      color: var(--link-hover);
-    }
-    .sidebar svg path,
-    .sidebar-div svg path {
-      fill: currentColor;
-    }
-    .svg-container {
-      width: auto;
-    }
-    .svg-container + span {
-      margin: 0 0.25rem 0 0.75rem;
-      font-size: 1rem;
-    }
-    .sidebar a:not(.kiwi-logo), .sidebar-div {
-      font-size: 2em;
-      margin-left: 0 !important;
-      margin-right: 0 !important;
-      padding-left: 14px !important; /* Match vote button left edge */
-      color: var(--text-primary);
-      fill: var(--text-primary);
-    }
-    .sidebar a:not(.kiwi-logo):hover, #nav-disconnect:hover {
-      background-color: var(--hover-bg);
-      border-radius: 2px;
-      border-top-left-radius: 0;
-      border-bottom-left-radius: 0;
-      color: var(--text-primary);
-    }
-    .sidebar a:not(.kiwi-logo):hover svg {
-      color: var(--text-primary);
-      fill: var(--text-primary);
-    }
-    .sidebar .icon-svg {
-      width: 36px;
-      height: 36px;
-    }
-    .sidebar-div {
-      font-size: 2em;
-    }
+.chat-bubble-container:not(.interaction-container-with-image) .chat-bubble {
+  margin: 5px 8px 5px 6px !important;
+}
+
+.vote-button-container.interaction-container-with-image .interaction-element.upvote-interaction {
+  margin: 5px 4px 5px 0 !important;
+}
+
+.chat-bubble-container.interaction-container-with-image .chat-bubble {
+  margin: 5px 8px 5px 6px !important;
+}
+
+/* Use mobile styles for all screen sizes */
+.content-row {
+  border: none;
+  border-bottom: 1px solid rgba(166, 110, 78, 0.08);
+  padding: 1px 0;
+  position: relative;
+}
+.content-row:last-child {
+  border-bottom: none;
+}
+td {
+  padding: 2px 8px;
+}
+.story-link-container-wrapper {
+  justify-content: flex-start !important;
+}
+.mobile-row-image {
+  display: block !important;
+}
+.row-image {
+  display: none !important;
+}
+/* Hide domain in subtitle like mobile */
+.story-subtitle .domain-text {
+  display: none !important;
+}
+.mobile-center {
+  display: flex !important;
+}
+.header-bell {
+  width: 33%;
+  padding: 7px 7px 7px 0;
+  display: flex;
+  justify-content: flex-end;
+}
+.desktop-nav {
+  display: none;
+}
+.sidebar {
+  position: fixed;
+  z-index: 11;
+  top: 0;
+  width: 75%;
+  height: 100%;
+  left: -75%;
+  background-color: var(--header-beige);
+  overflow-x: hidden;
+  transition: 0.5s;
+  border-right: none;
+  padding-top: 35%;
+}
+.gateway-banner {
+  max-width: 80% !important;
+  margin-top: -20rem;
+}
+.gateway-container img {
+  max-width: 80% !important;
+}
+.notification-bar {
+  bottom: 51px !important;
+}
+#hnmain {
+  width: 100%;
+  min-width: 0;
+  max-width: 70ch;
+  margin: 0 auto;
+  border-left: var(--border);
+  border-right: var(--border);
+}
+#bell {
+  display: none;
+}
+.third-header {
+  display: none;
+}
+.bottom-nav {
+  display: flex !important;
+}
+#hnmain > table:first-of-type > tbody > tr:first-of-type {
+  background-color: var(--header-beige) !important;
+  border-bottom: 1px solid rgba(166, 110, 78, 0.08);
+}
+#hnmain > table {
+  background-color: var(--table-bg-mobile);
+  border: none;
+}
+#hnmain table tr.athing {
+  background-color: var(--table-bg-mobile);
+  border-bottom: 1px solid rgba(166, 110, 78, 0.08);
+  position: relative;
+}
+#hnmain table tr {
+  border-bottom: 1px solid rgba(166, 110, 78, 0.08);
+}
+#hnmain table tr:last-child {
+  border-bottom: none;
+}
+.second-header {
+  background-color: var(--middle-beige) !important;
+  border-bottom: 1px solid rgba(166, 110, 78, 0.08);
+}
+.third-header td div {
+  background-color: var(--table-bg) !important;
+  border-bottom: 1px solid rgba(166, 110, 78, 0.08);
+  padding-bottom: 3px;
+  margin-bottom: 0;
+  margin-left: -1rem;
+  margin-right: -1rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+footer {
+  background-color: var(--header-beige) !important;
+  border-top: var(--border);
+  border-bottom: var(--border);
+  padding-bottom: 100px;
+}
+body {
+  background-color: var(--body-bg);
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  -webkit-text-size-adjust: none;
+}
+.submit-button {
+  display: block;
+}
+.sidebar a[href="/submit"] {
+  display: none;
+}
+.container {
+  padding: 0;
+}
+.pagetop {
+  display: block;
+  margin: 3px 5px;
+  font-size: 14px;
+  line-height: normal;
+}
+.kn-banner-desk {
+  display: none;
+}
+.sidebar .kiwi-logo {
+  display: none;
+}
+.sidebar-toggle, .story-back-button {
+  display: flex;
 }
  .sidebar a {
     padding: 0.2rem 0 0.2rem 0;
@@ -2168,10 +2095,9 @@ a.meta-link, span.meta-link {
 /* Style vote and chat icons similar to filter tabs */
 .vote-button-container .interaction-element,
 .chat-bubble.interaction-element {
-  background-color: var(--hover-bg) !important;
+  background-color: var(--bg-off-white) !important;
   border: var(--border-thin) !important;
   border-radius: 2px !important;
-  transition: all 0.2s ease;
   box-sizing: border-box;
 }
 
@@ -2265,22 +2191,19 @@ a.meta-link, span.meta-link {
   justify-content: center;
 }
 
-/* Align header search icon with vote button left edge on desktop */
-@media (min-width: 641px) {
-  .header-bell {
-    padding-left: 6px !important; /* Align with vote button edge */
-    padding-right: 14px !important; /* Match left edge alignment for right side */
-  }
-  
-  /* Ensure bell icon aligns with right edge */
-  #bell {
-    margin-right: 0 !important;
-  }
-  
-  /* Ensure search icon also aligns properly */
-  #search {
-    margin-left: 8px;
-  }
+/* Use mobile header alignment everywhere */
+.header-bell {
+  padding-left: 0 !important;
+  padding-right: 6px !important;
+}
+
+#bell {
+  display: none;
+}
+
+#search {
+  padding-left: 6px !important;
+  margin-left: 0 !important;
 }
 
 /* Skeleton loader for search while it's loading */
@@ -2291,42 +2214,35 @@ a.meta-link, span.meta-link {
   border-radius: 2px;
 }
 
-/* Desktop-specific adjustments for bell and search */
-@media (min-width: 641px) {
-  #bell {
-    min-width: 32px;
-    min-height: 32px;
-  }
-  
-  /* Hide search button on desktop since we have desktop search in second header */
-  #search {
-    display: none;
-  }
-  
-  .bell-button {
-    min-width: auto;
-    min-height: auto;
-    padding: 8px 10px;
-  }
-  
-  /* Adjust icon sizes within buttons */
-  #bell svg,
-  .bell-button svg {
-    width: 1.25rem;
-    height: 1.25rem;
-  }
-  
-  /* Align second header content with vote button edge */
-  .second-header table {
-    padding-left: 14px !important;
-    padding-right: 14px !important;
-  }
-  
-  /* Align third header content */
-  .third-header td > div {
-    padding-left: 14px !important;
-    padding-right: 14px !important;
-  }
+/* Use mobile bell and search styles everywhere */
+#bell {
+  display: none;
+}
+
+#search {
+  min-width: 40px;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bell-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  min-height: 40px;
+}
+
+/* Remove desktop header alignments */
+.second-header table {
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+}
+
+.third-header {
+  display: none;
 }
 
 @keyframes karma-float {
@@ -2385,11 +2301,9 @@ a.meta-link, span.meta-link {
   transition: background-color 0.3s;
   margin-left: 10px;
 }
-@media (hover: hover) {
-  #top-bar button:hover {
-    background-color: var(--button-hover-bg);
-    color: var(--button-hover-text);
-  }
+/* Remove top bar button hover effects */
+#top-bar button {
+  cursor: pointer;
 }
 #close-button {
   cursor: pointer;
@@ -2442,18 +2356,12 @@ a.meta-link, span.meta-link {
    content: attr(data-placeholder);
    color: var(--text-muted);
 }
-@media only screen and (min-width: 641px) {
-  .desktop-search {
-    display: block !important;
-  }
+/* Hide desktop search everywhere */
+.desktop-search {
+  display: none !important;
 }
-@media only screen and (max-width: 640px) {
-  .desktop-search {
-    display: none !important;
-  }
-  #static-desktop-search {
-    display: none !important;
-  }
+#static-desktop-search {
+  display: none !important;
 }
 
 /* Spinner overlay styles */

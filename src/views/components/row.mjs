@@ -231,6 +231,17 @@ const knownBadOgImages = [
   "https://s.turbifycdn.com/aah/paulgraham/essays-5.gif",
 ];
 
+// Helper function to check if story is upvoted
+function isInUpvotedStorage(href) {
+  if (typeof window === 'undefined') return false;
+  try {
+    const stories = JSON.parse(localStorage.getItem('--kiwi-news-upvoted-stories') || '[]');
+    return stories.some(s => s.href === href);
+  } catch {
+    return false;
+  }
+}
+
 const row = (
   start = 0,
   path,
@@ -504,8 +515,9 @@ const row = (
                 <div
                   class="interaction-element upvote-interaction"
                   data-story-href="${DOMPurify.sanitize(story.href)}"
-                  style="display: flex; align-items: center; justify-content: center; min-width: 49px; min-height: 42px; align-self: stretch; border-radius: 2px; background-color: var(--bg-off-white); border: var(--border-thin);"
-                  onclick="const key='--kiwi-news-upvoted-stories';const href=this.parentElement.getAttribute('data-href');const title=this.parentElement.getAttribute('data-title');const stories=JSON.parse(localStorage.getItem(key)||'[]');if(!stories.some(s=>s.href===href)){stories.push({href,title});localStorage.setItem(key,JSON.stringify(stories));window.dispatchEvent(new Event('upvote-storage'));const contentRow=this.closest('.content-row,.content-row-elevated');if(contentRow)contentRow.classList.add('upvoted-story');this.style.backgroundColor='rgba(255, 102, 0, 0.15)';this.style.border='1px solid rgba(255, 102, 0, 0.3)';const arrow=this.querySelector('.votearrow');if(arrow)arrow.style.fill='#ff6600';}"
+                  data-upvoted="${isInUpvotedStorage(story.href)}"
+                  style="display: flex; align-items: center; justify-content: center; min-width: 49px; min-height: 42px; align-self: stretch; border-radius: 2px; background-color: var(--bg-off-white); border: var(--border-thin); box-sizing: border-box; margin: 5px 8px 5px 0;"
+                  onclick="const key='--kiwi-news-upvoted-stories';const href=this.parentElement.getAttribute('data-href');const title=this.parentElement.getAttribute('data-title');const stories=JSON.parse(localStorage.getItem(key)||'[]');if(!stories.some(s=>s.href===href)){stories.push({href,title});localStorage.setItem(key,JSON.stringify(stories));window.dispatchEvent(new Event('upvote-storage'));const contentRow=this.closest('.content-row,.content-row-elevated');if(contentRow)contentRow.classList.add('upvoted-story');this.style.backgroundColor='rgba(255, 102, 0, 0.15)';this.style.border='1px solid rgba(255, 102, 0, 0.3)';const arrow=this.querySelector('.votearrow');if(arrow)arrow.style.fill='#ff6600';this.setAttribute('data-upvoted','true');}"
                 >
                   <script>
                     (function(){
@@ -884,7 +896,7 @@ const row = (
                       style="display: ${path ===
                       "/stories"
                         ? "none"
-                        : "flex"}; justify-content: center; min-width: 49px; min-height: 42px; align-items: center; flex-direction: column; align-self: stretch; border-radius: 2px; background-color: var(--bg-off-white); border: var(--border-thin);"
+                        : "flex"}; justify-content: center; min-width: 49px; min-height: 42px; align-items: center; flex-direction: column; align-self: stretch; border-radius: 2px;"
                     >
                       ${ChatsSVG()}
                       <span

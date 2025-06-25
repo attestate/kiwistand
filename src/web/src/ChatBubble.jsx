@@ -73,7 +73,6 @@ const ChatBubble = ({ allowlist, delegations, storyIndex, commentCount }) => {
       id={`chat-bubble-${storyIndex}`}
       style={{
         cursor: isDisabled ? "not-allowed" : "pointer",
-        margin: "5px",
         backgroundColor: "var(--bg-off-white)",
         border: isExpanded ? "1px solid var(--button-primary-bg)" : "var(--border-thin)",
         borderRadius: "2px",
@@ -81,6 +80,7 @@ const ChatBubble = ({ allowlist, delegations, storyIndex, commentCount }) => {
         alignSelf: "stretch",
         justifyContent: "center",
         minWidth: "49px",
+        minHeight: "42px",
         alignItems: "center",
         flexDirection: "column",
       }}
