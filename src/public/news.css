@@ -336,6 +336,7 @@ button, a, .interaction-element {
   display: flex;
   align-self: stretch;
   align-items: stretch;
+  margin-left: 5px;
 }
 
 .chat-bubble-container div {
