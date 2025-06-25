@@ -24,7 +24,9 @@ const header = (theme, path) => {
     >
       <tbody>
         <tr>
-          <td style="line-height:12pt; height:62px;">
+          <td
+            style="line-height:12pt; height:62px; padding-left: 0px; padding-right: 0px;"
+          >
             <div
               style="display: flex; flex-wrap: nowrap; justify-content: space-between; align-items: center;"
             >
@@ -42,7 +44,7 @@ const header = (theme, path) => {
                 >
               </div>
               <nav-header-avatar
-                class="${isStoryPage ? "story-back-button" : "sidebar-toggle"}"
+                class="${isStoryPage ? "story-back-button desktop-hide" : "sidebar-toggle"}"
                 style="width: 33%;"
               >
                 ${isStoryPage
@@ -74,7 +76,7 @@ const header = (theme, path) => {
                   : // Default Menu button for non-story pages (React will replace if logged in)
                     html`
                       <div
-                        style="padding: 0 13px 0 7px; background: rgba(0, 0, 0, 0.05); border-radius: 2px; display: ${path ===
+                        style="padding: 0 13px 0 7px; background: rgba(255, 255, 255, 0.15); border-radius: 2px; display: ${path ===
                         "/kiwipass-mint"
                           ? "none"
                           : "flex"}; align-items: center;"
@@ -92,7 +94,8 @@ const header = (theme, path) => {
                             <rect y="30" width="100" height="10"></rect>
                             <rect y="60" width="100" height="10"></rect>
                           </svg>
-                          <span style="color: var(--text-primary); margin-left: 10px;"
+                          <span
+                            style="color: var(--text-primary); margin-left: 10px;"
                             >Menu</span
                           >
                         </div>

@@ -167,7 +167,6 @@ export function extractDomain(link) {
   return tld;
 }
 
-
 const truncateLongWords = (text, maxLength = 20) => {
   const words = text.split(" ");
   const truncatedWords = words.map((word) =>
@@ -231,17 +230,6 @@ const knownBadOgImages = [
   "https://s.turbifycdn.com/aah/paulgraham/essays-5.gif",
 ];
 
-// Helper function to check if story is upvoted
-function isInUpvotedStorage(href) {
-  if (typeof window === 'undefined') return false;
-  try {
-    const stories = JSON.parse(localStorage.getItem('--kiwi-news-upvoted-stories') || '[]');
-    return stories.some(s => s.href === href);
-  } catch {
-    return false;
-  }
-}
-
 const row = (
   start = 0,
   path,
@@ -272,10 +260,7 @@ const row = (
     const submissionId = `kiwi:0x${story.index}`;
     const commentCount = commentCounts.get(submissionId) || 0;
     const outboundsLookbackHours = 24 * 5;
-    const clicks = countOutbounds(
-      story.href,
-      outboundsLookbackHours,
-    );
+    const clicks = countOutbounds(story.href, outboundsLookbackHours);
     const extractedDomain = extractDomain(DOMPurify.sanitize(story.href));
     // Use the twitterFrontends list from parser.mjs for comprehensive coverage
     const isTweet = twitterFrontends.some((domain) => {
@@ -285,11 +270,12 @@ const row = (
     });
 
     // Check if this is a Farcaster cast (only actual cast URLs)
-    const isFarcasterCast = extractedDomain === "warpcast.com" || 
-      (story.href.includes("farcaster.xyz/") && 
-       !story.href.includes("miniapps.farcaster.xyz") && 
-       !story.href.includes("docs.farcaster.xyz") &&
-       !story.href.includes("api.farcaster.xyz"));
+    const isFarcasterCast =
+      extractedDomain === "warpcast.com" ||
+      (story.href.includes("farcaster.xyz/") &&
+        !story.href.includes("miniapps.farcaster.xyz") &&
+        !story.href.includes("docs.farcaster.xyz") &&
+        !story.href.includes("api.farcaster.xyz"));
 
     // Check if the story itself is older than 12 hours
     const isStoryOlderThan12Hours =
@@ -313,14 +299,12 @@ const row = (
 
     // Check if we have what we need to render a tweet preview
     const canRenderTweetPreview =
-      isTweet && 
-      story.metadata && 
-      story.metadata.ogDescription;
+      isTweet && story.metadata && story.metadata.ogDescription;
 
     // Check if we have what we need to render a Farcaster cast preview
     const canRenderFarcasterPreview =
-      isFarcasterCast && 
-      story.metadata && 
+      isFarcasterCast &&
+      story.metadata &&
       (story.metadata.farcasterCast || story.metadata.ogDescription);
 
     const displayMobileImage =
@@ -328,7 +312,7 @@ const row = (
       !canRenderFarcasterPreview && // Don't use regular mobile image if we can render a Farcaster preview
       hasImageData &&
       !interactive &&
-      (path === "/" || 
+      (path === "/" ||
         path === "/stories" ||
         path === "/new" ||
         path === "/best");
@@ -350,7 +334,9 @@ const row = (
           <div
             class="${interactive ? "" : "content-row"} ${invert
               ? "inverted-row"
-              : ""} ${displayMobileImage || canRenderTweetPreview || canRenderFarcasterPreview
+              : ""} ${displayMobileImage ||
+            canRenderTweetPreview ||
+            canRenderFarcasterPreview
               ? "content-row-elevated"
               : ""} ${style}"
             style="${invert ? "display:none;" : ""}"
@@ -361,31 +347,64 @@ const row = (
                   data-no-instant
                   href="${DOMPurify.sanitize(story.href)}"
                   target="_blank"
-                  onclick="event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${DOMPurify.sanitize(story.href)}')); if (window.ReactNativeWebView || window !== window.parent) { window.sdk.actions.openUrl('${DOMPurify.sanitize(story.href)}'); } else { window.open('${DOMPurify.sanitize(story.href)}', event.currentTarget.getAttribute('target')); }"
+                  onclick="event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${DOMPurify.sanitize(
+                    story.href,
+                  )}')); if (window.ReactNativeWebView || window !== window.parent) { window.sdk.actions.openUrl('${DOMPurify.sanitize(
+                    story.href,
+                  )}'); } else { window.open('${DOMPurify.sanitize(
+                    story.href,
+                  )}', event.currentTarget.getAttribute('target')); }"
                   style="text-decoration:none; color:inherit; display:block;"
                 >
                   <div class="tweet-embed-container">
                     <div>
                       <div class="tweet-embed-header">
-                        <div style="display:flex; align-items:center; margin-bottom:12px;">
-                          <svg width="20" height="20" viewBox="0 0 24 24" fill="#000" style="margin-right:8px;">
-                            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                        <div
+                          style="display:flex; align-items:center; margin-bottom:12px;"
+                        >
+                          <svg
+                            width="20"
+                            height="20"
+                            viewBox="0 0 24 24"
+                            fill="#000"
+                            style="margin-right:8px;"
+                          >
+                            <path
+                              d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"
+                            />
                           </svg>
-                          <span style="font-weight:500; color:var(--contrast-color); font-size:14px;">${story.metadata.twitterCreator || "Tweet"}</span>
-                          <span style="margin-left:auto; opacity:0.5; font-size:12px;">${formatDistanceToNowStrict(new Date(story.timestamp * 1000))}</span>
+                          <span
+                            style="font-weight:500; color:var(--contrast-color); font-size:14px;"
+                            >${story.metadata.twitterCreator || "Tweet"}</span
+                          >
+                          <span
+                            style="margin-left:auto; opacity:0.5; font-size:12px;"
+                            >${formatDistanceToNowStrict(
+                              new Date(story.timestamp * 1000),
+                            )}</span
+                          >
                         </div>
                       </div>
                       <div class="tweet-embed-body">
-                        <p>${DOMPurify.sanitize(story.metadata.ogDescription || "")
-                          .slice(0, 280)
-                          .split(/(\bhttps?:\/\/[^\s]+)/g)
-                          .map((part) => {
-                            if (part.match(/^\bhttps?:\/\//)) {
-                              return part.length > 30 ? part.substring(0, 30) + "..." : part;
-                            }
-                            return part;
-                          })
-                          .join("")}${(story.metadata.ogDescription || "").length > 280 ? "..." : ""}</p>
+                        <p>
+                          ${DOMPurify.sanitize(
+                            story.metadata.ogDescription || "",
+                          )
+                            .slice(0, 280)
+                            .split(/(\bhttps?:\/\/[^\s]+)/g)
+                            .map((part) => {
+                              if (part.match(/^\bhttps?:\/\//)) {
+                                return part.length > 30
+                                  ? part.substring(0, 30) + "..."
+                                  : part;
+                              }
+                              return part;
+                            })
+                            .join("")}${(story.metadata.ogDescription || "")
+                            .length > 280
+                            ? "..."
+                            : ""}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -396,17 +415,30 @@ const row = (
                   data-no-instant
                   href="${DOMPurify.sanitize(story.href)}"
                   target="_blank"
-                  onclick="event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${DOMPurify.sanitize(story.href)}')); if (window.ReactNativeWebView || window !== window.parent) { window.sdk.actions.openUrl('${DOMPurify.sanitize(story.href)}'); } else { window.open('${DOMPurify.sanitize(story.href)}', event.currentTarget.getAttribute('target')); }"
+                  onclick="event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${DOMPurify.sanitize(
+                    story.href,
+                  )}')); if (window.ReactNativeWebView || window !== window.parent) { window.sdk.actions.openUrl('${DOMPurify.sanitize(
+                    story.href,
+                  )}'); } else { window.open('${DOMPurify.sanitize(
+                    story.href,
+                  )}', event.currentTarget.getAttribute('target')); }"
                   style="text-decoration:none; color:inherit; display:block;"
                 >
                   <div class="farcaster-embed-container">
                     <div>
                       <div class="farcaster-embed-metadata">
                         <div class="farcaster-embed-author-avatar-container">
-                          ${story.metadata.farcasterCast?.author?.pfp 
+                          ${story.metadata.farcasterCast?.author?.pfp
                             ? html`<img
-                                src="${DOMPurify.sanitize(story.metadata.farcasterCast.author.pfp)}"
-                                alt="${DOMPurify.sanitize(story.metadata.farcasterCast.author.displayName || story.metadata.farcasterCast.author.username)}"
+                                src="${DOMPurify.sanitize(
+                                  story.metadata.farcasterCast.author.pfp,
+                                )}"
+                                alt="${DOMPurify.sanitize(
+                                  story.metadata.farcasterCast.author
+                                    .displayName ||
+                                    story.metadata.farcasterCast.author
+                                      .username,
+                                )}"
                                 width="32"
                                 height="32"
                                 class="farcaster-embed-author-avatar"
@@ -429,32 +461,56 @@ const row = (
                               </svg>`}
                         </div>
                         <div class="farcaster-embed-author">
-                          <p class="farcaster-embed-author-display-name">${story.metadata.farcasterCast?.author?.displayName || story.metadata.ogTitle || "Cast"}</p>
-                          <p class="farcaster-embed-author-username">@${story.metadata.farcasterCast?.author?.username || "farcaster"}</p>
+                          <p class="farcaster-embed-author-display-name">
+                            ${story.metadata.farcasterCast?.author
+                              ?.displayName ||
+                            story.metadata.ogTitle ||
+                            "Cast"}
+                          </p>
+                          <p class="farcaster-embed-author-username">
+                            @${story.metadata.farcasterCast?.author?.username ||
+                            "farcaster"}
+                          </p>
                         </div>
                       </div>
                       <div class="farcaster-embed-body">
-                        <p>${story.metadata.farcasterCast?.text 
-                          ? DOMPurify.sanitize(story.metadata.farcasterCast.text)
-                              .slice(0, 280)
-                              .split(/(\bhttps?:\/\/[^\s]+)/g)
-                              .map((part) => {
-                                if (part.match(/^\bhttps?:\/\//)) {
-                                  return part.length > 30 ? part.substring(0, 30) + "..." : part;
-                                }
-                                return part;
-                              })
-                              .join("") + (story.metadata.farcasterCast.text.length > 280 ? "..." : "")
-                          : DOMPurify.sanitize(story.metadata.ogDescription || "")
-                              .slice(0, 280)
-                              .split(/(\bhttps?:\/\/[^\s]+)/g)
-                              .map((part) => {
-                                if (part.match(/^\bhttps?:\/\//)) {
-                                  return part.length > 30 ? part.substring(0, 30) + "..." : part;
-                                }
-                                return part;
-                              })
-                              .join("") + ((story.metadata.ogDescription || "").length > 280 ? "..." : "")}</p>
+                        <p>
+                          ${story.metadata.farcasterCast?.text
+                            ? DOMPurify.sanitize(
+                                story.metadata.farcasterCast.text,
+                              )
+                                .slice(0, 280)
+                                .split(/(\bhttps?:\/\/[^\s]+)/g)
+                                .map((part) => {
+                                  if (part.match(/^\bhttps?:\/\//)) {
+                                    return part.length > 30
+                                      ? part.substring(0, 30) + "..."
+                                      : part;
+                                  }
+                                  return part;
+                                })
+                                .join("") +
+                              (story.metadata.farcasterCast.text.length > 280
+                                ? "..."
+                                : "")
+                            : DOMPurify.sanitize(
+                                story.metadata.ogDescription || "",
+                              )
+                                .slice(0, 280)
+                                .split(/(\bhttps?:\/\/[^\s]+)/g)
+                                .map((part) => {
+                                  if (part.match(/^\bhttps?:\/\//)) {
+                                    return part.length > 30
+                                      ? part.substring(0, 30) + "..."
+                                      : part;
+                                  }
+                                  return part;
+                                })
+                                .join("") +
+                              ((story.metadata.ogDescription || "").length > 280
+                                ? "..."
+                                : "")}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -465,7 +521,13 @@ const row = (
                   style="display: block; width: 100%;"
                   class="mobile-row-image"
                   href="${DOMPurify.sanitize(story.href)}"
-                  onclick="event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${DOMPurify.sanitize(story.href)}')); if (window.ReactNativeWebView || window !== window.parent) { window.sdk.actions.openUrl('${DOMPurify.sanitize(story.href)}'); } else { window.open('${DOMPurify.sanitize(story.href)}', event.currentTarget.getAttribute('target')); }"
+                  onclick="event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${DOMPurify.sanitize(
+                    story.href,
+                  )}')); if (window.ReactNativeWebView || window !== window.parent) { window.sdk.actions.openUrl('${DOMPurify.sanitize(
+                    story.href,
+                  )}'); } else { window.open('${DOMPurify.sanitize(
+                    story.href,
+                  )}', event.currentTarget.getAttribute('target')); }"
                 >
                   <div style="position: relative;">
                     <img
@@ -498,7 +560,8 @@ const row = (
               class="information-row ${displayCommentPreview
                 ? "with-comment-preview"
                 : `without-comment-preview without-comment-preview-0x${story.index}`} ${displayMobileImage ||
-              canRenderTweetPreview || canRenderFarcasterPreview
+              canRenderTweetPreview ||
+              canRenderFarcasterPreview
                 ? "elevating-row"
                 : ""}"
               style="display: flex; align-items: stretch; padding: 3px 0;"
@@ -507,34 +570,19 @@ const row = (
                 data-title="${DOMPurify.sanitize(story.title)}"
                 data-href="${DOMPurify.sanitize(story.href)}"
                 data-upvoters="${JSON.stringify(story.upvoters)}"
-                class="vote-button-container${displayMobileImage || canRenderTweetPreview || canRenderFarcasterPreview
+                class="vote-button-container${displayMobileImage ||
+                canRenderTweetPreview ||
+                canRenderFarcasterPreview
                   ? " interaction-container-with-image"
                   : ""}"
-                style="display: flex; align-self: stretch;"
+                style="margin-right: 5px; display: flex; align-self: stretch;"
               >
                 <div
                   class="interaction-element upvote-interaction"
                   data-story-href="${DOMPurify.sanitize(story.href)}"
-                  data-upvoted="${isInUpvotedStorage(story.href)}"
                   style="display: flex; align-items: center; justify-content: center; min-width: 49px; min-height: 42px; align-self: stretch; border-radius: 2px; background-color: var(--bg-off-white); border: var(--border-thin); box-sizing: border-box; margin: 5px 8px 5px 0;"
                   onclick="const key='--kiwi-news-upvoted-stories';const href=this.parentElement.getAttribute('data-href');const title=this.parentElement.getAttribute('data-title');const stories=JSON.parse(localStorage.getItem(key)||'[]');if(!stories.some(s=>s.href===href)){stories.push({href,title});localStorage.setItem(key,JSON.stringify(stories));window.dispatchEvent(new Event('upvote-storage'));const contentRow=this.closest('.content-row,.content-row-elevated');if(contentRow)contentRow.classList.add('upvoted-story');this.style.backgroundColor='rgba(255, 102, 0, 0.15)';this.style.border='1px solid rgba(255, 102, 0, 0.3)';const arrow=this.querySelector('.votearrow');if(arrow)arrow.style.fill='#ff6600';this.setAttribute('data-upvoted','true');}"
                 >
-                  <script>
-                    (function(){
-                      const key='--kiwi-news-upvoted-stories';
-                      const href='${DOMPurify.sanitize(story.href)}';
-                      const stories=JSON.parse(localStorage.getItem(key)||'[]');
-                      if(stories.some(s=>s.href===href)){
-                        const btn=document.currentScript.parentElement;
-                        btn.style.backgroundColor='rgba(255, 102, 0, 0.15)';
-                        btn.style.border='1px solid rgba(255, 102, 0, 0.3)';
-                        const contentRow=btn.closest('.content-row,.content-row-elevated');
-                        if(contentRow)contentRow.classList.add('upvoted-story');
-                        const arrow=btn.querySelector('.votearrow');
-                        if(arrow)arrow.style.fill='#ff6600';
-                      }
-                    })();
-                  </script>
                   <div style="min-height: 42px; display: block;">
                     <div
                       class="votearrow"
@@ -559,7 +607,13 @@ const row = (
                       class="row-image"
                       target="_blank"
                       style="user-select:text; align-self: stretch; margin: 5px 0;"
-                      onclick="event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${DOMPurify.sanitize(story.href)}')); if (window.ReactNativeWebView || window !== window.parent) { window.sdk.actions.openUrl('${DOMPurify.sanitize(story.href)}'); } else { window.open('${DOMPurify.sanitize(story.href)}', event.currentTarget.getAttribute('target')); }"
+                      onclick="event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${DOMPurify.sanitize(
+                        story.href,
+                      )}')); if (window.ReactNativeWebView || window !== window.parent) { window.sdk.actions.openUrl('${DOMPurify.sanitize(
+                        story.href,
+                      )}'); } else { window.open('${DOMPurify.sanitize(
+                        story.href,
+                      )}', event.currentTarget.getAttribute('target')); }"
                     >
                       <img
                         loading="lazy"
@@ -580,7 +634,7 @@ const row = (
                   : null}
                 <div
                   class="story-link-container-wrapper"
-                  style="min-height: 59px; display:flex; justify-content: center; flex-direction: column; flex-grow: 1; line-height: 1.3; padding: 4px 0 5px 0;"
+                  style="min-height: 59px; display:flex; justify-content: center; flex-direction: column; flex-grow: 1; line-height: 1.3; padding: 4px 0 5px 0; text-align: center;"
                 >
                   <span>
                     <span class="story-link-container">
@@ -595,7 +649,13 @@ const row = (
                           : DOMPurify.sanitize(story.href)}"
                         onclick="${isCloudflare && story.index
                           ? "if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
-                          : `event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${DOMPurify.sanitize(story.href)}')); if (window.ReactNativeWebView || window !== window.parent) { window.sdk.actions.openUrl('${DOMPurify.sanitize(story.href)}'); } else { window.open('${DOMPurify.sanitize(story.href)}', event.currentTarget.getAttribute('target')); }`}"
+                          : `event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${DOMPurify.sanitize(
+                              story.href,
+                            )}')); if (window.ReactNativeWebView || window !== window.parent) { window.sdk.actions.openUrl('${DOMPurify.sanitize(
+                              story.href,
+                            )}'); } else { window.open('${DOMPurify.sanitize(
+                              story.href,
+                            )}', event.currentTarget.getAttribute('target')); }`}"
                         data-story-link="/stories/${getSlug(
                           story.title,
                         )}?index=0x${story.index}"
@@ -654,8 +714,7 @@ const row = (
                                   src="${avatar}"
                                   alt="avatar"
                                   style="z-index: ${index}; width: ${size}px; height:
- ${size}px; border-radius: 0; margin-left: -${size /
-                                  2}px;"
+ ${size}px; border-radius: 0; margin-left: -${size / 2}px;"
                                 />
                               `,
                             )}
@@ -725,7 +784,10 @@ const row = (
                             )}
                           `}
                       ${!interactive &&
-                      (path === "/" || path === "/new" || path === "/best" || path === "/stories") &&
+                      (path === "/" ||
+                        path === "/new" ||
+                        path === "/best" ||
+                        path === "/stories") &&
                       !isCloudflare
                         ? html`
                             <span class="domain-text">
@@ -841,7 +903,9 @@ const row = (
               </div>
               ${path === "/stories"
                 ? html`<div
-                    class="${displayMobileImage || canRenderTweetPreview || canRenderFarcasterPreview
+                    class="${displayMobileImage ||
+                    canRenderTweetPreview ||
+                    canRenderFarcasterPreview
                       ? "interaction-container-with-image"
                       : ""}"
                     style="display: flex; align-self: stretch;"
@@ -881,7 +945,9 @@ const row = (
                 ? html`<div
                     data-story-index="0x${story.index}"
                     data-comment-count="${commentCount}"
-                    class="chat-bubble-container${displayMobileImage || canRenderTweetPreview || canRenderFarcasterPreview
+                    class="chat-bubble-container${displayMobileImage ||
+                    canRenderTweetPreview ||
+                    canRenderFarcasterPreview
                       ? " interaction-container-with-image"
                       : ""}"
                     style="display: flex; align-self: stretch; align-items: stretch;"
@@ -893,8 +959,7 @@ const row = (
                         story.title,
                       )}?index=0x${story.index}"
                       onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
-                      style="display: ${path ===
-                      "/stories"
+                      style="display: ${path === "/stories"
                         ? "none"
                         : "flex"}; justify-content: center; min-width: 49px; min-height: 42px; align-items: center; flex-direction: column; align-self: stretch; border-radius: 2px;"
                     >
@@ -911,7 +976,8 @@ const row = (
             ${displayCommentPreview
               ? html` <div
                   class="comment-preview comment-preview-0x${story.index} ${displayMobileImage ||
-                  canRenderTweetPreview || canRenderFarcasterPreview
+                  canRenderTweetPreview ||
+                  canRenderFarcasterPreview
                     ? "elevating-comment-preview"
                     : "comment-preview-no-mobile-image"}"
                   style="touch-action: manipulation; user-select: none; display: flex; margin: 5px 6px 5px 6px;"
@@ -935,7 +1001,9 @@ const row = (
                     >
                       <!-- Twitter-style two-column layout -->
                       <!-- Left column: Avatar (fixed width) -->
-                      <div style="width: 32px; flex-shrink: 0; margin-right: 14px; display: flex; align-items: flex-start;">
+                      <div
+                        style="width: 32px; flex-shrink: 0; margin-right: 14px; display: flex; align-items: flex-start;"
+                      >
                         ${story.lastComment.identity.safeAvatar &&
                         html`<img
                           loading="lazy"
@@ -946,7 +1014,7 @@ const row = (
                           style="width: 32px; height: 32px; border-radius: 0;"
                         />`}
                       </div>
-                      
+
                       <!-- Right column: Content -->
                       <div style="flex: 1; min-width: 0;">
                         <!-- Name and time on same line -->
@@ -968,7 +1036,7 @@ const row = (
                             ago
                           </span>
                         </div>
-                        
+
                         <!-- Comment text -->
                         <div>
                           <span
@@ -979,7 +1047,7 @@ const row = (
                             )}</span
                           >
                         </div>
-                        
+
                         <!-- Previous participants (moved below comment, more subtle) -->
                         ${story.lastComment.previousParticipants &&
                         story.lastComment.previousParticipants.length > 0 &&
@@ -1003,7 +1071,9 @@ const row = (
                                       participant.safeAvatar,
                                     )}"
                                     alt="previous participant"
-                                    style="z-index: ${index}; width: ${size - 2}px; height: ${size - 2}px; border-radius: 0; margin-left: ${index ===
+                                    style="z-index: ${index}; width: ${size -
+                                    2}px; height: ${size -
+                                    2}px; border-radius: 0; margin-left: ${index ===
                                     0
                                       ? "0"
                                       : "-3px"};"
@@ -1016,7 +1086,7 @@ const row = (
                       </div>
                     </div>
                   </div>
-                  
+
                   <!-- Separate expand button column -->
                   <div
                     class="comment-preview-expand-button"
@@ -1028,12 +1098,17 @@ const row = (
                       ? `/#0x${story.lastComment.index}`
                       : `/new?cached=true#0x${story.lastComment.index}`}');})(),document.querySelector('.comment-preview-0x${story.index}').style.opacity = 0.5,window.addToQueue(new
  CustomEvent('open-comments-0x${story.index}',{detail:{source:'comment-preview'}}));window.dispatchEvent(new HashChangeEvent('hashchange'));"
-                    style="flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 0 16px; border-left: 1px solid rgba(166, 110, 78, 0.15); cursor: pointer; background: transparent;"
+                    style="flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 0 6px; cursor: pointer; background: transparent;"
                     title="Expand comment thread"
                   >
-                    <div style="color: var(--text-muted); display: flex; flex-direction: column; align-items: center;">
+                    <div
+                      style="color: var(--text-muted); display: flex; flex-direction: column; align-items: center;"
+                    >
                       ${expandSVG}
-                      <span style="font-size: 8pt; margin-top: 4px; font-weight: 500;">Expand</span>
+                      <span
+                        style="font-size: 8pt; margin-top: 4px; font-weight: 500;"
+                        >Expand</span
+                      >
                     </div>
                   </div>
                 </div>`
@@ -1078,30 +1153,6 @@ export const ChatsSVG = (
       stroke-width="16"
     />
   </svg>
-`;
-// Add script to check localStorage for upvoted stories on page load
-export const upvoteCheckScript = () => html`
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    const key = '--kiwi-news-upvoted-stories';
-    try {
-      const stories = JSON.parse(localStorage.getItem(key) || '[]');
-      stories.forEach(story => {
-        const voteBtn = document.querySelector('[data-story-href="' + story.href + '"]');
-        if (voteBtn) {
-          voteBtn.style.backgroundColor = 'rgba(255, 102, 0, 0.15)';
-          voteBtn.style.border = '1px solid rgba(255, 102, 0, 0.3)';
-          const arrow = voteBtn.querySelector('.votearrow');
-          if (arrow) arrow.style.fill = '#ff6600';
-          const contentRow = voteBtn.closest('.content-row, .content-row-elevated');
-          if (contentRow) contentRow.classList.add('upvoted-story');
-        }
-      });
-    } catch (e) {
-      console.error('Error checking upvoted stories:', e);
-    }
-  });
-</script>
 `;
 
 export default row;

@@ -166,18 +166,14 @@
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
-.comment-preview {
-  border-bottom: 1px solid rgba(166, 110, 78, 0.08);
-  box-sizing: border-box;
-  padding: 1px 0;
-}
-/* Remove desktop comment preview borders - use mobile style everywhere */
+/* Comment preview base styles - consistent everywhere */
 .comment-preview {
   border: none;
   border-bottom: 1px solid rgba(166, 110, 78, 0.08);
   border-radius: 0;
   margin: 0;
   padding: 1px 0;
+  box-sizing: border-box;
 }
 .comment-preview:active {
   touch-action: manipulation;
@@ -190,9 +186,101 @@
   cursor: pointer;
 }
 
+/* Disable ALL interaction on comment preview except expand button */
+.comment-preview,
+.comment-preview * {
+  pointer-events: none !important;
+}
+
+/* Only re-enable pointer events on expand button */
+.comment-preview .comment-preview-expand-button {
+  pointer-events: auto !important;
+}
+
+/* Disable ALL hover effects on expand button - no changes at all */
+.comment-preview .comment-preview-expand-button:hover,
+.comment-preview-expand-button:hover,
+body .comment-preview .comment-preview-expand-button:hover,
+body .comment-preview-expand-button:hover {
+  background: transparent !important;
+  border: none !important;
+  border-left: 1px solid rgba(166, 110, 78, 0.15) !important;
+  border-right: none !important;
+  border-top: none !important;
+  border-bottom: none !important;
+  opacity: 1 !important;
+  transform: none !important;
+  transition: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
+
+/* Override media query hover rules */
+@media only screen and (min-width: 641px) {
+  @media (hover: hover) {
+    .comment-preview .comment-preview-expand-button:hover,
+    .comment-preview-expand-button:hover {
+      border: none !important;
+      border-left: 1px solid rgba(166, 110, 78, 0.15) !important;
+      box-shadow: none !important;
+      background-color: transparent !important;
+    }
+  }
+}
+
+.comment-preview-expand-button:hover svg,
+.comment-preview-expand-button:hover span,
+.comment-preview .comment-preview-expand-button:hover svg,
+.comment-preview .comment-preview-expand-button:hover span {
+  opacity: 0.7 !important;
+  color: var(--text-muted) !important;
+  transform: none !important;
+  transition: none !important;
+}
+
+/* Override ALL hover styles for comment preview interaction elements - highest specificity */
+.comment-preview .interaction-element:hover,
+.comment-preview .comment-preview-expand-button:hover,
+.comment-preview-no-mobile-image .interaction-element:hover,
+.elevating-comment-preview .interaction-element:hover,
+body .comment-preview .interaction-element:hover,
+body .elevating-comment-preview .interaction-element:hover,
+body .comment-preview-no-mobile-image .interaction-element:hover {
+  box-shadow: none !important;
+  background-color: transparent !important;
+  border: var(--border-thin) !important;
+  cursor: pointer !important;
+  transform: none !important;
+  outline: none !important;
+}
+
+/* Extra specificity to override all media queries */
+@media all {
+  .comment-preview .interaction-element:hover,
+  .elevating-comment-preview .interaction-element:hover,
+  .comment-preview-no-mobile-image .interaction-element:hover {
+    box-shadow: none !important;
+    background-color: transparent !important;
+    border: var(--border-thin) !important;
+  }
+}
+
+@media only screen and (min-width: 641px) {
+  @media (hover: hover) {
+    .comment-preview .interaction-element:hover,
+    .elevating-comment-preview .interaction-element:hover,
+    .comment-preview-no-mobile-image .interaction-element:hover {
+      box-shadow: none !important;
+      background-color: transparent !important;
+      border: var(--border-thin) !important;
+    }
+  }
+}
+
 /* Comment preview expand button styles */
 .comment-preview-expand-button {
-  transition: all 0.2s ease;
+  transition: none !important;
   -webkit-tap-highlight-color: transparent;
 }
 .comment-preview-expand-button svg {
@@ -253,6 +341,12 @@ button, a, .interaction-element {
 .chat-bubble-container div {
   display: flex;
   align-self: stretch;
+}
+
+/* Prevent chat bubble hover border changes */
+.chat-bubble:hover {
+  background-color: var(--bg-off-white) !important;
+  border: var(--border-thin) !important;
 }
 html {
   background-color: var(--html-bg);
@@ -634,6 +728,8 @@ input, textarea, [contenteditable="true"] {
       border-bottom: none;
       border-top-left-radius: 0;
       border-top-right-radius: 0;
+      max-width: 70ch;
+      margin: 0 auto;
     }
   
 .canon-font {
@@ -654,7 +750,7 @@ input, textarea, [contenteditable="true"] {
 }
 
 .chat-bubble-container:not(.interaction-container-with-image) .chat-bubble {
-  margin: 5px 8px 5px 6px !important;
+  margin: 5px 0 5px 6px !important;
 }
 
 .content-row-elevated,
@@ -703,12 +799,13 @@ input, textarea, [contenteditable="true"] {
 /* Show tweet preview on all screen sizes */
 .tweet-preview-container {
   display: block !important;
+  margin: 5px 0 0 0;
 }
 
 /* Show farcaster preview on all screen sizes */
 .farcaster-preview-container {
   display: block !important;
-  margin: 0;
+  margin: 5px 0 0 0;
 }
 
 /* Prevent active state propagation on all screen sizes */
@@ -723,7 +820,7 @@ input, textarea, [contenteditable="true"] {
 .elevating-row:hover,
 .information-row:hover {
   background-color: var(--background-color0) !important;
-  border-bottom: 1px solid rgba(166, 110, 78, 0.08) !important;
+  /* Keep existing border */
 }
 
 /* Farcaster embed styles */
@@ -904,7 +1001,7 @@ input, textarea, [contenteditable="true"] {
 .elevating-row:hover,
 .content-row-elevated:hover {
   background-color: var(--background-color0) !important;
-  border-bottom: 1px solid rgba(166, 110, 78, 0.08) !important;
+  /* Keep existing border, don't add new one */
 }
 
 /* Prevent background interaction on mobile when tapping elements */
@@ -957,7 +1054,7 @@ input, textarea, [contenteditable="true"] {
   
   /* Chat bubble mobile margins - align with vote button */
   .chat-bubble-container .chat-bubble {
-    margin: 5px 8px 5px 6px !important; /* Same as vote button to align left edge */
+    margin: 5px 0 5px 0px !important; /* Aligned with vote button left edge */
     min-height: 42px !important;
     height: 100% !important;
     align-self: stretch !important;
@@ -972,7 +1069,7 @@ input, textarea, [contenteditable="true"] {
   }
   
   .interaction-container-with-image .chat-bubble {
-    margin: 5px 8px 5px 6px !important; /* Same as vote button to align left edge */
+    margin: 5px 0 5px 0px !important; /* Aligned with vote button left edge */
     min-height: 42px !important;
     height: 100% !important;
     align-self: stretch !important;
@@ -1017,9 +1114,8 @@ input, textarea, [contenteditable="true"] {
     width: 100% !important;
     margin: 0 !important;
     box-sizing: border-box !important;
-    border-left: none !important;
-    border-right: none !important;
-    border-radius: 0 !important;
+    border: 1px solid #828282 !important;
+    border-radius: 2px !important;
   }
   
   /* Remove double line between last comment and composer */
@@ -1084,13 +1180,20 @@ input, textarea, [contenteditable="true"] {
   .story-back-button {
     padding-left: 6px !important; /* Match vote button left margin */
   }
-  /* Disable all hover effects on mobile */
-  .interaction-element:hover,
+  /* Fix hover effects on mobile - prevent layout shifts */
+  .interaction-element:hover {
+    background-color: var(--bg-off-white) !important;
+    border: var(--border-thin) !important;
+    transform: none !important;
+  }
   .activity-row:hover,
   .content-row:hover,
   .elevating-row:hover,
   .content-row-elevated:hover,
-  .information-row:hover,
+  .information-row:hover {
+    background-color: transparent !important;
+    /* No border changes */
+  }
   .bell-button:hover,
   .submit-button:hover,
   .feed-button:hover,
@@ -1108,6 +1211,7 @@ input, textarea, [contenteditable="true"] {
   #top-bar button:hover,
   .comment-preview:hover,
   .comment-preview:active,
+  .comment-preview:focus,
   .comment-preview .interaction-element:hover,
   .comment-preview .interaction-element:active,
   .comment-preview-expand-button:hover,
@@ -1128,12 +1232,13 @@ input, textarea, [contenteditable="true"] {
   /* Show tweet preview only on mobile */
   .tweet-preview-container {
     display: block !important;
+    margin: 5px 0 0 0;
   }
   
   /* Show farcaster preview only on mobile */
   .farcaster-preview-container {
     display: block !important;
-    margin: 0;
+    margin: 5px 0 0 0;
   }
   
   /* Align Farcaster embed padding with vote/chat icons on mobile */
@@ -1171,12 +1276,11 @@ input, textarea, [contenteditable="true"] {
       position: relative;
       z-index: 1;
     }
-    /* Prevent any hover effects on comment previews on mobile */
+    /* Disable comment preview hover on mobile */
     .comment-preview:hover,
     .comment-preview:active,
     .comment-preview:focus {
-      background-color: transparent !important;
-      border-bottom: 1px solid rgba(166, 110, 78, 0.08) !important;
+      /* No changes on hover */
     }
     .comment-preview .interaction-element:hover,
     .comment-preview .interaction-element:active,
@@ -1278,12 +1382,12 @@ input, textarea, [contenteditable="true"] {
     }
     .elevating-comment-preview .interaction-element{
       padding: 6px 10px !important;
-      margin: 5px 6px 5px 6px !important;
+      margin: 5px 6px 5px 0px !important; /* Align left edge with vote button */
       box-sizing: border-box;
     }
     .comment-preview-no-mobile-image .interaction-element{
       padding: 6px 10px !important;
-      margin: 5px 6px 5px 6px !important;
+      margin: 5px 6px 5px 0px !important; /* Align left edge with vote button */
       box-sizing: border-box;
     }
     .with-comment-preview {
@@ -1322,12 +1426,12 @@ input, textarea, [contenteditable="true"] {
       border-bottom: 1px solid rgba(166, 110, 78, 0.08) !important;
     }
     
-    /* Prevent white border appearing on row hover on mobile */
+    /* Prevent border changes on hover on mobile */
     .information-row:hover,
     .elevating-row:hover,
     .content-row:hover,
     .content-row-elevated:hover {
-      border-bottom: 1px solid rgba(166, 110, 78, 0.08) !important;
+      /* Keep existing borders, no changes */
     }
     
     /* Make comment preview part of parent row visually */
@@ -1347,7 +1451,7 @@ input, textarea, [contenteditable="true"] {
     
     /* Ensure all table rows have borders on mobile */
     #hnmain table tr {
-      border-bottom: 1px solid rgba(166, 110, 78, 0.08);
+      border-bottom: none;
     }
     
     #hnmain table tr:last-child {
@@ -1603,9 +1707,9 @@ input, textarea, [contenteditable="true"] {
   justify-content: center;
 }
 
-/* Chat bubble consistent margins */
+/* Chat bubble consistent margins - align with vote button */
 .chat-bubble-container .chat-bubble {
-  margin: 5px 8px 5px 6px;
+  margin: 5px 0 5px 0px; /* Aligned left edge with vote button */
   min-height: 42px;
   height: 100%;
   display: flex;
@@ -1789,8 +1893,30 @@ footer {
   align-items: center;
 }
 
+/* Desktop navigation - hidden by default, shown on desktop */
 .desktop-nav {
   display: none;
+  align-items: center;
+  gap: 15px;
+}
+
+.desktop-nav a {
+  color: var(--text-primary);
+  font-size: 11pt;
+  text-decoration: none;
+}
+
+.desktop-nav .primary-action {
+  background-color: var(--button-primary-bg);
+  color: var(--button-primary-text);
+  padding: 5px 12px;
+  border-radius: 2px;
+}
+
+.desktop-nav .header-disconnect {
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 11pt;
 }
 
 /* Use mobile vote button margins everywhere */
@@ -1799,7 +1925,7 @@ footer {
 }
 
 .chat-bubble-container:not(.interaction-container-with-image) .chat-bubble {
-  margin: 5px 8px 5px 6px !important;
+  margin: 5px 0 5px 0px !important; /* Aligned with vote button */
 }
 
 .vote-button-container.interaction-container-with-image .interaction-element.upvote-interaction {
@@ -1807,7 +1933,7 @@ footer {
 }
 
 .chat-bubble-container.interaction-container-with-image .chat-bubble {
-  margin: 5px 8px 5px 6px !important;
+  margin: 5px 0 5px 0px !important; /* Aligned with vote button */
 }
 
 /* Use mobile styles for all screen sizes */
@@ -1823,8 +1949,14 @@ footer {
 td {
   padding: 2px 8px;
 }
+
+/* Fix row content alignment */
+.content-row td {
+  padding: 2px 0;
+}
 .story-link-container-wrapper {
-  justify-content: flex-start !important;
+  justify-content: center !important; /* Center content vertically */
+  align-items: center;
 }
 .mobile-row-image {
   display: block !important;
@@ -1845,8 +1977,30 @@ td {
   display: flex;
   justify-content: flex-end;
 }
+/* Desktop navigation - hidden by default, shown on desktop */
 .desktop-nav {
   display: none;
+  align-items: center;
+  gap: 15px;
+}
+
+.desktop-nav a {
+  color: var(--text-primary);
+  font-size: 11pt;
+  text-decoration: none;
+}
+
+.desktop-nav .primary-action {
+  background-color: var(--button-primary-bg);
+  color: var(--button-primary-text);
+  padding: 5px 12px;
+  border-radius: 2px;
+}
+
+.desktop-nav .header-disconnect {
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 11pt;
 }
 .sidebar {
   position: fixed;
@@ -1876,8 +2030,9 @@ td {
   min-width: 0;
   max-width: 70ch;
   margin: 0 auto;
-  border-left: var(--border);
-  border-right: var(--border);
+  border: var(--border);
+  border-top: none;
+  border-bottom: none;
 }
 #bell {
   display: none;
@@ -1890,7 +2045,7 @@ td {
 }
 #hnmain > table:first-of-type > tbody > tr:first-of-type {
   background-color: var(--header-beige) !important;
-  border-bottom: 1px solid rgba(166, 110, 78, 0.08);
+  border-bottom: none;
 }
 #hnmain > table {
   background-color: var(--table-bg-mobile);
@@ -1902,7 +2057,7 @@ td {
   position: relative;
 }
 #hnmain table tr {
-  border-bottom: 1px solid rgba(166, 110, 78, 0.08);
+  border-bottom: none;
 }
 #hnmain table tr:last-child {
   border-bottom: none;
@@ -1991,6 +2146,94 @@ body {
      color: var(--text-primary);
      fill: var(--text-primary);
 }
+
+/* Desktop-specific styles */
+@media only screen and (min-width: 641px) {
+  /* Show desktop nav instead of mobile elements */
+  .desktop-nav {
+    display: flex !important;
+  }
+  
+  /* Hide mobile elements on desktop */
+  .sidebar-toggle {
+    display: none !important;
+  }
+  
+  .mobile-center {
+    display: none !important;
+  }
+  
+  .bottom-nav {
+    display: none !important;
+  }
+  
+  .submit-button {
+    display: none !important;
+  }
+  
+  /* Show desktop elements */
+  #bell {
+    display: block !important;
+  }
+  
+  .kn-banner-desk {
+    display: flex !important;
+    align-items: center;
+    width: 33%;
+  }
+  
+  /* Fix header layout on desktop */
+  nav-header-avatar {
+    width: 33% !important;
+    display: flex;
+    justify-content: center;
+  }
+  
+  .header-bell {
+    width: 33% !important;
+    display: flex;
+    justify-content: flex-end;
+  }
+  
+  /* Hide story page back button on desktop */
+  .desktop-hide {
+    display: none !important;
+  }
+  
+  /* Desktop hover effects */
+  @media (hover: hover) {
+    /* Fix 1px layout shift on hover by using box-shadow instead of border */
+    .interaction-element:hover {
+      box-shadow: inset 0 0 0 1px rgba(166, 110, 78, 0.2);
+      border: var(--border-thin) !important;
+    }
+    
+    /* Disable ALL hover effects on interaction elements inside comment previews */
+    .comment-preview .interaction-element:hover,
+    .comment-preview-expand-button:hover {
+      box-shadow: none !important;
+      border: var(--border-thin) !important;
+      background-color: transparent !important;
+      cursor: default !important;
+      transform: none !important;
+    }
+    
+    /* Prevent layout shift on row hover by maintaining existing border */
+    .content-row:hover,
+    .elevating-row:hover,
+    .content-row-elevated:hover,
+    .information-row:hover {
+      background-color: var(--background-color0) !important;
+      /* No border change to prevent shift */
+    }
+    
+    /* Disable comment preview hover on desktop */
+    .comment-preview:hover {
+      /* No changes on hover */
+    }
+  }
+}
+
  @media (min-width: 640px) {
      .sidebar a {
          font-size: 2em;
@@ -2435,10 +2678,15 @@ a.meta-link, span.meta-link {
   padding: 2px 8px;
 }
 
+/* Fix row content alignment */
+.content-row td {
+  padding: 2px 0;
+}
+
 .activity-row .notification,
 .activity-row .upvote-notification {
   display: block;
-  padding: 8px 0;
+  padding: 0;
   text-decoration: none;
 }
 
@@ -2475,7 +2723,7 @@ a.meta-link, span.meta-link {
 /* Compact activity page overrides - allow some breathing room */
 .activity-row * {
   margin: 0;
-  line-height: 1.4;
+  line-height: 1.0;
 }
 
 .activity-row p {
@@ -2509,7 +2757,7 @@ a.meta-link, span.meta-link {
 @media only screen and (max-width: 640px) {
   .activity-row .notification,
   .activity-row .upvote-notification {
-    padding: 8px 0;
+    padding: 0;
   }
   
   .activity-row {
@@ -2756,6 +3004,13 @@ body.story-page {
 
 /* Ensure proper alignment for story page sections on desktop */
 @media (min-width: 641px) {
+  /* Add padding to content rows and upvoted stories on desktop */
+  .content-row,
+  .upvoted-story {
+    padding-left: 2px !important;
+    padding-right: 2px !important;
+  }
+  
   /* Align story page td elements with vote button */
   .scaled-hnmain td {
     padding-left: 14px !important;
@@ -2770,8 +3025,8 @@ body.story-page {
   /* Larger screens */
   @media screen and (min-width: 1600px) {
     .scaled-hnmain td {
-      padding-left: 34px !important;
-      padding-right: 34px !important;
+      padding-left: 14px !important;
+      padding-right: 14px !important;
     }
     
     .story-page-row td {
@@ -2897,14 +3152,15 @@ body.story-page .comment-section {
 
 /* Comment section margin alignment */
 .comment-section-container {
-  padding: 1rem 0 !important;
+  padding: 1rem 0 0 0 !important;
   max-width: 100%;
+  background-color: transparent !important;
 }
 
 /* Desktop: align comments with vote button left edge */
 @media (min-width: 641px) {
   .comment-section-container {
-    padding: 1rem 14px !important; /* 8px (td padding) + 6px (vote button left margin) = 14px */
+    padding: 1rem 0 !important; /* Remove horizontal padding */
   }
   
   /* Individual comments already have their own padding, no additional margins needed */
@@ -2925,7 +3181,7 @@ body.story-page .comment-section {
 /* Mobile: remove all margins so comments start at viewport edge */
 @media only screen and (max-width: 640px) {
   .comment-section-container {
-    padding: 1rem 0 !important; /* Remove horizontal padding on mobile */
+    padding: 1rem 0 0 0 !important; /* Remove horizontal padding on mobile */
   }
   
   /* Ensure individual comments have no horizontal margins on mobile */
@@ -3056,7 +3312,7 @@ body.story-page .comment-section {
   .comment-preview {
     border-left: var(--border) !important;
     border-right: var(--border) !important;
-    border-radius: 2px !important;
+    border-radius: 0 0 2px 2px !important;
   }
   
   /* Comments should have borders on desktop */
