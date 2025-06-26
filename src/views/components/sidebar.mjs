@@ -598,19 +598,19 @@ const sidebar = (path) => html`
       </a>
     </div>
     <a
-      title="Users"
-      href="/community"
-      style="${path === "/community"
-        ? " font-weight: bold; background-color: rgba(0,0,0,0.1);"
-        : "font-weight: normal"}; color: black; text-decoration: none; display: block;"
-    >
-      <div style="display: flex; align-items: center;">
-        <div class="svg-container">
-          ${path === "/community" ? communityfull : community}
+        title="Rewards"
+        href="/community"
+        style="${path === "/community"
+          ? " font-weight: bold; background-color: rgba(0,0,0,0.1);"
+          : "font-weight: normal"}; color: black; text-decoration: none; display: block;"
+      >
+        <div style="display: flex; align-items: center;">
+          <div class="svg-container">
+            ${path === "/community" ? communityfull : community}
+          </div>
+          <span>Rewards</span>
         </div>
-        <span>Users</span>
-      </div>
-    </a>
+      </a>
     <a
       title="Wiki"
       href="https://kiwistand.github.io/kiwi-docs/"

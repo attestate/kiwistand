@@ -40,6 +40,7 @@ import * as karma from "../karma.mjs";
 import { cachedMetadata } from "../parser.mjs";
 // Assuming prediction function exists here
 import { getPredictedEngagement } from "../prediction.mjs";
+import { getLeaderboard } from "../leaderboard.mjs";
 
 import holders from "./holders.mjs";
 const formatedHolders = holders.map((a) => ethers.utils.getAddress(a));
@@ -728,7 +729,7 @@ export default async function (trie, theme, page, domain, identity, hash) {
   const title = undefined;
   const description = undefined;
   const twitterCard = undefined;
-  const prefetch = ["/new?cached=true", "/submit", "/best", "/community"];
+  const prefetch = ["/new?cached=true", "/submit", "/best", "/leaderboard"];
   return html`
     <html lang="en" op="news">
       <head>
@@ -737,6 +738,10 @@ export default async function (trie, theme, page, domain, identity, hash) {
           name="description"
           content="Kiwi News is the prime feed for hacker engineers building a decentralized future. All our content is handpicked and curated by crypto veterans."
         />
+        <script
+          defer
+          src="https://unpkg.com/@zoralabs/zorb@^0.0/dist/zorb-web-component.umd.js"
+        ></script>
       </head>
       <body
         data-instant-allow-query-string
@@ -753,7 +758,6 @@ export default async function (trie, theme, page, domain, identity, hash) {
               <tr>
                 ${SecondHeader(theme, "top")}
               </tr>
-              <!-- Removed the table row that rendered the support banner -->
               ${
                 // Render pinned story only if it exists
                 pinnedStory &&
@@ -769,8 +773,8 @@ export default async function (trie, theme, page, domain, identity, hash) {
                   true, // isPinned = true
                 )(pinnedStory)
               }
-              ${stories // Render the main list of stories
-                .slice(0, 4) // Show first 4 stories before newsletter
+              ${stories // Render first 3 stories
+                .slice(0, 3)
                 .map(
                   Row(
                     start, // Use start index from content
@@ -783,8 +787,55 @@ export default async function (trie, theme, page, domain, identity, hash) {
                     currentQuery,
                   ),
                 )}
-              ${stories // Render remaining stories after newsletter
-                .slice(4)
+              <tr>
+                <td>
+                  <div style="background-color: var(--table-bg); padding: 15px; margin-bottom: 20px;">
+                    <div style="text-align: center; margin-bottom: 15px;">
+                      <h2 style="margin: 0 0 8px 0; font-size: 18px; color: black; font-weight: 600;">Weekly Rewards</h2>
+                      <p style="margin: 0; color: var(--visited-link); font-size: 13px;">
+                        Looking for a sponsor — Contact us to support this weekly competition
+                      </p>
+                    </div>
+                    <div style="border: var(--border-thin);">
+                      ${(await getLeaderboard()).slice(0, 3).map((user, index) => {
+                        const medals = ['🥇', '🥈', '🥉'];
+                        return html`
+                          <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: ${index < 2 ? 'var(--border-thin)' : 'none'};">
+                            <div style="display: flex; align-items: center; min-width: 0; flex: 1;">
+                              <div style="width: 25px; text-align: center; margin-right: 10px; font-size: 16px;">${medals[index]}</div>
+                              <a 
+                                href="/upvotes?address=${user.identity}" 
+                                style="display: flex; align-items: center; min-width: 0; flex: 1; text-decoration: none; color: inherit;"
+                              >
+                                ${user.ensData?.safeAvatar
+                                  ? html`<img
+                                      loading="lazy"
+                                      src="${DOMPurify.sanitize(user.ensData.safeAvatar)}"
+                                      style="border: var(--border); width: 20px; height: 20px; border-radius: 2px; margin-right: 10px; flex-shrink: 0;"
+                                    />`
+                                  : html`
+                                      <zora-zorb
+                                        style="margin-right: 10px; flex-shrink: 0;"
+                                        size="20px"
+                                        address="${user.identity}"
+                                      ></zora-zorb>
+                                    `}
+                                <span style="color: black; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px;">${user.displayName}</span>
+                              </a>
+                            </div>
+                            <div style="color: black; font-weight: bold; margin-left: 10px; font-size: 14px;">${user.karma}</div>
+                          </div>
+                        `;
+                      })}
+                    </div>
+                    <div style="text-align: center; margin-top: 12px;">
+                      <a href="/community" style="color: var(--visited-link); text-decoration: none; font-size: 14px;">View full leaderboard →</a>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+              ${stories // Render remaining stories after leaderboard
+                .slice(3)
                 .map(
                   (story, i) =>
                     Row(
@@ -796,7 +847,7 @@ export default async function (trie, theme, page, domain, identity, hash) {
                       null,
                       false,
                       currentQuery,
-                    )(story, i + 4), // Adjust index offset
+                    )(story, i + 3), // Adjust index offset
                 )}
             </table>
             ${Footer(theme, path)}

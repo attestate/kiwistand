@@ -1,0 +1,127 @@
+.leaderboard-container {
+  background-color: var(--background-color0);
+  color: var(--visited-link);
+  padding: 20px;
+  font-family: var(--font-family);
+}
+
+.leaderboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.leaderboard-header h1 {
+  font-size: 24px;
+  color: black;
+}
+
+.leaderboard-header .powered-by {
+  font-size: 14px;
+}
+
+.leaderboard-header .powered-by a {
+  color: #007bff; /* Oku's blue */
+}
+
+.user-stats {
+  background-color: var(--table-bg);
+  padding: 20px;
+  border-radius: 2px;
+  margin-bottom: 20px;
+  border: var(--border);
+}
+
+.user-stats .user-score {
+  text-align: center;
+}
+
+.user-stats .user-score .subtext {
+  font-size: 14px;
+  color: var(--visited-link);
+}
+
+.user-stats .user-score div:last-child {
+  font-size: 36px;
+  font-weight: bold;
+  color: black;
+}
+
+.user-stats .user-rank-time {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.user-stats .user-rank-time .subtext {
+  font-size: 14px;
+  color: var(--visited-link);
+}
+
+.user-stats .user-rank-time div:last-child {
+  font-size: 20px;
+  font-weight: bold;
+  color: black;
+}
+
+.leaderboard-list {
+  border: var(--border);
+  border-radius: 2px;
+}
+
+.leaderboard-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px;
+  border-bottom: var(--border-thin);
+}
+
+.leaderboard-item:last-child {
+  border-bottom: none;
+}
+
+.leaderboard-item div:first-child {
+  display: flex;
+  align-items: center;
+}
+
+.leaderboard-item div:first-child .subtext {
+  width: 30px;
+  text-align: right;
+  margin-right: 10px;
+  color: var(--visited-link);
+}
+
+.leaderboard-item div:first-child div:last-child {
+  color: black;
+}
+
+.leaderboard-item div:last-child {
+  color: black;
+}
+
+.how-to-earn,
+.reward-tiers {
+  margin-top: 20px;
+}
+
+.how-to-earn h2,
+.reward-tiers h2 {
+  font-size: 20px;
+  margin-bottom: 10px;
+  color: black;
+}
+
+.how-to-earn div,
+.reward-tiers div {
+  background-color: var(--table-bg);
+  padding: 20px;
+  border-radius: 2px;
+  border: var(--border);
+}
+
+.how-to-earn p,
+.reward-tiers p {
+  color: black;
+}

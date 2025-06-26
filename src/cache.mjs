@@ -568,6 +568,39 @@ export function getKarmaRanking() {
   }
 }
 
+export function getKarmaRankingByDate(startDate, endDate) {
+  try {
+    const startTimestamp = Math.floor(new Date(startDate).getTime() / 1000);
+    const endTimestamp = Math.floor(new Date(endDate).getTime() / 1000);
+
+    const query = `
+      SELECT identity, count(*) as karma
+      FROM (
+        SELECT s.identity
+        FROM upvotes u
+        JOIN submissions s ON u.href = s.href
+        WHERE u.timestamp BETWEEN ? AND ?
+        UNION ALL
+        SELECT identity
+        FROM reactions r
+        WHERE r.timestamp BETWEEN ? AND ?
+      )
+      GROUP BY identity
+      ORDER BY karma DESC
+    `;
+
+    const params = [startTimestamp, endTimestamp, startTimestamp, endTimestamp];
+    const results = db.prepare(query).all(params);
+    return results.map((row) => ({
+      identity: row.identity,
+      karma: row.karma,
+    }));
+  } catch (err) {
+    log(`Error in getKarmaRankingByDate: ${err.toString()}`);
+    return [];
+  }
+}
+
 export function getBest(amount, from, orderBy, domain, startDatetime) {
   let orderClause = "upvotesCount DESC";
   if (orderBy === "new") {

@@ -42,7 +42,7 @@ import onboardingCurator from "./views/onboarding-curator.mjs";
 import onboardingSubmitter from "./views/onboarding-submitter.mjs";
 import shortcut from "./views/shortcut.mjs";
 import upvotes from "./views/upvotes.mjs";
-import community from "./views/community.mjs";
+import leaderboard from "./views/leaderboard.mjs";
 import stats from "./views/stats.mjs";
 import users from "./views/users.mjs";
 import basics from "./views/basics.mjs";
@@ -1224,11 +1224,11 @@ export async function launch(trie, libp2p, isPrimary = true) {
     return reply.status(200).type("text/html").send(content);
   });
   app.get("/community", async (request, reply) => {
-    const content = await community(trie, reply.locals.theme, request.query);
-
+    const content = await leaderboard(reply.locals.identity, reply.locals.theme);
+    
     reply.header(
       "Cache-Control",
-      "public, s-maxage=86400, max-age=0, stale-while-revalidate=604800",
+      "public, s-maxage=300, max-age=0, stale-while-revalidate=1800",
     );
     return reply.status(200).type("text/html").send(content);
   });

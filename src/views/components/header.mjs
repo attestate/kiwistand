@@ -136,7 +136,7 @@ const header = (theme, path) => {
                   href="/community"
                   data-no-instant
                   onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
-                  >Users</a
+                  >Rewards</a
                 >
                 <span class="header-disconnect">Disconnect</span>
               </div>

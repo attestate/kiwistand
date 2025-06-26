@@ -577,6 +577,18 @@ async function addMinuteCountdown() {
   }
 }
 
+async function addTutorialDrawers() {
+  const tutorialContainer = document.querySelector("#tutorial-drawers");
+  if (tutorialContainer) {
+    const TutorialDrawers = (await import("./TutorialDrawers.jsx")).default;
+    createRoot(tutorialContainer).render(
+      <StrictMode>
+        <TutorialDrawers />
+      </StrictMode>,
+    );
+  }
+}
+
 async function addAvatar(allowlist) {
   const avatarElem = document.querySelectorAll("nav-header-avatar");
   if (avatarElem && avatarElem.length > 0) {
@@ -1087,6 +1099,7 @@ async function start() {
     addNFTPrice(),
     addKarmaElements(),
     addMinuteCountdown(),
+    addTutorialDrawers(),
     addAvatar(await allowlistPromise),
     addDelegateButton(await allowlistPromise, await delegationsPromise, toast),
     addBuyButton(allowlistPromise, delegationsPromise, toast),

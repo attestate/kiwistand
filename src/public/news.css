@@ -1344,3 +1344,34 @@ a.meta-link:hover, span.meta-link:hover {
   font-size: 1.5rem;
   color: black;
 }
+
+/* Leaderboard Preview Styles */
+.leaderboard-preview-container {
+  background-color: var(--table-bg);
+  padding: 15px;
+  border-top: var(--border);
+  border-bottom: var(--border);
+  margin-bottom: 20px;
+}
+
+.leaderboard-preview-container h2 {
+  font-size: 18px;
+  margin-top: 0;
+  margin-bottom: 10px;
+  color: black;
+}
+
+.leaderboard-preview-container .leaderboard-list div {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 0;
+}
+
+.leaderboard-preview-container .leaderboard-list div div {
+  color: black;
+}
+
+.leaderboard-preview-container a {
+  color: #007bff; /* Oku's blue */
+  text-decoration: none;
+}
