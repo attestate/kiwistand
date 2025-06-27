@@ -20,6 +20,7 @@ import "express-async-errors";
 import { sub } from "date-fns";
 import DOMPurify from "isomorphic-dompurify";
 import { getSlug } from "./utils.mjs";
+import { extractDomain } from "./views/components/row.mjs";
 import { createServer as createHttpServer } from "http";
 import { FileSystemCache, getCacheKey } from "node-fetch-cache";
 
@@ -157,17 +158,46 @@ app.post("/api/v1/neynar/notify", async (req, res) => {
   ) {
     return res.status(401).json({ status: "error", message: "Unauthorized" });
   }
-  const { target_url, body, title } = req.body;
-  if (!target_url || !body || !title) {
+  const { target_url, tag } = req.body;
+  
+  if (!target_url || !tag) {
     return sendError(
       res,
       400,
       "Bad Request",
-      "target_url and body, title required",
+      "target_url and tag are required",
     );
   }
+  
+  let notificationTitle;
+  let notificationBody;
+  
   try {
-    const resp = await sendNotification(target_url, body, title);
+    // Extract index from URL
+    const indexMatch = target_url.match(/index=(0x[a-fA-F0-9]+)/);
+    if (!indexMatch) {
+      return sendError(res, 400, "Bad Request", "Invalid URL format - missing index parameter");
+    }
+    const index = indexMatch[1];
+    
+    // Fetch submission from cache
+    const submission = getSubmission(index);
+    
+    // Extract domain from submission href
+    const domain = extractDomain(submission.href);
+    
+    // Construct notification title and body
+    notificationTitle = `Kiwi News: ${tag}`;
+    notificationBody = `${submission.title} - ${domain}`;
+    
+    log(`Sending notification for story: ${submission.title} (${domain}) with tag: ${tag}`);
+  } catch (err) {
+    log(`Error fetching submission: ${err.toString()}`);
+    return sendError(res, 400, "Bad Request", `Failed to fetch story: ${err.message}`);
+  }
+  
+  try {
+    const resp = await sendNotification(target_url, notificationBody, notificationTitle);
     return res.json(resp);
   } catch (err) {
     return sendError(res, 500, "Internal Server Error", err.toString());

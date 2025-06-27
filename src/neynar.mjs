@@ -14,6 +14,17 @@ const client = new NeynarAPIClient(config);
 
 export async function sendNotification(target_url, body, title, targetFids = []) {
   const notification = { title, body, target_url };
+  
+  // Only send notifications in production
+  if (process.env.NODE_ENV !== "production") {
+    console.log("[DEV MODE] Would send notification:", notification);
+    return {
+      status: "success",
+      message: "Notification simulated in dev mode",
+      notification
+    };
+  }
+  
   try {
     const resp = await client.publishFrameNotifications({
       targetFids,
