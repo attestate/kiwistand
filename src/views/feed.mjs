@@ -792,8 +792,14 @@ export default async function (trie, theme, page, domain, identity, hash) {
                   <div style="background-color: var(--table-bg); padding: 15px; margin-bottom: 20px;">
                     <div style="text-align: center; margin-bottom: 15px;">
                       <h2 style="margin: 0 0 8px 0; font-size: 18px; color: black; font-weight: 600;">Weekly Rewards</h2>
-                      <p style="margin: 0; color: var(--visited-link); font-size: 13px;">
-                        Looking for a sponsor — Contact us to support this weekly competition
+                      <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 8px;">
+                        <img src="/usdc-logo.svg" alt="USDC" style="width: 24px; height: 24px;" />
+                        <p style="margin: 0; color: black; font-size: 16px; font-weight: 600;">
+                          100 USDC Prize Pool
+                        </p>
+                      </div>
+                      <p style="margin: 4px 0 0 0; color: var(--visited-link); font-size: 12px;">
+                        1st: 50 USDC • 2nd: 30 USDC • 3rd: 20 USDC
                       </p>
                     </div>
                     <div style="border: var(--border-thin);">
