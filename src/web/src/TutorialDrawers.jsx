@@ -114,15 +114,12 @@ const TutorialDrawers = () => {
             </button>
           </div>
           <div style={{ color: "#666", lineHeight: "1.6" }}>
-            <p style={{ margin: "0 0 15px 0" }}>Karma is earned through active participation in the Kiwi News community:</p>
-            <ul style={{ margin: "0 0 15px 0", paddingLeft: "20px" }}>
-              <li style={{ marginBottom: "8px" }}>Submit quality content that gets upvoted</li>
-              <li style={{ marginBottom: "8px" }}>Receive upvotes for stories</li>
-              <li style={{ marginBottom: "8px" }}>Receive emoji reactions</li>
-              <li style={{ marginBottom: "8px" }}>Contribute valuable stories and links</li>
-              <li style={{ marginBottom: "8px" }}>Engage with the community through thoughtful submissions</li>
+            <p style={{ margin: "0 0 15px 0", fontSize: "16px", fontWeight: "500", color: "#333" }}>Earn karma by:</p>
+            <ul style={{ margin: "0 0 20px 0", paddingLeft: "20px", fontSize: "15px" }}>
+              <li style={{ marginBottom: "10px" }}>Getting upvotes on your story submissions</li>
+              <li style={{ marginBottom: "10px" }}>Receiving emoji reactions on your comments</li>
             </ul>
-            <p style={{ margin: "0" }}>Rankings are updated weekly and reflect your recent activity. The more valuable content you share, the higher your karma score!</p>
+            <p style={{ margin: "0", fontSize: "14px" }}>Rankings update weekly. The more engagement you receive, the higher your karma score!</p>
           </div>
         </div>
       </SwipeableDrawer>
