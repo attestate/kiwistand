@@ -168,6 +168,7 @@ const TutorialDrawers = () => {
                 <div style={{ textAlign: "center", padding: "12px 8px", background: "rgba(192, 192, 192, 0.1)", border: "1px solid #c0c0c0", borderRadius: "4px" }}>
                   <div style={{ fontSize: "11px", color: "#666", marginBottom: "4px" }}>2nd Place</div>
                   <div style={{ fontSize: "20px", fontWeight: "700", color: "black" }}>30 USDC</div>
+                  <div style={{ fontSize: "9px", color: "#666", marginTop: "2px" }}>by @robot</div>
                 </div>
                 <div style={{ textAlign: "center", padding: "12px 8px", background: "rgba(205, 127, 50, 0.1)", border: "1px solid #cd7f32", borderRadius: "4px" }}>
                   <div style={{ fontSize: "11px", color: "#666", marginBottom: "4px" }}>3rd Place</div>

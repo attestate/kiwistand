@@ -71,6 +71,7 @@ export default async function Leaderboard(identity, theme) {
                           <div style="padding: 12px 16px; background-color: rgba(192, 192, 192, 0.1); border: 1px solid #c0c0c0; border-radius: 4px;">
                             <div style="font-size: 12px; color: #666; margin-bottom: 2px;">2nd Place</div>
                             <div style="font-size: 18px; font-weight: 600; color: black;">30 USDC</div>
+                            <div style="font-size: 10px; color: #666; margin-top: 4px;">by @robot</div>
                           </div>
                           <div style="padding: 12px 16px; background-color: rgba(205, 127, 50, 0.1); border: 1px solid #cd7f32; border-radius: 4px;">
                             <div style="font-size: 12px; color: #666; margin-bottom: 2px;">3rd Place</div>

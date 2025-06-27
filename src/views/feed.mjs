@@ -799,7 +799,7 @@ export default async function (trie, theme, page, domain, identity, hash) {
                         </p>
                       </div>
                       <p style="margin: 4px 0 0 0; color: var(--visited-link); font-size: 12px;">
-                        1st: 50 USDC • 2nd: 30 USDC • 3rd: 20 USDC
+                        1st: 50 USDC • 2nd: 30 USDC (by @robot) • 3rd: 20 USDC
                       </p>
                     </div>
                     <div style="border: var(--border-thin);">
