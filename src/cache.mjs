@@ -574,41 +574,17 @@ export function getKarmaRankingByDate(startDate, endDate) {
     const endTimestamp = Math.floor(new Date(endDate).getTime() / 1000);
 
     const query = `
-      WITH user_karma AS (
-        -- Calculate total karma for all users (not date-restricted)
-        SELECT identity, COUNT(*) as total_karma
-        FROM (
-          SELECT s.identity
-          FROM upvotes u
-          JOIN submissions s ON u.href = s.href
-          UNION ALL
-          SELECT c.identity
-          FROM reactions r
-          JOIN comments c ON r.comment_id = c.id
-        )
-        GROUP BY identity
-      ),
-      legit_users AS (
-        -- Users with 5+ total karma are considered legit
-        SELECT identity
-        FROM user_karma
-        WHERE total_karma >= 5
-      )
       SELECT identity, count(*) as karma
       FROM (
-        -- Count upvotes from legit users only
         SELECT s.identity
         FROM upvotes u
         JOIN submissions s ON u.href = s.href
         WHERE u.timestamp BETWEEN ? AND ?
-          AND u.identity IN (SELECT identity FROM legit_users)
         UNION ALL
-        -- Count reactions from legit users only
         SELECT c.identity
         FROM reactions r
         JOIN comments c ON r.comment_id = c.id
         WHERE r.timestamp BETWEEN ? AND ?
-          AND r.identity IN (SELECT identity FROM legit_users)
       )
       GROUP BY identity
       ORDER BY karma DESC
