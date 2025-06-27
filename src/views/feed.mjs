@@ -798,14 +798,23 @@ export default async function (trie, theme, page, domain, identity, hash) {
                           100 USDC Prize Pool
                         </p>
                       </div>
-                      <p style="margin: 4px 0 0 0; color: var(--visited-link); font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 4px;">
-                        <span>1st: 50 USDC • 2nd: 30 USDC</span>
-                        <a href="https://farcaster.xyz/robot" target="_blank" style="display: inline-flex; align-items: center; gap: 2px; text-decoration: none; color: var(--visited-link);">
-                          <img src="https://wrpcd.net/cdn-cgi/imagedelivery/BXluQx4ige9GuW0Ia56BHw/3933efd9-8a97-4c1c-0616-3aa04cc1f900/anim=false,fit=contain,f=auto,w=48" alt="robot" style="width: 12px; height: 12px; border-radius: 2px;" />
-                          <span>(by @robot)</span>
-                        </a>
-                        <span>• 3rd: 20 USDC</span>
-                      </p>
+                      <div style="margin: 4px 0 0 0; color: var(--visited-link); font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap;">
+                        <span style="display: inline-flex; align-items: center; gap: 4px;">
+                          1st: 50 USDC
+                          <a href="https://farcaster.xyz/timdaub.eth" target="_blank" style="display: inline-flex; align-items: center; gap: 2px; text-decoration: none; color: var(--visited-link);">
+                            <img src="https://wrpcd.net/cdn-cgi/imagedelivery/BXluQx4ige9GuW0Ia56BHw/2b498bea-9075-4173-9172-3c99689eb400/anim=false,fit=contain,f=auto,w=48" alt="timdaub" style="width: 12px; height: 12px; border-radius: 2px;" />
+                          </a>
+                        </span>
+                        <span>•</span>
+                        <span style="display: inline-flex; align-items: center; gap: 4px;">
+                          2nd: 30 USDC
+                          <a href="https://farcaster.xyz/robot" target="_blank" style="display: inline-flex; align-items: center; gap: 2px; text-decoration: none; color: var(--visited-link);">
+                            <img src="https://wrpcd.net/cdn-cgi/imagedelivery/BXluQx4ige9GuW0Ia56BHw/3933efd9-8a97-4c1c-0616-3aa04cc1f900/anim=false,fit=contain,f=auto,w=48" alt="robot" style="width: 12px; height: 12px; border-radius: 2px;" />
+                          </a>
+                        </span>
+                        <span>•</span>
+                        <span>3rd: 20 USDC</span>
+                      </div>
                     </div>
                     <div style="border: var(--border-thin);">
                       ${(await getLeaderboard()).slice(0, 3).map((user, index) => {

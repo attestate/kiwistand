@@ -164,6 +164,10 @@ const TutorialDrawers = () => {
                 <div style={{ textAlign: "center", padding: "12px 8px", background: "rgba(255, 215, 0, 0.1)", border: "1px solid #ffd700", borderRadius: "4px" }}>
                   <div style={{ fontSize: "11px", color: "#666", marginBottom: "4px" }}>1st Place</div>
                   <div style={{ fontSize: "20px", fontWeight: "700", color: "black" }}>50 USDC</div>
+                  <a href="https://farcaster.xyz/timdaub.eth" target="_blank" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "4px", marginTop: "4px", textDecoration: "none", color: "#666" }}>
+                    <img src="https://wrpcd.net/cdn-cgi/imagedelivery/BXluQx4ige9GuW0Ia56BHw/2b498bea-9075-4173-9172-3c99689eb400/anim=false,fit=contain,f=auto,w=48" alt="timdaub" style={{ width: "14px", height: "14px", borderRadius: "2px" }} />
+                    <span style={{ fontSize: "9px" }}>by @timdaub</span>
+                  </a>
                 </div>
                 <div style={{ textAlign: "center", padding: "12px 8px", background: "rgba(192, 192, 192, 0.1)", border: "1px solid #c0c0c0", borderRadius: "4px", position: "relative" }}>
                   <div style={{ fontSize: "11px", color: "#666", marginBottom: "4px" }}>2nd Place</div>

@@ -57,8 +57,7 @@ export default async function Leaderboard(identity, theme) {
                         <div style="margin-top: 20px; display: flex; align-items: center; justify-content: center; gap: 12px;">
                           <img src="/usdc-logo.svg" alt="USDC" style="width: 40px; height: 40px;" />
                           <div style="text-align: left;">
-                            <h2 style="margin: 0; font-size: 20px; color: black; font-weight: 600;">Weekly Prize Pool</h2>
-                            <p style="margin: 0; font-size: 13px; color: var(--visited-link);">Sponsored by @timdaub</p>
+                            <h2 style="margin: 0; font-size: 20px; color: black; font-weight: 600;">100 USDC Weekly Prize Pool</h2>
                           </div>
                         </div>
                         
@@ -67,6 +66,10 @@ export default async function Leaderboard(identity, theme) {
                           <div style="padding: 12px 16px; background-color: #ffd700; background-color: rgba(255, 215, 0, 0.1); border: 1px solid #ffd700; border-radius: 4px;">
                             <div style="font-size: 12px; color: #666; margin-bottom: 2px;">1st Place</div>
                             <div style="font-size: 18px; font-weight: 600; color: black;">50 USDC</div>
+                            <a href="https://farcaster.xyz/timdaub.eth" target="_blank" style="display: flex; align-items: center; gap: 4px; margin-top: 6px; text-decoration: none; color: #666;">
+                              <img src="https://wrpcd.net/cdn-cgi/imagedelivery/BXluQx4ige9GuW0Ia56BHw/2b498bea-9075-4173-9172-3c99689eb400/anim=false,fit=contain,f=auto,w=48" alt="timdaub" style="width: 16px; height: 16px; border-radius: 2px;" />
+                              <span style="font-size: 10px;">by @timdaub</span>
+                            </a>
                           </div>
                           <div style="padding: 12px 16px; background-color: rgba(192, 192, 192, 0.1); border: 1px solid #c0c0c0; border-radius: 4px; position: relative;">
                             <div style="font-size: 12px; color: #666; margin-bottom: 2px;">2nd Place</div>
