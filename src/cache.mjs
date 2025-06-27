@@ -581,8 +581,9 @@ export function getKarmaRankingByDate(startDate, endDate) {
         JOIN submissions s ON u.href = s.href
         WHERE u.timestamp BETWEEN ? AND ?
         UNION ALL
-        SELECT identity
+        SELECT c.identity
         FROM reactions r
+        JOIN comments c ON r.comment_id = c.id
         WHERE r.timestamp BETWEEN ? AND ?
       )
       GROUP BY identity
