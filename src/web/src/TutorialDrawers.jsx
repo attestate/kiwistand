@@ -117,7 +117,8 @@ const TutorialDrawers = () => {
             <p style={{ margin: "0 0 15px 0" }}>Karma is earned through active participation in the Kiwi News community:</p>
             <ul style={{ margin: "0 0 15px 0", paddingLeft: "20px" }}>
               <li style={{ marginBottom: "8px" }}>Submit quality content that gets upvoted</li>
-              <li style={{ marginBottom: "8px" }}>Receive upvotes on your submissions</li>
+              <li style={{ marginBottom: "8px" }}>Receive upvotes for stories</li>
+              <li style={{ marginBottom: "8px" }}>Receive emoji reactions</li>
               <li style={{ marginBottom: "8px" }}>Contribute valuable stories and links</li>
               <li style={{ marginBottom: "8px" }}>Engage with the community through thoughtful submissions</li>
             </ul>

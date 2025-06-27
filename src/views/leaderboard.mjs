@@ -51,14 +51,13 @@ export default async function Leaderboard(identity, theme) {
                   <div style="padding: 15px; max-width: 800px; margin: 0 auto;">
                     <div style="background-color: var(--table-bg); padding: 20px; border: var(--border); margin-bottom: 20px;">
                       <div style="text-align: center;">
-                        <h1 style="margin: 0 0 8px 0; font-size: 24px; color: black; font-weight: 600;">Weekly Rewards</h1>
-                        <p style="margin: 0 0 12px 0; color: var(--visited-link); font-size: 14px;">Community rewards for the most active contributors</p>
+                        <h1 style="margin: 0 0 8px 0; font-size: 24px; color: black; font-weight: 600;">Win 100 USDC</h1>
                         
                         <!-- USDC Sponsorship -->
                         <div style="margin-top: 20px; display: flex; align-items: center; justify-content: center; gap: 12px;">
                           <img src="/usdc-logo.svg" alt="USDC" style="width: 40px; height: 40px;" />
                           <div style="text-align: left;">
-                            <h2 style="margin: 0; font-size: 20px; color: black; font-weight: 600;">100 USDC Weekly Prize Pool</h2>
+                            <h2 style="margin: 0; font-size: 20px; color: black; font-weight: 600;">Weekly Prize Pool</h2>
                             <p style="margin: 0; font-size: 13px; color: var(--visited-link);">Sponsored by @timdaub</p>
                           </div>
                         </div>
@@ -133,8 +132,8 @@ export default async function Leaderboard(identity, theme) {
                           <div style="font-size: 22px; font-weight: bold; color: black;">${currentUserRank?.rank ? `#${currentUserRank.rank}` : 'Unranked'}</div>
                         </div>
                         <div style="text-align: center; flex: 1;">
-                          <div style="color: var(--visited-link); font-size: 13px; margin-bottom: 6px;">Round Ends</div>
-                          <div style="font-size: 22px; font-weight: bold; color: black;">${formatTime(timeRemaining)}</div>
+                          <div style="color: var(--visited-link); font-size: 13px; margin-bottom: 6px;">Competition Ends</div>
+                          <div style="font-size: 22px; font-weight: bold; color: black;">July 7</div>
                         </div>
                       </div>
                     </div>
