@@ -165,10 +165,13 @@ const TutorialDrawers = () => {
                   <div style={{ fontSize: "11px", color: "#666", marginBottom: "4px" }}>1st Place</div>
                   <div style={{ fontSize: "20px", fontWeight: "700", color: "black" }}>50 USDC</div>
                 </div>
-                <div style={{ textAlign: "center", padding: "12px 8px", background: "rgba(192, 192, 192, 0.1)", border: "1px solid #c0c0c0", borderRadius: "4px" }}>
+                <div style={{ textAlign: "center", padding: "12px 8px", background: "rgba(192, 192, 192, 0.1)", border: "1px solid #c0c0c0", borderRadius: "4px", position: "relative" }}>
                   <div style={{ fontSize: "11px", color: "#666", marginBottom: "4px" }}>2nd Place</div>
                   <div style={{ fontSize: "20px", fontWeight: "700", color: "black" }}>30 USDC</div>
-                  <div style={{ fontSize: "9px", color: "#666", marginTop: "2px" }}>by @robot</div>
+                  <a href="https://farcaster.xyz/robot" target="_blank" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "4px", marginTop: "4px", textDecoration: "none", color: "#666" }}>
+                    <img src="https://wrpcd.net/cdn-cgi/imagedelivery/BXluQx4ige9GuW0Ia56BHw/3933efd9-8a97-4c1c-0616-3aa04cc1f900/anim=false,fit=contain,f=auto,w=48" alt="robot" style={{ width: "14px", height: "14px", borderRadius: "2px" }} />
+                    <span style={{ fontSize: "9px" }}>by @robot</span>
+                  </a>
                 </div>
                 <div style={{ textAlign: "center", padding: "12px 8px", background: "rgba(205, 127, 50, 0.1)", border: "1px solid #cd7f32", borderRadius: "4px" }}>
                   <div style={{ fontSize: "11px", color: "#666", marginBottom: "4px" }}>3rd Place</div>

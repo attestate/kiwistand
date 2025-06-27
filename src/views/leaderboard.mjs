@@ -68,10 +68,13 @@ export default async function Leaderboard(identity, theme) {
                             <div style="font-size: 12px; color: #666; margin-bottom: 2px;">1st Place</div>
                             <div style="font-size: 18px; font-weight: 600; color: black;">50 USDC</div>
                           </div>
-                          <div style="padding: 12px 16px; background-color: rgba(192, 192, 192, 0.1); border: 1px solid #c0c0c0; border-radius: 4px;">
+                          <div style="padding: 12px 16px; background-color: rgba(192, 192, 192, 0.1); border: 1px solid #c0c0c0; border-radius: 4px; position: relative;">
                             <div style="font-size: 12px; color: #666; margin-bottom: 2px;">2nd Place</div>
                             <div style="font-size: 18px; font-weight: 600; color: black;">30 USDC</div>
-                            <div style="font-size: 10px; color: #666; margin-top: 4px;">by @robot</div>
+                            <a href="https://farcaster.xyz/robot" target="_blank" style="display: flex; align-items: center; gap: 4px; margin-top: 6px; text-decoration: none; color: #666;">
+                              <img src="https://wrpcd.net/cdn-cgi/imagedelivery/BXluQx4ige9GuW0Ia56BHw/3933efd9-8a97-4c1c-0616-3aa04cc1f900/anim=false,fit=contain,f=auto,w=48" alt="robot" style="width: 16px; height: 16px; border-radius: 2px;" />
+                              <span style="font-size: 10px;">by @robot</span>
+                            </a>
                           </div>
                           <div style="padding: 12px 16px; background-color: rgba(205, 127, 50, 0.1); border: 1px solid #cd7f32; border-radius: 4px;">
                             <div style="font-size: 12px; color: #666; margin-bottom: 2px;">3rd Place</div>
