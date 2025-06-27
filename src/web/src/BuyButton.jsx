@@ -25,7 +25,7 @@ import {
 import { getLocalAccount } from "./session.mjs";
 import theme from "./theme.jsx";
 import posthog from "posthog-js";
-import { fetchPrice, fetchLeaderboard, requestFaucet } from "./API.mjs";
+import { fetchPrice, fetchLeaderboard } from "./API.mjs";
 import { getProvider, useProvider, client, chains } from "./client.mjs";
 
 export async function prepare(key) {
@@ -190,59 +190,7 @@ const BuyButton = (props) => {
 
   const [config, setConfig] = useState(null);
   const [error, setError] = useState(null);
-  const [isFundingInProgress, setIsFundingInProgress] = useState(false);
-  const [faucetRequested, setFaucetRequested] = useState(false);
 
-  useEffect(() => {
-    let timeoutId;
-
-    const checkBalance = async () => {
-      if (!isFundingInProgress || !from.address) return;
-
-      try {
-        // Check the balance on Optimism
-        const provider = getProvider({ chainId: optimism.id });
-        const balance = await provider.getBalance(from.address);
-
-        if (balance > 0) {
-          // We have a balance, try to prepare the config
-          try {
-            const newConfig = await prepare(key);
-            if (newConfig) {
-              // Only show toast after successful prepare
-              toast.success(
-                `We've just sent you some ETH to cover your transaction fees!`,
-              );
-              setConfig(newConfig);
-              setError(null);
-              setIsFundingInProgress(false);
-              return;
-            }
-          } catch (err) {
-            // If we get a "Need at least" error, the balance isn't enough yet
-            if (err.message.includes("Need at least")) {
-              console.log("Balance found but not enough yet, will retry");
-            } else {
-              console.log("Error during prepare:", err.message);
-            }
-          }
-        }
-      } catch (err) {
-        console.log("Error checking balance:", err.message);
-      }
-
-      // Continue polling
-      timeoutId = setTimeout(checkBalance, 500);
-    };
-
-    if (isFundingInProgress && from.address) {
-      checkBalance();
-    }
-
-    return () => {
-      if (timeoutId) clearTimeout(timeoutId);
-    };
-  }, [isFundingInProgress, from.address, key]);
 
   useEffect(() => {
     const generate = async () => {
@@ -264,28 +212,6 @@ const BuyButton = (props) => {
         console.log("setting error", err.message);
         setError(err);
 
-        if (
-          !err.message.includes("Need at least") ||
-          !from.address ||
-          faucetRequested ||
-          isFundingInProgress
-        ) {
-          return;
-        }
-
-        setIsFundingInProgress(true);
-        setFaucetRequested(true);
-
-        console.log("Requesting funds from faucet for:", from.address);
-        const result = await requestFaucet(from.address);
-
-        if (result.status === "success") {
-          console.log("Faucet request successful:", result.details);
-          // Keep funding in progress for all success cases
-        } else {
-          console.error("Faucet request failed:", result.message);
-          setIsFundingInProgress(false);
-        }
       }
     };
 
@@ -295,8 +221,6 @@ const BuyButton = (props) => {
     chain?.id,
     discountEligible,
     from.address,
-    faucetRequested,
-    isFundingInProgress,
   ]);
 
   if (isEligible) {
@@ -377,27 +301,13 @@ const BuyButton = (props) => {
         error.code === "INSUFFICIENT_FUNDS")) ||
     (error && error.toString().includes("Need at least"))
   ) {
-    // Show a message indicating we're getting the user ready
-    const button = (
-      <button className="buy-button" disabled>
-        Getting you ready...
-      </button>
-    );
-
-    return (
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          flexDirection: "column",
-        }}
-      >
-        {button}
-      </div>
-    );
-  }
-  if (isFundingInProgress) {
+    // Extract the amount needed from the error message
+    let amount = "0.000003";
+    const match = error.toString().match(/Need at least ([0-9.]+) ETH/);
+    if (match) {
+      amount = match[1];
+    }
+    
     return (
       <div
         style={{
@@ -408,10 +318,10 @@ const BuyButton = (props) => {
         }}
       >
         <button className="buy-button" disabled>
-          Getting you ready...
+          Insufficient funds
         </button>
-        <p style={{ marginTop: "10px", fontSize: "14px" }}>
-          Please wait a moment while we prepare your account
+        <p style={{ marginTop: "10px", fontSize: "14px", textAlign: "center" }}>
+          Please add at least {amount} ETH to your wallet on Optimism
         </p>
       </div>
     );
