@@ -52,17 +52,12 @@ export function getTimeRemainingInRound() {
 }
 
 function getCurrentRoundDates() {
-  const now = new Date();
-  const weekStartsOn = 1; // Monday
-  const dayOfWeek = now.getDay();
-  const daysSinceStart = (dayOfWeek - weekStartsOn + 7) % 7;
-  
-  const startDate = new Date(now);
-  startDate.setDate(now.getDate() - daysSinceStart);
+  // Fixed competition period: From today (June 27, 2025) to July 7, 2025
+  const startDate = new Date('2025-06-27');
   startDate.setHours(0, 0, 0, 0);
-
-  const endDate = new Date(startDate);
-  endDate.setDate(startDate.getDate() + (ROUND_DURATION_WEEKS * 7));
+  
+  const endDate = new Date('2025-07-07');
+  endDate.setHours(23, 59, 59, 999);
 
   return { startDate, endDate };
 }
