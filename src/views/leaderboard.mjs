@@ -53,10 +53,36 @@ export default async function Leaderboard(identity, theme) {
                       <div style="text-align: center;">
                         <h1 style="margin: 0 0 8px 0; font-size: 24px; color: black; font-weight: 600;">Weekly Rewards</h1>
                         <p style="margin: 0 0 12px 0; color: var(--visited-link); font-size: 14px;">Community rewards for the most active contributors</p>
+                        
+                        <!-- USDC Sponsorship -->
+                        <div style="margin-top: 20px; display: flex; align-items: center; justify-content: center; gap: 12px;">
+                          <img src="/usdc-logo.svg" alt="USDC" style="width: 40px; height: 40px;" />
+                          <div style="text-align: left;">
+                            <h2 style="margin: 0; font-size: 20px; color: black; font-weight: 600;">100 USDC Weekly Prize Pool</h2>
+                            <p style="margin: 0; font-size: 13px; color: var(--visited-link);">Sponsored by @timdaub</p>
+                          </div>
+                        </div>
+                        
+                        <!-- Prize Distribution -->
+                        <div style="margin-top: 16px; display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;">
+                          <div style="padding: 12px 16px; background-color: #ffd700; background-color: rgba(255, 215, 0, 0.1); border: 1px solid #ffd700; border-radius: 4px;">
+                            <div style="font-size: 12px; color: #666; margin-bottom: 2px;">1st Place</div>
+                            <div style="font-size: 18px; font-weight: 600; color: black;">50 USDC</div>
+                          </div>
+                          <div style="padding: 12px 16px; background-color: rgba(192, 192, 192, 0.1); border: 1px solid #c0c0c0; border-radius: 4px;">
+                            <div style="font-size: 12px; color: #666; margin-bottom: 2px;">2nd Place</div>
+                            <div style="font-size: 18px; font-weight: 600; color: black;">30 USDC</div>
+                          </div>
+                          <div style="padding: 12px 16px; background-color: rgba(205, 127, 50, 0.1); border: 1px solid #cd7f32; border-radius: 4px;">
+                            <div style="font-size: 12px; color: #666; margin-bottom: 2px;">3rd Place</div>
+                            <div style="font-size: 18px; font-weight: 600; color: black;">20 USDC</div>
+                          </div>
+                        </div>
+                        
                         <div style="margin-top: 16px; padding: 12px; background-color: var(--table-bg); border: var(--border-thin);">
                           <p style="margin: 0; font-size: 13px; color: var(--visited-link);">
-                            <span style="font-weight: 500;">Looking for a sponsor</span> 
-                            <span style="margin-left: 4px;">— Contact us to support this weekly competition</span>
+                            <span style="font-weight: 500;">Want to increase the prize pool?</span> 
+                            <span style="margin-left: 4px;">Contact us to sponsor future competitions</span>
                           </p>
                         </div>
                       </div>

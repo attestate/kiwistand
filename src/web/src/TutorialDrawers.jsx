@@ -74,7 +74,7 @@ const TutorialDrawers = () => {
               </svg>
               <div>
                 <h3 style={{ margin: "0 0 5px 0", fontSize: "16px", color: "black" }}>Rewards Info</h3>
-                <p style={{ margin: "0", color: "#666", fontSize: "13px" }}>Looking for sponsor</p>
+                <p style={{ margin: "0", color: "#666", fontSize: "13px" }}>100 USDC prize pool</p>
               </div>
             </div>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ color: "#666" }}>
@@ -156,16 +156,37 @@ const TutorialDrawers = () => {
             </button>
           </div>
           <div style={{ color: "#666", lineHeight: "1.6" }}>
-            <p style={{ margin: "0 0 15px 0" }}>We're building a community rewards system to recognize our most active contributors.</p>
+            <p style={{ margin: "0 0 15px 0" }}>Top contributors earn weekly rewards from our community prize pool.</p>
             
             <div style={{ background: "#f5f5f5", padding: "16px", borderRadius: "6px", marginBottom: "20px", border: "1px solid #ddd" }}>
-              <div style={{ textAlign: "center" }}>
-                <div style={{ fontSize: "16px", fontWeight: "bold", color: "black", marginBottom: "6px" }}>Looking for Sponsor</div>
-                <div style={{ fontSize: "13px", color: "#666" }}>
-                  Interested in sponsoring our weekly community rewards? Contact us to learn more about supporting active contributors.
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "12px", marginBottom: "12px" }}>
+                <img src="/usdc-logo.svg" alt="USDC" style={{ width: "32px", height: "32px" }} />
+                <div style={{ fontSize: "18px", fontWeight: "bold", color: "black" }}>100 USDC Weekly Prize Pool</div>
+              </div>
+              
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "8px", marginTop: "12px" }}>
+                <div style={{ textAlign: "center", padding: "8px", background: "rgba(255, 215, 0, 0.1)", border: "1px solid #ffd700", borderRadius: "4px" }}>
+                  <div style={{ fontSize: "11px", color: "#666", marginBottom: "2px" }}>1st Place</div>
+                  <div style={{ fontSize: "16px", fontWeight: "600", color: "black" }}>50 USDC</div>
+                </div>
+                <div style={{ textAlign: "center", padding: "8px", background: "rgba(192, 192, 192, 0.1)", border: "1px solid #c0c0c0", borderRadius: "4px" }}>
+                  <div style={{ fontSize: "11px", color: "#666", marginBottom: "2px" }}>2nd Place</div>
+                  <div style={{ fontSize: "16px", fontWeight: "600", color: "black" }}>30 USDC</div>
+                </div>
+                <div style={{ textAlign: "center", padding: "8px", background: "rgba(205, 127, 50, 0.1)", border: "1px solid #cd7f32", borderRadius: "4px" }}>
+                  <div style={{ fontSize: "11px", color: "#666", marginBottom: "2px" }}>3rd Place</div>
+                  <div style={{ fontSize: "16px", fontWeight: "600", color: "black" }}>20 USDC</div>
                 </div>
               </div>
+              
+              <div style={{ textAlign: "center", marginTop: "12px", fontSize: "12px", color: "#666" }}>
+                Sponsored by @timdaub
+              </div>
             </div>
+            
+            <p style={{ margin: "0 0 12px 0", fontSize: "13px", color: "#666", textAlign: "center" }}>
+              Want to increase the prize pool? Contact us to sponsor future competitions.
+            </p>
             
             <p style={{ margin: "0", fontSize: "14px", color: "#666", textAlign: "center" }}>
               Rankings are updated weekly based on community contributions and engagement.
