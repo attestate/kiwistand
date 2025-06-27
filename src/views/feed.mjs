@@ -813,7 +813,12 @@ export default async function (trie, theme, page, domain, identity, hash) {
                           </a>
                         </span>
                         <span>•</span>
-                        <span>3rd: 20 USDC</span>
+                        <span style="display: inline-flex; align-items: center; gap: 4px;">
+                          3rd: 20 USDC
+                          <a href="https://farcaster.xyz/timdaub.eth" target="_blank" style="display: inline-flex; align-items: center; gap: 2px; text-decoration: none; color: var(--visited-link);">
+                            <img src="https://wrpcd.net/cdn-cgi/imagedelivery/BXluQx4ige9GuW0Ia56BHw/2b498bea-9075-4173-9172-3c99689eb400/anim=false,fit=contain,f=auto,w=48" alt="timdaub" style="width: 12px; height: 12px; border-radius: 2px;" />
+                          </a>
+                        </span>
                       </div>
                     </div>
                     <div style="border: var(--border-thin);">

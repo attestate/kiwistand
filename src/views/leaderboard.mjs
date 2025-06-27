@@ -82,6 +82,10 @@ export default async function Leaderboard(identity, theme) {
                           <div style="padding: 12px 16px; background-color: rgba(205, 127, 50, 0.1); border: 1px solid #cd7f32; border-radius: 4px;">
                             <div style="font-size: 12px; color: #666; margin-bottom: 2px;">3rd Place</div>
                             <div style="font-size: 18px; font-weight: 600; color: black;">20 USDC</div>
+                            <a href="https://farcaster.xyz/timdaub.eth" target="_blank" style="display: flex; align-items: center; gap: 4px; margin-top: 6px; text-decoration: none; color: #666;">
+                              <img src="https://wrpcd.net/cdn-cgi/imagedelivery/BXluQx4ige9GuW0Ia56BHw/2b498bea-9075-4173-9172-3c99689eb400/anim=false,fit=contain,f=auto,w=48" alt="timdaub" style="width: 16px; height: 16px; border-radius: 2px;" />
+                              <span style="font-size: 10px;">by @timdaub</span>
+                            </a>
                           </div>
                         </div>
                         
