@@ -199,8 +199,8 @@ export const EmojiReaction = ({ comment, allowlist, delegations, toast }) => {
       style={{
         display: "flex",
         flexWrap: "wrap",
-        gap: "16px",
-        marginTop: "32px",
+        gap: "8px",
+        marginTop: "12px",
       }}
     >
       {commonEmojis.map((emoji) => {
@@ -492,7 +492,7 @@ const Comment = React.forwardRef(
           color: "black",
           border: isTargeted ? "none" : "var(--border)",
           backgroundColor: "var(--bg-off-white)",
-          padding: `0 0.75rem ${isCollapsed ? "0px" : "0.75rem"} 0.75rem`,
+          padding: `0.75rem`,
           borderRadius: "2px",
           display: "block",
           marginBottom: "12px",
@@ -502,145 +502,157 @@ const Comment = React.forwardRef(
           overflowWrap: "break-word",
         }}
       >
-        <div
-          style={{
-            whiteSpace: "nowrap",
-            gap: "3px",
-            display: "inline-flex",
-            alignItems: "center",
-            width: "100%",
-            padding: "0.55rem 0 0.45rem 0",
-          }}
-          onClick={toggleCollapsed}
-        >
-          <a
-            style={{
-              marginTop: "-3px",
-              display: "inline-flex",
-              alignItems: "center",
-              color: "black",
-            }}
-            className="meta-link"
-            href={`/upvotes?address=${comment.identity.address}`}
-            onClick={() =>
-              (document.getElementById("spinner-overlay").style.display =
-                "block")
-            }
-          >
-            {comment.identity.safeAvatar && (
-              <img
-                loading="lazy"
-                src={comment.identity.safeAvatar}
-                alt="avatar"
-                style={{
-                  marginRight: "5px",
-                  width: "10px",
-                  height: "10px",
-                  border: "1px solid #828282",
-                  borderRadius: "2px",
-                }}
-              />
-            )}
-            <span style={{ fontWeight: "400", fontSize: "10pt" }}>
-              {truncateName(comment.identity.displayName)}
-            </span>
-          </a>
-          <span style={{ fontSize: "10pt", color: "grey", opacity: "0.6" }}>
-            {" "}
-            •{" "}
-          </span>
-          <span style={{ fontSize: "9pt", color: "grey" }}>
-            <a
-              href={url}
-              className="caster-link share-link"
-              title="Share"
-              style={{ whiteSpace: "nowrap" }}
-              onClick={handleShare}
-            >
-              {ShareIcon({
-                padding: "0 3px 1px 0",
-                verticalAlign: "-3px",
-                height: "13px",
-                width: "13px",
-              })}
-              <span>
-                {formatDistanceToNowStrict(new Date(comment.timestamp * 1000))}
-              </span>
-              <span> ago</span>
-            </a>
-          </span>
-        </div>
-        <br />
-        {!isCollapsed && (
-          <>
-            <span
-              className="comment-text"
-              style={{ fontSize: "11pt", lineHeight: "1.15" }}
-            >
-              <Linkify
-                options={{
-                  className: "meta-link selectable-link",
-                  target: (href) => {
-                    if (href.startsWith("https://news.kiwistand.com") || 
-                        href.startsWith("https://staging.kiwistand.com"))
-                      return "_self";
-                    return isIOS() ? "_self" : "_blank";
-                  },
-                  attributes: (href) => ({
-                    onClick: (e) => {
-                      const sanitizedHref = DOMPurify.sanitize(href);
-                      const isInternal = sanitizedHref.startsWith("https://news.kiwistand.com") || 
-                                        sanitizedHref.startsWith("https://staging.kiwistand.com");
-                      
-                      if ((window.ReactNativeWebView || window !== window.parent) && !isInternal) {
-                        e.preventDefault();
-                        if (window.sdk?.actions?.openUrl) {
-                          window.sdk.actions.openUrl(sanitizedHref);
-                        }
-                      }
-                    },
-                  }),
-                  defaultProtocol: "https",
-                  validate: {
-                    url: (value) => /^https:\/\/.*/.test(value),
-                    email: () => false,
-                  },
-                }}
+        <div style={{ display: "flex", alignItems: "flex-start" }}>
+          {comment.identity.safeAvatar && (
+            <div style={{ width: "32px", flexShrink: 0, marginRight: "14px" }}>
+              <a
+                href={`/upvotes?address=${comment.identity.address}`}
+                onClick={() =>
+                  (document.getElementById("spinner-overlay").style.display =
+                    "block")
+                }
               >
-                {comment.title.split("\n").map((line, i) => {
-                  if (line.startsWith(">")) {
-                    return (
-                      <div
-                        key={i}
-                        style={{
-                          borderLeft: "3px solid #ccc",
-                          paddingLeft: "10px",
-                          margin: "8px 0 0 0",
-                          color: "#666",
-                        }}
-                      >
-                        {line.substring(2)}
-                      </div>
-                    );
-                  }
-                  // Only wrap in div if it's not an empty line
-                  return line.trim() ? (
-                    <div key={i}>{line}</div>
-                  ) : (
-                    // Empty lines create spacing between paragraphs
-                    <br key={i} />
-                  );
-                })}
-              </Linkify>
-            </span>
-            <EmojiReaction
-              comment={comment}
-              allowlist={allowlist}
-              delegations={delegations}
-              toast={toast}
-            />
-          </>
-        )}
+                <img
+                  loading="lazy"
+                  src={comment.identity.safeAvatar}
+                  alt="avatar"
+                  style={{
+                    width: "32px",
+                    height: "32px",
+                    border: "1px solid #828282",
+                    borderRadius: "0",
+                  }}
+                />
+              </a>
+            </div>
+          )}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div
+              style={{
+                whiteSpace: "nowrap",
+                gap: "3px",
+                display: "inline-flex",
+                alignItems: "center",
+                width: "100%",
+                paddingBottom: "0.45rem",
+              }}
+              onClick={toggleCollapsed}
+            >
+              <a
+                style={{
+                  marginTop: "-3px",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  color: "black",
+                }}
+                className="meta-link"
+                href={`/upvotes?address=${comment.identity.address}`}
+                onClick={() =>
+                  (document.getElementById("spinner-overlay").style.display =
+                    "block")
+                }
+              >
+                <span style={{ fontWeight: "400", fontSize: "10pt" }}>
+                  {truncateName(comment.identity.displayName)}
+                </span>
+              </a>
+              <span style={{ fontSize: "10pt", color: "grey", opacity: "0.6" }}>
+                {" "}
+                •{" "}
+              </span>
+              <span style={{ fontSize: "9pt", color: "grey" }}>
+                <a
+                  href={url}
+                  className="caster-link share-link"
+                  title="Share"
+                  style={{ whiteSpace: "nowrap" }}
+                  onClick={handleShare}
+                >
+                  {ShareIcon({
+                    padding: "0 3px 1px 0",
+                    verticalAlign: "-3px",
+                    height: "13px",
+                    width: "13px",
+                  })}
+                  <span>
+                    {formatDistanceToNowStrict(new Date(comment.timestamp * 1000))}
+                  </span>
+                  <span> ago</span>
+                </a>
+              </span>
+            </div>
+            {!isCollapsed && (
+              <>
+                <span
+                  className="comment-text"
+                  style={{ fontSize: "11pt", lineHeight: "1.15" }}
+                >
+                  <Linkify
+                    options={{
+                      className: "meta-link selectable-link",
+                      target: (href) => {
+                        if (href.startsWith("https://news.kiwistand.com") || 
+                            href.startsWith("https://staging.kiwistand.com"))
+                          return "_self";
+                        return isIOS() ? "_self" : "_blank";
+                      },
+                      attributes: (href) => ({
+                        onClick: (e) => {
+                          const sanitizedHref = DOMPurify.sanitize(href);
+                          const isInternal = sanitizedHref.startsWith("https://news.kiwistand.com") || 
+                                            sanitizedHref.startsWith("https://staging.kiwistand.com");
+                          
+                          if ((window.ReactNativeWebView || window !== window.parent) && !isInternal) {
+                            e.preventDefault();
+                            if (window.sdk?.actions?.openUrl) {
+                              window.sdk.actions.openUrl(sanitizedHref);
+                            }
+                          }
+                        },
+                      }),
+                      defaultProtocol: "https",
+                      validate: {
+                        url: (value) => /^https:\/\/.*/.test(value),
+                        email: () => false,
+                      },
+                    }}
+                  >
+                    {comment.title.split("\n").map((line, i) => {
+                      if (line.startsWith(">")) {
+                        return (
+                          <div
+                            key={i}
+                            style={{
+                              borderLeft: "3px solid #ccc",
+                              paddingLeft: "10px",
+                              margin: "8px 0 0 0",
+                              color: "#666",
+                            }}
+                          >
+                            {line.substring(2)}
+                          </div>
+                        );
+                      }
+                      // Only wrap in div if it's not an empty line
+                      return line.trim() ? (
+                        <div key={i}>{line}</div>
+                      ) : (
+                        // Empty lines create spacing between paragraphs
+                        <br key={i} />
+                      );
+                    })}
+                  </Linkify>
+                </span>
+                <EmojiReaction
+                  comment={comment}
+                  allowlist={allowlist}
+                  delegations={delegations}
+                  toast={toast}
+                />
+              </>
+            )}
+          </div>
+        </div>
       </span>
     );
   },

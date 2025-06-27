@@ -945,42 +945,45 @@ const row = (
                             </span>
                           </div>
                         `}
-                        <div
-                          style="display: flex; align-items: center; gap: 5px; margin-bottom: 3px;"
-                        >
+                        <div style="display: flex; align-items: flex-start;">
                           ${story.lastComment.identity.safeAvatar &&
-                          html`<img
-                            loading="lazy"
-                            src="${DOMPurify.sanitize(
-                              story.lastComment.identity.safeAvatar,
-                            )}"
-                            alt="avatar"
-                            style="border: 1px solid #ccc; width: ${size}px; height: ${size}px; border-radius: 2px;"
-                          />`}
-                          <span
-                            style="font-size: 10pt; touch-action: manipulation;user-select: none; font-weight: 500;"
-                            >${DOMPurify.sanitize(
-                              story.lastComment.identity.displayName,
-                            )}</span
-                          >
-                          <span style="opacity:0.6"> • </span>
-                          <span style="font-size: 9pt; opacity: 0.9;">
-                            ${formatDistanceToNowStrict(
-                              new Date(story.lastComment.timestamp * 1000),
-                            )}
-                            <span> </span>
-                            ago
-                          </span>
-                        </div>
-                        <span> </span>
-                        <div style="padding-left:20px;">
-                          <span
-                            class="comment-preview-text"
-                            style="display: block; white-space: pre-wrap; word-break: break-word; touch-action: manipulation;user-select: none;"
-                            >${truncateComment(
-                              DOMPurify.sanitize(story.lastComment.title),
-                            )}</span
-                          >
+                          html`<div style="width: 32px; flex-shrink: 0; margin-right: 14px;">
+                            <img
+                              loading="lazy"
+                              src="${DOMPurify.sanitize(
+                                story.lastComment.identity.safeAvatar,
+                              )}"
+                              alt="avatar"
+                              style="width: 32px; height: 32px; border: 1px solid #828282; border-radius: 0;"
+                            />
+                          </div>`}
+                          <div style="flex: 1; min-width: 0;">
+                            <div
+                              style="display: flex; align-items: center; gap: 5px; margin-bottom: 3px;"
+                            >
+                              <span
+                                style="font-size: 10pt; touch-action: manipulation;user-select: none; font-weight: 500;"
+                                >${DOMPurify.sanitize(
+                                  story.lastComment.identity.displayName,
+                                )}</span
+                              >
+                              <span style="opacity:0.6"> • </span>
+                              <span style="font-size: 9pt; opacity: 0.9;">
+                                ${formatDistanceToNowStrict(
+                                  new Date(story.lastComment.timestamp * 1000),
+                                )}
+                                <span> </span>
+                                ago
+                              </span>
+                            </div>
+                            <span
+                              class="comment-preview-text"
+                              style="display: block; white-space: pre-wrap; word-break: break-word; touch-action: manipulation;user-select: none;"
+                              >${truncateComment(
+                                DOMPurify.sanitize(story.lastComment.title),
+                              )}</span
+                            >
+                          </div>
                         </div>
                         <span> </span>
                       </div>

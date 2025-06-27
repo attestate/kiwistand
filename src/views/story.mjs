@@ -318,173 +318,182 @@ export default async function (trie, theme, index, value, referral) {
                                 : "scroll-margin-base"}"
                               style="${comment.flagged
                                 ? "opacity: 0.5"
-                                : ""}; color: black; border: var(--border); background-color: var(--background-color0); padding: 0.55rem 0.75rem 0.75rem 0.55rem; border-radius: 2px;display: block; margin-bottom: 15px; white-space: pre-wrap; line-height: 1.2; word-break: break-word; overflow-wrap: break-word;"
+                                : ""}; color: black; border: var(--border); background-color: var(--background-color0); padding: 0.75rem; border-radius: 2px;display: block; margin-bottom: 15px; white-space: pre-wrap; line-height: 1.2; word-break: break-word; overflow-wrap: break-word;"
                             >
-                              <div
-                                style="white-space: nowrap; gap: 3px; margin-bottom: 0.5rem; display: inline-flex; align-items: center;"
-                              >
+                              <div style="display: flex; align-items: flex-start;">
                                 ${comment.avatar
-                                  ? html`<img
-                                      loading="lazy"
-                                      src="${comment.avatar}"
-                                      alt="avatar"
-                                      style="margin-right: 5px; width: 12px; height:12px; border: 1px solid #828282; border-radius: 2px;"
-                                    />`
+                                  ? html`<div style="width: 32px; flex-shrink: 0; margin-right: 12px;">
+                                      <a
+                                        href="/upvotes?address=${comment.identity.address}"
+                                      >
+                                        <img
+                                          loading="lazy"
+                                          src="${comment.avatar}"
+                                          alt="avatar"
+                                          style="width: 32px; height: 32px; border: 1px solid #828282; border-radius: 0;"
+                                        />
+                                      </a>
+                                    </div>`
                                   : null}
-                                <b
-                                  >${!comment.flagged
-                                    ? html`<a
-                                        style="color: black;"
-                                        href="/upvotes?address=${comment
-                                          .identity.address}"
-                                        >${truncateName(comment.displayName)}</a
-                                      >`
-                                    : truncateName(comment.displayName)}</b
-                                >
-                                <span class="inverse-share-container">
-                                  <span> • </span>
-                                  <a
-                                    class="meta-link"
-                                    href="/stories/${getSlug(value.title)}?index=0x${index}#0x${comment.index}"
+                                <div style="flex: 1; min-width: 0;">
+                                  <div
+                                    style="white-space: nowrap; gap: 3px; margin-bottom: 0.5rem; display: inline-flex; align-items: center;"
                                   >
-                                    <span>
-                                      ${formatDistanceToNowStrict(
-                                        new Date(comment.timestamp * 1000),
-                                      )}
-                                    </span>
-                                    <span> ago</span>
-                                  </a>
-                                </span>
-                                <span class="share-container">
-                                  <span> • </span>
-                                  <a
-                                    href="#"
-                                    class="caster-link share-link"
-                                    title="Share"
-                                    style="white-space: nowrap;"
-                                    onclick="event.preventDefault(); navigator.share({url: 'https://news.kiwistand.com/stories/${getSlug(
-                                      value.title,
-                                    )}?index=0x${index}#0x${comment.index}'});"
-                                  >
-                                    ${ShareIcon(
-                                      "padding: 0 3px 1px 0; vertical-align: middle; height: 13px; width: 13px;",
-                                    )}
-                                    <span>
-                                      ${formatDistanceToNowStrict(
-                                        new Date(comment.timestamp * 1000),
-                                      )}
-                                    </span>
-                                    <span> ago</span>
-                                  </a>
-                                </span>
-                              </div>
-                              <br />
-                              ${comment.flagged && comment.reason
-                                ? html`<i
-                                    >Moderated because: "${comment.reason}"</i
-                                  >`
-                                : html`<span
-                                      class="comment-text"
-                                      dangerouslySetInnerHTML=${{
-                                        __html: comment.title
-                                          .split("\n")
-                                          .map((line) => {
-                                            if (line.startsWith(">")) {
-                                              return `<div style="border-left: 3px solid #ccc; padding-left: 10px; margin: 8px 0 0 0; color: #666;">${DOMPurify.sanitize(
-                                                line.substring(2),
-                                              )}</div>`;
-                                            }
-                                            return line.trim()
-                                              ? `<div>${DOMPurify.sanitize(
-                                                  line,
-                                                )}</div>`
-                                              : "<br/>";
-                                          })
-                                          .join("")
-                                          .replace(
-                                            /(https?:\/\/[^\s<]+)/g,
-                                            (url) => {
-                                              const sanitizedUrl = DOMPurify.sanitize(url);
-                                              const isInternal = sanitizedUrl.startsWith("https://news.kiwistand.com") || 
-                                                                sanitizedUrl.startsWith("https://staging.kiwistand.com");
-                                              return `<a class="meta-link selectable-link" href="${sanitizedUrl}" target="${
-                                                isInternal ? "_self" : "_blank"
-                                              }" onclick="${
-                                                !isInternal 
-                                                  ? `if (window.ReactNativeWebView || window !== window.parent) { event.preventDefault(); window.sdk.actions.openUrl('${sanitizedUrl}'); }`
-                                                  : ""
-                                              }">${sanitizedUrl}</a>`;
-                                            }
-                                          ),
-                                      }}
-                                    ></span>
-                                    <div
-                                      class="reactions-container"
-                                      data-comment-index="${comment.index}"
-                                      data-comment="${JSON.stringify({
-                                        ...comment,
-                                        reactions: (
-                                          comment.reactions || []
-                                        ).map((reaction) => ({
-                                          ...reaction,
-                                          reactors: reaction.reactors,
-                                          reactorProfiles:
-                                            reaction.reactorProfiles,
-                                        })),
-                                      })}"
-                                      style="display: flex; flex-wrap: wrap; gap: 16px; min-height: 59px;"
+                                    <b
+                                      >${!comment.flagged
+                                        ? html`<a
+                                            style="color: black;"
+                                            href="/upvotes?address=${comment
+                                              .identity.address}"
+                                            >${truncateName(comment.displayName)}</a
+                                          >`
+                                        : truncateName(comment.displayName)}</b
                                     >
-                                      ${["🥝", "🔥", "👀", "💯", "🤭"].map(
-                                        (emoji) => {
-                                          const reaction =
-                                            comment.reactions.find(
-                                              (r) => r.emoji === emoji,
-                                            );
-                                          return html`
-                                            <div
-                                              style="margin-top: 32px; display: inline-flex; align-items: center; padding: 4px 12px; background-color: var(--bg-off-white); border: var(--border-thin); border-radius: 2px; font-size: 10pt;"
-                                            >
-                                              <span
-                                                style="margin-right: ${reaction?.reactorProfiles?.filter(
-                                                  (profile) =>
-                                                    profile.safeAvatar,
-                                                )?.length
-                                                  ? "4px"
-                                                  : "0"}"
-                                                >${emoji}</span
-                                              >
-                                              ${reaction?.reactorProfiles
-                                                ?.filter(
-                                                  (profile) =>
-                                                    profile.safeAvatar,
-                                                )
-                                                .map(
-                                                  (profile, i) => html`
-                                                    <img
-                                                      loading="lazy"
-                                                      src="${profile.safeAvatar}"
-                                                      alt="reactor"
-                                                      style="z-index: ${i}; width: ${i >
-                                                      0
-                                                        ? "13px"
-                                                        : "12px"}; height: ${i >
-                                                      0
-                                                        ? "13px"
-                                                        : "12px"}; border-radius: 2px; border: ${i >
-                                                      0
-                                                        ? "1px solid #f3f3f3"
-                                                        : "1px solid #828282"}; margin-left: ${i >
-                                                      0
-                                                        ? "-4px"
-                                                        : "0"};"
-                                                    />
-                                                  `,
-                                                )}
-                                            </div>
-                                          `;
-                                        },
-                                      )}
-                                    </div>`}
+                                    <span class="inverse-share-container">
+                                      <span> • </span>
+                                      <a
+                                        class="meta-link"
+                                        href="/stories/${getSlug(value.title)}?index=0x${index}#0x${comment.index}"
+                                      >
+                                        <span>
+                                          ${formatDistanceToNowStrict(
+                                            new Date(comment.timestamp * 1000),
+                                          )}
+                                        </span>
+                                        <span> ago</span>
+                                      </a>
+                                    </span>
+                                    <span class="share-container">
+                                      <span> • </span>
+                                      <a
+                                        href="#"
+                                        class="caster-link share-link"
+                                        title="Share"
+                                        style="white-space: nowrap;"
+                                        onclick="event.preventDefault(); navigator.share({url: 'https://news.kiwistand.com/stories/${getSlug(
+                                          value.title,
+                                        )}?index=0x${index}#0x${comment.index}'});"
+                                      >
+                                        ${ShareIcon(
+                                          "padding: 0 3px 1px 0; vertical-align: middle; height: 13px; width: 13px;",
+                                        )}
+                                        <span>
+                                          ${formatDistanceToNowStrict(
+                                            new Date(comment.timestamp * 1000),
+                                          )}
+                                        </span>
+                                        <span> ago</span>
+                                      </a>
+                                    </span>
+                                  </div>
+                                  ${comment.flagged && comment.reason
+                                    ? html`<i
+                                        >Moderated because: "${comment.reason}"</i
+                                      >`
+                                    : html`<span
+                                          class="comment-text"
+                                          dangerouslySetInnerHTML=${{
+                                            __html: comment.title
+                                              .split("\n")
+                                              .map((line) => {
+                                                if (line.startsWith(">")) {
+                                                  return `<div style="border-left: 3px solid #ccc; padding-left: 10px; margin: 8px 0 0 0; color: #666;">${DOMPurify.sanitize(
+                                                    line.substring(2),
+                                                  )}</div>`;
+                                                }
+                                                return line.trim()
+                                                  ? `<div>${DOMPurify.sanitize(
+                                                      line,
+                                                    )}</div>`
+                                                  : "<br/>";
+                                              })
+                                              .join("")
+                                              .replace(
+                                                /(https?:\/\/[^\s<]+)/g,
+                                                (url) => {
+                                                  const sanitizedUrl = DOMPurify.sanitize(url);
+                                                  const isInternal = sanitizedUrl.startsWith("https://news.kiwistand.com") || 
+                                                                    sanitizedUrl.startsWith("https://staging.kiwistand.com");
+                                                  return `<a class="meta-link selectable-link" href="${sanitizedUrl}" target="${
+                                                    isInternal ? "_self" : "_blank"
+                                                  }" onclick="${
+                                                    !isInternal 
+                                                      ? `if (window.ReactNativeWebView || window !== window.parent) { event.preventDefault(); window.sdk.actions.openUrl('${sanitizedUrl}'); }`
+                                                      : ""
+                                                  }">${sanitizedUrl}</a>`;
+                                                }
+                                              ),
+                                          }}
+                                        ></span>
+                                        <div
+                                          class="reactions-container"
+                                          data-comment-index="${comment.index}"
+                                          data-comment="${JSON.stringify({
+                                            ...comment,
+                                            reactions: (
+                                              comment.reactions || []
+                                            ).map((reaction) => ({
+                                              ...reaction,
+                                              reactors: reaction.reactors,
+                                              reactorProfiles:
+                                                reaction.reactorProfiles,
+                                            })),
+                                          })}"
+                                          style="display: flex; flex-wrap: wrap; gap: 8px;"
+                                        >
+                                          ${["🥝", "🔥", "👀", "💯", "🤭"].map(
+                                            (emoji) => {
+                                              const reaction =
+                                                comment.reactions.find(
+                                                  (r) => r.emoji === emoji,
+                                                );
+                                              return html`
+                                                <div
+                                                  style="margin-top: 32px; display: inline-flex; align-items: center; padding: 4px 12px; background-color: var(--bg-off-white); border: var(--border-thin); border-radius: 2px; font-size: 10pt;"
+                                                >
+                                                  <span
+                                                    style="margin-right: ${reaction?.reactorProfiles?.filter(
+                                                      (profile) =>
+                                                        profile.safeAvatar,
+                                                    )?.length
+                                                      ? "4px"
+                                                      : "0"}"
+                                                    >${emoji}</span
+                                                  >
+                                                  ${reaction?.reactorProfiles
+                                                    ?.filter(
+                                                      (profile) =>
+                                                        profile.safeAvatar,
+                                                    )
+                                                    .map(
+                                                      (profile, i) => html`
+                                                        <img
+                                                          loading="lazy"
+                                                          src="${profile.safeAvatar}"
+                                                          alt="reactor"
+                                                          style="z-index: ${i}; width: ${i >
+                                                          0
+                                                            ? "13px"
+                                                            : "12px"}; height: ${i >
+                                                          0
+                                                            ? "13px"
+                                                            : "12px"}; border-radius: 2px; border: ${i >
+                                                          0
+                                                            ? "1px solid #f3f3f3"
+                                                            : "1px solid #828282"}; margin-left: ${i >
+                                                          0
+                                                            ? "-4px"
+                                                            : "0"};"
+                                                        />
+                                                      `,
+                                                    )}
+                                                </div>
+                                              `;
+                                            },
+                                          )}
+                                        </div>`}
+                                </div>
+                              </div>
                             </span>`,
                         )}
                       </div>
