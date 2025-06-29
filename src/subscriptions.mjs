@@ -12,6 +12,7 @@ import * as email from "./email.mjs";
 import { truncateComment } from "./views/activity.mjs";
 import { getSlug } from "./utils.mjs";
 import { sendNotification, getFidsFromAddresses } from "./neynar.mjs";
+import * as moderation from "./views/moderation.mjs";
 
 if (env.NODE_ENV == "production")
   webpush.setVapidDetails(
@@ -69,7 +70,19 @@ export async function triggerNotification(message) {
     submission.identity,
     ...submission.comments.map((comment) => comment.identity),
   ].filter((receiver) => receiver !== message.identity);
-  const uniqueReceivers = Array.from(new Set(receivers));
+  let uniqueReceivers = Array.from(new Set(receivers));
+
+  // Filter out banned users from receiving notifications
+  try {
+    const policy = await moderation.getLists();
+    const bannedAddresses = policy.addresses || [];
+    uniqueReceivers = uniqueReceivers.filter(
+      receiver => !bannedAddresses.includes(receiver.toLowerCase())
+    );
+  } catch (err) {
+    log(`Failed to get banned addresses for notification filtering: ${err}`);
+    // Continue with unfiltered list if moderation fails
+  }
 
   const maxChars = 140;
   const slug = getSlug(submission.title);

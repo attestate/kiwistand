@@ -1,5 +1,6 @@
 import { getKarmaRankingByDate } from './cache.mjs';
 import * as ens from './ens.mjs';
+import * as moderation from './views/moderation.mjs';
 
 const ROUND_DURATION_WEEKS = 1;
 
@@ -7,10 +8,21 @@ export async function getLeaderboard() {
   const { startDate, endDate } = getCurrentRoundDates();
   const leaderboard = getKarmaRankingByDate(startDate, endDate);
   
-  // Filter out specific addresses
+  // Get banned profiles from moderation system
+  let bannedAddresses = [];
+  try {
+    const policy = await moderation.getLists();
+    bannedAddresses = policy.profiles || [];
+  } catch (err) {
+    // If moderation fails, continue with empty banlist
+    console.error('Failed to get banned profiles:', err);
+  }
+  
+  // Filter out banned addresses and specific addresses that don't want to participate
   const filteredLeaderboard = leaderboard.filter(user => 
     user.identity.toLowerCase() !== '0x2cb8c01eabdff323c9f2600782132ace6ea37bc4' &&
-    user.identity.toLowerCase() !== '0xee324c588cef1bf1c1360883e4318834af66366d'
+    user.identity.toLowerCase() !== '0xee324c588cef1bf1c1360883e4318834af66366d' &&
+    !bannedAddresses.includes(user.identity.toLowerCase())
   );
   
   // Resolve ENS data for each user

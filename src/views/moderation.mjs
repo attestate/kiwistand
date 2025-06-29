@@ -126,7 +126,8 @@ export async function getLists() {
     titlesResult,
     hrefsResult,
     messagesResult,
-    labelsResult
+    labelsResult,
+    profilesResult
   ] = await Promise.allSettled([
     getConfig("pinned"),
     getConfig("banlist_addresses"),
@@ -135,7 +136,8 @@ export async function getLists() {
     getConfig("moderation_titles"),
     getConfig("moderation_hrefs"),
     getConfig("banlist_messages"),
-    getLabels()
+    getLabels(),
+    getConfig("banlist_profiles")
   ]);
 
   // Process results
@@ -205,15 +207,31 @@ export async function getLists() {
     log(`labels: Couldn't get config: ${labelsResult.reason}`);
   }
 
+  let profiles = [];
+  if (profilesResult.status === "fulfilled") {
+    profiles = profilesResult.value.map(({ profile }) => {
+      // Extract address from profile URL like https://news.kiwistand.com/upvotes?address=0x...
+      const url = new URL(profile);
+      const address = url.searchParams.get('address');
+      return address ? address.toLowerCase() : null;
+    }).filter(Boolean);
+  } else {
+    log(`banlist_profiles: Couldn't get config: ${profilesResult.reason}`);
+  }
+
+  // Merge profile addresses into the main addresses banlist
+  const mergedAddresses = [...new Set([...addresses, ...profiles])];
+
   const result = {
     pinned,
     hrefs,
     messages,
     titles,
-    addresses,
+    addresses: mergedAddresses,
     links,
     images,
     labels,
+    profiles,
   };
 
   // Cache result in dev mode
