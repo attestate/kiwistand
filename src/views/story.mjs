@@ -47,7 +47,10 @@ export async function generateStory(index) {
 
   let submission;
   try {
-    submission = getSubmission(index);
+    // Get banned addresses from moderation config
+    const policy = await moderation.getLists();
+    const bannedAddresses = policy.addresses || [];
+    submission = getSubmission(index, null, null, null, bannedAddresses);
   } catch (err) {
     log(
       `Requested index "${index}" but didn't find because of error "${err.toString()}"`,
@@ -61,7 +64,10 @@ export async function generateStory(index) {
 export async function generatePreview(index) {
   let submission;
   try {
-    submission = getSubmission(index);
+    // Get banned addresses from moderation config
+    const policy = await moderation.getLists();
+    const bannedAddresses = policy.addresses || [];
+    submission = getSubmission(index, null, null, null, bannedAddresses);
   } catch (err) {
     log(
       `Requested index "${index}" but didn't find because of error "${err.toString()}"`,

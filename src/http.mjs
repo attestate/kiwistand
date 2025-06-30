@@ -1045,8 +1045,11 @@ export async function launch(trie, libp2p, isPrimary = true) {
 
     const index = request.query.index;
     try {
-      submission = getSubmission(index);
-    } catch (e) {
+      // Get banned addresses from moderation config
+      const policy = await moderation.getLists();
+      const bannedAddresses = policy.addresses || [];
+      submission = getSubmission(index, null, null, null, bannedAddresses);
+    } catch (err) {
       log(`/api/v1/stories: Error in getSubmission: ${err.stack}`);
       const code = 404;
       const httpMessage = "Not Found";

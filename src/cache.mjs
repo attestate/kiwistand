@@ -918,7 +918,7 @@ export function getLastComment(submissionId) {
   };
 }
 
-export function getSubmission(index, href, identityFilter, hrefs) {
+export function getSubmission(index, href, identityFilter, hrefs, bannedAddresses = []) {
   let submission;
   if (index) {
     submission = db
@@ -1000,6 +1000,10 @@ export function getSubmission(index, href, identityFilter, hrefs) {
    `,
     )
     .all(submission.id)
+    .filter((comment) => {
+      // Filter out comments from banned addresses
+      return !bannedAddresses.includes(comment.identity.toLowerCase());
+    })
     .map((comment) => {
       const [, index] = comment.id.split("0x");
       const originalCommentId = comment.id;
