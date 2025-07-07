@@ -66,6 +66,7 @@ import * as subscriptions from "./subscriptions.mjs";
 import * as telegram from "./telegram.mjs";
 import * as email from "./email.mjs";
 import * as price from "./price.mjs";
+import * as moderation from "./views/moderation.mjs";
 import {
   getSubmission,
   trackOutbound,
