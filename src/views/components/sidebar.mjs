@@ -598,7 +598,7 @@ const sidebar = (path) => html`
       </a>
     </div>
     <a
-        title="Rewards"
+        title="Leaderboard"
         href="/community"
         style="${path === "/community"
           ? " font-weight: bold; background-color: rgba(0,0,0,0.1);"
@@ -608,7 +608,7 @@ const sidebar = (path) => html`
           <div class="svg-container">
             ${path === "/community" ? communityfull : community}
           </div>
-          <span>Rewards</span>
+          <span>Leaderboard</span>
         </div>
       </a>
     <a

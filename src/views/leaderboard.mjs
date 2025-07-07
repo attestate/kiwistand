@@ -7,7 +7,7 @@ import Sidebar from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
 import { custom } from "./components/head.mjs";
 
-import { getLeaderboard, getCurrentUserRank, getTimeRemainingInRound } from '../leaderboard.mjs';
+import { getLeaderboard, getCurrentUserRank } from '../leaderboard.mjs';
 import DOMPurify from "isomorphic-dompurify";
 
 const html = htm.bind(vhtml);
@@ -15,16 +15,8 @@ const html = htm.bind(vhtml);
 export default async function Leaderboard(identity, theme) {
   const leaderboard = await getLeaderboard();
   const currentUserRank = await getCurrentUserRank(identity);
-  const timeRemaining = await getTimeRemainingInRound();
 
-  const formatTime = (milliseconds) => {
-    const totalSeconds = Math.floor(milliseconds / 1000);
-    const days = Math.floor(totalSeconds / 86400);
-    const hours = Math.floor((totalSeconds % 86400) / 3600);
-    return `${days}d ${hours}h`;
-  };
-
-  const path = "/community"; // This page is accessed via /community
+  const path = "/community";
 
   return html`
     <html lang="en" op="news">
@@ -49,88 +41,7 @@ export default async function Leaderboard(identity, theme) {
               <tr>
                 <td>
                   <div style="padding: 15px; max-width: 800px; margin: 0 auto;">
-                    <div style="background-color: var(--table-bg); padding: 20px; border: var(--border); margin-bottom: 20px;">
-                      <div style="text-align: center;">
-                        <h1 style="margin: 0 0 8px 0; font-size: 24px; color: black; font-weight: 600;">Win 100 USDC</h1>
-                        
-                        <!-- USDC Sponsorship -->
-                        <div style="margin-top: 20px; display: flex; align-items: center; justify-content: center; gap: 12px;">
-                          <img src="/usdc-logo.svg" alt="USDC" style="width: 40px; height: 40px;" />
-                          <div style="text-align: left;">
-                            <h2 style="margin: 0; font-size: 20px; color: black; font-weight: 600;">100 USDC Weekly Prize Pool</h2>
-                          </div>
-                        </div>
-                        
-                        <!-- Prize Distribution -->
-                        <div style="margin-top: 16px; display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;">
-                          <div style="padding: 12px 16px; background-color: #ffd700; background-color: rgba(255, 215, 0, 0.1); border: 1px solid #ffd700; border-radius: 4px;">
-                            <div style="font-size: 12px; color: #666; margin-bottom: 2px;">1st Place</div>
-                            <div style="font-size: 18px; font-weight: 600; color: black;">50 USDC</div>
-                            <a href="https://farcaster.xyz/timdaub.eth" target="_blank" style="display: flex; align-items: center; gap: 4px; margin-top: 6px; text-decoration: none; color: #666;">
-                              <img src="https://wrpcd.net/cdn-cgi/imagedelivery/BXluQx4ige9GuW0Ia56BHw/2b498bea-9075-4173-9172-3c99689eb400/anim=false,fit=contain,f=auto,w=48" alt="timdaub" style="width: 16px; height: 16px; border-radius: 2px;" />
-                              <span style="font-size: 10px;">by @timdaub</span>
-                            </a>
-                          </div>
-                          <div style="padding: 12px 16px; background-color: rgba(192, 192, 192, 0.1); border: 1px solid #c0c0c0; border-radius: 4px; position: relative;">
-                            <div style="font-size: 12px; color: #666; margin-bottom: 2px;">2nd Place</div>
-                            <div style="font-size: 18px; font-weight: 600; color: black;">30 USDC</div>
-                            <a href="https://farcaster.xyz/robot" target="_blank" style="display: flex; align-items: center; gap: 4px; margin-top: 6px; text-decoration: none; color: #666;">
-                              <img src="https://wrpcd.net/cdn-cgi/imagedelivery/BXluQx4ige9GuW0Ia56BHw/3933efd9-8a97-4c1c-0616-3aa04cc1f900/anim=false,fit=contain,f=auto,w=48" alt="robot" style="width: 16px; height: 16px; border-radius: 2px;" />
-                              <span style="font-size: 10px;">by @robot</span>
-                            </a>
-                          </div>
-                          <div style="padding: 12px 16px; background-color: rgba(205, 127, 50, 0.1); border: 1px solid #cd7f32; border-radius: 4px;">
-                            <div style="font-size: 12px; color: #666; margin-bottom: 2px;">3rd Place</div>
-                            <div style="font-size: 18px; font-weight: 600; color: black;">20 USDC</div>
-                            <a href="https://farcaster.xyz/timdaub.eth" target="_blank" style="display: flex; align-items: center; gap: 4px; margin-top: 6px; text-decoration: none; color: #666;">
-                              <img src="https://wrpcd.net/cdn-cgi/imagedelivery/BXluQx4ige9GuW0Ia56BHw/2b498bea-9075-4173-9172-3c99689eb400/anim=false,fit=contain,f=auto,w=48" alt="timdaub" style="width: 16px; height: 16px; border-radius: 2px;" />
-                              <span style="font-size: 10px;">by @timdaub</span>
-                            </a>
-                          </div>
-                        </div>
-                        
-                        <div style="margin-top: 16px; padding: 12px; background-color: var(--table-bg); border: var(--border-thin);">
-                          <p style="margin: 0; font-size: 13px; color: var(--visited-link);">
-                            <span style="font-weight: 500;">Want to increase the prize pool?</span> 
-                            <span style="margin-left: 4px;">Contact us to sponsor future competitions</span>
-                          </p>
-                        </div>
-                      </div>
-                    </div>
 
-                    <!-- Tutorial Boxes - React component will mount here -->
-                    <div id="tutorial-drawers">
-                      <!-- Server-side placeholder to prevent layout shift -->
-                      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
-                        <!-- How to Earn Box Placeholder -->
-                        <div style="background-color: var(--table-bg); padding: 15px; border: var(--border); cursor: pointer; opacity: 0.8; min-height: 68px;">
-                          <div style="display: flex; justify-content: space-between; align-items: center; height: 38px;">
-                            <div style="display: flex; align-items: center;">
-                              <div style="width: 20px; height: 20px; margin-right: 10px; background-color: #ddd; border-radius: 2px; flex-shrink: 0;"></div>
-                              <div>
-                                <div style="width: 80px; height: 16px; background-color: #ddd; border-radius: 2px; margin-bottom: 5px;"></div>
-                                <div style="width: 120px; height: 13px; background-color: #eee; border-radius: 2px;"></div>
-                              </div>
-                            </div>
-                            <div style="width: 16px; height: 16px; background-color: #ddd; border-radius: 2px; flex-shrink: 0;"></div>
-                          </div>
-                        </div>
-
-                        <!-- Reward Tiers Box Placeholder -->
-                        <div style="background-color: var(--table-bg); padding: 15px; border: var(--border); cursor: pointer; opacity: 0.8; min-height: 68px;">
-                          <div style="display: flex; justify-content: space-between; align-items: center; height: 38px;">
-                            <div style="display: flex; align-items: center;">
-                              <div style="width: 20px; height: 20px; margin-right: 10px; background-color: #ddd; border-radius: 2px; flex-shrink: 0;"></div>
-                              <div>
-                                <div style="width: 90px; height: 16px; background-color: #ddd; border-radius: 2px; margin-bottom: 5px;"></div>
-                                <div style="width: 110px; height: 13px; background-color: #eee; border-radius: 2px;"></div>
-                              </div>
-                            </div>
-                            <div style="width: 16px; height: 16px; background-color: #ddd; border-radius: 2px; flex-shrink: 0;"></div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
 
                     <div style="background-color: var(--table-bg); padding: 20px; border: var(--border); margin-bottom: 20px;">
                       <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -141,10 +52,6 @@ export default async function Leaderboard(identity, theme) {
                         <div style="text-align: center; flex: 1;">
                           <div style="color: var(--visited-link); font-size: 13px; margin-bottom: 6px;">Your Rank</div>
                           <div style="font-size: 22px; font-weight: bold; color: black;">${currentUserRank?.rank ? `#${currentUserRank.rank}` : 'Unranked'}</div>
-                        </div>
-                        <div style="text-align: center; flex: 1;">
-                          <div style="color: var(--visited-link); font-size: 13px; margin-bottom: 6px;">Competition Ends</div>
-                          <div style="font-size: 22px; font-weight: bold; color: black;">July 7</div>
                         </div>
                       </div>
                     </div>
