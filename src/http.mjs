@@ -80,6 +80,7 @@ import { sendNotification } from "./neynar.mjs";
 import { timingSafeEqual } from "crypto";
 import { invalidateActivityCaches } from "./cloudflarePurge.mjs";
 import { getCastByHashAndConstructUrl } from "./parser.mjs";
+import { sendToChannel } from "./telegram-bot.mjs";
 
 const app = express();
 
@@ -198,9 +199,66 @@ app.post("/api/v1/neynar/notify", async (req, res) => {
   }
   
   try {
+    // Send Neynar notification
     const resp = await sendNotification(target_url, notificationBody, notificationTitle);
+    
+    // Also send to Telegram channel
+    const telegramMessage = `${submission.title}\n\n${target_url}`;
+    const tgResult = await sendToChannel(telegramMessage);
+    
+    if (!tgResult.success) {
+      log(`Failed to send to Telegram: ${tgResult.error}`);
+    } else {
+      log(`Successfully sent to Telegram channel`);
+    }
+    
     return res.json(resp);
   } catch (err) {
+    return sendError(res, 500, "Internal Server Error", err.toString());
+  }
+});
+
+// Test endpoint for Telegram only (no Farcaster notifications)
+app.post("/api/v1/telegram/test", async (req, res) => {
+  const apiKey = req.header("x-admin-key") || "";
+  const adminKey = process.env.ADMIN_KEY || "";
+  const apiKeyBuf = Buffer.from(apiKey);
+  const adminKeyBuf = Buffer.from(adminKey);
+  if (
+    apiKeyBuf.length !== adminKeyBuf.length ||
+    !timingSafeEqual(apiKeyBuf, adminKeyBuf)
+  ) {
+    return res.status(401).json({ status: "error", message: "Unauthorized" });
+  }
+
+  const { index = "0x686ce790e44594f0fb061d0983011442a0a16b03e45d65a8ea8e9b4ec5317ac17f4b2def", tag = "Test Demo" } = req.body;
+  
+  try {
+    // Fetch submission from cache
+    const submission = getSubmission(index);
+    
+    // Extract domain from submission href
+    const domain = extractDomain(submission.href);
+    
+    // Construct the story URL
+    const storyUrl = `https://news.kiwistand.com/stories/${getSlug(submission.title)}?index=${index}`;
+    
+    // Send only to Telegram channel
+    const telegramMessage = `🥝 *${tag}*\n\n[${submission.title}](${storyUrl})\n\n🌐 ${domain}`;
+    const tgResult = await sendToChannel(telegramMessage);
+    
+    if (!tgResult.success) {
+      log(`Failed to send test to Telegram: ${tgResult.error}`);
+      return sendError(res, 500, "Telegram Error", tgResult.error);
+    }
+    
+    log(`Successfully sent test message to Telegram channel`);
+    return sendStatus(res, 200, "OK", "Test message sent to Telegram successfully", {
+      telegramSent: true,
+      message: telegramMessage
+    });
+  } catch (err) {
+    log(`Error in Telegram test: ${err.toString()}`);
     return sendError(res, 500, "Internal Server Error", err.toString());
   }
 });

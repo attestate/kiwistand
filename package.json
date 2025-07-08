@@ -111,6 +111,7 @@
     "node-cache": "5.1.2",
     "node-fetch-cache": "3.1.2",
     "node-html-parser": "6.1.13",
+    "node-telegram-bot-api": "0.66.0",
     "nodemon": "2.0.21",
     "normalize-url": "8.0.0",
     "open-graph-scraper-lite": "2.0.0",
