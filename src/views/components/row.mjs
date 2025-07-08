@@ -297,14 +297,17 @@ const row = (
       (story.metadata &&
         story.metadata.image &&
         !blockedOGImageDomains.includes(extractedDomain) &&
-        !knownBadOgImages.includes(story.metadata.image)) ||
+        !knownBadOgImages.includes(story.metadata.image) &&
+        !story.href.includes("/i/article/")) ||
       isCloudflare;
 
     // Check if we have what we need to render a tweet preview
+    // Exclude X.com article links
     const canRenderTweetPreview =
       isTweet && 
       story.metadata && 
-      story.metadata.ogDescription;
+      story.metadata.ogDescription &&
+      !story.href.includes("/i/article/");
 
     // Check if we have what we need to render a Farcaster cast preview
     const canRenderFarcasterPreview =
