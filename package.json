@@ -75,6 +75,7 @@
     "@tensorflow/tfjs-node": "4.22.0",
     "ajv": "8.12.0",
     "ajv-formats": "2.1.1",
+    "arweave": "1.14.4",
     "better-sqlite3": "9.4.0",
     "blocked-at": "1.2.0",
     "canonicalize": "2.0.0",

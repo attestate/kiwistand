@@ -19,6 +19,7 @@ import { countOutbounds } from "../../cache.mjs";
 import log from "../../logger.mjs";
 import { twitterFrontends } from "../../parser.mjs";
 import FarcasterFullCast from "./farcaster-full-cast.mjs";
+import ParagraphFullPost from "./paragraph-full-post.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -282,6 +283,9 @@ const row = (
        !story.href.includes("miniapps.farcaster.xyz") && 
        !story.href.includes("docs.farcaster.xyz") &&
        !story.href.includes("api.farcaster.xyz"));
+
+    // Check if this is a Paragraph.xyz post
+    const isParagraphPost = extractedDomain === "paragraph.xyz";
 
     // Check if the story itself is older than 12 hours
     const isStoryOlderThan12Hours =
@@ -1008,6 +1012,12 @@ const row = (
             (isFarcasterCast && story.metadata && story.metadata.farcasterCast && path === "/stories")
               ? html`<div style="margin: 0;">
                   ${FarcasterFullCast({ cast: story.metadata.farcasterCast })}
+                </div>`
+              : null}
+            ${// Show full Paragraph post content for Paragraph.xyz links only on /stories page
+            (isParagraphPost && story.metadata && story.metadata.paragraphPost && path === "/stories")
+              ? html`<div style="margin: 0;">
+                  ${ParagraphFullPost({ post: { ...story.metadata.paragraphPost, url: story.href } })}
                 </div>`
               : null}
             ${path !== "/stories"

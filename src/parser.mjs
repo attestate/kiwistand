@@ -11,6 +11,7 @@ import { fetchBuilder, FileSystemCache } from "node-fetch-cache";
 import { useAgent } from "request-filtering-agent";
 import Anthropic from "@anthropic-ai/sdk";
 import sharp from "sharp";
+import Arweave from "arweave";
 
 import { fetchCache as fetchCacheFactory } from "./utils.mjs";
 
@@ -24,6 +25,13 @@ const fetchCache = new FileSystemCache({
 
 const fetch = fetchBuilder.withCache(fetchCache);
 const fetchStaleWhileRevalidate = fetchCacheFactory(fetch, fetchCache);
+
+// Initialize Arweave client
+const arweave = Arweave.init({
+  host: 'arweave.net',
+  port: 443,
+  protocol: 'https'
+});
 
 export async function getPageSpeedScore(url) {
   const apiUrl = `https://pagespeedonline.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(
@@ -74,7 +82,7 @@ export const twitterFrontends = [
   "fxtwitter.com",
   "vxtwitter.com",
 ];
-const CLAUDE_DOMAINS = ["farcaster.xyz", "fxtwitter.com", ...twitterFrontends];
+const CLAUDE_DOMAINS = ["farcaster.xyz", "warpcast.com", "fxtwitter.com", ...twitterFrontends];
 
 const TITLE_COMPLIANCE = `
 Format this title according to these rules:
@@ -294,6 +302,7 @@ export async function extractWarpcastContent(identifier, type = "url") {
         pfp: data.cast.author.pfp_url,
       },
       timestamp: data.cast.timestamp,
+      embeds: data.cast.embeds || [],
     };
   } catch (error) {
     console.error("Neynar API error:", error);
@@ -315,6 +324,285 @@ export async function getCastByHashAndConstructUrl(castHash) {
   }
 
   return null;
+}
+
+// Convert TipTap JSON to HTML
+function convertTipTapToHTML(doc) {
+  if (!doc || !doc.content) return '';
+  
+  const convertNode = (node) => {
+    if (!node) return '';
+    
+    // Handle text nodes
+    if (node.type === 'text') {
+      let text = node.text || '';
+      // Apply marks (bold, italic, links, etc.)
+      if (node.marks && node.marks.length > 0) {
+        node.marks.forEach(mark => {
+          switch (mark.type) {
+            case 'bold':
+              text = `<strong>${text}</strong>`;
+              break;
+            case 'italic':
+              text = `<em>${text}</em>`;
+              break;
+            case 'underline':
+              text = `<u>${text}</u>`;
+              break;
+            case 'link':
+              text = `<a href="${mark.attrs.href}" target="${mark.attrs.target || '_blank'}" rel="${mark.attrs.rel || 'noopener noreferrer'}">${text}</a>`;
+              break;
+          }
+        });
+      }
+      return text;
+    }
+    
+    // Handle different node types
+    const children = node.content ? node.content.map(convertNode).join('') : '';
+    
+    switch (node.type) {
+      case 'doc':
+        return children;
+      case 'paragraph':
+        return `<p>${children}</p>`;
+      case 'heading':
+        const level = node.attrs?.level || 2;
+        return `<h${level}>${children}</h${level}>`;
+      case 'blockquote':
+        return `<blockquote>${children}</blockquote>`;
+      case 'bulletList':
+        return `<ul>${children}</ul>`;
+      case 'orderedList':
+        return `<ol>${children}</ol>`;
+      case 'listItem':
+        return `<li>${children}</li>`;
+      case 'codeBlock':
+        return `<pre><code>${children}</code></pre>`;
+      case 'image':
+        const imgAttrs = node.attrs || {};
+        // Ensure we have a valid image source
+        if (imgAttrs.src) {
+          return `<img src="${imgAttrs.src}" alt="${imgAttrs.alt || ''}" ${imgAttrs.title ? `title="${imgAttrs.title}"` : ''} style="max-width: 100%; height: auto;">`;
+        }
+        return '';
+      case 'figure':
+        // Figures often contain images, ensure proper styling
+        return `<figure style="margin: 1em 0; text-align: center;">${children}</figure>`;
+      case 'figcaption':
+        return `<figcaption style="margin-top: 0.5em; font-style: italic; color: #666;">${children}</figcaption>`;
+      case 'hardBreak':
+        return '<br>';
+      default:
+        // For unknown types, just return the children
+        return children;
+    }
+  };
+  
+  return convertNode(doc);
+}
+
+export async function extractParagraphContent(url) {
+  try {
+    // Extract the post slug from Paragraph.xyz URL
+    // URLs are typically in format: https://paragraph.xyz/@username/post-slug
+    const urlObj = new URL(url);
+    const pathParts = urlObj.pathname.split('/').filter(p => p);
+    
+    if (pathParts.length < 2 || !pathParts[0].startsWith('@')) {
+      log(`Invalid Paragraph URL format: ${url}`);
+      return null;
+    }
+    
+    const username = pathParts[0].substring(1); // Remove @ prefix
+    const postSlug = pathParts[1];
+    
+    // Fetch the HTML page
+    const signal = AbortSignal.timeout(10000);
+    const response = await fetch(url, {
+      headers: {
+        "User-Agent": env.USER_AGENT,
+      },
+      agent: useAgent(url),
+      signal,
+    });
+    
+    if (!response.ok) {
+      log(`Failed to fetch Paragraph page: ${response.status}`);
+      return null;
+    }
+    
+    const html = await response.text();
+    const dom = parser(html);
+    
+    // Try to extract Arweave transaction ID from meta tags or script tags
+    let arweaveId = null;
+    const metaTags = dom.querySelectorAll('meta');
+    for (const meta of metaTags) {
+      const property = meta.getAttribute('property') || meta.getAttribute('name');
+      if (property && property.includes('arweave')) {
+        arweaveId = meta.getAttribute('content');
+        break;
+      }
+    }
+    
+    // If no Arweave ID in meta tags, look in script tags
+    if (!arweaveId) {
+      const scriptTags = dom.querySelectorAll('script');
+      for (const script of scriptTags) {
+        const content = script.innerHTML;
+        // Look for Arweave transaction ID patterns (43 character base64url strings)
+        const arweaveMatch = content.match(/["']([a-zA-Z0-9_-]{43})["']/);
+        if (arweaveMatch && content.includes('arweave')) {
+          arweaveId = arweaveMatch[1];
+          break;
+        }
+      }
+    }
+    
+    // Extract basic metadata from the page
+    const title = dom.querySelector('meta[property="og:title"]')?.getAttribute('content') || 
+                  dom.querySelector('title')?.text || '';
+    const description = dom.querySelector('meta[property="og:description"]')?.getAttribute('content') || 
+                        dom.querySelector('meta[name="description"]')?.getAttribute('content') || '';
+    
+    // Try to extract article content
+    let content = '';
+    // Common selectors for article content in blog platforms
+    const contentSelectors = [
+      // Paragraph.xyz specific selectors
+      'div.prose.prose-lg',
+      'div[class*="prose"]',
+      '#__next main div.prose',
+      '#main-post-body',
+      // Generic selectors
+      'article[class*="prose"]',
+      'article',
+      '[class*="article-content"]',
+      '[class*="post-content"]',
+      'main article',
+      'main',
+      '.content'
+    ];
+    
+    log(`Attempting to extract content from page...`);
+    for (const selector of contentSelectors) {
+      const contentElement = dom.querySelector(selector);
+      if (contentElement) {
+        content = contentElement.innerHTML;
+        log(`Found content using selector: "${selector}", content length: ${content.length}, first 200 chars: ${content.substring(0, 200).replace(/\n/g, '\\n')}`);
+        
+        // If content looks like it's just plain text without HTML tags, check if we need to look deeper
+        if (content.length < 500 && !content.includes('<p>') && !content.includes('<br>')) {
+          log(`Content seems too short or lacks HTML, continuing search...`);
+          continue;
+        }
+        break;
+      }
+    }
+    
+    if (!content) {
+      log(`No content found with selectors, trying to find any div with substantial text...`);
+      // Last resort: find any div with substantial text content
+      const allDivs = dom.querySelectorAll('div');
+      for (const div of allDivs) {
+        const text = div.textContent || '';
+        if (text.length > 1000 && div.innerHTML.includes('<p>')) {
+          content = div.innerHTML;
+          log(`Found content in generic div, length: ${content.length}`);
+          break;
+        }
+      }
+    }
+    
+    // If we have an Arweave ID, try to fetch from Arweave
+    if (arweaveId) {
+      try {
+        log(`Found Arweave ID: ${arweaveId}, attempting to fetch...`);
+        const data = await arweave.transactions.getData(arweaveId, {
+          decode: true,
+          string: true
+        });
+        
+        log(`Arweave data fetched, length: ${data.length}, first 200 chars: ${data.substring(0, 200)}`);
+        
+        // Try to parse as JSON
+        try {
+          const arweaveData = JSON.parse(data);
+          log(`Arweave data is JSON with keys: ${Object.keys(arweaveData).join(', ')}`);
+          
+          // Return the raw data - let the component handle rendering
+          return {
+            title: arweaveData.title || title,
+            content: arweaveData.staticHtml || '',
+            tiptapJson: arweaveData.json || null,
+            markdown: arweaveData.markdown || null,
+            author: {
+              username: username,
+              displayName: arweaveData.authors?.[1]?.name || username,
+            },
+            publishedAt: arweaveData.publishedAt || arweaveData.createdAt,
+            description: arweaveData.post_preview || arweaveData.description || description,
+            arweaveId: arweaveId,
+            coverImage: arweaveData.cover_img || null,
+          };
+        } catch (jsonError) {
+          // If not JSON, it might be HTML or plain text
+          log(`Arweave data is not JSON, checking if it's HTML...`);
+          
+          // Check if it looks like HTML
+          if (data.includes('<p>') || data.includes('<div>') || data.includes('<article>')) {
+            log(`Arweave data appears to be HTML`);
+            return {
+              title: title,
+              content: data,
+              author: {
+                username: username,
+                displayName: username,
+              },
+              publishedAt: null,
+              description: description,
+              arweaveId: arweaveId,
+            };
+          } else {
+            // If it's plain text, we need to preserve line breaks
+            log(`Arweave data appears to be plain text`);
+            return {
+              title: title,
+              content: data,
+              author: {
+                username: username,
+                displayName: username,
+              },
+              publishedAt: null,
+              description: description,
+              arweaveId: arweaveId,
+            };
+          }
+        }
+      } catch (arweaveError) {
+        log(`Failed to fetch from Arweave: ${arweaveError.message}`);
+        // Continue with scraped data
+      }
+    }
+    
+    // Return scraped data
+    return {
+      title: title,
+      content: content,
+      author: {
+        username: username,
+        displayName: username,
+      },
+      publishedAt: null,
+      description: description,
+      arweaveId: null,
+    };
+    
+  } catch (error) {
+    log(`Error extracting Paragraph content: ${error.message}`);
+    return null;
+  }
 }
 
 async function extractCanonicalLink(html) {
@@ -492,19 +780,22 @@ export const metadata = async (
     "reuters.com",
     "www.reuters.com",
     "farcaster.xyz",
+    "warpcast.com",
     "medium.com",
+    "paragraph.xyz",
     ...twitterFrontends,
   ];
   let output = {};
 
   // Always extract Farcaster cast data for preview, regardless of generateTitle
-  if (hostname === "farcaster.xyz") {
+  if (hostname === "farcaster.xyz" || hostname === "warpcast.com") {
     const cast = await extractWarpcastContent(url, "url");
     if (cast) {
       // Store cast data for preview component
       output.farcasterCast = {
         author: cast.author,
         text: cast.text,
+        embeds: cast.embeds,
       };
 
       // Only generate title if requested
@@ -517,6 +808,42 @@ export const metadata = async (
       }
     } else {
       log(`No cast data returned for URL: ${url}`);
+    }
+  }
+
+  // Extract Paragraph.xyz content from Arweave
+  if (hostname === "paragraph.xyz") {
+    const paragraphPost = await extractParagraphContent(url);
+    if (paragraphPost) {
+      // Store post data for preview component
+      output.paragraphPost = {
+        author: paragraphPost.author,
+        title: paragraphPost.title,
+        description: paragraphPost.description,
+        content: paragraphPost.content,
+        publishedAt: paragraphPost.publishedAt,
+        arweaveId: paragraphPost.arweaveId,
+      };
+
+      // Override og metadata with Paragraph data
+      if (paragraphPost.title) {
+        output.ogTitle = paragraphPost.title;
+      }
+      if (paragraphPost.description) {
+        ogDescription = paragraphPost.description;
+        output.ogDescription = DOMPurify.sanitize(paragraphPost.description);
+      }
+      
+      // Generate better title if requested
+      if (generateTitle && paragraphPost.content) {
+        const postContent = `${paragraphPost.title}: ${paragraphPost.description || paragraphPost.content.substring(0, 500)}`;
+        const claudeTitle = await generateClaudeTitle(postContent);
+        if (claudeTitle) {
+          output.ogTitle = claudeTitle;
+        }
+      }
+    } else {
+      log(`No Paragraph data returned for URL: ${url}`);
     }
   }
 
