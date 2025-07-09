@@ -18,6 +18,7 @@ import theme from "../../theme.mjs";
 import { countOutbounds } from "../../cache.mjs";
 import log from "../../logger.mjs";
 import { twitterFrontends } from "../../parser.mjs";
+import FarcasterFullCast from "./farcaster-full-cast.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -274,7 +275,9 @@ const row = (
     });
 
     // Check if this is a Farcaster cast (only actual cast URLs)
-    const isFarcasterCast = extractedDomain === "warpcast.com" || 
+    const isFarcasterCast = (extractedDomain === "warpcast.com" && story.href.includes("/~/conversations/")) || 
+      extractedDomain === "warpcast.com" ||
+      extractedDomain === "farcaster.xyz" ||
       (story.href.includes("farcaster.xyz/") && 
        !story.href.includes("miniapps.farcaster.xyz") && 
        !story.href.includes("docs.farcaster.xyz") &&
@@ -310,10 +313,12 @@ const row = (
       !story.href.includes("/i/article/");
 
     // Check if we have what we need to render a Farcaster cast preview
+    // Only show preview on non-stories pages
     const canRenderFarcasterPreview =
       isFarcasterCast && 
       story.metadata && 
-      (story.metadata.farcasterCast || story.metadata.ogDescription);
+      (story.metadata.farcasterCast || story.metadata.ogDescription) &&
+      path !== "/stories"; // Don't show preview on stories page since we show full cast there
 
     const displayMobileImage =
       !canRenderTweetPreview && // Don't use regular mobile image if we can render a tweet preview
@@ -997,6 +1002,12 @@ const row = (
                       </div>
                     </a>
                   </div>
+                </div>`
+              : null}
+            ${// Show full Farcaster cast content for Farcaster/Warpcast links only on /stories page
+            (isFarcasterCast && story.metadata && story.metadata.farcasterCast && path === "/stories")
+              ? html`<div style="margin: 0;">
+                  ${FarcasterFullCast({ cast: story.metadata.farcasterCast })}
                 </div>`
               : null}
             ${path !== "/stories"
