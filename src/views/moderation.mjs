@@ -119,44 +119,20 @@ export async function getLists() {
 
   // Parallelize all getConfig calls
   const [
-    pinnedResult,
-    addressesResult,
     linksResult,
     imagesResult,
     titlesResult,
     hrefsResult,
-    messagesResult,
-    labelsResult,
     profilesResult
   ] = await Promise.allSettled([
-    getConfig("pinned"),
-    getConfig("banlist_addresses"),
     getConfig("banlist_links"),
     getConfig("banlist_images"),
     getConfig("moderation_titles"),
     getConfig("moderation_hrefs"),
-    getConfig("banlist_messages"),
-    getLabels(),
     getConfig("banlist_profiles")
   ]);
 
   // Process results
-  let pinned = [];
-  if (pinnedResult.status === "fulfilled") {
-    pinned = pinnedResult.value.map(({ link }) =>
-      normalizeUrl(link, { stripWWW: false }),
-    );
-  } else {
-    log(`pinned: Couldn't get config: ${pinnedResult.reason}`);
-  }
-
-  let addresses = [];
-  if (addressesResult.status === "fulfilled") {
-    addresses = addressesResult.value.map(({ address }) => address.toLowerCase());
-  } else {
-    log(`banlist_addresses: Couldn't get config: ${addressesResult.reason}`);
-  }
-
   let links = [];
   if (linksResult.status === "fulfilled") {
     links = linksResult.value.map(({ link }) => normalizeUrl(link));
@@ -193,18 +169,74 @@ export async function getLists() {
     log(`moderation_hrefs: Couldn't get config: ${hrefsResult.reason}`);
   }
 
-  let messages = [];
-  if (messagesResult.status === "fulfilled") {
-    messages = messagesResult.value;
+  let profiles = [];
+  if (profilesResult.status === "fulfilled") {
+    profiles = profilesResult.value.map(({ profile }) => {
+      // Extract address from profile URL like https://news.kiwistand.com/upvotes?address=0x...
+      const url = new URL(profile);
+      const address = url.searchParams.get('address');
+      return address ? address.toLowerCase() : null;
+    }).filter(Boolean);
   } else {
-    log(`banlist_messages: Couldn't get config: ${messagesResult.reason}`);
+    log(`banlist_profiles: Couldn't get config: ${profilesResult.reason}`);
   }
 
-  let labels = {};
-  if (labelsResult.status === "fulfilled") {
-    labels = labelsResult.value;
+  // Use profiles as the addresses banlist
+  const addresses = profiles;
+
+  const result = {
+    pinned: [],  // Empty for backward compatibility
+    hrefs,
+    messages: [],  // Empty for backward compatibility
+    titles,
+    addresses,
+    links,
+    images,
+    labels: {},  // Empty for backward compatibility
+    profiles,
+  };
+
+  // Cache result in dev mode
+  if (env.NODE_ENV === "dev") {
+    moderationCache = result;
+    cacheTimestamp = Date.now();
+  }
+
+  return result;
+}
+
+// Lightweight version for story pages (only fetches what's needed)
+export async function getListsForStory() {
+  // Parallelize only the necessary calls for story pages
+  const [
+    titlesResult,
+    hrefsResult,
+    profilesResult
+  ] = await Promise.allSettled([
+    getConfig("moderation_titles"),
+    getConfig("moderation_hrefs"),
+    getConfig("banlist_profiles")
+  ]);
+
+  // Process results
+  let titles = {};
+  if (titlesResult.status === "fulfilled") {
+    for (const { title } of titlesResult.value) {
+      const [word, action] = title.split(":").map((str) => str.trim());
+      if (!titles[word]) titles[word] = [];
+      if (action) titles[word].push(action);
+    }
   } else {
-    log(`labels: Couldn't get config: ${labelsResult.reason}`);
+    log(`moderation_titles: Couldn't get config: ${titlesResult.reason}`);
+  }
+
+  let hrefs = {};
+  if (hrefsResult.status === "fulfilled") {
+    for (const obj of hrefsResult.value) {
+      hrefs[normalizeUrl(obj.old)] = normalizeUrl(obj.new);
+    }
+  } else {
+    log(`moderation_hrefs: Couldn't get config: ${hrefsResult.reason}`);
   }
 
   let profiles = [];
@@ -219,33 +251,26 @@ export async function getLists() {
     log(`banlist_profiles: Couldn't get config: ${profilesResult.reason}`);
   }
 
-  // Merge profile addresses into the main addresses banlist
-  const mergedAddresses = [...new Set([...addresses, ...profiles])];
+  // Use profiles as the addresses banlist
+  const addresses = profiles;
 
-  const result = {
-    pinned,
+  return {
+    pinned: [],  // Empty for backward compatibility
     hrefs,
-    messages,
+    messages: [],  // Empty for backward compatibility
     titles,
-    addresses: mergedAddresses,
-    links,
-    images,
-    labels,
+    addresses,
+    links: [], // Empty for story pages
+    images: [], // Empty for story pages
+    labels: {},  // Empty for backward compatibility
     profiles,
   };
-
-  // Cache result in dev mode
-  if (env.NODE_ENV === "dev") {
-    moderationCache = result;
-    cacheTimestamp = Date.now();
-  }
-
-  return result;
 }
 
 export function flag(leaves, config) {
   return leaves.map((leaf) => {
-    const flag = config.messages.find(
+    // Messages removed from config, return leaves as-is
+    const flag = config.messages?.find?.(
       ({ index }) => index === `0x${leaf.index}`,
     );
     if (flag) {

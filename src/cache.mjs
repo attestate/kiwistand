@@ -1003,6 +1003,7 @@ export function getSubmission(index, href, identityFilter, hrefs, bannedAddresse
     throw new Error(`Couldn't find submission with index: ${index}`);
   }
 
+
   let upvotesCount =
     db
       .prepare(

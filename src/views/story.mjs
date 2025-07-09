@@ -48,7 +48,7 @@ export async function generateStory(index) {
   let submission;
   try {
     // Get banned addresses from moderation config
-    const policy = await moderation.getLists();
+    const policy = await moderation.getListsForStory();
     const bannedAddresses = policy.addresses || [];
     submission = getSubmission(index, null, null, null, bannedAddresses);
   } catch (err) {
@@ -65,7 +65,7 @@ export async function generatePreview(index) {
   let submission;
   try {
     // Get banned addresses from moderation config
-    const policy = await moderation.getLists();
+    const policy = await moderation.getListsForStory();
     const bannedAddresses = policy.addresses || [];
     submission = getSubmission(index, null, null, null, bannedAddresses);
   } catch (err) {
