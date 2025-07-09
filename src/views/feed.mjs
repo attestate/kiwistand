@@ -27,6 +27,7 @@ import * as moderation from "./moderation.mjs";
 import cache, {
   countImpressions,
   countOutbounds,
+  countShares,
   getLastComment,
   getSubmission,
   listNewest,
@@ -217,11 +218,16 @@ export async function topstories(leaves) {
       const commentCount =
         store.commentCounts.get(`kiwi:0x${story.index}`) || 0;
       const upvotes = await calculateNeynarUpvotes(story.upvoters);
+      
+      // Add shares with double weight of upvotes
+      const shares = countShares(story.href);
+      const sharesAsUpvotes = shares * 2; // Each share counts as 2 upvotes
+      
       let score;
       if (upvotes > 2) {
-        score = Math.log(upvotes * 0.4 + commentCount * 0.6);
+        score = Math.log((upvotes + sharesAsUpvotes) * 0.4 + commentCount * 0.6);
       } else {
-        score = Math.log(upvotes);
+        score = Math.log(upvotes + sharesAsUpvotes);
       }
 
       const outboundClicks = countOutbounds(story.href) + 1;

@@ -92,6 +92,34 @@ export function initializeImpressions() {
   return false;
 }
 
+export function initializeShares() {
+  const exists = db
+    .prepare(
+      `SELECT name FROM sqlite_master WHERE type='table' AND name='shares'`,
+    )
+    .get();
+  if (exists) {
+    log(
+      "Aborting cache.initializeShares early because table already exists",
+    );
+    return true;
+  }
+
+  log("Creating shares table");
+  db.exec(`CREATE TABLE IF NOT EXISTS shares (
+     id INTEGER PRIMARY KEY AUTOINCREMENT,
+     url TEXT NOT NULL,
+     hash TEXT NOT NULL,
+     share_type TEXT NOT NULL,
+     timestamp INTEGER NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS idx_shares_url ON shares(url);
+  CREATE INDEX IF NOT EXISTS idx_shares_hash ON shares(hash);
+  CREATE INDEX IF NOT EXISTS idx_shares_share_type ON shares(share_type);
+  CREATE INDEX IF NOT EXISTS idx_shares_timestamp ON shares(timestamp);`);
+  return false;
+}
+
 export function initialize(messages) {
   let isSetup = true;
   const tables = ["fingerprints", "submissions", "upvotes", "comments"];
@@ -449,6 +477,31 @@ export function trackImpression(url, hash) {
     `INSERT INTO impressions(url, hash, timestamp) VALUES (?,?,?)`,
   );
   insert.run(normalizedUrl, hash, timestamp);
+}
+
+export function trackShare(url, hash, shareType) {
+  const normalizedUrl = normalizeUrl(url, {
+    stripWWW: false,
+  });
+  const timestamp = Math.floor(Date.now() / 1000);
+  const insert = db.prepare(
+    `INSERT INTO shares(url, hash, share_type, timestamp) VALUES (?,?,?,?)`,
+  );
+  insert.run(normalizedUrl, hash, shareType, timestamp);
+}
+
+export function countShares(url) {
+  const normalizedUrl = normalizeUrl(url, {
+    stripWWW: false,
+  });
+
+  const query = db.prepare(`
+     SELECT COUNT(DISTINCT hash) AS uniqueHashCount
+     FROM shares 
+     WHERE url = ?
+   `);
+  const result = query.get(normalizedUrl);
+  return result ? result.uniqueHashCount : 0;
 }
 
 export function getNumberOfOnlineUsers() {

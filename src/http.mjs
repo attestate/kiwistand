@@ -71,6 +71,7 @@ import {
   getSubmission,
   trackOutbound,
   trackImpression,
+  trackShare,
   countOutbounds,
   storeMiniAppUpvote,
 } from "./cache.mjs";
@@ -497,6 +498,24 @@ export async function launch(trie, libp2p, isPrimary = true) {
 
     const hash = fingerprint.generate(request);
     trackImpression(url, hash);
+    return reply.status(204).send();
+  });
+
+  app.post("/share", async (request, reply) => {
+    reply.header("Cache-Control", "no-cache");
+    const { url, type } = request.query;
+    if (!url) {
+      return reply.status(400).send("URL parameter is required");
+    }
+    if (!type) {
+      return reply.status(400).send("Type parameter is required");
+    }
+    if (!fingerprint) {
+      return reply.status(204).send();
+    }
+
+    const hash = fingerprint.generate(request);
+    trackShare(url, hash, type);
     return reply.status(204).send();
   });
   // Disabled GET outbound tracking due to spam abuse - POST still works for sendBeacon

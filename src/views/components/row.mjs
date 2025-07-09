@@ -790,7 +790,7 @@ const row = (
                                   data-story-slug="${getSlug(story.title)}"
                                   data-story-index="0x${story.index}"
                                   style="color: var(--contrast-color); touch-action: manipulation; user-select: none; white-space: nowrap;"
-                                  onclick="event.preventDefault(); const slug = this.getAttribute('data-story-slug'); const index = this.getAttribute('data-story-index'); const url = 'https://news.kiwistand.com/stories/' + slug + '?index=' + index; navigator.share({url: url});"
+                                  onclick="event.preventDefault(); const slug = this.getAttribute('data-story-slug'); const index = this.getAttribute('data-story-index'); const url = 'https://news.kiwistand.com/stories/' + slug + '?index=' + index; navigator.sendBeacon && navigator.sendBeacon('/share?url=' + encodeURIComponent('${DOMPurify.sanitize(story.href)}') + '&type=native'); navigator.share({url: url});"
                                 >
                                   ${ShareIcon(
                                     "padding: 0 3px 1px 0; vertical-align: bottom; height: 13px; width: 13px;",
@@ -815,7 +815,7 @@ const row = (
                                   data-story-slug="${getSlug(story.title)}"
                                   data-story-index="0x${story.index}"
                                   style="color: var(--contrast-color); touch-action: manipulation; user-select: none; white-space: nowrap;"
-                                  onclick="event.preventDefault(); const slug = this.getAttribute('data-story-slug'); const index = this.getAttribute('data-story-index'); const url = 'https://news.kiwistand.com/stories/' + slug + '?index=' + index; navigator.clipboard.writeText(url); window.toast.success('Link copied!');"
+                                  onclick="event.preventDefault(); const slug = this.getAttribute('data-story-slug'); const index = this.getAttribute('data-story-index'); const url = 'https://news.kiwistand.com/stories/' + slug + '?index=' + index; navigator.sendBeacon && navigator.sendBeacon('/share?url=' + encodeURIComponent('${DOMPurify.sanitize(story.href)}') + '&type=copy'); navigator.clipboard.writeText(url); window.toast.success('Link copied!');"
                                 >
                                   ${CopyIcon(
                                     "padding: 0 3px 1px 0; vertical-align: bottom; height: 13px; width: 13px;",
@@ -851,7 +851,7 @@ const row = (
                       data-story-slug="${getSlug(story.title)}"
                       data-story-index="0x${story.index}"
                       style="border-radius: 2px; border: var(--border-thin); background-color: rgba(124, 101, 193, 0.5); display: flex; align-items: center; justify-content: center; min-width: 49px; margin: 5px 8px 5px 6px; align-self: stretch; cursor: pointer; text-decoration: none;"
-                      onclick="event.preventDefault(); const title = this.getAttribute('data-story-title'); const slug = this.getAttribute('data-story-slug'); const index = this.getAttribute('data-story-index'); const kiwiUrl = 'https://news.kiwistand.com/stories/' + slug + '?index=' + index; const url = 'https://warpcast.com/~/compose?text=' + encodeURIComponent(title) + '&embeds[]=' + encodeURIComponent(kiwiUrl); if (window.ReactNativeWebView || window !== window.parent) { window.sdk.actions.openUrl(url); } else { window.open(url, '_blank'); }"
+                      onclick="event.preventDefault(); const title = this.getAttribute('data-story-title'); const slug = this.getAttribute('data-story-slug'); const index = this.getAttribute('data-story-index'); const kiwiUrl = 'https://news.kiwistand.com/stories/' + slug + '?index=' + index; const url = 'https://warpcast.com/~/compose?text=' + encodeURIComponent(title) + '&embeds[]=' + encodeURIComponent(kiwiUrl); navigator.sendBeacon && navigator.sendBeacon('/share?url=' + encodeURIComponent('${DOMPurify.sanitize(story.href)}') + '&type=farcaster'); if (window.ReactNativeWebView || window !== window.parent) { window.sdk.actions.openUrl(url); } else { window.open(url, '_blank'); }"
                     >
                       <div style="min-height: 42px; display:block;">
                         <div

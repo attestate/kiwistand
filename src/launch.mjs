@@ -54,6 +54,7 @@ if (cluster.isPrimary) {
   // is widely used throughout the application.
   cache.initializeLtCache();
   cache.initializeImpressions();
+  cache.initializeShares();
 
   if (reconcileMode) {
     log(`Running in reconciliation mode`);
