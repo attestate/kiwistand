@@ -173,6 +173,7 @@ app.post("/api/v1/neynar/notify", async (req, res) => {
   
   let notificationTitle;
   let notificationBody;
+  let submission;
   
   try {
     // Extract index from URL
@@ -183,7 +184,7 @@ app.post("/api/v1/neynar/notify", async (req, res) => {
     const index = indexMatch[1];
     
     // Fetch submission from cache
-    const submission = getSubmission(index);
+    submission = getSubmission(index);
     
     // Extract domain from submission href
     const domain = extractDomain(submission.href);
