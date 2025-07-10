@@ -1400,6 +1400,18 @@ export async function launch(trie, libp2p, isPrimary = true) {
     );
     return reply.status(200).type("text/html").send(content);
   });
+  // Shared function for handling activity data retrieval
+  async function handleActivityRequest(address, lastUpdate) {
+    const skipDetails = true;
+    const data = await activity.data(
+      trie,
+      DOMPurify.sanitize(address),
+      parseInt(lastUpdate, 10),
+      skipDetails,
+    );
+    return data;
+  }
+
   app.get("/api/v1/activity", async (request, reply) => {
     if (!request.query.address) {
       const code = 400;
@@ -1413,13 +1425,10 @@ export async function launch(trie, libp2p, isPrimary = true) {
     }
 
     let data;
-    const skipDetails = true;
     try {
-      data = await activity.data(
-        trie,
-        DOMPurify.sanitize(request.query.address),
-        parseInt(request.query.lastUpdate, 10),
-        skipDetails,
+      data = await handleActivityRequest(
+        request.query.address,
+        request.query.lastUpdate
       );
     } catch (err) {
       log(`Error getting activity data: ${err.stack}`);
@@ -1439,6 +1448,28 @@ export async function launch(trie, libp2p, isPrimary = true) {
       notifications: data.notifications,
       lastServerValue: data.latestValue,
     });
+  });
+
+  // POST endpoint for sendBeacon (uses query params like GET)
+  app.post("/api/v1/activity", async (request, reply) => {
+    const { address, lastUpdate } = request.query;
+    
+    if (!address) {
+      // sendBeacon can't read this anyway, just return 400
+      return reply.status(400).send();
+    }
+
+    try {
+      // Just call the function to update the server cache
+      await handleActivityRequest(address, lastUpdate);
+    } catch (err) {
+      log(`Error in sendBeacon activity update: ${err.stack}`);
+      // sendBeacon can't read this anyway, just return 400
+      return reply.status(400).send();
+    }
+    
+    // sendBeacon doesn't care about response, just return 200
+    return reply.status(200).send();
   });
 
   app.get("/activity", async (request, reply) => {

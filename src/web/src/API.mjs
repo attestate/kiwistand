@@ -123,6 +123,13 @@ export async function fetchNotifications(address) {
     const timestamp = latestNotification.timestamp;
     console.log("Setting lastUpdate on activity page to:", timestamp);
     setCookie("lastUpdate", timestamp);
+    
+    // Use sendBeacon to ensure the notification fetch completes even if user navigates away
+    try {
+      navigator.sendBeacon && navigator.sendBeacon('/api/v1/activity?address=' + encodeURIComponent(address) + '&lastUpdate=' + timestamp);
+    } catch (err) {
+      console.log("Failed to send activity beacon:", err);
+    }
   } else if (
     (data?.data?.lastServerValue &&
       lastUpdate <= parseInt(data.data.lastServerValue, 10)) ||
