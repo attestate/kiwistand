@@ -25,7 +25,7 @@ import {
 import { getLocalAccount } from "./session.mjs";
 import theme from "./theme.jsx";
 import posthog from "posthog-js";
-import { fetchPrice, fetchLeaderboard } from "./API.mjs";
+import { fetchPrice } from "./API.mjs";
 import { getProvider, useProvider, client, chains } from "./client.mjs";
 
 export async function prepare(key) {

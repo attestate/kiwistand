@@ -207,17 +207,6 @@ export async function fetchPrice() {
   }
 }
 
-export async function fetchLeaderboard() {
-  let response;
-  try {
-    response = await fetch(`/api/v1/leaderboard`);
-    const data = await response.json();
-    return data.data;
-  } catch (err) {
-    console.error(err);
-    return null;
-  }
-}
 
 export async function requestFaucet(address) {
   try {

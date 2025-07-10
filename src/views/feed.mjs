@@ -735,7 +735,7 @@ export default async function (trie, theme, page, domain, identity, hash) {
   const title = undefined;
   const description = undefined;
   const twitterCard = undefined;
-  const prefetch = ["/new?cached=true", "/submit", "/best", "/leaderboard"];
+  const prefetch = ["/new?cached=true", "/submit", "/best", "/community"];
   return html`
     <html lang="en" op="news">
       <head>
