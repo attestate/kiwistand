@@ -942,14 +942,20 @@ export function getThreadParticipants(submissionId, lastCommentTimestamp) {
   return participants;
 }
 
-export function getLastComment(submissionId) {
-  const lastComment = db
+export function getLastComment(submissionId, bannedAddresses = []) {
+  // Get all comments for the submission, ordered by timestamp descending
+  const comments = db
     .prepare(
       `
-     SELECT * FROM comments WHERE submission_id = ? ORDER BY timestamp DESC LIMIT 1
+     SELECT * FROM comments WHERE submission_id = ? ORDER BY timestamp DESC
    `,
     )
-    .get(submissionId);
+    .all(submissionId);
+
+  // Filter out comments from banned addresses and get the first valid one
+  const lastComment = comments.find(comment => 
+    !bannedAddresses.includes(comment.identity.toLowerCase())
+  );
 
   if (!lastComment) return null;
 

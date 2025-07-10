@@ -406,7 +406,7 @@ export async function index(
       upvoterProfiles.sort((a, b) => b.neynarScore - a.neynarScore);
       avatars = upvoterProfiles.slice(0, 5).map(p => p.avatar);
 
-      const lastComment = getLastComment(`kiwi:0x${story.index}`);
+      const lastComment = getLastComment(`kiwi:0x${story.index}`, policy.addresses || []);
       if (lastComment && lastComment.identity) {
         lastComment.identity = await ens.resolve(lastComment.identity);
         const uniqueIdentities = new Set(
@@ -579,7 +579,7 @@ export async function index(
                   const profile = await ens.resolve(upvoter);
                   if (profile.safeAvatar) avatars.push(profile.safeAvatar);
                 }
-                const lastComment = getLastComment(`kiwi:0x${story.index}`);
+                const lastComment = getLastComment(`kiwi:0x${story.index}`, policy.addresses || []);
                 if (lastComment && lastComment.identity) {
                   lastComment.identity = await ens.resolve(
                     lastComment.identity,

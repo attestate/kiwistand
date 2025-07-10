@@ -75,7 +75,7 @@ export async function recompute() {
         return;
       }
 
-      const lastComment = getLastComment(`kiwi:0x${story.index}`);
+      const lastComment = getLastComment(`kiwi:0x${story.index}`, config.addresses || []);
       if (lastComment && lastComment.identity) {
         lastComment.identity = await ens.resolve(lastComment.identity);
         const uniqueIdentities = new Set(
