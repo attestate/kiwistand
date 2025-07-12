@@ -81,16 +81,18 @@ export async function generatePreview(index) {
     submitter: ensData,
   };
   const hexIndex = index.substring(2);
+  const domain = extractDomain(submission.href);
   try {
     const body = preview.story(
       value.title,
       value.submitter.displayName,
       value.submitter.safeAvatar,
+      domain,
     );
     await preview.generate(hexIndex, body); // Generate OG image (1200x630)
     await preview.generate(hexIndex, body, true); // Generate frame image (1200x800)
   } catch (err) {
-    const body = preview.story(value.title, value.submitter.displayName);
+    const body = preview.story(value.title, value.submitter.displayName, null, domain);
     await preview.generate(hexIndex, body); // Generate OG image (1200x630)
     await preview.generate(hexIndex, body, true); // Generate frame image (1200x800)
   }
@@ -183,16 +185,18 @@ export default async function (trie, theme, index, value, referral) {
   // Ensure frame preview exists for Farcaster embeds (after ENS resolution)
   if (!isCloudflareImage(value.href)) {
     const hexIndex = index.substring(2);
+    const domain = extractDomain(value.href);
     try {
       const body = preview.story(
         value.title,
         story.submitter.displayName,
         story.submitter.safeAvatar,
+        domain,
       );
       await preview.generate(hexIndex, body, true); // Generate frame version if missing
     } catch (err) {
       // Fallback without avatar if there's an error
-      const body = preview.story(value.title, story.submitter.displayName);
+      const body = preview.story(value.title, story.submitter.displayName, null, domain);
       await preview.generate(hexIndex, body, true);
     }
   }

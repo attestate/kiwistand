@@ -76,7 +76,7 @@ export function cfTransform(url, size) {
 }
 
 const emojiMatcher = emojiRegex();
-export function story(title, displayName, avatar) {
+export function story(title, displayName, avatar, domain) {
   title = title.replace(emojiMatcher, "");
   return html`
     <div
@@ -106,10 +106,24 @@ export function story(title, displayName, avatar) {
       >
         ${title}
       </p>
+      ${domain
+        ? html`
+            <p
+              style=${{
+                fontSize: "1.8rem",
+                margin: "0.5rem 0 0 0",
+                opacity: 0.7,
+              }}
+            >
+              ${domain}
+            </p>
+          `
+        : null}
       <p
         style=${{
           fontSize: "2rem",
           marginBottom: 0,
+          marginTop: domain ? "1rem" : 0,
         }}
       >
         submitted by
@@ -160,7 +174,7 @@ export function story(title, displayName, avatar) {
   `;
 }
 
-export function storyFrame(title, displayName, avatar) {
+export function storyFrame(title, displayName, avatar, domain) {
   title = title.replace(emojiMatcher, "");
   return html`
     <div
@@ -191,6 +205,20 @@ export function storyFrame(title, displayName, avatar) {
       >
         ${title}
       </p>
+      ${domain
+        ? html`
+            <p
+              style=${{
+                fontSize: "1.5rem",
+                margin: "-0.5rem 0 1rem 0",
+                opacity: 0.7,
+                textAlign: "center",
+              }}
+            >
+              ${domain}
+            </p>
+          `
+        : null}
       <div
         style=${{
           display: "flex",
