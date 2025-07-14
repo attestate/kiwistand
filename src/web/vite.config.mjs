@@ -29,6 +29,22 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         input: "src/main.jsx",
         plugins: [],
+        output: {
+          // Manual chunk splitting to reduce unused JavaScript
+          manualChunks: {
+            // Split vendor code into separate chunks
+            'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+            'ethers-vendor': ['ethers'],
+            'ui-vendor': ['@mui/material', '@emotion/react', '@emotion/styled'],
+            // Split large dependencies
+            'date-vendor': ['date-fns'],
+            'wallet-vendor': ['@rainbow-me/rainbowkit', 'wagmi', 'viem'],
+          },
+          // Use smaller chunks
+          chunkFileNames: 'assets/[name]-[hash].js',
+          entryFileNames: 'assets/[name]-[hash].js',
+          assetFileNames: 'assets/[name]-[hash].[ext]',
+        },
       },
       // NOTE: vite is broken and so when we set minify in build then it'll not
       // minify in the most extreme way possible using esbuild. Instead, we have

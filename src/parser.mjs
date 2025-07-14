@@ -35,7 +35,7 @@ const arweave = Arweave.init({
 
 export async function getPageSpeedScore(url) {
   const apiKey = env.PAGESPEED_INSIGHTS_KEY;
-  const apiUrl = `https://pagespeedonline.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(
+  const apiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(
     url,
   )}&strategy=MOBILE${apiKey ? `&key=${apiKey}` : ''}`;
 
@@ -658,7 +658,23 @@ const checkOgImage = async (url) => {
         "User-Agent": env.USER_AGENT,
       },
     });
-    return res.ok;
+    
+    if (!res.ok) return false;
+    
+    // Check image size from Content-Length header
+    const contentLength = res.headers.get('content-length');
+    if (contentLength) {
+      const sizeInBytes = parseInt(contentLength);
+      const sizeInMB = sizeInBytes / (1024 * 1024);
+      
+      // Reject images larger than 2MB
+      if (sizeInMB > 2) {
+        log(`Rejecting oversized image (${sizeInMB.toFixed(1)}MB): ${url}`);
+        return false;
+      }
+    }
+    
+    return true;
   } catch {
     return false;
   }
