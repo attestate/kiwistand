@@ -12,7 +12,6 @@ import { isIOS, getLocalAccount, getCookie } from "./session.mjs";
 import { client, chains, useProvider } from "./client.mjs";
 import { dynamicPrefetch } from "./main.jsx";
 import { sdk } from "@farcaster/frame-sdk";
-import KiwipassMintModal from "./KiwipassMintModal.jsx";
 
 const EmailSubscriptionForm = ({
   onSuccess,
@@ -548,7 +547,6 @@ const Form = (props) => {
   // Ensure Bell receives the mobile prop correctly if Form is used in mobile layout
   return (
     <Connector {...props}>
-      <KiwipassMintModal {...props} />
       <Bell {...props} />
     </Connector>
   );
