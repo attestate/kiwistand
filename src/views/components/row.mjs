@@ -596,12 +596,12 @@ const row = (
                           : DOMPurify.sanitize(story.href)}"
                         onclick="${isCloudflare && story.index
                           ? "if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
-                          : `event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${DOMPurify.sanitize(story.href)}')); if (window.ReactNativeWebView || window !== window.parent) { ${isFarcasterCast && story.metadata.farcasterCast && story.metadata.farcasterCast.hash ? `(async function() { try { var context = await window.sdk.context; if (context && context.client && context.client.clientFid === 309857) { window.sdk.actions.openUrl('https://wallet.coinbase.com/post/${DOMPurify.sanitize(story.metadata.farcasterCast.hash)}'); return; } } catch(e) {} window.sdk.actions.openUrl('${DOMPurify.sanitize(story.href)}'); })()` : `window.sdk.actions.openUrl('${DOMPurify.sanitize(story.href)}')`}; } else { window.open('${DOMPurify.sanitize(story.href)}', event.currentTarget.getAttribute('target')); }`}"
+                          : `event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${DOMPurify.sanitize(story.href)}')); if (window.ReactNativeWebView || window !== window.parent) { ${isFarcasterCast && story.metadata && story.metadata.farcasterCast && story.metadata.farcasterCast.hash ? `(async function() { try { var context = await window.sdk.context; if (context && context.client && context.client.clientFid === 309857) { window.sdk.actions.openUrl('https://wallet.coinbase.com/post/${DOMPurify.sanitize(story.metadata.farcasterCast.hash)}'); return; } } catch(e) {} window.sdk.actions.openUrl('${DOMPurify.sanitize(story.href)}'); })()` : `window.sdk.actions.openUrl('${DOMPurify.sanitize(story.href)}')`}; } else { window.open('${DOMPurify.sanitize(story.href)}', event.currentTarget.getAttribute('target')); }`}"
                         data-story-link="/stories/${getSlug(
                           story.title,
                         )}?index=0x${story.index}"
                         data-external-link="${DOMPurify.sanitize(story.href)}"
-                        ${isFarcasterCast && story.metadata.farcasterCast && story.metadata.farcasterCast.hash ? `data-cast-hash="${DOMPurify.sanitize(story.metadata.farcasterCast.hash)}"` : ''}
+                        ${isFarcasterCast && story.metadata && story.metadata.farcasterCast && story.metadata.farcasterCast.hash ? `data-cast-hash="${DOMPurify.sanitize(story.metadata.farcasterCast.hash)}"` : ''}
                         ${isFarcasterCast ? 'class="story-link farcaster-cast-link"' : 'class="story-link"'}
                         target="${path === "/submit" ||
                         path === "/demonstration" ||
