@@ -1,13 +1,21 @@
 import htm from "htm";
 import vhtml from "vhtml";
 import DOMPurify from "isomorphic-dompurify";
+import { env } from "process";
 
 import PwaLinks from "./pwaLinks.mjs";
 
 const html = htm.bind(vhtml);
 
+// Determine domain dynamically
+let domain = "https://news.kiwistand.com";
+if (env.CUSTOM_PROTOCOL && env.CUSTOM_HOST_NAME) {
+  const [hostname] = env.CUSTOM_HOST_NAME.split(":");
+  domain = `${env.CUSTOM_PROTOCOL}${hostname}`;
+}
+
 export function custom(
-  ogImage = "https://news.kiwistand.com/preview.jpeg",
+  ogImage = `${domain}/preview.jpeg`,
   ogTitle = "Kiwi News - handpicked web3 alpha",
   ogDescription = "",
   twitterCard = "summary_large_image",
@@ -23,7 +31,7 @@ export function custom(
       action: {
         name: "Kiwi News",
         type: "launch_frame",
-        url: canonicalUrl || "https://news.kiwistand.com/?miniapp=true",
+        url: canonicalUrl || `${domain}/?miniapp=true`,
       },
     },
   });
