@@ -1,6 +1,7 @@
 import { getKarmaRankingByDate } from './cache.mjs';
 import * as ens from './ens.mjs';
 import * as moderation from './views/moderation.mjs';
+import { startOfWeek, endOfWeek, addHours } from 'date-fns';
 
 const ROUND_DURATION_WEEKS = 1;
 
@@ -64,12 +65,43 @@ export function getTimeRemainingInRound() {
 }
 
 function getCurrentRoundDates() {
-  // Fixed competition period: From today (June 27, 2025) to July 7, 2025
-  const startDate = new Date('2025-06-27');
-  startDate.setHours(0, 0, 0, 0);
+  const now = new Date();
   
-  const endDate = new Date('2025-07-07');
-  endDate.setHours(23, 59, 59, 999);
+  // Get UTC offset for CET/CEST
+  const cetOffset = getCETOffset(now);
+  
+  // Adjust current time to CET/CEST
+  const nowInCET = addHours(now, cetOffset);
+  
+  // Get start of week (Monday) in CET
+  const startDate = startOfWeek(nowInCET, { weekStartsOn: 1 });
+  
+  // Get end of week (Sunday) in CET  
+  const endDate = endOfWeek(nowInCET, { weekStartsOn: 1 });
+  
+  // Adjust back to server timezone by subtracting the offset
+  const startDateLocal = addHours(startDate, -cetOffset);
+  const endDateLocal = addHours(endDate, -cetOffset);
+  
+  return { startDate: startDateLocal, endDate: endDateLocal };
+}
 
-  return { startDate, endDate };
+function getCETOffset(date) {
+  // Get UTC offset in hours
+  const utcOffset = -date.getTimezoneOffset() / 60;
+  
+  // CET = UTC+1, CEST = UTC+2
+  // Determine if we're in DST (last Sunday of March to last Sunday of October)
+  const year = date.getFullYear();
+  const lastSundayMarch = new Date(year, 2, 31);
+  lastSundayMarch.setDate(31 - lastSundayMarch.getDay());
+  
+  const lastSundayOctober = new Date(year, 9, 31);
+  lastSundayOctober.setDate(31 - lastSundayOctober.getDay());
+  
+  const isCEST = date >= lastSundayMarch && date < lastSundayOctober;
+  const cetOffset = isCEST ? 2 : 1;
+  
+  // Return the difference between CET and current timezone
+  return cetOffset - utcOffset;
 }

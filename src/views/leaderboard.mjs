@@ -7,14 +7,18 @@ import Sidebar from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
 import { custom } from "./components/head.mjs";
 
-import { getLeaderboard, getCurrentUserRank } from '../leaderboard.mjs';
+import { getLeaderboard, getCurrentUserRank, getTimeRemainingInRound } from '../leaderboard.mjs';
 import DOMPurify from "isomorphic-dompurify";
+import { formatDistance } from 'date-fns';
 
 const html = htm.bind(vhtml);
 
 export default async function Leaderboard(identity, theme) {
   const leaderboard = await getLeaderboard();
   const currentUserRank = await getCurrentUserRank(identity);
+  const timeRemaining = getTimeRemainingInRound();
+  const endDate = new Date(Date.now() + timeRemaining);
+  const formattedTime = formatDistance(endDate, new Date(), { addSuffix: false });
 
   const path = "/community";
 
@@ -52,6 +56,10 @@ export default async function Leaderboard(identity, theme) {
                         <div style="text-align: center; flex: 1;">
                           <div style="color: var(--visited-link); font-size: 13px; margin-bottom: 6px;">Your Rank</div>
                           <div style="font-size: 22px; font-weight: bold; color: black;">${currentUserRank?.rank ? `#${currentUserRank.rank}` : 'Unranked'}</div>
+                        </div>
+                        <div style="text-align: center; flex: 1;">
+                          <div style="color: var(--visited-link); font-size: 13px; margin-bottom: 6px;">Week Ends In</div>
+                          <div style="font-size: 22px; font-weight: bold; color: black;">${formattedTime}</div>
                         </div>
                       </div>
                     </div>
