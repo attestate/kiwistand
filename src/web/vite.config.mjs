@@ -33,11 +33,8 @@ export default defineConfig(({ mode }) => {
           // Manual chunk splitting to reduce unused JavaScript
           manualChunks: {
             // Split vendor code into separate chunks
-            'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-            'ethers-vendor': ['ethers'],
+            'react-vendor': ['react', 'react-dom'],
             'ui-vendor': ['@mui/material', '@emotion/react', '@emotion/styled'],
-            // Split large dependencies
-            'date-vendor': ['date-fns'],
             'wallet-vendor': ['@rainbow-me/rainbowkit', 'wagmi', 'viem'],
           },
           // Use smaller chunks
