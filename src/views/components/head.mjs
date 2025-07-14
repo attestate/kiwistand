@@ -51,16 +51,88 @@ export function custom(
     <link rel="preconnect" href="https://www.googletagmanager.com" />
     <link rel="preconnect" href="https://api.ensdata.net/" />
     <link
+      rel="preload"
+      as="style"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+    />
+    <link
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
-      media="print"
-      onload="this.media='all'"
     />
-    <noscript
-      ><link
-        rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
-    /></noscript>
+    <style>
+      /* Critical CSS to prevent layout shift */
+      :root {
+        --font-family: 'Inter', Verdana, Geneva, sans-serif;
+      }
+      
+      /* Predefine font metrics to prevent shifts */
+      body {
+        font-family: var(--font-family);
+        font-synthesis: none;
+        text-rendering: optimizeLegibility;
+      }
+      
+      /* Set minimum heights for table rows to prevent vertical shifts */
+      tr {
+        min-height: 91px;
+      }
+      
+      .title {
+        min-height: 36px;
+        line-height: 1.4;
+      }
+      
+      .subtext {
+        min-height: 20px;
+        line-height: 1.4;
+      }
+      
+      /* Ensure consistent table layout */
+      table {
+        table-layout: fixed;
+      }
+      
+      /* Use font-display swap for better UX while preventing major shifts */
+      @font-face {
+        font-family: 'Inter';
+        font-style: normal;
+        font-weight: 300;
+        font-display: swap;
+        src: url(https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTcviYwY.woff2) format('woff2');
+      }
+      
+      @font-face {
+        font-family: 'Inter';
+        font-style: normal;
+        font-weight: 400;
+        font-display: swap;
+        src: url(https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hiA.woff2) format('woff2');
+      }
+      
+      @font-face {
+        font-family: 'Inter';
+        font-style: normal;
+        font-weight: 500;
+        font-display: swap;
+        src: url(https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTcviYwY.woff2) format('woff2');
+      }
+      
+      @font-face {
+        font-family: 'Inter';
+        font-style: normal;
+        font-weight: 600;
+        font-display: swap;
+        src: url(https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTcviYwY.woff2) format('woff2');
+      }
+      
+      @font-face {
+        font-family: 'Inter';
+        font-style: normal;
+        font-weight: 700;
+        font-display: swap;
+        src: url(https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTcviYwY.woff2) format('woff2');
+      }
+    </style>
     <script src="event-queue.js"></script>
     <meta charset="utf-8" />
     <meta name="referrer" content="origin" />

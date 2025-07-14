@@ -157,3 +157,29 @@ readability.
 - Use opacity changes to indicate state
 - Implement proper touch-action handling
 - Ensure proper user-select behavior
+
+## 4. Performance & Quality Testing
+
+### 4.1. Layout Shift Testing (CLS)
+We use automated Puppeteer-based testing to ensure zero or minimal layout shifts:
+- Target CLS score: < 0.1 (Good), ideally 0.0
+- Test multiple pages: homepage, /new, story pages
+- Test different network conditions
+
+**Implementation methodology:**
+1. Create a Puppeteer test that measures CLS using PerformanceObserver
+2. Identify shifting elements and their root causes
+3. Fix issues by:
+   - Adding explicit width/height to images
+   - Using font-display: swap with proper fallbacks
+   - Setting min-heights on dynamic content
+   - Preloading critical resources
+4. Re-test to verify improvements
+
+**Key principles:**
+- Images must have explicit width/height attributes
+- Fonts should use font-display: swap with matching fallback metrics
+- Dynamic content areas need min-height to reserve space
+- Critical CSS should be inlined to prevent FOUC
+
+This automated testing approach should be used regularly to maintain visual stability and ship quality software.

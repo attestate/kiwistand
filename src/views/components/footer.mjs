@@ -106,7 +106,9 @@ const footer = (theme, path) => html`
           loading="lazy"
           src="/etherium.webp"
           alt="Powered by Ethereum"
-          style="height: 4.5rem;"
+          style="height: 4.5rem; width: auto;"
+          width="650"
+          height="288"
         />
       </a>
       <div>

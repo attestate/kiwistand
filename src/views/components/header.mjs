@@ -37,6 +37,8 @@ const header = (theme, path) => {
                   <img
                     style="filter: saturate(90%); width: 35px; height: 35px;"
                     src="kiwi-icon.webp"
+                    width="200"
+                    height="200"
                   />
                   Kiwi News</a
                 >
@@ -109,8 +111,10 @@ const header = (theme, path) => {
                   <b class="hnname">
                     <span>
                       <img
-                        style="filter: saturate(90%); width: 40px;"
+                        style="filter: saturate(90%); width: 40px; height: 40px;"
                         src="kiwi-icon.webp"
+                        width="200"
+                        height="200"
                       />
                     </span>
                   </b>
