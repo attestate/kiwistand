@@ -303,6 +303,7 @@ export async function extractWarpcastContent(identifier, type = "url") {
       },
       timestamp: data.cast.timestamp,
       embeds: data.cast.embeds || [],
+      hash: data.cast.hash || null,
     };
   } catch (error) {
     console.error("Neynar API error:", error);
@@ -796,6 +797,7 @@ export const metadata = async (
         author: cast.author,
         text: cast.text,
         embeds: cast.embeds,
+        hash: cast.hash,
       };
 
       // Only generate title if requested

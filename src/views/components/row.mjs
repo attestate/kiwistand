@@ -398,11 +398,12 @@ const row = (
                 </a>`
               : canRenderFarcasterPreview
               ? html`<a
-                  class="farcaster-preview-container"
+                  class="farcaster-preview-container farcaster-cast-link"
                   data-no-instant
                   href="${DOMPurify.sanitize(story.href)}"
+                  data-cast-hash="${story.metadata.farcasterCast && story.metadata.farcasterCast.hash ? DOMPurify.sanitize(story.metadata.farcasterCast.hash) : ''}"
                   target="_blank"
-                  onclick="event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${DOMPurify.sanitize(story.href)}')); if (window.ReactNativeWebView || window !== window.parent) { window.sdk.actions.openUrl('${DOMPurify.sanitize(story.href)}'); } else { window.open('${DOMPurify.sanitize(story.href)}', event.currentTarget.getAttribute('target')); }"
+                  onclick="event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${DOMPurify.sanitize(story.href)}')); if (window.ReactNativeWebView || window !== window.parent) { ${story.metadata.farcasterCast && story.metadata.farcasterCast.hash ? `(async function() { try { var context = await window.sdk.context; if (context && context.client && context.client.clientFid === 309857) { window.sdk.actions.openUrl('https://wallet.coinbase.com/post/${DOMPurify.sanitize(story.metadata.farcasterCast.hash)}'); return; } } catch(e) {} window.sdk.actions.openUrl('${DOMPurify.sanitize(story.href)}'); })()` : `window.sdk.actions.openUrl('${DOMPurify.sanitize(story.href)}')`}; } else { window.open('${DOMPurify.sanitize(story.href)}', event.currentTarget.getAttribute('target')); }"
                   style="text-decoration:none; color:inherit; display:block;"
                 >
                   <div class="farcaster-embed-container">
@@ -415,6 +416,7 @@ const row = (
                                 alt="${DOMPurify.sanitize(story.metadata.farcasterCast.author.displayName || story.metadata.farcasterCast.author.username)}"
                                 width="40"
                                 height="40"
+                                loading="lazy"
                                 class="farcaster-embed-author-avatar"
                               />`
                             : html`<svg
@@ -476,9 +478,11 @@ const row = (
                   <div style="position: relative;">
                     <img
                       loading="lazy"
+                      width="600"
+                      height="300"
                       style="aspect-ratio: 2 / 1; object-fit:${isCloudflare
                         ? "contain"
-                        : "cover"}; margin: 0 11px; border-radius: 2px; width: calc(100% - 24px);"
+                        : "cover"}; margin: 0 11px; border-radius: 2px; width: calc(100% - 24px); height: auto;"
                       src="${isCloudflare
                         ? DOMPurify.sanitize(
                             story.href.endsWith("/public")
@@ -558,7 +562,9 @@ const row = (
                     >
                       <img
                         loading="lazy"
-                        style="max-height: 61px; border: var(--border-line); border-radius: 2px; width: 110px; object-fit: ${isCloudflare
+                        width="110"
+                        height="61"
+                        style="max-height: 61px; border: var(--border-line); border-radius: 2px; width: 110px; height: 61px; object-fit: ${isCloudflare
                           ? "contain"
                           : "cover"};"
                         src="${isCloudflare
@@ -590,17 +596,18 @@ const row = (
                           : DOMPurify.sanitize(story.href)}"
                         onclick="${isCloudflare && story.index
                           ? "if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
-                          : `event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${DOMPurify.sanitize(story.href)}')); if (window.ReactNativeWebView || window !== window.parent) { window.sdk.actions.openUrl('${DOMPurify.sanitize(story.href)}'); } else { window.open('${DOMPurify.sanitize(story.href)}', event.currentTarget.getAttribute('target')); }`}"
+                          : `event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${DOMPurify.sanitize(story.href)}')); if (window.ReactNativeWebView || window !== window.parent) { ${isFarcasterCast && story.metadata.farcasterCast && story.metadata.farcasterCast.hash ? `(async function() { try { var context = await window.sdk.context; if (context && context.client && context.client.clientFid === 309857) { window.sdk.actions.openUrl('https://wallet.coinbase.com/post/${DOMPurify.sanitize(story.metadata.farcasterCast.hash)}'); return; } } catch(e) {} window.sdk.actions.openUrl('${DOMPurify.sanitize(story.href)}'); })()` : `window.sdk.actions.openUrl('${DOMPurify.sanitize(story.href)}')`}; } else { window.open('${DOMPurify.sanitize(story.href)}', event.currentTarget.getAttribute('target')); }`}"
                         data-story-link="/stories/${getSlug(
                           story.title,
                         )}?index=0x${story.index}"
                         data-external-link="${DOMPurify.sanitize(story.href)}"
+                        ${isFarcasterCast && story.metadata.farcasterCast && story.metadata.farcasterCast.hash ? `data-cast-hash="${DOMPurify.sanitize(story.metadata.farcasterCast.hash)}"` : ''}
+                        ${isFarcasterCast ? 'class="story-link farcaster-cast-link"' : 'class="story-link"'}
                         target="${path === "/submit" ||
                         path === "/demonstration" ||
                         (isCloudflare && story.index)
                           ? "_self"
                           : "_blank"}"
-                        class="story-link"
                         style="user-select: text; line-height: 15pt; font-size: 13pt;"
                       >
                         ${story.isOriginal
@@ -648,6 +655,8 @@ const row = (
                                   loading="lazy"
                                   src="${avatar}"
                                   alt="avatar"
+                                  width="${size}"
+                                  height="${size}"
                                   style="z-index: ${index}; width: ${size}px; height:
  ${size}px; border: 1px solid #828282; border-radius: 2px; margin-left: -${size /
                                   2}px;"
@@ -856,7 +865,7 @@ const row = (
                       data-story-slug="${getSlug(story.title)}"
                       data-story-index="0x${story.index}"
                       style="border-radius: 2px; border: var(--border-thin); background-color: rgba(124, 101, 193, 0.5); display: flex; align-items: center; justify-content: center; min-width: 49px; margin: 5px 8px 5px 6px; align-self: stretch; cursor: pointer; text-decoration: none;"
-                      onclick="event.preventDefault(); const title = this.getAttribute('data-story-title'); const slug = this.getAttribute('data-story-slug'); const index = this.getAttribute('data-story-index'); const kiwiUrl = 'https://news.kiwistand.com/stories/' + slug + '?index=' + index; const url = 'https://warpcast.com/~/compose?text=' + encodeURIComponent(title) + '&embeds[]=' + encodeURIComponent(kiwiUrl); navigator.sendBeacon && navigator.sendBeacon('/share?url=' + encodeURIComponent('${DOMPurify.sanitize(story.href)}') + '&type=farcaster'); if (window.ReactNativeWebView || window !== window.parent) { window.sdk.actions.openUrl(url); } else { window.open(url, '_blank'); }"
+                      onclick="event.preventDefault(); const title = this.getAttribute('data-story-title'); const slug = this.getAttribute('data-story-slug'); const index = this.getAttribute('data-story-index'); const kiwiUrl = 'https://news.kiwistand.com/stories/' + slug + '?index=' + index; navigator.sendBeacon && navigator.sendBeacon('/share?url=' + encodeURIComponent('${DOMPurify.sanitize(story.href)}') + '&type=farcaster'); if (window.isInFarcasterMiniApp && window.sdk && window.sdk.actions && window.sdk.actions.composeCast) { window.sdk.actions.composeCast({ text: title, embeds: [kiwiUrl] }); } else if (window.ReactNativeWebView || window !== window.parent) { const url = 'https://warpcast.com/~/compose?text=' + encodeURIComponent(title) + '&embeds[]=' + encodeURIComponent(kiwiUrl); window.sdk.actions.openUrl(url); } else { const url = 'https://warpcast.com/~/compose?text=' + encodeURIComponent(title) + '&embeds[]=' + encodeURIComponent(kiwiUrl); window.open(url, '_blank'); }"
                     >
                       <div style="min-height: 42px; display:block;">
                         <div
@@ -947,6 +956,8 @@ const row = (
                                       participant.safeAvatar,
                                     )}"
                                     alt="previous participant"
+                                    width="${size}"
+                                    height="${size}"
                                     style="z-index: ${index}; width: ${size}px; height: ${size}px; border: 1px solid #828282; border-radius: 2px; margin-left: ${index ===
                                     0
                                       ? "0"
@@ -971,6 +982,8 @@ const row = (
                                 story.lastComment.identity.safeAvatar,
                               )}"
                               alt="avatar"
+                              width="32"
+                              height="32"
                               style="width: 32px; height: 32px; border: 1px solid #828282; border-radius: 0;"
                             />
                           </div>`}
