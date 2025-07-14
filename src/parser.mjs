@@ -34,16 +34,31 @@ const arweave = Arweave.init({
 });
 
 export async function getPageSpeedScore(url) {
+  const apiKey = env.PAGESPEED_INSIGHTS_KEY;
   const apiUrl = `https://pagespeedonline.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(
     url,
-  )}&strategy=MOBILE`;
+  )}&strategy=MOBILE${apiKey ? `&key=${apiKey}` : ''}`;
 
   try {
     const response = await fetchStaleWhileRevalidate(apiUrl);
+    
+    // Check for rate limiting
+    if (response.status === 429) {
+      log(`PageSpeed Insights rate limit hit for ${url}`);
+      // Return a default score when rate limited
+      return 30;
+    }
+    
+    if (!response.ok) {
+      log(`PageSpeed Insights API error ${response.status} for ${url}`);
+      return 30;
+    }
+    
     const data = await response.json();
     const score = data?.lighthouseResult?.categories?.performance?.score || 0;
     return Math.round(score * 100);
   } catch (err) {
+    log(`PageSpeed Insights fetch error for ${url}: ${err.message}`);
     return 30;
   }
 }
