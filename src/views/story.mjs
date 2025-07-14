@@ -230,7 +230,7 @@ export default async function (trie, theme, index, value, referral) {
   const ogDescription =
     data && data.ogDescription
       ? data.ogDescription
-      : "Kiwi News is the prime feed for hacker engineers building a decentralized future. All our content is handpicked and curated by crypto veterans.";
+      : "Crypto news for builders";
   const slug = getSlug(value.title);
   const canonicalUrl = `${baseUrl}/stories/${slug}?index=0x${index}`;
 

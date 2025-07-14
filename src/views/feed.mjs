@@ -742,7 +742,7 @@ export default async function (trie, theme, page, domain, identity, hash) {
         ${custom(ogImage, title, description, twitterCard, prefetch)}
         <meta
           name="description"
-          content="Kiwi News is the prime feed for hacker engineers building a decentralized future. All our content is handpicked and curated by crypto veterans."
+          content="Crypto news for builders"
         />
         <script
           defer

@@ -86,7 +86,7 @@ export default async function index(trie, theme, page, period, domain) {
         ${custom(ogImage, undefined, undefined, undefined, prefetch)}
         <meta
           name="description"
-          content="Explore the latest news in the decentralized world on Kiwi News. Stay updated with fresh content handpicked by crypto veterans."
+          content="Fresh crypto news daily"
         />
       </head>
       <body
