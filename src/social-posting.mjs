@@ -247,11 +247,9 @@ ${targetUrl}`;
 }
 
 export function formatSubmissionForFarcaster(submission, domain, targetUrl) {
-  const text = `${submission.title} - ${domain}
-
-${targetUrl}`;
+  const text = `${submission.title} - ${domain}`;
   
-  const embeds = [];
+  const embeds = [targetUrl];
   
   return { text, embeds };
 }
