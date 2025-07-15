@@ -33,6 +33,7 @@
     "simulate:farcaster-aggregator": "cross-env SIMULATION_MODE=true node -r dotenv/config ./src/farcaster-link-aggregator.mjs",
     "run:farcaster-aggregator": "node -r dotenv/config ./src/farcaster-link-aggregator.mjs",
     "test:bot-submission": "node -r dotenv/config ./scripts/test_submission.mjs",
+    "create:farcaster-signer": "node ./scripts/create-farcaster-signer.mjs",
     "tunnel": "ssh -R 8443:localhost:8443 -R 5173:localhost:5173 -R 443:localhost:443 -o ServerAliveInterval=60 -N root@157.90.170.215",
     "watch:staging": "cross-env CUSTOM_HOST_NAME=\"staging.kiwistand.com:5173\" CUSTOM_PROTOCOL=\"https://\" npm run dev:staging"
   },

@@ -82,6 +82,12 @@ import { timingSafeEqual } from "crypto";
 import { invalidateActivityCaches } from "./cloudflarePurge.mjs";
 import { getCastByHashAndConstructUrl } from "./parser.mjs";
 import { sendToChannel } from "./telegram-bot.mjs";
+import { 
+  sendTweet, 
+  sendCast, 
+  formatSubmissionForTwitter, 
+  formatSubmissionForFarcaster 
+} from "./social-posting.mjs";
 
 const app = express();
 
@@ -204,14 +210,37 @@ app.post("/api/v1/neynar/notify", async (req, res) => {
     // Send Neynar notification
     const resp = await sendNotification(target_url, notificationBody, notificationTitle);
     
+    // Extract domain from submission href
+    const domain = extractDomain(submission.href);
+    
     // Also send to Telegram channel
-    const telegramMessage = `${submission.title}\n\n${target_url}`;
+    const telegramMessage = `${submission.title} - ${domain}\n\n${target_url}`;
     const tgResult = await sendToChannel(telegramMessage);
     
     if (!tgResult.success) {
       log(`Failed to send to Telegram: ${tgResult.error}`);
     } else {
       log(`Successfully sent to Telegram channel`);
+    }
+    
+    // Post to Twitter
+    const tweet = formatSubmissionForTwitter(submission, domain, target_url);
+    const twitterResult = await sendTweet(tweet);
+    
+    if (!twitterResult.success) {
+      log(`Failed to send tweet: ${twitterResult.error}`);
+    } else {
+      log(`Successfully posted to Twitter`);
+    }
+    
+    // Post to Farcaster
+    const { text: castText, embeds } = formatSubmissionForFarcaster(submission, domain, target_url);
+    const farcasterResult = await sendCast(castText, embeds);
+    
+    if (!farcasterResult.success) {
+      log(`Failed to send cast: ${farcasterResult.error}`);
+    } else {
+      log(`Successfully posted to Farcaster`);
     }
     
     return res.json(resp);
