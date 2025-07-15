@@ -1,86 +1,238 @@
 // Required environment variables:
-// - NEYNAR_API_KEY: Neynar API key for Farcaster operations
-// - FC_SEED_PHRASE: Farcaster account seed phrase for signing casts
-// - CONSUMER_KEY: Twitter API consumer key (for future implementation)
-// - CONSUMER_SECRET: Twitter API consumer secret (for future implementation)
-// - TWITTER_ACCESS_TOKEN: Twitter access token (for future implementation)
-// - TWITTER_ACCESS_TOKEN_SECRET: Twitter access token secret (for future implementation)
+// - FC_SEED_PHRASE: Farcaster account seed phrase for posting casts
+// - CONSUMER_KEY: Twitter API consumer key
+// - CONSUMER_SECRET: Twitter API consumer secret
+// - TWITTER_ACCESS_TOKEN: Twitter access token (obtained via OAuth flow)
+// - TWITTER_ACCESS_TOKEN_SECRET: Twitter access token secret (obtained via OAuth flow)
 
+import crypto from "crypto";
+import qs from "querystring";
+import { createInterface } from "readline";
 import { env } from "process";
-import { Wallet } from "ethers";
-import {
-  NeynarAPIClient,
-  Configuration,
-  isApiErrorResponse,
-} from "@neynar/nodejs-sdk";
+import OAuth from "oauth-1.0a";
 import log from "./logger.mjs";
 
-const neynarConfig = new Configuration({
-  apiKey: env.NEYNAR_API_KEY,
+const readline = createInterface({
+  input: process.stdin,
+  output: process.stdout,
 });
 
-const neynarClient = new NeynarAPIClient(neynarConfig);
+const consumer_key = env.CONSUMER_KEY;
+const consumer_secret = env.CONSUMER_SECRET;
+
+const endpointURL = `https://api.twitter.com/2/tweets`;
+
+const requestTokenURL =
+  "https://api.twitter.com/oauth/request_token?oauth_callback=oob&x_auth_access_type=write";
+const authorizeURL = new URL("https://api.twitter.com/oauth/authorize");
+const accessTokenURL = "https://api.twitter.com/oauth/access_token";
+
+const oauth = OAuth({
+  consumer: {
+    key: consumer_key,
+    secret: consumer_secret,
+  },
+  signature_method: "HMAC-SHA1",
+  hash_function: (baseString, key) =>
+    crypto.createHmac("sha1", key).update(baseString).digest("base64"),
+});
+
+async function input(prompt) {
+  return new Promise(async (resolve, reject) => {
+    readline.question(prompt, (out) => {
+      readline.close();
+      resolve(out);
+    });
+  });
+}
+
+async function requestToken() {
+  const authHeader = oauth.toHeader(
+    oauth.authorize({
+      url: requestTokenURL,
+      method: "POST",
+    })
+  );
+
+  const response = await fetch(requestTokenURL, {
+    method: "POST",
+    headers: {
+      Authorization: authHeader["Authorization"],
+    },
+  });
+  
+  if (response.ok) {
+    const body = await response.text();
+    return qs.parse(body);
+  } else {
+    throw new Error("Cannot get an OAuth request token");
+  }
+}
+
+async function accessToken({ oauth_token, oauth_token_secret }, verifier) {
+  const authHeader = oauth.toHeader(
+    oauth.authorize({
+      url: accessTokenURL,
+      method: "POST",
+    })
+  );
+  const path = `https://api.twitter.com/oauth/access_token?oauth_verifier=${verifier}&oauth_token=${oauth_token}`;
+  const response = await fetch(path, {
+    method: "POST",
+    headers: {
+      Authorization: authHeader["Authorization"],
+    },
+  });
+  
+  if (response.ok) {
+    const body = await response.text();
+    return qs.parse(body);
+  } else {
+    throw new Error("Cannot get an OAuth access token");
+  }
+}
+
+async function getRequest({ oauth_token, oauth_token_secret }, tweet) {
+  const token = {
+    key: oauth_token,
+    secret: oauth_token_secret,
+  };
+
+  const authHeader = oauth.toHeader(
+    oauth.authorize(
+      {
+        url: endpointURL,
+        method: "POST",
+      },
+      token
+    )
+  );
+
+  const response = await fetch(endpointURL, {
+    method: "POST",
+    headers: {
+      Authorization: authHeader["Authorization"],
+      "user-agent": "v2CreateTweetJS",
+      "content-type": "application/json",
+      accept: "application/json",
+    },
+    body: JSON.stringify(tweet),
+  });
+
+  if (response.ok) {
+    return response.json();
+  } else {
+    throw new Error("Unsuccessful request");
+  }
+}
+
+async function login() {
+  // Get request token
+  const oAuthRequestToken = await requestToken();
+  // Get authorization
+  authorizeURL.searchParams.append(
+    "oauth_token",
+    oAuthRequestToken.oauth_token
+  );
+  console.log("Please go here and authorize:", authorizeURL.href);
+  const pin = await input("Paste the PIN here: ");
+  // Get the access token
+  return await accessToken(oAuthRequestToken, pin.trim());
+}
 
 export async function sendTweet(tweet) {
   try {
-    // Twitter posting is temporarily disabled until OAuth dependencies are installed
-    log("Twitter posting is not yet configured");
-    return { success: false, error: "Twitter not configured" };
+    // Check if we have the access tokens in env vars
+    if (!env.TWITTER_ACCESS_TOKEN || !env.TWITTER_ACCESS_TOKEN_SECRET) {
+      log("Twitter access tokens not found. Run the OAuth flow to get them.");
+      return { success: false, error: "Twitter not configured" };
+    }
+
+    const token = {
+      oauth_token: env.TWITTER_ACCESS_TOKEN,
+      oauth_token_secret: env.TWITTER_ACCESS_TOKEN_SECRET,
+    };
+
+    const response = await getRequest(token, { text: tweet });
+    log(`Tweet sent successfully: ${tweet.substring(0, 50)}...`);
+    return { success: true, data: response };
   } catch (error) {
     log(`Failed to send tweet: ${error.message}`);
     return { success: false, error: error.message };
   }
 }
 
-let signerUuid = null;
+// Warpcast API implementation using seed phrase
+async function generateWarpcastToken() {
+  const { utils, Wallet } = await import("ethers");
+  const startTimestamp = Date.now();
 
-async function ensureSignerReady() {
-  if (signerUuid) return signerUuid;
+  const body = JSON.stringify({
+    method: "generateToken",
+    params: {
+      expiresAt: startTimestamp + 1000 * 60 * 60 * 24, // 24h
+      timestamp: startTimestamp,
+    },
+  });
+
+  const signature = Buffer.from(
+    utils.arrayify(
+      await Wallet.fromMnemonic(env.FC_SEED_PHRASE).signMessage(body)
+    )
+  ).toString("base64");
+
+  const authResponse = await fetch("https://api.warpcast.com/v2/auth", {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer eip191:${signature}`,
+    },
+    body,
+  });
+
+  const data = await authResponse.json();
+  if (!authResponse.ok) {
+    throw new Error(`Warpcast auth failed: ${JSON.stringify(data)}`);
+  }
+
+  return data.result.token.secret;
+}
+
+async function postCastViaWarpcast(text, embeds) {
+  const bearerToken = await generateWarpcastToken();
+  const url = "https://api.warpcast.com/v2/casts";
+  const headers = {
+    Accept: "application/json",
+    Authorization: `Bearer ${bearerToken}`,
+    "Content-Type": "application/json",
+  };
   
-  // Check if we have a stored signer UUID
-  if (env.FC_SIGNER_UUID) {
-    signerUuid = env.FC_SIGNER_UUID;
-    return signerUuid;
+  const body = JSON.stringify({
+    text,
+    embeds,
+  });
+
+  const response = await fetch(url, { method: "POST", headers, body });
+  const data = await response.json();
+  
+  if (!response.ok) {
+    throw new Error(`Warpcast cast failed: ${JSON.stringify(data)}`);
   }
   
-  // If no signer UUID is provided, we need manual setup
-  log("No FC_SIGNER_UUID found. Please create a signer via Neynar dashboard or API");
-  log("To create a signer programmatically:");
-  log("1. Call neynarClient.createSigner() to get a signer");
-  log("2. Approve the signer in Warpcast or another Farcaster client");
-  log("3. Store the signer_uuid in FC_SIGNER_UUID environment variable");
-  
-  return null;
+  return data;
 }
 
 export async function sendCast(text, embeds = []) {
   try {
-    const signer = await ensureSignerReady();
-    if (!signer) {
-      return { success: false, error: "Farcaster signer not configured" };
+    if (!env.FC_SEED_PHRASE) {
+      log("FC_SEED_PHRASE not configured");
+      return { success: false, error: "Farcaster not configured" };
     }
 
-    const castData = {
-      signer_uuid: signer,
-      text: text,
-    };
-
-    if (embeds && embeds.length > 0) {
-      castData.embeds = embeds.map(url => ({ url }));
-    }
-
-    const response = await neynarClient.publishCast(castData);
+    const response = await postCastViaWarpcast(text, embeds);
     log(`Cast sent successfully: ${text.substring(0, 50)}...`);
     return { success: true, data: response };
   } catch (error) {
-    if (isApiErrorResponse(error)) {
-      log(`Failed to send cast - API Error: ${JSON.stringify(error.response.data)}`);
-      return { 
-        success: false, 
-        error: `API Error: ${error.response.status}`, 
-        details: error.response.data 
-      };
-    }
     log(`Failed to send cast: ${error.message}`);
     return { success: false, error: error.message };
   }

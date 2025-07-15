@@ -34,6 +34,7 @@
     "run:farcaster-aggregator": "node -r dotenv/config ./src/farcaster-link-aggregator.mjs",
     "test:bot-submission": "node -r dotenv/config ./scripts/test_submission.mjs",
     "create:farcaster-signer": "node ./scripts/create-farcaster-signer.mjs",
+    "auth:twitter": "node ./scripts/twitter-auth.mjs",
     "tunnel": "ssh -R 8443:localhost:8443 -R 5173:localhost:5173 -R 443:localhost:443 -o ServerAliveInterval=60 -N root@157.90.170.215",
     "watch:staging": "cross-env CUSTOM_HOST_NAME=\"staging.kiwistand.com:5173\" CUSTOM_PROTOCOL=\"https://\" npm run dev:staging"
   },
@@ -116,6 +117,7 @@
     "node-telegram-bot-api": "0.66.0",
     "nodemon": "2.0.21",
     "normalize-url": "8.0.0",
+    "oauth-1.0a": "2.2.6",
     "open-graph-scraper-lite": "2.0.0",
     "piscina": "4.7.0",
     "pm2": "5.3.0",
