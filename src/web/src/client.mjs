@@ -381,9 +381,15 @@ export const isInIOSApp =
 export const isInFarcasterFrame = () => {
   if (typeof window === "undefined") return false;
   
-  // Check if the Farcaster Frame SDK is available and initialized
+  // Use the SDK's built-in method to check if we're in a mini app
   try {
-    return !!(FrameSDK && FrameSDK.wallet && FrameSDK.wallet.ethProvider);
+    // This returns a promise, so we need to handle it differently
+    // For now, check if we have the Farcaster connector active
+    const account = window?.ethereum?.selectedAddress;
+    const isFarcasterConnected = window?.ethereum?.isFarcaster === true;
+    
+    // Also check for Farcaster-specific properties in the window
+    return isFarcasterConnected || (FrameSDK && typeof FrameSDK.isInMiniApp === 'function');
   } catch {
     return false;
   }

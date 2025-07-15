@@ -21,12 +21,15 @@ import {
   fetchBalance,
   readContract,
 } from "@wagmi/core";
+import { base } from "wagmi/chains";
 
 import { getLocalAccount } from "./session.mjs";
 import theme from "./theme.jsx";
 import posthog from "posthog-js";
 import { fetchPrice } from "./API.mjs";
-import { getProvider, useProvider, client, chains } from "./client.mjs";
+import { getProvider, useProvider, client, chains, isInIOSApp } from "./client.mjs";
+import InsufficientFundsSwap from "./InsufficientFundsSwap.jsx";
+import sdk from "@farcaster/frame-sdk";
 
 export async function prepare(key) {
   const { address } = getAccount();
@@ -165,6 +168,7 @@ const BuyButton = (props) => {
         parse: (val) => val,
       },
     });
+  const [isInMiniApp, setIsInMiniApp] = useState(false);
 
   let address;
   const localAccount = getLocalAccount(from.address, allowlist);
@@ -187,6 +191,19 @@ const BuyButton = (props) => {
       setDelegated(true);
     }
   }, [from.address, localStorageKey, provider]);
+
+  // Check if we're in a Farcaster Mini App
+  useEffect(() => {
+    const checkMiniApp = async () => {
+      try {
+        const inMiniApp = await sdk.isInMiniApp();
+        setIsInMiniApp(inMiniApp);
+      } catch (error) {
+        setIsInMiniApp(false);
+      }
+    };
+    checkMiniApp();
+  }, []);
 
   const [config, setConfig] = useState(null);
   const [error, setError] = useState(null);
@@ -308,6 +325,21 @@ const BuyButton = (props) => {
       amount = match[1];
     }
     
+    // Check if we're in a Farcaster Frame (Mini App) and show swap options
+    // Only show swap for Farcaster Mini Apps, not for iOS Coinbase Wallet app
+    if (isInMiniApp && !isInIOSApp) {
+      return (
+        <InsufficientFundsSwap 
+          requiredAmount={amount}
+          onSwapInitiated={() => {
+            // Re-generate config after swap is initiated
+            setError(null);
+          }}
+        />
+      );
+    }
+    
+    // Default message for non-Frame users (including iOS Coinbase Wallet)
     return (
       <div
         style={{
