@@ -115,6 +115,15 @@ const Vote = (props) => {
     try {
       if (isInFarcasterFrame() && window.sdk) {
         isMiniApp = await window.sdk.isInMiniApp();
+        
+        // Also check for Coinbase Wallet's specific clientFid
+        if (!isMiniApp && window.sdk.context) {
+          const context = await window.sdk.context;
+          if (context && context.client && context.client.clientFid === 309857) {
+            isMiniApp = true;
+            console.log("Detected Coinbase Wallet mini app via clientFid");
+          }
+        }
       }
     } catch (err) {
       console.log("Mini app detection failed:", err);
@@ -249,6 +258,15 @@ const Vote = (props) => {
               try {
                 if (isInFarcasterFrame() && window.sdk) {
                   isMiniApp = await window.sdk.isInMiniApp();
+                  
+                  // Also check for Coinbase Wallet's specific clientFid
+                  if (!isMiniApp && window.sdk.context) {
+                    const context = await window.sdk.context;
+                    if (context && context.client && context.client.clientFid === 309857) {
+                      isMiniApp = true;
+                      console.log("Detected Coinbase Wallet mini app via clientFid in eligibility check");
+                    }
+                  }
                 }
               } catch (err) {
                 console.log("Mini app detection failed in vote eligibility check:", err);
