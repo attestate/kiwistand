@@ -243,13 +243,8 @@ const BuyButton = (props) => {
   if (isEligible) {
     return (
       <div>
-        <button
-          onClick={() => {
-            window.location.pathname = "/";
-          }}
-          className="buy-button"
-        >
-          Thanks for joining!
+        <button className="buy-button" disabled>
+          You already have a Kiwi Pass
         </button>
       </div>
     );

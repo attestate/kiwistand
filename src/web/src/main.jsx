@@ -315,6 +315,21 @@ async function addBuyButton(allowlistPromise, delegationsPromise, toast) {
   }
 }
 
+async function addProfileDisplay() {
+  const profileContainer = document.querySelector("#user-profile");
+  if (profileContainer) {
+    // Clear the placeholder content before mounting React
+    profileContainer.innerHTML = '';
+    
+    const ProfileWithConfig = (await import("./ProfileWithConfig.jsx")).default;
+    createRoot(profileContainer).render(
+      <StrictMode>
+        <ProfileWithConfig />
+      </StrictMode>,
+    );
+  }
+}
+
 async function addCommentInput(toast, allowlist, delegations) {
   const commentInput = document.querySelector("nav-comment-input");
   if (commentInput) {
@@ -1103,6 +1118,7 @@ async function start() {
     addAvatar(await allowlistPromise),
     addDelegateButton(await allowlistPromise, await delegationsPromise, toast),
     addBuyButton(allowlistPromise, delegationsPromise, toast),
+    addProfileDisplay(),
     addFriendBuyButton(toast, await allowlistPromise),
     addConnectedComponents(
       await allowlistPromise,
