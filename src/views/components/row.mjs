@@ -497,8 +497,18 @@ const row = (
                     ${isCloudflare
                       ? null
                       : html`<div
-                          style="position: absolute; bottom: 8px; left: 19px; background: rgba(255,255,255,0.9); padding: 2px 6px; border-radius: 2px; font-size: 9pt;"
+                          style="position: absolute; bottom: 8px; left: 19px; background: rgba(255,255,255,0.9); padding: 2px 6px; border-radius: 2px; font-size: 9pt; display: flex; align-items: center;"
                         >
+                          ${!["farcaster.xyz", "warpcast.com", "hey.xyz", "lens.xyz", "zora.co", "etherscan.io", "basescan.org", "arbiscan.io"].includes(extractedDomain)
+                            ? html`<img 
+                                src="https://www.google.com/s2/favicons?sz=32&domain_url=${encodeURIComponent(extractedDomain)}"
+                                width="12"
+                                height="12"
+                                style="margin-right: 4px; display: inline-block;"
+                                loading="lazy"
+                                onerror="this.style.display='none'"
+                              />`
+                            : ''}
                           ${extractedDomain}
                         </div>`}
                   </div>
@@ -739,7 +749,7 @@ const row = (
                                     src="https://www.google.com/s2/favicons?sz=32&domain_url=${encodeURIComponent(extractedDomain)}"
                                     width="10"
                                     height="10"
-                                    style="vertical-align: top; position: relative; top: 2.5px; margin-right: 3px; opacity: 0.7; display: inline-block;"
+                                    style="vertical-align: middle; position: relative; top: -1px; margin-right: 3px; opacity: 0.7; display: inline-block;"
                                     loading="lazy"
                                     onerror="this.style.display='none'"
                                   />`
