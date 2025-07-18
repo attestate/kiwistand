@@ -734,6 +734,16 @@ const row = (
                         ? html`
                             <span class="domain-text">
                               <span style="opacity:0.6"> • </span>
+                              ${!["farcaster.xyz", "warpcast.com", "hey.xyz", "lens.xyz", "zora.co", "etherscan.io", "basescan.org", "arbiscan.io"].includes(extractedDomain)
+                                ? html`<img 
+                                    src="https://www.google.com/s2/favicons?sz=32&domain_url=${encodeURIComponent(extractedDomain)}"
+                                    width="10"
+                                    height="10"
+                                    style="vertical-align: top; position: relative; top: 2.5px; margin-right: 3px; opacity: 0.7; display: inline-block;"
+                                    loading="lazy"
+                                    onerror="this.style.display='none'"
+                                  />`
+                                : ''}
                               <span>${extractedDomain}</span>
                             </span>
                           `
