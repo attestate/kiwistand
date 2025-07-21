@@ -204,6 +204,7 @@ const SubmitButton = (props) => {
   const [remainingChars, setRemainingChars] = useState(80);
   const [showShareModal, setShowShareModal] = useState(false);
   const [storyData, setStoryData] = useState(null);
+  const [isGeneratingTitle, setIsGeneratingTitle] = useState(false);
 
   // Ad related state removed
   // const params = new URLSearchParams(window.location.search);
@@ -238,6 +239,7 @@ const SubmitButton = (props) => {
         .catch((error) => {
           console.log("Fetch error: ", error);
         });
+      setIsGeneratingTitle(true);
       fetch(
         `/api/v1/metadata?url=${encodeURIComponent(
           canonicalURL,
@@ -255,7 +257,10 @@ const SubmitButton = (props) => {
             const isTitleBlank = titleInputElem.innerText.length === 0;
             // NOTE: We don't want to overwrite the title in case the user has
             // already typed something in the title box.
-            if (!isTitleBlank) return;
+            if (!isTitleBlank) {
+              setIsGeneratingTitle(false);
+              return;
+            }
 
             const title = data.data.ogTitle;
             titleInputElem.innerText = title;
@@ -265,9 +270,11 @@ const SubmitButton = (props) => {
               remaining > 0 ? "#828282" : "red";
             setTitle(title);
           }
+          setIsGeneratingTitle(false);
         })
         .catch((error) => {
           console.log("Fetch error: ", error);
+          setIsGeneratingTitle(false);
         });
     } else {
       embedPreview.innerHTML = "";
@@ -512,7 +519,52 @@ const SubmitButton = (props) => {
   };
 
   return (
-    <div>
+    <div style={{ position: "relative" }}>
+      {isGeneratingTitle && (
+        <>
+          <style>
+            {`
+              @keyframes spin {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+              }
+            `}
+          </style>
+          <div
+            style={{
+              position: "absolute",
+              top: "-120px",
+              left: "50%",
+              transform: "translateX(-50%)",
+              backgroundColor: "#f6f6ef",
+              padding: "1.5rem",
+              borderRadius: "8px",
+              textAlign: "center",
+              width: "280px",
+              border: "2px solid #16CA16",
+              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+              zIndex: 100,
+            }}
+          >
+            <div
+              style={{
+                fontSize: "2.5rem",
+                marginBottom: "0.75rem",
+                animation: "spin 2s linear infinite",
+                display: "inline-block",
+              }}
+            >
+              🥝
+            </div>
+            <h3 style={{ margin: "0 0 0.5rem 0", color: "#000", fontSize: "1.1rem" }}>
+              AI Title Magic
+            </h3>
+            <p style={{ margin: 0, color: "#828282", fontSize: "13px" }}>
+              Generating a catchy title for your link...
+            </p>
+          </div>
+        </>
+      )}
       <>
         <button
           id="button-onboarding"
