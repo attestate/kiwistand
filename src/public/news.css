@@ -307,7 +307,7 @@ body {
   height: 100%;
 }
 .like-notification .heart-icon svg {
-  color: #ff6b6b;
+  color: #000000;
 }
 .pulsate {
   animation: pulsate 1s infinite;
@@ -1019,6 +1019,14 @@ body {
     }
     .information-row {
       background-color: var(--background-color0);
+    }
+    /* Style comment preview for desktop tiles */
+    .comment-preview {
+      margin: 0 !important;
+    }
+    .comment-preview .interaction-element {
+      border-radius: 0 0 2px 2px !important;
+      margin: 0 !important;
     }
     .mobile-center {
       display: none !important;

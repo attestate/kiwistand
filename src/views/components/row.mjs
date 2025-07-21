@@ -909,7 +909,7 @@ const row = (
                       ? `/#0x${story.lastComment.index}`
                       : `/new?cached=true#0x${story.lastComment.index}`}');})(),document.querySelector('.comment-preview-0x${story.index}').style.opacity = 0.5,window.addToQueue(new
  CustomEvent('open-comments-0x${story.index}',{detail:{source:'comment-preview'}}));window.dispatchEvent(new HashChangeEvent('hashchange'));"
-                    style="margin: 0 5px 5px 5px; padding: 11px; border: var(--border); border-top: rgba(166, 110, 78, 0.075); display: flex;width: 100%; background-color: var(--bg-off-white); border-radius: 2px;"
+                    style="margin: 0; padding: 12px 16px; border-top: 1px solid rgba(166, 110, 78, 0.1); display: flex; width: 100%; background-color: rgba(166, 110, 78, 0.03);"
                   >
                     <a
                       class="comment-preview-anchor"
