@@ -302,6 +302,13 @@ body {
   color: #828282;
   font-size: 1.5rem;
 }
+.heart-icon svg {
+  width: 100%;
+  height: 100%;
+}
+.like-notification .heart-icon svg {
+  color: #ff6b6b;
+}
 .pulsate {
   animation: pulsate 1s infinite;
 }
@@ -966,23 +973,52 @@ body {
 
 /* Media query for larger screens */
  @media (min-width: 641px) {
-    .content-row {
-      border-bottom: var(--border-thin);
-      padding-bottom: 8px;
-      margin-bottom: 8px !important;
+    /* Use mobile layout for rows on desktop */
+    #hnmain > table {
+      background-color: var(--table-bg-mobile);
     }
-    .story-link-container-wrapper {
-      justify-content: center !important;
+    /* Replicate mobile tile styles */
+    .content-row:not(.content-row-elevated) {
+      border: var(--border);
+      margin: 0 11px;
+      border-bottom: var(--border-thick) !important;
+      background-color: var(--background-color0);
+      border-top: var(--border) !important;
     }
+    .content-row-elevated {
+      padding-bottom: 5px;
+    }
+    .elevating-row {
+      background: var(--background-color0);
+      position: relative;
+      margin: 0 11px 10px 11px;
+      border-radius: 2px;
+      border: var(--border);
+      border-top: none;
+      margin-bottom: 0;
+    }
+    .elevating-row.without-comment-preview {
+      border-bottom: var(--border-thick) !important;
+    }
+    /* Fix mobile image alignment and borders */
     .mobile-row-image {
-      display: none !important;
+      margin: 0 11px;
+      margin-bottom: 0;
     }
-    .row-image {
-      display: block !important;
+    .mobile-row-image img {
+      border-left: var(--border);
+      border-right: var(--border);
+      border-top: var(--border);
+      border-bottom: none;
+      border-top-left-radius: 2px !important;
+      border-top-right-radius: 2px !important;
+      border-bottom-left-radius: 0px !important;
+      border-bottom-right-radius: 0px !important;
+      width: calc(100% - 24px) !important;
+      margin: 0 !important;
     }
-    /* Always show domain in subtitle for desktop */
-    .story-subtitle .domain-text {
-      display: inline !important;
+    .information-row {
+      background-color: var(--background-color0);
     }
     .mobile-center {
       display: none !important;
