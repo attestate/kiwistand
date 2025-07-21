@@ -35,6 +35,29 @@ export const iconSVG = html`
   </svg>
 `;
 
+const heartSVG = html`
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+    <rect width="256" height="256" fill="none"/>
+    <path d="M128,224S24,168,24,102A54,54,0,0,1,78,48c22.59,0,41.94,12.31,50,32,8.06-19.69,27.41-32,50-32a54,54,0,0,1,54,54C232,168,128,224,128,224Z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/>
+  </svg>
+`;
+
+const shareSVG = html`
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+    <rect width="256" height="256" fill="none"/>
+    <polyline points="176 152 224 104 176 56" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/>
+    <polyline points="192 216 32 216 32 88" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/>
+    <path d="M72,176a96,96,0,0,1,93-72h59" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/>
+  </svg>
+`;
+
+const heartFilledSVG = html`
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+    <rect width="256" height="256" fill="none"/>
+    <path d="M240,102c0,70-103.79,126.66-108.21,129a8,8,0,0,1-7.58,0C119.79,228.66,16,172,16,102A62.07,62.07,0,0,1,78,40c20.65,0,38.73,8.88,50,23.89C139.27,48.88,157.35,40,178,40A62.07,62.07,0,0,1,240,102Z"/>
+  </svg>
+`;
+
 const expandSVG = html`
   <svg
     style="color:black; height: 1rem;"
@@ -521,43 +544,12 @@ const row = (
               canRenderTweetPreview || canRenderFarcasterPreview
                 ? "elevating-row"
                 : ""}"
-              style="display: flex; align-items: center; padding: 3px 0;"
+              style="display: flex; flex-direction: column; padding: 12px 16px;"
+              class:mobile-information-row
             >
               <div
-                data-title="${DOMPurify.sanitize(story.title)}"
-                data-href="${DOMPurify.sanitize(story.href)}"
-                data-upvoters="${JSON.stringify(story.upvoters)}"
-                class="${displayMobileImage || canRenderTweetPreview || canRenderFarcasterPreview
-                  ? "vote-button-container interaction-container-with-image"
-                  : "vote-button-container"}"
-                style="display: flex; align-self: stretch;"
-              >
-                <div
-                  onclick="const key='--kiwi-news-upvoted-stories';const href=this.parentElement.parentElement.getAttribute('data-href');const title=this.parentElement.parentElement.getAttribute('data-title');const stories=JSON.parse(localStorage.getItem(key)||'[]');stories.push({href,title});localStorage.setItem(key,JSON.stringify(stories));window.dispatchEvent(new Event('upvote-storage'));"
-                >
-                  <div
-                    class="interaction-element"
-                    style="border-radius: 2px; border: var(--border-thin); background-color: var(--bg-off-white); display: flex; align-items: center; justify-content: center; min-width: 49px; margin: 5px 8px 5px 6px; align-self: stretch;"
-                  >
-                    <div style="min-height: 42px; display:block;">
-                      <div class="votearrowcontainer">
-                        <div>
-                          <div
-                            class="votearrow"
-                            style="color: rgb(130, 130, 130); cursor: pointer;"
-                            title="upvote"
-                          >
-                            ${iconSVG}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div
                 class="content-container"
-                style="display: flex; align-items: start; flex-grow: 1; gap: 8px;"
+                style="display: flex; align-items: start; gap: 12px; margin-bottom: 8px;"
               >
                 ${hasImageData &&
                 !interactive &&
@@ -567,7 +559,7 @@ const row = (
                       href="${DOMPurify.sanitize(story.href)}"
                       class="row-image"
                       target="_blank"
-                      style="user-select:text; align-self: stretch; margin: 5px 0;"
+                      style="user-select:text; align-self: stretch;"
                       onclick="event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${DOMPurify.sanitize(story.href)}')); if (window.ReactNativeWebView || window !== window.parent) { window.sdk.actions.openUrl('${DOMPurify.sanitize(story.href)}'); } else { window.open('${DOMPurify.sanitize(story.href)}', event.currentTarget.getAttribute('target')); }"
                     >
                       <img
@@ -591,7 +583,7 @@ const row = (
                   : null}
                 <div
                   class="story-link-container-wrapper"
-                  style="min-height: 59px; display:flex; justify-content: center; flex-direction: column; flex-grow: 1; line-height: 1.3; padding: 4px 3px 5px 0;"
+                  style="display:flex; justify-content: center; flex-direction: column; flex-grow: 1; line-height: 1.3;"
                 >
                   <span>
                     <span class="story-link-container">
@@ -808,129 +800,96 @@ const row = (
                             href="https://paragraph.xyz/@kiwi-updates/kiwi-feedbot-submissions-open"
                             >${story.displayName}</a
                           >`}
-                      <span>
-                        ${path === "/" ||
-                        path === "/new" ||
-                        interactive ||
-                        hideCast
-                          ? null
-                          : html`
-                              <span class="share-container">
-                                <span style="opacity:0.6"> • </span>
-                                <a
-                                  href="#"
-                                  class="caster-link share-link"
-                                  title="Share"
-                                  data-story-slug="${getSlug(story.title)}"
-                                  data-story-index="0x${story.index}"
-                                  style="color: var(--contrast-color); touch-action: manipulation; user-select: none; white-space: nowrap;"
-                                  onclick="event.preventDefault(); const slug = this.getAttribute('data-story-slug'); const index = this.getAttribute('data-story-index'); const url = 'https://news.kiwistand.com/stories/' + slug + '?index=' + index; navigator.sendBeacon && navigator.sendBeacon('/share?url=' + encodeURIComponent('${DOMPurify.sanitize(story.href)}') + '&type=native'); navigator.share({url: url});"
-                                >
-                                  ${ShareIcon(
-                                    "padding: 0 3px 1px 0; vertical-align: bottom; height: 13px; width: 13px;",
-                                  )}
-                                  Share Kiwi link
-                                </a>
-                              </span>
-                            `}
-                        ${interactive ||
-                        hideCast ||
-                        story.displayName === "Feedbot"
-                          ? null
-                          : html`
-                              <span class="inverse-share-container">
-                                <span style="opacity:0.6"> • </span>
-                                <a
-                                  href="https://news.kiwistand.com/stories/${getSlug(
-                                    story.title,
-                                  )}?index=0x${story.index}"
-                                  class="meta-link share-link"
-                                  title="Share"
-                                  data-story-slug="${getSlug(story.title)}"
-                                  data-story-index="0x${story.index}"
-                                  style="color: var(--contrast-color); touch-action: manipulation; user-select: none; white-space: nowrap;"
-                                  onclick="event.preventDefault(); const slug = this.getAttribute('data-story-slug'); const index = this.getAttribute('data-story-index'); const url = 'https://news.kiwistand.com/stories/' + slug + '?index=' + index; navigator.sendBeacon && navigator.sendBeacon('/share?url=' + encodeURIComponent('${DOMPurify.sanitize(story.href)}') + '&type=copy'); navigator.clipboard.writeText(url); window.toast.success('Link copied!');"
-                                >
-                                  ${CopyIcon(
-                                    "padding: 0 3px 1px 0; vertical-align: bottom; height: 13px; width: 13px;",
-                                  )}
-                                  Copy Kiwi link
-                                </a>
-                              </span>
-                            `}
-                      </span>
                     </span>
                   </div>
                 </div>
               </div>
-              ${path === "/stories"
-                ? html`<div
-                    class="${displayMobileImage || canRenderTweetPreview || canRenderFarcasterPreview
-                      ? "interaction-container-with-image"
-                      : ""}"
-                    style="display: flex; align-self: stretch;"
+              <div
+                class="interaction-bar"
+                style="display: flex; gap: 0; margin-top: 8px; padding: 0; justify-content: space-between;"
+              >
+                <div
+                  data-title="${DOMPurify.sanitize(story.title)}"
+                  data-href="${DOMPurify.sanitize(story.href)}"
+                  data-upvoters="${JSON.stringify(story.upvoters)}"
+                  class="like-button-container"
+                  style="flex: 1; display: flex; justify-content: center;"
+                >
+                  <button
+                    onclick="const key='--kiwi-news-upvoted-stories';const href=this.parentElement.getAttribute('data-href');const title=this.parentElement.getAttribute('data-title');const stories=JSON.parse(localStorage.getItem(key)||'[]');if(!stories.some(s=>s.href===href)){stories.push({href,title});localStorage.setItem(key,JSON.stringify(stories));window.dispatchEvent(new Event('upvote-storage'));const heartSpan=this.querySelector('.heart-icon');heartSpan.innerHTML='${heartFilledSVG}'.replace(/currentColor/g,'#ff6b6b');heartSpan.style.color='#ff6b6b';window.toast.success('Thanks for your like! Have a 🥝');}"
+                    class="interaction-button like-button"
+                    style="min-width: 60px; padding: 8px 12px; border: none; background: transparent; border-radius: 999px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.15s ease;"
+                    onmouseover="this.style.backgroundColor='rgba(249, 24, 128, 0.1)'"
+                    onmouseout="this.style.backgroundColor='transparent'"
                   >
-                    <a
-                      href="https://warpcast.com/~/compose?text=${encodeURIComponent(
-                        DOMPurify.sanitize(story.title),
-                      )}&embeds[]=${encodeURIComponent(
-                        `https://news.kiwistand.com/stories/${getSlug(
-                          story.title,
-                        )}?index=0x${story.index}`,
-                      )}"
-                      target="_blank"
-                      class="interaction-element"
-                      title="Share to Farcaster"
-                      data-story-title="${DOMPurify.sanitize(story.title)}"
-                      data-story-slug="${getSlug(story.title)}"
+                    <span class="heart-icon" style="width: 20px; height: 20px; color: rgba(83, 100, 113, 1); display: flex; align-items: center; justify-content: center;">${heartSVG}</span>
+                    <span style="font-size: 13px; color: rgba(83, 100, 113, 1); font-weight: 400;">${story.upvoters ? story.upvoters.length : 0}</span>
+                  </button>
+                </div>
+                ${path !== "/stories" &&
+                path !== "/demonstration" &&
+                path !== "/submit"
+                  ? html`<div
                       data-story-index="0x${story.index}"
-                      style="border-radius: 2px; border: var(--border-thin); background-color: rgba(124, 101, 193, 0.5); display: flex; align-items: center; justify-content: center; min-width: 49px; margin: 5px 8px 5px 6px; align-self: stretch; cursor: pointer; text-decoration: none;"
-                      onclick="event.preventDefault(); const title = this.getAttribute('data-story-title'); const slug = this.getAttribute('data-story-slug'); const index = this.getAttribute('data-story-index'); const kiwiUrl = 'https://news.kiwistand.com/stories/' + slug + '?index=' + index; navigator.sendBeacon && navigator.sendBeacon('/share?url=' + encodeURIComponent('${DOMPurify.sanitize(story.href)}') + '&type=farcaster'); if (window.isInFarcasterMiniApp && window.sdk && window.sdk.actions && window.sdk.actions.composeCast) { window.sdk.actions.composeCast({ text: title, embeds: [kiwiUrl] }); } else if (window.ReactNativeWebView || window !== window.parent) { const url = 'https://warpcast.com/~/compose?text=' + encodeURIComponent(title) + '&embeds[]=' + encodeURIComponent(kiwiUrl); window.sdk.actions.openUrl(url); } else { const url = 'https://warpcast.com/~/compose?text=' + encodeURIComponent(title) + '&embeds[]=' + encodeURIComponent(kiwiUrl); window.open(url, '_blank'); }"
+                      data-comment-count="${commentCount}"
+                      class="comment-button-container"
+                      style="flex: 1; display: flex; justify-content: center;"
                     >
-                      <div style="min-height: 42px; display:block;">
-                        <div
-                          style="display: flex; align-items: center; justify-content: center; height: 100%;"
-                        >
-                          ${warpcastSvg(
-                            "width: 24px; height: 24px; color: white;",
-                          )}
-                        </div>
-                      </div>
-                    </a>
-                  </div>`
-                : ""}
-              ${path !== "/stories" &&
-              path !== "/demonstration" &&
-              path !== "/submit"
-                ? html`<div
-                    data-story-index="0x${story.index}"
-                    data-comment-count="${commentCount}"
-                    class="${displayMobileImage || canRenderTweetPreview || canRenderFarcasterPreview
-                      ? "interaction-container-with-image chat-bubble-container"
-                      : "chat-bubble-container"}"
-                    style="display: flex; align-self: stretch;"
-                  >
-                    <a
-                      class="chat-bubble interaction-element"
-                      id="chat-bubble-${story.index}"
-                      href="/stories/${getSlug(
-                        story.title,
-                      )}?index=0x${story.index}"
-                      onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
-                      style="margin: 5px; border: var(--border-thin); background-color: var(--bg-off-white); border-radius: 2px; display: ${path ===
-                      "/stories"
-                        ? "none"
-                        : "flex"}; justify-content: center; min-width: 49px; align-items: center; flex-direction: column;"
-                    >
-                      ${ChatsSVG()}
-                      <span
-                        id="comment-count-${story.index}"
-                        style="color: rgba(0,0,0,0.65); font-size: 8pt; font-weight: bold;"
-                        >${commentCount}</span
+                      <a
+                        class="interaction-button comment-button"
+                        id="chat-bubble-${story.index}"
+                        href="/stories/${getSlug(
+                          story.title,
+                        )}?index=0x${story.index}"
+                        onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
+                        style="min-width: 60px; padding: 8px 12px; border: none; background: transparent; border-radius: 999px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.15s ease; text-decoration: none; color: inherit;"
+                        onmouseover="this.style.backgroundColor='rgba(29, 155, 240, 0.1)'"
+                        onmouseout="this.style.backgroundColor='transparent'"
                       >
-                    </a>
-                  </div>`
-                : ""}
+                        <span style="width: 20px; height: 20px; color: rgba(83, 100, 113, 1); display: flex; align-items: center; justify-content: center;">${ChatsSVG("width: 20px; height: 20px; color: rgba(83, 100, 113, 1);")}</span>
+                        ${commentCount > 0 ? html`<span style="font-size: 13px; color: rgba(83, 100, 113, 1); font-weight: 400;">${commentCount}</span>` : ''}
+                      </a>
+                    </div>`
+                  : ""}
+                <div class="share-button-container" style="flex: 1; display: flex; justify-content: center;">
+                  <button
+                    class="interaction-button share-button"
+                    data-story-title="${DOMPurify.sanitize(story.title)}"
+                    data-story-slug="${getSlug(story.title)}"
+                    data-story-index="0x${story.index}"
+                    style="min-width: 40px; padding: 8px; border: none; background: transparent; border-radius: 999px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s ease;"
+                    onclick="event.preventDefault(); const slug = this.getAttribute('data-story-slug'); const index = this.getAttribute('data-story-index'); const url = 'https://news.kiwistand.com/stories/' + slug + '?index=' + index; navigator.sendBeacon && navigator.sendBeacon('/share?url=' + encodeURIComponent('${DOMPurify.sanitize(story.href)}') + '&type=native'); if (navigator.share) { navigator.share({url: url}); } else { navigator.clipboard.writeText(url); window.toast.success('Link copied!'); }"
+                    onmouseover="this.style.backgroundColor='rgba(0, 186, 124, 0.1)'"
+                    onmouseout="this.style.backgroundColor='transparent'"
+                  >
+                    <span style="width: 20px; height: 20px; color: rgba(83, 100, 113, 1); display: flex; align-items: center; justify-content: center;">${shareSVG}</span>
+                  </button>
+                </div>
+                ${path === "/stories"
+                  ? html`<div class="farcaster-share-button-container" style="flex: 1; display: flex; justify-content: center;">
+                      <a
+                        href="https://warpcast.com/~/compose?text=${encodeURIComponent(
+                          DOMPurify.sanitize(story.title),
+                        )}&embeds[]=${encodeURIComponent(
+                          `https://news.kiwistand.com/stories/${getSlug(
+                            story.title,
+                          )}?index=0x${story.index}`,
+                        )}"
+                        target="_blank"
+                        class="interaction-button farcaster-share-button"
+                        data-story-title="${DOMPurify.sanitize(story.title)}"
+                        data-story-slug="${getSlug(story.title)}"
+                        data-story-index="0x${story.index}"
+                        style="min-width: 40px; padding: 8px; border: none; background: transparent; border-radius: 999px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s ease; text-decoration: none; color: inherit;"
+                        onclick="event.preventDefault(); const title = this.getAttribute('data-story-title'); const slug = this.getAttribute('data-story-slug'); const index = this.getAttribute('data-story-index'); const kiwiUrl = 'https://news.kiwistand.com/stories/' + slug + '?index=' + index; navigator.sendBeacon && navigator.sendBeacon('/share?url=' + encodeURIComponent('${DOMPurify.sanitize(story.href)}') + '&type=farcaster'); if (window.isInFarcasterMiniApp && window.sdk && window.sdk.actions && window.sdk.actions.composeCast) { window.sdk.actions.composeCast({ text: title, embeds: [kiwiUrl] }); } else if (window.ReactNativeWebView || window !== window.parent) { const url = 'https://warpcast.com/~/compose?text=' + encodeURIComponent(title) + '&embeds[]=' + encodeURIComponent(kiwiUrl); window.sdk.actions.openUrl(url); } else { const url = 'https://warpcast.com/~/compose?text=' + encodeURIComponent(title) + '&embeds[]=' + encodeURIComponent(kiwiUrl); window.open(url, '_blank'); }"
+                        onmouseover="this.style.backgroundColor='rgba(124, 101, 193, 0.1)'"
+                        onmouseout="this.style.backgroundColor='transparent'"
+                      >
+                        <span style="width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;">${warpcastSvg("width: 20px; height: 20px; color: rgb(124, 101, 193);")}</span>
+                      </a>
+                    </div>`
+                  : ""}
+              </div>
             </div>
             ${displayCommentPreview
               ? html` <div

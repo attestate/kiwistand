@@ -651,7 +651,21 @@ body {
     }
     .information-row {
       background-color: var(--background-color0);
-      padding: 8px 0 !important;
+      padding: 12px 16px !important;
+    }
+    .elevating-row {
+      padding-left: 0 !important;
+      padding-right: 0 !important;
+    }
+    /* Standard padding for information rows */
+    .information-row {
+      padding: 12px 16px !important;
+    }
+    /* Elevating rows already have their own padding set to 0 */
+    /* Just set consistent padding for all story wrappers */
+    .story-link-container-wrapper {
+      padding-left: 0;
+      padding-right: 0;
     }
     .story-domain {
       font-size: 9pt;

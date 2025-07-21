@@ -213,7 +213,7 @@ const Vote = (props) => {
     if (response.status === "success") {
       // Update UI state
       setUpvotes(upvotes + 1);
-      toast.success("Thanks for your upvote!");
+      toast.success("Thanks for your like!");
       posthog.capture("upvote");
     } else if (response.details.includes("You must mint")) {
       // NOTE: This should technically never happen, but if it does we pop open
