@@ -713,6 +713,10 @@ body {
       border-top: none !important;
       margin: 0 11px 5px 11px !important;
       border-bottom: var(--border-thick) !important;
+      border-left: var(--border) !important;
+      border-right: var(--border) !important;
+      border-bottom-left-radius: 2px !important;
+      border-bottom-right-radius: 2px !important;
     }
     .comment-preview-no-mobile-image .interaction-element{
       padding-top: 2px !important;
