@@ -37,24 +37,59 @@ export const iconSVG = html`
 
 const heartSVG = html`
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
-    <rect width="256" height="256" fill="none"/>
-    <path d="M128,224S24,168,24,102A54,54,0,0,1,78,48c22.59,0,41.94,12.31,50,32,8.06-19.69,27.41-32,50-32a54,54,0,0,1,54,54C232,168,128,224,128,224Z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/>
+    <rect width="256" height="256" fill="none" />
+    <path
+      d="M128,224S24,168,24,102A54,54,0,0,1,78,48c22.59,0,41.94,12.31,50,32,8.06-19.69,27.41-32,50-32a54,54,0,0,1,54,54C232,168,128,224,128,224Z"
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="16"
+    />
   </svg>
 `;
 
 const shareSVG = html`
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="20" height="20">
-    <rect width="256" height="256" fill="none"/>
-    <polyline points="176 152 224 104 176 56" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/>
-    <polyline points="192 216 32 216 32 88" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/>
-    <path d="M72,176a96,96,0,0,1,93-72h59" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/>
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 256 256"
+    width="20"
+    height="20"
+  >
+    <rect width="256" height="256" fill="none" />
+    <polyline
+      points="176 152 224 104 176 56"
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="16"
+    />
+    <polyline
+      points="192 216 32 216 32 88"
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="16"
+    />
+    <path
+      d="M72,176a96,96,0,0,1,93-72h59"
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="16"
+    />
   </svg>
 `;
 
 const heartFilledSVG = html`
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
-    <rect width="256" height="256" fill="none"/>
-    <path d="M240,102c0,70-103.79,126.66-108.21,129a8,8,0,0,1-7.58,0C119.79,228.66,16,172,16,102A62.07,62.07,0,0,1,78,40c20.65,0,38.73,8.88,50,23.89C139.27,48.88,157.35,40,178,40A62.07,62.07,0,0,1,240,102Z"/>
+    <rect width="256" height="256" fill="none" />
+    <path
+      d="M240,102c0,70-103.79,126.66-108.21,129a8,8,0,0,1-7.58,0C119.79,228.66,16,172,16,102A62.07,62.07,0,0,1,78,40c20.65,0,38.73,8.88,50,23.89C139.27,48.88,157.35,40,178,40A62.07,62.07,0,0,1,240,102Z"
+    />
   </svg>
 `;
 
@@ -192,7 +227,6 @@ export function extractDomain(link) {
   return tld;
 }
 
-
 const truncateLongWords = (text, maxLength = 20) => {
   const words = text.split(" ");
   const truncatedWords = words.map((word) =>
@@ -286,10 +320,7 @@ const row = (
     const submissionId = `kiwi:0x${story.index}`;
     const commentCount = commentCounts.get(submissionId) || 0;
     const outboundsLookbackHours = 24 * 5;
-    const clicks = countOutbounds(
-      story.href,
-      outboundsLookbackHours,
-    );
+    const clicks = countOutbounds(story.href, outboundsLookbackHours);
     const extractedDomain = extractDomain(DOMPurify.sanitize(story.href));
     // Use the twitterFrontends list from parser.mjs for comprehensive coverage
     const isTweet = twitterFrontends.some((domain) => {
@@ -299,13 +330,15 @@ const row = (
     });
 
     // Check if this is a Farcaster cast (only actual cast URLs)
-    const isFarcasterCast = (extractedDomain === "warpcast.com" && story.href.includes("/~/conversations/")) || 
+    const isFarcasterCast =
+      (extractedDomain === "warpcast.com" &&
+        story.href.includes("/~/conversations/")) ||
       extractedDomain === "warpcast.com" ||
       extractedDomain === "farcaster.xyz" ||
-      (story.href.includes("farcaster.xyz/") && 
-       !story.href.includes("miniapps.farcaster.xyz") && 
-       !story.href.includes("docs.farcaster.xyz") &&
-       !story.href.includes("api.farcaster.xyz"));
+      (story.href.includes("farcaster.xyz/") &&
+        !story.href.includes("miniapps.farcaster.xyz") &&
+        !story.href.includes("docs.farcaster.xyz") &&
+        !story.href.includes("api.farcaster.xyz"));
 
     // Check if this is a Paragraph.xyz post
     const isParagraphPost = extractedDomain === "paragraph.xyz";
@@ -331,38 +364,48 @@ const row = (
       isCloudflare;
 
     // Check if tweet contains an X.com article link in its content
-    const tweetContainsXArticle = story.metadata && 
-      story.metadata.ogDescription && 
-      (story.metadata.ogDescription.includes("x.com/i/article/") || 
-       story.metadata.ogDescription.includes("twitter.com/i/article/"));
-    
+    const tweetContainsXArticle =
+      story.metadata &&
+      story.metadata.ogDescription &&
+      (story.metadata.ogDescription.includes("x.com/i/article/") ||
+        story.metadata.ogDescription.includes("twitter.com/i/article/"));
+
     // Check if we have what we need to render a tweet preview
     // Exclude tweets containing article links
     const canRenderTweetPreview =
-      isTweet && 
-      story.metadata && 
+      isTweet &&
+      story.metadata &&
       story.metadata.ogDescription &&
       !tweetContainsXArticle;
 
     // Check if we have what we need to render a Farcaster cast preview
     // Only show preview on non-stories pages
     const canRenderFarcasterPreview =
-      isFarcasterCast && 
-      story.metadata && 
+      isFarcasterCast &&
+      story.metadata &&
       (story.metadata.farcasterCast || story.metadata.ogDescription) &&
       path !== "/stories"; // Don't show preview on stories page since we show full cast there
-    
+
     // Extract first image from Farcaster cast embeds
     let farcasterImageUrl = null;
     if (canRenderFarcasterPreview && story.metadata.farcasterCast?.embeds) {
-      const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'];
-      const imageEmbed = story.metadata.farcasterCast.embeds.find(embed => {
+      const imageExtensions = [
+        ".jpg",
+        ".jpeg",
+        ".png",
+        ".gif",
+        ".webp",
+        ".svg",
+      ];
+      const imageEmbed = story.metadata.farcasterCast.embeds.find((embed) => {
         if (!embed || !embed.url) return false;
-        const isDirectImage = imageExtensions.some(ext => embed.url.toLowerCase().includes(ext));
+        const isDirectImage = imageExtensions.some((ext) =>
+          embed.url.toLowerCase().includes(ext),
+        );
         const hasImageMetadata = embed.metadata && embed.metadata.image;
         return isDirectImage || hasImageMetadata;
       });
-      
+
       if (imageEmbed) {
         farcasterImageUrl = imageEmbed.metadata?.image?.url || imageEmbed.url;
       }
@@ -373,7 +416,7 @@ const row = (
       !canRenderFarcasterPreview && // Don't use regular image if we can render a Farcaster preview
       hasImageData &&
       !interactive &&
-      (path === "/" || 
+      (path === "/" ||
         path === "/stories" ||
         path === "/new" ||
         path === "/best");
@@ -395,7 +438,9 @@ const row = (
           <div
             class="${interactive ? "" : "content-row"} ${invert
               ? "inverted-row"
-              : ""} ${displayImage || canRenderTweetPreview || canRenderFarcasterPreview
+              : ""} ${displayImage ||
+            canRenderTweetPreview ||
+            canRenderFarcasterPreview
               ? "content-row-elevated"
               : ""}"
             style="${invert ? "display:none;" : ""} ${style}"
@@ -406,44 +451,85 @@ const row = (
                   data-no-instant
                   href="${DOMPurify.sanitize(story.href)}"
                   target="_blank"
-                  onclick="event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${DOMPurify.sanitize(story.href)}')); if (window.ReactNativeWebView || window !== window.parent) { window.sdk.actions.openUrl('${DOMPurify.sanitize(story.href)}'); } else { window.open('${DOMPurify.sanitize(story.href)}', event.currentTarget.getAttribute('target')); }"
+                  onclick="event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${DOMPurify.sanitize(
+                    story.href,
+                  )}')); if (window.ReactNativeWebView || window !== window.parent) { window.sdk.actions.openUrl('${DOMPurify.sanitize(
+                    story.href,
+                  )}'); } else { window.open('${DOMPurify.sanitize(
+                    story.href,
+                  )}', event.currentTarget.getAttribute('target')); }"
                   style="text-decoration:none; color:inherit; display:block;"
                 >
                   <div class="tweet-embed-container">
                     <div>
                       <div class="tweet-embed-header">
-                        <div style="display:flex; align-items:center; margin-bottom:12px;">
-                          ${story.metadata.twitterAuthorAvatar 
+                        <div
+                          style="display:flex; align-items:center; margin-bottom:12px;"
+                        >
+                          ${story.metadata.twitterAuthorAvatar
                             ? html`<img
-                                src="${DOMPurify.sanitize(story.metadata.twitterAuthorAvatar)}"
-                                alt="${DOMPurify.sanitize(story.metadata.twitterCreator || "Author")}"
+                                src="${DOMPurify.sanitize(
+                                  story.metadata.twitterAuthorAvatar,
+                                )}"
+                                alt="${DOMPurify.sanitize(
+                                  story.metadata.twitterCreator || "Author",
+                                )}"
                                 width="40"
                                 height="40"
                                 loading="lazy"
                                 style="border-radius: 50%; margin-right: 12px;"
                               />`
-                            : html`<div style="width: 40px; height: 40px; border-radius: 50%; background-color: #e1e8ed; margin-right: 12px; display: flex; align-items: center; justify-content: center;">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="#657786">
-                                  <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                            : html`<div
+                                style="width: 40px; height: 40px; border-radius: 50%; background-color: #e1e8ed; margin-right: 12px; display: flex; align-items: center; justify-content: center;"
+                              >
+                                <svg
+                                  width="24"
+                                  height="24"
+                                  viewBox="0 0 24 24"
+                                  fill="#657786"
+                                >
+                                  <path
+                                    d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"
+                                  />
                                 </svg>
                               </div>`}
-                          <svg width="20" height="20" viewBox="0 0 24 24" fill="#000" style="margin-right:8px;">
-                            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                          <svg
+                            width="20"
+                            height="20"
+                            viewBox="0 0 24 24"
+                            fill="#000"
+                            style="margin-right:8px;"
+                          >
+                            <path
+                              d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"
+                            />
                           </svg>
-                          <span style="font-weight:500; color:var(--contrast-color); font-size:14px;">${story.metadata.twitterCreator || "Tweet"}</span>
+                          <span
+                            style="font-weight:500; color:var(--contrast-color); font-size:14px;"
+                            >${story.metadata.twitterCreator || "Tweet"}</span
+                          >
                         </div>
                       </div>
                       <div class="tweet-embed-body">
-                        <p>${DOMPurify.sanitize(story.metadata.ogDescription || "")
-                          .slice(0, 280)
-                          .split(/(\bhttps?:\/\/[^\s]+)/g)
-                          .map((part) => {
-                            if (part.match(/^\bhttps?:\/\//)) {
-                              return part.length > 30 ? part.substring(0, 30) + "..." : part;
-                            }
-                            return part;
-                          })
-                          .join("")}${(story.metadata.ogDescription || "").length > 280 ? "..." : ""}</p>
+                        <p>
+                          ${DOMPurify.sanitize(
+                            story.metadata.ogDescription || "",
+                          )
+                            .slice(0, 280)
+                            .split(/(\bhttps?:\/\/[^\s]+)/g)
+                            .map((part) => {
+                              if (part.match(/^\bhttps?:\/\//)) {
+                                return part.length > 30
+                                  ? part.substring(0, 30) + "..."
+                                  : part;
+                              }
+                              return part;
+                            })
+                            .join("")}${(story.metadata.ogDescription || "")
+                            .length > 280
+                            ? "..."
+                            : ""}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -453,19 +539,42 @@ const row = (
                   class="farcaster-preview-container farcaster-cast-link"
                   data-no-instant
                   href="${DOMPurify.sanitize(story.href)}"
-                  data-cast-hash="${story.metadata.farcasterCast && story.metadata.farcasterCast.hash ? DOMPurify.sanitize(story.metadata.farcasterCast.hash) : ''}"
+                  data-cast-hash="${story.metadata.farcasterCast &&
+                  story.metadata.farcasterCast.hash
+                    ? DOMPurify.sanitize(story.metadata.farcasterCast.hash)
+                    : ""}"
                   target="_blank"
-                  onclick="event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${DOMPurify.sanitize(story.href)}')); if (window.ReactNativeWebView || window !== window.parent) { ${story.metadata.farcasterCast && story.metadata.farcasterCast.hash ? `(async function() { try { var context = await window.sdk.context; if (context && context.client && context.client.clientFid === 309857) { window.sdk.actions.openUrl('https://wallet.coinbase.com/post/${DOMPurify.sanitize(story.metadata.farcasterCast.hash)}'); return; } } catch(e) {} window.sdk.actions.openUrl('${DOMPurify.sanitize(story.href)}'); })()` : `window.sdk.actions.openUrl('${DOMPurify.sanitize(story.href)}')`}; } else { window.open('${DOMPurify.sanitize(story.href)}', event.currentTarget.getAttribute('target')); }"
+                  onclick="event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${DOMPurify.sanitize(
+                    story.href,
+                  )}')); if (window.ReactNativeWebView || window !== window.parent) { ${story
+                    .metadata.farcasterCast && story.metadata.farcasterCast.hash
+                    ? `(async function() { try { var context = await window.sdk.context; if (context && context.client && context.client.clientFid === 309857) { window.sdk.actions.openUrl('https://wallet.coinbase.com/post/${DOMPurify.sanitize(
+                        story.metadata.farcasterCast.hash,
+                      )}'); return; } } catch(e) {} window.sdk.actions.openUrl('${DOMPurify.sanitize(
+                        story.href,
+                      )}'); })()`
+                    : `window.sdk.actions.openUrl('${DOMPurify.sanitize(
+                        story.href,
+                      )}')`}; } else { window.open('${DOMPurify.sanitize(
+                    story.href,
+                  )}', event.currentTarget.getAttribute('target')); }"
                   style="text-decoration:none; color:inherit; display:block;"
                 >
                   <div class="farcaster-embed-container">
                     <div>
                       <div class="farcaster-embed-metadata">
                         <div class="farcaster-embed-author-avatar-container">
-                          ${story.metadata.farcasterCast?.author?.pfp 
+                          ${story.metadata.farcasterCast?.author?.pfp
                             ? html`<img
-                                src="${DOMPurify.sanitize(story.metadata.farcasterCast.author.pfp)}"
-                                alt="${DOMPurify.sanitize(story.metadata.farcasterCast.author.displayName || story.metadata.farcasterCast.author.username)}"
+                                src="${DOMPurify.sanitize(
+                                  story.metadata.farcasterCast.author.pfp,
+                                )}"
+                                alt="${DOMPurify.sanitize(
+                                  story.metadata.farcasterCast.author
+                                    .displayName ||
+                                    story.metadata.farcasterCast.author
+                                      .username,
+                                )}"
                                 width="40"
                                 height="40"
                                 loading="lazy"
@@ -489,32 +598,59 @@ const row = (
                               </svg>`}
                         </div>
                         <div class="farcaster-embed-author">
-                          <p class="farcaster-embed-author-display-name">${story.metadata.farcasterCast?.author?.displayName || story.metadata.ogTitle || "Cast"}</p>
-                          <p class="farcaster-embed-author-username" style="opacity: 0.6;">@${story.metadata.farcasterCast?.author?.username || "farcaster"}</p>
+                          <p class="farcaster-embed-author-display-name">
+                            ${story.metadata.farcasterCast?.author
+                              ?.displayName ||
+                            story.metadata.ogTitle ||
+                            "Cast"}
+                          </p>
+                          <p
+                            class="farcaster-embed-author-username"
+                            style="opacity: 0.6;"
+                          >
+                            @${story.metadata.farcasterCast?.author?.username ||
+                            "farcaster"}
+                          </p>
                         </div>
                       </div>
                       <div class="farcaster-embed-body">
-                        <p>${story.metadata.farcasterCast?.text 
-                          ? DOMPurify.sanitize(story.metadata.farcasterCast.text)
-                              .slice(0, 280)
-                              .split(/(\bhttps?:\/\/[^\s]+)/g)
-                              .map((part) => {
-                                if (part.match(/^\bhttps?:\/\//)) {
-                                  return part.length > 30 ? part.substring(0, 30) + "..." : part;
-                                }
-                                return part;
-                              })
-                              .join("") + (story.metadata.farcasterCast.text.length > 280 ? "..." : "")
-                          : DOMPurify.sanitize(story.metadata.ogDescription || "")
-                              .slice(0, 280)
-                              .split(/(\bhttps?:\/\/[^\s]+)/g)
-                              .map((part) => {
-                                if (part.match(/^\bhttps?:\/\//)) {
-                                  return part.length > 30 ? part.substring(0, 30) + "..." : part;
-                                }
-                                return part;
-                              })
-                              .join("") + ((story.metadata.ogDescription || "").length > 280 ? "..." : "")}</p>
+                        <p>
+                          ${story.metadata.farcasterCast?.text
+                            ? DOMPurify.sanitize(
+                                story.metadata.farcasterCast.text,
+                              )
+                                .slice(0, 280)
+                                .split(/(\bhttps?:\/\/[^\s]+)/g)
+                                .map((part) => {
+                                  if (part.match(/^\bhttps?:\/\//)) {
+                                    return part.length > 30
+                                      ? part.substring(0, 30) + "..."
+                                      : part;
+                                  }
+                                  return part;
+                                })
+                                .join("") +
+                              (story.metadata.farcasterCast.text.length > 280
+                                ? "..."
+                                : "")
+                            : DOMPurify.sanitize(
+                                story.metadata.ogDescription || "",
+                              )
+                                .slice(0, 280)
+                                .split(/(\bhttps?:\/\/[^\s]+)/g)
+                                .map((part) => {
+                                  if (part.match(/^\bhttps?:\/\//)) {
+                                    return part.length > 30
+                                      ? part.substring(0, 30) + "..."
+                                      : part;
+                                  }
+                                  return part;
+                                })
+                                .join("") +
+                              ((story.metadata.ogDescription || "").length > 280
+                                ? "..."
+                                : "")}
+                        </p>
                         ${farcasterImageUrl
                           ? html`
                               <div style="height: 16px;"></div>
@@ -536,7 +672,13 @@ const row = (
                   style="display: block; width: 100%;"
                   class="row-image-preview"
                   href="${DOMPurify.sanitize(story.href)}"
-                  onclick="event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${DOMPurify.sanitize(story.href)}')); if (window.ReactNativeWebView || window !== window.parent) { window.sdk.actions.openUrl('${DOMPurify.sanitize(story.href)}'); } else { window.open('${DOMPurify.sanitize(story.href)}', event.currentTarget.getAttribute('target')); }"
+                  onclick="event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${DOMPurify.sanitize(
+                    story.href,
+                  )}')); if (window.ReactNativeWebView || window !== window.parent) { window.sdk.actions.openUrl('${DOMPurify.sanitize(
+                    story.href,
+                  )}'); } else { window.open('${DOMPurify.sanitize(
+                    story.href,
+                  )}', event.currentTarget.getAttribute('target')); }"
                 >
                   <div style="position: relative;">
                     <img
@@ -557,23 +699,34 @@ const row = (
                           )
                         : DOMPurify.sanitize(story.metadata.image)}"
                     />
-                    ${isCloudflare
-                      ? null
-                      : html`<div
-                          style="position: absolute; bottom: 8px; left: 8px; background: rgba(255,255,255,0.9); padding: 2px 6px; border-radius: 2px; font-size: 9pt; display: flex; align-items: center;"
-                        >
-                          ${!["farcaster.xyz", "warpcast.com", "hey.xyz", "lens.xyz", "zora.co", "etherscan.io", "basescan.org", "arbiscan.io"].includes(extractedDomain)
-                            ? html`<img 
-                                src="https://www.google.com/s2/favicons?sz=32&domain_url=${encodeURIComponent(extractedDomain)}"
-                                width="12"
-                                height="12"
-                                style="margin-right: 4px; display: inline-block;"
-                                loading="lazy"
-                                onerror="this.style.display='none'"
-                              />`
-                            : ''}
-                          ${extractedDomain}
-                        </div>`}
+                    <span
+                      style="gap: 5px; position: absolute; bottom: 8px; left: 16px; background: rgba(255,255,255,0.85); padding: 2px 4px; border-radius: 2px; font-size: 10px !important; line-height: 1; display: inline-flex; align-items: center; font-weight: normal; transform: none; z-index: 1; height: 18px;"
+                    >
+                      ${![
+                        "farcaster.xyz",
+                        "warpcast.com",
+                        "hey.xyz",
+                        "lens.xyz",
+                        "zora.co",
+                        "etherscan.io",
+                        "basescan.org",
+                        "arbiscan.io",
+                      ].includes(extractedDomain)
+                        ? html`<img
+                            src="https://www.google.com/s2/favicons?sz=32&domain_url=${encodeURIComponent(
+                              extractedDomain,
+                            )}"
+                            width="10"
+                            height="10"
+                            style="margin-right: 5px; display: inline-block; vertical-align: middle; width: 10px; height: 10px;"
+                            loading="lazy"
+                            onerror="this.style.display='none'"
+                          />`
+                        : ""}
+                      <span style="font-size: 10px !important;"
+                        >${extractedDomain}</span
+                      >
+                    </span>
                   </div>
                 </a>`
               : null}
@@ -605,13 +758,39 @@ const row = (
                           : DOMPurify.sanitize(story.href)}"
                         onclick="${isCloudflare && story.index
                           ? "if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
-                          : `event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${DOMPurify.sanitize(story.href)}')); if (window.ReactNativeWebView || window !== window.parent) { ${isFarcasterCast && story.metadata && story.metadata.farcasterCast && story.metadata.farcasterCast.hash ? `(async function() { try { var context = await window.sdk.context; if (context && context.client && context.client.clientFid === 309857) { window.sdk.actions.openUrl('https://wallet.coinbase.com/post/${DOMPurify.sanitize(story.metadata.farcasterCast.hash)}'); return; } } catch(e) {} window.sdk.actions.openUrl('${DOMPurify.sanitize(story.href)}'); })()` : `window.sdk.actions.openUrl('${DOMPurify.sanitize(story.href)}')`}; } else { window.open('${DOMPurify.sanitize(story.href)}', event.currentTarget.getAttribute('target')); }`}"
+                          : `event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${DOMPurify.sanitize(
+                              story.href,
+                            )}')); if (window.ReactNativeWebView || window !== window.parent) { ${
+                              isFarcasterCast &&
+                              story.metadata &&
+                              story.metadata.farcasterCast &&
+                              story.metadata.farcasterCast.hash
+                                ? `(async function() { try { var context = await window.sdk.context; if (context && context.client && context.client.clientFid === 309857) { window.sdk.actions.openUrl('https://wallet.coinbase.com/post/${DOMPurify.sanitize(
+                                    story.metadata.farcasterCast.hash,
+                                  )}'); return; } } catch(e) {} window.sdk.actions.openUrl('${DOMPurify.sanitize(
+                                    story.href,
+                                  )}'); })()`
+                                : `window.sdk.actions.openUrl('${DOMPurify.sanitize(
+                                    story.href,
+                                  )}')`
+                            }; } else { window.open('${DOMPurify.sanitize(
+                              story.href,
+                            )}', event.currentTarget.getAttribute('target')); }`}"
                         data-story-link="/stories/${getSlug(
                           story.title,
                         )}?index=0x${story.index}"
                         data-external-link="${DOMPurify.sanitize(story.href)}"
-                        ${isFarcasterCast && story.metadata && story.metadata.farcasterCast && story.metadata.farcasterCast.hash ? `data-cast-hash="${DOMPurify.sanitize(story.metadata.farcasterCast.hash)}"` : ''}
-                        ${isFarcasterCast ? 'class="story-link farcaster-cast-link"' : 'class="story-link"'}
+                        ${isFarcasterCast &&
+                        story.metadata &&
+                        story.metadata.farcasterCast &&
+                        story.metadata.farcasterCast.hash
+                          ? `data-cast-hash="${DOMPurify.sanitize(
+                              story.metadata.farcasterCast.hash,
+                            )}"`
+                          : ""}
+                        ${isFarcasterCast
+                          ? 'class="story-link farcaster-cast-link"'
+                          : 'class="story-link"'}
                         target="${path === "/submit" ||
                         path === "/demonstration" ||
                         (isCloudflare && story.index)
@@ -738,22 +917,36 @@ const row = (
                             )}
                           `}
                       ${!interactive &&
-                      (path === "/" || path === "/new" || path === "/best" || path === "/stories") &&
+                      (path === "/" ||
+                        path === "/new" ||
+                        path === "/best" ||
+                        path === "/stories") &&
                       !isCloudflare &&
                       !displayImage
                         ? html`
                             <span class="domain-text">
                               <span style="opacity:0.6"> • </span>
-                              ${!["farcaster.xyz", "warpcast.com", "hey.xyz", "lens.xyz", "zora.co", "etherscan.io", "basescan.org", "arbiscan.io"].includes(extractedDomain)
-                                ? html`<img 
-                                    src="https://www.google.com/s2/favicons?sz=32&domain_url=${encodeURIComponent(extractedDomain)}"
+                              ${![
+                                "farcaster.xyz",
+                                "warpcast.com",
+                                "hey.xyz",
+                                "lens.xyz",
+                                "zora.co",
+                                "etherscan.io",
+                                "basescan.org",
+                                "arbiscan.io",
+                              ].includes(extractedDomain)
+                                ? html`<img
+                                    src="https://www.google.com/s2/favicons?sz=32&domain_url=${encodeURIComponent(
+                                      extractedDomain,
+                                    )}"
                                     width="10"
                                     height="10"
                                     style="vertical-align: middle; position: relative; top: -1px; margin-right: 3px; opacity: 0.7; display: inline-block;"
                                     loading="lazy"
                                     onerror="this.style.display='none'"
                                   />`
-                                : ''}
+                                : ""}
                               <span>${extractedDomain}</span>
                             </span>
                           `
@@ -812,125 +1005,168 @@ const row = (
                   </div>
                 </div>
               </div>
-              ${!interactive ? html`<div
-                class="interaction-bar"
-                style="display: flex; gap: 0; margin-top: 8px; padding: 0; justify-content: space-between;"
-              >
-                <div
-                  data-title="${DOMPurify.sanitize(story.title)}"
-                  data-href="${DOMPurify.sanitize(story.href)}"
-                  data-upvoters="${JSON.stringify(story.upvoters)}"
-                  class="like-button-container"
-                  style="flex: 1; display: flex; justify-content: center;"
-                >
-                  <button
-                    class="interaction-button like-button"
-                    style="min-width: 60px; padding: 8px 12px; border: none; background: transparent; border-radius: 999px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.15s ease;"
-                    onmouseover="this.style.backgroundColor='rgba(249, 24, 128, 0.1)'"
-                    onmouseout="this.style.backgroundColor='transparent'"
+              ${!interactive
+                ? html`<div
+                    class="interaction-bar"
+                    style="display: flex; gap: 0; margin-top: 8px; padding: 0; justify-content: space-between;"
                   >
-                    <span class="heart-icon" style="width: 20px; height: 20px; color: rgba(83, 100, 113, 1); display: flex; align-items: center; justify-content: center;">${heartSVG}</span>
-                    <span style="font-size: 13px; color: rgba(83, 100, 113, 1); font-weight: 400;">${story.upvoters ? story.upvoters.length : 0}</span>
-                  </button>
-                </div>
-                ${path !== "/stories" &&
-                path !== "/demonstration" &&
-                path !== "/submit"
-                  ? html`<div
-                      data-story-index="0x${story.index}"
-                      data-comment-count="${commentCount}"
-                      class="comment-button-container"
+                    <div
+                      data-title="${DOMPurify.sanitize(story.title)}"
+                      data-href="${DOMPurify.sanitize(story.href)}"
+                      data-upvoters="${JSON.stringify(story.upvoters)}"
+                      class="like-button-container"
                       style="flex: 1; display: flex; justify-content: center;"
                     >
-                      <a
-                        class="interaction-button comment-button"
-                        id="chat-bubble-${story.index}"
-                        href="/stories/${getSlug(
-                          story.title,
-                        )}?index=0x${story.index}"
-                        onclick="event.preventDefault(); window.dispatchEvent(new CustomEvent('open-comments-0x${story.index}', { detail: { source: 'chat-bubble' } })); window.dispatchEvent(new HashChangeEvent('hashchange')); const commentPreview = document.querySelector('.comment-preview-0x${story.index}'); if (commentPreview) { commentPreview.style.opacity = 1; } const borderElem = document.querySelector('.without-comment-preview-0x${story.index}'); if (borderElem) { borderElem.classList.toggle('no-border'); }"
-                        style="min-width: 60px; padding: 8px 12px; border: none; background: transparent; border-radius: 999px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.15s ease; text-decoration: none; color: inherit;"
-                        onmouseover="this.style.backgroundColor='rgba(29, 155, 240, 0.1)'"
+                      <button
+                        class="interaction-button like-button"
+                        style="min-width: 60px; padding: 8px 12px; border: none; background: transparent; border-radius: 999px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.15s ease;"
+                        onmouseover="this.style.backgroundColor='rgba(249, 24, 128, 0.1)'"
                         onmouseout="this.style.backgroundColor='transparent'"
                       >
-                        <span style="width: 20px; height: 20px; color: rgba(83, 100, 113, 1); display: flex; align-items: center; justify-content: center;">
-                          <svg style="width: 20px; height: 20px; color: rgba(83, 100, 113, 1);" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
-                            <rect width="256" height="256" fill="none" />
-                            <path
-                              d="M71.58,144,32,176V48a8,8,0,0,1,8-8H168a8,8,0,0,1,8,8v88a8,8,0,0,1-8,8Z"
-                              fill="none"
-                              stroke="currentColor"
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              stroke-width="16"
-                            />
-                            <path
-                              d="M80,144v40a8,8,0,0,0,8,8h96.42L224,224V96a8,8,0,0,0-8-8H176"
-                              fill="none"
-                              stroke="currentColor"
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              stroke-width="16"
-                            />
-                          </svg>
-                        </span>
-                        ${commentCount > 0 ? html`<span style="font-size: 13px; color: rgba(83, 100, 113, 1); font-weight: 400;">${commentCount}</span>` : ''}
-                      </a>
-                    </div>`
-                  : ""}
-                <div class="share-button-container" style="flex: 1; display: flex; justify-content: center;">
-                  <button
-                    class="interaction-button share-button"
-                    data-story-title="${DOMPurify.sanitize(story.title)}"
-                    data-story-slug="${getSlug(story.title)}"
-                    data-story-index="0x${story.index}"
-                    style="min-width: 40px; padding: 8px; border: none; background: transparent; border-radius: 999px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s ease;"
-                    onclick="event.preventDefault(); const slug = this.getAttribute('data-story-slug'); const index = this.getAttribute('data-story-index'); const url = 'https://news.kiwistand.com/stories/' + slug + '?index=' + index; navigator.sendBeacon && navigator.sendBeacon('/share?url=' + encodeURIComponent('${DOMPurify.sanitize(story.href)}') + '&type=native'); if (window.innerWidth <= 640 && navigator.share) { navigator.share({url: url}); } else { const dropdown = this.nextElementSibling; if (dropdown) { dropdown.classList.toggle('active'); document.addEventListener('click', function closeDropdown(e) { if (!e.target.closest('.share-button-container')) { dropdown.classList.remove('active'); document.removeEventListener('click', closeDropdown); } }); } }"
-                    onmouseover="this.style.backgroundColor='rgba(0, 186, 124, 0.1)'"
-                    onmouseout="this.style.backgroundColor='transparent'"
-                  >
-                    <span style="width: 20px; height: 20px; color: rgba(83, 100, 113, 1); display: flex; align-items: center; justify-content: center;">${shareSVG}</span>
-                  </button>
-                  <div class="share-dropdown">
-                    <button 
-                      class="share-dropdown-item"
-                      onclick="event.preventDefault(); event.stopPropagation(); const container = this.closest('.share-button-container'); const slug = container.querySelector('.share-button').getAttribute('data-story-slug'); const index = container.querySelector('.share-button').getAttribute('data-story-index'); const url = 'https://news.kiwistand.com/stories/' + slug + '?index=' + index; navigator.clipboard.writeText(url).then(() => { window.toast.success('Link copied!'); this.closest('.share-dropdown').classList.remove('active'); });"
+                        <span
+                          class="heart-icon"
+                          style="width: 20px; height: 20px; color: rgba(83, 100, 113, 1); display: flex; align-items: center; justify-content: center;"
+                          >${heartSVG}</span
+                        >
+                        <span
+                          style="font-size: 13px; color: rgba(83, 100, 113, 1); font-weight: 400;"
+                          >${story.upvoters ? story.upvoters.length : 0}</span
+                        >
+                      </button>
+                    </div>
+                    ${path !== "/stories" &&
+                    path !== "/demonstration" &&
+                    path !== "/submit"
+                      ? html`<div
+                          data-story-index="0x${story.index}"
+                          data-comment-count="${commentCount}"
+                          class="comment-button-container"
+                          style="flex: 1; display: flex; justify-content: center;"
+                        >
+                          <a
+                            class="interaction-button comment-button"
+                            id="chat-bubble-${story.index}"
+                            href="/stories/${getSlug(
+                              story.title,
+                            )}?index=0x${story.index}"
+                            onclick="event.preventDefault(); window.dispatchEvent(new CustomEvent('open-comments-0x${story.index}', { detail: { source: 'chat-bubble' } })); window.dispatchEvent(new HashChangeEvent('hashchange')); const commentPreview = document.querySelector('.comment-preview-0x${story.index}'); if (commentPreview) { commentPreview.style.opacity = 1; } const borderElem = document.querySelector('.without-comment-preview-0x${story.index}'); if (borderElem) { borderElem.classList.toggle('no-border'); }"
+                            style="min-width: 60px; padding: 8px 12px; border: none; background: transparent; border-radius: 999px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.15s ease; text-decoration: none; color: inherit;"
+                            onmouseover="this.style.backgroundColor='rgba(29, 155, 240, 0.1)'"
+                            onmouseout="this.style.backgroundColor='transparent'"
+                          >
+                            <span
+                              style="width: 20px; height: 20px; color: rgba(83, 100, 113, 1); display: flex; align-items: center; justify-content: center;"
+                            >
+                              <svg
+                                style="width: 20px; height: 20px; color: rgba(83, 100, 113, 1);"
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 256 256"
+                              >
+                                <rect width="256" height="256" fill="none" />
+                                <path
+                                  d="M71.58,144,32,176V48a8,8,0,0,1,8-8H168a8,8,0,0,1,8,8v88a8,8,0,0,1-8,8Z"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  stroke-width="16"
+                                />
+                                <path
+                                  d="M80,144v40a8,8,0,0,0,8,8h96.42L224,224V96a8,8,0,0,0-8-8H176"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  stroke-width="16"
+                                />
+                              </svg>
+                            </span>
+                            ${commentCount > 0
+                              ? html`<span
+                                  style="font-size: 13px; color: rgba(83, 100, 113, 1); font-weight: 400;"
+                                  >${commentCount}</span
+                                >`
+                              : ""}
+                          </a>
+                        </div>`
+                      : ""}
+                    <div
+                      class="share-button-container"
+                      style="flex: 1; display: flex; justify-content: center;"
                     >
-                      ${CopyIcon("width: 20px; height: 20px; margin-right: 12px; color: rgba(83, 100, 113, 1);")}
-                      Copy link
-                    </button>
-                  </div>
-                </div>
-                ${path === "/stories"
-                  ? html`<div class="farcaster-share-button-container" style="flex: 1; display: flex; justify-content: center;">
-                      <a
-                        href="https://warpcast.com/~/compose?text=${encodeURIComponent(
-                          DOMPurify.sanitize(story.title),
-                        )}&embeds[]=${encodeURIComponent(
-                          `https://news.kiwistand.com/stories/${getSlug(
-                            story.title,
-                          )}?index=0x${story.index}`,
-                        )}"
-                        target="_blank"
-                        class="interaction-button farcaster-share-button"
+                      <button
+                        class="interaction-button share-button"
                         data-story-title="${DOMPurify.sanitize(story.title)}"
                         data-story-slug="${getSlug(story.title)}"
                         data-story-index="0x${story.index}"
-                        style="min-width: 40px; padding: 8px; border: none; background: transparent; border-radius: 999px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s ease; text-decoration: none; color: inherit;"
-                        onclick="event.preventDefault(); const title = this.getAttribute('data-story-title'); const slug = this.getAttribute('data-story-slug'); const index = this.getAttribute('data-story-index'); const kiwiUrl = 'https://news.kiwistand.com/stories/' + slug + '?index=' + index; navigator.sendBeacon && navigator.sendBeacon('/share?url=' + encodeURIComponent('${DOMPurify.sanitize(story.href)}') + '&type=farcaster'); if (window.isInFarcasterMiniApp && window.sdk && window.sdk.actions && window.sdk.actions.composeCast) { window.sdk.actions.composeCast({ text: title, embeds: [kiwiUrl] }); } else if (window.ReactNativeWebView || window !== window.parent) { const url = 'https://warpcast.com/~/compose?text=' + encodeURIComponent(title) + '&embeds[]=' + encodeURIComponent(kiwiUrl); window.sdk.actions.openUrl(url); } else { const url = 'https://warpcast.com/~/compose?text=' + encodeURIComponent(title) + '&embeds[]=' + encodeURIComponent(kiwiUrl); window.open(url, '_blank'); }"
-                        onmouseover="this.style.backgroundColor='rgba(124, 101, 193, 0.1)'"
+                        style="min-width: 40px; padding: 8px; border: none; background: transparent; border-radius: 999px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s ease;"
+                        onclick="event.preventDefault(); const slug = this.getAttribute('data-story-slug'); const index = this.getAttribute('data-story-index'); const url = 'https://news.kiwistand.com/stories/' + slug + '?index=' + index; navigator.sendBeacon && navigator.sendBeacon('/share?url=' + encodeURIComponent('${DOMPurify.sanitize(
+                          story.href,
+                        )}') + '&type=native'); if (window.innerWidth <= 640 && navigator.share) { navigator.share({url: url}); } else { const dropdown = this.nextElementSibling; if (dropdown) { dropdown.classList.toggle('active'); document.addEventListener('click', function closeDropdown(e) { if (!e.target.closest('.share-button-container')) { dropdown.classList.remove('active'); document.removeEventListener('click', closeDropdown); } }); } }"
+                        onmouseover="this.style.backgroundColor='rgba(0, 186, 124, 0.1)'"
                         onmouseout="this.style.backgroundColor='transparent'"
                       >
-                        <span style="width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;">${warpcastSvg("width: 20px; height: 20px; color: rgb(124, 101, 193);")}</span>
-                      </a>
-                    </div>`
-                  : ""}
-              </div>` : ""}
+                        <span
+                          style="width: 20px; height: 20px; color: rgba(83, 100, 113, 1); display: flex; align-items: center; justify-content: center;"
+                          >${shareSVG}</span
+                        >
+                      </button>
+                      <div class="share-dropdown">
+                        <button
+                          class="share-dropdown-item"
+                          onclick="event.preventDefault(); event.stopPropagation(); const container = this.closest('.share-button-container'); const slug = container.querySelector('.share-button').getAttribute('data-story-slug'); const index = container.querySelector('.share-button').getAttribute('data-story-index'); const url = 'https://news.kiwistand.com/stories/' + slug + '?index=' + index; navigator.clipboard.writeText(url).then(() => { window.toast.success('Link copied!'); this.closest('.share-dropdown').classList.remove('active'); });"
+                        >
+                          ${CopyIcon(
+                            "width: 20px; height: 20px; margin-right: 12px; color: rgba(83, 100, 113, 1);",
+                          )}
+                          Copy link
+                        </button>
+                      </div>
+                    </div>
+                    ${path === "/stories"
+                      ? html`<div
+                          class="farcaster-share-button-container"
+                          style="flex: 1; display: flex; justify-content: center;"
+                        >
+                          <a
+                            href="https://warpcast.com/~/compose?text=${encodeURIComponent(
+                              DOMPurify.sanitize(story.title),
+                            )}&embeds[]=${encodeURIComponent(
+                              `https://news.kiwistand.com/stories/${getSlug(
+                                story.title,
+                              )}?index=0x${story.index}`,
+                            )}"
+                            target="_blank"
+                            class="interaction-button farcaster-share-button"
+                            data-story-title="${DOMPurify.sanitize(
+                              story.title,
+                            )}"
+                            data-story-slug="${getSlug(story.title)}"
+                            data-story-index="0x${story.index}"
+                            style="min-width: 40px; padding: 8px; border: none; background: transparent; border-radius: 999px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s ease; text-decoration: none; color: inherit;"
+                            onclick="event.preventDefault(); const title = this.getAttribute('data-story-title'); const slug = this.getAttribute('data-story-slug'); const index = this.getAttribute('data-story-index'); const kiwiUrl = 'https://news.kiwistand.com/stories/' + slug + '?index=' + index; navigator.sendBeacon && navigator.sendBeacon('/share?url=' + encodeURIComponent('${DOMPurify.sanitize(
+                              story.href,
+                            )}') + '&type=farcaster'); if (window.isInFarcasterMiniApp && window.sdk && window.sdk.actions && window.sdk.actions.composeCast) { window.sdk.actions.composeCast({ text: title, embeds: [kiwiUrl] }); } else if (window.ReactNativeWebView || window !== window.parent) { const url = 'https://warpcast.com/~/compose?text=' + encodeURIComponent(title) + '&embeds[]=' + encodeURIComponent(kiwiUrl); window.sdk.actions.openUrl(url); } else { const url = 'https://warpcast.com/~/compose?text=' + encodeURIComponent(title) + '&embeds[]=' + encodeURIComponent(kiwiUrl); window.open(url, '_blank'); }"
+                            onmouseover="this.style.backgroundColor='rgba(124, 101, 193, 0.1)'"
+                            onmouseout="this.style.backgroundColor='transparent'"
+                          >
+                            <span
+                              style="width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;"
+                              >${warpcastSvg(
+                                "width: 20px; height: 20px; color: rgb(124, 101, 193);",
+                              )}</span
+                            >
+                          </a>
+                        </div>`
+                      : ""}
+                  </div>`
+                : ""}
             </div>
             ${displayCommentPreview
               ? html` <div
                   class="comment-preview comment-preview-0x${story.index} ${displayImage ||
-                  canRenderTweetPreview || canRenderFarcasterPreview
+                  canRenderTweetPreview ||
+                  canRenderFarcasterPreview
                     ? "elevating-comment-preview"
                     : "comment-preview-no-mobile-image"}"
                   style="touch-action: manipulation; user-select: none; cursor: pointer; display: flex;"
@@ -990,7 +1226,9 @@ const row = (
                         `}
                         <div style="display: flex; align-items: flex-start;">
                           ${story.lastComment.identity.safeAvatar &&
-                          html`<div style="width: 32px; flex-shrink: 0; margin-right: 14px;">
+                          html`<div
+                            style="width: 32px; flex-shrink: 0; margin-right: 14px;"
+                          >
                             <img
                               loading="lazy"
                               src="${DOMPurify.sanitize(
@@ -1041,24 +1279,43 @@ const row = (
                   </div>
                 </div>`
               : null}
-            ${// Show full Farcaster cast content for Farcaster/Warpcast links only on /stories page
-            (isFarcasterCast && story.metadata && story.metadata.farcasterCast && path === "/stories")
-              ? html`<div style="margin: 0;">
-                  ${FarcasterFullCast({ cast: story.metadata.farcasterCast })}
-                </div>`
-              : null}
-            ${// Show full Paragraph post content for Paragraph.xyz links only on /stories page
-            (isParagraphPost && story.metadata && story.metadata.paragraphPost && path === "/stories")
-              ? html`<div style="margin: 0;">
-                  ${ParagraphFullPost({ post: { ...story.metadata.paragraphPost, url: story.href } })}
-                </div>`
-              : null}
+            ${
+              // Show full Farcaster cast content for Farcaster/Warpcast links only on /stories page
+              isFarcasterCast &&
+              story.metadata &&
+              story.metadata.farcasterCast &&
+              path === "/stories"
+                ? html`<div style="margin: 0;">
+                    ${FarcasterFullCast({ cast: story.metadata.farcasterCast })}
+                  </div>`
+                : null
+            }
+            ${
+              // Show full Paragraph post content for Paragraph.xyz links only on /stories page
+              isParagraphPost &&
+              story.metadata &&
+              story.metadata.paragraphPost &&
+              path === "/stories"
+                ? html`<div style="margin: 0;">
+                    ${ParagraphFullPost({
+                      post: {
+                        ...story.metadata.paragraphPost,
+                        url: story.href,
+                      },
+                    })}
+                  </div>`
+                : null
+            }
             ${path !== "/stories"
               ? html`<div
                   class="comment-section"
                   data-comment-count="${commentCount}"
                   data-story-index="0x${story.index}"
-                  data-has-preview="${displayImage || canRenderTweetPreview || canRenderFarcasterPreview ? 'true' : 'false'}"
+                  data-has-preview="${displayImage ||
+                  canRenderTweetPreview ||
+                  canRenderFarcasterPreview
+                    ? "true"
+                    : "false"}"
                 ></div>`
               : null}
           </div>

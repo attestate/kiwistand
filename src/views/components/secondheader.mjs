@@ -197,7 +197,7 @@ const secondheader = (theme, site, period, domain, query) => {
     <td>
       <div
         class="second-header"
-        style="background-color: var(--table-bg); min-height: 40px; display: flex; justify-content: space-between; align-items: center; padding: 10px 11px; color: white;"
+        style="min-height: 40px; display: flex; justify-content: space-between; align-items: center; padding: 10px 11px; color: white;"
       >
         <div style="display: flex; align-items: center;">
           ${site === "search" ||
@@ -313,7 +313,10 @@ const secondheader = (theme, site, period, domain, query) => {
                   data-no-instant
                   href="/best?period=all${domain ? `&domain=${domain}` : ""}"
                 >
-                  <button onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'" style="${periodIconStyle(theme, period, "all")}">
+                  <button
+                    onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
+                    style="${periodIconStyle(theme, period, "all")}"
+                  >
                     <span>All</span>
                   </button>
                 </a>
@@ -321,7 +324,10 @@ const secondheader = (theme, site, period, domain, query) => {
                   data-no-instant
                   href="/best?period=year${domain ? `&domain=${domain}` : ""}"
                 >
-                  <button onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'" style="${periodIconStyle(theme, period, "year")}">
+                  <button
+                    onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
+                    style="${periodIconStyle(theme, period, "year")}"
+                  >
                     <span>Year</span>
                   </button>
                 </a>
@@ -329,7 +335,10 @@ const secondheader = (theme, site, period, domain, query) => {
                   data-no-instant
                   href="/best?period=month${domain ? `&domain=${domain}` : ""}"
                 >
-                  <button onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'" style="${periodIconStyle(theme, period, "month")}">
+                  <button
+                    onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
+                    style="${periodIconStyle(theme, period, "month")}"
+                  >
                     <span>Month</span>
                   </button>
                 </a>
@@ -337,7 +346,10 @@ const secondheader = (theme, site, period, domain, query) => {
                   data-no-instant
                   href="/best?period=week${domain ? `&domain=${domain}` : ""}"
                 >
-                  <button onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'" style="${periodIconStyle(theme, period, "week")}">
+                  <button
+                    onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
+                    style="${periodIconStyle(theme, period, "week")}"
+                  >
                     <span>Week</span>
                   </button>
                 </a>
@@ -345,7 +357,10 @@ const secondheader = (theme, site, period, domain, query) => {
                   data-no-instant
                   href="/best?period=day${domain ? `&domain=${domain}` : ""}"
                 >
-                  <button onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'" style="${periodIconStyle(theme, period, "day")}">
+                  <button
+                    onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
+                    style="${periodIconStyle(theme, period, "day")}"
+                  >
                     <span>Day</span>
                   </button>
                 </a>

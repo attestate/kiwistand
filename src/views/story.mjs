@@ -262,9 +262,7 @@ export default async function (trie, theme, index, value, referral) {
                   ${Header(theme, path)}
                 </tr>
               </thead>
-              <thead
-                style="background-color: #ebebe6;"
-              >
+              <tbody>
                 ${Row(
                   start,
                   "/stories",
@@ -273,22 +271,22 @@ export default async function (trie, theme, index, value, referral) {
                   null,
                   null,
                 )({ ...story, index })}
-              </thead>
+              </tbody>
               ${upvoterProfiles.length > 0
                 ? html`<tr>
-                    <td>
-                      <div style="padding: 1rem; background-color: #f8f8f8; border-bottom: 1px solid #e0e0e0;">
-                        <div style="font-size: 11pt; font-weight: 500; margin-bottom: 0.75rem; color: #333;">
+                    <td style="padding: 16px 0;">
+                      <div style="margin: 0 1rem;">
+                        <div style="font-size: 10pt; font-weight: 500; margin-bottom: 12px; color: #828282;">
                           Recommended by ${upvoterProfiles.length} ${upvoterProfiles.length === 1 ? 'curator' : 'curators'}
                         </div>
-                        <div style="display: flex; flex-wrap: wrap; gap: 12px;">
+                        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
                           ${upvoterProfiles.slice(0, 20).map(
                             (upvoter) =>
                               html`<a
                                 href="/upvotes?address=${upvoter.address}"
-                                style="display: flex; align-items: center; text-decoration: none; color: inherit; background-color: white; padding: 6px 10px; border: 1px solid #e0e0e0; border-radius: 4px; transition: all 0.2s;"
-                                onmouseover="this.style.borderColor='#828282'; this.style.backgroundColor='#fafafa';"
-                                onmouseout="this.style.borderColor='#e0e0e0'; this.style.backgroundColor='white';"
+                                style="display: flex; align-items: center; text-decoration: none; color: inherit; background-color: white; padding: 4px 8px; border: var(--border); border-radius: 2px; transition: all 0.2s; font-size: 10pt;"
+                                onmouseover="this.style.borderColor='var(--hn-orange-border)'; this.style.backgroundColor='var(--bg-off-white)';"
+                                onmouseout="this.style.borderColor='var(--border-color)'; this.style.backgroundColor='white';"
                               >
                                 ${upvoter.safeAvatar
                                   ? html`<img
@@ -298,14 +296,14 @@ export default async function (trie, theme, index, value, referral) {
                                       style="width: 20px; height: 20px; border-radius: 2px; margin-right: 6px;"
                                     />`
                                   : null}
-                                <span style="font-size: 10pt; color: #333;">
+                                <span style="color: var(--contrast-color);">
                                   ${upvoter.displayName}
                                 </span>
                               </a>`,
                           )}
                           ${upvoterProfiles.length > 20
                             ? html`<div
-                                style="display: flex; align-items: center; padding: 6px 10px; color: #666; font-size: 10pt;"
+                                style="display: flex; align-items: center; padding: 4px 8px; color: #828282; font-size: 10pt;"
                               >
                                 +${upvoterProfiles.length - 20} more
                               </div>`
@@ -318,7 +316,7 @@ export default async function (trie, theme, index, value, referral) {
               ${story.comments.length > 0
                 ? html`<tr>
                     <td>
-                      <div style="padding: 1rem 1rem 0 1rem; font-size: 1rem;">
+                      <div style="margin: 0 1rem; padding: 16px 0 16px 0; font-size: 1rem;">
                         ${story.comments.map(
                           (comment) =>
                             html`<span
@@ -328,7 +326,7 @@ export default async function (trie, theme, index, value, referral) {
                                 : "scroll-margin-base"}"
                               style="${comment.flagged
                                 ? "opacity: 0.5"
-                                : ""}; color: black; border: var(--border); background-color: white; padding: 0.75rem; border-radius: 2px;display: block; margin-bottom: 15px; white-space: pre-wrap; line-height: 1.2; word-break: break-word; overflow-wrap: break-word;"
+                                : ""}; color: black; border: var(--border); background-color: white; padding: 0.75rem; border-radius: 2px; display: block; margin-bottom: 16px; white-space: pre-wrap; line-height: 1.3; word-break: break-word; overflow-wrap: break-word;"
                             >
                               <div style="display: flex; align-items: flex-start;">
                                 ${comment.avatar
@@ -340,26 +338,26 @@ export default async function (trie, theme, index, value, referral) {
                                           loading="lazy"
                                           src="${comment.avatar}"
                                           alt="avatar"
-                                          style="width: 32px; height: 32px; border: 1px solid #828282; border-radius: 0;"
+                                          style="width: 32px; height: 32px; border: var(--border); border-radius: 2px;"
                                         />
                                       </a>
                                     </div>`
                                   : null}
                                 <div style="flex: 1; min-width: 0;">
                                   <div
-                                    style="white-space: nowrap; gap: 3px; margin-bottom: 0.5rem; display: inline-flex; align-items: center;"
+                                    style="white-space: nowrap; gap: 3px; margin-bottom: 8px; display: inline-flex; align-items: center; font-size: 10pt;"
                                   >
                                     <b
                                       >${!comment.flagged
                                         ? html`<a
-                                            style="color: black;"
+                                            style="color: var(--contrast-color); font-weight: 500;"
                                             href="/upvotes?address=${comment
                                               .identity.address}"
                                             >${truncateName(comment.displayName)}</a
                                           >`
                                         : truncateName(comment.displayName)}</b
                                     >
-                                    <span class="inverse-share-container">
+                                    <span class="inverse-share-container" style="opacity: 0.6;">
                                       <span> • </span>
                                       <a
                                         class="meta-link"
@@ -373,7 +371,7 @@ export default async function (trie, theme, index, value, referral) {
                                         <span> ago</span>
                                       </a>
                                     </span>
-                                    <span class="share-container">
+                                    <span class="share-container" style="opacity: 0.6;">
                                       <span> • </span>
                                       <a
                                         href="#"
@@ -459,7 +457,7 @@ export default async function (trie, theme, index, value, referral) {
                                                 );
                                               return html`
                                                 <div
-                                                  style="margin-top: 32px; display: inline-flex; align-items: center; padding: 4px 12px; background-color: var(--bg-off-white); border: var(--border-thin); border-radius: 2px; font-size: 10pt;"
+                                                  style="margin-top: 12px; display: inline-flex; align-items: center; padding: 4px 8px; background-color: var(--bg-off-white); border: var(--border); border-radius: 2px; font-size: 10pt;"
                                                 >
                                                   <span
                                                     style="margin-right: ${reaction?.reactorProfiles?.filter(
@@ -489,8 +487,8 @@ export default async function (trie, theme, index, value, referral) {
                                                             ? "13px"
                                                             : "12px"}; border-radius: 2px; border: ${i >
                                                           0
-                                                            ? "1px solid #f3f3f3"
-                                                            : "1px solid #828282"}; margin-left: ${i >
+                                                            ? "1px solid var(--bg-off-white)"
+                                                            : "var(--border)"}; margin-left: ${i >
                                                           0
                                                             ? "-4px"
                                                             : "0"};"
@@ -511,24 +509,23 @@ export default async function (trie, theme, index, value, referral) {
                   </tr>`
                 : null}
               <tr>
-                <td style="padding-top: 20px;">
+                <td>
                   <nav-comment-input data-story-index="0x${index}">
                     <div style="margin: 0 1rem 1rem 1rem;">
                       <textarea
-                        style="font-size: 1rem; border: 1px solid #828282; display:block;width:100%;"
-                        rows="12"
-                        cols="80"
+                        style="font-size: 1rem; border: var(--border); background-color: white; display: block; width: 100%; padding: 10px; border-radius: 2px; resize: vertical;"
+                        rows="6"
                         disabled
                       ></textarea>
-                      <br />
-                      <br />
-                      <button
-                        style="width: auto;"
-                        id="button-onboarding"
-                        disabled
-                      >
-                        Loading...
-                      </button>
+                      <div style="margin-top: 12px;">
+                        <button
+                          style="width: auto; padding: 8px 16px; background-color: var(--hn-orange); color: white; border: none; border-radius: 2px; font-size: 10pt; cursor: not-allowed; opacity: 0.5;"
+                          id="button-onboarding"
+                          disabled
+                        >
+                          Loading...
+                        </button>
+                      </div>
                     </div>
                   </nav-comment-input>
                 </td>

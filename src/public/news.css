@@ -1048,14 +1048,8 @@ body {
     .bottom-nav {
       display: none !important;
     }
-    #hnmain > table:first-of-type > tbody > tr:first-of-type {
-         background-color: var(--header-beige) !important;
-    }
     #hnmain > table {
       width: 100%;
-    }
-    .second-header, .third-header td div, footer {
-      background-color: var(--header-beige) !important;
     }
     footer {
       border-top: var(--border);
