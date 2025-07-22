@@ -25,9 +25,18 @@ import * as moderation from "./moderation.mjs";
 import log from "../logger.mjs";
 import { EIP712_MESSAGE } from "../constants.mjs";
 import Row, { extractDomain } from "./components/row.mjs";
-import { getBest } from "../cache.mjs";
+import { getBest, getLastComment, countImpressions } from "../cache.mjs";
+import { cachedMetadata } from "../parser.mjs";
 
 const html = htm.bind(vhtml);
+
+async function addMetadata(post) {
+  const data = cachedMetadata(post.href);
+  return {
+    ...post,
+    metadata: data,
+  };
+}
 
 async function getStories(trie, page, period, domain) {
   let startDatetime = 0;
@@ -52,15 +61,89 @@ async function getStories(trie, page, period, domain) {
   const path = "/best";
   result = moderation.moderate(result, policy, path);
 
+  let writers = [];
+  try {
+    writers = await moderation.getWriters();
+  } catch (err) {
+    // noop
+  }
+
   let stories = [];
   for await (let story of result) {
+    // Get last comment
+    const lastComment = getLastComment(`kiwi:0x${story.index}`, policy.addresses || []);
+    if (lastComment && lastComment.identity) {
+      lastComment.identity = await ens.resolve(lastComment.identity);
+      const uniqueIdentities = new Set(
+        lastComment.previousParticipants
+          .map((p) => p.identity)
+          .filter((identity) => identity !== lastComment.identity),
+      );
+
+      const resolvedParticipants = await Promise.allSettled(
+        [...uniqueIdentities].map((identity) => ens.resolve(identity)),
+      );
+
+      lastComment.previousParticipants = resolvedParticipants
+        .filter(
+          (result) =>
+            result.status === "fulfilled" && result.value.safeAvatar,
+        )
+        .map((result) => ({
+          identity: result.value.identity,
+          safeAvatar: result.value.safeAvatar,
+          displayName: result.value.displayName,
+        }));
+    }
+
+    // Resolve ENS data for submitter
     const ensData = await ens.resolve(story.identity);
 
+    // Get upvoter avatars
+    let avatars = [];
+    let upvoterProfiles = [];
+    for await (let upvoter of story.upvoters) {
+      const profile = await ens.resolve(upvoter);
+      if (profile.safeAvatar) {
+        upvoterProfiles.push({
+          avatar: profile.safeAvatar,
+          address: upvoter,
+          neynarScore: profile.neynarScore || 0
+        });
+      }
+    }
+    // Sort by neynarScore descending and take top 5
+    upvoterProfiles.sort((a, b) => b.neynarScore - a.neynarScore);
+    avatars = upvoterProfiles.slice(0, 5).map(p => p.avatar);
+
+    // Check if story is original
+    const isOriginal = Object.keys(writers).some(
+      (domain) =>
+        normalizeUrl(story.href).startsWith(domain) &&
+        writers[domain] === story.identity,
+    );
+
+    // Add metadata
+    const augmentedStory = await addMetadata(story);
+    let finalStory = augmentedStory || story;
+
+    // Handle image blocking based on policy
+    const href = normalizeUrl(finalStory.href, { stripWWW: false });
+    if (href && policy?.images?.includes(href) && finalStory.metadata?.image) {
+      delete finalStory.metadata.image;
+    }
+
+    // Get impressions count
+    const impressions = countImpressions(finalStory.href);
+
     stories.push({
-      ...story,
+      ...finalStory,
+      impressions,
+      lastComment,
       displayName: ensData.displayName,
-      avatars: [],
-      isOriginal: false,
+      submitter: ensData,
+      avatars: avatars,
+      isOriginal,
     });
   }
   return stories;
