@@ -368,9 +368,9 @@ const row = (
       }
     }
 
-    const displayMobileImage =
-      !canRenderTweetPreview && // Don't use regular mobile image if we can render a tweet preview
-      !canRenderFarcasterPreview && // Don't use regular mobile image if we can render a Farcaster preview
+    const displayImage =
+      !canRenderTweetPreview && // Don't use regular image if we can render a tweet preview
+      !canRenderFarcasterPreview && // Don't use regular image if we can render a Farcaster preview
       hasImageData &&
       !interactive &&
       (path === "/" || 
@@ -395,7 +395,7 @@ const row = (
           <div
             class="${interactive ? "" : "content-row"} ${invert
               ? "inverted-row"
-              : ""} ${displayMobileImage || canRenderTweetPreview || canRenderFarcasterPreview
+              : ""} ${displayImage || canRenderTweetPreview || canRenderFarcasterPreview
               ? "content-row-elevated"
               : ""}"
             style="${invert ? "display:none;" : ""} ${style}"
@@ -530,11 +530,11 @@ const row = (
                     </div>
                   </div>
                 </a>`
-              : displayMobileImage
+              : displayImage
               ? html` <a
                   data-no-instant
                   style="display: block; width: 100%;"
-                  class="mobile-row-image"
+                  class="row-image-preview"
                   href="${DOMPurify.sanitize(story.href)}"
                   onclick="event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${DOMPurify.sanitize(story.href)}')); if (window.ReactNativeWebView || window !== window.parent) { window.sdk.actions.openUrl('${DOMPurify.sanitize(story.href)}'); } else { window.open('${DOMPurify.sanitize(story.href)}', event.currentTarget.getAttribute('target')); }"
                 >
@@ -586,38 +586,8 @@ const row = (
             >
               <div
                 class="content-container"
-                style="display: flex; align-items: start; gap: 12px; margin-bottom: 8px;"
+                style="display: flex; align-items: start; gap: 12px; margin-bottom: 8px; width: 100%;"
               >
-                ${hasImageData &&
-                !interactive &&
-                !isSubstackDomain(extractedDomain) // Keep substack check specific to desktop?
-                  ? html`<a
-                      data-no-instant
-                      href="${DOMPurify.sanitize(story.href)}"
-                      class="row-image"
-                      target="_blank"
-                      style="user-select:text; align-self: stretch;"
-                      onclick="event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${DOMPurify.sanitize(story.href)}')); if (window.ReactNativeWebView || window !== window.parent) { window.sdk.actions.openUrl('${DOMPurify.sanitize(story.href)}'); } else { window.open('${DOMPurify.sanitize(story.href)}', event.currentTarget.getAttribute('target')); }"
-                    >
-                      <img
-                        loading="lazy"
-                        width="110"
-                        height="61"
-                        style="max-height: 61px; border: var(--border-line); border-radius: 2px; width: 110px; height: 61px; object-fit: ${isCloudflare
-                          ? "contain"
-                          : "cover"};"
-                        src="${isCloudflare
-                          ? DOMPurify.sanitize(
-                              story.href.endsWith("/public")
-                                ? story.href.replace(
-                                    "/public",
-                                    "/w=220,q=80,fit=cover,f=auto",
-                                  )
-                                : story.href + "/w=220,q=80,fit=cover,f=auto",
-                            )
-                          : DOMPurify.sanitize(story.metadata.image)}"
-                    /></a>`
-                  : null}
                 <div
                   class="story-link-container-wrapper"
                   style="display:flex; justify-content: center; flex-direction: column; flex-grow: 1; line-height: 1.3;"
@@ -769,7 +739,8 @@ const row = (
                           `}
                       ${!interactive &&
                       (path === "/" || path === "/new" || path === "/best" || path === "/stories") &&
-                      !isCloudflare
+                      !isCloudflare &&
+                      !displayImage
                         ? html`
                             <span class="domain-text">
                               <span style="opacity:0.6"> • </span>
@@ -958,7 +929,7 @@ const row = (
             </div>
             ${displayCommentPreview
               ? html` <div
-                  class="comment-preview comment-preview-0x${story.index} ${displayMobileImage ||
+                  class="comment-preview comment-preview-0x${story.index} ${displayImage ||
                   canRenderTweetPreview || canRenderFarcasterPreview
                     ? "elevating-comment-preview"
                     : "comment-preview-no-mobile-image"}"
@@ -1087,7 +1058,7 @@ const row = (
                   class="comment-section"
                   data-comment-count="${commentCount}"
                   data-story-index="0x${story.index}"
-                  data-has-preview="${displayMobileImage || canRenderTweetPreview || canRenderFarcasterPreview ? 'true' : 'false'}"
+                  data-has-preview="${displayImage || canRenderTweetPreview || canRenderFarcasterPreview ? 'true' : 'false'}"
                 ></div>`
               : null}
           </div>
