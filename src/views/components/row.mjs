@@ -845,7 +845,7 @@ const row = (
                   </div>
                 </div>
               </div>
-              <div
+              ${!interactive ? html`<div
                 class="interaction-bar"
                 style="display: flex; gap: 0; margin-top: 8px; padding: 0; justify-content: space-between;"
               >
@@ -949,7 +949,7 @@ const row = (
                       </a>
                     </div>`
                   : ""}
-              </div>
+              </div>` : ""}
             </div>
             ${displayCommentPreview
               ? html` <div
