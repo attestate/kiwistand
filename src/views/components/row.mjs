@@ -43,7 +43,7 @@ const heartSVG = html`
 `;
 
 const shareSVG = html`
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="20" height="20">
     <rect width="256" height="256" fill="none"/>
     <polyline points="176 152 224 104 176 56" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/>
     <polyline points="192 216 32 216 32 88" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/>
