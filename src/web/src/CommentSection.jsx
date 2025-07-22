@@ -198,9 +198,11 @@ export const EmojiReaction = ({ comment, allowlist, delegations, toast }) => {
     <div
       style={{
         display: "flex",
-        flexWrap: "wrap",
+        flexWrap: "nowrap",
         gap: "8px",
         marginTop: "12px",
+        overflowX: "auto",
+        WebkitOverflowScrolling: "touch",
       }}
     >
       {commonEmojis.map((emoji) => {
@@ -257,6 +259,7 @@ export const EmojiReaction = ({ comment, allowlist, delegations, toast }) => {
               WebkitAppearance: "none",
               opacity: 1,
               filter: "none",
+              flexShrink: 0,
             }}
           >
             <span style={{ marginRight: counts[emoji] > 0 ? "4px" : "0" }}>
@@ -331,7 +334,7 @@ function NotificationOptIn(props) {
   return (
     <div
       style={{
-        padding: "12px",
+        padding: "0.75rem",
         marginBottom: "1rem",
         backgroundColor: "var(--middle-beige)",
         border: "var(--border)",
@@ -729,7 +732,7 @@ const CommentsSection = (props) => {
         className="comment-section"
         style={{
           backgroundColor: hasPreview ? "var(--background-color0)" : "transparent",
-          padding: "12px 11px",
+          padding: "12px 0",
           fontSize: "1rem",
           borderLeft: hasPreview ? "var(--border)" : "none",
           borderRight: hasPreview ? "var(--border)" : "none",
@@ -755,7 +758,7 @@ const CommentsSection = (props) => {
             {...props} 
             comments={comments}
             setComments={setComments}
-            style={{ margin: "0 0 1rem 0" }} 
+            style={{ margin: "0" }} 
           />
         </RainbowKitProvider>
       </WagmiConfig>

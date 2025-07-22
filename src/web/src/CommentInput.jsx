@@ -38,7 +38,7 @@ const SiteExplainer = () => {
     <div
       className="site-explainer"
       style={{
-        padding: "12px",
+        padding: "0.75rem",
         marginBottom: "1rem",
         backgroundColor: "var(--middle-beige)",
         border: "var(--border)",
@@ -628,7 +628,18 @@ const CommentInput = (props) => {
   }, [text, address, isEligible]);
 
   
-  if (isEligible === false) return <SiteExplainer />;
+  if (isEligible === false) {
+    return (
+      <div
+        style={{
+          margin: "0 1rem 1rem 1rem",
+          ...props.style,
+        }}
+      >
+        <SiteExplainer />
+      </div>
+    );
+  }
   
   return (
     <div
