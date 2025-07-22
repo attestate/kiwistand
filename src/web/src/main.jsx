@@ -191,11 +191,13 @@ async function addDynamicComments(allowlist, delegations, toast) {
         arrow.getAttribute("data-comment-count"),
         10,
       );
+      const hasPreview = arrow.getAttribute("data-has-preview") === "true";
       createRoot(arrow).render(
         <StrictMode>
           <CommentSection
             commentCount={commentCount}
             storyIndex={storyIndex}
+            hasPreview={hasPreview}
             allowlist={allowlist}
             delegations={delegations}
             toast={toast}

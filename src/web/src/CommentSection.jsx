@@ -660,7 +660,7 @@ const Comment = React.forwardRef(
 );
 
 const CommentsSection = (props) => {
-  const { storyIndex, commentCount } = props;
+  const { storyIndex, commentCount, hasPreview } = props;
   const [comments, setComments] = useState([]);
   const [shown, setShown] = useState(false);
   const lastCommentRef = useRef(null);
@@ -728,13 +728,13 @@ const CommentsSection = (props) => {
       <div
         className="comment-section"
         style={{
-          backgroundColor: "var(--background-color0)",
+          backgroundColor: hasPreview ? "var(--background-color0)" : "transparent",
           padding: "12px 11px",
           fontSize: "1rem",
-          borderLeft: "var(--border)",
-          borderRight: "var(--border)",
-          borderBottom: "var(--border-thick)",
-          borderRadius: "0 0 2px 2px",
+          borderLeft: hasPreview ? "var(--border)" : "none",
+          borderRight: hasPreview ? "var(--border)" : "none",
+          borderBottom: hasPreview ? "var(--border-thick)" : "none",
+          borderRadius: hasPreview ? "0 0 2px 2px" : "0",
         }}
       >
       <WagmiConfig config={client}>

@@ -1042,6 +1042,7 @@ const row = (
                   class="comment-section"
                   data-comment-count="${commentCount}"
                   data-story-index="0x${story.index}"
+                  data-has-preview="${displayMobileImage || canRenderTweetPreview || canRenderFarcasterPreview ? 'true' : 'false'}"
                 ></div>`
               : null}
           </div>
