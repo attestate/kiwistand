@@ -703,9 +703,6 @@ body {
       margin-top: 5px !important;
       font-size: 12px !important;
     }
-    .content-row-elevated {
-      padding-bottom: 5px;
-    }
     .elevating-comment-preview .interaction-element{
       padding-top: 2px !important;
       border: none !important;
@@ -977,9 +974,6 @@ body {
       border-bottom: var(--border-thick) !important;
       background-color: var(--background-color0);
       border-top: var(--border) !important;
-    }
-    .content-row-elevated {
-      padding-bottom: 5px;
     }
     /* Style comment preview for desktop tiles */
     .comment-preview {
