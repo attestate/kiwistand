@@ -487,11 +487,11 @@ const Comment = React.forwardRef(
         ref={ref}
         style={{
           boxShadow: isTargeted
-            ? "0 0 0 2px rgb(175, 192, 70, 0.75)"
+            ? "0 0 0 2px rgb(175, 192, 70)"
             : undefined,
           color: "black",
-          border: isTargeted ? "none" : "var(--border)",
-          backgroundColor: "var(--bg-off-white)",
+          border: "var(--border)",
+          backgroundColor: isTargeted ? "#fefef8" : "var(--bg-off-white)",
           padding: `0.75rem`,
           borderRadius: "2px",
           display: "block",
@@ -500,6 +500,7 @@ const Comment = React.forwardRef(
           lineHeight: "1.2",
           wordBreak: "break-word",
           overflowWrap: "break-word",
+          transition: "all 0.2s ease",
         }}
       >
         <div style={{ display: "flex", alignItems: "flex-start" }}>
@@ -719,11 +720,23 @@ const CommentsSection = (props) => {
   return (
     <div
       style={{
-        backgroundColor: "var(--table-bg)",
-        padding: "0 11px 0 11px",
-        fontSize: "1rem",
+        marginLeft: "11px",
+        marginRight: "11px",
+        marginBottom: "10px",
       }}
     >
+      <div
+        className="comment-section"
+        style={{
+          backgroundColor: "var(--background-color0)",
+          padding: "12px 11px",
+          fontSize: "1rem",
+          borderLeft: "var(--border)",
+          borderRight: "var(--border)",
+          borderBottom: "var(--border-thick)",
+          borderRadius: "0 0 2px 2px",
+        }}
+      >
       <WagmiConfig config={client}>
         <RainbowKitProvider chains={chains}>
           {comments.length > 0 &&
@@ -746,6 +759,7 @@ const CommentsSection = (props) => {
           />
         </RainbowKitProvider>
       </WagmiConfig>
+      </div>
     </div>
   );
 };

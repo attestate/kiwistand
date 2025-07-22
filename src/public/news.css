@@ -32,8 +32,16 @@
   color: black;
 }
 :target {
-  border: none !important;
-  box-shadow: 0 0 0 2px rgb(175, 192, 70, 0.75);
+  animation: highlight 0.3s ease-out;
+}
+
+@keyframes highlight {
+  from {
+    box-shadow: 0 0 0 4px rgb(175, 192, 70, 0.5);
+  }
+  to {
+    box-shadow: 0 0 0 2px rgb(175, 192, 70);
+  }
 }
 .inverted-row {
   filter: invert(100%) brightness(2);
@@ -684,9 +692,6 @@ body {
       border-bottom-left-radius: 0px !important;
       border-bottom-right-radius: 0px !important;
     }
-    .comment-section {
-      background-color: var(--background-color0);
-    }
     .content-row-elevated {
       padding-bottom: 5px;
     }
@@ -826,6 +831,8 @@ body {
          width: 90%;
     }
 }
+/* Comment section styles */
+
 /* Navigation */
  #menu {
      padding-top: 10px;
