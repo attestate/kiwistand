@@ -593,6 +593,21 @@ async function addAnalyticsConsent() {
   );
 }
 
+async function addTestFlightQR() {
+  if (!document.getElementById('testflight-qr-container')) {
+    const container = document.createElement('div');
+    container.id = 'testflight-qr-container';
+    document.body.appendChild(container);
+  }
+  
+  const TestFlightQR = (await import('./TestFlightQR.jsx')).default;
+  createRoot(document.getElementById('testflight-qr-container')).render(
+    <StrictMode>
+      <TestFlightQR />
+    </StrictMode>
+  );
+}
+
 async function addMinuteCountdown() {
   const elem = document.querySelector(".nav-countdown");
   if (elem) {
@@ -1091,6 +1106,9 @@ async function start() {
   
   // Add the analytics consent banner
   await addAnalyticsConsent();
+  
+  // Add TestFlight QR code
+  await addTestFlightQR();
 
   const { fetchAllowList, fetchDelegations } = await import("./API.mjs");
 
