@@ -349,6 +349,16 @@ async function addCommentInput(toast, allowlist, delegations) {
     const CommentInputComponent = (await import("./CommentInput.jsx")).default;
 
     const storyIndex = commentInput.getAttribute("data-story-index");
+    const customStyleAttr = commentInput.getAttribute("data-custom-style");
+    let customStyle = {};
+    if (customStyleAttr) {
+      try {
+        customStyle = JSON.parse(customStyleAttr);
+      } catch (e) {
+        console.error("Failed to parse custom style", e);
+      }
+    }
+    
     createRoot(commentInput).render(
       <StrictMode>
         <CommentInputComponent
@@ -356,6 +366,7 @@ async function addCommentInput(toast, allowlist, delegations) {
           toast={toast}
           allowlist={allowlist}
           delegations={delegations}
+          style={customStyle}
         />
       </StrictMode>,
     );

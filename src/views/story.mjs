@@ -510,21 +510,25 @@ export default async function (trie, theme, index, value, referral) {
                 : null}
               <tr>
                 <td>
-                  <nav-comment-input data-story-index="0x${index}">
-                    <div style="margin: 0 1rem 1rem 1rem;">
+                  <nav-comment-input data-story-index="0x${index}" data-custom-style='{"margin": "16px 11px"}'>
+                    <div style="margin: 16px 11px;">
                       <textarea
                         style="font-size: 1rem; border: var(--border); background-color: white; display: block; width: 100%; padding: 10px; border-radius: 2px; resize: vertical;"
-                        rows="6"
+                        rows="12"
                         disabled
                       ></textarea>
-                      <div style="margin-top: 12px;">
+                      <span style="color: #828282; font-size: 10pt;">Characters remaining: 10,000</span>
+                      <br />
+                      <br />
+                      <div style="display: flex; align-items: center; justify-content: space-between;">
                         <button
-                          style="width: auto; padding: 8px 16px; background-color: var(--hn-orange); color: white; border: none; border-radius: 2px; font-size: 10pt; cursor: not-allowed; opacity: 0.5;"
+                          style="width: auto; padding: 8px 16px; background-color: var(--hn-orange); color: white; border: none; border-radius: 2px; font-size: 10pt; cursor: not-allowed; opacity: 0.5; margin-bottom: 10px;"
                           id="button-onboarding"
                           disabled
                         >
                           Loading...
                         </button>
+                        <span class="meta-link drawer-link" style="font-size: 0.8rem; color: #828282;">comment guidelines</span>
                       </div>
                     </div>
                   </nav-comment-input>
