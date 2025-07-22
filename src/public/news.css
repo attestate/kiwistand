@@ -492,7 +492,7 @@ body {
   justify-content: space-between;
   height: 100%;
   border-radius: 2px;
-  margin: 0 11px 0;
+  margin: 0;
   background: var(--background-color0);
 }
 
@@ -606,7 +606,7 @@ body {
   justify-content: space-between;
   height: 100%;
   border-radius: 2px;
-  margin: 0 11px 0;
+  margin: 0;
   background: var(--background-color0);
 }
 

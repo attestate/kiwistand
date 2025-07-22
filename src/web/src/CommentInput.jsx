@@ -643,7 +643,7 @@ const CommentInput = (props) => {
   return (
     <div
       style={{
-        margin: "0 1rem 1rem 1rem",
+        margin: isMobile ? "1rem 1rem 1rem 1rem" : "0 1rem 1rem 1rem",
         ...props.style,
       }}
     >
@@ -676,7 +676,8 @@ const CommentInput = (props) => {
                 gap: "10px",
                 padding: "10px",
                 borderRadius: "2px",
-                backgroundColor: "var(--bg-off-white)",
+                backgroundColor: "white",
+                border: "var(--border)",
                 cursor: address && isEligible ? "pointer" : "not-allowed",
                 opacity: address && isEligible ? 1 : 0.5,
                 marginBottom: "10px",
@@ -717,8 +718,8 @@ const CommentInput = (props) => {
               style={{
                 display: "block",
                 width: "100%",
-                border: "none",
-                backgroundColor: "var(--bg-off-white)",
+                border: "var(--border)",
+                backgroundColor: "white",
                 fontSize: "1rem",
                 borderRadius: "2px",
                 resize: "vertical",

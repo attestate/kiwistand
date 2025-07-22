@@ -328,7 +328,7 @@ export default async function (trie, theme, index, value, referral) {
                                 : "scroll-margin-base"}"
                               style="${comment.flagged
                                 ? "opacity: 0.5"
-                                : ""}; color: black; border: var(--border); background-color: var(--background-color0); padding: 0.75rem; border-radius: 2px;display: block; margin-bottom: 15px; white-space: pre-wrap; line-height: 1.2; word-break: break-word; overflow-wrap: break-word;"
+                                : ""}; color: black; border: var(--border); background-color: white; padding: 0.75rem; border-radius: 2px;display: block; margin-bottom: 15px; white-space: pre-wrap; line-height: 1.2; word-break: break-word; overflow-wrap: break-word;"
                             >
                               <div style="display: flex; align-items: flex-start;">
                                 ${comment.avatar

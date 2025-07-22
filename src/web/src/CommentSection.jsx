@@ -337,6 +337,7 @@ function NotificationOptIn(props) {
         padding: "0.75rem",
         marginBottom: "1rem",
         backgroundColor: "var(--middle-beige)",
+        border: "var(--border)",
         borderRadius: "2px",
       }}
     >
@@ -492,7 +493,8 @@ const Comment = React.forwardRef(
             ? "0 0 0 2px rgb(175, 192, 70)"
             : undefined,
           color: "black",
-          backgroundColor: isTargeted ? "#fefef8" : "var(--bg-off-white)",
+          backgroundColor: isTargeted ? "#fefef8" : "white",
+          border: "var(--border)",
           padding: `0.75rem`,
           borderRadius: "2px",
           display: "block",
