@@ -42,6 +42,7 @@ const SiteExplainer = () => {
         marginBottom: "1rem",
         backgroundColor: "var(--middle-beige)",
         borderRadius: "2px",
+        border: "var(--border)",
       }}
     >
       <p
