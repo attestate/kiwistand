@@ -17,21 +17,23 @@ import { getLocalAccount, isIOSApp } from "./session.mjs";
 
 export const iconSVG = (
   <svg
-    style={{ width: "35px" }}
-    viewBox="0 0 200 200"
+    style={{ width: "20px", height: "20px" }}
     xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 256 256"
   >
-    <path d="M99.84 52.0801L55.04 96.8001L68.44 110.04L90.36 88.0401L90.3747 148H109.8V88.0401L131.84 110.04L144.96 96.8001L100.24 52.0801H99.84Z" />
+    <rect width="256" height="256" fill="none"/>
+    <path d="M128,224S24,168,24,102A54,54,0,0,1,78,48c22.59,0,41.94,12.31,50,32,8.06-19.69,27.41-32,50-32a54,54,0,0,1,54,54C232,168,128,224,128,224Z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/>
   </svg>
 );
 
 const iconFullSVG = (
   <svg
-    style={{ width: "35px" }}
-    viewBox="0 0 200 200"
+    style={{ width: "20px", height: "20px" }}
     xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 256 256"
   >
-    <path d="M99.84 52.0801L55.04 96.8001L68.44 110.04L90.36 88.0401L90.3747 148H109.8V88.0401L131.84 110.04L144.96 96.8001L100.24 52.0801H99.84Z" />
+    <rect width="256" height="256" fill="none"/>
+    <path d="M240,102c0,70-103.79,126.66-108.21,129a8,8,0,0,1-7.58,0C119.79,228.66,16,172,16,102A62.07,62.07,0,0,1,78,40c20.65,0,38.73,8.88,50,23.89C139.27,48.88,157.35,40,178,40A62.07,62.07,0,0,1,240,102Z" fill="currentColor"/>
   </svg>
 );
 
@@ -213,7 +215,7 @@ const Vote = (props) => {
     if (response.status === "success") {
       // Update UI state
       setUpvotes(upvotes + 1);
-      toast.success("Thanks for your like!");
+      toast.success("Thanks for your like! Have a 🥝");
       posthog.capture("upvote");
     } else if (response.details.includes("You must mint")) {
       // NOTE: This should technically never happen, but if it does we pop open
@@ -247,7 +249,7 @@ const Vote = (props) => {
       {({ account, chain, mounted, openConnectModal }) => {
         const connected = account && chain && mounted;
         return (
-          <div
+          <button
             ref={animationContainerRef}
             onClick={async (e) => {
               if (hasUpvoted || isad || window.location.pathname === "/submit")
@@ -328,35 +330,46 @@ const Vote = (props) => {
               
               handleSubmit(e);
             }}
-            className={hasUpvoted ? "" : "interaction-element"}
+            className={`interaction-button like-button ${hasUpvoted ? "" : "interaction-element"}`}
             style={{
-              borderRadius: "2px",
-              backgroundColor: "var(--bg-off-white)",
-              border: "var(--border-thin)",
+              minWidth: "60px",
+              padding: "8px 12px",
+              border: "none",
+              background: "transparent",
+              borderRadius: "999px",
+              cursor: hasUpvoted ? "not-allowed" : "pointer",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              minWidth: "49px",
-              margin: "5px 8px 5px 6px",
-              alignSelf: "stretch",
-              cursor: hasUpvoted ? "not-allowed" : "pointer",
+              gap: "6px",
+              transition: "all 0.15s ease",
               position: "relative", // For positioning the animation
             }}
+            onMouseOver={(e) => !hasUpvoted && (e.currentTarget.style.backgroundColor = 'rgba(249, 24, 128, 0.1)')}
+            onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
           >
             <KarmaAnimation active={showKarmaAnimation} />
-            <div style={{ minHeight: "42px", display: "block" }}>
-              <div
-                className={`votearrow`}
-                style={{
-                  fill: hasUpvoted ? theme.color : "#828282",
-                  cursor: hasUpvoted ? "not-allowed" : "pointer",
-                }}
-                title="upvote"
-              >
-                {hasUpvoted ? iconFullSVG : iconSVG}
-              </div>
-            </div>
-          </div>
+            <span 
+              className="heart-icon" 
+              style={{ 
+                width: "20px", 
+                height: "20px", 
+                color: hasUpvoted ? "#ff6b6b" : "rgba(83, 100, 113, 1)", 
+                display: "flex", 
+                alignItems: "center", 
+                justifyContent: "center" 
+              }}
+            >
+              {hasUpvoted ? iconFullSVG : iconSVG}
+            </span>
+            <span style={{ 
+              fontSize: "13px", 
+              color: "rgba(83, 100, 113, 1)", 
+              fontWeight: "400" 
+            }}>
+              {upvotes}
+            </span>
+          </button>
         );
       }}
     </ConnectButton.Custom>

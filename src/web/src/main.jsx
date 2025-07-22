@@ -229,7 +229,7 @@ async function addDynamicComments(allowlist, delegations, toast) {
 }
 
 async function addVotes(allowlist, delegations, toast) {
-  const voteArrows = document.querySelectorAll(".vote-button-container");
+  const voteArrows = document.querySelectorAll(".like-button-container");
   if (voteArrows.length === 0) return;
 
   const [{ default: Vote }, { default: DOMPurify }] = await Promise.all([
@@ -853,11 +853,10 @@ async function processAndSendVotes(signer, identity) {
       );
       const response = await send(value, signature);
       if (response && response.status === "success") {
-        window.toast.success("Thanks for your upvote! Have a 🥝");
         console.log("Vote sent:", response);
 
         const element = document.querySelector(
-          `.vote-button-container[data-href="${href}"]`,
+          `.like-button-container[data-href="${href}"]`,
         );
         if (element) {
           const upvoters = JSON.parse(element.getAttribute("data-upvoters"));

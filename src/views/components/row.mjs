@@ -816,7 +816,6 @@ const row = (
                   style="flex: 1; display: flex; justify-content: center;"
                 >
                   <button
-                    onclick="const key='--kiwi-news-upvoted-stories';const href=this.parentElement.getAttribute('data-href');const title=this.parentElement.getAttribute('data-title');const stories=JSON.parse(localStorage.getItem(key)||'[]');if(!stories.some(s=>s.href===href)){stories.push({href,title});localStorage.setItem(key,JSON.stringify(stories));window.dispatchEvent(new Event('upvote-storage'));const heartSpan=this.querySelector('.heart-icon');heartSpan.innerHTML='${heartFilledSVG}'.replace(/currentColor/g,'#ff6b6b');heartSpan.style.color='#ff6b6b';window.toast.success('Thanks for your like! Have a 🥝');}"
                     class="interaction-button like-button"
                     style="min-width: 60px; padding: 8px 12px; border: none; background: transparent; border-radius: 999px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.15s ease;"
                     onmouseover="this.style.backgroundColor='rgba(249, 24, 128, 0.1)'"
