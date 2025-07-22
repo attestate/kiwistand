@@ -351,6 +351,22 @@ const row = (
       story.metadata && 
       (story.metadata.farcasterCast || story.metadata.ogDescription) &&
       path !== "/stories"; // Don't show preview on stories page since we show full cast there
+    
+    // Extract first image from Farcaster cast embeds
+    let farcasterImageUrl = null;
+    if (canRenderFarcasterPreview && story.metadata.farcasterCast?.embeds) {
+      const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'];
+      const imageEmbed = story.metadata.farcasterCast.embeds.find(embed => {
+        if (!embed || !embed.url) return false;
+        const isDirectImage = imageExtensions.some(ext => embed.url.toLowerCase().includes(ext));
+        const hasImageMetadata = embed.metadata && embed.metadata.image;
+        return isDirectImage || hasImageMetadata;
+      });
+      
+      if (imageEmbed) {
+        farcasterImageUrl = imageEmbed.metadata?.image?.url || imageEmbed.url;
+      }
+    }
 
     const displayMobileImage =
       !canRenderTweetPreview && // Don't use regular mobile image if we can render a tweet preview
@@ -397,6 +413,20 @@ const row = (
                     <div>
                       <div class="tweet-embed-header">
                         <div style="display:flex; align-items:center; margin-bottom:12px;">
+                          ${story.metadata.twitterAuthorAvatar 
+                            ? html`<img
+                                src="${DOMPurify.sanitize(story.metadata.twitterAuthorAvatar)}"
+                                alt="${DOMPurify.sanitize(story.metadata.twitterCreator || "Author")}"
+                                width="40"
+                                height="40"
+                                loading="lazy"
+                                style="border-radius: 50%; margin-right: 12px;"
+                              />`
+                            : html`<div style="width: 40px; height: 40px; border-radius: 50%; background-color: #e1e8ed; margin-right: 12px; display: flex; align-items: center; justify-content: center;">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="#657786">
+                                  <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                                </svg>
+                              </div>`}
                           <svg width="20" height="20" viewBox="0 0 24 24" fill="#000" style="margin-right:8px;">
                             <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
                           </svg>
@@ -461,7 +491,7 @@ const row = (
                         </div>
                         <div class="farcaster-embed-author">
                           <p class="farcaster-embed-author-display-name">${story.metadata.farcasterCast?.author?.displayName || story.metadata.ogTitle || "Cast"}</p>
-                          <p class="farcaster-embed-author-username">@${story.metadata.farcasterCast?.author?.username || "farcaster"}</p>
+                          <p class="farcaster-embed-author-username" style="opacity: 0.6;">@${story.metadata.farcasterCast?.author?.username || "farcaster"}</p>
                         </div>
                       </div>
                       <div class="farcaster-embed-body">
@@ -486,6 +516,17 @@ const row = (
                                 return part;
                               })
                               .join("") + ((story.metadata.ogDescription || "").length > 280 ? "..." : "")}</p>
+                        ${farcasterImageUrl
+                          ? html`
+                              <div style="height: 16px;"></div>
+                              <img
+                                src="${DOMPurify.sanitize(farcasterImageUrl)}"
+                                alt="Cast image"
+                                style="display: block; max-width: 100%; height: auto; border-radius: 2px; max-height: 300px; object-fit: contain;"
+                                loading="lazy"
+                              />
+                            `
+                          : null}
                       </div>
                     </div>
                   </div>

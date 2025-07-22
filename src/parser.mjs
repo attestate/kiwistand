@@ -924,6 +924,38 @@ export const metadata = async (
     // Store the original, potentially longer description in the output object
     output.ogDescription = DOMPurify.sanitize(ogDescription);
   }
+  
+  // For tweets, extract author info and fetch their profile for avatar
+  if (twitterFrontends.includes(hostname) && !ogDescription?.includes("x.com/i/article/")) {
+    try {
+      // Extract username from the tweet URL (format: /username/status/id)
+      const pathParts = urlObj.pathname.split('/');
+      if (pathParts.length >= 3 && pathParts[2] === 'status') {
+        const username = pathParts[1];
+        
+        // Fetch the author's profile page to get their avatar
+        const profileUrl = `https://x.com/${username}`;
+        const profileResponse = await fetch(profileUrl, {
+          headers: {
+            "User-Agent": env.USER_AGENT,
+          },
+          agent: useAgent(profileUrl),
+          signal: AbortSignal.timeout(3000),
+        });
+        
+        if (profileResponse.ok) {
+          const profileHtml = await profileResponse.text();
+          const profileParsed = await ogs({ html: profileHtml });
+          
+          if (profileParsed.result && profileParsed.result.ogImage && profileParsed.result.ogImage.length > 0) {
+            output.twitterAuthorAvatar = DOMPurify.sanitize(profileParsed.result.ogImage[0].url);
+          }
+        }
+      }
+    } catch (err) {
+      log(`Failed to fetch Twitter author avatar: ${err.message}`);
+    }
+  }
   if (canonicalLink) {
     output.canonicalLink = DOMPurify.sanitize(canonicalLink);
   }
