@@ -31,6 +31,13 @@ import cache, {
 
 const html = htm.bind(vhtml);
 
+const heartSVG = html`
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+    <rect width="256" height="256" fill="none"/>
+    <path d="M240,102c0,70-103.79,126.66-108.21,129a8,8,0,0,1-7.58,0C119.79,228.66,16,172,16,102A62.07,62.07,0,0,1,78,40c20.65,0,38.73,8.88,50,23.89C139.27,48.88,157.35,40,178,40A62.07,62.07,0,0,1,240,102Z" fill="currentColor"/>
+  </svg>
+`;
+
 const generateFeed = (messages) => {
   const groupedMessages = {};
 
@@ -55,7 +62,7 @@ const generateFeed = (messages) => {
           groupedMessages[href].timestamp = message.timestamp;
         }
         groupedMessages[href].identities.push(message.identity);
-        groupedMessages[href].verb = "upvoted";
+        groupedMessages[href].verb = "liked";
       }
     });
 
@@ -260,7 +267,7 @@ function generateRow(lastUpdate, theme) {
               .index}${identities.length > 0
               ? `&upvoter=${identities[identities.length - 1].address}`
               : ""}"
-            class="upvote-notification notification"
+            class="like-notification notification"
             onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
           >
             <div
@@ -270,11 +277,11 @@ function generateRow(lastUpdate, theme) {
                 style="flex: 0.15; display: flex; flex-direction: column; align-items: center; justify-content: center;"
               >
                 <div
-                  class="votearrow"
-                  style="font-size: 1.5rem; display: flex; align-items: center; justify-content: center; color: ${theme.color};"
-                  title="upvote"
+                  class="heart-icon"
+                  style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; color: ${theme.color};"
+                  title="like"
                 >
-                  ${iconSVG}
+                  ${heartSVG}
                 </div>
                 <div
                   style="font-size: 0.7rem; font-weight: bold; color: ${theme.color}; margin-top: -5px;"
@@ -315,7 +322,7 @@ function generateRow(lastUpdate, theme) {
                           <span> others </span>
                         `
                       : ""}
-                    ${activity.verb} your submission
+                    liked your submission
                   </p>
                   <p style="font-weight: bold; margin: 7px 0 15px 0;">
                     ${title.substring(0, 80)}
@@ -481,7 +488,7 @@ export async function data(
 
   const path = "/activity";
   const activities = generateFeed(leaves).filter(
-    (activity) => activity.verb === "upvoted",
+    (activity) => activity.verb === "liked",
   );
 
   comments.map((comment) => {
