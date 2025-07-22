@@ -83,7 +83,7 @@ const DesktopSearch = () => {
             width: "200px",
             height: "32px",
             padding: "4px 4px 4px 32px",
-            fontSize: "1.01rem",
+            fontSize: "0.75rem",
             fontVariant: "small-caps",
             border: "var(--border-thin)",
           }}

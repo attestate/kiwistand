@@ -213,7 +213,7 @@ const SearchInterface = () => {
                 style={{
                   flex: "0 0 70%",
                   padding: "8px",
-                  fontSize: "16px",
+                  fontSize: "0.75rem",
                   border: "var(--border-thin)",
                   borderRadius: "2px",
                   backgroundColor: "white",

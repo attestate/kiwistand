@@ -296,7 +296,7 @@ const secondheader = (theme, site, period, domain, query) => {
                   placeholder="Search..."
                   value="${site === "search" ? query : ""}"
                   disabled
-                  style="width: 200px; height: 32px; padding: 4px 4px 4px 32px; font-size: 1.01rem; font-variant: small-caps; border: var(--border-thin);"
+                  style="width: 200px; height: 32px; padding: 4px 4px 4px 32px; font-size: 0.75rem; font-variant: small-caps; border: var(--border-thin);"
                 />
               </div>
             `
