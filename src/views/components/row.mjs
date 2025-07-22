@@ -918,12 +918,21 @@ const row = (
                     data-story-slug="${getSlug(story.title)}"
                     data-story-index="0x${story.index}"
                     style="min-width: 40px; padding: 8px; border: none; background: transparent; border-radius: 999px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s ease;"
-                    onclick="event.preventDefault(); const slug = this.getAttribute('data-story-slug'); const index = this.getAttribute('data-story-index'); const url = 'https://news.kiwistand.com/stories/' + slug + '?index=' + index; navigator.sendBeacon && navigator.sendBeacon('/share?url=' + encodeURIComponent('${DOMPurify.sanitize(story.href)}') + '&type=native'); if (navigator.share) { navigator.share({url: url}); } else { navigator.clipboard.writeText(url); window.toast.success('Link copied!'); }"
+                    onclick="event.preventDefault(); const slug = this.getAttribute('data-story-slug'); const index = this.getAttribute('data-story-index'); const url = 'https://news.kiwistand.com/stories/' + slug + '?index=' + index; navigator.sendBeacon && navigator.sendBeacon('/share?url=' + encodeURIComponent('${DOMPurify.sanitize(story.href)}') + '&type=native'); if (window.innerWidth <= 640 && navigator.share) { navigator.share({url: url}); } else { const dropdown = this.nextElementSibling; if (dropdown) { dropdown.classList.toggle('active'); document.addEventListener('click', function closeDropdown(e) { if (!e.target.closest('.share-button-container')) { dropdown.classList.remove('active'); document.removeEventListener('click', closeDropdown); } }); } }"
                     onmouseover="this.style.backgroundColor='rgba(0, 186, 124, 0.1)'"
                     onmouseout="this.style.backgroundColor='transparent'"
                   >
                     <span style="width: 20px; height: 20px; color: rgba(83, 100, 113, 1); display: flex; align-items: center; justify-content: center;">${shareSVG}</span>
                   </button>
+                  <div class="share-dropdown">
+                    <button 
+                      class="share-dropdown-item"
+                      onclick="event.preventDefault(); event.stopPropagation(); const container = this.closest('.share-button-container'); const slug = container.querySelector('.share-button').getAttribute('data-story-slug'); const index = container.querySelector('.share-button').getAttribute('data-story-index'); const url = 'https://news.kiwistand.com/stories/' + slug + '?index=' + index; navigator.clipboard.writeText(url).then(() => { window.toast.success('Link copied!'); this.closest('.share-dropdown').classList.remove('active'); });"
+                    >
+                      ${CopyIcon("width: 20px; height: 20px; margin-right: 12px; color: rgba(83, 100, 113, 1);")}
+                      Copy link
+                    </button>
+                  </div>
                 </div>
                 ${path === "/stories"
                   ? html`<div class="farcaster-share-button-container" style="flex: 1; display: flex; justify-content: center;">
