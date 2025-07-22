@@ -337,7 +337,6 @@ function NotificationOptIn(props) {
         padding: "0.75rem",
         marginBottom: "1rem",
         backgroundColor: "var(--middle-beige)",
-        border: "var(--border)",
         borderRadius: "2px",
       }}
     >
@@ -493,7 +492,6 @@ const Comment = React.forwardRef(
             ? "0 0 0 2px rgb(175, 192, 70)"
             : undefined,
           color: "black",
-          border: "var(--border)",
           backgroundColor: isTargeted ? "#fefef8" : "var(--bg-off-white)",
           padding: `0.75rem`,
           borderRadius: "2px",
@@ -722,24 +720,16 @@ const CommentsSection = (props) => {
   if (!shown) return;
   return (
     <div
+      className="comment-section"
       style={{
         marginLeft: "11px",
         marginRight: "11px",
         marginBottom: "10px",
+        backgroundColor: "transparent",
+        padding: "0",
+        fontSize: "1rem",
       }}
     >
-      <div
-        className="comment-section"
-        style={{
-          backgroundColor: hasPreview ? "var(--background-color0)" : "transparent",
-          padding: "12px 0",
-          fontSize: "1rem",
-          borderLeft: hasPreview ? "var(--border)" : "none",
-          borderRight: hasPreview ? "var(--border)" : "none",
-          borderBottom: hasPreview ? "var(--border-thick)" : "none",
-          borderRadius: hasPreview ? "0 0 2px 2px" : "0",
-        }}
-      >
       <WagmiConfig config={client}>
         <RainbowKitProvider chains={chains}>
           {comments.length > 0 &&
@@ -762,7 +752,6 @@ const CommentsSection = (props) => {
           />
         </RainbowKitProvider>
       </WagmiConfig>
-      </div>
     </div>
   );
 };

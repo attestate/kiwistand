@@ -546,7 +546,7 @@ const row = (
                       height="300"
                       style="aspect-ratio: 2 / 1; object-fit:${isCloudflare
                         ? "contain"
-                        : "cover"}; margin: 0 11px; border-radius: 2px; width: calc(100% - 24px); height: auto;"
+                        : "cover"}; border-radius: 2px; width: 100%; height: auto;"
                       src="${isCloudflare
                         ? DOMPurify.sanitize(
                             story.href.endsWith("/public")
@@ -561,7 +561,7 @@ const row = (
                     ${isCloudflare
                       ? null
                       : html`<div
-                          style="position: absolute; bottom: 8px; left: 19px; background: rgba(255,255,255,0.9); padding: 2px 6px; border-radius: 2px; font-size: 9pt; display: flex; align-items: center;"
+                          style="position: absolute; bottom: 8px; left: 8px; background: rgba(255,255,255,0.9); padding: 2px 6px; border-radius: 2px; font-size: 9pt; display: flex; align-items: center;"
                         >
                           ${!["farcaster.xyz", "warpcast.com", "hey.xyz", "lens.xyz", "zora.co", "etherscan.io", "basescan.org", "arbiscan.io"].includes(extractedDomain)
                             ? html`<img 
@@ -579,12 +579,9 @@ const row = (
                 </a>`
               : null}
             <div
-              class="information-row ${displayCommentPreview
+              class="${displayCommentPreview
                 ? "with-comment-preview"
-                : `without-comment-preview without-comment-preview-0x${story.index}`} ${displayMobileImage ||
-              canRenderTweetPreview || canRenderFarcasterPreview
-                ? "elevating-row"
-                : ""}"
+                : `without-comment-preview without-comment-preview-0x${story.index}`}"
               style="display: flex; flex-direction: column; padding: 12px 16px;"
               class:mobile-information-row
             >
@@ -978,7 +975,7 @@ const row = (
                       ? `/#0x${story.lastComment.index}`
                       : `/new?cached=true#0x${story.lastComment.index}`}');})(),document.querySelector('.comment-preview-0x${story.index}').style.opacity = 0.5,window.addToQueue(new
  CustomEvent('open-comments-0x${story.index}',{detail:{source:'comment-preview'}}));window.dispatchEvent(new HashChangeEvent('hashchange'));"
-                    style="margin: 0; padding: 12px 16px; border-top: 1px solid rgba(166, 110, 78, 0.1); display: flex; width: 100%; background-color: rgba(166, 110, 78, 0.03);"
+                    style="margin: 0; padding: 12px 16px; display: flex; width: 100%; background-color: rgba(166, 110, 78, 0.03);"
                   >
                     <a
                       class="comment-preview-anchor"

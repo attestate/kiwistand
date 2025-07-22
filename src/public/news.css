@@ -491,7 +491,6 @@ body {
   flex-direction: column;
   justify-content: space-between;
   height: 100%;
-  border: var(--border);
   border-radius: 2px;
   margin: 0 11px 0;
   background: var(--background-color0);
@@ -606,7 +605,6 @@ body {
   flex-direction: column;
   justify-content: space-between;
   height: 100%;
-  border: var(--border);
   border-radius: 2px;
   margin: 0 11px 0;
   background: var(--background-color0);
@@ -655,18 +653,6 @@ body {
       font-size: 10pt;
       line-height: 1.3;
     }
-    .information-row {
-      background-color: var(--background-color0);
-      padding: 12px 16px !important;
-    }
-    .elevating-row {
-      padding-left: 0 !important;
-      padding-right: 0 !important;
-    }
-    /* Standard padding for information rows */
-    .information-row {
-      padding: 12px 16px !important;
-    }
     /* Elevating rows already have their own padding set to 0 */
     /* Just set consistent padding for all story wrappers */
     .story-link-container-wrapper {
@@ -695,44 +681,24 @@ body {
     .content-row-elevated {
       padding-bottom: 5px;
     }
-    .elevating-row {
-      background: var(--background-color0);
-      position: relative;
-      margin: 0 11px 10px 11px;
-      border-radius: 2px;
-      border: var(--border);
-      border-top: none;
-      margin-bottom: 0;
-    }
     .elevating-comment-preview .interaction-element{
       padding-top: 2px !important;
-      border-top: none !important;
-      margin: 0 11px 5px 11px !important;
-      border-bottom: var(--border-thick) !important;
-      border-left: var(--border) !important;
-      border-right: var(--border) !important;
-      border-bottom-left-radius: 2px !important;
-      border-bottom-right-radius: 2px !important;
+      border: none !important;
+      margin: 0 !important;
     }
     .comment-preview-no-mobile-image .interaction-element{
       padding-top: 2px !important;
       border: none !important;
       margin: 0 !important;
-      border-bottom: none;
     }
     .with-comment-preview {
       border-bottom: none;
     }
-    .elevating-row.without-comment-preview {
-      border-bottom: var(--border-thick) !important;
-    }
-    .elevating-row.without-comment-preview.no-border {
-      border-bottom: none !important;
-    }
-    .content-row:not(.content-row-elevated) {
+    .content-row {
       border: var(--border);
       margin: 0 11px;
       border-bottom: var(--border-thick) !important;
+      background-color: var(--background-color0);
     }
     #hnmain {
       border: none;
@@ -980,7 +946,7 @@ body {
       background-color: var(--table-bg-mobile);
     }
     /* Replicate mobile tile styles */
-    .content-row:not(.content-row-elevated) {
+    .content-row {
       border: var(--border);
       margin: 0 11px;
       border-bottom: var(--border-thick) !important;
@@ -989,18 +955,6 @@ body {
     }
     .content-row-elevated {
       padding-bottom: 5px;
-    }
-    .elevating-row {
-      background: var(--background-color0);
-      position: relative;
-      margin: 0 11px 10px 11px;
-      border-radius: 2px;
-      border: var(--border);
-      border-top: none;
-      margin-bottom: 0;
-    }
-    .elevating-row.without-comment-preview {
-      border-bottom: var(--border-thick) !important;
     }
     /* Fix mobile image alignment and borders */
     .mobile-row-image {
@@ -1019,9 +973,6 @@ body {
       width: calc(100% - 24px) !important;
       margin: 0 !important;
     }
-    .information-row {
-      background-color: var(--background-color0);
-    }
     /* Style comment preview for desktop tiles */
     .comment-preview {
       margin: 0 !important;
@@ -1032,10 +983,8 @@ body {
     }
     /* Fix alignment for elevating comment previews on desktop */
     .elevating-comment-preview .interaction-element {
-      margin: 0 11px 11px 11px !important;
-      border: var(--border) !important;
-      border-top: none !important;
-      border-radius: 0 0 2px 2px !important;
+      margin: 0 !important;
+      border: none !important;
     }
     .mobile-center {
       display: none !important;

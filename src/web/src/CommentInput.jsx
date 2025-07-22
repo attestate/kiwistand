@@ -41,7 +41,6 @@ const SiteExplainer = () => {
         padding: "0.75rem",
         marginBottom: "1rem",
         backgroundColor: "var(--middle-beige)",
-        border: "var(--border)",
         borderRadius: "2px",
       }}
     >
@@ -676,9 +675,8 @@ const CommentInput = (props) => {
                 alignItems: "center",
                 gap: "10px",
                 padding: "10px",
-                border: "var(--border)",
                 borderRadius: "2px",
-                backgroundColor: "white",
+                backgroundColor: "var(--bg-off-white)",
                 cursor: address && isEligible ? "pointer" : "not-allowed",
                 opacity: address && isEligible ? 1 : 0.5,
                 marginBottom: "10px",
@@ -719,10 +717,12 @@ const CommentInput = (props) => {
               style={{
                 display: "block",
                 width: "100%",
-                border: "var(--border)",
+                border: "none",
+                backgroundColor: "var(--bg-off-white)",
                 fontSize: "1rem",
                 borderRadius: "2px",
                 resize: "vertical",
+                padding: "10px",
               }}
               value={text}
               onChange={(e) => setText(e.target.value)}
