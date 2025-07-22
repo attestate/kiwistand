@@ -1032,6 +1032,13 @@ body {
       border-radius: 0 0 2px 2px !important;
       margin: 0 !important;
     }
+    /* Fix alignment for elevating comment previews on desktop */
+    .elevating-comment-preview .interaction-element {
+      margin: 0 11px 11px 11px !important;
+      border: var(--border) !important;
+      border-top: none !important;
+      border-radius: 0 0 2px 2px !important;
+    }
     .mobile-center {
       display: none !important;
     }
