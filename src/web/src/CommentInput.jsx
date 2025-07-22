@@ -270,18 +270,28 @@ const CommentInput = (props) => {
   const provider = useProvider();
   const result = useSigner();
 
+  let signer;
+  if (localAccount && localAccount.privateKey) {
+    signer = new Wallet(localAccount.privateKey, provider);
+  } else {
+    signer = result;
+  }
+
   const [isEligible, setIsEligible] = useState(null);
   const [preResolvedAvatar, setPreResolvedAvatar] = useState(null);
   const [preResolvedName, setPreResolvedName] = useState(null);
 
   useEffect(() => {
     const loadData = async () => {
-      const result =
-        signer && eligible(allowlist, delegations, await signer.getAddress());
+      if (!signer || !address) {
+        setIsEligible(false);
+        return;
+      }
+      const result = eligible(allowlist, delegations, await signer.getAddress());
       setIsEligible(result);
     };
     loadData();
-  });
+  }, [signer, address, allowlist, delegations]);
   
   // Pre-resolve profile (name and avatar) for optimistic UI updates
   useEffect(() => {
@@ -324,13 +334,6 @@ const CommentInput = (props) => {
     }
     fetchProfile();
   }, [address]); // Re-run effect when address changes
-
-  let signer;
-  if (localAccount && localAccount.privateKey) {
-    signer = new Wallet(localAccount.privateKey, provider);
-  } else {
-    signer = result;
-  }
 
   function getIndex() {
     return props.storyIndex;
