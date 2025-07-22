@@ -13,6 +13,17 @@ async function initFarcasterFrame() {
   try {
     await sdk.actions.ready();
   } catch {}
+  
+  // Enable back navigation for mini app
+  try {
+    const isMiniApp = await sdk.isInMiniApp();
+    if (isMiniApp) {
+      await sdk.back.enableWebNavigation();
+    }
+  } catch (err) {
+    console.log("Could not enable back navigation:", err);
+  }
+  
   // 2) Wire up the button (guarded)
   const btn = document.getElementById("frame-add-btn");
   if (btn) btn.addEventListener("click", () => sdk.actions.addFrame());
