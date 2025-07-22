@@ -649,66 +649,112 @@ const CommentInput = (props) => {
         />
       ) : (
         <>
-          <textarea
-            ref={textareaRef}
-            onFocus={(e) => {
-              if (isMobile) {
-                if (disableAutoOpen) return;
-                e.preventDefault();
-                setShowMobileComposer(true);
-              } else {
-                toggleNavigationItems();
-              }
-            }}
-            onBlur={!isMobile ? toggleNavigationItems : undefined}
-            rows="12"
-            cols="80"
-            style={{
-              display: "block",
-              width: "100%",
-              border: "var(--border)",
-              fontSize: "1rem",
-              borderRadius: "2px",
-              resize: "vertical",
-            }}
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            disabled={isLoading || !address || !isEligible}
-          ></textarea>
-          <span>
-            Characters remaining:{" "}
-            {(characterLimit - text.length).toLocaleString()}
-          </span>
-          <br />
-          <br />
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <button
-              id="button-onboarding"
-              style={{ marginBottom: "10px", width: "auto" }}
-              disabled={isLoading || !address || !isEligible}
-              onClick={async (e) => {
-                // Add haptic feedback for comment submission only in frames
-                if (isInFarcasterFrame()) {
-                  try {
-                    await sdk.haptics.impactOccurred('light');
-                  } catch (error) {
-                    // Silently fail if haptics not supported
-                  }
+          {isMobile ? (
+            <div
+              onClick={(e) => {
+                if (!disableAutoOpen && address && isEligible) {
+                  e.preventDefault();
+                  setShowMobileComposer(true);
                 }
-                
-                handleSubmit(e);
+              }}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+                padding: "10px",
+                border: "var(--border)",
+                borderRadius: "2px",
+                backgroundColor: "white",
+                cursor: address && isEligible ? "pointer" : "not-allowed",
+                opacity: address && isEligible ? 1 : 0.5,
+                marginBottom: "10px",
               }}
             >
-              {isLoading ? "Submitting..." : "Add comment"}
-            </button>
-            <CommentGuidelines />
-          </div>
+              {preResolvedAvatar && (
+                <img
+                  src={preResolvedAvatar}
+                  alt="Your avatar"
+                  style={{
+                    width: "32px",
+                    height: "32px",
+                    borderRadius: "2px",
+                    border: "1px solid #828282",
+                    flexShrink: 0,
+                  }}
+                />
+              )}
+              <span
+                style={{
+                  color: "#828282",
+                  fontSize: "0.9rem",
+                  flex: 1,
+                }}
+              >
+                {text ? text.substring(0, 50) + (text.length > 50 ? "..." : "") : "Post your reply"}
+              </span>
+            </div>
+          ) : (
+            <textarea
+              ref={textareaRef}
+              onFocus={(e) => {
+                toggleNavigationItems();
+              }}
+              onBlur={toggleNavigationItems}
+              rows="12"
+              cols="80"
+              style={{
+                display: "block",
+                width: "100%",
+                border: "var(--border)",
+                fontSize: "1rem",
+                borderRadius: "2px",
+                resize: "vertical",
+              }}
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              disabled={isLoading || !address || !isEligible}
+            ></textarea>
+          )}
+          {!isMobile && (
+            <>
+              <span>
+                Characters remaining:{" "}
+                {(characterLimit - text.length).toLocaleString()}
+              </span>
+              <br />
+              <br />
+            </>
+          )}
+          {!isMobile && (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <button
+                id="button-onboarding"
+                style={{ marginBottom: "10px", width: "auto" }}
+                disabled={isLoading || !address || !isEligible}
+                onClick={async (e) => {
+                  // Add haptic feedback for comment submission only in frames
+                  if (isInFarcasterFrame()) {
+                    try {
+                      await sdk.haptics.impactOccurred('light');
+                    } catch (error) {
+                      // Silently fail if haptics not supported
+                    }
+                  }
+                  
+                  handleSubmit(e);
+                }}
+              >
+                {isLoading ? "Submitting..." : "Add comment"}
+              </button>
+              <CommentGuidelines />
+            </div>
+          )}
         </>
       )}
     </div>
