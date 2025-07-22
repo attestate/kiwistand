@@ -841,12 +841,32 @@ const row = (
                         href="/stories/${getSlug(
                           story.title,
                         )}?index=0x${story.index}"
-                        onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
+                        onclick="event.preventDefault(); window.dispatchEvent(new CustomEvent('open-comments-0x${story.index}', { detail: { source: 'chat-bubble' } })); window.dispatchEvent(new HashChangeEvent('hashchange')); const commentPreview = document.querySelector('.comment-preview-0x${story.index}'); if (commentPreview) { commentPreview.style.opacity = 1; } const borderElem = document.querySelector('.without-comment-preview-0x${story.index}'); if (borderElem) { borderElem.classList.toggle('no-border'); }"
                         style="min-width: 60px; padding: 8px 12px; border: none; background: transparent; border-radius: 999px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.15s ease; text-decoration: none; color: inherit;"
                         onmouseover="this.style.backgroundColor='rgba(29, 155, 240, 0.1)'"
                         onmouseout="this.style.backgroundColor='transparent'"
                       >
-                        <span style="width: 20px; height: 20px; color: rgba(83, 100, 113, 1); display: flex; align-items: center; justify-content: center;">${ChatsSVG("width: 20px; height: 20px; color: rgba(83, 100, 113, 1);")}</span>
+                        <span style="width: 20px; height: 20px; color: rgba(83, 100, 113, 1); display: flex; align-items: center; justify-content: center;">
+                          <svg style="width: 20px; height: 20px; color: rgba(83, 100, 113, 1);" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+                            <rect width="256" height="256" fill="none" />
+                            <path
+                              d="M71.58,144,32,176V48a8,8,0,0,1,8-8H168a8,8,0,0,1,8,8v88a8,8,0,0,1-8,8Z"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="16"
+                            />
+                            <path
+                              d="M80,144v40a8,8,0,0,0,8,8h96.42L224,224V96a8,8,0,0,0-8-8H176"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="16"
+                            />
+                          </svg>
+                        </span>
                         ${commentCount > 0 ? html`<span style="font-size: 13px; color: rgba(83, 100, 113, 1); font-weight: 400;">${commentCount}</span>` : ''}
                       </a>
                     </div>`
