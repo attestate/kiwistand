@@ -459,14 +459,14 @@ body {
   display: none;
 }
 
-/* Hide tweet preview on desktop */
+/* Tweet preview container - visible on all devices */
 .tweet-preview-container {
-  display: none !important;
+  display: block;
 }
 
-/* Hide farcaster preview on desktop */
+/* Farcaster preview container - visible on all devices */
 .farcaster-preview-container {
-  display: none !important;
+  display: block;
 }
 
 /* Farcaster embed styles */
@@ -485,7 +485,7 @@ body {
   height: 100%;
   border: var(--border);
   border-radius: 2px;
-  margin: 0 11px 2px;
+  margin: 0 11px 0;
   background: var(--background-color0);
 }
 
@@ -600,7 +600,7 @@ body {
   height: 100%;
   border: var(--border);
   border-radius: 2px;
-  margin: 0 11px 2px;
+  margin: 0 11px 0;
   background: var(--background-color0);
 }
 
@@ -622,15 +622,6 @@ body {
 
 /* mobile device */
 @media only screen and (min-width : 300px) and (max-width : 640px) {
-  /* Show tweet preview only on mobile */
-  .tweet-preview-container {
-    display: block !important;
-  }
-  
-  /* Show farcaster preview only on mobile */
-  .farcaster-preview-container {
-    display: block !important;
-  }
     .scroll-margin-base {
       scroll-margin-top: 140px;
     }
