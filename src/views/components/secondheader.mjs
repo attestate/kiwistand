@@ -197,7 +197,7 @@ const secondheader = (theme, site, period, domain, query) => {
     <td>
       <div
         class="second-header"
-        style="background-color: var(--table-bg); min-height: 40px; display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; color: white;"
+        style="background-color: var(--table-bg); min-height: 40px; display: flex; justify-content: space-between; align-items: center; padding: 10px 11px; color: white;"
       >
         <div style="display: flex; align-items: center;">
           ${site === "search" ||

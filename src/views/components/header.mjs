@@ -146,7 +146,7 @@ const header = (theme, path) => {
               </div>
               <div
                 class="header-bell"
-                style="width: 33%; padding: 7px 7px 7px 0; display: flex; justify-content: flex-end;"
+                style="width: 33%; padding: 7px 4px 7px 0; display: flex; justify-content: flex-end;"
               >
                 <div id="bell"></div>
                 <div id="search"></div>
