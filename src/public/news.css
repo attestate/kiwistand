@@ -1083,7 +1083,7 @@ body {
       display: block;
       color: black;
       font-size: 1.1rem;
-      font-weight: bold;
+      font-weight:600;
     }
      .sidebar .kiwi-logo {
          display: block;
