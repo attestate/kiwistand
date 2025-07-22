@@ -717,10 +717,12 @@ body {
       border-bottom: none;
     }
     .content-row {
-      border: var(--border);
+      border: 1px solid rgba(166, 110, 78, 0.15);
       margin: 0 11px;
-      border-bottom: var(--border-thick) !important;
-      background-color: var(--background-color0);
+      border-bottom: 1px solid rgba(166, 110, 78, 0.2) !important;
+      background-color: #f6f6ef;
+      -webkit-border-image: initial;
+      -webkit-appearance: none;
     }
     #hnmain {
       border: none;
@@ -969,11 +971,13 @@ body {
     }
     /* Replicate mobile tile styles */
     .content-row {
-      border: var(--border);
+      border: 1px solid rgba(166, 110, 78, 0.15);
       margin: 0 11px;
-      border-bottom: var(--border-thick) !important;
-      background-color: var(--background-color0);
-      border-top: var(--border) !important;
+      border-bottom: 1px solid rgba(166, 110, 78, 0.2) !important;
+      background-color: #f6f6ef;
+      border-top: 1px solid rgba(166, 110, 78, 0.15) !important;
+      -webkit-border-image: initial;
+      -webkit-appearance: none;
     }
     /* Style comment preview for desktop tiles */
     .comment-preview {
@@ -1395,6 +1399,14 @@ a.meta-link:hover, span.meta-link:hover {
 .leaderboard-preview-container a {
   color: #007bff; /* Oku's blue */
   text-decoration: none;
+}
+
+/* Safari-specific fixes for content row borders */
+@supports (-webkit-appearance: none) {
+  .content-row {
+    border: 1px solid rgba(166, 110, 78, 0.15) !important;
+    background-color: #f6f6ef !important;
+  }
 }
 
 /* Share dropdown menu styles */
