@@ -36,6 +36,7 @@ module.exports = {
       env: {
         NODE_PATH: "./node_modules",
         NODE_ENV: "production",
+        DATA_DIR: "bootstrap",
         FID_LABELING_INTERVAL_HOURS: "6", // Run every 6 hours
       },
       node_args: "-r dotenv/config",
