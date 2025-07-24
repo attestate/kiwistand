@@ -30,5 +30,18 @@ module.exports = {
       },
       node_args: "-r dotenv/config --max-old-space-size=4096",
     },
+    {
+      name: "kiwinews-fid-labeling",
+      script: "./src/fid-labeling-service.mjs",
+      env: {
+        NODE_PATH: "./node_modules",
+        NODE_ENV: "production",
+        FID_LABELING_INTERVAL_HOURS: "6", // Run every 6 hours
+      },
+      node_args: "-r dotenv/config",
+      // Restart if it crashes, but not more than 10 times in 10 minutes
+      max_restarts: 10,
+      min_uptime: "10m",
+    },
   ],
 };
