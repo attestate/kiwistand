@@ -1,0 +1,1 @@
+- Always run TODOs in parallel using subagents (if possible)
