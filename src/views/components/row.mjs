@@ -499,7 +499,7 @@ const row = (
                             />
                           </svg>
                           <span
-                            style="font-weight:500; color:var(--contrast-color); font-size:14px;"
+                            style="font-weight:600; color:#000000; font-size:14px;"
                             >${story.metadata.twitterCreator || "Tweet"}</span
                           >
                         </div>
@@ -790,7 +790,7 @@ const row = (
                         (isCloudflare && story.index)
                           ? "_self"
                           : "_blank"}"
-                        style="user-select: text; line-height: 15pt; font-size: 13pt;"
+                        style="user-select: text; line-height: 15pt; font-size: 13pt;${canRenderFarcasterPreview || canRenderTweetPreview ? ' color: rgba(0, 0, 0, 0.35);' : ''}"
                       >
                         ${story.isOriginal
                           ? html`<mark
