@@ -46,7 +46,48 @@ import { getLeaderboard } from "../leaderboard.mjs";
 import holders from "./holders.mjs";
 const formatedHolders = holders.map((a) => ethers.utils.getAddress(a));
 
+// Import twitterFrontends for checking Twitter/X links
+import { twitterFrontends } from "../parser.mjs";
+
 const html = htm.bind(vhtml);
+
+// Helper function to check if a story is one of the allowed content types for predictions
+// Based on debug view types: 2, 3, 4, 5, or 8
+function isAllowedContentTypeForPrediction(story) {
+  // Type 8: Any story with OG image
+  const hasOgImage = story.metadata?.image && 
+    story.metadata.image.startsWith("https://");
+  
+  // Type 2: Cloudflare image - href pointing to Cloudflare URL  
+  const isCloudflareImage = story.href?.includes("cloudflare") || 
+    story.href?.includes("imagedelivery.net");
+  
+  // Type 3: Twitter/X preview - check if URL is from Twitter/X frontends
+  let isTwitterLink = false;
+  try {
+    const url = new URL(story.href);
+    isTwitterLink = twitterFrontends.some(domain => 
+      url.hostname === domain || url.hostname === `www.${domain}`
+    );
+  } catch (e) {
+    // Invalid URL
+  }
+  const hasTwitterMetadata = story.metadata?.twitterCreator || 
+    story.metadata?.twitterAuthorAvatar;
+  const isTwitterPreview = isTwitterLink || hasTwitterMetadata;
+  
+  // Type 4: Farcaster preview - with farcasterCast metadata or warpcast/farcaster URLs
+  const isFarcasterLink = story.href?.includes("warpcast.com") || 
+    story.href?.includes("farcaster.xyz");
+  const hasFarcasterCast = story.metadata?.farcasterCast;
+  const isFarcasterPreview = isFarcasterLink || hasFarcasterCast;
+  
+  // Type 5: Comment preview - with lastComment object
+  const hasLastComment = !!story.lastComment;
+  
+  return hasOgImage || isCloudflareImage || isTwitterPreview || 
+    isFarcasterPreview || hasLastComment;
+}
 
 // --- Prediction Configuration ---
 const PREDICTION_NEWNESS_THRESHOLD_SECONDS = 10 * 60 * 60; // 10 hours
@@ -506,23 +547,34 @@ export async function index(
       // Find candidates for prediction (new, low engagement, not already on page)
       // Use the original 'leaves' list for candidates
       const nowTimestampForAge = getUnixTime(new Date());
-      const candidates = leaves.filter(
+      
+      // Pre-filter candidates based on basic criteria
+      const potentialCandidates = leaves.filter(
         (leaf) =>
           nowTimestampForAge - leaf.timestamp <
             PREDICTION_NEWNESS_THRESHOLD_SECONDS &&
           leaf.upvotes <= PREDICTION_LOW_ENGAGEMENT_UPVOTES &&
           !stories.some((ps) => ps.index === leaf.index), // Ensure candidate isn't already on the final page list
       );
+      
+      // Load metadata and lastComment for candidates to check content type
+      const candidatesWithMetadata = potentialCandidates.map((candidate) => {
+        const metadata = cachedMetadata(candidate.href);
+        const lastComment = getLastComment(`kiwi:0x${candidate.index}`, policy.addresses || []);
+        return { ...candidate, metadata, lastComment };
+      });
+      
+      // Filter to only allowed content types
+      const candidates = candidatesWithMetadata.filter(isAllowedContentTypeForPrediction);
 
       if (candidates.length > 0) {
         const predictionPromises = candidates.map(async (story) => {
           const prediction = await getPredictedEngagement(story);
-          // Also pre-resolve ENS and add metadata for potential replacements here
+          // Also pre-resolve ENS for potential replacements here
           const submitter = await ens.resolve(story.identity);
-          const metadata = cachedMetadata(story.href);
           const impressions = countImpressions(story.href); // Get impressions for candidate
           return {
-            story: { ...story, submitter, metadata, impressions },
+            story: { ...story, submitter, impressions }, // metadata and lastComment already included
             prediction,
           }; // Combine story, resolved data, and prediction
         });

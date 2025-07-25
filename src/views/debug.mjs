@@ -27,30 +27,9 @@ const createMockStories = () => {
       avatars: [],
     },
     
-    // 2. OG image story - with metadata.image from allowed domain
+    // 2. Cloudflare image - href pointing to Cloudflare URL
     {
       index: "000002",
-      title: "Visual Story: The Future of Decentralized Social Media",
-      href: "https://mirror.xyz/article/future-of-social",
-      upvoters: ["0xaaa", "0xbbb", "0xccc"],
-      timestamp: baseTimestamp - 7200, // 2 hours ago
-      displayName: "bob.eth",
-      identity: "0xaaa",
-      avatars: [
-        "https://cdn.stamp.fyi/avatar/eth:0xaaa?s=144",
-        "https://cdn.stamp.fyi/avatar/eth:0xbbb?s=144",
-        "https://cdn.stamp.fyi/avatar/eth:0xccc?s=144",
-      ],
-      metadata: {
-        image: "https://placehold.co/1200x600/4a90e2/ffffff?text=Mirror+Article",
-        compliantTitle: "Visual Story: The Future of Decentralized Social Media",
-        ogDescription: "An in-depth exploration of how blockchain technology is reshaping social media platforms.",
-      },
-    },
-    
-    // 3. Cloudflare image - href pointing to Cloudflare URL
-    {
-      index: "000003",
       title: "NFT Collection Launch: Pixel Cats",
       href: "https://placehold.co/800x600/FFB347/ffffff?text=Cloudflare+Image",
       upvoters: ["0xddd", "0xeee", "0xfff", "0x111"],
@@ -65,9 +44,9 @@ const createMockStories = () => {
       ],
     },
     
-    // 4. Twitter preview - href to twitter.com with metadata
+    // 3. Twitter preview - href to twitter.com with metadata
     {
-      index: "000004",
+      index: "000003",
       title: "Breaking: Ethereum Hits New Milestone",
       href: "https://x.com/VitalikButerin/status/1234567890",
       upvoters: ["0x222", "0x333"],
@@ -85,9 +64,9 @@ const createMockStories = () => {
       },
     },
     
-    // 5. Farcaster preview - warpcast.com URL with metadata.farcasterCast
+    // 4. Farcaster preview - warpcast.com URL with metadata.farcasterCast
     {
-      index: "000005",
+      index: "000004",
       title: "Building in Public: My Journey with Kiwi",
       href: "https://warpcast.com/dwr.eth/0x1234abcd",
       upvoters: ["0x444", "0x555", "0x666"],
@@ -123,9 +102,9 @@ const createMockStories = () => {
       },
     },
     
-    // 6. Comment preview - with lastComment object
+    // 5. Comment preview - with lastComment object
     {
-      index: "000006",
+      index: "000005",
       title: "The State of DeFi in 2024: Comprehensive Analysis",
       href: "https://research.paradigm.xyz/defi-2024",
       upvoters: ["0x777", "0x888", "0x999", "0xaaa"],
@@ -158,9 +137,9 @@ const createMockStories = () => {
       },
     },
     
-    // 7. Original content - with isOriginal flag
+    // 6. Original content - with isOriginal flag
     {
-      index: "000007",
+      index: "000006",
       title: "My Experience Building a Decentralized Social Protocol",
       href: "https://blog.example.com/decentralized-social",
       upvoters: ["0x123", "0x456", "0x789"],
@@ -178,9 +157,9 @@ const createMockStories = () => {
       },
     },
     
-    // 8. Multiple upvoters - with avatars array of 5+ items
+    // 7. Multiple upvoters - with avatars array of 5+ items
     {
-      index: "000008",
+      index: "000007",
       title: "Ethereum's Roadmap: What's Next After The Merge",
       href: "https://ethereum.org/roadmap",
       upvoters: [
@@ -202,11 +181,11 @@ const createMockStories = () => {
       impressions: 1337,
     },
     
-    // 9. Substack domain with good OG image
+    // 8. Any post with OG image
     {
-      index: "000009",
+      index: "000008",
       title: "The Future of Digital Identity: Self-Sovereign Solutions",
-      href: "https://identity.substack.com/p/self-sovereign-identity",
+      href: "https://techblog.example.com/digital-identity-future",
       upvoters: ["0xc01", "0xc02", "0xc03"],
       timestamp: baseTimestamp - 432000, // 5 days ago
       displayName: "identity_researcher.eth",
@@ -217,7 +196,7 @@ const createMockStories = () => {
         "https://cdn.stamp.fyi/avatar/eth:0xc03?s=144",
       ],
       metadata: {
-        image: "https://placehold.co/1200x600/FF6154/ffffff?text=Substack+Article",
+        image: "https://placehold.co/1200x600/FF6154/ffffff?text=Blog+Article+With+OG+Image",
         ogDescription: "Exploring how blockchain technology enables self-sovereign identity solutions that put users in control of their personal data.",
       },
     },
@@ -294,14 +273,13 @@ export default async function debug(theme) {
               ${mockStories.map((story, index) => {
                 const labels = [
                   "1. Basic Link (Minimal Story)",
-                  "2. OG Image Story (Mirror.xyz)",
-                  "3. Cloudflare Image",
-                  "4. Twitter/X Preview",
-                  "5. Farcaster Cast Preview",
-                  "6. Comment Preview",
-                  "7. Original Content [OC]",
-                  "8. Multiple Upvoters (7+ avatars)",
-                  "9. Substack with OG Image",
+                  "2. Cloudflare Image",
+                  "3. Twitter/X Preview",
+                  "4. Farcaster Cast Preview",
+                  "5. Comment Preview",
+                  "6. Original Content [OC]",
+                  "7. Multiple Upvoters (7+ avatars)",
+                  "8. Any Post with OG Image",
                 ];
                 
                 return html`
