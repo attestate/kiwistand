@@ -303,6 +303,7 @@ const row = (
   // don't have to properly set query anywhere else.
   query = "",
   pinned = false,
+  debugMode = false,
 ) => {
   const size = 12;
   return (story, i) => {
@@ -348,7 +349,7 @@ const row = (
       differenceInHours(new Date(), new Date(story.timestamp * 1000)) > 12;
 
     // Check if the image is a Cloudflare image
-    const isCloudflare = isCloudflareImage(story.href);
+    const isCloudflare = isCloudflareImage(story.href) || (debugMode && story.href && story.href.includes("placehold.co"));
 
     // Condition for displaying mobile image:
     // - Must have image data (metadata or cloudflare)
@@ -361,7 +362,8 @@ const row = (
         story.metadata.image &&
         !blockedOGImageDomains.includes(extractedDomain) &&
         !knownBadOgImages.includes(story.metadata.image)) ||
-      isCloudflare;
+      isCloudflare ||
+      (debugMode && story.metadata && story.metadata.image);
 
     // Check if tweet contains an X.com article link in its content
     const tweetContainsXArticle =
@@ -419,7 +421,8 @@ const row = (
       (path === "/" ||
         path === "/stories" ||
         path === "/new" ||
-        path === "/best");
+        path === "/best" ||
+        (debugMode && path === "/debug"));
 
     // Condition for displaying comment preview:
     // - Must have a last comment

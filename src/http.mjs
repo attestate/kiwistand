@@ -58,6 +58,7 @@ import appTestflight from "./views/app-testflight.mjs";
 import demonstration from "./views/demonstration.mjs";
 import notifications from "./views/notifications.mjs";
 import emailNotifications from "./views/email-notifications.mjs";
+import debug from "./views/debug.mjs";
 import { parse, metadata } from "./parser.mjs";
 import { toAddress, resolve, ENS_CACHE_PREFIX } from "./ens.mjs";
 import * as ens from "./ens.mjs";
@@ -1362,6 +1363,12 @@ export async function launch(trie, libp2p, isPrimary = true) {
       "Cache-Control",
       "public, max-age=0, no-transform, must-revalidate, stale-while-revalidate=120",
     );
+    return reply.status(200).type("text/html").send(content);
+  });
+
+  app.get("/debug", async (request, reply) => {
+    const content = await debug(reply.locals.theme);
+    reply.header("Cache-Control", "no-cache");
     return reply.status(200).type("text/html").send(content);
   });
 
