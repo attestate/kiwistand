@@ -158,28 +158,9 @@ const createMockStories = () => {
       },
     },
     
-    // 7. Pinned story - with pinned flag
+    // 7. Original content - with isOriginal flag
     {
       index: "000007",
-      title: "Welcome to Kiwi News - Start Here!",
-      href: "https://news.kiwistand.com/guidelines",
-      upvoters: ["0xbbb", "0xccc", "0xddd", "0xeee", "0xfff"],
-      timestamp: baseTimestamp - 604800, // 7 days ago
-      displayName: "kiwi-team.eth",
-      identity: "0xbbb",
-      avatars: [
-        "https://cdn.stamp.fyi/avatar/eth:0xbbb?s=144",
-        "https://cdn.stamp.fyi/avatar/eth:0xccc?s=144",
-        "https://cdn.stamp.fyi/avatar/eth:0xddd?s=144",
-        "https://cdn.stamp.fyi/avatar/eth:0xeee?s=144",
-        "https://cdn.stamp.fyi/avatar/eth:0xfff?s=144",
-      ],
-      pinned: true,
-    },
-    
-    // 8. Original content - with isOriginal flag
-    {
-      index: "000008",
       title: "My Experience Building a Decentralized Social Protocol",
       href: "https://blog.example.com/decentralized-social",
       upvoters: ["0x123", "0x456", "0x789"],
@@ -197,22 +178,9 @@ const createMockStories = () => {
       },
     },
     
-    // 9. FUD labeled - with label: "FUD"
+    // 8. Multiple upvoters - with avatars array of 5+ items
     {
-      index: "000009",
-      title: "Why Crypto Will Fail: A Contrarian View",
-      href: "https://medium.com/crypto-skeptic/why-crypto-fails",
-      upvoters: ["0xf00"],
-      timestamp: baseTimestamp - 172800, // 2 days ago
-      displayName: "skeptic.eth",
-      identity: "0xf00",
-      avatars: ["https://cdn.stamp.fyi/avatar/eth:0xf00?s=144"],
-      label: "FUD",
-    },
-    
-    // 10. Multiple upvoters - with avatars array of 5+ items
-    {
-      index: "000010",
+      index: "000008",
       title: "Ethereum's Roadmap: What's Next After The Merge",
       href: "https://ethereum.org/roadmap",
       upvoters: [
@@ -234,23 +202,9 @@ const createMockStories = () => {
       impressions: 1337,
     },
     
-    // 11. Feedbot submission
+    // 9. Substack domain with good OG image
     {
-      index: "000011",
-      title: "Understanding Zero-Knowledge Proofs: A Beginner's Guide",
-      href: "https://zkproof.org/beginners-guide",
-      upvoters: ["0xb01", "0xb02"],
-      timestamp: baseTimestamp - 345600, // 4 days ago
-      displayName: "Feedbot",
-      avatars: [
-        "https://cdn.stamp.fyi/avatar/eth:0xb01?s=144",
-        "https://cdn.stamp.fyi/avatar/eth:0xb02?s=144",
-      ],
-    },
-    
-    // 12. Substack domain with good OG image
-    {
-      index: "000012",
+      index: "000009",
       title: "The Future of Digital Identity: Self-Sovereign Solutions",
       href: "https://identity.substack.com/p/self-sovereign-identity",
       upvoters: ["0xc01", "0xc02", "0xc03"],
@@ -272,7 +226,7 @@ const createMockStories = () => {
 
 export default async function debug(theme) {
   const mockStories = createMockStories();
-  const rowRenderer = Row(0, "/debug", "", false, false, null, false, "", false, true); // debugMode = true
+  const rowRenderer = Row(0, "/debug", "", false, false, null, false, "", true); // debugMode = true
   
   return html`
     <html lang="en" op="news">
@@ -345,12 +299,9 @@ export default async function debug(theme) {
                   "4. Twitter/X Preview",
                   "5. Farcaster Cast Preview",
                   "6. Comment Preview",
-                  "7. Pinned Story",
-                  "8. Original Content [OC]",
-                  "9. FUD Labeled Content",
-                  "10. Multiple Upvoters (7+ avatars)",
-                  "11. Feedbot Submission",
-                  "12. Substack with OG Image",
+                  "7. Original Content [OC]",
+                  "8. Multiple Upvoters (7+ avatars)",
+                  "9. Substack with OG Image",
                 ];
                 
                 return html`

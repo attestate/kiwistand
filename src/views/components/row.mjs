@@ -152,14 +152,6 @@ const expandSVG = html`
   </svg>
 `;
 
-const pin = html`<svg
-  style="height: 17px; vertical-align: -3px;"
-  xmlns="http://www.w3.org/2000/svg"
-  viewBox="0 0 256 256"
->
-  <rect width="256" height="256" fill="none" />
-  <path d="M136,127.42V232a8,8,0,0,1-16,0V127.42a56,56,0,1,1,16,0Z" />
-</svg> `;
 
 const formatDistanceToNowStrict = (date) => {
   return originalFormatDistance(date)
@@ -302,7 +294,6 @@ const row = (
   // as visited, and so since comment previews are only active on / and /new, we
   // don't have to properly set query anywhere else.
   query = "",
-  pinned = false,
   debugMode = false,
 ) => {
   const size = 12;
@@ -813,9 +804,7 @@ const row = (
                                 ),
                               )}</mark
                             >`
-                          : html`${pinned
-                              ? html`${pin} `
-                              : ""}${truncateLongWords(
+                          : html`${truncateLongWords(
                               DOMPurify.sanitize(
                                 story.metadata && story.metadata.compliantTitle
                                   ? story.metadata.compliantTitle
@@ -860,47 +849,6 @@ const row = (
                       `}
                       ${story.index
                         ? html`
-                            ${story.label === "FUD"
-                              ? html`<span
-                                  style="vertical-align: -2px; font-size: 8pt; background-color:#FFEB3B; color:#000; padding:2px 4px; border-radius:2px; margin-right:4px; display:inline-flex; align-items:center;"
-                                  ><svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    viewBox="0 0 256 256"
-                                    style="width:12px; height:12px; margin-right:4px;"
-                                  >
-                                    <rect
-                                      width="256"
-                                      height="256"
-                                      fill="none"
-                                    />
-                                    <path
-                                      d="M109.77,97,83.82,52a8,8,0,0,0-11.55-2.54A95.94,95.94,0,0,0,32,119.14,8.1,8.1,0,0,0,40,128H92"
-                                      fill="none"
-                                      stroke="currentColor"
-                                      stroke-linecap="round"
-                                      stroke-linejoin="round"
-                                      stroke-width="16"
-                                    />
-                                    <path
-                                      d="M146.23,97l26-44.94a8,8,0,0,1,11.55-2.54A95.94,95.94,0,0,1,224,119.14a8.1,8.1,0,0,1-8,8.86H164"
-                                      fill="none"
-                                      stroke="currentColor"
-                                      stroke-linecap="round"
-                                      stroke-linejoin="round"
-                                      stroke-width="16"
-                                    />
-                                    <path
-                                      d="M146,159.18l25.83,44.73a8,8,0,0,1-3.56,11.26,96.24,96.24,0,0,1-80.54,0,8,8,0,0,1-3.56-11.26L110,159.18"
-                                      fill="none"
-                                      stroke="currentColor"
-                                      stroke-linecap="round"
-                                      stroke-linejoin="round"
-                                      stroke-width="16"
-                                    />
-                                    <circle cx="128" cy="128" r="12" /></svg
-                                  >FUD</span
-                                >`
-                              : ""}
                             <a
                               class="meta-link"
                               style="user-select: text;"
@@ -976,34 +924,7 @@ const row = (
                         ? html`<a class="meta-link" href="javascript:void(0);"
                             >${story.displayName}</a
                           >`
-                        : story.displayName === "Feedbot"
-                        ? html`<span
-                            class="meta-link"
-                            style="touch-action: manipulation; user-select: none; display: inline-flex; align-items: center; vertical-align: -1px;"
-                          >
-                            <svg
-                              style="width: 12px; height: 12px; margin-right: 4px; vertical-align: -1px;"
-                              xmlns="http://www.w3.org/2000/svg"
-                              viewBox="0 0 256 256"
-                            >
-                              <rect width="256" height="256" fill="none" />
-                              <path
-                                d="M88,64a.12.12,0,0,0-.12.12A.12.12,0,0,0,88,64Z"
-                                opacity="0.2"
-                              />
-                              <path
-                                d="M216,48H40A16,16,0,0,0,24,64V192a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V64A16,16,0,0,0,216,48ZM40,64H216v32H40ZM216,192H40V112H216v80Zm-16-24a8,8,0,0,1-8,8H152a8,8,0,0,1,0-16h40A8,8,0,0,1,200,168Zm0-32a8,8,0,0,1-8,8H104a8,8,0,0,1,0-16h88A8,8,0,0,1,200,136Z"
-                              />
-                            </svg>
-                            ${story.displayName}
-                          </span>`
-                        : html`<a
-                            target="_blank"
-                            class="meta-link"
-                            style="touch-action: manipulation; user-select: none;"
-                            href="https://paragraph.xyz/@kiwi-updates/kiwi-feedbot-submissions-open"
-                            >${story.displayName}</a
-                          >`}
+                        : html`<span class="meta-link">${story.displayName}</span>`}
                     </span>
                   </div>
                 </div>
