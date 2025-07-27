@@ -48,8 +48,9 @@ async function fetchNeynarData(address) {
     });
 
     if (!response.ok) {
+      // Silently handle rate limits - they're expected
       if (response.status === 429) {
-        log(`Neynar rate limit exceeded for ${address}`);
+        // Rate limited
       }
       return;
     }
@@ -80,7 +81,7 @@ async function fetchNeynarData(address) {
       },
     };
   } catch (err) {
-    log(`Failed to fetch Neynar data for ${address}: ${err}`);
+    // Silently fail - these errors are common and expected
     return;
   }
 }
@@ -162,7 +163,7 @@ export async function fetchENSData(address) {
       // NOTE: If you're coming across this environment variable and you're
       // wondering why it wasn't documented, this is because its only meant to be
       // used by the Kiwi News production server.
-      url += `&special=env.ENSDATA_KEY`;
+      url += `&special=${env.ENSDATA_KEY}`;
     }
 
     const signal = AbortSignal.timeout(5000);
@@ -212,7 +213,7 @@ export async function fetchENSData(address) {
       truncatedAddress,
     };
   } catch (error) {
-    console.error(`Failed to fetch ENS data for address: ${address}`, error);
+    // Silently handle ENS failures - they're common
 
     // Try Neynar as fallback
     try {
@@ -233,10 +234,7 @@ export async function fetchENSData(address) {
         };
       }
     } catch (neynarError) {
-      console.error(
-        `Neynar fallback also failed for address: ${address}`,
-        neynarError,
-      );
+      // Silently handle Neynar fallback failures
     }
 
     const truncatedAddress =
@@ -347,11 +345,12 @@ export async function resolve(address) {
 
       // Update cache with complete profile
       cache.set(cacheKey, completeProfile);
-      log(`Updated ENS cache for ${address}`);
     } catch (err) {
-      log(`Background ENS resolution failed for ${address}: ${err}`);
+      // Silently handle background resolution failures
     }
-  })().catch((err) => log(`Error in ENS background fetch: ${err}`));
+  })().catch((err) => {
+    // Silently handle background fetch errors
+  });
 
   // Return minimal profile immediately
   return minimalProfile;
