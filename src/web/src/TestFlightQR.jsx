@@ -1,10 +1,50 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 const TestFlightQR = () => {
   const testflightUrl = 'https://testflight.apple.com/join/6jyvYECH';
+  const [shouldShow, setShouldShow] = useState(false);
 
-  // Check if mobile - hide on mobile views
-  if (window.innerWidth <= 640) {
+  useEffect(() => {
+    const checkViewportWidth = () => {
+      const viewportWidth = window.innerWidth;
+      
+      // Mobile breakpoint - never show on mobile
+      if (viewportWidth <= 640) {
+        setShouldShow(false);
+        return;
+      }
+
+      // Calculate minimum required width for QR code display
+      const qrCodeWidth = 200; // width of QR code container
+      const rightMargin = 20; // right margin
+      const minContentSpace = 400; // minimum space for main content
+      
+      // Get sidebar width based on breakpoints
+      let sidebarWidth = 0;
+      if (viewportWidth >= 641 && viewportWidth < 1200) {
+        // Medium screens: sidebar takes 40% when open
+        sidebarWidth = viewportWidth * 0.4;
+      } else if (viewportWidth >= 1200) {
+        // Large screens: sidebar takes 25% when open
+        sidebarWidth = viewportWidth * 0.25;
+      }
+      
+      // Calculate available space (accounting for sidebar when open)
+      const availableSpace = viewportWidth - sidebarWidth;
+      const requiredSpace = qrCodeWidth + rightMargin + minContentSpace;
+      
+      // Only show if there's enough space
+      setShouldShow(availableSpace >= requiredSpace);
+    };
+
+    // Check on mount and resize
+    checkViewportWidth();
+    window.addEventListener('resize', checkViewportWidth);
+
+    return () => window.removeEventListener('resize', checkViewportWidth);
+  }, []);
+
+  if (!shouldShow) {
     return null;
   }
 
