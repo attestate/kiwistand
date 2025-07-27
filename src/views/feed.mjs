@@ -54,6 +54,7 @@ const html = htm.bind(vhtml);
 // Helper function to check if a story is one of the allowed content types for predictions
 // Based on debug view types: 2, 3, 4, 5, or 8
 function isAllowedContentTypeForPrediction(story) {
+  if (!story) return false;
   // Type 8: Any story with OG image
   const hasOgImage = story.metadata?.image && 
     story.metadata.image.startsWith("https://");
@@ -65,10 +66,12 @@ function isAllowedContentTypeForPrediction(story) {
   // Type 3: Twitter/X preview - check if URL is from Twitter/X frontends
   let isTwitterLink = false;
   try {
-    const url = new URL(story.href);
-    isTwitterLink = twitterFrontends.some(domain => 
-      url.hostname === domain || url.hostname === `www.${domain}`
-    );
+    if (story.href) {
+      const url = new URL(story.href);
+      isTwitterLink = Array.isArray(twitterFrontends) && twitterFrontends.some(domain => 
+        url.hostname === domain || url.hostname === `www.${domain}`
+      );
+    }
   } catch (e) {
     // Invalid URL
   }
@@ -559,8 +562,19 @@ export async function index(
       
       // Load metadata and lastComment for candidates to check content type
       const candidatesWithMetadata = potentialCandidates.map((candidate) => {
-        const metadata = cachedMetadata(candidate.href);
-        const lastComment = getLastComment(`kiwi:0x${candidate.index}`, policy.addresses || []);
+        let metadata, lastComment;
+        try {
+          metadata = cachedMetadata(candidate.href);
+        } catch (err) {
+          log(`Error getting metadata for ${candidate.href}: ${err}`);
+          metadata = null;
+        }
+        try {
+          lastComment = getLastComment(`kiwi:0x${candidate.index}`, policy.addresses || []);
+        } catch (err) {
+          log(`Error getting last comment for ${candidate.index}: ${err}`);
+          lastComment = null;
+        }
         return { ...candidate, metadata, lastComment };
       });
       

@@ -447,6 +447,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
         log(`Cached feed updated in ${elapsed}ms`);
       } catch (err) {
         log("Failed to update cached feed: " + err);
+        log("Error stack: " + err.stack);
         // Retain existing cachedFeed to avoid response delays.
       } finally {
         updateCachedFeed();
