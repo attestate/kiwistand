@@ -913,6 +913,9 @@ body {
  .sidebar-toggle {
      display: flex;
 }
+ .story-back-button {
+     display: flex;
+}
  .kn-banner-desk {
      display: none;
 }

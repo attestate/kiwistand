@@ -464,9 +464,56 @@ const row = (
                   target="_blank"
                   onclick="event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${DOMPurify.sanitize(
                     story.href,
-                  )}')); if (window.ReactNativeWebView || window !== window.parent) { window.sdk.actions.openUrl('${DOMPurify.sanitize(
-                    story.href,
-                  )}'); } else { window.open('${DOMPurify.sanitize(
+                  )}')); if (window.ReactNativeWebView || window !== window.parent) { 
+                    (function() {
+                      var targetUrl = '${DOMPurify.sanitize(story.href)}';
+                      var canIframe = ${story.metadata && story.metadata.canIframe !== undefined ? story.metadata.canIframe : true};
+                      
+                      try {
+                        var urlObj = new window.URL(targetUrl);
+                        var hostname = urlObj.hostname.toLowerCase();
+                        
+                        // Domains that should always use openUrl
+                        var alwaysOpenDomains = [
+                          'farcaster.xyz',
+                          'wallet.coinbase.com',
+                          'x.com',
+                          'twitter.com',
+                          'www.x.com',
+                          'www.twitter.com',
+                          'balajis.com',
+                          'sceneswithsimon.com'
+                        ];
+                        
+                        // Check if it's a Substack domain
+                        var isSubstack = hostname.endsWith('.substack.com');
+                        
+                        var shouldAlwaysOpen = isSubstack || alwaysOpenDomains.some(function(domain) {
+                          return hostname === domain || hostname.endsWith('.' + domain);
+                        });
+                        
+                        if (shouldAlwaysOpen) {
+                          if (window.sdk && window.sdk.actions && window.sdk.actions.openUrl) {
+                            window.sdk.actions.openUrl(targetUrl);
+                          } else {
+                            window.open(targetUrl, '_blank');
+                          }
+                        } else if (!canIframe && window.sdk && window.sdk.actions && window.sdk.actions.openUrl) {
+                          window.sdk.actions.openUrl(targetUrl);
+                        } else {
+                          if (window.openEmbedDrawer) {
+                            window.openEmbedDrawer(targetUrl);
+                          } else {
+                            // Fallback if drawer not ready yet
+                            window.open(targetUrl, '_blank');
+                          }
+                        }
+                      } catch (e) {
+                        // Fallback to embed on error
+                        window.openEmbedDrawer(targetUrl);
+                      }
+                    })();
+                  } else { window.open('${DOMPurify.sanitize(
                     story.href,
                   )}', event.currentTarget.getAttribute('target')); }"
                   style="text-decoration:none; color:inherit; display:block;"
@@ -569,16 +616,56 @@ const row = (
                   target="_blank"
                   onclick="event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${DOMPurify.sanitize(
                     story.href,
-                  )}')); if (window.ReactNativeWebView || window !== window.parent) { ${story
-                    .metadata.farcasterCast && story.metadata.farcasterCast.hash
-                    ? `(async function() { try { var context = await window.sdk.context; if (context && context.client && context.client.clientFid === 309857) { window.sdk.actions.openUrl('https://wallet.coinbase.com/post/${DOMPurify.sanitize(
-                        story.metadata.farcasterCast.hash,
-                      )}'); return; } } catch(e) {} window.sdk.actions.openUrl('${DOMPurify.sanitize(
-                        story.href,
-                      )}'); })()`
-                    : `window.sdk.actions.openUrl('${DOMPurify.sanitize(
-                        story.href,
-                      )}')`}; } else { window.open('${DOMPurify.sanitize(
+                  )}')); if (window.ReactNativeWebView || window !== window.parent) { 
+                    (function() {
+                      var targetUrl = '${DOMPurify.sanitize(story.href)}';
+                      var canIframe = ${story.metadata && story.metadata.canIframe !== undefined ? story.metadata.canIframe : true};
+                      
+                      try {
+                        var urlObj = new window.URL(targetUrl);
+                        var hostname = urlObj.hostname.toLowerCase();
+                        
+                        // Domains that should always use openUrl
+                        var alwaysOpenDomains = [
+                          'farcaster.xyz',
+                          'wallet.coinbase.com',
+                          'x.com',
+                          'twitter.com',
+                          'www.x.com',
+                          'www.twitter.com',
+                          'balajis.com',
+                          'sceneswithsimon.com'
+                        ];
+                        
+                        // Check if it's a Substack domain
+                        var isSubstack = hostname.endsWith('.substack.com');
+                        
+                        var shouldAlwaysOpen = isSubstack || alwaysOpenDomains.some(function(domain) {
+                          return hostname === domain || hostname.endsWith('.' + domain);
+                        });
+                        
+                        if (shouldAlwaysOpen) {
+                          if (window.sdk && window.sdk.actions && window.sdk.actions.openUrl) {
+                            window.sdk.actions.openUrl(targetUrl);
+                          } else {
+                            window.open(targetUrl, '_blank');
+                          }
+                        } else if (!canIframe && window.sdk && window.sdk.actions && window.sdk.actions.openUrl) {
+                          window.sdk.actions.openUrl(targetUrl);
+                        } else {
+                          if (window.openEmbedDrawer) {
+                            window.openEmbedDrawer(targetUrl);
+                          } else {
+                            // Fallback if drawer not ready yet
+                            window.open(targetUrl, '_blank');
+                          }
+                        }
+                      } catch (e) {
+                        // Fallback to embed on error
+                        window.openEmbedDrawer(targetUrl);
+                      }
+                    })();
+                  } else { window.open('${DOMPurify.sanitize(
                     story.href,
                   )}', event.currentTarget.getAttribute('target')); }"
                   style="text-decoration:none; color:inherit; display:block;"
@@ -707,9 +794,56 @@ const row = (
                   href="${DOMPurify.sanitize(story.href)}"
                   onclick="event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${DOMPurify.sanitize(
                     story.href,
-                  )}')); if (window.ReactNativeWebView || window !== window.parent) { window.sdk.actions.openUrl('${DOMPurify.sanitize(
-                    story.href,
-                  )}'); } else { window.open('${DOMPurify.sanitize(
+                  )}')); if (window.ReactNativeWebView || window !== window.parent) { 
+                    (function() {
+                      var targetUrl = '${DOMPurify.sanitize(story.href)}';
+                      var canIframe = ${story.metadata && story.metadata.canIframe !== undefined ? story.metadata.canIframe : true};
+                      
+                      try {
+                        var urlObj = new window.URL(targetUrl);
+                        var hostname = urlObj.hostname.toLowerCase();
+                        
+                        // Domains that should always use openUrl
+                        var alwaysOpenDomains = [
+                          'farcaster.xyz',
+                          'wallet.coinbase.com',
+                          'x.com',
+                          'twitter.com',
+                          'www.x.com',
+                          'www.twitter.com',
+                          'balajis.com',
+                          'sceneswithsimon.com'
+                        ];
+                        
+                        // Check if it's a Substack domain
+                        var isSubstack = hostname.endsWith('.substack.com');
+                        
+                        var shouldAlwaysOpen = isSubstack || alwaysOpenDomains.some(function(domain) {
+                          return hostname === domain || hostname.endsWith('.' + domain);
+                        });
+                        
+                        if (shouldAlwaysOpen) {
+                          if (window.sdk && window.sdk.actions && window.sdk.actions.openUrl) {
+                            window.sdk.actions.openUrl(targetUrl);
+                          } else {
+                            window.open(targetUrl, '_blank');
+                          }
+                        } else if (!canIframe && window.sdk && window.sdk.actions && window.sdk.actions.openUrl) {
+                          window.sdk.actions.openUrl(targetUrl);
+                        } else {
+                          if (window.openEmbedDrawer) {
+                            window.openEmbedDrawer(targetUrl);
+                          } else {
+                            // Fallback if drawer not ready yet
+                            window.open(targetUrl, '_blank');
+                          }
+                        }
+                      } catch (e) {
+                        // Fallback to embed on error
+                        window.openEmbedDrawer(targetUrl);
+                      }
+                    })();
+                  } else { window.open('${DOMPurify.sanitize(
                     story.href,
                   )}', event.currentTarget.getAttribute('target')); }"
                 >
@@ -793,20 +927,46 @@ const row = (
                           ? "if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
                           : `event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${DOMPurify.sanitize(
                               story.href,
-                            )}')); if (window.ReactNativeWebView || window !== window.parent) { ${
-                              isFarcasterCast &&
-                              story.metadata &&
-                              story.metadata.farcasterCast &&
-                              story.metadata.farcasterCast.hash
-                                ? `(async function() { try { var context = await window.sdk.context; if (context && context.client && context.client.clientFid === 309857) { window.sdk.actions.openUrl('https://wallet.coinbase.com/post/${DOMPurify.sanitize(
-                                    story.metadata.farcasterCast.hash,
-                                  )}'); return; } } catch(e) {} window.sdk.actions.openUrl('${DOMPurify.sanitize(
-                                    story.href,
-                                  )}'); })()`
-                                : `window.sdk.actions.openUrl('${DOMPurify.sanitize(
-                                    story.href,
-                                  )}')`
-                            }; } else { window.open('${DOMPurify.sanitize(
+                            )}')); if (window.ReactNativeWebView || window !== window.parent) { 
+                              (function() {
+                                var targetUrl = '${DOMPurify.sanitize(story.href)}';
+                                var canIframe = ${story.metadata && story.metadata.canIframe !== undefined ? story.metadata.canIframe : true};
+                                
+                                try {
+                                  var urlObj = new window.URL(targetUrl);
+                                  var hostname = urlObj.hostname.toLowerCase();
+                                  
+                                  // Domains that should always use openUrl
+                                  var alwaysOpenDomains = [
+                                    'farcaster.xyz',
+                                    'wallet.coinbase.com',
+                                    'x.com',
+                                    'twitter.com',
+                                    'www.x.com',
+                                    'www.twitter.com'
+                                  ];
+                                  
+                                  var shouldAlwaysOpen = alwaysOpenDomains.some(function(domain) {
+                                    return hostname === domain || hostname.endsWith('.' + domain);
+                                  });
+                                  
+                                  if (shouldAlwaysOpen) {
+                                    if (window.sdk && window.sdk.actions && window.sdk.actions.openUrl) {
+                                      window.sdk.actions.openUrl(targetUrl);
+                                    } else {
+                                      window.open(targetUrl, '_blank');
+                                    }
+                                  } else if (!canIframe && window.sdk && window.sdk.actions && window.sdk.actions.openUrl) {
+                                    window.sdk.actions.openUrl(targetUrl);
+                                  } else {
+                                    window.openEmbedDrawer(targetUrl);
+                                  }
+                                } catch (e) {
+                                  // Fallback to embed on error
+                                  window.openEmbedDrawer(targetUrl);
+                                }
+                              })();
+                            } else { window.open('${DOMPurify.sanitize(
                               story.href,
                             )}', event.currentTarget.getAttribute('target')); }`}"
                         data-story-link="/stories/${getSlug(
@@ -1109,7 +1269,7 @@ const row = (
                             style="min-width: 40px; padding: 8px; border: none; background: transparent; border-radius: 999px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s ease; text-decoration: none; color: inherit;"
                             onclick="event.preventDefault(); const title = this.getAttribute('data-story-title'); const slug = this.getAttribute('data-story-slug'); const index = this.getAttribute('data-story-index'); const kiwiUrl = 'https://news.kiwistand.com/stories/' + slug + '?index=' + index; navigator.sendBeacon && navigator.sendBeacon('/share?url=' + encodeURIComponent('${DOMPurify.sanitize(
                               story.href,
-                            )}') + '&type=farcaster'); if (window.isInFarcasterMiniApp && window.sdk && window.sdk.actions && window.sdk.actions.composeCast) { window.sdk.actions.composeCast({ text: title, embeds: [kiwiUrl] }); } else if (window.ReactNativeWebView || window !== window.parent) { const url = 'https://warpcast.com/~/compose?text=' + encodeURIComponent(title) + '&embeds[]=' + encodeURIComponent(kiwiUrl); window.sdk.actions.openUrl(url); } else { const url = 'https://warpcast.com/~/compose?text=' + encodeURIComponent(title) + '&embeds[]=' + encodeURIComponent(kiwiUrl); window.open(url, '_blank'); }"
+                            )}') + '&type=farcaster'); if (window.isInFarcasterMiniApp && window.sdk && window.sdk.actions && window.sdk.actions.composeCast) { window.sdk.actions.composeCast({ text: title, embeds: [kiwiUrl] }); } else { const url = 'https://warpcast.com/~/compose?text=' + encodeURIComponent(title) + '&embeds[]=' + encodeURIComponent(kiwiUrl); window.open(url, '_blank'); }"
                             onmouseover="this.style.backgroundColor='rgba(124, 101, 193, 0.1)'"
                             onmouseout="this.style.backgroundColor='transparent'"
                           >

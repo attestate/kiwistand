@@ -775,11 +775,12 @@ export const metadata = async (
     url = urlObj.toString();
   }
 
-  let result, html;
+  let result, html, canIframe;
   if (cache.has(url)) {
     const fromCache = cache.get(url);
     result = fromCache.result;
     html = fromCache.html;
+    canIframe = fromCache.canIframe !== undefined ? fromCache.canIframe : true; // Default to true for old cache entries
   } else {
     const signal = AbortSignal.timeout(5000);
     const response = await fetch(url, {
@@ -790,12 +791,43 @@ export const metadata = async (
       signal,
     });
 
+    // Check iframe compatibility
+    const xFrameOptions = response.headers.get('x-frame-options');
+    const csp = response.headers.get('content-security-policy');
+    
+    canIframe = true;
+    if (xFrameOptions && (xFrameOptions.toLowerCase() === 'deny' || xFrameOptions.toLowerCase() === 'sameorigin')) {
+      canIframe = false;
+    }
+    if (csp) {
+      // Check for frame-ancestors directive
+      if (csp.includes('frame-ancestors')) {
+        // Extract the frame-ancestors value
+        const frameAncestorsMatch = csp.match(/frame-ancestors\s+([^;]+)/);
+        if (frameAncestorsMatch) {
+          const frameAncestorsValue = frameAncestorsMatch[1].trim();
+          // Default to blocking unless explicitly allowed
+          canIframe = false;
+          
+          // Only allow if it explicitly allows all
+          if (frameAncestorsValue.includes('*') || 
+              frameAncestorsValue.includes('https://*') ||
+              frameAncestorsValue.includes('http://*')) {
+            canIframe = true;
+          }
+        } else {
+          // If frame-ancestors is present but we can't parse it, block to be safe
+          canIframe = false;
+        }
+      }
+    }
+
     html = await response.text();
     const parsed = await ogs({ html });
     result = parsed.result;
 
     if (result && html) {
-      cache.set(url, { result, html });
+      cache.set(url, { result, html, canIframe });
     }
   }
 
@@ -1073,6 +1105,9 @@ export const metadata = async (
         .catch((err) => log(`fixTitle background error: ${err}`));
     }
   }
+
+  // Add iframe compatibility info
+  output.canIframe = canIframe;
 
   return output;
 };

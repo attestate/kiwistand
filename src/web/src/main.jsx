@@ -643,6 +643,22 @@ async function addTutorialDrawers() {
   }
 }
 
+async function addEmbedDrawer(toast) {
+  // Create container if it doesn't exist
+  if (!document.getElementById('embed-drawer-container')) {
+    const container = document.createElement('div');
+    container.id = 'embed-drawer-container';
+    document.body.appendChild(container);
+  }
+  
+  const EmbedDrawer = (await import('./EmbedDrawer.jsx')).default;
+  createRoot(document.getElementById('embed-drawer-container')).render(
+    <StrictMode>
+      <EmbedDrawer toast={toast} />
+    </StrictMode>
+  );
+}
+
 async function addAvatar(allowlist) {
   const avatarElem = document.querySelectorAll("nav-header-avatar");
   if (avatarElem && avatarElem.length > 0) {
@@ -654,6 +670,18 @@ async function addAvatar(allowlist) {
         </StrictMode>,
       );
     });
+  }
+}
+
+async function addBackButton() {
+  const backButtonElem = document.querySelector(".story-back-button");
+  if (backButtonElem) {
+    const BackButton = (await import("./BackButton.jsx")).default;
+    createRoot(backButtonElem).render(
+      <StrictMode>
+        <BackButton />
+      </StrictMode>,
+    );
   }
 }
 
@@ -1156,7 +1184,9 @@ async function start() {
     addKarmaElements(),
     addMinuteCountdown(),
     addTutorialDrawers(),
+    addEmbedDrawer(toast),
     addAvatar(await allowlistPromise),
+    addBackButton(),
     addDelegateButton(await allowlistPromise, await delegationsPromise, toast),
     addBuyButton(allowlistPromise, delegationsPromise, toast),
     addProfileDisplay(),
@@ -1196,5 +1226,6 @@ async function start() {
   // application.
   window.reactHasLoaded = true;
 }
+
 
 start();

@@ -1240,6 +1240,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
     );
     return reply.status(200).type("text/html").send(content);
   });
+  
   app.get("/stories/:slug?", async (request, reply) => {
     let referral;
     try {
