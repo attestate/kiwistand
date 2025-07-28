@@ -55,6 +55,10 @@ const UrlInput = (props) => {
   const fetchMetadata = async (url) => {
     try {
       const response = await fetch(`/api/v1/metadata?url=${url}`);
+      if (!response.ok) {
+        console.error(`Metadata fetch failed with status: ${response.status}`);
+        return;
+      }
       const data = await response.json();
 
       if (data.data && data.data.canonicalLink) {
@@ -205,6 +209,7 @@ const SubmitButton = (props) => {
   const [showShareModal, setShowShareModal] = useState(false);
   const [storyData, setStoryData] = useState(null);
   const [isGeneratingTitle, setIsGeneratingTitle] = useState(false);
+  const [isCloudflareChallenge, setIsCloudflareChallenge] = useState(false);
 
   // Ad related state removed
   // const params = new URLSearchParams(window.location.search);
@@ -241,9 +246,7 @@ const SubmitButton = (props) => {
         });
       setIsGeneratingTitle(true);
       fetch(
-        `/api/v1/metadata?url=${encodeURIComponent(
-          canonicalURL,
-        )}&generateTitle=true`,
+        `/api/v1/metadata?url=${encodeURIComponent(canonicalURL)}&generateTitle=true`,
       )
         .then((response) => {
           if (!response.ok) {
@@ -252,6 +255,17 @@ const SubmitButton = (props) => {
           return response.json();
         })
         .then((data) => {
+          // Check if it's a Cloudflare challenge page
+          if (data.data.isCloudflareChallenge) {
+            setIsCloudflareChallenge(true);
+            setIsGeneratingTitle(false);
+            // Keep the message visible for 3 seconds
+            setTimeout(() => {
+              setIsCloudflareChallenge(false);
+            }, 3000);
+            return;
+          }
+          
           if (data.data.ogTitle) {
             const titleInputElem = document.getElementById("titleInput");
             const isTitleBlank = titleInputElem.innerText.length === 0;
@@ -278,6 +292,7 @@ const SubmitButton = (props) => {
         });
     } else {
       embedPreview.innerHTML = "";
+      setIsCloudflareChallenge(false);
     }
   }, [url]);
 
@@ -365,6 +380,7 @@ const SubmitButton = (props) => {
       setIsLoading(false);
       return;
     }
+    
 
     const value = API.messageFab(
       title.replace(/(\r\n|\n|\r)/gm, " "),
@@ -564,6 +580,37 @@ const SubmitButton = (props) => {
             </p>
           </div>
         </>
+      )}
+      {isCloudflareChallenge && !isGeneratingTitle && (
+        <div
+          onClick={() => setIsCloudflareChallenge(false)}
+          style={{
+            position: "absolute",
+            top: "-140px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            backgroundColor: "#fff3cd",
+            padding: "1rem",
+            borderRadius: "8px",
+            textAlign: "center",
+            width: "320px",
+            border: "2px solid #856404",
+            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+            zIndex: 100,
+            cursor: "pointer",
+          }}
+        >
+          <div style={{ fontSize: "1.5rem", marginBottom: "0.5rem" }}>⚠️</div>
+          <h3 style={{ margin: "0 0 0.5rem 0", color: "#856404", fontSize: "1rem" }}>
+            AI Title Magic Failed
+          </h3>
+          <p style={{ margin: "0 0 0.5rem 0", color: "#856404", fontSize: "13px" }}>
+            Please enter a title manually.
+          </p>
+          <p style={{ margin: 0, color: "#856404", fontSize: "11px", fontStyle: "italic" }}>
+            Tap to dismiss
+          </p>
+        </div>
       )}
       <>
         <button

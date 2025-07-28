@@ -66,6 +66,20 @@ export async function getPageSpeedScore(url) {
 
 const html = htm.bind(vhtml);
 
+// Helper function to detect Cloudflare challenge pages
+function isCloudflareChallengePage(title) {
+  if (!title) return false;
+  const lowercaseTitle = title.toLowerCase();
+  return (
+    lowercaseTitle.includes("just a moment") ||
+    lowercaseTitle.includes("attention required") ||
+    lowercaseTitle.includes("checking your browser") ||
+    lowercaseTitle.includes("cloudflare") ||
+    lowercaseTitle === "please wait..." ||
+    lowercaseTitle.includes("ddos protection")
+  );
+}
+
 const filtered = [
   "kiwistand.com",
   "kiwinews.xyz",
@@ -231,7 +245,15 @@ async function generateClaudeTitle(content) {
       console.error("No title found in Claude response");
       return null;
     }
-    return toolUse.input.title;
+    const generatedTitle = toolUse.input.title;
+    
+    // Check if the generated title is from a Cloudflare challenge page
+    if (isCloudflareChallengePage(generatedTitle)) {
+      console.error("Generated title appears to be from Cloudflare challenge page");
+      return null;
+    }
+    
+    return generatedTitle;
   } catch (error) {
     console.error("Error extracting title from response:", error);
     return null;
@@ -278,17 +300,27 @@ async function fixTitle(title) {
   }
   try {
     let toolUse = response.content.find((c) => c.type === "tool_use");
+    let fixedTitle = null;
+    
     if (toolUse && toolUse.input && toolUse.input.title) {
-      return toolUse.input.title;
+      fixedTitle = toolUse.input.title;
     } else if (response.completion && response.completion.trim().length > 0) {
       console.warn(
         "No tool_use block found, falling back to response.completion",
       );
-      return response.completion.trim();
+      fixedTitle = response.completion.trim();
     } else {
       console.error("No title found in fixTitle response");
       return null;
     }
+    
+    // Check if the fixed title is from a Cloudflare challenge page
+    if (isCloudflareChallengePage(fixedTitle)) {
+      console.error("Fixed title appears to be from Cloudflare challenge page");
+      return null;
+    }
+    
+    return fixedTitle;
   } catch (error) {
     console.error("Error extracting title in fixTitle:", error);
     return null;
@@ -772,6 +804,17 @@ export const metadata = async (
     throw new Error("Link from excluded domain");
   }
 
+  // Check if result is undefined or invalid
+  if (!result) {
+    log(`No metadata result for URL: ${url}`);
+    return {
+      domain: DOMPurify.sanitize(domain),
+      ogTitle: "",
+      ogDescription: "",
+      canIframe: false
+    };
+  }
+
   let image;
   if (result.ogImage && result.ogImage.length >= 1) {
     image = result.ogImage[0].url;
@@ -796,6 +839,19 @@ export const metadata = async (
 
   const { ogTitle } = result;
   let { ogDescription } = result;
+  
+  // Check if the title is a Cloudflare challenge page
+  if (isCloudflareChallengePage(ogTitle)) {
+    log(`Cloudflare challenge page detected for URL: ${url}`);
+    // Return minimal metadata to prevent using the cloudflare title
+    return {
+      domain: DOMPurify.sanitize(domain),
+      ogTitle: "", // Empty title to force user to enter one manually
+      ogDescription: "",
+      canIframe: false,
+      isCloudflareChallenge: true // Flag to indicate this is a Cloudflare page
+    };
+  }
 
   let canonicalLink;
   // NOTE: Hey's and Rekt News's canonical link implementation is wrong and
@@ -923,7 +979,14 @@ export const metadata = async (
   }
   
   if (!output.ogTitle && ogTitle && !bannedTitleDomains.includes(hostname)) {
-    output.ogTitle = ogTitle;
+    // Check if the title is from a Cloudflare challenge page
+    if (isCloudflareChallengePage(ogTitle)) {
+      log(`Cloudflare challenge page title detected, skipping title assignment for URL: ${url}`);
+      output.isCloudflareChallenge = true; // Flag to indicate this is a Cloudflare page
+      // Don't set the title, leave it empty
+    } else {
+      output.ogTitle = ogTitle;
+    }
   }
 
   if (domain) {
