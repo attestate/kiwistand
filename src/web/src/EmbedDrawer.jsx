@@ -49,12 +49,52 @@ const EmbedDrawer = ({ toast }) => {
     }
   }, []);
 
+  // Domains that should always open externally
+  const alwaysExternalDomains = [
+    'x.com',
+    'twitter.com',
+    'github.com',
+    'drive.google.com'
+  ];
+
   // Expose open/close methods globally
   useEffect(() => {
     window.openEmbedDrawer = (url) => {
       try {
         const urlObj = new URL(url);
         const hostname = urlObj.hostname;
+        
+        // Security check: prevent embedding our own domain
+        const currentDomain = window.location.hostname;
+        // Also check for the root domain (kiwistand.com)
+        const rootDomain = 'kiwistand.com';
+        if (hostname === currentDomain || 
+            hostname.endsWith(`.${currentDomain}`) ||
+            hostname === rootDomain ||
+            hostname.endsWith(`.${rootDomain}`)) {
+          console.log("Security: Cannot embed same domain");
+          if (window.sdk && window.sdk.actions && window.sdk.actions.openUrl) {
+            window.sdk.actions.openUrl(url);
+          } else {
+            window.open(url, '_blank');
+          }
+          return;
+        }
+        
+        // Check if this domain should always open externally
+        const shouldOpenExternally = alwaysExternalDomains.some(domain => 
+          hostname === domain || hostname.endsWith(`.${domain}`)
+        );
+        
+        if (shouldOpenExternally) {
+          console.log(`Domain ${hostname} is configured to open externally`);
+          if (window.sdk && window.sdk.actions && window.sdk.actions.openUrl) {
+            window.sdk.actions.openUrl(url);
+          } else {
+            window.open(url, '_blank');
+          }
+          return;
+        }
         
         // Check if this domain is known to block iframes
         if (blockedDomains.current.has(hostname)) {
