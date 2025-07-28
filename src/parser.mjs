@@ -809,11 +809,14 @@ export const metadata = async (
           // Default to blocking unless explicitly allowed
           canIframe = false;
           
-          // Only allow if it explicitly allows all
-          if (frameAncestorsValue.includes('*') || 
-              frameAncestorsValue.includes('https://*') ||
-              frameAncestorsValue.includes('http://*')) {
+          // Only allow if it explicitly allows all origins
+          if (frameAncestorsValue.includes('*') && !frameAncestorsValue.includes("'self'")) {
             canIframe = true;
+          }
+          // Check if it only allows specific domains (like Substack allowing only *.substack.com)
+          else if (frameAncestorsValue.includes('https://') || frameAncestorsValue.includes('http://')) {
+            // If it specifies specific domains, it won't work from kiwistand.com
+            canIframe = false;
           }
         } else {
           // If frame-ancestors is present but we can't parse it, block to be safe

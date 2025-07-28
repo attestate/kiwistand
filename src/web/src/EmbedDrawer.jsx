@@ -28,6 +28,7 @@ const EmbedDrawer = ({ toast }) => {
   const [currentUrl, setCurrentUrl] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
+  const [showFallbackButton, setShowFallbackButton] = useState(false);
   const iframeRef = useRef(null);
   
   const iOS = typeof navigator !== "undefined" && /iPad|iPhone|iPod/.test(navigator.userAgent);
@@ -73,6 +74,7 @@ const EmbedDrawer = ({ toast }) => {
       setOpen(true);
       setIsLoading(true);
       setHasError(false);
+      setShowFallbackButton(false);
     };
 
     window.closeEmbedDrawer = () => {
@@ -150,22 +152,39 @@ const EmbedDrawer = ({ toast }) => {
         const iframeBody = iframeDoc.body;
         if (iframeBody && (
           iframeBody.textContent?.includes('refused to connect') ||
-          iframeBody.textContent?.includes('blocked by X-Frame-Options') ||
-          iframeBody.innerHTML?.length < 100 // Very short content might indicate an error
+          iframeBody.textContent?.includes('blocked by X-Frame-Options')
         )) {
           setHasError(true);
         }
       }
     } catch (e) {
-      // Cross-origin access denied - the iframe is blocked
-      console.log('Iframe blocked by cross-origin policy');
-      setHasError(true);
+      // Cross-origin access denied - this is EXPECTED for cross-origin iframes
+      // Don't treat this as an error automatically
+      console.log('Cross-origin iframe loaded (cannot access content)');
+      
+      // Show fallback button after a delay for sites that might not work properly
+      setTimeout(() => {
+        setShowFallbackButton(true);
+      }, 2000);
     }
   };
 
   const handleIframeError = () => {
     setIsLoading(false);
     setHasError(true);
+    
+    // Only remember this domain as blocked when we get an actual error event
+    try {
+      const urlObj = new URL(currentUrl);
+      const hostname = urlObj.hostname;
+      blockedDomains.current.add(hostname);
+      
+      // Save to localStorage
+      const domains = Array.from(blockedDomains.current);
+      localStorage.setItem('kiwi-iframe-blocked-domains', JSON.stringify(domains));
+    } catch (e) {
+      console.error('Failed to save blocked domain:', e);
+    }
   };
 
   return (
@@ -363,42 +382,122 @@ const EmbedDrawer = ({ toast }) => {
                 border: "none",
                 backgroundColor: "white"
               }}
-              sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
+              sandbox="allow-scripts allow-same-origin"
+              referrerPolicy="no-referrer"
+              loading="lazy"
               onLoad={handleIframeLoad}
               onError={handleIframeError}
             />
+          )}
+
+          {/* Fallback button for sites that load but might not work */}
+          {showFallbackButton && !hasError && !isLoading && (
+            <div style={{
+              position: "absolute",
+              bottom: "20px",
+              right: "20px",
+              zIndex: 10
+            }}>
+              <button
+                onClick={() => {
+                  if (window.sdk && window.sdk.actions && window.sdk.actions.openUrl) {
+                    window.sdk.actions.openUrl(currentUrl);
+                  } else {
+                    window.open(currentUrl, '_blank');
+                  }
+                }}
+                style={{
+                  background: "rgba(175, 192, 70, 0.95)",
+                  border: "1px solid #98ad35",
+                  borderRadius: "4px",
+                  color: "black",
+                  fontSize: "12pt",
+                  fontFamily: "Verdana, Geneva, sans-serif",
+                  padding: "8px 16px",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
+                }}
+              >
+                Not working? Open in browser
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  viewBox="0 0 256 256" 
+                  width="14" 
+                  height="14" 
+                  style={{ opacity: 0.7 }}
+                >
+                  <rect width="256" height="256" fill="none"/>
+                  <polyline points="216 104 216 40 152 40" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="16"/>
+                  <line x1="144" y1="112" x2="216" y2="40" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="16"/>
+                  <path d="M184,144v64a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V80a8,8,0,0,1,8-8h64" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="16"/>
+                </svg>
+              </button>
+            </div>
           )}
 
           {/* Error message */}
           {hasError && !isLoading && (
             <div 
               style={{
-                display: "flex",
                 position: "absolute",
-                top: 0,
-                left: 0,
-                width: "100%",
-                height: "100%",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+                display: "flex",
+                flexDirection: "column",
                 alignItems: "center",
                 justifyContent: "center",
-                textAlign: "center",
-                padding: "50px",
                 fontFamily: "Verdana, Geneva, sans-serif",
-                backgroundColor: "white"
+                textAlign: "center"
               }}
             >
-              <div>
-                <h3>This site cannot be displayed in the embed view</h3>
-                <p>The website blocks embedding for security reasons.</p>
-                <a 
-                  href={currentUrl} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  style={{ color: "#afc046" }}
+              <p style={{ 
+                margin: "0 0 20px 0", 
+                fontSize: "14px", 
+                color: "#666"
+              }}>
+                Can't show this site here
+              </p>
+              <button
+                onClick={() => {
+                  if (window.sdk && window.sdk.actions && window.sdk.actions.openUrl) {
+                    window.sdk.actions.openUrl(currentUrl);
+                  } else {
+                    window.open(currentUrl, '_blank');
+                  }
+                }}
+                style={{
+                  background: "#afc046",
+                  border: "1px solid #98ad35",
+                  borderRadius: "4px",
+                  color: "black",
+                  fontSize: "14pt",
+                  fontFamily: "Verdana, Geneva, sans-serif",
+                  padding: "12px 32px",
+                  cursor: "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  fontWeight: "500"
+                }}
+              >
+                Open Site
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  viewBox="0 0 256 256" 
+                  width="16" 
+                  height="16" 
+                  style={{ opacity: 0.8 }}
                 >
-                  Open the site directly
-                </a>
-              </div>
+                  <rect width="256" height="256" fill="none"/>
+                  <polyline points="216 104 216 40 152 40" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="16"/>
+                  <line x1="144" y1="112" x2="216" y2="40" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="16"/>
+                  <path d="M184,144v64a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V80a8,8,0,0,1,8-8h64" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="16"/>
+                </svg>
+              </button>
             </div>
           )}
         </div>

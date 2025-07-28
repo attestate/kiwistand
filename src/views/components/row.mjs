@@ -475,14 +475,10 @@ const row = (
                         
                         // Domains that should always use openUrl
                         var alwaysOpenDomains = [
-                          'farcaster.xyz',
-                          'wallet.coinbase.com',
                           'x.com',
                           'twitter.com',
                           'www.x.com',
-                          'www.twitter.com',
-                          'balajis.com',
-                          'sceneswithsimon.com'
+                          'www.twitter.com'
                         ];
                         
                         // Check if it's a Substack domain
@@ -510,7 +506,11 @@ const row = (
                         }
                       } catch (e) {
                         // Fallback to embed on error
-                        window.openEmbedDrawer(targetUrl);
+                        if (window.openEmbedDrawer) {
+                          window.openEmbedDrawer(targetUrl);
+                        } else {
+                          window.open(targetUrl, '_blank');
+                        }
                       }
                     })();
                   } else { window.open('${DOMPurify.sanitize(
@@ -627,14 +627,10 @@ const row = (
                         
                         // Domains that should always use openUrl
                         var alwaysOpenDomains = [
-                          'farcaster.xyz',
-                          'wallet.coinbase.com',
                           'x.com',
                           'twitter.com',
                           'www.x.com',
-                          'www.twitter.com',
-                          'balajis.com',
-                          'sceneswithsimon.com'
+                          'www.twitter.com'
                         ];
                         
                         // Check if it's a Substack domain
@@ -662,7 +658,11 @@ const row = (
                         }
                       } catch (e) {
                         // Fallback to embed on error
-                        window.openEmbedDrawer(targetUrl);
+                        if (window.openEmbedDrawer) {
+                          window.openEmbedDrawer(targetUrl);
+                        } else {
+                          window.open(targetUrl, '_blank');
+                        }
                       }
                     })();
                   } else { window.open('${DOMPurify.sanitize(
@@ -805,14 +805,10 @@ const row = (
                         
                         // Domains that should always use openUrl
                         var alwaysOpenDomains = [
-                          'farcaster.xyz',
-                          'wallet.coinbase.com',
                           'x.com',
                           'twitter.com',
                           'www.x.com',
-                          'www.twitter.com',
-                          'balajis.com',
-                          'sceneswithsimon.com'
+                          'www.twitter.com'
                         ];
                         
                         // Check if it's a Substack domain
@@ -938,8 +934,6 @@ const row = (
                                   
                                   // Domains that should always use openUrl
                                   var alwaysOpenDomains = [
-                                    'farcaster.xyz',
-                                    'wallet.coinbase.com',
                                     'x.com',
                                     'twitter.com',
                                     'www.x.com',
@@ -959,11 +953,19 @@ const row = (
                                   } else if (!canIframe && window.sdk && window.sdk.actions && window.sdk.actions.openUrl) {
                                     window.sdk.actions.openUrl(targetUrl);
                                   } else {
-                                    window.openEmbedDrawer(targetUrl);
+                                    if (window.openEmbedDrawer) {
+                                      window.openEmbedDrawer(targetUrl);
+                                    } else {
+                                      window.open(targetUrl, '_blank');
+                                    }
                                   }
                                 } catch (e) {
                                   // Fallback to embed on error
-                                  window.openEmbedDrawer(targetUrl);
+                                  if (window.openEmbedDrawer) {
+                                    window.openEmbedDrawer(targetUrl);
+                                  } else {
+                                    window.open(targetUrl, '_blank');
+                                  }
                                 }
                               })();
                             } else { window.open('${DOMPurify.sanitize(
