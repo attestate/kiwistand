@@ -18,7 +18,10 @@ async function initFarcasterFrame() {
   try {
     const isMiniApp = await sdk.isInMiniApp();
     if (isMiniApp) {
+      // Enable automatic web navigation handling
       await sdk.back.enableWebNavigation();
+      // Show the native back button
+      await sdk.back.show();
     }
   } catch (err) {
     console.log("Could not enable back navigation:", err);
