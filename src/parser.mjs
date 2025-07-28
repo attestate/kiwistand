@@ -17,6 +17,7 @@ import { fetchCache as fetchCacheFactory } from "./utils.mjs";
 
 import cache, { lifetimeCache } from "./cache.mjs";
 import log from "./logger.mjs";
+import { getVideoMetadata } from "./youtube.mjs";
 
 const fetchCache = new FileSystemCache({
   cacheDirectory: path.resolve(env.CACHE_DIR),
@@ -778,10 +779,18 @@ export const metadata = async (
   if (result.twitterImage && result.twitterImage.length >= 1) {
     image = result.twitterImage[0].url;
   }
+  let youtubeMetadata = null;
   if (hostname === "youtu.be" || hostname.endsWith("youtube.com")) {
     const id = getYTId(url);
     if (id) {
-      image = `https://i.ytimg.com/vi/${id}/maxresdefault.jpg`;
+      // Try to get metadata from YouTube API first
+      youtubeMetadata = await getVideoMetadata(id);
+      if (youtubeMetadata && youtubeMetadata.thumbnail) {
+        image = youtubeMetadata.thumbnail;
+      } else {
+        // Fallback to direct thumbnail URL
+        image = `https://i.ytimg.com/vi/${id}/maxresdefault.jpg`;
+      }
     }
   }
 
@@ -894,6 +903,25 @@ export const metadata = async (
     }
   }
 
+  // Use YouTube API data if available
+  if (youtubeMetadata) {
+    if (youtubeMetadata.title && !output.ogTitle) {
+      output.ogTitle = youtubeMetadata.title;
+    }
+    if (youtubeMetadata.description) {
+      output.ogDescription = DOMPurify.sanitize(youtubeMetadata.description);
+      ogDescription = youtubeMetadata.description; // Update for later use
+    }
+    // Add YouTube-specific metadata
+    output.youtubeData = {
+      channelTitle: youtubeMetadata.channelTitle,
+      duration: youtubeMetadata.duration,
+      viewCount: youtubeMetadata.viewCount,
+      embedAllowed: youtubeMetadata.embedAllowed,
+      videoId: getYTId(url),
+    };
+  }
+  
   if (!output.ogTitle && ogTitle && !bannedTitleDomains.includes(hostname)) {
     output.ogTitle = ogTitle;
   }

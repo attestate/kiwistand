@@ -20,6 +20,7 @@ import log from "../../logger.mjs";
 import { twitterFrontends } from "../../parser.mjs";
 import FarcasterFullCast from "./farcaster-full-cast.mjs";
 import ParagraphFullPost from "./paragraph-full-post.mjs";
+import YouTubeEmbed from "./youtube-embed.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -334,6 +335,12 @@ const row = (
 
     // Check if this is a Paragraph.xyz post
     const isParagraphPost = extractedDomain === "paragraph.xyz";
+    
+    // Check if this is a YouTube video
+    const isYouTubeVideo = 
+      extractedDomain === "youtube.com" || 
+      extractedDomain === "youtu.be" ||
+      extractedDomain === "m.youtube.com";
 
     // Check if the story itself is older than 12 hours
     const isStoryOlderThan12Hours =
@@ -404,9 +411,18 @@ const row = (
       }
     }
 
+    // Check if we can render YouTube embed
+    const canRenderYouTubeEmbed = 
+      isYouTubeVideo &&
+      story.metadata &&
+      story.metadata.youtubeData &&
+      story.metadata.youtubeData.videoId &&
+      story.metadata.youtubeData.embedAllowed;
+
     const displayImage =
       !canRenderTweetPreview && // Don't use regular image if we can render a tweet preview
       !canRenderFarcasterPreview && // Don't use regular image if we can render a Farcaster preview
+      !canRenderYouTubeEmbed && // Don't use regular image if we can render a YouTube embed
       hasImageData &&
       !interactive &&
       (path === "/" ||
@@ -434,7 +450,8 @@ const row = (
               ? "inverted-row"
               : ""} ${displayImage ||
             canRenderTweetPreview ||
-            canRenderFarcasterPreview
+            canRenderFarcasterPreview ||
+            canRenderYouTubeEmbed
               ? "content-row-elevated"
               : ""}"
             style="${invert ? "display:none;" : ""} ${style}"
@@ -672,6 +689,16 @@ const row = (
                     </div>
                   </div>
                 </a>`
+              : canRenderYouTubeEmbed
+              ? html`<div
+                  class="youtube-preview-container"
+                  style="display: block; width: 100%; margin: 0;"
+                >
+                  ${YouTubeEmbed({
+                    videoId: story.metadata.youtubeData.videoId,
+                    metadata: story.metadata.youtubeData,
+                  })}
+                </div>`
               : displayImage
               ? html` <a
                   data-no-instant
@@ -802,7 +829,7 @@ const row = (
                         (isCloudflare && story.index)
                           ? "_self"
                           : "_blank"}"
-                        style="user-select: text; line-height: 15pt; font-size: 13pt;${canRenderFarcasterPreview || canRenderTweetPreview ? ' color: rgba(0, 0, 0, 0.35);' : ''}"
+                        style="user-select: text; line-height: 15pt; font-size: 13pt;${canRenderFarcasterPreview || canRenderTweetPreview || canRenderYouTubeEmbed ? ' color: rgba(0, 0, 0, 0.35);' : ''}"
                       >
                         ${story.isOriginal
                           ? html`<mark
@@ -1102,7 +1129,8 @@ const row = (
               ? html` <div
                   class="comment-preview comment-preview-0x${story.index} ${displayImage ||
                   canRenderTweetPreview ||
-                  canRenderFarcasterPreview
+                  canRenderFarcasterPreview ||
+                  canRenderYouTubeEmbed
                     ? "elevating-comment-preview"
                     : "comment-preview-no-mobile-image"}"
                   style="touch-action: manipulation; user-select: none; cursor: pointer; display: flex;"
@@ -1249,7 +1277,8 @@ const row = (
                   data-story-index="0x${story.index}"
                   data-has-preview="${displayImage ||
                   canRenderTweetPreview ||
-                  canRenderFarcasterPreview
+                  canRenderFarcasterPreview ||
+                  canRenderYouTubeEmbed
                     ? "true"
                     : "false"}"
                 ></div>`
