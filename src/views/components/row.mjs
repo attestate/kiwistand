@@ -524,6 +524,18 @@ const row = (
                             ? "..."
                             : ""}
                         </p>
+                        ${story.metadata.image
+                          ? html`
+                              <div style="margin-top: 12px;">
+                                <img
+                                  src="${DOMPurify.sanitize(story.metadata.image)}"
+                                  alt="Tweet image"
+                                  style="display: block; max-width: 100%; height: auto; border-radius: 2px; max-height: 300px; object-fit: contain;"
+                                  loading="lazy"
+                                />
+                              </div>
+                            `
+                          : null}
                       </div>
                     </div>
                   </div>
