@@ -116,7 +116,7 @@ const nav = (path) => html`
      rgba(246, 246, 239, 0) 100%
    );
    backdrop-filter: blur(10px);
-   -webkit-backdrop-filter: blur(10px);box-shadow: 0 -2px 5px rgba(0,0,0,0.1);"
+   -webkit-backdrop-filter: blur(10px);box-shadow: 0 -2px 5px rgba(0,0,0,0.1); z-index: 100;"
   >
     <a
       data-no-instant
