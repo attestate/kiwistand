@@ -156,35 +156,54 @@ export const EmojiReaction = ({ comment, allowlist, delegations, toast }) => {
       const resolvedAvatar =
         preResolvedAvatar || (await resolveAvatar(identity));
       const existingReaction = comment.reactions.find(
-        (r) => r.emoji === emoji && Array.isArray(r.reactorProfiles),
+        (r) => r.emoji === emoji,
       );
       if (existingReaction) {
-        existingReaction.reactorProfiles.push({
-          address: identity,
-          safeAvatar: resolvedAvatar,
-        });
+        // Initialize reactorProfiles if it doesn't exist
+        if (!Array.isArray(existingReaction.reactorProfiles)) {
+          existingReaction.reactorProfiles = [];
+        }
+        // Only add if not already in the array
+        if (!existingReaction.reactors.includes(identity)) {
+          existingReaction.reactors.push(identity);
+          existingReaction.reactorProfiles.push({
+            address: identity,
+            safeAvatar: resolvedAvatar,
+          });
+        }
       } else {
         comment.reactions.push({
           emoji,
+          reactors: [identity],
           reactorProfiles: [{ address: identity, safeAvatar: resolvedAvatar }],
         });
       }
 
       switch (emoji) {
         case "🥝":
-          setKiwis([...kiwis, identity]);
+          if (!kiwis.includes(identity)) {
+            setKiwis([...kiwis, identity]);
+          }
           break;
         case "🔥":
-          setFires([...fires, identity]);
+          if (!fires.includes(identity)) {
+            setFires([...fires, identity]);
+          }
           break;
         case "👀":
-          setEyes([...eyes, identity]);
+          if (!eyes.includes(identity)) {
+            setEyes([...eyes, identity]);
+          }
           break;
         case "💯":
-          setHundreds([...hundreds, identity]);
+          if (!hundreds.includes(identity)) {
+            setHundreds([...hundreds, identity]);
+          }
           break;
         case "🤭":
-          setLaughs([...laughs, identity]);
+          if (!laughs.includes(identity)) {
+            setLaughs([...laughs, identity]);
+          }
           break;
       }
 
@@ -257,8 +276,8 @@ export const EmojiReaction = ({ comment, allowlist, delegations, toast }) => {
             return (
               <button
                 key={reaction.emoji}
-                onClick={() => !isOwnComment && !alreadyReacted && handleReaction(reaction.emoji, true)}
-                disabled={isntLoggedIn || isReacting || isOwnComment || alreadyReacted}
+                onClick={() => !isOwnComment && !alreadyReacted && !hasReacted && handleReaction(reaction.emoji, true)}
+                disabled={isntLoggedIn || isReacting || isOwnComment || alreadyReacted || hasReacted}
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
@@ -268,12 +287,13 @@ export const EmojiReaction = ({ comment, allowlist, delegations, toast }) => {
                   borderRadius: "20px",
                   padding: "6px 12px",
                   minHeight: "40px",
-                  cursor: (isntLoggedIn || isOwnComment || alreadyReacted) ? "default" : "pointer",
+                  cursor: (isntLoggedIn || isOwnComment || alreadyReacted || hasReacted) ? "default" : "pointer",
                   transition: "all 0.15s ease",
                   WebkitAppearance: "none",
+                  opacity: hasReacted && !alreadyReacted ? 0.6 : 1,
                 }}
                 onMouseEnter={(e) => {
-                  if (!isntLoggedIn && !isOwnComment && !alreadyReacted) {
+                  if (!isntLoggedIn && !isOwnComment && !alreadyReacted && !hasReacted) {
                     e.currentTarget.style.backgroundColor = "rgba(0, 0, 0, 0.05)";
                   }
                 }}
@@ -282,12 +302,45 @@ export const EmojiReaction = ({ comment, allowlist, delegations, toast }) => {
                 }}
               >
                 <span style={{ fontSize: "16px" }}>{reaction.emoji}</span>
-                {reaction.reactorProfiles
-                  ?.filter((profile) => profile.safeAvatar)
-                  .slice(0, 2)
-                  .map((profile, i) => (
+                {(() => {
+                  const profiles = reaction.reactorProfiles || [];
+                  
+                  // Debug: Check if current user is in the reactors list
+                  const currentUserHasReacted = reaction.reactors?.includes(address);
+                  const currentUserProfile = profiles.find(p => 
+                    p.address?.toLowerCase() === address?.toLowerCase()
+                  );
+                  
+                  // Temporary debug logging
+                  if (currentUserHasReacted && !currentUserProfile?.safeAvatar) {
+                    console.log('Current user has reacted but no avatar found:', {
+                      address,
+                      currentUserProfile,
+                      reactors: reaction.reactors,
+                      profiles: profiles.map(p => ({ address: p.address, hasAvatar: !!p.safeAvatar }))
+                    });
+                  }
+                  
+                  let profilesToShow = [];
+                  
+                  // If current user has reacted, always show them first
+                  if (currentUserHasReacted && currentUserProfile?.safeAvatar) {
+                    profilesToShow.push(currentUserProfile);
+                  }
+                  
+                  // Then add other profiles with avatars
+                  const otherProfiles = profiles
+                    .filter(p => 
+                      p.address?.toLowerCase() !== address?.toLowerCase() && 
+                      p.safeAvatar
+                    )
+                    .slice(0, currentUserProfile?.safeAvatar ? 1 : 2);
+                  
+                  profilesToShow = [...profilesToShow, ...otherProfiles];
+                  
+                  return profilesToShow.map((profile, i) => (
                     <img
-                      key={i}
+                      key={profile.address}
                       loading="lazy"
                       src={profile.safeAvatar}
                       alt=""
@@ -299,7 +352,8 @@ export const EmojiReaction = ({ comment, allowlist, delegations, toast }) => {
                         border: "1.5px solid white",
                       }}
                     />
-                  ))}
+                  ));
+                })()}
                 {reactionCounts[reaction.emoji] > 1 && (
                   <span style={{ color: "#666", fontSize: "13px", fontWeight: "500" }}>
                     {reactionCounts[reaction.emoji]}
@@ -312,7 +366,7 @@ export const EmojiReaction = ({ comment, allowlist, delegations, toast }) => {
       )}
       
       {/* React button - larger touch target */}
-      {(!isOwnComment || localAccount) && (
+      {(!isOwnComment || localAccount) && !hasReacted && (
         <button
           onClick={() => setIsExpanded(!isExpanded)}
           disabled={isntLoggedIn}
