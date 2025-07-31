@@ -63,6 +63,7 @@ function truncateName(name) {
 
 export const EmojiReaction = ({ comment, allowlist, delegations, toast }) => {
   const [isReacting, setIsReacting] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [kiwis, setKiwis] = useState(
     comment.reactions?.find((r) => r.emoji === "🥝")?.reactors || [],
   );
@@ -99,6 +100,19 @@ export const EmojiReaction = ({ comment, allowlist, delegations, toast }) => {
     signer = new Wallet(localAccount.privateKey, provider);
   }
   const [preResolvedAvatar, setPreResolvedAvatar] = useState(null);
+  
+  // Click outside handler
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isExpanded && !event.target.closest('.reactions-container')) {
+        setIsExpanded(false);
+      }
+    };
+    
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [isExpanded]);
+  
   useEffect(() => {
     async function fetchAvatar() {
       if (signer) {
@@ -114,7 +128,7 @@ export const EmojiReaction = ({ comment, allowlist, delegations, toast }) => {
     fetchAvatar();
   }, [signer, allowlist, delegations]);
 
-  const handleReaction = async (emoji) => {
+  const handleReaction = async (emoji, isFromExistingReaction = false) => {
     if (!signer) {
       toast.error("Please connect your wallet first");
       return;
@@ -174,12 +188,16 @@ export const EmojiReaction = ({ comment, allowlist, delegations, toast }) => {
           break;
       }
 
+      // Collapse after successful reaction
+      setIsExpanded(false);
+
       // Send reaction in background
       const response = await API.send(value, signature);
       if (response.status === "success") {
         toast.success("Reaction added!");
         posthog.capture("emoji_reaction", {
           emoji: emoji,
+          from_existing: isFromExistingReaction,
         });
       } else {
         toast.error(response.details || "Failed to add reaction");
@@ -194,98 +212,212 @@ export const EmojiReaction = ({ comment, allowlist, delegations, toast }) => {
 
   // Don't allow reacting to your own comments, but do show reactions you've received
   const isOwnComment = comment.identity.address === address;
+  
+  const reactionCounts = {
+    "🥝": kiwis.length,
+    "🔥": fires.length,
+    "👀": eyes.length,
+    "💯": hundreds.length,
+    "🤭": laughs.length,
+  };
+  
+  const existingReactions = comment.reactions?.filter(r => r.reactors?.length > 0) || [];
+  
   return (
     <div
+      className="reactions-container"
       style={{
         display: "flex",
-        flexWrap: "nowrap",
-        gap: "8px",
-        marginTop: "12px",
-        overflowX: "auto",
-        WebkitOverflowScrolling: "touch",
+        alignItems: "center",
+        gap: "6px",
+        minHeight: "40px",
+        marginTop: "8px",
+        position: "relative",
       }}
+      onClick={(e) => e.stopPropagation()}
     >
-      {commonEmojis.map((emoji) => {
-        const counts = {
-          "🥝": kiwis.length,
-          "🔥": fires.length,
-          "👀": eyes.length,
-          "💯": hundreds.length,
-          "🤭": laughs.length,
-        };
-        const profiles = {
-          "🥝":
-            comment.reactions?.find((r) => r.emoji === "🥝")?.reactorProfiles ||
-            [],
-          "🔥":
-            comment.reactions?.find((r) => r.emoji === "🔥")?.reactorProfiles ||
-            [],
-          "👀":
-            comment.reactions?.find((r) => r.emoji === "👀")?.reactorProfiles ||
-            [],
-          "💯":
-            comment.reactions?.find((r) => r.emoji === "💯")?.reactorProfiles ||
-            [],
-          "🤭":
-            comment.reactions?.find((r) => r.emoji === "🤭")?.reactorProfiles ||
-            [],
-        };
-
-        const disabled = isReacting || hasReacted || isOwnComment;
-
-        // Show reaction if there are reactions to display
-        // Don't show empty reaction buttons on your own comments
-        if (counts[emoji] === 0 && (isntLoggedIn || hasReacted || isOwnComment)) return null;
-
-        return (
-          <button
-            key={emoji}
-            onClick={() => !disabled && handleReaction(emoji)}
-            disabled={disabled || isntLoggedIn}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              padding: "4px 12px",
-              backgroundColor:
-                disabled || isntLoggedIn ? "#f3f3f3" : "var(--bg-off-white)",
-              border:
-                disabled || isntLoggedIn
-                  ? "1px solid rgba(0,0,0,0)"
-                  : "var(--border-thin)",
-              borderRadius: "2px",
-              cursor: disabled || isntLoggedIn ? "default" : "pointer",
-              color: disabled || isntLoggedIn ? "black" : "auto",
-              fontSize: "10pt",
-              WebkitAppearance: "none",
-              opacity: 1,
-              filter: "none",
-              flexShrink: 0,
-            }}
-          >
-            <span style={{ marginRight: counts[emoji] > 0 ? "4px" : "0" }}>
-              {emoji}
-            </span>
-            {profiles[emoji]
-              .filter(profile => profile.safeAvatar)
-              .map((profile, i) => (
-                <img
-                  key={i}
-                  loading="lazy"
-                  src={profile.safeAvatar}
-                  alt="reactor"
-                  style={{
-                    zIndex: i,
-                    width: i > 0 ? "13px" : "12px",
-                    height: i > 0 ? "13px" : "12px",
-                    borderRadius: "2px",
-                    border: i > 0 ? "1px solid #f3f3f3" : "1px solid #828282",
-                    marginLeft: i > 0 ? "-4px" : 0,
-                  }}
-                />
-              ))}
-          </button>
-        );
-      })}
+      {/* Existing reactions - clickable and larger */}
+      {existingReactions.length > 0 && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "4px",
+          }}
+        >
+          {existingReactions.map((reaction) => {
+            const alreadyReacted = (
+              reaction.emoji === "🥝" && kiwis.includes(address) ||
+              reaction.emoji === "🔥" && fires.includes(address) ||
+              reaction.emoji === "👀" && eyes.includes(address) ||
+              reaction.emoji === "💯" && hundreds.includes(address) ||
+              reaction.emoji === "🤭" && laughs.includes(address)
+            );
+            
+            return (
+              <button
+                key={reaction.emoji}
+                onClick={() => !isOwnComment && !alreadyReacted && handleReaction(reaction.emoji, true)}
+                disabled={isntLoggedIn || isReacting || isOwnComment || alreadyReacted}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "4px",
+                  backgroundColor: alreadyReacted ? "rgba(175, 192, 70, 0.1)" : "rgba(0, 0, 0, 0.02)",
+                  border: "none",
+                  borderRadius: "20px",
+                  padding: "6px 12px",
+                  minHeight: "40px",
+                  cursor: (isntLoggedIn || isOwnComment || alreadyReacted) ? "default" : "pointer",
+                  transition: "all 0.15s ease",
+                  WebkitAppearance: "none",
+                }}
+                onMouseEnter={(e) => {
+                  if (!isntLoggedIn && !isOwnComment && !alreadyReacted) {
+                    e.currentTarget.style.backgroundColor = "rgba(0, 0, 0, 0.05)";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = alreadyReacted ? "rgba(175, 192, 70, 0.1)" : "rgba(0, 0, 0, 0.02)";
+                }}
+              >
+                <span style={{ fontSize: "16px" }}>{reaction.emoji}</span>
+                {reaction.reactorProfiles
+                  ?.filter((profile) => profile.safeAvatar)
+                  .slice(0, 2)
+                  .map((profile, i) => (
+                    <img
+                      key={i}
+                      loading="lazy"
+                      src={profile.safeAvatar}
+                      alt=""
+                      style={{
+                        width: "16px",
+                        height: "16px",
+                        borderRadius: "50%",
+                        marginLeft: i === 0 ? "0" : "-6px",
+                        border: "1.5px solid white",
+                      }}
+                    />
+                  ))}
+                {reactionCounts[reaction.emoji] > 1 && (
+                  <span style={{ color: "#666", fontSize: "13px", fontWeight: "500" }}>
+                    {reactionCounts[reaction.emoji]}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
+      
+      {/* React button - larger touch target */}
+      {(!isOwnComment || localAccount) && (
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          disabled={isntLoggedIn}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "8px 14px",
+            minWidth: "48px",
+            minHeight: "40px",
+            background: isExpanded ? "rgba(0, 0, 0, 0.04)" : "transparent",
+            border: "none",
+            borderRadius: "20px",
+            fontSize: "16px",
+            color: isExpanded ? "#666" : "#888",
+            cursor: isntLoggedIn ? "default" : "pointer",
+            fontFamily: "var(--font-family)",
+            WebkitAppearance: "none",
+            transition: "all 0.15s ease",
+          }}
+          onMouseEnter={(e) => {
+            if (!isntLoggedIn && !isExpanded) {
+              e.target.style.backgroundColor = "rgba(0, 0, 0, 0.04)";
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (!isExpanded) {
+              e.target.style.backgroundColor = "transparent";
+            }
+          }}
+        >
+          <span style={{ fontSize: "20px", lineHeight: "1" }}>
+            {isExpanded ? "−" : "+"}
+          </span>
+        </button>
+      )}
+      
+      {/* Expanded emoji picker - floating overlay */}
+      {isExpanded && !isntLoggedIn && (
+        <div
+          style={{
+            position: "absolute",
+            top: "100%",
+            left: "0",
+            marginTop: "4px",
+            display: "flex",
+            alignItems: "center",
+            gap: "4px",
+            backgroundColor: "white",
+            borderRadius: "24px",
+            padding: "6px",
+            boxShadow: "0 2px 12px rgba(0, 0, 0, 0.12)",
+            border: "1px solid rgba(0, 0, 0, 0.08)",
+            zIndex: 10,
+            animation: "fadeIn 0.15s ease-out",
+          }}
+        >
+          {commonEmojis.map((emoji) => {
+            const alreadyReacted = (
+              emoji === "🥝" && kiwis.includes(address) ||
+              emoji === "🔥" && fires.includes(address) ||
+              emoji === "👀" && eyes.includes(address) ||
+              emoji === "💯" && hundreds.includes(address) ||
+              emoji === "🤭" && laughs.includes(address)
+            );
+            const disabled = isReacting || isOwnComment || alreadyReacted;
+            
+            return (
+              <button
+                key={emoji}
+                onClick={() => !disabled && handleReaction(emoji)}
+                disabled={disabled}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: "48px",
+                  height: "48px",
+                  padding: "0",
+                  background: alreadyReacted ? "rgba(175, 192, 70, 0.1)" : "transparent",
+                  border: "none",
+                  borderRadius: "50%",
+                  fontSize: "20px",
+                  cursor: disabled ? "default" : "pointer",
+                  WebkitAppearance: "none",
+                  opacity: disabled ? 0.5 : 1,
+                  transition: "all 0.15s ease",
+                }}
+                onMouseEnter={(e) => {
+                  if (!disabled) {
+                    e.target.style.backgroundColor = "rgba(0, 0, 0, 0.08)";
+                    e.target.style.transform = "scale(1.1)";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = alreadyReacted ? "rgba(175, 192, 70, 0.1)" : "transparent";
+                  e.target.style.transform = "scale(1)";
+                }}
+              >
+                {emoji}
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };

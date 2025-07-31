@@ -447,58 +447,64 @@ export default async function (trie, theme, index, value, referral) {
                                                 reaction.reactorProfiles,
                                             })),
                                           })}"
-                                          style="display: flex; flex-wrap: wrap; gap: 8px;"
+                                          style="display: flex; align-items: center; gap: 6px; min-height: 40px; margin-top: 8px; position: relative;"
                                         >
-                                          ${["🥝", "🔥", "👀", "💯", "🤭"].map(
-                                            (emoji) => {
-                                              const reaction =
-                                                comment.reactions.find(
-                                                  (r) => r.emoji === emoji,
-                                                );
-                                              return html`
-                                                <div
-                                                  style="margin-top: 12px; display: inline-flex; align-items: center; padding: 4px 8px; background-color: var(--bg-off-white); border: var(--border); border-radius: 2px; font-size: 10pt;"
-                                                >
-                                                  <span
-                                                    style="margin-right: ${reaction?.reactorProfiles?.filter(
-                                                      (profile) =>
-                                                        profile.safeAvatar,
-                                                    )?.length
-                                                      ? "4px"
-                                                      : "0"}"
-                                                    >${emoji}</span
-                                                  >
-                                                  ${reaction?.reactorProfiles
-                                                    ?.filter(
-                                                      (profile) =>
-                                                        profile.safeAvatar,
-                                                    )
+                                          ${comment.reactions && comment.reactions.filter((r) => r.reactors && r.reactors.length > 0).length > 0
+                                            ? html`
+                                                <div style="display: flex; align-items: center; gap: 4px;">
+                                                  ${comment.reactions
+                                                    .filter((r) => r.reactors && r.reactors.length > 0)
                                                     .map(
-                                                      (profile, i) => html`
-                                                        <img
-                                                          loading="lazy"
-                                                          src="${profile.safeAvatar}"
-                                                          alt="reactor"
-                                                          style="z-index: ${i}; width: ${i >
-                                                          0
-                                                            ? "13px"
-                                                            : "12px"}; height: ${i >
-                                                          0
-                                                            ? "13px"
-                                                            : "12px"}; border-radius: 2px; border: ${i >
-                                                          0
-                                                            ? "1px solid var(--bg-off-white)"
-                                                            : "var(--border)"}; margin-left: ${i >
-                                                          0
-                                                            ? "-4px"
-                                                            : "0"};"
-                                                        />
+                                                      (reaction) => html`
+                                                        <button
+                                                          style="display: inline-flex; align-items: center; gap: 4px; background-color: rgba(0, 0, 0, 0.02); border: none; border-radius: 20px; padding: 6px 12px; min-height: 40px; cursor: pointer; font-family: var(--font-family);"
+                                                          disabled
+                                                        >
+                                                          <span style="font-size: 16px;">${reaction.emoji}</span>
+                                                          ${reaction.reactorProfiles
+                                                            ?.filter((profile) => profile.safeAvatar)
+                                                            .slice(0, 2)
+                                                            .map(
+                                                              (profile, i) => html`
+                                                                <img
+                                                                  loading="lazy"
+                                                                  src="${profile.safeAvatar}"
+                                                                  alt=""
+                                                                  style="width: 16px; height: 16px; border-radius: 50%; margin-left: ${i === 0 ? "0" : "-6px"}; border: 1.5px solid white;"
+                                                                />
+                                                              `,
+                                                            )}
+                                                          ${reaction.reactors.length > 1
+                                                            ? html`<span style="color: #666; font-size: 13px; font-weight: 500;">${reaction.reactors.length}</span>`
+                                                            : null}
+                                                        </button>
                                                       `,
                                                     )}
                                                 </div>
-                                              `;
-                                            },
-                                          )}
+                                              `
+                                            : null}
+                                          <button
+                                            class="react-toggle-btn"
+                                            style="display: inline-flex; align-items: center; justify-content: center; padding: 8px 14px; min-width: 48px; min-height: 40px; background: transparent; border: none; border-radius: 20px; font-size: 16px; color: #888; cursor: pointer; font-family: var(--font-family);"
+                                            disabled
+                                          >
+                                            <span style="font-size: 20px; line-height: 1;">+</span>
+                                          </button>
+                                          <div
+                                            class="emoji-picker-options"
+                                            style="display: none; position: absolute; top: 100%; left: 0; margin-top: 4px; align-items: center; gap: 4px; background-color: white; border-radius: 24px; padding: 6px; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12); border: 1px solid rgba(0, 0, 0, 0.08); z-index: 10;"
+                                          >
+                                            ${["🥝", "🔥", "👀", "💯", "🤭"].map(
+                                              (emoji) => html`
+                                                <button
+                                                  style="display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; padding: 0; background: transparent; border: none; border-radius: 50%; font-size: 20px; cursor: pointer;"
+                                                  disabled
+                                                >
+                                                  ${emoji}
+                                                </button>
+                                              `,
+                                            )}
+                                          </div>
                                         </div>`}
                                 </div>
                               </div>

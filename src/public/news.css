@@ -1477,3 +1477,24 @@ a.meta-link:hover, span.meta-link:hover {
     display: none !important;
   }
 }
+
+/* Emoji reaction styles - Telegram-like subtle design */
+.react-toggle-btn:hover:not(:disabled) {
+  background-color: rgba(0, 0, 0, 0.04) !important;
+}
+
+.react-toggle-btn:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+/* Emoji picker fade-in animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
