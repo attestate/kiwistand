@@ -274,8 +274,8 @@ export default async function (trie, theme, index, value, referral) {
               </tbody>
               ${upvoterProfiles.length > 0
                 ? html`<tr>
-                    <td style="padding: 16px 0;">
-                      <div style="margin: 0 1rem;">
+                    <td style="padding: 12px 0;">
+                      <div style="margin: 0 11px;">
                         <div style="font-size: 10pt; font-weight: 500; margin-bottom: 12px; color: #828282;">
                           Recommended by ${upvoterProfiles.length} ${upvoterProfiles.length === 1 ? 'curator' : 'curators'}
                         </div>
@@ -316,7 +316,7 @@ export default async function (trie, theme, index, value, referral) {
               ${story.comments.length > 0
                 ? html`<tr>
                     <td>
-                      <div style="margin: 0 1rem; padding: 16px 0 16px 0; font-size: 1rem;">
+                      <div style="margin: 0 11px; padding: 12px 0; font-size: 1rem;">
                         ${story.comments.map(
                           (comment) =>
                             html`<span
@@ -510,8 +510,8 @@ export default async function (trie, theme, index, value, referral) {
                 : null}
               <tr>
                 <td>
-                  <nav-comment-input data-story-index="0x${index}" data-custom-style='{"margin": "16px 11px"}'>
-                    <div style="margin: 16px 11px;">
+                  <nav-comment-input data-story-index="0x${index}" data-custom-style='{"margin": "0 11px 16px 11px"}'>
+                    <div style="margin: 0 11px 16px 11px;">
                       <textarea
                         style="font-size: 1rem; border: var(--border); background-color: white; display: block; width: 100%; padding: 10px; border-radius: 2px; resize: vertical;"
                         rows="12"
