@@ -726,6 +726,9 @@ const getYTId = (url) => {
   }
 };
 
+// Track URLs currently being fetched to prevent duplicate processing
+const inFlightFetches = new Map();
+
 export const cachedMetadata = (
   url,
   generateTitle = false,
@@ -740,6 +743,15 @@ export const cachedMetadata = (
     return cache.get(normalizedUrl);
   }
 
+  // Check if another worker is already fetching this URL
+  if (inFlightFetches.get(normalizedUrl)) {
+    log(`Skipping duplicate fetch for ${normalizedUrl} - already in flight`);
+    return {}; // Someone else is fetching, just return empty
+  }
+
+  // Mark that we're fetching this URL
+  inFlightFetches.set(normalizedUrl, true);
+
   // If not in cache, return empty object and trigger background fetch
   metadata(url, generateTitle, submittedTitle)
     .then((freshData) => {
@@ -750,6 +762,10 @@ export const cachedMetadata = (
     })
     .catch((err) => {
       log(`Metadata fetch failed for ${url}: ${err}`);
+    })
+    .finally(() => {
+      // Clear the in-flight flag
+      inFlightFetches.delete(normalizedUrl);
     });
 
   // Return empty object immediately since we have nothing cached
