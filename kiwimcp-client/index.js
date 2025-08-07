@@ -22,17 +22,34 @@ server.prompt(
       role: 'system',
       content: `When using Kiwi News MCP tools:
 
-1. **Karma Rankings**: The karma system tracks user contributions to Kiwi News
-   - Higher karma indicates more valuable contributions (submissions and upvotes)
+1. **Content Discovery**:
+   - Use search-content for keyword searches across all posts
+   - Use get-feed to browse hot/new/best content
+   - Hot feed shows trending content, new shows recent, best shows top-rated
+   - Always use limits (default 10, max 50) to prevent token overflow
+
+2. **Story Details**:
+   - Use get-story to fetch full story with comments
+   - Story indices are hex strings - tool auto-adds 0x prefix if missing
+   - Comments include author addresses and timestamps
+
+3. **User & Karma System**:
+   - Karma tracks user contributions (submissions and upvotes)
+   - Higher karma = more valuable contributions
+   - Use get-user-profile for ENS names and avatars
+   - Use get-top-karma-holders for leaderboard
+   - Display ENS names when available for readability
+
+4. **Best Practices**:
+   - Default to 10 items per request
+   - Use pagination (page parameter) for browsing
+   - For "best" feed, specify period (day/week/month)
+   - When showing addresses, include ENS if available
    
-2. **User Information**: When displaying karma holders:
-   - Show their Ethereum address
-   - Include ENS name if available for better readability
-   - Display their karma score
-   
-3. **Performance**: 
-   - Use reasonable limits (default 10, max 100)
-   - Use offset for pagination through large lists`
+5. **Response Handling**:
+   - All responses follow {status, data} format
+   - Check data.stories for feeds, data.data for search
+   - Handle empty results gracefully`
     }]
   })
 );
