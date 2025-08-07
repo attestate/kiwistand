@@ -943,6 +943,74 @@ export async function launch(trie, libp2p, isPrimary = true) {
     reply.header("Cache-Control", "no-cache");
     return reply.status(200).type("text/html").send(embed);
   });
+  
+  // IMPORTANT: This route must come BEFORE /api/v1/karma/:address to avoid route conflicts
+  app.get("/api/v1/karma/top", async (request, reply) => {
+    const limit = Math.min(parseInt(request.query.limit) || 10, 100);
+    const offset = parseInt(request.query.offset) || 0;
+    
+    try {
+      // Get the full karma ranking
+      const allRankings = karma.ranking();
+      
+      // Slice based on offset and limit
+      const topHolders = allRankings.slice(offset, offset + limit);
+      
+      // Add display names and ENS data for each user
+      const enrichedHolders = await Promise.all(
+        topHolders.map(async (holder, index) => {
+          let displayName = holder.identity;
+          let ensData = null;
+          
+          try {
+            // Try to get ENS data using resolve
+            const profileData = await ens.resolve(holder.identity);
+            if (profileData?.ens) {
+              displayName = profileData.ens;
+              ensData = { 
+                name: profileData.ens,
+                avatar: profileData.safeAvatar || null
+              };
+            }
+          } catch (err) {
+            // Silently ignore ENS resolution errors
+          }
+          
+          return {
+            rank: offset + index + 1,
+            identity: holder.identity,
+            displayName,
+            karma: holder.karma,
+            ensData
+          };
+        })
+      );
+      
+      const code = 200;
+      const httpMessage = "OK";
+      const details = "Top karma holders";
+      
+      // Cache for 5 minutes with longer stale-while-revalidate
+      reply.header(
+        "Cache-Control",
+        "public, s-maxage=300, max-age=0, stale-while-revalidate=86400",
+      );
+      
+      return sendStatus(reply, code, httpMessage, details, {
+        total: allRankings.length,
+        limit,
+        offset,
+        holders: enrichedHolders
+      });
+    } catch (err) {
+      log(`Error in /api/v1/karma/top: ${err.toString()}`);
+      const code = 500;
+      const httpMessage = "Internal Server Error";
+      const details = "Failed to fetch karma rankings";
+      return sendError(reply, code, httpMessage, details);
+    }
+  });
+  
   app.get("/api/v1/karma/:address", async (request, reply) => {
     let address;
     try {
@@ -969,6 +1037,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
       karma: points,
     });
   });
+  
   app.get("/api/v1/feeds/:name", async (request, reply) => {
     let stories = [];
     if (request.params.name === "hot") {

@@ -16,7 +16,7 @@
     "start": "concurrently \"npm run start:load-balancer\" \"npm run start:primary\"",
     "start:load-balancer": "node -r dotenv/config ./src/load-balancer.mjs",
     "start:primary": "node -r dotenv/config ./src/launch.mjs",
-    "watch": "nodemon --watch src/views --exec 'npm run dev:anon'",
+    "watch": "nodemon --watch src/views --watch src/http.mjs --exec 'npm run dev:anon'",
     "watch:ssl": "nodemon --watch src/views --exec 'npm run dev:anon:ssl'",
     "reconcile": "NODE_ENV=reconcile npm run dev:anon",
     "watch:web": "cd src/web && npm run dev",
