@@ -1,7 +1,7 @@
 {
   "name": "kiwimcp-client",
   "version": "1.0.0",
-  "description": "MCP client for Kiwi News karma data",
+  "description": "Access Kiwi News directly from Claude Code via MCP - search content, browse feeds, read stories with comments, and track karma scores",
   "main": "index.js",
   "type": "module",
   "bin": {
