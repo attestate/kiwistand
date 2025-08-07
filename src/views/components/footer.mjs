@@ -96,6 +96,11 @@ const footer = (theme, path) => html`
           target="_blank"
           >Source code</a
         ><br />
+        <a
+          target="_blank"
+          href="https://github.com/attestate/kiwistand/tree/main/kiwimcp-client"
+          >MCP Client</a
+        ><br />
       </div>
     </div>
     <div
