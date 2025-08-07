@@ -1,31 +1,11 @@
 # Kiwi MCP Client
 
-MCP (Model Context Protocol) client for accessing Kiwi News data.
+Access Kiwi News directly from Claude Code using the Model Context Protocol (MCP).
 
 ## Setup
 
-1. Install the package dependencies:
-```bash
-cd kiwimcp-client
-npm install
-```
+1. Save this config as `kiwi.json`:
 
-2. Create a config file `kiwi.json`:
-```json
-{
-  "mcpServers": {
-    "kiwi": {
-      "command": "node",
-      "args": ["/path/to/kiwimcp-client/index.js"],
-      "env": {
-        "KIWI_API_URL": "https://news.kiwistand.com"
-      }
-    }
-  }
-}
-```
-
-Or use npx directly:
 ```json
 {
   "mcpServers": {
@@ -40,58 +20,84 @@ Or use npx directly:
 }
 ```
 
-3. Run Claude with the MCP config:
+2. Run Claude:
 ```bash
 claude --mcp-config kiwi.json
 ```
 
+## Examples
+
+**Content & Feeds:**
+- "What's hot on Kiwi News today?"
+- "Search for articles about Ethereum on Kiwi"
+- "Show me the newest posts on Kiwi"
+- "Get the best Kiwi posts from this week"
+
+**Stories & Comments:**
+- "Get the comments for story 0x68487fbf..."
+- "Show me the details of this story: 68487fbf..."
+
+**Users & Karma:**
+- "Who are the top contributors on Kiwi News?"
+- "Check karma for address 0x1234..."
+- "Get the profile for vitalik.eth on Kiwi"
+
 ## Available Tools
 
+### search-content
+Search for content on Kiwi News.
+- `query`: Search terms
+- `sort`: "new" or "top" (default: "new")
+- `limit`: Results to return, 1-50 (default: 10)
+
+### get-feed
+Browse hot, new, or best content feeds.
+- `name`: "hot", "new", or "best"
+- `page`: Page number (default: 0)
+- `limit`: Stories per page, 1-50 (default: 10)
+- `period`: For "best" feed - "day", "week", "month" (default: "week")
+
+### get-story
+Get full story details including comments.
+- `index`: Story ID (hex string, with or without 0x prefix)
+
+### get-user-profile  
+Get profile information for a user.
+- `address`: Ethereum address
+
 ### get-top-karma-holders
-Get the top karma holders on Kiwi News.
-
-**Parameters:**
-- `limit` (optional): Number of results (1-100, default: 10)
-- `offset` (optional): Pagination offset (default: 0)
-
-**Example prompts:**
-- "Get the top 10 Kiwi karma holders"
-- "Show me the top 25 contributors on Kiwi News"
-- "List Kiwi News karma rankings starting from position 50"
+View the karma leaderboard.
+- `limit`: Number of results, 1-100 (default: 10)
+- `offset`: Pagination offset (default: 0)
 
 ### get-user-karma
-Get the karma score for a specific Ethereum address.
-
-**Parameters:**
-- `address`: Ethereum address (0x...)
-
-**Example prompts:**
-- "Check karma for address 0x1234..."
-- "What's the Kiwi News karma score for vitalik.eth"
-
-## API Endpoint
-
-The client connects to the Kiwi News API endpoint:
-- `GET /api/v1/karma/top?limit=10&offset=0`
-
-This endpoint returns:
-- Total number of ranked users
-- List of top karma holders with:
-  - Rank
-  - Ethereum address
-  - Display name (ENS if available)
-  - Karma score
-  - ENS avatar (if available)
-
-## Environment Variables
-
-- `KIWI_API_URL`: Base URL for Kiwi News API (default: https://news.kiwistand.com)
+Check karma score for a specific user.
+- `address`: Ethereum address
 
 ## Development
 
-To test locally:
-```bash
-node index.js
+For local development, use `http://localhost:4000`:
+
+```json
+{
+  "mcpServers": {
+    "kiwi": {
+      "command": "npx",
+      "args": ["kiwimcp-client"],
+      "env": {
+        "KIWI_API_URL": "http://localhost:4000"
+      }
+    }
+  }
+}
 ```
 
-The MCP server communicates via stdio, so it needs to be run through Claude or another MCP-compatible client.
+## Troubleshooting
+
+**Token limit errors:** Responses are automatically limited to prevent this. Default is 10 items, max is 50.
+
+**Story not found:** Story IDs need to be hex strings. The tool automatically adds "0x" prefix if missing.
+
+## Contributing
+
+Issues and PRs welcome at [github.com/attestate/kiwistand](https://github.com/attestate/kiwistand)
