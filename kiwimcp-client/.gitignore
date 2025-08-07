@@ -1,0 +1,15 @@
+# MCP config files (user-specific)
+mcp-config.json
+mcp-config-local.json
+*.json.bak
+
+# Test files
+test.mjs
+test-*.mjs
+
+# Node
+node_modules/
+npm-debug.log*
+
+# OS
+.DS_Store

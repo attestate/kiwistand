@@ -1,0 +1,17 @@
+# Config files (not for npm package)
+mcp-config.json
+mcp-config-local.json
+mcp-config*.json
+kiwi.json
+
+# Test files
+test.mjs
+test-*.mjs
+*.test.mjs
+
+# Development
+.gitignore
+.git/
+
+# Documentation that's not needed in package
+*.bak
