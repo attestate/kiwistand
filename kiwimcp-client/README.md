@@ -1,6 +1,6 @@
 # Kiwi MCP Client
 
-MCP (Model Context Protocol) client for accessing Kiwi News karma data.
+MCP (Model Context Protocol) client for accessing Kiwi News data.
 
 ## Setup
 

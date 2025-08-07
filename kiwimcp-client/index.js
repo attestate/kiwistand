@@ -20,26 +20,19 @@ server.prompt(
   async () => ({
     messages: [{
       role: 'system',
-      content: `When using Kiwi News MCP tools, follow these guidelines:
+      content: `When using Kiwi News MCP tools:
 
 1. **Karma Rankings**: The karma system tracks user contributions to Kiwi News
    - Higher karma indicates more valuable contributions (submissions and upvotes)
-   - Rankings update in real-time as users interact with the platform
    
 2. **User Information**: When displaying karma holders:
-   - Always show their Ethereum address
+   - Show their Ethereum address
    - Include ENS name if available for better readability
-   - Display their karma score and rank
+   - Display their karma score
    
-3. **Data Presentation**: When presenting Kiwi karma data:
-   - Show rank numbers for context
-   - Highlight top contributors (e.g., top 3 with medals)
-   - Include total number of ranked users when relevant
-   
-4. **Performance**: For better performance:
+3. **Performance**: 
    - Use reasonable limits (default 10, max 100)
-   - Use offset for pagination through large lists
-   - Data is cached for 5 minutes to reduce load`
+   - Use offset for pagination through large lists`
     }]
   })
 );
