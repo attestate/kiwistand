@@ -611,6 +611,12 @@ export async function launch(trie, libp2p, isPrimary = true) {
       return sendError(reply, code, httpMessage, details);
     }
 
+    // Add optional limit parameter to control response size
+    let limit = parseInt(req.body.limit);
+    if (!isNaN(limit) && limit > 0 && data && data.data && Array.isArray(data.data)) {
+      data.data = data.data.slice(0, limit);
+    }
+    
     const code = 200;
     const httpMessage = "OK";
     const details = "Search completed successfully";
@@ -1118,6 +1124,12 @@ export async function launch(trie, libp2p, isPrimary = true) {
       return sendError(reply, code, httpMessage, details);
     }
 
+    // Add optional limit parameter to control response size
+    let limit = parseInt(request.query.limit);
+    if (!isNaN(limit) && limit > 0) {
+      stories = stories.slice(0, limit);
+    }
+    
     const code = 200;
     const httpMessage = "OK";
     const details = `${request.params.name} feed`;

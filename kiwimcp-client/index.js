@@ -38,26 +38,35 @@ server.prompt(
 );
 
 // Helper function to call Kiwi API
-async function callKiwiAPI(endpoint, params = {}) {
+async function callKiwiAPI(endpoint, params = {}, options = {}) {
+  const { method = 'GET', body = null } = options;
   const url = new URL(`${API_URL}${endpoint}`);
   
-  // Add query parameters
-  Object.keys(params).forEach(key => {
-    if (params[key] !== undefined && params[key] !== null) {
-      url.searchParams.append(key, params[key]);
-    }
-  });
+  // Add query parameters for GET requests
+  if (method === 'GET') {
+    Object.keys(params).forEach(key => {
+      if (params[key] !== undefined && params[key] !== null) {
+        url.searchParams.append(key, params[key]);
+      }
+    });
+  }
   
   try {
-    console.error(`[Kiwi MCP] Calling API: ${url.toString()}`);
+    console.error(`[Kiwi MCP] Calling API: ${method} ${url.toString()}`);
     
-    const response = await fetch(url.toString(), {
-      method: 'GET',
+    const fetchOptions = {
+      method,
       headers: {
         'Content-Type': 'application/json',
         'User-Agent': 'kiwimcp-client/1.0.0'
       }
-    });
+    };
+    
+    if (body) {
+      fetchOptions.body = JSON.stringify(body || params);
+    }
+    
+    const response = await fetch(url.toString(), fetchOptions);
     
     if (!response.ok) {
       const error = await response.text();
@@ -91,7 +100,7 @@ server.tool(
     console.error('[Kiwi MCP] Fetching top karma holders');
     
     try {
-      const data = await callKiwiAPI('/api/v1/karma/top', { limit, offset });
+      const data = await callKiwiAPI('/api/v1/karma/top');
       
       // Format the response for better readability
       const formattedResponse = {
@@ -178,13 +187,155 @@ server.tool(
   }
 );
 
+// Register tool to search content
+server.tool(
+  'search-content',
+  'Search for content on Kiwi News',
+  {
+    query: z.string().describe('Search query'),
+    sort: z.enum(['new', 'top']).optional().describe('Sort order (default: new)'),
+    limit: z.number().min(1).max(50).optional().describe('Number of results to return (1-50, default: 10)')
+  },
+  async ({ query, sort = 'new', limit = 10 }) => {
+    console.error(`[Kiwi MCP] Searching for: ${query} with limit ${limit}`);
+    
+    try {
+      const data = await callKiwiAPI('/api/v1/search', {}, { 
+        method: 'POST', 
+        body: { query, sort, limit } 
+      });
+      
+      return {
+        content: [{
+          type: 'text',
+          text: JSON.stringify(data, null, 2)
+        }]
+      };
+    } catch (error) {
+      return {
+        content: [{
+          type: 'text',
+          text: `Error searching content: ${error.message}`
+        }],
+        isError: true
+      };
+    }
+  }
+);
+
+// Register tool to get feeds
+server.tool(
+  'get-feed',
+  'Get content from a specific feed (hot, new, best)',
+  {
+    name: z.enum(['hot', 'new', 'best']).describe('Feed name'),
+    page: z.number().min(0).optional().describe('Page number for pagination (default: 0)'),
+    limit: z.number().min(1).max(50).optional().describe('Number of stories to return (1-50, default: 10)'),
+    period: z.string().optional().describe('Time period for best feed only (e.g., "day", "week", "month")')
+  },
+  async ({ name, page = 0, limit = 10, period }) => {
+    console.error(`[Kiwi MCP] Fetching ${name} feed with limit ${limit}`);
+    
+    try {
+      const params = { page, limit };
+      if (period && name === 'best') params.period = period;
+      
+      const data = await callKiwiAPI(`/api/v1/feeds/${name}`, params);
+      
+      return {
+        content: [{
+          type: 'text',
+          text: JSON.stringify(data, null, 2)
+        }]
+      };
+    } catch (error) {
+      return {
+        content: [{
+          type: 'text',
+          text: `Error fetching feed: ${error.message}`
+        }],
+        isError: true
+      };
+    }
+  }
+);
+
+// Register tool to get story details
+server.tool(
+  'get-story',
+  'Get detailed information about a specific story including comments',
+  {
+    index: z.string().describe('Story index/ID (hex string, with or without 0x prefix)')
+  },
+  async ({ index }) => {
+    // Ensure the index has 0x prefix
+    if (!index.startsWith('0x')) {
+      index = '0x' + index;
+    }
+    
+    console.error(`[Kiwi MCP] Fetching story: ${index}`);
+    
+    try {
+      const data = await callKiwiAPI('/api/v1/stories', { index });
+      
+      return {
+        content: [{
+          type: 'text',
+          text: JSON.stringify(data, null, 2)
+        }]
+      };
+    } catch (error) {
+      return {
+        content: [{
+          type: 'text',
+          text: `Error fetching story: ${error.message}`
+        }],
+        isError: true
+      };
+    }
+  }
+);
+
+
+// Register tool to get user profile
+server.tool(
+  'get-user-profile',
+  'Get profile information for a user by Ethereum address',
+  {
+    address: z.string().describe('Ethereum address (0x...)')
+  },
+  async ({ address }) => {
+    console.error(`[Kiwi MCP] Fetching profile for: ${address}`);
+    
+    try {
+      const data = await callKiwiAPI(`/api/v1/profile/${address}`);
+      
+      return {
+        content: [{
+          type: 'text',
+          text: JSON.stringify(data, null, 2)
+        }]
+      };
+    } catch (error) {
+      return {
+        content: [{
+          type: 'text',
+          text: `Error fetching profile: ${error.message}`
+        }],
+        isError: true
+      };
+    }
+  }
+);
+
+
 async function main() {
   console.error('[Kiwi MCP] Starting MCP server...');
   console.error('[Kiwi MCP] Connecting to API:', API_URL);
   
   // Test connection to API
   try {
-    const response = await fetch(`${API_URL}/api/v1/karma/top?limit=1`);
+    const response = await fetch(`${API_URL}/api/v1/karma/top`);
     if (response.ok) {
       console.error('[Kiwi MCP] Successfully connected to Kiwi News API');
     } else {
