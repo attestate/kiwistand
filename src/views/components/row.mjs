@@ -566,17 +566,13 @@ const row = (
                         </p>
                         ${story.metadata.image
                           ? html`
-                              <div style="margin-top: 12px; position: relative;">
-                                <div style="width: 100%; aspect-ratio: 16 / 9; background: transparent; border-radius: 0; overflow: hidden; border: none;">
-                                  <img
-                                    src="${DOMPurify.sanitize(story.metadata.image)}"
-                                    alt="Tweet image"
-                                    width="1600"
-                                    height="900"
-                                    style="width: 100%; height: 100%; object-fit: contain; display: block; background-color: #ffffff;"
-                                    loading="lazy"
-                                  />
-                                </div>
+                              <div style="margin-top: 12px;">
+                                <img
+                                  src="${DOMPurify.sanitize(story.metadata.image)}"
+                                  alt="Tweet image"
+                                  style="width: 100%; height: auto; max-width: 100%; display: block; border-radius: 8px;"
+                                  loading="lazy"
+                                />
                               </div>
                             `
                           : null}
@@ -723,14 +719,11 @@ const row = (
                         </p>
                         ${farcasterImageUrl
                           ? html`
-                              <div style="height: 16px;"></div>
-                              <div style="width: 100%; aspect-ratio: 16 / 9; background: transparent; border-radius: 0; overflow: hidden; border: none;">
+                              <div style="margin-top: 12px;">
                                 <img
                                   src="${DOMPurify.sanitize(farcasterImageUrl)}"
                                   alt="Cast image"
-                                  width="1600"
-                                  height="900"
-                                  style="width: 100%; height: 100%; object-fit: contain; display: block; background-color: #ffffff;"
+                                  style="width: 100%; height: auto; max-width: 100%; display: block; border-radius: 8px;"
                                   loading="lazy"
                                 />
                               </div>
@@ -954,7 +947,7 @@ const row = (
                         (isCloudflare && story.index)
                           ? "_self"
                           : "_blank"}"
-                        style="user-select: text; line-height: 15pt; font-size: 13pt; padding-right: 14px;${canRenderFarcasterPreview || canRenderTweetPreview ? ' color: rgba(0, 0, 0, 0.35);' : ''}"
+                        style="user-select: text; line-height: 15pt; font-size: 13pt; padding-right: 14px;"
                       >
                         ${story.isOriginal
                           ? html`<mark
@@ -1012,18 +1005,16 @@ const row = (
                                 : `/upvotes?address=${story.identity}`}"
                               class="meta-link meta-item submitter-name"
                               onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
-                              style="display:inline-block; font-weight: 600; user-select: text; color: ${canRenderFarcasterPreview || canRenderTweetPreview ? '#828282' : 'black'}; flex: 0 0 auto;"
+                              style="display:inline-block; font-weight: 600; user-select: text; color: black; flex: 0 0 auto;"
                             >
                               ${story.displayName}
                             </a>`
                           : path === "/demonstration"
-                          ? html`<a class="meta-link meta-item submitter-name" href="javascript:void(0);" style="display:inline-block; font-weight: 600; color: ${canRenderFarcasterPreview || canRenderTweetPreview ? '#828282' : 'black'}; flex: 0 0 auto;">${story.displayName}</a>`
-                          : html`<span class="meta-link meta-item submitter-name" style="display:inline-block; font-weight: 600; color: ${canRenderFarcasterPreview || canRenderTweetPreview ? '#828282' : 'black'}; flex: 0 0 auto;">${story.displayName}</span>`}
+                          ? html`<a class="meta-link meta-item submitter-name" href="javascript:void(0);" style="display:inline-block; font-weight: 600; color: black; flex: 0 0 auto;">${story.displayName}</a>`
+                          : html`<span class="meta-link meta-item submitter-name" style="display:inline-block; font-weight: 600; color: black; flex: 0 0 auto;">${story.displayName}</span>`}
                         ${submitterKarmaPoints !== null
                           ? html`<span
-                              style="${canRenderFarcasterPreview || canRenderTweetPreview
-                                ? 'opacity: 0.55; font-size: 9px; color: inherit; margin-left: 6px;'
-                                : 'background: rgba(0,0,0,0.06); padding: 2px 6px; border-radius: 999px; font-size: 9px; font-weight: 600; color: black; margin-left: 6px;'}"
+                              style="background: rgba(0,0,0,0.06); padding: 2px 6px; border-radius: 999px; font-size: 9px; font-weight: 600; color: black; margin-left: 6px;"
                             >
                               ${submitterKarmaPoints} 🥝
                             </span>`
@@ -1031,11 +1022,7 @@ const row = (
                         ${isTrending
                           ? html`<span
                               title="Trending submission"
-                              style="${
-                                canRenderFarcasterPreview || canRenderTweetPreview
-                                  ? 'opacity:0.45;'
-                                  : ''
-                              } padding: 1px 6px; border-radius: 999px; font-size: 9px; color: black; background: rgba(255,69,0,0.08); border: 1px solid rgba(255,69,0,0.25);"
+                              style="padding: 1px 6px; border-radius: 999px; font-size: 9px; color: black; background: rgba(255,69,0,0.08); border: 1px solid rgba(255,69,0,0.25);"
                             >🔥 Trending</span>`
                           : ""}
                         <span style="opacity:0.6; white-space: pre;"> • </span>
