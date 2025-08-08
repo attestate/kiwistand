@@ -20,6 +20,7 @@ import log from "../../logger.mjs";
 import { twitterFrontends } from "../../parser.mjs";
 import FarcasterFullCast from "./farcaster-full-cast.mjs";
 import ParagraphFullPost from "./paragraph-full-post.mjs";
+import * as karma from "../../karma.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -1007,15 +1008,52 @@ const row = (
                     class="story-subtitle"
                     style="font-size: 9pt; margin-top: 3px;"
                   >
-                    <span style="opacity: 0.8">
+                  <span style="opacity: 0.8; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; flex-wrap: nowrap;">
+                    ${(() => {
+                      // Compute submitter karma once per row render
+                      let submitterKarmaPoints = null;
+                      try {
+                        submitterKarmaPoints = story.identity
+                          ? karma.resolve(story.identity)
+                          : null;
+                      } catch (e) {
+                        submitterKarmaPoints = null;
+                      }
+                      return html`
+                        ${story.identity
+                          ? html`<a
+                              href="${interactive
+                                ? ""
+                                : `/upvotes?address=${story.identity}`}"
+                              class="meta-link"
+                              onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
+                              style="${canRenderFarcasterPreview || canRenderTweetPreview ? '' : 'font-weight: 600; user-select: text; color: black;'}"
+                            >
+                              ${story.displayName}
+                            </a>`
+                          : path === "/demonstration"
+                          ? html`<a class="meta-link" href="javascript:void(0);" style="${canRenderFarcasterPreview || canRenderTweetPreview ? '' : 'font-weight: 600; color: black;'}">${story.displayName}</a>`
+                          : html`<span class="meta-link" style="${canRenderFarcasterPreview || canRenderTweetPreview ? '' : 'font-weight: 600; color: black;'}">${story.displayName}</span>`}
+                        ${submitterKarmaPoints !== null
+                          ? html`<span
+                              style="${canRenderFarcasterPreview || canRenderTweetPreview
+                                ? 'opacity: 0.55; font-size: 9px; color: inherit;'
+                                : 'background: rgba(0,0,0,0.06); padding: 2px 6px; border-radius: 999px; font-size: 9px; font-weight: 600; color: black;'}"
+                            >
+                              ${submitterKarmaPoints} 🥝
+                            </span>`
+                          : ""}
+                        <span style="opacity:0.6"> • </span>
+                      `;
+                    })()}
                       ${path !== "/stories" &&
                       story.avatars &&
                       story.avatars.length > 3 &&
                       html`
                         <span>
-                          <div
+                          <span
                             style="margin-left: ${size /
-                            2}; top: 2px; display: inline-flex; position:relative;"
+                            2}px; top: 2px; display: inline-flex; position:relative;"
                           >
                             ${story.avatars.slice(0, 5).map(
                               (avatar, index) => html`
@@ -1025,13 +1063,12 @@ const row = (
                                   alt="avatar"
                                   width="${size}"
                                   height="${size}"
-                                  style="z-index: ${index}; width: ${size}px; height:
- ${size}px; border: 1px solid #828282; border-radius: 2px; margin-left: -${size /
+                                  style="z-index: ${index}; width: ${size}px; height: ${size}px; border: 1px solid #828282; border-radius: 2px; margin-left: -${size /
                                   2}px;"
                                 />
                               `,
                             )}
-                          </div>
+                          </span>
                           <span style="opacity:0.6"> • </span>
                         </span>
                       `}
@@ -1096,23 +1133,6 @@ const row = (
                             <span>${story.impressions} views</span>
                           `
                         : ""}
-                      <span style="opacity:0.6"> • </span>
-                      ${story.identity
-                        ? html`<a
-                            href="${interactive
-                              ? ""
-                              : `/upvotes?address=${story.identity}`}"
-                            class="meta-link"
-                            onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
-                            style="font-weight: 500; user-select: text;"
-                          >
-                            ${story.displayName}
-                          </a>`
-                        : path === "/demonstration"
-                        ? html`<a class="meta-link" href="javascript:void(0);"
-                            >${story.displayName}</a
-                          >`
-                        : html`<span class="meta-link">${story.displayName}</span>`}
                     </span>
                   </div>
                 </div>
