@@ -13,7 +13,7 @@ async function initFarcasterFrame() {
   try {
     await sdk.actions.ready();
   } catch {}
-  
+
   // Enable back navigation for mini app
   try {
     const isMiniApp = await sdk.isInMiniApp();
@@ -26,48 +26,51 @@ async function initFarcasterFrame() {
   } catch (err) {
     console.log("Could not enable back navigation:", err);
   }
-  
+
   // 2) Wire up the button (guarded)
   const btn = document.getElementById("frame-add-btn");
   if (btn) btn.addEventListener("click", () => sdk.actions.addFrame());
 }
 
 async function applySafeAreaInsets() {
-  console.log('applySafeAreaInsets called');
-  
+  console.log("applySafeAreaInsets called");
+
   // Check if we're running in a mini app context
   const isMiniApp = await sdk.isInMiniApp();
-  console.log('isMiniApp:', isMiniApp);
-  
+  console.log("isMiniApp:", isMiniApp);
+
   if (!isMiniApp) {
-    console.log('Not in mini app, returning');
+    console.log("Not in mini app, returning");
     return;
   }
 
   try {
-    console.log('Getting context...');
+    console.log("Getting context...");
     const context = await sdk.context;
-    console.log('Context:', context);
-    
+    console.log("Context:", context);
+
     const { safeAreaInsets } = context.client;
-    console.log('Safe area insets:', safeAreaInsets);
-    
+    console.log("Safe area insets:", safeAreaInsets);
+
     if (safeAreaInsets && safeAreaInsets.bottom > 0) {
-      console.log('Applying bottom inset to bottom navigation:', safeAreaInsets.bottom);
-      
+      console.log(
+        "Applying bottom inset to bottom navigation:",
+        safeAreaInsets.bottom,
+      );
+
       // Apply bottom inset to bottom navigation
-      const bottomNav = document.querySelector('.bottom-nav');
+      const bottomNav = document.querySelector(".bottom-nav");
       if (bottomNav) {
         bottomNav.style.paddingBottom = `${safeAreaInsets.bottom}px`;
-        console.log('Bottom nav padding applied:', safeAreaInsets.bottom);
+        console.log("Bottom nav padding applied:", safeAreaInsets.bottom);
       } else {
-        console.log('Bottom nav element not found');
+        console.log("Bottom nav element not found");
       }
     } else {
-      console.log('No bottom safe area inset needed');
+      console.log("No bottom safe area inset needed");
     }
   } catch (error) {
-    console.log('Could not apply safe area insets:', error);
+    console.log("Could not apply safe area insets:", error);
   }
 }
 
@@ -77,8 +80,9 @@ import posthog from "posthog-js";
 window.posthog = posthog; // Make available globally but don't initialize
 
 // Initialize PostHog by default unless user has explicitly opted out
-const analyticsConsent = localStorage.getItem('kiwi-analytics-consent');
-if (analyticsConsent !== 'false') { // Initialize unless explicitly opted out
+const analyticsConsent = localStorage.getItem("kiwi-analytics-consent");
+if (analyticsConsent !== "false") {
+  // Initialize unless explicitly opted out
   posthog.init("phc_F3mfkyH5tKKSVxnMbJf0ALcPA98s92s3Jw8a7eqpBGw", {
     api_host: "https://eu.i.posthog.com",
     person_profiles: "identified_only",
@@ -112,10 +116,10 @@ function toggleSidebar() {
 document.addEventListener("DOMContentLoaded", () => {
   // Add click handler for sidebar toggle buttons
   const toggleButtons = document.querySelectorAll(".sidebar-toggle");
-  toggleButtons.forEach(button => {
+  toggleButtons.forEach((button) => {
     button.addEventListener("click", toggleSidebar);
   });
-  
+
   // Add click handler for overlay to close sidebar
   const overlay = document.querySelector("#overlay");
   if (overlay) {
@@ -335,8 +339,8 @@ async function addProfileDisplay() {
   const profileContainer = document.querySelector("#user-profile");
   if (profileContainer) {
     // Clear the placeholder content before mounting React
-    profileContainer.innerHTML = '';
-    
+    profileContainer.innerHTML = "";
+
     const ProfileWithConfig = (await import("./ProfileWithConfig.jsx")).default;
     createRoot(profileContainer).render(
       <StrictMode>
@@ -361,7 +365,7 @@ async function addCommentInput(toast, allowlist, delegations) {
         console.error("Failed to parse custom style", e);
       }
     }
-    
+
     createRoot(commentInput).render(
       <StrictMode>
         <CommentInputComponent
@@ -519,7 +523,6 @@ async function addConnectedComponents(allowlist, delegations, toast) {
   }
 }
 
-
 async function addTGLink(allowlist) {
   const elem = document.querySelector("nav-invite-link");
   if (elem) {
@@ -531,7 +534,6 @@ async function addTGLink(allowlist) {
     );
   }
 }
-
 
 async function addModals(allowlist, delegations, toast) {
   const nftmodal = document.querySelector("nav-nft-modal");
@@ -593,32 +595,32 @@ async function addToaster() {
 }
 
 async function addAnalyticsConsent() {
-  if (!document.getElementById('analytics-consent-container')) {
-    const container = document.createElement('div');
-    container.id = 'analytics-consent-container';
+  if (!document.getElementById("analytics-consent-container")) {
+    const container = document.createElement("div");
+    container.id = "analytics-consent-container";
     document.body.appendChild(container);
   }
-  
-  const AnalyticsConsent = (await import('./AnalyticsConsent.jsx')).default;
-  createRoot(document.getElementById('analytics-consent-container')).render(
+
+  const AnalyticsConsent = (await import("./AnalyticsConsent.jsx")).default;
+  createRoot(document.getElementById("analytics-consent-container")).render(
     <StrictMode>
       <AnalyticsConsent />
-    </StrictMode>
+    </StrictMode>,
   );
 }
 
 async function addTestFlightQR() {
-  if (!document.getElementById('testflight-qr-container')) {
-    const container = document.createElement('div');
-    container.id = 'testflight-qr-container';
+  if (!document.getElementById("testflight-qr-container")) {
+    const container = document.createElement("div");
+    container.id = "testflight-qr-container";
     document.body.appendChild(container);
   }
-  
-  const TestFlightQR = (await import('./TestFlightQR.jsx')).default;
-  createRoot(document.getElementById('testflight-qr-container')).render(
+
+  const TestFlightQR = (await import("./TestFlightQR.jsx")).default;
+  createRoot(document.getElementById("testflight-qr-container")).render(
     <StrictMode>
       <TestFlightQR />
-    </StrictMode>
+    </StrictMode>,
   );
 }
 
@@ -648,17 +650,17 @@ async function addTutorialDrawers() {
 
 async function addEmbedDrawer(toast) {
   // Create container if it doesn't exist
-  if (!document.getElementById('embed-drawer-container')) {
-    const container = document.createElement('div');
-    container.id = 'embed-drawer-container';
+  if (!document.getElementById("embed-drawer-container")) {
+    const container = document.createElement("div");
+    container.id = "embed-drawer-container";
     document.body.appendChild(container);
   }
-  
-  const EmbedDrawer = (await import('./EmbedDrawer.jsx')).default;
-  createRoot(document.getElementById('embed-drawer-container')).render(
+
+  const EmbedDrawer = (await import("./EmbedDrawer.jsx")).default;
+  createRoot(document.getElementById("embed-drawer-container")).render(
     <StrictMode>
       <EmbedDrawer toast={toast} />
-    </StrictMode>
+    </StrictMode>,
   );
 }
 
@@ -1078,15 +1080,15 @@ async function start() {
   initFarcasterFrame()
     .then()
     .catch((err) => console.log(err));
-  
+
   // Apply safe area insets for mini app context
-  console.log('Starting applySafeAreaInsets...');
+  console.log("Starting applySafeAreaInsets...");
   applySafeAreaInsets()
-    .then(() => console.log('applySafeAreaInsets completed'))
-    .catch((err) => console.log('applySafeAreaInsets error:', err));
-    
+    .then(() => console.log("applySafeAreaInsets completed"))
+    .catch((err) => console.log("applySafeAreaInsets error:", err));
+
   const urlParams = new URL(window.location.href).searchParams;
-  if (urlParams.get('miniapp') === 'true') {
+  if (urlParams.get("miniapp") === "true") {
     sdk.actions.addFrame();
   }
   // Spinner overlay initialization
@@ -1106,6 +1108,14 @@ async function start() {
 
   // Initialize link impression tracking
   trackLinkImpressions();
+
+  // Track A/B test variant via PostHog
+  if (window.location.pathname === "/" && typeof posthog !== "undefined") {
+    const variantMeta = document.querySelector('meta[name="kiwi-variant"]');
+    const variant = variantMeta?.content || "unknown";
+    posthog?.capture?.("feed_page_view", { variant });
+    console.log("caputred", variant);
+  }
   // NOTE: There are clients which had the identity cookie sent to 1 week and
   // they're now encountering the paywall. So in case this happens but their
   // local storage contains the respective private key, we want them to reload
@@ -1145,10 +1155,10 @@ async function start() {
 
   const toast = await addToaster();
   window.toast = toast;
-  
+
   // Add the analytics consent banner
   await addAnalyticsConsent();
-  
+
   // Add TestFlight QR code
   await addTestFlightQR();
 
@@ -1229,9 +1239,8 @@ async function start() {
   // application.
   window.reactHasLoaded = true;
   try {
-    document.body.classList.add('react-loaded');
+    document.body.classList.add("react-loaded");
   } catch {}
 }
-
 
 start();

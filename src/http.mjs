@@ -424,27 +424,55 @@ export async function launch(trie, libp2p, isPrimary = true) {
     log(`Worker ${process.pid} ready to receive IPC messages`);
   }
 
+  // Simple 2-variant A/B test: control vs lobsters
+  // 50/50 split for maximum statistical power
+  const variants = ['control', 'lobsters'];
+  let currentVariant = 'control';
+  let variantCounter = 0; // Use counter for deterministic 50/50 split
+  
+  // Map variants to their functions (only 2 for simplified test)
+  const feedFunctions = {
+    control: feed,
+    lobsters: feed  // Both use same feed function now, just with different params
+  };
+  
+  // Map variant names to algorithm selection
+  const variantConfigs = {
+    control: { algorithm: 'control' },  // Original algorithm
+    lobsters: { algorithm: 'lobsters' }  // Lobsters algorithm
+  };
+  
   // Start computing the feed in the background to avoid blocking server startup
   // The first request to / might be slower if the feed isn't ready yet
   setImmediate(async () => {
     try {
       console.time("initial-feed-computation");
-      cachedFeed = await feed(trie, theme, 0, null, undefined, undefined);
+      // Start with control variant
+      currentVariant = 'control';
+      const initialFeedFunction = feedFunctions[currentVariant];
+      cachedFeed = await initialFeedFunction(trie, theme, 0, null, undefined, undefined, currentVariant);
       console.timeEnd("initial-feed-computation");
-      log("Initial cached feed ready");
+      log(`Initial cached feed ready (variant: ${currentVariant})`);
     } catch (err) {
       log("Failed to compute initial cached feed: " + err);
       cachedFeed = null;
     }
   });
+  
   (function updateCachedFeed() {
     setTimeout(async () => {
       const startTime = Date.now();
       try {
-        const newFeed = await feed(trie, theme, 0, null, undefined, undefined);
+        // Alternate between variants for 50/50 split
+        variantCounter++;
+        currentVariant = variants[variantCounter % 2];
+        const feedFunction = feedFunctions[currentVariant];
+        
+        const newFeed = await feedFunction(trie, theme, 0, null, undefined, undefined, currentVariant);
         cachedFeed = newFeed;
+        
         const elapsed = Date.now() - startTime;
-        log(`Cached feed updated in ${elapsed}ms`);
+        log(`Cached feed updated in ${elapsed}ms (variant: ${currentVariant})`);
       } catch (err) {
         log("Failed to update cached feed: " + err);
         log("Error stack: " + err.stack);
@@ -452,7 +480,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
       } finally {
         updateCachedFeed();
       }
-    }, 30000);
+    }, 15000); // Changed to 15 seconds for faster variant switching
   })();
 
   app.use((err, req, res, next) => {
@@ -1046,6 +1074,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
   
   app.get("/api/v1/feeds/:name", async (request, reply) => {
     let stories = [];
+    
     if (request.params.name === "hot") {
       let page = parseInt(request.query.page);
       if (isNaN(page) || page < 1) {
@@ -1054,13 +1083,17 @@ export async function launch(trie, libp2p, isPrimary = true) {
 
       let results;
       const domain = undefined;
+      
       const lookback = sub(new Date(), {
         weeks: 3,
       });
       const paginate = false;
-      const showAd = false;
-      const showContest = false;
       const appCuration = request.query.curation === "true";
+      
+      // Use variant from query param for testing, otherwise use current rotation
+      const variant = request.query.variant || currentVariant;
+      const config = variantConfigs[variant] || variantConfigs.control;
+      
       try {
         results = await index(
           trie,
@@ -1068,12 +1101,15 @@ export async function launch(trie, libp2p, isPrimary = true) {
           domain,
           lookback,
           paginate,
-          showAd,
-          showContest,
           appCuration,
+          config.algorithm, // Pass algorithm selection
         );
       } catch (err) {
-        log(`Error in api/v1/feeds/hot: ${err.stack}`);
+        log(`Error in api/v1/feeds/hot (variant: ${variant || 'control'}): ${err.stack}`);
+        const code = 500;
+        const httpMessage = "Internal Server Error";
+        const details = "Error generating feed";
+        return sendError(reply, code, httpMessage, details);
       }
       reply.header(
         "Cache-Control",
@@ -1128,6 +1164,33 @@ export async function launch(trie, libp2p, isPrimary = true) {
     let limit = parseInt(request.query.limit);
     if (!isNaN(limit) && limit > 0) {
       stories = stories.slice(0, limit);
+    }
+    
+    // Compact mode for reduced response size
+    if (request.query.compact === "true") {
+      const referenceTime = Date.now();
+      stories = stories.map((story, idx) => {
+        let age = 'unknown';
+        if (story.timestamp) {
+          const ageInHours = (referenceTime - new Date(story.timestamp * 1000)) / 3600000;
+          if (ageInHours < 1) {
+            age = Math.floor(ageInHours * 60) + 'm';
+          } else if (ageInHours < 24) {
+            age = Math.floor(ageInHours) + 'h';
+          } else {
+            age = Math.floor(ageInHours / 24) + 'd';
+          }
+        }
+        return {
+          rank: idx + 1,
+          title: story.title,
+          link: story.href,
+          score: story.score || 0,
+          upvotes: story.upvotes || 0,
+          timestamp: story.timestamp,
+          age: age
+        };
+      });
     }
     
     const code = 200;
@@ -1301,13 +1364,17 @@ export async function launch(trie, libp2p, isPrimary = true) {
       ) {
         content = cachedFeed;
       } else {
-        content = await feed(
+        // Use whichever variant is currently in rotation (no user-specific selection)
+        const feedFunction = feedFunctions[currentVariant];
+        
+        content = await feedFunction(
           trie,
           reply.locals.theme,
           page,
           DOMPurify.sanitize(request.query.domain),
           identity,
           hash,
+          currentVariant, // Pass variant as 7th parameter
         );
         cachedFeed = content;
       }

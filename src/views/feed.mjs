@@ -34,12 +34,11 @@ import cache, {
   // Removed getRecommendations import
 } from "../cache.mjs";
 import * as curation from "./curation.mjs";
-import log from "../logger.mjs"; // Use original logger here
+import log from "../logger.mjs";
 import { EIP712_MESSAGE } from "../constants.mjs";
 import Row, { extractDomain } from "./components/row.mjs";
 import * as karma from "../karma.mjs";
 import { cachedMetadata } from "../parser.mjs";
-// Assuming prediction function exists here
 import { getPredictedEngagement } from "../prediction.mjs";
 import { getLeaderboard } from "../leaderboard.mjs";
 
@@ -176,6 +175,15 @@ export async function getNeynarScore(address) {
   return score;
 }
 
+const formatAge = (ageInMinutes) => {
+  const hours = Math.floor(ageInMinutes / 60);
+  const days = Math.floor(hours / 24);
+  
+  if (days > 0) return `${days}d`;
+  if (hours > 0) return `${hours}h`;
+  return `${Math.floor(ageInMinutes)}m`;
+};
+
 const itemAge = (timestamp) => {
   const now = new Date();
   const ageInMinutes = differenceInMinutes(now, new Date(timestamp * 1000));
@@ -256,86 +264,111 @@ async function calculateNeynarUpvotes(upvoters) {
   return weightedUpvotes;
 }
 
-export async function topstories(leaves) {
+export async function topstories(leaves, algorithm = 'control') {
+  // Check if we're using Lobsters algorithm
+  const useLobstersAlgo = algorithm === 'lobsters';
+  
   return Promise.allSettled(leaves
     .map(async (story) => {
       const commentCount =
         store.commentCounts.get(`kiwi:0x${story.index}`) || 0;
       const upvotes = await calculateNeynarUpvotes(story.upvoters);
       
-      // Add shares with double weight of upvotes
-      const shares = countShares(story.href);
-      const sharesAsUpvotes = shares * 2; // Each share counts as 2 upvotes
-      
       let score;
-      if (upvotes > 2) {
-        score = Math.log((upvotes + sharesAsUpvotes) * 0.4 + commentCount * 0.6);
+      
+      if (useLobstersAlgo) {
+        // Lobsters algorithm: negative hotness with simple time decay
+        // Base score: log10(upvotes + comments*0.5)
+        const baseScore = Math.log10(Math.max(1, upvotes + commentCount * 0.5));
+        
+        // Time penalty: hours_age / 2
+        const hoursAge = itemAge(story.timestamp) / 60; // Convert minutes to hours
+        const timePenalty = hoursAge / 2;
+        
+        // Lobsters uses negative scores for sorting (more negative = lower rank)
+        // We'll invert this to keep positive scores for consistency with sorting
+        score = baseScore - timePenalty;
+        
+        // Ensure score doesn't go negative (would break our sorting)
+        score = Math.max(0.001, score);
       } else {
-        score = Math.log(upvotes + sharesAsUpvotes);
-      }
+        // Original control algorithm
+        // Add shares with double weight of upvotes
+        const shares = countShares(story.href);
+        const sharesAsUpvotes = shares * 2; // Each share counts as 2 upvotes
+        
+        if (upvotes > 2) {
+          score = Math.log((upvotes + sharesAsUpvotes) * 0.4 + commentCount * 0.6);
+        } else {
+          score = Math.log(upvotes + sharesAsUpvotes);
+        }
 
-      const outboundClicks = countOutbounds(story.href) + 1;
-      if (outboundClicks > 0) {
-        score = score * 0.9 + 0.1 * Math.log(outboundClicks);
-      }
+        const outboundClicks = countOutbounds(story.href) + 1;
+        if (outboundClicks > 0) {
+          score = score * 0.9 + 0.1 * Math.log(outboundClicks);
+        }
 
-      try {
-        const upvoteRatio = meanUpvoteRatio(leaves);
-        const storyRatio = calculateUpvoteClickRatio(story);
-        const upvotePerformance = storyRatio / upvoteRatio;
+        try {
+          const upvoteRatio = meanUpvoteRatio(leaves);
+          const storyRatio = calculateUpvoteClickRatio(story);
+          const upvotePerformance = storyRatio / upvoteRatio;
 
-        const clicks = countOutbounds(story.href);
-        const sampleSize = upvotes + clicks;
-        const confidenceFactor = Math.pow(
-          Math.min(1, sampleSize / 1_000_000),
-          2,
-        );
+          const clicks = countOutbounds(story.href);
+          const sampleSize = upvotes + clicks;
+          const confidenceFactor = Math.pow(
+            Math.min(1, sampleSize / 1_000_000),
+            2,
+          );
 
-        const adjustedPerformance = upvotePerformance * confidenceFactor;
+          const adjustedPerformance = upvotePerformance * confidenceFactor;
 
-        score *= adjustedPerformance;
-      } catch (e) {
-        // If Upvote-Click ratio can't be calculated, we just keep the current
-        // score
-      }
+          score *= adjustedPerformance;
+        } catch (e) {
+          // If Upvote-Click ratio can't be calculated, we just keep the current
+          // score
+        }
 
-      // Try to apply CTR adjustment if available
-      try {
-        const meanCtrValue = meanCTR(leaves);
-        const ctr = calculateCTR(story);
-        const ctrPerformance = ctr / meanCtrValue;
+        // Try to apply CTR adjustment if available
+        try {
+          const meanCtrValue = meanCTR(leaves);
+          const ctr = calculateCTR(story);
+          const ctrPerformance = ctr / meanCtrValue;
 
-        const impressions = countImpressions(story.href);
-        const confidenceFactor = Math.pow(
-          Math.min(1, impressions / 1_000_000),
-          2,
-        );
+          const impressions = countImpressions(story.href);
+          const confidenceFactor = Math.pow(
+            Math.min(1, impressions / 1_000_000),
+            2,
+          );
 
-        const adjustedPerformance = ctrPerformance * confidenceFactor;
+          const adjustedPerformance = ctrPerformance * confidenceFactor;
 
-        score *= adjustedPerformance;
-      } catch (e) {
-        // If CTR can't be calculated, we just keep the current score
-      }
+          score *= adjustedPerformance;
+        } catch (e) {
+          // If CTR can't be calculated, we just keep the current score
+        }
 
-      const scoreBeforeDecay = score;
-      const storyAgeInDays = itemAge(story.timestamp) / (60 * 24); // Convert minutes to days
-      const decay = Math.sqrt(itemAge(story.timestamp));
+        const scoreBeforeDecay = score;
+        const storyAgeInDays = itemAge(story.timestamp) / (60 * 24); // Convert minutes to days
+        const decay = Math.sqrt(itemAge(story.timestamp));
 
-      if (storyAgeInDays < 5) {
-        score = score / Math.pow(decay, 5);
-      } else {
-        score = score / Math.pow(decay, storyAgeInDays);
+        // No freshness boost in control algorithm anymore
+        
+        if (storyAgeInDays < 5) {
+          score = score / Math.pow(decay, 5);
+        } else {
+          score = score / Math.pow(decay, storyAgeInDays);
+        }
       }
 
       story.score = score * 10000000;
       return story;
     }))
-    .then(results => results
-      .filter(result => result.status === 'fulfilled')
-      .map(result => result.value)
-      .sort((a, b) => b.score - a.score)
-    );
+    .then(results => {
+      return results
+        .filter(result => result.status === 'fulfilled')
+        .map(result => result.value)
+        .sort((a, b) => b.score - a.score);
+    });
 }
 
 async function addMetadata(post) {
@@ -356,6 +389,7 @@ export async function index(
   }),
   paginate = true,
   appCuration = false,
+  algorithm = 'control',
 ) {
   const lookbackUnixTime = Math.floor(lookback.getTime() / 1000);
   const limit = -1;
@@ -366,7 +400,7 @@ export async function index(
   let moderatedLeaves = moderation.moderate(leaves, policy, path); // Use a different var name
 
   // 1. Calculate initial ranking based on ACTUAL engagement
-  let rankedStories = await topstories(moderatedLeaves); // Use moderated leaves
+  let rankedStories = await topstories(moderatedLeaves, algorithm); // Use moderated leaves with algorithm
 
   // 2. Filter ranked stories based on age/engagement rules
   rankedStories = rankedStories.filter(({ index, upvotes, timestamp }) => {
@@ -436,6 +470,7 @@ export async function index(
 
       let avatars = [];
       let upvoterProfiles = [];
+      
       for await (let upvoter of story.upvoters) {
         const profile = await ens.resolve(upvoter);
         if (profile.safeAvatar) {
@@ -767,14 +802,17 @@ const expandSVG = html`<svg
   />
 </svg>`;
 
-export default async function (trie, theme, page, domain, identity, hash) {
+export default async function (trie, theme, page, domain, identity, hash, variant) {
   const path = "/";
   const totalStories = parseInt(env.TOTAL_STORIES, 10);
 
   // Removed Stripe URLs
 
+  // Map variant to algorithm
+  const algorithm = variant === 'lobsters' ? 'lobsters' : 'control';
+  
   // Always call the standard index function, regardless of identity/hash
-  const content = await index(trie, page, domain);
+  const content = await index(trie, page, domain, sub(new Date(), { days: 3 }), true, false, algorithm);
 
   // Destructure content
   const { originals, stories, start, pinnedStory } = content;
@@ -805,7 +843,7 @@ export default async function (trie, theme, page, domain, identity, hash) {
   return html`
     <html lang="en" op="news">
       <head>
-        ${custom(ogImage, title, description, twitterCard, prefetch)}
+        ${custom(ogImage, title, description, twitterCard, prefetch, null, null, variant)}
         <meta
           name="description"
           content="Crypto news for builders"

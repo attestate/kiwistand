@@ -22,6 +22,7 @@ export function custom(
   prefetch = [],
   canonicalUrl = null,
   frameImage = null,
+  variant = null,
 ) {
   const embedMetaContent = JSON.stringify({
     version: "next",
@@ -103,6 +104,7 @@ export function custom(
  user-scalable=0 viewport-fit=cover"
     />
     <meta name="fc:frame" content="${embedMetaContent}" />
+    ${variant ? html`<meta name="kiwi-variant" content="${variant}" />` : ''}
     ${ogImage ? html`<meta property="og:image" content="${ogImage}" />` : null}
     ${ogImage
       ? html`<meta property="twitter:image" content="${ogImage}" />`

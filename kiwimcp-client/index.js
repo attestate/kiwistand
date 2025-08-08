@@ -248,14 +248,16 @@ server.tool(
     name: z.enum(['hot', 'new', 'best']).describe('Feed name'),
     page: z.number().min(0).optional().describe('Page number for pagination (default: 0)'),
     limit: z.number().min(1).max(50).optional().describe('Number of stories to return (1-50, default: 10)'),
-    period: z.string().optional().describe('Time period for best feed only (e.g., "day", "week", "month")')
+    period: z.string().optional().describe('Time period for best feed only (e.g., "day", "week", "month")'),
+    variant: z.enum(['control', 'lobsters']).optional().describe('A/B test variant for hot feed (control or lobsters)')
   },
-  async ({ name, page = 0, limit = 10, period }) => {
+  async ({ name, page = 0, limit = 10, period, variant }) => {
     console.error(`[Kiwi MCP] Fetching ${name} feed with limit ${limit}`);
     
     try {
       const params = { page, limit };
       if (period && name === 'best') params.period = period;
+      if (name === 'hot' && variant) params.variant = variant; // Add variant for hot feed
       
       const data = await callKiwiAPI(`/api/v1/feeds/${name}`, params);
       
