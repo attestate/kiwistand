@@ -87,15 +87,14 @@ const SiteExplainer = () => {
 };
 
 const useIsMobile = () => {
-  const [isMobile, setIsMobile] = useState(false);
+  const compute = () =>
+    typeof window !== "undefined" ? window.innerWidth <= 768 : false;
+  const [isMobile, setIsMobile] = useState(compute);
 
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
+    const onResize = () => setIsMobile(compute());
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
   }, []);
 
   return isMobile;
@@ -439,6 +438,16 @@ const CommentInput = (props) => {
   }, [showMobileComposer]);
 
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Hide SSR placeholder once React mounts to avoid overlap/flash
+  useEffect(() => {
+    const placeholder = document.querySelector(
+      ".comment-input-ssr-placeholder",
+    );
+    if (placeholder) {
+      placeholder.style.display = "none";
+    }
+  }, []);
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);

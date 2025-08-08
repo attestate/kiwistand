@@ -19,12 +19,16 @@ const renderEmbed = (embed) => {
     const imageUrl = embed.metadata?.image?.url || embed.url;
     return html`
       <div style="margin-top: 16px;">
-        <img
-          src="${DOMPurify.sanitize(imageUrl)}"
-          alt="${DOMPurify.sanitize(embed.metadata?.title || 'Embedded image')}"
-          style="max-width: 100%; height: auto; border-radius: 8px; border: 1px solid rgba(0,0,0,0.1);"
-          loading="lazy"
-        />
+        <div style="width: 100%; aspect-ratio: 16 / 9; background: rgba(0,0,0,0.03); border-radius: 8px; overflow: hidden; border: 1px solid rgba(0,0,0,0.1);">
+          <img
+            src="${DOMPurify.sanitize(imageUrl)}"
+            alt="${DOMPurify.sanitize(embed.metadata?.title || 'Embedded image')}"
+            width="1600"
+            height="900"
+            style="width: 100%; height: 100%; object-fit: contain; display: block;"
+            loading="lazy"
+          />
+        </div>
       </div>
     `;
   }

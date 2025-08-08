@@ -1228,6 +1228,9 @@ async function start() {
   // which we consider to be the case when we've reached this part of the
   // application.
   window.reactHasLoaded = true;
+  try {
+    document.body.classList.add('react-loaded');
+  } catch {}
 }
 
 

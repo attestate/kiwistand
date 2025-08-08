@@ -573,13 +573,17 @@ const row = (
                         </p>
                         ${story.metadata.image
                           ? html`
-                              <div style="margin-top: 12px;">
-                                <img
-                                  src="${DOMPurify.sanitize(story.metadata.image)}"
-                                  alt="Tweet image"
-                                  style="display: block; max-width: 100%; height: auto; border-radius: 2px; max-height: 300px; object-fit: contain;"
-                                  loading="lazy"
-                                />
+                              <div style="margin-top: 12px; position: relative;">
+                                <div style="width: 100%; aspect-ratio: 16 / 9; background: rgba(0,0,0,0.03); border-radius: 2px; overflow: hidden;">
+                                  <img
+                                    src="${DOMPurify.sanitize(story.metadata.image)}"
+                                    alt="Tweet image"
+                                    width="1600"
+                                    height="900"
+                                    style="width: 100%; height: 100%; object-fit: contain; display: block;"
+                                    loading="lazy"
+                                  />
+                                </div>
                               </div>
                             `
                           : null}
@@ -747,12 +751,16 @@ const row = (
                         ${farcasterImageUrl
                           ? html`
                               <div style="height: 16px;"></div>
-                              <img
-                                src="${DOMPurify.sanitize(farcasterImageUrl)}"
-                                alt="Cast image"
-                                style="display: block; max-width: 100%; height: auto; border-radius: 2px; max-height: 300px; object-fit: contain;"
-                                loading="lazy"
-                              />
+                              <div style="width: 100%; aspect-ratio: 16 / 9; background: rgba(0,0,0,0.03); border-radius: 2px; overflow: hidden;">
+                                <img
+                                  src="${DOMPurify.sanitize(farcasterImageUrl)}"
+                                  alt="Cast image"
+                                  width="1600"
+                                  height="900"
+                                  style="width: 100%; height: 100%; object-fit: contain; display: block;"
+                                  loading="lazy"
+                                />
+                              </div>
                             `
                           : null}
                       </div>
@@ -816,14 +824,14 @@ const row = (
                     story.href,
                   )}', event.currentTarget.getAttribute('target')); }"
                 >
-                  <div style="position: relative;">
+                  <div style="position: relative; width: 100%; aspect-ratio: 2 / 1; background: rgba(0,0,0,0.03); border-radius: 2px; contain: content; contain-intrinsic-size: 600px 300px;">
                     <img
                       loading="lazy"
                       width="600"
                       height="300"
-                      style="aspect-ratio: 2 / 1; object-fit:${isCloudflare
+                      style="position: absolute; inset: 0; object-fit:${isCloudflare
                         ? "contain"
-                        : "cover"}; border-radius: 2px; width: 100%; height: auto;"
+                        : "cover"}; border-radius: 2px; width: 100%; height: 100%; display: block;"
                       src="${isCloudflare
                         ? DOMPurify.sanitize(
                             story.href.endsWith("/public")
@@ -865,6 +873,12 @@ const row = (
                     </span>
                   </div>
                 </a>`
+              : path === "/stories" && story.metadata && story.metadata.image
+              ? html`
+                  <div class="row-image-preview" style="display:block; width:100%;">
+                    <div style="position: relative; width: 100%; aspect-ratio: 2 / 1; background: rgba(0,0,0,0.03); border-radius: 2px; contain: content; contain-intrinsic-size: 600px 300px;"></div>
+                  </div>
+                `
               : null}
             <div
               class="${displayCommentPreview

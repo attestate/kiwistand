@@ -338,6 +338,8 @@ export default async function (trie, theme, index, value, referral) {
                                           loading="lazy"
                                           src="${comment.avatar}"
                                           alt="avatar"
+                                          width="32"
+                                          height="32"
                                           style="width: 32px; height: 32px; border: var(--border); border-radius: 2px;"
                                         />
                                       </a>
@@ -470,6 +472,8 @@ export default async function (trie, theme, index, value, referral) {
                                                                   loading="lazy"
                                                                   src="${profile.safeAvatar}"
                                                                   alt=""
+                                                                  width="16"
+                                                                  height="16"
                                                                   style="width: 16px; height: 16px; border-radius: 50%; margin-left: ${i === 0 ? "0" : "-6px"}; border: 1.5px solid white;"
                                                                 />
                                                               `,
@@ -516,28 +520,31 @@ export default async function (trie, theme, index, value, referral) {
                 : null}
               <tr>
                 <td>
-                  <nav-comment-input data-story-index="0x${index}" data-custom-style='{"margin": "0 11px 16px 11px"}'>
-                    <div style="margin: 0 11px 16px 11px;">
-                      <textarea
-                        style="font-size: 1rem; border: var(--border); background-color: white; display: block; width: 100%; padding: 10px; border-radius: 2px; resize: vertical;"
-                        rows="12"
-                        disabled
-                      ></textarea>
-                      <span style="color: #828282; font-size: 10pt;">Characters remaining: 10,000</span>
-                      <br />
-                      <br />
-                      <div style="display: flex; align-items: center; justify-content: space-between;">
-                        <button
-                          style="width: auto; padding: 8px 16px; background-color: var(--hn-orange); color: white; border: none; border-radius: 2px; font-size: 10pt; cursor: not-allowed; opacity: 0.5; margin-bottom: 10px;"
-                          id="button-onboarding"
+                  <div class="comment-input-host">
+                    <div class="comment-input-ssr-placeholder" style="margin: 0 11px 16px 11px;">
+                      <div class="comment-input-desktop-ssr">
+                        <textarea
+                          style="font-size: 1rem; border: var(--border); background-color: white; display: block; width: 100%; padding: 10px; border-radius: 2px; resize: vertical;"
+                          rows="12"
                           disabled
-                        >
-                          Loading...
-                        </button>
-                        <span class="meta-link drawer-link" style="font-size: 0.8rem; color: #828282;">comment guidelines</span>
+                        ></textarea>
+                        <span style="color: #828282; font-size: 10pt;">Characters remaining: 10,000</span>
+                        <br />
+                        <br />
+                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                          <button
+                            style="width: auto; padding: 8px 16px; background-color: var(--hn-orange); color: white; border: none; border-radius: 2px; font-size: 10pt; cursor: not-allowed; opacity: 0.5; margin-bottom: 10px;"
+                            id="button-onboarding"
+                            disabled
+                          >
+                            Loading...
+                          </button>
+                          <span class="meta-link drawer-link" style="font-size: 0.8rem; color: #828282;">comment guidelines</span>
+                        </div>
                       </div>
                     </div>
-                  </nav-comment-input>
+                    <nav-comment-input data-story-index="0x${index}" data-custom-style='{"margin": "0 11px 16px 11px"}'></nav-comment-input>
+                  </div>
                 </td>
               </tr>
               <tr style="height: 20px;"></tr>

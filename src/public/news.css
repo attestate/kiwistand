@@ -495,12 +495,28 @@ body {
     border-radius: 0;
     width: 100% !important;
   }
+  /* Ensure SSR placeholder shows mobile version to avoid swapping */
+  /* On mobile, show the compact placeholder and hide desktop-sized */
+  .comment-input-mobile-ssr { display: block !important; }
+  .comment-input-desktop-ssr { display: none !important; }
+  /* Reserve space for comment input React mount to avoid jump */
+  .comment-input-host { display: block; min-height: 64px; }
 }
 
 /* Tweet preview container - visible on all devices */
 .tweet-preview-container {
   display: block;
 }
+
+/* Desktop defaults for SSR comment input placeholders */
+@media (min-width: 641px) {
+  .comment-input-mobile-ssr { display: none !important; }
+  .comment-input-desktop-ssr { display: block !important; }
+}
+
+/* Hide React comment input until React has mounted; SSR placeholder stays visible */
+.comment-input-host nav-comment-input { visibility: hidden; }
+body.react-loaded .comment-input-host nav-comment-input { visibility: visible; }
 
 /* Farcaster preview container - visible on all devices */
 .farcaster-preview-container {

@@ -53,16 +53,16 @@ export function custom(
     <link
       rel="preload"
       as="style"
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=optional"
     />
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=optional"
     />
     <style>
       /* Critical CSS to prevent layout shift */
       :root {
-        --font-family: 'Inter', Verdana, Geneva, sans-serif;
+        --font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
       }
       
       /* Predefine font metrics to prevent shifts */
@@ -92,46 +92,7 @@ export function custom(
         table-layout: fixed;
       }
       
-      /* Use font-display swap for better UX while preventing major shifts */
-      @font-face {
-        font-family: 'Inter';
-        font-style: normal;
-        font-weight: 300;
-        font-display: swap;
-        src: url(https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTcviYwY.woff2) format('woff2');
-      }
-      
-      @font-face {
-        font-family: 'Inter';
-        font-style: normal;
-        font-weight: 400;
-        font-display: swap;
-        src: url(https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hiA.woff2) format('woff2');
-      }
-      
-      @font-face {
-        font-family: 'Inter';
-        font-style: normal;
-        font-weight: 500;
-        font-display: swap;
-        src: url(https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTcviYwY.woff2) format('woff2');
-      }
-      
-      @font-face {
-        font-family: 'Inter';
-        font-style: normal;
-        font-weight: 600;
-        font-display: swap;
-        src: url(https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTcviYwY.woff2) format('woff2');
-      }
-      
-      @font-face {
-        font-family: 'Inter';
-        font-style: normal;
-        font-weight: 700;
-        font-display: swap;
-        src: url(https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTcviYwY.woff2) format('woff2');
-      }
+      /* Remove custom @font-face to avoid double-loading Inter; use Google CSS above */
     </style>
     <script src="event-queue.js"></script>
     <meta charset="utf-8" />

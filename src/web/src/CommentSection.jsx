@@ -905,7 +905,7 @@ const CommentsSection = (props) => {
     }
   }, [shown, comments]);
 
-  if (!shown) return;
+  if (!shown) return null;
   return (
     <div
       className="comment-section"
