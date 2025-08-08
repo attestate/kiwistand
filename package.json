@@ -28,6 +28,7 @@
     "dev:staging": "nodemon --watch src/views --exec 'cross-env NODE_ENV=dev API_PORT=8443 HTTP_PORT=443 DATA_DIR=anon BIND_ADDRESS_V4=\"0.0.0.0\" PORT=0 IS_BOOTSTRAP_NODE=false USE_EPHEMERAL_ID=true npm run dev'",
     "migration:1": "node -r dotenv/config scripts/migration1.mjs",
     "sync": "node -r dotenv/config ./src/gen_db.mjs",
+    "sync:cache": "rsync -avz root@91.107.210.214:./kiwistand/cache/database.db* ./cache/ && cp ./cache/database.db ./cache/database.db.prod",
     "simulate:telegram-bot": "cross-env SIMULATION_MODE=true node -r dotenv/config ./src/telegram_bot.mjs",
     "run:telegram-bot": "node -r dotenv/config ./src/telegram_bot.mjs",
     "simulate:farcaster-aggregator": "cross-env SIMULATION_MODE=true node -r dotenv/config ./src/farcaster-link-aggregator.mjs",
