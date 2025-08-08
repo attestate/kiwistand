@@ -501,7 +501,14 @@ body {
   .comment-input-desktop-ssr { display: none !important; }
   /* Reserve space for comment input React mount to avoid jump */
   .comment-input-host { display: block; min-height: 64px; }
+  /* Strong gutters for content rows */
+  .content-row .mobile-information-row { padding-left: 16px !important; padding-right: 16px !important; box-sizing: border-box; }
+  .content-row .story-link-container-wrapper { padding-right: 16px !important; }
+  .content-row .story-link { padding-right: 16px !important; }
+  .content-row .domain-text { padding-right: 12px !important; }
 }
+
+/* (dup guard) */
 
 /* Tweet preview container - visible on all devices */
 .tweet-preview-container {
@@ -712,7 +719,9 @@ body.react-loaded .comment-input-host nav-comment-input { visibility: visible; }
     /* Just set consistent padding for all story wrappers */
     .story-link-container-wrapper {
       padding-left: 0;
-      padding-right: 0;
+      padding-right: 8px;
+      max-width: 100%;
+      overflow: hidden;
     }
     .story-domain {
       font-size: 9pt;
@@ -722,12 +731,50 @@ body.react-loaded .comment-input-host nav-comment-input { visibility: visible; }
       font-size: 12pt !important;
       line-height: 1.15 !important;
       font-weight: 500;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      hyphens: auto;
     }
-    .story-subtitle {
-      opacity: 0.9;
-      margin-top: 5px !important;
-      font-size: 12px !important;
-    }
+  .story-subtitle {
+  opacity: 0.9;
+  margin-top: 5px !important;
+  font-size: 12px !important;
+  padding-right: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-width: 100%;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.story-subtitle::-webkit-scrollbar {
+  display: none;
+}
+.subtitle-flex {
+  max-width: 100%;
+}
+
+/* Ensure consistent vertical alignment for subtitle items */
+.meta-item {
+  display: inline-flex;
+  align-items: center;
+  height: 18px;
+  line-height: 18px;
+}
+
+/* Fix domain text overflow on mobile */
+.domain-text, .domain-flex {
+  min-width: 0;
+  overflow: visible;
+}
+.submitter-name {
+  white-space: nowrap;
+}
+
+/* Normalize small favicon baseline in domain block */
+.story-subtitle .domain-text img {
+  vertical-align: middle;
+  position: static !important;
+}
     .elevating-comment-preview .interaction-element{
       padding-top: 2px !important;
       border: none !important;
@@ -1062,6 +1109,21 @@ body.react-loaded .comment-input-host nav-comment-input { visibility: visible; }
     .story-link:not(.redacted):hover {
       text-decoration: underline;
     }
+    /* Desktop alignment for subtitle items */
+    .subtitle-flex { 
+      align-items: baseline !important; 
+      flex-wrap: nowrap !important;
+      white-space: nowrap;
+    }
+    .subtitle-flex .meta-item { 
+      height: 18px; 
+      line-height: 18px;
+      white-space: nowrap;
+    }
+    .subtitle-flex .domain-flex { 
+      align-items: baseline;
+      white-space: nowrap;
+    }
     .notification-bar {
       bottom: 0px !important;
     }
@@ -1244,6 +1306,7 @@ body.react-loaded .comment-input-host nav-comment-input { visibility: visible; }
      color: black;
      font-weight: 500;
 }
+.story-link { display: block; max-width: 100%; overflow-wrap: anywhere; word-break: break-word; }
  .story-link:visited {
      color: var(--visited-link);
 }

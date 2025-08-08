@@ -337,8 +337,12 @@ const row = (
     const isParagraphPost = extractedDomain === "paragraph.xyz";
 
     // Check if the story itself is older than 12 hours
-    const isStoryOlderThan12Hours =
-      differenceInHours(new Date(), new Date(story.timestamp * 1000)) > 12;
+    const storyAgeHours = differenceInHours(
+      new Date(),
+      new Date(story.timestamp * 1000),
+    );
+    const isStoryOlderThan12Hours = storyAgeHours > 12;
+    const isStoryNew = storyAgeHours <= 4;
 
     // Check if the image is a Cloudflare image
     const isCloudflare = isCloudflareImage(story.href) || (debugMode && story.href && story.href.includes("placehold.co"));
@@ -885,7 +889,7 @@ const row = (
               class="${displayCommentPreview
                 ? "with-comment-preview"
                 : `without-comment-preview without-comment-preview-0x${story.index}`}"
-              style="display: flex; flex-direction: column; padding: 12px 16px;"
+              style="display: flex; flex-direction: column; padding: 12px 20px; box-sizing: border-box;"
               class:mobile-information-row
             >
               <div
@@ -894,7 +898,7 @@ const row = (
               >
                 <div
                   class="story-link-container-wrapper"
-                  style="display:flex; justify-content: center; flex-direction: column; flex-grow: 1; line-height: 1.3;"
+                  style="display:flex; justify-content: center; flex-direction: column; flex-grow: 1; line-height: 1.3; padding-right: 14px;"
                 >
                   <span>
                     <span class="story-link-container">
@@ -979,7 +983,7 @@ const row = (
                         (isCloudflare && story.index)
                           ? "_self"
                           : "_blank"}"
-                        style="user-select: text; line-height: 15pt; font-size: 13pt;${canRenderFarcasterPreview || canRenderTweetPreview ? ' color: rgba(0, 0, 0, 0.35);' : ''}"
+                        style="user-select: text; line-height: 15pt; font-size: 13pt; padding-right: 14px;${canRenderFarcasterPreview || canRenderTweetPreview ? ' color: rgba(0, 0, 0, 0.35);' : ''}"
                       >
                         ${story.isOriginal
                           ? html`<mark
@@ -1005,10 +1009,10 @@ const row = (
                     </span>
                   </span>
                   <div
-                    class="story-subtitle"
-                    style="font-size: 9pt; margin-top: 3px;"
+                    class="story-subtitle subtitle-flex"
+                  style="font-size: 9pt; margin-top: 3px; display: flex; flex-wrap: wrap; align-items: center; column-gap: 6px; row-gap: 2px; padding-right: 16px;"
                   >
-                  <span style="opacity: 0.8; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; flex-wrap: nowrap;">
+                  <span class="meta-item" style="opacity: 0.8; gap: 4px; white-space: nowrap; flex-wrap: nowrap; min-width: 0;">
                     ${(() => {
                       // Compute submitter karma once per row render
                       let submitterKarmaPoints = null;
@@ -1019,31 +1023,51 @@ const row = (
                       } catch (e) {
                         submitterKarmaPoints = null;
                       }
+                      const trendingThreshold = 10;
+                      const upvoterCount = Array.isArray(story.upvoters)
+                        ? story.upvoters.length
+                        : story.upvotes || 0;
+                      const isTrending = upvoterCount >= trendingThreshold;
                       return html`
+                        <span class="meta-item" style="opacity:${
+                          canRenderFarcasterPreview || canRenderTweetPreview
+                            ? 0.6
+                            : 0.9
+                        };">by </span>
                         ${story.identity
                           ? html`<a
                               href="${interactive
                                 ? ""
                                 : `/upvotes?address=${story.identity}`}"
-                              class="meta-link"
+                              class="meta-link meta-item submitter-name"
                               onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
-                              style="${canRenderFarcasterPreview || canRenderTweetPreview ? '' : 'font-weight: 600; user-select: text; color: black;'}"
+                              style="display:inline-block; font-weight: 600; user-select: text; color: ${canRenderFarcasterPreview || canRenderTweetPreview ? '#828282' : 'black'}; flex: 0 0 auto;"
                             >
                               ${story.displayName}
                             </a>`
                           : path === "/demonstration"
-                          ? html`<a class="meta-link" href="javascript:void(0);" style="${canRenderFarcasterPreview || canRenderTweetPreview ? '' : 'font-weight: 600; color: black;'}">${story.displayName}</a>`
-                          : html`<span class="meta-link" style="${canRenderFarcasterPreview || canRenderTweetPreview ? '' : 'font-weight: 600; color: black;'}">${story.displayName}</span>`}
+                          ? html`<a class="meta-link meta-item submitter-name" href="javascript:void(0);" style="display:inline-block; font-weight: 600; color: ${canRenderFarcasterPreview || canRenderTweetPreview ? '#828282' : 'black'}; flex: 0 0 auto;">${story.displayName}</a>`
+                          : html`<span class="meta-link meta-item submitter-name" style="display:inline-block; font-weight: 600; color: ${canRenderFarcasterPreview || canRenderTweetPreview ? '#828282' : 'black'}; flex: 0 0 auto;">${story.displayName}</span>`}
                         ${submitterKarmaPoints !== null
                           ? html`<span
                               style="${canRenderFarcasterPreview || canRenderTweetPreview
-                                ? 'opacity: 0.55; font-size: 9px; color: inherit;'
-                                : 'background: rgba(0,0,0,0.06); padding: 2px 6px; border-radius: 999px; font-size: 9px; font-weight: 600; color: black;'}"
+                                ? 'opacity: 0.55; font-size: 9px; color: inherit; margin-left: 6px;'
+                                : 'background: rgba(0,0,0,0.06); padding: 2px 6px; border-radius: 999px; font-size: 9px; font-weight: 600; color: black; margin-left: 6px;'}"
                             >
                               ${submitterKarmaPoints} 🥝
                             </span>`
                           : ""}
-                        <span style="opacity:0.6"> • </span>
+                        ${isTrending
+                          ? html`<span
+                              title="Trending submission"
+                              style="${
+                                canRenderFarcasterPreview || canRenderTweetPreview
+                                  ? 'opacity:0.45;'
+                                  : ''
+                              } padding: 1px 6px; border-radius: 999px; font-size: 9px; color: black; background: rgba(255,69,0,0.08); border: 1px solid rgba(255,69,0,0.25);"
+                            >🔥 Trending</span>`
+                          : ""}
+                        <span style="opacity:0.6; white-space: pre;"> • </span>
                       `;
                     })()}
                       ${path !== "/stories" &&
@@ -1069,14 +1093,14 @@ const row = (
                               `,
                             )}
                           </span>
-                          <span style="opacity:0.6"> • </span>
+                          <span style="opacity:0.6; white-space: pre;"> • </span>
                         </span>
                       `}
                       ${story.index
                         ? html`
                             <a
-                              class="meta-link"
-                              style="user-select: text;"
+                              class="meta-link meta-item"
+                              style="user-select: text; ${isStoryNew ? 'background: rgba(0,186,124,0.15); padding: 0 4px; border-radius: 3px;' : ''}"
                               href="/stories/${getSlug(
                                 story.title,
                               )}?index=0x${story.index}"
@@ -1088,9 +1112,11 @@ const row = (
                             </a>
                           `
                         : html`
-                            ${formatDistanceToNowStrict(
-                              new Date(story.timestamp * 1000),
-                            )}
+                            <span style="${isStoryNew ? 'background: rgba(0,186,124,0.15); padding: 0 4px; border-radius: 3px;' : ''}">
+                              ${formatDistanceToNowStrict(
+                                new Date(story.timestamp * 1000),
+                              )}
+                            </span>
                           `}
                       ${!interactive &&
                       (path === "/" ||
@@ -1100,8 +1126,8 @@ const row = (
                       !isCloudflare &&
                       !displayImage
                         ? html`
-                            <span class="domain-text">
-                              <span style="opacity:0.6"> • </span>
+                            <span class="domain-text domain-flex meta-item" style="padding-right: 12px; display: inline-flex; align-items: center; min-width: 0; gap: 4px; flex-shrink: 1;">
+                              <span style="opacity:0.6; flex: 0 0 auto; white-space: pre;"> • </span>
                               ${![
                                 "farcaster.xyz",
                                 "warpcast.com",
@@ -1118,19 +1144,21 @@ const row = (
                                     )}"
                                     width="10"
                                     height="10"
-                                    style="vertical-align: middle; position: relative; top: -1px; margin-right: 3px; opacity: 0.7; display: inline-block;"
+                                    style="vertical-align: middle; position: relative; top: -1px; margin-right: 3px; opacity: 0.7; display: inline-block; flex-shrink: 0;"
                                     loading="lazy"
                                     onerror="this.style.display='none'"
                                   />`
                                 : ""}
-                              <span>${extractedDomain}</span>
+                              <span style="display: inline-block; white-space: nowrap; font-size: 11px;">
+                                ${extractedDomain}
+                              </span>
                             </span>
                           `
                         : ""}
                       ${story.impressions && story.impressions > 100
                         ? html`
-                            <span style="opacity:0.6"> • </span>
-                            <span>${story.impressions} views</span>
+                            <span style="opacity:0.6; white-space: pre;"> • </span>
+                            <span class="meta-item">${story.impressions} views</span>
                           `
                         : ""}
                     </span>
@@ -1382,7 +1410,7 @@ const row = (
                                   story.lastComment.identity.displayName,
                                 )}</span
                               >
-                              <span style="opacity:0.6"> • </span>
+                              <span style="opacity:0.6; white-space: pre;"> • </span>
                               <span style="font-size: 9pt; opacity: 0.9;">
                                 ${formatDistanceToNowStrict(
                                   new Date(story.lastComment.timestamp * 1000),
