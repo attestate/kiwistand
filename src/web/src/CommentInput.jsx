@@ -693,19 +693,32 @@ const CommentInput = (props) => {
                 marginBottom: "10px",
               }}
             >
-              {preResolvedAvatar && (
-                <img
-                  src={preResolvedAvatar}
-                  alt="Your avatar"
-                  style={{
-                    width: "32px",
-                    height: "32px",
-                    borderRadius: "2px",
-                    border: "1px solid #828282",
-                    flexShrink: 0,
-                  }}
-                />
-              )}
+              <div style={{ width: "32px", height: "32px", flexShrink: 0 }}>
+                {preResolvedAvatar ? (
+                  <img
+                    src={preResolvedAvatar}
+                    alt="Your avatar"
+                    style={{
+                      width: "32px",
+                      height: "32px",
+                      borderRadius: "2px",
+                      border: "1px solid #828282",
+                      display: "block",
+                    }}
+                  />
+                ) : (
+                  <div
+                    aria-hidden="true"
+                    style={{
+                      width: "32px",
+                      height: "32px",
+                      borderRadius: "2px",
+                      border: "1px solid #E0E0E0",
+                      backgroundColor: "#F8F8F8",
+                    }}
+                  />
+                )}
+              </div>
               <span
                 style={{
                   color: "#828282",

@@ -479,44 +479,30 @@ export const EmojiReaction = ({ comment, allowlist, delegations, toast }) => {
 function NotificationOptIn(props) {
   const account = useAccount();
   const localAccount = getLocalAccount(account.address, props.allowlist);
-  const provider = useProvider();
-  const [identity, setIdentity] = useState(null);
-  const [signer, setSigner] = useState(null);
   const [isMiniApp, setIsMiniApp] = useState(false);
 
-  useEffect(() => {
-    async function init() {
-      if (!localAccount || !account) {
-        setIdentity(null);
-        return;
-      }
-
-      const s = new Wallet(localAccount.privateKey, provider);
-      setSigner(s);
-
-      const addr = await s.getAddress();
-      const isEligible =
-        addr && (await eligible(props.allowlist, props.delegations, addr));
-
-      setIdentity(isEligible);
-    }
-
-    init();
-  }, [account?.account]);
+  // Compute eligibility synchronously when possible to avoid pop-in
+  const identity =
+    localAccount?.identity &&
+    eligible(props.allowlist, props.delegations, localAccount.identity);
 
   useEffect(() => {
+    let mounted = true;
     async function checkMiniApp() {
       try {
         const miniAppStatus = await window.sdk?.isInMiniApp();
-        setIsMiniApp(miniAppStatus);
+        if (mounted) setIsMiniApp(Boolean(miniAppStatus));
       } catch (error) {
-        setIsMiniApp(false);
+        if (mounted) setIsMiniApp(false);
       }
     }
     checkMiniApp();
+    return () => {
+      mounted = false;
+    };
   }, []);
 
-  if (!identity || isMiniApp) return null;
+  if (!identity || isMiniApp === true) return null;
   return (
     <div
       style={{
@@ -851,6 +837,7 @@ const Comment = React.forwardRef(
 const CommentsSection = (props) => {
   const { storyIndex, commentCount, hasPreview } = props;
   const [comments, setComments] = useState([]);
+  const [loaded, setLoaded] = useState(commentCount === 0);
   const [shown, setShown] = useState(false);
   const lastCommentRef = useRef(null);
   const [source, setSource] = useState(null);
@@ -888,6 +875,7 @@ const CommentsSection = (props) => {
       const story = await API.fetchStory(storyIndex, commentCount);
       if (story && story.comments) setComments(story.comments);
       if (story && story.title) setStoryTitle(story.title);
+      setLoaded(true);
     })();
   }, [storyIndex]);
 
@@ -906,6 +894,34 @@ const CommentsSection = (props) => {
   }, [shown, comments]);
 
   if (!shown) return null;
+  // Avoid staggered pop-ins by showing content once initial data is ready
+  if (!loaded) {
+    return (
+      <div
+        className="comment-section"
+        style={{
+          marginLeft: "11px",
+          marginRight: "11px",
+          marginBottom: "10px",
+          backgroundColor: "transparent",
+          padding: "0",
+          fontSize: "1rem",
+        }}
+      >
+        <div
+          style={{
+            border: "var(--border)",
+            borderRadius: "2px",
+            background: "white",
+            padding: "0.75rem",
+            color: "#666",
+          }}
+        >
+          Loading comments…
+        </div>
+      </div>
+    );
+  }
   return (
     <div
       className="comment-section"
