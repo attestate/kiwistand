@@ -845,10 +845,30 @@ const CommentsSection = (props) => {
 
   useEffect(() => {
     const toggle = (evt) => {
-      const elem = document.querySelector(`.comment-preview-${storyIndex}`);
-      if (shown && elem) {
+      const preview = document.querySelector(`.comment-preview-${storyIndex}`);
+      const host = document.querySelector(`.comment-section[data-story-index="${storyIndex}"]`);
+      const nextShown = !shown;
+
+      if (nextShown) {
+        // Opening: replace preview with a same-height placeholder immediately
+        setSource(evt?.detail?.source);
+        if (preview && host) {
+          const { height } = preview.getBoundingClientRect();
+          // Hide preview right away to avoid overlap
+          preview.style.display = "none";
+          // Reserve exact space for comments to avoid layout jump
+          host.style.minHeight = `${Math.ceil(height)}px`;
+        }
+      } else {
+        // Closing: show preview again and clear placeholder
         setSource(null);
-        elem.style.display = "flex";
+        if (preview) {
+          preview.style.display = "flex";
+          preview.style.opacity = 1;
+        }
+        if (host) {
+          host.style.minHeight = "";
+        }
         if (window.location.hash.startsWith("#0x")) {
           history.replaceState(
             null,
@@ -857,16 +877,14 @@ const CommentsSection = (props) => {
           );
           window.dispatchEvent(new HashChangeEvent("hashchange"));
         }
-      } else if (elem) {
-        setSource(evt?.detail?.source);
-        elem.style.display = "none";
       }
-      setShown(!shown);
+
+      setShown(nextShown);
     };
     window.addEventListener(`open-comments-${storyIndex}`, toggle);
     return () =>
       window.removeEventListener(`open-comments-${storyIndex}`, toggle);
-  }, [shown]);
+  }, [shown, storyIndex]);
 
   useEffect(() => {
     (async () => {
@@ -877,7 +895,7 @@ const CommentsSection = (props) => {
       if (story && story.title) setStoryTitle(story.title);
       setLoaded(true);
     })();
-  }, [storyIndex]);
+  }, [storyIndex, commentCount]);
 
   useEffect(() => {
     if (
@@ -891,7 +909,15 @@ const CommentsSection = (props) => {
         block: "center",
       });
     }
-  }, [shown, comments]);
+  }, [shown, comments, source]);
+
+  // Ensure placeholder is released once comments are ready (keep hooks before returns)
+  useEffect(() => {
+    if (shown && loaded) {
+      const host = document.querySelector(`.comment-section[data-story-index="${storyIndex}"]`);
+      if (host) host.style.minHeight = "";
+    }
+  }, [shown, loaded, storyIndex]);
 
   if (!shown) return null;
   // Avoid staggered pop-ins by showing content once initial data is ready
@@ -922,6 +948,7 @@ const CommentsSection = (props) => {
       </div>
     );
   }
+  
   return (
     <div
       className="comment-section"
