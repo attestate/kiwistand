@@ -872,6 +872,13 @@ export const metadata = async (
   if (result.twitterImage && result.twitterImage.length >= 1) {
     image = result.twitterImage[0].url;
   }
+  // Detect if the target has video content (used to avoid rendering text-only previews)
+  const hasVideoContent = Boolean(
+    (result.ogVideo && result.ogVideo.length >= 1) ||
+      (result.twitterPlayer && result.twitterPlayer.length >= 1) ||
+      (result.twitterCard && String(result.twitterCard).toLowerCase() === "player") ||
+      (result.ogType && String(result.ogType).toLowerCase().includes("video"))
+  );
   if (hostname === "youtu.be" || hostname.endsWith("youtube.com")) {
     const id = getYTId(url);
     if (id) {
@@ -1018,21 +1025,35 @@ export const metadata = async (
   if (image && image.startsWith("https://")) {
     const exists = await checkOgImage(image);
     if (exists) {
-      // Check if image is meaningful before including it
-      const isMeaningful = await isImageMeaningful(
-        image,
-        output.ogTitle || ogTitle,
-        ogDescription
+      // Skip quality assessment for Twitter/X images as they often contain valuable screenshots/text
+      const isTwitterImage = twitterFrontends.some(frontend => 
+        hostname === frontend || hostname === "fxtwitter.com"
       );
-      if (isMeaningful) {
+      
+      if (isTwitterImage) {
+        // Always show Twitter/X images as they're usually relevant content
         output.image = DOMPurify.sanitize(image);
       } else {
-        log(`Image rejected by quality assessment: ${image}`);
+        // Check if image is meaningful before including it for non-Twitter sources
+        const isMeaningful = await isImageMeaningful(
+          image,
+          output.ogTitle || ogTitle,
+          ogDescription
+        );
+        if (isMeaningful) {
+          output.image = DOMPurify.sanitize(image);
+        } else {
+          log(`Image rejected by quality assessment: ${image}`);
+        }
       }
     }
   }
   if (result.twitterCreator) {
     output.twitterCreator = DOMPurify.sanitize(result.twitterCreator);
+  }
+  // Forward useful media hints to the UI layer
+  if (hasVideoContent) {
+    output.hasVideo = true;
   }
   if (ogDescription) {
     // Store the original, potentially longer description in the output object

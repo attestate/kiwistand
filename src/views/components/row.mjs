@@ -374,7 +374,9 @@ const row = (
       isTweet &&
       story.metadata &&
       story.metadata.ogDescription &&
-      !tweetContainsXArticle;
+      !tweetContainsXArticle &&
+      // If the tweet is primarily video, avoid rendering text-only faux screenshot
+      !story.metadata.hasVideo;
 
     // Check if we have what we need to render a Farcaster cast preview
     // Only show preview on non-stories pages
@@ -508,84 +510,70 @@ const row = (
                 >
                   <div class="tweet-embed-container">
                     <div>
-                      <div class="tweet-embed-header">
-                        <div
-                          style="display:flex; align-items:center; margin-bottom:12px;"
-                        >
-                          ${story.metadata.twitterAuthorAvatar
-                            ? html`<img
-                                src="${DOMPurify.sanitize(
-                                  story.metadata.twitterAuthorAvatar,
-                                )}"
-                                alt="${DOMPurify.sanitize(
-                                  story.metadata.twitterCreator || "Author",
-                                )}"
-                                width="40"
-                                height="40"
-                                loading="lazy"
-                                style="border-radius: 50%; margin-right: 12px;"
-                              />`
-                            : html`<div
-                                style="width: 40px; height: 40px; border-radius: 50%; background-color: #e1e8ed; margin-right: 12px; display: flex; align-items: center; justify-content: center;"
+                      <div style="display: flex; align-items: center; margin-bottom: 12px;">
+                        ${story.metadata.twitterAuthorAvatar
+                          ? html`<img
+                              src="${DOMPurify.sanitize(
+                                story.metadata.twitterAuthorAvatar,
+                              )}"
+                              alt="${DOMPurify.sanitize(
+                                story.metadata.twitterCreator || "Author",
+                              )}"
+                              width="20"
+                              height="20"
+                              loading="lazy"
+                              style="border-radius: 9999px; margin-right: 8px;"
+                            />`
+                          : html`<div
+                              style="width: 20px; height: 20px; border-radius: 50%; background-color: #e1e8ed; margin-right: 8px; display: flex; align-items: center; justify-content: center;"
+                            >
+                              <svg
+                                width="12"
+                                height="12"
+                                viewBox="0 0 24 24"
+                                fill="#657786"
                               >
-                                <svg
-                                  width="24"
-                                  height="24"
-                                  viewBox="0 0 24 24"
-                                  fill="#657786"
-                                >
-                                  <path
-                                    d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"
-                                  />
-                                </svg>
-                              </div>`}
-                          <svg
-                            width="20"
-                            height="20"
-                            viewBox="0 0 24 24"
-                            fill="#000"
-                            style="margin-right:8px;"
-                          >
-                            <path
-                              d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"
-                            />
-                          </svg>
-                          <span
-                            style="font-weight:600; color:#000000; font-size:14px;"
-                            >${story.metadata.twitterCreator || "Tweet"}</span
-                          >
-                        </div>
+                                <path
+                                  d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"
+                                />
+                              </svg>
+                            </div>`}
+                        <span style="font-weight: 600; color: #0f1419; font-size: 14px;">
+                          ${story.metadata.twitterCreator || "@tweet"}
+                        </span>
                       </div>
                       <div class="tweet-embed-body">
                         <p>
-                          ${DOMPurify.sanitize(
-                            story.metadata.ogDescription || "",
-                          )
-                            .slice(0, 280)
-                            .split(/(\bhttps?:\/\/[^\s]+)/g)
-                            .map((part) => {
-                              if (part.match(/^\bhttps?:\/\//)) {
-                                return part.length > 30
-                                  ? part.substring(0, 30) + "..."
-                                  : part;
-                              }
-                              return part;
-                            })
-                            .join("")}${(story.metadata.ogDescription || "")
-                            .length > 280
-                            ? "..."
-                            : ""}
+                          ${(() => {
+                            const linkifyNodes = (text) => {
+                              const parts = text.split(/(\bhttps?:\/\/[^\s]+)/g);
+                              return parts.map((part) => {
+                                if (/^\bhttps?:\/\//.test(part)) {
+                                  const display = part.length > 40 ? part.substring(0, 40) + "…" : part;
+                                  return html`<a href="${DOMPurify.sanitize(part)}" target="_blank" rel="noopener">${DOMPurify.sanitize(display)}</a>`;
+                                }
+                                return DOMPurify.sanitize(part);
+                              });
+                            };
+                            const desc = (story.metadata.ogDescription || "").trim();
+                            if (/^https?:\/\/\S+$/i.test(desc)) {
+                              return html`<a href="${DOMPurify.sanitize(desc)}" target="_blank" rel="noopener">${DOMPurify.sanitize(desc)}</a>`;
+                            }
+                            const sliced = desc.slice(0, 260);
+                            const nodes = linkifyNodes(sliced);
+                            return html`${nodes}${desc.length > 260 ? '…' : ''}`;
+                          })()}
                         </p>
                         ${story.metadata.image
                           ? html`
                               <div style="margin-top: 12px; position: relative;">
-                                <div style="width: 100%; aspect-ratio: 16 / 9; background: rgba(0,0,0,0.03); border-radius: 2px; overflow: hidden;">
+                                <div style="width: 100%; aspect-ratio: 16 / 9; background: transparent; border-radius: 0; overflow: hidden; border: none;">
                                   <img
                                     src="${DOMPurify.sanitize(story.metadata.image)}"
                                     alt="Tweet image"
                                     width="1600"
                                     height="900"
-                                    style="width: 100%; height: 100%; object-fit: contain; display: block;"
+                                    style="width: 100%; height: 100%; object-fit: contain; display: block; background-color: #ffffff;"
                                     loading="lazy"
                                   />
                                 </div>
@@ -593,6 +581,9 @@ const row = (
                             `
                           : null}
                       </div>
+                    </div>
+                    <div style="display:flex; justify-content:flex-end; margin-top:8px;">
+                      <span style="font-size: 11px; opacity: 0.55; color:#0f1419;">x.com</span>
                     </div>
                   </div>
                 </a>`
@@ -664,110 +655,90 @@ const row = (
                 >
                   <div class="farcaster-embed-container">
                     <div>
-                      <div class="farcaster-embed-metadata">
-                        <div class="farcaster-embed-author-avatar-container">
-                          ${story.metadata.farcasterCast?.author?.pfp
-                            ? html`<img
-                                src="${DOMPurify.sanitize(
-                                  story.metadata.farcasterCast.author.pfp,
-                                )}"
-                                alt="${DOMPurify.sanitize(
-                                  story.metadata.farcasterCast.author
-                                    .displayName ||
-                                    story.metadata.farcasterCast.author
-                                      .username,
-                                )}"
-                                width="40"
-                                height="40"
-                                loading="lazy"
-                                class="farcaster-embed-author-avatar"
-                              />`
-                            : html`<svg
-                                width="24"
-                                height="24"
-                                viewBox="0 0 1000 1000"
-                                xmlns="http://www.w3.org/2000/svg"
-                                style="color: #8A63D2;"
-                              >
-                                <path
-                                  d="M257.778 155.556H742.222V844.444H671.111V528.889H257.778V155.556Z"
-                                  fill="currentColor"
-                                />
-                                <path
-                                  d="M128.889 528.889H257.778V844.444H128.889V528.889Z"
-                                  fill="currentColor"
-                                />
-                              </svg>`}
-                        </div>
-                        <div class="farcaster-embed-author">
-                          <p class="farcaster-embed-author-display-name">
-                            ${story.metadata.farcasterCast?.author
-                              ?.displayName ||
-                            story.metadata.ogTitle ||
-                            "Cast"}
-                          </p>
-                          <p
-                            class="farcaster-embed-author-username"
-                            style="opacity: 0.6;"
-                          >
-                            @${story.metadata.farcasterCast?.author?.username ||
-                            "farcaster"}
-                          </p>
-                        </div>
+                      <div style="display: flex; align-items: center; margin-bottom: 12px;">
+                        ${story.metadata.farcasterCast?.author?.pfp
+                          ? html`<img
+                              src="${DOMPurify.sanitize(
+                                story.metadata.farcasterCast.author.pfp,
+                              )}"
+                              alt="${DOMPurify.sanitize(
+                                story.metadata.farcasterCast.author.username || "farcaster",
+                              )}"
+                              width="20"
+                              height="20"
+                              loading="lazy"
+                              style="border-radius: 9999px; margin-right: 8px;"
+                            />`
+                          : html`<svg
+                              width="20"
+                              height="20"
+                              viewBox="0 0 1000 1000"
+                              xmlns="http://www.w3.org/2000/svg"
+                              style="color: #7c65c1; margin-right: 8px;"
+                            >
+                              <path
+                                d="M257.778 155.556H742.222V844.444H671.111V528.889H257.778V155.556Z"
+                                fill="currentColor"
+                              />
+                              <path
+                                d="M128.889 528.889H257.778V844.444H128.889V528.889Z"
+                                fill="currentColor"
+                              />
+                            </svg>`}
+                        <span style="font-weight: 600; color: #12212b; font-size: 14px;">
+                          @${story.metadata.farcasterCast?.author?.username || "farcaster"}
+                        </span>
                       </div>
                       <div class="farcaster-embed-body">
                         <p>
-                          ${story.metadata.farcasterCast?.text
-                            ? DOMPurify.sanitize(
-                                story.metadata.farcasterCast.text,
-                              )
-                                .slice(0, 280)
-                                .split(/(\bhttps?:\/\/[^\s]+)/g)
-                                .map((part) => {
-                                  if (part.match(/^\bhttps?:\/\//)) {
-                                    return part.length > 30
-                                      ? part.substring(0, 30) + "..."
-                                      : part;
-                                  }
-                                  return part;
-                                })
-                                .join("") +
-                              (story.metadata.farcasterCast.text.length > 280
-                                ? "..."
-                                : "")
-                            : DOMPurify.sanitize(
-                                story.metadata.ogDescription || "",
-                              )
-                                .slice(0, 280)
-                                .split(/(\bhttps?:\/\/[^\s]+)/g)
-                                .map((part) => {
-                                  if (part.match(/^\bhttps?:\/\//)) {
-                                    return part.length > 30
-                                      ? part.substring(0, 30) + "..."
-                                      : part;
-                                  }
-                                  return part;
-                                })
-                                .join("") +
-                              ((story.metadata.ogDescription || "").length > 280
-                                ? "..."
-                                : "")}
+                          ${(() => {
+                            const linkifyNodes = (text) => {
+                              const parts = text.split(/(\bhttps?:\/\/[^\s]+)/g);
+                              return parts.map((part) => {
+                                if (/^\bhttps?:\/\//.test(part)) {
+                                  const display = part.length > 40 ? part.substring(0, 40) + "…" : part;
+                                  return html`<a href="${DOMPurify.sanitize(part)}" target="_blank" rel="noopener">${DOMPurify.sanitize(display)}</a>`;
+                                }
+                                return DOMPurify.sanitize(part);
+                              });
+                            };
+
+                            if (story.metadata.farcasterCast?.text) {
+                              const text = story.metadata.farcasterCast.text.trim();
+                              if (/^https?:\/\/\S+$/i.test(text)) {
+                                return html`<a href="${DOMPurify.sanitize(text)}" target="_blank" rel="noopener">${DOMPurify.sanitize(text)}</a>`;
+                              }
+                              const sliced = text.slice(0, 260);
+                              const nodes = linkifyNodes(sliced);
+                              return html`${nodes}${text.length > 260 ? '…' : ''}`;
+                            }
+                            const desc = (story.metadata.ogDescription || "").trim();
+                            if (/^https?:\/\/\S+$/i.test(desc)) {
+                              return html`<a href="${DOMPurify.sanitize(desc)}" target="_blank" rel="noopener">${DOMPurify.sanitize(desc)}</a>`;
+                            }
+                            const sliced = desc.slice(0, 260);
+                            const nodes = linkifyNodes(sliced);
+                            return html`${nodes}${desc.length > 260 ? '…' : ''}`;
+                          })()}
                         </p>
                         ${farcasterImageUrl
                           ? html`
                               <div style="height: 16px;"></div>
-                              <div style="width: 100%; aspect-ratio: 16 / 9; background: rgba(0,0,0,0.03); border-radius: 2px; overflow: hidden;">
+                              <div style="width: 100%; aspect-ratio: 16 / 9; background: transparent; border-radius: 0; overflow: hidden; border: none;">
                                 <img
                                   src="${DOMPurify.sanitize(farcasterImageUrl)}"
                                   alt="Cast image"
                                   width="1600"
                                   height="900"
-                                  style="width: 100%; height: 100%; object-fit: contain; display: block;"
+                                  style="width: 100%; height: 100%; object-fit: contain; display: block; background-color: #ffffff;"
                                   loading="lazy"
                                 />
                               </div>
                             `
                           : null}
+                      </div>
+                      <div style="display:flex; justify-content:flex-end; margin-top:8px;">
+                        <span style="font-size: 11px; opacity: 0.75; color:#7c65c1;">farcaster.xyz</span>
                       </div>
                     </div>
                   </div>

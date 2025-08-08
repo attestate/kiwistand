@@ -513,6 +513,11 @@ body {
 /* Tweet preview container - visible on all devices */
 .tweet-preview-container {
   display: block;
+  margin: 0; /* no margin */
+  padding: 0; /* no padding */
+  background: transparent;
+  border-radius: 0;
+  border: none;
 }
 
 /* Desktop defaults for SSR comment input placeholders */
@@ -528,25 +533,32 @@ body.react-loaded .comment-input-host nav-comment-input { visibility: visible; }
 /* Farcaster preview container - visible on all devices */
 .farcaster-preview-container {
   display: block;
+  margin: 0; /* no margin */
+  padding: 0; /* no padding */
+  background: transparent;
+  border-radius: 0;
+  border: none;
 }
 
 /* Farcaster embed styles */
 .farcaster-embed-container * {
   box-sizing: border-box;
-  margin: 0 !important;
-  padding: 0 !important;
 }
 
 .farcaster-embed-container {
   position: relative;
-  padding: 1rem !important;
+  padding: 16px !important;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   height: 100%;
-  border-radius: 2px;
+  border-radius: 0; /* no rounding */
   margin: 0;
-  background: var(--background-color0);
+  background: #ffffff; /* white background extends to edges */
+  color: #12212b;
+  border: none;
+  border-bottom: 1px solid #e6e6df; /* same border as row */
+  box-shadow: none; /* no shadow */
 }
 
 .farcaster-embed-metadata {
@@ -579,9 +591,9 @@ body.react-loaded .comment-input-host nav-comment-input { visibility: visible; }
 .farcaster-embed-author-avatar-container {
   width: 40px;
   height: 40px;
-  border-radius: 2px;
+  border-radius: 9999px;
   overflow: hidden;
-  border: 1px solid #ccc;
+  border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .farcaster-embed-author-avatar {
@@ -596,25 +608,28 @@ body.react-loaded .comment-input-host nav-comment-input { visibility: visible; }
 }
 
 .farcaster-embed-author-display-name {
-  color: #000000;
+  color: #12212b;
   font-weight: 600;
 }
 
 .farcaster-embed-author-username {
-  opacity: 0.5;
+  opacity: 0.7;
+  color: #7c65c1;
 }
 
 .farcaster-embed-body {
-  margin-top: 0.75rem !important;
+  margin-top: 0.75rem;
 }
 
 .farcaster-embed-body p {
-  font-size: 1rem;
+  font-size: 0.95rem;
   line-height: 1.5rem;
   overflow-wrap: break-word;
   white-space: pre-wrap;
-  color: #000000;
+  color: #12212b;
   font-weight: 400;
+  margin: 0;
+  padding: 0;
 }
 
 .farcaster-embed-stats {
@@ -660,14 +675,23 @@ body.react-loaded .comment-input-host nav-comment-input { visibility: visible; }
 /* Tweet embed styles */
 .tweet-embed-container {
   position: relative;
-  padding: 1rem !important;
+  padding: 16px !important;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   height: 100%;
-  border-radius: 2px;
+  border-radius: 0; /* no rounding */
   margin: 0;
-  background: var(--background-color0);
+  background: #ffffff; /* white background extends to edges */
+  color: #0f1419;
+  border: none;
+  border-bottom: 1px solid #e6e6df; /* same border as row */
+  box-shadow: none; /* no shadow */
+}
+
+/* Ensure inner images inherit outer card clip and don’t create extra corners */
+.tweet-preview-container img, .farcaster-preview-container img {
+  border-radius: 0 !important;
 }
 
 .tweet-embed-header {
@@ -679,12 +703,23 @@ body.react-loaded .comment-input-host nav-comment-input { visibility: visible; }
 }
 
 .tweet-embed-body p {
-  font-size: 1rem;
+  font-size: 0.95rem;
   line-height: 1.5rem;
   overflow-wrap: break-word;
   white-space: pre-wrap;
-  color: #000000;
+  color: #0f1419;
   font-weight: 400;
+}
+
+/* Link styling inside preview bodies (make URLs useful but subtle) */
+.tweet-embed-body a, .farcaster-embed-body a {
+  color: #536471; /* Twitter-style link color */
+  text-decoration: none;
+  opacity: 1;
+}
+
+.tweet-embed-body a:hover, .farcaster-embed-body a:hover {
+  text-decoration: underline;
 }
 
 
