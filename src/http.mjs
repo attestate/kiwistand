@@ -28,6 +28,23 @@ import * as registry from "./chainstate/registry.mjs";
 import log from "./logger.mjs";
 import theme from "./theme.mjs";
 import feed, { index } from "./views/feed.mjs";
+
+// Global error handlers to catch crashes and log them properly
+process.on("uncaughtException", (err) => {
+  console.error("UNCAUGHT EXCEPTION (HTTP):", err.message);
+  console.error(err.stack);
+  // Give the process time to write logs before exiting
+  setTimeout(() => process.exit(1), 100);
+});
+
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("UNHANDLED REJECTION (HTTP) at:", promise);
+  console.error("Reason:", reason);
+  // Log stack trace if available
+  if (reason && reason.stack) {
+    console.error(reason.stack);
+  }
+});
 import story, { generateStory } from "./views/story.mjs";
 import newest, * as newAPI from "./views/new.mjs";
 import best, * as bestAPI from "./views/best.mjs";

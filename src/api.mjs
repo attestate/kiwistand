@@ -21,6 +21,23 @@ import * as newest from "./views/new.mjs";
 import { generatePreview } from "./views/story.mjs";
 import { getSubmission, isReactionComment } from "./cache.mjs";
 
+// Global error handlers to catch crashes and log them properly
+process.on("uncaughtException", (err) => {
+  console.error("UNCAUGHT EXCEPTION:", err.message);
+  console.error(err.stack);
+  // Give the process time to write logs before exiting
+  setTimeout(() => process.exit(1), 100);
+});
+
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("UNHANDLED REJECTION at:", promise);
+  console.error("Reason:", reason);
+  // Log stack trace if available
+  if (reason && reason.stack) {
+    console.error(reason.stack);
+  }
+});
+
 const ajv = new Ajv();
 addFormats(ajv);
 const api = express.Router();
