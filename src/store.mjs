@@ -434,7 +434,11 @@ async function atomicPut(trie, message, identity, accounts, delegations) {
       // Invalidate activity caches for all affected users in a truly non-blocking way
       // This contains synchronous getSubmission calls that can be slow
       setImmediate(() => {
-        invalidateActivityCaches(message);
+        try {
+          invalidateActivityCaches(message);
+        } catch (err) {
+          log(`Error in invalidateActivityCaches: ${err.stack}`);
+        }
       });
 
       // Trigger notifications in a truly non-blocking way
