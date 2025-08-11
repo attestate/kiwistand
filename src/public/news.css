@@ -518,6 +518,9 @@ body {
   background: transparent;
   border-radius: 0;
   border: none;
+  max-width: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 /* Desktop defaults for SSR comment input placeholders */
@@ -538,6 +541,9 @@ body.react-loaded .comment-input-host nav-comment-input { visibility: visible; }
   background: transparent;
   border-radius: 0;
   border: none;
+  max-width: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 /* Farcaster embed styles */
@@ -559,6 +565,8 @@ body.react-loaded .comment-input-host nav-comment-input { visibility: visible; }
   border: none;
   border-bottom: 1px solid #e6e6df; /* same border as row */
   box-shadow: none; /* no shadow */
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .farcaster-embed-metadata {
@@ -687,6 +695,8 @@ body.react-loaded .comment-input-host nav-comment-input { visibility: visible; }
   border: none;
   border-bottom: 1px solid #e6e6df; /* same border as row */
   box-shadow: none; /* no shadow */
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 /* Ensure inner images inherit outer card clip and don’t create extra corners */
@@ -1116,6 +1126,7 @@ body.react-loaded .comment-input-host nav-comment-input { visibility: visible; }
     }
     .header-bell {
       width: 20% !important;
+      align-items: center;
     }
     .desktop-nav {
       width: 47%;

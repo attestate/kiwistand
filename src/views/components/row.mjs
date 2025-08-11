@@ -566,11 +566,13 @@ const row = (
                         </p>
                         ${story.metadata.image
                           ? html`
-                              <div style="margin-top: 12px;">
+                              <div style="margin-top: 12px; position: relative; width: 100%; aspect-ratio: 16 / 9; background: rgba(0,0,0,0.03); border-radius: 2px; overflow: hidden;">
                                 <img
                                   src="${DOMPurify.sanitize(story.metadata.image)}"
                                   alt="Tweet image"
-                                  style="width: 100%; height: auto; max-width: 100%; display: block; border-radius: 8px;"
+                                  width="600"
+                                  height="338"
+                                  style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 2px;"
                                   loading="lazy"
                                 />
                               </div>
@@ -719,11 +721,13 @@ const row = (
                         </p>
                         ${farcasterImageUrl
                           ? html`
-                              <div style="margin-top: 12px;">
+                              <div style="margin-top: 12px; position: relative; width: 100%; aspect-ratio: 16 / 9; background: rgba(0,0,0,0.03); border-radius: 2px; overflow: hidden;">
                                 <img
                                   src="${DOMPurify.sanitize(farcasterImageUrl)}"
                                   alt="Cast image"
-                                  style="width: 100%; height: auto; max-width: 100%; display: block; border-radius: 8px;"
+                                  width="600"
+                                  height="338"
+                                  style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 2px;"
                                   loading="lazy"
                                 />
                               </div>
@@ -853,18 +857,23 @@ const row = (
               class="${displayCommentPreview
                 ? "with-comment-preview"
                 : `without-comment-preview without-comment-preview-0x${story.index}`}"
-              style="display: flex; flex-direction: column; padding: 12px 20px; box-sizing: border-box;"
+              style="display: flex; flex-direction: column; padding: ${
+                canRenderTweetPreview || canRenderFarcasterPreview ? "8px 20px" : "12px 20px"
+              }; box-sizing: border-box;"
               class:mobile-information-row
             >
               <div
                 class="content-container"
-                style="display: flex; align-items: start; gap: 12px; margin-bottom: 8px; width: 100%;"
+                style="display: flex; align-items: start; gap: 12px; margin-bottom: ${
+                  canRenderTweetPreview || canRenderFarcasterPreview ? "4px" : "8px"
+                }; width: 100%;"
               >
                 <div
                   class="story-link-container-wrapper"
                   style="display:flex; justify-content: center; flex-direction: column; flex-grow: 1; line-height: 1.3; padding-right: 14px;"
                 >
-                  <span>
+                  ${!(canRenderTweetPreview || canRenderFarcasterPreview)
+                    ? html`<span>
                     <span class="story-link-container">
                       <a
                         data-no-instant
@@ -971,10 +980,13 @@ const row = (
                       </a>
                       <span> </span>
                     </span>
-                  </span>
+                  </span>`
+                    : ""}
                   <div
                     class="story-subtitle subtitle-flex"
-                  style="font-size: 9pt; margin-top: 3px; display: flex; flex-wrap: wrap; align-items: center; column-gap: 6px; row-gap: 2px; padding-right: 16px;"
+                  style="font-size: 9pt; margin-top: ${ 
+                    canRenderTweetPreview || canRenderFarcasterPreview ? "-4px" : "3px"
+                  }; display: flex; flex-wrap: wrap; align-items: center; column-gap: 6px; row-gap: 2px; padding-right: 16px;"
                   >
                   <span class="meta-item" style="opacity: 0.8; gap: 4px; white-space: nowrap; flex-wrap: nowrap; min-width: 0;">
                     ${(() => {
@@ -1126,7 +1138,9 @@ const row = (
               ${!interactive
                 ? html`<div
                     class="interaction-bar"
-                    style="display: flex; gap: 0; margin-top: 8px; padding: 0; justify-content: space-between;"
+                    style="display: flex; gap: 0; margin-top: ${
+                      canRenderTweetPreview || canRenderFarcasterPreview ? "2px" : "8px"
+                    }; padding: 0; justify-content: space-between;"
                   >
                     <div
                       data-title="${DOMPurify.sanitize(story.title)}"

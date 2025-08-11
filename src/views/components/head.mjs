@@ -93,6 +93,20 @@ export function custom(
         table-layout: fixed;
       }
       
+      /* Reserve space for header-bell to prevent layout shift */
+      #bell {
+        min-height: 30px;
+      }
+      
+      .header-bell {
+        min-height: 44px;
+      }
+      
+      /* Stabilize comment preview areas */
+      .comment-preview {
+        min-height: 60px;
+      }
+      
       /* Remove custom @font-face to avoid double-loading Inter; use Google CSS above */
     </style>
     <script src="event-queue.js"></script>
