@@ -7,7 +7,7 @@ import Sidebar from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
 import { custom } from "./components/head.mjs";
 
-import { getLeaderboard, getCurrentUserRank, getTimeRemainingInRound } from '../leaderboard.mjs';
+import { getLeaderboard, getTimeRemainingInRound } from '../leaderboard.mjs';
 import DOMPurify from "isomorphic-dompurify";
 import { formatDistance } from 'date-fns';
 
@@ -15,10 +15,20 @@ const html = htm.bind(vhtml);
 
 export default async function Leaderboard(identity, theme) {
   const leaderboard = await getLeaderboard();
-  const currentUserRank = await getCurrentUserRank(identity);
   const timeRemaining = getTimeRemainingInRound();
   const endDate = new Date(Date.now() + timeRemaining);
   const formattedTime = formatDistance(endDate, new Date(), { addSuffix: false });
+
+  let currentUserRank = null;
+  if (identity) {
+    const rankIndex = leaderboard.findIndex((user) => user.identity.toLowerCase() === identity.toLowerCase());
+    if (rankIndex !== -1) {
+      currentUserRank = {
+        rank: rankIndex + 1,
+        karma: leaderboard[rankIndex].karma
+      };
+    }
+  }
 
   const path = "/community";
 

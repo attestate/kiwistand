@@ -51,11 +51,7 @@ export async function getLeaderboard() {
     .map((result) => result.value);
 }
 
-export async function getCurrentUserRank(identity) {
-  const leaderboard = await getLeaderboard();
-  const rank = leaderboard.findIndex((user) => user.identity === identity);
-  return rank !== -1 ? rank + 1 : null;
-}
+
 
 export function getTimeRemainingInRound() {
   const { endDate } = getCurrentRoundDates();
