@@ -14,13 +14,42 @@ Kiwi News is built on an open, permissionless, and decentralized peer-to-peer pr
 
 For a deeper dive into the protocol, see the [Protocol Guide](https://github.com/attestate/kiwistand/blob/main/docs/source/protocol-guide.rst).
 
+## IMPORTANT: API Architecture
+
+**The Kiwi News API is split across two different ports with distinct purposes:**
+
+### Port 443 (Standard HTTPS) - Public Read API
+- **Base URL**: `https://news.kiwistand.com/api/v1`
+- **Purpose**: Public, read-only data access
+- **CORS**: Fully enabled (`Access-Control-Allow-Origin: *`)
+- **Endpoints**:
+  - `GET /feeds/hot` - Trending stories with metadata
+  - `GET /feeds/new` - Newest stories
+  - `GET /feeds/best` - Top-rated stories
+  - `GET /profile/:address` - User profile data (ENS, avatars, social links)
+  - `GET /karma/:address` - User karma scores
+
+### Port 8443 - Core API (Read/Write)
+- **Base URL**: `https://news.kiwistand.com:8443/api/v1`
+- **Purpose**: Core API for all read/write operations
+- **CORS**: Fully enabled (`Access-Control-Allow-Origin: *`)
+- **Endpoints**:
+  - `POST /list` - Paginated list of messages
+  - `GET /allowlist` - Array of allowed Ethereum addresses
+  - `GET /delegations` - Delegation mappings
+  - `GET /stories?index=:index` - Single story details
+  - `POST /messages` - Submit new messages (stories, comments, upvotes)
+
 ### For Client Developers (Recommended)
 
-If you only want to build a client against the Kiwi News API, it is highly recommended to use the public, production instance instead of running your own node. This allows you to skip the complex node setup and synchronization process.
+If you only want to build a client against the Kiwi News API, use the public instances:
 
--   **Public API Endpoint**: `https://news.kiwistand.com/api/v1/messages`
+-   **Core API (Read/Write)**: `https://news.kiwistand.com:8443/api/v1`
+-   **Public Feeds (Read-only)**: `https://news.kiwistand.com/api/v1`
 
-Use the "Client API & Signing" documentation below to interact with this endpoint.
+**Note**: For browser-based applications, you'll need to handle CORS:
+- Port 8443 endpoints work directly from browsers
+- Port 443 endpoints require a server-side proxy due to lack of CORS headers
 
 ### For Node Operators (Advanced)
 
@@ -56,35 +85,17 @@ This guide provides everything you need to build a simple client that can read t
 
 Here is a complete, language-agnostic overview of the process:
 
-1.  **Fetch the Feed**: Send a `POST` request to `https://news.kiwistand.com/api/v1/list` with a JSON body like `{"from": 0, "amount": 10, "type": "amplify"}` to get the first 10 stories.
-2.  **Check Authorization**: To upvote, the user's address must hold a Kiwi Pass NFT. You can verify this by fetching the `https://news.kiwistand.com/api/v1/allowlist` and checking if the user's address is included.
+1.  **Fetch the Feed**: Send a `POST` request to `https://news.kiwistand.com:8443/api/v1/list` with a JSON body like `{"from": 0, "amount": 10, "type": "amplify"}` to get the first 10 stories.
+2.  **Check Authorization**: To upvote, the user's address must hold a Kiwi Pass NFT. You can verify this by fetching `https://news.kiwistand.com:8443/api/v1/allowlist` and checking if the user's address is included.
 3.  **Prepare the Message**: Let's say you want to upvote the first story from the feed. You'll create a JSON object with its `title` and `href`.
 4.  **Sign the Message**: Using an EIP-712 compliant library, sign the message object with the user's Ethereum private key.
-5.  **Submit the Upvote**: Send a `POST` request to `https://news.kiwistand.com/api/v1/messages` with the message object from step 3, plus the `signature` from step 4.
+5.  **Submit the Upvote**: Send a `POST` request to `https://news.kiwistand.com:8443/api/v1/messages` with the message object from step 3, plus the `signature` from step 4.
 
 ---
 
 ## Client API: Step-by-Step Guide
 
-The Kiwi News API is versioned under `/api/v1`. The public, production instance is available at `https://news.kiwistand.com`.
-
-### Step 1: Fetching the Feed
-
-To get a list of stories or comments, you send a `POST` request to the `/api/v1/list` endpoint.
-
--   **Endpoint**: `POST /api/v1/list`
--   **Description**: Retrieves a paginated list of messages.
--   **Request Body**:
-    -   `from` (integer): The starting offset.
-    -   `amount` (integer): The number of items to retrieve.
-    -   `type` (string, optional): `"amplify"` for stories (default) or `"comment"` for comments.
-
-**Example Request:**
----
-
-## Client API: A Developer's Guide
-
-This guide provides a detailed walkthrough of how to interact with the Kiwi News API. The public, production instance is available at `https://news.kiwistand.com`. All API endpoints are versioned under `/api/v1`.
+The Kiwi News API is versioned under `/api/v1` and split across two ports as described above.
 
 ### Core Concepts
 
@@ -95,17 +106,24 @@ This guide provides a detailed walkthrough of how to interact with the Kiwi News
 
 ### Reading from the API
 
-#### Fetching Feeds (`/api/v1/list`)
+#### Fetching Feeds (`/api/v1/list` on port 8443)
 
 To get a list of stories or comments, send a `POST` request.
 
--   **Endpoint**: `POST /api/v1/list`
+-   **Endpoint**: `POST https://news.kiwistand.com:8443/api/v1/list`
 -   **Request Body**:
     -   `from` (integer): The starting offset for pagination.
     -   `amount` (integer): The number of items to retrieve.
     -   `type` (string, optional): `"amplify"` for stories (default) or `"comment"` for comments.
 
-**Example Response (`/api/v1/list`)**:
+**Example Request:**
+```bash
+curl -X POST https://news.kiwistand.com:8443/api/v1/list \
+  -H "Content-Type: application/json" \
+  -d '{"from": 0, "amount": 10, "type": "amplify"}'
+```
+
+**Example Response:**
 ```json
 {
   "status": "success",
@@ -127,6 +145,17 @@ To get a list of stories or comments, send a `POST` request.
 }
 ```
 
+#### Fetching Named Feeds (port 443)
+
+For curated feeds, use the GET endpoints on port 443:
+
+-   **Endpoints**: 
+    - `GET https://news.kiwistand.com/api/v1/feeds/hot`
+    - `GET https://news.kiwistand.com/api/v1/feeds/new`
+    - `GET https://news.kiwistand.com/api/v1/feeds/best`
+-   **Query Parameters**: `?page=0` for pagination
+-   **Note**: These endpoints don't support CORS, so browser clients need a proxy
+
 #### Resolving Author Identity (`signer` vs. `identity`)
 
 When you receive a message, you need to determine the author's identity. Here is the required client-side logic:
@@ -136,15 +165,14 @@ When you receive a message, you need to determine the author's identity. Here is
 3.  **If `signer` === `identity`**: The user acted with their main wallet.
 4.  **If `signer` !== `identity`**: The user acted with a delegated key. The `identity` field shows you who the true author is. You can verify this delegation is valid by checking the `/api/v1/delegations` endpoint.
 
-#### Fetching a Single Story (`/api/v1/stories`)
+#### Fetching a Single Story
 
--   **Endpoint**: `GET /api/v1/stories?index=<message_index>`
+-   **Endpoint**: `GET https://news.kiwistand.com:8443/api/v1/stories?index=<message_index>`
 -   **Description**: Retrieves the full details for a single story, including all of its comments and reactions.
--   **Example Response**: The response will be a single story object (like the one in the `/api/v1/list` example), but with an additional `comments` array containing comment objects.
 
 ### Writing to the API
 
-All write actions require an EIP-712 signature.
+All write actions require an EIP-712 signature and must be sent to port 8443.
 
 #### The EIP-712 Signature Payload
 
@@ -174,10 +202,21 @@ All write actions require an EIP-712 signature.
 -   `"comment"`: Used for posting a comment. The `href` should be `kiwi:<story_index>`.
 -   `"reaction"`: Used for emoji reactions on comments. The `href` should be `kiwi:<comment_index>`.
 
-#### Submitting a Message (`/api/v1/messages`)
+#### Submitting a Message
 
--   **Endpoint**: `POST /api/v1/messages`
+-   **Endpoint**: `POST https://news.kiwistand.com:8443/api/v1/messages`
 -   **Request Body**: A JSON object containing the message data (`title`, `href`, `type`, `timestamp`) plus the `signature`.
+
+**Example Request Body:**
+```json
+{
+  "title": "The Title of the Story Being Upvoted",
+  "href": "https://example.com/the-story-url",
+  "type": "amplify",
+  "timestamp": 1678886400,
+  "signature": "0x[... the long EIP-712 signature you generated ...]"
+}
+```
 
 ### Verifying Signatures (Client-Side)
 
@@ -210,156 +249,97 @@ console.log("Is signature valid?", recoveredAddress.toLowerCase() === signer.toL
 -   **Not on Allowlist**: If the `identity` address does not hold a Kiwi Pass NFT, the API will return a `400 Bad Request` with a detail message like "You must mint the Kiwi NFT...".
 -   **Duplicate Message**: If a user tries to upvote the same story twice, the API will return a `400 Bad Request` with a detail message indicating it's a duplicate.
 
-### Other Useful Endpoints
+### Other Useful Endpoints (Port 8443)
 
--   **`GET /api/v1/allowlist`**: Retrieves the list of all Ethereum addresses that hold the Kiwi Pass NFT.
--   **`GET /api/v1/delegations`**: Retrieves an object of valid delegations in the form of `to:from`.
--   **`GET /api/v1/profile/:address`**: Retrieves profile information (ENS, avatar) for an address.
--   **`GET /api/v1/karma/:address`**: Returns the karma score for an address.
--   **`GET /api/v1/feeds/:name`**: Retrieves a specific feed (`hot`, `new`, `best`). Supports `page` for pagination.
+-   **`GET /allowlist`**: Retrieves the list of all Ethereum addresses that hold the Kiwi Pass NFT.
+-   **`GET /delegations`**: Retrieves an object of valid delegations in the form of `to:from`.
+-   **`GET /profile/:address`**: Retrieves profile information (ENS, avatar) for an address.
+-   **`GET /karma/:address`**: Returns the karma score for an address.
 
+### Other Useful Endpoints (Port 443)
 
-**Example Response:**
-The `data` array will contain a list of story objects, which you can use to build your feed.
+-   **`GET /profile/:address`**: Retrieves profile information (ENS, avatar) for an address.
+-   **`GET /karma/:address`**: Returns the karma score for an address.
+-   **`GET /feeds/:name`**: Retrieves a specific feed (`hot`, `new`, `best`). Supports `page` for pagination.
 
-### Step 2: Authorizing a User
+## Implementation Notes for Browser Clients
 
-Before a user can perform a write action (like upvoting), you must verify they are on the allowlist.
+### CORS Handling
 
--   **Endpoint**: `GET /api/v1/allowlist`
--   **Description**: Retrieves an array of all Ethereum addresses that hold the Kiwi Pass NFT.
--   **Usage**: Fetch this list and check if your user's address is present. You can cache this list to avoid repeated requests.
+Since port 443 endpoints don't support CORS, browser-based clients have two options:
 
-### Step 3: Constructing and Signing a Message (EIP-712)
+1. **Server-side Proxy**: Create API routes in your framework (Next.js, Express, etc.) to proxy requests
+2. **Use Port 8443 Only**: Stick to the core API endpoints which have CORS enabled
 
-This is the core of all write actions on Kiwi News.
+### Example Next.js Proxy Route
 
-#### The EIP-712 Domain
-
-This object provides the context for the signature, preventing it from being used on other applications.
-
-```json
-{
-  "name": "kiwinews",
-  "version": "1.0.0",
-  "salt": "0xfe7a9d68e99b6942bb3a36178b251da8bd061c20ed1e795207ae97183b590e5b"
-}
-```
-
-#### The Message Structure
-
-This defines the data fields that will be signed.
-
-```json
-{
-  "Message": [
-    { "name": "title", "type": "string" },
-    { "name": "href", "type": "string" },
-    { "name": "type", "type": "string" },
-    { "name": "timestamp", "type": "uint256" }
-  ]
-}
-```
-
-#### Creating the Message Data
-
-To upvote a story, you create a JSON object that matches the structure above.
-
--   `title` (string): The exact title of the story you are upvoting.
--   `href` (string): The exact URL of the story.
--   `type` (string): For upvotes and new submissions, this is always `"amplify"`.
--   `timestamp` (uint256): The current UNIX timestamp in seconds.
-
-**Example Message to be Signed:**
-```json
-{
-  "title": "The Title of the Story Being Upvoted",
-  "href": "https://example.com/the-story-url",
-  "type": "amplify",
-  "timestamp": 1678886400
-}
-```
-
-You will then use a library like `ethers.js` (`signer._signTypedData(...)`) or `viem` (`walletClient.signTypedData(...)`) to sign this data object. The output will be a long hexadecimal string, which is your signature.
-
-### Step 4: Submitting the Signed Message
-
-Finally, you send the signed message to the `/api/v1/messages` endpoint.
-
--   **Endpoint**: `POST /api/v1/messages`
--   **Description**: Submits a new message (upvote, comment, etc.) to the network.
--   **Request Body**: The message object from Step 3, plus the `signature`.
-
-**Example Request Body:**
-```json
-{
-  "title": "The Title of the Story Being Upvoted",
-  "href": "https://example.com/the-story-url",
-  "type": "amplify",
-  "timestamp": 1678886400,
-  "signature": "0x[... the long EIP-712 signature you generated ...]"
-}
-```
-
-A successful submission will return a `200 OK` response with a success message.
-
-### Step 5: Verifying a Message Signature (Client-Side)
-
-When you fetch messages from the `/api/v1/list` endpoint, each message includes a `signature`. Your client should verify this signature to confirm the authenticity of the message and identify the signer.
-
-Using `ethers.js`, you can recover the signer's address from the message data and signature.
-
-**Example using `ethers.js`:**
 ```javascript
-import { verifyTypedData } from "ethers/lib/utils";
-
-// 1. The EIP-712 domain and types (as defined above)
-const domain = {
-  name: "kiwinews",
-  version: "1.0.0",
-  salt: "0xfe7a9d68e99b6942bb3a36178b251da8bd061c20ed1e795207ae97183b590e5b"
-};
-
-const types = {
-  Message: [
-    { name: "title", type: "string" },
-    { name: "href", type: "string" },
-    { name: "type", type: "string" },
-    { name: "timestamp", type: "uint256" }
-  ]
-};
-
-// 2. The message object received from the API
-const messageFromApi = {
-  title: "The Title of the Story Being Upvoted",
-  href: "https://example.com/the-story-url",
-  type: "amplify",
-  timestamp: 1678886400,
-  signature: "0x[... the signature from the API ...]",
-  signer: "0x[... the signer address from the API ...]"
-};
-
-// 3. Separate the signature from the message data
-const signature = messageFromApi.signature;
-const messageToVerify = {
-  title: messageFromApi.title,
-  href: messageFromApi.href,
-  type: messageFromApi.type,
-  timestamp: messageFromApi.timestamp
-};
-
-// 4. Recover the signer's address
-const recoveredAddress = verifyTypedData(domain, types, messageToVerify, signature);
-
-// 5. The recoveredAddress should match the `signer` field from the API
-console.log("Does signature match?", recoveredAddress.toLowerCase() === messageFromApi.signer.toLowerCase());
+// app/api/proxy/feeds/[name]/route.ts
+export async function GET(request, { params }) {
+  const { name } = params;
+  const url = new URL(request.url);
+  const page = url.searchParams.get('page') || '0';
+  
+  const response = await fetch(
+    `https://news.kiwistand.com/api/v1/feeds/${name}?page=${page}`
+  );
+  
+  const data = await response.json();
+  return NextResponse.json(data);
+}
 ```
 
-### Other Useful Endpoints
+### Response Format
 
--   **`GET /api/v1/delegations`**: Retrieves an object of valid delegations in the form of `to:from`, where `from` is the identity address (NFT holder) and `to` is the delegated signing key. This is useful for clients that want to support signless interactions.
--   **`GET /api/v1/profile/:address`**: Retrieves profile information for a given Ethereum address, including ENS name and avatar.
--   **`GET /api/v1/karma/:address`**: Returns the karma score for a given address.
--   **`GET /api/v1/stories?index=:index`**: Fetches the full details for a single story, including all of its comments and reactions.
--   **`GET /api/v1/feeds/:name`**: Retrieves a specific feed. Supported `:name` values are `hot`, `new`, and `best`. This endpoint supports pagination via the `page` query parameter.
+All API responses follow a consistent structure:
 
+**Success Response:**
+```json
+{
+  "status": "success",
+  "code": 200,
+  "message": "OK",
+  "details": "Description of what was returned",
+  "data": { /* actual response data */ }
+}
+```
+
+**Error Response:**
+```json
+{
+  "status": "error",
+  "code": 400,
+  "message": "Bad Request",
+  "details": "Detailed error message",
+  "errors": [ /* validation errors if applicable */ ]
+}
+```
+
+## Testing the API
+
+You can test the API endpoints using curl:
+
+```bash
+# Get the allowlist (port 8443)
+curl https://news.kiwistand.com:8443/api/v1/allowlist
+
+# Get hot feed (port 443, no CORS)
+curl https://news.kiwistand.com/api/v1/feeds/hot
+
+# Get stories list (port 8443)
+curl -X POST https://news.kiwistand.com:8443/api/v1/list \
+  -H "Content-Type: application/json" \
+  -d '{"from": 0, "amount": 20, "type": "amplify"}'
+
+# Get user profile (works on both ports)
+curl https://news.kiwistand.com/api/v1/profile/0x0DF5Ba52e8C055950AaAf5fcFE829020e898ee60
+```
+
+## Common Pitfalls
+
+1. **Using wrong port**: Remember port 8443 for core API, port 443 for public feeds
+2. **CORS issues**: Port 443 endpoints need a proxy for browser access
+3. **Missing required fields**: The API validates JSON schemas strictly
+4. **Timestamp format**: Use UNIX timestamps in seconds, not milliseconds
+5. **Signature format**: Ensure signatures include the "0x" prefix
+6. **Case sensitivity**: Ethereum addresses should be compared case-insensitively
