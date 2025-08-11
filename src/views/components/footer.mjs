@@ -88,6 +88,7 @@ const footer = (theme, path) => html`
         <strong>Devs</strong><br />
         <a target="_blank" href="https://attestate.com/kiwistand/main/">API</a
         ><br />
+        <a href="/llms.txt">LLMs</a><br />
         <a target="_blank" href="https://kiwistand.github.io/kiwi-docs/">Docs</a
         ><br />
         <a

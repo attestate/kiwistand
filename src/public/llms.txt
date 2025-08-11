@@ -1,0 +1,365 @@
+# Kiwistand
+
+> Kiwi News is a decentralized news aggregator built on web3 technologies. It allows users to submit, rank, and read news articles, with a focus on community curation and crypto-alignment. The platform integrates with social protocols like Farcaster and Lens.
+
+This project is a Node.js application using Express.js for the backend and server-side rendered views for the frontend. It uses modern JavaScript (ESM) and LMDB for its database.
+
+### Protocol Overview
+
+Kiwi News is built on an open, permissionless, and decentralized peer-to-peer protocol. Key features include:
+
+-   **P2P Content Distribution**: User-generated content is distributed across a P2P network. Nodes use a Merkle Patricia Trie to efficiently synchronize and verify data with each other.
+-   **NFT-based Sybil Resistance**: To post or vote, a user's Ethereum address must have minted the "Hyperkiwification" NFT on Optimism. This creates a cost for participation, which helps prevent spam.
+-   **Key Delegation**: Users can delegate signing authority from their main wallet (the `from` address that holds the NFT) to a temporary, "hot" key (the `to` address). This allows for a smoother user experience without constant wallet confirmations for every action. The logic for this is handled by the `delegator2` smart contract. For full technical details, see the [`delegator2` repository](https://github.com/attestate/delegator2).
+
+For a deeper dive into the protocol, see the [Protocol Guide](https://github.com/attestate/kiwistand/blob/main/docs/source/protocol-guide.rst).
+
+### For Client Developers (Recommended)
+
+If you only want to build a client against the Kiwi News API, it is highly recommended to use the public, production instance instead of running your own node. This allows you to skip the complex node setup and synchronization process.
+
+-   **Public API Endpoint**: `https://news.kiwistand.com/api/v1/messages`
+
+Use the "Client API & Signing" documentation below to interact with this endpoint.
+
+### For Node Operators (Advanced)
+
+Running a full Kiwi News node requires syncing with the Ethereum blockchain, which can be resource-intensive. Please see the `readme.md` for details on requirements and the initial sync process.
+
+#### Local Development
+1.  Clone the repository.
+2.  Install dependencies: `npm install`
+3.  Create the environment file: `cp .env-copy .env`
+4.  Edit the `.env` file with your RPC node configuration.
+5.  Start the development server: `npm run watch`
+
+### Common Commands
+
+-   `npm run watch`: Starts the development server with file watching (most common).
+-   `npm run dev`: A similar command to start the server.
+-   `npm start`: Starts the production server.
+-   `npm test`: Runs the test suite.
+-   `npm run lint`: Checks for code formatting issues.
+
+## Core Documentation
+
+-   [CONVENTIONS.md](https://github.com/attestate/kiwistand/blob/main/CONVENTIONS.md): **Crucial Read.** Outlines the coding style, architecture, and conventions. Please adhere to these strictly.
+-   [src/web/src/API.mjs](https://github.com/attestate/kiwistand/blob/main/src/web/src/API.mjs): **Crucial Client Reference.** Contains the frontend API logic, including EIP-712 signing details.
+-   [src/api.mjs](https://github.com/attestate/kiwistand/blob/main/src/api.mjs): Defines the core Express.js API routes for the backend.
+-   [contributing.md](https://github.com/attestate/kiwistand/blob/main/contributing.md): Guidelines on pull requests and the development process.
+
+## Building a Kiwi News Client: A Quick Start Guide
+
+This guide provides everything you need to build a simple client that can read the Kiwi News feed and upvote a story.
+
+### Quick Start: Upvoting a Story
+
+Here is a complete, language-agnostic overview of the process:
+
+1.  **Fetch the Feed**: Send a `POST` request to `https://news.kiwistand.com/api/v1/list` with a JSON body like `{"from": 0, "amount": 10, "type": "amplify"}` to get the first 10 stories.
+2.  **Check Authorization**: To upvote, the user's address must hold a Kiwi Pass NFT. You can verify this by fetching the `https://news.kiwistand.com/api/v1/allowlist` and checking if the user's address is included.
+3.  **Prepare the Message**: Let's say you want to upvote the first story from the feed. You'll create a JSON object with its `title` and `href`.
+4.  **Sign the Message**: Using an EIP-712 compliant library, sign the message object with the user's Ethereum private key.
+5.  **Submit the Upvote**: Send a `POST` request to `https://news.kiwistand.com/api/v1/messages` with the message object from step 3, plus the `signature` from step 4.
+
+---
+
+## Client API: Step-by-Step Guide
+
+The Kiwi News API is versioned under `/api/v1`. The public, production instance is available at `https://news.kiwistand.com`.
+
+### Step 1: Fetching the Feed
+
+To get a list of stories or comments, you send a `POST` request to the `/api/v1/list` endpoint.
+
+-   **Endpoint**: `POST /api/v1/list`
+-   **Description**: Retrieves a paginated list of messages.
+-   **Request Body**:
+    -   `from` (integer): The starting offset.
+    -   `amount` (integer): The number of items to retrieve.
+    -   `type` (string, optional): `"amplify"` for stories (default) or `"comment"` for comments.
+
+**Example Request:**
+---
+
+## Client API: A Developer's Guide
+
+This guide provides a detailed walkthrough of how to interact with the Kiwi News API. The public, production instance is available at `https://news.kiwistand.com`. All API endpoints are versioned under `/api/v1`.
+
+### Core Concepts
+
+-   **Message**: The fundamental unit of data on Kiwi News (e.g., a story submission, a comment, an upvote).
+-   **Message ID (`index`)**: A unique identifier derived from the message's content and timestamp. It's a hex string prefixed with the timestamp, ensuring chronological and content-based uniqueness.
+-   **`signer`**: The Ethereum address of the key that signed a message. This could be a user's main wallet or a delegated key.
+-   **`identity`**: The Ethereum address that holds the Kiwi Pass NFT. This is the true "author" of a message. If delegation is not used, the `signer` and `identity` will be the same.
+
+### Reading from the API
+
+#### Fetching Feeds (`/api/v1/list`)
+
+To get a list of stories or comments, send a `POST` request.
+
+-   **Endpoint**: `POST /api/v1/list`
+-   **Request Body**:
+    -   `from` (integer): The starting offset for pagination.
+    -   `amount` (integer): The number of items to retrieve.
+    -   `type` (string, optional): `"amplify"` for stories (default) or `"comment"` for comments.
+
+**Example Response (`/api/v1/list`)**:
+```json
+{
+  "status": "success",
+  "data": [
+    {
+      "index": "63b0bef1...",
+      "href": "https://example.com/story",
+      "signature": "0xfbc8c...",
+      "timestamp": 1672527601,
+      "title": "Example Story Title",
+      "type": "amplify",
+      "signer": "0x0DF5Ba...",
+      "identity": "0x0DF5Ba...",
+      "upvotes": 15,
+      "upvoters": ["0x0DF5Ba..."],
+      "commentCount": 3
+    }
+  ]
+}
+```
+
+#### Resolving Author Identity (`signer` vs. `identity`)
+
+When you receive a message, you need to determine the author's identity. Here is the required client-side logic:
+
+1.  **Check the `signer`**: The `signer` field is the address that created the signature.
+2.  **Check the `identity`**: The `identity` field is the NFT-holding address.
+3.  **If `signer` === `identity`**: The user acted with their main wallet.
+4.  **If `signer` !== `identity`**: The user acted with a delegated key. The `identity` field shows you who the true author is. You can verify this delegation is valid by checking the `/api/v1/delegations` endpoint.
+
+#### Fetching a Single Story (`/api/v1/stories`)
+
+-   **Endpoint**: `GET /api/v1/stories?index=<message_index>`
+-   **Description**: Retrieves the full details for a single story, including all of its comments and reactions.
+-   **Example Response**: The response will be a single story object (like the one in the `/api/v1/list` example), but with an additional `comments` array containing comment objects.
+
+### Writing to the API
+
+All write actions require an EIP-712 signature.
+
+#### The EIP-712 Signature Payload
+
+-   **Domain**:
+    ```json
+    {
+      "name": "kiwinews",
+      "version": "1.0.0",
+      "salt": "0xfe7a9d68e99b6942bb3a36178b251da8bd061c20ed1e795207ae97183b590e5b"
+    }
+    ```
+-   **Types**:
+    ```json
+    {
+      "Message": [
+        { "name": "title", "type": "string" },
+        { "name": "href", "type": "string" },
+        { "name": "type", "type": "string" },
+        { "name": "timestamp", "type": "uint256" }
+      ]
+    }
+    ```
+
+#### Message `type` Field Reference
+
+-   `"amplify"`: Used for both submitting a new story and upvoting an existing one.
+-   `"comment"`: Used for posting a comment. The `href` should be `kiwi:<story_index>`.
+-   `"reaction"`: Used for emoji reactions on comments. The `href` should be `kiwi:<comment_index>`.
+
+#### Submitting a Message (`/api/v1/messages`)
+
+-   **Endpoint**: `POST /api/v1/messages`
+-   **Request Body**: A JSON object containing the message data (`title`, `href`, `type`, `timestamp`) plus the `signature`.
+
+### Verifying Signatures (Client-Side)
+
+Your client should always verify the signature of messages received from the feed.
+
+**Example using `ethers.js`:**
+```javascript
+import { verifyTypedData } from "ethers/lib/utils";
+
+// The EIP-712 domain and types (as defined above)
+const domain = { /* ... */ };
+const types = { /* ... */ };
+
+// A message object from the /api/v1/list response
+const messageFromApi = { /* ... */ };
+
+// Separate the signature from the message data
+const { signature, signer, ...messageToVerify } = messageFromApi;
+
+// Recover the signer's address
+const recoveredAddress = verifyTypedData(domain, types, messageToVerify, signature);
+
+// The recoveredAddress should match the `signer` field
+console.log("Is signature valid?", recoveredAddress.toLowerCase() === signer.toLowerCase());
+```
+
+### Handling API Errors
+
+-   **Invalid Signature**: The API will return a `400 Bad Request` if the signature does not match the message and signer.
+-   **Not on Allowlist**: If the `identity` address does not hold a Kiwi Pass NFT, the API will return a `400 Bad Request` with a detail message like "You must mint the Kiwi NFT...".
+-   **Duplicate Message**: If a user tries to upvote the same story twice, the API will return a `400 Bad Request` with a detail message indicating it's a duplicate.
+
+### Other Useful Endpoints
+
+-   **`GET /api/v1/allowlist`**: Retrieves the list of all Ethereum addresses that hold the Kiwi Pass NFT.
+-   **`GET /api/v1/delegations`**: Retrieves an object of valid delegations in the form of `to:from`.
+-   **`GET /api/v1/profile/:address`**: Retrieves profile information (ENS, avatar) for an address.
+-   **`GET /api/v1/karma/:address`**: Returns the karma score for an address.
+-   **`GET /api/v1/feeds/:name`**: Retrieves a specific feed (`hot`, `new`, `best`). Supports `page` for pagination.
+
+
+**Example Response:**
+The `data` array will contain a list of story objects, which you can use to build your feed.
+
+### Step 2: Authorizing a User
+
+Before a user can perform a write action (like upvoting), you must verify they are on the allowlist.
+
+-   **Endpoint**: `GET /api/v1/allowlist`
+-   **Description**: Retrieves an array of all Ethereum addresses that hold the Kiwi Pass NFT.
+-   **Usage**: Fetch this list and check if your user's address is present. You can cache this list to avoid repeated requests.
+
+### Step 3: Constructing and Signing a Message (EIP-712)
+
+This is the core of all write actions on Kiwi News.
+
+#### The EIP-712 Domain
+
+This object provides the context for the signature, preventing it from being used on other applications.
+
+```json
+{
+  "name": "kiwinews",
+  "version": "1.0.0",
+  "salt": "0xfe7a9d68e99b6942bb3a36178b251da8bd061c20ed1e795207ae97183b590e5b"
+}
+```
+
+#### The Message Structure
+
+This defines the data fields that will be signed.
+
+```json
+{
+  "Message": [
+    { "name": "title", "type": "string" },
+    { "name": "href", "type": "string" },
+    { "name": "type", "type": "string" },
+    { "name": "timestamp", "type": "uint256" }
+  ]
+}
+```
+
+#### Creating the Message Data
+
+To upvote a story, you create a JSON object that matches the structure above.
+
+-   `title` (string): The exact title of the story you are upvoting.
+-   `href` (string): The exact URL of the story.
+-   `type` (string): For upvotes and new submissions, this is always `"amplify"`.
+-   `timestamp` (uint256): The current UNIX timestamp in seconds.
+
+**Example Message to be Signed:**
+```json
+{
+  "title": "The Title of the Story Being Upvoted",
+  "href": "https://example.com/the-story-url",
+  "type": "amplify",
+  "timestamp": 1678886400
+}
+```
+
+You will then use a library like `ethers.js` (`signer._signTypedData(...)`) or `viem` (`walletClient.signTypedData(...)`) to sign this data object. The output will be a long hexadecimal string, which is your signature.
+
+### Step 4: Submitting the Signed Message
+
+Finally, you send the signed message to the `/api/v1/messages` endpoint.
+
+-   **Endpoint**: `POST /api/v1/messages`
+-   **Description**: Submits a new message (upvote, comment, etc.) to the network.
+-   **Request Body**: The message object from Step 3, plus the `signature`.
+
+**Example Request Body:**
+```json
+{
+  "title": "The Title of the Story Being Upvoted",
+  "href": "https://example.com/the-story-url",
+  "type": "amplify",
+  "timestamp": 1678886400,
+  "signature": "0x[... the long EIP-712 signature you generated ...]"
+}
+```
+
+A successful submission will return a `200 OK` response with a success message.
+
+### Step 5: Verifying a Message Signature (Client-Side)
+
+When you fetch messages from the `/api/v1/list` endpoint, each message includes a `signature`. Your client should verify this signature to confirm the authenticity of the message and identify the signer.
+
+Using `ethers.js`, you can recover the signer's address from the message data and signature.
+
+**Example using `ethers.js`:**
+```javascript
+import { verifyTypedData } from "ethers/lib/utils";
+
+// 1. The EIP-712 domain and types (as defined above)
+const domain = {
+  name: "kiwinews",
+  version: "1.0.0",
+  salt: "0xfe7a9d68e99b6942bb3a36178b251da8bd061c20ed1e795207ae97183b590e5b"
+};
+
+const types = {
+  Message: [
+    { name: "title", type: "string" },
+    { name: "href", type: "string" },
+    { name: "type", type: "string" },
+    { name: "timestamp", type: "uint256" }
+  ]
+};
+
+// 2. The message object received from the API
+const messageFromApi = {
+  title: "The Title of the Story Being Upvoted",
+  href: "https://example.com/the-story-url",
+  type: "amplify",
+  timestamp: 1678886400,
+  signature: "0x[... the signature from the API ...]",
+  signer: "0x[... the signer address from the API ...]"
+};
+
+// 3. Separate the signature from the message data
+const signature = messageFromApi.signature;
+const messageToVerify = {
+  title: messageFromApi.title,
+  href: messageFromApi.href,
+  type: messageFromApi.type,
+  timestamp: messageFromApi.timestamp
+};
+
+// 4. Recover the signer's address
+const recoveredAddress = verifyTypedData(domain, types, messageToVerify, signature);
+
+// 5. The recoveredAddress should match the `signer` field from the API
+console.log("Does signature match?", recoveredAddress.toLowerCase() === messageFromApi.signer.toLowerCase());
+```
+
+### Other Useful Endpoints
+
+-   **`GET /api/v1/delegations`**: Retrieves an object of valid delegations in the form of `to:from`, where `from` is the identity address (NFT holder) and `to` is the delegated signing key. This is useful for clients that want to support signless interactions.
+-   **`GET /api/v1/profile/:address`**: Retrieves profile information for a given Ethereum address, including ENS name and avatar.
+-   **`GET /api/v1/karma/:address`**: Returns the karma score for a given address.
+-   **`GET /api/v1/stories?index=:index`**: Fetches the full details for a single story, including all of its comments and reactions.
+-   **`GET /api/v1/feeds/:name`**: Retrieves a specific feed. Supported `:name` values are `hot`, `new`, and `best`. This endpoint supports pagination via the `page` query parameter.
+
