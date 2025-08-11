@@ -139,6 +139,7 @@
     "concurrently": "8.0.1",
     "csv-parser": "3.2.0",
     "csv-writer": "1.6.0",
+    "puppeteer": "24.16.1",
     "vite": "4.3.1"
   },
   "ava": {
