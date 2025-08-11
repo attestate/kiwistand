@@ -15,6 +15,7 @@ import morgan from "morgan";
 import express from "express";
 import cookieParser from "cookie-parser";
 import compression from "compression";
+import cors from "cors";
 import { utils } from "ethers";
 import { handleFaucetRequest } from "./faucet.mjs";
 import "express-async-errors";
@@ -136,6 +137,36 @@ app.use(
     },
   }),
 );
+
+// Optimal CORS configuration with caching for both browsers and CDNs
+const corsOptions = {
+  // Cache preflight requests for 24 hours in browsers via CORS-specific header
+  maxAge: 86400,
+  // This ensures the preflight continuation so we can add our own headers
+  preflightContinue: true,
+};
+
+// Use CORS with the options
+app.use(cors(corsOptions));
+
+// Add Cache-Control headers for CDN caching of preflight requests
+app.use((req, res, next) => {
+  if (req.method === "OPTIONS") {
+    // Enable caching at all levels:
+    // - s-maxage for Cloudflare CDN
+    // - max-age for browser HTTP cache
+    // - stale-while-revalidate for background revalidation
+    res.setHeader(
+      "Cache-Control",
+      "public, s-maxage=86400, max-age=86400, stale-while-revalidate=604800",
+    );
+    // Ensure responses are varied by origin to prevent CORS issues
+    res.setHeader("Vary", "Origin");
+    res.end();
+  } else {
+    next();
+  }
+});
 
 app.set("etag", false);
 app.use((req, res, next) => {
