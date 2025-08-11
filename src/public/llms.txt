@@ -28,6 +28,7 @@ For a deeper dive into the protocol, see the [Protocol Guide](https://github.com
   - `GET /feeds/best` - Top-rated stories
   - `GET /profile/:address` - User profile data (ENS, avatars, social links)
   - `GET /karma/:address` - User karma scores
+  - `GET /stories?index=:index` - Single story details
 
 ### Port 8443 - Core API (Read/Write)
 - **Base URL**: `https://news.kiwistand.com:8443/api/v1`
@@ -37,7 +38,6 @@ For a deeper dive into the protocol, see the [Protocol Guide](https://github.com
   - `POST /list` - Paginated list of messages
   - `GET /allowlist` - Array of allowed Ethereum addresses
   - `GET /delegations` - Delegation mappings
-  - `GET /stories?index=:index` - Single story details
   - `POST /messages` - Submit new messages (stories, comments, upvotes)
 
 ### For Client Developers (Recommended)
@@ -103,6 +103,7 @@ The Kiwi News API is versioned under `/api/v1` and split across two ports as des
 -   **Message ID (`index`)**: A unique identifier derived from the message's content and timestamp. It's a hex string prefixed with the timestamp, ensuring chronological and content-based uniqueness.
 -   **`signer`**: The Ethereum address of the key that signed a message. This could be a user's main wallet or a delegated key.
 -   **`identity`**: The Ethereum address that holds the Kiwi Pass NFT. This is the true "author" of a message. If delegation is not used, the `signer` and `identity` will be the same.
+-   **Comment href format**: Comments have an `href` field in the format `kiwi:<story_index>` that links them to their parent story.
 
 ### Reading from the API
 
@@ -113,7 +114,7 @@ To get a list of stories or comments, send a `POST` request.
 -   **Endpoint**: `POST https://news.kiwistand.com:8443/api/v1/list`
 -   **Request Body**:
     -   `from` (integer): The starting offset for pagination.
-    -   `amount` (integer): The number of items to retrieve.
+    -   `amount` (integer): The number of items to retrieve (maximum: 500 items per request).
     -   `type` (string, optional): `"amplify"` for stories (default) or `"comment"` for comments.
 
 **Example Request:**
@@ -127,6 +128,9 @@ curl -X POST https://news.kiwistand.com:8443/api/v1/list \
 ```json
 {
   "status": "success",
+  "code": 200,
+  "message": "OK",
+  "details": "Extracted posts from...",
   "data": [
     {
       "index": "63b0bef1...",
@@ -145,6 +149,11 @@ curl -X POST https://news.kiwistand.com:8443/api/v1/list \
 }
 ```
 
+**Important Notes**:
+- The `/list` endpoint returns the data array directly in the `data` field
+- Maximum 500 items can be returned per request
+- Stories don't include their comments - to get a story with all its comments, use `/api/v1/stories?index=<message_index>`
+
 #### Fetching Named Feeds (port 443)
 
 For curated feeds, use the GET endpoints on port 443:
@@ -155,6 +164,28 @@ For curated feeds, use the GET endpoints on port 443:
     - `GET https://news.kiwistand.com/api/v1/feeds/best`
 -   **Query Parameters**: `?page=0` for pagination
 -   **Note**: These endpoints don't support CORS, so browser clients need a proxy
+
+**Response Format for /feeds/* endpoints:**
+```json
+{
+  "status": "success",
+  "code": 200,
+  "message": "OK",
+  "details": "hot feed",
+  "data": {
+    "stories": [/* array of story objects */]
+  }
+}
+```
+
+**Important Differences from /list**:
+- `/feeds/*` endpoints return data in `data.stories` array (nested structure)
+- `/list` endpoint returns data directly in `data` array (flat structure)
+
+**Feed Limitations**:
+- The `/best` feed frequently returns empty results, especially for shorter time periods. Client applications should implement graceful empty state handling.
+- The `/new` feed typically has content available.
+- The `/best` feed supports period filtering (`?period=day|week|month|year|all`) - longer periods are more likely to have content.
 
 #### Resolving Author Identity (`signer` vs. `identity`)
 
@@ -167,8 +198,8 @@ When you receive a message, you need to determine the author's identity. Here is
 
 #### Fetching a Single Story
 
--   **Endpoint**: `GET https://news.kiwistand.com:8443/api/v1/stories?index=<message_index>`
--   **Description**: Retrieves the full details for a single story, including all of its comments and reactions.
+-   **Endpoint**: `GET https://news.kiwistand.com/api/v1/stories?index=<message_index>`
+-   **Description**: Retrieves the full details for a single story, including all of its comments in the response. Comments are included directly in the story response object, not requiring a separate API call.
 
 ### Writing to the API
 
@@ -335,6 +366,46 @@ curl -X POST https://news.kiwistand.com:8443/api/v1/list \
 curl https://news.kiwistand.com/api/v1/profile/0x0DF5Ba52e8C055950AaAf5fcFE829020e898ee60
 ```
 
+## Practical Implementation Examples
+
+### Fetching a Story with Comments
+
+Since stories from `/list` or `/feeds/*` don't include comments, you need two API calls:
+
+**Step 1: Get the story from a feed**
+```javascript
+// Get stories from the hot feed
+const feedResponse = await fetch('https://news.kiwistand.com/api/v1/feeds/hot');
+const feedData = await feedResponse.json();
+const stories = feedData.data.stories;
+const firstStory = stories[0];
+```
+
+**Step 2: Get the full story with comments**
+```javascript
+// Use the story's index to fetch it with comments
+const storyResponse = await fetch(
+  `https://news.kiwistand.com/api/v1/stories?index=${firstStory.index}`
+);
+const storyData = await storyResponse.json();
+// storyData.data now contains the story with all comments included
+const storyWithComments = storyData.data;
+```
+
+### Fetching Comments for Multiple Stories
+
+If you need comments for multiple stories, batch your requests efficiently:
+
+```javascript
+const storiesWithComments = await Promise.all(
+  stories.slice(0, 5).map(story => 
+    fetch(`https://news.kiwistand.com/api/v1/stories?index=${story.index}`)
+      .then(res => res.json())
+      .then(data => data.data)
+  )
+);
+```
+
 ## Common Pitfalls
 
 1. **Using wrong port**: Remember port 8443 for core API, port 443 for public feeds
@@ -343,3 +414,5 @@ curl https://news.kiwistand.com/api/v1/profile/0x0DF5Ba52e8C055950AaAf5fcFE82902
 4. **Timestamp format**: Use UNIX timestamps in seconds, not milliseconds
 5. **Signature format**: Ensure signatures include the "0x" prefix
 6. **Case sensitivity**: Ethereum addresses should be compared case-insensitively
+7. **Response structure differences**: Remember `/list` returns `data` array directly, while `/feeds/*` returns `data.stories`
+8. **Pagination limits**: `/list` endpoint has a maximum of 500 items per request
