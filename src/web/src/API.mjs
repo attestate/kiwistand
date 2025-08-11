@@ -350,18 +350,25 @@ export async function fetchEthUsdPrice() {
   }
 }
 
-export async function sendMiniAppUpvote(value, fid, walletAddress) {
+export async function sendMiniAppUpvote(value, fid, walletAddress, authToken) {
+  // authToken is now REQUIRED
+  if (!authToken) {
+    throw new Error("Authentication token required");
+  }
+
   const body = {
     ...value,
-    signature: `miniapp:${fid}`,
     walletAddress: walletAddress
+  };
+
+  const headers = {
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${authToken}`
   };
 
   const response = await fetch("/api/v1/miniapp-upvote", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: headers,
     body: JSON.stringify(body),
   });
 

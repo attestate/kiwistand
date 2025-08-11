@@ -70,6 +70,7 @@
     "@ethereumjs/trie": "5.0.4",
     "@ethersproject/wallet": "5.7.0",
     "@farcaster/hub-nodejs": "0.13.4",
+    "@farcaster/quick-auth": "0.0.7",
     "@libp2p/bootstrap": "5.0.0",
     "@libp2p/mplex": "7.1.0",
     "@libp2p/peer-id": "1.1.16",

@@ -9,6 +9,7 @@ import { env } from "process";
 import path from "path";
 import cluster from "cluster";
 import Cloudflare from "cloudflare";
+import { createClient as createQuickAuthClient, Errors } from "@farcaster/quick-auth";
 
 import morgan from "morgan";
 import express from "express";
@@ -109,6 +110,9 @@ import {
 } from "./social-posting.mjs";
 
 const app = express();
+
+// Initialize Quick Auth client
+const quickAuthClient = createQuickAuthClient();
 
 //
 // Always use HTTP for internal servers since SSL is terminated at the load balancer
@@ -1986,15 +1990,52 @@ export async function launch(trie, libp2p, isPrimary = true) {
     reply.header("Cache-Control", "no-cache");
     
     const message = request.body;
+    const authorization = request.headers.authorization;
     
-    // Validate mini app signature format
-    if (!message.signature || !message.signature.startsWith("miniapp:")) {
-      return sendError(reply, 400, "Invalid Signature", "Invalid mini app signature format");
+    // REQUIRE JWT authorization - no more FID-only auth
+    if (!authorization || !authorization.startsWith("Bearer ")) {
+      return sendError(reply, 401, "Missing Authentication", "Quick Auth JWT token required in Authorization header");
     }
     
-    const fid = message.signature.replace("miniapp:", "");
-    if (!/^\d+$/.test(fid)) {
-      return sendError(reply, 400, "Invalid FID", "Invalid FID in signature");
+    let fid;
+    const token = authorization.split(" ")[1];
+    
+    try {
+      // Get the host domain for JWT verification
+      // Use CUSTOM_HOST_NAME if set (for local dev), otherwise use request host
+      let host;
+      if (env.CUSTOM_HOST_NAME) {
+        host = env.CUSTOM_HOST_NAME;
+      } else if (env.NODE_ENV === 'production') {
+        host = "news.kiwistand.com";
+      } else if (env.NODE_ENV === 'staging') {
+        host = "staging.kiwistand.com";
+      } else {
+        host = request.headers.host || "news.kiwistand.com";
+      }
+      
+      let domain = host.split(':')[0]; // Remove port if present
+      
+      log(`Verifying JWT for miniapp-upvote, host: ${host}, domain: ${domain}, token preview: ${token.substring(0, 20)}...`);
+      
+      // Verify the JWT token with the domain
+      const payload = await quickAuthClient.verifyJwt({
+        token: token,
+        domain: domain
+      });
+      
+      // Extract the FID from the JWT payload (sub field)
+      fid = payload.sub;
+      
+      log(`JWT verified successfully for FID: ${fid}`);
+      
+    } catch (verifyError) {
+      if (verifyError instanceof Errors.InvalidTokenError) {
+        log(`Invalid Quick Auth token: ${verifyError.message}`);
+        return sendError(reply, 401, "Invalid Token", "Invalid authentication token");
+      }
+      log(`JWT verification error: ${verifyError.message}`);
+      return sendError(reply, 401, "Authentication Failed", verifyError.message);
     }
     
     // Validate message structure

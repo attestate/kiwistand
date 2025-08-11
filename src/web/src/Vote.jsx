@@ -123,7 +123,6 @@ const Vote = (props) => {
           const context = await window.sdk.context;
           if (context && context.client && context.client.clientFid === 309857) {
             isMiniApp = true;
-            console.log("Detected Coinbase Wallet mini app via clientFid");
           }
         }
       }
@@ -150,7 +149,7 @@ const Vote = (props) => {
     let response;
     
     if (isMiniApp) {
-      // Mini app upvote flow - use FID instead of signature
+      // Mini app upvote flow - REQUIRES JWT authentication
       try {
         const context = await window.sdk.context;
         const fid = context.user.fid;
@@ -159,13 +158,27 @@ const Vote = (props) => {
           throw new Error("No FID available in context");
         }
         
+        // Get Quick Auth JWT token - REQUIRED
+        let authToken = null;
+        
+        if (window.sdk && window.sdk.quickAuth) {
+          try {
+            const tokenResponse = await window.sdk.quickAuth.getToken();
+            authToken = typeof tokenResponse === 'string' ? tokenResponse : tokenResponse.token;
+          } catch (tokenError) {
+            console.error("Failed to get Quick Auth token:", tokenError);
+            throw new Error("Authentication failed. Please try again or update your Farcaster app.");
+          }
+        } else {
+          throw new Error("Quick Auth not available. Please update your Farcaster app to continue.");
+        }
+        
         // Get the user's connected wallet address from Wagmi (the proper way)
         let walletAddress = null;
         
         // For mini apps, use the current account's address from useAccount hook
         if (account.isConnected && account.address) {
           walletAddress = account.address;
-          console.log("Found wallet via Wagmi useAccount:", walletAddress);
         } else {
           // Fallback: try to get from Ethereum provider
           try {
@@ -175,15 +188,11 @@ const Vote = (props) => {
             });
             if (accounts && accounts.length > 0) {
               walletAddress = accounts[0];
-              console.log("Found wallet via SDK Ethereum provider:", walletAddress);
             }
           } catch (providerError) {
-            console.log("Failed to get wallet from SDK provider:", providerError);
+            // Silently fail and try next method
           }
         }
-        
-        console.log("Account state:", { isConnected: account.isConnected, address: account.address });
-        console.log("Final wallet address:", walletAddress);
         
         if (!walletAddress) {
           throw new Error("No connected wallet found in Farcaster mini app");
@@ -191,12 +200,12 @@ const Vote = (props) => {
         
         toast("Submitting your upvote...");
         
-        response = await API.sendMiniAppUpvote(value, fid, walletAddress);
+        response = await API.sendMiniAppUpvote(value, fid, walletAddress, authToken);
       } catch (err) {
         console.error("Mini app upvote error:", err);
         setHasUpvoted(false);
         setShowKarmaAnimation(false);
-        toast.error("Unable to access Farcaster context");
+        toast.error(err.message || "Unable to complete upvote");
         return;
       }
     } else {
@@ -266,7 +275,6 @@ const Vote = (props) => {
                     const context = await window.sdk.context;
                     if (context && context.client && context.client.clientFid === 309857) {
                       isMiniApp = true;
-                      console.log("Detected Coinbase Wallet mini app via clientFid in eligibility check");
                     }
                   }
                 }
