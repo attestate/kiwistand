@@ -831,7 +831,7 @@ const row = (
                             )}"
                             width="10"
                             height="10"
-                            style="margin-right: 5px; display: inline-block; vertical-align: middle; width: 10px; height: 10px;"
+                            style="margin-right: 5px; display: inline-block; vertical-align: middle; width: 10px; height: 10px; object-fit: contain;"
                             loading="lazy"
                             onerror="this.style.display='none'"
                           />`
@@ -1102,7 +1102,7 @@ const row = (
                                     )}"
                                     width="10"
                                     height="10"
-                                    style="vertical-align: middle; position: relative; top: -1px; margin-right: 3px; opacity: 0.7; display: inline-block; flex-shrink: 0;"
+                                    style="vertical-align: middle; position: relative; top: -1px; margin-right: 3px; opacity: 0.7; display: inline-block; flex-shrink: 0; width: 10px; height: 10px; object-fit: contain;"
                                     loading="lazy"
                                     onerror="this.style.display='none'"
                                   />`
