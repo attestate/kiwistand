@@ -96,7 +96,7 @@ export async function subscribe(
   };
 
   try {
-    sync.advertise(trie, node, env.ROOT_ADVERTISEMENT_TIMEOUT);
+    sync.advertise(trie, node, parseInt(env.ROOT_ADVERTISEMENT_TIMEOUT, 10));
   } catch (err) {
     elog(err, "subscribe: Error when advertising");
   }

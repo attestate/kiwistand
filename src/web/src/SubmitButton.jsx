@@ -6,7 +6,7 @@ import { eligible } from "@attestate/delegator2";
 import DOMPurify from "isomorphic-dompurify";
 import slugify from "slugify";
 import { sdk } from "@farcaster/frame-sdk";
-slugify.extend({ "′": "", "'": "", "'": "", '"': "" });
+slugify.extend({ "′": "", "'": "", '"': "" });
 
 import * as API from "./API.mjs";
 import {

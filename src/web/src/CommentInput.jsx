@@ -15,7 +15,7 @@ import { client, chains, useProvider, useSigner, isInFarcasterFrame } from "./cl
 import { resolveAvatar } from "./Avatar.jsx";
 
 // Configure slugify extension
-slugify.extend({ "′": "", "'": "", "'": "" });
+slugify.extend({ "′": "", "'": "" });
 
 // Implement getSlug exactly as in src/utils.mjs
 export function getSlug(title) {

@@ -35,7 +35,7 @@ test.afterEach.always(async () => {
 });
 
 test("list delegation addresses", async (t) => {
-  const mockRequest = {};
+  const mockRequest = { query: {} };
   const mockReply = {
     status: (code) => ({
       json: (response) => response,
