@@ -92,9 +92,14 @@ export async function generatePreview(index) {
     await preview.generate(hexIndex, body); // Generate OG image (1200x630)
     await preview.generate(hexIndex, body, true); // Generate frame image (1200x800)
   } catch (err) {
-    const body = preview.story(value.title, value.submitter.displayName, null, domain);
-    await preview.generate(hexIndex, body); // Generate OG image (1200x630)
-    await preview.generate(hexIndex, body, true); // Generate frame image (1200x800)
+    log(`Failed to generate preview with avatar for story ${hexIndex}: ${err.stack}`);
+    try {
+      const body = preview.story(value.title, value.submitter.displayName, null, domain);
+      await preview.generate(hexIndex, body); // Generate OG image (1200x630)
+      await preview.generate(hexIndex, body, true); // Generate frame image (1200x800)
+    } catch (err2) {
+      log(`Failed to generate preview without avatar for story ${hexIndex}: ${err2.stack}`);
+    }
   }
 }
 
