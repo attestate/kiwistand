@@ -39,7 +39,7 @@ function getUpvotesInPeriod(startDate, endDate) {
     const startTimestamp = Math.floor(startDate.getTime() / 1000);
     const endTimestamp = Math.floor(endDate.getTime() / 1000);
     const query = `
-        SELECT u.identity as upvoter, s.identity as author
+        SELECT u.identity as upvoter, s.identity as author, s.href, s.title
         FROM upvotes u
         JOIN submissions s ON u.href = s.href
         WHERE u.timestamp BETWEEN ? AND ?
@@ -90,15 +90,37 @@ export async function getContestLeaderboard(userIdentity = null) {
         upvoteCounts.set(upvoter, (upvoteCounts.get(upvoter) || 0) + 1);
     });
 
-    // 4. Distribute voting power to calculate initial earnings for ALL authors.
+    // 4. Distribute voting power to calculate initial earnings for ALL authors and track story details.
     const initialEarnings = new Map();
+    const storyEarnings = new Map(); // Track earnings per story
+    const storyUpvoters = new Map(); // Track upvoters per story
+    
     upvotesInPeriod.forEach(upvote => {
         const upvoter = upvote.upvoter.toLowerCase();
         const author = upvote.author.toLowerCase();
         const upvoterPower = votingPower.get(upvoter) || 0;
         const upvoterTotalUpvotes = upvoteCounts.get(upvoter) || 1;
         const valuePerUpvote = upvoterPower / upvoterTotalUpvotes;
+        
         initialEarnings.set(author, (initialEarnings.get(author) || 0) + valuePerUpvote);
+        
+        // Track story-level data
+        const storyKey = `${author}:${upvote.href}`;
+        if (!storyEarnings.has(storyKey)) {
+            storyEarnings.set(storyKey, {
+                href: upvote.href,
+                title: upvote.title,
+                author: author,
+                earnings: 0,
+                upvoters: []
+            });
+        }
+        const story = storyEarnings.get(storyKey);
+        story.earnings += valuePerUpvote;
+        story.upvoters.push({
+            identity: upvoter,
+            contribution: valuePerUpvote
+        });
     });
 
     // 5. Separate winners from excluded recipients and calculate the total prize money for winners.
@@ -121,7 +143,7 @@ export async function getContestLeaderboard(userIdentity = null) {
         .filter(user => user.earnings > 0.005) // Filter out users with less than 0.01 USDC (accounting for rounding)
         .sort((a, b) => b.earnings - a.earnings);
 
-    // 7. Resolve names and return the final data structure.
+    // 7. Resolve names and add top stories for each user.
     const leaderboard = await Promise.all(
         finalLeaderboard.map(async (user) => {
             const ensData = await fetchENSData(user.identity).catch(() => null);
@@ -135,7 +157,56 @@ export async function getContestLeaderboard(userIdentity = null) {
                     displayName = ensData.ens;
                 }
             }
-            return { ...user, displayName, ensData };
+            
+            // Get ALL stories for this user with scaled earnings
+            const allUserStories = Array.from(storyEarnings.values())
+                .filter(story => story.author === user.identity.toLowerCase())
+                .map(story => ({
+                    ...story,
+                    earnings: story.earnings * scalingFactor,
+                    upvoters: story.upvoters.map(u => ({
+                        ...u,
+                        contribution: u.contribution * scalingFactor
+                    }))
+                }))
+                .filter(story => story.earnings > 0.005) // Filter out stories with less than 0.01 USDC
+                .sort((a, b) => b.earnings - a.earnings);
+            
+            // Take top stories and calculate remainder
+            const userStories = allUserStories.slice(0, 4); // Show top 4 stories
+            const remainingStories = allUserStories.slice(4); // Rest of the stories
+            const remainingEarnings = remainingStories.reduce((sum, story) => sum + story.earnings, 0);
+            
+            // Resolve ENS for upvoters
+            for (const story of userStories) {
+                // Filter out contributors with 0.00 USDC and sort by contribution (highest first) before slicing
+                const significantUpvoters = story.upvoters
+                    .filter(upvoter => upvoter.contribution > 0.005) // Filter out contributors with less than 0.01 USDC
+                    .sort((a, b) => b.contribution - a.contribution);
+                
+                story.upvotersData = await Promise.all(
+                    significantUpvoters.slice(0, 5).map(async (upvoter) => {
+                        const upvoterEns = await fetchENSData(upvoter.identity).catch(() => null);
+                        return {
+                            identity: upvoter.identity,
+                            contribution: upvoter.contribution,
+                            ensData: upvoterEns
+                        };
+                    })
+                );
+                
+                // Update the upvoters list to only include significant contributors
+                story.upvoters = significantUpvoters;
+            }
+            
+            return { 
+                ...user, 
+                displayName, 
+                ensData, 
+                topStories: userStories,
+                remainingStoriesCount: remainingStories.length,
+                remainingStoriesEarnings: remainingEarnings
+            };
         })
     );
     

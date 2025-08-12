@@ -775,6 +775,110 @@ async function addKarmaElements() {
   }
 }
 
+async function addLeaderboardInteractions() {
+  // Only add if we're on the leaderboard page
+  if (window.location.pathname !== "/community") return;
+
+  // Wait a bit for DOM to be ready
+  setTimeout(() => {
+    // Function to toggle user stories
+    function toggleUserStories(userId) {
+      const storiesDiv = document.getElementById(`stories-${userId}`);
+      const expandIcon = document.getElementById(`expand-${userId}`);
+      
+      console.log('Toggling:', userId, storiesDiv);
+      
+      if (storiesDiv && (storiesDiv.style.display === 'none' || !storiesDiv.style.display)) {
+        storiesDiv.style.display = 'block';
+        if (expandIcon) {
+          // Change to down arrow when expanded
+          expandIcon.innerHTML = '<rect width="256" height="256" fill="none"/><polyline points="208 96 128 176 48 96" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/>';
+        }
+      } else if (storiesDiv) {
+        storiesDiv.style.display = 'none';
+        if (expandIcon) {
+          // Change to right arrow when collapsed
+          expandIcon.innerHTML = '<rect width="256" height="256" fill="none"/><polyline points="96 48 176 128 96 208" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/>';
+        }
+      }
+    }
+
+    // Add click handlers for expand buttons
+    const expandButtons = document.querySelectorAll('.expand-button[data-user-id]');
+    console.log('Found expand buttons:', expandButtons.length);
+    
+    expandButtons.forEach(button => {
+      button.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        const userId = this.getAttribute('data-user-id');
+        toggleUserStories(userId);
+      });
+    });
+
+    // Add click handlers for expandable rows (clicking anywhere on the row)
+    const expandableRows = document.querySelectorAll('.expandable-row[data-user-id]');
+    console.log('Found expandable rows:', expandableRows.length);
+    
+    expandableRows.forEach(row => {
+      row.addEventListener('click', function(e) {
+        // Only expand if we didn't click on a link or button
+        if (!e.target.closest('a') && !e.target.closest('button')) {
+          const userId = this.getAttribute('data-user-id');
+          toggleUserStories(userId);
+        }
+      });
+    });
+
+    // Function to toggle story contributors
+    function toggleStoryContributors(storyId) {
+      const contributorsDiv = document.getElementById(`contributors-${storyId}`);
+      const expandIcon = document.getElementById(`expand-${storyId}`);
+      
+      if (contributorsDiv && (contributorsDiv.style.display === 'none' || !contributorsDiv.style.display)) {
+        contributorsDiv.style.display = 'block';
+        if (expandIcon) {
+          // Change to down arrow when expanded
+          expandIcon.innerHTML = '<rect width="256" height="256" fill="none"/><polyline points="208 96 128 176 48 96" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/>';
+        }
+      } else if (contributorsDiv) {
+        contributorsDiv.style.display = 'none';
+        if (expandIcon) {
+          // Change to right arrow when collapsed
+          expandIcon.innerHTML = '<rect width="256" height="256" fill="none"/><polyline points="96 48 176 128 96 208" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/>';
+        }
+      }
+    }
+
+    // Add click handlers for story expand buttons
+    const storyExpandButtons = document.querySelectorAll('.story-expand-button[data-story-id]');
+    console.log('Found story expand buttons:', storyExpandButtons.length);
+    
+    storyExpandButtons.forEach(button => {
+      button.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        const storyId = this.getAttribute('data-story-id');
+        toggleStoryContributors(storyId);
+      });
+    });
+
+    // Add click handlers for expandable story rows (clicking anywhere on the row)
+    const expandableStoryRows = document.querySelectorAll('.expandable-story-row[data-story-id]');
+    console.log('Found expandable story rows:', expandableStoryRows.length);
+    
+    expandableStoryRows.forEach(row => {
+      row.addEventListener('click', function(e) {
+        // Only expand if we didn't click on a link or button
+        if (!e.target.closest('a') && !e.target.closest('button')) {
+          const storyId = this.getAttribute('data-story-id');
+          toggleStoryContributors(storyId);
+        }
+      });
+    });
+  }, 100);
+}
+
 async function addLeaderboardStats(allowlist, delegations) {
   // Only add if we're on the leaderboard page
   if (window.location.pathname !== "/community") return;
@@ -1253,6 +1357,7 @@ async function start() {
     addNFTPrice(),
     addKarmaElements(),
     addLeaderboardStats(await allowlistPromise, await delegationsPromise),
+    addLeaderboardInteractions(),
     addMinuteCountdown(),
     addTutorialDrawers(),
     addEmbedDrawer(toast),
