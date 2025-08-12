@@ -105,6 +105,7 @@ export async function getContestLeaderboard() {
             identity,
             earnings: earnings * scalingFactor
         }))
+        .filter(user => user.earnings > 0.005) // Filter out users with less than 0.01 USDC (accounting for rounding)
         .sort((a, b) => b.earnings - a.earnings);
 
     // 7. Resolve names and return the final data structure.
@@ -121,7 +122,7 @@ export async function getContestLeaderboard() {
                     displayName = ensData.ens;
                 }
             }
-            return { ...user, displayName };
+            return { ...user, displayName, ensData };
         })
     );
 }

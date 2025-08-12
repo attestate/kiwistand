@@ -60,7 +60,9 @@ export default async function Leaderboard(identity, theme) {
                       <div style="display: flex; justify-content: space-between; align-items: center;">
                         <div style="text-align: center; flex: 1;">
                           <div style="color: var(--visited-link); font-size: 13px; margin-bottom: 6px;">Your Prize</div>
-                          <div style="font-size: 22px; font-weight: bold; color: black;">${currentUserRank ? `${currentUserRank.earnings.toFixed(2)} USDC` : 'N/A'}</div>
+                          <div style="font-size: 22px; font-weight: bold; color: black; display: flex; align-items: center; justify-content: center;">
+                            ${currentUserRank ? html`<span>${currentUserRank.earnings.toFixed(2)}</span><img src="/usdc-logo.svg" style="width: 20px; height: 20px; margin-left: 5px;" alt="USDC" />` : 'N/A'}
+                          </div>
                         </div>
                         <div style="text-align: center; flex: 1;">
                           <div style="color: var(--visited-link); font-size: 13px; margin-bottom: 6px;">Your Rank</div>
@@ -77,6 +79,18 @@ export default async function Leaderboard(identity, theme) {
                         ${leaderboard.map((user, index) => {
                           const medals = ['🥇', '🥈', '🥉'];
                           const displayRank = index < 3 ? medals[index] : `${index + 1}.`;
+                          const avatar = user.ensData?.avatar_small || user.ensData?.avatar || user.ensData?.farcaster?.avatar;
+                          
+                          const avatarHtml = avatar 
+                            ? html`<img src="${avatar}" style="width: 24px; height: 24px; border-radius: 50%; margin-right: 12px; flex-shrink: 0;" />`
+                            : html`<div style="width: 24px; height: 24px; margin-right: 12px; flex-shrink: 0; display: inline-block;">
+                                    <zora-zorb
+                                      style="display: block;"
+                                      size="24px"
+                                      address="${user.identity}"
+                                    ></zora-zorb>
+                                  </div>`;
+
                           return html`
                             <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; border-bottom: ${index < leaderboard.length - 1 ? 'var(--border-thin)' : 'none'};">
                               <div style="display: flex; align-items: center; min-width: 0; flex: 1;">
@@ -85,15 +99,14 @@ export default async function Leaderboard(identity, theme) {
                                   href="/upvotes?address=${user.identity}"
                                   style="display: flex; align-items: center; min-width: 0; flex: 1; text-decoration: none; color: inherit;"
                                 >
-                                  <zora-zorb
-                                      style="margin-right: 12px; flex-shrink: 0;"
-                                      size="24px"
-                                      address="${user.identity}"
-                                  ></zora-zorb>
+                                  ${avatarHtml}
                                   <span style="color: black; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px;">${user.displayName}</span>
                                 </a>
                               </div>
-                              <div style="color: black; font-weight: bold; margin-left: 12px; font-size: 14px;">${user.earnings.toFixed(2)} USDC</div>
+                              <div style="color: black; font-weight: bold; margin-left: 12px; font-size: 14px; display: flex; align-items: center;">
+                                ${user.earnings.toFixed(2)}
+                                <img src="/usdc-logo.svg" style="width: 16px; height: 16px; margin-left: 4px;" alt="USDC" />
+                              </div>
                             </div>
                           `;
                         })}
