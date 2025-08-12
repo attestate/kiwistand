@@ -7,25 +7,22 @@ import Sidebar from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
 import { custom } from "./components/head.mjs";
 
-import { getLeaderboard, getTimeRemainingInRound } from '../leaderboard.mjs';
+import { getContestLeaderboard } from '../contest-leaderboard.mjs';
 import DOMPurify from "isomorphic-dompurify";
-import { formatDistance } from 'date-fns';
 
 const html = htm.bind(vhtml);
 
 export default async function Leaderboard(identity, theme) {
-  const leaderboard = await getLeaderboard();
-  const timeRemaining = getTimeRemainingInRound();
-  const endDate = new Date(Date.now() + timeRemaining);
-  const formattedTime = formatDistance(endDate, new Date(), { addSuffix: false });
+  const leaderboard = await getContestLeaderboard();
 
+  // Find the current user in the contest leaderboard
   let currentUserRank = null;
   if (identity) {
     const rankIndex = leaderboard.findIndex((user) => user.identity.toLowerCase() === identity.toLowerCase());
     if (rankIndex !== -1) {
       currentUserRank = {
         rank: rankIndex + 1,
-        karma: leaderboard[rankIndex].karma
+        earnings: leaderboard[rankIndex].earnings
       };
     }
   }
@@ -35,7 +32,7 @@ export default async function Leaderboard(identity, theme) {
   return html`
     <html lang="en" op="news">
       <head>
-        ${custom("", "Leaderboard", "", "", [])}
+        ${custom("", "Contest Leaderboard", "", "", [])}
         <script
           defer
           src="https://unpkg.com/@zoralabs/zorb@^0.0/dist/zorb-web-component.umd.js"
@@ -56,27 +53,25 @@ export default async function Leaderboard(identity, theme) {
                 <td>
                   <div style="padding: 15px; max-width: 800px; margin: 0 auto;">
 
-
                     <div style="background-color: var(--table-bg); padding: 20px; border: var(--border); margin-bottom: 20px;">
+                      <div style="text-align: center; color: var(--visited-link); font-size: 14px; margin-bottom: 10px;">
+                        August 5 - August 12, 2025 Contest Results
+                      </div>
                       <div style="display: flex; justify-content: space-between; align-items: center;">
                         <div style="text-align: center; flex: 1;">
-                          <div style="color: var(--visited-link); font-size: 13px; margin-bottom: 6px;">Your Score</div>
-                          <div style="font-size: 22px; font-weight: bold; color: black;">${currentUserRank?.karma || 'N/A'}</div>
+                          <div style="color: var(--visited-link); font-size: 13px; margin-bottom: 6px;">Your Prize</div>
+                          <div style="font-size: 22px; font-weight: bold; color: black;">${currentUserRank ? `${currentUserRank.earnings.toFixed(2)} USDC` : 'N/A'}</div>
                         </div>
                         <div style="text-align: center; flex: 1;">
                           <div style="color: var(--visited-link); font-size: 13px; margin-bottom: 6px;">Your Rank</div>
                           <div style="font-size: 22px; font-weight: bold; color: black;">${currentUserRank?.rank ? `#${currentUserRank.rank}` : 'Unranked'}</div>
-                        </div>
-                        <div style="text-align: center; flex: 1;">
-                          <div style="color: var(--visited-link); font-size: 13px; margin-bottom: 6px;">Week Ends In</div>
-                          <div style="font-size: 22px; font-weight: bold; color: black;">${formattedTime}</div>
                         </div>
                       </div>
                     </div>
 
                     <div style="background-color: var(--table-bg); border: var(--border); margin-bottom: 20px;">
                       <div style="padding: 15px; border-bottom: var(--border-thin);">
-                        <h2 style="margin: 0; font-size: 18px; color: black; font-weight: 600; text-align: center;">Top Contributors</h2>
+                        <h2 style="margin: 0; font-size: 18px; color: black; font-weight: 600; text-align: center;">Top Winners</h2>
                       </div>
                       <div>
                         ${leaderboard.map((user, index) => {
@@ -86,27 +81,19 @@ export default async function Leaderboard(identity, theme) {
                             <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; border-bottom: ${index < leaderboard.length - 1 ? 'var(--border-thin)' : 'none'};">
                               <div style="display: flex; align-items: center; min-width: 0; flex: 1;">
                                 <div style="width: 30px; text-align: center; margin-right: 12px; color: var(--visited-link); font-size: ${index < 3 ? '16px' : '14px'}; font-weight: bold;">${displayRank}</div>
-                                <a 
-                                  href="/upvotes?address=${user.identity}" 
+                                <a
+                                  href="/upvotes?address=${user.identity}"
                                   style="display: flex; align-items: center; min-width: 0; flex: 1; text-decoration: none; color: inherit;"
                                 >
-                                  ${user.ensData?.safeAvatar
-                                    ? html`<img
-                                        loading="lazy"
-                                        src="${DOMPurify.sanitize(user.ensData.safeAvatar)}"
-                                        style="border: var(--border); width: 24px; height: 24px; border-radius: 2px; margin-right: 12px; flex-shrink: 0;"
-                                      />`
-                                    : html`
-                                        <zora-zorb
-                                          style="margin-right: 12px; flex-shrink: 0;"
-                                          size="24px"
-                                          address="${user.identity}"
-                                        ></zora-zorb>
-                                      `}
+                                  <zora-zorb
+                                      style="margin-right: 12px; flex-shrink: 0;"
+                                      size="24px"
+                                      address="${user.identity}"
+                                  ></zora-zorb>
                                   <span style="color: black; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px;">${user.displayName}</span>
                                 </a>
                               </div>
-                              <div style="color: black; font-weight: bold; margin-left: 12px; font-size: 14px;">${user.karma}</div>
+                              <div style="color: black; font-weight: bold; margin-left: 12px; font-size: 14px;">${user.earnings.toFixed(2)} USDC</div>
                             </div>
                           `;
                         })}
