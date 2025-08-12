@@ -664,6 +664,22 @@ async function addEmbedDrawer(toast) {
   );
 }
 
+async function addRewardsDrawer() {
+  // Create container if it doesn't exist
+  if (!document.getElementById("rewards-drawer-container")) {
+    const container = document.createElement("div");
+    container.id = "rewards-drawer-container";
+    document.body.appendChild(container);
+  }
+
+  const RewardsDrawer = (await import("./RewardsDrawer.jsx")).default;
+  createRoot(document.getElementById("rewards-drawer-container")).render(
+    <StrictMode>
+      <RewardsDrawer />
+    </StrictMode>,
+  );
+}
+
 async function addAvatar(allowlist) {
   const avatarElem = document.querySelectorAll("nav-header-avatar");
   if (avatarElem && avatarElem.length > 0) {
@@ -786,8 +802,6 @@ async function addLeaderboardInteractions() {
       const storiesDiv = document.getElementById(`stories-${userId}`);
       const expandIcon = document.getElementById(`expand-${userId}`);
       
-      console.log('Toggling:', userId, storiesDiv);
-      
       if (storiesDiv && (storiesDiv.style.display === 'none' || !storiesDiv.style.display)) {
         storiesDiv.style.display = 'block';
         if (expandIcon) {
@@ -817,7 +831,7 @@ async function addLeaderboardInteractions() {
     });
 
     // Add click handlers for expandable rows (clicking anywhere on the row)
-    const expandableRows = document.querySelectorAll('.expandable-row[data-user-id]');
+    const expandableRows = document.querySelectorAll('.leaderboard-user-row.expandable-row');
     console.log('Found expandable rows:', expandableRows.length);
     
     expandableRows.forEach(row => {
@@ -876,7 +890,7 @@ async function addLeaderboardInteractions() {
         }
       });
     });
-  }, 100);
+  }, 200); // Small delay to ensure DOM is ready
 }
 
 async function addLeaderboardStats(allowlist, delegations) {
@@ -1361,6 +1375,7 @@ async function start() {
     addMinuteCountdown(),
     addTutorialDrawers(),
     addEmbedDrawer(toast),
+    addRewardsDrawer(),
     addAvatar(await allowlistPromise),
     addBackButton(),
     addDelegateButton(await allowlistPromise, await delegationsPromise, toast),

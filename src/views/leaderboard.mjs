@@ -193,7 +193,7 @@ export default async function Leaderboard(identity, theme) {
                                               ` : ''}
                                               <div style="display: flex; flex-direction: column; gap: 4px;">
                                                 <div>
-                                                  <a href="/stories/${getSlug(story.title)}?href=${encodeURIComponent(story.href)}" style="color: black; text-decoration: none; font-size: 13px; line-height: 1.3;" onclick="event.stopPropagation();">
+                                                  <a href="/stories/${getSlug(story.title)}?index=${story.index}" style="color: black; text-decoration: none; font-size: 13px; line-height: 1.3;" onclick="event.stopPropagation();">
                                                     ${story.title || 'Untitled'}
                                                   </a>
                                                   ${domain ? html` <span style="color: var(--visited-link); font-size: 11px; margin-left: 6px;">(${domain})</span>` : ''}

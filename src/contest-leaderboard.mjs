@@ -39,7 +39,7 @@ function getUpvotesInPeriod(startDate, endDate) {
     const startTimestamp = Math.floor(startDate.getTime() / 1000);
     const endTimestamp = Math.floor(endDate.getTime() / 1000);
     const query = `
-        SELECT u.identity as upvoter, s.identity as author, s.href, s.title
+        SELECT u.identity as upvoter, s.identity as author, s.href, s.title, s.id
         FROM upvotes u
         JOIN submissions s ON u.href = s.href
         WHERE u.timestamp BETWEEN ? AND ?
@@ -107,9 +107,12 @@ export async function getContestLeaderboard(userIdentity = null) {
         // Track story-level data
         const storyKey = `${author}:${upvote.href}`;
         if (!storyEarnings.has(storyKey)) {
+            // Extract index from id (format is "kiwi:0x...")
+            const index = upvote.id ? upvote.id.replace('kiwi:', '') : '';
             storyEarnings.set(storyKey, {
                 href: upvote.href,
                 title: upvote.title,
+                index: index,
                 author: author,
                 earnings: 0,
                 upvoters: []

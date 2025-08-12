@@ -900,7 +900,7 @@ export default async function (trie, theme, page, domain, identity, hash, varian
                 )}
               <tr>
                 <td>
-                  <div style="background-color: var(--table-bg); padding: 15px; margin-bottom: 20px;">
+                  <div style="background-color: var(--table-bg); padding: 15px; margin-bottom: 20px; cursor: pointer;" onclick="if (window.innerWidth <= 768 && window.openRewardsDrawer) { window.openRewardsDrawer(); } else { window.location.href = '/community'; }">
                     <div style="text-align: center; margin-bottom: 15px;">
                       <h2 style="margin: 0 0 8px 0; font-size: 18px; color: black; font-weight: 600;">Weekly Rewards</h2>
                       <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 8px;">
@@ -908,22 +908,6 @@ export default async function (trie, theme, page, domain, identity, hash, varian
                         <p style="margin: 0; color: black; font-size: 16px; font-weight: 600;">
                           100 Prize Pool
                         </p>
-                      </div>
-                      <div style="margin: 4px 0 0 0; color: var(--visited-link); font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap;">
-                        <span style="display: inline-flex; align-items: center; gap: 4px;">
-                          1st: 50
-                          <img src="/usdc-logo.svg" alt="USDC" style="width: 14px; height: 14px;" />
-                        </span>
-                        <span>•</span>
-                        <span style="display: inline-flex; align-items: center; gap: 4px;">
-                          2nd: 30
-                          <img src="/usdc-logo.svg" alt="USDC" style="width: 14px; height: 14px;" />
-                        </span>
-                        <span>•</span>
-                        <span style="display: inline-flex; align-items: center; gap: 4px;">
-                          3rd: 20
-                          <img src="/usdc-logo.svg" alt="USDC" style="width: 14px; height: 14px;" />
-                        </span>
                       </div>
                     </div>
                     <div style="border: var(--border-thin);">
@@ -963,7 +947,7 @@ export default async function (trie, theme, page, domain, identity, hash, varian
                       })}
                     </div>
                     <div style="text-align: center; margin-top: 12px;">
-                      <a href="/community" style="color: var(--visited-link); text-decoration: none; font-size: 14px;">View full leaderboard →</a>
+                      <a href="/community" style="color: black; text-decoration: underline; font-size: 14px; font-weight: 600;" onclick="event.stopPropagation(); if (window.innerWidth <= 768 && window.openRewardsDrawer) { window.openRewardsDrawer(); event.preventDefault(); } else { window.location.href = '/community'; event.preventDefault(); }">View full leaderboard →</a>
                     </div>
                   </div>
                 </td>
