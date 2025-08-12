@@ -91,7 +91,7 @@ if (cluster.isPrimary) {
           .catch((err) =>
             log(`Failed to purge homepage cache after 15 seconds: ${err}`),
           );
-      }, 15000);
+      }, 25000);
     }
   }
 
