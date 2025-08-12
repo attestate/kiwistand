@@ -775,6 +775,63 @@ async function addKarmaElements() {
   }
 }
 
+async function addLeaderboardStats(allowlist, delegations) {
+  // Only add if we're on the leaderboard page
+  if (window.location.pathname !== "/community") return;
+  
+  // Check if the elements exist
+  const karmaEl = document.querySelector('.user-karma-value');
+  if (!karmaEl) return;
+
+  // Get the current account if available
+  const [{ getAccount }, { client, chains }] = await Promise.all([
+    import("@wagmi/core"),
+    import("./client.mjs"),
+  ]);
+  
+  let address;
+  try {
+    const account = await getAccount();
+    if (account && account.address) {
+      address = account.address;
+    }
+  } catch (err) {
+    // Try to get from local storage
+    const localAccount = getLocalAccount(null, allowlist);
+    if (localAccount && localAccount.identity) {
+      address = localAccount.identity;
+    }
+  }
+
+  // Create a hidden container for the React component
+  const container = document.createElement('div');
+  container.style.display = 'none';
+  document.body.appendChild(container);
+
+  const [LeaderboardStats, wagmi, rainbowKit] = await Promise.all([
+    import("./LeaderboardStats.jsx").then(m => m.default),
+    import("wagmi"),
+    import("@rainbow-me/rainbowkit"),
+  ]);
+  
+  const { WagmiConfig } = wagmi;
+  const { RainbowKitProvider } = rainbowKit;
+
+  createRoot(container).render(
+    <StrictMode>
+      <WagmiConfig config={client}>
+        <RainbowKitProvider chains={chains}>
+          <LeaderboardStats 
+            allowlist={allowlist} 
+            delegations={delegations} 
+            address={address}
+          />
+        </RainbowKitProvider>
+      </WagmiConfig>
+    </StrictMode>,
+  );
+}
+
 async function checkMintStatus(address) {
   const url = new URL(window.location.href);
   if (url.pathname !== "/indexing") return;
@@ -1195,6 +1252,7 @@ async function start() {
     addModals(await allowlistPromise, await delegationsPromise, toast),
     addNFTPrice(),
     addKarmaElements(),
+    addLeaderboardStats(await allowlistPromise, await delegationsPromise),
     addMinuteCountdown(),
     addTutorialDrawers(),
     addEmbedDrawer(toast),

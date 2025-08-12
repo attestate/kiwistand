@@ -13,7 +13,8 @@ import DOMPurify from "isomorphic-dompurify";
 const html = htm.bind(vhtml);
 
 export default async function Leaderboard(identity, theme) {
-  const leaderboard = await getContestLeaderboard();
+  const contestData = await getContestLeaderboard(identity);
+  const { leaderboard, userVoterInfo, contestDates } = contestData;
 
   // Find the current user in the contest leaderboard
   let currentUserRank = null;
@@ -26,6 +27,13 @@ export default async function Leaderboard(identity, theme) {
       };
     }
   }
+  
+  // Format contest dates
+  const formatDate = (date) => {
+    const options = { month: 'long', day: 'numeric', year: 'numeric' };
+    return date.toLocaleDateString('en-US', options);
+  };
+  const dateRange = `${formatDate(contestDates.start)} - ${formatDate(contestDates.end)}`;
 
   const path = "/community";
 
@@ -54,26 +62,50 @@ export default async function Leaderboard(identity, theme) {
                   <div style="padding: 15px; max-width: 800px; margin: 0 auto;">
 
                     <div style="background-color: var(--table-bg); padding: 20px; border: var(--border); margin-bottom: 20px;">
-                      <div style="text-align: center; color: var(--visited-link); font-size: 14px; margin-bottom: 10px;">
-                        August 5 - August 12, 2025 Contest Results
-                      </div>
-                      <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <div style="text-align: center; flex: 1;">
-                          <div style="color: var(--visited-link); font-size: 13px; margin-bottom: 6px;">Your Prize</div>
-                          <div style="font-size: 22px; font-weight: bold; color: black; display: flex; align-items: center; justify-content: center;">
-                            ${currentUserRank ? html`<span>${currentUserRank.earnings.toFixed(2)}</span><img src="/usdc-logo.svg" style="width: 20px; height: 20px; margin-left: 5px;" alt="USDC" />` : 'N/A'}
+                      <div style="display: flex; gap: 20px;">
+                        <!-- As Voter Section -->
+                        <div style="flex: 1;">
+                          <div style="font-size: 12px; font-weight: 600; color: var(--visited-link); margin-bottom: 10px; text-transform: uppercase;">As Voter</div>
+                          <div style="display: flex; flex-direction: column; gap: 10px;">
+                            <div>
+                              <div style="color: var(--visited-link); font-size: 12px; margin-bottom: 4px;">Your Karma</div>
+                              <div class="user-karma-value" style="font-size: 20px; font-weight: bold; color: black;">N/A</div>
+                            </div>
+                            <div>
+                              <div style="color: var(--visited-link); font-size: 12px; margin-bottom: 4px;">Voting Power</div>
+                              <div class="user-voting-power" style="font-size: 20px; font-weight: bold; color: black; display: flex; align-items: center;">
+                                N/A
+                              </div>
+                            </div>
                           </div>
                         </div>
-                        <div style="text-align: center; flex: 1;">
-                          <div style="color: var(--visited-link); font-size: 13px; margin-bottom: 6px;">Your Rank</div>
-                          <div style="font-size: 22px; font-weight: bold; color: black;">${currentUserRank?.rank ? `#${currentUserRank.rank}` : 'Unranked'}</div>
+                        
+                        <!-- Divider -->
+                        <div style="width: 1px; background-color: var(--border-color); margin: 0 10px;"></div>
+                        
+                        <!-- As Submitter Section -->
+                        <div style="flex: 1;">
+                          <div style="font-size: 12px; font-weight: 600; color: var(--visited-link); margin-bottom: 10px; text-transform: uppercase;">As Submitter</div>
+                          <div style="display: flex; flex-direction: column; gap: 10px;">
+                            <div>
+                              <div style="color: var(--visited-link); font-size: 12px; margin-bottom: 4px;">Your Prize</div>
+                              <div class="user-prize-value" style="font-size: 20px; font-weight: bold; color: black; display: flex; align-items: center;">
+                                N/A
+                              </div>
+                            </div>
+                            <div>
+                              <div style="color: var(--visited-link); font-size: 12px; margin-bottom: 4px;">Your Rank</div>
+                              <div class="user-rank-value" style="font-size: 20px; font-weight: bold; color: black;">Unranked</div>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
 
                     <div style="background-color: var(--table-bg); border: var(--border); margin-bottom: 20px;">
                       <div style="padding: 15px; border-bottom: var(--border-thin);">
-                        <h2 style="margin: 0; font-size: 18px; color: black; font-weight: 600; text-align: center;">Top Winners</h2>
+                        <h2 style="margin: 0; font-size: 18px; color: black; font-weight: 600; text-align: center;">Leaderboard</h2>
+                        <div style="text-align: center; color: var(--visited-link); font-size: 13px; margin-top: 5px;">${dateRange}</div>
                       </div>
                       <div>
                         ${leaderboard.map((user, index) => {

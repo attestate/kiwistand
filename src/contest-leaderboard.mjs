@@ -9,7 +9,6 @@ const CONTEST_START_DATE = new Date('2025-08-05T00:00:00Z');
 const CONTEST_END_DATE = new Date('2025-08-12T23:59:59Z');
 const PRIZE_POOL = 100; // 100 USDC
 const EXCLUDED_RECIPIENTS = [
-    '0xee324c588cef1bf1c1360883e4318834af66366d',
     '0x2cb8c01eabdff323c9f2600782132ace6ea37bc4'
 ];
 
@@ -50,7 +49,7 @@ function getUpvotesInPeriod(startDate, endDate) {
 
 // --- Main Exported Function ---
 
-export async function getContestLeaderboard() {
+export async function getContestLeaderboard(userIdentity = null) {
     // 1. Get karma snapshot and identify active voters.
     const karmaSnapshot = getGlobalKarmaSnapshot(CONTEST_START_DATE);
     const upvotesInPeriod = getUpvotesInPeriod(CONTEST_START_DATE, CONTEST_END_DATE);
@@ -68,6 +67,20 @@ export async function getContestLeaderboard() {
             const power = (voterKarma / totalActiveKarma) * PRIZE_POOL;
             votingPower.set(voter, power);
         }
+    }
+    
+    // Get user's voter info if identity provided
+    let userVoterInfo = null;
+    if (userIdentity) {
+        const userIdentityLower = userIdentity.toLowerCase();
+        const userKarma = karmaSnapshot.get(userIdentityLower) || 0;
+        // User only has voting power if they're an active voter (voted during the period)
+        const userVotingPower = activeVoters.has(userIdentityLower) ? (votingPower.get(userIdentityLower) || 0) : 0;
+        userVoterInfo = {
+            karma: userKarma,
+            votingPower: userVotingPower,
+            isActiveVoter: activeVoters.has(userIdentityLower)
+        };
     }
 
     // 3. Count upvotes cast by each user.
@@ -109,7 +122,7 @@ export async function getContestLeaderboard() {
         .sort((a, b) => b.earnings - a.earnings);
 
     // 7. Resolve names and return the final data structure.
-    return await Promise.all(
+    const leaderboard = await Promise.all(
         finalLeaderboard.map(async (user) => {
             const ensData = await fetchENSData(user.identity).catch(() => null);
             let displayName = user.identity;
@@ -125,4 +138,13 @@ export async function getContestLeaderboard() {
             return { ...user, displayName, ensData };
         })
     );
+    
+    return {
+        leaderboard,
+        userVoterInfo,
+        contestDates: {
+            start: CONTEST_START_DATE,
+            end: CONTEST_END_DATE
+        }
+    };
 }

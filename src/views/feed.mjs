@@ -41,6 +41,7 @@ import * as karma from "../karma.mjs";
 import { cachedMetadata } from "../parser.mjs";
 import { getPredictedEngagement } from "../prediction.mjs";
 import { getLeaderboard } from "../leaderboard.mjs";
+import { getContestLeaderboard } from "../contest-leaderboard.mjs";
 
 import holders from "./holders.mjs";
 const formatedHolders = holders.map((a) => ethers.utils.getAddress(a));
@@ -897,6 +898,76 @@ export default async function (trie, theme, page, domain, identity, hash, varian
                     currentQuery,
                   ),
                 )}
+              <tr>
+                <td>
+                  <div style="background-color: var(--table-bg); padding: 15px; margin-bottom: 20px;">
+                    <div style="text-align: center; margin-bottom: 15px;">
+                      <h2 style="margin: 0 0 8px 0; font-size: 18px; color: black; font-weight: 600;">Weekly Rewards</h2>
+                      <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 8px;">
+                        <img src="/usdc-logo.svg" alt="USDC" style="width: 24px; height: 24px;" />
+                        <p style="margin: 0; color: black; font-size: 16px; font-weight: 600;">
+                          100 Prize Pool
+                        </p>
+                      </div>
+                      <div style="margin: 4px 0 0 0; color: var(--visited-link); font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap;">
+                        <span style="display: inline-flex; align-items: center; gap: 4px;">
+                          1st: 50
+                          <img src="/usdc-logo.svg" alt="USDC" style="width: 14px; height: 14px;" />
+                        </span>
+                        <span>•</span>
+                        <span style="display: inline-flex; align-items: center; gap: 4px;">
+                          2nd: 30
+                          <img src="/usdc-logo.svg" alt="USDC" style="width: 14px; height: 14px;" />
+                        </span>
+                        <span>•</span>
+                        <span style="display: inline-flex; align-items: center; gap: 4px;">
+                          3rd: 20
+                          <img src="/usdc-logo.svg" alt="USDC" style="width: 14px; height: 14px;" />
+                        </span>
+                      </div>
+                    </div>
+                    <div style="border: var(--border-thin);">
+                      ${(await getContestLeaderboard()).leaderboard.slice(0, 3).map((user, index) => {
+                        const medals = ['🥇', '🥈', '🥉'];
+                        const avatar = user.ensData?.avatar_small || user.ensData?.avatar || user.ensData?.farcaster?.avatar;
+                        return html`
+                          <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: ${index < 2 ? 'var(--border-thin)' : 'none'};">
+                            <div style="display: flex; align-items: center; min-width: 0; flex: 1;">
+                              <div style="width: 25px; text-align: center; margin-right: 10px; font-size: 16px;">${medals[index]}</div>
+                              <a 
+                                href="/upvotes?address=${user.identity}" 
+                                style="display: flex; align-items: center; min-width: 0; flex: 1; text-decoration: none; color: inherit;"
+                              >
+                                ${avatar
+                                  ? html`<img
+                                      loading="lazy"
+                                      src="${DOMPurify.sanitize(avatar)}"
+                                      style="border: var(--border); width: 20px; height: 20px; border-radius: 2px; margin-right: 10px; flex-shrink: 0;"
+                                    />`
+                                  : html`<div style="width: 20px; height: 20px; margin-right: 10px; flex-shrink: 0; display: inline-block;">
+                                      <zora-zorb
+                                        style="display: block;"
+                                        size="20px"
+                                        address="${user.identity}"
+                                      ></zora-zorb>
+                                    </div>`}
+                                <span style="color: black; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px;">${user.displayName}</span>
+                              </a>
+                            </div>
+                            <div style="color: black; font-weight: bold; font-size: 14px; display: flex; align-items: center;">
+                              ${user.earnings.toFixed(2)}
+                              <img src="/usdc-logo.svg" style="width: 16px; height: 16px; margin-left: 4px;" alt="USDC" />
+                            </div>
+                          </div>
+                        `;
+                      })}
+                    </div>
+                    <div style="text-align: center; margin-top: 12px;">
+                      <a href="/community" style="color: var(--visited-link); text-decoration: none; font-size: 14px;">View full leaderboard →</a>
+                    </div>
+                  </div>
+                </td>
+              </tr>
               ${stories // Render remaining stories
                 .slice(3)
                 .map(

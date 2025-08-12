@@ -1531,6 +1531,40 @@ export async function launch(trie, libp2p, isPrimary = true) {
     );
     return reply.status(200).type("text/html").send(content);
   });
+  
+  app.get("/api/contest-stats", async (request, reply) => {
+    const address = request.query.address;
+    if (!address) {
+      return reply.status(400).json({ error: "Address is required" });
+    }
+    
+    try {
+      const { getContestLeaderboard } = await import("./contest-leaderboard.mjs");
+      const contestData = await getContestLeaderboard(address);
+      const { leaderboard, userVoterInfo } = contestData;
+      
+      // Find user's rank
+      let userRank = null;
+      let userEarnings = null;
+      const rankIndex = leaderboard.findIndex(
+        (user) => user.identity.toLowerCase() === address.toLowerCase()
+      );
+      if (rankIndex !== -1) {
+        userRank = rankIndex + 1;
+        userEarnings = leaderboard[rankIndex].earnings;
+      }
+      
+      return reply.status(200).json({
+        karma: userVoterInfo?.karma || 0,
+        votingPower: userVoterInfo?.votingPower || 0,
+        earnings: userEarnings,
+        rank: userRank
+      });
+    } catch (error) {
+      console.error("Error fetching contest stats:", error);
+      return reply.status(500).json({ error: "Internal server error" });
+    }
+  });
   app.get("/price", async (request, reply) => {
     const content = await price.chart(reply.locals.theme);
     return reply.status(200).type("text/html").send(content);
