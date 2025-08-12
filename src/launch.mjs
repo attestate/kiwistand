@@ -26,6 +26,7 @@ import * as newest from "./views/new.mjs";
 import * as email from "./email.mjs";
 import * as moderation from "./views/moderation.mjs";
 import diskcheck from "./diskcheck.mjs";
+import { purgeCache } from "./cloudflarePurge.mjs";
 
 // Initialize blocked-at monitoring
 // Adjust threshold (milliseconds) as needed. Start higher (e.g., 100ms)
@@ -75,6 +76,24 @@ if (cluster.isPrimary) {
 
   if (!reconcileMode) {
     await http.launch(trie, node, true); // true indicates primary process
+
+    // Purge homepage cache on server restart in production
+    if (productionMode) {
+      purgeCache("https://news.kiwistand.com/")
+        .then(() => log("Homepage cache purged on startup"))
+        .catch((err) =>
+          log(`Failed to purge homepage cache on startup: ${err}`),
+        );
+
+      // Purge again after 15 seconds to catch feed recomputation
+      setTimeout(() => {
+        purgeCache("https://news.kiwistand.com/")
+          .then(() => log("Homepage cache purged again after 15 seconds"))
+          .catch((err) =>
+            log(`Failed to purge homepage cache after 15 seconds: ${err}`),
+          );
+      }, 25000);
+    }
   }
 
   crawl(mintCrawlPath);
@@ -131,7 +150,8 @@ const accounts = await registry.accounts();
 const delegations = await registry.delegations();
 const href = null;
 
-let upvotes = [], comments = [];
+let upvotes = [],
+  comments = [];
 if (cluster.isPrimary) {
   // Primary needs both upvotes and comments
   await Promise.allSettled([
