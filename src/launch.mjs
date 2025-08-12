@@ -76,7 +76,6 @@ if (cluster.isPrimary) {
 
   if (!reconcileMode) {
     await http.launch(trie, node, true); // true indicates primary process
-
     // Purge homepage cache on server restart in production
     if (productionMode) {
       purgeCache("https://news.kiwistand.com/")
@@ -92,7 +91,7 @@ if (cluster.isPrimary) {
           .catch((err) =>
             log(`Failed to purge homepage cache after 15 seconds: ${err}`),
           );
-      }, 25000);
+      }, 15000);
     }
   }
 
