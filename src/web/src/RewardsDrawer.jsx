@@ -158,6 +158,40 @@ const RewardsDrawer = () => {
   const initializeLeaderboardHandlers = () => {
     // Re-attach the toggle functions that were defined in main.jsx
     
+    // Initialize tab switching
+    window.switchLeaderboardTab = function(tab) {
+      const rewardsBtn = document.getElementById('rewards-tab-btn');
+      const karmaBtn = document.getElementById('karma-tab-btn');
+      const rewardsIndicator = document.getElementById('rewards-indicator');
+      const karmaIndicator = document.getElementById('karma-indicator');
+      const rewardsContent = document.getElementById('rewards-tab-content');
+      const karmaContent = document.getElementById('karma-tab-content');
+      
+      if (tab === 'rewards') {
+        // Activate rewards tab
+        rewardsBtn.style.color = 'black';
+        rewardsBtn.style.fontWeight = '600';
+        karmaBtn.style.color = 'var(--visited-link)';
+        karmaBtn.style.fontWeight = '400';
+        if (rewardsIndicator) rewardsIndicator.style.display = 'block';
+        if (karmaIndicator) karmaIndicator.style.display = 'none';
+        
+        rewardsContent.style.display = 'block';
+        karmaContent.style.display = 'none';
+      } else if (tab === 'karma') {
+        // Activate karma tab
+        karmaBtn.style.color = 'black';
+        karmaBtn.style.fontWeight = '600';
+        rewardsBtn.style.color = 'var(--visited-link)';
+        rewardsBtn.style.fontWeight = '400';
+        if (karmaIndicator) karmaIndicator.style.display = 'block';
+        if (rewardsIndicator) rewardsIndicator.style.display = 'none';
+        
+        karmaContent.style.display = 'block';
+        rewardsContent.style.display = 'none';
+      }
+    };
+    
     // Function to toggle user stories
     const toggleUserStories = (userId) => {
       const storiesDiv = document.getElementById(`stories-${userId}`);

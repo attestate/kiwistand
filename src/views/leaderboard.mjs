@@ -6,7 +6,7 @@ import Sidebar from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
 import { custom } from "./components/head.mjs";
 
-import { getContestLeaderboard } from '../contest-leaderboard.mjs';
+import { getContestLeaderboard, getTotalKarmaLeaderboard } from '../contest-leaderboard.mjs';
 import DOMPurify from "isomorphic-dompurify";
 import { getSlug } from "../utils.mjs";
 
@@ -15,6 +15,9 @@ const html = htm.bind(vhtml);
 export default async function Leaderboard(identity, theme) {
   const contestData = await getContestLeaderboard(identity);
   const { leaderboard, userVoterInfo, contestDates } = contestData;
+  
+  // Get total karma leaderboard data
+  const totalKarmaData = await getTotalKarmaLeaderboard(identity);
 
   // Find the current user in the contest leaderboard
   let currentUserRank = null;
@@ -99,12 +102,65 @@ export default async function Leaderboard(identity, theme) {
                       </div>
                     </div>
 
-                    <div style="background-color: var(--table-bg); border: var(--border); margin-bottom: 20px;">
-                      <div style="padding: 15px; border-bottom: var(--border-thin);">
-                        <h2 style="margin: 0; font-size: 18px; color: black; font-weight: 600; text-align: center;">Leaderboard</h2>
-                        <div style="text-align: center; margin-top: 8px; color: var(--visited-link); font-size: 13px;">${dateRange}</div>
+                    <!-- Tab Navigation -->
+                    <div style="background-color: var(--table-bg); border: var(--border); margin-bottom: 0; border-bottom: none;">
+                      <div style="display: flex; border-bottom: var(--border-thin); position: relative;">
+                        <button 
+                          id="rewards-tab-btn"
+                          onclick="(function() {
+                            const rewardsBtn = document.getElementById('rewards-tab-btn');
+                            const karmaBtn = document.getElementById('karma-tab-btn');
+                            const rewardsIndicator = document.getElementById('rewards-indicator');
+                            const karmaIndicator = document.getElementById('karma-indicator');
+                            const rewardsContent = document.getElementById('rewards-tab-content');
+                            const karmaContent = document.getElementById('karma-tab-content');
+                            rewardsBtn.style.color = 'black';
+                            rewardsBtn.style.fontWeight = '600';
+                            karmaBtn.style.color = 'var(--visited-link)';
+                            karmaBtn.style.fontWeight = '400';
+                            rewardsIndicator.style.display = 'block';
+                            karmaIndicator.style.display = 'none';
+                            rewardsContent.style.display = 'block';
+                            karmaContent.style.display = 'none';
+                          })()"
+                          style="flex: 1; padding: 15px 12px; background: transparent; color: black; border: none; font-size: 14px; font-weight: 600; cursor: pointer; position: relative; transition: color 0.2s;"
+                        >
+                          Weekly Rewards
+                          <div id="rewards-indicator" style="position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: black; border-radius: 2px 2px 0 0;"></div>
+                        </button>
+                        <button 
+                          id="karma-tab-btn"
+                          onclick="(function() {
+                            const rewardsBtn = document.getElementById('rewards-tab-btn');
+                            const karmaBtn = document.getElementById('karma-tab-btn');
+                            const rewardsIndicator = document.getElementById('rewards-indicator');
+                            const karmaIndicator = document.getElementById('karma-indicator');
+                            const rewardsContent = document.getElementById('rewards-tab-content');
+                            const karmaContent = document.getElementById('karma-tab-content');
+                            karmaBtn.style.color = 'black';
+                            karmaBtn.style.fontWeight = '600';
+                            rewardsBtn.style.color = 'var(--visited-link)';
+                            rewardsBtn.style.fontWeight = '400';
+                            karmaIndicator.style.display = 'block';
+                            rewardsIndicator.style.display = 'none';
+                            karmaContent.style.display = 'block';
+                            rewardsContent.style.display = 'none';
+                          })()"
+                          style="flex: 1; padding: 15px 12px; background: transparent; color: var(--visited-link); border: none; font-size: 14px; font-weight: 400; cursor: pointer; position: relative; transition: color 0.2s;"
+                        >
+                          Voting Power
+                          <div id="karma-indicator" style="position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: black; border-radius: 2px 2px 0 0; display: none;"></div>
+                        </button>
                       </div>
-                      <div>
+                    </div>
+
+                    <!-- Rewards Winners Tab Content -->
+                    <div id="rewards-tab-content" style="display: block;">
+                      <div style="background-color: var(--table-bg); border: var(--border); border-top: none; margin-bottom: 20px;">
+                        <div style="padding: 15px; border-bottom: var(--border-thin);">
+                          <div style="text-align: center; color: var(--visited-link); font-size: 13px;">${dateRange}</div>
+                        </div>
+                        <div>
                         ${leaderboard.map((user, index) => {
                           const medals = ['🥇', '🥈', '🥉'];
                           const displayRank = index < 3 ? medals[index] : `${index + 1}.`;
@@ -151,9 +207,12 @@ export default async function Leaderboard(identity, theme) {
                                   </div>
                                 </div>
                                 <div style="display: flex; align-items: center;">
-                                  <div style="width: 100px; text-align: right; color: black; font-weight: bold; font-size: 14px; display: flex; align-items: center; justify-content: flex-end;">
-                                    ${user.earnings.toFixed(2)}
-                                    <img src="/usdc-logo.svg" style="width: 16px; height: 16px; margin-left: 4px;" alt="USDC" />
+                                  <div style="width: 100px; text-align: right;">
+                                    <div style="color: var(--visited-link); font-size: 11px; margin-bottom: 2px;">Earnings</div>
+                                    <div style="color: black; font-weight: bold; font-size: 14px; display: flex; align-items: center; justify-content: flex-end;">
+                                      ${user.earnings.toFixed(2)}
+                                      <img src="/usdc-logo.svg" style="width: 16px; height: 16px; margin-left: 4px;" alt="USDC" />
+                                    </div>
                                   </div>
                                 </div>
                               </div>
@@ -314,11 +373,129 @@ export default async function Leaderboard(identity, theme) {
                           `;
                         })}
                       </div>
-                      <div style="padding: 12px 15px; background-color: black; color: white; display: flex; justify-content: space-between; align-items: center;">
-                        <span style="font-size: 14px; font-weight: bold;">TOTAL PRIZE POOL</span>
-                        <div style="font-size: 16px; font-weight: bold; display: flex; align-items: center;">
-                          ${leaderboard.reduce((sum, user) => sum + user.earnings, 0).toFixed(2)}
-                          <img src="/usdc-logo.svg" style="width: 18px; height: 18px; margin-left: 4px;" alt="USDC" />
+                        <div style="padding: 12px 15px; background-color: black; color: white; display: flex; justify-content: space-between; align-items: center;">
+                          <span style="font-size: 14px; font-weight: bold;">TOTAL PRIZE POOL</span>
+                          <div style="font-size: 16px; font-weight: bold; display: flex; align-items: center;">
+                            ${leaderboard.reduce((sum, user) => sum + user.earnings, 0).toFixed(2)}
+                            <img src="/usdc-logo.svg" style="width: 18px; height: 18px; margin-left: 4px;" alt="USDC" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Voting Power Tab Content -->
+                    <div id="karma-tab-content" style="display: none;">
+                      <div style="background-color: var(--table-bg); border: var(--border); border-top: none; margin-bottom: 20px;">
+                        <div style="padding: 15px; border-bottom: var(--border-thin);">
+                          <div style="text-align: center; color: var(--visited-link); font-size: 13px;">Top 50 Users by All-Time Karma</div>
+                        </div>
+                        <div>
+                          ${totalKarmaData.leaderboard.map((user, index) => {
+                            const medals = ['🥇', '🥈', '🥉'];
+                            const displayRank = index < 3 ? medals[index] : `${index + 1}.`;
+                            const avatar = user.ensData?.avatar_small || user.ensData?.avatar || user.ensData?.farcaster?.avatar;
+                            
+                            const avatarHtml = avatar 
+                              ? html`<img src="${avatar}" style="width: 24px; height: 24px; border-radius: 50%; margin-right: 12px; flex-shrink: 0;" />`
+                              : html`<div style="width: 24px; height: 24px; margin-right: 12px; flex-shrink: 0; display: inline-block;">
+                                      <zora-zorb
+                                        style="display: block;"
+                                        size="24px"
+                                        address="${user.identity}"
+                                      ></zora-zorb>
+                                    </div>`;
+
+                            return html`
+                              <div class="karma-leaderboard-entry" style="border-bottom: ${index < totalKarmaData.leaderboard.length - 1 ? 'var(--border-thin)' : 'none'};">
+                                <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; gap: 15px;">
+                                  <div style="display: flex; align-items: center; min-width: 0; flex: 1; max-width: 50%;">
+                                    <div style="width: 30px; text-align: center; margin-right: 12px; color: var(--visited-link); font-size: ${index < 3 ? '16px' : '14px'}; font-weight: bold; flex-shrink: 0;">${displayRank}</div>
+                                    <div style="display: flex; align-items: center; min-width: 0; flex: 1;">
+                                      ${avatarHtml}
+                                      <a
+                                        href="/upvotes?address=${user.identity}"
+                                        style="color: black; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; text-decoration: none;"
+                                      >
+                                        ${user.displayName}
+                                      </a>
+                                    </div>
+                                  </div>
+                                  <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
+                                    <div style="text-align: right; min-width: 50px;">
+                                      <div style="color: var(--visited-link); font-size: 10px; margin-bottom: 2px;">Karma</div>
+                                      <div style="color: var(--visited-link); font-weight: normal; font-size: 13px;">${user.karma.toLocaleString()}</div>
+                                    </div>
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" style="width: 16px; height: 16px; color: var(--visited-link); flex-shrink: 0;">
+                                      <rect width="256" height="256" fill="none"/>
+                                      <line x1="40" y1="128" x2="216" y2="128" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/>
+                                      <polyline points="144 56 216 128 144 200" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/>
+                                    </svg>
+                                    <div style="width: 70px; text-align: right;">
+                                      <div style="color: var(--visited-link); font-size: 11px; margin-bottom: 2px;">USDC</div>
+                                      <div style="color: black; font-weight: bold; font-size: 14px; display: flex; align-items: center; justify-content: flex-end;">
+                                        ${user.votingPower.toFixed(2)}
+                                        <img src="/usdc-logo.svg" style="width: 16px; height: 16px; margin-left: 4px;" alt="USDC" />
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            `;
+                          })}
+                          
+                          ${/* Show current user if they're not in top 50 */
+                          totalKarmaData.currentUserData && !totalKarmaData.currentUserData.isInTop50 ? html`
+                            <div style="border-top: 2px solid var(--border-color); background-color: rgba(255, 255, 0, 0.05);">
+                              <div style="padding: 8px 15px; font-size: 12px; color: var(--visited-link); text-align: center; font-style: italic;">
+                                Your Position
+                              </div>
+                              <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; gap: 15px;">
+                                <div style="display: flex; align-items: center; min-width: 0; flex: 1; max-width: 50%;">
+                                  <div style="width: 30px; text-align: center; margin-right: 12px; color: var(--visited-link); font-size: 14px; font-weight: bold; flex-shrink: 0;">
+                                    #${totalKarmaData.currentUserData.rank}
+                                  </div>
+                                  <div style="display: flex; align-items: center; min-width: 0; flex: 1;">
+                                    ${totalKarmaData.currentUserData.ensData?.avatar_small || totalKarmaData.currentUserData.ensData?.avatar || totalKarmaData.currentUserData.ensData?.farcaster?.avatar
+                                      ? html`<img src="${totalKarmaData.currentUserData.ensData.avatar_small || totalKarmaData.currentUserData.ensData.avatar || totalKarmaData.currentUserData.ensData.farcaster.avatar}" style="width: 24px; height: 24px; border-radius: 50%; margin-right: 12px; flex-shrink: 0;" />`
+                                      : html`<div style="width: 24px; height: 24px; margin-right: 12px; flex-shrink: 0; display: inline-block;">
+                                          <zora-zorb size="24px" address="${totalKarmaData.currentUserData.identity}"></zora-zorb>
+                                        </div>`}
+                                    <span style="color: black; font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                      ${totalKarmaData.currentUserData.displayName} (You)
+                                    </span>
+                                  </div>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
+                                  <div style="text-align: right; min-width: 50px;">
+                                    <div style="color: var(--visited-link); font-size: 10px; margin-bottom: 2px;">Karma</div>
+                                    <div style="color: var(--visited-link); font-weight: normal; font-size: 13px;">${totalKarmaData.currentUserData.karma.toLocaleString()}</div>
+                                  </div>
+                                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" style="width: 16px; height: 16px; color: var(--visited-link); flex-shrink: 0;">
+                                    <rect width="256" height="256" fill="none"/>
+                                    <line x1="40" y1="128" x2="216" y2="128" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/>
+                                    <polyline points="144 56 216 128 144 200" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/>
+                                  </svg>
+                                  <div style="width: 70px; text-align: right;">
+                                    <div style="color: var(--visited-link); font-size: 11px; margin-bottom: 2px;">USDC</div>
+                                    <div style="color: black; font-weight: bold; font-size: 14px; display: flex; align-items: center; justify-content: flex-end;">
+                                      0.00
+                                      <img src="/usdc-logo.svg" style="width: 16px; height: 16px; margin-left: 4px;" alt="USDC" />
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                              <div style="padding: 8px 15px; font-size: 11px; color: var(--visited-link); text-align: center; background-color: rgba(0, 0, 0, 0.03);">
+                                Need ${(totalKarmaData.thresholdKarma - totalKarmaData.currentUserData.karma).toLocaleString()} more karma to enter top 50
+                              </div>
+                            </div>
+                          ` : ''}
+                        </div>
+                        <div style="padding: 12px 15px; background-color: black; color: white; display: flex; justify-content: space-between; align-items: center;">
+                          <span style="font-size: 14px; font-weight: bold;">TOTAL USDC VOTING POWER</span>
+                          <div style="font-size: 16px; font-weight: bold; display: flex; align-items: center;">
+                            100.00
+                            <img src="/usdc-logo.svg" style="width: 18px; height: 18px; margin-left: 4px;" alt="USDC" />
+                          </div>
                         </div>
                       </div>
                     </div>

@@ -35,6 +35,24 @@ function getGlobalKarmaSnapshot(snapshotDate) {
     return karmaMap;
 }
 
+function getAllTimeKarma() {
+    const query = `
+        SELECT identity, SUM(points) as total_karma
+        FROM (
+            SELECT identity, 1 as points FROM submissions
+            UNION ALL
+            SELECT s.identity, 1 as points FROM upvotes u JOIN submissions s ON u.href = s.href
+        )
+        GROUP BY identity
+        ORDER BY total_karma DESC
+    `;
+    const rows = db.prepare(query).all();
+    return rows.map(row => ({
+        identity: row.identity.toLowerCase(),
+        karma: row.total_karma
+    }));
+}
+
 function getUpvotesInPeriod(startDate, endDate) {
     const startTimestamp = Math.floor(startDate.getTime() / 1000);
     const endTimestamp = Math.floor(endDate.getTime() / 1000);
@@ -220,5 +238,95 @@ export async function getContestLeaderboard(userIdentity = null) {
             start: CONTEST_START_DATE,
             end: CONTEST_END_DATE
         }
+    };
+}
+
+export async function getTotalKarmaLeaderboard(userIdentity = null) {
+    const TOP_USERS_COUNT = 50;
+    const TOTAL_POOL = 100; // 100 USDC total voting power pool
+    
+    // Get all-time karma for all users
+    const allUsers = getAllTimeKarma();
+    
+    // Get top 50 users
+    const top50Users = allUsers.slice(0, TOP_USERS_COUNT);
+    
+    // Calculate total karma for top 50
+    const totalTop50Karma = top50Users.reduce((sum, user) => sum + user.karma, 0);
+    
+    // Calculate USDC voting power for each top 50 user
+    const leaderboardWithPower = await Promise.all(
+        top50Users.map(async (user, index) => {
+            const votingPower = totalTop50Karma > 0 
+                ? (user.karma / totalTop50Karma) * TOTAL_POOL 
+                : 0;
+            
+            // Fetch ENS data
+            const ensData = await fetchENSData(user.identity).catch(() => null);
+            let displayName = user.identity;
+            if (ensData && !ensData.error) {
+                if (ensData.farcaster && ensData.farcaster.username) {
+                    displayName = `@${ensData.farcaster.username}`;
+                } else if (ensData.displayName && ensData.displayName.startsWith('@')) {
+                    displayName = ensData.displayName;
+                } else if (ensData.ens) {
+                    displayName = ensData.ens;
+                }
+            }
+            
+            return {
+                rank: index + 1,
+                identity: user.identity,
+                displayName,
+                ensData,
+                karma: user.karma,
+                votingPower
+            };
+        })
+    );
+    
+    // Find current user's data if they exist
+    let currentUserData = null;
+    if (userIdentity) {
+        const userIdentityLower = userIdentity.toLowerCase();
+        const userIndex = allUsers.findIndex(u => u.identity === userIdentityLower);
+        
+        if (userIndex !== -1) {
+            const userData = allUsers[userIndex];
+            const isInTop50 = userIndex < TOP_USERS_COUNT;
+            const votingPower = isInTop50 && totalTop50Karma > 0
+                ? (userData.karma / totalTop50Karma) * TOTAL_POOL
+                : 0;
+            
+            // Fetch ENS data for current user
+            const ensData = await fetchENSData(userData.identity).catch(() => null);
+            let displayName = userData.identity;
+            if (ensData && !ensData.error) {
+                if (ensData.farcaster && ensData.farcaster.username) {
+                    displayName = `@${ensData.farcaster.username}`;
+                } else if (ensData.displayName && ensData.displayName.startsWith('@')) {
+                    displayName = ensData.displayName;
+                } else if (ensData.ens) {
+                    displayName = ensData.ens;
+                }
+            }
+            
+            currentUserData = {
+                rank: userIndex + 1,
+                identity: userData.identity,
+                displayName,
+                ensData,
+                karma: userData.karma,
+                votingPower,
+                isInTop50
+            };
+        }
+    }
+    
+    return {
+        leaderboard: leaderboardWithPower,
+        currentUserData,
+        totalUsers: allUsers.length,
+        thresholdKarma: top50Users[top50Users.length - 1]?.karma || 0
     };
 }
