@@ -553,7 +553,7 @@ body.react-loaded .comment-input-host nav-comment-input { visibility: visible; }
 
 .farcaster-embed-container {
   position: relative;
-  padding: 16px !important;
+  padding: 20px !important;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -683,7 +683,7 @@ body.react-loaded .comment-input-host nav-comment-input { visibility: visible; }
 /* Tweet embed styles */
 .tweet-embed-container {
   position: relative;
-  padding: 16px !important;
+  padding: 20px !important;
   display: flex;
   flex-direction: column;
   justify-content: space-between;

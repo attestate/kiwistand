@@ -566,13 +566,15 @@ const row = (
                         </p>
                         ${story.metadata.image
                           ? html`
-                              <div style="margin-top: 12px; position: relative; width: 100%; aspect-ratio: 16 / 9; background: rgba(0,0,0,0.03); border-radius: 2px; overflow: hidden;">
+                              <div
+                                style="margin-top: 12px; position: relative; width: 100%; aspect-ratio: 16 / 9; background: rgba(0,0,0,0.03); overflow: hidden;"
+                              >
                                 <img
                                   src="${DOMPurify.sanitize(story.metadata.image)}"
                                   alt="Tweet image"
                                   width="600"
                                   height="338"
-                                  style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 2px;"
+                                  style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block;"
                                   loading="lazy"
                                 />
                               </div>
@@ -797,14 +799,16 @@ const row = (
                     story.href,
                   )}', event.currentTarget.getAttribute('target')); }"
                 >
-                  <div style="position: relative; width: 100%; aspect-ratio: 2 / 1; background: rgba(0,0,0,0.03); border-radius: 2px; contain: content; contain-intrinsic-size: 600px 300px;">
+                  <div
+                    style="position: relative; width: 100%; aspect-ratio: 2 / 1; background: rgba(0,0,0,0.03); contain: content; contain-intrinsic-size: 600px 300px;"
+                  >
                     <img
                       loading="lazy"
                       width="600"
                       height="300"
                       style="position: absolute; inset: 0; object-fit:${isCloudflare
                         ? "contain"
-                        : "cover"}; border-radius: 2px; width: 100%; height: 100%; display: block;"
+                        : "cover"}; width: 100%; height: 100%; display: block;"
                       src="${isCloudflare
                         ? DOMPurify.sanitize(
                             story.href.endsWith("/public")
