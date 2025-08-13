@@ -45,27 +45,9 @@ export async function prepare(key) {
     optimism: (await fetchBalance({ address, chainId: optimism.id })).value,
   };
 
-  let price = await fetchPrice();
-  if (!price || !price.authoritative || price.difference === null) {
-    throw new Error("Error getting the price");
-  }
-  const { difference } = price;
+  const price = 400000000000000n;
 
-  const discount = new URLSearchParams(window.location.search).get("discount");
-  const validDiscount = discount === theme.discount.code;
-
-  if (validDiscount) {
-    console.log("Found valid discount");
-    price = price.min;
-  } else {
-    price = price.authoritative;
-  }
-
-  let preferredChainId = null;
-  if (balance.optimism > price) {
-    preferredChainId = optimism.id;
-  }
-  if (!preferredChainId) {
+  if (balance.optimism < price) {
     let error = `Need at least ${formatEther(price)} ETH on Optimism`;
     throw new Error(error);
   }
@@ -75,40 +57,16 @@ export async function prepare(key) {
 
   const recipients = [];
   const values = [];
-  if (!validDiscount) {
-    const zeroAddress = "0x0000000000000000000000000000000000000000";
-    let referral = zeroAddress;
-    const queryReferral = localStorage.getItem("--kiwi-news-original-referral");
-    try {
-      referral = getAddress(queryReferral);
-    } catch (err) {
-      console.log("Couldn't find referral address in URL bar");
-      //noop
-    }
-    const treasury = "0x1337E2624ffEC537087c6774e9A18031CFEAf0a9";
-    if (referral !== zeroAddress) {
-      price -= difference;
-      recipients.push(referral);
-      values.push(difference);
-    } else {
-      recipients.push(treasury);
-      values.push(difference);
-    }
-  }
 
-  let config;
-  if (preferredChainId === optimism.id) {
-    config = await prepareWriteContract({
-      address: addressDelegator,
-      abi: abiDelegator,
-      functionName: "setup",
-      args: [payload, recipients, values],
-      value: price,
-      chainId: optimism.id,
-    });
-  } else {
-    throw new Error("Selected unsupported chainId");
-  }
+  const config = await prepareWriteContract({
+    address: addressDelegator,
+    abi: abiDelegator,
+    functionName: "setup",
+    args: [payload, recipients, values],
+    value: price,
+    chainId: optimism.id,
+  });
+
   return config;
 }
 
