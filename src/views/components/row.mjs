@@ -468,7 +468,9 @@ const row = (
                           'x.com',
                           'twitter.com',
                           'www.x.com',
-                          'www.twitter.com'
+                          'www.twitter.com',
+                          'farcaster.xyz',
+                          'warpcast.com'
                         ];
                         
                         // Check if it's a Substack domain
@@ -613,7 +615,9 @@ const row = (
                           'x.com',
                           'twitter.com',
                           'www.x.com',
-                          'www.twitter.com'
+                          'www.twitter.com',
+                          'farcaster.xyz',
+                          'warpcast.com'
                         ];
                         
                         // Check if it's a Substack domain
@@ -764,7 +768,9 @@ const row = (
                           'x.com',
                           'twitter.com',
                           'www.x.com',
-                          'www.twitter.com'
+                          'www.twitter.com',
+                          'farcaster.xyz',
+                          'warpcast.com'
                         ];
                         
                         // Check if it's a Substack domain
