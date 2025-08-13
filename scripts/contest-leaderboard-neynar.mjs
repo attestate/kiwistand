@@ -3,7 +3,7 @@ import { getKarmaRankingByDate } from '../src/cache.mjs';
 // We need to use a different function to get the Farcaster data.
 // Let's look inside ens.mjs again to find the right function.
 // After inspection, `fetchNeynarData` is the correct function.
-import { fetchNeynarData } from '../src/ens.mjs';
+import { fetchENSData } from '../src/ens.mjs';
 import 'dotenv/config';
 
 async function generateContestLeaderboard() {
@@ -30,6 +30,12 @@ async function generateContestLeaderboard() {
     return;
   }
 
+  // To flatten the prize distribution, we apply a square root to the karma scores.
+  const scaledKarmaUsers = eligibleUsers.map(user => ({
+    ...user,
+    scaledKarma: Math.sqrt(user.karma)
+  }));
+  const totalScaledKarma = scaledKarmaUsers.reduce((sum, user) => sum + user.scaledKarma, 0);
   const totalKarma = eligibleUsers.reduce((sum, user) => sum + user.karma, 0);
 
   console.log(`
@@ -40,9 +46,9 @@ Total karma from eligible users: ${totalKarma}`);
   console.log('--------------------------------------------------------------------------');
 
   const leaderboardWithPrizes = await Promise.all(
-    eligibleUsers.map(async (user, index) => {
-      const prize = (user.karma / totalKarma) * prizePool;
-      const neynarData = await fetchNeynarData(user.identity).catch(() => null);
+    scaledKarmaUsers.map(async (user, index) => {
+      const prize = (user.scaledKarma / totalScaledKarma) * prizePool;
+      const neynarData = await fetchENSData(user.identity).catch(() => null);
       
       let displayName = user.identity;
       if (neynarData && neynarData.farcaster && neynarData.farcaster.username) {

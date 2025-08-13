@@ -210,7 +210,7 @@ export default async function Leaderboard(identity, theme) {
                                   <div style="width: 100px; text-align: right;">
                                     <div style="color: var(--visited-link); font-size: 11px; margin-bottom: 2px;">Earnings</div>
                                     <div style="color: black; font-weight: bold; font-size: 14px; display: flex; align-items: center; justify-content: flex-end;">
-                                      ${user.earnings.toFixed(2)}
+                                      ${(typeof user.earnings === 'number' && !isNaN(user.earnings) ? user.earnings : 0).toFixed(2)}
                                       <img src="/usdc-logo.svg" style="width: 16px; height: 16px; margin-left: 4px;" alt="USDC" />
                                     </div>
                                   </div>
@@ -282,7 +282,7 @@ export default async function Leaderboard(identity, theme) {
                                             </td>
                                             <td style="width: 120px; text-align: right; padding: 10px 15px; vertical-align: middle;">
                                               <div style="font-size: 13px; font-weight: 600; color: black; display: flex; align-items: center; justify-content: flex-end; white-space: nowrap;">
-                                                +${story.earnings.toFixed(2)}
+                                                +${(typeof story.earnings === 'number' && !isNaN(story.earnings) ? story.earnings : 0).toFixed(2)}
                                                 <img src="/usdc-logo.svg" style="width: 14px; height: 14px; margin-left: 3px;" alt="USDC" />
                                               </div>
                                             </td>
@@ -308,7 +308,7 @@ export default async function Leaderboard(identity, theme) {
                                               </td>
                                               <td style="width: 120px; text-align: right; padding: 4px 15px;">
                                                 <div style="display: flex; align-items: center; justify-content: flex-end; color: #666;">
-                                                  <span>+${upvoter.contribution.toFixed(2)}</span>
+                                                  <span>+${(typeof upvoter.contribution === 'number' && !isNaN(upvoter.contribution) ? upvoter.contribution : 0).toFixed(2)}</span>
                                                   <img src="/usdc-logo.svg" style="width: 10px; height: 10px; margin-left: 2px;" alt="USDC" />
                                                 </div>
                                               </td>
@@ -319,7 +319,7 @@ export default async function Leaderboard(identity, theme) {
                                               <td style="padding: 8px 15px 8px 15px; font-weight: 700; color: black; font-size: 12px;">Story Total</td>
                                               <td style="width: 120px; text-align: right; padding: 8px 15px;">
                                                 <div style="display: flex; align-items: center; justify-content: flex-end; font-weight: 700; color: black; font-size: 12px;">
-                                                  <span>${story.earnings.toFixed(2)}</span>
+                                                  <span>${(typeof story.earnings === 'number' && !isNaN(story.earnings) ? story.earnings : 0).toFixed(2)}</span>
                                                   <img src="/usdc-logo.svg" style="width: 12px; height: 12px; margin-left: 2px;" alt="USDC" />
                                                 </div>
                                               </td>
@@ -345,7 +345,7 @@ export default async function Leaderboard(identity, theme) {
                                             </td>
                                             <td style="width: 120px; text-align: right;">
                                               <div style="font-size: 13px; font-weight: 600; color: black; display: flex; align-items: center; justify-content: flex-end;">
-                                                +${user.remainingStoriesEarnings.toFixed(2)}
+                                                +${(typeof user.remainingStoriesEarnings === 'number' && !isNaN(user.remainingStoriesEarnings) ? user.remainingStoriesEarnings : 0).toFixed(2)}
                                                 <img src="/usdc-logo.svg" style="width: 14px; height: 14px; margin-left: 3px;" alt="USDC" />
                                               </div>
                                             </td>
@@ -359,7 +359,7 @@ export default async function Leaderboard(identity, theme) {
                                           <td style="padding: 10px 15px 10px 48px; font-size: 12px; font-weight: 600; color: var(--visited-link);">SUBTOTAL</td>
                                           <td style="width: 120px; text-align: right; padding: 10px 15px;">
                                             <div style="font-size: 13px; font-weight: bold; color: black; display: flex; align-items: center; justify-content: flex-end;">
-                                              ${user.earnings.toFixed(2)}
+                                              ${(typeof user.earnings === 'number' && !isNaN(user.earnings) ? user.earnings : 0).toFixed(2)}
                                               <img src="/usdc-logo.svg" style="width: 14px; height: 14px; margin-left: 3px;" alt="USDC" />
                                             </div>
                                           </td>
@@ -376,7 +376,7 @@ export default async function Leaderboard(identity, theme) {
                         <div style="padding: 12px 15px; background-color: black; color: white; display: flex; justify-content: space-between; align-items: center;">
                           <span style="font-size: 14px; font-weight: bold;">TOTAL PRIZE POOL</span>
                           <div style="font-size: 16px; font-weight: bold; display: flex; align-items: center;">
-                            ${leaderboard.reduce((sum, user) => sum + user.earnings, 0).toFixed(2)}
+                            ${(() => { const total = leaderboard.reduce((sum, user) => sum + (typeof user.earnings === 'number' && !isNaN(user.earnings) ? user.earnings : 0), 0); return (typeof total === 'number' && !isNaN(total) ? total : 0).toFixed(2); })()}
                             <img src="/usdc-logo.svg" style="width: 18px; height: 18px; margin-left: 4px;" alt="USDC" />
                           </div>
                         </div>
@@ -433,7 +433,7 @@ export default async function Leaderboard(identity, theme) {
                                     <div style="width: 70px; text-align: right;">
                                       <div style="color: var(--visited-link); font-size: 11px; margin-bottom: 2px;">USDC</div>
                                       <div style="color: black; font-weight: bold; font-size: 14px; display: flex; align-items: center; justify-content: flex-end;">
-                                        ${user.votingPower.toFixed(2)}
+                                        ${(typeof user.votingPower === 'number' && !isNaN(user.votingPower) ? user.votingPower : 0).toFixed(2)}
                                         <img src="/usdc-logo.svg" style="width: 16px; height: 16px; margin-left: 4px;" alt="USDC" />
                                       </div>
                                     </div>

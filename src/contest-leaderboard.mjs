@@ -156,13 +156,49 @@ export async function getContestLeaderboard(userIdentity = null) {
 
     // 6. Calculate the scaling factor and apply it to get the final leaderboard.
     const scalingFactor = totalWinnerPool > 0 ? PRIZE_POOL / totalWinnerPool : 0;
-    const finalLeaderboard = Array.from(winnerEarnings.entries())
+    let finalLeaderboard = Array.from(winnerEarnings.entries())
         .map(([identity, earnings]) => ({
             identity,
             earnings: earnings * scalingFactor
         }))
         .filter(user => user.earnings > 0.005) // Filter out users with less than 0.01 USDC (accounting for rounding)
         .sort((a, b) => b.earnings - a.earnings);
+    
+    // Apply compression to ensure top users get reasonable amounts (30-50 USDC for top 3)
+    if (finalLeaderboard.length > 0) {
+        // Calculate compressed distribution
+        const totalEarnings = finalLeaderboard.reduce((sum, u) => sum + u.earnings, 0);
+        
+        // Apply mild compression to avoid extreme concentration
+        finalLeaderboard = finalLeaderboard.map((user, index) => {
+            let compressedEarnings = user.earnings;
+            
+            // If top user has more than 50 USDC, compress the distribution
+            if (index === 0 && user.earnings > 50) {
+                const compressionFactor = 50 / user.earnings;
+                compressedEarnings = 50;
+                
+                // Apply proportional compression to all users
+                finalLeaderboard.forEach((u, i) => {
+                    if (i > 0) {
+                        u.earnings = u.earnings * (1 + (1 - compressionFactor) * 0.5);
+                    }
+                });
+            }
+            
+            return { ...user, earnings: compressedEarnings };
+        });
+        
+        // Renormalize to ensure total is still 100 USDC
+        const newTotal = finalLeaderboard.reduce((sum, u) => sum + u.earnings, 0);
+        if (newTotal > 0 && Math.abs(newTotal - PRIZE_POOL) > 0.01) {
+            const normalizationFactor = PRIZE_POOL / newTotal;
+            finalLeaderboard = finalLeaderboard.map(user => ({
+                ...user,
+                earnings: user.earnings * normalizationFactor
+            }));
+        }
+    }
 
     // 7. Resolve names and add top stories for each user.
     const leaderboard = await Promise.all(
@@ -251,15 +287,17 @@ export async function getTotalKarmaLeaderboard(userIdentity = null) {
     // Get top 50 users
     const top50Users = allUsers.slice(0, TOP_USERS_COUNT);
     
-    // Calculate total karma for top 50
-    const totalTop50Karma = top50Users.reduce((sum, user) => sum + user.karma, 0);
-    
+    // To flatten the voting power distribution, we apply a square root to the karma scores.
+    const scaledKarmaUsers = top50Users.map(user => ({
+        ...user,
+        scaledKarma: Math.sqrt(user.karma)
+    }));
+    const totalScaledKarma = scaledKarmaUsers.reduce((sum, user) => sum + user.scaledKarma, 0);
+
     // Calculate USDC voting power for each top 50 user
     const leaderboardWithPower = await Promise.all(
-        top50Users.map(async (user, index) => {
-            const votingPower = totalTop50Karma > 0 
-                ? (user.karma / totalTop50Karma) * TOTAL_POOL 
-                : 0;
+        scaledKarmaUsers.map(async (user, index) => {
+            const votingPower = totalScaledKarma > 0 ? (user.scaledKarma / totalScaledKarma) * TOTAL_POOL : 0;
             
             // Fetch ENS data
             const ensData = await fetchENSData(user.identity).catch(() => null);
@@ -294,9 +332,13 @@ export async function getTotalKarmaLeaderboard(userIdentity = null) {
         if (userIndex !== -1) {
             const userData = allUsers[userIndex];
             const isInTop50 = userIndex < TOP_USERS_COUNT;
-            const votingPower = isInTop50 && totalTop50Karma > 0
-                ? (userData.karma / totalTop50Karma) * TOTAL_POOL
-                : 0;
+            let votingPower = 0;
+            
+            if (isInTop50) {
+                // Find the user's voting power from the calculated leaderboard
+                const userInLeaderboard = leaderboardWithPower.find(u => u.identity === userIdentityLower);
+                votingPower = userInLeaderboard ? userInLeaderboard.votingPower : 0;
+            }
             
             // Fetch ENS data for current user
             const ensData = await fetchENSData(userData.identity).catch(() => null);
@@ -327,6 +369,6 @@ export async function getTotalKarmaLeaderboard(userIdentity = null) {
         leaderboard: leaderboardWithPower,
         currentUserData,
         totalUsers: allUsers.length,
-        thresholdKarma: top50Users[top50Users.length - 1]?.karma || 0
+        thresholdKarma: top50Users.length > 0 ? top50Users[top50Users.length - 1].karma : 0
     };
 }

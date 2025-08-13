@@ -939,7 +939,7 @@ export default async function (trie, theme, page, domain, identity, hash, varian
                               </a>
                             </div>
                             <div style="color: black; font-weight: bold; font-size: 14px; display: flex; align-items: center;">
-                              ${user.earnings.toFixed(2)}
+                              ${(typeof user.earnings === 'number' && !isNaN(user.earnings) ? user.earnings : 0).toFixed(2)}
                               <img src="/usdc-logo.svg" style="width: 16px; height: 16px; margin-left: 4px;" alt="USDC" />
                             </div>
                           </div>
