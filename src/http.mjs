@@ -98,7 +98,6 @@ import {
 import appCache from "./cache.mjs"; // For LRU cache used by ENS profiles
 import frameSubscribe from "./views/frame-subscribe.mjs";
 import { sendNotification } from "./neynar.mjs";
-import { getFidsByTopics } from "./fid-labels.mjs";
 import { timingSafeEqual } from "crypto";
 import { invalidateActivityCaches } from "./cloudflarePurge.mjs";
 import { getCastByHashAndConstructUrl } from "./parser.mjs";
@@ -221,14 +220,14 @@ app.post("/api/v1/neynar/notify", async (req, res) => {
   ) {
     return res.status(401).json({ status: "error", message: "Unauthorized" });
   }
-  const { target_url, tag, topics } = req.body;
+  const { target_url, tag } = req.body;
   
-  if (!target_url || !topics || topics.length === 0 || !tag) {
+  if (!target_url || !tag) {
     return sendError(
       res,
       400,
       "Bad Request",
-      "target_url, tag, and topics are required",
+      "target_url and tag are required",
     );
   }
   
@@ -251,24 +250,18 @@ app.post("/api/v1/neynar/notify", async (req, res) => {
     const domain = extractDomain(submission.href);
     
     // Construct notification title and body
-    // Tag is the visual label for users, topics are just for filtering
     notificationTitle = `Kiwi News: ${tag}`;
     notificationBody = `${submission.title} - ${domain}`;
     
-    log(`Sending notification for story: ${submission.title} (${domain}) with tag: ${tag}, filtering by topics: ${topics.join(", ")}`);
+    log(`Sending notification for story: ${submission.title} (${domain}) with tag: ${tag}`);
   } catch (err) {
     log(`Error fetching submission: ${err.toString()}`);
     return sendError(res, 400, "Bad Request", `Failed to fetch story: ${err.message}`);
   }
   
   try {
-    // Get FIDs interested in these topics
-    const targetFids = getFidsByTopics(topics);
-    
-    log(`Found ${targetFids.length} FIDs interested in topics: ${topics.join(", ")}`);
-    
-    // Send Neynar notification to filtered FIDs
-    const resp = await sendNotification(target_url, notificationBody, notificationTitle, targetFids);
+    // Send Neynar notification
+    const resp = await sendNotification(target_url, notificationBody, notificationTitle);
     
     // Extract domain from submission href
     const domain = extractDomain(submission.href);
