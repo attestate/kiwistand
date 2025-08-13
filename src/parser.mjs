@@ -685,29 +685,79 @@ const checkOgImage = async (url) => {
     const res = await fetch(url, {
       agent: useAgent(url),
       signal,
-      method: "HEAD",
       headers: {
         "User-Agent": env.USER_AGENT,
       },
     });
-    
-    if (!res.ok) return false;
-    
+
+    if (!res.ok) {
+      log(`Failed to fetch image with status ${res.status}: ${url}`);
+      return false;
+    }
+
     // Check image size from Content-Length header
-    const contentLength = res.headers.get('content-length');
+    const contentLength = res.headers.get("content-length");
     if (contentLength) {
-      const sizeInBytes = parseInt(contentLength);
+      const sizeInBytes = parseInt(contentLength, 10);
       const sizeInMB = sizeInBytes / (1024 * 1024);
-      
+
       // Reject images larger than 2MB
       if (sizeInMB > 2) {
         log(`Rejecting oversized image (${sizeInMB.toFixed(1)}MB): ${url}`);
         return false;
       }
     }
-    
+
+    const imageProcessor = sharp();
+    // Pipe the response stream to sharp
+    res.body.pipe(imageProcessor);
+
+    const metadata = await imageProcessor.metadata();
+    const { width, height } = metadata;
+
+    if (!width || !height) {
+      log(`Rejecting image with missing dimension metadata: ${url}`);
+      return false;
+    }
+
+    // Twitter summary_large_image requirements
+    const minWidth = 300;
+    const minHeight = 157;
+    const maxWidth = 4096;
+    const maxHeight = 4096;
+
+    if (width < minWidth || height < minHeight) {
+      log(
+        `Rejecting image smaller than minimum dimensions (${width}x${height} vs ${minWidth}x${minHeight}): ${url}`,
+      );
+      return false;
+    }
+
+    if (width > maxWidth || height > maxHeight) {
+      log(
+        `Rejecting image larger than maximum dimensions (${width}x${height} vs ${maxWidth}x${maxHeight}): ${url}`,
+      );
+      return false;
+    }
+
+    if (width < height) {
+      log(`Rejecting portrait-oriented image (${width}x${height}): ${url}`);
+      return false;
+    }
+
+    const aspectRatio = width / height;
+    if (aspectRatio > 2 || aspectRatio < 16 / 9) {
+      log(
+        `Rejecting image with aspect ratio out of range (${aspectRatio.toFixed(
+          2,
+        )}): ${url}`,
+      );
+      return false;
+    }
+
     return true;
-  } catch {
+  } catch (err) {
+    log(`Error checking image dimensions for ${url}: ${err.message}`);
     return false;
   }
 };
@@ -1025,27 +1075,7 @@ export const metadata = async (
   if (image && image.startsWith("https://")) {
     const exists = await checkOgImage(image);
     if (exists) {
-      // Skip quality assessment for Twitter/X images as they often contain valuable screenshots/text
-      const isTwitterImage = twitterFrontends.some(frontend => 
-        hostname === frontend || hostname === "fxtwitter.com"
-      );
-      
-      if (isTwitterImage) {
-        // Always show Twitter/X images as they're usually relevant content
-        output.image = DOMPurify.sanitize(image);
-      } else {
-        // Check if image is meaningful before including it for non-Twitter sources
-        const isMeaningful = await isImageMeaningful(
-          image,
-          output.ogTitle || ogTitle,
-          ogDescription
-        );
-        if (isMeaningful) {
-          output.image = DOMPurify.sanitize(image);
-        } else {
-          log(`Image rejected by quality assessment: ${image}`);
-        }
-      }
+      output.image = DOMPurify.sanitize(image);
     }
   }
   if (result.twitterCreator) {
@@ -1227,147 +1257,6 @@ export async function isRelevantToKiwiNews(link, metadataContext = {}) {
   cache.set(cacheKey, isRelevant);
 
   return isRelevant;
-}
-
-/**
- * Assesses if an image meaningfully adds to an article using Claude.
- * Resizes image to 200x200px to minimize API costs.
- * @param {string} imageUrl - The URL of the image to assess.
- * @param {string} articleTitle - The title of the article.
- * @param {string} articleDescription - The description of the article.
- * @returns {Promise<boolean>} - True if the image is meaningful and should be shown.
- */
-export async function isImageMeaningful(imageUrl, articleTitle, articleDescription) {
-  const normalizedUrl = normalizeUrl(imageUrl, { stripWWW: false });
-  const cacheKey = `image-quality-${normalizedUrl}`;
-
-  // Check cache first
-  const cachedResult = cache.get(cacheKey);
-  if (cachedResult !== undefined) {
-    log(`Image quality cache hit for ${imageUrl}: ${cachedResult}`);
-    return cachedResult;
-  }
-
-  try {
-    // Fetch the image
-    const signal = AbortSignal.timeout(10000);
-    const response = await fetch(imageUrl, {
-      agent: useAgent(imageUrl),
-      signal,
-      headers: {
-        "User-Agent": env.USER_AGENT,
-      },
-    });
-
-    if (!response.ok) {
-      log(`Failed to fetch image ${imageUrl}: ${response.status}`);
-      cache.set(cacheKey, false);
-      return false;
-    }
-
-    const buffer = await response.arrayBuffer();
-    log(`Fetched image ${imageUrl}, size: ${buffer.byteLength} bytes`);
-    
-    // Resize image to 200x200px to minimize Claude API costs
-    const resizedBuffer = await sharp(Buffer.from(buffer))
-      .resize(200, 200, {
-        fit: 'inside',
-        withoutEnlargement: true
-      })
-      .jpeg({ quality: 80 })
-      .toBuffer();
-    
-    log(`Resized image to ${resizedBuffer.length} bytes`);
-
-    // Convert to base64
-    const base64Image = resizedBuffer.toString('base64');
-
-    // Prepare context for Claude
-    let context = "";
-    if (articleTitle) {
-      context += `Article Title: ${articleTitle}\n`;
-    }
-    if (articleDescription) {
-      const descSnippet = articleDescription.substring(0, 200);
-      context += `Article Description: ${descSnippet}${articleDescription.length > 200 ? "..." : ""}\n`;
-    }
-
-    const prompt = `You are curating images for a beautiful tech/crypto news feed. We want a visually appealing feed with meaningful, high-quality images.
-
-${context}
-
-Consider:
-1. Does this image make the feed more beautiful and engaging?
-2. Is it visually appealing and high-quality?
-3. Does it add meaningful visual context to the article?
-
-REJECT these ugly/low-value images:
-- Company logos as the main image (extremely ugly in feeds!)
-- Generic icons or app icons
-- Low-resolution or pixelated images
-- Generic abstract patterns or backgrounds
-- Default forum avatars or profile pictures
-- Bland technical diagrams that are just decorative
-- Screenshots of walls of text
-- Generic stock photos that don't relate to content
-
-ACCEPT these beautiful/meaningful images:
-- High-quality photos related to the article
-- Beautiful artwork or game visuals when relevant
-- Clean, informative infographics or diagrams
-- Compelling screenshots that show interesting UI/features
-- Photos of people/events mentioned in the article
-- Visually striking images that enhance the story
-- Well-designed technical illustrations
-
-Think: "Would this image make someone want to click and read more?" If it's just a boring logo or generic image, reject it.
-
-Answer with only "YES" (show the image) or "NO" (hide the image).`;
-
-    const response_claude = await anthropic.messages.create({
-      model: "claude-3-5-sonnet-20241022",
-      max_tokens: 10,
-      temperature: 0,
-      messages: [
-        {
-          role: "user",
-          content: [
-            {
-              type: "image",
-              source: {
-                type: "base64",
-                media_type: "image/jpeg",
-                data: base64Image
-              }
-            },
-            {
-              type: "text",
-              text: prompt
-            }
-          ]
-        }
-      ]
-    });
-
-    // Extract response
-    let responseText = "NO"; // Default to NO if parsing fails
-    if (response_claude.content && response_claude.content.length > 0 && response_claude.content[0].type === "text") {
-      responseText = response_claude.content[0].text.trim().toUpperCase();
-    }
-
-    const isMeaningful = responseText.startsWith("YES");
-    log(`Claude image assessment for ${imageUrl}: ${responseText} -> ${isMeaningful}`);
-
-    // Cache the result
-    cache.set(cacheKey, isMeaningful);
-    return isMeaningful;
-
-  } catch (error) {
-    log(`Error assessing image ${imageUrl}: ${error.message}`);
-    // On error, default to not showing the image
-    cache.set(cacheKey, false);
-    return false;
-  }
 }
 
 function safeExtractDomain(link) {
