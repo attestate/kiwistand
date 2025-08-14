@@ -18,7 +18,6 @@ import theme from "../../theme.mjs";
 import { countOutbounds } from "../../cache.mjs";
 import log from "../../logger.mjs";
 import { twitterFrontends } from "../../parser.mjs";
-import FarcasterFullCast from "./farcaster-full-cast.mjs";
 import ParagraphFullPost from "./paragraph-full-post.mjs";
 import * as karma from "../../karma.mjs";
 
@@ -379,12 +378,10 @@ const row = (
       !story.metadata.hasVideo;
 
     // Check if we have what we need to render a Farcaster cast preview
-    // Only show preview on non-stories pages
     const canRenderFarcasterPreview =
       isFarcasterCast &&
       story.metadata &&
-      (story.metadata.farcasterCast || story.metadata.ogDescription) &&
-      path !== "/stories"; // Don't show preview on stories page since we show full cast there
+      (story.metadata.farcasterCast || story.metadata.ogDescription);
 
     // Extract first image from Farcaster cast embeds
     let farcasterImageUrl = null;
@@ -1421,17 +1418,6 @@ const row = (
                   </div>
                 </div>`
               : null}
-            ${
-              // Show full Farcaster cast content for Farcaster/Warpcast links only on /stories page
-              isFarcasterCast &&
-              story.metadata &&
-              story.metadata.farcasterCast &&
-              path === "/stories"
-                ? html`<div style="margin: 0;">
-                    ${FarcasterFullCast({ cast: story.metadata.farcasterCast })}
-                  </div>`
-                : null
-            }
             ${
               // Show full Paragraph post content for Paragraph.xyz links only on /stories page
               isParagraphPost &&
