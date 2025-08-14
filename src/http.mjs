@@ -1888,11 +1888,13 @@ export async function launch(trie, libp2p, isPrimary = true) {
     theme,
     address,
     enabledFrame = false,
+    tab = "submissions",
   ) {
     const content = await upvotes(
       trie,
       theme,
       address,
+      tab,
     );
     return content;
   }
@@ -1911,10 +1913,12 @@ export async function launch(trie, libp2p, isPrimary = true) {
         .send("No valid Ethereum address");
     }
 
-    const content = await getProfile(
+    const tab = request.query.tab || "submissions";
+    const content = await upvotes(
       trie,
       reply.locals.theme,
       request.query.address,
+      tab,
     );
 
     reply.header(

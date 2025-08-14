@@ -35,7 +35,7 @@ import {
 
 const html = htm.bind(vhtml);
 
-export default async function (trie, theme, identity) {
+export default async function (trie, theme, identity, tab = "submissions") {
   if (!utils.isAddress(identity)) {
     return html`Not a valid address`;
   }
@@ -51,6 +51,16 @@ export default async function (trie, theme, identity) {
   const twitterCard = "summary";
   const points = karma.resolve(identity);
   const path = "/upvotes";
+  
+  // Fetch user's submissions 
+  const limit = 30;
+  const offset = 0;
+  const orderBy = tab === "top" ? "votes" : "new";
+  const submissions = getSubmissions(identity, limit, offset, orderBy);
+  
+  // Get karma rank
+  const allKarma = karma.ranking();
+  const rank = allKarma.findIndex(k => k.identity.toLowerCase() === identity.toLowerCase()) + 1;
   return html`
     <html lang="en" op="news">
       <head>
@@ -62,6 +72,53 @@ export default async function (trie, theme, identity) {
           [], // prefetch
           `https://news.kiwistand.com/upvotes?address=${identity}`, // canonical URL
         )}
+        <style>
+          .profile-stats {
+            display: flex;
+            gap: 20px;
+            margin: 10px 0;
+            font-size: 14px;
+          }
+          .stat {
+            color: #828282;
+          }
+          .stat strong {
+            color: black;
+          }
+          .tabs {
+            margin: 15px 0;
+            border-bottom: 1px solid #ccc;
+          }
+          .tab {
+            display: inline-block;
+            padding: 8px 16px;
+            margin-right: 5px;
+            color: #828282;
+            text-decoration: none;
+            border-bottom: 2px solid transparent;
+          }
+          .tab.active {
+            color: black;
+            border-bottom-color: black;
+          }
+          .submission-row {
+            margin: 10px 0;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+          }
+          .submission-title {
+            font-size: 14px;
+            margin-bottom: 4px;
+          }
+          .submission-meta {
+            font-size: 12px;
+            color: #828282;
+          }
+          .domain {
+            color: #828282;
+            font-size: 12px;
+          }
+        </style>
       </head>
       <body ontouchstart="">
         <div class="container">
@@ -74,7 +131,7 @@ export default async function (trie, theme, identity) {
               <tr>
                 <td>
                   <div
-                    style="max-width: 96vw; margin: 4vw 2vw; overflow-wrap: break-word; color: black; font-size: 16px; line-height: 1.5;"
+                    style="max-width: 900px; margin: 20px auto; padding: 0 20px; overflow-wrap: break-word; color: black; font-size: 16px; line-height: 1.5;"
                   >
                     <span
                       style="margin-bottom: 10px; font-weight: bold; display: flex; align-items: center; gap: 10px;"
@@ -100,6 +157,14 @@ export default async function (trie, theme, identity) {
                         >
                       </a>
                     </span>
+                    
+                    <!-- Stats bar like Reddit/HN -->
+                    <div class="profile-stats">
+                      <span class="stat">Rank: <strong>#${rank}</strong></span>
+                      <span class="stat">Karma: <strong>${points}</strong></span>
+                      <span class="stat">Submissions: <strong>${submissions.length}</strong></span>
+                    </div>
+                    
                     <span style="font-size: 0.8rem;">
                       ${description
                         ? html`${DOMPurify.sanitize(description)}<br />`
@@ -115,7 +180,7 @@ export default async function (trie, theme, identity) {
                         ? SocialButton(
                             `https://twitter.com/${ensData.twitter}`,
                             twitterSvg(),
-                            "",
+                            "X",
                           )
                         : ""}
                       ${ensData.github
@@ -159,6 +224,28 @@ export default async function (trie, theme, identity) {
                         "Interface",
                         true,
                       )}
+                    </div>
+                    
+                    <!-- Tabs like Reddit/HN -->
+                    <div class="tabs">
+                      <a href="?address=${identity}&tab=submissions" class="tab ${tab === 'submissions' ? 'active' : ''}">Submissions</a>
+                      <a href="?address=${identity}&tab=top" class="tab ${tab === 'top' ? 'active' : ''}">Top</a>
+                    </div>
+                    
+                    <!-- Content based on tab -->
+                    <div class="profile-content">
+                      <div class="submissions-list">
+                        ${submissions.map((story, i) => html`
+                          <div class="submission-row">
+                            <div class="submission-title">
+                              ${i + 1}. <a href="${story.href}" target="_blank">${story.title}</a> <span class="domain">(${new URL(story.href).hostname})</span>
+                            </div>
+                            <div class="submission-meta">
+                              ${story.upvotes} points | <a href="/stories/${story.title}?index=0x${story.index}">comments</a> | ${formatDistanceToNow(new Date(story.timestamp * 1000))} ago
+                            </div>
+                          </div>
+                        `)}
+                      </div>
                     </div>
                   </div>
                 </td>
