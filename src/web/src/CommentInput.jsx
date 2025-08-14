@@ -39,6 +39,7 @@ const SiteExplainer = () => {
       className="site-explainer"
       style={{
         padding: "0.75rem",
+        marginTop: "1rem",
         marginBottom: "1rem",
         backgroundColor: "var(--middle-beige)",
         borderRadius: "2px",

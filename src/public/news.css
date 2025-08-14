@@ -1597,6 +1597,18 @@ a.meta-link:hover, span.meta-link:hover {
   .share-dropdown {
     display: none !important;
   }
+  
+  /* Hide footer on mobile story pages */
+  .desktop-only-footer {
+    display: none !important;
+  }
+}
+
+/* Hide mobile spacer on desktop */
+@media only screen and (min-width: 641px) {
+  .mobile-only-spacer {
+    display: none !important;
+  }
 }
 
 /* Emoji reaction styles - Telegram-like subtle design */

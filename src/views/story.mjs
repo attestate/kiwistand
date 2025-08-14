@@ -20,6 +20,7 @@ import Header from "./components/header.mjs";
 import SecondHeader from "./components/secondheader.mjs";
 import Sidebar from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
+import nav from "./components/nav.mjs";
 import * as head from "./components/head.mjs";
 import * as store from "../store.mjs";
 import * as id from "../id.mjs";
@@ -276,6 +277,7 @@ export default async function (trie, theme, index, value, referral) {
                   null,
                   null,
                 )({ ...story, index })}
+                <tr class="mobile-only-spacer" style="height: 20px;"><td></td></tr>
               </tbody>
               ${upvoterProfiles.length > 0
                 ? html`<tr>
@@ -552,10 +554,13 @@ export default async function (trie, theme, index, value, referral) {
                   </div>
                 </td>
               </tr>
-              <tr style="height: 20px;"></tr>
+              <tr style="height: 40px;"></tr>
             </table>
-            ${Footer(theme, path)}
+            <div class="desktop-only-footer">
+              ${Footer(theme, path)}
+            </div>
           </div>
+          ${nav(path)}
         </div>
       </body>
     </html>
