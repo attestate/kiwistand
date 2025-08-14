@@ -996,7 +996,7 @@ const row = (
                     class="story-subtitle subtitle-flex"
                   style="font-size: 9pt; margin-top: ${ 
                     canRenderTweetPreview || canRenderFarcasterPreview ? "-4px" : "3px"
-                  }; display: flex; flex-wrap: wrap; align-items: center; column-gap: 6px; row-gap: 2px; padding-right: 16px;"
+                  }; display: flex; flex-wrap: wrap; align-items: center; column-gap: 6px; row-gap: 2px;"
                   >
                   <span class="meta-item" style="opacity: 0.8; gap: 4px; white-space: nowrap; flex-wrap: nowrap; min-width: 0;">
                     ${(() => {
@@ -1036,7 +1036,7 @@ const row = (
                           : html`<span class="meta-link meta-item submitter-name" style="display:inline-block; font-weight: 600; color: black; flex: 0 0 auto;">${story.displayName}</span>`}
                         ${submitterKarmaPoints !== null
                           ? html`<span
-                              style="background: rgba(0,0,0,0.06); padding: 2px 6px; border-radius: 999px; font-size: 9px; font-weight: 600; color: black; margin-left: 6px;"
+                              style="background: rgba(0,0,0,0.06); padding: 2px 6px; border-radius: 999px; font-size: 9px; font-weight: 600; color: black; margin-left: 6px; flex-shrink: 0; white-space: nowrap;"
                             >
                               ${submitterKarmaPoints} 🥝
                             </span>`
@@ -1044,7 +1044,7 @@ const row = (
                         ${isTrending
                           ? html`<span
                               title="Trending submission"
-                              style="padding: 1px 6px; border-radius: 999px; font-size: 9px; color: black; background: rgba(255,69,0,0.08); border: 1px solid rgba(255,69,0,0.25);"
+                              style="padding: 1px 6px; border-radius: 999px; font-size: 9px; color: black; background: rgba(255,69,0,0.08); border: 1px solid rgba(255,69,0,0.25); flex-shrink: 0; white-space: nowrap; margin-left: 6px;"
                             >🔥 Trending</span>`
                           : ""}
                         <span style="opacity:0.6; white-space: pre;"> • </span>
