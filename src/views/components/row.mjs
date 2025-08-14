@@ -1036,7 +1036,7 @@ const row = (
                           : html`<span class="meta-link meta-item submitter-name" style="display:inline-block; font-weight: 600; color: black; flex: 0 0 auto;">${story.displayName}</span>`}
                         ${submitterKarmaPoints !== null
                           ? html`<span
-                              style="background: rgba(0,0,0,0.06); padding: 2px 6px; border-radius: 999px; font-size: 9px; font-weight: 600; color: black; margin-left: 6px; flex-shrink: 0; white-space: nowrap;"
+                              style="background: rgba(0,0,0,0.06); padding: 2px 6px; border-radius: 999px; font-size: 9px; font-weight: 600; color: black; margin-left: 6px; display: inline-block;"
                             >
                               ${submitterKarmaPoints} 🥝
                             </span>`
@@ -1044,7 +1044,7 @@ const row = (
                         ${isTrending
                           ? html`<span
                               title="Trending submission"
-                              style="padding: 1px 6px; border-radius: 999px; font-size: 9px; color: black; background: rgba(255,69,0,0.08); border: 1px solid rgba(255,69,0,0.25); flex-shrink: 0; white-space: nowrap; margin-left: 6px;"
+                              style="padding: 1px 6px; border-radius: 999px; font-size: 9px; color: black; background: rgba(255,69,0,0.08); border: 1px solid rgba(255,69,0,0.25); margin-left: 6px; display: inline-block;"
                             >🔥 Trending</span>`
                           : ""}
                         <span style="opacity:0.6; white-space: pre;"> • </span>

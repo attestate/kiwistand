@@ -784,18 +784,14 @@ body.react-loaded .comment-input-host nav-comment-input { visibility: visible; }
   opacity: 0.9;
   margin-top: 5px !important;
   font-size: 12px !important;
-  padding-right: 0;
-  overflow-x: auto;
-  overflow-y: hidden;
+  padding-right: 8px;
+  padding-bottom: 2px;
+  overflow: visible;
   max-width: 100%;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-.story-subtitle::-webkit-scrollbar {
-  display: none;
 }
 .subtitle-flex {
   max-width: 100%;
+  overflow: visible;
 }
 
 /* Ensure consistent vertical alignment for subtitle items */
