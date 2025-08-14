@@ -20,6 +20,7 @@ import NFTModal from "./NFTModal.jsx";
 import { getLocalAccount } from "./session.mjs";
 import { SimpleDisconnectButton } from "./Navigation.jsx";
 import ShareModal from "./ShareModal.jsx";
+import GuidelinesDrawer, { useGuidelinesCheck } from "./GuidelinesDrawer.jsx";
 
 export function getSlug(title) {
   return slugify(DOMPurify.sanitize(title));
@@ -210,6 +211,9 @@ const SubmitButton = (props) => {
   const [storyData, setStoryData] = useState(null);
   const [isGeneratingTitle, setIsGeneratingTitle] = useState(false);
   const [isCloudflareChallenge, setIsCloudflareChallenge] = useState(false);
+  const [showGuidelinesDrawer, setShowGuidelinesDrawer] = useState(false);
+  const [hasSeenGuidelines, setHasSeenGuidelines] = useState(false);
+  const { shouldShowGuidelines } = useGuidelinesCheck();
 
   // Ad related state removed
   // const params = new URLSearchParams(window.location.search);
@@ -371,6 +375,13 @@ const SubmitButton = (props) => {
 
   const handleClick = async (e) => {
     e.preventDefault();
+
+    // Show guidelines drawer for low-karma users first (only once per session)
+    if (shouldShowGuidelines && !hasSeenGuidelines) {
+      setShowGuidelinesDrawer(true);
+      setHasSeenGuidelines(true);
+      return;
+    }
 
     const canonicalURL = url;
     // Check for emojis in the title
@@ -654,6 +665,15 @@ const SubmitButton = (props) => {
           storyUrl={storyData.storyUrl}
         />
       )}
+      <GuidelinesDrawer
+        isOpen={showGuidelinesDrawer}
+        onClose={() => setShowGuidelinesDrawer(false)}
+        onContinue={() => {
+          setShowGuidelinesDrawer(false);
+          // Continue with submission after user acknowledges guidelines
+          handleClick({ preventDefault: () => {} });
+        }}
+      />
     </div>
   );
 };
