@@ -282,9 +282,9 @@ export async function topstories(leaves, algorithm = 'control') {
         // Base score: log10(upvotes + comments*0.5)
         const baseScore = Math.log10(Math.max(1, upvotes + commentCount * 0.5));
         
-        // Time penalty: hours_age / 2
+        // Time penalty: hours_age / 6 (reduced from /2 for better balance)
         const hoursAge = itemAge(story.timestamp) / 60; // Convert minutes to hours
-        const timePenalty = hoursAge / 2;
+        const timePenalty = hoursAge / 6;
         
         // Lobsters uses negative scores for sorting (more negative = lower rank)
         // We'll invert this to keep positive scores for consistency with sorting
