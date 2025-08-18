@@ -149,16 +149,6 @@ export async function calculateContestData() {
     finalLeaderboard = finalLeaderboard
         .filter(user => user.earnings > 0.005)
         .sort((a, b) => b.earnings - a.earnings);
-
-    if (finalLeaderboard.length > 0 && finalLeaderboard[0].earnings > 50) {
-        const compressionFactor = 50 / finalLeaderboard[0].earnings;
-        finalLeaderboard.forEach(user => { user.earnings *= compressionFactor; });
-        const newTotal = finalLeaderboard.reduce((sum, u) => sum + u.earnings, 0);
-        if (newTotal > 0) {
-            const normalizationFactor = PRIZE_POOL / newTotal;
-            finalLeaderboard.forEach(user => { user.earnings *= normalizationFactor; });
-        }
-    }
     
     // 6. Calculate Final Story Earnings (applying scaling and re-mapping from final user earnings)
     const finalUserEarningsMap = new Map(finalLeaderboard.map(u => [u.identity, u.earnings]));
