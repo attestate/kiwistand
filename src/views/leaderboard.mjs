@@ -417,11 +417,16 @@ export default async function Leaderboard(identity, theme) {
                                       <polyline points="144 56 216 128 144 200" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/>
                                     </svg>
                                     <div style="width: 100px; text-align: right;">
-                                      <div style="color: var(--visited-link); font-size: 11px; margin-bottom: 2px;">Total Contributed</div>
+                                      <div style="color: var(--visited-link); font-size: 11px; margin-bottom: 2px;">Voting Power</div>
                                       <div style="color: black; font-weight: bold; font-size: 14px; display: flex; align-items: center; justify-content: flex-end;">
                                         ${(typeof user.votingPower === 'number' && !isNaN(user.votingPower) ? user.votingPower : 0).toFixed(2)}
                                         <img src="/usdc-logo.svg" style="width: 16px; height: 16px; margin-left: 4px;" alt="USDC" />
                                       </div>
+                                      ${user.actualContributed > 0 ? html`
+                                        <div style="color: green; font-size: 10px; margin-top: 2px;">
+                                          Used: ${user.actualContributed.toFixed(2)}
+                                        </div>
+                                      ` : ''}
                                     </div>
                                   </div>
                                 </div>
@@ -508,9 +513,9 @@ export default async function Leaderboard(identity, theme) {
                           ` : ''}
                         </div>
                         <div style="padding: 12px 15px; background-color: black; color: white; display: flex; justify-content: space-between; align-items: center;">
-                          <span style="font-size: 14px; font-weight: bold;">TOTAL CONTRIBUTED</span>
+                          <span style="font-size: 14px; font-weight: bold;">TOTAL VOTING POWER</span>
                           <div style="font-size: 16px; font-weight: bold; display: flex; align-items: center;">
-                            100.00
+                            ${(() => { const total = voterData.leaderboard.reduce((sum, user) => sum + (typeof user.votingPower === 'number' && !isNaN(user.votingPower) ? user.votingPower : 0), 0); return (typeof total === 'number' && !isNaN(total) ? total : 0).toFixed(2); })()}
                             <img src="/usdc-logo.svg" style="width: 18px; height: 18px; margin-left: 4px;" alt="USDC" />
                           </div>
                         </div>

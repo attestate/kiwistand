@@ -233,8 +233,27 @@ export async function getContestLeaderboard(userIdentity = null) {
 
 export async function getVoterLeaderboard(userIdentity = null) {
     const { finalStoryEarnings } = await calculateContestData();
-    const allUsersKarma = new Map(getAllTimeKarma().map(u => [u.identity, u.karma]));
-
+    
+    // Get top 20 karma holders only
+    const allUsersKarma = getAllTimeKarma();
+    const topUsers = allUsersKarma.slice(0, 20); // Only top 20
+    
+    // Calculate voting power with balanced scaling (1/2 for moderate distribution)
+    let totalScaledKarma = 0;
+    const scaledKarmaMap = new Map();
+    topUsers.forEach(user => {
+        const scaled = Math.pow(user.karma, 1/2); // Square root for balanced distribution
+        scaledKarmaMap.set(user.identity, scaled);
+        totalScaledKarma += scaled;
+    });
+    
+    const votingPowerMap = new Map();
+    topUsers.forEach(user => {
+        const power = (scaledKarmaMap.get(user.identity) / totalScaledKarma) * PRIZE_POOL;
+        votingPowerMap.set(user.identity, power);
+    });
+    
+    // Get actual contributions from stories (if any)
     const voterContributions = new Map();
     finalStoryEarnings.forEach(story => {
         story.upvoters.forEach(upvoter => {
@@ -250,14 +269,19 @@ export async function getVoterLeaderboard(userIdentity = null) {
         });
     });
 
-    let voterLeaderboard = Array.from(voterContributions.entries())
-        .map(([identity, data]) => ({
-            identity,
-            votingPower: data.total,
-            votes: data.votes.sort((a, b) => b.amount - a.amount),
-            karma: allUsersKarma.get(identity) || 0
-        }))
-        .filter(u => u.votingPower > 0.005)
+    // Create leaderboard with top 20 karma holders
+    let voterLeaderboard = topUsers
+        .map(user => {
+            const contributions = voterContributions.get(user.identity);
+            return {
+                identity: user.identity,
+                votingPower: votingPowerMap.get(user.identity) || 0,
+                actualContributed: contributions ? contributions.total : 0,
+                votes: contributions ? contributions.votes.sort((a, b) => b.amount - a.amount) : [],
+                karma: user.karma
+            };
+        })
+        .filter(u => u.votingPower > 0.01) // Slightly higher threshold
         .sort((a, b) => b.votingPower - a.votingPower);
 
     const leaderboard = await Promise.all(
