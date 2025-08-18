@@ -8,7 +8,10 @@ import 'dotenv/config';
 const CONTEST_START_DATE = new Date('2025-08-11T10:00:00Z');
 const CONTEST_END_DATE = new Date('2025-08-18T10:00:00Z');
 const PRIZE_POOL = 100; // 100 USDC
-const EXCLUDED_RECIPIENTS = ['0x2cb8c01eabdff323c9f2600782132ace6ea37bc4'];
+const EXCLUDED_RECIPIENTS = [
+    '0xee324c588cef1bf1c1360883e4318834af66366d',
+    '0x2cb8c01eabdff323c9f2600782132ace6ea37bc4'
+];
 
 // --- Database Setup ---
 const dbPath = join(process.env.CACHE_DIR, "database.db");
