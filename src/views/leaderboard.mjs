@@ -125,7 +125,7 @@ export default async function Leaderboard(identity, theme) {
                           })()"
                           style="flex: 1; padding: 15px 12px; background: transparent; color: black; border: none; font-size: 14px; font-weight: 600; cursor: pointer; position: relative; transition: color 0.2s;"
                         >
-                          Weekly Rewards
+                          Rewards
                           <div id="rewards-indicator" style="position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: black; border-radius: 2px 2px 0 0;"></div>
                         </button>
                         <button 
@@ -386,8 +386,13 @@ export default async function Leaderboard(identity, theme) {
                     <!-- Voting Power Tab Content -->
                     <div id="karma-tab-content" style="display: none;">
                       <div style="background-color: var(--table-bg); border: var(--border); border-top: none; margin-bottom: 20px;">
-                        <div style="padding: 15px; border-bottom: var(--border-thin);">
-                          <div style="text-align: center; color: var(--visited-link); font-size: 13px;">Top 50 Users by All-Time Karma</div>
+                        <div style="padding: 20px 15px; border-bottom: var(--border-thin); text-align: center;">
+                          <div style="color: black; font-size: 14px; font-weight: 600; margin-bottom: 8px;">
+                            🏆 How The Voter Leaderboard Works
+                          </div>
+                          <div style="color: var(--visited-link); font-size: 12px; line-height: 1.6; max-width: 400px; margin: 0 auto;">
+                            This is a leaderboard of voters from the last contest, ranked by the total USDC their votes contributed to submitters. The "Voting Power" shown is the sum of all their successful vote contributions.
+                          </div>
                         </div>
                         <div>
                           ${totalKarmaData.leaderboard.map((user, index) => {
@@ -407,8 +412,30 @@ export default async function Leaderboard(identity, theme) {
 
                             return html`
                               <div class="karma-leaderboard-entry" style="border-bottom: ${index < totalKarmaData.leaderboard.length - 1 ? 'var(--border-thin)' : 'none'};">
-                                <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; gap: 15px;">
-                                  <div style="display: flex; align-items: center; min-width: 0; flex: 1; max-width: 50%;">
+                                <div 
+                                  style="display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; gap: 15px; cursor: pointer;"
+                                  onclick="(function() {
+                                    var votesDiv = document.getElementById('karma-votes-${index}');
+                                    var chevron = document.getElementById('karma-chevron-${index}');
+                                    if (votesDiv.style.display === 'none' || votesDiv.style.display === '') {
+                                      votesDiv.style.display = 'block';
+                                      chevron.style.transform = 'rotate(90deg)';
+                                    } else {
+                                      votesDiv.style.display = 'none';
+                                      chevron.style.transform = 'rotate(0deg)';
+                                    }
+                                  })()"
+                                >
+                                  <div style="display: flex; align-items: center; min-width: 0; flex: 1;">
+                                    <button 
+                                      class="expand-button"
+                                      style="background: none; border: none; cursor: pointer; padding: 4px; margin-right: 8px; color: var(--visited-link); display: flex; align-items: center;"
+                                    >
+                                      <svg id="karma-chevron-${index}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" style="width: 16px; height: 16px; transition: transform 0.2s; color: currentColor;">
+                                        <rect width="256" height="256" fill="none"/>
+                                        <polyline points="96 48 176 128 96 208" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/>
+                                      </svg>
+                                    </button>
                                     <div style="width: 30px; text-align: center; margin-right: 12px; color: var(--visited-link); font-size: ${index < 3 ? '16px' : '14px'}; font-weight: bold; flex-shrink: 0;">${displayRank}</div>
                                     <div style="display: flex; align-items: center; min-width: 0; flex: 1;">
                                       ${avatarHtml}
@@ -422,7 +449,7 @@ export default async function Leaderboard(identity, theme) {
                                   </div>
                                   <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
                                     <div style="text-align: right; min-width: 50px;">
-                                      <div style="color: var(--visited-link); font-size: 10px; margin-bottom: 2px;">Karma</div>
+                                      <div style="color: var(--visited-link); font-size: 10px; margin-bottom: 2px;">All-Time Karma</div>
                                       <div style="color: var(--visited-link); font-weight: normal; font-size: 13px;">${user.karma.toLocaleString()}</div>
                                     </div>
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" style="width: 16px; height: 16px; color: var(--visited-link); flex-shrink: 0;">
@@ -430,8 +457,8 @@ export default async function Leaderboard(identity, theme) {
                                       <line x1="40" y1="128" x2="216" y2="128" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/>
                                       <polyline points="144 56 216 128 144 200" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/>
                                     </svg>
-                                    <div style="width: 70px; text-align: right;">
-                                      <div style="color: var(--visited-link); font-size: 11px; margin-bottom: 2px;">USDC</div>
+                                    <div style="width: 100px; text-align: right;">
+                                      <div style="color: var(--visited-link); font-size: 11px; margin-bottom: 2px;">Voting Power Used</div>
                                       <div style="color: black; font-weight: bold; font-size: 14px; display: flex; align-items: center; justify-content: flex-end;">
                                         ${(typeof user.votingPower === 'number' && !isNaN(user.votingPower) ? user.votingPower : 0).toFixed(2)}
                                         <img src="/usdc-logo.svg" style="width: 16px; height: 16px; margin-left: 4px;" alt="USDC" />
@@ -439,11 +466,45 @@ export default async function Leaderboard(identity, theme) {
                                     </div>
                                   </div>
                                 </div>
+                                <!-- Expandable votes section -->
+                                <div id="karma-votes-${index}" style="display: none; background-color: rgba(0, 0, 0, 0.02); border-top: var(--border-thin);">
+                                  <div style="padding: 15px;">
+                                    <div style="font-size: 12px; color: var(--visited-link); margin-bottom: 10px; font-weight: 600;">VOTES CAST IN LAST CONTEST</div>
+                                    ${user.votes && user.votes.length > 0 ? html`
+                                      <div style="display: flex; flex-direction: column; gap: 8px;">
+                                        ${user.votes.map(vote => html`
+                                          <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; background-color: white; border: var(--border-thin); border-radius: 4px;">
+                                            <div style="flex: 1; min-width: 0;">
+                                              <div>
+                                                <a href="${vote.href}" target="_blank" rel="noopener noreferrer" style="color: black; text-decoration: none; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; max-width: 100%;">
+                                                  ${vote.title}
+                                                </a>
+                                              </div>
+                                              <div style="font-size: 11px; color: var(--visited-link); margin-top: 2px;">
+                                                by ${vote.author}
+                                              </div>
+                                            </div>
+                                            <div style="display: flex; align-items: center; gap: 4px; flex-shrink: 0; margin-left: 10px;">
+                                              <span style="font-weight: bold; font-size: 13px;">+${vote.amount.toFixed(2)}</span>
+                                              <img src="/usdc-logo.svg" style="width: 14px; height: 14px;" alt="USDC" />
+                                            </div>
+                                          </div>
+                                        `)}
+                                      </div>
+                                    ` : html`
+                                      <div style="padding: 20px; text-align: center;">
+                                        <div style="color: var(--visited-link); font-size: 12px;">
+                                          This user did not cast any votes that resulted in rewards during the last contest.
+                                        </div>
+                                      </div>
+                                    `}
+                                  </div>
+                                </div>
                               </div>
                             `;
                           })}
                           
-                          ${/* Show current user if they're not in top 50 */
+                          ${
                           totalKarmaData.currentUserData && !totalKarmaData.currentUserData.isInTop50 ? html`
                             <div style="border-top: 2px solid var(--border-color); background-color: rgba(255, 255, 0, 0.05);">
                               <div style="padding: 8px 15px; font-size: 12px; color: var(--visited-link); text-align: center; font-style: italic;">
@@ -452,7 +513,7 @@ export default async function Leaderboard(identity, theme) {
                               <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; gap: 15px;">
                                 <div style="display: flex; align-items: center; min-width: 0; flex: 1; max-width: 50%;">
                                   <div style="width: 30px; text-align: center; margin-right: 12px; color: var(--visited-link); font-size: 14px; font-weight: bold; flex-shrink: 0;">
-                                    #${totalKarmaData.currentUserData.rank}
+                                    ${totalKarmaData.currentUserData.rank !== 'N/A' ? `#${totalKarmaData.currentUserData.rank}` : 'Unranked'}
                                   </div>
                                   <div style="display: flex; align-items: center; min-width: 0; flex: 1;">
                                     ${totalKarmaData.currentUserData.ensData?.avatar_small || totalKarmaData.currentUserData.ensData?.avatar || totalKarmaData.currentUserData.ensData?.farcaster?.avatar
@@ -467,7 +528,7 @@ export default async function Leaderboard(identity, theme) {
                                 </div>
                                 <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
                                   <div style="text-align: right; min-width: 50px;">
-                                    <div style="color: var(--visited-link); font-size: 10px; margin-bottom: 2px;">Karma</div>
+                                    <div style="color: var(--visited-link); font-size: 10px; margin-bottom: 2px;">All-Time Karma</div>
                                     <div style="color: var(--visited-link); font-weight: normal; font-size: 13px;">${totalKarmaData.currentUserData.karma.toLocaleString()}</div>
                                   </div>
                                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" style="width: 16px; height: 16px; color: var(--visited-link); flex-shrink: 0;">
@@ -475,8 +536,8 @@ export default async function Leaderboard(identity, theme) {
                                     <line x1="40" y1="128" x2="216" y2="128" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/>
                                     <polyline points="144 56 216 128 144 200" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/>
                                   </svg>
-                                  <div style="width: 70px; text-align: right;">
-                                    <div style="color: var(--visited-link); font-size: 11px; margin-bottom: 2px;">USDC</div>
+                                  <div style="width: 100px; text-align: right;">
+                                    <div style="color: var(--visited-link); font-size: 11px; margin-bottom: 2px;">Voting Power Used</div>
                                     <div style="color: black; font-weight: bold; font-size: 14px; display: flex; align-items: center; justify-content: flex-end;">
                                       0.00
                                       <img src="/usdc-logo.svg" style="width: 16px; height: 16px; margin-left: 4px;" alt="USDC" />
@@ -484,14 +545,11 @@ export default async function Leaderboard(identity, theme) {
                                   </div>
                                 </div>
                               </div>
-                              <div style="padding: 8px 15px; font-size: 11px; color: var(--visited-link); text-align: center; background-color: rgba(0, 0, 0, 0.03);">
-                                Need ${(totalKarmaData.thresholdKarma - totalKarmaData.currentUserData.karma).toLocaleString()} more karma to enter top 50
-                              </div>
                             </div>
                           ` : ''}
                         </div>
                         <div style="padding: 12px 15px; background-color: black; color: white; display: flex; justify-content: space-between; align-items: center;">
-                          <span style="font-size: 14px; font-weight: bold;">TOTAL USDC VOTING POWER</span>
+                          <span style="font-size: 14px; font-weight: bold;">TOTAL VOTING POWER USED</span>
                           <div style="font-size: 16px; font-weight: bold; display: flex; align-items: center;">
                             100.00
                             <img src="/usdc-logo.svg" style="width: 18px; height: 18px; margin-left: 4px;" alt="USDC" />
