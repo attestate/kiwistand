@@ -78,15 +78,21 @@ export async function calculateContestData() {
     const upvotesInPeriod = getUpvotesInPeriod(CONTEST_START_DATE, CONTEST_END_DATE);
     const activeVoters = new Set(upvotesInPeriod.map(upvote => upvote.upvoter.toLowerCase()));
 
-    // 2. Calculate Voting Power
-    let totalActiveKarma = 0;
+    // 2. Calculate Voting Power with a flatter distribution
+    const scaledKarma = new Map();
+    let totalActiveScaledKarma = 0;
     activeVoters.forEach(voter => {
-        totalActiveKarma += karmaSnapshot.get(voter) || 0;
+        const karma = karmaSnapshot.get(voter) || 0;
+        // Use a root to flatten the distribution curve
+        const scaled = Math.pow(karma, 1/2.5);
+        scaledKarma.set(voter, scaled);
+        totalActiveScaledKarma += scaled;
     });
+
     const votingPower = new Map();
-    if (totalActiveKarma > 0) {
+    if (totalActiveScaledKarma > 0) {
         activeVoters.forEach(voter => {
-            const power = ((karmaSnapshot.get(voter) || 0) / totalActiveKarma) * PRIZE_POOL;
+            const power = ((scaledKarma.get(voter) || 0) / totalActiveScaledKarma) * PRIZE_POOL;
             votingPower.set(voter, power);
         });
     }
@@ -232,7 +238,7 @@ export async function getContestLeaderboard(userIdentity = null) {
     };
 }
 
-export async function getTotalKarmaLeaderboard(userIdentity = null) {
+export async function getVoterLeaderboard(userIdentity = null) {
     const { finalStoryEarnings } = await calculateContestData();
     const allUsersKarma = new Map(getAllTimeKarma().map(u => [u.identity, u.karma]));
 
@@ -258,6 +264,7 @@ export async function getTotalKarmaLeaderboard(userIdentity = null) {
             votes: data.votes.sort((a, b) => b.amount - a.amount),
             karma: allUsersKarma.get(identity) || 0
         }))
+        .filter(u => u.votingPower > 0.005)
         .sort((a, b) => b.votingPower - a.votingPower);
 
     const leaderboard = await Promise.all(
@@ -286,7 +293,7 @@ export async function getTotalKarmaLeaderboard(userIdentity = null) {
         const lowerIdentity = userIdentity.toLowerCase();
         const userData = leaderboard.find(u => u.identity === lowerIdentity);
         if (userData) {
-            currentUserData = { ...userData, isInTop50: true }; // Simplified, assumes anyone on this list is "top"
+            currentUserData = { ...userData, isOnLeaderboard: true };
         } else {
             const karma = allUsersKarma.get(lowerIdentity) || 0;
             if (karma > 0) {
@@ -294,7 +301,7 @@ export async function getTotalKarmaLeaderboard(userIdentity = null) {
                  const displayName = (ensData?.farcaster?.username ? `@${ensData.farcaster.username}` : (ensData?.displayName || ensData?.ens)) || lowerIdentity;
                  currentUserData = {
                     rank: 'N/A', identity: lowerIdentity, displayName, ensData,
-                    karma, votingPower: 0, isInTop50: false, votes: []
+                    karma, votingPower: 0, isOnLeaderboard: false, votes: []
                  }
             }
         }
@@ -303,8 +310,6 @@ export async function getTotalKarmaLeaderboard(userIdentity = null) {
     return {
         leaderboard,
         currentUserData,
-        totalUsers: voterLeaderboard.length,
-        thresholdKarma: 0 // Not applicable in this new context
     };
 }
 
