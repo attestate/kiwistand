@@ -61,47 +61,6 @@ export default async function Leaderboard(identity, theme) {
                 <td>
                   <div style="padding: 15px; max-width: 800px; margin: 0 auto;">
 
-                    <div style="background-color: var(--table-bg); padding: 20px; border: var(--border); margin-bottom: 20px;">
-                      <div style="display: flex; gap: 20px;">
-                        <!-- As Voter Section -->
-                        <div style="flex: 1;">
-                          <div style="font-size: 12px; font-weight: 600; color: var(--visited-link); margin-bottom: 10px; text-transform: uppercase;">As Voter</div>
-                          <div style="display: flex; flex-direction: column; gap: 10px;">
-                            <div>
-                              <div style="color: var(--visited-link); font-size: 12px; margin-bottom: 4px;">Your Karma</div>
-                              <div class="user-karma-value" style="font-size: 20px; font-weight: bold; color: black;">N/A</div>
-                            </div>
-                            <div>
-                              <div style="color: var(--visited-link); font-size: 12px; margin-bottom: 4px;">Votes Contributed</div>
-                              <div class="user-voting-power" style="font-size: 20px; font-weight: bold; color: black; display: flex; align-items: center;">
-                                N/A
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <!-- Divider -->
-                        <div style="width: 1px; background-color: var(--border-color); margin: 0 10px;"></div>
-                        
-                        <!-- As Submitter Section -->
-                        <div style="flex: 1;">
-                          <div style="font-size: 12px; font-weight: 600; color: var(--visited-link); margin-bottom: 10px; text-transform: uppercase;">As Submitter</div>
-                          <div style="display: flex; flex-direction: column; gap: 10px;">
-                            <div>
-                              <div style="color: var(--visited-link); font-size: 12px; margin-bottom: 4px;">Your Prize</div>
-                              <div class="user-prize-value" style="font-size: 20px; font-weight: bold; color: black; display: flex; align-items: center;">
-                                N/A
-                              </div>
-                            </div>
-                            <div>
-                              <div style="color: var(--visited-link); font-size: 12px; margin-bottom: 4px;">Your Rank</div>
-                              <div class="user-rank-value" style="font-size: 20px; font-weight: bold; color: black;">Unranked</div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
                     <!-- Tab Navigation -->
                     <div style="background-color: var(--table-bg); border: var(--border); margin-bottom: 0; border-bottom: none;">
                       <div style="display: flex; border-bottom: var(--border-thin); position: relative;">
@@ -148,7 +107,7 @@ export default async function Leaderboard(identity, theme) {
                           })()"
                           style="flex: 1; padding: 15px 12px; background: transparent; color: var(--visited-link); border: none; font-size: 14px; font-weight: 400; cursor: pointer; position: relative; transition: color 0.2s;"
                         >
-                          Voter Leaderboard
+                          Voting Power
                           <div id="karma-indicator" style="position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: black; border-radius: 2px 2px 0 0; display: none;"></div>
                         </button>
                       </div>
@@ -388,10 +347,10 @@ export default async function Leaderboard(identity, theme) {
                       <div style="background-color: var(--table-bg); border: var(--border); border-top: none; margin-bottom: 20px;">
                         <div style="padding: 20px 15px; border-bottom: var(--border-thin); text-align: center;">
                           <div style="color: black; font-size: 14px; font-weight: 600; margin-bottom: 8px;">
-                            🏆 How The Voter Leaderboard Works
+                            🏆 How The Voting Power Works
                           </div>
                           <div style="color: var(--visited-link); font-size: 12px; line-height: 1.6; max-width: 400px; margin: 0 auto;">
-                            This is a leaderboard of the top voters from the last contest, ranked by the total USDC their votes contributed to submitters.
+                            This is a leaderboard of the top voters, ranked by the total USDC their votes contributed to submitters.
                           </div>
                         </div>
                         <div>
@@ -469,7 +428,7 @@ export default async function Leaderboard(identity, theme) {
                                 <!-- Expandable votes section -->
                                 <div id="karma-votes-${index}" style="display: none; background-color: rgba(0, 0, 0, 0.02); border-top: var(--border-thin);">
                                   <div style="padding: 15px;">
-                                    <div style="font-size: 12px; color: var(--visited-link); margin-bottom: 10px; font-weight: 600;">VOTES CAST IN LAST CONTEST</div>
+                                    <div style="font-size: 12px; color: var(--visited-link); margin-bottom: 10px; font-weight: 600;">USDC ALLOCATION</div>
                                     ${user.votes && user.votes.length > 0 ? html`
                                       <div style="display: flex; flex-direction: column; gap: 8px;">
                                         ${user.votes.map(vote => html`
@@ -494,7 +453,7 @@ export default async function Leaderboard(identity, theme) {
                                     ` : html`
                                       <div style="padding: 20px; text-align: center;">
                                         <div style="color: var(--visited-link); font-size: 12px;">
-                                          This user did not cast any votes that resulted in rewards during the last contest.
+                                          This user did not cast any votes that resulted in rewards.
                                         </div>
                                       </div>
                                     `}
