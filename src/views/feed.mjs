@@ -900,54 +900,82 @@ export default async function (trie, theme, page, domain, identity, hash, varian
                 )}
               <tr>
                 <td>
-                  <div style="background-color: var(--table-bg); padding: 15px; margin-bottom: 20px; cursor: pointer;" onclick="if (window.innerWidth <= 768 && window.openRewardsDrawer) { window.openRewardsDrawer(); } else { window.location.href = '/community'; }">
-                    <div style="text-align: center; margin-bottom: 15px;">
-                      <h2 style="margin: 0 0 8px 0; font-size: 18px; color: black; font-weight: 600;">Weekly Rewards</h2>
-                      <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 8px;">
-                        <img src="/usdc-logo.svg" alt="USDC" style="width: 24px; height: 24px;" />
-                        <p style="margin: 0; color: black; font-size: 16px; font-weight: 600;">
-                          100 Prize Pool
-                        </p>
+                  <div style="background-color: var(--table-bg); border-top: var(--border); border-bottom: var(--border); margin-bottom: 20px; cursor: pointer;" onclick="if (window.innerWidth <= 768 && window.openRewardsDrawer) { window.openRewardsDrawer(); } else { window.location.href = '/community'; }">
+                    <!-- Header -->
+                    <div style="padding: 15px; border-bottom: var(--border-thin);">
+                      <div style="text-align: center;">
+                        <h3 style="margin: 0 0 8px 0; font-size: 16px; color: black; font-weight: 600;">💰 Weekly USDC Rewards</h3>
+                        <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                          <img src="/usdc-logo.svg" alt="USDC" style="width: 20px; height: 20px;" />
+                          <span style="color: black; font-size: 14px; font-weight: 600;">$100 Prize Pool</span>
+                        </div>
                       </div>
                     </div>
-                    <div style="border: var(--border-thin);">
+                    
+                    <!-- Contest Dates -->
+                    <div style="padding: 10px 15px; border-bottom: var(--border-thin);">
+                      <div style="text-align: center; color: var(--visited-link); font-size: 12px;">${await (async () => {
+                        const contestData = await getContestLeaderboard();
+                        const formatDate = (date) => {
+                          const options = { month: 'long', day: 'numeric', year: 'numeric' };
+                          return date.toLocaleDateString('en-US', options);
+                        };
+                        return `${formatDate(contestData.contestDates.start)} - ${formatDate(contestData.contestDates.end)}`;
+                      })()}</div>
+                    </div>
+                    
+                    <!-- Top 3 Winners -->
+                    <div>
                       ${(await getContestLeaderboard()).leaderboard.slice(0, 3).map((user, index) => {
                         const medals = ['🥇', '🥈', '🥉'];
                         const avatar = user.ensData?.avatar_small || user.ensData?.avatar || user.ensData?.farcaster?.avatar;
+                        
                         return html`
-                          <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: ${index < 2 ? 'var(--border-thin)' : 'none'};">
+                          <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; border-bottom: ${index < 2 ? 'var(--border-thin)' : 'none'};">
                             <div style="display: flex; align-items: center; min-width: 0; flex: 1;">
-                              <div style="width: 25px; text-align: center; margin-right: 10px; font-size: 16px;">${medals[index]}</div>
-                              <a 
-                                href="/upvotes?address=${user.identity}" 
-                                style="display: flex; align-items: center; min-width: 0; flex: 1; text-decoration: none; color: inherit;"
-                              >
+                              <div style="width: 30px; text-align: center; margin-right: 12px; color: var(--visited-link); font-size: ${index < 3 ? '16px' : '14px'}; font-weight: bold;">${medals[index]}</div>
+                              <div style="display: flex; align-items: center; min-width: 0; flex: 1;">
                                 ${avatar
                                   ? html`<img
                                       loading="lazy"
                                       src="${DOMPurify.sanitize(avatar)}"
-                                      style="border: var(--border); width: 20px; height: 20px; border-radius: 2px; margin-right: 10px; flex-shrink: 0;"
+                                      style="width: 24px; height: 24px; border-radius: 50%; margin-right: 12px; flex-shrink: 0;"
                                     />`
-                                  : html`<div style="width: 20px; height: 20px; margin-right: 10px; flex-shrink: 0; display: inline-block;">
+                                  : html`<div style="width: 24px; height: 24px; margin-right: 12px; flex-shrink: 0; display: inline-block;">
                                       <zora-zorb
                                         style="display: block;"
-                                        size="20px"
+                                        size="24px"
                                         address="${user.identity}"
                                       ></zora-zorb>
                                     </div>`}
-                                <span style="color: black; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px;">${user.displayName}</span>
-                              </a>
+                                <a
+                                  href="/upvotes?address=${user.identity}"
+                                  style="color: black; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; text-decoration: none;"
+                                  onclick="event.stopPropagation();"
+                                >
+                                  ${user.displayName}
+                                </a>
+                              </div>
                             </div>
-                            <div style="color: black; font-weight: bold; font-size: 14px; display: flex; align-items: center;">
-                              ${(typeof user.earnings === 'number' && !isNaN(user.earnings) ? user.earnings : 0).toFixed(2)}
-                              <img src="/usdc-logo.svg" style="width: 16px; height: 16px; margin-left: 4px;" alt="USDC" />
+                            <div style="display: flex; align-items: center;">
+                              <div style="width: 100px; text-align: right;">
+                                <div style="color: var(--visited-link); font-size: 11px; margin-bottom: 2px;">Earnings</div>
+                                <div style="color: black; font-weight: bold; font-size: 14px; display: flex; align-items: center; justify-content: flex-end;">
+                                  ${(typeof user.earnings === 'number' && !isNaN(user.earnings) ? user.earnings : 0).toFixed(2)}
+                                  <img src="/usdc-logo.svg" style="width: 16px; height: 16px; margin-left: 4px;" alt="USDC" />
+                                </div>
+                              </div>
                             </div>
                           </div>
                         `;
                       })}
-                    </div>
-                    <div style="text-align: center; margin-top: 12px;">
-                      <a href="/community" style="color: black; text-decoration: underline; font-size: 14px; font-weight: 600;" onclick="event.stopPropagation(); if (window.innerWidth <= 768 && window.openRewardsDrawer) { window.openRewardsDrawer(); event.preventDefault(); } else { window.location.href = '/community'; event.preventDefault(); }">View full leaderboard →</a>
+                      <div style="padding: 12px 15px; background-color: black; color: white; display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 14px; font-weight: bold;">TOTAL PRIZE POOL</span>
+                        <div style="font-size: 16px; font-weight: bold; display: flex; align-items: center;">
+                          ${await (async () => { const total = (await getContestLeaderboard()).leaderboard.reduce((sum, user) => sum + (typeof user.earnings === 'number' && !isNaN(user.earnings) ? user.earnings : 0), 0); return (typeof total === 'number' && !isNaN(total) ? total : 0).toFixed(2); })()}
+                          <img src="/usdc-logo.svg" style="width: 18px; height: 18px; margin-left: 4px;" alt="USDC" />
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </td>
