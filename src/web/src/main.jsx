@@ -1184,8 +1184,12 @@ export function dynamicPrefetch(url, priority = "auto") {
 }
 
 function trackLinkImpressions() {
-  // Find all story links
-  const storyLinks = document.querySelectorAll(".story-link");
+  // Find all story links - both regular links and those with previews
+  // Regular story links have class="story-link"
+  // Preview links are in .story-link-container but may not have the class
+  const storyLinks = document.querySelectorAll(
+    ".story-link, .story-link-container a[data-external-link], .mobile-row-image, .tweet-preview-container"
+  );
   if (storyLinks.length === 0) return;
 
   // Get current hostname for comparison
@@ -1197,18 +1201,16 @@ function trackLinkImpressions() {
         if (entry.isIntersecting) {
           const link = entry.target;
           let href = link.getAttribute("href");
+          
+          // For links with data-external-link, use that as the actual URL
+          if (link.hasAttribute("data-external-link")) {
+            href = link.getAttribute("data-external-link");
+          }
 
           if (!href) return;
 
+          // Skip internal links
           if (
-            href.startsWith("/stories") &&
-            link.hasAttribute("data-external-link")
-          ) {
-            const externalLink = link.getAttribute("data-external-link");
-            if (externalLink && externalLink.includes("imagedelivery.net")) {
-              href = externalLink;
-            }
-          } else if (
             href.startsWith("javascript:") ||
             href.startsWith("/") ||
             href.startsWith("#") ||
