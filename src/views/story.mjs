@@ -10,6 +10,7 @@ import {
   sub,
   differenceInMinutes,
   isBefore,
+  format,
 } from "date-fns";
 import linkifyStr from "linkify-string";
 import DOMPurify from "isomorphic-dompurify";
@@ -62,7 +63,7 @@ export async function generateStory(index) {
   return submission;
 }
 
-export async function generatePreview(index) {
+export async function generatePreview(index, commentIndex = null) {
   let submission;
   try {
     // Get banned addresses from moderation config
@@ -75,6 +76,51 @@ export async function generatePreview(index) {
     );
     throw new Error("Index wasn't found");
   }
+  
+  // If commentIndex is provided, generate comment preview instead
+  if (commentIndex) {
+    const comment = submission.comments?.find(c => 
+      c.index === commentIndex || c.id === `kiwi:0x${commentIndex}` || c.id === commentIndex
+    );
+    
+    if (comment) {
+      try {
+        const commentEnsData = await ens.resolve(comment.identity);
+        const absoluteTime = format(new Date(comment.timestamp * 1000), "PPpp");
+        
+        const hexIndex = index.substring(2);
+        const fileName = `${hexIndex}-comment-${commentIndex}`;
+        
+        // Generate comment preview
+        const body = preview.comment(
+          comment.title,
+          commentEnsData.displayName || comment.identity.slice(0, 6) + "...",
+          commentEnsData.safeAvatar,
+          submission.title,
+          absoluteTime,
+          comment.reactions
+        );
+        await preview.generate(fileName, body); // Generate OG image
+        
+        const frameBody = preview.commentFrame(
+          comment.title,
+          commentEnsData.displayName || comment.identity.slice(0, 6) + "...",
+          commentEnsData.safeAvatar,
+          submission.title,
+          absoluteTime,
+          comment.reactions
+        );
+        await preview.generate(fileName, frameBody, true); // Generate frame image
+        
+        return; // Exit after generating comment preview
+      } catch (err) {
+        log(`Failed to generate comment preview: ${err.stack}`);
+        // Fall back to story preview if comment preview fails
+      }
+    }
+  }
+  
+  // Default story preview generation
   const ensData = await ens.resolve(submission.identity);
   const value = {
     ...submission,
@@ -105,7 +151,7 @@ export async function generatePreview(index) {
 }
 
 
-export default async function (trie, theme, index, value, referral) {
+export default async function (trie, theme, index, value, referral, commentIndex = null) {
   const path = "/stories";
 
   let data = cachedMetadata(value.href, false, value.title);
@@ -210,35 +256,98 @@ export default async function (trie, theme, index, value, referral) {
   const start = 0;
   const style = "";
 
-  let ogImage;
-  if (isCloudflareImage(value.href)) {
-    // Use Cloudflare image URL directly with appropriate parameters for OG image
-    ogImage = value.href.endsWith("/public")
-      ? value.href.replace("/public", "/w=1200,q=80,fit=cover,f=auto")
-      : value.href + "/w=1200,q=80,fit=cover,f=auto";
-  } else {
-    // Fall back to the generated preview
-    ogImage = `https://news.kiwistand.com/previews/${index}.jpg`;
-  }
-
-  // Generate frame-specific image URL for Farcaster embeds only
+  // Generate appropriate preview URLs based on whether this is a comment or story
+  let ogImage, frameImage, ogDescription, ogTitle;
   let baseUrl = "https://news.kiwistand.com";
   if (env.CUSTOM_HOST_NAME && env.CUSTOM_PROTOCOL) {
     // Remove port for public URLs like meta tags
     const hostWithoutPort = env.CUSTOM_HOST_NAME.split(':')[0];
     baseUrl = `${env.CUSTOM_PROTOCOL}${hostWithoutPort}`;
   }
-  
-  const frameImage = isCloudflareImage(value.href) 
-    ? ogImage  // Use same for Cloudflare images
-    : `${baseUrl}/previews/${index.substring(2)}-frame.jpg`;
 
-  const ogDescription =
-    data && data.ogDescription
+  if (commentIndex) {
+    // Find the specific comment for preview
+    const comment = story.comments?.find(c => 
+      c.index === commentIndex || c.id === `kiwi:0x${commentIndex}` || c.id === commentIndex
+    );
+    
+    if (comment) {
+      // Generate comment preview if needed with proper timestamp
+      try {
+        // comment.identity is already resolved and is an object with address property
+        const commentEnsData = comment.identity;
+        const absoluteTime = format(new Date(comment.timestamp * 1000), "PPpp");
+        
+        const hexIndex = index;
+        const fileName = `${hexIndex}-comment-${commentIndex}`;
+        
+        // Generate comment preview with formatted timestamp
+        const body = preview.comment(
+          comment.title,
+          commentEnsData.displayName || commentEnsData.address.slice(0, 6) + "...",
+          commentEnsData.safeAvatar,
+          value.title,
+          absoluteTime,
+          comment.reactions
+        );
+        await preview.generate(fileName, body); // Generate OG image
+        
+        const frameBody = preview.commentFrame(
+          comment.title,
+          commentEnsData.displayName || commentEnsData.address.slice(0, 6) + "...",
+          commentEnsData.safeAvatar,
+          value.title,
+          absoluteTime,
+          comment.reactions
+        );
+        await preview.generate(fileName, frameBody, true); // Generate frame image
+      } catch (err) {
+        log(`Failed to generate comment preview: ${err.message}`);
+        log(`Error stack: ${err.stack}`);
+      }
+      
+      const fileName = `${index}-comment-${commentIndex}`;
+      ogImage = `${baseUrl}/previews/${fileName}.jpg`;
+      frameImage = `${baseUrl}/previews/${fileName}-frame.jpg`;
+      
+      // Use comment text as description, truncated
+      const maxLength = 160;
+      ogDescription = comment.title.length > maxLength 
+        ? comment.title.substring(0, maxLength) + "..."
+        : comment.title;
+      
+      // Update title to indicate it's a comment
+      ogTitle = `Comment on: ${value.title}`;
+    } else {
+      // Fall back to story preview if comment not found
+      commentIndex = null;
+    }
+  }
+  
+  // Default to story preview if not a comment
+  if (!commentIndex) {
+    if (isCloudflareImage(value.href)) {
+      // Use Cloudflare image URL directly with appropriate parameters for OG image
+      ogImage = value.href.endsWith("/public")
+        ? value.href.replace("/public", "/w=1200,q=80,fit=cover,f=auto")
+        : value.href + "/w=1200,q=80,fit=cover,f=auto";
+      frameImage = ogImage; // Use same for Cloudflare images
+    } else {
+      // Fall back to the generated preview
+      ogImage = `${baseUrl}/previews/${index}.jpg`;
+      frameImage = `${baseUrl}/previews/${index.substring(2)}-frame.jpg`;
+    }
+    
+    ogDescription = data && data.ogDescription
       ? data.ogDescription
       : "Crypto news for builders";
+    ogTitle = value.title;
+  }
+  
   const slug = getSlug(value.title);
-  const canonicalUrl = `${baseUrl}/stories/${slug}?index=0x${index}`;
+  const canonicalUrl = commentIndex 
+    ? `${baseUrl}/stories/${slug}?index=0x${index}&commentIndex=${commentIndex}`
+    : `${baseUrl}/stories/${slug}?index=0x${index}`;
 
   return html`
     <html lang="en" op="news">
@@ -246,7 +355,7 @@ export default async function (trie, theme, index, value, referral) {
         <base href="/" />
         ${head.custom(
           ogImage,
-          value.title,
+          ogTitle,
           ogDescription,
           undefined,
           ["/", "/new?cached=true", "/submit"],
@@ -370,7 +479,7 @@ export default async function (trie, theme, index, value, referral) {
                                       <span> • </span>
                                       <a
                                         class="meta-link"
-                                        href="/stories/${getSlug(value.title)}?index=0x${index}#0x${comment.index}"
+                                        href="/stories/${getSlug(value.title)}?index=0x${index}&commentIndex=${comment.index}#0x${comment.index}"
                                       >
                                         <span>
                                           ${formatDistanceToNowStrict(
@@ -387,9 +496,9 @@ export default async function (trie, theme, index, value, referral) {
                                         class="caster-link share-link"
                                         title="Share"
                                         style="white-space: nowrap;"
-                                        onclick="event.preventDefault(); navigator.share({url: 'https://news.kiwistand.com/stories/${getSlug(
+                                        onclick="event.preventDefault(); navigator.share({url: '${baseUrl}/stories/${getSlug(
                                           value.title,
-                                        )}?index=0x${index}#0x${comment.index}'});"
+                                        )}?index=0x${index}&commentIndex=${comment.index}#0x${comment.index}'});"
                                       >
                                         ${ShareIcon(
                                           "padding: 0 3px 1px 0; vertical-align: middle; height: 13px; width: 13px;",

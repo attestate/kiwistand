@@ -279,6 +279,20 @@ export function handleMessage(
         });
       });
     }
+    
+    // Generate preview for comments (excluding emoji reactions)
+    if (message.type === "comment" && !isReactionComment(message.title)) {
+      // Use setImmediate to ensure preview generation is non-blocking
+      setImmediate(() => {
+        // For comments, we need to pass both the story index and comment index
+        const storyIndex = message.href ? `0x${message.href.substring(7)}` : null;
+        if (storyIndex) {
+          generatePreview(storyIndex, index).catch((err) => {
+            log(`Failed to generate comment preview: ${err.message}`);
+          });
+        }
+      });
+    }
 
     const code = 200;
     const httpMessage = "OK";

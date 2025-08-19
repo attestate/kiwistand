@@ -78,6 +78,7 @@ import demonstration from "./views/demonstration.mjs";
 import notifications from "./views/notifications.mjs";
 import emailNotifications from "./views/email-notifications.mjs";
 import debug from "./views/debug.mjs";
+import commentDebug from "./views/comment-debug.mjs";
 import { parse, metadata } from "./parser.mjs";
 import { toAddress, resolve, ENS_CACHE_PREFIX } from "./ens.mjs";
 import * as ens from "./ens.mjs";
@@ -1535,12 +1536,18 @@ export async function launch(trie, libp2p, isPrimary = true) {
     }
 
     const hexIndex = request.query.index.substring(2);
+    
+    // Handle commentIndex if provided
+    const commentIndex = request.query.commentIndex ? 
+      DOMPurify.sanitize(request.query.commentIndex) : null;
+    
     const content = await story(
       trie,
       reply.locals.theme,
       DOMPurify.sanitize(hexIndex),
       submission,
       referral,
+      commentIndex,
     );
     reply.header(
       "Cache-Control",
@@ -1676,6 +1683,12 @@ export async function launch(trie, libp2p, isPrimary = true) {
 
   app.get("/debug", async (request, reply) => {
     const content = await debug(reply.locals.theme);
+    reply.header("Cache-Control", "no-cache");
+    return reply.status(200).type("text/html").send(content);
+  });
+
+  app.get("/comment-debug", async (request, reply) => {
+    const content = await commentDebug(reply.locals.theme);
     reply.header("Cache-Control", "no-cache");
     return reply.status(200).type("text/html").send(content);
   });
