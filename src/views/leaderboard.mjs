@@ -370,7 +370,7 @@ export default async function Leaderboard(identity, theme) {
                                     </div>`;
 
                             return html`
-                              <div class="karma-leaderboard-entry" style="border-bottom: ${index < voterData.leaderboard.length - 1 ? 'var(--border-thin)' : 'none'};">
+                              <div class="karma-leaderboard-entry" style="border-bottom: ${index < voterData.leaderboard.length - 1 ? 'var(--border-thin)' : 'none'}">
                                 <div 
                                   style="display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; gap: 15px; cursor: pointer;"
                                   onclick="(function() {
@@ -400,34 +400,25 @@ export default async function Leaderboard(identity, theme) {
                                       ${avatarHtml}
                                       <a
                                         href="/upvotes?address=${user.identity}"
-                                        style="color: black; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; text-decoration: none;"
+                                        style="color: black; font-size: 14px; text-decoration: none; white-space: nowrap;"
                                       >
                                         ${user.displayName}
                                       </a>
                                     </div>
                                   </div>
-                                  <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
-                                    <div style="text-align: right; min-width: 50px;">
-                                      <div style="color: var(--visited-link); font-size: 10px; margin-bottom: 2px;">All-Time Karma</div>
-                                      <div style="color: var(--visited-link); font-weight: normal; font-size: 13px;">${user.karma.toLocaleString()}</div>
+                                  <div style="text-align: right; flex-shrink: 0;">
+                                    <div style="color: var(--visited-link); font-size: 10px; margin-bottom: 2px;">
+                                      Karma: ${user.karma.toLocaleString()}
                                     </div>
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" style="width: 16px; height: 16px; color: var(--visited-link); flex-shrink: 0;">
-                                      <rect width="256" height="256" fill="none"/>
-                                      <line x1="40" y1="128" x2="216" y2="128" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/>
-                                      <polyline points="144 56 216 128 144 200" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/>
-                                    </svg>
-                                    <div style="width: 100px; text-align: right;">
-                                      <div style="color: var(--visited-link); font-size: 11px; margin-bottom: 2px;">Voting Power</div>
-                                      <div style="color: black; font-weight: bold; font-size: 14px; display: flex; align-items: center; justify-content: flex-end;">
-                                        ${(typeof user.votingPower === 'number' && !isNaN(user.votingPower) ? user.votingPower : 0).toFixed(2)}
-                                        <img src="/usdc-logo.svg" style="width: 16px; height: 16px; margin-left: 4px;" alt="USDC" />
+                                    <div style="color: black; font-weight: bold; font-size: 14px; display: flex; align-items: center; justify-content: flex-end;">
+                                      ${(typeof user.votingPower === 'number' && !isNaN(user.votingPower) ? user.votingPower : 0).toFixed(2)}
+                                      <img src="/usdc-logo.svg" style="width: 16px; height: 16px; margin-left: 4px;" alt="USDC" />
+                                    </div>
+                                    ${user.actualContributed > 0 ? html`
+                                      <div style="color: green; font-size: 10px; margin-top: 2px;">
+                                        Used: ${user.actualContributed.toFixed(2)}
                                       </div>
-                                      ${user.actualContributed > 0 ? html`
-                                        <div style="color: green; font-size: 10px; margin-top: 2px;">
-                                          Used: ${user.actualContributed.toFixed(2)}
-                                        </div>
-                                      ` : ''}
-                                    </div>
+                                    ` : ''}
                                   </div>
                                 </div>
                                 <!-- Expandable votes section -->
