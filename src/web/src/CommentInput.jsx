@@ -590,6 +590,22 @@ const CommentInput = (props) => {
     }
   }
   const textareaRef = useRef(null);
+  
+  // Auto-focus the textarea when component mounts (desktop only, and only if no existing comments)
+  useEffect(() => {
+    // Only auto-focus on desktop when there are no existing comments
+    const hasNoComments = !props.comments || props.comments.length === 0;
+    
+    if (!isMobile && hasNoComments && textareaRef.current && address && isEligible) {
+      // Small delay to ensure smooth rendering
+      setTimeout(() => {
+        if (textareaRef.current) {
+          textareaRef.current.focus();
+        }
+      }, 100);
+    }
+  }, [isMobile, address, isEligible, props.comments]);
+  
   useEffect(() => {
     const handleKeyPress = (e) => {
       if (
