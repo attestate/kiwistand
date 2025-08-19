@@ -1,6 +1,7 @@
 //@format
 import { env } from "process";
 import { URL } from "url";
+import { existsSync } from "fs";
 
 import htm from "htm";
 import vhtml from "vhtml";
@@ -281,26 +282,35 @@ export default async function (trie, theme, index, value, referral, commentIndex
         const hexIndex = index;
         const fileName = `${hexIndex}-comment-${commentIndex}`;
         
-        // Generate comment preview with formatted timestamp
-        const body = preview.comment(
-          comment.title,
-          commentEnsData.displayName || commentEnsData.address.slice(0, 6) + "...",
-          commentEnsData.safeAvatar,
-          value.title,
-          absoluteTime,
-          comment.reactions
-        );
-        await preview.generate(fileName, body); // Generate OG image
+        // Check if preview files already exist to avoid regeneration
+        const ogPath = `src/public/previews/${fileName}.jpg`;
+        const framePath = `src/public/previews/${fileName}-frame.jpg`;
         
-        const frameBody = preview.commentFrame(
-          comment.title,
-          commentEnsData.displayName || commentEnsData.address.slice(0, 6) + "...",
-          commentEnsData.safeAvatar,
-          value.title,
-          absoluteTime,
-          comment.reactions
-        );
-        await preview.generate(fileName, frameBody, true); // Generate frame image
+        // Generate OG preview only if it doesn't exist
+        if (!existsSync(ogPath)) {
+          const body = preview.comment(
+            comment.title,
+            commentEnsData.displayName || commentEnsData.address.slice(0, 6) + "...",
+            commentEnsData.safeAvatar,
+            value.title,
+            absoluteTime,
+            comment.reactions
+          );
+          await preview.generate(fileName, body); // Generate OG image
+        }
+        
+        // Generate frame preview only if it doesn't exist
+        if (!existsSync(framePath)) {
+          const frameBody = preview.commentFrame(
+            comment.title,
+            commentEnsData.displayName || commentEnsData.address.slice(0, 6) + "...",
+            commentEnsData.safeAvatar,
+            value.title,
+            absoluteTime,
+            comment.reactions
+          );
+          await preview.generate(fileName, frameBody, true); // Generate frame image
+        }
       } catch (err) {
         log(`Failed to generate comment preview: ${err.message}`);
         log(`Error stack: ${err.stack}`);

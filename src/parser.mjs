@@ -708,11 +708,9 @@ const checkOgImage = async (url) => {
       }
     }
 
-    const imageProcessor = sharp();
-    // Pipe the response stream to sharp
-    res.body.pipe(imageProcessor);
-
-    const metadata = await imageProcessor.metadata();
+    // Buffer the entire image to avoid stream memory leaks
+    const buffer = await res.arrayBuffer();
+    const metadata = await sharp(Buffer.from(buffer)).metadata();
     const { width, height } = metadata;
 
     if (!width || !height) {
