@@ -1038,6 +1038,15 @@ const row = (
                               ${submitterKarmaPoints} 🥝
                             </span>`
                           : ""}
+                        ${story.storyEarnings && story.storyEarnings > 0
+                          ? html`<span
+                              title="USDC earned in contest"
+                              style="background: rgba(0, 123, 255, 0.08); padding: 2px 6px; border-radius: 999px; font-size: 9px; font-weight: 600; color: black; margin-left: 6px; display: inline-flex; align-items: center; gap: 3px;"
+                            >
+                              ${story.storyEarnings.toFixed(2)}
+                              <img src="/usdc-logo.svg" style="width: 10px; height: 10px;" alt="USDC" />
+                            </span>`
+                          : ""}
                         ${isTrending
                           ? html`<span
                               title="Trending submission"

@@ -355,3 +355,16 @@ export async function getStoriesUSDCEarnings() {
     
     return earningsMap;
 }
+
+export async function getUsersUSDCEarnings() {
+    const { finalLeaderboard } = await calculateContestData();
+    const userEarningsMap = new Map();
+    
+    finalLeaderboard.forEach(user => {
+        if (user.earnings > 0) {
+            userEarningsMap.set(user.identity.toLowerCase(), user.earnings);
+        }
+    });
+    
+    return userEarningsMap;
+}
