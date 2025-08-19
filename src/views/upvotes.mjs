@@ -19,7 +19,7 @@ import * as moderation from "./moderation.mjs";
 import * as karma from "../karma.mjs";
 import * as preview from "../preview.mjs";
 import Row from "./components/row.mjs";
-import { getSubmissions, getContributionsData } from "../cache.mjs";
+import { getSubmissions, getSubmissionCount, getContributionsData } from "../cache.mjs";
 import { metadata } from "../parser.mjs";
 import { truncate } from "../utils.mjs";
 import {
@@ -57,6 +57,7 @@ export default async function (trie, theme, identity, tab = "submissions") {
   const offset = 0;
   const orderBy = tab === "top" ? "votes" : "new";
   const submissions = getSubmissions(identity, limit, offset, orderBy);
+  const totalSubmissions = getSubmissionCount(identity);
   
   // Get karma rank
   const allKarma = karma.ranking();
@@ -162,7 +163,7 @@ export default async function (trie, theme, identity, tab = "submissions") {
                     <div class="profile-stats">
                       <span class="stat">Rank: <strong>#${rank}</strong></span>
                       <span class="stat">Karma: <strong>${points}</strong></span>
-                      <span class="stat">Submissions: <strong>${submissions.length}</strong></span>
+                      <span class="stat">Submissions: <strong>${totalSubmissions}</strong></span>
                     </div>
                     
                     <span style="font-size: 0.8rem;">

@@ -704,6 +704,17 @@ export function getBest(amount, from, orderBy, domain, startDatetime) {
   });
 }
 
+export function getSubmissionCount(identity) {
+  const query = `
+    SELECT COUNT(*) as count
+    FROM submissions
+    WHERE identity = ?
+  `;
+  
+  const result = db.prepare(query).get(identity);
+  return result ? result.count : 0;
+}
+
 export function getSubmissions(identity, amount, from, orderBy, domains) {
   let orderClause = "upvotesCount DESC";
   if (orderBy === "new") {
