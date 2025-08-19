@@ -20,6 +20,7 @@ import * as registry from "./chainstate/registry.mjs";
 import * as newest from "./views/new.mjs";
 import { generatePreview } from "./views/story.mjs";
 import { getSubmission, isReactionComment } from "./cache.mjs";
+import { triggerUpvoteNotification } from "./subscriptions.mjs";
 
 // Global error handlers to catch crashes and log them properly
 process.on("uncaughtException", (err) => {
@@ -268,6 +269,13 @@ export function handleMessage(
       setImmediate(() => {
         generatePreview(`0x${index}`).catch((err) => {
           // NOTE: This can fail if the message is an upvote, not a submission.
+        });
+      });
+      
+      // Trigger upvote notification for the story author
+      setImmediate(() => {
+        triggerUpvoteNotification(message).catch((err) => {
+          log(`Failed to trigger upvote notification: ${err}`);
         });
       });
     }

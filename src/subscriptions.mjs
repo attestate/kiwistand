@@ -57,6 +57,68 @@ db.exec(`
  subscription)
   `);
 
+export async function triggerUpvoteNotification(message) {
+  if (message.type !== "amplify") return;
+
+  try {
+    // Get the submission that was upvoted
+    const submission = getSubmission(null, message.href);
+    if (!submission || !submission.identity) return;
+
+    // Don't notify if the upvoter is the author
+    if (message.identity === submission.identity) return;
+
+    // Get upvoter's display name
+    const ensData = await resolve(message.identity);
+    if (!ensData.displayName) return;
+
+    // Filter out banned users from receiving notifications
+    let receivers = [submission.identity];
+    try {
+      const policy = await moderation.getLists();
+      const bannedAddresses = policy.addresses || [];
+      receivers = receivers.filter(
+        receiver => !bannedAddresses.includes(receiver.toLowerCase())
+      );
+    } catch (err) {
+      log(`Failed to get banned addresses for upvote notification filtering: ${err}`);
+    }
+
+    if (receivers.length === 0) return;
+
+    const slug = getSlug(submission.title);
+    const url = `https://news.kiwistand.com/stories/${slug}?index=0x${submission.index}`;
+
+    // Get FID for Neynar notification
+    let targetFids = [];
+    try {
+      targetFids = await getFidsFromAddresses(receivers);
+    } catch (err) {
+      log(`Failed to get FIDs for upvote Neynar notifications: ${err}`);
+    }
+
+    // Send Neynar notification if we have FID (production only)
+    if (targetFids.length > 0 && env.NODE_ENV === "production") {
+      try {
+        const fcTitle = "New upvote"; // Max 32 chars
+        const fcBody = `${ensData.displayName} upvoted: ${submission.title.substring(0, 128 - ensData.displayName.length - 11)}`; // Max 128 chars total
+        
+        await sendNotification(
+          url,
+          fcBody,
+          fcTitle,
+          targetFids
+        );
+        log(`Sent upvote Neynar notification to FID ${targetFids[0]}`);
+      } catch (err) {
+        log(`Failed to send upvote Neynar notification: ${err}`);
+      }
+    }
+  } catch (err) {
+    log(`Error in triggerUpvoteNotification: ${err}`);
+  }
+}
+
 export async function triggerNotification(message) {
   if (message.type !== "comment") return;
 

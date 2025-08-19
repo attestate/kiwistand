@@ -2137,6 +2137,19 @@ export async function launch(trie, libp2p, isPrimary = true) {
         identity: message.walletAddress
       });
       
+      // Trigger upvote notification for mini app upvotes
+      setImmediate(() => {
+        subscriptions.triggerUpvoteNotification({
+          type: "amplify",
+          href: message.href,
+          title: message.title,
+          timestamp: message.timestamp,
+          identity: message.walletAddress
+        }).catch((err) => {
+          log(`Failed to trigger mini app upvote notification: ${err}`);
+        });
+      });
+      
       return sendStatus(reply, 200, "OK", "Mini app upvote recorded successfully");
     } catch (error) {
       log(`Mini app upvote error: ${error.message}`);

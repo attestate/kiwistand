@@ -6,6 +6,7 @@ import {
   getSubmission,
   isReactionComment,
 } from "./cache.mjs";
+import { getSlug } from "./utils.mjs";
 
 /**
  * Purges Cloudflare cache for the specified URL.
@@ -78,6 +79,13 @@ function invalidateUpvoteActivityCaches(message) {
     const submission = getSubmission(null, normalizedHref);
     if (submission && submission.identity) {
       invalidateNotifications(submission.identity);
+      
+      // Also invalidate the story page cache so the upvote count updates
+      const slug = getSlug(submission.title);
+      const storyUrl = `https://news.kiwistand.com/stories/${slug}?index=0x${submission.index}`;
+      purgeCache(storyUrl).catch((err) => 
+        log(`Failed to purge story page cache: ${err}`)
+      );
     }
   } catch (error) {
     log(`Error invalidating upvote activity cache: ${error}`);
