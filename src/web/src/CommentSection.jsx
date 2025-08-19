@@ -479,7 +479,7 @@ export const EmojiReaction = ({ comment, allowlist, delegations, toast }) => {
 function NotificationOptIn(props) {
   const account = useAccount();
   const localAccount = getLocalAccount(account.address, props.allowlist);
-  const [isMiniApp, setIsMiniApp] = useState(false);
+  const [isMiniApp, setIsMiniApp] = useState(null); // Start with null to indicate loading state
 
   // Compute eligibility synchronously when possible to avoid pop-in
   const identity =
@@ -502,7 +502,8 @@ function NotificationOptIn(props) {
     };
   }, []);
 
-  if (!identity || isMiniApp === true) return null;
+  // Don't render until we know the mini app status to avoid flash
+  if (!identity || isMiniApp === null || isMiniApp === true) return null;
   return (
     <div
       style={{
