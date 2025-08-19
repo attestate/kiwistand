@@ -498,7 +498,7 @@ export default async function (trie, theme, index, value, referral, commentIndex
                                         style="white-space: nowrap;"
                                         onclick="event.preventDefault(); navigator.share({url: '${baseUrl}/stories/${getSlug(
                                           value.title,
-                                        )}?index=0x${index}&commentIndex=${comment.index}#0x${comment.index}'});"
+                                        )}?index=0x${index}&commentIndex=${comment.index}'});"
                                       >
                                         ${ShareIcon(
                                           "padding: 0 3px 1px 0; vertical-align: middle; height: 13px; width: 13px;",
