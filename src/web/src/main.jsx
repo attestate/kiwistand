@@ -144,6 +144,31 @@ async function addSubmitButton(allowlist, delegations, toast) {
   }
 }
 
+async function addAnalytics(allowlist) {
+  // Run on feed pages, profile pages, and story pages
+  const path = window.location.pathname;
+  const isFeedPage = path === "/" || path === "/new" || path === "/best";
+  const isProfilePage = path.startsWith("/upvotes");
+  const isStoryPage = path.startsWith("/stories");
+  
+  // Check if there are any analytics elements on the page
+  const analyticsElements = document.querySelectorAll(".story-analytics");
+  if (analyticsElements.length > 0 && (isFeedPage || isProfilePage || isStoryPage)) {
+    const Analytics = (await import("./Analytics.jsx")).default;
+    
+    // Create a container for the React component
+    const container = document.createElement("div");
+    container.style.display = "none";
+    document.body.appendChild(container);
+    
+    createRoot(container).render(
+      <StrictMode>
+        <Analytics allowlist={allowlist} />
+      </StrictMode>,
+    );
+  }
+}
+
 async function addDecayingPriceLink() {
   const linkContainer = document.querySelector(".decaying-price-link");
   if (linkContainer) {
@@ -1390,6 +1415,7 @@ async function start() {
       toast,
     ),
     addSubmitButton(await allowlistPromise, await delegationsPromise, toast),
+    addAnalytics(await allowlistPromise),
   ]);
 
   results0.forEach((result, index) => {

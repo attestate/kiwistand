@@ -1047,12 +1047,6 @@ const row = (
                               <img src="/usdc-logo.svg" style="width: 10px; height: 10px;" alt="USDC" />
                             </span>`
                           : ""}
-                        ${isTrending
-                          ? html`<span
-                              title="Trending submission"
-                              style="padding: 1px 6px; border-radius: 999px; font-size: 9px; color: black; background: rgba(255,69,0,0.08); border: 1px solid rgba(255,69,0,0.25); margin-left: 6px; display: inline-block;"
-                            >🔥 Trending</span>`
-                          : ""}
                         <span style="opacity:0.6; white-space: pre;"> • </span>
                       `;
                     })()}
@@ -1141,12 +1135,17 @@ const row = (
                             </span>
                           `
                         : ""}
-                      ${story.impressions && story.impressions > 100
-                        ? html`
-                            <span style="opacity:0.6; white-space: pre;"> • </span>
-                            <span class="meta-item">${story.impressions} views</span>
-                          `
-                        : ""}
+                      <span 
+                        class="story-analytics meta-item" 
+                        data-submitter="${story.identity || ''}" 
+                        data-href="${story.href || ''}"
+                        style="display: none; white-space: nowrap;"
+                      >
+                        <span style="opacity:0.6;"> • </span>
+                        <span class="analytics-impressions">0</span> views
+                        <span style="opacity:0.6;"> • </span>
+                        <span class="analytics-clicks">0</span> clicks
+                      </span>
                     </span>
                   </div>
                 </div>

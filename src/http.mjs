@@ -93,12 +93,17 @@ import {
   trackImpression,
   trackShare,
   countOutbounds,
+  countImpressions,
   storeMiniAppUpvote,
 } from "./cache.mjs";
+import normalizeUrl from "normalize-url";
 import appCache from "./cache.mjs"; // For LRU cache used by ENS profiles
 import frameSubscribe from "./views/frame-subscribe.mjs";
 import { sendNotification } from "./neynar.mjs";
 import { timingSafeEqual } from "crypto";
+import { verify, ecrecover } from "./id.mjs";
+import { EIP712_MESSAGE } from "./constants.mjs";
+import { eligible } from "@attestate/delegator2";
 import { invalidateActivityCaches } from "./cloudflarePurge.mjs";
 import { getCastByHashAndConstructUrl } from "./parser.mjs";
 import { sendToChannel } from "./telegram-bot.mjs";
@@ -1360,6 +1365,80 @@ export async function launch(trie, libp2p, isPrimary = true) {
     return sendStatus(reply, code, httpMessage, details, {
       ...submission,
       comments: enrichedComments,
+    });
+  });
+
+  app.post("/api/v1/story-analytics", async (request, reply) => {
+    const message = request.body;
+    
+    // Validate message format
+    if (!message || message.type !== "analytics" || !message.href || !message.signature) {
+      return sendError(reply, 400, "Bad Request", "Invalid message format");
+    }
+    
+    let requesterAddress;
+    try {
+      // For analytics messages, we need to verify the signature directly
+      // since the schema doesn't include "analytics" type
+      // Use ecrecover directly to verify the signature
+      requesterAddress = ecrecover(message, EIP712_MESSAGE);
+      
+      if (!requesterAddress) {
+        throw new Error("Failed to recover address from signature");
+      }
+    } catch (err) {
+      log(`Failed to verify analytics message signature: ${err.toString()}`);
+      return sendError(reply, 401, "Unauthorized", "Invalid signature");
+    }
+    
+    let submission;
+    try {
+      // Normalize the URL to match how it's stored in the database
+      const normalizedHref = normalizeUrl(message.href, {
+        stripWWW: false,
+      });
+      // Get the submission by href
+      submission = getSubmission(null, normalizedHref);
+    } catch (err) {
+      log(`Story not found for analytics: ${message.href} - ${err.toString()}`);
+      return sendError(reply, 404, "Not Found", "Story not found");
+    }
+    
+    // Check if requester is authorized to view analytics
+    // Use eligible to check if requester can act on behalf of submitter
+    const allowlist = await registry.allowlist();
+    const delegations = await registry.delegations();
+    
+    log(`Analytics request - Requester: ${requesterAddress}, Submitter: ${submission.identity}`);
+    
+    // Check if the requester can act as the submitter (either is the submitter or has delegation)
+    const authorizedIdentity = eligible(allowlist, delegations, requesterAddress);
+    
+    // The requester is authorized if:
+    // 1. They ARE the submitter
+    // 2. They can act on behalf of the submitter (have delegation from submitter)
+    const isAuthorized = authorizedIdentity && 
+                        (authorizedIdentity.toLowerCase() === submission.identity.toLowerCase() ||
+                         requesterAddress.toLowerCase() === submission.identity.toLowerCase());
+    
+    if (!isAuthorized) {
+      log(`Unauthorized analytics access attempt by ${requesterAddress} for story by ${submission.identity}`);
+      return sendError(reply, 403, "Forbidden", "Not authorized to view analytics for this story");
+    }
+    
+    // Get analytics data (use normalized URL to match stored data)
+    const normalizedHref = normalizeUrl(message.href, {
+      stripWWW: false,
+    });
+    const impressions = countImpressions(normalizedHref);
+    const clicks = countOutbounds(normalizedHref);
+    
+    reply.header("Cache-Control", "no-cache");
+    return sendStatus(reply, 200, "OK", "Analytics retrieved", {
+      impressions,
+      clicks,
+      href: message.href,
+      submitter: submission.identity
     });
   });
 

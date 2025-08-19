@@ -97,6 +97,72 @@ export async function send(
   return result;
 }
 
+export async function fetchStoryAnalytics(href, signer) {
+  // Create analytics message using same format as other messages
+  const message = messageFab("analytics", href, "analytics");
+  
+  console.log("Signing analytics message:", message);
+  
+  // Sign the message - handle both ethers Wallet and wagmi wallet client
+  let signature;
+  if (signer._signTypedData) {
+    // Ethers Wallet (local account)
+    signature = await signer._signTypedData(
+      EIP712_DOMAIN,
+      EIP712_TYPES,
+      message
+    );
+  } else if (signer.signTypedData) {
+    // Wagmi wallet client
+    signature = await signer.signTypedData({
+      domain: EIP712_DOMAIN,
+      types: EIP712_TYPES,
+      primaryType: "Message",
+      message,
+    });
+  } else {
+    console.error("Signer doesn't support typed data signing");
+    return null;
+  }
+  
+  console.log("Signature generated:", signature);
+  
+  const body = JSON.stringify({
+    ...message,
+    signature,
+  });
+  
+  const url = getApiUrl("/api/v1/story-analytics");
+  
+  let response;
+  try {
+    response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body,
+    });
+  } catch (err) {
+    console.error("Failed to fetch analytics:", err);
+    return null;
+  }
+  
+  let result;
+  try {
+    result = await response.json();
+  } catch (err) {
+    console.error("Failed to parse analytics response:", err);
+    return null;
+  }
+  
+  if (result.status === "success" && result.data) {
+    return result.data;
+  }
+  
+  return null;
+}
+
 export async function fetchNotifications(address) {
   const lastUpdate = parseInt(getCookie("lastUpdate"), 10) || 0;
   const url = getApiUrl(`/api/v1/activity?address=${address}`);

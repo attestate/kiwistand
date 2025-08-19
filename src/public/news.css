@@ -808,6 +808,11 @@ body.react-loaded .comment-input-host nav-comment-input { visibility: visible; }
   line-height: 18px;
 }
 
+/* Hide domain when analytics are shown to prevent overflow */
+.story-subtitle.has-analytics .domain-hideable {
+  display: none !important;
+}
+
 /* Fix domain text overflow on mobile */
 .domain-text, .domain-flex {
   min-width: 0;
@@ -1635,5 +1640,28 @@ a.meta-link:hover, span.meta-link:hover {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* Fix analytics overflow on mobile */
+@media (max-width: 768px) {
+  /* Only style analytics that are actually shown (not display: none) */
+  .story-analytics:not([style*="display: none"]) {
+    display: inline !important;
+    margin-top: 0;
+    width: auto;
+    line-height: inherit;
+    vertical-align: baseline;
+  }
+  
+  /* When analytics are shown, ensure they don't overflow */
+  .story-subtitle {
+    flex-wrap: wrap;
+  }
+  
+  /* Hide domain on mobile when analytics are shown */
+  .story-analytics:not([style*="display: none"]) ~ .domain-text,
+  .story-analytics:not([style*="display: none"]) ~ .domain-flex {
+    display: none !important;
   }
 }
