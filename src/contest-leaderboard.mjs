@@ -81,22 +81,31 @@ export async function calculateContestData() {
     const upvotesInPeriod = getUpvotesInPeriod(CONTEST_START_DATE, CONTEST_END_DATE);
     const activeVoters = new Set(upvotesInPeriod.map(upvote => upvote.upvoter.toLowerCase()));
 
-    // 2. Calculate Voting Power with a flatter distribution
+    // 2. Calculate Voting Power - ONLY for top 20 karma holders
+    // Get top 20 karma holders at the time of the contest
+    const allUsersKarma = getAllTimeKarma();
+    const top20Identities = new Set(allUsersKarma.slice(0, 20).map(u => u.identity.toLowerCase()));
+    
     const scaledKarma = new Map();
     let totalActiveScaledKarma = 0;
     activeVoters.forEach(voter => {
-        const karma = karmaSnapshot.get(voter) || 0;
-        // Use a root to flatten the distribution curve
-        const scaled = Math.pow(karma, 1/2.5);
-        scaledKarma.set(voter, scaled);
-        totalActiveScaledKarma += scaled;
+        // Only give voting power to top 20 karma holders
+        if (top20Identities.has(voter)) {
+            const karma = karmaSnapshot.get(voter) || 0;
+            // Use a root to flatten the distribution curve
+            const scaled = Math.pow(karma, 1/2.5);
+            scaledKarma.set(voter, scaled);
+            totalActiveScaledKarma += scaled;
+        }
     });
 
     const votingPower = new Map();
     if (totalActiveScaledKarma > 0) {
         activeVoters.forEach(voter => {
-            const power = ((scaledKarma.get(voter) || 0) / totalActiveScaledKarma) * PRIZE_POOL;
-            votingPower.set(voter, power);
+            if (top20Identities.has(voter)) {
+                const power = ((scaledKarma.get(voter) || 0) / totalActiveScaledKarma) * PRIZE_POOL;
+                votingPower.set(voter, power);
+            }
         });
     }
 
@@ -121,7 +130,10 @@ export async function calculateContestData() {
         }
         const story = initialStoryEarnings.get(storyKey);
         story.earnings += valuePerUpvote;
-        story.upvoters.push({ identity: upvoter, contribution: valuePerUpvote });
+        // Only add upvoters who have voting power (i.e., are in the voting power map)
+        if (valuePerUpvote > 0) {
+            story.upvoters.push({ identity: upvoter, contribution: valuePerUpvote });
+        }
     });
 
     // 4. Calculate Scaling Factor
@@ -147,7 +159,7 @@ export async function calculateContestData() {
     });
 
     finalLeaderboard = finalLeaderboard
-        .filter(user => user.earnings > 0.005)
+        .filter(user => user.earnings >= 0.01)
         .sort((a, b) => b.earnings - a.earnings);
     
     // 6. Calculate Final Story Earnings (applying scaling and re-mapping from final user earnings)
@@ -167,7 +179,7 @@ export async function calculateContestData() {
                 upvoters: story.upvoters.map(u => ({
                     ...u,
                     contribution: (u.contribution / authorTotalInitial) * authorTotalFinal
-                })).filter(u => u.contribution > 0.005)
+                })).filter(u => u.contribution >= 0.01)
             });
         }
     });
@@ -189,7 +201,7 @@ export async function getContestLeaderboard(userIdentity = null) {
             const displayName = (ensData?.farcaster?.username ? `@${ensData.farcaster.username}` : (ensData?.displayName || ensData?.ens)) || user.identity;
 
             const allUserStories = Array.from(finalStoryEarnings.values())
-                .filter(story => story.author === user.identity.toLowerCase())
+                .filter(story => story.author === user.identity.toLowerCase() && story.earnings >= 0.01)
                 .sort((a, b) => b.earnings - a.earnings);
 
             const userStories = allUserStories.slice(0, 4);
@@ -281,7 +293,7 @@ export async function getVoterLeaderboard(userIdentity = null) {
                 karma: user.karma
             };
         })
-        .filter(u => u.votingPower > 0.01) // Slightly higher threshold
+        .filter(u => u.votingPower >= 0.01) // Minimum meaningful threshold
         .sort((a, b) => b.votingPower - a.votingPower);
 
     const leaderboard = await Promise.all(
