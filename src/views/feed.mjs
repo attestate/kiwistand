@@ -41,7 +41,7 @@ import * as karma from "../karma.mjs";
 import { cachedMetadata } from "../parser.mjs";
 import { getPredictedEngagement } from "../prediction.mjs";
 import { getLeaderboard } from "../leaderboard.mjs";
-import { getContestLeaderboard, getStoriesUSDCEarnings, getUsersUSDCEarnings } from "../contest-leaderboard.mjs";
+import { getContestLeaderboard, getStoriesUSDCEarnings } from "../contest-leaderboard.mjs";
 
 import holders from "./holders.mjs";
 const formatedHolders = holders.map((a) => ethers.utils.getAddress(a));
@@ -467,12 +467,10 @@ export async function index(
   async function resolveIds(storyPromises) {
     const stories = [];
     
-    // Get USDC earnings maps once for all stories
-    let storyUsdcEarningsMap = new Map();
-    let userUsdcEarningsMap = new Map();
+    // Get USDC earnings map once for all stories
+    let usdcEarningsMap = new Map();
     try {
-      storyUsdcEarningsMap = await getStoriesUSDCEarnings();
-      userUsdcEarningsMap = await getUsersUSDCEarnings();
+      usdcEarningsMap = await getStoriesUSDCEarnings();
     } catch (err) {
       log(`Failed to get USDC earnings: ${err}`);
     }
@@ -537,8 +535,8 @@ export async function index(
 
       const impressions = countImpressions(story.href); // Get impressions count
       
-      // Get USDC earnings for this specific story
-      const storyEarnings = storyUsdcEarningsMap.get(story.index) || 0;
+      // Get USDC earnings for this story
+      const usdcEarnings = usdcEarningsMap.get(story.index) || 0;
 
       stories.push({
         ...story,
@@ -548,7 +546,7 @@ export async function index(
         submitter: ensData,
         avatars: avatars,
         isOriginal,
-        storyEarnings, // Add story-specific USDC earnings
+        usdcEarnings, // Add USDC earnings to the story object
       });
     }
     return stories;

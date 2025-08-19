@@ -19,7 +19,6 @@ import Row, { extractDomain } from "./components/row.mjs";
 import log from "../logger.mjs";
 import { purgeCache } from "../cloudflarePurge.mjs";
 import { cachedMetadata } from "../parser.mjs";
-import { getStoriesUSDCEarnings } from "../contest-leaderboard.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -61,14 +60,6 @@ export async function recompute() {
   let writers = writersResult.status === "fulfilled" ? writersResult.value : [];
 
   counts = moderation.moderate(counts, config, path);
-
-  // Get USDC earnings map once for all stories
-  let storyUsdcEarningsMap = new Map();
-  try {
-    storyUsdcEarningsMap = await getStoriesUSDCEarnings();
-  } catch (err) {
-    log(`Failed to get USDC earnings: ${err}`);
-  }
 
   let nextStories = [];
   await Promise.allSettled(
@@ -143,7 +134,6 @@ export async function recompute() {
       }
       
       const impressions = countImpressions(finalStory.href);
-      const storyEarnings = storyUsdcEarningsMap.get(story.index) || 0;
       
       nextStories.push({
         ...finalStory,
@@ -153,7 +143,6 @@ export async function recompute() {
         submitter: ensData,
         avatars: avatars,
         isOriginal,
-        storyEarnings,
       });
     }),
   );
