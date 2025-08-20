@@ -892,7 +892,9 @@ const row = (
                             }`
                           : DOMPurify.sanitize(story.href)}"
                         onclick="${isCloudflare && story.index
-                          ? "if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
+                          ? `if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) { document.getElementById('spinner-overlay').style.display='block'; navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${DOMPurify.sanitize(
+                              story.href,
+                            )}')); }`
                           : `event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${DOMPurify.sanitize(
                               story.href,
                             )}')); if (window.ReactNativeWebView || window !== window.parent) { 

@@ -1228,29 +1228,36 @@ function trackLinkImpressions() {
           let href = link.getAttribute("href");
           
           // For links with data-external-link, use that as the actual URL
+          // This includes Cloudflare images which have internal href but external data-external-link
           if (link.hasAttribute("data-external-link")) {
             href = link.getAttribute("data-external-link");
           }
 
           if (!href) return;
 
-          // Skip internal links
-          if (
-            href.startsWith("javascript:") ||
-            href.startsWith("/") ||
-            href.startsWith("#") ||
-            href.startsWith("mailto:") ||
-            href.startsWith("tel:") ||
-            !href.includes("://")
-          ) {
-            return;
+          // Skip internal links UNLESS they have a data-external-link attribute
+          // This allows Cloudflare images to be tracked
+          if (!link.hasAttribute("data-external-link")) {
+            if (
+              href.startsWith("javascript:") ||
+              href.startsWith("/") ||
+              href.startsWith("#") ||
+              href.startsWith("mailto:") ||
+              href.startsWith("tel:") ||
+              !href.includes("://")
+            ) {
+              return;
+            }
           }
 
-          try {
-            const linkUrl = new URL(href);
-            if (linkUrl.hostname === currentHostname) return;
-          } catch (e) {
-            return;
+          // For URLs with protocol, check if they're external
+          if (href.includes("://")) {
+            try {
+              const linkUrl = new URL(href);
+              if (linkUrl.hostname === currentHostname) return;
+            } catch (e) {
+              return;
+            }
           }
 
           // Check if this URL has already been tracked in this session
