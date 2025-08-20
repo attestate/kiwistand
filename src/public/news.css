@@ -500,7 +500,11 @@ body {
   .comment-input-mobile-ssr { display: block !important; }
   .comment-input-desktop-ssr { display: none !important; }
   /* Reserve space for comment input React mount to avoid jump */
-  .comment-input-host { display: block; min-height: 64px; }
+  .comment-input-host { 
+    display: block; 
+    min-height: 64px;
+    position: relative;
+  }
   /* Strong gutters for content rows */
   .content-row .mobile-information-row { padding-left: 16px !important; padding-right: 16px !important; box-sizing: border-box; }
   .content-row .story-link-container-wrapper { padding-right: 16px !important; }
@@ -527,11 +531,33 @@ body {
 @media (min-width: 641px) {
   .comment-input-mobile-ssr { display: none !important; }
   .comment-input-desktop-ssr { display: block !important; }
+  /* Desktop: Reserve appropriate height when SSR placeholder is present */
+  .comment-input-host:has(.comment-input-ssr-placeholder) {
+    min-height: 380px;
+  }
+  /* Once React loads and hides the placeholder, reduce the min-height */
+  body.react-loaded .comment-input-host {
+    min-height: auto;
+  }
 }
 
 /* Hide React comment input until React has mounted; SSR placeholder stays visible */
-.comment-input-host nav-comment-input { visibility: hidden; }
-body.react-loaded .comment-input-host nav-comment-input { visibility: visible; }
+.comment-input-host nav-comment-input { 
+  visibility: hidden; 
+  position: absolute;
+  width: 100%;
+  top: 0;
+  left: 0;
+}
+body.react-loaded .comment-input-host nav-comment-input { 
+  visibility: visible; 
+  position: static;
+}
+
+/* Hide SSR placeholder when React has loaded to prevent overlap */
+body.react-loaded .comment-input-ssr-placeholder {
+  display: none !important;
+}
 
 /* Farcaster preview container - visible on all devices */
 .farcaster-preview-container {
@@ -1664,4 +1690,9 @@ a.meta-link:hover, span.meta-link:hover {
   .story-analytics:not([style*="display: none"]) ~ .domain-flex {
     display: none !important;
   }
+}
+
+/* Fix for emoji reaction container layout shift */
+.reactions-container {
+  min-height: 48px \!important; /* Prevent height change when React loads */
 }

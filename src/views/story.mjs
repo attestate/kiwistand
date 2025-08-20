@@ -575,7 +575,7 @@ export default async function (trie, theme, index, value, referral, commentIndex
                                                 reaction.reactorProfiles,
                                             })),
                                           })}"
-                                          style="display: flex; align-items: center; gap: 6px; min-height: 40px; margin-top: 8px; position: relative;"
+                                          style="display: flex; align-items: center; gap: 6px; min-height: 48px; margin-top: 8px; position: relative;"
                                         >
                                           ${comment.reactions && comment.reactions.filter((r) => r.reactors && r.reactors.length > 0).length > 0
                                             ? html`
