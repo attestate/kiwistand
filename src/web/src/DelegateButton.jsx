@@ -337,7 +337,7 @@ const DelegateButton = (props) => {
               Thanks! Your key is being added to Optimism (1-2 min).
               <br />
               <br />
-              This is so that you can upvote without having to confirm each time
+              This is so that you can like without having to confirm each time
               in your wallet
               <br />
               <br />
@@ -345,7 +345,7 @@ const DelegateButton = (props) => {
             </p>
           ) : (
             <p>
-              You can now upvote, submit and comment without needing to confirm
+              You can now like, submit and comment without needing to confirm
               the signing manually in your wallet!
             </p>
           )}

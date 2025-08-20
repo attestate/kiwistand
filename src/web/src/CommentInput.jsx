@@ -64,7 +64,7 @@ const SiteExplainer = () => {
           color: "#666",
         }}
       >
-        Want to leave a comment, upvote this link or join our community of 500+
+        Want to leave a comment, like this link or join our community of 500+
         Ethereum builders?
       </p>
 

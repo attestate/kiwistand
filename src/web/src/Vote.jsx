@@ -133,7 +133,7 @@ const Vote = (props) => {
 
     // Check wallet connection for both mini app and traditional users
     if (!isMiniApp && !signer) {
-      toast.error("Please connect your wallet to upvote");
+      toast.error("Please connect your wallet to like");
       return;
     }
     

@@ -90,7 +90,7 @@ export default async function index(theme) {
                     style="color: black; margin-top: 0; padding: 0 3rem 1rem 3rem; font-size: 1rem; text-align: center; font-weight: bold;"
                   >
                     Now you can<span style="color: ${theme.color};"
-                      ><span> </span> upvote, submit & comment links.</span
+                      ><span> </span> like, submit & comment links.</span
                     >
                   </p>
                   <tr>

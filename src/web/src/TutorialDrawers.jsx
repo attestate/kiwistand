@@ -116,7 +116,7 @@ const TutorialDrawers = () => {
           <div style={{ color: "#666", lineHeight: "1.6" }}>
             <p style={{ margin: "0 0 15px 0", fontSize: "16px", fontWeight: "500", color: "#333" }}>Earn karma by:</p>
             <ul style={{ margin: "0 0 20px 0", paddingLeft: "20px", fontSize: "15px" }}>
-              <li style={{ marginBottom: "10px" }}>Getting upvotes on your story submissions</li>
+              <li style={{ marginBottom: "10px" }}>Getting likes on your story submissions</li>
               <li style={{ marginBottom: "10px" }}>Receiving emoji reactions on your comments</li>
             </ul>
             <p style={{ margin: "0", fontSize: "14px" }}>Rankings update weekly. The more engagement you receive, the higher your karma score!</p>
@@ -161,7 +161,7 @@ const TutorialDrawers = () => {
               
               <div style={{ color: "#666", fontSize: "15px", lineHeight: "1.6" }}>
                 <p style={{ margin: "0 0 12px 0" }}>The leaderboard shows the top contributors to the Kiwi News community based on their karma scores.</p>
-                <p style={{ margin: "0" }}>Karma is earned through upvotes on your story submissions and reactions to your comments.</p>
+                <p style={{ margin: "0" }}>Karma is earned through likes on your story submissions and reactions to your comments.</p>
               </div>
             </div>
             

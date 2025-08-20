@@ -153,11 +153,11 @@ export default async function (theme) {
                     Connect your social accounts to ensure your submissions
                     remain visible to the community.
                   </p>
-                  <h2>How to upvote?</h2>
+                  <h2>How to like?</h2>
                   <p>
-                    Within a small community, upvoting carries a lot of weight.
+                    Within a small community, liking carries a lot of weight.
                     The recommendation here is to carefully consider what's
-                    worth upvoting and what isn't. Avoid upvoting things you
+                    worth liking and what isn't. Avoid liking things you
                     haven't read, watched, or vetted as worthy of other people's
                     time.
                   </p>

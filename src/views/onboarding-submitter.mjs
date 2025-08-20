@@ -144,7 +144,7 @@ export default async function (theme, identity) {
                     <div class="text-left">
                       <h2>Grow your Kiwi Score</h2>
                       <p>
-                        Every submission and every upvote your links receive
+                        Every submission and every like your links receive
                         give you one Kiwi point. Stand out in our community and
                         become a beloved curator of everyday and evergreen
                         content.

@@ -163,11 +163,11 @@ export default async function (theme, identity) {
                     <div class="text-left">
                       <h2>Test your Kiwi superpowers</h2>
                       <p>
-                        Use your Kiwipass superpowers to upvote links. Check the
-                        most popular links of the last month and upvote the ones
+                        Use your Kiwipass superpowers to like links. Check the
+                        most popular links of the last month and like the ones
                         you find interesting.
                         <br />
-                        <br />While upvoting, please be mindful of our<a
+                        <br />While liking, please be mindful of our<a
                           href="/guidelines"
                           target="_blank"
                           >${" "}<u>Guidelines</u></a
@@ -179,7 +179,7 @@ export default async function (theme, identity) {
                         target="_blank"
                       >
                         <button id="button-onboarding" style="margin-right: 0;">
-                          Upvote your first link
+                          Like your first link
                         </button></a
                       >
                     </div>
