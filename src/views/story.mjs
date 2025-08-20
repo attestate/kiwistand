@@ -395,7 +395,11 @@ export default async function (trie, theme, index, value, referral, commentIndex
                   null,
                   null,
                   null,
-                )({ ...story, index })}
+                  false, // invert
+                  "", // query
+                  false, // debugMode
+                  true, // isAboveFold = true for main story
+                )({ ...story, index }, 0)}
                 <tr class="mobile-only-spacer" style="height: 20px;"><td></td></tr>
               </tbody>
               ${upvoterProfiles.length > 0

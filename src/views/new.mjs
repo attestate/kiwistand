@@ -185,16 +185,19 @@ export default async function (trie, theme) {
                 ${SecondHeader(theme, "new")}
               </tr>
               ${items.map(
-                Row(
-                  null,
-                  "/new",
-                  "margin-bottom: 20px;",
-                  null,
-                  null,
-                  null,
-                  false,
-                  query,
-                ),
+                (item, i) =>
+                  Row(
+                    null,
+                    "/new",
+                    "margin-bottom: 20px;",
+                    null,
+                    null,
+                    null,
+                    false,
+                    query,
+                    false, // debugMode
+                    i < 2, // isAboveFold = true for first 2 items only
+                  )(item, i),
               )}
             </table>
             ${Footer(theme, "/new")}

@@ -199,14 +199,19 @@ export default async function index(trie, theme, page, period, domain) {
                   </tr>`
                 : null}
               ${stories.map(
-                Row(
-                  null,
-                  "/best",
-                  "margin-bottom: 20px;",
-                  false,
-                  false,
-                  period,
-                ),
+                (story, i) =>
+                  Row(
+                    null,
+                    "/best",
+                    "margin-bottom: 20px;",
+                    false,
+                    false,
+                    period,
+                    false, // invert
+                    "", // query
+                    false, // debugMode
+                    i < 2, // isAboveFold = true for first 2 stories only
+                  )(story, i),
               )}
               <tr class="spacer" style="height:15px"></tr>
               <tr>

@@ -894,22 +894,26 @@ export default async function (trie, theme, page, domain, identity, hash, varian
                   null,
                   false,
                   undefined,
-                  true, // isPinned = true
-                )(pinnedStory)
+                  false, // debugMode
+                  true, // isAboveFold = true for pinned story
+                )(pinnedStory, 0)
               }
               ${stories // Render first 3 stories
                 .slice(0, 3)
                 .map(
-                  Row(
-                    start, // Use start index from content
-                    "/",
-                    "margin-bottom: 20px;",
-                    null,
-                    null,
-                    null,
-                    false,
-                    currentQuery,
-                  ),
+                  (story, i) =>
+                    Row(
+                      start, // Use start index from content
+                      "/",
+                      "margin-bottom: 20px;",
+                      null,
+                      null,
+                      null,
+                      false,
+                      currentQuery,
+                      false, // debugMode
+                      i < 2, // isAboveFold = true for first 2 stories only
+                    )(story, i),
                 )}
               <tr>
                 <td>
@@ -1006,6 +1010,8 @@ export default async function (trie, theme, page, domain, identity, hash, varian
                       null,
                       false,
                       currentQuery,
+                      false, // debugMode
+                      false, // isAboveFold = false for all remaining stories
                     )(story, i + 3), // Adjust index offset
                 )}
             </table>
