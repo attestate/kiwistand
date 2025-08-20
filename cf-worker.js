@@ -48,10 +48,13 @@ async function swr({ request, event }) {
     if (shouldRevalidate(cachedRes)) {
       cacheStatus = CacheStatus.REVALIDATING;
 
+      // Clone the cached response before using it for cache.put
+      const responseForCache = cachedRes.clone();
+      
       // mark as revalidating so we don't double-fetch
       await cache.put(
         cacheKey,
-        addHeaders(cachedRes, {
+        addHeaders(responseForCache, {
           [CACHE_STATUS_HEADER]: CacheStatus.REVALIDATING,
         }),
       );
@@ -61,9 +64,7 @@ async function swr({ request, event }) {
 
     return addHeaders(cachedRes, {
       [CACHE_STATUS_HEADER]: cacheStatus,
-      [CACHE_CONTROL_HEADER]: cachedRes.headers.get(
-        CLIENT_CACHE_CONTROL_HEADER,
-      ),
+      [CACHE_CONTROL_HEADER]: cachedRes.headers.get(CLIENT_CACHE_CONTROL_HEADER),
     });
   }
 
@@ -72,7 +73,7 @@ async function swr({ request, event }) {
 
 async function fetchAndCache({ cacheKey, request, event }) {
   const cache = caches.default;
-  const originRes = await fetch(addCacheBustParam(request));
+  const originRes = await fetch(request);  // No cache busting
 
   const cacheControl = resolveCacheControlHeaders(request, originRes);
   const headers = {
@@ -81,11 +82,13 @@ async function fetchAndCache({ cacheKey, request, event }) {
     "x-origin-cf-cache-status": originRes.headers.get("cf-cache-status"),
   };
 
+  // Clone for cache storage if needed
   if (cacheControl?.edge) {
+    const responseForCache = originRes.clone();
     event.waitUntil(
       cache.put(
         cacheKey,
-        addHeaders(originRes, {
+        addHeaders(responseForCache, {
           ...headers,
           [CACHE_STATUS_HEADER]: CacheStatus.HIT,
           [CACHE_CONTROL_HEADER]: cacheControl.edge.value,
@@ -122,20 +125,18 @@ function resolveCacheControlHeaders(req, res) {
 }
 
 function resolveEdgeCacheControl({ sMaxage, staleWhileRevalidate }) {
-  if (!sMaxage) return;
+  if (sMaxage === undefined) return;
   const staleAt = Date.now() + sMaxage * 1000;
 
   if (staleWhileRevalidate === 0) {
     return { value: "immutable", staleAt };
   }
 
-  if (!staleWhileRevalidate) {
-    return { value: `max-age=${sMaxage}`, staleAt };
-  }
-
-  return {
-    value: `max-age=${sMaxage + staleWhileRevalidate}`,
-    staleAt,
+  // Don't add staleWhileRevalidate to the cache time sent to Cloudflare
+  // The worker handles SWR internally, Cloudflare should only cache for sMaxage
+  return { 
+    value: `max-age=${sMaxage}`, 
+    staleAt 
   };
 }
 
@@ -148,15 +149,16 @@ function parseCacheControl(value = "") {
   const parts = value.replace(/ +/g, "").split(",");
   return parts.reduce((result, part) => {
     const [key, val] = part.split("=");
-    result[toCamelCase(key)] = Number(val) || true;
+    result[toCamelCase(key)] = val !== undefined ? Number(val) : true;
     return result;
   }, {});
 }
 
 function addHeaders(response, headers) {
-  const resp = new Response(response.clone().body, {
+  // Clone the response to avoid body consumption issues
+  const resp = new Response(response.body, {
     status: response.status,
-    headers: response.headers,
+    headers: new Headers(response.headers),
   });
 
   Object.entries(headers).forEach(([key, value]) => {
