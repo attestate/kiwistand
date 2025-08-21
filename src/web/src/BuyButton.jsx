@@ -45,7 +45,7 @@ export async function prepare(key) {
     optimism: (await fetchBalance({ address, chainId: optimism.id })).value,
   };
 
-  const price = 400000000000000n;
+  const price = 14000000000000000n;
 
   if (balance.optimism < price) {
     let error = `Need at least ${formatEther(price)} ETH on Optimism`;
