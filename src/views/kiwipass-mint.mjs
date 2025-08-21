@@ -186,7 +186,7 @@ export default async function (theme) {
                       <!-- Small print -->
                       <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e5e7eb;">
                         <p style="font-size: 14px; color: #6b7280; margin: 0; line-height: 1.5;">
-                          Price: 0.014 ETH • Creates app key
+                          Price: 0.0014 ETH • Creates app key
                         </p>
                       </div>
                     </div>
