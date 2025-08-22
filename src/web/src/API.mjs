@@ -100,9 +100,7 @@ export async function send(
 export async function fetchStoryAnalytics(href, signer) {
   // Create analytics message using same format as other messages
   const message = messageFab("analytics", href, "analytics");
-  
-  console.log("Signing analytics message:", message);
-  
+
   // Sign the message - handle both ethers Wallet and wagmi wallet client
   let signature;
   if (signer._signTypedData) {
@@ -124,9 +122,7 @@ export async function fetchStoryAnalytics(href, signer) {
     console.error("Signer doesn't support typed data signing");
     return null;
   }
-  
-  console.log("Signature generated:", signature);
-  
+
   const body = JSON.stringify({
     ...message,
     signature,
