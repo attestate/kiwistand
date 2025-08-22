@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { WagmiConfig, useAccount, useWalletClient } from "wagmi";
+import { WagmiConfig, useAccount } from "wagmi";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { Wallet } from "@ethersproject/wallet";
 import { client, chains, getProvider } from "./client.mjs";
@@ -21,23 +21,19 @@ const AnalyticsInner = (props) => {
   const [analyticsData, setAnalyticsData] = useState({});
   const [loading, setLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
-  const { address: wagmiAddress, isConnected } = useAccount();
-  const { data: result } = useWalletClient();
+  const { address: wagmiAddress } = useAccount();
 
-  // Get local account and provider - same as Vote.jsx
+  // Get local account and provider
   const provider = getProvider();
   const localAccount = getLocalAccount(wagmiAddress, props.allowlist);
 
-  // Determine address - same logic as Vote.jsx
-  let address = localAccount ? localAccount.identity : wagmiAddress;
-
-  // Determine signer - exact same logic as Vote.jsx
-  let signer, isLocal;
+  // Only use analytics if we have a local account
+  // Never use custody wallet for analytics
+  let address = localAccount ? localAccount.identity : null;
+  let signer = null;
+  
   if (localAccount && localAccount.privateKey) {
     signer = new Wallet(localAccount.privateKey, provider);
-    isLocal = true;
-  } else {
-    signer = result;
   }
 
   useEffect(() => {
