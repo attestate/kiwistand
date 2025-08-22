@@ -7,7 +7,7 @@ import Database from "better-sqlite3";
 
 import log from "./logger.mjs";
 import { getSubmission } from "./cache.mjs";
-import { resolve } from "./ens.mjs";
+import { resolve, fetchENSData } from "./ens.mjs";
 import * as email from "./email.mjs";
 import { truncateComment } from "./views/activity.mjs";
 import { getSlug } from "./utils.mjs";
@@ -68,9 +68,33 @@ export async function triggerUpvoteNotification(message) {
     // Don't notify if the upvoter is the author
     if (message.identity === submission.identity) return;
 
-    // Get upvoter's display name
+    // Get upvoter's display name and try to determine Neynar score
     const ensData = await resolve(message.identity);
     if (!ensData.displayName) return;
+
+    // Determine Neynar quality score for the upvoter
+    const MIN_NEYNAR_SCORE = parseFloat(env.MIN_NEYNAR_SCORE || "0.7");
+    let neynarScore = typeof ensData.neynarScore === "number" ? ensData.neynarScore : 0;
+
+    // If score is not known from cache, try fetching richer ENS/Neynar data
+    if (!neynarScore || Number.isNaN(neynarScore)) {
+      try {
+        const richProfile = await fetchENSData(message.identity.toLowerCase());
+        if (richProfile?.farcaster?.score && typeof richProfile.farcaster.score === "number") {
+          neynarScore = richProfile.farcaster.score;
+        }
+      } catch (_) {
+        // Ignore fetch errors; we'll fall back to default (0)
+      }
+    }
+
+    // Only notify if upvoter meets Neynar quality threshold
+    if (!(neynarScore >= MIN_NEYNAR_SCORE)) {
+      log(
+        `Skipping Neynar upvote notification: score ${neynarScore} below threshold ${MIN_NEYNAR_SCORE} for ${message.identity}`,
+      );
+      return;
+    }
 
     // Filter out banned users from receiving notifications
     let receivers = [submission.identity];
@@ -100,7 +124,7 @@ export async function triggerUpvoteNotification(message) {
     // Send Neynar notification if we have FID (production only)
     if (targetFids.length > 0 && env.NODE_ENV === "production") {
       try {
-        const fcTitle = "New upvote"; // Max 32 chars
+        const fcTitle = "New like"; // Max 32 chars
         const fcBody = `${ensData.displayName} upvoted: ${submission.title.substring(0, 128 - ensData.displayName.length - 11)}`; // Max 128 chars total
         
         await sendNotification(
