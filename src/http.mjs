@@ -98,6 +98,7 @@ import {
   storeMiniAppUpvote,
 } from "./cache.mjs";
 import normalizeUrl from "normalize-url";
+import * as interactions from "./interactions.mjs";
 import appCache from "./cache.mjs"; // For LRU cache used by ENS profiles
 import frameSubscribe from "./views/frame-subscribe.mjs";
 import { sendNotification } from "./neynar.mjs";
@@ -2248,6 +2249,94 @@ export async function launch(trie, libp2p, isPrimary = true) {
       return sendError(reply, 500, "Internal Server Error", error.message);
     }
   });
+
+  // Record impressions and clicks for content
+  app.post("/api/v1/interactions/batch", async (request, reply) => {
+    reply.header("Cache-Control", "no-cache");
+    
+    const { impressions = [], clicks = [] } = request.body;
+    
+    // Validate input
+    if (!Array.isArray(impressions) || !Array.isArray(clicks)) {
+      return sendError(reply, 400, "Bad Request", "Impressions and clicks must be arrays");
+    }
+    
+    // Validate each interaction has required fields
+    for (const impression of impressions) {
+      if (!impression.contentId || !impression.contentType || !impression.message || !impression.signature) {
+        return sendError(reply, 400, "Bad Request", "Invalid impression data");
+      }
+      if (impression.contentType !== "submission" && impression.contentType !== "comment") {
+        return sendError(reply, 400, "Bad Request", "contentType must be 'submission' or 'comment'");
+      }
+    }
+    
+    for (const click of clicks) {
+      if (!click.contentId || !click.contentType || !click.message || !click.signature) {
+        return sendError(reply, 400, "Bad Request", "Invalid click data");
+      }
+      if (click.contentType !== "submission" && click.contentType !== "comment") {
+        return sendError(reply, 400, "Bad Request", "contentType must be 'submission' or 'comment'");
+      }
+    }
+    
+    try {
+      // Process the batch
+      const result = await interactions.recordBatch(impressions, clicks);
+      
+      if (result.success) {
+        const code = 200;
+        const httpMessage = "OK";
+        const details = `Recorded ${result.results.impressions.success} impressions and ${result.results.clicks.success} clicks`;
+        return sendStatus(reply, code, httpMessage, details, result.results);
+      } else {
+        return sendError(reply, 500, "Internal Server Error", result.error);
+      }
+    } catch (err) {
+      log(`Error recording interactions batch: ${err.toString()}`);
+      return sendError(reply, 500, "Internal Server Error", err.toString());
+    }
+  });
+
+  // Get user's interaction history for sync
+  app.get("/api/v1/interactions/sync", async (request, reply) => {
+    const { signature, message } = request.query;
+    
+    if (!signature || !message) {
+      return sendError(reply, 400, "Bad Request", "Signature and message required");
+    }
+    
+    try {
+      // Parse the message if it's a JSON string
+      const parsedMessage = typeof message === 'string' ? JSON.parse(message) : message;
+      
+      // Verify the signature and get the user identity (custody address)
+      const userIdentity = await interactions.verifyInteraction(parsedMessage, signature);
+      
+      if (!userIdentity) {
+        return sendError(reply, 401, "Unauthorized", "Invalid signature or not eligible");
+      }
+      
+      // Get user's interactions using their identity (custody address)
+      const userInteractions = interactions.getUserInteractions(userIdentity);
+      
+      const code = 200;
+      const httpMessage = "OK";
+      const details = `Found ${userInteractions.totalImpressions} impressions and ${userInteractions.totalClicks} clicks`;
+      
+      // Cache for 1 minute to reduce database load
+      reply.header(
+        "Cache-Control",
+        "private, max-age=60, must-revalidate",
+      );
+      
+      return sendStatus(reply, code, httpMessage, details, userInteractions);
+    } catch (err) {
+      log(`Error syncing interactions: ${err.toString()}`);
+      return sendError(reply, 500, "Internal Server Error", err.toString());
+    }
+  });
+
 
   app.get("/api/v1/image-upload-token", async (request, reply) => {
     reply.header("Cache-Control", "no-cache");

@@ -443,6 +443,8 @@ const row = (
               ? "content-row-elevated"
               : ""}"
             style="${invert ? "display:none;" : ""} ${style}"
+            data-content-id="${submissionId}"
+            data-content-type="submission"
           >
             ${canRenderTweetPreview
               ? html`<a

@@ -1696,3 +1696,54 @@ a.meta-link:hover, span.meta-link:hover {
 .reactions-container {
   min-height: 48px \!important; /* Prevent height change when React loads */
 }
+
+/* Styles for clicked/visited content rows */
+.clicked-content {
+  opacity: 0.6;
+}
+
+.clicked-content .story-link-container a,
+.clicked-content .story-title,
+.clicked-link a {
+  color: var(--visited-link) !important;
+}
+
+/* Lighter grey for the metadata and interaction buttons */
+.clicked-content .story-subtitle,
+.clicked-content .interaction-bar {
+  opacity: 0.7;
+}
+
+/* Keep images slightly faded but still visible */
+.clicked-content img {
+  opacity: 0.7;
+}
+
+/* Disable hover effect on desktop for clicked content */
+@media (min-width: 769px) {
+  .clicked-content:hover {
+    background-color: transparent !important;
+    opacity: 0.6; /* Keep the same opacity, no change on hover */
+  }
+  
+  /* Also disable the hover background color that's applied inline or via other classes */
+  .content-row.clicked-content:hover,
+  .row-container.clicked-content:hover,
+  div.clicked-content:hover,
+  tr:has(.clicked-content):hover,
+  td:has(.clicked-content):hover {
+    background-color: transparent !important;
+  }
+  
+  /* Prevent any background color changes on hover for clicked content */
+  .clicked-content,
+  .clicked-content * {
+    transition: none !important;
+  }
+}
+
+/* Override for inverted rows to maintain their style */
+.inverted-row.clicked-content {
+  filter: invert(100%) brightness(2);
+  opacity: 0.7;
+}
