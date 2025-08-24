@@ -4,6 +4,7 @@ import PullToRefresh from "pulltorefreshjs";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import sdk from "@farcaster/frame-sdk";
+import { Providers } from "./providers.jsx";
 
 // Make SDK available globally for use in other parts of the app
 window.sdk = sdk;
@@ -134,11 +135,13 @@ async function addSubmitButton(allowlist, delegations, toast) {
 
     createRoot(submitButtonContainer).render(
       <StrictMode>
-        <SubmitButton
-          toast={toast}
-          allowlist={allowlist}
-          delegations={delegations}
-        />
+        <Providers>
+          <SubmitButton
+            toast={toast}
+            allowlist={allowlist}
+            delegations={delegations}
+          />
+        </Providers>
       </StrictMode>,
     );
   }
@@ -163,7 +166,9 @@ async function addAnalytics(allowlist) {
     
     createRoot(container).render(
       <StrictMode>
-        <Analytics allowlist={allowlist} />
+        <Providers>
+          <Analytics allowlist={allowlist} />
+        </Providers>
       </StrictMode>,
     );
   }
@@ -177,7 +182,9 @@ async function addDecayingPriceLink() {
 
     createRoot(linkContainer).render(
       <StrictMode>
-        <Link initialPrice={price} />
+        <Providers>
+          <Link initialPrice={price} />
+        </Providers>
       </StrictMode>,
     );
   }
@@ -190,7 +197,9 @@ async function addInviteLink(toast) {
 
     createRoot(linkContainer).render(
       <StrictMode>
-        <InviteLink toast={toast} />
+        <Providers>
+          <InviteLink toast={toast} />
+        </Providers>
       </StrictMode>,
     );
   }
@@ -205,7 +214,9 @@ async function addDynamicNavElements() {
       const icon = elem.getAttribute("data-icon");
       createRoot(elem).render(
         <StrictMode>
-          <BottomNavElem icon={icon} />
+          <Providers>
+            <BottomNavElem icon={icon} />
+          </Providers>
         </StrictMode>,
       );
     });
@@ -226,14 +237,16 @@ async function addDynamicComments(allowlist, delegations, toast) {
       const hasPreview = arrow.getAttribute("data-has-preview") === "true";
       createRoot(arrow).render(
         <StrictMode>
-          <CommentSection
-            commentCount={commentCount}
-            storyIndex={storyIndex}
-            hasPreview={hasPreview}
-            allowlist={allowlist}
-            delegations={delegations}
-            toast={toast}
-          />
+          <Providers>
+            <CommentSection
+              commentCount={commentCount}
+              storyIndex={storyIndex}
+              hasPreview={hasPreview}
+              allowlist={allowlist}
+              delegations={delegations}
+              toast={toast}
+            />
+          </Providers>
         </StrictMode>,
       );
     });
@@ -248,12 +261,14 @@ async function addDynamicComments(allowlist, delegations, toast) {
       const commentCount = arrow.getAttribute("data-comment-count");
       createRoot(arrow).render(
         <StrictMode>
-          <ChatBubble
-            allowlist={allowlist}
-            delegations={delegations}
-            storyIndex={storyIndex}
-            commentCount={commentCount}
-          />
+          <Providers>
+            <ChatBubble
+              allowlist={allowlist}
+              delegations={delegations}
+              storyIndex={storyIndex}
+              commentCount={commentCount}
+            />
+          </Providers>
         </StrictMode>,
       );
     });
@@ -285,16 +300,18 @@ async function addVotes(allowlist, delegations, toast) {
           }
           createRoot(arrow).render(
             <StrictMode>
-              <Vote
-                isad={isad}
-                title={title}
-                href={href}
-                allowlist={allowlist}
-                delegations={delegations}
-                upvoters={upvoters}
-                toast={toast}
-                editorPicks={editorPicks}
-              />
+              <Providers>
+                <Vote
+                  isad={isad}
+                  title={title}
+                  href={href}
+                  allowlist={allowlist}
+                  delegations={delegations}
+                  upvoters={upvoters}
+                  toast={toast}
+                  editorPicks={editorPicks}
+                />
+              </Providers>
             </StrictMode>,
           );
           observer.unobserve(arrow); // Stop observing after rendering
@@ -315,7 +332,9 @@ async function addFriendBuyButton(toast, allowlist) {
     const BuyButton = (await import("./FriendBuyButton.jsx")).default;
     createRoot(buyButtonContainer).render(
       <StrictMode>
-        <BuyButton toast={toast} allowlist={allowlist} />
+        <Providers>
+          <BuyButton toast={toast} allowlist={allowlist} />
+        </Providers>
       </StrictMode>,
     );
   }
@@ -327,14 +346,16 @@ async function addEmailSubscriptionForm(allowlist, delegations, toast) {
     const { ConnectedEmailSubscriptionForm } = await import("./Bell.jsx");
     createRoot(elem).render(
       <StrictMode>
-        <ConnectedEmailSubscriptionForm
-          allowlist={allowlist}
-          delegations={delegations}
-          toast={toast}
-          onSuccess={() => {
-            window.location.href = "/demonstration";
-          }}
-        />
+        <Providers>
+          <ConnectedEmailSubscriptionForm
+            allowlist={allowlist}
+            delegations={delegations}
+            toast={toast}
+            onSuccess={() => {
+              window.location.href = "/demonstration";
+            }}
+          />
+        </Providers>
       </StrictMode>,
     );
   }
@@ -350,11 +371,13 @@ async function addBuyButton(allowlistPromise, delegationsPromise, toast) {
     ]);
     createRoot(buyButtonContainer).render(
       <StrictMode>
-        <BuyButton
-          allowlist={allowlist}
-          delegations={delegations}
-          toast={toast}
-        />
+        <Providers>
+          <BuyButton
+            allowlist={allowlist}
+            delegations={delegations}
+            toast={toast}
+          />
+        </Providers>
       </StrictMode>,
     );
   }
@@ -369,7 +392,9 @@ async function addProfileDisplay() {
     const ProfileWithConfig = (await import("./ProfileWithConfig.jsx")).default;
     createRoot(profileContainer).render(
       <StrictMode>
-        <ProfileWithConfig />
+        <Providers>
+          <ProfileWithConfig />
+        </Providers>
       </StrictMode>,
     );
   }
@@ -393,13 +418,15 @@ async function addCommentInput(toast, allowlist, delegations) {
 
     createRoot(commentInput).render(
       <StrictMode>
-        <CommentInputComponent
-          storyIndex={storyIndex}
-          toast={toast}
-          allowlist={allowlist}
-          delegations={delegations}
-          style={customStyle}
-        />
+        <Providers>
+          <CommentInputComponent
+            storyIndex={storyIndex}
+            toast={toast}
+            allowlist={allowlist}
+            delegations={delegations}
+            style={customStyle}
+          />
+        </Providers>
       </StrictMode>,
     );
   }
@@ -415,13 +442,15 @@ async function addDelegateButton(allowlist, delegations, toast) {
       delegateButtonContainer.getAttribute("is-app-onboarding") === "true";
     createRoot(delegateButtonContainer).render(
       <StrictMode>
-        <DelegateButton
-          allowlist={allowlist}
-          delegations={delegations}
-          toast={toast}
-          showRedirect={showRedirect}
-          isAppOnboarding={isAppOnboarding}
-        />
+        <Providers>
+          <DelegateButton
+            allowlist={allowlist}
+            delegations={delegations}
+            toast={toast}
+            showRedirect={showRedirect}
+            isAppOnboarding={isAppOnboarding}
+          />
+        </Providers>
       </StrictMode>,
     );
   }
@@ -433,11 +462,13 @@ async function addConnectedComponents(allowlist, delegations, toast) {
     const { ConnectedTextConnectButton } = await import("./Navigation.jsx");
     createRoot(connectButton).render(
       <StrictMode>
-        <ConnectedTextConnectButton
-          allowlist={allowlist}
-          delegations={delegations}
-          toast={toast}
-        />
+        <Providers>
+          <ConnectedTextConnectButton
+            allowlist={allowlist}
+            delegations={delegations}
+            toast={toast}
+          />
+        </Providers>
       </StrictMode>,
     );
   }
@@ -452,7 +483,9 @@ async function addConnectedComponents(allowlist, delegations, toast) {
       bellButton.style = "";
       createRoot(bellButton).render(
         <StrictMode>
-          <Bell toast={toast} allowlist={allowlist} delegations={delegations} />
+          <Providers>
+            <Bell toast={toast} allowlist={allowlist} delegations={delegations} />
+          </Providers>
         </StrictMode>,
       );
     }
@@ -464,7 +497,9 @@ async function addConnectedComponents(allowlist, delegations, toast) {
     searchButton.style = "";
     createRoot(searchButton).render(
       <StrictMode>
-        <Search />
+        <Providers>
+          <Search />
+        </Providers>
       </StrictMode>,
     );
   }
@@ -475,7 +510,9 @@ async function addConnectedComponents(allowlist, delegations, toast) {
     import("./DesktopSearch.jsx").then((module) => {
       createRoot(desktopSearchContainer).render(
         <StrictMode>
-          <module.default />
+          <Providers>
+            <module.default />
+          </Providers>
         </StrictMode>,
       );
     });
@@ -487,12 +524,14 @@ async function addConnectedComponents(allowlist, delegations, toast) {
       const Bell = (await import("./Bell.jsx")).default;
       createRoot(mobileBellButton).render(
         <StrictMode>
-          <Bell
-            toast={toast}
-            mobile
-            allowlist={allowlist}
-            delegations={delegations}
-          />
+          <Providers>
+            <Bell
+              toast={toast}
+              mobile
+              allowlist={allowlist}
+              delegations={delegations}
+            />
+          </Providers>
         </StrictMode>,
       );
     }
@@ -503,11 +542,13 @@ async function addConnectedComponents(allowlist, delegations, toast) {
     const { ConnectedProfile } = await import("./Navigation.jsx");
     createRoot(profileLink).render(
       <StrictMode>
-        <ConnectedProfile
-          toast={toast}
-          allowlist={allowlist}
-          delegations={delegations}
-        />
+        <Providers>
+          <ConnectedProfile
+            toast={toast}
+            allowlist={allowlist}
+            delegations={delegations}
+          />
+        </Providers>
       </StrictMode>,
     );
   }
@@ -517,7 +558,9 @@ async function addConnectedComponents(allowlist, delegations, toast) {
     const { ConnectedDisconnectButton } = await import("./Navigation.jsx");
     createRoot(disconnect).render(
       <StrictMode>
-        <ConnectedDisconnectButton toast={toast} />
+        <Providers>
+          <ConnectedDisconnectButton toast={toast} />
+        </Providers>
       </StrictMode>,
     );
   }
@@ -531,7 +574,9 @@ async function addConnectedComponents(allowlist, delegations, toast) {
     );
     createRoot(simpledisconnect).render(
       <StrictMode>
-        <ConnectedSimpleDisconnectButton toast={toast} />
+        <Providers>
+          <ConnectedSimpleDisconnectButton toast={toast} />
+        </Providers>
       </StrictMode>,
     );
   }
@@ -542,7 +587,9 @@ async function addConnectedComponents(allowlist, delegations, toast) {
     );
     createRoot(headerdisconnect).render(
       <StrictMode>
-        <ConnectedSimpleDisconnectButton label="Disconnect" toast={toast} />
+        <Providers>
+          <ConnectedSimpleDisconnectButton label="Disconnect" toast={toast} />
+        </Providers>
       </StrictMode>,
     );
   }
@@ -554,7 +601,9 @@ async function addTGLink(allowlist) {
     const TelegramLink = (await import("./TelegramLink.jsx")).default;
     createRoot(elem).render(
       <StrictMode>
-        <TelegramLink allowlist={allowlist} />
+        <Providers>
+          <TelegramLink allowlist={allowlist} />
+        </Providers>
       </StrictMode>,
     );
   }
@@ -566,7 +615,9 @@ async function addModals(allowlist, delegations, toast) {
     const NFTModal = (await import("./NFTModal.jsx")).default;
     createRoot(nftmodal).render(
       <StrictMode>
-        <NFTModal />
+        <Providers>
+          <NFTModal />
+        </Providers>
       </StrictMode>,
     );
   }
@@ -576,11 +627,13 @@ async function addModals(allowlist, delegations, toast) {
     const DelegationModal = (await import("./DelegationModal.jsx")).default;
     createRoot(delegationModal).render(
       <StrictMode>
-        <DelegationModal
-          toast={toast}
-          allowlist={allowlist}
-          delegations={delegations}
-        />
+        <Providers>
+          <DelegationModal
+            toast={toast}
+            allowlist={allowlist}
+            delegations={delegations}
+          />
+        </Providers>
       </StrictMode>,
     );
   }
@@ -590,7 +643,9 @@ async function addModals(allowlist, delegations, toast) {
     const OnboardingModal = (await import("./OnboardingModal.jsx")).default;
     createRoot(onboarding).render(
       <StrictMode>
-        <OnboardingModal />
+        <Providers>
+          <OnboardingModal />
+        </Providers>
       </StrictMode>,
     );
   }
@@ -605,15 +660,17 @@ async function addToaster() {
 
   createRoot(newElement).render(
     <StrictMode>
-      <Toaster
-        toastOptions={{
-          success: {
-            iconTheme: {
-              primary: "rgb(175, 192, 70)",
+      <Providers>
+        <Toaster
+          toastOptions={{
+            success: {
+              iconTheme: {
+                primary: "rgb(175, 192, 70)",
+              },
             },
-          },
-        }}
-      />
+          }}
+        />
+      </Providers>
     </StrictMode>,
   );
   return toast;
@@ -629,7 +686,9 @@ async function addAnalyticsConsent() {
   const AnalyticsConsent = (await import("./AnalyticsConsent.jsx")).default;
   createRoot(document.getElementById("analytics-consent-container")).render(
     <StrictMode>
-      <AnalyticsConsent />
+      <Providers>
+        <AnalyticsConsent />
+      </Providers>
     </StrictMode>,
   );
 }
@@ -644,7 +703,9 @@ async function addTestFlightQR() {
   const TestFlightQR = (await import("./TestFlightQR.jsx")).default;
   createRoot(document.getElementById("testflight-qr-container")).render(
     <StrictMode>
-      <TestFlightQR />
+      <Providers>
+        <TestFlightQR />
+      </Providers>
     </StrictMode>,
   );
 }
@@ -655,7 +716,9 @@ async function addMinuteCountdown() {
     const Countdown = (await import("./MinuteCountdown.jsx")).default;
     createRoot(elem).render(
       <StrictMode>
-        <Countdown />
+        <Providers>
+          <Countdown />
+        </Providers>
       </StrictMode>,
     );
   }
@@ -667,7 +730,9 @@ async function addTutorialDrawers() {
     const TutorialDrawers = (await import("./TutorialDrawers.jsx")).default;
     createRoot(tutorialContainer).render(
       <StrictMode>
-        <TutorialDrawers />
+        <Providers>
+          <TutorialDrawers />
+        </Providers>
       </StrictMode>,
     );
   }
@@ -684,7 +749,9 @@ async function addEmbedDrawer(toast) {
   const EmbedDrawer = (await import("./EmbedDrawer.jsx")).default;
   createRoot(document.getElementById("embed-drawer-container")).render(
     <StrictMode>
-      <EmbedDrawer toast={toast} />
+      <Providers>
+        <EmbedDrawer toast={toast} />
+      </Providers>
     </StrictMode>,
   );
 }
@@ -700,7 +767,9 @@ async function addRewardsDrawer() {
   const RewardsDrawer = (await import("./RewardsDrawer.jsx")).default;
   createRoot(document.getElementById("rewards-drawer-container")).render(
     <StrictMode>
-      <RewardsDrawer />
+      <Providers>
+        <RewardsDrawer />
+      </Providers>
     </StrictMode>,
   );
 }
@@ -712,7 +781,9 @@ async function addAvatar(allowlist) {
     avatarElem.forEach((element) => {
       createRoot(element).render(
         <StrictMode>
-          <Avatar allowlist={allowlist} />
+          <Providers>
+            <Avatar allowlist={allowlist} />
+          </Providers>
         </StrictMode>,
       );
     });
@@ -725,7 +796,9 @@ async function addBackButton() {
     const BackButton = (await import("./BackButton.jsx")).default;
     createRoot(backButtonElem).render(
       <StrictMode>
-        <BackButton />
+        <Providers>
+          <BackButton />
+        </Providers>
       </StrictMode>,
     );
   }
@@ -734,19 +807,22 @@ async function addBackButton() {
 async function addStoryEmojiReactions(allowlist, delegations, toast) {
   const reactionContainers = document.querySelectorAll(".reactions-container");
   if (reactionContainers && reactionContainers.length > 0) {
-    const [commentSection, wagmi, rainbowKit, clientConfig] = await Promise.all(
+    const [commentSection, wagmi, tanstackQuery, rainbowKit, clientConfig] = await Promise.all(
       [
         import("./CommentSection.jsx"),
         import("wagmi"),
+        import("@tanstack/react-query"),
         import("@rainbow-me/rainbowkit"),
         import("./client.mjs"),
       ],
     );
 
     const { EmojiReaction } = commentSection;
-    const { WagmiConfig } = wagmi;
+    const { WagmiProvider } = wagmi;
+    const { QueryClient, QueryClientProvider } = tanstackQuery;
     const { RainbowKitProvider } = rainbowKit;
     const { client, chains } = clientConfig;
+    const queryClient = new QueryClient();
 
     reactionContainers.forEach((container) => {
       const commentData = container.getAttribute("data-comment");
@@ -760,16 +836,20 @@ async function addStoryEmojiReactions(allowlist, delegations, toast) {
         // Prepare the React component
         const reactComponent = (
           <StrictMode>
-            <WagmiConfig config={client}>
-              <RainbowKitProvider chains={chains}>
-                <EmojiReaction
-                  comment={comment}
-                  allowlist={allowlist}
-                  delegations={delegations}
-                  toast={toast}
-                />
-              </RainbowKitProvider>
-            </WagmiConfig>
+            <Providers>
+              <QueryClientProvider client={queryClient}>
+                <WagmiProvider config={client}>
+                  <RainbowKitProvider chains={chains}>
+                    <EmojiReaction
+                      comment={comment}
+                      allowlist={allowlist}
+                      delegations={delegations}
+                      toast={toast}
+                    />
+                  </RainbowKitProvider>
+                </WagmiProvider>
+              </QueryClientProvider>
+            </Providers>
           </StrictMode>
         );
 
@@ -789,7 +869,9 @@ async function addNFTPrice() {
       const selector = element.getAttribute("data-selector");
       createRoot(element).render(
         <StrictMode>
-          <NFTPrice fee={fee} selector={selector} />
+          <Providers>
+            <NFTPrice fee={fee} selector={selector} />
+          </Providers>
         </StrictMode>,
       );
     });
@@ -807,9 +889,11 @@ async function addKarmaElements() {
 
       createRoot(element).render(
         <StrictMode>
-          <Karma address={address} initial={initial}>
-            {initialContent}
-          </Karma>
+          <Providers>
+            <Karma address={address} initial={initial}>
+              {initialContent}
+            </Karma>
+          </Providers>
         </StrictMode>,
       );
     });
@@ -934,7 +1018,7 @@ async function addLeaderboardStats(allowlist, delegations) {
   
   let address;
   try {
-    const account = await getAccount();
+    const account = await getAccount(client);
     if (account && account.address) {
       address = account.address;
     }
@@ -951,26 +1035,33 @@ async function addLeaderboardStats(allowlist, delegations) {
   container.style.display = 'none';
   document.body.appendChild(container);
 
-  const [LeaderboardStats, wagmi, rainbowKit] = await Promise.all([
+  const [LeaderboardStats, wagmi, tanstackQuery, rainbowKit] = await Promise.all([
     import("./LeaderboardStats.jsx").then(m => m.default),
     import("wagmi"),
+    import("@tanstack/react-query"),
     import("@rainbow-me/rainbowkit"),
   ]);
   
-  const { WagmiConfig } = wagmi;
+  const { WagmiProvider } = wagmi;
+  const { QueryClient, QueryClientProvider } = tanstackQuery;
   const { RainbowKitProvider } = rainbowKit;
+  const queryClient = new QueryClient();
 
   createRoot(container).render(
     <StrictMode>
-      <WagmiConfig config={client}>
-        <RainbowKitProvider chains={chains}>
-          <LeaderboardStats 
-            allowlist={allowlist} 
-            delegations={delegations} 
-            address={address}
-          />
-        </RainbowKitProvider>
-      </WagmiConfig>
+      <Providers>
+        <QueryClientProvider client={queryClient}>
+          <WagmiProvider config={client}>
+            <RainbowKitProvider chains={chains}>
+              <LeaderboardStats 
+                allowlist={allowlist} 
+                delegations={delegations} 
+                address={address}
+              />
+            </RainbowKitProvider>
+          </WagmiProvider>
+        </QueryClientProvider>
+      </Providers>
     </StrictMode>,
   );
 }
@@ -1021,7 +1112,7 @@ async function startWatchAccount(allowlist, delegations) {
     import("@wagmi/core"),
   ]);
 
-  const account = await getAccount();
+  const account = await getAccount(client);
   let signer;
   try {
     signer = await getSigner(account, allowlist);

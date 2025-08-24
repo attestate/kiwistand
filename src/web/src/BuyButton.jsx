@@ -1,10 +1,11 @@
 import {
   useContractWrite,
-  WagmiConfig,
+  WagmiProvider,
   useAccount,
-  useNetwork,
-  useSwitchNetwork,
+  useChainId,
+  useSwitchChain,
 } from "wagmi";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Contract } from "@ethersproject/contracts";
 import { Provider } from "@ethersproject/providers";
 import { parseEther, formatEther } from "viem";
@@ -16,9 +17,9 @@ import { useState, useEffect } from "react";
 import useLocalStorageState from "use-local-storage-state";
 import { RainbowKitProvider, ConnectButton } from "@rainbow-me/rainbowkit";
 import {
-  prepareWriteContract,
+  simulateContract,
   getAccount,
-  fetchBalance,
+  getBalance,
   readContract,
 } from "@wagmi/core";
 import { base } from "wagmi/chains";
@@ -32,7 +33,7 @@ import InsufficientFundsSwap from "./InsufficientFundsSwap.jsx";
 import sdk from "@farcaster/frame-sdk";
 
 export async function prepare(key) {
-  const { address } = getAccount();
+  const { address } = getAccount(client);
   if (!address) {
     throw new Error("Account not available");
   }
@@ -42,7 +43,7 @@ export async function prepare(key) {
   if (code !== "0x") throw new Error("Smart accounts aren't supported");
 
   const balance = {
-    optimism: (await fetchBalance({ address, chainId: optimism.id })).value,
+    optimism: (await getBalance(client, { address, chainId: optimism.id })).value,
   };
 
   const price = 1400000000000000n;
@@ -58,7 +59,7 @@ export async function prepare(key) {
   const recipients = [];
   const values = [];
 
-  const config = await prepareWriteContract({
+  const { request } = await simulateContract(client, {
     address: addressDelegator,
     abi: abiDelegator,
     functionName: "setup",
@@ -66,6 +67,7 @@ export async function prepare(key) {
     value: price,
     chainId: optimism.id,
   });
+  const config = { request };
 
   return config;
 }
@@ -105,8 +107,8 @@ const addressDelegator = "0xe63496a8a9e6bd3ad9270236a890d78239441cf6";
 
 const newKey = Wallet.createRandom();
 const BuyButton = (props) => {
-  const { chain } = useNetwork();
-  const { switchNetwork } = useSwitchNetwork();
+  const chainId = useChainId();
+  const { switchChain } = useSwitchChain();
   const { discountEligible, allowlist, delegations, toast } = props;
   const from = useAccount();
   useEffect(() => {
@@ -174,7 +176,7 @@ const BuyButton = (props) => {
       setConfig(null);
 
       try {
-        if (!chain) {
+        if (!chainId) {
           setError(new Error("Waiting for network connection..."));
           return;
         }
@@ -193,7 +195,7 @@ const BuyButton = (props) => {
     generate();
   }, [
     key,
-    chain?.id,
+    chainId,
     discountEligible,
     from.address,
   ]);
@@ -225,14 +227,14 @@ const BuyButton = (props) => {
   }
 
   if (
-    (config && config.request && config.request.chainId !== chain.id) ||
+    (config && config.request && config.request.chainId !== chainId) ||
     (error && error.message.includes("Chain mismatch"))
   ) {
     let chainId = config && config.request ? config.request.chainId : null;
     if (
       config &&
       config.request &&
-      config.request.chainId !== chain.id &&
+      config.request.chainId !== chainId &&
       config.request.chainId === mainnet.id
     ) {
       name = "Ethereum";
@@ -241,7 +243,7 @@ const BuyButton = (props) => {
     if (
       config &&
       config.request &&
-      config.request.chainId !== chain.id &&
+      config.request.chainId !== chainId &&
       config.request.chainId === optimism.id
     ) {
       name = "Optimism";
@@ -257,7 +259,7 @@ const BuyButton = (props) => {
     }
     return (
       <div>
-        <button className="buy-button" onClick={() => switchNetwork?.(chainId)}>
+        <button className="buy-button" onClick={() => switchChain?.({ chainId: optimism.id })}>
           Switch to {name}
         </button>
       </div>
@@ -384,44 +386,48 @@ const Button = (props) => {
   );
 };
 
+const queryClient = new QueryClient();
+
 const Form = (props) => {
   const [discountEligible, setDiscountEligible] = useState(false);
 
   return (
-    <WagmiConfig config={client}>
-      <RainbowKitProvider chains={chains}>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <ConnectButton.Custom>
-            {({ account, chain, mounted, openConnectModal }) => {
-              const connected = account && chain && mounted;
-              if (connected)
-                return (
-                  <BuyButton {...props} discountEligible={discountEligible} />
-                );
-              return (
-                <button
-                  onClick={async (e) => {
-                    if (!connected) {
-                      openConnectModal();
-                      return;
-                    }
-                  }}
-                  className="buy-button"
-                >
-                  Connect Wallet
-                </button>
-              );
+    <QueryClientProvider client={queryClient}>
+      <WagmiProvider config={client}>
+        <RainbowKitProvider chains={chains}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
             }}
-          </ConnectButton.Custom>
-        </div>
-      </RainbowKitProvider>
-    </WagmiConfig>
+          >
+            <ConnectButton.Custom>
+              {({ account, chain, mounted, openConnectModal }) => {
+                const connected = account && chain && mounted;
+                if (connected)
+                  return (
+                    <BuyButton {...props} discountEligible={discountEligible} />
+                  );
+                return (
+                  <button
+                    onClick={async (e) => {
+                      if (!connected) {
+                        openConnectModal();
+                        return;
+                      }
+                    }}
+                    className="buy-button"
+                  >
+                    Connect Wallet
+                  </button>
+                );
+              }}
+            </ConnectButton.Custom>
+          </div>
+        </RainbowKitProvider>
+      </WagmiProvider>
+    </QueryClientProvider>
   );
 };
 

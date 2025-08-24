@@ -4,6 +4,7 @@ import { getAccount } from "@wagmi/core";
 import debounce from "lodash.debounce";
 
 import { isSafariOnIOS, isChromeOnAndroid, isRunningPWA } from "./session.mjs";
+import { client } from "./client.mjs";
 
 if (document.querySelector("nav-onboarding-modal")) {
   Modal.setAppElement("nav-onboarding-modal");

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { useAccount, WagmiConfig } from "wagmi";
+import { useAccount, WagmiProvider } from "wagmi";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { Wallet } from "@ethersproject/wallet";
 
@@ -73,13 +74,17 @@ const TelegramLink = (props) => {
   );
 };
 
+const queryClient = new QueryClient();
+
 const Container = (props) => {
   return (
-    <WagmiConfig config={client}>
-      <RainbowKitProvider chains={chains}>
-        <TelegramLink {...props} />
-      </RainbowKitProvider>
-    </WagmiConfig>
+    <QueryClientProvider client={queryClient}>
+      <WagmiProvider config={client}>
+        <RainbowKitProvider chains={chains}>
+          <TelegramLink {...props} />
+        </RainbowKitProvider>
+      </WagmiProvider>
+    </QueryClientProvider>
   );
 };
 export default Container;

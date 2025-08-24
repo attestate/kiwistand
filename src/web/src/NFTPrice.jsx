@@ -1,4 +1,5 @@
-import { useContractRead, WagmiConfig } from "wagmi";
+import { useReadContract, WagmiProvider } from "wagmi";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { parseEther, formatEther } from "viem";
 import { optimism } from "wagmi/chains";
 import { useEffect, useState } from "react";
@@ -133,11 +134,15 @@ export const PriceComponent = (props) => {
   );
 };
 
+const queryClient = new QueryClient();
+
 const WrappedPriceComponent = (props) => {
   return (
-    <WagmiConfig config={client}>
-      <PriceComponent {...props} />
-    </WagmiConfig>
+    <QueryClientProvider client={queryClient}>
+      <WagmiProvider config={client}>
+        <PriceComponent {...props} />
+      </WagmiProvider>
+    </QueryClientProvider>
   );
 };
 

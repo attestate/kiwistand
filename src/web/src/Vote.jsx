@@ -2,7 +2,8 @@
 import { useState, useEffect, useRef } from "react";
 
 import posthog from "posthog-js";
-import { useAccount, WagmiConfig } from "wagmi";
+import { useAccount, WagmiProvider } from "wagmi";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Wallet } from "@ethersproject/wallet";
 import { RainbowKitProvider, ConnectButton } from "@rainbow-me/rainbowkit";
 import { eligible } from "@attestate/delegator2";
@@ -37,22 +38,26 @@ const iconFullSVG = (
   </svg>
 );
 
+const queryClient = new QueryClient();
+
 const Container = (props) => {
   const [modalIsOpen, setIsOpen] = useState(false);
 
   return (
-    <WagmiConfig config={client}>
-      <RainbowKitProvider chains={chains}>
-        <Vote {...props} setIsOpen={setIsOpen} />
-        <NFTModal
-          headline="Wait a minute!"
-          text="You have to sign up before voting."
-          closeText="Close"
-          modalIsOpen={modalIsOpen}
-          setIsOpen={setIsOpen}
-        />
-      </RainbowKitProvider>
-    </WagmiConfig>
+    <QueryClientProvider client={queryClient}>
+      <WagmiProvider config={client}>
+        <RainbowKitProvider chains={chains}>
+          <Vote {...props} setIsOpen={setIsOpen} />
+          <NFTModal
+            headline="Wait a minute!"
+            text="You have to sign up before voting."
+            closeText="Close"
+            modalIsOpen={modalIsOpen}
+            setIsOpen={setIsOpen}
+          />
+        </RainbowKitProvider>
+      </WagmiProvider>
+    </QueryClientProvider>
   );
 };
 

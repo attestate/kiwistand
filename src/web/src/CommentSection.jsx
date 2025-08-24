@@ -2,7 +2,8 @@ import React, { useRef, useState, useEffect } from "react";
 import posthog from "posthog-js";
 import { formatDistanceToNowStrict } from "date-fns";
 import Linkify from "linkify-react";
-import { useAccount, WagmiConfig } from "wagmi";
+import { useAccount, WagmiProvider } from "wagmi";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { Wallet } from "@ethersproject/wallet";
 import { eligible } from "@attestate/delegator2";
@@ -950,6 +951,8 @@ const CommentsSection = (props) => {
     );
   }
   
+  const queryClient = new QueryClient();
+  
   return (
     <div
       className="comment-section"
@@ -962,28 +965,30 @@ const CommentsSection = (props) => {
         fontSize: "1rem",
       }}
     >
-      <WagmiConfig config={client}>
-        <RainbowKitProvider chains={chains}>
-          {comments.length > 0 &&
-            comments.map((comment, index) => (
-              <Comment
-                {...props}
-                ref={index === comments.length - 1 ? lastCommentRef : null}
-                key={comment.index}
-                comment={comment}
-                storyIndex={storyIndex}
-                storyTitle={storyTitle}
-              />
-            ))}
-          <NotificationOptIn {...props} />
-          <CommentInput 
-            {...props} 
-            comments={comments}
-            setComments={setComments}
-            style={{ margin: "0" }} 
-          />
-        </RainbowKitProvider>
-      </WagmiConfig>
+      <QueryClientProvider client={queryClient}>
+        <WagmiProvider config={client}>
+          <RainbowKitProvider chains={chains}>
+            {comments.length > 0 &&
+              comments.map((comment, index) => (
+                <Comment
+                  {...props}
+                  ref={index === comments.length - 1 ? lastCommentRef : null}
+                  key={comment.index}
+                  comment={comment}
+                  storyIndex={storyIndex}
+                  storyTitle={storyTitle}
+                />
+              ))}
+            <NotificationOptIn {...props} />
+            <CommentInput 
+              {...props} 
+              comments={comments}
+              setComments={setComments}
+              style={{ margin: "0" }} 
+            />
+          </RainbowKitProvider>
+        </WagmiProvider>
+      </QueryClientProvider>
     </div>
   );
 };

@@ -1,6 +1,7 @@
 // @format
 import { readContract } from "@wagmi/core";
 import { mainnet, optimism } from "wagmi/chains";
+import { client } from "./client.mjs";
 import { keccak256 } from "ethereum-cryptography/keccak.js";
 import { toHex } from "ethereum-cryptography/utils.js";
 import { encode } from "cbor-x";
@@ -398,7 +399,7 @@ const PRICE_FEED_ABI = [
 
 export async function fetchEthUsdPrice() {
   try {
-    const priceData = await readContract({
+    const priceData = await readContract(client, {
       address: ETH_USD_PRICE_FEED_ADDRESS,
       abi: PRICE_FEED_ABI,
       functionName: "latestRoundData",

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Wallet } from "@ethersproject/wallet";
-import { useAccount, WagmiConfig } from "wagmi";
+import { useAccount, WagmiProvider } from "wagmi";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RainbowKitProvider, ConnectButton } from "@rainbow-me/rainbowkit";
 import { eligible } from "@attestate/delegator2";
 import DOMPurify from "isomorphic-dompurify";
@@ -680,17 +681,21 @@ const SubmitButton = (props) => {
 
 // AdForm component and related constants/imports removed
 
+const queryClient = new QueryClient();
+
 const Form = (props) => {
   const urlInput = document.getElementById("urlInput");
   const [url, setURL] = useState(urlInput.value);
 
   return (
-    <WagmiConfig config={client}>
-      <RainbowKitProvider chains={chains}>
-        <UrlInput url={url} setURL={setURL} toast={toast} />
-        <SubmitButton {...props} url={url} />
-      </RainbowKitProvider>
-    </WagmiConfig>
+    <QueryClientProvider client={queryClient}>
+      <WagmiProvider config={client}>
+        <RainbowKitProvider chains={chains}>
+          <UrlInput url={url} setURL={setURL} toast={toast} />
+          <SubmitButton {...props} url={url} />
+        </RainbowKitProvider>
+      </WagmiProvider>
+    </QueryClientProvider>
   );
 };
 

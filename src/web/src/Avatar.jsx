@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { WagmiConfig, useAccount } from "wagmi";
+import { WagmiProvider, useAccount } from "wagmi";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { eligible } from "@attestate/delegator2";
 
@@ -286,13 +287,17 @@ const Avatar = (props) => {
   }
 };
 
+const queryClient = new QueryClient();
+
 const Form = (props) => {
   return (
-    <WagmiConfig config={client}>
-      <RainbowKitProvider chains={chains}>
-        <Avatar {...props} />
-      </RainbowKitProvider>
-    </WagmiConfig>
+    <QueryClientProvider client={queryClient}>
+      <WagmiProvider config={client}>
+        <RainbowKitProvider chains={chains}>
+          <Avatar {...props} />
+        </RainbowKitProvider>
+      </WagmiProvider>
+    </QueryClientProvider>
   );
 };
 

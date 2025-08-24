@@ -1,20 +1,18 @@
 import {
-  usePrepareContractWrite,
-  useContractWrite,
-  WagmiConfig,
+  useSimulateContract,
+  useWriteContract,
   useAccount,
-  useNetwork,
-  useSwitchNetwork,
+  useChainId,
+  useSwitchChain,
 } from "wagmi";
 import posthog from "posthog-js";
 import { useMemo, useEffect, useState } from "react";
 import { Wallet } from "@ethersproject/wallet";
 import { optimism } from "wagmi/chains";
 import { create, eligible } from "@attestate/delegator2";
-import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import useLocalStorageState from "use-local-storage-state";
 
-import { useProvider, chains, client } from "./client.mjs";
+import { useProvider } from "./client.mjs";
 import { CheckmarkSVG } from "./icons.jsx";
 import theme from "./theme.jsx";
 import {
@@ -195,10 +193,22 @@ function getNewKey() {
   return newKey;
 }
 const DelegateButton = (props) => {
-  const { chain } = useNetwork();
+  const chainId = useChainId();
   const from = useAccount();
-  const { switchNetwork } = useSwitchNetwork();
+  const { switchChain } = useSwitchChain();
   const [keyName, setKeyName] = useState(null);
+
+  // Extract the style that was coming from the Form wrapper
+  const wrapperStyle = {
+    border: "1px solid rgba(0,0,0,0.1)",
+    backgroundColor: "#E6E6DF",
+    maxWidth: "315px",
+    display: "inline-block",
+    padding: "20px 15px",
+    borderRadius: "2px",
+    boxShadow: "0 6px 20 rgba(0,0,0,0.1)",
+    ...props.style,
+  };
 
   useEffect(() => {
     if (from.address) {
@@ -244,14 +254,14 @@ const DelegateButton = (props) => {
     chainId: optimism.id,
   };
 
-  const { config, error, isError } = usePrepareContractWrite(prepArgs);
+  const { data: config, error, isError } = useSimulateContract(prepArgs);
 
   const {
     data,
-    write,
-    isLoading,
+    writeContract,
+    isPending: isLoading,
     isSuccess: isWriteSuccess,
-  } = useContractWrite(config);
+  } = useWriteContract();
   const isSuccess = isWriteSuccess && data && data.hash !== "null";
   if (isSuccess) {
     setKey(getNewKey().privateKey);
@@ -299,7 +309,7 @@ const DelegateButton = (props) => {
 
   if (!from.address) {
     return (
-      <div>
+      <div style={wrapperStyle}>
         <ProgressBar progress={0} />
         <ConnectionDialogue account={from} />
         <ConnectedConnectButton
@@ -318,7 +328,7 @@ const DelegateButton = (props) => {
     } else {
       const progress = indexedDelegation ? 3 : 1;
       return (
-        <div>
+        <div style={wrapperStyle}>
           <ProgressBar progress={progress} />
           <h3
             style={{
@@ -356,21 +366,21 @@ const DelegateButton = (props) => {
   let content;
   let activity;
   let handler;
-  if (chain.id === 10) {
+  if (chainId === 10) {
     content = isLoading ? (
       "Please sign in wallet"
     ) : (
       <span>Enable on Optimism</span>
     );
-    activity = !write || (!write && !isError) || isLoading || isSuccess;
-    handler = () => write?.();
+    activity = !writeContract || (!writeContract && !isError) || isLoading || isSuccess;
+    handler = () => config && writeContract(config.request);
   } else {
     content = <span>Switch to Optimism</span>;
     activity = false;
-    handler = () => switchNetwork?.(10);
+    handler = () => switchChain?.({ chainId: 10 });
   }
   return (
-    <div>
+    <div style={wrapperStyle}>
       <ConnectionDialogue account={from} />
       {isPersistent ? (
         <div
@@ -404,27 +414,4 @@ const DelegateButton = (props) => {
   );
 };
 
-const Form = (props) => {
-  return (
-    <WagmiConfig config={client}>
-      <RainbowKitProvider chains={chains}>
-        <div
-          style={{
-            border: "1px solid rgba(0,0,0,0.1)",
-            backgroundColor: "#E6E6DF",
-            maxWidth: "315px",
-            display: "inline-block",
-            padding: "20px 15px",
-            borderRadius: "2px",
-            boxShadow: "0 6px 20 rgba(0,0,0,0.1)",
-            ...props.style,
-          }}
-        >
-          <DelegateButton {...props} />
-        </div>
-      </RainbowKitProvider>
-    </WagmiConfig>
-  );
-};
-
-export default Form;
+export default DelegateButton;

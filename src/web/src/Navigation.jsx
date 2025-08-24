@@ -1,9 +1,8 @@
-import { WagmiConfig, useAccount } from "wagmi";
-import { RainbowKitProvider, ConnectButton } from "@rainbow-me/rainbowkit";
+import { useAccount } from "wagmi";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useEffect, useState } from "react";
 import { eligible } from "@attestate/delegator2";
 
-import { client, chains } from "./client.mjs";
 import { EthereumSVG } from "./icons.jsx";
 import {
   getLocalAccount,
@@ -299,43 +298,10 @@ export const CustomConnectButton = (props) => {
   );
 };
 
-export const Connector = (props) => {
-  return (
-    <WagmiConfig config={client}>
-      <RainbowKitProvider
-        appInfo={{}}
-        chains={chains}
-      >
-        {props.children}
-      </RainbowKitProvider>
-    </WagmiConfig>
-  );
-};
+// Connector component removed - components should use providers from parent
 
-export const ConnectedProfile = (props) => (
-  <Connector {...props}>
-    <Profile {...props} />
-  </Connector>
-);
-export const ConnectedDisconnectButton = (props) => (
-  <Connector {...props}>
-    <DisconnectButton {...props} />
-  </Connector>
-);
-export const ConnectedSimpleDisconnectButton = (props) => (
-  <Connector {...props}>
-    <SimpleDisconnectButton {...props} />
-  </Connector>
-);
-export const ConnectedConnectButton = (props) => (
-  <Connector {...props}>
-    <CustomConnectButton {...props} />
-  </Connector>
-);
-export const ConnectedTextConnectButton = (props) => (
-  <>
-    <Connector {...props}>
-      <TextConnectButton {...props} />
-    </Connector>
-  </>
-);
+export const ConnectedProfile = Profile;
+export const ConnectedDisconnectButton = DisconnectButton;
+export const ConnectedSimpleDisconnectButton = SimpleDisconnectButton;
+export const ConnectedConnectButton = CustomConnectButton;
+export const ConnectedTextConnectButton = TextConnectButton;

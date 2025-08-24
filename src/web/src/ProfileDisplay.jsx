@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
-import { fetchBalance } from "@wagmi/core";
+import { getBalance } from "@wagmi/core";
 import { optimism } from "wagmi/chains";
+import { client } from "./client.mjs";
 
 const ProfileDisplay = () => {
   const { address, isConnected } = useAccount();

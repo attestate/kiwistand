@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { WagmiConfig, useAccount } from "wagmi";
+import { WagmiProvider, useAccount } from "wagmi";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { Wallet } from "@ethersproject/wallet";
 import { client, chains, getProvider } from "./client.mjs";
@@ -157,13 +158,17 @@ const AnalyticsInner = (props) => {
   return null;
 };
 
+const queryClient = new QueryClient();
+
 const Analytics = (props) => {
   return (
-    <WagmiConfig config={client}>
-      <RainbowKitProvider chains={chains}>
-        <AnalyticsInner {...props} />
-      </RainbowKitProvider>
-    </WagmiConfig>
+    <QueryClientProvider client={queryClient}>
+      <WagmiProvider config={client}>
+        <RainbowKitProvider chains={chains}>
+          <AnalyticsInner {...props} />
+        </RainbowKitProvider>
+      </WagmiProvider>
+    </QueryClientProvider>
   );
 };
 

@@ -1,10 +1,11 @@
 import {
   useContractWrite,
-  WagmiConfig,
+  WagmiProvider,
   useAccount,
-  useNetwork,
-  useSwitchNetwork,
+  useChainId,
+  useSwitchChain,
 } from "wagmi";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Contract } from "@ethersproject/contracts";
 import { Provider } from "@ethersproject/providers";
 import { parseEther, formatEther } from "viem";
@@ -16,9 +17,9 @@ import { useState, useEffect } from "react";
 import useLocalStorageState from "use-local-storage-state";
 import { RainbowKitProvider, ConnectButton } from "@rainbow-me/rainbowkit";
 import {
-  prepareWriteContract,
+  simulateContract,
   getAccount,
-  fetchBalance,
+  getBalance,
   readContract,
 } from "@wagmi/core";
 
@@ -41,14 +42,14 @@ export async function prepare(recipient) {
     recipient = await ensResolver.getAddress();
   }
 
-  const { address } = getAccount();
+  const { address } = getAccount(client);
   if (!address) {
     throw new Error("Account not available");
   }
   const referrer = address;
 
   const balance = {
-    optimism: (await fetchBalance({ address, chainId: optimism.id })).value,
+    optimism: (await getBalance(client, { address, chainId: optimism.id })).value,
   };
 
   let price = await fetchPrice();
@@ -58,7 +59,7 @@ export async function prepare(recipient) {
 
   const quantity = 1;
   const comment = "";
-  const config = await prepareWriteContract({
+  const { request } = await simulateContract(client, {
     address: addressCollection,
     abi: abiCollection,
     functionName: "mintWithRewards",
@@ -66,6 +67,7 @@ export async function prepare(recipient) {
     value: price.min,
     chainId: optimism.id,
   });
+  const config = { request };
   return config;
 }
 
@@ -99,8 +101,8 @@ const EnsInput = (props) => {
 };
 
 const FriendBuyButton = (props) => {
-  const { chain } = useNetwork();
-  const { switchNetwork } = useSwitchNetwork();
+  const chainId = useChainId();
+  const { switchChain } = useSwitchChain();
   const from = useAccount();
   const provider = useProvider();
   const [recipient, setRecipient] = useState(null);
@@ -199,9 +201,9 @@ const FriendBuyButton = (props) => {
   }
 
   const name = "Optimism";
-  const chainId = optimism;
+  const targetChainId = optimism.id;
   if (
-    (config && config.request && config.request.chainId !== chain.id) ||
+    (config && config.request && config.request.chainId !== targetChainId) ||
     (error && error.message.includes("Chain mismatch")) ||
     (error && error.message.includes("attempting to switch chain"))
   ) {
@@ -210,7 +212,7 @@ const FriendBuyButton = (props) => {
         <EnsInput setRecipient={setRecipient} />
         <button
           className="friend-buy-button"
-          onClick={() => switchNetwork?.(chainId)}
+          onClick={() => switchChain?.({ chainId: optimism.id })}
         >
           Switch to {name}
         </button>
@@ -318,24 +320,28 @@ const Button = (props) => {
   );
 };
 
+const queryClient = new QueryClient();
+
 const Form = (props) => {
   return (
-    <WagmiConfig config={client}>
-      <RainbowKitProvider chains={chains}>
-        <ConnectButton.Custom>
-          {({ account, chain, mounted, openConnectModal }) => {
-            const connected = account && chain && mounted;
-            return (
-              <FriendBuyButton
-                {...props}
-                connected={connected}
-                openConnectModal={openConnectModal}
-              />
-            );
-          }}
-        </ConnectButton.Custom>
-      </RainbowKitProvider>
-    </WagmiConfig>
+    <QueryClientProvider client={queryClient}>
+      <WagmiProvider config={client}>
+        <RainbowKitProvider chains={chains}>
+          <ConnectButton.Custom>
+            {({ account, chain, mounted, openConnectModal }) => {
+              const connected = account && chain && mounted;
+              return (
+                <FriendBuyButton
+                  {...props}
+                  connected={connected}
+                  openConnectModal={openConnectModal}
+                />
+              );
+            }}
+          </ConnectButton.Custom>
+        </RainbowKitProvider>
+      </WagmiProvider>
+    </QueryClientProvider>
   );
 };
 

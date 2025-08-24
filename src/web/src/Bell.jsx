@@ -1,15 +1,14 @@
 // @format
 import React, { useEffect, useState } from "react";
-import { WagmiConfig, useAccount } from "wagmi";
-import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
+import { useAccount } from "wagmi";
 import { eligible } from "@attestate/delegator2";
 import SwipeableDrawer from "@mui/material/SwipeableDrawer";
 import { Wallet } from "@ethersproject/wallet";
 
-import { Connector, TextConnectButton } from "./Navigation.jsx";
+import { TextConnectButton } from "./Navigation.jsx";
 import * as API from "./API.mjs";
 import { isIOS, getLocalAccount, getCookie } from "./session.mjs";
-import { client, chains, useProvider } from "./client.mjs";
+import { useProvider } from "./client.mjs";
 import { dynamicPrefetch } from "./main.jsx";
 import { sdk } from "@farcaster/frame-sdk";
 
@@ -224,13 +223,7 @@ const EmailSubscriptionForm = ({
   );
 };
 
-const ConnectedEmailSubscriptionForm = (props) => {
-  return (
-    <Connector {...props}>
-      <EmailSubscriptionForm {...props} />
-    </Connector>
-  );
-};
+const ConnectedEmailSubscriptionForm = EmailSubscriptionForm;
 
 export { ConnectedEmailSubscriptionForm };
 
@@ -542,17 +535,7 @@ const Bell = (props) => {
   );
 };
 
-const Form = (props) => {
-  // This component seems to wrap Bell for desktop scenarios or modals
-  // Ensure Bell receives the mobile prop correctly if Form is used in mobile layout
-  return (
-    <Connector {...props}>
-      <Bell {...props} />
-    </Connector>
-  );
-};
-
-export default Form; // Assuming Form is the intended export for general use
+export default Bell;
 
 // Export Bell directly if it's used standalone elsewhere
 export { Bell };

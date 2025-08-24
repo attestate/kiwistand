@@ -3,7 +3,6 @@ import Modal from "react-modal";
 import { useAccount } from "wagmi";
 import { eligible } from "@attestate/delegator2";
 
-import { Connector } from "./Navigation.jsx";
 import { getLocalAccount } from "./session.mjs";
 import DelegateButton from "./DelegateButton.jsx";
 
@@ -123,12 +122,4 @@ function SimpleModal(props) {
   );
 }
 
-const Container = (props) => {
-  return (
-    <Connector {...props}>
-      <SimpleModal {...props}>{props.children}</SimpleModal>
-    </Connector>
-  );
-};
-
-export default Container;
+export default SimpleModal;

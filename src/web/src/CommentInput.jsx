@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import posthog from "posthog-js";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
-import { WagmiConfig, useAccount } from "wagmi";
+import { WagmiProvider, useAccount } from "wagmi";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Wallet } from "@ethersproject/wallet";
 import { eligible } from "@attestate/delegator2";
 import Drawer from "react-bottom-drawer";
@@ -866,13 +867,17 @@ const CommentGuidelines = () => {
   );
 };
 
+const queryClient = new QueryClient();
+
 const Container = (props) => {
   return (
-    <WagmiConfig config={client}>
-      <RainbowKitProvider chains={chains}>
-        <CommentInput {...props} />
-      </RainbowKitProvider>
-    </WagmiConfig>
+    <QueryClientProvider client={queryClient}>
+      <WagmiProvider config={client}>
+        <RainbowKitProvider chains={chains}>
+          <CommentInput {...props} />
+        </RainbowKitProvider>
+      </WagmiProvider>
+    </QueryClientProvider>
   );
 };
 

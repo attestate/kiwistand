@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { WagmiConfig, useAccount } from "wagmi";
+import { WagmiProvider, useAccount } from "wagmi";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 
 import { getLocalAccount } from "./session.mjs";
@@ -109,13 +110,17 @@ const ChatBubble = ({ allowlist, delegations, storyIndex, commentCount }) => {
   );
 };
 
+const queryClient = new QueryClient();
+
 const Container = (props) => {
   return (
-    <WagmiConfig config={client}>
-      <RainbowKitProvider chains={chains}>
-        <ChatBubble {...props} />
-      </RainbowKitProvider>
-    </WagmiConfig>
+    <QueryClientProvider client={queryClient}>
+      <WagmiProvider config={client}>
+        <RainbowKitProvider chains={chains}>
+          <ChatBubble {...props} />
+        </RainbowKitProvider>
+      </WagmiProvider>
+    </QueryClientProvider>
   );
 };
 
