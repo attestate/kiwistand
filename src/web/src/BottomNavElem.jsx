@@ -205,10 +205,10 @@ const BottomNavElem = ({ icon }) => {
   const textLabel = textMap[icon];
 
   return (
-    <React.Fragment>
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%" }}>
       <IconComponent onClick={handleClick} />
       <span style={{ fontSize: "9px", marginTop: "2px" }}>{textLabel}</span>
-    </React.Fragment>
+    </div>
   );
 };
 

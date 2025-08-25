@@ -52,7 +52,7 @@
 .inverted-row .drawer-link {
   display: none;
 }
-.connect-button-wrapper, .connect-button-wrapper div {
+.connect-button-wrapper {
   display: inline;
 }
 .redacted {
@@ -111,7 +111,7 @@ button, a, .interaction-element {
   -webkit-tap-highlight-color: transparent;
 }
 
-.chat-bubble-container div {
+.chat-bubble-container {
   display: flex;
   align-self: stretch;
 }
@@ -124,7 +124,7 @@ body {
      font-size:10pt;
      color:#828282;
 }
-.story-link-container div {
+.story-link-container {
   display: inline;
 }
 .comment-text-link {
@@ -142,7 +142,7 @@ body {
 .inverse-share-container {
   display: inline;
 }
-.tipsbuttoncontainer div {
+.tipsbuttoncontainer {
   display: inline;
 }
 @media screen and (max-width: 640px) {
@@ -1093,12 +1093,12 @@ body.react-loaded .comment-input-ssr-placeholder {
    }
  }
 .bottom-nav > a > svg,
-.mobile-bell-container > div > a > svg,
-.mobile-bell-container > a > svg {
+.mobile-bell-container a > svg,
+.mobile-bell-container svg {
   color: black;
   width: 1.65rem;
 }
-.mobile-bell-container > div {
+.mobile-bell-container {
   height: 100%;
   width: 100%;
   display: flex;
@@ -1418,7 +1418,7 @@ a.meta-link:hover, span.meta-link:hover {
      cursor: pointer;
 }
 
-.vote-button-container > div {
+.vote-button-container {
   min-height: 100%;
   display: flex;
   align-self: stretch;

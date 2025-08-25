@@ -206,21 +206,26 @@ async function addInviteLink(toast) {
 }
 
 async function addDynamicNavElements() {
-  const navElements = document.querySelectorAll("[data-icon]");
-  if (navElements && navElements.length > 0) {
-    const BottomNavElem = (await import("./BottomNavElem.jsx")).default;
-
-    navElements.forEach((elem) => {
-      const icon = elem.getAttribute("data-icon");
-      createRoot(elem).render(
-        <StrictMode>
-          <Providers>
-            <BottomNavElem icon={icon} />
-          </Providers>
-        </StrictMode>,
-      );
-    });
-  }
+  // Disabled: React components were replacing server-rendered navigation content
+  // The server already renders complete navigation with SVGs and labels
+  // This was causing the navigation to shrink when JS loaded
+  return;
+  
+  // const navElements = document.querySelectorAll("[data-icon]");
+  // if (navElements && navElements.length > 0) {
+  //   const BottomNavElem = (await import("./BottomNavElem.jsx")).default;
+  //
+  //   navElements.forEach((elem) => {
+  //     const icon = elem.getAttribute("data-icon");
+  //     createRoot(elem).render(
+  //       <StrictMode>
+  //         <Providers>
+  //           <BottomNavElem icon={icon} />
+  //         </Providers>
+  //       </StrictMode>,
+  //     );
+  //   });
+  // }
 }
 
 async function addDynamicComments(allowlist, delegations, toast) {
@@ -693,22 +698,23 @@ async function addAnalyticsConsent() {
   );
 }
 
-async function addTestFlightQR() {
-  if (!document.getElementById("testflight-qr-container")) {
-    const container = document.createElement("div");
-    container.id = "testflight-qr-container";
-    document.body.appendChild(container);
-  }
-
-  const TestFlightQR = (await import("./TestFlightQR.jsx")).default;
-  createRoot(document.getElementById("testflight-qr-container")).render(
-    <StrictMode>
-      <Providers>
-        <TestFlightQR />
-      </Providers>
-    </StrictMode>,
-  );
-}
+// TestFlight QR code removed - no longer supported
+// async function addTestFlightQR() {
+//   if (!document.getElementById("testflight-qr-container")) {
+//     const container = document.createElement("div");
+//     container.id = "testflight-qr-container";
+//     document.body.appendChild(container);
+//   }
+//
+//   const TestFlightQR = (await import("./TestFlightQR.jsx")).default;
+//   createRoot(document.getElementById("testflight-qr-container")).render(
+//     <StrictMode>
+//       <Providers>
+//         <TestFlightQR />
+//       </Providers>
+//     </StrictMode>,
+//   );
+// }
 
 async function addMinuteCountdown() {
   const elem = document.querySelector(".nav-countdown");
@@ -1515,8 +1521,8 @@ async function start() {
   // Add the analytics consent banner
   await addAnalyticsConsent();
 
-  // Add TestFlight QR code
-  await addTestFlightQR();
+  // TestFlight QR code removed - no longer supported
+  // await addTestFlightQR();
 
   const { fetchAllowList, fetchDelegations } = await import("./API.mjs");
 
