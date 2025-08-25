@@ -5,8 +5,8 @@ import { fetchENSData } from './ens.mjs';
 import 'dotenv/config';
 
 // --- Contest Configuration ---
-const CONTEST_START_DATE = new Date('2025-08-18T10:00:00Z'); // Aug 18 12pm noon CEST (UTC+2)
-const CONTEST_END_DATE = new Date('2025-08-22T16:00:00Z'); // Aug 22 6pm CEST (UTC+2)
+const CONTEST_START_DATE = new Date('2025-08-25T10:00:00Z'); // Aug 25 12pm noon CEST (UTC+2)
+const CONTEST_END_DATE = new Date('2025-08-29T16:00:00Z'); // Aug 29 6pm CEST (UTC+2)
 const PRIZE_POOL = 100; // 100 USDC
 const EXCLUDED_RECIPIENTS = [
     '0xee324c588cef1bf1c1360883e4318834af66366d',
