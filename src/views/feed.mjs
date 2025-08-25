@@ -1050,7 +1050,7 @@ export default async function (trie, theme, page, domain, identity, hash, varian
                           <h3 style="margin: 0 0 8px 0; font-size: 16px; color: black; font-weight: 600;">💰 Weekly USDC Rewards</h3>
                           <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
                             <img src="/usdc-logo.svg" alt="USDC" style="width: 20px; height: 20px;" />
-                            <span style="color: black; font-size: 14px; font-weight: 600;">$100 Prize Pool</span>
+                            <span style="color: black; font-size: 14px; font-weight: 600;">$50 Prize Pool</span>
                           </div>
                         </div>
                       </div>
