@@ -1,5 +1,5 @@
 import {
-  useContractWrite,
+  useWriteContract,
   WagmiProvider,
   useAccount,
   useChainId,
@@ -346,23 +346,23 @@ const BuyButton = (props) => {
 
 const Button = (props) => {
   const { name, config, signer, from, setLocalStorageKey, chainId } = props;
-  const { data, write, isLoading, isSuccess } = useContractWrite(config);
+  const { data: hash, writeContract, isPending, isSuccess } = useWriteContract();
 
   useEffect(() => {
-    // NOTE: wagmi returns data.hash === "null" (a string) when the transaction
+    // NOTE: wagmi returns hash === "null" (a string) when the transaction
     // is canceled by the user.
-    if (isSuccess && data.hash !== "null") {
+    if (isSuccess && hash && hash !== "null") {
       setLocalStorageKey(signer.privateKey);
       posthog.capture("user_signed_up", {
         address: from.address,
-        transactionHash: data.hash,
+        transactionHash: hash,
       });
       // Removed Google Analytics conversion tracking for onboarding
-      window.location.href = `/indexing?address=${from.address}&transactionHash=${data.hash}`;
+      window.location.href = `/indexing?address=${from.address}&transactionHash=${hash}`;
     }
-  }, [isSuccess]);
+  }, [isSuccess, hash]);
 
-  if (isSuccess && data.hash !== "null") {
+  if (isSuccess && hash && hash !== "null") {
     return (
       <div>
         <button className="buy-button" disabled>
@@ -376,11 +376,11 @@ const Button = (props) => {
     <div>
       <button
         className="buy-button"
-        disabled={!write || isLoading}
-        onClick={() => write?.()}
+        disabled={!config || isPending}
+        onClick={() => config && writeContract(config.request)}
       >
-        {!isLoading && <div>Mint Kiwi Pass on {name}</div>}
-        {isLoading && <div>Please sign transaction</div>}
+        {!isPending && <div>Mint Kiwi Pass on {name}</div>}
+        {isPending && <div>Please sign transaction</div>}
       </button>
     </div>
   );
