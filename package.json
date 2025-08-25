@@ -5,7 +5,7 @@
   "main": "./src/index.mjs",
   "scripts": {
     "clean:assets": "rm src/public/assets/*",
-    "build": "npm run clean:assets && cd src/web && NODE_ENV=production npm run build",
+    "build": "npm run clean:assets && cd src/web && NODE_ENV=production npm run build && cp ../public/.vite/manifest.json ../public/manifest.json",
     "test": "DEBUG=\"-@attestate/delegator2*\" ava --timeout=30s --serial --verbose",
     "test:compression": "NODE_TLS_REJECT_UNAUTHORIZED=0 ava test/compression_test.mjs --timeout=30s --verbose",
     "connect": "ssh root@91.107.210.214",
