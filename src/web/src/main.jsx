@@ -1324,6 +1324,34 @@ export function dynamicPrefetch(url, priority = "auto") {
   prefetchedUrls.add(url);
 }
 
+function initTerminalAds() {
+  const terminalAds = document.querySelectorAll('[data-terminal-ad="true"]');
+  if (terminalAds.length === 0) return;
+
+  const observerOptions = {
+    root: null,
+    rootMargin: '0px',
+    threshold: 0.3
+  };
+  
+  const terminalObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting && !entry.target.classList.contains('terminal-ad-active')) {
+        entry.target.classList.add('terminal-ad-active');
+        // Also add class to parent container for border animation
+        const container = entry.target.closest('.terminal-container');
+        if (container) {
+          container.classList.add('terminal-ad-active');
+        }
+      }
+    });
+  }, observerOptions);
+  
+  terminalAds.forEach(ad => {
+    terminalObserver.observe(ad);
+  });
+}
+
 function trackLinkImpressions() {
   // Find all story links - both regular links and those with previews
   // Regular story links have class="story-link"
@@ -1433,6 +1461,9 @@ async function start() {
 
   // Initialize link impression tracking
   trackLinkImpressions();
+  
+  // Initialize terminal ad animations
+  initTerminalAds();
 
   // Track A/B test variant via PostHog
   if (window.location.pathname === "/" && typeof posthog !== "undefined") {

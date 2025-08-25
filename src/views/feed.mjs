@@ -919,17 +919,141 @@ export default async function (trie, theme, page, domain, identity, hash, varian
                 )}
               <tr>
                 <td>
-                  <div style="background-color: var(--table-bg); border-top: var(--border); border-bottom: var(--border); margin-bottom: 20px; cursor: pointer;" onclick="if (window.innerWidth <= 768 && window.openRewardsDrawer) { window.openRewardsDrawer(); } else { window.location.href = '/community'; }">
-                    <!-- Header -->
-                    <div style="padding: 15px; border-bottom: var(--border-thin);">
-                      <div style="text-align: center;">
-                        <h3 style="margin: 0 0 8px 0; font-size: 16px; color: black; font-weight: 600;">💰 Weekly USDC Rewards</h3>
-                        <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
-                          <img src="/usdc-logo.svg" alt="USDC" style="width: 20px; height: 20px;" />
-                          <span style="color: black; font-size: 14px; font-weight: 600;">$100 Prize Pool</span>
+                  <div style="background-color: var(--table-bg); border-top: var(--border); border-bottom: var(--border); margin-bottom: 20px;">
+                    <!-- Deletecasts Terminal Advertisement -->
+                    <div style="position: relative; margin-bottom: 8px;">
+                      <div class="terminal-container" style="background-color: #000; padding: 20px; font-family: 'Courier New', 'Courier', monospace; position: relative; min-height: 120px; overflow: hidden;">
+                        <style>
+                          @keyframes typing {
+                            from { width: 0; }
+                            to { width: 100%; }
+                          }
+                          @keyframes blink {
+                            0%, 49% { opacity: 1; }
+                            50%, 100% { opacity: 0; }
+                          }
+                          @keyframes dots {
+                            0%, 20% { content: '.'; }
+                            40% { content: '..'; }
+                            60%, 100% { content: '...'; }
+                          }
+                          @keyframes fadeIn {
+                            from { opacity: 0; }
+                            to { opacity: 1; }
+                          }
+                          @keyframes slideDown {
+                            from { 
+                              opacity: 0;
+                              transform: translateY(-100%);
+                            }
+                            to { 
+                              opacity: 1;
+                              transform: translateY(0);
+                            }
+                          }
+                          .terminal-line {
+                            color: #00ff00;
+                            white-space: nowrap;
+                            overflow: hidden;
+                            display: block;
+                            font-size: 16px;
+                            line-height: 1.5;
+                            width: 0;
+                          }
+                          .typing-indicator {
+                            color: #00ff00;
+                            opacity: 0;
+                            font-size: 14px;
+                          }
+                          .typing-indicator::after {
+                            content: '.';
+                            animation: dots 1.5s infinite;
+                          }
+                          .terminal-ad-active .typing-indicator {
+                            opacity: 1;
+                            animation: fadeIn 0.5s forwards;
+                          }
+                          .terminal-ad-active .typing-line1 {
+                            animation: typing 2s steps(40, end) 2.5s forwards;
+                          }
+                          .terminal-ad-active .typing-line2 {
+                            animation: typing 3s steps(50, end) 5s forwards;
+                          }
+                          .cursor::after {
+                            content: '█';
+                            animation: blink 1s infinite;
+                            color: #00ff00;
+                          }
+                          .solution-overlay {
+                            position: absolute;
+                            top: -1px;
+                            left: -1px;
+                            right: -1px;
+                            bottom: -1px;
+                            background: white;
+                            display: none;
+                            align-items: center;
+                            justify-content: center;
+                            z-index: 10;
+                            border: none;
+                          }
+                          .terminal-ad-active .solution-overlay {
+                            display: flex;
+                            animation: slideDown 0.6s 8.5s forwards;
+                            opacity: 0;
+                          }
+                          @media (max-width: 768px) {
+                            .terminal-line {
+                              font-size: 13px;
+                            }
+                            .typing-indicator {
+                              font-size: 12px;
+                            }
+                          }
+                        </style>
+                        
+                        <div class="terminal-ad" data-terminal-ad="true">
+                          <div style="color: #00ff00; margin-bottom: 10px; opacity: 0.7; font-size: 14px;">
+                            root@hackerman:~$ ./scan --farcaster-history
+                          </div>
+                          <div style="margin-top: 8px;">
+                            <span class="typing-indicator">typing</span>
+                          </div>
+                          <div class="terminal-line typing-line1" style="margin-top: 8px; color: #8b5cf6;">
+                            [*] Scanning your Farcaster history...
+                          </div>
+                          <div class="terminal-line typing-line2 cursor" style="margin-top: 8px;">
+                            [!] I know what you uploaded last summer...
+                          </div>
+                          
+                          <!-- Solution Overlay that slides down from top -->
+                          <a href="https://farcaster.xyz/miniapps/Y1Tanr9_yvlY/deletecasts" target="_blank" rel="noopener noreferrer" class="solution-overlay" style="text-decoration: none; color: inherit; border: none; outline: none;">
+                            <div style="text-align: center;">
+                              <img src="/deletecasts-logo.webp" alt="Deletecasts" style="width: 50px; height: 50px; margin: 0 auto 12px; display: block;" />
+                              <div style="color: #7c65c1; font-weight: bold; font-size: 24px; margin-bottom: 8px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">deletecasts.com</div>
+                              <div style="color: #666; font-size: 14px; font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">Stop the hacker. Delete your past.</div>
+                            </div>
+                          </a>
                         </div>
                       </div>
+                      
+                      <!-- Contest Sponsor Label Outside -->
+                      <div style="text-align: right; margin-top: 4px; margin-right: 5px;">
+                        <span style="color: #666; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Contest Sponsor</span>
+                      </div>
                     </div>
+                    
+                    <!-- Contest Leaderboard Header -->
+                    <div style="cursor: pointer;" onclick="if (window.innerWidth <= 768 && window.openRewardsDrawer) { window.openRewardsDrawer(); } else { window.location.href = '/community'; }">
+                      <div style="padding: 15px; border-bottom: var(--border-thin); border-top: var(--border-thin);">
+                        <div style="text-align: center;">
+                          <h3 style="margin: 0 0 8px 0; font-size: 16px; color: black; font-weight: 600;">💰 Weekly USDC Rewards</h3>
+                          <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                            <img src="/usdc-logo.svg" alt="USDC" style="width: 20px; height: 20px;" />
+                            <span style="color: black; font-size: 14px; font-weight: 600;">$100 Prize Pool</span>
+                          </div>
+                        </div>
+                      </div>
                     
                     <!-- Contest Dates -->
                     <div style="padding: 10px 15px; border-bottom: var(--border-thin);">
@@ -995,6 +1119,7 @@ export default async function (trie, theme, page, domain, identity, hash, varian
                           <img src="/usdc-logo.svg" style="width: 18px; height: 18px; margin-left: 4px;" alt="USDC" />
                         </div>
                       </div>
+                    </div>
                     </div>
                   </div>
                 </td>

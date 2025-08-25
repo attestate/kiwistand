@@ -61,6 +61,22 @@ export default async function Leaderboard(identity, theme) {
                 <td>
                   <div style="padding: 15px; max-width: 800px; margin: 0 auto;">
 
+                    <!-- Deletecasts Sponsor Banner -->
+                    <div style="position: relative; margin-bottom: 20px;">
+                      <a href="https://farcaster.xyz/miniapps/Y1Tanr9_yvlY/deletecasts" target="_blank" rel="noopener noreferrer" style="text-decoration: none;">
+                        <div style="background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px; display: flex; align-items: center; justify-content: center; gap: 16px;">
+                          <img src="/deletecasts-logo.webp" alt="Deletecasts" style="width: 40px; height: 40px;" />
+                          <div style="text-align: left;">
+                            <div style="color: #7c65c1; font-weight: bold; font-size: 20px; margin-bottom: 4px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">deletecasts.com</div>
+                            <div style="color: #666; font-size: 13px; font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">Stop the hacker. Delete your past.</div>
+                          </div>
+                        </div>
+                      </a>
+                      <div style="text-align: right; margin-top: 4px; margin-right: 5px;">
+                        <span style="color: #666; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Contest Sponsor</span>
+                      </div>
+                    </div>
+
                     <!-- Tab Navigation -->
                     <div style="background-color: var(--table-bg); border: var(--border); margin-bottom: 0; border-bottom: none;">
                       <div style="display: flex; border-bottom: var(--border-thin); position: relative;">
