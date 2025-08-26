@@ -132,7 +132,7 @@ const SearchInterface = () => {
           WebkitTapHighlightColor: "transparent",
           WebkitAppearance: "none",
           appearance: "none",
-          "-webkit-text-fill-color": "black",
+          WebkitTextFillColor: "black",
         }}
         aria-label="Open search"
       >
