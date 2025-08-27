@@ -18,9 +18,12 @@ import * as api from "./api.mjs";
 import * as http from "./http.mjs";
 import * as store from "./store.mjs";
 import * as cache from "./cache.mjs";
+import { ecrecover, toDigest } from "./id.mjs";
+import { EIP712_MESSAGE } from "./constants.mjs";
 import mintCrawlPath from "./chainstate/mint.config.crawler.mjs";
 import delegateCrawlPath from "./chainstate/delegate.config.crawler.mjs";
 import * as registry from "./chainstate/registry.mjs";
+import { eligibleAt } from "@attestate/delegator2";
 import * as karma from "./karma.mjs";
 import * as newest from "./views/new.mjs";
 import * as email from "./email.mjs";
@@ -47,6 +50,124 @@ const productionMode = env.NODE_ENV === "production";
 const numWorkers = Number(env.WORKER_COUNT) || os.cpus().length;
 
 const trie = await store.create();
+
+// Ensure registry is initialized before computing posts/seed
+await registry.initialize();
+
+// Precompute posts and initialize SQLite schema before HTTP starts
+// This avoids "no such table: submissions" during first feed computation
+// when the cache directory has been deleted.
+const from = null;
+const amount = null;
+const startDatetime = null;
+const parser = JSON.parse;
+const accounts = await registry.accounts();
+const delegations = await registry.delegations();
+const href = null;
+
+let upvotes = [], comments = [];
+if (cluster.isPrimary) {
+  // Primary needs both upvotes and comments
+  await Promise.allSettled([
+    store
+      .posts(
+        trie,
+        from,
+        amount,
+        parser,
+        startDatetime,
+        accounts,
+        delegations,
+        href,
+        "amplify",
+      )
+      .then((result) => (upvotes = result))
+      .catch((error) => console.error("Amplify posts error:", error)),
+    store
+      .posts(
+        trie,
+        from,
+        amount,
+        parser,
+        startDatetime,
+        accounts,
+        delegations,
+        href,
+        "comment",
+      )
+      .then((result) => (comments = result))
+      .catch((error) => console.error("Comment posts error:", error)),
+  ]);
+} else {
+  // Workers only need comments for counts
+  await store
+    .posts(
+      trie,
+      from,
+      amount,
+      parser,
+      startDatetime,
+      accounts,
+      delegations,
+      href,
+      "comment",
+    )
+    .then((result) => (comments = result))
+    .catch((error) => console.error("Comment posts error:", error));
+}
+
+// Build seed messages; if eligibility filtered result is empty, fall back to raw leaves
+let seedMessages = [...upvotes, ...comments];
+if (seedMessages.length === 0) {
+  try {
+    const rawAmplify = await store.leaves(
+      trie,
+      from,
+      amount,
+      parser,
+      startDatetime,
+      href,
+      "amplify",
+    );
+    const rawComments = await store.leaves(
+      trie,
+      from,
+      amount,
+      parser,
+      startDatetime,
+      href,
+      "comment",
+    );
+    const raw = [...rawAmplify, ...rawComments];
+    seedMessages = raw
+      .map((node) => {
+        try {
+          const signer = ecrecover(node, EIP712_MESSAGE, false);
+          const { index } = toDigest(node);
+          const validationTime = node.timestamp;
+          const identity = eligibleAt(accounts, delegations, {
+            address: signer,
+            validationTime,
+          });
+          if (!identity) return null;
+          return { ...node, index, signer, identity };
+        } catch (err) {
+          log(`launch fallback seed: Skipping node due to ${err.toString()}`);
+          return null;
+        }
+      })
+      .filter((m) => m && m.type);
+    log(`launch: Using fallback seed with ${seedMessages.length} messages`);
+  } catch (err) {
+    log(`launch: Fallback seed failed: ${err.toString()}`);
+  }
+}
+
+// Ensure DB schema exists before any feed computation kicks off
+cache.initialize(seedMessages);
+cache.initializeNotifications();
+cache.initializeReactions();
+cache.addCompoundIndexes();
 
 if (cluster.isPrimary) {
   log(`Primary process ${process.pid} is running`);
@@ -127,84 +248,10 @@ if (cluster.isPrimary) {
   // Initialize lifetime cache in worker too
   cache.initializeLtCache();
 
-  const trie = await store.create();
-
   if (!reconcileMode) {
     await http.launch(trie, null, false); // false indicates worker process
   }
 }
-
-// NOTE: This request queries all messages in the database to enable caching
-// when calling ecrecover on messages' signatures.
-//
-// NOTE: Yes, this does influence the startup duration of a node as it extracts
-// and re-validates all messages from the DB. However, the store.cache function
-// is necessary to be run as it generates the markers that prevent double
-// upvoting from happening.
-const from = null;
-const amount = null;
-const startDatetime = null;
-const parser = JSON.parse;
-const accounts = await registry.accounts();
-const delegations = await registry.delegations();
-const href = null;
-
-let upvotes = [],
-  comments = [];
-if (cluster.isPrimary) {
-  // Primary needs both upvotes and comments
-  await Promise.allSettled([
-    store
-      .posts(
-        trie,
-        from,
-        amount,
-        parser,
-        startDatetime,
-        accounts,
-        delegations,
-        href,
-        "amplify",
-      )
-      .then((result) => (upvotes = result))
-      .catch((error) => console.error("Amplify posts error:", error)),
-    store
-      .posts(
-        trie,
-        from,
-        amount,
-        parser,
-        startDatetime,
-        accounts,
-        delegations,
-        href,
-        "comment",
-      )
-      .then((result) => (comments = result))
-      .catch((error) => console.error("Comment posts error:", error)),
-  ]);
-} else {
-  // Workers only need comments for counts
-  await store
-    .posts(
-      trie,
-      from,
-      amount,
-      parser,
-      startDatetime,
-      accounts,
-      delegations,
-      href,
-      "comment",
-    )
-    .then((result) => (comments = result))
-    .catch((error) => console.error("Comment posts error:", error));
-}
-
-cache.initialize([...upvotes, ...comments]);
-cache.initializeNotifications();
-cache.initializeReactions();
-cache.addCompoundIndexes();
 
 // Make upvote caching non-blocking to improve startup time
 setImmediate(() => {

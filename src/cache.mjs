@@ -195,7 +195,24 @@ export function initialize(messages) {
       CREATE INDEX IF NOT EXISTS idx_fingerprints_hash ON fingerprints(hash);
       CREATE INDEX IF NOT EXISTS idx_url_fingerprints_timestamp ON fingerprints(timestamp);
     `);
-  messages.forEach(insertMessage);
+  // Sanitize and re-insert messages defensively. Some entries may be undefined
+  // due to rejected enhancements in posts(); we only accept objects with a type.
+  const safeMessages = Array.isArray(messages)
+    ? messages.filter((m) => m && typeof m === "object" && "type" in m)
+    : [];
+
+  let skipped = 0;
+  for (const msg of safeMessages) {
+    try {
+      insertMessage(msg);
+    } catch (err) {
+      skipped++;
+      log(`initialize: Skipping malformed message due to error: ${err.toString()}`);
+    }
+  }
+  if (skipped > 0) {
+    log(`initialize: Skipped ${skipped} malformed messages during re-insert`);
+  }
   log("initialize: Done re-inserting all messages");
 }
 
