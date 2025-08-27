@@ -81,11 +81,24 @@ export async function refreshDelegations() {
   // Hence, below we are checking if the last bit of data[2] (`bool
   // authorize`) is zero. If so, we're filtering it from the delegation event
   // logs as to not allow revocations to be validated.
+  // Process Delegator3 logs only
   const logs = all
-    .map(({ value }) => ({ ...value, data: value.data.data }))
+    .map(({ value }) => {
+      // Delegator3 logs have sender in the data
+      if (value.data && value.data.sender) {
+        return {
+          data: value.data.data,  // The bytes32[3] from the decoded event
+          sender: value.data.sender  // The address sender from the decoded event
+        };
+      }
+      // Skip logs without sender (shouldn't happen with Delegator3)
+      return null;
+    })
+    .filter(log => log !== null)
     .filter(({ data }) => BigInt(data[2]) % 2n !== 0n);
 
   cachedDelegations = organize(logs);
+  
   lastDelegationsChecksum = currentChecksum;
   await db.close();
   await purgeCache(`${baseURL}/api/v1/delegations?cached=true`);

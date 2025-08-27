@@ -33,11 +33,11 @@ export default {
           update: delegations.update,
         },
         args: {
-          start: 106733451,
-          address: "0x08b7ecfac2c5754abafb789c84f8fa37c9f088b0",
+          start: 140309527,  // Delegator3 deployment block
+          address: "0x418910fef46896eb0bfe38f656e2f7df3eca7198",  // Delegator3 address
           topics: [
-            // keccak256("Delegate(bytes32[3])") ===
-            "0x9fcbf2ac7d9825115ae81812d10efa7fce04fcc9ca46f1d416aba53cdea8483e",
+            // keccak256("Delegate(bytes32[3],address)") ===
+            "0xcd9cc59d1cc3aa17955023d009176720c8a383000a973ae2933c1cf6cbeee480",
           ],
           blockspan: 5000,
           includeTimestamp: false,
@@ -53,6 +53,11 @@ export default {
             {
               type: "bytes32[3]",
               name: "data",
+              indexed: false,
+            },
+            {
+              type: "address",
+              name: "sender",
               indexed: false,
             },
           ],

@@ -179,7 +179,7 @@ const ConnectionDialogue = (props) => {
   );
 };
 
-const address = "0x08b7ECFac2c5754ABafb789c84F8fa37c9f088B0";
+const address = "0x418910fef46896eb0bfe38f656e2f7df3eca7198"; // Delegator3
 
 // NOTE: This is a performance optimization as `createRandom` causes a notable
 // occupation of the main thread of JavaScript to generate the randomness.

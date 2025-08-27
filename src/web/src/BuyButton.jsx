@@ -103,7 +103,7 @@ const abiDelegator = [
 ];
 
 const collectionProxy = "0x66747bdc903d17c586fa09ee5d6b54cc85bbea45";
-const addressDelegator = "0xe63496a8a9e6bd3ad9270236a890d78239441cf6";
+const addressDelegator = "0x418910fef46896eb0bfe38f656e2f7df3eca7198"; // Delegator3
 
 const newKey = Wallet.createRandom();
 const BuyButton = (props) => {

@@ -13,14 +13,6 @@ const receiptmsg = (txid, options) => ({
   options,
 });
 
-const transactionmsg = (txid, options) => ({
-  version: "0.0.1",
-  type: "json-rpc",
-  method: "eth_getTransactionByHash",
-  params: [txid],
-  options,
-});
-
 export async function update({ message, execute, environment }) {
   const options = {
     url: environment.rpcHttpHost,
@@ -42,27 +34,8 @@ export async function update({ message, execute, environment }) {
   const updatedLogs = [];
 
   for await (const log of message.results) {
-    const receipt = await execute(receiptmsg(log.transactionHash, options));
-
-    if (!receipt.results) {
-      console.error(receipt.error);
-      continue;
-    }
-
-    // Also fetch the full transaction to get authorizationList for EIP-7702
-    const transaction = await execute(transactionmsg(log.transactionHash, options));
-    
-    let authorizationList = null;
-    if (transaction.results && transaction.results.authorizationList) {
-      authorizationList = transaction.results.authorizationList;
-    }
-
     updatedLogs.push({
       ...log,
-      receipt: {
-        from: receipt.results.from,
-        authorizationList: authorizationList,
-      },
     });
   }
 

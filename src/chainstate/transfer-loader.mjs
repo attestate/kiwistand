@@ -37,7 +37,7 @@ const purchaseDelegatorABI = [
     type: "function",
   },
 ];
-const purchaseDelegatorAddress = "0xe63496a8a9e6bd3ad9270236a890d78239441cf6";
+const purchaseDelegatorAddress = "0x418910fef46896eb0bfe38f656e2f7df3eca7198"; // Delegator3
 const purchaseDelegatorInterface = new ethers.utils.Interface(
   purchaseDelegatorABI,
 );
