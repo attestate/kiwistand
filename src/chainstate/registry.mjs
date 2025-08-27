@@ -2,6 +2,7 @@
 import { resolve } from "path";
 import { createHash } from "crypto";
 import canonicalize from "canonicalize"; // Added import
+import { readFileSync } from "fs";
 
 import { differenceInDays } from "date-fns";
 import { utils } from "ethers";
@@ -54,6 +55,49 @@ export async function delegations() {
   return cachedDelegations;
 }
 export async function refreshDelegations() {
+  // DELEGATION SYSTEM ARCHITECTURE (as of Aug 2024):
+  // 
+  // We use a dual-contract delegation system on Optimism:
+  // 1. Delegator2 (0x08b7ecfac2c5754abafb789c84f8fa37c9f088b0): 
+  //    - Original contract deployed at block 117149738
+  //    - Used until block 140309526
+  //    - Emits: Delegate(bytes32[3] data)
+  //    - Required complex sender recovery logic
+  //
+  // 2. Delegator3 (0x418910fef46896eb0bfe38f656e2f7df3eca7198):
+  //    - New contract deployed at block 140309527
+  //    - Emits: Delegate(bytes32[3] data, address sender)
+  //    - Sender is emitted directly in event (supports EIP-7702 & Porto wallets)
+  //
+  // HISTORICAL CONTEXT:
+  // - Initially attempted to re-crawl all Delegator2 logs with complex recovery
+  // - Realized maintaining backward compatibility was critical for message validation
+  // - Messages are signed with the contract address in EIP-712 domain
+  // - Old messages require Delegator2 address to validate signatures
+  //
+  // CURRENT APPROACH:
+  // - Historical delegations (Delegator2 era) are loaded from a static JSON file
+  // - This JSON was exported from production and contains ~2561 delegations
+  // - New delegations (Delegator3) are crawled dynamically
+  // - Both sets are merged, with newer delegations overriding older ones
+  //
+  // This hybrid approach ensures:
+  // - Historical message validation continues to work
+  // - No complex sender recovery needed for old delegations
+  // - New delegations support EIP-7702 and smart contract wallets
+  // - System remains simple and maintainable
+  
+  // Load historical delegations from static JSON (Delegator2 era)
+  const historicalDelegationsPath = resolve(process.cwd(), "src/chainstate/historical-delegations.json");
+  let historicalDelegations = {};
+  try {
+    const content = readFileSync(historicalDelegationsPath, 'utf8');
+    historicalDelegations = JSON.parse(content);
+    log(`Loaded ${Object.keys(historicalDelegations).length} historical delegations`);
+  } catch (err) {
+    log(`Warning: Could not load historical delegations: ${err.message}`);
+  }
+  
   const path = resolve(process.env.DATA_DIR, "list-delegations-load-2");
   const maxReaders = 500;
   const db = database.open(path, maxReaders);
@@ -81,23 +125,40 @@ export async function refreshDelegations() {
   // Hence, below we are checking if the last bit of data[2] (`bool
   // authorize`) is zero. If so, we're filtering it from the delegation event
   // logs as to not allow revocations to be validated.
-  // Process Delegator3 logs only
-  const logs = all
-    .map(({ value }) => {
-      // Delegator3 logs have sender in the data
-      if (value.data && value.data.sender) {
-        return {
-          data: value.data.data,  // The bytes32[3] from the decoded event
-          sender: value.data.sender  // The address sender from the decoded event
-        };
-      }
-      // Skip logs without sender (shouldn't happen with Delegator3)
-      return null;
-    })
-    .filter(log => log !== null)
-    .filter(({ data }) => BigInt(data[2]) % 2n !== 0n);
-
-  cachedDelegations = organize(logs);
+  // Delegator3 deployment block - this is when we switched contracts
+  const DELEGATOR3_START_BLOCK = 140309527;
+  
+  // Process only Delegator3 logs from the crawler
+  // These are new delegations that happen after the contract upgrade
+  const delegator3Logs = [];
+  
+  for (const { value } of all) {
+    if (!value.data) continue;
+    
+    const blockNumber = parseInt(value.blockNumber, 16);
+    
+    // Only process Delegator3 logs (from block 140309527 with sender field)
+    if (value.data.sender && blockNumber >= DELEGATOR3_START_BLOCK) {
+      // Filter out revocations
+      if (BigInt(value.data.data[2]) % 2n === 0n) continue;
+      
+      delegator3Logs.push({
+        data: value.data.data,
+        sender: value.data.sender
+      });
+    }
+  }
+  
+  log(`Using ${Object.keys(historicalDelegations).length} historical and ${delegator3Logs.length} new Delegator3 delegations`);
+  
+  // Process Delegator3 with v0.6.0 validation
+  const delegator3Delegations = organize(delegator3Logs);   // Uses v0.6.0 with new contract
+  
+  // Merge historical with new Delegator3 delegations
+  cachedDelegations = {
+    ...historicalDelegations,
+    ...delegator3Delegations
+  };
   
   lastDelegationsChecksum = currentChecksum;
   await db.close();

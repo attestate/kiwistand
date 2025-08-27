@@ -8,7 +8,7 @@
       "name": "web",
       "version": "0.0.0",
       "dependencies": {
-        "@attestate/delegator2": "0.1.2",
+        "@attestate/delegator2": "0.6.1",
         "@emotion/react": "11.14.0",
         "@emotion/styled": "11.14.0",
         "@ethersproject/contracts": "5.8.0",
@@ -56,9 +56,10 @@
       "license": "MIT"
     },
     "node_modules/@attestate/delegator2": {
-      "version": "0.1.2",
-      "resolved": "https://registry.npmjs.org/@attestate/delegator2/-/delegator2-0.1.2.tgz",
-      "integrity": "sha512-bwreNQPrGLmPmtwTEWZopIi5jDIJDfIKrYt8q5H+3odJYtkr6BxErCoXHNKlv1jHKmqoO0wJQqAykC+r46F5sg==",
+      "version": "0.6.1",
+      "resolved": "https://registry.npmjs.org/@attestate/delegator2/-/delegator2-0.6.1.tgz",
+      "integrity": "sha512-5PWnsB59IvgHd0+WK7dxIFvj2ZbTr6G6GOhq+1VxIsCwvwbb2Jejhwym+NAZ8vznkoiNhsHb+yH9gQQdfxNgAQ==",
+      "license": "GPL-3.0-only",
       "dependencies": {
         "@ethersproject/address": "5.7.0",
         "@ethersproject/bytes": "5.7.0",

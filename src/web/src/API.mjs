@@ -109,7 +109,7 @@ export async function fetchStoryAnalytics(href, signer) {
     signature = await signer._signTypedData(
       EIP712_DOMAIN,
       EIP712_TYPES,
-      message
+      message,
     );
   } else if (signer.signTypedData) {
     // Wagmi wallet client
@@ -128,9 +128,9 @@ export async function fetchStoryAnalytics(href, signer) {
     ...message,
     signature,
   });
-  
+
   const url = getApiUrl("/api/v1/story-analytics");
-  
+
   let response;
   try {
     response = await fetch(url, {
@@ -144,7 +144,7 @@ export async function fetchStoryAnalytics(href, signer) {
     console.error("Failed to fetch analytics:", err);
     return null;
   }
-  
+
   let result;
   try {
     result = await response.json();
@@ -152,11 +152,11 @@ export async function fetchStoryAnalytics(href, signer) {
     console.error("Failed to parse analytics response:", err);
     return null;
   }
-  
+
   if (result.status === "success" && result.data) {
     return result.data;
   }
-  
+
   return null;
 }
 
@@ -186,10 +186,16 @@ export async function fetchNotifications(address) {
     const timestamp = latestNotification.timestamp;
     console.log("Setting lastUpdate on activity page to:", timestamp);
     setCookie("lastUpdate", timestamp);
-    
+
     // Use sendBeacon to ensure the notification fetch completes even if user navigates away
     try {
-      navigator.sendBeacon && navigator.sendBeacon('/api/v1/activity?address=' + encodeURIComponent(address) + '&lastUpdate=' + timestamp);
+      navigator.sendBeacon &&
+        navigator.sendBeacon(
+          "/api/v1/activity?address=" +
+            encodeURIComponent(address) +
+            "&lastUpdate=" +
+            timestamp,
+        );
     } catch (err) {
       console.log("Failed to send activity beacon:", err);
     }
@@ -269,7 +275,6 @@ export async function fetchPrice() {
     return null;
   }
 }
-
 
 export async function requestFaucet(address) {
   try {
@@ -426,12 +431,12 @@ export async function sendMiniAppUpvote(value, fid, walletAddress, authToken) {
 
   const body = {
     ...value,
-    walletAddress: walletAddress
+    walletAddress: walletAddress,
   };
 
   const headers = {
     "Content-Type": "application/json",
-    "Authorization": `Bearer ${authToken}`
+    Authorization: `Bearer ${authToken}`,
   };
 
   const response = await fetch("/api/v1/miniapp-upvote", {
