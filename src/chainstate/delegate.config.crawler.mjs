@@ -81,12 +81,17 @@ export default {
   ],
   queue: {
     options: {
-      concurrent: 100,
+      // Keep concurrency modest; actual RPS is enforced via endpoints below
+      concurrent: 10,
     },
   },
   endpoints: {
     [process.env.OPTIMISM_RPC_HTTP_HOST]: {
       timeout: 10_000,
+      // Respect Alchemy per-key throughput with a conservative cap
+      // Adjust upward if your plan allows higher RPS
+      requestsPerUnit: 15,
+      unit: "second",
     },
   },
 };
