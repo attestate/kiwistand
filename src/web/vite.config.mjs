@@ -22,30 +22,32 @@ if (
 }
 
 export default defineConfig(({ mode }) => {
-  const devHost = process.env.CUSTOM_HOST_NAME || 'localhost:5173';
-  const devOrigin = (process.env.CUSTOM_PROTOCOL === 'https://' ? 'https://' : 'http://') + devHost;
+  const devHost = process.env.CUSTOM_HOST_NAME || "localhost:5173";
+  const devOrigin =
+    (process.env.CUSTOM_PROTOCOL === "https://" ? "https://" : "http://") +
+    devHost;
   return {
     optimizeDeps: {
       // Prebundle commonly used deps at startup to avoid on-demand 504s
       include: [
-        '@ethersproject/contracts',
-        '@ethersproject/providers',
-        '@ethersproject/wallet',
-        '@ethersproject/units',
-        '@tanstack/react-query',
-        '@rainbow-me/rainbowkit',
-        'wagmi',
-        'viem',
-        'react',
-        'react/jsx-runtime',
-        'react/jsx-dev-runtime',
-        'react-dom',
-        'react-dom/client',
-        'pulltorefreshjs',
-        'posthog-js',
-        '@farcaster/frame-sdk',
+        "@ethersproject/contracts",
+        "@ethersproject/providers",
+        "@ethersproject/wallet",
+        "@ethersproject/units",
+        "@tanstack/react-query",
+        "@rainbow-me/rainbowkit",
+        "wagmi",
+        "viem",
+        "react",
+        "react/jsx-runtime",
+        "react/jsx-dev-runtime",
+        "react-dom",
+        "react-dom/client",
+        "pulltorefreshjs",
+        "posthog-js",
+        "@farcaster/frame-sdk",
       ],
-      entries: ['src/main.jsx'],
+      entries: ["src/main.jsx"],
       // Ensure fresh optimization when server restarts
       force: true,
     },
@@ -59,14 +61,14 @@ export default defineConfig(({ mode }) => {
           // Manual chunk splitting to reduce unused JavaScript
           manualChunks: {
             // Split vendor code into separate chunks
-            'react-vendor': ['react', 'react-dom'],
-            'ui-vendor': ['@mui/material', '@emotion/react', '@emotion/styled'],
-            'wallet-vendor': ['@rainbow-me/rainbowkit', 'wagmi', 'viem'],
+            "react-vendor": ["react", "react-dom"],
+            "ui-vendor": ["@mui/material", "@emotion/react", "@emotion/styled"],
+            "wallet-vendor": ["@rainbow-me/rainbowkit", "wagmi", "viem"],
           },
           // Use smaller chunks
-          chunkFileNames: 'assets/[name]-[hash].js',
-          entryFileNames: 'assets/[name]-[hash].js',
-          assetFileNames: 'assets/[name]-[hash].[ext]',
+          chunkFileNames: "assets/[name]-[hash].js",
+          entryFileNames: "assets/[name]-[hash].js",
+          assetFileNames: "assets/[name]-[hash].[ext]",
         },
       },
       // NOTE: vite is broken and so when we set minify in build then it'll not
@@ -82,6 +84,8 @@ export default defineConfig(({ mode }) => {
       minifyWhitespace: mode === "production",
     },
     server: {
+      host: hostname,
+      port: parseInt(port),
       cors: true,
       https,
       origin: devOrigin,
