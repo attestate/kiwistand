@@ -110,7 +110,7 @@ function generateCommentRow(activity, identity, bgColor, theme, i) {
           data-no-instant="${i < 3}"
           class="notification"
           href="${link}"
-          onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
+          onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block';}"
         >
           <div style="display: flex; border-bottom: 1px solid rgba(0,0,0,0.1);">
             <div
@@ -178,7 +178,7 @@ function generateRow(lastUpdate, theme) {
               href="/stories/${getSlug(
                 submissionTitle,
               )}?index=${submissionIndex}#${commentId.split(":")[1]}"
-              onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
+              onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block';}"
             >
               <div
                 style="display: flex; border-bottom: 1px solid rgba(0,0,0,0.1);"
@@ -268,7 +268,7 @@ function generateRow(lastUpdate, theme) {
               ? `&upvoter=${identities[identities.length - 1].address}`
               : ""}"
             class="like-notification notification"
-            onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
+            onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block';}"
           >
             <div
               style="display: flex; border-bottom: 1px solid rgba(0,0,0,0.1);"

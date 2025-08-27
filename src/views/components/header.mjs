@@ -32,7 +32,7 @@ const header = (theme, path) => {
                 <a
                   style="display: flex; align-items: center; gap: 0.5rem; color: black;"
                   href="/"
-                  onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
+                  onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block';}"
                 >
                   <img
                     style="filter: saturate(90%); width: 35px; height: 35px;"
@@ -125,21 +125,21 @@ const header = (theme, path) => {
                   class="meta-link"
                   href="/"
                   data-no-instant
-                  onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
+                  onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block';}"
                   >Feed</a
                 >
                 <a
                   class="meta-link primary-action"
                   href="/submit"
                   data-no-instant
-                  onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
+                  onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block';}"
                   >Submit</a
                 >
                 <a
                   class="meta-link"
                   href="/community"
                   data-no-instant
-                  onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
+                  onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block';}"
                   >Leaderboard</a
                 >
                 <span class="header-disconnect">Disconnect</span>

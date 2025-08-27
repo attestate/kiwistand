@@ -895,7 +895,7 @@ const row = (
                             }`
                           : DOMPurify.sanitize(story.href)}"
                         onclick="${isCloudflare && story.index
-                          ? `if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) { document.getElementById('spinner-overlay').style.display='block'; navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${DOMPurify.sanitize(
+                          ? `if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) { var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block'; navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${DOMPurify.sanitize(
                               story.href,
                             )}')); }`
                           : `event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${DOMPurify.sanitize(
@@ -1028,7 +1028,7 @@ const row = (
                                 ? ""
                                 : `/upvotes?address=${story.identity}`}"
                               class="meta-link meta-item submitter-name"
-                              onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
+                              onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block';}"
                               style="display:inline-block; font-weight: 600; user-select: text; color: black; flex: 0 0 auto;"
                             >
                               ${story.displayName}
@@ -1089,7 +1089,7 @@ const row = (
                               href="/stories/${getSlug(
                                 story.title,
                               )}?index=0x${story.index}"
-                              onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
+                              onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block';}"
                             >
                               ${formatDistanceToNowStrict(
                                 new Date(story.timestamp * 1000),

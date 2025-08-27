@@ -122,7 +122,7 @@ const nav = (path) => html`
       data-no-instant
       data-icon="home"
       href="/"
-      onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
+      onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block';}"
       style="flex-direction: column; display: flex; justify-content: center; align-items: center; width: 25%;
  text-decoration: none; color: black; height: 45px;"
     >
@@ -133,7 +133,7 @@ const nav = (path) => html`
       data-no-instant
       data-icon="newest"
       href="/new?cached=true"
-      onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
+      onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block';}"
       style="flex-direction: column; display: flex; justify-content: center; align-items: center; width: 25%;
  text-decoration: none; color: black; height: 45px;"
     >
@@ -144,7 +144,7 @@ const nav = (path) => html`
       data-no-instant
       data-icon="submit"
       href="/submit"
-      onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) document.getElementById('spinner-overlay').style.display='block'"
+      onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block';}"
       style="flex-direction: column; display: flex; justify-content: center; align-items: center; width: 25%;
  text-decoration: none; color: black; height: 45px;"
     >
