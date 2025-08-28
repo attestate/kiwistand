@@ -67,7 +67,7 @@ export function getLocalAccount(identity, allowlist) {
     const [[key, value]] = Object.entries(keys);
     if (
       (identity && key !== identity) ||
-      (allowlist && !allowlist.includes(key)) ||
+      (allowlist && !allowlist.has(key)) ||
       !allowlist
     )
       return;

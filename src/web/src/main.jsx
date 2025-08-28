@@ -1095,7 +1095,7 @@ async function checkMintStatus(address) {
     ]);
 
     if (
-      !allowList.includes(address) ||
+      !allowList.has(address) &&
       !Object.values(delegations).includes(address)
     ) {
       console.log("Waiting for mint to be picked up...");
