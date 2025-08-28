@@ -328,10 +328,10 @@ export async function fetchDelegations(cached = false) {
   try {
     response = await fetch(url);
     const data = await response.json();
-    return data.data;
+    return data.data ? new Set(data.data) : new Set();
   } catch (err) {
     console.error(err);
-    return null;
+    return new Set();
   }
 }
 
@@ -343,10 +343,10 @@ export async function fetchAllowList(cached = false) {
   try {
     response = await fetch(url);
     const data = await response.json();
-    return data.data;
+    return data.data ? new Set(data.data) : new Set();
   } catch (err) {
     console.error(err);
-    return null;
+    return new Set();
   }
 }
 
@@ -361,7 +361,7 @@ function checkMintStatus() {
 
     // Start the interval to check the allow list and delegations
     const intervalId = setInterval(async () => {
-      const allowList = await fetchAllowlist();
+      const allowList = await fetchAllowList();
       const delegations = await fetchDelegations();
 
       if (
