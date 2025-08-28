@@ -9429,6 +9429,16 @@
       "resolved": "https://registry.npmjs.org/rrweb-cssom/-/rrweb-cssom-0.7.1.tgz",
       "integrity": "sha512-TrEMa7JGdVm0UThDJSx7ddw5nVm3UJS9o9CCIZ72B1vSyEZoziDqBYP3XIoi/12lKrJR8rE3jeFHMok2F/Mnsg=="
     },
+    "node_modules/rrweb-snapshot": {
+      "version": "2.0.0-alpha.18",
+      "resolved": "https://registry.npmjs.org/rrweb-snapshot/-/rrweb-snapshot-2.0.0-alpha.18.tgz",
+      "integrity": "sha512-hBHZL/NfgQX6wO1D9mpwqFu1NJPpim+moIcKhFEjVTZVRUfCln+LOugRc4teVTCISYHN8Cw5e2iNTWCSm+SkoA==",
+      "license": "MIT",
+      "peer": true,
+      "dependencies": {
+        "postcss": "^8.4.38"
+      }
+    },
     "node_modules/run-applescript": {
       "version": "7.0.0",
       "resolved": "https://registry.npmjs.org/run-applescript/-/run-applescript-7.0.0.tgz",

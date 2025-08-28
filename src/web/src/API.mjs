@@ -333,11 +333,10 @@ export async function fetchDelegations(cached = false) {
   try {
     response = await fetch(url);
     const data = await response.json();
-    // Return delegations object or empty object if null/undefined
-    return data?.data || {};
+    return data.data ? new Set(data.data) : new Set();
   } catch (err) {
     console.error(err);
-    return {};
+    return new Set();
   }
 }
 
@@ -349,11 +348,15 @@ export async function fetchAllowList(cached = false) {
   try {
     response = await fetch(url);
     const data = await response.json();
+<<<<<<< HEAD
     // Ensure data.data is an array before creating a Set
     if (Array.isArray(data?.data)) {
       return new Set(data.data);
     }
     return new Set();
+=======
+    return data.data ? new Set(data.data) : new Set();
+>>>>>>> 76bf4c12 (Fix delegation flow)
   } catch (err) {
     console.error(err);
     return new Set();
