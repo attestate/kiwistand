@@ -386,6 +386,9 @@ app.get("/.well-known/farcaster.json", (req, res) => {
       primaryCategory: "news-media",
       castShareUrl: `${domain}/submit`,
     },
+    baseBuilder: {
+      allowedAddresses: ["0xbDA59D8e48ca664e82559a42DDE0Aef8C23ffd10"],
+    },
   });
 });
 
