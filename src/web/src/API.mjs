@@ -328,7 +328,11 @@ export async function fetchDelegations(cached = false) {
   try {
     response = await fetch(url);
     const data = await response.json();
-    return data.data ? new Set(data.data) : new Set();
+    // Ensure data.data is an array before creating a Set
+    if (Array.isArray(data?.data)) {
+      return new Set(data.data);
+    }
+    return new Set();
   } catch (err) {
     console.error(err);
     return new Set();
@@ -343,7 +347,11 @@ export async function fetchAllowList(cached = false) {
   try {
     response = await fetch(url);
     const data = await response.json();
-    return data.data ? new Set(data.data) : new Set();
+    // Ensure data.data is an array before creating a Set
+    if (Array.isArray(data?.data)) {
+      return new Set(data.data);
+    }
+    return new Set();
   } catch (err) {
     console.error(err);
     return new Set();
@@ -365,8 +373,8 @@ function checkMintStatus() {
       const delegations = await fetchDelegations();
 
       if (
-        allowList.includes(address) ||
-        Object.values(delegations).includes(address)
+        allowList.has(address) ||
+        delegations.has(address)
       ) {
         console.log("Mint has been picked up by the node.");
         clearInterval(intervalId);
