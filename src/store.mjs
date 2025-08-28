@@ -686,8 +686,8 @@ export async function posts(
   const cacheEnabled = true;
   const enhancer = enhance(accounts, delegations, cacheEnabled);
   const posts = (await Promise.allSettled(nodes.map(enhancer)))
-    .map((res) => (res.status === "fulfilled" ? res.value : undefined))
-    .filter((elem) => elem != null);
+    .map(({ value }) => value)
+    .filter((elem) => elem !== null);
   return posts;
 }
 

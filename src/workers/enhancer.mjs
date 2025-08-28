@@ -6,7 +6,7 @@ import { EIP712_MESSAGE } from "../constants.mjs";
 async function enhance({ node, accounts, delegations }) {
   const cacheEnabled = false;
   const signer = ecrecover(node, EIP712_MESSAGE, cacheEnabled);
-  const validationTime = node.timestamp;
+  const validationTime = new Date(node.timestamp * 1000);
   const identity = eligibleAt(accounts, delegations, {
     address: signer,
     validationTime,
