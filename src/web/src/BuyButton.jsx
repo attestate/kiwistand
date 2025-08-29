@@ -28,7 +28,13 @@ import { getLocalAccount } from "./session.mjs";
 import theme from "./theme.jsx";
 import posthog from "posthog-js";
 import { fetchPrice } from "./API.mjs";
-import { getProvider, useProvider, client, chains, isInIOSApp } from "./client.mjs";
+import {
+  getProvider,
+  useProvider,
+  client,
+  chains,
+  isInIOSApp,
+} from "./client.mjs";
 import InsufficientFundsSwap from "./InsufficientFundsSwap.jsx";
 import sdk from "@farcaster/frame-sdk";
 
@@ -38,12 +44,9 @@ export async function prepare(key) {
     throw new Error("Account not available");
   }
 
-  const provider = getProvider();
-  const code = await provider.getCode(address);
-  if (code !== "0x") throw new Error("Smart accounts aren't supported");
-
   const balance = {
-    optimism: (await getBalance(client, { address, chainId: optimism.id })).value,
+    optimism: (await getBalance(client, { address, chainId: optimism.id }))
+      .value,
   };
 
   const price = 1400000000000000n;
@@ -56,14 +59,11 @@ export async function prepare(key) {
   const authorize = true;
   const payload = await create(key, address, key.address, authorize);
 
-  const recipients = [];
-  const values = [];
-
   const { request } = await simulateContract(client, {
     address: addressDelegator,
     abi: abiDelegator,
     functionName: "setup",
-    args: [payload, recipients, values],
+    args: [payload],
     value: price,
     chainId: optimism.id,
   });
@@ -90,11 +90,7 @@ const abiOptimismPortal = [
 ];
 const abiDelegator = [
   {
-    inputs: [
-      { internalType: "bytes32[3]", name: "data", type: "bytes32[3]" },
-      { internalType: "address[]", name: "beneficiaries", type: "address[]" },
-      { internalType: "uint256[]", name: "amounts", type: "uint256[]" },
-    ],
+    inputs: [{ internalType: "bytes32[3]", name: "data", type: "bytes32[3]" }],
     name: "setup",
     outputs: [],
     stateMutability: "payable",
@@ -168,7 +164,6 @@ const BuyButton = (props) => {
   const [config, setConfig] = useState(null);
   const [error, setError] = useState(null);
 
-
   useEffect(() => {
     const generate = async () => {
       if (!key || isEligible) return;
@@ -188,17 +183,11 @@ const BuyButton = (props) => {
       } catch (err) {
         console.log("setting error", err.message);
         setError(err);
-
       }
     };
 
     generate();
-  }, [
-    key,
-    chainId,
-    discountEligible,
-    from.address,
-  ]);
+  }, [key, chainId, discountEligible, from.address]);
 
   if (isEligible) {
     return (
@@ -259,7 +248,10 @@ const BuyButton = (props) => {
     }
     return (
       <div>
-        <button className="buy-button" onClick={() => switchChain?.({ chainId: optimism.id })}>
+        <button
+          className="buy-button"
+          onClick={() => switchChain?.({ chainId: optimism.id })}
+        >
           Switch to {name}
         </button>
       </div>
@@ -279,12 +271,12 @@ const BuyButton = (props) => {
     if (match) {
       amount = match[1];
     }
-    
+
     // Check if we're in a Farcaster Frame (Mini App) and show swap options
     // Only show swap for Farcaster Mini Apps, not for iOS Coinbase Wallet app
     if (isInMiniApp && !isInIOSApp) {
       return (
-        <InsufficientFundsSwap 
+        <InsufficientFundsSwap
           requiredAmount={amount}
           onSwapInitiated={() => {
             // Re-generate config after swap is initiated
@@ -293,7 +285,7 @@ const BuyButton = (props) => {
         />
       );
     }
-    
+
     // Default message for non-Frame users (including iOS Coinbase Wallet)
     return (
       <div
@@ -346,7 +338,12 @@ const BuyButton = (props) => {
 
 const Button = (props) => {
   const { name, config, signer, from, setLocalStorageKey, chainId } = props;
-  const { data: hash, writeContract, isPending, isSuccess } = useWriteContract();
+  const {
+    data: hash,
+    writeContract,
+    isPending,
+    isSuccess,
+  } = useWriteContract();
 
   useEffect(() => {
     // NOTE: wagmi returns hash === "null" (a string) when the transaction
