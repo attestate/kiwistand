@@ -23,6 +23,9 @@ if (
 
 export default defineConfig(({ mode }) => {
   const devHost = process.env.CUSTOM_HOST_NAME || "localhost:5173";
+  const [hostname, port] = devHost.includes(':') 
+    ? devHost.split(':') 
+    : [devHost, '5173'];
   const devOrigin =
     (process.env.CUSTOM_PROTOCOL === "https://" ? "https://" : "http://") +
     devHost;
