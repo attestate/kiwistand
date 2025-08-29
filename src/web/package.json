@@ -4,8 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --host 0.0.0.0 --cors -l warn",
-    "dev:ssl": "cross-env CUSTOM_PROTOCOL=https:// vite --host 0.0.0.0 --cors -l warn",
+    "dev": "vite --host 0.0.0.0 --cors -l warn --force",
+    "dev:ssl": "cross-env CUSTOM_PROTOCOL=https:// vite --host 0.0.0.0 --cors -l warn --force",
     "build": "vite build"
   },
   "dependencies": {

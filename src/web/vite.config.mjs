@@ -22,7 +22,33 @@ if (
 }
 
 export default defineConfig(({ mode }) => {
+  const devHost = process.env.CUSTOM_HOST_NAME || 'localhost:5173';
+  const devOrigin = (process.env.CUSTOM_PROTOCOL === 'https://' ? 'https://' : 'http://') + devHost;
   return {
+    optimizeDeps: {
+      // Prebundle commonly used deps at startup to avoid on-demand 504s
+      include: [
+        '@ethersproject/contracts',
+        '@ethersproject/providers',
+        '@ethersproject/wallet',
+        '@ethersproject/units',
+        '@tanstack/react-query',
+        '@rainbow-me/rainbowkit',
+        'wagmi',
+        'viem',
+        'react',
+        'react/jsx-runtime',
+        'react/jsx-dev-runtime',
+        'react-dom',
+        'react-dom/client',
+        'pulltorefreshjs',
+        'posthog-js',
+        '@farcaster/frame-sdk',
+      ],
+      entries: ['src/main.jsx'],
+      // Ensure fresh optimization when server restarts
+      force: true,
+    },
     build: {
       outDir: "../public",
       manifest: true,
@@ -58,10 +84,7 @@ export default defineConfig(({ mode }) => {
     server: {
       cors: true,
       https,
-      origin:
-        process.env.CUSTOM_PROTOCOL === "https://"
-          ? "https://kazoo.local:5173"
-          : "http://kazoo.local:5173",
+      origin: devOrigin,
     },
     plugins: [react(), nodePolyfills()],
   };
