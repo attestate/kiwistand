@@ -35,6 +35,13 @@ considering valid, we've bumped the version to 0.10.0 and we've also
 upgraded our version identifiers in libp2p. We highly recommend all node
 operators to upgrade.
 
+### How to upgrade your existing node?
+
+1. Run `npm i` then run `cd src/web && npm i -f`
+1. In your `DATA_DIR`, rename `list-delegations-load-2` (to back it up)
+2. Run `npm run sync`. It will run very briefly (this is fine)
+3. That's it, you should be good to go
+
 ## 0.9.0
 
 1. (breaking) Add token tracking to allow to precisely determine during
