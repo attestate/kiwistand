@@ -9,6 +9,12 @@ import https from "https";
 import fs from "fs";
 import { createServer as createHttpServer } from "http";
 
+// Exit early in reconcile mode - only API and sync should run
+if (env.NODE_ENV === "reconcile") {
+  log("Load balancer exiting - reconcile mode doesn't need HTTP server");
+  process.exit(0);
+}
+
 // Routes that should be handled by worker processes
 const workerRoutes = [
   "/api/v1/activity",

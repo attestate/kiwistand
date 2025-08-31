@@ -112,15 +112,17 @@ if (cluster.isPrimary) {
     trie,
   );
 
-  // Fork workers
-  for (let i = 0; i < numWorkers; i++) {
-    cluster.fork();
-  }
+  // Fork workers (skip in reconcile mode - no HTTP workers needed)
+  if (!reconcileMode) {
+    for (let i = 0; i < numWorkers; i++) {
+      cluster.fork();
+    }
 
-  cluster.on("exit", (worker, code, signal) => {
-    log(`Worker ${worker.process.pid} died. Restarting...`);
-    cluster.fork();
-  });
+    cluster.on("exit", (worker, code, signal) => {
+      log(`Worker ${worker.process.pid} died. Restarting...`);
+      cluster.fork();
+    });
+  }
 } else {
   log(`Worker ${process.pid} started`);
 
