@@ -333,10 +333,10 @@ export async function fetchDelegations(cached = false) {
   try {
     response = await fetch(url);
     const data = await response.json();
-    return data.data ? new Set(data.data) : new Set();
+    return data.data;
   } catch (err) {
     console.error(err);
-    return new Set();
+    return {};
   }
 }
 
