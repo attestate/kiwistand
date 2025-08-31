@@ -5,19 +5,8 @@ import {
   FallbackProvider,
   JsonRpcProvider,
 } from "@ethersproject/providers";
-import { getDefaultConfig, connectorsForWallets } from "@rainbow-me/rainbowkit";
+import { getDefaultConfig } from "@rainbow-me/rainbowkit";
 import { farcasterMiniApp } from "@farcaster/miniapp-wagmi-connector";
-import { porto } from "porto/wagmi";
-import {
-  injectedWallet,
-  walletConnectWallet,
-  safeWallet,
-  coinbaseWallet,
-  metaMaskWallet,
-  trustWallet,
-  braveWallet,
-  rainbowWallet,
-} from "@rainbow-me/rainbowkit/wallets";
 import { getPublicClient } from "@wagmi/core";
 import {
   createConfig,
@@ -29,6 +18,16 @@ import {
 import { mainnet, optimism, base, arbitrum } from "wagmi/chains";
 import { createWalletClient, custom, getAddress } from "viem";
 import { IOSWalletProvider } from "./iosWalletProvider";
+import {
+  injectedWallet,
+  walletConnectWallet,
+  safeWallet,
+  coinbaseWallet,
+  metaMaskWallet,
+  trustWallet,
+  braveWallet,
+  rainbowWallet,
+} from "@rainbow-me/rainbowkit/wallets";
 
 // Check if we're in the iOS app by looking for the CSS class
 export const isInIOSApp =
@@ -179,42 +178,12 @@ if (isInIOSApp) {
     transports,
   });
 } else {
-  // Create connectors with Porto and RainbowKit wallets
-  const connectors = connectorsForWallets(
-    [
-      {
-        groupName: 'Recommended',
-        wallets: [
-          injectedWallet,
-          walletConnectWallet,
-          coinbaseWallet,
-          metaMaskWallet,
-        ],
-      },
-      {
-        groupName: 'Other',
-        wallets: [
-          safeWallet,
-          trustWallet,
-          braveWallet,
-          rainbowWallet,
-        ],
-      },
-    ],
-    {
-      appName,
-      projectId,
-    }
-  );
-  
-  // Create config with Porto added as a connector
-  client = createConfig({
+  // Standard configuration using RainbowKit's getDefaultConfig
+  client = getDefaultConfig({
+    appName,
+    projectId,
     chains,
     transports,
-    connectors: [
-      porto(),  // Add Porto as first connector
-      ...connectors,  // Then all RainbowKit connectors
-    ],
   });
 }
 

@@ -1,7 +1,6 @@
 import { useAccount } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useEffect, useState } from "react";
-import { ConnectModal } from "./ConnectModal.jsx";
 import { eligible } from "@attestate/delegator2";
 
 import { EthereumSVG } from "./icons.jsx";
@@ -203,115 +202,99 @@ export const TextConnectButton = ({
   className,
   text = "Connect",
 }) => {
-  const [modalIsOpen, setModalIsOpen] = useState(false);
-  
   return (
-    <>
-      <ConnectButton.Custom>
-        {({ account, chain, mounted }) => {
-          if (!mounted) return;
-          const connected = account && chain;
-          // NOTE: We are checking the cookie before calling getLocalAccount
-          // because if the cookie expired, then the user will have been taken to
-          // the paywall and this means we'll have to reload the page.
-          const localAccount = getLocalAccount(
-            account && account.address,
-            allowlist,
+    <ConnectButton.Custom>
+      {({ account, chain, mounted, openConnectModal }) => {
+        if (!mounted) return;
+        const connected = account && chain;
+        // NOTE: We are checking the cookie before calling getLocalAccount
+        // because if the cookie expired, then the user will have been taken to
+        // the paywall and this means we'll have to reload the page.
+        const localAccount = getLocalAccount(
+          account && account.address,
+          allowlist,
+        );
+
+        let address;
+        if (connected) {
+          address = account.address;
+        }
+        if (localAccount) {
+          address = localAccount.identity;
+        }
+        const isEligible = address && eligible(allowlist, delegations, address);
+
+        const newIdentityCookie = getCookie("identity");
+        if (isEligible && newIdentityCookie && !window.initialIdentityCookie) {
+          console.log(
+            "Reloading because initial identity cookie was undefined but eligibly was recognized",
           );
+          window.location.pathname = "/";
+        }
 
-          let address;
-          if (connected) {
-            address = account.address;
-          }
-          if (localAccount) {
-            address = localAccount.identity;
-          }
-          const isEligible = address && eligible(allowlist, delegations, address);
+        // Modal will handle showing UI for non-eligible users
 
-          const newIdentityCookie = getCookie("identity");
-          if (isEligible && newIdentityCookie && !window.initialIdentityCookie) {
-            console.log(
-              "Reloading because initial identity cookie was undefined but eligibly was recognized",
-            );
-            window.location.pathname = "/";
-          }
-
-          // Modal will handle showing UI for non-eligible users
-
-          if ((required && !connected) || (!connected && !isEligible)) {
-            return (
-              <span
-                style={{ color: "black", ...style }}
-                onClick={() => setModalIsOpen(true)}
-                className={`meta-link ${className}`}
-              >
-                {text}
-              </span>
-            );
-          }
-        }}
-      </ConnectButton.Custom>
-      <ConnectModal 
-        isOpen={modalIsOpen} 
-        onClose={() => setModalIsOpen(false)} 
-      />
-    </>
+        if ((required && !connected) || (!connected && !isEligible)) {
+          return (
+            <span
+              style={{ color: "black", ...style }}
+              onClick={openConnectModal}
+              className={`meta-link ${className}`}
+            >
+              {text}
+            </span>
+          );
+        }
+      }}
+    </ConnectButton.Custom>
   );
 };
 
 export const CustomConnectButton = (props) => {
-  const [modalIsOpen, setModalIsOpen] = useState(false);
-  
   return (
-    <>
-      <ConnectButton.Custom>
-        {({ account, chain, mounted }) => {
-          if (!mounted) return;
-          const connected = account && chain;
-          // NOTE: We are checking the cookie before calling getLocalAccount
-          // because if the cookie expired, then the user will have been taken to
-          // the paywall and this means we'll have to reload the page.
-          const localAccount = getLocalAccount(
-            account && account.address,
-            props.allowlist,
+    <ConnectButton.Custom>
+      {({ account, chain, mounted, openConnectModal }) => {
+        if (!mounted) return;
+        const connected = account && chain;
+        // NOTE: We are checking the cookie before calling getLocalAccount
+        // because if the cookie expired, then the user will have been taken to
+        // the paywall and this means we'll have to reload the page.
+        const localAccount = getLocalAccount(
+          account && account.address,
+          props.allowlist,
+        );
+
+        let address;
+        if (connected) {
+          address = account.address;
+        }
+        if (localAccount) {
+          address = localAccount.identity;
+        }
+        const isEligible =
+          address && eligible(props.allowlist, props.delegations, address);
+
+        const newIdentityCookie = getCookie("identity");
+        if (isEligible && newIdentityCookie && !window.initialIdentityCookie) {
+          console.log(
+            "Reloading because initial identity cookie was undefined but eligibly was recognized",
           );
+          window.location.pathname = "/";
+        }
 
-          let address;
-          if (connected) {
-            address = account.address;
-          }
-          if (localAccount) {
-            address = localAccount.identity;
-          }
-          const isEligible =
-            address && eligible(props.allowlist, props.delegations, address);
-
-          const newIdentityCookie = getCookie("identity");
-          if (isEligible && newIdentityCookie && !window.initialIdentityCookie) {
-            console.log(
-              "Reloading because initial identity cookie was undefined but eligibly was recognized",
-            );
-            window.location.pathname = "/";
-          }
-
-          if ((props.required && !connected) || (!connected && !isEligible)) {
-            return (
-              <PrimaryActionButton
-                className={props.className}
-                style={props.style}
-                icon={<EthereumSVG style={{ width: "16px" }} />}
-                text="Connect"
-                onClick={() => setModalIsOpen(true)}
-              />
-            );
-          }
-        }}
-      </ConnectButton.Custom>
-      <ConnectModal 
-        isOpen={modalIsOpen} 
-        onClose={() => setModalIsOpen(false)} 
-      />
-    </>
+        if ((props.required && !connected) || (!connected && !isEligible)) {
+          return (
+            <PrimaryActionButton
+              className={props.className}
+              style={props.style}
+              icon={<EthereumSVG style={{ width: "16px" }} />}
+              text="Connect"
+              onClick={openConnectModal}
+            />
+          );
+        }
+      }}
+    </ConnectButton.Custom>
   );
 };
 
