@@ -5,6 +5,36 @@
 - We are versioning according to [semver.org](https://semver.org)
 - We are currently in the ["Initial development phase"](https://semver.org/#spec-item-4)
 
+## 0.10.0
+
+(breaking) To make Kiwi News compatible with smart wallets and EIP-4337, we've
+made some breaking changes to the
+[delegator2](https://github.com/attestate/delegator2/blob/main/sdk/changelog.md#060)
+contract. 
+
+Instead of relying on `transaction.from`, it now emits `msg.sender`
+from within the contract, hence allowing paymasters etc. to call `etch` in the
+name of the Kiwi Pass controlling address. 
+
+This however means that we have, for the time being, added all other signers as
+a plain text file to the code base, meaning that the old delegator2 contract at
+0x08b7ECFac2c5754ABafb789c84F8fa37c9f088B0 will not count anymore when
+delegating upvoting/commenting power to a new address. Instead all apps will
+have to start using the new contract:
+0x418910fef46896eb0bfe38f656e2f7df3eca7198. For a proper upgrade path where
+signers can both be revoked and used from both delegator2 contracts we'll have
+to combine their logs. It's not clear to me whether all of this work would be
+worth it or whether it would be simpler to just call the delegator2@0.5.1
+period its own epoch, add all its messages to a merkle tree and then just
+consider them valid if they appear as a member. For this release, I did the
+simplest possible thing because I felt as if this work wouldn't pay off to do
+properly as we're still not really making money with Kiwi.
+
+Anyways, as the above change will interact with what messages nodes are
+considering valid, we've bumped the version to 0.10.0 and we've also
+upgraded our version identifiers in libp2p. We highly recommend all node
+operators to upgrade.
+
 ## 0.9.0
 
 1. (breaking) Add token tracking to allow to precisely determine during
