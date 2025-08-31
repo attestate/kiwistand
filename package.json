@@ -1,6 +1,6 @@
 {
   "name": "kiwistand",
-  "version": "0.10.0",
+  "version": "0.10.1",
   "description": "kiwistand is the p2p node client for kiwinews.xyz, a web3 writer friendly Hacker News that nobody controls but everybody co-owns",
   "main": "./src/index.mjs",
   "scripts": {
