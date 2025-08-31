@@ -5,6 +5,10 @@
 - We are versioning according to [semver.org](https://semver.org)
 - We are currently in the ["Initial development phase"](https://semver.org/#spec-item-4)
 
+## 0.10.1
+
+- Fix `npm run reconcile`
+
 ## 0.10.0
 
 (breaking) To make Kiwi News compatible with smart wallets and EIP-4337, we've
