@@ -155,15 +155,6 @@ const corsOptions = {
 // Use CORS with the options
 app.use(cors(corsOptions));
 
-// Add CSP for Porto iframe
-app.use((req, res, next) => {
-  res.setHeader(
-    "Content-Security-Policy", 
-    "frame-src 'self' https://id.porto.sh; connect-src 'self' https://rpc.ithaca.xyz https://stg-rpc.ithaca.xyz *"
-  );
-  next();
-});
-
 // Add Cache-Control headers for CDN caching of preflight requests
 app.use((req, res, next) => {
   if (req.method === "OPTIONS") {
