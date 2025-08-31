@@ -5,7 +5,7 @@ import {
   FallbackProvider,
   JsonRpcProvider,
 } from "@ethersproject/providers";
-import { getDefaultConfig } from "@rainbow-me/rainbowkit";
+import { getDefaultConfig, connectorsForWallets } from "@rainbow-me/rainbowkit";
 import { farcasterMiniApp } from "@farcaster/miniapp-wagmi-connector";
 import { getPublicClient } from "@wagmi/core";
 import {
@@ -17,23 +17,15 @@ import {
 } from "wagmi";
 import { mainnet, optimism, base, arbitrum } from "wagmi/chains";
 import { createWalletClient, custom, getAddress } from "viem";
-import { IOSWalletProvider } from "./iosWalletProvider";
 import {
   injectedWallet,
   walletConnectWallet,
-  safeWallet,
   coinbaseWallet,
   metaMaskWallet,
-  trustWallet,
-  braveWallet,
   rainbowWallet,
+  trustWallet,
+  safeWallet,
 } from "@rainbow-me/rainbowkit/wallets";
-
-// Check if we're in the iOS app by looking for the CSS class
-export const isInIOSApp =
-  typeof document !== "undefined" &&
-  document.documentElement.classList.contains("kiwi-ios-app");
-
 // Check if we're in a Farcaster Frame context
 export const isInFarcasterFrame = () => {
   if (typeof window === "undefined") return false;
@@ -55,90 +47,10 @@ const isDesktop = () => {
   );
 };
 
-// Custom iOS Wallet Connector for wagmi v2
-function iosWalletConnector() {
-  return createConnector((config) => ({
-    id: "iosCoinbaseWallet",
-    name: "Coinbase Wallet",
-    type: "iosCoinbaseWallet",
-    
-    async setup() {
-      // Initialization logic if needed
-    },
-
-    async connect({ chainId } = {}) {
-      const provider = new IOSWalletProvider();
-      try {
-        const accounts = await provider.request({
-          method: "eth_requestAccounts",
-        });
-        const account = getAddress(accounts[0]);
-
-        // The iOS wallet provider is assumed to connect to Optimism by default.
-        const connectedChainId = 10; // Optimism ID
-        
-        return {
-          accounts: [account],
-          chainId: connectedChainId,
-        };
-      } catch (error) {
-        throw error;
-      }
-    },
-
-    async disconnect() {
-      // Nothing to do since iOS app handles connection
-      return;
-    },
-
-    async getAccounts() {
-      const provider = new IOSWalletProvider();
-      const accounts = await provider.request({ method: "eth_accounts" });
-      return accounts.map(a => getAddress(a));
-    },
-
-    async getChainId() {
-      return 10; // Default to Optimism (10)
-    },
-
-    async getProvider() {
-      return new IOSWalletProvider();
-    },
-
-    async isAuthorized() {
-      try {
-        const provider = new IOSWalletProvider();
-        const accounts = await provider.request({ method: "eth_accounts" });
-        return accounts.length > 0;
-      } catch {
-        return false;
-      }
-    },
-
-    async switchChain({ chainId }) {
-      // If the requested chain is Optimism (10), "switch" to it.
-      if (chainId === 10) {
-        return optimism;
-      }
-      // For other chains, throw an error indicating this iOS wallet only supports Optimism
-      throw new Error("This wallet connection only supports Optimism");
-    },
-
-    onAccountsChanged(accounts) {
-      // Handle account changes
-      config.emitter.emit('change', { accounts: accounts.map(a => getAddress(a)) });
-    },
-
-    onChainChanged(chainId) {
-      const id = Number(chainId);
-      config.emitter.emit('change', { chainId: id });
-    },
-
-    onDisconnect() {
-      config.emitter.emit('disconnect');
-    },
-  }));
-}
+// Check if we're in the iOS app by looking for the CSS class
+export const isInIOSApp =
+  typeof document !== "undefined" &&
+  document.documentElement.classList.contains("kiwi-ios-app");
 
 // Setup chains
 export const chains = [optimism, mainnet, arbitrum, base];
@@ -156,29 +68,46 @@ const transports = {
 // Create wagmi config based on environment
 let client;
 
-if (isInIOSApp) {
-  // iOS app configuration with custom connector
-  const connectors = [iosWalletConnector()];
-  
-  // Add Farcaster connector if in frame
-  if (isInFarcasterFrame()) {
-    connectors.unshift(farcasterMiniApp());
-  }
-  
-  client = createConfig({
-    chains,
-    connectors,
-    transports,
-  });
-} else if (isInFarcasterFrame()) {
+if (isInFarcasterFrame()) {
   // Farcaster frame configuration
   client = createConfig({
     chains,
     connectors: [farcasterMiniApp()],
     transports,
   });
+} else if (isInIOSApp) {
+  // iOS app configuration - exclude Coinbase Wallet and browser wallet
+  const wallets = [
+    // injectedWallet excluded on iOS app (browser wallet)
+    walletConnectWallet,
+    // coinbaseWallet excluded on iOS app (popup issues)
+    metaMaskWallet,
+    rainbowWallet,
+    trustWallet,
+    safeWallet,
+  ];
+  
+  const connectors = connectorsForWallets(
+    [
+      {
+        groupName: 'Wallets',
+        wallets,
+      },
+    ],
+    {
+      appName,
+      projectId,
+    }
+  );
+
+  client = createConfig({
+    chains,
+    connectors,
+    transports,
+  });
 } else {
   // Standard configuration using RainbowKit's getDefaultConfig
+  // This will be used for all browsers including iOS Safari (not the app)
   client = getDefaultConfig({
     appName,
     projectId,
