@@ -115,6 +115,7 @@ import {
   formatSubmissionForTwitter, 
   formatSubmissionForFarcaster 
 } from "./social-posting.mjs";
+import { sendBroadcastNotification } from "./onesignal.mjs";
 
 const app = express();
 
@@ -269,6 +270,18 @@ app.post("/api/v1/neynar/notify", async (req, res) => {
   try {
     // Send Neynar notification
     const resp = await sendNotification(target_url, notificationBody, notificationTitle);
+    
+    // Also broadcast via OneSignal to all subscribed users
+    try {
+      await sendBroadcastNotification({
+        title: notificationTitle,
+        body: notificationBody,
+        url: target_url,
+      });
+      log(`Successfully broadcasted OneSignal notification for tag: ${tag}`);
+    } catch (osErr) {
+      log(`Failed to broadcast OneSignal notification: ${osErr}`);
+    }
     
     // Extract domain from submission href
     const domain = extractDomain(submission.href);

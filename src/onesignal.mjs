@@ -69,3 +69,52 @@ export async function sendTestNotification(address) {
     url: "https://news.kiwistand.com",
   });
 }
+
+/**
+ * Send a broadcast push notification to all subscribed users in OneSignal
+ * This targets the "Subscribed Users" segment which includes all users who
+ * have opted in to notifications for the configured app.
+ * @param {Object} notification - Notification content
+ * @param {string} notification.title - Notification title
+ * @param {string} notification.body - Notification body
+ * @param {string} notification.url - URL to open when notification is clicked
+ */
+export async function sendBroadcastNotification(notification) {
+  if (!ONESIGNAL_API_KEY) {
+    log("OneSignal API key not configured, skipping broadcast push notification");
+    return;
+  }
+
+  const payload = {
+    app_id: ONESIGNAL_APP_ID,
+    included_segments: ["Subscribed Users"],
+    headings: { en: notification.title },
+    contents: { en: notification.body },
+    url: notification.url,
+    ios_badgeType: "Increase",
+    ios_badgeCount: 1,
+  };
+
+  try {
+    const response = await fetch("https://onesignal.com/api/v1/notifications", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Basic ${ONESIGNAL_API_KEY}`,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const result = await response.json();
+
+    if (result.errors) {
+      log(`OneSignal broadcast failed: ${JSON.stringify(result.errors)}`);
+    } else {
+      log(`OneSignal broadcast sent: ${result.id}`);
+    }
+
+    return result;
+  } catch (error) {
+    log(`Failed to send OneSignal broadcast: ${error.message}`);
+  }
+}
