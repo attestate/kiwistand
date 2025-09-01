@@ -1111,13 +1111,7 @@ async function checkMintStatus(address) {
   }, 3000);
 }
 
-async function startWatchAccount(allowlist, delegations) {
-  const [{ client }, { getAccount }] = await Promise.all([
-    import("./client.mjs"),
-    import("@wagmi/core"),
-  ]);
-
-  const account = await getAccount(client);
+async function startWatchAccount(allowlist, delegations, account, isInIOSApp) {
   let signer;
   try {
     signer = await getSigner(account, allowlist);
@@ -1146,6 +1140,12 @@ async function startWatchAccount(allowlist, delegations) {
   if (identity) {
     posthog.identify(identity);
     
+    // Set iOS wallet for push notifications
+    if (isInIOSApp && window.setKiwiWallet) {
+      window.setKiwiWallet(identity);
+      console.log("Set Kiwi wallet for iOS notifications:", identity);
+    }
+    
     // Initialize interaction tracking with the signer and identity
     if (signer) {
       import("./tracker.mjs").then((tracker) => {
@@ -1165,6 +1165,13 @@ async function startWatchAccount(allowlist, delegations) {
     }
   } else {
     hideDesktopLinks();
+    
+    // Clear iOS wallet when disconnected
+    if (isInIOSApp && window.clearKiwiWallet) {
+      window.clearKiwiWallet();
+      console.log("Cleared Kiwi wallet for iOS");
+    }
+    
     // Still initialize tracker but without signer (for non-logged in users)
     import("./tracker.mjs").then((tracker) => {
       tracker.initializeTracking();
@@ -1529,7 +1536,22 @@ async function start() {
   const allowlistPromise = fetchAllowList(cached);
   const delegationsPromise = fetchDelegations(cached);
 
-  await startWatchAccount(await allowlistPromise, await delegationsPromise);
+  // Import watchAccount, getAccount, client and isInIOSApp
+  const [{ client, isInIOSApp }, { watchAccount, getAccount }] = await Promise.all([
+    import("./client.mjs"),
+    import("@wagmi/core"),
+  ]);
+
+  // Get initial account and set up watcher
+  const initialAccount = await getAccount(client);
+  await startWatchAccount(await allowlistPromise, await delegationsPromise, initialAccount, isInIOSApp);
+  
+  // Watch for future account changes
+  watchAccount(client, {
+    async onChange(account) {
+      await startWatchAccount(await allowlistPromise, await delegationsPromise, account, isInIOSApp);
+    }
+  });
 
   const results0 = await Promise.allSettled([
     import("@rainbow-me/rainbowkit/styles.css"), // Load styles in parallel

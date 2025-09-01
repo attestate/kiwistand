@@ -13,6 +13,7 @@ import { truncateComment } from "./views/activity.mjs";
 import { getSlug } from "./utils.mjs";
 import { sendNotification, getFidsFromAddresses } from "./neynar.mjs";
 import * as moderation from "./views/moderation.mjs";
+import { sendPushNotification } from "./onesignal.mjs";
 
 if (env.NODE_ENV == "production")
   webpush.setVapidDetails(
@@ -138,6 +139,17 @@ export async function triggerUpvoteNotification(message) {
         log(`Failed to send upvote Neynar notification: ${err}`);
       }
     }
+
+    // Send OneSignal push notification for upvote
+    try {
+      await sendPushNotification(receivers, {
+        title: "New like",
+        body: `${ensData.displayName} upvoted your story: ${submission.title.substring(0, 100)}`,
+        url: url,
+      });
+    } catch (err) {
+      log(`Failed to send upvote OneSignal notification: ${err}`);
+    }
   } catch (err) {
     log(`Error in triggerUpvoteNotification: ${err}`);
   }
@@ -198,6 +210,17 @@ export async function triggerNotification(message) {
     } catch (err) {
       log(`Failed to send Neynar notifications: ${err}`);
     }
+  }
+
+  // Send OneSignal push notifications to iOS app users
+  try {
+    await sendPushNotification(uniqueReceivers, {
+      title: `${ensData.displayName} replied`,
+      body: truncateComment(message.title, maxChars),
+      url: url,
+    });
+  } catch (err) {
+    log(`Failed to send OneSignal notifications: ${err}`);
   }
 
   await Promise.allSettled(
