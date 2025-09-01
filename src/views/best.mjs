@@ -26,13 +26,25 @@ import log from "../logger.mjs";
 import { EIP712_MESSAGE } from "../constants.mjs";
 import Row, { extractDomain } from "./components/row.mjs";
 import { getBest, getLastComment, countImpressions } from "../cache.mjs";
-import { cachedMetadata } from "../parser.mjs";
+import { cachedMetadata, metadata } from "../parser.mjs";
 import { getStoriesUSDCEarnings } from "../contest-leaderboard.mjs";
 
 const html = htm.bind(vhtml);
 
+// Add metadata to a post
 async function addMetadata(post) {
-  const data = cachedMetadata(post.href);
+  let data = cachedMetadata(post.href);
+  
+  // If cache is empty, fetch synchronously to ensure metadata is available
+  if (!data || Object.keys(data).length === 0) {
+    try {
+      data = await metadata(post.href);
+    } catch (err) {
+      // If fetch fails, return empty metadata
+      data = {};
+    }
+  }
+  
   return {
     ...post,
     metadata: data,
