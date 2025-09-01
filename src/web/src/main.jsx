@@ -698,23 +698,22 @@ async function addAnalyticsConsent() {
   );
 }
 
-// TestFlight QR code removed - no longer supported
-// async function addTestFlightQR() {
-//   if (!document.getElementById("testflight-qr-container")) {
-//     const container = document.createElement("div");
-//     container.id = "testflight-qr-container";
-//     document.body.appendChild(container);
-//   }
-//
-//   const TestFlightQR = (await import("./TestFlightQR.jsx")).default;
-//   createRoot(document.getElementById("testflight-qr-container")).render(
-//     <StrictMode>
-//       <Providers>
-//         <TestFlightQR />
-//       </Providers>
-//     </StrictMode>,
-//   );
-// }
+async function addTestFlightQR() {
+  if (!document.getElementById("testflight-qr-container")) {
+    const container = document.createElement("div");
+    container.id = "testflight-qr-container";
+    document.body.appendChild(container);
+  }
+
+  const TestFlightQR = (await import("./TestFlightQR.jsx")).default;
+  createRoot(document.getElementById("testflight-qr-container")).render(
+    <StrictMode>
+      <Providers>
+        <TestFlightQR />
+      </Providers>
+    </StrictMode>,
+  );
+}
 
 async function addMinuteCountdown() {
   const elem = document.querySelector(".nav-countdown");
@@ -1521,8 +1520,8 @@ async function start() {
   // Add the analytics consent banner
   await addAnalyticsConsent();
 
-  // TestFlight QR code removed - no longer supported
-  // await addTestFlightQR();
+  // Add TestFlight QR code
+  await addTestFlightQR();
 
   const { fetchAllowList, fetchDelegations } = await import("./API.mjs");
 
