@@ -15,7 +15,7 @@ import * as messages from "./topics/messages.mjs";
 import * as roots from "./topics/roots.mjs";
 import { handlers } from "./index.mjs";
 import * as api from "./api.mjs";
-import * as http from "./http.mjs";
+// Dynamic import for http module - only loaded when not in reconcile mode
 import * as store from "./store.mjs";
 import * as cache from "./cache.mjs";
 import mintCrawlPath from "./chainstate/mint.config.crawler.mjs";
@@ -75,6 +75,7 @@ if (cluster.isPrimary) {
   await api.launch(trie, node);
 
   if (!reconcileMode) {
+    const http = await import("./http.mjs");
     await http.launch(trie, node, true); // true indicates primary process
     // Purge homepage cache on server restart in production
     if (productionMode) {
@@ -132,6 +133,7 @@ if (cluster.isPrimary) {
   const trie = await store.create();
 
   if (!reconcileMode) {
+    const http = await import("./http.mjs");
     await http.launch(trie, null, false); // false indicates worker process
   }
 }

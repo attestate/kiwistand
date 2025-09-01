@@ -15,10 +15,12 @@ import { utils } from "ethers";
 import log from "./logger.mjs";
 import * as store from "./store.mjs";
 import { SCHEMATA } from "./constants.mjs";
-import { sendToCluster } from "./http.mjs";
+// Dynamic import for sendToCluster - only loaded when not in reconcile mode
+let sendToCluster = null;
 import * as registry from "./chainstate/registry.mjs";
 import * as newest from "./views/new.mjs";
-import { generatePreview } from "./views/story.mjs";
+// Dynamic import for generatePreview - only loaded when not in reconcile mode
+let generatePreview = null;
 import { getSubmission, isReactionComment } from "./cache.mjs";
 import { triggerUpvoteNotification } from "./subscriptions.mjs";
 
@@ -252,7 +254,10 @@ export function handleMessage(
       message.type === "amplify" ||
       (message.type === "comment" && !isReactionComment(message.title))
     ) {
-      sendToCluster("recompute-new-feed");
+      // Only send to cluster if not in reconcile mode (where there are no workers)
+      if (sendToCluster && env.NODE_ENV !== "reconcile") {
+        sendToCluster("recompute-new-feed");
+      }
       // Use setImmediate to make recomputation truly asynchronous
       // This prevents blocking the API response while doing heavy computation
       setImmediate(() => {
@@ -267,9 +272,11 @@ export function handleMessage(
     if (message.type === "amplify") {
       // Use setImmediate to ensure all preview generation work is truly non-blocking
       setImmediate(() => {
-        generatePreview(`0x${index}`).catch((err) => {
-          // NOTE: This can fail if the message is an upvote, not a submission.
-        });
+        if (generatePreview) {
+          generatePreview(`0x${index}`).catch((err) => {
+            // NOTE: This can fail if the message is an upvote, not a submission.
+          });
+        }
       });
       
       // Trigger upvote notification for the story author
@@ -286,7 +293,7 @@ export function handleMessage(
       setImmediate(() => {
         // For comments, we need to pass both the story index and comment index
         const storyIndex = message.href ? `0x${message.href.substring(7)}` : null;
-        if (storyIndex) {
+        if (storyIndex && generatePreview) {
           generatePreview(storyIndex, index).catch((err) => {
             log(`Failed to generate comment preview: ${err.message}`);
           });
@@ -402,7 +409,24 @@ export function listMessages(trie, getAccounts, getDelegations) {
   };
 }
 
-export function launch(trie, libp2p) {
+export async function launch(trie, libp2p) {
+  // Load sendToCluster and generatePreview only when not in reconcile mode
+  if (env.NODE_ENV !== "reconcile") {
+    try {
+      const httpModule = await import("./http.mjs");
+      sendToCluster = httpModule.sendToCluster;
+    } catch (err) {
+      log(`Warning: Could not load http module: ${err.message}`);
+    }
+    
+    try {
+      const storyModule = await import("./views/story.mjs");
+      generatePreview = storyModule.generatePreview;
+    } catch (err) {
+      log(`Warning: Could not load story module: ${err.message}`);
+    }
+  }
+  
   api.use((err, req, res, next) => {
     log(`Express error: "${err.message}", "${err.stack}"`);
     res.status(500).send("Internal Server Error");
