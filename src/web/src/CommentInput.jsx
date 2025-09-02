@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import posthog from "posthog-js";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { WagmiProvider, useAccount } from "wagmi";
@@ -136,28 +137,42 @@ const MobileComposer = ({
     };
   }, []);
   return (
-    <div
-      onTouchMove={(e) => {
-        if (!e.target.closest("textarea")) {
-          e.preventDefault();
-        }
-      }}
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: "white",
-        zIndex: 1000,
-        display: "flex",
-        flexDirection: "column",
-        width: "100%",
-        overflow: "hidden",
-        touchAction: "none",
-        overscrollBehavior: "none",
-      }}
-    >
+    <>
+      {/* Solid white backdrop to prevent bleed-through */}
+      <div
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: "white",
+          zIndex: 998,
+        }}
+      />
+      <div
+        onTouchMove={(e) => {
+          if (!e.target.closest("textarea")) {
+            e.preventDefault();
+          }
+        }}
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: "white",
+          zIndex: 999,
+          display: "flex",
+          flexDirection: "column",
+          width: "100%",
+          overflow: "hidden",
+          touchAction: "none",
+          overscrollBehavior: "none",
+          isolation: "isolate",
+        }}
+      >
       <div
         style={{
           display: "flex",
@@ -168,7 +183,7 @@ const MobileComposer = ({
           position: "sticky",
           top: 0,
           backgroundColor: "white",
-          zIndex: 2,
+          zIndex: 1000,
         }}
       >
         <button
@@ -232,6 +247,7 @@ const MobileComposer = ({
           height: "100%",
           overflowY: "auto",
           touchAction: "auto",
+          backgroundColor: "white",
         }}
         onTouchMove={(e) => e.stopPropagation()}
         value={text}
@@ -246,12 +262,13 @@ const MobileComposer = ({
           position: "sticky",
           bottom: 0,
           backgroundColor: "white",
-          zIndex: 2,
+          zIndex: 1000,
         }}
       >
         {(characterLimit - text.length).toLocaleString()} characters remaining
       </div>
     </div>
+    </>
   );
 };
 
@@ -676,18 +693,21 @@ const CommentInput = (props) => {
       }}
     >
       {showMobileComposer && isMobile ? (
-        <MobileComposer
-          text={text}
-          setText={setText}
-          onSubmit={handleSubmit}
-          onCancel={() => {
-            setShowMobileComposer(false);
-            setDisableAutoOpen(true);
-            setTimeout(() => setDisableAutoOpen(false), 300);
-          }}
-          isLoading={isLoading}
-          characterLimit={characterLimit}
-        />
+        createPortal(
+          <MobileComposer
+            text={text}
+            setText={setText}
+            onSubmit={handleSubmit}
+            onCancel={() => {
+              setShowMobileComposer(false);
+              setDisableAutoOpen(true);
+              setTimeout(() => setDisableAutoOpen(false), 300);
+            }}
+            isLoading={isLoading}
+            characterLimit={characterLimit}
+          />,
+          document.body
+        )
       ) : (
         <>
           {isMobile ? (
