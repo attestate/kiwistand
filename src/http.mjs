@@ -323,32 +323,58 @@ app.post("/api/v1/neynar/notify", async (req, res) => {
 });
 
 // NOTE: We use s-maxage for Cloudflare CDN caching, while max-age controls browser caching
-app.get("/.well-known/apple-app-site-association", (req, res) => {
-  res.setHeader("Content-Type", "application/json");
-  res.setHeader(
-    "Cache-Control",
-    "public, s-maxage=86400, max-age=86400, stale-while-revalidate=600000",
-  );
-  res.json({
+// Helper to build the Apple App Site Association payload
+function buildAppleAppSiteAssociation() {
+  return {
     webcredentials: {
       apps: ["SKFAD6UPBF.attestate.Kiwi-News-iOS"],
     },
     applinks: {
       apps: [],
+      // Use both components (newer iOS) and paths (older iOS) styles
       details: [
         {
           appIDs: ["SKFAD6UPBF.attestate.Kiwi-News-iOS"],
           components: [
-            {
-              "/": "/*",
-              comment: "Matches all URLs",
-            },
+            // Explicitly match actual existing routes
+            { "/": "/stories/*" },
+            { "/": "/submit*" },
+            { "/": "/new*" },
+            { "/": "/best*" },
+            { "/": "/upvotes*" },
+            { "/": "/activity*" },
+            // Fallback – match everything under the domain
+            { "/": "/*" },
+          ],
+          // Include legacy 'paths' for broader compatibility
+          paths: [
+            "/stories/*",
+            "/submit*",
+            "/new*",
+            "/best*",
+            "/upvotes*",
+            "/activity*",
+            "/*",
           ],
         },
       ],
     },
-  });
-});
+  };
+}
+
+// Serve AASA at both well-known and root paths to satisfy iOS fetch behavior
+function serveAASA(req, res) {
+  res.setHeader("Content-Type", "application/json");
+  res.setHeader(
+    "Cache-Control",
+    "public, s-maxage=86400, max-age=86400, stale-while-revalidate=600000",
+  );
+  // Use send instead of json to avoid Express overriding headers
+  res.status(200).send(JSON.stringify(buildAppleAppSiteAssociation()));
+}
+
+app.get("/.well-known/apple-app-site-association", serveAASA);
+app.get("/apple-app-site-association", serveAASA);
 
 let domain = "https://news.kiwistand.com";
 let hostname, port;
