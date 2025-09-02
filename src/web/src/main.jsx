@@ -779,30 +779,6 @@ async function addRewardsDrawer() {
   );
 }
 
-async function addNewsletterScrollModal(toast) {
-  // Only show on feed pages where users are likely to be reading
-  const path = window.location.pathname;
-  const shouldShow = path === "/" || path === "/new" || path === "/best";
-  
-  if (!shouldShow) return;
-
-  // Create container if it doesn't exist
-  if (!document.getElementById("newsletter-scroll-modal-container")) {
-    const container = document.createElement("div");
-    container.id = "newsletter-scroll-modal-container";
-    document.body.appendChild(container);
-  }
-
-  const NewsletterScrollModal = (await import("./NewsletterScrollModal.jsx")).default;
-  createRoot(document.getElementById("newsletter-scroll-modal-container")).render(
-    <StrictMode>
-      <Providers>
-        <NewsletterScrollModal toast={toast} />
-      </Providers>
-    </StrictMode>,
-  );
-}
-
 async function addAvatar(allowlist) {
   const avatarElem = document.querySelectorAll("nav-header-avatar");
   if (avatarElem && avatarElem.length > 0) {
@@ -1170,15 +1146,22 @@ async function startWatchAccount(allowlist, delegations, account, isInIOSApp) {
       console.log("Set Kiwi wallet for iOS notifications:", identity);
     }
     
-    // Update interaction tracking signer/identity (initialized once globally)
+    // Initialize interaction tracking with the signer and identity
     if (signer) {
-      import("./tracker.mjs")
-        .then((tracker) => {
-          tracker.setSigner(signer, identity);
-        })
-        .catch((err) => {
-          console.error("Failed to set signer for interaction tracking:", err);
-        });
+      import("./tracker.mjs").then((tracker) => {
+        tracker.initializeTracking(signer, identity);
+        console.log("Interaction tracking initialized with signer");
+      }).catch((err) => {
+        console.error("Failed to initialize interaction tracking:", err);
+      });
+    } else {
+      // Initialize without signer (read-only mode)
+      import("./tracker.mjs").then((tracker) => {
+        tracker.initializeTracking();
+        console.log("Interaction tracking initialized without signer (read-only)");
+      }).catch((err) => {
+        console.error("Failed to initialize interaction tracking:", err);
+      });
     }
   } else {
     hideDesktopLinks();
@@ -1189,7 +1172,13 @@ async function startWatchAccount(allowlist, delegations, account, isInIOSApp) {
       console.log("Cleared Kiwi wallet for iOS");
     }
     
-    // Tracking is initialized globally; nothing else to do here
+    // Still initialize tracker but without signer (for non-logged in users)
+    import("./tracker.mjs").then((tracker) => {
+      tracker.initializeTracking();
+      console.log("Interaction tracking initialized (no auth)");
+    }).catch((err) => {
+      console.error("Failed to initialize interaction tracking:", err);
+    });
     return;
   }
   dynamicPrefetch(`https://api.ensdata.net/${identity}?farcaster=true`);
@@ -1485,14 +1474,6 @@ async function start() {
   // Initialize link impression tracking
   trackLinkImpressions();
   
-  // Initialize interaction tracking once (read-only by default)
-  try {
-    const tracker = await import("./tracker.mjs");
-    tracker.initializeTracking();
-  } catch (err) {
-    console.error("Failed to initialize interaction tracking:", err);
-  }
-  
   // Initialize terminal ad animations
   initTerminalAds();
 
@@ -1603,7 +1584,6 @@ async function start() {
     addTutorialDrawers(),
     addEmbedDrawer(toast),
     addRewardsDrawer(),
-    addNewsletterScrollModal(toast),
     addAvatar(await allowlistPromise),
     addBackButton(),
     addDelegateButton(await allowlistPromise, await delegationsPromise, toast),
@@ -1650,8 +1630,4 @@ async function start() {
   } catch {}
 }
 
-// Ensure start() runs only once
-if (!window.__kiwiMainStarted) {
-  window.__kiwiMainStarted = true;
-  start();
-}
+start();
