@@ -28,11 +28,6 @@ let globalIdentity = null;
 export function setSigner(signer, identity) {
   globalSigner = signer;
   globalIdentity = identity;
-  console.log("Tracker: Signer and identity set", {
-    signer,
-    hasS: !!signer,
-    identity,
-  });
 }
 
 // Create a signed interaction message
@@ -475,6 +470,13 @@ export function applyClickedStyling() {
     const contentId = row.dataset.contentId;
     
     if (clickedIds.has(contentId)) {
+      // If comments are open for this row, treat it as "unread":
+      // remove faded styling and clear from local cache.
+      if (areCommentsOpenForContent(contentId)) {
+        removeClickedStyling(contentId);
+        return;
+      }
+      
       // Add a class to indicate this row has been clicked
       row.classList.add("clicked-content");
       
@@ -491,6 +493,30 @@ export function applyClickedStyling() {
   
   // Avoid noisy logs during frequent DOM mutations
   // console.debug(`Applied clicked styling to ${clickedIds.size} items`);
+}
+
+// Determine if the comments drawer is currently open for a given content item
+function areCommentsOpenForContent(contentId) {
+  // contentId is in form: "kiwi:0x<index>" for submissions
+  if (!contentId) return false;
+  let storyIndex = null;
+  try {
+    const parts = String(contentId).split(":");
+    storyIndex = parts.length > 1 ? parts[1] : null;
+  } catch (_) {
+    storyIndex = null;
+  }
+  if (!storyIndex) return false;
+
+  // Find the server-rendered comment section placeholder for this row
+  const host = document.querySelector(
+    `.comment-section[data-story-index="${storyIndex}"]`,
+  );
+  if (!host) return false;
+
+  // When comments are shown, React renders children inside this container
+  // (or replaces its content). If it has children, consider it open.
+  return host.childElementCount > 0;
 }
 
 // Disable hover effects on a specific element
@@ -609,11 +635,6 @@ export function initializeTracking(signer = null, identity = null) {
   mutationObserver.observe(document.body, {
     childList: true,
     subtree: true,
-  });
-
-  console.log("Interaction tracking initialized", {
-    hasSigner: !!globalSigner,
-    identity: globalIdentity,
   });
 }
 
