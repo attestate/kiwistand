@@ -9,10 +9,6 @@ let clickQueue = [];
 let batchTimer = null;
 let isProcessing = false;
 
-// Initialization guard and listener flags
-let trackerInitialized = false;
-let clickListenerAdded = false;
-
 // Configuration
 const BATCH_INTERVAL = 5000; // Send batch every 5 seconds
 const MAX_BATCH_SIZE = 50; // Maximum items per batch
@@ -285,9 +281,6 @@ function observeElements() {
 
 // Set up click tracking
 export function setupClickTracking() {
-  // Ensure we only add one global click listener
-  if (clickListenerAdded) return;
-
   // Use event delegation on document body with capture to get it early
   document.body.addEventListener(
     "click",
@@ -346,8 +339,6 @@ export function setupClickTracking() {
     },
     false,
   ); // Use bubbling phase (false) instead of capture
-
-  clickListenerAdded = true;
 }
 
 // Sync user interactions from server
@@ -489,8 +480,7 @@ export function applyClickedStyling() {
     }
   });
   
-  // Avoid noisy logs during frequent DOM mutations
-  // console.debug(`Applied clicked styling to ${clickedIds.size} items`);
+  console.log(`Applied clicked styling to ${clickedIds.size} items`);
 }
 
 // Disable hover effects on a specific element
@@ -553,15 +543,6 @@ export function removeClickedStyling(contentId) {
 // Initialize tracking when DOM is ready
 // Now accepts signer and identity from main.jsx
 export function initializeTracking(signer = null, identity = null) {
-  // If we were called again, just update signer/identity and bail
-  if (trackerInitialized) {
-    if (signer && identity) setSigner(signer, identity);
-    return;
-  }
-
-  // First-time initialization
-  trackerInitialized = true;
-
   // Set the signer if provided
   if (signer && identity) {
     setSigner(signer, identity);
@@ -573,14 +554,14 @@ export function initializeTracking(signer = null, identity = null) {
 
   // Load cached interactions
   loadCachedInteractions();
-
+  
   // Apply greyed-out styling to clicked items
   applyClickedStyling();
 
   // Sync interactions from server (only if we have a signer and on / or /new pages)
   const currentPath = window.location.pathname;
   const shouldSync = currentPath === "/" || currentPath === "/new";
-
+  
   if (globalSigner && shouldSync) {
     syncInteractions().then(() => {
       // Re-apply styling after sync
@@ -593,17 +574,10 @@ export function initializeTracking(signer = null, identity = null) {
   window.addEventListener("pagehide", flushInteractions);
 
   // Re-observe elements when DOM changes (for dynamic content)
-  let applyStylingScheduled = false;
   const mutationObserver = new MutationObserver(() => {
     observeElements();
-    // Debounce styling updates to avoid thrashing
-    if (!applyStylingScheduled) {
-      applyStylingScheduled = true;
-      setTimeout(() => {
-        applyClickedStyling();
-        applyStylingScheduled = false;
-      }, 150);
-    }
+    // Re-apply styling when new content is added
+    applyClickedStyling();
   });
 
   mutationObserver.observe(document.body, {
