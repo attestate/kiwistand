@@ -144,7 +144,7 @@ const NewsletterScrollModal = ({ toast }) => {
           justify-content: center;
           align-items: flex-start;
           z-index: 5; /* Below nav which is typically z-index: 6 or higher */
-          padding: 20px 20px 0 20px;
+          padding-top: 20px;
           box-sizing: border-box;
         }
 
@@ -168,11 +168,10 @@ const NewsletterScrollModal = ({ toast }) => {
           position: relative;
           width: 90%;
           max-width: 500px;
-          background-color: #f6f6ef;
-          border-radius: 0;
-          padding: 26px 24px 32px 24px;
+          background-color: #fff;
+          border-radius: 12px;
+          padding: 32px;
           box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
-          font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         }
 
         .newsletter-close-btn {
@@ -190,14 +189,14 @@ const NewsletterScrollModal = ({ toast }) => {
         }
 
         .newsletter-close-btn:hover {
-          color: #142615;
+          color: #000;
         }
 
         .newsletter-logo {
           width: 64px;
           height: 64px;
           margin: 0 auto 24px;
-          background-color: #142615;
+          background-color: #1a4f2e;
           border-radius: 50%;
           display: flex;
           align-items: center;
@@ -211,59 +210,54 @@ const NewsletterScrollModal = ({ toast }) => {
         }
 
         .newsletter-title {
-          font-size: 17pt;
+          font-size: 24px;
           font-weight: 700;
-          font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
           text-align: center;
           margin: 0 0 12px 0;
-          color: #142615;
+          color: #000;
           line-height: 1.2;
         }
 
         .newsletter-subtitle {
-          font-size: 12pt;
-          font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+          font-size: 16px;
           text-align: center;
           color: #666;
           margin: 0 0 28px 0;
-          line-height: 1.2;
+          line-height: 1.5;
         }
 
         .newsletter-input {
           width: 100%;
-          padding: 7px 14px;
-          font-size: 11pt;
-          font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-          color: #142615;
-          border: 1px solid #142615;
-          border-radius: 0;
-          margin-bottom: 8px;
-          background-color: #f6f6ef;
+          padding: 14px 16px;
+          font-size: 16px;
+          border: 1px solid #ddd;
+          border-radius: 4px;
+          margin-bottom: 12px;
+          background-color: #fff;
           outline: none;
           transition: border-color 0.2s;
           box-sizing: border-box;
         }
 
         .newsletter-input:focus {
-          border-color: #c5d54e;
+          border-color: #afc048;
         }
 
         .newsletter-submit {
           width: 100%;
-          padding: 7px 14px;
-          font-size: 12pt;
-          font-weight: bold;
-          font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-          background-color: #c5d54e;
-          color: #142615;
-          border: 1px solid #142615;
-          border-radius: 0;
+          padding: 14px;
+          font-size: 16px;
+          font-weight: 600;
+          background-color: #afc048;
+          color: #000;
+          border: none;
+          border-radius: 4px;
           cursor: pointer;
           transition: background-color 0.2s;
         }
 
         .newsletter-submit:hover:not(:disabled) {
-          background-color: #b5c43e;
+          background-color: #9fb038;
         }
 
         .newsletter-submit:disabled {
@@ -272,12 +266,10 @@ const NewsletterScrollModal = ({ toast }) => {
         }
 
         .newsletter-footer {
-          font-size: 9pt;
-          font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-          font-weight: normal;
+          font-size: 13px;
           text-align: center;
           color: #999;
-          margin-top: 12px;
+          margin-top: 16px;
           margin-bottom: 0;
         }
       `}</style>
@@ -310,12 +302,12 @@ const NewsletterScrollModal = ({ toast }) => {
 
           {/* Heading */}
           <h2 className="newsletter-title">
-            Subscribe to<br />Kiwi News Newsletter
+            Discover more from Kiwi News Newsletter
           </h2>
 
           {/* Subheading */}
           <p className="newsletter-subtitle">
-            Get weekly updates with curated stories and trusted insights, handpicked for you.
+            Stay updated with curated stories and trusted insights, handpicked for you.
           </p>
 
           {/* Email Form */}
