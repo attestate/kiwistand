@@ -308,6 +308,16 @@ export function setupClickTracking() {
         return; // Don't track this as a regular click
       }
 
+      // Ignore clicks on share UI so shares don't mark items as read
+      // Covers: native share button + dropdown, and Farcaster share button
+      const isShareClick = clickedElement.closest(
+        
+        ".share-button, .share-button-container, .share-dropdown, .share-dropdown-item, .farcaster-share-button, .farcaster-share-button-container, .share-link"
+      );
+      if (isShareClick) {
+        return; // Do not track shares as clicks/read
+      }
+
       // Check if we clicked on a clickable element (link, button, etc.)
       const isClickable = clickedElement.closest("a, button, [role='button']");
       if (!isClickable) return;
