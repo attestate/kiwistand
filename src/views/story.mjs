@@ -248,11 +248,21 @@ export default async function (trie, theme, index, value, referral, commentIndex
         story.submitter.safeAvatar,
         domain,
       );
-      await preview.generate(hexIndex, body, true); // Generate frame version if missing
+      // Fire-and-forget to avoid blocking story render
+      preview
+        .generate(hexIndex, body, true)
+        .catch((e) => log(`Frame preview generation failed: ${e.message}`));
     } catch (err) {
       // Fallback without avatar if there's an error
-      const body = preview.story(value.title, story.submitter.displayName, null, domain);
-      await preview.generate(hexIndex, body, true);
+      const body = preview.story(
+        value.title,
+        story.submitter.displayName,
+        null,
+        domain,
+      );
+      preview
+        .generate(hexIndex, body, true)
+        .catch((e) => log(`Frame preview generation (fallback) failed: ${e.message}`));
     }
   }
 
@@ -298,7 +308,10 @@ export default async function (trie, theme, index, value, referral, commentIndex
             absoluteTime,
             comment.reactions
           );
-          await preview.generate(fileName, body); // Generate OG image
+          // Fire-and-forget to avoid blocking story render
+          preview
+            .generate(fileName, body)
+            .catch((e) => log(`OG comment preview generation failed: ${e.message}`));
         }
         
         // Generate frame preview only if it doesn't exist
@@ -311,7 +324,10 @@ export default async function (trie, theme, index, value, referral, commentIndex
             absoluteTime,
             comment.reactions
           );
-          await preview.generate(fileName, frameBody, true); // Generate frame image
+          // Fire-and-forget to avoid blocking story render
+          preview
+            .generate(fileName, frameBody, true)
+            .catch((e) => log(`Frame comment preview generation failed: ${e.message}`));
         }
       } catch (err) {
         log(`Failed to generate comment preview: ${err.message}`);
