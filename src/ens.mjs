@@ -16,8 +16,8 @@ const fsCache = new FileSystemCache({
   cacheDirectory: path.resolve(env.CACHE_DIR),
   ttl: 86400000 * 5, // 72 hours
 });
-const fetch = fetchBuilder.withCache(fsCache);
-const fetchStaleWhileRevalidate = fetchCache(fetch, fsCache);
+const cachedFetch = fetchBuilder.withCache(fsCache);
+const fetchStaleWhileRevalidate = fetchCache(cachedFetch, fsCache);
 
 export async function toAddress(name) {
   const address = await provider.resolveName(name);
@@ -25,8 +25,7 @@ export async function toAddress(name) {
   throw new Error("Couldn't convert to address");
 }
 
-
-async function fetchNeynarData(address) {
+async function fetchNeynarData(address, forceFetch) {
   try {
     utils.getAddress(address);
   } catch (err) {
@@ -40,11 +39,12 @@ async function fetchNeynarData(address) {
   try {
     const url = `https://api.neynar.com/v2/farcaster/user/bulk-by-address?addresses=${address}`;
     const signal = AbortSignal.timeout(5000);
-    const response = await fetchStaleWhileRevalidate(url, {
+    const fetchFn = forceFetch ? fetch : fetchStaleWhileRevalidate;
+    const response = await fetchFn(url, {
       signal,
       headers: {
-        'x-api-key': env.NEYNAR_API_KEY
-      }
+        "x-api-key": env.NEYNAR_API_KEY,
+      },
     });
 
     if (!response.ok) {
@@ -56,7 +56,7 @@ async function fetchNeynarData(address) {
     }
 
     const data = await response.json();
-    
+
     // API returns data in format: {"0x...": [user_object]}
     const userData = data[address.toLowerCase()];
     if (!userData || !userData.length) {
@@ -86,7 +86,7 @@ async function fetchNeynarData(address) {
   }
 }
 
-async function fetchLensData(address) {
+async function fetchLensData(address, forceFetch) {
   try {
     utils.getAddress(address);
   } catch (err) {
@@ -123,7 +123,8 @@ async function fetchLensData(address) {
   let response;
   try {
     const signal = AbortSignal.timeout(5000);
-    response = await fetchStaleWhileRevalidate("https://api-v2.lens.dev/", {
+    const fetchFn = forceFetch ? fetch : fetchStaleWhileRevalidate;
+    response = await fetchFn("https://api-v2.lens.dev/", {
       signal,
       method: "POST",
       headers: {
@@ -154,7 +155,7 @@ async function fetchLensData(address) {
   };
 }
 
-export async function fetchENSData(address) {
+export async function fetchENSData(address, forceFetch) {
   const endpoint = "https://api.ensdata.net/";
 
   try {
@@ -167,14 +168,16 @@ export async function fetchENSData(address) {
     }
 
     const signal = AbortSignal.timeout(5000);
-    const response = await fetchStaleWhileRevalidate(url, { signal });
-    
+    const fetchFn = forceFetch ? fetch : fetchStaleWhileRevalidate;
+    const response = await fetchFn(url, { signal });
+
     const data = await response.json();
-    
+
     // Check if ENS returned an error in the JSON response
     if (data.error || !response.ok) {
       throw new Error(
-        data.message || `ENS API returned ${response.status}: ${response.statusText}`,
+        data.message ||
+          `ENS API returned ${response.status}: ${response.statusText}`,
       );
     }
     try {
@@ -256,13 +259,72 @@ export async function fetchENSData(address) {
 // Create a prefix for ENS cache entries to ensure uniqueness
 export const ENS_CACHE_PREFIX = "ens-profile-";
 
-export async function resolve(address) {
+export async function _resolve(normalizedAddress, forceFetch) {
+  const ensProfile = await fetchENSData(normalizedAddress, forceFetch);
+  const lensProfile = await fetchLensData(normalizedAddress, forceFetch);
+
+  // If ENS failed and didn't return Neynar data, try Neynar independently
+  let neynarProfile = null;
+  if (ensProfile.error && !ensProfile.farcaster) {
+    neynarProfile = await fetchNeynarData(normalizedAddress, forceFetch);
+  }
+
+  // Get Neynar score from API data (if available)
+  let neynarScore = 0;
+  if (ensProfile?.farcaster?.score) {
+    neynarScore = ensProfile.farcaster.score;
+  } else if (neynarProfile?.farcaster?.score) {
+    neynarScore = neynarProfile.farcaster.score;
+  }
+
+  let safeAvatar = ensProfile.avatar_small
+    ? ensProfile.avatar_small
+    : ensProfile.avatar;
+  if (safeAvatar && !safeAvatar.startsWith("https")) {
+    safeAvatar = ensProfile.avatar_url;
+  }
+  if (!safeAvatar && ensProfile?.farcaster?.avatar) {
+    safeAvatar = ensProfile.farcaster.avatar;
+  }
+  if (!safeAvatar && neynarProfile?.farcaster?.avatar) {
+    safeAvatar = neynarProfile.farcaster.avatar;
+  }
+  if (!safeAvatar && lensProfile?.avatar) {
+    safeAvatar = lensProfile.avatar;
+  }
+
+  let displayName = DOMPurify.sanitize(ensProfile.ens);
+  if (!displayName && ensProfile?.farcaster?.username) {
+    displayName = `@${DOMPurify.sanitize(ensProfile.farcaster.username)}`;
+  }
+  if (!displayName && neynarProfile?.farcaster?.username) {
+    displayName = `@${DOMPurify.sanitize(neynarProfile.farcaster.username)}`;
+  }
+  if (!displayName && lensProfile?.username) {
+    displayName = `${DOMPurify.sanitize(lensProfile.username)}`;
+  }
+  if (!displayName) {
+    displayName = ensProfile.truncatedAddress;
+  }
+
+  const completeProfile = {
+    safeAvatar: DOMPurify.sanitize(safeAvatar),
+    ...ensProfile,
+    ...(neynarProfile && { neynar: neynarProfile }),
+    lens: lensProfile,
+    displayName,
+    neynarScore,
+  };
+  return completeProfile;
+}
+
+export async function resolve(address, forceFetch = false) {
   // Normalize address for consistent cache keys and API calls
   const normalizedAddress = address.toLowerCase();
   const cacheKey = `${ENS_CACHE_PREFIX}${normalizedAddress}`;
 
   // Check if we have complete data in cache (not just minimal profile)
-  if (cache.has(cacheKey)) {
+  if (cache.has(cacheKey) && !forceFetch) {
     const cached = cache.get(cacheKey);
     // Only return cached data if it's been fully resolved (has ENS, Farcaster, or Lens data)
     if (cached.ens || cached.farcaster || cached.lens || cached.neynar) {
@@ -282,75 +344,23 @@ export async function resolve(address) {
     safeAvatar: null,
   };
 
-  // Trigger background fetch and update cache when done - don't await
-  (async () => {
-    try {
-      const ensProfile = await fetchENSData(normalizedAddress);
-      const lensProfile = await fetchLensData(normalizedAddress);
+  if (!forceFetch) {
+    // Trigger background fetch and update cache when done - don't await
+    (async () => {
+      try {
+        const completeProfile = await _resolve(normalizedAddress);
+        cache.set(cacheKey, completeProfile);
 
-      // If ENS failed and didn't return Neynar data, try Neynar independently
-      let neynarProfile = null;
-      if (ensProfile.error && !ensProfile.farcaster) {
-        neynarProfile = await fetchNeynarData(normalizedAddress);
+        return completeProfile;
+      } catch (err) {
+        // Silently handle background resolution failures
       }
-
-      // Get Neynar score from API data (if available)
-      let neynarScore = 0;
-      if (ensProfile?.farcaster?.score) {
-        neynarScore = ensProfile.farcaster.score;
-      } else if (neynarProfile?.farcaster?.score) {
-        neynarScore = neynarProfile.farcaster.score;
-      }
-
-      let safeAvatar = ensProfile.avatar_small
-        ? ensProfile.avatar_small
-        : ensProfile.avatar;
-      if (safeAvatar && !safeAvatar.startsWith("https")) {
-        safeAvatar = ensProfile.avatar_url;
-      }
-      if (!safeAvatar && ensProfile?.farcaster?.avatar) {
-        safeAvatar = ensProfile.farcaster.avatar;
-      }
-      if (!safeAvatar && neynarProfile?.farcaster?.avatar) {
-        safeAvatar = neynarProfile.farcaster.avatar;
-      }
-      if (!safeAvatar && lensProfile?.avatar) {
-        safeAvatar = lensProfile.avatar;
-      }
-
-      let displayName = DOMPurify.sanitize(ensProfile.ens);
-      if (!displayName && ensProfile?.farcaster?.username) {
-        displayName = `@${DOMPurify.sanitize(ensProfile.farcaster.username)}`;
-      }
-      if (!displayName && neynarProfile?.farcaster?.username) {
-        displayName = `@${DOMPurify.sanitize(
-          neynarProfile.farcaster.username,
-        )}`;
-      }
-      if (!displayName && lensProfile?.username) {
-        displayName = `${DOMPurify.sanitize(lensProfile.username)}`;
-      }
-      if (!displayName) {
-        displayName = ensProfile.truncatedAddress;
-      }
-
-      const completeProfile = {
-        safeAvatar: DOMPurify.sanitize(safeAvatar),
-        ...ensProfile,
-        ...(neynarProfile && { neynar: neynarProfile }),
-        lens: lensProfile,
-        displayName,
-        neynarScore,
-      };
-
-      // Update cache with complete profile
-      cache.set(cacheKey, completeProfile);
-    } catch (err) {
-      // Silently handle background resolution failures
-    }
-  })().catch((err) => {
-    // Silently handle background fetch errors
-  });
+    })().catch((err) => {
+      // Silently handle background fetch errors
+    });
+  } else {
+    return await _resolve(normalizedAddress, forceFetch);
+  }
 
   // Return minimal profile immediately
   return minimalProfile;
