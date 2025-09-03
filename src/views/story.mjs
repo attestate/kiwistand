@@ -86,7 +86,8 @@ export async function generatePreview(index, commentIndex = null) {
     
     if (comment) {
       try {
-        const commentEnsData = await ens.resolve(comment.identity);
+        const forceFetch = true;
+        const commentEnsData = await ens.resolve(comment.identity, forceFetch);
         const absoluteTime = format(new Date(comment.timestamp * 1000), "PPpp");
         
         const hexIndex = index.substring(2);
@@ -122,7 +123,8 @@ export async function generatePreview(index, commentIndex = null) {
   }
   
   // Default story preview generation
-  const ensData = await ens.resolve(submission.identity);
+  const forceFetch = true;
+  const ensData = await ens.resolve(submission.identity, forceFetch);
   const value = {
     ...submission,
     displayName: ensData.displayName,
