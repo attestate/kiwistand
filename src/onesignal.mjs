@@ -85,9 +85,13 @@ export async function sendBroadcastNotification(notification) {
     return;
   }
 
+  // Use filters to target all users who have subscribed (session_count > 0)
+  // This is more reliable than segments for iOS
   const payload = {
     app_id: ONESIGNAL_APP_ID,
-    included_segments: ["Subscribed Users"],
+    filters: [
+      { field: "session_count", relation: ">", value: "0" }
+    ],
     headings: { en: notification.title },
     contents: { en: notification.body },
     url: notification.url,
@@ -110,7 +114,7 @@ export async function sendBroadcastNotification(notification) {
     if (result.errors) {
       log(`OneSignal broadcast failed: ${JSON.stringify(result.errors)}`);
     } else {
-      log(`OneSignal broadcast sent: ${result.id}`);
+      log(`OneSignal broadcast sent to ${result.recipients} users: ${result.id}`);
     }
 
     return result;
