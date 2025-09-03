@@ -76,13 +76,13 @@ const EmailSubscriptionForm = ({
       // Subscribe to newsletter
       if (subscribeToNewsletter) {
         const response = await fetch(
-          "https://paragraph.xyz/api/blogs/@kiwi-weekly/subscribe",
+          "/api/v1/newsletter/subscribe",
           {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({ email }),
+            body: JSON.stringify({ email, newsletter: "kiwi-weekly" }),
           },
         );
 
@@ -94,13 +94,13 @@ const EmailSubscriptionForm = ({
       // Subscribe to Kiwi Updates
       if (subscribeToUpdates) {
         const response = await fetch(
-          "https://paragraph.xyz/api/blogs/@kiwi-updates/subscribe",
+          "/api/v1/newsletter/subscribe",
           {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({ email }),
+            body: JSON.stringify({ email, newsletter: "kiwi-updates" }),
           },
         );
         if (!response.ok) {
