@@ -39,34 +39,6 @@ const truncateLongWords = (text, maxLength = 20) => {
   return truncatedWords.join(" ");
 };
 
-function truncateComment(comment, maxLength = 180) {
-  if (!comment) return "";
-  const emptyLineIndex = comment.indexOf("\n\n");
-  if (emptyLineIndex !== -1 && emptyLineIndex < maxLength)
-    return truncateLongWords(comment.slice(0, emptyLineIndex)) + "\n...";
-
-  const lastLinkStart = comment.lastIndexOf("https://", maxLength);
-  if (lastLinkStart !== -1 && lastLinkStart < maxLength) {
-    const nextSpace = comment.indexOf(" ", lastLinkStart);
-    const linkEnd = nextSpace === -1 ? comment.length : nextSpace;
-    const fullLink = comment.slice(lastLinkStart, linkEnd);
-    const truncatedLink =
-      fullLink.length > 60 ? fullLink.substring(0, 60) + "..." : fullLink;
-
-    const beforeLink = truncateLongWords(comment.slice(0, lastLinkStart).trim());
-    if (beforeLink && beforeLink.length > 0) {
-      return beforeLink + " " + truncateLongWords(truncatedLink) + "...";
-    } else {
-      return truncatedLink + "...";
-    }
-  }
-
-  if (comment.length <= maxLength) return truncateLongWords(comment);
-  return truncateLongWords(
-    comment.slice(0, comment.lastIndexOf(" ", maxLength)) + "..."
-  );
-}
-
 // --- SVGs as React Components ---
 
 const HeartSVG = () => (
@@ -108,25 +80,17 @@ const ChatsSVG = () => (
 // --- Main Component ---
 
 export default function RowEmail({ story = mockStory }) {
-  // --- Logic from row.mjs ---
-  // Simplified for email context
   const {
     href,
     title,
     metadata,
-    timestamp,
     identity,
     displayName,
-    upvoters,
   } = story;
 
-  const commentCount = story.commentCount || 0; // Mocked
   const extractedDomain = extractDomain(href);
   const isTweet = extractedDomain.includes("twitter.com") || extractedDomain.includes("x.com");
   const isFarcasterCast = extractedDomain.includes("warpcast.com") || extractedDomain.includes("farcaster.xyz");
-
-  const storyAgeHours = differenceInHours(new Date(), new Date(timestamp * 1000));
-  const isStoryNew = storyAgeHours <= 4;
 
   const canRenderTweetPreview = isTweet && metadata && metadata.ogDescription;
   const canRenderFarcasterPreview = isFarcasterCast && metadata && (metadata.farcasterCast || metadata.ogDescription);
@@ -145,88 +109,6 @@ export default function RowEmail({ story = mockStory }) {
     <Html>
       <Head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      </Head>
-      <Tailwind>
-        <Body style={main}>
-          <Container style={container}>
-            <Row>
-              <Column>
-                {canRenderTweetPreview ? (
-                  <Link href={href} style={previewContainer}>
-                    <Section style={tweetEmbedContainer}>
-                      <Row>
-                        <Column width="30">
-                          <Img
-                            src={metadata.twitterAuthorAvatar}
-                            alt={metadata.twitterCreator || "Author"}
-                            width="20"
-                            height="20"
-                            style={{ borderRadius: '9999px', marginRight: '8px' }}
-                          />
-                        </Column>
-                        <Column>
-                          <Text style={{ fontWeight: 600, color: '#0f1419', fontSize: '14px' }}>
-                            {metadata.twitterCreator || "@tweet"}
-                          </Text>
-                        </Column>
-                      </Row>
-                      <Text>{metadata.ogDescription}</Text>
-                      {metadata.image && (
-                        <Img
-                          src={metadata.image}
-                          alt="Tweet image"
-                          width="100%"
-                          style={{ marginTop: '12px', aspectRatio: '16 / 9', objectFit: 'cover' }}
-                        />
-                      )}
-                      <Text style={{ fontSize: '11px', opacity: 0.55, color: '#0f1419', textAlign: 'right' }}>x.com</Text>
-                    </Section>
-                  </Link>
-                ) : canRenderFarcasterPreview ? (
-                  <Link href={href} style={previewContainer}>
-                    <Section style={farcasterEmbedContainer}>
-                       <Row>
-                        <Column width="30">
-                          <Img
-                            src={metadata.farcasterCast?.author?.pfp}
-                            alt={metadata.farcasterCast?.author?.username || "farcaster"}
-                            width="20"
-                            height="20"
-                            style={{ borderRadius: '9999px', marginRight: '8px' }}
-                          />
-                        </Column>
-                        <Column>
-                          <Text style={{ fontWeight: 600, color: '#12212b', fontSize: '14px' }}>
-                            @{metadata.farcasterCast?.author?.username || "farcaster"}
-                          </Text>
-                        </Column>
-                      </Row>
-                      <Text>{metadata.farcasterCast?.text || metadata.ogDescription}</Text>
-                      {farcasterImageUrl && (
-                        <Img
-                          src={farcasterImageUrl}
-                          alt="Cast image"
-                          width="100%"
-                          style={{ marginTop: '12px', aspectRatio: '16 / 9', objectFit: 'cover' }}
-                        />
-                      )}
-                      <Text style={{ fontSize: '11px', opacity: 0.75, color: '#7c65c1', textAlign: 'right' }}>farcaster.xyz</Text>
-                    </Section>
-                  </Link>
-                ) : displayImage ? (
-                  <Link href={href}>
-                    <Img
-                      src={metadata.image}
-                      alt="Story image"
-                      width="100%"
-                      style={{ aspectRatio: '2 / 1', objectFit: 'cover' }}
-                    />
-                  </Link>
-                ) : null}
-
-                <Html>
-      <Head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" />
       </Head>
@@ -235,69 +117,7 @@ export default function RowEmail({ story = mockStory }) {
           <Container style={container}>
             <Row>
               <Column>
-                {canRenderTweetPreview ? (
-                  <Link href={href} style={previewContainer}>
-                    <Section style={tweetEmbedContainer}>
-                      <Row>
-                        <Column width="30">
-                          <Img
-                            src={metadata.twitterAuthorAvatar}
-                            alt={metadata.twitterCreator || "Author"}
-                            width="20"
-                            height="20"
-                            style={{ borderRadius: '9999px', marginRight: '8px' }}
-                          />
-                        </Column>
-                        <Column>
-                          <Text style={{ fontWeight: 600, color: '#0f1419', fontSize: '14px' }}>
-                            {metadata.twitterCreator || "@tweet"}
-                          </Text>
-                        </Column>
-                      </Row>
-                      <Text>{metadata.ogDescription}</Text>
-                      {metadata.image && (
-                        <Img
-                          src={metadata.image}
-                          alt="Tweet image"
-                          width="100%"
-                          style={{ marginTop: '12px', aspectRatio: '16 / 9', objectFit: 'cover' }}
-                        />
-                      )}
-                      <Text style={{ fontSize: '11px', opacity: 0.55, color: '#0f1419', textAlign: 'right' }}>x.com</Text>
-                    </Section>
-                  </Link>
-                ) : canRenderFarcasterPreview ? (
-                  <Link href={href} style={previewContainer}>
-                    <Section style={farcasterEmbedContainer}>
-                       <Row>
-                        <Column width="30">
-                          <Img
-                            src={metadata.farcasterCast?.author?.pfp}
-                            alt={metadata.farcasterCast?.author?.username || "farcaster"}
-                            width="20"
-                            height="20"
-                            style={{ borderRadius: '9999px', marginRight: '8px' }}
-                          />
-                        </Column>
-                        <Column>
-                          <Text style={{ fontWeight: 600, color: '#12212b', fontSize: '14px' }}>
-                            @{metadata.farcasterCast?.author?.username || "farcaster"}
-                          </Text>
-                        </Column>
-                      </Row>
-                      <Text>{metadata.farcasterCast?.text || metadata.ogDescription}</Text>
-                      {farcasterImageUrl && (
-                        <Img
-                          src={farcasterImageUrl}
-                          alt="Cast image"
-                          width="100%"
-                          style={{ marginTop: '12px', aspectRatio: '16 / 9', objectFit: 'cover' }}
-                        />
-                      )}
-                      <Text style={{ fontSize: '11px', opacity: 0.75, color: '#7c65c1', textAlign: 'right' }}>farcaster.xyz</Text>
-                    </Section>
-                  </Link>
-                ) : displayImage ? (
+                {displayImage ? (
                   <Link href={href}>
                     <Img
                       src={metadata.image}
@@ -319,7 +139,6 @@ export default function RowEmail({ story = mockStory }) {
                     {extractedDomain}
                   </Text>
                 </Section>
-
               </Column>
             </Row>
           </Container>
@@ -333,21 +152,6 @@ export default function RowEmail({ story = mockStory }) {
 const main = {
   backgroundColor: "#ffffff",
   fontFamily: "'Inter', Verdana, Geneva, sans-serif",
-};
-
-                </Column>
-            </Row>
-          </Container>
-        </Body>
-      </Tailwind>
-    </Html>
-  );
-}
-
-// --- Styles ---
-const main = {
-  backgroundColor: "#ffffff",
-  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif',
 };
 
 const container = {
@@ -377,16 +181,4 @@ const farcasterEmbedContainer = {
   borderRadius: '12px',
   padding: '12px',
   margin: '0 20px',
-};
-
-const interactionButton = {
-  padding: '8px 12px',
-};
-
-const interactionText = {
-  fontSize: '13px',
-  color: 'rgba(83, 100, 113, 1)',
-  fontWeight: 400,
-  margin: 0,
-  marginLeft: '4px'
 };
