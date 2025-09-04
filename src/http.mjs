@@ -322,6 +322,52 @@ app.post("/api/v1/neynar/notify", async (req, res) => {
   }
 });
 
+// Proxy endpoint for Paragraph newsletter subscriptions
+app.post("/api/v1/newsletter/subscribe", async (req, res) => {
+  const { email, newsletter } = req.body;
+
+  if (!email || !newsletter) {
+    return res
+      .status(400)
+      .json({ error: "Email and newsletter type required" });
+  }
+
+  const allowedNewsletters = ["kiwi-weekly", "kiwi-updates"];
+  if (!allowedNewsletters.includes(newsletter)) {
+    return res.status(400).json({ error: "Invalid newsletter type" });
+  }
+
+  try {
+    const response = await fetch(
+      `https://paragraph.xyz/api/blogs/@${newsletter}/subscribe`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),
+      },
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      log(`Paragraph subscription failed: ${response.status} - ${errorText}`);
+      return res
+        .status(response.status)
+        .json({ error: "Newsletter subscription failed", details: errorText });
+    }
+
+    const data = await response.json();
+    return res.status(200).json(data);
+  } catch (error) {
+    log(`Newsletter subscription error: ${error.message}`);
+    return res.status(500).json({
+      error: "Failed to subscribe to newsletter",
+      details: error.message,
+    });
+  }
+});
+
 // NOTE: We use s-maxage for Cloudflare CDN caching, while max-age controls browser caching
 // Helper to build the Apple App Site Association payload
 function buildAppleAppSiteAssociation() {
