@@ -1,17 +1,17 @@
 import { Head, Html, Body, Container, Tailwind, Text, Link, Img, Row, Column, Section } from "@react-email/components";
 
-import { mockTweet } from "./_mockTweet.js";
+import { mockFarcaster } from "./_mockFarcaster.js";
 
 // --- Main Component ---
 
-export default function TweetEmail({ story = mockTweet }) {
+export default function FarcasterEmail({ story = mockFarcaster }) {
   const {
     href,
     metadata,
     displayName,
   } = story;
 
-  const extractedDomain = "x.com";
+  const extractedDomain = "farcaster.xyz";
 
   return (
     <Html>
@@ -25,29 +25,29 @@ export default function TweetEmail({ story = mockTweet }) {
           <Container style={container}>
             <Row>
               <Column>
-                <Section style={{...tweetEmbedContainer, backgroundColor: '#ffffff', borderBottom: '1px solid #e6e6df' }}>
+                <Section style={{...farcasterEmbedContainer, backgroundColor: '#ffffff', borderBottom: '1px solid #e6e6df' }}>
                   <Link href={href} style={previewContainer}>
                       <Row>
                         <Column width="30">
                           <Img
-                            src={metadata.twitterAuthorAvatar}
-                            alt={metadata.twitterCreator || "Author"}
+                            src={metadata.farcasterCast.author.pfp}
+                            alt={metadata.farcasterCast.author.username || "Author"}
                             width="20"
                             height="20"
                             style={{ borderRadius: '9999px', marginRight: '8px' }}
                           />
                         </Column>
                         <Column>
-                          <Text style={{ fontWeight: 600, color: '#0f1419', fontSize: '14px' }}>
-                            {metadata.twitterCreator || "@tweet"}
+                          <Text style={{ fontWeight: 600, color: '#12212b', fontSize: '14px' }}>
+                            @{metadata.farcasterCast.author.username || "farcaster"}
                           </Text>
                         </Column>
                       </Row>
-                      <Text>{metadata.ogDescription}</Text>
-                      {metadata.image && (
+                      <Text>{metadata.farcasterCast.text}</Text>
+                      {metadata.farcasterCast.embeds[0] && (
                         <Img
-                          src={metadata.image}
-                          alt="Tweet image"
+                          src={metadata.farcasterCast.embeds[0].url}
+                          alt="Farcaster image"
                           width="100%"
                           style={{ marginTop: '12px', objectFit: 'cover' }}
                         />
@@ -91,7 +91,7 @@ const previewContainer = {
   display: 'block',
 };
 
-const tweetEmbedContainer = {
+const farcasterEmbedContainer = {
   padding: '12px',
   backgroundColor: '#ffffff',
 };
