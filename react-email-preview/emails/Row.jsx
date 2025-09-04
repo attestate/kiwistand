@@ -5,8 +5,6 @@ import {
   formatDistanceToNowStrict as originalFormatDistance,
 } from "date-fns";
 
-import { mockStory } from "./_mock.js";
-
 // --- Helper functions from row.mjs ---
 
 const formatDistanceToNowStrict = (date) => {
@@ -80,7 +78,7 @@ const ChatsSVG = () => (
 
 // --- Main Component ---
 
-export default function RowEmail({ story = mockStory }) {
+export default function RowEmail({ story = {} }) {
   const {
     href,
     title,

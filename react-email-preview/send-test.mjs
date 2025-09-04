@@ -9,13 +9,13 @@ async function sendTestEmail() {
   const recipientEmail = process.env.RECIPIENT_EMAIL;
 
   if (!apiKey || !recipientEmail) {
-    console.error('Error: Please set BUTTONDOWN_API_KEY and RECIPIENT_EMAIL environment variables.');
+    console.error('Error: Please set BUTTONDOWN_API_KEY and RECIPIENT_EMAIL in your .env file.');
     process.exit(1);
   }
 
   try {
-    // 1. Read the HTML content
-    const htmlContent = await fs.readFile('digest.html', 'utf-8');
+    // 1. Read the HTML content from the `out` directory
+    const htmlContent = await fs.readFile('out/Digest.html', 'utf-8');
 
     // 2. Create a new email in Buttondown with the status 'draft'
     const createEmailResponse = await fetch('https://api.buttondown.email/v1/emails', {
@@ -40,8 +40,8 @@ async function sendTestEmail() {
     const emailData = await createEmailResponse.json();
     console.log(`Successfully created email draft with ID: ${emailData.id}`);
 
-    // 3. Send the created draft to a specific email address for review
-    // This does NOT send to your subscriber list.
+    // 3. Send the created draft for review
+    console.log(`Sending test email to ${recipientEmail}...`);
     const sendTestResponse = await fetch(`https://api.buttondown.email/v1/emails/${emailData.id}/send-draft`, {
       method: 'POST',
       headers: {
@@ -51,15 +51,8 @@ async function sendTestEmail() {
       body: JSON.stringify([recipientEmail]),
     });
 
-    if (!sendTestResponse.ok) {
-        const errorData = await sendTestResponse.text();
-        console.error('Error sending test email:', sendTestResponse.status, errorData);
-        return;
-    }
-
-    // The send-draft endpoint returns an empty body on success, so we just check the status
     if (sendTestResponse.ok) {
-      console.log(`Successfully sent test email to ${recipientEmail}.`);
+      console.log('Successfully sent test email!');
     } else {
       const errorText = await sendTestResponse.text();
       console.error('Failed to send test email with status:', sendTestResponse.status, errorText);

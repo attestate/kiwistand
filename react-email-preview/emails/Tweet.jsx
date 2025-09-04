@@ -1,11 +1,9 @@
 import React from "react";
 import { Head, Html, Body, Container, Tailwind, Text, Link, Img, Row, Column, Section } from "@react-email/components";
 
-import { mockTweet } from "./_mockTweet.js";
-
 // --- Main Component ---
 
-export default function TweetEmail({ story = mockTweet }) {
+export default function TweetEmail({ story = { metadata: {} } }) {
   const {
     href,
     metadata,

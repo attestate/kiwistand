@@ -1,11 +1,9 @@
 import React from "react";
 import { Head, Html, Body, Container, Tailwind, Text, Link, Img, Row, Column, Section } from "@react-email/components";
 
-import { mockFarcaster } from "./_mockFarcaster.js";
-
 // --- Main Component ---
 
-export default function FarcasterEmail({ story = mockFarcaster }) {
+export default function FarcasterEmail({ story = { metadata: { farcasterCast: { author: {} } } } }) {
   const {
     href,
     metadata,

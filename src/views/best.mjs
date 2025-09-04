@@ -33,25 +33,21 @@ const html = htm.bind(vhtml);
 
 // Add metadata to a post
 async function addMetadata(post) {
-  let data = cachedMetadata(post.href);
-  
-  // If cache is empty, fetch synchronously to ensure metadata is available
-  if (!data || Object.keys(data).length === 0) {
-    try {
-      data = await metadata(post.href);
-    } catch (err) {
-      // If fetch fails, return empty metadata
-      data = {};
-    }
+  try {
+    const data = await metadata(post.href);
+    return {
+      ...post,
+      metadata: data,
+    };
+  } catch (err) {
+    return {
+      ...post,
+      metadata: {},
+    };
   }
-  
-  return {
-    ...post,
-    metadata: data,
-  };
 }
 
-async function getStories(trie, page, period, domain) {
+export async function getStories(trie, page, period, domain) {
   let startDatetime = 0;
   const unix = (date) => Math.floor(date.getTime() / 1000);
   const now = new Date();

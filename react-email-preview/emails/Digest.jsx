@@ -5,11 +5,26 @@ import RowEmail from "./Row.jsx";
 import TweetEmail from "./Tweet.jsx";
 import FarcasterEmail from "./Farcaster.jsx";
 
-import { mockStory } from "./_mock.js";
-import { mockTweet } from "./_mockTweet.js";
-import { mockFarcaster } from "./_mockFarcaster.js";
+// --- Main Component ---
 
-export default function DigestEmail() {
+export default function DigestEmail({ stories = [] }) {
+  const components = {
+    Row: RowEmail,
+    Tweet: TweetEmail,
+    Farcaster: FarcasterEmail,
+  };
+
+  const getComponentForStory = (story) => {
+    const domain = story.metadata?.domain || '';
+    if (domain.includes('twitter.com') || domain.includes('x.com')) {
+      return 'Tweet';
+    }
+    if (domain.includes('warpcast.com') || domain.includes('farcaster.xyz')) {
+      return 'Farcaster';
+    }
+    return 'Row';
+  };
+
   return (
     <Html>
       <Head>
@@ -40,11 +55,17 @@ export default function DigestEmail() {
               <br />
               Have a nice day.
             </Text>
-            <RowEmail story={mockStory} />
-            <Hr style={hr} />
-            <TweetEmail story={mockTweet} />
-            <Hr style={hr} />
-            <FarcasterEmail story={mockFarcaster} />
+            
+            {stories.map((story, index) => {
+              const Component = components[getComponentForStory(story)];
+              return (
+                <React.Fragment key={story.href}>
+                  <Component story={story} />
+                  {index < stories.length - 1 && <Hr style={hr} />}
+                </React.Fragment>
+              );
+            })}
+
           </Container>
         </Body>
       </Tailwind>
