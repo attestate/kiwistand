@@ -1,6 +1,47 @@
 import React from "react";
 import { Head, Html, Body, Container, Tailwind, Text, Link, Img, Row, Column, Section } from "@react-email/components";
 
+// --- Helper functions ---
+const truncateLongWords = (text, maxLength = 20) => {
+  if (!text) return "";
+  const words = text.split(" ");
+  const truncatedWords = words.map((word) =>
+    word.length > maxLength ? `${word.substring(0, maxLength)}...` : word
+  );
+  return truncatedWords.join(" ");
+};
+
+function truncateComment(comment, maxLength = 180) {
+  if (!comment) return "";
+  
+  const emptyLineIndex = comment.indexOf("\n\n");
+  if (emptyLineIndex !== -1 && emptyLineIndex < maxLength)
+    return truncateLongWords(comment.slice(0, emptyLineIndex)) + "\n...";
+
+  const lastLinkStart = comment.lastIndexOf("https://", maxLength);
+  if (lastLinkStart !== -1 && lastLinkStart < maxLength) {
+    const nextSpace = comment.indexOf(" ", lastLinkStart);
+    const linkEnd = nextSpace === -1 ? comment.length : nextSpace;
+    const fullLink = comment.slice(lastLinkStart, linkEnd);
+    const truncatedLink =
+      fullLink.length > 60 ? fullLink.substring(0, 60) + "..." : fullLink;
+
+    const beforeLink = truncateLongWords(
+      comment.slice(0, lastLinkStart).trim()
+    );
+    if (beforeLink && beforeLink.length > 0) {
+      return beforeLink + " " + truncateLongWords(truncatedLink) + "...";
+    } else {
+      return truncatedLink + "...";
+    }
+  }
+
+  if (comment.length <= maxLength) return truncateLongWords(comment);
+  return truncateLongWords(
+    comment.slice(0, comment.lastIndexOf(" ", maxLength)) + "..."
+  );
+}
+
 // --- Main Component ---
 
 export default function TweetEmail({ story = { metadata: {} } }) {
@@ -42,7 +83,11 @@ export default function TweetEmail({ story = { metadata: {} } }) {
                           </Text>
                         </Column>
                       </Row>
-                      <Text>{metadata.ogDescription}</Text>
+                      <Text style={{ wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>
+                        {metadata.ogDescription && metadata.ogDescription.length > 260
+                          ? metadata.ogDescription.slice(0, 260) + '…'
+                          : metadata.ogDescription}
+                      </Text>
                       {metadata.image && (
                         <Img
                           src={metadata.image}

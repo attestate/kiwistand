@@ -1,13 +1,25 @@
 import React from "react";
 import { Head, Html, Body, Container, Tailwind, Hr, Img, Text, Row, Column, Section } from "@react-email/components";
+import fs from "fs";
+import path from "path";
 
 import RowEmail from "./Row.jsx";
 import TweetEmail from "./Tweet.jsx";
 import FarcasterEmail from "./Farcaster.jsx";
 
+// Load digest data
+let digestStories = [];
+try {
+  const digestDataPath = path.join(process.cwd(), '..', 'digest-data.json');
+  const digestData = JSON.parse(fs.readFileSync(digestDataPath, 'utf-8'));
+  digestStories = digestData.stories || [];
+} catch (error) {
+  console.error('Failed to load digest-data.json:', error);
+}
+
 // --- Main Component ---
 
-export default function DigestEmail({ stories = [] }) {
+export default function DigestEmail({ stories = digestStories }) {
   const components = {
     Row: RowEmail,
     Tweet: TweetEmail,

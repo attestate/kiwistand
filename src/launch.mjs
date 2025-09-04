@@ -27,6 +27,7 @@ import * as email from "./email.mjs";
 import * as moderation from "./views/moderation.mjs";
 import diskcheck from "./diskcheck.mjs";
 import { purgeCache } from "./cloudflarePurge.mjs";
+import { generateDigestData } from "./digest.mjs";
 
 // Initialize blocked-at monitoring
 // Adjust threshold (milliseconds) as needed. Start higher (e.g., 100ms)
@@ -210,6 +211,13 @@ cache.initializeNotifications();
 cache.initializeReactions();
 cache.addCompoundIndexes();
 
+// Generate digest data right after cache initialization
+if (cluster.isPrimary) {
+  generateDigestData(trie).catch((err) =>
+    log(`Error during startup digest generation: ${err}`),
+  );
+}
+
 // Make upvote caching non-blocking to improve startup time
 setImmediate(() => {
   if (cluster.isPrimary) {
@@ -233,6 +241,7 @@ setImmediate(() => {
   }
 });
 
+
 if (!reconcileMode) {
   // Make feed computation during startup non-blocking
   setImmediate(() => {
@@ -243,6 +252,7 @@ if (!reconcileMode) {
     await Promise.all([newest.recompute(trie)]);
   }, 1800000);
 }
+
 
 // These operations should only run in the primary process
 if (cluster.isPrimary && productionMode && env.POSTMARK_API_KEY) {

@@ -38,6 +38,37 @@ const truncateLongWords = (text, maxLength = 20) => {
   return truncatedWords.join(" ");
 };
 
+function truncateComment(comment, maxLength = 180) {
+  if (!comment) return "";
+  
+  const emptyLineIndex = comment.indexOf("\n\n");
+  if (emptyLineIndex !== -1 && emptyLineIndex < maxLength)
+    return truncateLongWords(comment.slice(0, emptyLineIndex)) + "\n...";
+
+  const lastLinkStart = comment.lastIndexOf("https://", maxLength);
+  if (lastLinkStart !== -1 && lastLinkStart < maxLength) {
+    const nextSpace = comment.indexOf(" ", lastLinkStart);
+    const linkEnd = nextSpace === -1 ? comment.length : nextSpace;
+    const fullLink = comment.slice(lastLinkStart, linkEnd);
+    const truncatedLink =
+      fullLink.length > 60 ? fullLink.substring(0, 60) + "..." : fullLink;
+
+    const beforeLink = truncateLongWords(
+      comment.slice(0, lastLinkStart).trim()
+    );
+    if (beforeLink && beforeLink.length > 0) {
+      return beforeLink + " " + truncateLongWords(truncatedLink) + "...";
+    } else {
+      return truncatedLink + "...";
+    }
+  }
+
+  if (comment.length <= maxLength) return truncateLongWords(comment);
+  return truncateLongWords(
+    comment.slice(0, comment.lastIndexOf(" ", maxLength)) + "..."
+  );
+}
+
 // --- SVGs as React Components ---
 
 const HeartSVG = () => (
@@ -104,51 +135,37 @@ export default function RowEmail({ story = {} }) {
 
   const displayImage = !canRenderTweetPreview && !canRenderFarcasterPreview && metadata && metadata.image;
 
+  // Return just the content for Digest, not a full HTML document  
   return (
-    <Html>
-      <Head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" />
-      </Head>
-      <Tailwind>
-        <Body style={main}>
-          <Container style={container}>
-            <Row>
-              <Column>
-                {displayImage ? (
-                  <Link href={href}>
-                    <Img
-                      src={metadata.image}
-                      alt="Story image"
-                      width="100%"
-                      style={{ aspectRatio: '2 / 1', objectFit: 'cover' }}
-                    />
-                  </Link>
-                ) : null}
+    <>
+      <Section style={container}>
+        {displayImage ? (
+          <Link href={href}>
+            <Img
+              src={metadata.image}
+              alt="Story image"
+              width="100%"
+              style={{ aspectRatio: '2 / 1', objectFit: 'cover' }}
+            />
+          </Link>
+        ) : null}
 
-                <Section style={{ padding: '12px 20px' }}>
-                  <Link href={href} style={{ lineHeight: '15pt', fontSize: '13pt', color: '#000000 !important', textDecoration: 'none' }}>
-                    {truncateLongWords(metadata.compliantTitle || title)}
-                  </Link>
+        <Section style={{ padding: '12px 12px 12px 12px' }}>
+          <Link href={href} style={{ lineHeight: '15pt', fontSize: '13pt', color: '#000000 !important', textDecoration: 'none' }}>
+            {truncateLongWords(metadata?.compliantTitle || title)}
+          </Link>
 
-                  <Text style={{ fontSize: '9pt', marginTop: '3px', marginBottom: '0', lineHeight: '1.4', color: '#666' }}>
-                    submitted by <Link href={`https://news.kiwistand.com/upvotes?address=${identity}`} style={{ fontWeight: 600, color: '#000000 !important', textDecoration: 'none' }}>{displayName}</Link>
-                    {' • '}
-                    <Link href={href} style={{ color: '#000000 !important', textDecoration: 'none' }}>{extractedDomain}</Link>
-                  </Text>
-                </Section>
-              </Column>
-            </Row>
-          </Container>
-          <Container style={{ margin: '0 auto', maxWidth: '580px' }}>
-            <Section style={{ padding: '12px 0' }}>
-              <Link href={href} style={buttonStyle}>GO TO STORY</Link>
-            </Section>
-          </Container>
-        </Body>
-      </Tailwind>
-    </Html>
+          <Text style={{ fontSize: '9pt', marginTop: '3px', marginBottom: '0', lineHeight: '1.4', color: '#666' }}>
+            submitted by <Link href={`https://news.kiwistand.com/upvotes?address=${identity}`} style={{ fontWeight: 600, color: '#000000 !important', textDecoration: 'none' }}>{displayName}</Link>
+            {' • '}
+            <Link href={href} style={{ color: '#000000 !important', textDecoration: 'none' }}>{extractedDomain}</Link>
+          </Text>
+        </Section>
+      </Section>
+      <Section style={{ padding: '12px 0' }}>
+        <Link href={href} style={buttonStyle}>GO TO STORY</Link>
+      </Section>
+    </>
   );
 }
 

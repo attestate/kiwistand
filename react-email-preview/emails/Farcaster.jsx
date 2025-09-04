@@ -1,6 +1,47 @@
 import React from "react";
 import { Head, Html, Body, Container, Tailwind, Text, Link, Img, Row, Column, Section } from "@react-email/components";
 
+// --- Helper functions ---
+const truncateLongWords = (text, maxLength = 20) => {
+  if (!text) return "";
+  const words = text.split(" ");
+  const truncatedWords = words.map((word) =>
+    word.length > maxLength ? `${word.substring(0, maxLength)}...` : word
+  );
+  return truncatedWords.join(" ");
+};
+
+function truncateComment(comment, maxLength = 180) {
+  if (!comment) return "";
+  
+  const emptyLineIndex = comment.indexOf("\n\n");
+  if (emptyLineIndex !== -1 && emptyLineIndex < maxLength)
+    return truncateLongWords(comment.slice(0, emptyLineIndex)) + "\n...";
+
+  const lastLinkStart = comment.lastIndexOf("https://", maxLength);
+  if (lastLinkStart !== -1 && lastLinkStart < maxLength) {
+    const nextSpace = comment.indexOf(" ", lastLinkStart);
+    const linkEnd = nextSpace === -1 ? comment.length : nextSpace;
+    const fullLink = comment.slice(lastLinkStart, linkEnd);
+    const truncatedLink =
+      fullLink.length > 60 ? fullLink.substring(0, 60) + "..." : fullLink;
+
+    const beforeLink = truncateLongWords(
+      comment.slice(0, lastLinkStart).trim()
+    );
+    if (beforeLink && beforeLink.length > 0) {
+      return beforeLink + " " + truncateLongWords(truncatedLink) + "...";
+    } else {
+      return truncatedLink + "...";
+    }
+  }
+
+  if (comment.length <= maxLength) return truncateLongWords(comment);
+  return truncateLongWords(
+    comment.slice(0, comment.lastIndexOf(" ", maxLength)) + "..."
+  );
+}
+
 // --- Main Component ---
 
 export default function FarcasterEmail({ story = { metadata: { farcasterCast: { author: {} } } } }) {
@@ -8,70 +49,83 @@ export default function FarcasterEmail({ story = { metadata: { farcasterCast: { 
     href,
     metadata,
     displayName,
+    identity,
   } = story;
 
   const extractedDomain = "farcaster.xyz";
+  
+  // Extract first image from Farcaster cast embeds
+  let farcasterImageUrl = null;
+  if (metadata?.farcasterCast?.embeds) {
+    const imageExtensions = [".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg"];
+    const imageEmbed = metadata.farcasterCast.embeds.find((embed) => {
+      if (!embed) return false;
+      
+      // Check if the URL is a direct image URL
+      const url = embed.url || "";
+      const isDirectImage = imageExtensions.some((ext) => url.toLowerCase().includes(ext));
+      
+      // Check if the embed has image metadata
+      const hasImageMetadata = embed.metadata && embed.metadata.image;
+      
+      return isDirectImage || hasImageMetadata;
+    });
 
+    if (imageEmbed) {
+      farcasterImageUrl = imageEmbed.metadata?.image?.url || imageEmbed.url;
+    }
+  }
+
+  // Return just the content for Digest, not a full HTML document
   return (
-    <Html>
-      <Head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" />
-      </Head>
-      <Tailwind>
-        <Body style={main}>
-          <Container style={container}>
-            <Row>
-              <Column>
-                <Section style={{...farcasterEmbedContainer, backgroundColor: '#ffffff', borderBottom: '1px solid #e6e6df' }}>
-                  <Link href={href} style={{...previewContainer, color: '#000000 !important', textDecoration: 'none'}}>
-                      <Row>
-                        <Column width="30">
-                          <Img
-                            src={metadata.farcasterCast.author.pfp}
-                            alt={metadata.farcasterCast.author.username || "Author"}
-                            width="20"
-                            height="20"
-                            style={{ borderRadius: '9999px', marginRight: '8px' }}
-                          />
-                        </Column>
-                        <Column>
-                          <Text style={{ fontWeight: 600, color: '#12212b', fontSize: '14px' }}>
-                            @{metadata.farcasterCast.author.username || "farcaster"}
-                          </Text>
-                        </Column>
-                      </Row>
-                      <Text>{metadata.farcasterCast.text}</Text>
-                      {metadata.farcasterCast.embeds[0] && (
-                        <Img
-                          src={metadata.farcasterCast.embeds[0].url}
-                          alt="Farcaster image"
-                          width="100%"
-                          style={{ marginTop: '12px', objectFit: 'cover' }}
-                        />
-                      )}
-                  </Link>
-                </Section>
-
-                <Section style={{ padding: '12px 20px 10px 12px', backgroundColor: '#f6f6ef' }}>
-                   <Text style={{ fontSize: '9pt', marginTop: '3px', marginBottom: '0', lineHeight: '1.4', color: '#666' }}>
-                    submitted by <Link href={`https://news.kiwistand.com/upvotes?address=${story.identity}`} style={{ fontWeight: 600, color: '#000000 !important', textDecoration: 'none' }}>{displayName}</Link>
-                    {' • '}
-                    <Link href={href} style={{ color: '#000000 !important', textDecoration: 'none' }}>{extractedDomain}</Link>
+    <>
+      <Section style={container}>
+        <Section style={{...farcasterEmbedContainer, backgroundColor: '#ffffff', borderBottom: '1px solid #e6e6df' }}>
+          <Link href={href} style={{...previewContainer, color: '#000000 !important', textDecoration: 'none'}}>
+              <Row>
+                <Column width="30">
+                  <Img
+                    src={metadata.farcasterCast.author.pfp}
+                    alt={metadata.farcasterCast.author.username || "Author"}
+                    width="20"
+                    height="20"
+                    style={{ borderRadius: '9999px', marginRight: '8px' }}
+                  />
+                </Column>
+                <Column>
+                  <Text style={{ fontWeight: 600, color: '#12212b', fontSize: '14px' }}>
+                    @{metadata.farcasterCast.author.username || "farcaster"}
                   </Text>
-                </Section>
-              </Column>
-            </Row>
-          </Container>
-          <Container style={{ margin: '0 auto', maxWidth: '580px' }}>
-            <Section style={{ padding: '12px 0' }}>
-              <Link href={href} style={buttonStyle}>GO TO STORY</Link>
-            </Section>
-          </Container>
-        </Body>
-      </Tailwind>
-    </Html>
+                </Column>
+              </Row>
+              <Text style={{ wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>
+                {metadata.farcasterCast.text && metadata.farcasterCast.text.length > 260 
+                  ? metadata.farcasterCast.text.slice(0, 260) + '…'
+                  : metadata.farcasterCast.text}
+              </Text>
+              {farcasterImageUrl && (
+                <Img
+                  src={farcasterImageUrl}
+                  alt="Farcaster image"
+                  width="100%"
+                  style={{ marginTop: '12px', objectFit: 'cover' }}
+                />
+              )}
+          </Link>
+        </Section>
+
+        <Section style={{ padding: '12px 20px 10px 12px', backgroundColor: '#f6f6ef' }}>
+           <Text style={{ fontSize: '9pt', marginTop: '3px', marginBottom: '0', lineHeight: '1.4', color: '#666' }}>
+            submitted by <Link href={`https://news.kiwistand.com/upvotes?address=${identity}`} style={{ fontWeight: 600, color: '#000000 !important', textDecoration: 'none' }}>{displayName}</Link>
+            {' • '}
+            <Link href={href} style={{ color: '#000000 !important', textDecoration: 'none' }}>{extractedDomain}</Link>
+          </Text>
+        </Section>
+      </Section>
+      <Section style={{ padding: '12px 0' }}>
+        <Link href={href} style={buttonStyle}>GO TO STORY</Link>
+      </Section>
+    </>
   );
 }
 
