@@ -1,3 +1,4 @@
+import React from "react";
 import { Head, Html, Body, Container, Tailwind, Hr, Img, Text, Row, Column, Section } from "@react-email/components";
 
 import RowEmail from "./Row.jsx";
@@ -22,14 +23,14 @@ export default function DigestEmail() {
             <Section style={{ marginTop: '10px', marginBottom: '15px' }}>
               <Row>
                 <Column width="40">
-                  <Img src="https://news.kiwistand.com/kiwi-icon.webp" alt="Kiwi News" width="35" height="35" />
+                  <Img src="https://news.kiwistand.com/kiwi-icon-email.png" alt="Kiwi News" width="35" height="35" />
                 </Column>
                 <Column>
                   <Text style={title}>Kiwi News</Text>
                 </Column>
               </Row>
             </Section>
-            <Img src="https://i.ibb.co/5gDpBj3h/banner-kiwi_newsletter.webp" alt="Kiwi Newsletter Banner" width="100%" />
+            <Img src="https://news.kiwistand.com/banner-email.webp" alt="Kiwi Newsletter Banner" width="100%" />
             <Text style={introGreeting}>
               <strong>Hi there,</strong>
             </Text>

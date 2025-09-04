@@ -1,3 +1,4 @@
+import React from "react";
 import { Head, Html, Body, Container, Tailwind, Text, Link, Img, Row, Column, Section } from "@react-email/components";
 import {
   differenceInHours,
@@ -129,14 +130,14 @@ export default function RowEmail({ story = mockStory }) {
                 ) : null}
 
                 <Section style={{ padding: '12px 20px' }}>
-                  <Link href={href} style={{ lineHeight: '15pt', fontSize: '13pt', color: '#000' }}>
+                  <Link href={href} style={{ lineHeight: '15pt', fontSize: '13pt', color: '#000000 !important', textDecoration: 'none' }}>
                     {truncateLongWords(metadata.compliantTitle || title)}
                   </Link>
 
                   <Text style={{ fontSize: '9pt', marginTop: '3px', marginBottom: '0', lineHeight: '1.4', color: '#666' }}>
-                    submitted by <Link href={`https://news.kiwistand.com/upvotes?address=${identity}`} style={{ fontWeight: 600, color: 'black' }}>{displayName}</Link>
+                    submitted by <Link href={`https://news.kiwistand.com/upvotes?address=${identity}`} style={{ fontWeight: 600, color: '#000000 !important', textDecoration: 'none' }}>{displayName}</Link>
                     {' • '}
-                    {extractedDomain}
+                    <Link href={href} style={{ color: '#000000 !important', textDecoration: 'none' }}>{extractedDomain}</Link>
                   </Text>
                 </Section>
               </Column>
@@ -190,7 +191,7 @@ const farcasterEmbedContainer = {
 
 const buttonStyle = {
   backgroundColor: '#000000',
-  color: '#ffffff',
+  color: '#ffffff !important',
   padding: '10px 20px',
   borderRadius: '0',
   textDecoration: 'none',

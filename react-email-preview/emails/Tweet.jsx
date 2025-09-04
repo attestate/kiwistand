@@ -1,3 +1,4 @@
+import React from "react";
 import { Head, Html, Body, Container, Tailwind, Text, Link, Img, Row, Column, Section } from "@react-email/components";
 
 import { mockTweet } from "./_mockTweet.js";
@@ -26,7 +27,7 @@ export default function TweetEmail({ story = mockTweet }) {
             <Row>
               <Column>
                 <Section style={{...tweetEmbedContainer, backgroundColor: '#ffffff', borderBottom: '1px solid #e6e6df' }}>
-                  <Link href={href} style={previewContainer}>
+                  <Link href={href} style={{...previewContainer, color: '#000000 !important', textDecoration: 'none'}}>
                       <Row>
                         <Column width="30">
                           <Img
@@ -57,9 +58,9 @@ export default function TweetEmail({ story = mockTweet }) {
 
                 <Section style={{ padding: '12px 20px 10px 12px', backgroundColor: '#f6f6ef' }}>
                    <Text style={{ fontSize: '9pt', marginTop: '3px', marginBottom: '0', lineHeight: '1.4', color: '#666' }}>
-                    submitted by <Link href={`https://news.kiwistand.com/upvotes?address=${story.identity}`} style={{ fontWeight: 600, color: 'black' }}>{displayName}</Link>
+                    submitted by <Link href={`https://news.kiwistand.com/upvotes?address=${story.identity}`} style={{ fontWeight: 600, color: '#000000 !important', textDecoration: 'none' }}>{displayName}</Link>
                     {' • '}
-                    {extractedDomain}
+                    <Link href={href} style={{ color: '#000000 !important', textDecoration: 'none' }}>{extractedDomain}</Link>
                   </Text>
                 </Section>
               </Column>
@@ -104,7 +105,7 @@ const tweetEmbedContainer = {
 
 const buttonStyle = {
   backgroundColor: '#000000',
-  color: '#ffffff',
+  color: '#ffffff !important',
   padding: '10px 20px',
   borderRadius: '0',
   textDecoration: 'none',
