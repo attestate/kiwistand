@@ -338,12 +338,14 @@ app.post("/api/v1/newsletter/subscribe", async (req, res) => {
   }
 
   try {
+    const url = `https://paragraph.xyz/api/blogs/@${newsletter}/subscribe`;
     const response = await fetch(
-      `https://paragraph.xyz/api/blogs/@${newsletter}/subscribe`,
+      url.replace(/\/$/, ""), // Remove trailing slash
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "User-Agent": "KiwiNews/1.0",
         },
         body: JSON.stringify({ email }),
       },

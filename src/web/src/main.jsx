@@ -779,6 +779,30 @@ async function addRewardsDrawer() {
   );
 }
 
+async function addNewsletterScrollModal(toast) {
+  // Only show on feed pages where users are likely to be reading
+  const path = window.location.pathname;
+  const shouldShow = path === "/" || path === "/new" || path === "/best";
+  
+  if (!shouldShow) return;
+
+  // Create container if it doesn't exist
+  if (!document.getElementById("newsletter-scroll-modal-container")) {
+    const container = document.createElement("div");
+    container.id = "newsletter-scroll-modal-container";
+    document.body.appendChild(container);
+  }
+
+  const NewsletterScrollModal = (await import("./NewsletterScrollModal.jsx")).default;
+  createRoot(document.getElementById("newsletter-scroll-modal-container")).render(
+    <StrictMode>
+      <Providers>
+        <NewsletterScrollModal toast={toast} />
+      </Providers>
+    </StrictMode>,
+  );
+}
+
 async function addAvatar(allowlist) {
   const avatarElem = document.querySelectorAll("nav-header-avatar");
   if (avatarElem && avatarElem.length > 0) {
@@ -1584,6 +1608,7 @@ async function start() {
     addTutorialDrawers(),
     addEmbedDrawer(toast),
     addRewardsDrawer(),
+    addNewsletterScrollModal(toast),
     addAvatar(await allowlistPromise),
     addBackButton(),
     addDelegateButton(await allowlistPromise, await delegationsPromise, toast),
