@@ -1,4 +1,5 @@
 src/public/.vite/manifest.json
+react-email-preview/out/
 mcp.config.json
 staging.kiwistand.com
 src/iOS
