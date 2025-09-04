@@ -78,7 +78,7 @@ export default function FarcasterEmail({ story = mockFarcaster }) {
 
 // --- Styles ---
 const main = {
-  backgroundColor: "#ffffff",
+  backgroundColor: "#fffffa",
   fontFamily: "'Inter', Verdana, Geneva, sans-serif",
 };
 
@@ -88,6 +88,7 @@ const container = {
   maxWidth: "580px",
   border: "1px solid #e6e6df",
   borderRadius: "3px",
+  backgroundColor: "#f6f6ef",
 };
 
 const previewContainer = {

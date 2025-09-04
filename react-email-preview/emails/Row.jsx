@@ -155,7 +155,7 @@ export default function RowEmail({ story = mockStory }) {
 
 // --- Styles ---
 const main = {
-  backgroundColor: "#ffffff",
+  backgroundColor: "#fffffa",
   fontFamily: "'Inter', Verdana, Geneva, sans-serif",
 };
 
