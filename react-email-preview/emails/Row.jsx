@@ -1,16 +1,4 @@
-import React from "react";
-import {
-  Html,
-  Body,
-  Container,
-  Tailwind,
-  Text,
-  Link,
-  Img,
-  Row,
-  Column,
-  Section,
-} from "@react-email/components";
+import { Head, Html, Body, Container, Tailwind, Text, Link, Img, Row, Column, Section } from "@react-email/components";
 import {
   differenceInHours,
   formatDistanceToNowStrict as originalFormatDistance,
@@ -82,7 +70,7 @@ function truncateComment(comment, maxLength = 180) {
 // --- SVGs as React Components ---
 
 const HeartSVG = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="20" height="20">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="15" height="15">
     <rect width="256" height="256" fill="none" />
     <path
       d="M128,224S24,168,24,102A54,54,0,0,1,78,48c22.59,0,41.94,12.31,50,32,8.06-19.69,27.41-32,50-32a54,54,0,0,1,54,54C232,168,128,224,128,224Z"
@@ -96,7 +84,7 @@ const HeartSVG = () => (
 );
 
 const ChatsSVG = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="20" height="20">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="15" height="15">
     <rect width="256" height="256" fill="none" />
     <path
       d="M71.58,144,32,176V48a8,8,0,0,1,8-8H168a8,8,0,0,1,8,8v88a8,8,0,0,1-8,8Z"
@@ -155,6 +143,9 @@ export default function RowEmail({ story = mockStory }) {
 
   return (
     <Html>
+      <Head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      </Head>
       <Tailwind>
         <Body style={main}>
           <Container style={container}>
@@ -280,7 +271,7 @@ const main = {
 const container = {
   margin: "0 auto",
   padding: "0",
-  width: "580px",
+  maxWidth: "580px",
   border: "1px solid #eaeaea",
   borderRadius: "3px",
 };
