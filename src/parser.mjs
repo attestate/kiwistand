@@ -1160,23 +1160,29 @@ export const metadata = async (
  * @param {string} [metadataContext.description] - Description from OG, Telegram, etc.
  * @returns {Promise<boolean>} - True if the link is deemed relevant.
  */
-export async function isRelevantToKiwiNews(link, metadataContext = {}) {
+export async function isRelevantToKiwiNews(
+  link,
+  metadataContext = {},
+  raw = false,
+) {
   const normalizedUrl = normalizeUrl(link, { stripWWW: false });
   const cacheKey = `relevance-${normalizedUrl}`;
 
   // Check LRU cache first
-  const cachedRelevance = cache.get(cacheKey);
-  if (cachedRelevance !== undefined) {
-    // LRUCache returns undefined for a cache miss
-    log(`Relevance LRU cache hit for ${link}: ${cachedRelevance}`);
-    return cachedRelevance;
+  if (!raw) {
+    const cachedRelevance = cache.get(cacheKey);
+    if (cachedRelevance !== undefined) {
+      // LRUCache returns undefined for a cache miss
+      log(`Relevance LRU cache hit for ${link}: ${cachedRelevance}`);
+      return cachedRelevance;
+    }
   }
 
   // Fetch metadata, generating title and processing submittedTitle (from metadataContext.title)
   let fetchedMeta = {};
   try {
     // Pass metadataContext.title as submittedTitle to the metadata function
-    fetchedMeta = await metadata(link, true, metadataContext.title);
+    fetchedMeta = await metadata(link, true, metadataContext.title, raw);
   } catch (error) {
     log(
       `Error fetching metadata in isRelevantToKiwiNews for ${link}: ${error.message}`,
@@ -1184,13 +1190,15 @@ export async function isRelevantToKiwiNews(link, metadataContext = {}) {
     // Proceed with empty fetchedMeta, fallbacks will be used
   }
 
-  let context = `URL: ${link}\n`;
+  let context = `URL: ${link}
+`;
 
   // Prioritize title from fetchedMeta (compliantTitle, then ogTitle), then fallback to metadataContext.title
   const titleForClaude =
     fetchedMeta.compliantTitle || fetchedMeta.ogTitle || metadataContext.title;
   if (titleForClaude) {
-    context += `Title: ${titleForClaude}\n`;
+    context += `Title: ${titleForClaude}
+`;
   }
 
   // Prioritize description from fetchedMeta, then fallback to metadataContext.description
@@ -1198,9 +1206,10 @@ export async function isRelevantToKiwiNews(link, metadataContext = {}) {
     fetchedMeta.ogDescription || metadataContext.description;
   if (descriptionForClaude) {
     const descSnippet = descriptionForClaude.substring(0, 300);
-    context += `Description: ${descSnippet}${
+    context += `Description: ${descSnippet}${ 
       descriptionForClaude.length > 300 ? "..." : ""
-    }\n`;
+    }
+`;
   }
   log(
     `Relevance LRU cache miss. Checking relevance with Claude for: ${JSON.stringify(
@@ -1209,7 +1218,14 @@ export async function isRelevantToKiwiNews(link, metadataContext = {}) {
   );
 
   // Simple prompt asking for a yes/no decision based on guidelines
-  const prompt = `Here are the Kiwi News submission guidelines:\n\n${KIWI_NEWS_GUIDELINES}\n\nBased *only* on these guidelines, is the content described below likely to be "On topic" and suitable for submission to Kiwi News? Answer with only "YES" or "NO".\n\nContent Context:\n${context}`;
+  const prompt = `Here are the Kiwi News submission guidelines:
+
+${KIWI_NEWS_GUIDELINES}
+
+Based *only* on these guidelines, is the content described below likely to be "On topic" and suitable for submission to Kiwi News? Answer with only "YES" or "NO".
+
+Content Context:
+${context}`;
 
   let responseText = "NO"; // Default to NO if anything fails
   try {
@@ -1252,10 +1268,13 @@ export async function isRelevantToKiwiNews(link, metadataContext = {}) {
   );
 
   // Cache the result in LRU cache
-  cache.set(cacheKey, isRelevant);
+  if (!raw) {
+    cache.set(cacheKey, isRelevant);
+  }
 
   return isRelevant;
 }
+
 
 function safeExtractDomain(link) {
   let parsedUrl;
