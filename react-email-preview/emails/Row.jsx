@@ -142,6 +142,11 @@ export default function RowEmail({ story = mockStory }) {
               </Column>
             </Row>
           </Container>
+          <Container style={{ margin: '0 auto', maxWidth: '580px' }}>
+            <Section style={{ padding: '12px 0' }}>
+              <Link href={href} style={buttonStyle}>GO TO STORY</Link>
+            </Section>
+          </Container>
         </Body>
       </Tailwind>
     </Html>
@@ -181,4 +186,14 @@ const farcasterEmbedContainer = {
   borderRadius: '12px',
   padding: '12px',
   margin: '0 20px',
+};
+
+const buttonStyle = {
+  backgroundColor: '#000000',
+  color: '#ffffff',
+  padding: '10px 20px',
+  borderRadius: '0',
+  textDecoration: 'none',
+  display: 'inline-block',
+  fontSize: '14px',
 };
