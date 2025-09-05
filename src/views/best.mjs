@@ -47,7 +47,7 @@ async function addMetadata(post) {
   }
 }
 
-export async function getStories(trie, page, period, domain) {
+export async function getStories(page, period, domain) {
   let startDatetime = 0;
   const unix = (date) => Math.floor(date.getTime() / 1000);
   const now = new Date();
@@ -168,9 +168,9 @@ export async function getStories(trie, page, period, domain) {
   return stories;
 }
 
-export default async function index(trie, theme, page, period, domain) {
+export default async function index(theme, page, period, domain) {
   const totalStories = parseInt(env.TOTAL_STORIES, 10);
-  const stories = await getStories(trie, page, period, domain);
+  const stories = await getStories(page, period, domain);
   const ogImage = "https://news.kiwistand.com/kiwi_top_feed_page.png";
   const prefetch = [
     "/",

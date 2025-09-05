@@ -1284,12 +1284,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
       }
 
       try {
-        stories = await bestAPI.getStories(
-          trie,
-          page,
-          period,
-          request.query.domain,
-        );
+        stories = await bestAPI.getStories(page, period, request.query.domain);
       } catch (err) {
         log(`error in /api/v1/feeds/best: ${err.stack}`);
       }
