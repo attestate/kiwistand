@@ -130,6 +130,7 @@
     "satori": "0.10.9",
     "sharp": "0.32.6",
     "slugify": "1.6.6",
+    "string-strip-html": "^13.4.5",
     "svg-line-chart": "0.4.1",
     "vhtml": "2.2.0",
     "web-push": "3.6.7"

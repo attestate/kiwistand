@@ -20,6 +20,8 @@
   "dependencies": {
     "@react-email/components": "0.5.1",
     "react": "19.1.1",
-    "react-dom": "19.1.1"
+    "react-dom": "19.1.1",
+    "string-strip-html": "^13.4.5",
+    "slugify": "^1.6.6"
   }
 }

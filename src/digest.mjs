@@ -8,6 +8,16 @@ import log from "./logger.mjs";
 import { sub } from "date-fns";
 import * as store from "./store.mjs";
 import * as registry from "./chainstate/registry.mjs";
+import DOMPurify from "isomorphic-dompurify";
+import slugify from "slugify";
+
+function getSlug(title) {
+  if (!title) {
+    return "";
+  }
+  // This mimics the logic from the main codebase
+  return slugify(DOMPurify.sanitize(title));
+}
 
 
 export async function generateDigestData(trie) {
@@ -58,9 +68,13 @@ export async function generateDigestData(trie) {
             true,
           ); // raw = true
           const storyIdentity = await resolve(story.identity, true); // forceFetch = true
+          const sanitizedTitle = DOMPurify.sanitize(story.title || "");
+          const slug = getSlug(sanitizedTitle);
 
           return {
             ...story,
+            sanitizedTitle,
+            storyLink: `https://news.kiwistand.com/stories/${slug}?index=0x${story.index}`,
             metadata: storyMetadata,
             submitter: storyIdentity,
             identity: storyIdentity,
