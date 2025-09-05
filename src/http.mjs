@@ -1677,7 +1677,6 @@ export async function launch(trie, libp2p, isPrimary = true) {
     let content;
     try {
       content = await best(
-        trie,
         reply.locals.theme,
         page,
         period,

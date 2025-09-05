@@ -12,6 +12,7 @@ import {
   differenceInSeconds,
 } from "date-fns";
 import DOMPurify from "isomorphic-dompurify";
+import slugify from "slugify";
 
 import * as ens from "../ens.mjs";
 import Header from "./components/header.mjs";
@@ -32,9 +33,9 @@ import { getStoriesUSDCEarnings } from "../contest-leaderboard.mjs";
 const html = htm.bind(vhtml);
 
 // Add metadata to a post
-async function addMetadata(post) {
+async function addMetadata(post, raw = false) {
   try {
-    const data = await metadata(post.href);
+    const data = await metadata(post.href, false, undefined, raw);
     return {
       ...post,
       metadata: data,
@@ -47,7 +48,8 @@ async function addMetadata(post) {
   }
 }
 
-export async function getStories(page, period, domain) {
+export async function getStories(page, period, domain, options = {}) {
+  const { forceFetch = false, rawMetadata = false, createStoryLink = false, amount = parseInt(env.TOTAL_STORIES, 10) } = options;
   let startDatetime = 0;
   const unix = (date) => Math.floor(date.getTime() / 1000);
   const now = new Date();
@@ -61,10 +63,9 @@ export async function getStories(page, period, domain) {
     startDatetime = unix(sub(now, { days: 1 }));
   }
 
-  const totalStories = parseInt(env.TOTAL_STORIES, 10);
-  const from = totalStories * page;
+  const from = amount * page;
   const orderBy = null;
-  let result = getBest(totalStories, from, orderBy, domain, startDatetime);
+  let result = getBest(amount, from, orderBy, domain, startDatetime);
 
   const policy = await moderation.getLists();
   const path = "/best";
@@ -90,7 +91,7 @@ export async function getStories(page, period, domain) {
     // Get last comment
     const lastComment = getLastComment(`kiwi:0x${story.index}`, policy.addresses || []);
     if (lastComment && lastComment.identity) {
-      lastComment.identity = await ens.resolve(lastComment.identity);
+      lastComment.identity = await ens.resolve(lastComment.identity, forceFetch);
       const uniqueIdentities = new Set(
         lastComment.previousParticipants
           .map((p) => p.identity)
@@ -98,7 +99,7 @@ export async function getStories(page, period, domain) {
       );
 
       const resolvedParticipants = await Promise.allSettled(
-        [...uniqueIdentities].map((identity) => ens.resolve(identity)),
+        [...uniqueIdentities].map((identity) => ens.resolve(identity, forceFetch)),
       );
 
       lastComment.previousParticipants = resolvedParticipants
@@ -114,13 +115,13 @@ export async function getStories(page, period, domain) {
     }
 
     // Resolve ENS data for submitter
-    const ensData = await ens.resolve(story.identity);
+    const ensData = await ens.resolve(story.identity, forceFetch);
 
     // Get upvoter avatars
     let avatars = [];
     let upvoterProfiles = [];
     for await (let upvoter of story.upvoters) {
-      const profile = await ens.resolve(upvoter);
+      const profile = await ens.resolve(upvoter, forceFetch);
       if (profile.safeAvatar) {
         upvoterProfiles.push({
           avatar: profile.safeAvatar,
@@ -141,7 +142,7 @@ export async function getStories(page, period, domain) {
     );
 
     // Add metadata
-    const augmentedStory = await addMetadata(story);
+    const augmentedStory = await addMetadata(story, rawMetadata);
     let finalStory = augmentedStory || story;
 
     // Handle image blocking based on policy
@@ -154,6 +155,13 @@ export async function getStories(page, period, domain) {
     const impressions = countImpressions(finalStory.href);
     const storyEarnings = storyUsdcEarningsMap.get(story.index) || 0;
 
+    let storyLink = null;
+    if (createStoryLink) {
+      const sanitizedTitle = DOMPurify.sanitize(story.title || "");
+      const slug = slugify(sanitizedTitle);
+      storyLink = `https://news.kiwistand.com/stories/${slug}?index=0x${story.index}`;
+    }
+
     stories.push({
       ...finalStory,
       impressions,
@@ -163,6 +171,7 @@ export async function getStories(page, period, domain) {
       avatars: avatars,
       isOriginal,
       storyEarnings,
+      storyLink,
     });
   }
   return stories;
