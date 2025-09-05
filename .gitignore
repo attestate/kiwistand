@@ -1,6 +1,6 @@
 src/public/.vite/manifest.json
 digest-data.json
-react-email-preview/out/
+newsletter/out/
 mcp.config.json
 staging.kiwistand.com
 src/iOS
