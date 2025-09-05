@@ -5,6 +5,10 @@ import { getStories } from "./views/best.mjs";
 import { metadata } from "./parser.mjs";
 import { resolve } from "./ens.mjs";
 import log from "./logger.mjs";
+import { sub } from "date-fns";
+import * as store from "./store.mjs";
+import * as registry from "./chainstate/registry.mjs";
+
 
 export async function generateDigestData(trie) {
   log("Starting digest generation...");
@@ -12,10 +16,24 @@ export async function generateDigestData(trie) {
 
   try {
     // 1. Fetch the top stories from the database.
-    log("Fetching top 3 stories for digest...");
-    // The 'trie' argument is not used by getStories, so passing null is fine.
-    // Using 'all' for the period to get all stories.
-    const allStories = await getStories(trie, 0, "week", null);
+    log("Fetching top stories for digest...");
+    const unix = (date) => Math.floor(date.getTime() / 1000);
+    const now = new Date();
+    const startDatetime = unix(sub(now, { weeks: 1 }));
+    const accounts = await registry.accounts();
+    const delegations = await registry.delegations();
+
+    const allStories = await store.posts(
+      trie,
+      null,
+      null,
+      JSON.parse,
+      startDatetime,
+      accounts,
+      delegations,
+      null,
+      "amplify"
+    );
     log(`Found ${allStories.length} total stories in database.`);
 
     if (allStories.length === 0) {
