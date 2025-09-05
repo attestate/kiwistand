@@ -126,8 +126,6 @@
     "pm2": "5.3.0",
     "postmark": "4.0.5",
     "preact": "10.18.1",
-    "react": "19.1.1",
-    "react-dom": "19.1.1",
     "request-filtering-agent": "2.0.1",
     "satori": "0.10.9",
     "sharp": "0.32.6",
