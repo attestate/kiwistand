@@ -28,9 +28,21 @@ export default function DigestEmail({ stories = digestStories }) {
 
   const getComponentForStory = (story) => {
     const domain = story.metadata?.domain || '';
-    if (domain.includes('twitter.com') || domain.includes('x.com')) {
+    const isTweetDomain = domain.includes('twitter.com') || domain.includes('x.com');
+
+    if (isTweetDomain) {
+      const tweetContainsXArticle =
+        story.metadata &&
+        story.metadata.ogDescription &&
+        (story.metadata.ogDescription.includes("x.com/i/article/") ||
+          story.metadata.ogDescription.includes("twitter.com/i/article/"));
+
+      if (tweetContainsXArticle) {
+        return 'Row';
+      }
       return 'Tweet';
     }
+
     if (domain.includes('warpcast.com') || domain.includes('farcaster.xyz')) {
       return 'Farcaster';
     }
