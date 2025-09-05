@@ -322,45 +322,60 @@ app.post("/api/v1/neynar/notify", async (req, res) => {
   }
 });
 
-// Proxy endpoint for Paragraph newsletter subscriptions
+// Proxy endpoint for Buttondown newsletter subscriptions
+// Accepts: { email } and optionally { newsletter } as a tag (ignored if absent)
 app.post("/api/v1/newsletter/subscribe", async (req, res) => {
-  const { email, newsletter } = req.body;
+  const { email, newsletter } = req.body || {};
 
-  if (!email || !newsletter) {
-    return res
-      .status(400)
-      .json({ error: "Email and newsletter type required" });
+  if (!email) {
+    return res.status(400).json({ error: "Email is required" });
   }
 
-  const allowedNewsletters = ["kiwi-weekly", "kiwi-updates"];
-  if (!allowedNewsletters.includes(newsletter)) {
-    return res.status(400).json({ error: "Invalid newsletter type" });
+  // Use BUTTON_DOWN_API_KEY (required)
+  const apiKey = process.env.BUTTON_DOWN_API_KEY;
+  if (!apiKey) {
+    log("Buttondown API key missing: set env BUTTON_DOWN_API_KEY");
+    return res.status(500).json({ error: "Server not configured for newsletter" });
   }
 
   try {
-    const url = `https://paragraph.xyz/api/blogs/@${newsletter}/subscribe`;
-    const response = await fetch(
-      url.replace(/\/$/, ""), // Remove trailing slash
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "User-Agent": "KiwiNews/1.0",
-        },
-        body: JSON.stringify({ email }),
+    const response = await fetch("https://api.buttondown.email/v1/subscribers", {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${apiKey}`,
+        "Content-Type": "application/json",
+        "User-Agent": "KiwiNews/1.0",
       },
-    );
+      body: JSON.stringify(
+        newsletter && typeof newsletter === "string" && newsletter.trim()
+          ? { email_address: email, tags: [newsletter.trim()] }
+          : { email_address: email }
+      ),
+    });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      log(`Paragraph subscription failed: ${response.status} - ${errorText}`);
-      return res
-        .status(response.status)
-        .json({ error: "Newsletter subscription failed", details: errorText });
+    if (response.ok) {
+      const data = await response.json().catch(() => ({}));
+      return res.status(200).json({ status: "subscribed", data });
     }
 
-    const data = await response.json();
-    return res.status(200).json(data);
+    // Handle common "already subscribed" scenarios gracefully
+    const errorText = await response.text();
+    const lower = (errorText || "").toLowerCase();
+    if (
+      response.status === 400 ||
+      response.status === 409 ||
+      lower.includes("already") ||
+      lower.includes("exists")
+    ) {
+      // Treat as idempotent success so UI can continue smoothly
+      log(`Buttondown already-subscribed case for ${email}: ${response.status}`);
+      return res.status(200).json({ status: "already_subscribed" });
+    }
+
+    log(`Buttondown subscription failed: ${response.status} - ${errorText}`);
+    return res
+      .status(response.status)
+      .json({ error: "Newsletter subscription failed", details: errorText });
   } catch (error) {
     log(`Newsletter subscription error: ${error.message}`);
     return res.status(500).json({

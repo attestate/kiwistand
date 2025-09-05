@@ -110,7 +110,7 @@ const NewsletterScrollModal = ({ toast }) => {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ email, newsletter: "kiwi-weekly" }),
+          body: JSON.stringify({ email }),
         }
       );
 

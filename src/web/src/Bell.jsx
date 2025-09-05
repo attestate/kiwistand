@@ -73,8 +73,8 @@ const EmailSubscriptionForm = ({
         }
       }
 
-      // Subscribe to newsletter
-      if (subscribeToNewsletter) {
+      // Subscribe to newsletter (single Buttondown list)
+      if (subscribeToNewsletter || subscribeToUpdates) {
         const response = await fetch(
           "/api/v1/newsletter/subscribe",
           {
@@ -82,29 +82,12 @@ const EmailSubscriptionForm = ({
             headers: {
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({ email, newsletter: "kiwi-weekly" }),
+            body: JSON.stringify({ email }),
           },
         );
 
         if (!response.ok) {
           throw new Error("Newsletter subscription failed");
-        }
-      }
-
-      // Subscribe to Kiwi Updates
-      if (subscribeToUpdates) {
-        const response = await fetch(
-          "/api/v1/newsletter/subscribe",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ email, newsletter: "kiwi-updates" }),
-          },
-        );
-        if (!response.ok) {
-          throw new Error("Kiwi Updates subscription failed");
         }
       }
 
