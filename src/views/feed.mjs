@@ -21,7 +21,6 @@ import SecondHeader from "./components/secondheader.mjs";
 import Sidebar from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
 import { custom } from "./components/head.mjs";
-import * as store from "../store.mjs";
 import * as id from "../id.mjs";
 import * as moderation from "./moderation.mjs";
 import cache, {
@@ -31,6 +30,7 @@ import cache, {
   getLastComment,
   getSubmission,
   listNewest,
+  countComments,
   // Removed getRecommendations import
 } from "../cache.mjs";
 import * as curation from "./curation.mjs";
@@ -271,8 +271,12 @@ export async function topstories(leaves, algorithm = 'control') {
   
   return Promise.allSettled(leaves
     .map(async (story) => {
-      const commentCount =
-        store.commentCounts.get(`kiwi:0x${story.index}`) || 0;
+      let commentCount;
+      try {
+        commentCount = countComments(`kiwi:0x${story.index}`);
+      } catch (e) {
+        commentCount = 0;
+      }
       const upvotes = await calculateNeynarUpvotes(story.upvoters);
       
       let score;
@@ -406,7 +410,7 @@ export async function index(
   // 2. Filter ranked stories based on age/engagement rules
   rankedStories = rankedStories.filter(({ index, upvotes, timestamp }) => {
     const storyAgeInDays = itemAge(timestamp) / (60 * 24);
-    const commentCount = store.commentCounts.get(`kiwi:0x${index}`) || 0;
+    const commentCount = countComments(`kiwi:0x${index}`) || 0;
     // Keep stories > 7 days old out of page 0 initially, but allow them on other pages
     if (page === 0 && storyAgeInDays > 7) {
       return false;

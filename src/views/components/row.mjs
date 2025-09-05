@@ -9,13 +9,12 @@ import DOMPurify from "isomorphic-dompurify";
 import ethers from "ethers";
 import { getSlug, isCloudflareImage } from "../../utils.mjs";
 
-import { commentCounts } from "../../store.mjs";
 import ShareIcon from "./shareicon.mjs";
 import CopyIcon from "./copyicon.mjs";
 import FCIcon from "./farcastericon.mjs";
 import { warpcastSvg } from "./socialNetworkIcons.mjs";
 import theme from "../../theme.mjs";
-import { countOutbounds } from "../../cache.mjs";
+import { countOutbounds, countComments } from "../../cache.mjs";
 import log from "../../logger.mjs";
 import { twitterFrontends } from "../../parser.mjs";
 import ParagraphFullPost from "./paragraph-full-post.mjs";
@@ -311,7 +310,12 @@ const row = (
     }
 
     const submissionId = `kiwi:0x${story.index}`;
-    const commentCount = commentCounts.get(submissionId) || 0;
+    let commentCount;
+    try {
+      commentCount = countComments(submissionId);
+    } catch (err) {
+      commentCount = 0;
+    }
     const outboundsLookbackHours = 24 * 5;
     const clicks = countOutbounds(story.href, outboundsLookbackHours);
     const extractedDomain = extractDomain(DOMPurify.sanitize(story.href));

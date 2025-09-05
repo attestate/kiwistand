@@ -45,39 +45,6 @@ const piscina = new Piscina({
 
 export const upvotes = new Set();
 export const reactions = new Set();
-export const commentCounts = new Map();
-
-// TODO: This function is badly named, it should be renamed to
-// "incrementCommentsCount"
-export function addComment(storyId, sync = false) {
-  const count = commentCounts.get(storyId) || 0;
-  commentCounts.set(storyId, count + 1);
-
-  if (sync) {
-    sendCommentUpdateToWorkers(storyId);
-  }
-}
-
-function sendCommentUpdateToWorkers(storyId) {
-  if (!cluster.isPrimary) return;
-
-  for (const id in cluster.workers) {
-    cluster.workers[id].send({
-      type: "increment-comment-count",
-      storyId,
-    });
-  }
-}
-
-if (cluster.worker) {
-  process.on("message", (message) => {
-    if (message.type === "increment-comment-count") {
-      const sync = false;
-      addComment(message.storyId, sync);
-      log(`Worker ${process.pid} updated comment count for ${message.storyId}`);
-    }
-  });
-}
 //
 // TODO: This function would benefit from constraining operation only to
 // markers of the type "amplify" as to not accidentially store other types of
@@ -116,8 +83,6 @@ export async function cache(upvotes, comments) {
   // Process comments with periodic yields
   for (let i = 0; i < comments.length; i++) {
     const { href, title, identity } = comments[i];
-    const sync = false;
-    addComment(href, sync);
     if (isReactionComment(title)) {
       const reactionMarker = upvoteID(identity, href, "reaction");
       passesReaction(reactionMarker);
@@ -461,11 +426,7 @@ async function atomicPut(trie, message, identity, accounts, delegations) {
         }`,
       );
     }
-    // TODO: Remove and replace with SQLite implementation
-    if (message.type === "comment") {
-      const syncCount = true;
-      addComment(message.href, syncCount);
-    }
+    // No in-memory comment count incrementing; SQLite holds canonical counts
   } catch (err) {
     if (message.type !== "amplify") {
       throw new Error(

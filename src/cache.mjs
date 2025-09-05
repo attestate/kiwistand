@@ -1272,6 +1272,34 @@ export function insertMessage(message) {
   }
 }
 
+// Returns the number of comments for a given submission id (e.g. 'kiwi:0x...')
+export function countComments(submissionId, bannedAddresses = []) {
+  try {
+    if (!submissionId) return 0;
+
+    // Fast count first
+    let total = db
+      .prepare(`SELECT COUNT(*) AS count FROM comments WHERE submission_id = ?`)
+      .get(submissionId).count;
+
+    if (!bannedAddresses || bannedAddresses.length === 0) {
+      return total;
+    }
+
+    // If we need to exclude banned addresses, compute filtered count
+    const placeholders = bannedAddresses.map(() => '?').join(',');
+    const stmt = db.prepare(`
+      SELECT COUNT(*) AS count FROM comments
+      WHERE submission_id = ? AND LOWER(identity) NOT IN (${placeholders})
+    `);
+    const row = stmt.get(submissionId, ...bannedAddresses.map((a) => a.toLowerCase()));
+    return row?.count ?? 0;
+  } catch (err) {
+    log(`countComments error for ${submissionId}: ${err.toString()}`);
+    return 0;
+  }
+}
+
 export async function storeMiniAppUpvote({ fid, href, title, timestamp, walletAddress }) {
   try {
     // Normalize the URL to prevent duplicate upvotes on same story
