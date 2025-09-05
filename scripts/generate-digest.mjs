@@ -32,7 +32,7 @@ import log from '../src/logger.mjs';
     cache.initialize([...upvotes, ...comments]);
     await store.cache(upvotes, comments)
 
-    await generateDigestData(trie);
+    await generateDigestData();
     log('Digest data generated successfully.');
     process.exit(0);
   } catch (error) {
