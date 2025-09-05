@@ -1,5 +1,7 @@
 import React from "react";
 import { Head, Html, Body, Container, Tailwind, Text, Link, Img, Row, Column, Section } from "@react-email/components";
+import slugify from "slugify";
+import DOMPurify from "isomorphic-dompurify";
 
 // --- Helper functions ---
 const truncateLongWords = (text, maxLength = 20) => {
@@ -10,6 +12,10 @@ const truncateLongWords = (text, maxLength = 20) => {
   );
   return truncatedWords.join(" ");
 };
+
+function getSlug(title) {
+  return slugify(DOMPurify.sanitize(title));
+}
 
 function truncateComment(comment, maxLength = 180) {
   if (!comment) return "";
@@ -66,7 +72,7 @@ export default function TweetEmail({ story = { metadata: {} } }) {
             <Row>
               <Column>
                 <Section style={{...tweetEmbedContainer, backgroundColor: '#ffffff', borderBottom: '1px solid #e6e6df' }}>
-                  <Link href={href} style={{...previewContainer, color: '#000000 !important', textDecoration: 'none'}}>
+                  <Link href={`https://news.kiwistand.com/stories/${getSlug(story.title)}?index=0x${story.index}`} style={{...previewContainer, color: '#000000 !important', textDecoration: 'none'}}>
                       <Row>
                         <Column width="30">
                           <Img
@@ -103,7 +109,7 @@ export default function TweetEmail({ story = { metadata: {} } }) {
                    <Text style={{ fontSize: '9pt', marginTop: '3px', marginBottom: '0', lineHeight: '1.4', color: '#666' }}>
                     submitted by <Link href={`https://news.kiwistand.com/upvotes?address=${story.identity}`} style={{ fontWeight: 600, color: '#000000 !important', textDecoration: 'none' }}>{displayName}</Link>
                     {' • '}
-                    <Link href={href} style={{ color: '#000000 !important', textDecoration: 'none' }}>{extractedDomain}</Link>
+                    <Link href={`https://news.kiwistand.com/stories/${getSlug(story.title)}?index=0x${story.index}`} style={{ color: '#000000 !important', textDecoration: 'none' }}>{extractedDomain}</Link>
                   </Text>
                 </Section>
               </Column>
@@ -111,7 +117,7 @@ export default function TweetEmail({ story = { metadata: {} } }) {
           </Container>
           <Container style={{ margin: '0 auto', maxWidth: '580px' }}>
             <Section style={{ padding: '12px 0' }}>
-              <Link href={href} style={buttonStyle}>GO TO STORY</Link>
+              <Link href={`https://news.kiwistand.com/stories/${getSlug(story.title)}?index=0x${story.index}`} style={buttonStyle}>GO TO STORY</Link>
             </Section>
           </Container>
         </Body>

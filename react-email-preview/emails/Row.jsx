@@ -4,6 +4,8 @@ import {
   differenceInHours,
   formatDistanceToNowStrict as originalFormatDistance,
 } from "date-fns";
+import slugify from "slugify";
+import DOMPurify from "isomorphic-dompurify";
 
 // --- Helper functions from row.mjs ---
 
@@ -17,6 +19,10 @@ const formatDistanceToNowStrict = (date) => {
     .replace(/ minutes?/, "m")
     .replace(/ seconds?/, "s");
 };
+
+function getSlug(title) {
+  return slugify(DOMPurify.sanitize(title));
+}
 
 function extractDomain(link) {
   try {
@@ -140,7 +146,7 @@ export default function RowEmail({ story = {} }) {
     <>
       <Section style={container}>
         {displayImage ? (
-          <Link href={href}>
+          <Link href={`https://news.kiwistand.com/stories/${getSlug(story.title)}?index=0x${story.index}`}>
             <Img
               src={metadata.image}
               alt="Story image"
@@ -151,19 +157,19 @@ export default function RowEmail({ story = {} }) {
         ) : null}
 
         <Section style={{ padding: '12px 12px 12px 12px' }}>
-          <Link href={href} style={{ lineHeight: '15pt', fontSize: '13pt', color: '#000000 !important', textDecoration: 'none' }}>
+          <Link href={`https://news.kiwistand.com/stories/${getSlug(story.title)}?index=0x${story.index}`} style={{ lineHeight: '15pt', fontSize: '13pt', color: '#000000 !important', textDecoration: 'none' }}>
             {truncateLongWords(metadata?.compliantTitle || title)}
           </Link>
 
           <Text style={{ fontSize: '9pt', marginTop: '3px', marginBottom: '0', lineHeight: '1.4', color: '#666' }}>
             submitted by <Link href={`https://news.kiwistand.com/upvotes?address=${identity}`} style={{ fontWeight: 600, color: '#000000 !important', textDecoration: 'none' }}>{displayName}</Link>
             {' • '}
-            <Link href={href} style={{ color: '#000000 !important', textDecoration: 'none' }}>{extractedDomain}</Link>
+            <Link href={`https://news.kiwistand.com/stories/${getSlug(story.title)}?index=0x${story.index}`} style={{ color: '#000000 !important', textDecoration: 'none' }}>{extractedDomain}</Link>
           </Text>
         </Section>
       </Section>
       <Section style={{ padding: '12px 0' }}>
-        <Link href={href} style={buttonStyle}>GO TO STORY</Link>
+        <Link href={`https://news.kiwistand.com/stories/${getSlug(story.title)}?index=0x${story.index}`} style={buttonStyle}>GO TO STORY</Link>
       </Section>
     </>
   );
