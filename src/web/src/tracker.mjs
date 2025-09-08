@@ -23,6 +23,9 @@ const openCommentSections = new Set();
 let globalSigner = null;
 let globalIdentity = null;
 
+// Track if already initialized to prevent multiple initializations
+let isInitialized = false;
+
 // Set the signer and identity (called from main.jsx after startWatchAccount)
 export function setSigner(signer, identity) {
   globalSigner = signer;
@@ -601,6 +604,18 @@ export function removeClickedStyling(contentId) {
 // Initialize tracking when DOM is ready
 // Now accepts signer and identity from main.jsx
 export function initializeTracking(signer = null, identity = null) {
+  // Prevent multiple initializations
+  if (isInitialized) {
+    // If we're just updating the signer, do that without re-initializing everything
+    if (signer && identity) {
+      setSigner(signer, identity);
+    }
+    console.log("Tracker already initialized, skipping re-initialization");
+    return;
+  }
+  
+  isInitialized = true;
+  
   // Set the signer if provided
   if (signer && identity) {
     setSigner(signer, identity);
