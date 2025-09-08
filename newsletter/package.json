@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "email dev --port 3001",
     "preexport": "npm run digest",
-    "export": "email export",
+    "export": "DATA_DIR=bootstramp email export",
     "digest": "cd .. && CACHE_DIR=./cache DEBUG=@attestate/kiwistand node scripts/generate-digest.mjs",
     "send": "node send.mjs"
   },
