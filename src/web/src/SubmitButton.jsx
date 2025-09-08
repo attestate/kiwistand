@@ -22,6 +22,7 @@ import { getLocalAccount } from "./session.mjs";
 import { SimpleDisconnectButton } from "./Navigation.jsx";
 import ShareModal from "./ShareModal.jsx";
 import GuidelinesDrawer, { useGuidelinesCheck } from "./GuidelinesDrawer.jsx";
+import { openDelegationModalForAction, isDelegationModalNeeded } from "./delegationModalManager.js";
 
 export function getSlug(title) {
   return slugify(DOMPurify.sanitize(title));
@@ -351,6 +352,13 @@ const SubmitButton = (props) => {
   } else {
     signer = result;
   }
+
+  // Check for delegation needs on mount
+  useEffect(() => {
+    if (address && isDelegationModalNeeded(props.allowlist, props.delegations, address)) {
+      openDelegationModalForAction();
+    }
+  }, [address, props.allowlist, props.delegations]);
 
   useEffect(() => {
     const titleInput = document.getElementById("titleInput");
