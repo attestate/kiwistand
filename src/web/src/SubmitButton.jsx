@@ -15,7 +15,7 @@ import {
   useProvider,
   client,
   chains,
-  isInFarcasterFrame,
+  useIsMiniApp,
 } from "./client.mjs";
 import NFTModal from "./NFTModal.jsx";
 import { getLocalAccount } from "./session.mjs";
@@ -215,6 +215,7 @@ const SubmitButton = (props) => {
   const [showGuidelinesDrawer, setShowGuidelinesDrawer] = useState(false);
   const [hasSeenGuidelines, setHasSeenGuidelines] = useState(false);
   const { shouldShowGuidelines } = useGuidelinesCheck();
+  const { isMiniApp, loading } = useIsMiniApp();
 
   // Ad related state removed
   // const params = new URLSearchParams(window.location.search);
@@ -630,7 +631,7 @@ const SubmitButton = (props) => {
           style={buttonStyles}
           onClick={async (e) => {
             // Add haptic feedback for submit action only in frames
-            if (isInFarcasterFrame()) {
+            if (isMiniApp) {
               try {
                 await sdk.haptics.impactOccurred("medium");
               } catch (error) {

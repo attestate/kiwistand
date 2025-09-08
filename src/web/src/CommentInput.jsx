@@ -13,7 +13,7 @@ import { sdk } from "@farcaster/frame-sdk";
 
 import * as API from "./API.mjs";
 import { getLocalAccount } from "./session.mjs";
-import { client, chains, useProvider, useSigner, isInFarcasterFrame } from "./client.mjs";
+import { chains, useProvider, useSigner, useIsMiniApp } from "./client.mjs";
 import { resolveAvatar } from "./Avatar.jsx";
 
 // Configure slugify extension
@@ -110,6 +110,7 @@ const MobileComposer = ({
   onCancel,
   isLoading,
   characterLimit,
+  isMiniApp,
 }) => {
   const [viewportHeight, setViewportHeight] = useState(
     window.visualViewport ? window.visualViewport.height : window.innerHeight,
@@ -204,17 +205,17 @@ const MobileComposer = ({
         </button>
         <button
           onClick={async (e) => {
-            // Add haptic feedback for comment submission only in frames
-            if (isInFarcasterFrame()) {
-              try {
-                await sdk.haptics.impactOccurred('light');
-              } catch (error) {
-                // Silently fail if haptics not supported
+              // Add haptic feedback for comment submission only in frames
+              if (isMiniApp) {
+                try {
+                  await sdk.haptics.impactOccurred("light");
+                } catch (error) {
+                  // Silently fail if haptics not supported
+                }
               }
-            }
-            
-            onSubmit(e);
-          }}
+              
+              onSubmit(e);
+            }}
           disabled={isLoading}
           style={{
             background: "black",
@@ -274,6 +275,7 @@ const MobileComposer = ({
 
 const CommentInput = (props) => {
   const { toast, allowlist, delegations } = props;
+  const { isMiniApp, loading } = useIsMiniApp();
 
   let address;
   const account = useAccount();
@@ -705,8 +707,9 @@ const CommentInput = (props) => {
             }}
             isLoading={isLoading}
             characterLimit={characterLimit}
+            isMiniApp={isMiniApp}
           />,
-          document.body
+          document.body,
         )
       ) : (
         <>
@@ -815,14 +818,14 @@ const CommentInput = (props) => {
                 disabled={isLoading || !address || !isEligible}
                 onClick={async (e) => {
                   // Add haptic feedback for comment submission only in frames
-                  if (isInFarcasterFrame()) {
+                  if (isMiniApp) {
                     try {
-                      await sdk.haptics.impactOccurred('light');
+                      await sdk.haptics.impactOccurred("light");
                     } catch (error) {
                       // Silently fail if haptics not supported
                     }
                   }
-                  
+
                   handleSubmit(e);
                 }}
               >

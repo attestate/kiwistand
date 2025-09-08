@@ -26,25 +26,35 @@ import {
   trustWallet,
   safeWallet,
 } from "@rainbow-me/rainbowkit/wallets";
-// Check if we're in a Farcaster Frame context
-export const isInFarcasterFrame = () => {
-  if (typeof window === "undefined") return false;
-  
-  // Check for Farcaster-specific properties
-  try {
-    const isFarcasterConnected = window?.ethereum?.isFarcaster === true;
-    // Also check if we have farcaster SDK available
-    return isFarcasterConnected || (typeof window?.Farcaster !== 'undefined');
-  } catch {
-    return false;
-  }
-};
+import { sdk } from "@farcaster/miniapp-sdk";
 
 const isDesktop = () => {
   return (
     !("ontouchstart" in window || navigator.maxTouchPoints) &&
     window.innerWidth > 800
   );
+};
+
+export const useIsMiniApp = () => {
+  const [isMiniApp, setIsMiniApp] = React.useState(false);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const check = async () => {
+      try {
+        const res = await sdk.isInMiniApp();
+        setIsMiniApp(res);
+      } catch (e) {
+        console.error(e);
+        setIsMiniApp(false);
+      } finally {
+        setLoading(false);
+      }
+    };
+    check();
+  }, []);
+
+  return { isMiniApp, loading };
 };
 
 // Check if we're in the iOS app by looking for the CSS class

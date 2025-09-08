@@ -5,7 +5,7 @@ import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { eligible } from "@attestate/delegator2";
 
 import { getLocalAccount } from "./session.mjs";
-import { client, chains, getProvider, isInFarcasterFrame } from "./client.mjs";
+import { client, chains, getProvider, useIsMiniApp } from "./client.mjs";
 import { fetchKarma } from "./API.mjs";
 
 export const resolveAvatar = async (address) => {
@@ -52,20 +52,20 @@ const Avatar = (props) => {
   let address;
   const account = useAccount();
   const localAccount = getLocalAccount(account.address, props.allowlist);
-  
+
   // Check if we're in a mini app and get the connected wallet address
   // Note: Using conservative detection for UI - if frame detection passes, we assume mini app for UI purposes
-  const isMiniAppForUI = isInFarcasterFrame() && window.sdk;
-  
+  const { isMiniApp, loading } = useIsMiniApp();
+
   if (account.isConnected) {
     address = account.address;
   }
   if (localAccount) {
     address = localAccount.identity;
   }
-  
+
   // For mini apps, ensure we use the connected address even without allowlist eligibility
-  if (isMiniAppForUI && account.isConnected && !address) {
+  if (isMiniApp && account.isConnected && !address) {
     address = account.address;
   }
 

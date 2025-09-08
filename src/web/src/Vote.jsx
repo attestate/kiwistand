@@ -11,7 +11,13 @@ import DOMPurify from "isomorphic-dompurify";
 import { sdk } from "@farcaster/frame-sdk";
 
 import * as API from "./API.mjs";
-import { useSigner, useProvider, client, chains, isInFarcasterFrame } from "./client.mjs";
+import {
+  useSigner,
+  useProvider,
+  client,
+  chains,
+  useIsMiniApp,
+} from "./client.mjs";
 import NFTModal from "./NFTModal.jsx";
 import theme from "./theme.jsx";
 import { getLocalAccount, isIOSApp } from "./session.mjs";
@@ -84,6 +90,41 @@ const KarmaAnimation = ({ active }) => {
 };
 
 const Vote = (props) => {
+  const { isMiniApp, loading } = useIsMiniApp();
+  const [isFarcasterClient, setIsFarcasterClient] = useState(false);
+
+  useEffect(() => {
+    const determineFarcasterClient = async () => {
+      if (loading) return; // Wait for the hook to finish
+
+      if (isMiniApp) {
+        setIsFarcasterClient(true);
+        return;
+      }
+
+      // Fallback check for Coinbase Wallet client
+      try {
+        if (window.sdk && window.sdk.context) {
+          const context = await window.sdk.context;
+          if (
+            context &&
+            context.client &&
+            context.client.clientFid === 309857
+          ) {
+            setIsFarcasterClient(true);
+            return;
+          }
+        }
+      } catch (err) {
+        console.log("Coinbase Wallet client check failed:", err);
+      }
+
+      setIsFarcasterClient(false);
+    };
+
+    determineFarcasterClient();
+  }, [isMiniApp, loading]);
+
   const { allowlist, delegations, toast, isad } = props;
   const value = API.messageFab(props.title, props.href);
   const [showKarmaAnimation, setShowKarmaAnimation] = useState(false);
@@ -117,31 +158,11 @@ const Vote = (props) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Check if we're in a Farcaster mini app
-    let isMiniApp = false;
-    try {
-      if (isInFarcasterFrame() && window.sdk) {
-        isMiniApp = await window.sdk.isInMiniApp();
-        
-        // Also check for Coinbase Wallet's specific clientFid
-        if (!isMiniApp && window.sdk.context) {
-          const context = await window.sdk.context;
-          if (context && context.client && context.client.clientFid === 309857) {
-            isMiniApp = true;
-          }
-        }
-      }
-    } catch (err) {
-      console.log("Mini app detection failed:", err);
-      isMiniApp = false;
-    }
-
     // Check wallet connection for both mini app and traditional users
-    if (!isMiniApp && !signer) {
+    if (!isFarcasterClient && !signer) {
       toast.error("Please connect your wallet to like");
       return;
     }
-    
 
     // Set upvoted state immediately for better UX
     setHasUpvoted(true);
@@ -152,8 +173,9 @@ const Vote = (props) => {
     setTimeout(() => setShowKarmaAnimation(false), 700);
 
     let response;
-    
-    if (isMiniApp) {
+
+    console.log(isFarcasterClient);
+    if (isFarcasterClient) {
       // Mini app upvote flow - REQUIRES JWT authentication
       try {
         const context = await window.sdk.context;
@@ -269,28 +291,8 @@ const Vote = (props) => {
               if (hasUpvoted || isad || window.location.pathname === "/submit")
                 return;
 
-              // Check if we're in a mini app - use conservative detection
-              let isMiniApp = false;
-              try {
-                if (isInFarcasterFrame() && window.sdk) {
-                  isMiniApp = await window.sdk.isInMiniApp();
-                  
-                  // Also check for Coinbase Wallet's specific clientFid
-                  if (!isMiniApp && window.sdk.context) {
-                    const context = await window.sdk.context;
-                    if (context && context.client && context.client.clientFid === 309857) {
-                      isMiniApp = true;
-                    }
-                  }
-                }
-              } catch (err) {
-                console.log("Mini app detection failed in vote eligibility check:", err);
-                isMiniApp = false;
-              }
-              
               let isEligible = false;
-              
-              if (isMiniApp) {
+              if (isFarcasterClient) {
                 // For mini apps, check if we have FID context
                 try {
                   const context = await window.sdk.context;
@@ -312,7 +314,7 @@ const Vote = (props) => {
               }
 
               if (!isEligible) {
-                if (isMiniApp) {
+                if (isFarcasterClient) {
                   toast.error("Unable to access your Farcaster profile");
                 } else {
                   toast.error("Connect your wallet to sign up");
