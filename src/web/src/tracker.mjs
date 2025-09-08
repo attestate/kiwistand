@@ -16,6 +16,9 @@ const MAX_BATCH_SIZE = 50; // Maximum items per batch
 // Track which content has been impressed to avoid duplicates in this session
 const sessionImpressions = new Set();
 
+// Track content IDs where comment sections are open (should not be greyed out)
+const openCommentSections = new Set();
+
 // Store the signer that will be passed from main.jsx
 let globalSigner = null;
 let globalIdentity = null;
@@ -291,8 +294,8 @@ export function setupClickTracking() {
       // Find the clicked element
       const clickedElement = event.target;
       
-      // Check if user clicked on a comment-related element (comment button or preview)
-      const isCommentClick = clickedElement.closest(".comment-button, .comment-preview, .comment-button-container");
+      // Check if user clicked on a comment-related element (comment button, preview, or chat bubble)
+      const isCommentClick = clickedElement.closest(".comment-button, .comment-preview, .comment-button-container, .chat-bubble, .comment-section");
       
       if (isCommentClick) {
         // Find the parent row/content element
@@ -300,10 +303,16 @@ export function setupClickTracking() {
         if (contentRow) {
           const contentId = contentRow.dataset.contentId;
           
-          // Remove the greyed-out styling when opening comments
-          removeClickedStyling(contentId);
+          // Track that this comment section is open
+          openCommentSections.add(contentId);
           
-          console.log(`Removed clicked styling from ${contentId} (comment view)`);
+          // Remove the greyed-out styling when opening comments
+          // This removes the CSS classes but keeps the data in localStorage
+          contentRow.classList.remove("clicked-content");
+          const linkContainer = contentRow.querySelector(".story-link-container");
+          if (linkContainer) {
+            linkContainer.classList.remove("clicked-link");
+          }
         }
         return; // Don't track this as a regular click
       }
@@ -457,13 +466,20 @@ export function applyClickedStyling() {
   
   const clickedIds = getClickedContentIds();
   
-  if (clickedIds.size === 0) return;
+  if (clickedIds.size === 0) {
+    return;
+  }
   
   // Find all content rows with data-content-id
   const contentRows = document.querySelectorAll("[data-content-id]");
   
   contentRows.forEach((row) => {
     const contentId = row.dataset.contentId;
+    
+    // Skip if comment section is open for this content
+    if (openCommentSections.has(contentId)) {
+      return;
+    }
     
     if (clickedIds.has(contentId)) {
       // Add a class to indicate this row has been clicked
@@ -479,8 +495,6 @@ export function applyClickedStyling() {
       disableHoverEffects(row);
     }
   });
-  
-  console.log(`Applied clicked styling to ${clickedIds.size} items`);
 }
 
 // Disable hover effects on a specific element
@@ -551,12 +565,64 @@ export function initializeTracking(signer = null, identity = null) {
   // Set up automatic tracking
   setupImpressionTracking();
   setupClickTracking();
+  
+  // Listen for comment section toggle events
+  // This handles when comment sections are opened/closed via the custom event
+  const handleCommentToggle = (event) => {
+    const match = event.type.match(/open-comments-(\d+)/);
+    if (match) {
+      const storyIndex = match[1];
+      // Find the content row associated with this story
+      const contentRow = document.querySelector(`[data-content-id]`);
+      if (contentRow) {
+        const contentId = contentRow.dataset.contentId;
+        
+        // Check if we're opening or closing (toggle state)
+        if (openCommentSections.has(contentId)) {
+          // Was open, now closing
+          openCommentSections.delete(contentId);
+          // Re-apply styling if this item was clicked
+          applyClickedStyling();
+        } else {
+          // Was closed, now opening
+          openCommentSections.add(contentId);
+          // Remove styling
+          contentRow.classList.remove("clicked-content");
+          const linkContainer = contentRow.querySelector(".story-link-container");
+          if (linkContainer) {
+            linkContainer.classList.remove("clicked-link");
+          }
+        }
+      }
+    }
+  };
+  
+  // Monitor DOM for story elements and add listeners
+  const observedStoryIndices = new Set();
+  const checkForStoryElements = () => {
+    document.querySelectorAll('[data-story-index], .chat-bubble').forEach(el => {
+      let storyIndex;
+      if (el.dataset?.storyIndex) {
+        storyIndex = el.dataset.storyIndex;
+      } else if (el.id?.startsWith('chat-bubble-')) {
+        storyIndex = el.id.replace('chat-bubble-', '');
+      }
+      
+      if (storyIndex && !observedStoryIndices.has(storyIndex)) {
+        observedStoryIndices.add(storyIndex);
+        window.addEventListener(`open-comments-${storyIndex}`, handleCommentToggle);
+      }
+    });
+  };
 
   // Load cached interactions
   loadCachedInteractions();
   
   // Apply greyed-out styling to clicked items
   applyClickedStyling();
+  
+  // Initial check for story elements
+  checkForStoryElements();
 
   // Sync interactions from server (only if we have a signer and on / or /new pages)
   const currentPath = window.location.pathname;
@@ -576,6 +642,7 @@ export function initializeTracking(signer = null, identity = null) {
   // Re-observe elements when DOM changes (for dynamic content)
   const mutationObserver = new MutationObserver(() => {
     observeElements();
+    checkForStoryElements();
     // Re-apply styling when new content is added
     applyClickedStyling();
   });
