@@ -94,16 +94,9 @@ export async function trackImpression(contentId, contentType = "submission") {
 
 // Add a click to the queue
 export async function trackClick(contentId, contentType = "submission") {
-  const interaction = await createInteractionMessage(
-    contentId,
-    contentType,
-    "click",
-  );
-  if (!interaction) return;
-
-  clickQueue.push(interaction);
+  // Update UI immediately before any async operations
+  const timestamp = Date.now();
   
-  // Update localStorage immediately for responsive UI
   if (globalIdentity) {
     try {
       const cached = localStorage.getItem(`interactions-${globalIdentity}`);
@@ -114,7 +107,7 @@ export async function trackClick(contentId, contentType = "submission") {
       data.clicks.push({
         content_id: contentId,
         content_type: contentType,
-        timestamp: interaction.message.timestamp
+        timestamp: timestamp
       });
       
       localStorage.setItem(`interactions-${globalIdentity}`, JSON.stringify(data));
@@ -122,9 +115,15 @@ export async function trackClick(contentId, contentType = "submission") {
       // Apply styling immediately to this item (only on / and /new pages)
       const currentPath = window.location.pathname;
       if (currentPath === "/" || currentPath === "/new") {
+        // Remove all last-clicked first
+        document.querySelectorAll(".last-clicked").forEach(el => {
+          el.classList.remove("last-clicked");
+        });
+        
         const contentElement = document.querySelector(`[data-content-id="${contentId}"]`);
         if (contentElement) {
           contentElement.classList.add("clicked-content");
+          contentElement.classList.add("last-clicked");
           const linkContainer = contentElement.querySelector(".story-link-container");
           if (linkContainer) {
             linkContainer.classList.add("clicked-link");
@@ -137,6 +136,16 @@ export async function trackClick(contentId, contentType = "submission") {
       console.error("Error updating localStorage with click:", error);
     }
   }
+  
+  // Now do the async operations for server sync
+  const interaction = await createInteractionMessage(
+    contentId,
+    contentType,
+    "click",
+  );
+  if (!interaction) return;
+
+  clickQueue.push(interaction);
 
   // Start batch timer if not already running
   scheduleBatch();
@@ -473,6 +482,36 @@ export function applyClickedStyling() {
   // Find all content rows with data-content-id
   const contentRows = document.querySelectorAll("[data-content-id]");
   
+  // Find the most recently clicked item from the synced data
+  let lastClickedId = null;
+  let lastClickedTime = 0;
+  
+  if (globalIdentity) {
+    try {
+      const cached = localStorage.getItem(`interactions-${globalIdentity}`);
+      if (cached) {
+        const data = JSON.parse(cached);
+        if (data.clicks && data.clicks.length > 0) {
+          // Find the click with the most recent timestamp
+          data.clicks.forEach(click => {
+            const clickTime = click.timestamp || 0;
+            if (clickTime > lastClickedTime) {
+              lastClickedTime = clickTime;
+              lastClickedId = click.content_id;
+            }
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error finding last clicked item:", error);
+    }
+  }
+  
+  // First, remove all existing last-clicked classes to ensure only one exists
+  document.querySelectorAll(".last-clicked").forEach(el => {
+    el.classList.remove("last-clicked");
+  });
+  
   contentRows.forEach((row) => {
     const contentId = row.dataset.contentId;
     
@@ -484,6 +523,11 @@ export function applyClickedStyling() {
     if (clickedIds.has(contentId)) {
       // Add a class to indicate this row has been clicked
       row.classList.add("clicked-content");
+      
+      // Add last-clicked class if this is the most recent
+      if (contentId === lastClickedId) {
+        row.classList.add("last-clicked");
+      }
       
       // Also mark the link container if it exists
       const linkContainer = row.querySelector(".story-link-container");
@@ -629,10 +673,9 @@ export function initializeTracking(signer = null, identity = null) {
   const shouldSync = currentPath === "/" || currentPath === "/new";
   
   if (globalSigner && shouldSync) {
-    syncInteractions().then(() => {
-      // Re-apply styling after sync
-      applyClickedStyling();
-    });
+    // Only sync on initial load, don't re-apply styling after sync
+    // to avoid overwriting recent local changes
+    syncInteractions();
   }
 
   // Set up page unload handler

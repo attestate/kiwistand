@@ -1747,3 +1747,9 @@ a.meta-link:hover, span.meta-link:hover {
   filter: invert(100%) brightness(2);
   opacity: 0.7;
 }
+
+/* Last clicked item indicator - similar to :target */
+.last-clicked {
+  box-shadow: 0 0 0 2px rgb(175, 192, 70);
+  animation: highlight 0.3s ease-out;
+}
