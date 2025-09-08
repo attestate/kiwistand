@@ -15,6 +15,7 @@ import * as API from "./API.mjs";
 import { getLocalAccount } from "./session.mjs";
 import { chains, useProvider, useSigner, useIsMiniApp } from "./client.mjs";
 import { resolveAvatar } from "./Avatar.jsx";
+import { openDelegationModalForAction, isDelegationModalNeeded } from "./delegationModalManager.js";
 
 // Configure slugify extension
 slugify.extend({ "′": "", "'": "" });
@@ -473,6 +474,13 @@ const CommentInput = (props) => {
     e.preventDefault();
     setIsLoading(true);
     const index = getIndex();
+
+    // --- Check if delegation is needed ---
+    if (address && isDelegationModalNeeded(allowlist, delegations, address)) {
+      setIsLoading(false);
+      openDelegationModalForAction();
+      return;
+    }
 
     // --- Validation ---
     const validMiladyTexts = ["Milady.", "milady.", "milady", "Milady"];

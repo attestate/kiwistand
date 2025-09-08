@@ -1,10 +1,11 @@
 import "vite/modulepreload-polyfill";
 import "./request_monitor.js";
 import PullToRefresh from "pulltorefreshjs";
-import { StrictMode } from "react";
+import { StrictMode, createRef } from "react";
 import { createRoot } from "react-dom/client";
 import sdk from "@farcaster/frame-sdk";
 import { Providers } from "./providers.jsx";
+import { setDelegationModalRef, preloadDelegationModal } from "./delegationModalManager.js";
 
 // Make SDK available globally for use in other parts of the app
 window.sdk = sdk;
@@ -629,11 +630,16 @@ async function addModals(allowlist, delegations, toast) {
 
   const delegationModal = document.querySelector("nav-delegation-modal");
   if (delegationModal) {
-    const DelegationModal = (await import("./DelegationModal.jsx")).default;
+    // Use preloaded module or import if not yet loaded
+    const DelegationModal = (await preloadDelegationModal()).default;
+    const delegationModalRef = createRef();
+    setDelegationModalRef(delegationModalRef);
+    
     createRoot(delegationModal).render(
       <StrictMode>
         <Providers>
           <DelegationModal
+            ref={delegationModalRef}
             toast={toast}
             allowlist={allowlist}
             delegations={delegations}
@@ -1576,6 +1582,9 @@ async function start() {
       await startWatchAccount(await allowlistPromise, await delegationsPromise, account, isInIOSApp);
     }
   });
+
+  // Preload the delegation modal early to avoid delays
+  preloadDelegationModal();
 
   const results0 = await Promise.allSettled([
     import("@rainbow-me/rainbowkit/styles.css"), // Load styles in parallel

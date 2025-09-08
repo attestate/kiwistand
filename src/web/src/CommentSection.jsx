@@ -15,6 +15,7 @@ import { getLocalAccount, isIOS, isRunningPWA } from "./session.mjs";
 import { resolveAvatar } from "./Avatar.jsx";
 import { dynamicPrefetch } from "./main.jsx";
 import { getSlug } from "./CommentInput.jsx"; // Import getSlug from CommentInput
+import { openDelegationModalForAction, isDelegationModalNeeded } from "./delegationModalManager.js";
 
 function ShareIcon(style) {
   return (
@@ -130,6 +131,19 @@ export const EmojiReaction = ({ comment, allowlist, delegations, toast }) => {
   }, [signer, allowlist, delegations]);
 
   const handleReaction = async (emoji, isFromExistingReaction = false) => {
+    // Check if wallet is connected
+    if (!account.isConnected) {
+      toast.error("Please connect your wallet first");
+      return;
+    }
+
+    // Check if delegation is needed using account address
+    if (account.address && isDelegationModalNeeded(allowlist, delegations, account.address)) {
+      openDelegationModalForAction();
+      return;
+    }
+
+    // Now check for signer
     if (!signer) {
       toast.error("Please connect your wallet first");
       return;
@@ -138,6 +152,7 @@ export const EmojiReaction = ({ comment, allowlist, delegations, toast }) => {
     setIsReacting(true);
     try {
       const address = await signer.getAddress();
+      
       const identity = eligible(allowlist, delegations, address);
 
       if (!identity) {
@@ -278,7 +293,7 @@ export const EmojiReaction = ({ comment, allowlist, delegations, toast }) => {
               <button
                 key={reaction.emoji}
                 onClick={() => !isOwnComment && !alreadyReacted && !hasReacted && handleReaction(reaction.emoji, true)}
-                disabled={isntLoggedIn || isReacting || isOwnComment || alreadyReacted || hasReacted}
+                disabled={isReacting || isOwnComment || alreadyReacted || hasReacted}
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
@@ -370,7 +385,7 @@ export const EmojiReaction = ({ comment, allowlist, delegations, toast }) => {
       {(!isOwnComment || localAccount) && !hasReacted && (
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          disabled={isntLoggedIn}
+          disabled={false}
           style={{
             display: "inline-flex",
             alignItems: "center",
@@ -383,7 +398,7 @@ export const EmojiReaction = ({ comment, allowlist, delegations, toast }) => {
             borderRadius: "20px",
             fontSize: "16px",
             color: isExpanded ? "#666" : "#888",
-            cursor: isntLoggedIn ? "default" : "pointer",
+            cursor: "pointer",
             fontFamily: "var(--font-family)",
             WebkitAppearance: "none",
             transition: "all 0.15s ease",
@@ -406,7 +421,7 @@ export const EmojiReaction = ({ comment, allowlist, delegations, toast }) => {
       )}
       
       {/* Expanded emoji picker - floating overlay */}
-      {isExpanded && !isntLoggedIn && (
+      {isExpanded && (
         <div
           style={{
             position: "absolute",

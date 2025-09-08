@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useImperativeHandle, forwardRef } from "react";
 import Modal from "react-modal";
 import { useAccount } from "wagmi";
 import { eligible } from "@attestate/delegator2";
@@ -10,13 +10,15 @@ if (document.querySelector("nav-delegation-modal")) {
   Modal.setAppElement("nav-delegation-modal");
 }
 
-function SimpleModal(props) {
+const SimpleModal = forwardRef((props, ref) => {
   const [showModal, setShowModal] = useState(false);
   const account = useAccount();
 
   const { toast, allowlist, delegations } = props;
+  
+  const MODAL_DISMISSED_KEY = `delegation-modal-dismissed-${account.address}`;
 
-  function openModal() {
+  function openModal(forceOpen = false) {
     if (
       !account.isConnected ||
       (window.location.pathname !== "/" &&
@@ -32,19 +34,34 @@ function SimpleModal(props) {
 
     const isEligible = eligible(allowlist, delegations, account.address);
     const localAccount = getLocalAccount(account.address, allowlist);
+    const wasDismissed = localStorage.getItem(MODAL_DISMISSED_KEY) === "true";
 
-    if (isEligible && !localAccount) {
+    if (isEligible && !localAccount && (forceOpen || !wasDismissed)) {
       setShowModal(true);
     }
   }
 
   function closeModal() {
     setShowModal(false);
+    if (account.address) {
+      localStorage.setItem(MODAL_DISMISSED_KEY, "true");
+    }
   }
 
   useEffect(() => {
     openModal();
   }, [account.address, account.isConnected]);
+
+  useImperativeHandle(ref, () => ({
+    openModalForAction: () => {
+      const isEligible = eligible(allowlist, delegations, account.address);
+      const localAccount = getLocalAccount(account.address, allowlist);
+      
+      if (isEligible && !localAccount) {
+        openModal(true);
+      }
+    }
+  }));
 
   const customStyles = {
     overlay: {
@@ -107,7 +124,30 @@ function SimpleModal(props) {
       contentLabel="Kiwi News Modal"
       shouldCloseOnOverlayClick={false}
       style={customStyles}
+      closeTimeoutMS={0}
     >
+      <button
+        onClick={closeModal}
+        style={{
+          position: "absolute",
+          top: "10px",
+          right: "10px",
+          background: "none",
+          border: "none",
+          fontSize: "1.5rem",
+          cursor: "pointer",
+          color: "#828282",
+          padding: "0",
+          width: "30px",
+          height: "30px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+        aria-label="Close modal"
+      >
+        ×
+      </button>
       <DelegateButton
         callback={closeModal}
         allowlist={allowlist}
@@ -120,6 +160,8 @@ function SimpleModal(props) {
       />
     </Modal>
   );
-}
+});
+
+SimpleModal.displayName = "SimpleModal";
 
 export default SimpleModal;

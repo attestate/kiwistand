@@ -21,6 +21,10 @@ import {
 import NFTModal from "./NFTModal.jsx";
 import theme from "./theme.jsx";
 import { getLocalAccount, isIOSApp } from "./session.mjs";
+import {
+  openDelegationModalForAction,
+  isDelegationModalNeeded,
+} from "./delegationModalManager.js";
 
 export const iconSVG = (
   <svg
@@ -28,8 +32,15 @@ export const iconSVG = (
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 256 256"
   >
-    <rect width="256" height="256" fill="none"/>
-    <path d="M128,224S24,168,24,102A54,54,0,0,1,78,48c22.59,0,41.94,12.31,50,32,8.06-19.69,27.41-32,50-32a54,54,0,0,1,54,54C232,168,128,224,128,224Z" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="16"/>
+    <rect width="256" height="256" fill="none" />
+    <path
+      d="M128,224S24,168,24,102A54,54,0,0,1,78,48c22.59,0,41.94,12.31,50,32,8.06-19.69,27.41-32,50-32a54,54,0,0,1,54,54C232,168,128,224,128,224Z"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="16"
+    />
   </svg>
 );
 
@@ -39,8 +50,11 @@ const iconFullSVG = (
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 256 256"
   >
-    <rect width="256" height="256" fill="none"/>
-    <path d="M240,102c0,70-103.79,126.66-108.21,129a8,8,0,0,1-7.58,0C119.79,228.66,16,172,16,102A62.07,62.07,0,0,1,78,40c20.65,0,38.73,8.88,50,23.89C139.27,48.88,157.35,40,178,40A62.07,62.07,0,0,1,240,102Z" fill="currentColor"/>
+    <rect width="256" height="256" fill="none" />
+    <path
+      d="M240,102c0,70-103.79,126.66-108.21,129a8,8,0,0,1-7.58,0C119.79,228.66,16,172,16,102A62.07,62.07,0,0,1,78,40c20.65,0,38.73,8.88,50,23.89C139.27,48.88,157.35,40,178,40A62.07,62.07,0,0,1,240,102Z"
+      fill="currentColor"
+    />
   </svg>
 );
 
@@ -164,6 +178,16 @@ const Vote = (props) => {
       return;
     }
 
+    // Check if delegation is needed for non-mini app users
+    if (
+      !isMiniApp &&
+      account?.address &&
+      isDelegationModalNeeded(allowlist, delegations, account.address)
+    ) {
+      openDelegationModalForAction();
+      return;
+    }
+
     // Set upvoted state immediately for better UX
     setHasUpvoted(true);
 
@@ -174,35 +198,41 @@ const Vote = (props) => {
 
     let response;
 
-    console.log(isFarcasterClient);
-    if (isFarcasterClient) {
+    if (isMiniApp) {
       // Mini app upvote flow - REQUIRES JWT authentication
       try {
         const context = await window.sdk.context;
         const fid = context.user.fid;
-        
+
         if (!fid) {
           throw new Error("No FID available in context");
         }
-        
+
         // Get Quick Auth JWT token - REQUIRED
         let authToken = null;
-        
+
         if (window.sdk && window.sdk.quickAuth) {
           try {
             const tokenResponse = await window.sdk.quickAuth.getToken();
-            authToken = typeof tokenResponse === 'string' ? tokenResponse : tokenResponse.token;
+            authToken =
+              typeof tokenResponse === "string"
+                ? tokenResponse
+                : tokenResponse.token;
           } catch (tokenError) {
             console.error("Failed to get Quick Auth token:", tokenError);
-            throw new Error("Authentication failed. Please try again or update your Farcaster app.");
+            throw new Error(
+              "Authentication failed. Please try again or update your Farcaster app.",
+            );
           }
         } else {
-          throw new Error("Quick Auth not available. Please update your Farcaster app to continue.");
+          throw new Error(
+            "Quick Auth not available. Please update your Farcaster app to continue.",
+          );
         }
-        
+
         // Get the user's connected wallet address from Wagmi (the proper way)
         let walletAddress = null;
-        
+
         // For mini apps, use the current account's address from useAccount hook
         if (account.isConnected && account.address) {
           walletAddress = account.address;
@@ -220,14 +250,19 @@ const Vote = (props) => {
             // Silently fail and try next method
           }
         }
-        
+
         if (!walletAddress) {
           throw new Error("No connected wallet found in Farcaster mini app");
         }
-        
+
         toast("Submitting your upvote...");
-        
-        response = await API.sendMiniAppUpvote(value, fid, walletAddress, authToken);
+
+        response = await API.sendMiniAppUpvote(
+          value,
+          fid,
+          walletAddress,
+          authToken,
+        );
       } catch (err) {
         console.error("Mini app upvote error:", err);
         setHasUpvoted(false);
@@ -335,17 +370,19 @@ const Vote = (props) => {
               }
 
               // Add haptic feedback for vote action only in frames
-              if (isInFarcasterFrame()) {
+              if (isFarcasterClient) {
                 try {
-                  await sdk.haptics.impactOccurred('medium');
+                  await sdk.haptics.impactOccurred("medium");
                 } catch (error) {
                   // Silently fail if haptics not supported
                 }
               }
-              
+
               handleSubmit(e);
             }}
-            className={`interaction-button like-button ${hasUpvoted ? "" : "interaction-element"}`}
+            className={`interaction-button like-button ${
+              hasUpvoted ? "" : "interaction-element"
+            }`}
             style={{
               minWidth: "60px",
               padding: "8px 12px",
@@ -360,28 +397,36 @@ const Vote = (props) => {
               transition: "all 0.15s ease",
               position: "relative", // For positioning the animation
             }}
-            onMouseOver={(e) => !hasUpvoted && (e.currentTarget.style.backgroundColor = 'rgba(249, 24, 128, 0.1)')}
-            onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+            onMouseOver={(e) =>
+              !hasUpvoted &&
+              (e.currentTarget.style.backgroundColor =
+                "rgba(249, 24, 128, 0.1)")
+            }
+            onMouseOut={(e) =>
+              (e.currentTarget.style.backgroundColor = "transparent")
+            }
           >
             <KarmaAnimation active={showKarmaAnimation} />
-            <span 
-              className="heart-icon" 
-              style={{ 
-                width: "20px", 
-                height: "20px", 
-                color: hasUpvoted ? "#ff6b6b" : "rgba(83, 100, 113, 1)", 
-                display: "flex", 
-                alignItems: "center", 
-                justifyContent: "center" 
+            <span
+              className="heart-icon"
+              style={{
+                width: "20px",
+                height: "20px",
+                color: hasUpvoted ? "#ff6b6b" : "rgba(83, 100, 113, 1)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
               }}
             >
               {hasUpvoted ? iconFullSVG : iconSVG}
             </span>
-            <span style={{ 
-              fontSize: "13px", 
-              color: "rgba(83, 100, 113, 1)", 
-              fontWeight: "400" 
-            }}>
+            <span
+              style={{
+                fontSize: "13px",
+                color: "rgba(83, 100, 113, 1)",
+                fontWeight: "400",
+              }}
+            >
               {upvotes}
             </span>
           </button>
