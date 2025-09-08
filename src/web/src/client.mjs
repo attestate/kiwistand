@@ -78,14 +78,7 @@ const transports = {
 // Create wagmi config based on environment
 let client;
 
-if (isInFarcasterFrame()) {
-  // Farcaster frame configuration
-  client = createConfig({
-    chains,
-    connectors: [farcasterMiniApp()],
-    transports,
-  });
-} else if (isInIOSApp) {
+if (isInIOSApp) {
   // iOS app configuration - exclude Coinbase Wallet and browser wallet
   const wallets = [
     // injectedWallet excluded on iOS app (browser wallet)
@@ -116,12 +109,37 @@ if (isInFarcasterFrame()) {
     transports,
   });
 } else {
-  // Standard configuration using RainbowKit's getDefaultConfig
+  // Standard configuration with Farcaster mini app support
   // This will be used for all browsers including iOS Safari (not the app)
-  client = getDefaultConfig({
-    appName,
-    projectId,
+  const wallets = [
+    injectedWallet,
+    walletConnectWallet,
+    coinbaseWallet,
+    metaMaskWallet,
+    rainbowWallet,
+    trustWallet,
+    safeWallet,
+  ];
+
+  const walletConnectors = connectorsForWallets(
+    [
+      {
+        groupName: 'Wallets',
+        wallets,
+      },
+    ],
+    {
+      appName,
+      projectId,
+    }
+  );
+
+  // Add Farcaster mini app connector to the connectors array
+  const connectors = [...walletConnectors, farcasterMiniApp()];
+
+  client = createConfig({
     chains,
+    connectors,
     transports,
   });
 }
