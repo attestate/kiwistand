@@ -33,7 +33,6 @@ const NewsletterScrollModal = ({ toast }) => {
 
       const rect = modal.getBoundingClientRect();
       const windowHeight = window.innerHeight;
-      const scrollY = window.scrollY;
       
       // Calculate how much of the modal is visible
       let visibilityPercentage = 0;
@@ -47,46 +46,13 @@ const NewsletterScrollModal = ({ toast }) => {
       
       // Set overlay opacity based on visibility (max 0.5)
       setOverlayOpacity(visibilityPercentage * 0.5);
-      
-      // Calculate the position where modal would be centered
-      const modalAbsoluteTop = window.innerHeight * 1.5; // 150vh from document top
-      const modalHeight = rect.height;
-      const maxScroll = modalAbsoluteTop - (windowHeight / 2 - modalHeight / 2);
-      
-      // If we're scrolled past the max position, scroll back
-      if (scrollY > maxScroll) {
-        window.scrollTo(0, maxScroll);
-      }
-    };
-
-    // Use a capturing listener to intercept scroll before default handling
-    const handleWheel = (e) => {
-      const modal = modalRef.current;
-      if (!modal || isDismissed) return;
-      
-      const rect = modal.getBoundingClientRect();
-      const windowHeight = window.innerHeight;
-      const scrollY = window.scrollY;
-      
-      // Calculate max scroll position
-      const modalAbsoluteTop = window.innerHeight * 1.5;
-      const modalHeight = rect.height;
-      const maxScroll = modalAbsoluteTop - (windowHeight / 2 - modalHeight / 2);
-      
-      // If scrolling down and we're at or past the limit, prevent default
-      if (e.deltaY > 0 && scrollY >= maxScroll - 5) {
-        e.preventDefault();
-        window.scrollTo(0, maxScroll);
-      }
     };
 
     window.addEventListener("scroll", handleScroll);
-    window.addEventListener("wheel", handleWheel, { passive: false });
     handleScroll(); // Check initial position
 
     return () => {
       window.removeEventListener("scroll", handleScroll);
-      window.removeEventListener("wheel", handleWheel);
     };
   }, [isDismissed]);
 
