@@ -13,7 +13,7 @@ import { sdk } from "@farcaster/frame-sdk";
 
 import * as API from "./API.mjs";
 import { getLocalAccount } from "./session.mjs";
-import { chains, useProvider, useSigner, useIsMiniApp } from "./client.mjs";
+import { chains, client, useProvider, useSigner, useIsMiniApp } from "./client.mjs";
 import { resolveAvatar } from "./Avatar.jsx";
 import { openDelegationModalForAction, isDelegationModalNeeded } from "./delegationModalManager.js";
 
@@ -726,7 +726,13 @@ const CommentInput = (props) => {
               onClick={(e) => {
                 if (!disableAutoOpen && address && isEligible) {
                   e.preventDefault();
-                  setShowMobileComposer(true);
+                  
+                  // Check if delegation is needed before opening mobile composer
+                  if (isDelegationModalNeeded(allowlist, delegations, address)) {
+                    openDelegationModalForAction();
+                  } else {
+                    setShowMobileComposer(true);
+                  }
                 }
               }}
               style={{

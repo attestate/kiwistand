@@ -66,7 +66,7 @@ const SimpleModal = forwardRef((props, ref) => {
   const customStyles = {
     overlay: {
       backgroundColor: "rgba(0, 0, 0, 0.5)",
-      zIndex: 6,
+      zIndex: 1000,
     },
     content: {
       fontSize: "1.025rem",
@@ -90,6 +90,7 @@ const SimpleModal = forwardRef((props, ref) => {
       alignItems: "center",
       justifyContent: "center",
       flexDirection: "column",
+      zIndex: 1001,
     },
   };
 
