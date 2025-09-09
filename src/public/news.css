@@ -873,6 +873,9 @@ body.react-loaded .comment-input-ssr-placeholder {
       background-color: #f6f6ef;
       -webkit-border-image: initial;
       -webkit-appearance: none;
+      /* Create a local stacking context we can raise when menus are open */
+      position: relative;
+      z-index: 0;
     }
     #hnmain {
       border: none;
@@ -1579,67 +1582,13 @@ a.meta-link:hover, span.meta-link:hover {
   }
 }
 
-/* Share dropdown menu styles */
-.share-dropdown {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  margin-top: 4px;
-  min-width: 180px;
-  background: white;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
-  display: none;
-  padding: 4px 0;
-}
+/* Removed dropdown UI; share button now copies link */
+.share-button-container { position: relative; }
 
-.share-dropdown.active {
-  display: block;
-}
+/* When a share dropdown is open, ensure the row sits above neighbors */
+/* dropdown-open no longer used */
 
-.share-dropdown-item {
-  display: flex;
-  align-items: center;
-  padding: 12px 16px;
-  text-decoration: none;
-  color: inherit;
-  cursor: pointer;
-  transition: background-color 0.15s ease;
-  border: none;
-  background: none;
-  width: 100%;
-  text-align: left;
-  font-size: 14px;
-}
-
-.share-dropdown-item:hover {
-  background-color: rgba(0, 0, 0, 0.04);
-}
-
-.share-dropdown-item svg {
-  width: 20px;
-  height: 20px;
-  margin-right: 12px;
-  color: rgba(83, 100, 113, 1);
-}
-
-.share-button-container {
-  position: relative;
-}
-
-/* Only show dropdown on desktop */
-@media only screen and (max-width: 640px) {
-  .share-dropdown {
-    display: none !important;
-  }
-  
-  /* Hide footer on mobile story pages */
-  .desktop-only-footer {
-    display: none !important;
-  }
-}
+/* No dropdown to hide/show by viewport anymore */
 
 /* Hide mobile spacer on desktop */
 @media only screen and (min-width: 641px) {
