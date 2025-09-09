@@ -1207,22 +1207,36 @@ async function startWatchAccount(allowlist, delegations, account, isInIOSApp) {
       console.log("Set Kiwi wallet for iOS notifications:", identity);
     }
     
-    // Initialize interaction tracking with the signer and identity
-    if (signer) {
-      import("./tracker.mjs").then((tracker) => {
-        tracker.initializeTracking(signer, identity);
-        console.log("Interaction tracking initialized with signer");
-      }).catch((err) => {
-        console.error("Failed to initialize interaction tracking:", err);
-      });
-    } else {
-      // Initialize without signer (read-only mode)
-      import("./tracker.mjs").then((tracker) => {
-        tracker.initializeTracking();
-        console.log("Interaction tracking initialized without signer (read-only)");
-      }).catch((err) => {
-        console.error("Failed to initialize interaction tracking:", err);
-      });
+    // Only load tracker on feed and story pages
+    const shouldLoadTracker = () => {
+      const p = window.location.pathname || "";
+      return p === "/" || p === "/new" || p === "/best" || p.startsWith("/stories");
+    };
+
+    if (shouldLoadTracker()) {
+      // Initialize interaction tracking with the signer and identity
+      if (signer) {
+        import("./tracker.mjs")
+          .then((tracker) => {
+            tracker.initializeTracking(signer, identity);
+            console.log("Interaction tracking initialized with signer");
+          })
+          .catch((err) => {
+            console.error("Failed to initialize interaction tracking:", err);
+          });
+      } else {
+        // Initialize without signer (read-only mode)
+        import("./tracker.mjs")
+          .then((tracker) => {
+            tracker.initializeTracking();
+            console.log(
+              "Interaction tracking initialized without signer (read-only)",
+            );
+          })
+          .catch((err) => {
+            console.error("Failed to initialize interaction tracking:", err);
+          });
+      }
     }
   } else {
     hideDesktopLinks();
@@ -1233,13 +1247,21 @@ async function startWatchAccount(allowlist, delegations, account, isInIOSApp) {
       console.log("Cleared Kiwi wallet for iOS");
     }
     
-    // Still initialize tracker but without signer (for non-logged in users)
-    import("./tracker.mjs").then((tracker) => {
-      tracker.initializeTracking();
-      console.log("Interaction tracking initialized (no auth)");
-    }).catch((err) => {
-      console.error("Failed to initialize interaction tracking:", err);
-    });
+    // Only load tracker on feed and story pages (no auth)
+    const shouldLoadTracker = () => {
+      const p = window.location.pathname || "";
+      return p === "/" || p === "/new" || p === "/best" || p.startsWith("/stories");
+    };
+    if (shouldLoadTracker()) {
+      import("./tracker.mjs")
+        .then((tracker) => {
+          tracker.initializeTracking();
+          console.log("Interaction tracking initialized (no auth)");
+        })
+        .catch((err) => {
+          console.error("Failed to initialize interaction tracking:", err);
+        });
+    }
     return;
   }
   dynamicPrefetch(`https://api.ensdata.net/${identity}?farcaster=true`);
