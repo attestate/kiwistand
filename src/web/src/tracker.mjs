@@ -28,8 +28,18 @@ let isInitialized = false;
 
 // Set the signer and identity (called from main.jsx after startWatchAccount)
 export function setSigner(signer, identity) {
+  const currentAddr = globalSigner?.address?.toLowerCase?.() ?? null;
+  const nextAddr = signer?.address?.toLowerCase?.() ?? null;
+  const same = currentAddr === nextAddr && globalIdentity === identity;
+
+  if (same) {
+    // Avoid noisy logs and unnecessary resets if nothing changed
+    return;
+  }
+
   globalSigner = signer;
   globalIdentity = identity;
+
   console.log("Tracker: Signer and identity set", {
     signer,
     hasS: !!signer,
@@ -44,7 +54,7 @@ async function createInteractionMessage(
   interactionType,
 ) {
   if (!globalSigner) {
-    console.log("No signer available for tracking");
+    // If no signer is available, skip silently (read-only mode)
     return null;
   }
 

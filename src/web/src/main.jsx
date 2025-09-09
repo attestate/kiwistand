@@ -1214,29 +1214,25 @@ async function startWatchAccount(allowlist, delegations, account, isInIOSApp) {
     };
 
     if (shouldLoadTracker()) {
-      // Initialize interaction tracking with the signer and identity
-      if (signer) {
-        import("./tracker.mjs")
-          .then((tracker) => {
-            tracker.initializeTracking(signer, identity);
-            console.log("Interaction tracking initialized with signer");
-          })
-          .catch((err) => {
-            console.error("Failed to initialize interaction tracking:", err);
-          });
-      } else {
-        // Initialize without signer (read-only mode)
-        import("./tracker.mjs")
-          .then((tracker) => {
-            tracker.initializeTracking();
-            console.log(
-              "Interaction tracking initialized without signer (read-only)",
-            );
-          })
-          .catch((err) => {
-            console.error("Failed to initialize interaction tracking:", err);
-          });
-      }
+      import("./tracker.mjs")
+        .then((tracker) => {
+          // Initialize once; afterwards only update signer/identity
+          if (!window.__kiwiTrackerInit) {
+            if (signer && identity) {
+              tracker.initializeTracking(signer, identity);
+              console.log("Interaction tracking initialized with signer");
+            } else {
+              tracker.initializeTracking();
+              console.log("Interaction tracking initialized (read-only)");
+            }
+            window.__kiwiTrackerInit = true;
+          } else if (signer && identity) {
+            tracker.setSigner(signer, identity);
+          }
+        })
+        .catch((err) => {
+          console.error("Failed to initialize interaction tracking:", err);
+        });
     }
   } else {
     hideDesktopLinks();
@@ -1255,8 +1251,11 @@ async function startWatchAccount(allowlist, delegations, account, isInIOSApp) {
     if (shouldLoadTracker()) {
       import("./tracker.mjs")
         .then((tracker) => {
-          tracker.initializeTracking();
-          console.log("Interaction tracking initialized (no auth)");
+          if (!window.__kiwiTrackerInit) {
+            tracker.initializeTracking();
+            window.__kiwiTrackerInit = true;
+            console.log("Interaction tracking initialized (no auth)");
+          }
         })
         .catch((err) => {
           console.error("Failed to initialize interaction tracking:", err);
