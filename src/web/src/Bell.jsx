@@ -419,6 +419,30 @@ const Bell = (props) => {
           backgroundColor: "#E2F266",
         };
 
+    // Minimal change: if desktop, user is connected but not eligible,
+    // show the normal Connect button AND a simple link to /kiwipass-mint
+    if (!props.mobile && account?.isConnected && !isEligible) {
+      return (
+        <span style={{ display: "inline-flex", gap: "6px", alignItems: "center" }}>
+          <TextConnectButton
+            className="bell-button"
+            style={mobileConnectStyle}
+            allowlist={props.allowlist}
+            delegations={props.delegations}
+            text="Connect"
+          />
+          <a
+            href="/kiwipass-mint"
+            className="meta-link bell-button"
+            title="Sign up"
+            style={mobileConnectStyle}
+          >
+            Sign up
+          </a>
+        </span>
+      );
+    }
+
     return (
       <TextConnectButton
         className={props.mobile ? "mobile-bell" : "bell-button"}
