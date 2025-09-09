@@ -328,6 +328,32 @@ export function getRecentInteractions(since) {
   }
 }
 
+// Get interactions (impressions and clicks) for DAU calculation
+export function getInteractionsForDAU() {
+  try {
+    // Get both impressions and clicks with a UNION to combine them
+    const stmt = db.prepare(`
+      SELECT user_identity as identity, timestamp, 'impression' as type
+      FROM impressions
+      UNION ALL
+      SELECT user_identity as identity, timestamp, 'click' as type
+      FROM clicks
+      ORDER BY timestamp DESC
+    `);
+    
+    const interactions = stmt.all();
+    
+    return interactions.map(interaction => ({
+      identity: interaction.identity,
+      timestamp: interaction.timestamp,
+      type: interaction.type
+    }));
+  } catch (error) {
+    log(`Error getting interactions for DAU: ${error.message}`);
+    return [];
+  }
+}
+
 // Clean up old interactions (optional maintenance)
 export function cleanupOldInteractions(daysToKeep = 90) {
   try {

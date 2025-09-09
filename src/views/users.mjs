@@ -14,6 +14,7 @@ import Head from "./components/head.mjs";
 import * as store from "../store.mjs";
 import * as registry from "../chainstate/registry.mjs";
 import { getHashesPerDateRange, getMiniAppUpvotes } from "../cache.mjs";
+import { getInteractionsForDAU } from "../interactions.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -196,14 +197,17 @@ export default async function (trie, theme) {
   // Get mini app upvotes from cache
   const miniAppUpvotes = await getMiniAppUpvotes();
 
-  const messagesWithAddresses = await makeAsync((messages, comments, miniAppUpvotes) => {
-    return [...messages, ...comments, ...miniAppUpvotes].filter((msg) => {
+  // Get article interactions (impressions and clicks) from tracker
+  const articleInteractions = await getInteractionsForDAU();
+
+  const messagesWithAddresses = await makeAsync((messages, comments, miniAppUpvotes, articleInteractions) => {
+    return [...messages, ...comments, ...miniAppUpvotes, ...articleInteractions].filter((msg) => {
       const messageDate = new Date(msg.timestamp * 1000);
       // NOTE: months are 0-indexed in JS, so 3 is April
       const cutOffDate = new Date(2023, 3);
       return messageDate >= cutOffDate;
     });
-  })(messages, comments, miniAppUpvotes);
+  })(messages, comments, miniAppUpvotes, articleInteractions);
 
   const dauData = calculateDAU(messagesWithAddresses);
   const mauData = calculateMAU(messagesWithAddresses);
@@ -338,7 +342,8 @@ export default async function (trie, theme) {
                     <br />
                     <b>Definition:</b> We consider someone a Daily Active User
                     if, for a given day, they've at least, interacted on the
-                    site once by either upvoting or submitting a new link.
+                    site once by either upvoting, submitting a new link,
+                    viewing, or clicking on an article.
                   </p>
                   ${dauChart}
                   <p>
@@ -347,8 +352,8 @@ export default async function (trie, theme) {
                     <br />
                     <b>Definition: </b>We consider someone a 7-day Active User
                     if, for a given period of 7 days, they've, at least,
-                    interacted on the site once by either upvoting or submitting
-                    a new link.
+                    interacted on the site once by either upvoting, submitting
+                    a new link, viewing, or clicking on an article.
                   </p>
                   ${wauChart}
                   <p>
@@ -357,7 +362,8 @@ export default async function (trie, theme) {
                     <br />
                     <b>Definition: </b>We consider someone a 30-day Active User
                     if, for the last 30 days, they've, at least, interacted on
-                    the site once by either upvoting or submitting a new link.
+                    the site once by either upvoting, submitting a new link,
+                    viewing, or clicking on an article.
                   </p>
                   ${mauChart}
                   <p>
