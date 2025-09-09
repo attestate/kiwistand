@@ -88,7 +88,7 @@ export default function AnalyticsConsent() {
   return (
     <div style={{
       position: 'fixed',
-      bottom: isDesktop ? 0 : 'calc(50px + env(safe-area-inset-bottom, 0px))', // Positioned above bottom nav on mobile
+      bottom: isDesktop ? 0 : 'calc(45px + env(safe-area-inset-bottom, 0px))', // Match mobile bottom nav height
       left: 0,
       right: 0,
       backgroundColor: '#f6f6ef',
