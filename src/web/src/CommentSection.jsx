@@ -131,28 +131,21 @@ export const EmojiReaction = ({ comment, allowlist, delegations, toast }) => {
   }, [signer, allowlist, delegations]);
 
   const handleReaction = async (emoji, isFromExistingReaction = false) => {
-    // Check if wallet is connected
-    if (!account.isConnected) {
-      toast.error("Please connect your wallet first");
-      return;
-    }
-
-    // Check if delegation is needed using account address
-    if (account.address && isDelegationModalNeeded(allowlist, delegations, account.address)) {
-      openDelegationModalForAction();
-      return;
-    }
-
-    // Now check for signer
+    // Prefer local signer if available; otherwise handle delegation flow for connected wallets
     if (!signer) {
+      if (account?.isConnected && account?.address) {
+        if (isDelegationModalNeeded(allowlist, delegations, account.address)) {
+          openDelegationModalForAction();
+          return;
+        }
+      }
       toast.error("Please connect your wallet first");
       return;
     }
 
-    setIsReacting(true);
     try {
       const address = await signer.getAddress();
-      
+      setIsReacting(true);
       const identity = eligible(allowlist, delegations, address);
 
       if (!identity) {
