@@ -61,12 +61,14 @@ export default function AnalyticsConsent() {
   const acceptAnalytics = () => {
     localStorage.setItem('kiwi-analytics-consent', 'true');
     setVisible(false);
+    window.dispatchEvent(new Event('analyticsConsentChange'));
     // Analytics are already enabled by default
   };
 
   const declineAnalytics = () => {
     localStorage.setItem('kiwi-analytics-consent', 'false');
     setVisible(false);
+    window.dispatchEvent(new Event('analyticsConsentChange'));
     
     // Disable analytics
     if (window.gtag) {

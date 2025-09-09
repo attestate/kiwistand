@@ -3,6 +3,9 @@ import React, { useState, useEffect } from 'react';
 const TestFlightQR = () => {
   const testflightUrl = 'https://testflight.apple.com/join/6jyvYECH';
   const [shouldShow, setShouldShow] = useState(false);
+  const [consentBannerVisible, setConsentBannerVisible] = useState(
+    localStorage.getItem('kiwi-analytics-consent') === null
+  );
 
   useEffect(() => {
     const checkViewportWidth = () => {
@@ -37,11 +40,21 @@ const TestFlightQR = () => {
       setShouldShow(availableSpace >= requiredSpace);
     };
 
+    const handleConsentChange = () => {
+      setConsentBannerVisible(localStorage.getItem('kiwi-analytics-consent') === null);
+    };
+
     // Check on mount and resize
     checkViewportWidth();
     window.addEventListener('resize', checkViewportWidth);
+    
+    // Listen for custom event when consent is given/denied
+    window.addEventListener('analyticsConsentChange', handleConsentChange);
 
-    return () => window.removeEventListener('resize', checkViewportWidth);
+    return () => {
+      window.removeEventListener('resize', checkViewportWidth);
+      window.removeEventListener('analyticsConsentChange', handleConsentChange);
+    };
   }, []);
 
   if (!shouldShow) {
@@ -52,7 +65,7 @@ const TestFlightQR = () => {
     <div 
       style={{
         position: 'fixed',
-        bottom: '20px',
+        bottom: consentBannerVisible ? '80px' : '20px',
         right: '20px',
         zIndex: 1000,
         backgroundColor: 'white',
@@ -61,6 +74,7 @@ const TestFlightQR = () => {
         border: '1px solid #e0e0e0',
         padding: '16px',
         width: '200px',
+        transition: 'bottom 0.3s ease-in-out',
       }}
     >
       <div style={{ 
