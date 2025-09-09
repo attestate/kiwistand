@@ -206,6 +206,37 @@ async function addInviteLink(toast) {
   }
 }
 
+async function addFarcasterShareButtons() {
+  const containers = document.querySelectorAll(
+    ".farcaster-share-button-container",
+  );
+  if (!containers || containers.length === 0) return;
+
+  const FarcasterShareButton = (
+    await import("./FarcasterShareButton.jsx")
+  ).default;
+
+  containers.forEach((container) => {
+    try {
+      const title = container.getAttribute("data-story-title");
+      const slug = container.getAttribute("data-story-slug");
+      const index = container.getAttribute("data-story-index");
+
+      // Replace SSR fallback content with React component
+      container.innerHTML = "";
+      createRoot(container).render(
+        <StrictMode>
+          <Providers>
+            <FarcasterShareButton title={title} slug={slug} index={index} />
+          </Providers>
+        </StrictMode>,
+      );
+    } catch (err) {
+      console.error("Failed to mount FarcasterShareButton:", err);
+    }
+  });
+}
+
 async function addDynamicNavElements() {
   // Disabled: React components were replacing server-rendered navigation content
   // The server already renders complete navigation with SVGs and labels
@@ -1655,6 +1686,7 @@ async function start() {
   const results1 = await Promise.allSettled([
     addDynamicNavElements(),
     addInviteLink(toast),
+    addFarcasterShareButtons(),
     addStoryEmojiReactions(
       await allowlistPromise,
       await delegationsPromise,

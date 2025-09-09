@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import DOMPurify from "isomorphic-dompurify";
-import { sdk } from "@farcaster/frame-sdk";
+import { sdk } from "@farcaster/miniapp-sdk";
 
 const ShareModal = ({ isOpen, onClose, title, url, storyUrl }) => {
   useEffect(() => {
@@ -17,14 +17,21 @@ const ShareModal = ({ isOpen, onClose, title, url, storyUrl }) => {
 
   if (!isOpen) return null;
 
-  const handleFarcasterShare = () => {
-    const shareUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(title)}&embeds[]=${encodeURIComponent(storyUrl)}`;
-    
-    if (window.ReactNativeWebView || window !== window.parent) {
-      window.sdk.actions.openUrl(shareUrl);
-    } else {
-      window.open(shareUrl, '_blank');
+  const handleFarcasterShare = async () => {
+    const shareUrl = `https://farcaster.xyz/~/compose?text=${encodeURIComponent(title)}&embeds[]=${encodeURIComponent(storyUrl)}`;
+    try {
+      const inMini = await sdk.isInMiniApp();
+      if (inMini && sdk?.actions?.composeCast) {
+        await sdk.actions.composeCast({ text: title, embeds: [storyUrl] });
+        return;
+      }
+    } catch (e) {
+      // fall through
     }
+    const inMiniContext = window.ReactNativeWebView || window !== window.parent;
+    if (inMiniContext) {
+      try { await sdk.actions.openUrl(shareUrl); } catch { window.open(shareUrl, '_blank'); }
+    } else { window.open(shareUrl, '_blank'); }
   };
 
   const handleGoToStory = () => {

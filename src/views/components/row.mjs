@@ -1282,10 +1282,13 @@ const row = (
                     ${path === "/stories"
                       ? html`<div
                           class="farcaster-share-button-container"
+                          data-story-title="${DOMPurify.sanitize(story.title)}"
+                          data-story-slug="${getSlug(story.title)}"
+                          data-story-index="0x${story.index}"
                           style="flex: 1; display: flex; justify-content: center;"
                         >
                           <a
-                            href="https://warpcast.com/~/compose?text=${encodeURIComponent(
+                            href="https://farcaster.xyz/~/compose?text=${encodeURIComponent(
                               DOMPurify.sanitize(story.title),
                             )}&embeds[]=${encodeURIComponent(
                               `https://news.kiwistand.com/stories/${getSlug(
@@ -1293,16 +1296,8 @@ const row = (
                               )}?index=0x${story.index}`,
                             )}"
                             target="_blank"
-                            class="interaction-button farcaster-share-button"
-                            data-story-title="${DOMPurify.sanitize(
-                              story.title,
-                            )}"
-                            data-story-slug="${getSlug(story.title)}"
-                            data-story-index="0x${story.index}"
+                            class="interaction-button farcaster-share-fallback"
                             style="min-width: 40px; padding: 8px; border: none; background: transparent; border-radius: 999px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s ease; text-decoration: none; color: inherit;"
-                            onclick="event.preventDefault(); const title = this.getAttribute('data-story-title'); const slug = this.getAttribute('data-story-slug'); const index = this.getAttribute('data-story-index'); const kiwiUrl = 'https://news.kiwistand.com/stories/' + slug + '?index=' + index; navigator.sendBeacon && navigator.sendBeacon('/share?url=' + encodeURIComponent('${DOMPurify.sanitize(
-                              story.href,
-                            )}') + '&type=farcaster'); if (window.isInFarcasterMiniApp && window.sdk && window.sdk.actions && window.sdk.actions.composeCast) { window.sdk.actions.composeCast({ text: title, embeds: [kiwiUrl] }); } else { const url = 'https://warpcast.com/~/compose?text=' + encodeURIComponent(title) + '&embeds[]=' + encodeURIComponent(kiwiUrl); window.open(url, '_blank'); }"
                             onmouseover="this.style.backgroundColor='rgba(124, 101, 193, 0.1)'"
                             onmouseout="this.style.backgroundColor='transparent'"
                           >

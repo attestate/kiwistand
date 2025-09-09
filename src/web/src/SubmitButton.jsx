@@ -6,7 +6,7 @@ import { RainbowKitProvider, ConnectButton } from "@rainbow-me/rainbowkit";
 import { eligible } from "@attestate/delegator2";
 import DOMPurify from "isomorphic-dompurify";
 import slugify from "slugify";
-import { sdk } from "@farcaster/frame-sdk";
+import { sdk } from "@farcaster/miniapp-sdk";
 slugify.extend({ "′": "", "'": "", '"': "" });
 
 import * as API from "./API.mjs";
@@ -485,7 +485,9 @@ const SubmitButton = (props) => {
     );
     storyUrl.searchParams.set("index", response.data.index);
 
-    if (window.ReactNativeWebView || window !== window.parent) {
+    try {
+      const inMini = await sdk.isInMiniApp();
+      if (inMini) {
       setStoryData({
         title,
         url: canonicalURL,
@@ -493,9 +495,10 @@ const SubmitButton = (props) => {
       });
       setShowShareModal(true);
       setIsLoading(false);
-    } else {
-      window.location.href = storyUrl.href;
-    }
+        return;
+      }
+    } catch {}
+    window.location.href = storyUrl.href;
   };
 
   if (!isEligible && account.isConnected) {
