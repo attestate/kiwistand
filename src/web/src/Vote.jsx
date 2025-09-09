@@ -104,6 +104,16 @@ const KarmaAnimation = ({ active }) => {
 };
 
 const Vote = (props) => {
+  // Read current feed variant from meta tag (if present)
+  const getVariant = () => {
+    try {
+      const el = document.querySelector('meta[name="kiwi-variant"]');
+      return el?.content || "unknown";
+    } catch (_) {
+      return "unknown";
+    }
+  };
+
   const { isMiniApp, loading } = useIsMiniApp();
   const [isFarcasterClient, setIsFarcasterClient] = useState(false);
 
@@ -287,7 +297,7 @@ const Vote = (props) => {
       // Update UI state
       setUpvotes(upvotes + 1);
       toast.success("Thanks for your like! Have a 🥝");
-      posthog.capture("upvote");
+      posthog.capture("upvote", { variant: getVariant() });
     } else if (response.details.includes("You must mint")) {
       // NOTE: This should technically never happen, but if it does we pop open
       // the modal to buy the NFT.

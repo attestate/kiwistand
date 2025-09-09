@@ -230,9 +230,15 @@ export const EmojiReaction = ({ comment, allowlist, delegations, toast }) => {
       const response = await API.send(value, signature);
       if (response.status === "success") {
         toast.success("Reaction added!");
+        let variant = "unknown";
+        try {
+          const el = document.querySelector('meta[name="kiwi-variant"]');
+          variant = el?.content || "unknown";
+        } catch (_) {}
         posthog.capture("emoji_reaction", {
           emoji: emoji,
           from_existing: isFromExistingReaction,
+          variant,
         });
       } else {
         toast.error(response.details || "Failed to add reaction");

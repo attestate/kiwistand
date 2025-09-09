@@ -1460,6 +1460,15 @@ function trackLinkImpressions() {
             console.log("Error tracking impression:", err);
           }
 
+          // Also capture impression in PostHog with variant for A/B analysis
+          try {
+            if (typeof posthog !== "undefined") {
+              const variantMeta = document.querySelector('meta[name="kiwi-variant"]');
+              const variant = variantMeta?.content || "unknown";
+              posthog?.capture?.("story_impression", { href, variant });
+            }
+          } catch (_) {}
+
           // Stop observing this link
           observer.unobserve(link);
         }
@@ -1469,6 +1478,48 @@ function trackLinkImpressions() {
   );
 
   storyLinks.forEach((link) => observer.observe(link));
+
+  // Attach outbound click capture for A/B analysis (minimal, robust)
+  storyLinks.forEach((link) => {
+    if (link._kiwiOutboundBound) return;
+    link._kiwiOutboundBound = true;
+
+    link.addEventListener("click", () => {
+      let href = link.getAttribute("href");
+      if (link.hasAttribute("data-external-link")) {
+        href = link.getAttribute("data-external-link");
+      }
+      if (!href) return;
+
+      // Heuristics: only count genuine external navigations
+      const isProtocol = href.includes("://");
+      const isInternalLike =
+        href.startsWith("javascript:") ||
+        href.startsWith("/") ||
+        href.startsWith("#") ||
+        href.startsWith("mailto:") ||
+        href.startsWith("tel:");
+
+      if (!link.hasAttribute("data-external-link")) {
+        if (isInternalLike || !isProtocol) return;
+        // If URL parsing fails, still record click with raw href to avoid data loss
+        try {
+          const linkUrl = new URL(href);
+          if (linkUrl.hostname === window.location.hostname) return;
+        } catch (_) {
+          // proceed with capture
+        }
+      }
+
+      if (typeof posthog !== "undefined") {
+        try {
+          const variantMeta = document.querySelector('meta[name="kiwi-variant"]');
+          const variant = variantMeta?.content || "unknown";
+          posthog?.capture?.("outbound_click", { href, variant });
+        } catch (_) {}
+      }
+    });
+  });
 }
 
 async function start() {
@@ -1503,6 +1554,15 @@ async function start() {
 
   // Initialize link impression tracking
   trackLinkImpressions();
+  
+  // Ensure variant is available on all subsequent PostHog events
+  if (window.location.pathname === "/" && typeof posthog !== "undefined") {
+    try {
+      const variantMeta = document.querySelector('meta[name="kiwi-variant"]');
+      const variant = variantMeta?.content || "unknown";
+      posthog?.register?.({ variant });
+    } catch (_) {}
+  }
   
   // Initialize terminal ad animations
   initTerminalAds();

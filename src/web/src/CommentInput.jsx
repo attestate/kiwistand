@@ -538,7 +538,7 @@ const CommentInput = (props) => {
         );
         API.send(value, signature, false); // Fire and forget
         toast.success("Comment added successfully!"); // Confirmation of *sending*
-        posthog.capture("comment_created");
+        posthog.capture("comment_created", { variant: getFeedVariant() });
       } catch (err) {
         console.error("Signing/Sending error (optimistic path):", err);
         toast.error(`Error: ${err.message}`);
@@ -570,7 +570,7 @@ const CommentInput = (props) => {
 
         // Success! Clear local state and reload
         toast.success("Comment submitted successfully!");
-        posthog.capture("comment_created");
+        posthog.capture("comment_created", { variant: getFeedVariant() });
         localStorage.removeItem(`-kiwi-news-comment-${address}-${index}`);
         setText(""); // Clear input
 
@@ -919,3 +919,12 @@ const Container = (props) => {
 };
 
 export default Container;
+// Helper to read feed variant from meta
+function getFeedVariant() {
+  try {
+    const el = document.querySelector('meta[name="kiwi-variant"]');
+    return el?.content || "unknown";
+  } catch (_) {
+    return "unknown";
+  }
+}
