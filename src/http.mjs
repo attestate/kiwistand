@@ -122,6 +122,57 @@ const app = express();
 // Initialize Quick Auth client
 const quickAuthClient = createQuickAuthClient();
 
+// Resolve a Farcaster user's primary Ethereum address from FID using Farcaster API
+async function resolvePrimaryEthAddressFromFid(fid) {
+  try {
+    const url = `https://api.farcaster.xyz/fc/primary-address?fid=${encodeURIComponent(
+      fid,
+    )}&protocol=ethereum`;
+    const res = await fetch(url, { headers: { "User-Agent": "KiwiNews/1.0" } });
+    if (!res.ok) return null;
+    const json = await res.json();
+    const addr = json?.result?.address?.address;
+    if (addr) return utils.getAddress(addr);
+  } catch (e) {
+    // noop
+  }
+  return null;
+}
+
+// Derive expected domain for Quick Auth verification
+function deriveDomainFromRequest(req) {
+  let host;
+  if (env.CUSTOM_HOST_NAME) host = env.CUSTOM_HOST_NAME;
+  else if (env.NODE_ENV === "production") host = "news.kiwistand.com";
+  else if (env.NODE_ENV === "staging") host = "staging.kiwistand.com";
+  else host = req.headers.host || "news.kiwistand.com";
+  return (host || "").split(":")[0];
+}
+
+// Validate Quick Auth JWT from request and optionally resolve primary address
+async function getQuickAuthContextFromRequest(req, { require = false, resolveAddress = true } = {}) {
+  const auth = req.headers.authorization || "";
+  if (!auth.startsWith("Bearer ")) {
+    if (require) throw new Errors.InvalidTokenError("Missing token");
+    return { tokenPresent: false };
+  }
+
+  const token = auth.split(" ")[1];
+  const domain = deriveDomainFromRequest(req);
+  const payload = await quickAuthClient.verifyJwt({ token, domain });
+  const fid = payload?.sub;
+  if (typeof fid !== "number") {
+    throw new Errors.InvalidTokenError("Invalid token payload: missing fid");
+  }
+
+  let address = null;
+  if (resolveAddress) {
+    address = await resolvePrimaryEthAddressFromFid(fid);
+  }
+
+  return { tokenPresent: true, fid, address };
+}
+
 //
 // Always use HTTP for internal servers since SSL is terminated at the load balancer
 const server = createHttpServer(app);
@@ -2244,62 +2295,27 @@ export async function launch(trie, libp2p, isPrimary = true) {
     reply.header("Cache-Control", "no-cache");
     
     const message = request.body;
-    const authorization = request.headers.authorization;
     
-    // REQUIRE JWT authorization - no more FID-only auth
-    if (!authorization || !authorization.startsWith("Bearer ")) {
-      return sendError(reply, 401, "Missing Authentication", "Quick Auth JWT token required in Authorization header");
-    }
-    
-    let fid;
-    const token = authorization.split(" ")[1];
-    
+    // REQUIRE JWT authorization and resolve identity from FID
+    let fid, identityAddress;
     try {
-      // Get the host domain for JWT verification
-      // Use CUSTOM_HOST_NAME if set (for local dev), otherwise use request host
-      let host;
-      if (env.CUSTOM_HOST_NAME) {
-        host = env.CUSTOM_HOST_NAME;
-      } else if (env.NODE_ENV === 'production') {
-        host = "news.kiwistand.com";
-      } else if (env.NODE_ENV === 'staging') {
-        host = "staging.kiwistand.com";
-      } else {
-        host = request.headers.host || "news.kiwistand.com";
+      const qa = await getQuickAuthContextFromRequest(request, { require: true, resolveAddress: true });
+      fid = qa.fid;
+      identityAddress = qa.address;
+      if (!identityAddress) {
+        return sendError(reply, 400, "Bad Request", "No primary Ethereum address found for Farcaster user");
       }
-      
-      let domain = host.split(':')[0]; // Remove port if present
-      
-      log(`Verifying JWT for miniapp-upvote, host: ${host}, domain: ${domain}, token preview: ${token.substring(0, 20)}...`);
-      
-      // Verify the JWT token with the domain
-      const payload = await quickAuthClient.verifyJwt({
-        token: token,
-        domain: domain
-      });
-      
-      // Extract the FID from the JWT payload (sub field)
-      fid = payload.sub;
-      
-      log(`JWT verified successfully for FID: ${fid}`);
-      
+      log(`JWT verified for miniapp-upvote. FID=${fid}, address=${identityAddress}`);
     } catch (verifyError) {
       if (verifyError instanceof Errors.InvalidTokenError) {
-        log(`Invalid Quick Auth token: ${verifyError.message}`);
         return sendError(reply, 401, "Invalid Token", "Invalid authentication token");
       }
-      log(`JWT verification error: ${verifyError.message}`);
-      return sendError(reply, 401, "Authentication Failed", verifyError.message);
+      return sendError(reply, 401, "Authentication Failed", verifyError.message || String(verifyError));
     }
     
     // Validate message structure
-    if (!message.title || !message.href || !message.timestamp || !message.walletAddress) {
+    if (!message.title || !message.href || !message.timestamp) {
       return sendError(reply, 400, "Invalid Message", "Missing required message fields");
-    }
-    
-    // Validate wallet address format
-    if (!message.walletAddress.match(/^0x[a-fA-F0-9]{40}$/)) {
-      return sendError(reply, 400, "Invalid Wallet", "Invalid Ethereum wallet address format");
     }
     
     try {
@@ -2309,7 +2325,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
         href: message.href,
         title: message.title,
         timestamp: message.timestamp,
-        walletAddress: message.walletAddress,
+        walletAddress: identityAddress,
       });
       
       // Trigger feed recomputation (same as protocol upvotes)
@@ -2354,7 +2370,21 @@ export async function launch(trie, libp2p, isPrimary = true) {
     reply.header("Cache-Control", "no-cache");
     
     const { impressions = [], clicks = [] } = request.body;
-    
+
+    // Optional Quick Auth JWT from Farcaster mini app
+    let jwtIdentity = null;
+    try {
+      const qa = await getQuickAuthContextFromRequest(request, { require: false, resolveAddress: true });
+      if (qa.tokenPresent && qa.address) {
+        jwtIdentity = qa.address;
+      }
+    } catch (verifyError) {
+      if (verifyError instanceof Errors.InvalidTokenError) {
+        return sendError(reply, 401, "Invalid Token", "Invalid authentication token");
+      }
+      return sendError(reply, 401, "Authentication Failed", verifyError.message || String(verifyError));
+    }
+
     // Validate input
     if (!Array.isArray(impressions) || !Array.isArray(clicks)) {
       return sendError(reply, 400, "Bad Request", "Impressions and clicks must be arrays");
@@ -2362,7 +2392,11 @@ export async function launch(trie, libp2p, isPrimary = true) {
     
     // Validate each interaction has required fields
     for (const impression of impressions) {
-      if (!impression.contentId || !impression.contentType || !impression.message || !impression.signature) {
+      if (!impression.contentId || !impression.contentType || !impression.message) {
+        return sendError(reply, 400, "Bad Request", "Invalid impression data");
+      }
+      // If no JWT identity, require signature as before
+      if (!jwtIdentity && !impression.signature) {
         return sendError(reply, 400, "Bad Request", "Invalid impression data");
       }
       if (impression.contentType !== "submission" && impression.contentType !== "comment") {
@@ -2371,14 +2405,33 @@ export async function launch(trie, libp2p, isPrimary = true) {
     }
     
     for (const click of clicks) {
-      if (!click.contentId || !click.contentType || !click.message || !click.signature) {
+      if (!click.contentId || !click.contentType || !click.message) {
+        return sendError(reply, 400, "Bad Request", "Invalid click data");
+      }
+      // If no JWT identity, require signature as before
+      if (!jwtIdentity && !click.signature) {
         return sendError(reply, 400, "Bad Request", "Invalid click data");
       }
       if (click.contentType !== "submission" && click.contentType !== "comment") {
         return sendError(reply, 400, "Bad Request", "contentType must be 'submission' or 'comment'");
       }
     }
-    
+
+    // Sanitize and inject server-validated identity into messages when JWT present
+    if (jwtIdentity) {
+      const scrub = (item) => {
+        if (!item?.message || typeof item.message !== "object") return;
+        // Remove any client-injected flags
+        delete item.message.jwtIdentity;
+        delete item.message.__jwtValidated;
+        // Inject server-validated identity
+        item.message.jwtIdentity = jwtIdentity;
+        item.message.__jwtValidated = true;
+      };
+      impressions.forEach(scrub);
+      clicks.forEach(scrub);
+    }
+
     try {
       // Process the batch
       const result = await interactions.recordBatch(impressions, clicks);
@@ -2401,13 +2454,38 @@ export async function launch(trie, libp2p, isPrimary = true) {
   app.get("/api/v1/interactions/sync", async (request, reply) => {
     const { signature, message } = request.query;
     
-    if (!signature || !message) {
-      return sendError(reply, 400, "Bad Request", "Signature and message required");
+    // Optional Quick Auth JWT from Farcaster mini app
+    let jwtIdentity = null;
+    try {
+      const qa = await getQuickAuthContextFromRequest(request, { require: false, resolveAddress: true });
+      if (qa.tokenPresent && qa.address) {
+        jwtIdentity = qa.address;
+      }
+    } catch (verifyError) {
+      if (verifyError instanceof Errors.InvalidTokenError) {
+        return sendError(reply, 401, "Invalid Token", "Invalid authentication token");
+      }
+      return sendError(reply, 401, "Authentication Failed", verifyError.message || String(verifyError));
     }
-    
+
+    if (!signature && !jwtIdentity) {
+      return sendError(reply, 400, "Bad Request", "Signature or Quick Auth token required");
+    }
+    if (!message) {
+      return sendError(reply, 400, "Bad Request", "Message is required");
+    }
+
     try {
       // Parse the message if it's a JSON string
       const parsedMessage = typeof message === 'string' ? JSON.parse(message) : message;
+      
+      if (jwtIdentity && parsedMessage && typeof parsedMessage === "object") {
+        // Strip any client-provided flags and inject server-validated identity
+        delete parsedMessage.jwtIdentity;
+        delete parsedMessage.__jwtValidated;
+        parsedMessage.jwtIdentity = jwtIdentity;
+        parsedMessage.__jwtValidated = true;
+      }
       
       // Verify the signature and get the user identity (custody address)
       const userIdentity = await interactions.verifyInteraction(parsedMessage, signature);

@@ -115,6 +115,14 @@ export async function verifyInteraction(message, signature) {
     if (message.timestamp < oneHourAgo || message.timestamp > now + 60) {
       throw new Error("Message timestamp is too old or in the future");
     }
+
+    // If the HTTP layer has verified a Quick Auth JWT and injected a
+    // server-validated identity, accept that as the user identity.
+    // Note: These fields are stripped and re-injected by the server to
+    // prevent client forgery.
+    if (!signature && message.__jwtValidated && message.jwtIdentity) {
+      return String(message.jwtIdentity).toLowerCase();
+    }
     
     // Use ecrecover directly to get the signer address
     // (verify() only accepts "amplify" and "comment" types)

@@ -26,6 +26,36 @@ let globalIdentity = null;
 // Track if already initialized to prevent multiple initializations
 let isInitialized = false;
 
+// Optionally include Farcaster Quick Auth JWT for mini apps
+async function getAuthHeadersIfAvailable() {
+  try {
+    if (window.sdk && window.sdk.quickAuth && typeof window.sdk.quickAuth.getToken === 'function') {
+      const tokenResponse = await window.sdk.quickAuth.getToken();
+      const token = typeof tokenResponse === 'string' ? tokenResponse : tokenResponse?.token;
+      if (token) {
+        return { Authorization: `Bearer ${token}` };
+      }
+    }
+  } catch (err) {
+    // Silently ignore token issues; EIP-712 flow will still work
+  }
+  return {};
+}
+
+// Resolve a stable identity for client-side storage/styling
+// Prefers wallet identity; falls back to mini app FID when available
+async function getEffectiveIdentity() {
+  if (globalIdentity) return globalIdentity;
+  try {
+    if (window.sdk && window.sdk.context) {
+      const ctx = await window.sdk.context;
+      const fid = ctx?.user?.fid;
+      if (fid) return `fid:${fid}`;
+    }
+  } catch (_) {}
+  return null;
+}
+
 // Set the signer and identity (called from main.jsx after startWatchAccount)
 export function setSigner(signer, identity) {
   const currentAddr = globalSigner?.address?.toLowerCase?.() ?? null;
@@ -53,9 +83,16 @@ async function createInteractionMessage(
   contentType,
   interactionType,
 ) {
+  // If we have a signer, use EIP-712 like Vote.jsx
   if (!globalSigner) {
-    // If no signer is available, skip silently (read-only mode)
-    return null;
+    // If in a Farcaster Mini App with Quick Auth available, allow unsigned message
+    // and rely on server-side JWT validation.
+    const authHeaders = await getAuthHeadersIfAvailable();
+    const hasJwt = !!authHeaders.Authorization;
+    if (!hasJwt) {
+      // No signer and no JWT → skip
+      return null;
+    }
   }
 
   // Use the standard messageFab to create the message
@@ -68,12 +105,16 @@ async function createInteractionMessage(
   // Use messageFab to create the message with proper structure
   const message = API.messageFab(title, href, type);
 
-  // Sign the message using the same pattern as Vote.jsx
-  const signature = await globalSigner._signTypedData(
-    API.EIP712_DOMAIN,
-    API.EIP712_TYPES,
-    message,
-  );
+  // If a signer is available, sign like Vote.jsx. Otherwise, omit signature
+  // and let the backend accept JWT-authenticated interactions.
+  let signature = undefined;
+  if (globalSigner) {
+    signature = await globalSigner._signTypedData(
+      API.EIP712_DOMAIN,
+      API.EIP712_TYPES,
+      message,
+    );
+  }
 
   return {
     contentId,
@@ -109,45 +150,57 @@ export async function trackImpression(contentId, contentType = "submission") {
 export async function trackClick(contentId, contentType = "submission") {
   // Update UI immediately before any async operations
   const timestamp = Date.now();
-  
-  if (globalIdentity) {
-    try {
-      const cached = localStorage.getItem(`interactions-${globalIdentity}`);
-      let data = cached ? JSON.parse(cached) : { impressions: [], clicks: [], syncedAt: Date.now() };
-      
-      // Add this click to the cached data
+
+  // Apply styling immediately to this item (only on / and /new pages)
+  try {
+    const currentPath = window.location.pathname;
+    if (currentPath === "/" || currentPath === "/new") {
+      // Remove all last-clicked first
+      document.querySelectorAll(".last-clicked").forEach((el) => {
+        el.classList.remove("last-clicked");
+      });
+
+      const contentElement = document.querySelector(
+        `[data-content-id="${contentId}"]`,
+      );
+      if (contentElement) {
+        contentElement.classList.add("clicked-content");
+        contentElement.classList.add("last-clicked");
+        const linkContainer = contentElement.querySelector(
+          ".story-link-container",
+        );
+        if (linkContainer) {
+          linkContainer.classList.add("clicked-link");
+        }
+        // Disable hover effects
+        disableHoverEffects(contentElement);
+      }
+    }
+  } catch (err) {
+    // non-fatal
+  }
+
+  // Persist to localStorage if we have an identity (wallet or mini app fid)
+  try {
+    const identityKey = await getEffectiveIdentity();
+    if (identityKey) {
+      const cached = localStorage.getItem(`interactions-${identityKey}`);
+      let data = cached
+        ? JSON.parse(cached)
+        : { impressions: [], clicks: [], syncedAt: Date.now() };
       if (!data.clicks) data.clicks = [];
       data.clicks.push({
         content_id: contentId,
         content_type: contentType,
-        timestamp: timestamp
+        timestamp: timestamp,
       });
-      
-      localStorage.setItem(`interactions-${globalIdentity}`, JSON.stringify(data));
-      
-      // Apply styling immediately to this item (only on / and /new pages)
-      const currentPath = window.location.pathname;
-      if (currentPath === "/" || currentPath === "/new") {
-        // Remove all last-clicked first
-        document.querySelectorAll(".last-clicked").forEach(el => {
-          el.classList.remove("last-clicked");
-        });
-        
-        const contentElement = document.querySelector(`[data-content-id="${contentId}"]`);
-        if (contentElement) {
-          contentElement.classList.add("clicked-content");
-          contentElement.classList.add("last-clicked");
-          const linkContainer = contentElement.querySelector(".story-link-container");
-          if (linkContainer) {
-            linkContainer.classList.add("clicked-link");
-          }
-          // Disable hover effects
-          disableHoverEffects(contentElement);
-        }
-      }
-    } catch (error) {
-      console.error("Error updating localStorage with click:", error);
+      localStorage.setItem(
+        `interactions-${identityKey}`,
+        JSON.stringify(data),
+      );
     }
+  } catch (error) {
+    console.error("Error updating localStorage with click:", error);
   }
   
   // Now do the async operations for server sync
@@ -190,10 +243,12 @@ async function sendBatch() {
   const clicks = clickQueue.splice(0, MAX_BATCH_SIZE);
 
   try {
+    const authHeaders = await getAuthHeadersIfAvailable();
     const response = await fetch("/api/v1/interactions/batch", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        ...authHeaders,
       },
       body: JSON.stringify({
         impressions,
@@ -247,15 +302,35 @@ export function flushInteractions() {
     clicks: clickQueue,
   });
 
-  if (navigator.sendBeacon) {
-    navigator.sendBeacon("/api/v1/interactions/batch", data);
-    console.log(
-      `Flushed ${impressionQueue.length} impressions and ${clickQueue.length} clicks`,
-    );
-  } else {
-    // Fallback to synchronous fetch
-    sendBatch();
-  }
+  (async () => {
+    try {
+      const authHeaders = await getAuthHeadersIfAvailable();
+      if (authHeaders.Authorization) {
+        // Use fetch with keepalive to include auth header
+        await fetch("/api/v1/interactions/batch", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", ...authHeaders },
+          body: data,
+          keepalive: true,
+        });
+      } else if (navigator.sendBeacon) {
+        navigator.sendBeacon("/api/v1/interactions/batch", data);
+      } else {
+        // Fallback to fetch without auth
+        await fetch("/api/v1/interactions/batch", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: data,
+          keepalive: true,
+        });
+      }
+      console.log(
+        `Flushed ${impressionQueue.length} impressions and ${clickQueue.length} clicks`,
+      );
+    } catch (e) {
+      // Swallow
+    }
+  })();
 
   // Clear queues
   impressionQueue = [];
@@ -374,8 +449,11 @@ export function setupClickTracking() {
 
 // Sync user interactions from server
 export async function syncInteractions() {
-  if (!globalSigner || !globalIdentity) {
-    console.log("No signer/identity for syncing interactions");
+  // Proceed if either we have a signer (EIP-712) or Quick Auth (JWT)
+  const authHeaders = await getAuthHeadersIfAvailable();
+  const hasJwt = !!authHeaders.Authorization;
+  if (!globalSigner && !hasJwt) {
+    console.log("No signer or Quick Auth for syncing interactions");
     return null;
   }
 
@@ -385,11 +463,14 @@ export async function syncInteractions() {
     const message = messageFab("sync", "sync", "sync");
 
     const { EIP712_DOMAIN, EIP712_TYPES } = await import("./API.mjs");
-    const signature = await globalSigner._signTypedData(
-      EIP712_DOMAIN,
-      EIP712_TYPES,
-      message,
-    );
+    let signature = undefined;
+    if (globalSigner) {
+      signature = await globalSigner._signTypedData(
+        EIP712_DOMAIN,
+        EIP712_TYPES,
+        message,
+      );
+    }
 
     // Fetch user's interaction history
     const params = new URLSearchParams({
@@ -397,7 +478,9 @@ export async function syncInteractions() {
       signature,
     });
 
-    const response = await fetch(`/api/v1/interactions/sync?${params}`);
+    const response = await fetch(`/api/v1/interactions/sync?${params}`, {
+      headers: { ...authHeaders },
+    });
     const result = await response.json();
 
     if (result.status === "success") {
@@ -430,6 +513,8 @@ export async function syncInteractions() {
 
 // Load cached interactions from localStorage
 export function loadCachedInteractions() {
+  // Try wallet identity; fall back to fid identity
+  // Note: this function is synchronous; if identity isn't ready yet, return null
   if (!globalIdentity) return null;
 
   try {
@@ -663,6 +748,24 @@ export function initializeTracking(signer = null, identity = null) {
   // Set the signer if provided
   if (signer && identity) {
     setSigner(signer, identity);
+  }
+
+  // If no wallet identity, try to derive a mini app identity from FID
+  if (!globalIdentity) {
+    (async () => {
+      try {
+        if (window.sdk && window.sdk.context) {
+          const ctx = await window.sdk.context;
+          const fid = ctx?.user?.fid;
+          if (fid) {
+            setSigner(null, `fid:${fid}`);
+            // Re-load cached interactions and re-apply styling once identity is known
+            loadCachedInteractions();
+            applyClickedStyling();
+          }
+        }
+      } catch (_) {}
+    })();
   }
 
   // Set up automatic tracking
