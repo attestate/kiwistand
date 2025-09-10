@@ -1264,6 +1264,7 @@ async function startWatchAccount(allowlist, delegations, account, isInIOSApp) {
     return;
   }
   dynamicPrefetch(`https://api.ensdata.net/${identity}?farcaster=true`);
+  return identity;
 }
 
 function hideDesktopLinks() {
@@ -1574,6 +1575,95 @@ function trackLinkImpressions() {
   });
 }
 
+async function reorderStories(identity) {
+  // Only on the main feed page
+  const path = window.location.pathname;
+  if (path !== "/") return;
+
+  const contentRows = Array.from(document.querySelectorAll("[data-content-id]"));
+  if (contentRows.length === 0) return;
+
+  const parent = contentRows[0].parentNode;
+  
+  const spinner = document.getElementById("spinner-overlay");
+  let spinnerIcon;
+
+  if (spinner) {
+    const spinnerStyle = `
+      .spinner-icon {
+        border: 4px solid rgba(0, 0, 0, 0.1);
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        border-left-color: #09f;
+        animation: spin 1s ease infinite;
+      }
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    `;
+    const styleSheet = document.createElement("style");
+    styleSheet.type = "text/css";
+    styleSheet.innerText = spinnerStyle;
+    document.head.appendChild(styleSheet);
+
+    spinner.style.display = "flex";
+    spinnerIcon = document.createElement('div');
+    spinnerIcon.className = 'spinner-icon';
+    spinner.appendChild(spinnerIcon);
+  }
+  
+  parent.style.transition = 'opacity 0.2s ease-in-out';
+  parent.style.opacity = '0.5';
+
+  // A small delay to ensure spinner is rendered before potential blocking work.
+  await new Promise(resolve => setTimeout(resolve, 50));
+
+  const { getClickedContentIds, getFrequentlyImpressedContentIds } = await import("./tracker.mjs");
+  const clickedIds = getClickedContentIds();
+  const frequentlyImpressedIds = getFrequentlyImpressedContentIds(3); // Threshold of 3 impressions
+
+  const seenIds = new Set([...clickedIds, ...frequentlyImpressedIds]);
+
+  if (seenIds.size > 0 || identity) {
+    const seenRows = [];
+    const unseenRows = [];
+
+    contentRows.forEach(row => {
+      const likeButton = row.querySelector(".like-button-container");
+      let upvoters = [];
+      if (likeButton) {
+        try {
+          upvoters = JSON.parse(likeButton.getAttribute("data-upvoters")) || [];
+        } catch (e) {
+          // Ignore parsing errors
+        }
+      }
+      
+      const isUpvotedByUser = identity ? upvoters.includes(identity) : false;
+
+      if (isUpvotedByUser || seenIds.has(row.dataset.contentId)) {
+        seenRows.push(row);
+      } else {
+        unseenRows.push(row);
+      }
+    });
+
+    // Only reorder if there's a mix of seen and unseen stories visible
+    if (seenRows.length > 0 && unseenRows.length > 0) {
+        unseenRows.forEach(row => parent.appendChild(row));
+        seenRows.forEach(row => parent.appendChild(row));
+    }
+  }
+
+  if (spinner) {
+    spinner.style.display = "none";
+    if (spinnerIcon) spinnerIcon.remove();
+  }
+  parent.style.opacity = '1';
+}
+
 async function start() {
   initFarcasterFrame()
     .then()
@@ -1601,6 +1691,8 @@ async function start() {
     overlay.style.height = "100%";
     overlay.style.background = "rgba(255,255,255,0.7)";
     overlay.style.zIndex = "9999";
+    overlay.style.justifyContent = "center";
+    overlay.style.alignItems = "center";
     document.body.appendChild(overlay);
   }
 
@@ -1630,8 +1722,8 @@ async function start() {
   // they're now encountering the paywall. So in case this happens but their
   // local storage contains the respective private key, we want them to reload
   // the page. See the logic in CustomConnectButton to follow this flow.
-  const identity = getCookie("identity");
-  window.initialIdentityCookie = identity;
+  const identityCookie = getCookie("identity");
+  window.initialIdentityCookie = identityCookie;
 
   window.addEventListener("DOMContentLoaded", () => {
     initKiwiRotation(".hnname span img");
@@ -1686,12 +1778,17 @@ async function start() {
 
   // Get initial account and set up watcher
   const initialAccount = await getAccount(client);
-  await startWatchAccount(await allowlistPromise, await delegationsPromise, initialAccount, isInIOSApp);
+  const allowlist = await allowlistPromise;
+  const delegations = await delegationsPromise;
+  const identity = await startWatchAccount(allowlist, delegations, initialAccount, isInIOSApp);
   
+  // Reorder stories based on seen status
+  await reorderStories(identity);
+
   // Watch for future account changes
   watchAccount(client, {
     async onChange(account) {
-      await startWatchAccount(await allowlistPromise, await delegationsPromise, account, isInIOSApp);
+      await startWatchAccount(allowlist, delegations, account, isInIOSApp);
     }
   });
 

@@ -478,6 +478,40 @@ export function getClickedContentIds() {
   return new Set();
 }
 
+// Get content IDs that have been impressed multiple times
+export function getFrequentlyImpressedContentIds(threshold = 3) {
+  if (!globalIdentity) return new Set();
+
+  try {
+    const cached = localStorage.getItem(`interactions-${globalIdentity}`);
+    if (cached) {
+      const data = JSON.parse(cached);
+      if (!data.impressions || data.impressions.length === 0) {
+        return new Set();
+      }
+
+      const impressionCounts = new Map();
+      data.impressions.forEach(impression => {
+        const count = impressionCounts.get(impression.content_id) || 0;
+        impressionCounts.set(impression.content_id, count + 1);
+      });
+
+      const frequentlyImpressedIds = new Set();
+      for (const [contentId, count] of impressionCounts.entries()) {
+        if (count >= threshold) {
+          frequentlyImpressedIds.add(contentId);
+        }
+      }
+      
+      return frequentlyImpressedIds;
+    }
+  } catch (error) {
+    console.error("Error getting frequently impressed content IDs:", error);
+  }
+
+  return new Set();
+}
+
 // Apply greyed-out styling to clicked rows
 export function applyClickedStyling() {
   // Only apply styling on / and /new pages
@@ -735,6 +769,7 @@ export default {
   syncInteractions,
   loadCachedInteractions,
   getClickedContentIds,
+  getFrequentlyImpressedContentIds,
   applyClickedStyling,
   removeClickedStyling,
   initializeTracking,
