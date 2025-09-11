@@ -30,7 +30,9 @@ export async function sendPushNotification(addresses, notification) {
     include_external_user_ids: externalUserIds,
     headings: { en: notification.title },
     contents: { en: notification.body },
-    url: notification.url,
+    // Do NOT set `url` for iOS – it opens Safari.
+    // Send the target as additional data and handle routing in-app.
+    data: { url: notification.url },
     ios_badgeType: "Increase",
     ios_badgeCount: 1
   };
@@ -94,7 +96,8 @@ export async function sendBroadcastNotification(notification) {
     ],
     headings: { en: notification.title },
     contents: { en: notification.body },
-    url: notification.url,
+    // Do NOT set `url` for iOS – it opens Safari.
+    data: { url: notification.url },
     ios_badgeType: "Increase",
     ios_badgeCount: 1,
   };
