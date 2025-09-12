@@ -109,14 +109,7 @@ const notificationsfull = html`<svg
 const nav = (path) => html`
   <div
     class="bottom-nav"
-    style="border-top: 1px solid rgba(0,0,0,0.1); display: flex; justify-content: space-around; position: fixed; bottom: 0px; width: 100%; background: linear-gradient(
-     to top,
-     rgba(246, 246, 239, 1) 0%,
-     rgba(246, 246, 239, 0.97) 50%,
-     rgba(246, 246, 239, 0) 100%
-   );
-   backdrop-filter: blur(10px);
-   -webkit-backdrop-filter: blur(10px);box-shadow: 0 -2px 5px rgba(0,0,0,0.1); z-index: 89;"
+    style="display: flex; justify-content: space-around; position: fixed; bottom: 0px; width: 100%; background: rgb(246, 246, 239); box-shadow: 0 -2px 5px rgba(0,0,0,0.1); z-index: 89;"
   >
     <a
       data-no-instant
