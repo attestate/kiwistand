@@ -172,7 +172,8 @@ export default function RowEmail({ story = {} }) {
 // --- Styles ---
 const main = {
   backgroundColor: "#fffffa",
-  fontFamily: "'Inter', Verdana, Geneva, sans-serif",
+  fontFamily:
+    "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, 'Apple Color Emoji', 'Segoe UI Emoji', sans-serif",
 };
 
 const container = {

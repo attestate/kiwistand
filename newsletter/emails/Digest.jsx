@@ -56,8 +56,6 @@ export default function DigestEmail({ stories = digestStories }) {
         <meta name="x-apple-disable-message-reformatting" />
         <meta name="color-scheme" content="light" />
         <meta name="supported-color-schemes" content="light" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" />
       </Head>
       <Tailwind>
         <Body style={main} bgcolor="#fffffa">
@@ -115,7 +113,8 @@ export default function DigestEmail({ stories = digestStories }) {
 // --- Styles ---
 const main = {
   backgroundColor: "#fffffa",
-  fontFamily: "'Inter', Verdana, Geneva, sans-serif",
+  fontFamily:
+    "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, 'Apple Color Emoji', 'Segoe UI Emoji', sans-serif",
 };
 
 const container = {
