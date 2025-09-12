@@ -62,6 +62,18 @@ export default function DigestEmail({ stories = digestStories }) {
       <Tailwind>
         <Body style={main} bgcolor="#fffffa">
           <Container style={container}>
+            <Text style={{
+              fontSize: '1px',
+              lineHeight: '1px',
+              color: '#fffffa',
+              display: 'none',
+              maxHeight: 0,
+              maxWidth: 0,
+              opacity: 0,
+              overflow: 'hidden'
+            }}>
+              Weekly highlights from Kiwi News — top community stories inside.
+            </Text>
             <Section style={{ marginTop: '10px', marginBottom: '15px' }}>
               <Row>
                 <Column width="40">

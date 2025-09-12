@@ -2,6 +2,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
+import { extractBody } from './lib/html.mjs';
 
 // Always load env from project root (../.env)
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -24,7 +25,8 @@ async function sendDigest() {
   try {
     // 1) Read the latest exported digest
     const outPath = path.resolve(__dirname, 'out', 'Digest.html');
-    const htmlContent = await fs.readFile(outPath, 'utf-8');
+    let htmlContent = await fs.readFile(outPath, 'utf-8');
+    htmlContent = extractBody(htmlContent);
 
     // 2) Create a new email draft in Buttondown
     const subject = `Kiwi News Weekly Digest — ${formatDateForSubject()}`;

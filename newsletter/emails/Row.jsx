@@ -163,7 +163,7 @@ export default function RowEmail({ story = {} }) {
         </Section>
       </Section>
       <Section style={{ padding: '12px 0' }}>
-        <Link href={story.storyLink} style={buttonStyle}>GO TO STORY</Link>
+        <Link href={story.storyLink} style={buttonStyle}>Read the story</Link>
       </Section>
     </>
   );
