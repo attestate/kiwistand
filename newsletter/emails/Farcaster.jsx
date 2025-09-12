@@ -79,8 +79,8 @@ export default function FarcasterEmail({ story = { metadata: { farcasterCast: { 
   // Return just the content for Digest, not a full HTML document
   return (
     <>
-      <Section style={container}>
-        <Section style={{...farcasterEmbedContainer, backgroundColor: '#ffffff', borderBottom: '1px solid #e6e6df' }}>
+      <Section style={container} bgcolor="#f6f6ef">
+        <Section style={{...farcasterEmbedContainer, backgroundColor: '#ffffff', borderBottom: '1px solid #e6e6df' }} bgcolor="#ffffff">
           <Link href={story.storyLink} style={{...previewContainer, color: '#000000 !important', textDecoration: 'none'}}>
               <Row>
                 <Column width="30">
@@ -114,7 +114,7 @@ export default function FarcasterEmail({ story = { metadata: { farcasterCast: { 
           </Link>
         </Section>
 
-        <Section style={{ padding: '12px 20px 10px 12px', backgroundColor: '#f6f6ef' }}>
+        <Section style={{ padding: '12px 20px 10px 12px', backgroundColor: '#f6f6ef' }} bgcolor="#f6f6ef">
            <Text style={{ fontSize: '9pt', marginTop: '3px', marginBottom: '0', lineHeight: '1.4', color: '#666' }}>
             submitted by <Link href={`https://news.kiwistand.com/upvotes?address=${identity}`} style={{ fontWeight: 600, color: '#000000 !important', textDecoration: 'none' }}>{displayName}</Link>
             {' • '}

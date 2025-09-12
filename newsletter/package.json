@@ -9,7 +9,11 @@
     "preexport": "npm run digest",
     "export": "DATA_DIR=bootstramp email export",
     "digest": "cd .. && CACHE_DIR=./cache DEBUG=@attestate/kiwistand node scripts/generate-digest.mjs",
-    "send": "node send.mjs"
+    "send": "node send.mjs",
+    "eml:digest": "node scripts/make-eml.mjs out/Digest.html out/Digest.eml 'Kiwi Digest (Preview)'",
+    "eml:tweet": "node scripts/make-eml.mjs out/Tweet.html out/Tweet.eml 'Kiwi Tweet (Preview)'",
+    "eml:farcaster": "node scripts/make-eml.mjs out/Farcaster.html out/Farcaster.eml 'Kiwi Farcaster (Preview)'",
+    "eml:row": "node scripts/make-eml.mjs out/Row.html out/Row.eml 'Kiwi Row (Preview)'"
   },
   "keywords": [],
   "author": "",

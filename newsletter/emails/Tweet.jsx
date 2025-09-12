@@ -58,15 +58,18 @@ export default function TweetEmail({ story = { metadata: {} } }) {
     <Html>
       <Head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="x-apple-disable-message-reformatting" />
+        <meta name="color-scheme" content="light" />
+        <meta name="supported-color-schemes" content="light" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" />
       </Head>
       <Tailwind>
-        <Body style={main}>
-          <Container style={container}>
+        <Body style={main} bgcolor="#fffffa">
+          <Container style={container} bgcolor="#f6f6ef">
             <Row>
               <Column>
-                <Section style={{...tweetEmbedContainer, backgroundColor: '#ffffff', borderBottom: '1px solid #e6e6df' }}>
+                <Section style={{...tweetEmbedContainer, backgroundColor: '#ffffff', borderBottom: '1px solid #e6e6df' }} bgcolor="#ffffff">
                   <Link href={story.storyLink} style={{...previewContainer, color: '#000000 !important', textDecoration: 'none'}}>
                       <Row>
                         <Column width="30">
@@ -100,7 +103,7 @@ export default function TweetEmail({ story = { metadata: {} } }) {
                   </Link>
                 </Section>
 
-                <Section style={{ padding: '12px 20px 10px 12px', backgroundColor: '#f6f6ef' }}>
+                <Section style={{ padding: '12px 20px 10px 12px', backgroundColor: '#f6f6ef' }} bgcolor="#f6f6ef">
                    <Text style={{ fontSize: '9pt', marginTop: '3px', marginBottom: '0', lineHeight: '1.4', color: '#666' }}>
                     submitted by <Link href={`https://news.kiwistand.com/upvotes?address=${story.identity}`} style={{ fontWeight: 600, color: '#000000 !important', textDecoration: 'none' }}>{displayName}</Link>
                     {' • '}

@@ -53,11 +53,14 @@ export default function DigestEmail({ stories = digestStories }) {
     <Html>
       <Head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="x-apple-disable-message-reformatting" />
+        <meta name="color-scheme" content="light" />
+        <meta name="supported-color-schemes" content="light" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" />
       </Head>
       <Tailwind>
-        <Body style={main}>
+        <Body style={main} bgcolor="#fffffa">
           <Container style={container}>
             <Section style={{ marginTop: '10px', marginBottom: '15px' }}>
               <Row>

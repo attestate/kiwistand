@@ -138,7 +138,7 @@ export default function RowEmail({ story = {} }) {
   // Return just the content for Digest, not a full HTML document  
   return (
     <>
-      <Section style={container}>
+      <Section style={container} bgcolor="#f6f6ef">
         {displayImage ? (
           <Link href={story.storyLink}>
             <Img
