@@ -530,7 +530,7 @@ export async function index(
           writers[domain] === story.identity,
       );
 
-      const augmentedStory = await addMetadata(story); // Add metadata (like pagespeed)
+      const augmentedStory = await addMetadata(story); // Add metadata
       if (augmentedStory) {
         story = augmentedStory;
         const href = normalizeUrl(story.href, { stripWWW: false });
@@ -569,16 +569,10 @@ export async function index(
     return hasProperName;
   });
 
-  // 8. Apply pagespeed boost and FINAL SORT before prediction injection
+  // 8. FINAL SORT before prediction injection
   stories = stories
-    .map((story) => {
-      if (story.metadata?.pagespeed) {
-        const speedMultiplier = 0.5 + story.metadata.pagespeed / 100;
-        story.score = (story.score || 0) * speedMultiplier;
-      }
-      return story;
-    })
-    .sort((a, b) => (b.score || 0) - (a.score || 0)); // Sort by potentially boosted score
+    .map((story) => story)
+    .sort((a, b) => (b.score || 0) - (a.score || 0)); // Sort by score
 
   // 9. Prediction Injection Logic (Page 0 ONLY - applied AFTER final sort)
   if (page === 0 && paginate && stories.length > 0) {
@@ -712,15 +706,9 @@ export async function index(
                     normalizeUrl(story.href).startsWith(d) &&
                     writers[d] === story.identity,
                 );
-                // Apply pagespeed boost to the predicted story's score if applicable
-                if (story.metadata?.pagespeed) {
-                  const speedMultiplier = 0.5 + story.metadata.pagespeed / 100;
-                  // Note: Predicted stories don't have an original 'score' from topstories.
-                  // We might need a different way to handle score or just use 0.
-                  story.score = 0 * speedMultiplier; // Or some base score?
-                } else {
-                  story.score = 0; // Ensure score property exists
-                }
+                // Predicted stories don't have an original 'score' from topstories.
+                // Initialize to baseline score for predicted stories.
+                story.score = 0; // Ensure score property exists
 
                 // Impressions already added when creating candidates
                 return {

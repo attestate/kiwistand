@@ -13,8 +13,6 @@ import Anthropic from "@anthropic-ai/sdk";
 import sharp from "sharp";
 import Arweave from "arweave";
 
-import { fetchCache as fetchCacheFactory } from "./utils.mjs";
-
 import cache, { lifetimeCache } from "./cache.mjs";
 import log from "./logger.mjs";
 
@@ -24,7 +22,6 @@ const fetchCache = new FileSystemCache({
 });
 
 const fetch = fetchBuilder.withCache(fetchCache);
-const fetchStaleWhileRevalidate = fetchCacheFactory(fetch, fetchCache);
 
 // Initialize Arweave client
 const arweave = Arweave.init({
@@ -33,35 +30,6 @@ const arweave = Arweave.init({
   protocol: 'https'
 });
 
-export async function getPageSpeedScore(url) {
-  const apiKey = env.PAGESPEED_INSIGHTS_KEY;
-  const apiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(
-    url,
-  )}&strategy=MOBILE${apiKey ? `&key=${apiKey}` : ''}`;
-
-  try {
-    const response = await fetchStaleWhileRevalidate(apiUrl);
-    
-    // Check for rate limiting
-    if (response.status === 429) {
-      log(`PageSpeed Insights rate limit hit for ${url}`);
-      // Return a default score when rate limited
-      return 30;
-    }
-    
-    if (!response.ok) {
-      log(`PageSpeed Insights API error ${response.status} for ${url}`);
-      return 30;
-    }
-    
-    const data = await response.json();
-    const score = data?.lighthouseResult?.categories?.performance?.score || 0;
-    return Math.round(score * 100);
-  } catch (err) {
-    log(`PageSpeed Insights fetch error for ${url}: ${err.message}`);
-    return 30;
-  }
-}
 
 const html = htm.bind(vhtml);
 
@@ -1127,8 +1095,6 @@ export const metadata = async (
     throw new Error("Insufficient metadata");
   }
 
-  const pagespeed = await getPageSpeedScore(url);
-  output.pagespeed = pagespeed;
 
   if (submittedTitle) {
     const normalized = normalizeUrl(url, { stripWWW: false });
