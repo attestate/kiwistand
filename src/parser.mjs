@@ -1,6 +1,8 @@
 import { env } from "process";
 import path from "path";
 import normalizeUrl from "normalize-url";
+import { Worker } from "worker_threads";
+import { fileURLToPath } from "url";
 
 import DOMPurify from "isomorphic-dompurify";
 import ogs from "open-graph-scraper-lite";
@@ -32,6 +34,43 @@ const arweave = Arweave.init({
 
 
 const html = htm.bind(vhtml);
+
+// Helper to run OGS in a worker thread with timeout
+async function parseWithOGS(htmlContent, timeout = 1000) {
+  const __dirname = path.dirname(fileURLToPath(import.meta.url));
+  const workerPath = path.join(__dirname, 'ogsWorker.mjs');
+  
+  return new Promise((resolve, reject) => {
+    const worker = new Worker(workerPath);
+    let timedOut = false;
+    
+    const timer = setTimeout(() => {
+      timedOut = true;
+      worker.terminate();
+      reject(new Error('OGS parsing timeout'));
+    }, timeout);
+    
+    worker.on('message', (message) => {
+      clearTimeout(timer);
+      worker.terminate();
+      
+      if (message.success) {
+        resolve({ result: message.result });
+      } else {
+        reject(new Error(message.error));
+      }
+    });
+    
+    worker.on('error', (error) => {
+      clearTimeout(timer);
+      if (!timedOut) {
+        reject(error);
+      }
+    });
+    
+    worker.postMessage({ html: htmlContent });
+  });
+}
 
 // Helper function to detect Cloudflare challenge pages
 function isCloudflareChallengePage(title) {
@@ -857,8 +896,19 @@ export const metadata = async (
     }
 
     html = await response.text();
-    const parsed = await ogs({ html });
-    result = parsed.result;
+    
+    // Run OGS in a worker thread with timeout to prevent blocking
+    try {
+      const parsed = await parseWithOGS(html, 1000); // 1 second timeout
+      result = parsed.result;
+    } catch (err) {
+      if (err.message === 'OGS parsing timeout') {
+        log(`OGS parsing timed out for URL: ${url}`);
+        throw new Error("Metadata parsing timeout - likely binary or malformed content");
+      }
+      log(`OGS parsing error for URL ${url}: ${err.message}`);
+      throw err;
+    }
 
     if (result && html) {
       cache.set(url, { result, html, canIframe });
