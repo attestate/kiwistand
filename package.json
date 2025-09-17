@@ -18,6 +18,7 @@
     "start:primary": "node -r dotenv/config ./src/launch.mjs",
     "watch": "nodemon --watch src/views --watch src/http.mjs --exec 'npm run dev:anon'",
     "watch:ssl": "nodemon --watch src/views --exec 'npm run dev:anon:ssl'",
+    "watch:anon:local": "nodemon --watch src/views --watch src/http.mjs --exec 'npm run dev:anon:local'",
     "reconcile": "cross-env NODE_ENV=reconcile API_PORT=8443 DATA_DIR=anon BIND_ADDRESS_V4=\"0.0.0.0\" PORT=0 IS_BOOTSTRAP_NODE=false USE_EPHEMERAL_ID=true node -r dotenv/config ./src/launch.mjs",
     "watch:web": "cd src/web && npm run dev",
     "watch:web:ssl": "cd src/web && npm run dev:ssl",
