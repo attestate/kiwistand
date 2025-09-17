@@ -53,6 +53,8 @@ export default function TweetEmail({ story = { metadata: {} } }) {
   } = story;
 
   const extractedDomain = "x.com";
+  const submitterProfileLink =
+    story.submitterLink || `https://news.kiwistand.com/upvotes?address=${story.identity}`;
 
   return (
     <Html>
@@ -103,7 +105,7 @@ export default function TweetEmail({ story = { metadata: {} } }) {
 
                 <Section style={{ padding: '12px 20px 10px 12px', backgroundColor: '#f6f6ef' }} bgcolor="#f6f6ef">
                    <Text style={{ fontSize: '9pt', marginTop: '3px', marginBottom: '0', lineHeight: '1.4', color: '#666' }}>
-                    submitted by <Link href={`https://news.kiwistand.com/upvotes?address=${story.identity}`} style={{ fontWeight: 600, color: '#000000 !important', textDecoration: 'none' }}>{displayName}</Link>
+                    submitted by <Link href={submitterProfileLink} style={{ fontWeight: 600, color: '#000000 !important', textDecoration: 'none' }}>{displayName}</Link>
                     {' • '}
                     <Link href={story.storyLink} style={{ color: '#000000 !important', textDecoration: 'none' }}>{extractedDomain}</Link>
                   </Text>

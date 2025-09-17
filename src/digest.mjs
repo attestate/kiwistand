@@ -42,11 +42,60 @@ export async function generateDigestData() {
     
     log(`Selected top ${stories.length} stories.`);
 
+    const generatedAt = new Date();
+    const isoDate = generatedAt.toISOString();
+    const campaignDate = isoDate.slice(0, 10);
+
+    const storiesWithTracking = stories.map((story, index) => {
+      let trackedStoryLink = story.storyLink;
+      if (story.storyLink) {
+        try {
+          const url = new URL(story.storyLink);
+          url.searchParams.set("utm_source", "kiwi-newsletter");
+          url.searchParams.set("utm_medium", "email");
+          url.searchParams.set("utm_campaign", `newsletter-${campaignDate}`);
+          url.searchParams.set("utm_content", `story-${index + 1}`);
+          trackedStoryLink = url.toString();
+        } catch (error) {
+          log(`Failed to append tracking parameters for story ${story.href}: ${error.message}`);
+        }
+      }
+
+      let submitterLink = null;
+      if (story.identity) {
+        const baseProfileUrl = `https://news.kiwistand.com/upvotes?address=${story.identity}`;
+        try {
+          const profileUrl = new URL(baseProfileUrl);
+          profileUrl.searchParams.set("utm_source", "kiwi-newsletter");
+          profileUrl.searchParams.set("utm_medium", "email");
+          profileUrl.searchParams.set("utm_campaign", `newsletter-${campaignDate}`);
+          profileUrl.searchParams.set("utm_content", `submitter-${index + 1}`);
+          submitterLink = profileUrl.toString();
+        } catch (error) {
+          submitterLink = baseProfileUrl;
+          log(`Failed to append tracking parameters for submitter ${story.identity}: ${error.message}`);
+        }
+      }
+
+      return {
+        ...story,
+        storyLink: trackedStoryLink,
+        submitterLink,
+      };
+    });
+
     // 2. Save the result to a JSON file.
     const outputPath = path.join(process.cwd(), "digest-data.json");
     fs.writeFileSync(
       outputPath,
-      JSON.stringify({ stories: stories }, null, 2),
+      JSON.stringify(
+        {
+          generatedAt: isoDate,
+          stories: storiesWithTracking,
+        },
+        null,
+        2,
+      ),
     );
     log(`Digest data successfully saved to ${outputPath}`);
   } catch (error) {
