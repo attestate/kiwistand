@@ -117,12 +117,17 @@ button, a, .interaction-element {
 }
 html {
   background-color: #f9f9f9;
+  height: 100dvh;
 }
 body {
+  height: 100dvh;
      margin: 0;
      font-family: var(--font-family);
      font-size:10pt;
      color:#828282;
+     padding-top: env(safe-area-inset-top);
+     padding-left: env(safe-area-inset-left);
+     padding-right: env(safe-area-inset-right);
 }
 .story-link-container {
   display: inline;
@@ -1083,7 +1088,13 @@ body.react-loaded .comment-input-ssr-placeholder {
 
 .bottom-nav {
   padding-bottom: calc(env(safe-area-inset-bottom, 0px));
+  transition: background-color 0.15s ease-out, box-shadow 0.15s ease-out;
 }
+
+.bottom-nav > a, .bottom-nav > .mobile-bell-container {
+  transition: opacity 0.15s ease-out;
+}
+
 @media (display-mode: standalone) {
    .submit-button {
      bottom: calc(5rem + env(safe-area-inset-bottom, 0px));

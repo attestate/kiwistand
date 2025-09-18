@@ -5,7 +5,11 @@ import { StrictMode, createRef } from "react";
 import { createRoot } from "react-dom/client";
 import sdk from "@farcaster/frame-sdk";
 import { Providers } from "./providers.jsx";
-import { setDelegationModalRef, preloadDelegationModal } from "./delegationModalManager.js";
+import {
+  setDelegationModalRef,
+  preloadDelegationModal,
+} from "./delegationModalManager.js";
+import { isSafariOnIOS, isIOSApp } from "./session.mjs";
 
 // Make SDK available globally for use in other parts of the app
 window.sdk = sdk;
@@ -154,17 +158,20 @@ async function addAnalytics(allowlist) {
   const isFeedPage = path === "/" || path === "/new" || path === "/best";
   const isProfilePage = path.startsWith("/upvotes");
   const isStoryPage = path.startsWith("/stories");
-  
+
   // Check if there are any analytics elements on the page
   const analyticsElements = document.querySelectorAll(".story-analytics");
-  if (analyticsElements.length > 0 && (isFeedPage || isProfilePage || isStoryPage)) {
+  if (
+    analyticsElements.length > 0 &&
+    (isFeedPage || isProfilePage || isStoryPage)
+  ) {
     const Analytics = (await import("./Analytics.jsx")).default;
-    
+
     // Create a container for the React component
     const container = document.createElement("div");
     container.style.display = "none";
     document.body.appendChild(container);
-    
+
     createRoot(container).render(
       <StrictMode>
         <Providers>
@@ -212,9 +219,8 @@ async function addFarcasterShareButtons() {
   );
   if (!containers || containers.length === 0) return;
 
-  const FarcasterShareButton = (
-    await import("./FarcasterShareButton.jsx")
-  ).default;
+  const FarcasterShareButton = (await import("./FarcasterShareButton.jsx"))
+    .default;
 
   containers.forEach((container) => {
     try {
@@ -242,7 +248,7 @@ async function addDynamicNavElements() {
   // The server already renders complete navigation with SVGs and labels
   // This was causing the navigation to shrink when JS loaded
   return;
-  
+
   // const navElements = document.querySelectorAll("[data-icon]");
   // if (navElements && navElements.length > 0) {
   //   const BottomNavElem = (await import("./BottomNavElem.jsx")).default;
@@ -521,7 +527,11 @@ async function addConnectedComponents(allowlist, delegations, toast) {
       createRoot(bellButton).render(
         <StrictMode>
           <Providers>
-            <Bell toast={toast} allowlist={allowlist} delegations={delegations} />
+            <Bell
+              toast={toast}
+              allowlist={allowlist}
+              delegations={delegations}
+            />
           </Providers>
         </StrictMode>,
       );
@@ -665,7 +675,7 @@ async function addModals(allowlist, delegations, toast) {
     const DelegationModal = (await preloadDelegationModal()).default;
     const delegationModalRef = createRef();
     setDelegationModalRef(delegationModalRef);
-    
+
     createRoot(delegationModal).render(
       <StrictMode>
         <Providers>
@@ -820,7 +830,7 @@ async function addNewsletterScrollModal(toast) {
   // Only show on feed pages where users are likely to be reading
   const path = window.location.pathname;
   const shouldShow = path === "/" || path === "/new" || path === "/best";
-  
+
   if (!shouldShow) return;
 
   // Create container if it doesn't exist
@@ -830,8 +840,11 @@ async function addNewsletterScrollModal(toast) {
     document.body.appendChild(container);
   }
 
-  const NewsletterScrollModal = (await import("./NewsletterScrollModal.jsx")).default;
-  createRoot(document.getElementById("newsletter-scroll-modal-container")).render(
+  const NewsletterScrollModal = (await import("./NewsletterScrollModal.jsx"))
+    .default;
+  createRoot(
+    document.getElementById("newsletter-scroll-modal-container"),
+  ).render(
     <StrictMode>
       <Providers>
         <NewsletterScrollModal toast={toast} />
@@ -873,15 +886,14 @@ async function addBackButton() {
 async function addStoryEmojiReactions(allowlist, delegations, toast) {
   const reactionContainers = document.querySelectorAll(".reactions-container");
   if (reactionContainers && reactionContainers.length > 0) {
-    const [commentSection, wagmi, tanstackQuery, rainbowKit, clientConfig] = await Promise.all(
-      [
+    const [commentSection, wagmi, tanstackQuery, rainbowKit, clientConfig] =
+      await Promise.all([
         import("./CommentSection.jsx"),
         import("wagmi"),
         import("@tanstack/react-query"),
         import("@rainbow-me/rainbowkit"),
         import("./client.mjs"),
-      ],
-    );
+      ]);
 
     const { EmojiReaction } = commentSection;
     const { WagmiProvider } = wagmi;
@@ -976,44 +988,53 @@ async function addLeaderboardInteractions() {
     function toggleUserStories(userId) {
       const storiesDiv = document.getElementById(`stories-${userId}`);
       const expandIcon = document.getElementById(`expand-${userId}`);
-      
-      if (storiesDiv && (storiesDiv.style.display === 'none' || !storiesDiv.style.display)) {
-        storiesDiv.style.display = 'block';
+
+      if (
+        storiesDiv &&
+        (storiesDiv.style.display === "none" || !storiesDiv.style.display)
+      ) {
+        storiesDiv.style.display = "block";
         if (expandIcon) {
           // Change to down arrow when expanded
-          expandIcon.innerHTML = '<rect width="256" height="256" fill="none"/><polyline points="208 96 128 176 48 96" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/>';
+          expandIcon.innerHTML =
+            '<rect width="256" height="256" fill="none"/><polyline points="208 96 128 176 48 96" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/>';
         }
       } else if (storiesDiv) {
-        storiesDiv.style.display = 'none';
+        storiesDiv.style.display = "none";
         if (expandIcon) {
           // Change to right arrow when collapsed
-          expandIcon.innerHTML = '<rect width="256" height="256" fill="none"/><polyline points="96 48 176 128 96 208" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/>';
+          expandIcon.innerHTML =
+            '<rect width="256" height="256" fill="none"/><polyline points="96 48 176 128 96 208" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/>';
         }
       }
     }
 
     // Add click handlers for expand buttons
-    const expandButtons = document.querySelectorAll('.expand-button[data-user-id]');
-    console.log('Found expand buttons:', expandButtons.length);
-    
-    expandButtons.forEach(button => {
-      button.addEventListener('click', function(e) {
+    const expandButtons = document.querySelectorAll(
+      ".expand-button[data-user-id]",
+    );
+    console.log("Found expand buttons:", expandButtons.length);
+
+    expandButtons.forEach((button) => {
+      button.addEventListener("click", function (e) {
         e.preventDefault();
         e.stopPropagation();
-        const userId = this.getAttribute('data-user-id');
+        const userId = this.getAttribute("data-user-id");
         toggleUserStories(userId);
       });
     });
 
     // Add click handlers for expandable rows (clicking anywhere on the row)
-    const expandableRows = document.querySelectorAll('.leaderboard-user-row.expandable-row');
-    console.log('Found expandable rows:', expandableRows.length);
-    
-    expandableRows.forEach(row => {
-      row.addEventListener('click', function(e) {
+    const expandableRows = document.querySelectorAll(
+      ".leaderboard-user-row.expandable-row",
+    );
+    console.log("Found expandable rows:", expandableRows.length);
+
+    expandableRows.forEach((row) => {
+      row.addEventListener("click", function (e) {
         // Only expand if we didn't click on a link or button
-        if (!e.target.closest('a') && !e.target.closest('button')) {
-          const userId = this.getAttribute('data-user-id');
+        if (!e.target.closest("a") && !e.target.closest("button")) {
+          const userId = this.getAttribute("data-user-id");
           toggleUserStories(userId);
         }
       });
@@ -1021,46 +1042,58 @@ async function addLeaderboardInteractions() {
 
     // Function to toggle story contributors
     function toggleStoryContributors(storyId) {
-      const contributorsDiv = document.getElementById(`contributors-${storyId}`);
+      const contributorsDiv = document.getElementById(
+        `contributors-${storyId}`,
+      );
       const expandIcon = document.getElementById(`expand-${storyId}`);
-      
-      if (contributorsDiv && (contributorsDiv.style.display === 'none' || !contributorsDiv.style.display)) {
-        contributorsDiv.style.display = 'block';
+
+      if (
+        contributorsDiv &&
+        (contributorsDiv.style.display === "none" ||
+          !contributorsDiv.style.display)
+      ) {
+        contributorsDiv.style.display = "block";
         if (expandIcon) {
           // Change to down arrow when expanded
-          expandIcon.innerHTML = '<rect width="256" height="256" fill="none"/><polyline points="208 96 128 176 48 96" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/>';
+          expandIcon.innerHTML =
+            '<rect width="256" height="256" fill="none"/><polyline points="208 96 128 176 48 96" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/>';
         }
       } else if (contributorsDiv) {
-        contributorsDiv.style.display = 'none';
+        contributorsDiv.style.display = "none";
         if (expandIcon) {
           // Change to right arrow when collapsed
-          expandIcon.innerHTML = '<rect width="256" height="256" fill="none"/><polyline points="96 48 176 128 96 208" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/>';
+          expandIcon.innerHTML =
+            '<rect width="256" height="256" fill="none"/><polyline points="96 48 176 128 96 208" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/>';
         }
       }
     }
 
     // Add click handlers for story expand buttons
-    const storyExpandButtons = document.querySelectorAll('.story-expand-button[data-story-id]');
-    console.log('Found story expand buttons:', storyExpandButtons.length);
-    
-    storyExpandButtons.forEach(button => {
-      button.addEventListener('click', function(e) {
+    const storyExpandButtons = document.querySelectorAll(
+      ".story-expand-button[data-story-id]",
+    );
+    console.log("Found story expand buttons:", storyExpandButtons.length);
+
+    storyExpandButtons.forEach((button) => {
+      button.addEventListener("click", function (e) {
         e.preventDefault();
         e.stopPropagation();
-        const storyId = this.getAttribute('data-story-id');
+        const storyId = this.getAttribute("data-story-id");
         toggleStoryContributors(storyId);
       });
     });
 
     // Add click handlers for expandable story rows (clicking anywhere on the row)
-    const expandableStoryRows = document.querySelectorAll('.expandable-story-row[data-story-id]');
-    console.log('Found expandable story rows:', expandableStoryRows.length);
-    
-    expandableStoryRows.forEach(row => {
-      row.addEventListener('click', function(e) {
+    const expandableStoryRows = document.querySelectorAll(
+      ".expandable-story-row[data-story-id]",
+    );
+    console.log("Found expandable story rows:", expandableStoryRows.length);
+
+    expandableStoryRows.forEach((row) => {
+      row.addEventListener("click", function (e) {
         // Only expand if we didn't click on a link or button
-        if (!e.target.closest('a') && !e.target.closest('button')) {
-          const storyId = this.getAttribute('data-story-id');
+        if (!e.target.closest("a") && !e.target.closest("button")) {
+          const storyId = this.getAttribute("data-story-id");
           toggleStoryContributors(storyId);
         }
       });
@@ -1071,9 +1104,9 @@ async function addLeaderboardInteractions() {
 async function addLeaderboardStats(allowlist, delegations) {
   // Only add if we're on the leaderboard page
   if (window.location.pathname !== "/community") return;
-  
+
   // Check if the elements exist
-  const karmaEl = document.querySelector('.user-karma-value');
+  const karmaEl = document.querySelector(".user-karma-value");
   if (!karmaEl) return;
 
   // Get the current account if available
@@ -1081,7 +1114,7 @@ async function addLeaderboardStats(allowlist, delegations) {
     import("@wagmi/core"),
     import("./client.mjs"),
   ]);
-  
+
   let address;
   try {
     const account = await getAccount(client);
@@ -1097,17 +1130,18 @@ async function addLeaderboardStats(allowlist, delegations) {
   }
 
   // Create a hidden container for the React component
-  const container = document.createElement('div');
-  container.style.display = 'none';
+  const container = document.createElement("div");
+  container.style.display = "none";
   document.body.appendChild(container);
 
-  const [LeaderboardStats, wagmi, tanstackQuery, rainbowKit] = await Promise.all([
-    import("./LeaderboardStats.jsx").then(m => m.default),
-    import("wagmi"),
-    import("@tanstack/react-query"),
-    import("@rainbow-me/rainbowkit"),
-  ]);
-  
+  const [LeaderboardStats, wagmi, tanstackQuery, rainbowKit] =
+    await Promise.all([
+      import("./LeaderboardStats.jsx").then((m) => m.default),
+      import("wagmi"),
+      import("@tanstack/react-query"),
+      import("@rainbow-me/rainbowkit"),
+    ]);
+
   const { WagmiProvider } = wagmi;
   const { QueryClient, QueryClientProvider } = tanstackQuery;
   const { RainbowKitProvider } = rainbowKit;
@@ -1119,9 +1153,9 @@ async function addLeaderboardStats(allowlist, delegations) {
         <QueryClientProvider client={queryClient}>
           <WagmiProvider config={client}>
             <RainbowKitProvider chains={chains}>
-              <LeaderboardStats 
-                allowlist={allowlist} 
-                delegations={delegations} 
+              <LeaderboardStats
+                allowlist={allowlist}
+                delegations={delegations}
                 address={address}
               />
             </RainbowKitProvider>
@@ -1200,17 +1234,19 @@ async function startWatchAccount(allowlist, delegations, account, isInIOSApp) {
   const identity = address && eligible(allowlist, delegations, address);
   if (identity) {
     posthog.identify(identity);
-    
+
     // Set iOS wallet for push notifications
     if (isInIOSApp && window.setKiwiWallet) {
       window.setKiwiWallet(identity);
       console.log("Set Kiwi wallet for iOS notifications:", identity);
     }
-    
+
     // Only load tracker on feed and story pages
     const shouldLoadTracker = () => {
       const p = window.location.pathname || "";
-      return p === "/" || p === "/new" || p === "/best" || p.startsWith("/stories");
+      return (
+        p === "/" || p === "/new" || p === "/best" || p.startsWith("/stories")
+      );
     };
 
     if (shouldLoadTracker()) {
@@ -1236,17 +1272,19 @@ async function startWatchAccount(allowlist, delegations, account, isInIOSApp) {
     }
   } else {
     hideDesktopLinks();
-    
+
     // Clear iOS wallet when disconnected
     if (isInIOSApp && window.clearKiwiWallet) {
       window.clearKiwiWallet();
       console.log("Cleared Kiwi wallet for iOS");
     }
-    
+
     // Only load tracker on feed and story pages (no auth)
     const shouldLoadTracker = () => {
       const p = window.location.pathname || "";
-      return p === "/" || p === "/new" || p === "/best" || p.startsWith("/stories");
+      return (
+        p === "/" || p === "/new" || p === "/best" || p.startsWith("/stories")
+      );
     };
     if (shouldLoadTracker()) {
       import("./tracker.mjs")
@@ -1425,24 +1463,27 @@ function initTerminalAds() {
 
   const observerOptions = {
     root: null,
-    rootMargin: '0px',
-    threshold: 0.3
+    rootMargin: "0px",
+    threshold: 0.3,
   };
-  
+
   const terminalObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting && !entry.target.classList.contains('terminal-ad-active')) {
-        entry.target.classList.add('terminal-ad-active');
+    entries.forEach((entry) => {
+      if (
+        entry.isIntersecting &&
+        !entry.target.classList.contains("terminal-ad-active")
+      ) {
+        entry.target.classList.add("terminal-ad-active");
         // Also add class to parent container for border animation
-        const container = entry.target.closest('.terminal-container');
+        const container = entry.target.closest(".terminal-container");
         if (container) {
-          container.classList.add('terminal-ad-active');
+          container.classList.add("terminal-ad-active");
         }
       }
     });
   }, observerOptions);
-  
-  terminalAds.forEach(ad => {
+
+  terminalAds.forEach((ad) => {
     terminalObserver.observe(ad);
   });
 }
@@ -1452,7 +1493,7 @@ function trackLinkImpressions() {
   // Regular story links have class="story-link"
   // Preview links are in .story-link-container but may not have the class
   const storyLinks = document.querySelectorAll(
-    ".story-link, .story-link-container a[data-external-link], .mobile-row-image, .tweet-preview-container"
+    ".story-link, .story-link-container a[data-external-link], .mobile-row-image, .tweet-preview-container",
   );
   if (storyLinks.length === 0) return;
 
@@ -1465,7 +1506,7 @@ function trackLinkImpressions() {
         if (entry.isIntersecting) {
           const link = entry.target;
           let href = link.getAttribute("href");
-          
+
           // For links with data-external-link, use that as the actual URL
           // This includes Cloudflare images which have internal href but external data-external-link
           if (link.hasAttribute("data-external-link")) {
@@ -1516,7 +1557,9 @@ function trackLinkImpressions() {
           // Also capture impression in PostHog with variant for A/B analysis
           try {
             if (typeof posthog !== "undefined") {
-              const variantMeta = document.querySelector('meta[name="kiwi-variant"]');
+              const variantMeta = document.querySelector(
+                'meta[name="kiwi-variant"]',
+              );
               const variant = variantMeta?.content || "unknown";
               posthog?.capture?.("story_impression", { href, variant });
             }
@@ -1566,7 +1609,9 @@ function trackLinkImpressions() {
 
       if (typeof posthog !== "undefined") {
         try {
-          const variantMeta = document.querySelector('meta[name="kiwi-variant"]');
+          const variantMeta = document.querySelector(
+            'meta[name="kiwi-variant"]',
+          );
           const variant = variantMeta?.content || "unknown";
           posthog?.capture?.("outbound_click", { href, variant });
         } catch (_) {}
@@ -1580,11 +1625,13 @@ async function reorderStories(identity) {
   const path = window.location.pathname;
   if (path !== "/") return;
 
-  const contentRows = Array.from(document.querySelectorAll("[data-content-id]"));
+  const contentRows = Array.from(
+    document.querySelectorAll("[data-content-id]"),
+  );
   if (contentRows.length === 0) return;
 
   const parent = contentRows[0].parentNode;
-  
+
   const spinner = document.getElementById("spinner-overlay");
   let spinnerIcon;
 
@@ -1609,18 +1656,19 @@ async function reorderStories(identity) {
     document.head.appendChild(styleSheet);
 
     spinner.style.display = "flex";
-    spinnerIcon = document.createElement('div');
-    spinnerIcon.className = 'spinner-icon';
+    spinnerIcon = document.createElement("div");
+    spinnerIcon.className = "spinner-icon";
     spinner.appendChild(spinnerIcon);
   }
-  
-  parent.style.transition = 'opacity 0.2s ease-in-out';
-  parent.style.opacity = '0.5';
+
+  parent.style.transition = "opacity 0.2s ease-in-out";
+  parent.style.opacity = "0.5";
 
   // A small delay to ensure spinner is rendered before potential blocking work.
-  await new Promise(resolve => setTimeout(resolve, 50));
+  await new Promise((resolve) => setTimeout(resolve, 50));
 
-  const { getClickedContentIds, getFrequentlyImpressedContentIds } = await import("./tracker.mjs");
+  const { getClickedContentIds, getFrequentlyImpressedContentIds } =
+    await import("./tracker.mjs");
   const clickedIds = getClickedContentIds();
   const frequentlyImpressedIds = getFrequentlyImpressedContentIds(3); // Threshold of 3 impressions
 
@@ -1630,7 +1678,7 @@ async function reorderStories(identity) {
     const seenRows = [];
     const unseenRows = [];
 
-    contentRows.forEach(row => {
+    contentRows.forEach((row) => {
       const likeButton = row.querySelector(".like-button-container");
       let upvoters = [];
       if (likeButton) {
@@ -1640,7 +1688,7 @@ async function reorderStories(identity) {
           // Ignore parsing errors
         }
       }
-      
+
       const isUpvotedByUser = identity ? upvoters.includes(identity) : false;
 
       if (isUpvotedByUser || seenIds.has(row.dataset.contentId)) {
@@ -1652,8 +1700,8 @@ async function reorderStories(identity) {
 
     // Only reorder if there's a mix of seen and unseen stories visible
     if (seenRows.length > 0 && unseenRows.length > 0) {
-        unseenRows.forEach(row => parent.appendChild(row));
-        seenRows.forEach(row => parent.appendChild(row));
+      unseenRows.forEach((row) => parent.appendChild(row));
+      seenRows.forEach((row) => parent.appendChild(row));
     }
   }
 
@@ -1661,7 +1709,7 @@ async function reorderStories(identity) {
     spinner.style.display = "none";
     if (spinnerIcon) spinnerIcon.remove();
   }
-  parent.style.opacity = '1';
+  parent.style.opacity = "1";
 }
 
 async function start() {
@@ -1674,6 +1722,26 @@ async function start() {
   applySafeAreaInsets()
     .then(() => console.log("applySafeAreaInsets completed"))
     .catch((err) => console.log("applySafeAreaInsets error:", err));
+
+  const isMiniApp = await sdk.isInMiniApp();
+  const bottomNav = document.querySelector(".bottom-nav");
+  const isKiwiIOSApp = isIOSApp();
+
+  if (bottomNav && !isMiniApp && !isIOSApp() && isSafariOnIOS()) {
+    let lastScrollY = window.scrollY;
+
+    window.addEventListener("scroll", () => {
+      const currentScrollY = window.scrollY;
+      if (currentScrollY > lastScrollY && currentScrollY > 50) {
+        // Scrolling down
+        bottomNav.style.display = "none";
+      } else if (currentScrollY < lastScrollY) {
+        // Scrolling up
+        bottomNav.style.display = "flex";
+      }
+      lastScrollY = currentScrollY <= 0 ? 0 : currentScrollY;
+    });
+  }
 
   const urlParams = new URL(window.location.href).searchParams;
   if (urlParams.get("miniapp") === "true") {
@@ -1698,7 +1766,7 @@ async function start() {
 
   // Initialize link impression tracking
   trackLinkImpressions();
-  
+
   // Ensure variant is available on all subsequent PostHog events
   if (window.location.pathname === "/" && typeof posthog !== "undefined") {
     try {
@@ -1707,7 +1775,7 @@ async function start() {
       posthog?.register?.({ variant });
     } catch (_) {}
   }
-  
+
   // Initialize terminal ad animations
   initTerminalAds();
 
@@ -1771,17 +1839,20 @@ async function start() {
   const delegationsPromise = fetchDelegations(cached);
 
   // Import watchAccount, getAccount, client and isInIOSApp
-  const [{ client, isInIOSApp }, { watchAccount, getAccount }] = await Promise.all([
-    import("./client.mjs"),
-    import("@wagmi/core"),
-  ]);
+  const [{ client, isInIOSApp }, { watchAccount, getAccount }] =
+    await Promise.all([import("./client.mjs"), import("@wagmi/core")]);
 
   // Get initial account and set up watcher
   const initialAccount = await getAccount(client);
   const allowlist = await allowlistPromise;
   const delegations = await delegationsPromise;
-  const identity = await startWatchAccount(allowlist, delegations, initialAccount, isInIOSApp);
-  
+  const identity = await startWatchAccount(
+    allowlist,
+    delegations,
+    initialAccount,
+    isInIOSApp,
+  );
+
   // Reorder stories based on seen status
   await reorderStories(identity);
 
@@ -1789,7 +1860,7 @@ async function start() {
   watchAccount(client, {
     async onChange(account) {
       await startWatchAccount(allowlist, delegations, account, isInIOSApp);
-    }
+    },
   });
 
   // Preload the delegation modal early to avoid delays
