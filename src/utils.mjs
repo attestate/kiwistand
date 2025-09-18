@@ -22,6 +22,7 @@ slugify.extend({
 // to-be-cached data in the background while returning an error to the caller
 // in the meantime. What this does is that it stops blocking requests from
 // being resolved, for example, in the ens module.
+const initialFetches = new Map();
 export function fetchCache(fetch, fileSystemCache) {
   // Renamed 'cache' param to avoid conflict
   if (!fetch || !fileSystemCache) {
@@ -33,7 +34,7 @@ export function fetchCache(fetch, fileSystemCache) {
     // Try getting from the file system cache first
     let cachedValue = await fileSystemCache.get(cacheKey);
 
-    (async () => {
+    async function doFetch() {
       try {
         const networkResponse = await fetch(url, options);
         if (networkResponse.ok) {
@@ -47,11 +48,23 @@ export function fetchCache(fetch, fileSystemCache) {
               headers: networkResponse.headers.raw(),
             },
           });
+          return new Response(buffer, {
+            status: networkResponse.status,
+            headers: networkResponse.headers.raw(),
+          });
         }
       } catch (error) {
         console.error(`Error fetching and caching data for ${url}:`, error);
       }
-    })();
+    }
+
+    if (!cachedValue && !initialFetches.get(cacheKey)) {
+      const response = await doFetch();
+      initialFetches.set(cacheKey, true);
+      return response;
+    } else {
+      (async () => await doFetch())();
+    }
 
     if (cachedValue) {
       // NOTE: node-fetch-cache doesn't return a node-fetch Response, hence we're

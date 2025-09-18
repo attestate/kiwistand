@@ -13,7 +13,7 @@ import { fetchCache } from "../utils.mjs";
 const oneSec = 1000;
 const cache = new FileSystemCache({
   cacheDirectory: path.resolve(env.CACHE_DIR, "newcache"),
-  ttl: oneSec * 60 * 5, // 5min
+  ttl: oneSec * 60 * 1, // 1min
 });
 const fetch = fetchBuilder.withCache(cache);
 const fetchStaleWhileRevalidate = fetchCache(fetch, cache);
@@ -106,17 +106,7 @@ export async function getWriters() {
   return writers;
 }
 
-// Cache for moderation lists in dev mode
-let moderationCache = null;
-let cacheTimestamp = 0;
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
-
 export async function getLists() {
-  // Use cache in dev mode
-  if (env.NODE_ENV === "dev" && moderationCache && Date.now() - cacheTimestamp < CACHE_TTL) {
-    return moderationCache;
-  }
-
   // Parallelize all getConfig calls
   const [
     linksResult,
@@ -195,12 +185,6 @@ export async function getLists() {
     labels: {},  // Empty for backward compatibility
     profiles,
   };
-
-  // Cache result in dev mode
-  if (env.NODE_ENV === "dev") {
-    moderationCache = result;
-    cacheTimestamp = Date.now();
-  }
 
   return result;
 }
