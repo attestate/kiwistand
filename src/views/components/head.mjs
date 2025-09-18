@@ -63,50 +63,51 @@ export function custom(
     <style>
       /* Critical CSS to prevent layout shift */
       :root {
-        --font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        --font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto,
+          Helvetica, Arial, sans-serif;
       }
-      
+
       /* Predefine font metrics to prevent shifts */
       body {
         font-family: var(--font-family);
         font-synthesis: none;
         text-rendering: optimizeLegibility;
       }
-      
+
       /* Set minimum heights for table rows to prevent vertical shifts */
       tr {
         min-height: 91px;
       }
-      
+
       .title {
         min-height: 36px;
         line-height: 1.4;
       }
-      
+
       .subtext {
         min-height: 20px;
         line-height: 1.4;
       }
-      
+
       /* Ensure consistent table layout */
       table {
         table-layout: fixed;
       }
-      
+
       /* Reserve space for header-bell to prevent layout shift */
       #bell {
         min-height: 30px;
       }
-      
+
       .header-bell {
         min-height: 44px;
       }
-      
+
       /* Stabilize comment preview areas */
       .comment-preview {
         min-height: 60px;
       }
-      
+
       /* Remove custom @font-face to avoid double-loading Inter; use Google CSS above */
     </style>
     <script src="event-queue.js"></script>
@@ -115,10 +116,10 @@ export function custom(
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1,
- user-scalable=0 viewport-fit=cover"
+ user-scalable=0, viewport-fit=cover"
     />
     <meta name="fc:frame" content="${embedMetaContent}" />
-    ${variant ? html`<meta name="kiwi-variant" content="${variant}" />` : ''}
+    ${variant ? html`<meta name="kiwi-variant" content="${variant}" />` : ""}
     ${ogImage ? html`<meta property="og:image" content="${ogImage}" />` : null}
     ${ogImage
       ? html`<meta property="twitter:image" content="${ogImage}" />`
