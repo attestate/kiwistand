@@ -22,7 +22,6 @@ import Header from "./components/header.mjs";
 import SecondHeader from "./components/secondheader.mjs";
 import Sidebar from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
-import nav from "./components/nav.mjs";
 import * as head from "./components/head.mjs";
 import * as store from "../store.mjs";
 import * as id from "../id.mjs";
@@ -685,7 +684,6 @@ export default async function (trie, theme, index, value, referral, commentIndex
               ${Footer(theme, path)}
             </div>
           </div>
-          ${nav(path)}
         </div>
       </body>
     </html>
