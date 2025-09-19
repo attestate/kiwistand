@@ -16,6 +16,7 @@ import { resolveAvatar } from "./Avatar.jsx";
 import { dynamicPrefetch } from "./main.jsx";
 import { getSlug } from "./CommentInput.jsx"; // Import getSlug from CommentInput
 import { openDelegationModalForAction, isDelegationModalNeeded } from "./delegationModalManager.js";
+import { showSpinnerOverlay } from "./spinnerOverlay.js";
 
 function ShareIcon(style) {
   return (
@@ -699,10 +700,7 @@ const Comment = React.forwardRef(
             <div style={{ width: "32px", flexShrink: 0, marginRight: "14px" }}>
               <a
                 href={`/upvotes?address=${comment.identity.address}`}
-                onClick={() =>
-                  (document.getElementById("spinner-overlay").style.display =
-                    "block")
-                }
+                onClick={() => showSpinnerOverlay()}
               >
                 <img
                   loading="lazy"
@@ -739,10 +737,7 @@ const Comment = React.forwardRef(
                 }}
                 className="meta-link"
                 href={`/upvotes?address=${comment.identity.address}`}
-                onClick={() =>
-                  (document.getElementById("spinner-overlay").style.display =
-                    "block")
-                }
+                onClick={() => showSpinnerOverlay()}
               >
                 <span style={{ fontWeight: "400", fontSize: "10pt" }}>
                   {truncateName(comment.identity.displayName)}

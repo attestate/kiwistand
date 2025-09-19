@@ -6,6 +6,11 @@ import { createRoot } from "react-dom/client";
 import sdk from "@farcaster/frame-sdk";
 import { Providers } from "./providers.jsx";
 import {
+  initSpinnerOverlay,
+  showSpinnerOverlay,
+  hideSpinnerOverlay,
+} from "./spinnerOverlay.js";
+import {
   setDelegationModalRef,
   preloadDelegationModal,
 } from "./delegationModalManager.js";
@@ -1632,8 +1637,8 @@ async function reorderStories(identity) {
 
   const parent = contentRows[0].parentNode;
 
-  const spinner = document.getElementById("spinner-overlay");
   let spinnerIcon;
+  const spinner = showSpinnerOverlay();
 
   if (spinner) {
     const spinnerStyle = `
@@ -1650,12 +1655,16 @@ async function reorderStories(identity) {
         100% { transform: rotate(360deg); }
       }
     `;
-    const styleSheet = document.createElement("style");
-    styleSheet.type = "text/css";
-    styleSheet.innerText = spinnerStyle;
-    document.head.appendChild(styleSheet);
 
-    spinner.style.display = "flex";
+    let styleSheet = document.getElementById("spinner-overlay-style");
+    if (!styleSheet) {
+      styleSheet = document.createElement("style");
+      styleSheet.id = "spinner-overlay-style";
+      styleSheet.type = "text/css";
+      styleSheet.innerText = spinnerStyle;
+      document.head.appendChild(styleSheet);
+    }
+
     spinnerIcon = document.createElement("div");
     spinnerIcon.className = "spinner-icon";
     spinner.appendChild(spinnerIcon);
@@ -1705,10 +1714,7 @@ async function reorderStories(identity) {
     }
   }
 
-  if (spinner) {
-    spinner.style.display = "none";
-    if (spinnerIcon) spinnerIcon.remove();
-  }
+  hideSpinnerOverlay();
   parent.style.opacity = "1";
 }
 
@@ -1716,6 +1722,8 @@ async function start() {
   initFarcasterFrame()
     .then()
     .catch((err) => console.log(err));
+
+  initSpinnerOverlay();
 
   // Apply safe area insets for mini app context
   console.log("Starting applySafeAreaInsets...");
@@ -1746,22 +1754,6 @@ async function start() {
   const urlParams = new URL(window.location.href).searchParams;
   if (urlParams.get("miniapp") === "true") {
     sdk.actions.addFrame();
-  }
-  // Spinner overlay initialization
-  if (!document.getElementById("spinner-overlay")) {
-    const overlay = document.createElement("div");
-    overlay.id = "spinner-overlay";
-    overlay.style.display = "none";
-    overlay.style.position = "fixed";
-    overlay.style.top = "0";
-    overlay.style.left = "0";
-    overlay.style.width = "100%";
-    overlay.style.height = "100%";
-    overlay.style.background = "rgba(255,255,255,0.7)";
-    overlay.style.zIndex = "9999";
-    overlay.style.justifyContent = "center";
-    overlay.style.alignItems = "center";
-    document.body.appendChild(overlay);
   }
 
   // Initialize link impression tracking

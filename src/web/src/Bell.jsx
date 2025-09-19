@@ -11,6 +11,7 @@ import { isIOS, getLocalAccount, getCookie } from "./session.mjs";
 import { useProvider } from "./client.mjs";
 import { dynamicPrefetch } from "./main.jsx";
 import { sdk } from "@farcaster/frame-sdk";
+import { showSpinnerOverlay } from "./spinnerOverlay.js";
 
 const EmailSubscriptionForm = ({
   onSuccess,
@@ -289,7 +290,7 @@ const Bell = (props) => {
       !event.shiftKey &&
       event.button !== 1
     ) {
-      document.getElementById("spinner-overlay").style.display = "block";
+      showSpinnerOverlay();
     }
   };
 

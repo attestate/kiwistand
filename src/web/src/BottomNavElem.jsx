@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { showSpinnerOverlay } from "./spinnerOverlay.js";
 
 const submitfull = (props) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
@@ -184,7 +185,7 @@ const BottomNavElem = ({ icon }) => {
       !event.shiftKey &&
       event.button !== 1
     ) {
-      document.getElementById("spinner-overlay").style.display = "block";
+      showSpinnerOverlay();
     }
   };
 

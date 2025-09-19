@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { isIOS, isSafariOnMacOS } from "./session.mjs";
+import { showSpinnerOverlay } from "./spinnerOverlay.js";
 
 const DesktopSearch = () => {
   const [keyIndicator, setKeyIndicator] = useState(null);
@@ -20,7 +21,7 @@ const DesktopSearch = () => {
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
       // Show spinner before navigation
-      document.getElementById('spinner-overlay').style.display = 'block';
+      showSpinnerOverlay();
       window.location.href = "/search?q=" + encodeURIComponent(e.target.value);
     }
   };
