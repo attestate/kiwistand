@@ -1463,6 +1463,8 @@ export async function launch(trie, libp2p, isPrimary = true) {
     let submission;
 
     const index = request.query.index;
+    const tokenMetadata = request.query.tokenMetadata === "true";
+    
     try {
       // Get banned addresses from moderation config
       const policy = await moderation.getLists();
@@ -1474,6 +1476,34 @@ export async function launch(trie, libp2p, isPrimary = true) {
       const httpMessage = "Not Found";
       const details = "Couldn't find the submission";
       return sendError(reply, code, httpMessage, details);
+    }
+
+    // If tokenMetadata flag is set, return ERC-721 compliant metadata
+    if (tokenMetadata) {
+      let imageUrl = submission.href;
+      
+      // If href is not an imagedelivery domain, fetch the actual image from the page
+      if (!submission.href.includes("imagedelivery.net")) {
+        try {
+          const result = await parse(submission.href, true); // forceFetch = true
+          if (result.image) {
+            imageUrl = result.image;
+          }
+        } catch (err) {
+          log(`Failed to parse image from ${submission.href}: ${err.message}`);
+          // Fall back to using the href as the image
+        }
+      }
+      
+      reply.header(
+        "Cache-Control",
+        "public, s-maxage=31536000, max-age=31536000, immutable",
+      );
+      return reply.status(200).type("application/json").send({
+        name: submission.title,
+        description: "",
+        image: imageUrl
+      });
     }
 
     const identities = new Set();
