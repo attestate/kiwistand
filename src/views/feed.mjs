@@ -101,6 +101,8 @@ const PREDICTION_REPLACEMENT_COUNT = 10; // Number of oldest stories to replace
 // NOTE: Only set this date in synchronicity with the src/launch.mjs date!!
 const cutoffDate = new Date("2025-01-15");
 const thresholdKarma = 5;
+// Minimum karma needed for a story to surface with only a single upvote
+const singleUpvoteKarmaThreshold = 50;
 export function identityClassifier(upvoter) {
   let balance = 0;
 
@@ -408,9 +410,17 @@ export async function index(
   let rankedStories = await topstories(moderatedLeaves, algorithm); // Use moderated leaves with algorithm
 
   // 2. Filter ranked stories based on age/engagement rules
-  rankedStories = rankedStories.filter(({ index, upvotes, timestamp }) => {
+  rankedStories = rankedStories.filter(({ index, identity, upvotes, timestamp }) => {
     const storyAgeInDays = itemAge(timestamp) / (60 * 24);
     const commentCount = countComments(`kiwi:0x${index}`) || 0;
+    const submitterKarma = identity
+      ? karma.resolve(identity, cutoffDate)
+      : 0;
+
+    if (upvotes <= 1 && submitterKarma < singleUpvoteKarmaThreshold) {
+      return false;
+    }
+
     // Keep stories > 7 days old out of page 0 initially, but allow them on other pages
     if (page === 0 && storyAgeInDays > 7) {
       return false;
