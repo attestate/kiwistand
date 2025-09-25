@@ -3,6 +3,7 @@ import log from "./logger.mjs";
 
 const ONESIGNAL_APP_ID = env.ONESIGNAL_APP_ID || "8288dc28-3742-41fd-bd94-89bd7c47768c";
 const ONESIGNAL_API_KEY = env.ONESIGNAL_API_KEY;
+const IS_PRODUCTION = env.NODE_ENV === "production";
 
 /**
  * Send push notification via OneSignal to users by their wallet addresses
@@ -13,6 +14,11 @@ const ONESIGNAL_API_KEY = env.ONESIGNAL_API_KEY;
  * @param {string} notification.url - URL to open when notification is clicked
  */
 export async function sendPushNotification(addresses, notification) {
+  if (!IS_PRODUCTION) {
+    log("NODE_ENV is not production, skipping OneSignal push notification");
+    return;
+  }
+
   if (!ONESIGNAL_API_KEY) {
     log("OneSignal API key not configured, skipping push notification");
     return;
@@ -82,6 +88,11 @@ export async function sendTestNotification(address) {
  * @param {string} notification.url - URL to open when notification is clicked
  */
 export async function sendBroadcastNotification(notification) {
+  if (!IS_PRODUCTION) {
+    log("NODE_ENV is not production, skipping OneSignal broadcast");
+    return;
+  }
+
   if (!ONESIGNAL_API_KEY) {
     log("OneSignal API key not configured, skipping broadcast push notification");
     return;
