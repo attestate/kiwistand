@@ -115,7 +115,7 @@ export default function TweetEmail({ story = { metadata: {} } }) {
           </Container>
           <Container style={{ margin: '0 auto', maxWidth: '580px' }}>
             <Section style={{ padding: '12px 0' }}>
-              <Link href={story.storyLink} style={buttonStyle}>GO TO STORY</Link>
+              <Link href={story.storyLink} style={buttonStyle}>Read the story</Link>
             </Section>
           </Container>
         </Body>
