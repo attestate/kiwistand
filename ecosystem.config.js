@@ -10,7 +10,7 @@ module.exports = {
         NODE_PATH: "./node_modules",
         NODE_ENV: "production",
         HTTP_PORT: "3000",
-        WORKER_COUNT: 8,
+        WORKER_COUNT: 10,
       },
     },
     {
@@ -28,7 +28,7 @@ module.exports = {
         USE_EPHEMERAL_ID: false,
         SSL_CERT_PATH: "/etc/letsencrypt/live/news.kiwistand.com/fullchain.pem",
         SSL_KEY_PATH: "/etc/letsencrypt/live/news.kiwistand.com/privkey.pem",
-        WORKER_COUNT: 8,
+        WORKER_COUNT: 10,
       },
       node_args: "-r dotenv/config --max-old-space-size=4096",
     },
