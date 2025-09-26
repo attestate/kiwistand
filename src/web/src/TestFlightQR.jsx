@@ -86,7 +86,7 @@ const TestFlightQR = () => {
         <span style={{ fontSize: '14px', fontWeight: 500 }}>Get Kiwi App</span>
         
         <img 
-          src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(testflightUrl)}`}
+          src="/testflight-qr.png"
           alt="TestFlight QR Code"
           width="150"
           height="150"

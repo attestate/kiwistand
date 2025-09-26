@@ -24,29 +24,56 @@ export async function generateDigestData() {
   log(`CACHE_DIR is: ${process.env.CACHE_DIR}`);
 
   try {
-    // 1. Fetch the top 3 stories using the same function as the website,
+    const desiredStoryCount = 5;
+    const fetchAmount = 12;
+    const bannedDomains = new Set(["imagedelivery.net"]);
+
+    // 1. Fetch the top stories using the same function as the website,
     //    but with options for fresh, complete data.
     log("Fetching top stories for digest...");
     const stories = await getStories(0, "week", "", {
       forceFetch: true,
       rawMetadata: true,
       createStoryLink: true,
-      amount: 3,
+      amount: fetchAmount,
     });
-    log(`Found ${stories.length} total stories.`);
+    log(`Found ${stories.length} total stories before filtering.`);
 
-    if (stories.length === 0) {
+    const filteredStories = stories.filter((story) => {
+      const metadataDomain = story.metadata?.domain?.toLowerCase?.();
+      let hrefDomain = null;
+      try {
+        hrefDomain = new URL(story.href).hostname.toLowerCase();
+      } catch (error) {
+        hrefDomain = null;
+      }
+
+      const domainsToCheck = [metadataDomain, hrefDomain].filter(Boolean);
+      return !domainsToCheck.some((domain) => {
+        for (const bannedDomain of bannedDomains) {
+          if (domain === bannedDomain || domain.endsWith(`.${bannedDomain}`)) {
+            return true;
+          }
+        }
+        return false;
+      });
+    });
+
+    log(`Remaining stories after filtering: ${filteredStories.length}.`);
+
+    if (filteredStories.length === 0) {
       log("No stories found. Aborting digest generation.");
       return;
     }
     
-    log(`Selected top ${stories.length} stories.`);
+    const selectedStories = filteredStories.slice(0, desiredStoryCount);
+    log(`Selected top ${selectedStories.length} stories.`);
 
     const generatedAt = new Date();
     const isoDate = generatedAt.toISOString();
     const campaignDate = isoDate.slice(0, 10);
 
-    const storiesWithTracking = stories.map((story, index) => {
+    const storiesWithTracking = selectedStories.map((story, index) => {
       let trackedStoryLink = story.storyLink;
       if (story.storyLink) {
         try {

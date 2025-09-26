@@ -26,6 +26,26 @@ export default function DigestEmail({ stories = digestStories }) {
     Farcaster: FarcasterEmail,
   };
 
+  const bannedDomains = ['imagedelivery.net'];
+  const sanitizeStories = stories.filter((story) => {
+    const metadataDomain = story.metadata?.domain?.toLowerCase?.();
+    let hrefDomain = null;
+    try {
+      hrefDomain = new URL(story.href).hostname.toLowerCase();
+    } catch (error) {
+      hrefDomain = null;
+    }
+
+    const domainsToCheck = [metadataDomain, hrefDomain].filter(Boolean);
+    return !domainsToCheck.some((domain) =>
+      bannedDomains.some((bannedDomain) =>
+        domain === bannedDomain || domain.endsWith(`.${bannedDomain}`)
+      )
+    );
+  });
+
+  const storiesToRender = sanitizeStories.slice(0, 5);
+
   const getComponentForStory = (story) => {
     const domain = story.metadata?.domain || '';
     const isTweetDomain = domain.includes('twitter.com') || domain.includes('x.com');
@@ -93,15 +113,31 @@ export default function DigestEmail({ stories = digestStories }) {
               Have a nice day.
             </Text>
             
-            {stories.map((story, index) => {
+            {storiesToRender.map((story, index) => {
               const Component = components[getComponentForStory(story)];
               return (
                 <React.Fragment key={story.href}>
                   <Component story={story} />
-                  {index < stories.length - 1 && <Hr style={hr} />}
+                  {index < storiesToRender.length - 1 && <Hr style={hr} />}
                 </React.Fragment>
               );
             })}
+
+            <Hr style={hr} />
+
+            <Section style={testflightSection}>
+              <Text style={testflightTitle}>Join Kiwi News on TestFlight</Text>
+              <Img
+                src="https://news.kiwistand.com/testflight-qr.png"
+                alt="Kiwi News TestFlight QR"
+                width="160"
+                height="160"
+                style={{ margin: '16px auto' }}
+              />
+              <Text style={testflightLink}>
+                Prefer tapping? <a href="https://testflight.apple.com/join/6jyvYECH" style={testflightAnchor}>Join the TestFlight beta</a>
+              </Text>
+            </Section>
 
           </Container>
         </Body>
@@ -147,4 +183,25 @@ const introBody = {
   lineHeight: "24px",
   textAlign: "left",
   margin: "0 0 20px 0",
+};
+
+const testflightSection = {
+  textAlign: 'center',
+  padding: '20px 16px',
+};
+
+const testflightTitle = {
+  fontSize: '16px',
+  fontWeight: '600',
+  margin: '0 0 10px 0',
+};
+
+const testflightLink = {
+  fontSize: '14px',
+  margin: '10px 0 0 0',
+};
+
+const testflightAnchor = {
+  color: '#0060df',
+  textDecoration: 'underline',
 };
