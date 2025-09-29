@@ -132,7 +132,6 @@ export default function DigestEmail({ stories = digestStories }) {
                 alt="Kiwi News TestFlight QR"
                 width="160"
                 height="160"
-                style={{ margin: '16px auto' }}
               />
               <Text style={testflightLink}>
                 Prefer tapping? <a href="https://testflight.apple.com/join/6jyvYECH" style={testflightAnchor}>Join the TestFlight beta</a>
@@ -186,7 +185,6 @@ const introBody = {
 };
 
 const testflightSection = {
-  textAlign: 'center',
   padding: '20px 16px',
 };
 

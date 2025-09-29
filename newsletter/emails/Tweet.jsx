@@ -1,5 +1,5 @@
 import React from "react";
-import { Head, Html, Body, Container, Tailwind, Text, Link, Img, Row, Column, Section } from "@react-email/components";
+import { Head, Html, Body, Tailwind, Text, Link, Img, Row, Column, Section } from "@react-email/components";
 
 // --- Helper functions ---
 const truncateLongWords = (text, maxLength = 20) => {
@@ -57,80 +57,62 @@ export default function TweetEmail({ story = { metadata: {} } }) {
     story.submitterLink || `https://news.kiwistand.com/upvotes?address=${story.identity}`;
 
   return (
-    <Html>
-      <Head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <meta name="x-apple-disable-message-reformatting" />
-        <meta name="color-scheme" content="light" />
-        <meta name="supported-color-schemes" content="light" />
-      </Head>
-      <Tailwind>
-        <Body style={main} bgcolor="#fffffa">
-          <Container style={container} bgcolor="#f6f6ef">
-            <Row>
-              <Column>
-                <Section style={{...tweetEmbedContainer, backgroundColor: '#ffffff', borderBottom: '1px solid #e6e6df' }} bgcolor="#ffffff">
-                  <Link href={story.storyLink} style={{...previewContainer, color: '#000000 !important', textDecoration: 'none'}}>
-                      <Row>
-                        <Column width="30">
-                          <Img
-                            src={metadata.twitterAuthorAvatar}
-                            alt={metadata.twitterCreator || "Author"}
-                            width="20"
-                            height="20"
-                            style={{ borderRadius: '9999px', marginRight: '8px' }}
-                          />
-                        </Column>
-                        <Column>
-                          <Text style={{ fontWeight: 600, color: '#0f1419', fontSize: '14px' }}>
-                            {metadata.twitterCreator || "@tweet"}
-                          </Text>
-                        </Column>
-                      </Row>
-                      <Text style={{ wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>
-                        {metadata.ogDescription && metadata.ogDescription.length > 260
-                          ? metadata.ogDescription.slice(0, 260) + '…'
-                          : metadata.ogDescription}
+    <>
+      <Section style={container} bgcolor="#f6f6ef">
+        <Row>
+          <Column>
+            <Section style={{...tweetEmbedContainer, backgroundColor: '#ffffff', borderBottom: '1px solid #e6e6df' }} bgcolor="#ffffff">
+              <Link href={story.storyLink} style={{...previewContainer, color: '#000000 !important', textDecoration: 'none'}}>
+                  <Row>
+                    <Column width="30">
+                      <Img
+                        src={metadata.twitterAuthorAvatar}
+                        alt={metadata.twitterCreator || "Author"}
+                        width="20"
+                        height="20"
+                        style={{ borderRadius: '9999px', marginRight: '8px' }}
+                      />
+                    </Column>
+                    <Column>
+                      <Text style={{ fontWeight: 600, color: '#0f1419', fontSize: '14px' }}>
+                        {metadata.twitterCreator || "@tweet"}
                       </Text>
-                      {metadata.image && (
-                        <Img
-                          src={metadata.image}
-                          alt="Tweet image"
-                          width="100%"
-                          style={{ marginTop: '12px', objectFit: 'cover' }}
-                        />
-                      )}
-                  </Link>
-                </Section>
-
-                <Section style={{ padding: '12px 20px 10px 12px', backgroundColor: '#f6f6ef' }} bgcolor="#f6f6ef">
-                   <Text style={{ fontSize: '9pt', marginTop: '3px', marginBottom: '0', lineHeight: '1.4', color: '#666' }}>
-                    submitted by <Link href={submitterProfileLink} style={{ fontWeight: 600, color: '#000000 !important', textDecoration: 'none' }}>{displayName}</Link>
-                    {' • '}
-                    <Link href={story.storyLink} style={{ color: '#000000 !important', textDecoration: 'none' }}>{extractedDomain}</Link>
+                    </Column>
+                  </Row>
+                  <Text style={{ wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>
+                    {metadata.ogDescription && metadata.ogDescription.length > 260
+                      ? metadata.ogDescription.slice(0, 260) + '…'
+                      : metadata.ogDescription}
                   </Text>
-                </Section>
-              </Column>
-            </Row>
-          </Container>
-          <Container style={{ margin: '0 auto', maxWidth: '580px' }}>
-            <Section style={{ padding: '12px 0' }}>
-              <Link href={story.storyLink} style={buttonStyle}>Read the story</Link>
+                  {metadata.image && (
+                    <Img
+                      src={metadata.image}
+                      alt="Tweet image"
+                      width="100%"
+                      style={{ marginTop: '12px', objectFit: 'cover' }}
+                    />
+                  )}
+              </Link>
             </Section>
-          </Container>
-        </Body>
-      </Tailwind>
-    </Html>
+
+            <Section style={{ padding: '12px 20px 10px 12px', backgroundColor: '#f6f6ef' }} bgcolor="#f6f6ef">
+                <Text style={{ fontSize: '9pt', marginTop: '3px', marginBottom: '0', lineHeight: '1.4', color: '#666' }}>
+                submitted by <Link href={submitterProfileLink} style={{ fontWeight: 600, color: '#000000 !important', textDecoration: 'none' }}>{displayName}</Link>
+                {' • '}
+                <Link href={story.storyLink} style={{ color: '#000000 !important', textDecoration: 'none' }}>{extractedDomain}</Link>
+              </Text>
+            </Section>
+          </Column>
+        </Row>
+      </Section>
+      <Section style={{ padding: '12px 0' }}>
+        <Link href={story.storyLink} style={buttonStyle}>Read the story</Link>
+      </Section>
+    </>
   );
 }
 
 // --- Styles ---
-const main = {
-  backgroundColor: "#fffffa",
-  fontFamily:
-    "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, 'Apple Color Emoji', 'Segoe UI Emoji', sans-serif",
-};
-
 const container = {
   margin: "0 auto",
   padding: "0",
