@@ -48,42 +48,8 @@ async function sendDigest() {
     const emailData = await createEmailResponse.json();
     const id = emailData.id;
     console.log(`Created Buttondown draft with ID: ${id}`);
-
-    // 3) Attempt to send to the full list
-    // First try the explicit send endpoint
-    const sendNow = await fetch(`https://api.buttondown.email/v1/emails/${id}/send`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Token ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (sendNow.ok) {
-      console.log('Successfully queued email to all subscribers.');
-      return;
-    }
-
-    // Fallback: attempt scheduling immediately via PATCH
-    const fallback = await fetch(`https://api.buttondown.email/v1/emails/${id}`, {
-      method: 'PATCH',
-      headers: {
-        'Authorization': `Token ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ status: 'scheduled', publish_date: new Date().toISOString() }),
-    });
-
-    if (fallback.ok) {
-      console.log('Email scheduled for immediate send.');
-    } else {
-      const errorText = await fallback.text();
-      console.error('Failed to send/schedule email:', fallback.status, errorText);
-      process.exit(1);
-    }
-  } catch (error) {
-    console.error('Unexpected error while sending digest:', error);
-    process.exit(1);
+  } catch(err) {
+    console.error("Error", err);
   }
 }
 
