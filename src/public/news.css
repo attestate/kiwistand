@@ -1658,9 +1658,9 @@ a.meta-link:hover, span.meta-link:hover {
   min-height: 48px \!important; /* Prevent height change when React loads */
 }
 
-/* Styles for clicked/visited content rows */
+/* Styles for clicked/visited content rows - using grayscale for better visibility */
 .clicked-content {
-  opacity: 0.6;
+  filter: grayscale(50%) opacity(0.85);
 }
 
 .clicked-content .story-link-container a,
@@ -1669,24 +1669,13 @@ a.meta-link:hover, span.meta-link:hover {
   color: var(--visited-link) !important;
 }
 
-/* Lighter grey for the metadata and interaction buttons */
-.clicked-content .story-subtitle,
-.clicked-content .interaction-bar {
-  opacity: 0.7;
-}
-
-/* Keep images slightly faded but still visible */
-.clicked-content img {
-  opacity: 0.7;
-}
-
 /* Disable hover effect on desktop for clicked content */
 @media (min-width: 769px) {
   .clicked-content:hover {
     background-color: transparent !important;
-    opacity: 0.6; /* Keep the same opacity, no change on hover */
+    filter: grayscale(50%) opacity(0.85); /* Keep the same styling, no change on hover */
   }
-  
+
   /* Also disable the hover background color that's applied inline or via other classes */
   .content-row.clicked-content:hover,
   .row-container.clicked-content:hover,
@@ -1695,7 +1684,7 @@ a.meta-link:hover, span.meta-link:hover {
   td:has(.clicked-content):hover {
     background-color: transparent !important;
   }
-  
+
   /* Prevent any background color changes on hover for clicked content */
   .clicked-content,
   .clicked-content * {
@@ -1705,12 +1694,59 @@ a.meta-link:hover, span.meta-link:hover {
 
 /* Override for inverted rows to maintain their style */
 .inverted-row.clicked-content {
-  filter: invert(100%) brightness(2);
-  opacity: 0.7;
+  filter: invert(100%) brightness(2) grayscale(50%);
+  opacity: 0.85;
 }
 
 /* Last clicked item indicator - similar to :target */
 .last-clicked {
   box-shadow: 0 0 0 2px rgb(175, 192, 70);
   animation: highlight 0.3s ease-out;
+  position: relative;
+  z-index: 100;
+}
+
+/* Don't apply gray filter to last-clicked content */
+.last-clicked.clicked-content {
+  filter: none;
+}
+
+/* Make the like button very prominent in last-clicked story */
+.last-clicked .like-button-container {
+  position: relative;
+  filter: none !important; /* Override grayscale from parent */
+}
+
+.last-clicked .like-button-container .like-button {
+  animation: sparkle 1.5s ease-in-out infinite;
+  background: rgba(175, 192, 70, 0.15) !important;
+  outline: 2px solid rgb(175, 192, 70) !important;
+  box-shadow: 0 0 0 4px rgba(175, 192, 70, 0.2);
+}
+
+.last-clicked .like-button-container .like-button:hover {
+  transform: scale(1.1);
+}
+
+@keyframes sparkle {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 4px rgba(175, 192, 70, 0.2);
+  }
+  50% {
+    transform: scale(1.1);
+    box-shadow: 0 0 8px 6px rgba(175, 192, 70, 0.4), 0 0 0 4px rgba(175, 192, 70, 0.3);
+  }
+}
+
+/* Add "Last clicked" badge-style label at start of subtitle */
+.content-row.last-clicked .story-subtitle > .meta-item:first-child::before {
+  content: "Last clicked";
+  background: rgba(175, 192, 70, 0.15);
+  color: rgb(175, 192, 70);
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 3px;
+  margin-right: 6px;
+  font-size: 11px;
 }

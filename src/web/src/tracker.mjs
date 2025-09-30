@@ -547,13 +547,13 @@ export function getClickedContentIds() {
     if (cached) {
       const data = JSON.parse(cached);
       const clickedIds = new Set();
-      
+
       if (data.clicks) {
         data.clicks.forEach((click) => {
           clickedIds.add(click.content_id);
         });
       }
-      
+
       return clickedIds;
     }
   } catch (error) {
@@ -561,6 +561,28 @@ export function getClickedContentIds() {
   }
 
   return new Set();
+}
+
+// Get the most recently clicked content ID
+export function getLastClickedContentId() {
+  if (!globalIdentity) return null;
+
+  try {
+    const cached = localStorage.getItem(`interactions-${globalIdentity}`);
+    if (cached) {
+      const data = JSON.parse(cached);
+
+      if (data.clicks && data.clicks.length > 0) {
+        // Clicks are stored with timestamps, find the most recent
+        const sortedClicks = [...data.clicks].sort((a, b) => b.timestamp - a.timestamp);
+        return sortedClicks[0].content_id;
+      }
+    }
+  } catch (error) {
+    console.error("Error getting last clicked content ID:", error);
+  }
+
+  return null;
 }
 
 // Get content IDs that have been impressed multiple times
@@ -872,6 +894,7 @@ export default {
   syncInteractions,
   loadCachedInteractions,
   getClickedContentIds,
+  getLastClickedContentId,
   getFrequentlyImpressedContentIds,
   applyClickedStyling,
   removeClickedStyling,

@@ -1676,9 +1676,10 @@ async function reorderStories(identity) {
   // A small delay to ensure spinner is rendered before potential blocking work.
   await new Promise((resolve) => setTimeout(resolve, 50));
 
-  const { getClickedContentIds, getFrequentlyImpressedContentIds } =
+  const { getClickedContentIds, getLastClickedContentId, getFrequentlyImpressedContentIds } =
     await import("./tracker.mjs");
   const clickedIds = getClickedContentIds();
+  const lastClickedId = getLastClickedContentId();
   const frequentlyImpressedIds = getFrequentlyImpressedContentIds(3); // Threshold of 3 impressions
 
   const seenIds = new Set([...clickedIds, ...frequentlyImpressedIds]);
@@ -1688,6 +1689,14 @@ async function reorderStories(identity) {
     const unseenRows = [];
 
     contentRows.forEach((row) => {
+      const contentId = row.dataset.contentId;
+
+      // Keep last-clicked story at its original position to allow upvoting
+      if (contentId === lastClickedId) {
+        unseenRows.push(row);
+        return;
+      }
+
       const likeButton = row.querySelector(".like-button-container");
       let upvoters = [];
       if (likeButton) {
@@ -1700,7 +1709,7 @@ async function reorderStories(identity) {
 
       const isUpvotedByUser = identity ? upvoters.includes(identity) : false;
 
-      if (isUpvotedByUser || seenIds.has(row.dataset.contentId)) {
+      if (isUpvotedByUser || seenIds.has(contentId)) {
         seenRows.push(row);
       } else {
         unseenRows.push(row);
