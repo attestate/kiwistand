@@ -1691,12 +1691,6 @@ async function reorderStories(identity) {
     contentRows.forEach((row) => {
       const contentId = row.dataset.contentId;
 
-      // Keep last-clicked story at its original position to allow upvoting
-      if (contentId === lastClickedId) {
-        unseenRows.push(row);
-        return;
-      }
-
       const likeButton = row.querySelector(".like-button-container");
       let upvoters = [];
       if (likeButton) {
@@ -1708,6 +1702,12 @@ async function reorderStories(identity) {
       }
 
       const isUpvotedByUser = identity ? upvoters.includes(identity) : false;
+
+      // Keep last-clicked story at its original position ONLY if not upvoted
+      if (contentId === lastClickedId && !isUpvotedByUser) {
+        unseenRows.push(row);
+        return;
+      }
 
       if (isUpvotedByUser || seenIds.has(contentId)) {
         seenRows.push(row);
