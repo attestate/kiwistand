@@ -103,6 +103,15 @@ const addressDelegator = "0x418910fef46896eb0bfe38f656e2f7df3eca7198"; // Delega
 
 const newKey = Wallet.createRandom();
 const BuyButton = (props) => {
+  // Temporarily deactivated
+  return (
+    <div>
+      <button className="buy-button" disabled>
+        Minting currently deactivated
+      </button>
+    </div>
+  );
+
   const chainId = useChainId();
   const { switchChain } = useSwitchChain();
   const { discountEligible, allowlist, delegations, toast } = props;
