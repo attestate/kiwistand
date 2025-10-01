@@ -5,6 +5,46 @@
 - We are versioning according to [semver.org](https://semver.org)
 - We are currently in the ["Initial development phase"](https://semver.org/#spec-item-4)
 
+## 0.11.0
+
+(breaking) Fixed critical bug in allowlist crawler that halted allowlist
+progression since the Delegator3/smart account switch in August 2025.
+
+**Background**: When commit 14baab66 updated the system to use Delegator3
+contract (0x418910fef46896eb0bfe38f656e2f7df3eca7198), the ABI for the `setup`
+function was correctly updated to match Delegator3's on-chain interface, which
+only accepts `bytes32[3] data` as a parameter (removing the `beneficiaries` and
+`amounts` arrays that existed in Delegator2).
+
+However, the transfer-loader.mjs code was not updated accordingly - it still
+attempted to extract and use `input.beneficiaries` and `input.amounts` after
+decoding. Since these fields no longer exist in Delegator3's return value, this
+caused the decoder to throw errors on every Delegator3 transaction, completely
+halting the allowlist crawler.
+
+**Impact**: The allowlist stopped updating after the Delegator3 switch. Users
+who minted Kiwi Passes during this period (several weeks) were not added to the
+allowlist and could not interact with the site. All production nodes were
+affected.
+
+**Fix** (commit c8a92a7c):
+- Removed the code that tried to access non-existent `beneficiaries` and
+  `amounts` fields (src/chainstate/transfer-loader.mjs:67-76, 113-122)
+- Added try-catch blocks around `decodeFunctionData` to handle any decoding
+  errors gracefully
+- Now correctly processes Delegator3 transactions with the updated ABI
+
+### How to upgrade your existing node?
+
+**CRITICAL**: All nodes running the broken version have corrupted/incomplete
+`op-call-block-logs-load` data and MUST re-sync:
+
+1. Navigate to your `DATA_DIR`
+2. Delete the `op-call-block-logs-load` directory
+3. Run: `DATA_DIR=/path/to/your/data npm run sync`
+4. Wait until the logs show: "op-call-block-logs loader strategy has finished"
+5. Your node is now fully synchronized with the correct allowlist
+
 ## 0.10.1
 
 - Fix `npm run reconcile`
