@@ -26,11 +26,7 @@ const inputs = [
 const purchaseDelegatorABI = [
   { inputs: [], name: "ErrValue", type: "error" },
   {
-    inputs: [
-      { internalType: "bytes32[3]", name: "data", type: "bytes32[3]" },
-      { internalType: "address[]", name: "beneficiaries", type: "address[]" },
-      { internalType: "uint256[]", name: "amounts", type: "uint256[]" },
-    ],
+    inputs: [{ internalType: "bytes32[3]", name: "data", type: "bytes32[3]" }],
     name: "setup",
     outputs: [],
     stateMutability: "payable",
@@ -67,12 +63,16 @@ export function* direct({ state: { line } }) {
     let beneficiaries = [];
     let amounts = [];
     if (log.transaction.to === purchaseDelegatorAddress) {
-      const input = purchaseDelegatorInterface.decodeFunctionData(
-        "setup",
-        log.transaction.input,
-      );
-      beneficiaries = input.beneficiaries;
-      amounts = input.amounts.map((amount) => amount.toString());
+      try {
+        purchaseDelegatorInterface.decodeFunctionData(
+          "setup",
+          log.transaction.input,
+        );
+      } catch (error) {
+        console.error(
+          `Failed to decode setup input for transaction ${log.transaction.hash}: ${error.message}`,
+        );
+      }
     }
 
     yield {
@@ -110,12 +110,16 @@ export function* order({ state: { line } }) {
     let beneficiaries = [];
     let amounts = [];
     if (log.transaction.to === purchaseDelegatorAddress) {
-      const input = purchaseDelegatorInterface.decodeFunctionData(
-        "setup",
-        log.transaction.input,
-      );
-      beneficiaries = input.beneficiaries;
-      amounts = input.amounts.map((amount) => amount.toString());
+      try {
+        purchaseDelegatorInterface.decodeFunctionData(
+          "setup",
+          log.transaction.input,
+        );
+      } catch (error) {
+        console.error(
+          `Failed to decode setup input for transaction ${log.transaction.hash}: ${error.message}`,
+        );
+      }
     }
 
     yield {

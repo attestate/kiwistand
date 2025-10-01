@@ -11,7 +11,7 @@
     "connect": "ssh root@91.107.210.214",
     "deploy": "npm run build && npm run rsync",
     "rsync": "rsync -avz . root@91.107.210.214:./kiwistand --exclude=src/iOS --exclude=certificates --exclude=anonlocal --exclude=cache --exclude=docs --exclude=anon --exclude \"node_modules\" --exclude=\".git\" --exclude=bootstrap --exclude=data",
-    "dev": "cross-env DEBUG=\"*@attestate/*,-@attestate/delegator2*,-@attestate/crawler*,-@attestate/extraction-worker*\" concurrently \"npm run watch:web\" \"npm run start\"",
+    "dev": "cross-env DEBUG=\"*@attestate/*,-@attestate/delegator2*\" concurrently \"npm run watch:web\" \"npm run start\"",
     "dev:ssl": "cross-env DEBUG=\"*@attestate/*,-@attestate/delegator2*,-@attestate/crawler*,-@attestate/extraction-worker*\" concurrently \"npm run watch:web:ssl\" \"npm run start\"",
     "start": "concurrently \"npm run start:load-balancer\" \"npm run start:primary\"",
     "start:load-balancer": "node -r dotenv/config ./src/load-balancer.mjs",
