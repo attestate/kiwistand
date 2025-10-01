@@ -28,6 +28,7 @@
         "linkify-react": "4.1.3",
         "linkifyjs": "4.1.3",
         "lodash.debounce": "4.0.8",
+        "porto": "0.2.23",
         "posthog-js": "1.222.0",
         "react": "^18.2.0",
         "react-bottom-drawer": "0.1.1",
@@ -7263,6 +7264,15 @@
       "resolved": "https://registry.npmjs.org/react-is/-/react-is-16.13.1.tgz",
       "integrity": "sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ=="
     },
+    "node_modules/hono": {
+      "version": "4.9.9",
+      "resolved": "https://registry.npmjs.org/hono/-/hono-4.9.9.tgz",
+      "integrity": "sha512-Hxw4wT6zjJGZJdkJzAx9PyBdf7ZpxaTSA0NfxqjLghwMrLBX8p33hJBzoETRakF3UJu6OdNQBZAlNSkGqKFukw==",
+      "license": "MIT",
+      "engines": {
+        "node": ">=16.9.0"
+      }
+    },
     "node_modules/html-encoding-sniffer": {
       "version": "4.0.0",
       "resolved": "https://registry.npmjs.org/html-encoding-sniffer/-/html-encoding-sniffer-4.0.0.tgz",
@@ -8553,6 +8563,132 @@
         "node": ">=12.0.0"
       }
     },
+    "node_modules/porto": {
+      "version": "0.2.23",
+      "resolved": "https://registry.npmjs.org/porto/-/porto-0.2.23.tgz",
+      "integrity": "sha512-ECCBdKyBM9SW433TlneYCiI+++Gc5OjTt5r+NQGOHXHQPxrgxKRh2orNYWZKgXsHdLWdw+8irBwbu9DCUTZzXQ==",
+      "license": "MIT",
+      "dependencies": {
+        "hono": "^4.9.8",
+        "idb-keyval": "^6.2.1",
+        "mipd": "^0.0.7",
+        "ox": "^0.9.6",
+        "zod": "^4.1.5",
+        "zustand": "^5.0.1"
+      },
+      "bin": {
+        "porto": "_dist/cli/bin/index.js"
+      },
+      "peerDependencies": {
+        "@tanstack/react-query": ">=5.59.0",
+        "@wagmi/core": ">=2.16.3",
+        "react": ">=18",
+        "typescript": ">=5.4.0",
+        "viem": ">=2.37.0",
+        "wagmi": ">=2.0.0"
+      },
+      "peerDependenciesMeta": {
+        "@tanstack/react-query": {
+          "optional": true
+        },
+        "react": {
+          "optional": true
+        },
+        "typescript": {
+          "optional": true
+        },
+        "wagmi": {
+          "optional": true
+        }
+      }
+    },
+    "node_modules/porto/node_modules/@noble/ciphers": {
+      "version": "1.3.0",
+      "resolved": "https://registry.npmjs.org/@noble/ciphers/-/ciphers-1.3.0.tgz",
+      "integrity": "sha512-2I0gnIVPtfnMw9ee9h1dJG7tp81+8Ob3OJb3Mv37rx5L40/b0i7djjCVvGOVqc9AEIQyvyu1i6ypKdFw8R8gQw==",
+      "license": "MIT",
+      "engines": {
+        "node": "^14.21.3 || >=16"
+      },
+      "funding": {
+        "url": "https://paulmillr.com/funding/"
+      }
+    },
+    "node_modules/porto/node_modules/@noble/curves": {
+      "version": "1.9.1",
+      "resolved": "https://registry.npmjs.org/@noble/curves/-/curves-1.9.1.tgz",
+      "integrity": "sha512-k11yZxZg+t+gWvBbIswW0yoJlu8cHOC7dhunwOzoWH/mXGBiYyR4YY6hAEK/3EUs4UpB8la1RfdRpeGsFHkWsA==",
+      "license": "MIT",
+      "dependencies": {
+        "@noble/hashes": "1.8.0"
+      },
+      "engines": {
+        "node": "^14.21.3 || >=16"
+      },
+      "funding": {
+        "url": "https://paulmillr.com/funding/"
+      }
+    },
+    "node_modules/porto/node_modules/abitype": {
+      "version": "1.1.1",
+      "resolved": "https://registry.npmjs.org/abitype/-/abitype-1.1.1.tgz",
+      "integrity": "sha512-Loe5/6tAgsBukY95eGaPSDmQHIjRZYQq8PB1MpsNccDIK8WiV+Uw6WzaIXipvaxTEL2yEB0OpEaQv3gs8pkS9Q==",
+      "license": "MIT",
+      "funding": {
+        "url": "https://github.com/sponsors/wevm"
+      },
+      "peerDependencies": {
+        "typescript": ">=5.0.4",
+        "zod": "^3.22.0 || ^4.0.0"
+      },
+      "peerDependenciesMeta": {
+        "typescript": {
+          "optional": true
+        },
+        "zod": {
+          "optional": true
+        }
+      }
+    },
+    "node_modules/porto/node_modules/ox": {
+      "version": "0.9.8",
+      "resolved": "https://registry.npmjs.org/ox/-/ox-0.9.8.tgz",
+      "integrity": "sha512-bedy2pidGW8/XKVlXiAo/sIJxO4RAY9DsLyzZ7ppzGdPrECjS/7RN26CDoeABkbCtZWtGH5k/+Sx/KD/8J3xUQ==",
+      "funding": [
+        {
+          "type": "github",
+          "url": "https://github.com/sponsors/wevm"
+        }
+      ],
+      "license": "MIT",
+      "dependencies": {
+        "@adraffy/ens-normalize": "^1.11.0",
+        "@noble/ciphers": "^1.3.0",
+        "@noble/curves": "1.9.1",
+        "@noble/hashes": "^1.8.0",
+        "@scure/bip32": "^1.7.0",
+        "@scure/bip39": "^1.6.0",
+        "abitype": "^1.0.9",
+        "eventemitter3": "5.0.1"
+      },
+      "peerDependencies": {
+        "typescript": ">=5.4.0"
+      },
+      "peerDependenciesMeta": {
+        "typescript": {
+          "optional": true
+        }
+      }
+    },
+    "node_modules/porto/node_modules/zod": {
+      "version": "4.1.11",
+      "resolved": "https://registry.npmjs.org/zod/-/zod-4.1.11.tgz",
+      "integrity": "sha512-WPsqwxITS2tzx1bzhIKsEs19ABD5vmCVa4xBo2tq/SrV4RNZtfws1EnCWQXM6yh8bD08a1idvkB5MZSBiZsjwg==",
+      "license": "MIT",
+      "funding": {
+        "url": "https://github.com/sponsors/colinhacks"
+      }
+    },
     "node_modules/postcss": {
       "version": "8.5.3",
       "resolved": "https://registry.npmjs.org/postcss/-/postcss-8.5.3.tgz",
@@ -9176,16 +9312,6 @@
       "version": "2.0.0-alpha.18",
       "resolved": "https://registry.npmjs.org/rrweb-snapshot/-/rrweb-snapshot-2.0.0-alpha.18.tgz",
       "integrity": "sha512-hBHZL/NfgQX6wO1D9mpwqFu1NJPpim+moIcKhFEjVTZVRUfCln+LOugRc4teVTCISYHN8Cw5e2iNTWCSm+SkoA==",
-      "license": "MIT",
-      "peer": true,
-      "dependencies": {
-        "postcss": "^8.4.38"
-      }
-    },
-    "node_modules/run-applescript": {
-      "version": "7.0.0",
-      "resolved": "https://registry.npmjs.org/run-applescript/-/run-applescript-7.0.0.tgz",
-      "integrity": "sha512-9by4Ij99JUr/MCFBUkDKLWK3G9HVXmabKz9U5MlIAIuvuzkiOicRYs8XJLxX+xahD+mLiiCYDqF9dKAgtzKP1A==",
       "license": "MIT",
       "peer": true,
       "dependencies": {
@@ -9894,9 +10020,9 @@
       }
     },
     "node_modules/viem": {
-      "version": "2.34.0",
-      "resolved": "https://registry.npmjs.org/viem/-/viem-2.34.0.tgz",
-      "integrity": "sha512-HJZG9Wt0DLX042MG0PK17tpataxtdAEhpta9/Q44FqKwy3xZMI5Lx4jF+zZPuXFuYjZ68R0PXqRwlswHs6r4gA==",
+      "version": "2.37.9",
+      "resolved": "https://registry.npmjs.org/viem/-/viem-2.37.9.tgz",
+      "integrity": "sha512-XXUOE5yJcjr9/M9kRoQcPMUfetwHprO9aTho6vNELjBKJIBx7rYq1fjvBw+xEnhsRjhh5lsORi6B0h8fYFB7NA==",
       "funding": [
         {
           "type": "github",
@@ -9905,13 +10031,13 @@
       ],
       "license": "MIT",
       "dependencies": {
-        "@noble/curves": "1.9.6",
+        "@noble/curves": "1.9.1",
         "@noble/hashes": "1.8.0",
         "@scure/bip32": "1.7.0",
         "@scure/bip39": "1.6.0",
-        "abitype": "1.0.8",
+        "abitype": "1.1.0",
         "isows": "1.0.7",
-        "ox": "0.8.7",
+        "ox": "0.9.6",
         "ws": "8.18.3"
       },
       "peerDependencies": {
@@ -9935,10 +10061,46 @@
         "url": "https://paulmillr.com/funding/"
       }
     },
+    "node_modules/viem/node_modules/@noble/curves": {
+      "version": "1.9.1",
+      "resolved": "https://registry.npmjs.org/@noble/curves/-/curves-1.9.1.tgz",
+      "integrity": "sha512-k11yZxZg+t+gWvBbIswW0yoJlu8cHOC7dhunwOzoWH/mXGBiYyR4YY6hAEK/3EUs4UpB8la1RfdRpeGsFHkWsA==",
+      "license": "MIT",
+      "dependencies": {
+        "@noble/hashes": "1.8.0"
+      },
+      "engines": {
+        "node": "^14.21.3 || >=16"
+      },
+      "funding": {
+        "url": "https://paulmillr.com/funding/"
+      }
+    },
+    "node_modules/viem/node_modules/abitype": {
+      "version": "1.1.0",
+      "resolved": "https://registry.npmjs.org/abitype/-/abitype-1.1.0.tgz",
+      "integrity": "sha512-6Vh4HcRxNMLA0puzPjM5GBgT4aAcFGKZzSgAXvuZ27shJP6NEpielTuqbBmZILR5/xd0PizkBGy5hReKz9jl5A==",
+      "license": "MIT",
+      "funding": {
+        "url": "https://github.com/sponsors/wevm"
+      },
+      "peerDependencies": {
+        "typescript": ">=5.0.4",
+        "zod": "^3.22.0 || ^4.0.0"
+      },
+      "peerDependenciesMeta": {
+        "typescript": {
+          "optional": true
+        },
+        "zod": {
+          "optional": true
+        }
+      }
+    },
     "node_modules/viem/node_modules/ox": {
-      "version": "0.8.7",
-      "resolved": "https://registry.npmjs.org/ox/-/ox-0.8.7.tgz",
-      "integrity": "sha512-W1f0FiMf9NZqtHPEDEAEkyzZDwbIKfmH2qmQx8NNiQ/9JhxrSblmtLJsSfTtQG5YKowLOnBlLVguCyxm/7ztxw==",
+      "version": "0.9.6",
+      "resolved": "https://registry.npmjs.org/ox/-/ox-0.9.6.tgz",
+      "integrity": "sha512-8SuCbHPvv2eZLYXrNmC0EC12rdzXQLdhnOMlHDW2wiCPLxBrOOJwX5L5E61by+UjTPOryqQiRSnjIKCI+GykKg==",
       "funding": [
         {
           "type": "github",
@@ -9949,11 +10111,11 @@
       "dependencies": {
         "@adraffy/ens-normalize": "^1.11.0",
         "@noble/ciphers": "^1.3.0",
-        "@noble/curves": "^1.9.1",
+        "@noble/curves": "1.9.1",
         "@noble/hashes": "^1.8.0",
         "@scure/bip32": "^1.7.0",
         "@scure/bip39": "^1.6.0",
-        "abitype": "^1.0.8",
+        "abitype": "^1.0.9",
         "eventemitter3": "5.0.1"
       },
       "peerDependencies": {

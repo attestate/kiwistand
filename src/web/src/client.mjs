@@ -7,6 +7,7 @@ import {
 } from "@ethersproject/providers";
 import { getDefaultConfig, connectorsForWallets } from "@rainbow-me/rainbowkit";
 import { farcasterMiniApp } from "@farcaster/miniapp-wagmi-connector";
+import { porto } from "porto/wagmi";
 import { getPublicClient } from "@wagmi/core";
 import {
   createConfig,
@@ -89,7 +90,7 @@ if (isInIOSApp) {
     trustWallet,
     safeWallet,
   ];
-  
+
   const connectors = connectorsForWallets(
     [
       {
@@ -105,7 +106,7 @@ if (isInIOSApp) {
 
   client = createConfig({
     chains,
-    connectors,
+    connectors: [porto(), ...connectors],
     transports,
   });
 } else {
@@ -134,8 +135,8 @@ if (isInIOSApp) {
     }
   );
 
-  // Add Farcaster mini app connector to the connectors array
-  const connectors = [...walletConnectors, farcasterMiniApp()];
+  // Add Farcaster mini app connector and Porto to the connectors array
+  const connectors = [porto(), ...walletConnectors, farcasterMiniApp()];
 
   client = createConfig({
     chains,
