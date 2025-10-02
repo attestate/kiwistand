@@ -36,6 +36,15 @@ const isDesktop = () => {
   );
 };
 
+// Setup chains and transports
+export const chains = [optimism, mainnet, arbitrum, base];
+const transports = {
+  [optimism.id]: http('https://opt-mainnet.g.alchemy.com/v2/TfAhzs116ThO7Fwod1gzpTJmH0Cudxp7'),
+  [mainnet.id]: http('https://eth-mainnet.g.alchemy.com/v2/TfAhzs116ThO7Fwod1gzpTJmH0Cudxp7'),
+  [arbitrum.id]: http('https://arb-mainnet.g.alchemy.com/v2/TfAhzs116ThO7Fwod1gzpTJmH0Cudxp7'),
+  [base.id]: http('https://base-mainnet.g.alchemy.com/v2/TfAhzs116ThO7Fwod1gzpTJmH0Cudxp7'),
+};
+
 export const useIsMiniApp = () => {
   const [isMiniApp, setIsMiniApp] = React.useState(false);
   const [loading, setLoading] = React.useState(true);
@@ -63,18 +72,8 @@ export const isInIOSApp =
   typeof document !== "undefined" &&
   document.documentElement.classList.contains("kiwi-ios-app");
 
-// Setup chains
-export const chains = [optimism, mainnet, arbitrum, base];
 const projectId = "cd46d2fcf6d171fb7c017129868fa211";
 const appName = "Kiwi News";
-
-// Configure transports for each chain
-const transports = {
-  [optimism.id]: http('https://opt-mainnet.g.alchemy.com/v2/TfAhzs116ThO7Fwod1gzpTJmH0Cudxp7'),
-  [mainnet.id]: http('https://eth-mainnet.g.alchemy.com/v2/TfAhzs116ThO7Fwod1gzpTJmH0Cudxp7'),
-  [arbitrum.id]: http('https://arb-mainnet.g.alchemy.com/v2/TfAhzs116ThO7Fwod1gzpTJmH0Cudxp7'),
-  [base.id]: http('https://base-mainnet.g.alchemy.com/v2/TfAhzs116ThO7Fwod1gzpTJmH0Cudxp7'),
-};
 
 // Create wagmi config based on environment
 let client;

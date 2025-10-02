@@ -6,6 +6,7 @@ import { useAccount, WagmiProvider } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Wallet } from "@ethersproject/wallet";
 import { RainbowKitProvider, ConnectButton } from "@rainbow-me/rainbowkit";
+import { ConnectModal } from "./ConnectModal.jsx";
 import { eligible } from "@attestate/delegator2";
 import DOMPurify from "isomorphic-dompurify";
 import { sdk } from "@farcaster/frame-sdk";
@@ -325,12 +326,19 @@ const Vote = (props) => {
     }
   };
 
+  const [showConnectModal, setShowConnectModal] = useState(false);
+
   return (
-    <ConnectButton.Custom>
-      {({ account, chain, mounted, openConnectModal }) => {
-        const connected = account && chain && mounted;
-        return (
-          <button
+    <>
+      <ConnectModal
+        isOpen={showConnectModal}
+        onClose={() => setShowConnectModal(false)}
+      />
+      <ConnectButton.Custom>
+        {({ account, chain, mounted }) => {
+          const connected = account && chain && mounted;
+          return (
+            <button
             ref={animationContainerRef}
             onClick={async (e) => {
               if (hasUpvoted || isad || window.location.pathname === "/submit")
@@ -443,6 +451,7 @@ const Vote = (props) => {
         );
       }}
     </ConnectButton.Custom>
+    </>
   );
 };
 
