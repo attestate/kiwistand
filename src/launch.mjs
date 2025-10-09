@@ -2,6 +2,7 @@
 import { env, exit } from "process";
 import cluster from "cluster";
 import os from "os";
+import { fork } from "child_process";
 
 import { boot as crawl } from "@attestate/crawler";
 import { subWeeks } from "date-fns";
@@ -57,6 +58,19 @@ if (cluster.isPrimary) {
   cache.initializeLtCache();
   cache.initializeImpressions();
   cache.initializeShares();
+
+  // Run cache cleanup in background (non-blocking)
+  const cleanupProcess = fork("./scripts/cleanup-cache.mjs", [], {
+    stdio: "inherit",
+    detached: false,
+  });
+  cleanupProcess.on("exit", (code) => {
+    if (code === 0) {
+      log("Cache cleanup completed successfully");
+    } else {
+      log(`Cache cleanup exited with code ${code}`);
+    }
+  });
 
   if (reconcileMode) {
     log(`Running in reconciliation mode`);

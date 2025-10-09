@@ -913,6 +913,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
     // 2. Clear related raw data from FileSystemCache
     const fsHttpCache = new FileSystemCache({
       cacheDirectory: path.resolve(env.CACHE_DIR),
+      ttl: 86400000 * 7, // 7 days
     });
 
     const potentialEnsDataUrls = [];
@@ -988,6 +989,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
 
     const cache = new FileSystemCache({
       cacheDirectory: path.resolve(env.CACHE_DIR),
+      ttl: 86400000 * 7, // 7 days
     });
 
     try {
