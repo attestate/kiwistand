@@ -38,7 +38,7 @@
     "create:farcaster-signer": "node ./scripts/create-farcaster-signer.mjs",
     "auth:twitter": "node ./scripts/twitter-auth.mjs",
     "purge:url": "node ./scripts/purge-cloudflare-url.mjs",
-    "tunnel": "ssh -R 8443:localhost:8443 -R 5173:localhost:5173 -R 443:localhost:443 -o ServerAliveInterval=60 -N root@157.90.170.215",
+    "tunnel": "ssh -R 8443:localhost:8443 -R 5173:localhost:5173 -R 443:localhost:443 -o ServerAliveInterval=60 -N root@65.108.82.10",
     "watch:staging": "cross-env CUSTOM_HOST_NAME=\"staging.kiwistand.com:5173\" CUSTOM_PROTOCOL=\"https://\" npm run dev:staging"
   },
   "repository": {
