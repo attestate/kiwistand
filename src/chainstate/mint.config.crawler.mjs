@@ -12,6 +12,7 @@ export default {
     // by the @attestate/crawler but since kiwistand will never use them for
     // anything.
     rpcHttpHost: env.OPTIMISM_RPC_HTTP_HOST,
+    rpcWsHost: env.OPTIMISM_RPC_WS_HOST,
     // NOTE: We're hard-coding these values here as they're mandated (falsely)
     // by the @attestate/crawler but since kiwistand will never use them for
     // anything.
@@ -24,7 +25,6 @@ export default {
       coordinator: {
         archive: false,
         module: blockLogs.state,
-        interval: 1000 * 15,
       },
       extractor: {
         module: blockLogs.extractor,

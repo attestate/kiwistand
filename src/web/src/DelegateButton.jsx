@@ -11,6 +11,7 @@ import { Wallet } from "@ethersproject/wallet";
 import { optimism } from "wagmi/chains";
 import { create, eligible } from "@attestate/delegator2";
 import useLocalStorageState from "use-local-storage-state";
+import { getAddress } from "@ethersproject/address";
 
 import { useProvider } from "./client.mjs";
 import { CheckmarkSVG } from "./icons.jsx";
@@ -212,7 +213,7 @@ const DelegateButton = (props) => {
 
   useEffect(() => {
     if (from.address) {
-      setKeyName(`-kiwi-news-${from.address}-key`);
+      setKeyName(`-kiwi-news-${getAddress(from.address)}-key`);
     }
   }, [from.address]);
 
@@ -282,7 +283,7 @@ const DelegateButton = (props) => {
       let intervalId;
       if (key && wallet && !indexedDelegation) {
         const checkDelegations = async () => {
-          const delegations = await fetchDelegations();
+          const delegations = await fetchDelegations(true);
           if (Object.keys(delegations).includes(wallet.address)) {
             setIndexedDelegation(true);
             clearInterval(intervalId);

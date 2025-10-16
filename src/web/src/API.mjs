@@ -366,8 +366,8 @@ function checkMintStatus() {
 
     // Start the interval to check the allow list and delegations
     const intervalId = setInterval(async () => {
-      const allowList = await fetchAllowList();
-      const delegations = await fetchDelegations();
+      const allowList = await fetchAllowList(true);
+      const delegations = await fetchDelegations(true);
 
       if (
         allowList.has(address) ||

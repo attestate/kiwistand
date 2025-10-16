@@ -1174,8 +1174,8 @@ async function checkMintStatus(address) {
 
   const intervalId = setInterval(async () => {
     const [allowList, delegations] = await Promise.all([
-      fetchAllowList(),
-      fetchDelegations(),
+      fetchAllowList(true),
+      fetchDelegations(true),
     ]);
 
     if (

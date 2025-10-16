@@ -111,8 +111,16 @@ if (cluster.isPrimary) {
     }
   }
 
-  crawl(mintCrawlPath);
-  crawl(delegateCrawlPath);
+  // NOTE: The crawl functions return promises that resolve only when the
+  // WebSocket coordinators are stopped (e.g., via SIGINT). We intentionally
+  // don't await them so the server can continue starting up while the
+  // crawlers run in the background with their persistent WebSocket connections.
+  crawl(mintCrawlPath).catch((err) =>
+    log(`Mint crawler error: ${err.message}`),
+  );
+  crawl(delegateCrawlPath).catch((err) =>
+    log(`Delegate crawler error: ${err.message}`),
+  );
 
   // NOTE: We're passing in the trie here as we don't want to make it globally
   // available to run more than one node in the tests
