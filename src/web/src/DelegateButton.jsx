@@ -1,5 +1,4 @@
 import {
-  useSimulateContract,
   useWriteContract,
   useAccount,
   useChainId,
@@ -229,39 +228,35 @@ const DelegateButton = (props) => {
   const [confirmation, setConfirmation] = useState("");
   const provider = useProvider();
 
-  const [payload, setPayload] = useState(null);
+  // Empty payload for testing - same as porto-permissions example
+  const payload = [
+    "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "0x0000000000000000000000000000000000000000000000000000000000000000",
+  ];
   const [indexedDelegation, setIndexedDelegation] = useState(false);
-
-  useEffect(() => {
-    const generate = async () => {
-      const authorize = true;
-      const payload = await create(
-        getNewKey(),
-        from.address,
-        getNewKey().address,
-        authorize,
-      );
-      setPayload(payload);
-    };
-    if (from.address) generate();
-  }, [from.address]);
-
-  const prepArgs = {
-    address,
-    abi,
-    functionName: "etch",
-    args: [payload],
-    chainId: optimism.id,
-  };
-
-  const { data: config, error, isError } = useSimulateContract(prepArgs);
 
   const {
     data,
     writeContract,
     isPending: isLoading,
     isSuccess: isWriteSuccess,
+    error,
+    isError,
   } = useWriteContract();
+
+  // Debug logging
+  useEffect(() => {
+    if (from.connector) {
+      console.log("DelegateButton: Current connector:", from.connector.id, from.connector.name);
+    }
+  }, [from.connector]);
+
+  useEffect(() => {
+    if (error) {
+      console.error("DelegateButton: writeContract error:", error);
+    }
+  }, [error]);
   const isSuccess = isWriteSuccess && data && data.hash !== "null";
   if (isSuccess) {
     setKey(getNewKey().privateKey);
@@ -373,7 +368,26 @@ const DelegateButton = (props) => {
       <span>Enable on Optimism</span>
     );
     activity = !writeContract || (!writeContract && !isError) || isLoading || isSuccess;
-    handler = () => config && writeContract(config.request);
+    handler = () => {
+      if (!payload) {
+        console.error("DelegateButton: No payload available");
+        return;
+      }
+      console.log("DelegateButton: Calling writeContract with:", {
+        address,
+        functionName: "etch",
+        args: [payload],
+        chainId: optimism.id,
+        connector: from.connector?.id
+      });
+      writeContract({
+        address,
+        abi,
+        functionName: "etch",
+        args: [payload],
+        chainId: optimism.id,
+      });
+    };
   } else {
     content = <span>Switch to Optimism</span>;
     activity = false;

@@ -19,6 +19,10 @@ const SimpleModal = forwardRef((props, ref) => {
   const MODAL_DISMISSED_KEY = `delegation-modal-dismissed-${account.address}`;
 
   function openModal(forceOpen = false) {
+    // TESTING: Always show modal for debugging
+    setShowModal(true);
+    return;
+
     if (
       !account.isConnected ||
       (window.location.pathname !== "/" &&

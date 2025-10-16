@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import Modal from "react-modal";
 import { useConnect, useAccount } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
+import { permissions } from "./permissions";
 
 const customStyles = {
   content: {
@@ -43,7 +44,14 @@ export const ConnectModal = ({ isOpen, onClose }) => {
 
     if (portoConnector) {
       try {
-        await connect({ connector: portoConnector });
+        console.log("Porto: Attempting to connect with permissions:", permissions());
+        const result = await connect({
+          capabilities: {
+            grantPermissions: permissions(),
+          },
+          connector: portoConnector,
+        });
+        console.log("Porto: Connection successful:", result);
         // Modal will auto-close when connected via useEffect
       } catch (error) {
         console.error("Porto connection error:", error);
