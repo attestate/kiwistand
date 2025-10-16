@@ -372,21 +372,6 @@ async function addVotes(allowlist, delegations, toast) {
   voteArrows.forEach((arrow) => observer.observe(arrow));
 }
 
-async function addFriendBuyButton(toast, allowlist) {
-  const buyButtonContainer = document.querySelector(
-    "#friend-buy-button-container",
-  );
-  if (buyButtonContainer) {
-    const BuyButton = (await import("./FriendBuyButton.jsx")).default;
-    createRoot(buyButtonContainer).render(
-      <StrictMode>
-        <Providers>
-          <BuyButton toast={toast} allowlist={allowlist} />
-        </Providers>
-      </StrictMode>,
-    );
-  }
-}
 
 async function addEmailSubscriptionForm(allowlist, delegations, toast) {
   const elem = document.querySelector("email-subscription-form");
@@ -1905,7 +1890,6 @@ async function start() {
     addDelegateButton(await allowlistPromise, await delegationsPromise, toast),
     addBuyButton(allowlistPromise, delegationsPromise, toast),
     addProfileDisplay(),
-    addFriendBuyButton(toast, await allowlistPromise),
     addConnectedComponents(
       await allowlistPromise,
       await delegationsPromise,

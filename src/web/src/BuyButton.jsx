@@ -16,7 +16,6 @@ import { eligible, create } from "@attestate/delegator2";
 import { useState, useEffect } from "react";
 import useLocalStorageState from "use-local-storage-state";
 import { RainbowKitProvider, ConnectButton } from "@rainbow-me/rainbowkit";
-import { ConnectModal } from "./ConnectModal.jsx";
 import {
   simulateContract,
   getAccount,
@@ -388,16 +387,11 @@ const queryClient = new QueryClient();
 
 const Form = (props) => {
   const [discountEligible, setDiscountEligible] = useState(false);
-  const [showConnectModal, setShowConnectModal] = useState(false);
 
   return (
     <QueryClientProvider client={queryClient}>
       <WagmiProvider config={client}>
         <RainbowKitProvider chains={chains}>
-          <ConnectModal
-            isOpen={showConnectModal}
-            onClose={() => setShowConnectModal(false)}
-          />
           <div
             style={{
               display: "flex",
@@ -406,7 +400,7 @@ const Form = (props) => {
             }}
           >
             <ConnectButton.Custom>
-              {({ account, chain, mounted }) => {
+              {({ account, chain, mounted, openConnectModal }) => {
                 const connected = account && chain && mounted;
                 if (connected)
                   return (
@@ -414,7 +408,12 @@ const Form = (props) => {
                   );
                 return (
                   <button
-                    onClick={() => setShowConnectModal(true)}
+                    onClick={async (e) => {
+                      if (!connected) {
+                        openConnectModal();
+                        return;
+                      }
+                    }}
                     className="buy-button"
                   >
                     Connect Wallet
