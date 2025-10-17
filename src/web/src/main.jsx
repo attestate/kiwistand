@@ -253,22 +253,6 @@ async function addDynamicNavElements() {
   // The server already renders complete navigation with SVGs and labels
   // This was causing the navigation to shrink when JS loaded
   return;
-
-  // const navElements = document.querySelectorAll("[data-icon]");
-  // if (navElements && navElements.length > 0) {
-  //   const BottomNavElem = (await import("./BottomNavElem.jsx")).default;
-  //
-  //   navElements.forEach((elem) => {
-  //     const icon = elem.getAttribute("data-icon");
-  //     createRoot(elem).render(
-  //       <StrictMode>
-  //         <Providers>
-  //           <BottomNavElem icon={icon} />
-  //         </Providers>
-  //       </StrictMode>,
-  //     );
-  //   });
-  // }
 }
 
 async function addDynamicComments(allowlist, delegations, toast) {
