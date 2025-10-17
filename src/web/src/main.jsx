@@ -262,18 +262,22 @@ async function addDynamicComments(allowlist, delegations, toast) {
 
     sections.forEach((arrow) => {
       const storyIndex = arrow.getAttribute("data-story-index");
+      const storyTitle = arrow.getAttribute("data-story-title");
       const commentCount = parseInt(
         arrow.getAttribute("data-comment-count"),
         10,
       );
       const hasPreview = arrow.getAttribute("data-has-preview") === "true";
+      const alwaysShown = arrow.getAttribute("data-always-shown") === "true";
       createRoot(arrow).render(
         <StrictMode>
           <Providers>
             <CommentSection
               commentCount={commentCount}
               storyIndex={storyIndex}
+              storyTitle={storyTitle}
               hasPreview={hasPreview}
+              alwaysShown={alwaysShown}
               allowlist={allowlist}
               delegations={delegations}
               toast={toast}

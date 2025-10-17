@@ -11,7 +11,7 @@ import { eligible } from "@attestate/delegator2";
 import { useProvider, client, chains } from "./client.mjs";
 import CommentInput from "./CommentInput.jsx";
 import * as API from "./API.mjs";
-import { getLocalAccount, isIOS, isRunningPWA } from "./session.mjs";
+import { getLocalAccount, isIOS, isAndroid, isRunningPWA } from "./session.mjs";
 import { resolveAvatar } from "./Avatar.jsx";
 import { dynamicPrefetch } from "./main.jsx";
 import { getSlug } from "./CommentInput.jsx"; // Import getSlug from CommentInput
@@ -382,7 +382,7 @@ export const EmojiReaction = ({ comment, allowlist, delegations, toast }) => {
       )}
       
       {/* React button - larger touch target */}
-      {(!isOwnComment || localAccount) && !hasReacted && (
+      {!isOwnComment && !hasReacted && (
         <button
           onClick={() => setIsExpanded(!isExpanded)}
           disabled={false}
@@ -520,11 +520,14 @@ function NotificationOptIn(props) {
 
   // Don't render until we know the mini app status to avoid flash
   if (!identity || isMiniApp === null || isMiniApp === true) return null;
+
+  // Only show on desktop (hide on mobile)
+  if (isIOS() || isAndroid()) return null;
   return (
     <div
       style={{
         padding: "0.75rem",
-        marginBottom: "1rem",
+        marginBottom: "28px",
         backgroundColor: "var(--middle-beige)",
         border: "var(--border)",
         borderRadius: "2px",
@@ -639,7 +642,7 @@ const EmailNotificationLink = (props) => {
 };
 
 const Comment = React.forwardRef(
-  ({ comment, storyIndex, storyTitle, allowlist, delegations, toast }, ref) => {
+  ({ comment, storyIndex, storyTitle, allowlist, delegations, toast, isLastComment }, ref) => {
     const [isCollapsed, setIsCollapsed] = useState(false);
     const toggleCollapsed = (e) => {
       if (e.target.closest("a")) {
@@ -687,7 +690,7 @@ const Comment = React.forwardRef(
           padding: `0.75rem`,
           borderRadius: "2px",
           display: "block",
-          marginBottom: "12px",
+          marginBottom: isLastComment ? "28px" : "12px",
           whiteSpace: "pre-wrap",
           lineHeight: "1.2",
           wordBreak: "break-word",
@@ -733,7 +736,7 @@ const Comment = React.forwardRef(
                   marginTop: "-3px",
                   display: "inline-flex",
                   alignItems: "center",
-                  color: "black",
+                  color: "var(--contrast-color)",
                 }}
                 className="meta-link"
                 href={`/upvotes?address=${comment.identity.address}`}
@@ -846,15 +849,17 @@ const Comment = React.forwardRef(
 );
 
 const CommentsSection = (props) => {
-  const { storyIndex, commentCount, hasPreview } = props;
+  const { storyIndex, commentCount, hasPreview, alwaysShown, storyTitle: storyTitleProp } = props;
   const [comments, setComments] = useState([]);
   const [loaded, setLoaded] = useState(commentCount === 0);
-  const [shown, setShown] = useState(false);
+  const [shown, setShown] = useState(alwaysShown || false);
   const lastCommentRef = useRef(null);
   const [source, setSource] = useState(null);
-  const [storyTitle, setStoryTitle] = useState(null);
+  const [storyTitle, setStoryTitle] = useState(storyTitleProp || null);
 
   useEffect(() => {
+    if (alwaysShown) return; // Skip toggle logic for story page
+
     const toggle = (evt) => {
       const preview = document.querySelector(`.comment-preview-${storyIndex}`);
       const host = document.querySelector(`.comment-section[data-story-index="${storyIndex}"]`);
@@ -895,7 +900,7 @@ const CommentsSection = (props) => {
     window.addEventListener(`open-comments-${storyIndex}`, toggle);
     return () =>
       window.removeEventListener(`open-comments-${storyIndex}`, toggle);
-  }, [shown, storyIndex]);
+  }, [shown, storyIndex, alwaysShown]);
 
   useEffect(() => {
     (async () => {
@@ -903,10 +908,10 @@ const CommentsSection = (props) => {
 
       const story = await API.fetchStory(storyIndex, commentCount);
       if (story && story.comments) setComments(story.comments);
-      if (story && story.title) setStoryTitle(story.title);
+      if (story && story.title && !storyTitleProp) setStoryTitle(story.title);
       setLoaded(true);
     })();
-  }, [storyIndex, commentCount]);
+  }, [storyIndex, commentCount, storyTitleProp]);
 
   useEffect(() => {
     if (
@@ -968,6 +973,7 @@ const CommentsSection = (props) => {
       style={{
         marginLeft: "11px",
         marginRight: "11px",
+        marginTop: alwaysShown ? "-12px" : "0",
         marginBottom: "10px",
         backgroundColor: "transparent",
         padding: "0",
@@ -986,6 +992,7 @@ const CommentsSection = (props) => {
                   comment={comment}
                   storyIndex={storyIndex}
                   storyTitle={storyTitle}
+                  isLastComment={index === comments.length - 1}
                 />
               ))}
             <NotificationOptIn {...props} />

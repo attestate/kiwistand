@@ -256,7 +256,8 @@ export default async function (trie, theme, index, value, referral, commentIndex
   }
 
   const start = 0;
-  const style = "";
+  // Only add margin-bottom when curator section won't be shown
+  const style = upvoterProfiles.length === 0 ? "margin-bottom: 28px;" : "";
 
   // Generate appropriate preview URLs based on whether this is a comment or story
   let ogImage, frameImage, ogDescription, ogTitle;
@@ -401,7 +402,6 @@ export default async function (trie, theme, index, value, referral, commentIndex
                   false, // debugMode
                   true, // isAboveFold = true for main story
                 )({ ...story, index }, 0)}
-                <tr class="mobile-only-spacer" style="height: 20px;"><td></td></tr>
               </tbody>
               ${upvoterProfiles.length > 0
                 ? html`<tr>
@@ -674,7 +674,14 @@ export default async function (trie, theme, index, value, referral, commentIndex
                         </div>
                       </div>
                     </div>
-                    <nav-comment-input data-story-index="0x${index}" data-custom-style='{"margin": "0 11px 16px 11px"}'></nav-comment-input>
+                    <div
+                      class="comment-section story-page-comments"
+                      data-story-index="0x${index}"
+                      data-story-title="${value.title}"
+                      data-comment-count="0"
+                      data-always-shown="true"
+                      data-has-preview="false"
+                    ></div>
                   </div>
                 </td>
               </tr>
