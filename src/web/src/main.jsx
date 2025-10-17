@@ -1717,7 +1717,7 @@ async function start() {
   const bottomNav = document.querySelector(".bottom-nav");
   const isKiwiIOSApp = isIOSApp();
 
-  if (bottomNav && !isMiniApp && !isIOSApp() && isSafariOnIOS()) {
+  if (bottomNav && !isMiniApp && isSafariOnIOS()) {
     let lastScrollY = window.scrollY;
 
     window.addEventListener("scroll", () => {
