@@ -79,9 +79,9 @@ const appName = "Kiwi News";
 let client;
 
 if (isInIOSApp) {
-  // iOS app configuration - exclude Coinbase Wallet and browser wallet
+  // iOS app configuration - exclude Coinbase Wallet, browser wallet, and Porto
   const wallets = [
-    portoWallet,
+    // portoWallet excluded on iOS app
     // injectedWallet excluded on iOS app (browser wallet)
     walletConnectWallet,
     // coinbaseWallet excluded on iOS app (popup issues)
