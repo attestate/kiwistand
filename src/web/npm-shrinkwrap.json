@@ -18,7 +18,7 @@
         "@farcaster/frame-sdk": "0.1.8",
         "@farcaster/miniapp-wagmi-connector": "^1.0.0",
         "@mui/material": "6.2.1",
-        "@rainbow-me/rainbowkit": "^2.2.0",
+        "@rainbow-me/rainbowkit": "2.2.9",
         "@tanstack/react-query": "^5.62.0",
         "buffer": "6.0.3",
         "canonicalize": "2.1.0",
@@ -37,8 +37,8 @@
         "react-modal": "3.16.1",
         "slugify": "1.6.6",
         "use-local-storage-state": "18.3.3",
-        "viem": "^2.22.0",
-        "wagmi": "^2.15.0"
+        "viem": "2.38.3",
+        "wagmi": "2.18.1"
       },
       "devDependencies": {
         "@types/react": "^18.0.28",
@@ -2636,19 +2636,20 @@
       }
     },
     "node_modules/@metamask/sdk": {
-      "version": "0.32.0",
-      "resolved": "https://registry.npmjs.org/@metamask/sdk/-/sdk-0.32.0.tgz",
-      "integrity": "sha512-WmGAlP1oBuD9hk4CsdlG1WJFuPtYJY+dnTHJMeCyohTWD2GgkcLMUUuvu9lO1/NVzuOoSi1OrnjbuY1O/1NZ1g==",
+      "version": "0.33.1",
+      "resolved": "https://registry.npmjs.org/@metamask/sdk/-/sdk-0.33.1.tgz",
+      "integrity": "sha512-1mcOQVGr9rSrVcbKPNVzbZ8eCl1K0FATsYH3WJ/MH4WcZDWGECWrXJPNMZoEAkLxWiMe8jOQBumg2pmcDa9zpQ==",
       "dependencies": {
         "@babel/runtime": "^7.26.0",
         "@metamask/onboarding": "^1.0.1",
         "@metamask/providers": "16.1.0",
-        "@metamask/sdk-communication-layer": "0.32.0",
-        "@metamask/sdk-install-modal-web": "0.32.0",
+        "@metamask/sdk-analytics": "0.0.5",
+        "@metamask/sdk-communication-layer": "0.33.1",
+        "@metamask/sdk-install-modal-web": "0.32.1",
         "@paulmillr/qr": "^0.2.1",
         "bowser": "^2.9.0",
         "cross-fetch": "^4.0.0",
-        "debug": "^4.3.4",
+        "debug": "4.3.4",
         "eciesjs": "^0.4.11",
         "eth-rpc-errors": "^4.0.3",
         "eventemitter2": "^6.4.9",
@@ -2661,14 +2662,24 @@
         "uuid": "^8.3.2"
       }
     },
-    "node_modules/@metamask/sdk-communication-layer": {
-      "version": "0.32.0",
-      "resolved": "https://registry.npmjs.org/@metamask/sdk-communication-layer/-/sdk-communication-layer-0.32.0.tgz",
-      "integrity": "sha512-dmj/KFjMi1fsdZGIOtbhxdg3amxhKL/A5BqSU4uh/SyDKPub/OT+x5pX8bGjpTL1WPWY/Q0OIlvFyX3VWnT06Q==",
+    "node_modules/@metamask/sdk-analytics": {
+      "version": "0.0.5",
+      "resolved": "https://registry.npmjs.org/@metamask/sdk-analytics/-/sdk-analytics-0.0.5.tgz",
+      "integrity": "sha512-fDah+keS1RjSUlC8GmYXvx6Y26s3Ax1U9hGpWb6GSY5SAdmTSIqp2CvYy6yW0WgLhnYhW+6xERuD0eVqV63QIQ==",
+      "license": "MIT",
       "dependencies": {
+        "openapi-fetch": "^0.13.5"
+      }
+    },
+    "node_modules/@metamask/sdk-communication-layer": {
+      "version": "0.33.1",
+      "resolved": "https://registry.npmjs.org/@metamask/sdk-communication-layer/-/sdk-communication-layer-0.33.1.tgz",
+      "integrity": "sha512-0bI9hkysxcfbZ/lk0T2+aKVo1j0ynQVTuB3sJ5ssPWlz+Z3VwveCkP1O7EVu1tsVVCb0YV5WxK9zmURu2FIiaA==",
+      "dependencies": {
+        "@metamask/sdk-analytics": "0.0.5",
         "bufferutil": "^4.0.8",
         "date-fns": "^2.29.3",
-        "debug": "^4.3.4",
+        "debug": "4.3.4",
         "utf-8-validate": "^5.0.2",
         "uuid": "^8.3.2"
       },
@@ -2681,9 +2692,9 @@
       }
     },
     "node_modules/@metamask/sdk-install-modal-web": {
-      "version": "0.32.0",
-      "resolved": "https://registry.npmjs.org/@metamask/sdk-install-modal-web/-/sdk-install-modal-web-0.32.0.tgz",
-      "integrity": "sha512-TFoktj0JgfWnQaL3yFkApqNwcaqJ+dw4xcnrJueMP3aXkSNev2Ido+WVNOg4IIMxnmOrfAC9t0UJ0u/dC9MjOQ==",
+      "version": "0.32.1",
+      "resolved": "https://registry.npmjs.org/@metamask/sdk-install-modal-web/-/sdk-install-modal-web-0.32.1.tgz",
+      "integrity": "sha512-MGmAo6qSjf1tuYXhCu2EZLftq+DSt5Z7fsIKr2P+lDgdTPWgLfZB1tJKzNcwKKOdf6q9Qmmxn7lJuI/gq5LrKw==",
       "dependencies": {
         "@paulmillr/qr": "^0.2.1"
       }
@@ -2698,9 +2709,9 @@
       }
     },
     "node_modules/@metamask/utils": {
-      "version": "11.4.2",
-      "resolved": "https://registry.npmjs.org/@metamask/utils/-/utils-11.4.2.tgz",
-      "integrity": "sha512-TygCcGmUbhmpxjYMm+mx68kRiJ80jYV54/Aa8gUFBv4cTX7ulX2XZKr8CJoJAw3K3FN5ZvCRmU0IzWZFaonwhA==",
+      "version": "11.8.1",
+      "resolved": "https://registry.npmjs.org/@metamask/utils/-/utils-11.8.1.tgz",
+      "integrity": "sha512-DIbsNUyqWLFgqJlZxi1OOCMYvI23GqFCvNJAtzv8/WXWzJfnJnvp1M24j7VvUe3URBi3S86UgQ7+7aWU9p/cnQ==",
       "license": "ISC",
       "dependencies": {
         "@ethereumjs/tx": "^4.2.0",
@@ -2708,8 +2719,9 @@
         "@noble/hashes": "^1.3.1",
         "@scure/base": "^1.1.3",
         "@types/debug": "^4.1.7",
+        "@types/lodash": "^4.17.20",
         "debug": "^4.3.4",
-        "lodash.memoize": "^4.1.2",
+        "lodash": "^4.17.21",
         "pony-cause": "^2.1.10",
         "semver": "^7.5.4",
         "uuid": "^9.0.1"
@@ -2986,16 +2998,16 @@
       }
     },
     "node_modules/@rainbow-me/rainbowkit": {
-      "version": "2.2.8",
-      "resolved": "https://registry.npmjs.org/@rainbow-me/rainbowkit/-/rainbowkit-2.2.8.tgz",
-      "integrity": "sha512-EdNIK2cdAT6GJ9G11wx7nCVfjqBfxh7dx/1DhPYrB+yg+VFrII6cM1PiMFVC9evD4mqVHe9mmLAt3nvlwDdiPQ==",
+      "version": "2.2.9",
+      "resolved": "https://registry.npmjs.org/@rainbow-me/rainbowkit/-/rainbowkit-2.2.9.tgz",
+      "integrity": "sha512-zXAeqkqpznpj9yEs1bTbpZbq0pVYKdJUnqqK/nI8xyYFDWchIOyBoEb/4+goT5RaHfGbDe9dp6pIEu/KelKE6A==",
       "license": "MIT",
       "dependencies": {
         "@vanilla-extract/css": "1.17.3",
         "@vanilla-extract/dynamic": "2.1.4",
         "@vanilla-extract/sprinkles": "1.6.4",
         "clsx": "2.1.1",
-        "cuer": "0.0.2",
+        "cuer": "0.0.3",
         "react-remove-scroll": "2.6.2",
         "ua-parser-js": "^1.0.37"
       },
@@ -3135,6 +3147,25 @@
       },
       "engines": {
         "node": ">=18"
+      }
+    },
+    "node_modules/@reown/appkit-controllers/node_modules/@walletconnect/keyvaluestorage": {
+      "version": "1.1.1",
+      "resolved": "https://registry.npmjs.org/@walletconnect/keyvaluestorage/-/keyvaluestorage-1.1.1.tgz",
+      "integrity": "sha512-V7ZQq2+mSxAq7MrRqDxanTzu2RcElfK1PfNYiaVnJgJ7Q7G7hTVwF8voIBx92qsRyGHZihrwNPHuZd1aKkd0rA==",
+      "license": "MIT",
+      "dependencies": {
+        "@walletconnect/safe-json": "^1.0.1",
+        "idb-keyval": "^6.2.1",
+        "unstorage": "^1.9.0"
+      },
+      "peerDependencies": {
+        "@react-native-async-storage/async-storage": "1.x"
+      },
+      "peerDependenciesMeta": {
+        "@react-native-async-storage/async-storage": {
+          "optional": true
+        }
       }
     },
     "node_modules/@reown/appkit-controllers/node_modules/@walletconnect/sign-client": {
@@ -3298,6 +3329,102 @@
       },
       "peerDependenciesMeta": {
         "typescript": {
+          "optional": true
+        }
+      }
+    },
+    "node_modules/@reown/appkit-controllers/node_modules/unstorage": {
+      "version": "1.17.1",
+      "resolved": "https://registry.npmjs.org/unstorage/-/unstorage-1.17.1.tgz",
+      "integrity": "sha512-KKGwRTT0iVBCErKemkJCLs7JdxNVfqTPc/85ae1XES0+bsHbc/sFBfVi5kJp156cc51BHinIH2l3k0EZ24vOBQ==",
+      "license": "MIT",
+      "dependencies": {
+        "anymatch": "^3.1.3",
+        "chokidar": "^4.0.3",
+        "destr": "^2.0.5",
+        "h3": "^1.15.4",
+        "lru-cache": "^10.4.3",
+        "node-fetch-native": "^1.6.7",
+        "ofetch": "^1.4.1",
+        "ufo": "^1.6.1"
+      },
+      "peerDependencies": {
+        "@azure/app-configuration": "^1.8.0",
+        "@azure/cosmos": "^4.2.0",
+        "@azure/data-tables": "^13.3.0",
+        "@azure/identity": "^4.6.0",
+        "@azure/keyvault-secrets": "^4.9.0",
+        "@azure/storage-blob": "^12.26.0",
+        "@capacitor/preferences": "^6.0.3 || ^7.0.0",
+        "@deno/kv": ">=0.9.0",
+        "@netlify/blobs": "^6.5.0 || ^7.0.0 || ^8.1.0 || ^9.0.0 || ^10.0.0",
+        "@planetscale/database": "^1.19.0",
+        "@upstash/redis": "^1.34.3",
+        "@vercel/blob": ">=0.27.1",
+        "@vercel/functions": "^2.2.12 || ^3.0.0",
+        "@vercel/kv": "^1.0.1",
+        "aws4fetch": "^1.0.20",
+        "db0": ">=0.2.1",
+        "idb-keyval": "^6.2.1",
+        "ioredis": "^5.4.2",
+        "uploadthing": "^7.4.4"
+      },
+      "peerDependenciesMeta": {
+        "@azure/app-configuration": {
+          "optional": true
+        },
+        "@azure/cosmos": {
+          "optional": true
+        },
+        "@azure/data-tables": {
+          "optional": true
+        },
+        "@azure/identity": {
+          "optional": true
+        },
+        "@azure/keyvault-secrets": {
+          "optional": true
+        },
+        "@azure/storage-blob": {
+          "optional": true
+        },
+        "@capacitor/preferences": {
+          "optional": true
+        },
+        "@deno/kv": {
+          "optional": true
+        },
+        "@netlify/blobs": {
+          "optional": true
+        },
+        "@planetscale/database": {
+          "optional": true
+        },
+        "@upstash/redis": {
+          "optional": true
+        },
+        "@vercel/blob": {
+          "optional": true
+        },
+        "@vercel/functions": {
+          "optional": true
+        },
+        "@vercel/kv": {
+          "optional": true
+        },
+        "aws4fetch": {
+          "optional": true
+        },
+        "db0": {
+          "optional": true
+        },
+        "idb-keyval": {
+          "optional": true
+        },
+        "ioredis": {
+          "optional": true
+        },
+        "uploadthing": {
           "optional": true
         }
       }
@@ -3474,6 +3601,25 @@
         "node": ">=18"
       }
     },
+    "node_modules/@reown/appkit-utils/node_modules/@walletconnect/keyvaluestorage": {
+      "version": "1.1.1",
+      "resolved": "https://registry.npmjs.org/@walletconnect/keyvaluestorage/-/keyvaluestorage-1.1.1.tgz",
+      "integrity": "sha512-V7ZQq2+mSxAq7MrRqDxanTzu2RcElfK1PfNYiaVnJgJ7Q7G7hTVwF8voIBx92qsRyGHZihrwNPHuZd1aKkd0rA==",
+      "license": "MIT",
+      "dependencies": {
+        "@walletconnect/safe-json": "^1.0.1",
+        "idb-keyval": "^6.2.1",
+        "unstorage": "^1.9.0"
+      },
+      "peerDependencies": {
+        "@react-native-async-storage/async-storage": "1.x"
+      },
+      "peerDependenciesMeta": {
+        "@react-native-async-storage/async-storage": {
+          "optional": true
+        }
+      }
+    },
     "node_modules/@reown/appkit-utils/node_modules/@walletconnect/sign-client": {
       "version": "2.21.0",
       "resolved": "https://registry.npmjs.org/@walletconnect/sign-client/-/sign-client-2.21.0.tgz",
@@ -3639,6 +3785,102 @@
         }
       }
     },
+    "node_modules/@reown/appkit-utils/node_modules/unstorage": {
+      "version": "1.17.1",
+      "resolved": "https://registry.npmjs.org/unstorage/-/unstorage-1.17.1.tgz",
+      "integrity": "sha512-KKGwRTT0iVBCErKemkJCLs7JdxNVfqTPc/85ae1XES0+bsHbc/sFBfVi5kJp156cc51BHinIH2l3k0EZ24vOBQ==",
+      "license": "MIT",
+      "dependencies": {
+        "anymatch": "^3.1.3",
+        "chokidar": "^4.0.3",
+        "destr": "^2.0.5",
+        "h3": "^1.15.4",
+        "lru-cache": "^10.4.3",
+        "node-fetch-native": "^1.6.7",
+        "ofetch": "^1.4.1",
+        "ufo": "^1.6.1"
+      },
+      "peerDependencies": {
+        "@azure/app-configuration": "^1.8.0",
+        "@azure/cosmos": "^4.2.0",
+        "@azure/data-tables": "^13.3.0",
+        "@azure/identity": "^4.6.0",
+        "@azure/keyvault-secrets": "^4.9.0",
+        "@azure/storage-blob": "^12.26.0",
+        "@capacitor/preferences": "^6.0.3 || ^7.0.0",
+        "@deno/kv": ">=0.9.0",
+        "@netlify/blobs": "^6.5.0 || ^7.0.0 || ^8.1.0 || ^9.0.0 || ^10.0.0",
+        "@planetscale/database": "^1.19.0",
+        "@upstash/redis": "^1.34.3",
+        "@vercel/blob": ">=0.27.1",
+        "@vercel/functions": "^2.2.12 || ^3.0.0",
+        "@vercel/kv": "^1.0.1",
+        "aws4fetch": "^1.0.20",
+        "db0": ">=0.2.1",
+        "idb-keyval": "^6.2.1",
+        "ioredis": "^5.4.2",
+        "uploadthing": "^7.4.4"
+      },
+      "peerDependenciesMeta": {
+        "@azure/app-configuration": {
+          "optional": true
+        },
+        "@azure/cosmos": {
+          "optional": true
+        },
+        "@azure/data-tables": {
+          "optional": true
+        },
+        "@azure/identity": {
+          "optional": true
+        },
+        "@azure/keyvault-secrets": {
+          "optional": true
+        },
+        "@azure/storage-blob": {
+          "optional": true
+        },
+        "@capacitor/preferences": {
+          "optional": true
+        },
+        "@deno/kv": {
+          "optional": true
+        },
+        "@netlify/blobs": {
+          "optional": true
+        },
+        "@planetscale/database": {
+          "optional": true
+        },
+        "@upstash/redis": {
+          "optional": true
+        },
+        "@vercel/blob": {
+          "optional": true
+        },
+        "@vercel/functions": {
+          "optional": true
+        },
+        "@vercel/kv": {
+          "optional": true
+        },
+        "aws4fetch": {
+          "optional": true
+        },
+        "db0": {
+          "optional": true
+        },
+        "idb-keyval": {
+          "optional": true
+        },
+        "ioredis": {
+          "optional": true
+        },
+        "uploadthing": {
+          "optional": true
+        }
+      }
+    },
     "node_modules/@reown/appkit-utils/node_modules/ws": {
       "version": "8.18.0",
       "resolved": "https://registry.npmjs.org/ws/-/ws-8.18.0.tgz",
@@ -3761,6 +4003,25 @@
       },
       "engines": {
         "node": ">=18"
+      }
+    },
+    "node_modules/@reown/appkit/node_modules/@walletconnect/keyvaluestorage": {
+      "version": "1.1.1",
+      "resolved": "https://registry.npmjs.org/@walletconnect/keyvaluestorage/-/keyvaluestorage-1.1.1.tgz",
+      "integrity": "sha512-V7ZQq2+mSxAq7MrRqDxanTzu2RcElfK1PfNYiaVnJgJ7Q7G7hTVwF8voIBx92qsRyGHZihrwNPHuZd1aKkd0rA==",
+      "license": "MIT",
+      "dependencies": {
+        "@walletconnect/safe-json": "^1.0.1",
+        "idb-keyval": "^6.2.1",
+        "unstorage": "^1.9.0"
+      },
+      "peerDependencies": {
+        "@react-native-async-storage/async-storage": "1.x"
+      },
+      "peerDependenciesMeta": {
+        "@react-native-async-storage/async-storage": {
+          "optional": true
+        }
       }
     },
     "node_modules/@reown/appkit/node_modules/@walletconnect/sign-client": {
@@ -3924,6 +4185,102 @@
       },
       "peerDependenciesMeta": {
         "typescript": {
+          "optional": true
+        }
+      }
+    },
+    "node_modules/@reown/appkit/node_modules/unstorage": {
+      "version": "1.17.1",
+      "resolved": "https://registry.npmjs.org/unstorage/-/unstorage-1.17.1.tgz",
+      "integrity": "sha512-KKGwRTT0iVBCErKemkJCLs7JdxNVfqTPc/85ae1XES0+bsHbc/sFBfVi5kJp156cc51BHinIH2l3k0EZ24vOBQ==",
+      "license": "MIT",
+      "dependencies": {
+        "anymatch": "^3.1.3",
+        "chokidar": "^4.0.3",
+        "destr": "^2.0.5",
+        "h3": "^1.15.4",
+        "lru-cache": "^10.4.3",
+        "node-fetch-native": "^1.6.7",
+        "ofetch": "^1.4.1",
+        "ufo": "^1.6.1"
+      },
+      "peerDependencies": {
+        "@azure/app-configuration": "^1.8.0",
+        "@azure/cosmos": "^4.2.0",
+        "@azure/data-tables": "^13.3.0",
+        "@azure/identity": "^4.6.0",
+        "@azure/keyvault-secrets": "^4.9.0",
+        "@azure/storage-blob": "^12.26.0",
+        "@capacitor/preferences": "^6.0.3 || ^7.0.0",
+        "@deno/kv": ">=0.9.0",
+        "@netlify/blobs": "^6.5.0 || ^7.0.0 || ^8.1.0 || ^9.0.0 || ^10.0.0",
+        "@planetscale/database": "^1.19.0",
+        "@upstash/redis": "^1.34.3",
+        "@vercel/blob": ">=0.27.1",
+        "@vercel/functions": "^2.2.12 || ^3.0.0",
+        "@vercel/kv": "^1.0.1",
+        "aws4fetch": "^1.0.20",
+        "db0": ">=0.2.1",
+        "idb-keyval": "^6.2.1",
+        "ioredis": "^5.4.2",
+        "uploadthing": "^7.4.4"
+      },
+      "peerDependenciesMeta": {
+        "@azure/app-configuration": {
+          "optional": true
+        },
+        "@azure/cosmos": {
+          "optional": true
+        },
+        "@azure/data-tables": {
+          "optional": true
+        },
+        "@azure/identity": {
+          "optional": true
+        },
+        "@azure/keyvault-secrets": {
+          "optional": true
+        },
+        "@azure/storage-blob": {
+          "optional": true
+        },
+        "@capacitor/preferences": {
+          "optional": true
+        },
+        "@deno/kv": {
+          "optional": true
+        },
+        "@netlify/blobs": {
+          "optional": true
+        },
+        "@planetscale/database": {
+          "optional": true
+        },
+        "@upstash/redis": {
+          "optional": true
+        },
+        "@vercel/blob": {
+          "optional": true
+        },
+        "@vercel/functions": {
+          "optional": true
+        },
+        "@vercel/kv": {
+          "optional": true
+        },
+        "aws4fetch": {
+          "optional": true
+        },
+        "db0": {
+          "optional": true
+        },
+        "idb-keyval": {
+          "optional": true
+        },
+        "ioredis": {
+          "optional": true
+        },
+        "uploadthing": {
           "optional": true
         }
       }
@@ -4704,6 +5061,12 @@
       "dev": true,
       "license": "MIT"
     },
+    "node_modules/@types/lodash": {
+      "version": "4.17.20",
+      "resolved": "https://registry.npmjs.org/@types/lodash/-/lodash-4.17.20.tgz",
+      "integrity": "sha512-H3MHACvFUEiujabxhaI/ImO6gUrd8oOurg7LQtS7mbwIXA/cUqWrvBsaeJ23aZEPk1TAYkurjfMbSELfoCXlGA==",
+      "license": "MIT"
+    },
     "node_modules/@types/ms": {
       "version": "2.1.0",
       "resolved": "https://registry.npmjs.org/@types/ms/-/ms-2.1.0.tgz",
@@ -4835,25 +5198,26 @@
       }
     },
     "node_modules/@wagmi/connectors": {
-      "version": "5.9.4",
-      "resolved": "https://registry.npmjs.org/@wagmi/connectors/-/connectors-5.9.4.tgz",
-      "integrity": "sha512-k/GSdYS6nuL0zLq5H7XasPmKr3Gnvplq+yQhTfRBu/o5Bh+B3aH3Jfq1lUh+t3z5kQcyKJIXw/bZIZ7lVS7UhA==",
+      "version": "6.0.1",
+      "resolved": "https://registry.npmjs.org/@wagmi/connectors/-/connectors-6.0.1.tgz",
+      "integrity": "sha512-ZHvC9GIncOViz6Fi+oCc+8oin+U+GfCKNLj90aNxve8CLw++vQBEcivPIq1mQq2QNo6lay7yjNyGInPoOEIkSg==",
       "license": "MIT",
       "dependencies": {
         "@base-org/account": "1.1.1",
         "@coinbase/wallet-sdk": "4.3.6",
         "@gemini-wallet/core": "0.2.0",
-        "@metamask/sdk": "0.32.0",
+        "@metamask/sdk": "0.33.1",
         "@safe-global/safe-apps-provider": "0.18.6",
         "@safe-global/safe-apps-sdk": "9.1.0",
         "@walletconnect/ethereum-provider": "2.21.1",
-        "cbw-sdk": "npm:@coinbase/wallet-sdk@3.9.3"
+        "cbw-sdk": "npm:@coinbase/wallet-sdk@3.9.3",
+        "porto": "0.2.19"
       },
       "funding": {
         "url": "https://github.com/sponsors/wevm"
       },
       "peerDependencies": {
-        "@wagmi/core": "2.19.0",
+        "@wagmi/core": "2.22.1",
         "typescript": ">=5.0.4",
         "viem": "2.x"
       },
@@ -4863,10 +5227,136 @@
         }
       }
     },
+    "node_modules/@wagmi/connectors/node_modules/@noble/ciphers": {
+      "version": "1.3.0",
+      "resolved": "https://registry.npmjs.org/@noble/ciphers/-/ciphers-1.3.0.tgz",
+      "integrity": "sha512-2I0gnIVPtfnMw9ee9h1dJG7tp81+8Ob3OJb3Mv37rx5L40/b0i7djjCVvGOVqc9AEIQyvyu1i6ypKdFw8R8gQw==",
+      "license": "MIT",
+      "engines": {
+        "node": "^14.21.3 || >=16"
+      },
+      "funding": {
+        "url": "https://paulmillr.com/funding/"
+      }
+    },
+    "node_modules/@wagmi/connectors/node_modules/@noble/curves": {
+      "version": "1.9.1",
+      "resolved": "https://registry.npmjs.org/@noble/curves/-/curves-1.9.1.tgz",
+      "integrity": "sha512-k11yZxZg+t+gWvBbIswW0yoJlu8cHOC7dhunwOzoWH/mXGBiYyR4YY6hAEK/3EUs4UpB8la1RfdRpeGsFHkWsA==",
+      "license": "MIT",
+      "dependencies": {
+        "@noble/hashes": "1.8.0"
+      },
+      "engines": {
+        "node": "^14.21.3 || >=16"
+      },
+      "funding": {
+        "url": "https://paulmillr.com/funding/"
+      }
+    },
+    "node_modules/@wagmi/connectors/node_modules/abitype": {
+      "version": "1.1.1",
+      "resolved": "https://registry.npmjs.org/abitype/-/abitype-1.1.1.tgz",
+      "integrity": "sha512-Loe5/6tAgsBukY95eGaPSDmQHIjRZYQq8PB1MpsNccDIK8WiV+Uw6WzaIXipvaxTEL2yEB0OpEaQv3gs8pkS9Q==",
+      "license": "MIT",
+      "funding": {
+        "url": "https://github.com/sponsors/wevm"
+      },
+      "peerDependencies": {
+        "typescript": ">=5.0.4",
+        "zod": "^3.22.0 || ^4.0.0"
+      },
+      "peerDependenciesMeta": {
+        "typescript": {
+          "optional": true
+        },
+        "zod": {
+          "optional": true
+        }
+      }
+    },
+    "node_modules/@wagmi/connectors/node_modules/ox": {
+      "version": "0.9.12",
+      "resolved": "https://registry.npmjs.org/ox/-/ox-0.9.12.tgz",
+      "integrity": "sha512-esyA5WXfFhlxpgzoVIEreRaasqqv95sjFpk3L4Me4RWk8bgBDe+J4wO3RZ5ikYmJ2Bbjyv+jKgxyaOzX6JpHPA==",
+      "funding": [
+        {
+          "type": "github",
+          "url": "https://github.com/sponsors/wevm"
+        }
+      ],
+      "license": "MIT",
+      "dependencies": {
+        "@adraffy/ens-normalize": "^1.11.0",
+        "@noble/ciphers": "^1.3.0",
+        "@noble/curves": "1.9.1",
+        "@noble/hashes": "^1.8.0",
+        "@scure/bip32": "^1.7.0",
+        "@scure/bip39": "^1.6.0",
+        "abitype": "^1.0.9",
+        "eventemitter3": "5.0.1"
+      },
+      "peerDependencies": {
+        "typescript": ">=5.4.0"
+      },
+      "peerDependenciesMeta": {
+        "typescript": {
+          "optional": true
+        }
+      }
+    },
+    "node_modules/@wagmi/connectors/node_modules/porto": {
+      "version": "0.2.19",
+      "resolved": "https://registry.npmjs.org/porto/-/porto-0.2.19.tgz",
+      "integrity": "sha512-q1vEJgdtlEOf6byWgD31GHiMwpfLuxFSfx9f7Sw4RGdvpQs2ANBGfnzzardADZegr87ZXsebSp+3vaaznEUzPQ==",
+      "license": "MIT",
+      "dependencies": {
+        "hono": "^4.9.6",
+        "idb-keyval": "^6.2.1",
+        "mipd": "^0.0.7",
+        "ox": "^0.9.6",
+        "zod": "^4.1.5",
+        "zustand": "^5.0.1"
+      },
+      "bin": {
+        "porto": "_dist/cli/bin/index.js"
+      },
+      "peerDependencies": {
+        "@tanstack/react-query": ">=5.59.0",
+        "@wagmi/core": ">=2.16.3",
+        "react": ">=18",
+        "typescript": ">=5.4.0",
+        "viem": ">=2.37.0",
+        "wagmi": ">=2.0.0"
+      },
+      "peerDependenciesMeta": {
+        "@tanstack/react-query": {
+          "optional": true
+        },
+        "react": {
+          "optional": true
+        },
+        "typescript": {
+          "optional": true
+        },
+        "wagmi": {
+          "optional": true
+        }
+      }
+    },
+    "node_modules/@wagmi/connectors/node_modules/zod": {
+      "version": "4.1.12",
+      "resolved": "https://registry.npmjs.org/zod/-/zod-4.1.12.tgz",
+      "integrity": "sha512-JInaHOamG8pt5+Ey8kGmdcAcg3OL9reK8ltczgHTAwNhMys/6ThXHityHxVV2p3fkw/c+MAvBHFVYHFZDmjMCQ==",
+      "license": "MIT",
+      "funding": {
+        "url": "https://github.com/sponsors/colinhacks"
+      }
+    },
     "node_modules/@wagmi/core": {
-      "version": "2.19.0",
-      "resolved": "https://registry.npmjs.org/@wagmi/core/-/core-2.19.0.tgz",
-      "integrity": "sha512-lI57q6refAtNU6xnk/oyOpbEtEiwQ6g4rR+C9FEx8Gn2hZlfoyyksndrl6hIKlMBK+UkkKso3VwR5DI65j/5XQ==",
+      "version": "2.22.1",
+      "resolved": "https://registry.npmjs.org/@wagmi/core/-/core-2.22.1.tgz",
+      "integrity": "sha512-cG/xwQWsBEcKgRTkQVhH29cbpbs/TdcUJVFXCyri3ZknxhMyGv0YEjTcrNpRgt2SaswL1KrvslSNYKKo+5YEAg==",
       "license": "MIT",
       "dependencies": {
         "eventemitter3": "5.0.1",
@@ -4947,6 +5437,121 @@
         "node": ">=18"
       }
     },
+    "node_modules/@walletconnect/core/node_modules/@walletconnect/keyvaluestorage": {
+      "version": "1.1.1",
+      "resolved": "https://registry.npmjs.org/@walletconnect/keyvaluestorage/-/keyvaluestorage-1.1.1.tgz",
+      "integrity": "sha512-V7ZQq2+mSxAq7MrRqDxanTzu2RcElfK1PfNYiaVnJgJ7Q7G7hTVwF8voIBx92qsRyGHZihrwNPHuZd1aKkd0rA==",
+      "license": "MIT",
+      "dependencies": {
+        "@walletconnect/safe-json": "^1.0.1",
+        "idb-keyval": "^6.2.1",
+        "unstorage": "^1.9.0"
+      },
+      "peerDependencies": {
+        "@react-native-async-storage/async-storage": "1.x"
+      },
+      "peerDependenciesMeta": {
+        "@react-native-async-storage/async-storage": {
+          "optional": true
+        }
+      }
+    },
+    "node_modules/@walletconnect/core/node_modules/unstorage": {
+      "version": "1.17.1",
+      "resolved": "https://registry.npmjs.org/unstorage/-/unstorage-1.17.1.tgz",
+      "integrity": "sha512-KKGwRTT0iVBCErKemkJCLs7JdxNVfqTPc/85ae1XES0+bsHbc/sFBfVi5kJp156cc51BHinIH2l3k0EZ24vOBQ==",
+      "license": "MIT",
+      "dependencies": {
+        "anymatch": "^3.1.3",
+        "chokidar": "^4.0.3",
+        "destr": "^2.0.5",
+        "h3": "^1.15.4",
+        "lru-cache": "^10.4.3",
+        "node-fetch-native": "^1.6.7",
+        "ofetch": "^1.4.1",
+        "ufo": "^1.6.1"
+      },
+      "peerDependencies": {
+        "@azure/app-configuration": "^1.8.0",
+        "@azure/cosmos": "^4.2.0",
+        "@azure/data-tables": "^13.3.0",
+        "@azure/identity": "^4.6.0",
+        "@azure/keyvault-secrets": "^4.9.0",
+        "@azure/storage-blob": "^12.26.0",
+        "@capacitor/preferences": "^6.0.3 || ^7.0.0",
+        "@deno/kv": ">=0.9.0",
+        "@netlify/blobs": "^6.5.0 || ^7.0.0 || ^8.1.0 || ^9.0.0 || ^10.0.0",
+        "@planetscale/database": "^1.19.0",
+        "@upstash/redis": "^1.34.3",
+        "@vercel/blob": ">=0.27.1",
+        "@vercel/functions": "^2.2.12 || ^3.0.0",
+        "@vercel/kv": "^1.0.1",
+        "aws4fetch": "^1.0.20",
+        "db0": ">=0.2.1",
+        "idb-keyval": "^6.2.1",
+        "ioredis": "^5.4.2",
+        "uploadthing": "^7.4.4"
+      },
+      "peerDependenciesMeta": {
+        "@azure/app-configuration": {
+          "optional": true
+        },
+        "@azure/cosmos": {
+          "optional": true
+        },
+        "@azure/data-tables": {
+          "optional": true
+        },
+        "@azure/identity": {
+          "optional": true
+        },
+        "@azure/keyvault-secrets": {
+          "optional": true
+        },
+        "@azure/storage-blob": {
+          "optional": true
+        },
+        "@capacitor/preferences": {
+          "optional": true
+        },
+        "@deno/kv": {
+          "optional": true
+        },
+        "@netlify/blobs": {
+          "optional": true
+        },
+        "@planetscale/database": {
+          "optional": true
+        },
+        "@upstash/redis": {
+          "optional": true
+        },
+        "@vercel/blob": {
+          "optional": true
+        },
+        "@vercel/functions": {
+          "optional": true
+        },
+        "@vercel/kv": {
+          "optional": true
+        },
+        "aws4fetch": {
+          "optional": true
+        },
+        "db0": {
+          "optional": true
+        },
+        "idb-keyval": {
+          "optional": true
+        },
+        "ioredis": {
+          "optional": true
+        },
+        "uploadthing": {
+          "optional": true
+        }
+      }
+    },
     "node_modules/@walletconnect/environment": {
       "version": "1.0.1",
       "resolved": "https://registry.npmjs.org/@walletconnect/environment/-/environment-1.0.1.tgz",
@@ -4979,6 +5584,121 @@
         "@walletconnect/universal-provider": "2.21.1",
         "@walletconnect/utils": "2.21.1",
         "events": "3.3.0"
+      }
+    },
+    "node_modules/@walletconnect/ethereum-provider/node_modules/@walletconnect/keyvaluestorage": {
+      "version": "1.1.1",
+      "resolved": "https://registry.npmjs.org/@walletconnect/keyvaluestorage/-/keyvaluestorage-1.1.1.tgz",
+      "integrity": "sha512-V7ZQq2+mSxAq7MrRqDxanTzu2RcElfK1PfNYiaVnJgJ7Q7G7hTVwF8voIBx92qsRyGHZihrwNPHuZd1aKkd0rA==",
+      "license": "MIT",
+      "dependencies": {
+        "@walletconnect/safe-json": "^1.0.1",
+        "idb-keyval": "^6.2.1",
+        "unstorage": "^1.9.0"
+      },
+      "peerDependencies": {
+        "@react-native-async-storage/async-storage": "1.x"
+      },
+      "peerDependenciesMeta": {
+        "@react-native-async-storage/async-storage": {
+          "optional": true
+        }
+      }
+    },
+    "node_modules/@walletconnect/ethereum-provider/node_modules/unstorage": {
+      "version": "1.17.1",
+      "resolved": "https://registry.npmjs.org/unstorage/-/unstorage-1.17.1.tgz",
+      "integrity": "sha512-KKGwRTT0iVBCErKemkJCLs7JdxNVfqTPc/85ae1XES0+bsHbc/sFBfVi5kJp156cc51BHinIH2l3k0EZ24vOBQ==",
+      "license": "MIT",
+      "dependencies": {
+        "anymatch": "^3.1.3",
+        "chokidar": "^4.0.3",
+        "destr": "^2.0.5",
+        "h3": "^1.15.4",
+        "lru-cache": "^10.4.3",
+        "node-fetch-native": "^1.6.7",
+        "ofetch": "^1.4.1",
+        "ufo": "^1.6.1"
+      },
+      "peerDependencies": {
+        "@azure/app-configuration": "^1.8.0",
+        "@azure/cosmos": "^4.2.0",
+        "@azure/data-tables": "^13.3.0",
+        "@azure/identity": "^4.6.0",
+        "@azure/keyvault-secrets": "^4.9.0",
+        "@azure/storage-blob": "^12.26.0",
+        "@capacitor/preferences": "^6.0.3 || ^7.0.0",
+        "@deno/kv": ">=0.9.0",
+        "@netlify/blobs": "^6.5.0 || ^7.0.0 || ^8.1.0 || ^9.0.0 || ^10.0.0",
+        "@planetscale/database": "^1.19.0",
+        "@upstash/redis": "^1.34.3",
+        "@vercel/blob": ">=0.27.1",
+        "@vercel/functions": "^2.2.12 || ^3.0.0",
+        "@vercel/kv": "^1.0.1",
+        "aws4fetch": "^1.0.20",
+        "db0": ">=0.2.1",
+        "idb-keyval": "^6.2.1",
+        "ioredis": "^5.4.2",
+        "uploadthing": "^7.4.4"
+      },
+      "peerDependenciesMeta": {
+        "@azure/app-configuration": {
+          "optional": true
+        },
+        "@azure/cosmos": {
+          "optional": true
+        },
+        "@azure/data-tables": {
+          "optional": true
+        },
+        "@azure/identity": {
+          "optional": true
+        },
+        "@azure/keyvault-secrets": {
+          "optional": true
+        },
+        "@azure/storage-blob": {
+          "optional": true
+        },
+        "@capacitor/preferences": {
+          "optional": true
+        },
+        "@deno/kv": {
+          "optional": true
+        },
+        "@netlify/blobs": {
+          "optional": true
+        },
+        "@planetscale/database": {
+          "optional": true
+        },
+        "@upstash/redis": {
+          "optional": true
+        },
+        "@vercel/blob": {
+          "optional": true
+        },
+        "@vercel/functions": {
+          "optional": true
+        },
+        "@vercel/kv": {
+          "optional": true
+        },
+        "aws4fetch": {
+          "optional": true
+        },
+        "db0": {
+          "optional": true
+        },
+        "idb-keyval": {
+          "optional": true
+        },
+        "ioredis": {
+          "optional": true
+        },
+        "uploadthing": {
+          "optional": true
+        }
       }
     },
     "node_modules/@walletconnect/events": {
@@ -5096,25 +5816,6 @@
           "optional": true
         },
         "utf-8-validate": {
-          "optional": true
-        }
-      }
-    },
-    "node_modules/@walletconnect/keyvaluestorage": {
-      "version": "1.1.1",
-      "resolved": "https://registry.npmjs.org/@walletconnect/keyvaluestorage/-/keyvaluestorage-1.1.1.tgz",
-      "integrity": "sha512-V7ZQq2+mSxAq7MrRqDxanTzu2RcElfK1PfNYiaVnJgJ7Q7G7hTVwF8voIBx92qsRyGHZihrwNPHuZd1aKkd0rA==",
-      "license": "MIT",
-      "dependencies": {
-        "@walletconnect/safe-json": "^1.0.1",
-        "idb-keyval": "^6.2.1",
-        "unstorage": "^1.9.0"
-      },
-      "peerDependencies": {
-        "@react-native-async-storage/async-storage": "1.x"
-      },
-      "peerDependenciesMeta": {
-        "@react-native-async-storage/async-storage": {
           "optional": true
         }
       }
@@ -5239,6 +5940,121 @@
         "events": "3.3.0"
       }
     },
+    "node_modules/@walletconnect/types/node_modules/@walletconnect/keyvaluestorage": {
+      "version": "1.1.1",
+      "resolved": "https://registry.npmjs.org/@walletconnect/keyvaluestorage/-/keyvaluestorage-1.1.1.tgz",
+      "integrity": "sha512-V7ZQq2+mSxAq7MrRqDxanTzu2RcElfK1PfNYiaVnJgJ7Q7G7hTVwF8voIBx92qsRyGHZihrwNPHuZd1aKkd0rA==",
+      "license": "MIT",
+      "dependencies": {
+        "@walletconnect/safe-json": "^1.0.1",
+        "idb-keyval": "^6.2.1",
+        "unstorage": "^1.9.0"
+      },
+      "peerDependencies": {
+        "@react-native-async-storage/async-storage": "1.x"
+      },
+      "peerDependenciesMeta": {
+        "@react-native-async-storage/async-storage": {
+          "optional": true
+        }
+      }
+    },
+    "node_modules/@walletconnect/types/node_modules/unstorage": {
+      "version": "1.17.1",
+      "resolved": "https://registry.npmjs.org/unstorage/-/unstorage-1.17.1.tgz",
+      "integrity": "sha512-KKGwRTT0iVBCErKemkJCLs7JdxNVfqTPc/85ae1XES0+bsHbc/sFBfVi5kJp156cc51BHinIH2l3k0EZ24vOBQ==",
+      "license": "MIT",
+      "dependencies": {
+        "anymatch": "^3.1.3",
+        "chokidar": "^4.0.3",
+        "destr": "^2.0.5",
+        "h3": "^1.15.4",
+        "lru-cache": "^10.4.3",
+        "node-fetch-native": "^1.6.7",
+        "ofetch": "^1.4.1",
+        "ufo": "^1.6.1"
+      },
+      "peerDependencies": {
+        "@azure/app-configuration": "^1.8.0",
+        "@azure/cosmos": "^4.2.0",
+        "@azure/data-tables": "^13.3.0",
+        "@azure/identity": "^4.6.0",
+        "@azure/keyvault-secrets": "^4.9.0",
+        "@azure/storage-blob": "^12.26.0",
+        "@capacitor/preferences": "^6.0.3 || ^7.0.0",
+        "@deno/kv": ">=0.9.0",
+        "@netlify/blobs": "^6.5.0 || ^7.0.0 || ^8.1.0 || ^9.0.0 || ^10.0.0",
+        "@planetscale/database": "^1.19.0",
+        "@upstash/redis": "^1.34.3",
+        "@vercel/blob": ">=0.27.1",
+        "@vercel/functions": "^2.2.12 || ^3.0.0",
+        "@vercel/kv": "^1.0.1",
+        "aws4fetch": "^1.0.20",
+        "db0": ">=0.2.1",
+        "idb-keyval": "^6.2.1",
+        "ioredis": "^5.4.2",
+        "uploadthing": "^7.4.4"
+      },
+      "peerDependenciesMeta": {
+        "@azure/app-configuration": {
+          "optional": true
+        },
+        "@azure/cosmos": {
+          "optional": true
+        },
+        "@azure/data-tables": {
+          "optional": true
+        },
+        "@azure/identity": {
+          "optional": true
+        },
+        "@azure/keyvault-secrets": {
+          "optional": true
+        },
+        "@azure/storage-blob": {
+          "optional": true
+        },
+        "@capacitor/preferences": {
+          "optional": true
+        },
+        "@deno/kv": {
+          "optional": true
+        },
+        "@netlify/blobs": {
+          "optional": true
+        },
+        "@planetscale/database": {
+          "optional": true
+        },
+        "@upstash/redis": {
+          "optional": true
+        },
+        "@vercel/blob": {
+          "optional": true
+        },
+        "@vercel/functions": {
+          "optional": true
+        },
+        "@vercel/kv": {
+          "optional": true
+        },
+        "aws4fetch": {
+          "optional": true
+        },
+        "db0": {
+          "optional": true
+        },
+        "idb-keyval": {
+          "optional": true
+        },
+        "ioredis": {
+          "optional": true
+        },
+        "uploadthing": {
+          "optional": true
+        }
+      }
+    },
     "node_modules/@walletconnect/universal-provider": {
       "version": "2.21.1",
       "resolved": "https://registry.npmjs.org/@walletconnect/universal-provider/-/universal-provider-2.21.1.tgz",
@@ -5257,6 +6073,121 @@
         "@walletconnect/utils": "2.21.1",
         "es-toolkit": "1.33.0",
         "events": "3.3.0"
+      }
+    },
+    "node_modules/@walletconnect/universal-provider/node_modules/@walletconnect/keyvaluestorage": {
+      "version": "1.1.1",
+      "resolved": "https://registry.npmjs.org/@walletconnect/keyvaluestorage/-/keyvaluestorage-1.1.1.tgz",
+      "integrity": "sha512-V7ZQq2+mSxAq7MrRqDxanTzu2RcElfK1PfNYiaVnJgJ7Q7G7hTVwF8voIBx92qsRyGHZihrwNPHuZd1aKkd0rA==",
+      "license": "MIT",
+      "dependencies": {
+        "@walletconnect/safe-json": "^1.0.1",
+        "idb-keyval": "^6.2.1",
+        "unstorage": "^1.9.0"
+      },
+      "peerDependencies": {
+        "@react-native-async-storage/async-storage": "1.x"
+      },
+      "peerDependenciesMeta": {
+        "@react-native-async-storage/async-storage": {
+          "optional": true
+        }
+      }
+    },
+    "node_modules/@walletconnect/universal-provider/node_modules/unstorage": {
+      "version": "1.17.1",
+      "resolved": "https://registry.npmjs.org/unstorage/-/unstorage-1.17.1.tgz",
+      "integrity": "sha512-KKGwRTT0iVBCErKemkJCLs7JdxNVfqTPc/85ae1XES0+bsHbc/sFBfVi5kJp156cc51BHinIH2l3k0EZ24vOBQ==",
+      "license": "MIT",
+      "dependencies": {
+        "anymatch": "^3.1.3",
+        "chokidar": "^4.0.3",
+        "destr": "^2.0.5",
+        "h3": "^1.15.4",
+        "lru-cache": "^10.4.3",
+        "node-fetch-native": "^1.6.7",
+        "ofetch": "^1.4.1",
+        "ufo": "^1.6.1"
+      },
+      "peerDependencies": {
+        "@azure/app-configuration": "^1.8.0",
+        "@azure/cosmos": "^4.2.0",
+        "@azure/data-tables": "^13.3.0",
+        "@azure/identity": "^4.6.0",
+        "@azure/keyvault-secrets": "^4.9.0",
+        "@azure/storage-blob": "^12.26.0",
+        "@capacitor/preferences": "^6.0.3 || ^7.0.0",
+        "@deno/kv": ">=0.9.0",
+        "@netlify/blobs": "^6.5.0 || ^7.0.0 || ^8.1.0 || ^9.0.0 || ^10.0.0",
+        "@planetscale/database": "^1.19.0",
+        "@upstash/redis": "^1.34.3",
+        "@vercel/blob": ">=0.27.1",
+        "@vercel/functions": "^2.2.12 || ^3.0.0",
+        "@vercel/kv": "^1.0.1",
+        "aws4fetch": "^1.0.20",
+        "db0": ">=0.2.1",
+        "idb-keyval": "^6.2.1",
+        "ioredis": "^5.4.2",
+        "uploadthing": "^7.4.4"
+      },
+      "peerDependenciesMeta": {
+        "@azure/app-configuration": {
+          "optional": true
+        },
+        "@azure/cosmos": {
+          "optional": true
+        },
+        "@azure/data-tables": {
+          "optional": true
+        },
+        "@azure/identity": {
+          "optional": true
+        },
+        "@azure/keyvault-secrets": {
+          "optional": true
+        },
+        "@azure/storage-blob": {
+          "optional": true
+        },
+        "@capacitor/preferences": {
+          "optional": true
+        },
+        "@deno/kv": {
+          "optional": true
+        },
+        "@netlify/blobs": {
+          "optional": true
+        },
+        "@planetscale/database": {
+          "optional": true
+        },
+        "@upstash/redis": {
+          "optional": true
+        },
+        "@vercel/blob": {
+          "optional": true
+        },
+        "@vercel/functions": {
+          "optional": true
+        },
+        "@vercel/kv": {
+          "optional": true
+        },
+        "aws4fetch": {
+          "optional": true
+        },
+        "db0": {
+          "optional": true
+        },
+        "idb-keyval": {
+          "optional": true
+        },
+        "ioredis": {
+          "optional": true
+        },
+        "uploadthing": {
+          "optional": true
+        }
       }
     },
     "node_modules/@walletconnect/utils": {
@@ -5338,6 +6269,25 @@
         "url": "https://paulmillr.com/funding/"
       }
     },
+    "node_modules/@walletconnect/utils/node_modules/@walletconnect/keyvaluestorage": {
+      "version": "1.1.1",
+      "resolved": "https://registry.npmjs.org/@walletconnect/keyvaluestorage/-/keyvaluestorage-1.1.1.tgz",
+      "integrity": "sha512-V7ZQq2+mSxAq7MrRqDxanTzu2RcElfK1PfNYiaVnJgJ7Q7G7hTVwF8voIBx92qsRyGHZihrwNPHuZd1aKkd0rA==",
+      "license": "MIT",
+      "dependencies": {
+        "@walletconnect/safe-json": "^1.0.1",
+        "idb-keyval": "^6.2.1",
+        "unstorage": "^1.9.0"
+      },
+      "peerDependencies": {
+        "@react-native-async-storage/async-storage": "1.x"
+      },
+      "peerDependenciesMeta": {
+        "@react-native-async-storage/async-storage": {
+          "optional": true
+        }
+      }
+    },
     "node_modules/@walletconnect/utils/node_modules/base-x": {
       "version": "5.0.1",
       "resolved": "https://registry.npmjs.org/base-x/-/base-x-5.0.1.tgz",
@@ -5393,6 +6343,102 @@
       },
       "peerDependenciesMeta": {
         "typescript": {
+          "optional": true
+        }
+      }
+    },
+    "node_modules/@walletconnect/utils/node_modules/unstorage": {
+      "version": "1.17.1",
+      "resolved": "https://registry.npmjs.org/unstorage/-/unstorage-1.17.1.tgz",
+      "integrity": "sha512-KKGwRTT0iVBCErKemkJCLs7JdxNVfqTPc/85ae1XES0+bsHbc/sFBfVi5kJp156cc51BHinIH2l3k0EZ24vOBQ==",
+      "license": "MIT",
+      "dependencies": {
+        "anymatch": "^3.1.3",
+        "chokidar": "^4.0.3",
+        "destr": "^2.0.5",
+        "h3": "^1.15.4",
+        "lru-cache": "^10.4.3",
+        "node-fetch-native": "^1.6.7",
+        "ofetch": "^1.4.1",
+        "ufo": "^1.6.1"
+      },
+      "peerDependencies": {
+        "@azure/app-configuration": "^1.8.0",
+        "@azure/cosmos": "^4.2.0",
+        "@azure/data-tables": "^13.3.0",
+        "@azure/identity": "^4.6.0",
+        "@azure/keyvault-secrets": "^4.9.0",
+        "@azure/storage-blob": "^12.26.0",
+        "@capacitor/preferences": "^6.0.3 || ^7.0.0",
+        "@deno/kv": ">=0.9.0",
+        "@netlify/blobs": "^6.5.0 || ^7.0.0 || ^8.1.0 || ^9.0.0 || ^10.0.0",
+        "@planetscale/database": "^1.19.0",
+        "@upstash/redis": "^1.34.3",
+        "@vercel/blob": ">=0.27.1",
+        "@vercel/functions": "^2.2.12 || ^3.0.0",
+        "@vercel/kv": "^1.0.1",
+        "aws4fetch": "^1.0.20",
+        "db0": ">=0.2.1",
+        "idb-keyval": "^6.2.1",
+        "ioredis": "^5.4.2",
+        "uploadthing": "^7.4.4"
+      },
+      "peerDependenciesMeta": {
+        "@azure/app-configuration": {
+          "optional": true
+        },
+        "@azure/cosmos": {
+          "optional": true
+        },
+        "@azure/data-tables": {
+          "optional": true
+        },
+        "@azure/identity": {
+          "optional": true
+        },
+        "@azure/keyvault-secrets": {
+          "optional": true
+        },
+        "@azure/storage-blob": {
+          "optional": true
+        },
+        "@capacitor/preferences": {
+          "optional": true
+        },
+        "@deno/kv": {
+          "optional": true
+        },
+        "@netlify/blobs": {
+          "optional": true
+        },
+        "@planetscale/database": {
+          "optional": true
+        },
+        "@upstash/redis": {
+          "optional": true
+        },
+        "@vercel/blob": {
+          "optional": true
+        },
+        "@vercel/functions": {
+          "optional": true
+        },
+        "@vercel/kv": {
+          "optional": true
+        },
+        "aws4fetch": {
+          "optional": true
+        },
+        "db0": {
+          "optional": true
+        },
+        "idb-keyval": {
+          "optional": true
+        },
+        "ioredis": {
+          "optional": true
+        },
+        "uploadthing": {
           "optional": true
         }
       }
@@ -6241,9 +7287,9 @@
       "integrity": "sha512-M1uQkMl8rQK/szD0LNhtqxIPLpimGm8sOBwU7lLnCpSbTyY3yeU1Vc7l4KT5zT4s/yOxHH5O7tIuuLOCnLADRw=="
     },
     "node_modules/cuer": {
-      "version": "0.0.2",
-      "resolved": "https://registry.npmjs.org/cuer/-/cuer-0.0.2.tgz",
-      "integrity": "sha512-MG1BYnnSLqBnO0dOBS1Qm/TEc9DnFa9Sz2jMA24OF4hGzs8UuPjpKBMkRPF3lrpC+7b3EzULwooX9djcvsM8IA==",
+      "version": "0.0.3",
+      "resolved": "https://registry.npmjs.org/cuer/-/cuer-0.0.3.tgz",
+      "integrity": "sha512-f/UNxRMRCYtfLEGECAViByA3JNflZImOk11G9hwSd+44jvzrc99J35u5l+fbdQ2+ZG441GvOpaeGYBmWquZsbQ==",
       "funding": [
         {
           "type": "github",
@@ -6560,14 +7606,14 @@
       }
     },
     "node_modules/eciesjs": {
-      "version": "0.4.15",
-      "resolved": "https://registry.npmjs.org/eciesjs/-/eciesjs-0.4.15.tgz",
-      "integrity": "sha512-r6kEJXDKecVOCj2nLMuXK/FCPeurW33+3JRpfXVbjLja3XUYFfD9I/JBreH6sUyzcm3G/YQboBjMla6poKeSdA==",
+      "version": "0.4.16",
+      "resolved": "https://registry.npmjs.org/eciesjs/-/eciesjs-0.4.16.tgz",
+      "integrity": "sha512-dS5cbA9rA2VR4Ybuvhg6jvdmp46ubLn3E+px8cG/35aEDNclrqoCjg6mt0HYZ/M+OoESS3jSkCrqk1kWAEhWAw==",
       "license": "MIT",
       "dependencies": {
-        "@ecies/ciphers": "^0.2.3",
+        "@ecies/ciphers": "^0.2.4",
         "@noble/ciphers": "^1.3.0",
-        "@noble/curves": "^1.9.1",
+        "@noble/curves": "^1.9.7",
         "@noble/hashes": "^1.8.0"
       },
       "engines": {
@@ -6581,6 +7627,21 @@
       "resolved": "https://registry.npmjs.org/@noble/ciphers/-/ciphers-1.3.0.tgz",
       "integrity": "sha512-2I0gnIVPtfnMw9ee9h1dJG7tp81+8Ob3OJb3Mv37rx5L40/b0i7djjCVvGOVqc9AEIQyvyu1i6ypKdFw8R8gQw==",
       "license": "MIT",
+      "engines": {
+        "node": "^14.21.3 || >=16"
+      },
+      "funding": {
+        "url": "https://paulmillr.com/funding/"
+      }
+    },
+    "node_modules/eciesjs/node_modules/@noble/curves": {
+      "version": "1.9.7",
+      "resolved": "https://registry.npmjs.org/@noble/curves/-/curves-1.9.7.tgz",
+      "integrity": "sha512-gbKGcRUYIjA3/zCCNaWDciTMFI0dCkvou3TL8Zmy5Nc7sJ47a0jtOeZoTaMxkuqRo9cRhjOdZJXegxYE5FN/xw==",
+      "license": "MIT",
+      "dependencies": {
+        "@noble/hashes": "1.8.0"
+      },
       "engines": {
         "node": "^14.21.3 || >=16"
       },
@@ -7854,16 +8915,16 @@
         "url": "https://github.com/sponsors/sindresorhus"
       }
     },
+    "node_modules/lodash": {
+      "version": "4.17.21",
+      "resolved": "https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz",
+      "integrity": "sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==",
+      "license": "MIT"
+    },
     "node_modules/lodash.debounce": {
       "version": "4.0.8",
       "resolved": "https://registry.npmjs.org/lodash.debounce/-/lodash.debounce-4.0.8.tgz",
       "integrity": "sha512-FT1yDzDYEoYWhnSGnpE/4Kj1fLZkDFyqRb7fNt6FdYOSxlUWAtp42Eh6Wb0rGIv/m9Bgo7x4GhQbm5Ys4SG5ow=="
-    },
-    "node_modules/lodash.memoize": {
-      "version": "4.1.2",
-      "resolved": "https://registry.npmjs.org/lodash.memoize/-/lodash.memoize-4.1.2.tgz",
-      "integrity": "sha512-t7j+NzmgnQzTAYXcsHYLgimltOV1MXHtlOWf6GjL9Kj8GK5FInw5JotxvbOs+IvV1/Dzo04/fCGfLVs7aXb4Ag==",
-      "license": "MIT"
     },
     "node_modules/loose-envify": {
       "version": "1.4.0",
@@ -8087,9 +9148,9 @@
       }
     },
     "node_modules/node-mock-http": {
-      "version": "1.0.2",
-      "resolved": "https://registry.npmjs.org/node-mock-http/-/node-mock-http-1.0.2.tgz",
-      "integrity": "sha512-zWaamgDUdo9SSLw47we78+zYw/bDr5gH8pH7oRRs8V3KmBtu8GLgGIbV2p/gRPd3LWpEOpjQj7X1FOU3VFMJ8g==",
+      "version": "1.0.3",
+      "resolved": "https://registry.npmjs.org/node-mock-http/-/node-mock-http-1.0.3.tgz",
+      "integrity": "sha512-jN8dK25fsfnMrVsEhluUTPkBFY+6ybu7jSB1n+ri/vOGjJxU8J9CZhpSGkHXSkFjtUhbmoncG/YG9ta5Ludqog==",
       "license": "MIT"
     },
     "node_modules/node-stdlib-browser": {
@@ -8294,6 +9355,21 @@
       "dependencies": {
         "wrappy": "1"
       }
+    },
+    "node_modules/openapi-fetch": {
+      "version": "0.13.8",
+      "resolved": "https://registry.npmjs.org/openapi-fetch/-/openapi-fetch-0.13.8.tgz",
+      "integrity": "sha512-yJ4QKRyNxE44baQ9mY5+r/kAzZ8yXMemtNAOFwOzRXJscdjSxxzWSNlyBAr+o5JjkUw9Lc3W7OIoca0cY3PYnQ==",
+      "license": "MIT",
+      "dependencies": {
+        "openapi-typescript-helpers": "^0.0.15"
+      }
+    },
+    "node_modules/openapi-typescript-helpers": {
+      "version": "0.0.15",
+      "resolved": "https://registry.npmjs.org/openapi-typescript-helpers/-/openapi-typescript-helpers-0.0.15.tgz",
+      "integrity": "sha512-opyTPaunsklCBpTK8JGef6mfPhLSnyy5a0IN9vKtx3+4aExf+KxEqYwIy3hqkedXIB97u357uLMJsOnm3GVjsw==",
+      "license": "MIT"
     },
     "node_modules/os-browserify": {
       "version": "0.3.0",
@@ -8830,9 +9906,9 @@
       "dev": true
     },
     "node_modules/qr": {
-      "version": "0.5.1",
-      "resolved": "https://registry.npmjs.org/qr/-/qr-0.5.1.tgz",
-      "integrity": "sha512-bBqlLzOJFhyj0RoeLTl9wZLUaEmVMlsAp8huBAZnRHJfhfbcIg9n2XWf/Qga3vnyzvfTh9Tqz7OcoOulTAT8RA==",
+      "version": "0.5.2",
+      "resolved": "https://registry.npmjs.org/qr/-/qr-0.5.2.tgz",
+      "integrity": "sha512-91M3sVlA7xCFpkJtYX5xzVH8tDo4rNZ7jr8v+1CRgPVkZ4D+Vl9y8rtZWJ/YkEUM6U/h0FAu5W/JAK7iowOteA==",
       "license": "(MIT OR Apache-2.0)",
       "engines": {
         "node": ">= 20.19.0"
@@ -9376,9 +10452,9 @@
       "integrity": "sha512-cdwTTnqPu0Hyvf5in5asVdZocVDTNRmR7XEcJuIzMjJeSHybHl7vpB66AzwTaIg6CLSbtjcxc8fqcySfnTkccA=="
     },
     "node_modules/semver": {
-      "version": "7.7.2",
-      "resolved": "https://registry.npmjs.org/semver/-/semver-7.7.2.tgz",
-      "integrity": "sha512-RF0Fw+rO5AMf9MAyaRXI4AV0Ulj5lMHqVxxdSgiVbixSCXoEmmX/jk0CuJw4+3SqroYO9VoUh+HcuJivvtJemA==",
+      "version": "7.7.3",
+      "resolved": "https://registry.npmjs.org/semver/-/semver-7.7.3.tgz",
+      "integrity": "sha512-SdsKMrI9TdgjdweUSR9MweHA4EJ8YxHn8DFaDisvhVlUOe4BF1tLD7GAj0lIqWVl+dPb/rExr0Btby5loQm20Q==",
       "license": "ISC",
       "bin": {
         "semver": "bin/semver.js"
@@ -9765,102 +10841,6 @@
         "node": ">= 4.0.0"
       }
     },
-    "node_modules/unstorage": {
-      "version": "1.17.0",
-      "resolved": "https://registry.npmjs.org/unstorage/-/unstorage-1.17.0.tgz",
-      "integrity": "sha512-l9Z7lBiwtNp8ZmcoZ/dmPkFXFdtEdZtTZafCSnEIj3YvtkXeGAtL2rN8MQFy/0cs4eOLpuRJMp9ivdug7TCvww==",
-      "license": "MIT",
-      "dependencies": {
-        "anymatch": "^3.1.3",
-        "chokidar": "^4.0.3",
-        "destr": "^2.0.5",
-        "h3": "^1.15.4",
-        "lru-cache": "^10.4.3",
-        "node-fetch-native": "^1.6.7",
-        "ofetch": "^1.4.1",
-        "ufo": "^1.6.1"
-      },
-      "peerDependencies": {
-        "@azure/app-configuration": "^1.8.0",
-        "@azure/cosmos": "^4.2.0",
-        "@azure/data-tables": "^13.3.0",
-        "@azure/identity": "^4.6.0",
-        "@azure/keyvault-secrets": "^4.9.0",
-        "@azure/storage-blob": "^12.26.0",
-        "@capacitor/preferences": "^6.0.3 || ^7.0.0",
-        "@deno/kv": ">=0.9.0",
-        "@netlify/blobs": "^6.5.0 || ^7.0.0 || ^8.1.0 || ^9.0.0 || ^10.0.0",
-        "@planetscale/database": "^1.19.0",
-        "@upstash/redis": "^1.34.3",
-        "@vercel/blob": ">=0.27.1",
-        "@vercel/functions": "^2.2.12",
-        "@vercel/kv": "^1.0.1",
-        "aws4fetch": "^1.0.20",
-        "db0": ">=0.2.1",
-        "idb-keyval": "^6.2.1",
-        "ioredis": "^5.4.2",
-        "uploadthing": "^7.4.4"
-      },
-      "peerDependenciesMeta": {
-        "@azure/app-configuration": {
-          "optional": true
-        },
-        "@azure/cosmos": {
-          "optional": true
-        },
-        "@azure/data-tables": {
-          "optional": true
-        },
-        "@azure/identity": {
-          "optional": true
-        },
-        "@azure/keyvault-secrets": {
-          "optional": true
-        },
-        "@azure/storage-blob": {
-          "optional": true
-        },
-        "@capacitor/preferences": {
-          "optional": true
-        },
-        "@deno/kv": {
-          "optional": true
-        },
-        "@netlify/blobs": {
-          "optional": true
-        },
-        "@planetscale/database": {
-          "optional": true
-        },
-        "@upstash/redis": {
-          "optional": true
-        },
-        "@vercel/blob": {
-          "optional": true
-        },
-        "@vercel/functions": {
-          "optional": true
-        },
-        "@vercel/kv": {
-          "optional": true
-        },
-        "aws4fetch": {
-          "optional": true
-        },
-        "db0": {
-          "optional": true
-        },
-        "idb-keyval": {
-          "optional": true
-        },
-        "ioredis": {
-          "optional": true
-        },
-        "uploadthing": {
-          "optional": true
-        }
-      }
-    },
     "node_modules/url": {
       "version": "0.11.3",
       "resolved": "https://registry.npmjs.org/url/-/url-0.11.3.tgz",
@@ -10020,9 +11000,9 @@
       }
     },
     "node_modules/viem": {
-      "version": "2.37.9",
-      "resolved": "https://registry.npmjs.org/viem/-/viem-2.37.9.tgz",
-      "integrity": "sha512-XXUOE5yJcjr9/M9kRoQcPMUfetwHprO9aTho6vNELjBKJIBx7rYq1fjvBw+xEnhsRjhh5lsORi6B0h8fYFB7NA==",
+      "version": "2.38.3",
+      "resolved": "https://registry.npmjs.org/viem/-/viem-2.38.3.tgz",
+      "integrity": "sha512-By2TutLv07iNHHtWqHHzjGipevYsfGqT7KQbGEmqLco1qTJxKnvBbSviqiu6/v/9REV6Q/FpmIxf2Z7/l5AbcQ==",
       "funding": [
         {
           "type": "github",
@@ -10242,13 +11222,13 @@
       }
     },
     "node_modules/wagmi": {
-      "version": "2.16.4",
-      "resolved": "https://registry.npmjs.org/wagmi/-/wagmi-2.16.4.tgz",
-      "integrity": "sha512-HthfF/6g7qPnCttl9tLkKoJdWKqMH3Isx4DJ+mkn//Ubom0eKnXH2hr2SMVGTqNQUpsi1knYLUWDGJYkT4hoog==",
+      "version": "2.18.1",
+      "resolved": "https://registry.npmjs.org/wagmi/-/wagmi-2.18.1.tgz",
+      "integrity": "sha512-u+lzv7K7R5Gvw5P8vtmwQ96+tR2UGSJ/wNRrDAZH+2ikLqc6Dt8Lj8L8MaqI0v7+gnHOGh63cgeXAEjOWydsMg==",
       "license": "MIT",
       "dependencies": {
-        "@wagmi/connectors": "5.9.4",
-        "@wagmi/core": "2.19.0",
+        "@wagmi/connectors": "6.0.1",
+        "@wagmi/core": "2.22.1",
         "use-sync-external-store": "1.4.0"
       },
       "funding": {

@@ -7,7 +7,6 @@ import {
 } from "@ethersproject/providers";
 import { getDefaultConfig, connectorsForWallets } from "@rainbow-me/rainbowkit";
 import { farcasterMiniApp } from "@farcaster/miniapp-wagmi-connector";
-import { porto } from "porto/wagmi";
 import { getPublicClient } from "@wagmi/core";
 import {
   createConfig,
@@ -26,6 +25,7 @@ import {
   rainbowWallet,
   trustWallet,
   safeWallet,
+  portoWallet,
 } from "@rainbow-me/rainbowkit/wallets";
 import { sdk } from "@farcaster/miniapp-sdk";
 
@@ -81,6 +81,7 @@ let client;
 if (isInIOSApp) {
   // iOS app configuration - exclude Coinbase Wallet and browser wallet
   const wallets = [
+    portoWallet,
     // injectedWallet excluded on iOS app (browser wallet)
     walletConnectWallet,
     // coinbaseWallet excluded on iOS app (popup issues)
@@ -105,13 +106,14 @@ if (isInIOSApp) {
 
   client = createConfig({
     chains,
-    connectors: [porto(), ...connectors],
+    connectors,
     transports,
   });
 } else {
   // Standard configuration with Farcaster mini app support
   // This will be used for all browsers including iOS Safari (not the app)
   const wallets = [
+    portoWallet,
     injectedWallet,
     walletConnectWallet,
     coinbaseWallet,
@@ -134,8 +136,8 @@ if (isInIOSApp) {
     }
   );
 
-  // Add Farcaster mini app connector and Porto to the connectors array
-  const connectors = [porto(), ...walletConnectors, farcasterMiniApp()];
+  // Add Farcaster mini app connector to the connectors array
+  const connectors = [...walletConnectors, farcasterMiniApp()];
 
   client = createConfig({
     chains,
