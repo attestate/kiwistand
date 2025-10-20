@@ -10,7 +10,7 @@
     "test:compression": "NODE_TLS_REJECT_UNAUTHORIZED=0 ava test/compression_test.mjs --timeout=30s --verbose",
     "connect": "ssh root@91.107.210.214",
     "deploy": "npm run build && npm run rsync",
-    "rsync": "rsync -avz . root@91.107.210.214:./kiwistand --exclude=src/iOS --exclude=certificates --exclude=anonlocal --exclude=cache --exclude=docs --exclude=anon --exclude \"node_modules\" --exclude=\".git\" --exclude=bootstrap --exclude=data",
+    "rsync": "rsync -avz . root@91.107.210.214:./kiwistand --exclude=.claude --exclude=src/iOS --exclude=certificates --exclude=anonlocal --exclude=cache --exclude=docs --exclude=anon --exclude \"node_modules\" --exclude=\".git\" --exclude=bootstrap --exclude=data",
     "dev": "cross-env DEBUG=\"*@attestate/*,-@attestate/delegator2*\" concurrently \"npm run watch:web\" \"npm run start\"",
     "dev:ssl": "cross-env DEBUG=\"*@attestate/*,-@attestate/delegator2*,-@attestate/crawler*,-@attestate/extraction-worker*\" concurrently \"npm run watch:web:ssl\" \"npm run start\"",
     "start": "concurrently \"npm run start:load-balancer\" \"npm run start:primary\"",
