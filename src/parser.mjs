@@ -845,11 +845,11 @@ export const metadata = async (
     url = urlObj.toString();
   }
 
-  let result, html, canIframe;
+  let result, canIframe, canonicalLink;
   if (cache.has(url)) {
     const fromCache = cache.get(url);
     result = fromCache.result;
-    html = fromCache.html;
+    canonicalLink = fromCache.canonicalLink;
     canIframe = fromCache.canIframe !== undefined ? fromCache.canIframe : true; // Default to true for old cache entries
   } else {
     const signal = AbortSignal.timeout(5000);
@@ -864,7 +864,7 @@ export const metadata = async (
     // Check iframe compatibility
     const xFrameOptions = response.headers.get('x-frame-options');
     const csp = response.headers.get('content-security-policy');
-    
+
     canIframe = true;
     if (xFrameOptions && (xFrameOptions.toLowerCase() === 'deny' || xFrameOptions.toLowerCase() === 'sameorigin')) {
       canIframe = false;
@@ -878,7 +878,7 @@ export const metadata = async (
           const frameAncestorsValue = frameAncestorsMatch[1].trim();
           // Default to blocking unless explicitly allowed
           canIframe = false;
-          
+
           // Only allow if it explicitly allows all origins
           if (frameAncestorsValue.includes('*') && !frameAncestorsValue.includes("'self'")) {
             canIframe = true;
@@ -895,8 +895,8 @@ export const metadata = async (
       }
     }
 
-    html = await response.text();
-    
+    const html = await response.text();
+
     // Run OGS in a worker thread with timeout to prevent blocking
     try {
       const parsed = await parseWithOGS(html, 1000); // 1 second timeout
@@ -910,8 +910,21 @@ export const metadata = async (
       throw err;
     }
 
-    if (result && html) {
-      cache.set(url, { result, html, canIframe });
+    // Extract canonical link before caching (html not needed after this)
+    // NOTE: Hey's and Rekt News's canonical link implementation is wrong and
+    // always links back to the root
+    const domain = safeExtractDomain(url);
+    if (domain !== "hey.xyz" && domain !== "rekt.news") {
+      try {
+        canonicalLink = await extractCanonicalLink(html);
+      } catch (err) {
+        log(`Failed to extract canonical link ${err.stack}`);
+      }
+    }
+
+    // Cache only the small pieces of data, NOT the full HTML
+    if (result) {
+      cache.set(url, { result, canIframe, canonicalLink });
     }
   }
 
@@ -954,7 +967,7 @@ export const metadata = async (
 
   const { ogTitle } = result;
   let { ogDescription } = result;
-  
+
   // Check if the title is a Cloudflare challenge page
   if (isCloudflareChallengePage(ogTitle)) {
     log(`Cloudflare challenge page detected for URL: ${url}`);
@@ -968,16 +981,7 @@ export const metadata = async (
     };
   }
 
-  let canonicalLink;
-  // NOTE: Hey's and Rekt News's canonical link implementation is wrong and
-  // always links back to the root
-  if (domain !== "hey.xyz" || domain !== "rekt.news") {
-    try {
-      canonicalLink = await extractCanonicalLink(html);
-    } catch (err) {
-      log(`Failed to extract canonical link ${err.stack}`);
-    }
-  }
+  // canonicalLink is now extracted and cached earlier (before cache.set)
 
   // NOTE: For some domains, adding the title to the submit form is actually
   // counter productive as these pages' titles are just some filler text, but
