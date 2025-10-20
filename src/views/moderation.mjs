@@ -189,8 +189,13 @@ export async function getLists() {
   return result;
 }
 
-// Lightweight version for story pages (only fetches what's needed)
-export async function getListsForStory() {
+// Singleton cache for story page moderation config
+let storyConfigCache = null;
+let lastStoryConfigFetch = 0;
+const CACHE_TTL = 60000; // 1 minute
+
+// Internal function to fetch and process config
+async function fetchStoryConfig() {
   // Parallelize only the necessary calls for story pages
   const [
     titlesResult,
@@ -249,6 +254,31 @@ export async function getListsForStory() {
     labels: {},  // Empty for backward compatibility
     profiles,
   };
+}
+
+// Lightweight version for story pages (only fetches what's needed)
+// Uses singleton pattern with background refresh
+export async function getListsForStory() {
+  const now = Date.now();
+  const needsRefresh = now - lastStoryConfigFetch > CACHE_TTL;
+
+  if (!storyConfigCache) {
+    // First call ever: block and fetch
+    storyConfigCache = await fetchStoryConfig();
+    lastStoryConfigFetch = now;
+  } else if (needsRefresh) {
+    // Has cache but stale: return cached, refresh in background
+    fetchStoryConfig()
+      .then((config) => {
+        storyConfigCache = config;
+        lastStoryConfigFetch = Date.now();
+      })
+      .catch((err) => {
+        log(`Background refresh of story config failed: ${err.toString()}`);
+      });
+  }
+
+  return storyConfigCache;
 }
 
 export function flag(leaves, config) {
