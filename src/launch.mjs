@@ -219,7 +219,12 @@ cache.addCompoundIndexes();
 setImmediate(() => {
   store
     .cache(upvotes, comments)
-    .then(() => log("store cached"))
+    .then(() => {
+      log("store cached");
+      // Clear arrays to free memory after caching is complete
+      upvotes = null;
+      comments = null;
+    })
     .catch((err) => {
       log(
         `launch: An irrecoverable error during cache bootstrap occurred. "${err.stack}`,
