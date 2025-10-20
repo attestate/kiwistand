@@ -5,6 +5,7 @@ import { Response, Request } from "node-fetch";
 import { getCacheKey } from "node-fetch-cache";
 import DOMPurify from "isomorphic-dompurify";
 import slugify from "slugify";
+import { LRUCache } from "lru-cache";
 import cache from "./cache.mjs"; // Import the default cache
 
 slugify.extend({ 
@@ -22,7 +23,9 @@ slugify.extend({
 // to-be-cached data in the background while returning an error to the caller
 // in the meantime. What this does is that it stops blocking requests from
 // being resolved, for example, in the ens module.
-const initialFetches = new Map();
+const initialFetches = new LRUCache({
+  max: 1000 // Limit to 1,000 entries using LRU eviction
+});
 export function fetchCache(fetch, fileSystemCache) {
   // Renamed 'cache' param to avoid conflict
   if (!fetch || !fileSystemCache) {
