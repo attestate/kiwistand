@@ -1685,7 +1685,6 @@ export async function launch(trie, libp2p, isPrimary = true) {
           hash,
           currentVariant, // Pass variant as 7th parameter
         );
-        cachedFeed = content;
       }
     } catch (err) {
       log(`Error in /: ${err.stack}`);
