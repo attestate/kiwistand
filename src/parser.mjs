@@ -211,7 +211,7 @@ async function generateClaudeTitle(content) {
   let response;
   try {
     response = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
+      model: "claude-sonnet-4-5-20250929",
       max_tokens: 100,
       temperature: 0,
       tools: [
@@ -271,7 +271,7 @@ async function fixTitle(title) {
   let response;
   try {
     response = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
+      model: "claude-sonnet-4-5-20250929",
       max_tokens: 100,
       temperature: 0,
       tools: [
@@ -1246,7 +1246,7 @@ ${context}`;
   let responseText = "NO"; // Default to NO if anything fails
   try {
     const response = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
+      model: "claude-sonnet-4-5-20250929",
       max_tokens: 200, // Just need YES or NO
       temperature: 0, // Deterministic
       messages: [
