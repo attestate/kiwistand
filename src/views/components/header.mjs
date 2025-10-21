@@ -135,13 +135,6 @@ const header = (theme, path) => {
                   onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block';}"
                   >Submit</a
                 >
-                <a
-                  class="meta-link"
-                  href="/community"
-                  data-no-instant
-                  onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block';}"
-                  >Leaderboard</a
-                >
                 <span class="header-disconnect">Disconnect</span>
               </div>
               <div
