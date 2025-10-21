@@ -132,7 +132,7 @@
     "sharp": "0.32.6",
     "slugify": "1.6.6",
     "svg-line-chart": "0.4.1",
-    "vhtml": "2.2.0",
+    "vhtml": "github:attestate/vhtml-memory-safe#master",
     "web-push": "3.6.7"
   },
   "devDependencies": {
