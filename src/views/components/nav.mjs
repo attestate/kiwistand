@@ -109,7 +109,7 @@ const notificationsfull = html`<svg
 const nav = (path) => html`
   <div
     class="bottom-nav"
-    style="display: flex; justify-content: space-around; position: fixed; bottom: 0px; width: 100%; background: rgb(246, 246, 239); box-shadow: 0 -2px 5px rgba(0,0,0,0.1); z-index: 89;"
+    style="display: flex; justify-content: space-around; position: fixed; bottom: 0px; width: 100%; background: rgb(246, 246, 239); box-shadow: 0 -2px 5px rgba(0,0,0,0.1); z-index: 110;"
   >
     <a
       data-no-instant
