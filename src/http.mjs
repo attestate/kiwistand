@@ -798,14 +798,12 @@ export async function launch(trie, libp2p, isPrimary = true) {
     return reply.status(404).send("GET outbound tracking disabled");
   });
   app.get("/kiwipass-mint", async (request, reply) => {
+    const content = await kiwipassmint(reply.locals.theme);
     reply.header(
       "Cache-Control",
       "public, s-maxage=86400, max-age=0, stale-while-revalidate=604800",
     );
-    return reply
-      .status(200)
-      .type("text/html")
-      .send(await kiwipassmint(reply.locals.theme));
+    return reply.status(200).type("text/html").send(content.valueOf());
   });
   app.post("/api/v1/search", async (req, reply) => {
     let response;
@@ -1635,14 +1633,12 @@ export async function launch(trie, libp2p, isPrimary = true) {
       //noop
     }
 
+    const content = await gateway(referral);
     reply.header(
       "Cache-Control",
       "public, s-maxage=86400, max-age=0, stale-while-revalidate=259200",
     );
-    return reply
-      .status(200)
-      .type("text/html")
-      .send(await gateway(referral));
+    return reply.status(200).type("text/html").send(content.valueOf());
   });
 
   app.get("/", async (request, reply) => {
@@ -2081,114 +2077,88 @@ export async function launch(trie, libp2p, isPrimary = true) {
     return reply.status(200).type("text/html").send(content.valueOf());
   });
   app.get("/privacy-policy", async (request, reply) => {
+    const content = await privacy(reply.locals.theme);
     reply.header(
       "Cache-Control",
       "public, s-maxage=86400, max-age=0, stale-while-revalidate=600000",
     );
-    return reply
-      .status(200)
-      .type("text/html")
-      .send(await privacy(reply.locals.theme));
+    return reply.status(200).type("text/html").send(content.valueOf());
   });
   app.get("/guidelines", async (request, reply) => {
+    const content = await guidelines(reply.locals.theme);
     reply.header(
       "Cache-Control",
       "public, s-maxage=86400, max-age=0, stale-while-revalidate=600000",
     );
-    return reply
-      .status(200)
-      .type("text/html")
-      .send(await guidelines(reply.locals.theme));
+    return reply.status(200).type("text/html").send(content.valueOf());
   });
   app.get("/onboarding", async (request, reply) => {
+    const content = await onboarding(
+      reply.locals.theme,
+      DOMPurify.sanitize(request.cookies.identity),
+    );
     reply.header(
       "Cache-Control",
       "public, s-maxage=3600, max-age=0, stale-while-revalidate=864000",
     );
-    return reply
-      .status(200)
-      .type("text/html")
-      .send(
-        await onboarding(
-          reply.locals.theme,
-          DOMPurify.sanitize(request.cookies.identity),
-        ),
-      );
+    return reply.status(200).type("text/html").send(content.valueOf());
   });
   app.get("/whattosubmit", async (request, reply) => {
+    const content = await whattosubmit(reply.locals.theme);
     reply.header(
       "Cache-Control",
       "public, s-maxage=86400, max-age=0, stale-while-revalidate=600000",
     );
-    return reply
-      .status(200)
-      .type("text/html")
-      .send(await whattosubmit(reply.locals.theme));
+    return reply.status(200).type("text/html").send(content.valueOf());
   });
   app.get("/referral", async (request, reply) => {
+    const content = await referral(reply.locals.theme);
     reply.header(
       "Cache-Control",
       "public, s-maxage=3600, max-age=0, stale-while-revalidate=864000",
     );
-    return reply
-      .status(200)
-      .type("text/html")
-      .send(await referral(reply.locals.theme));
+    return reply.status(200).type("text/html").send(content.valueOf());
   });
   app.get("/onboarding-reader", async (request, reply) => {
+    const content = await onboardingReader(
+      reply.locals.theme,
+      DOMPurify.sanitize(request.cookies.identity),
+    );
     reply.header(
       "Cache-Control",
       "public, s-maxage=3600, max-age=0, stale-while-revalidate=864000",
     );
-    return reply
-      .status(200)
-      .type("text/html")
-      .send(
-        await onboardingReader(
-          reply.locals.theme,
-          DOMPurify.sanitize(request.cookies.identity),
-        ),
-      );
+    return reply.status(200).type("text/html").send(content.valueOf());
   });
   app.get("/onboarding-curator", async (request, reply) => {
+    const content = await onboardingCurator(
+      reply.locals.theme,
+      DOMPurify.sanitize(request.cookies.identity),
+    );
     reply.header(
       "Cache-Control",
       "public, s-maxage=3600, max-age=0, stale-while-revalidate=864000",
     );
-    return reply
-      .status(200)
-      .type("text/html")
-      .send(
-        await onboardingCurator(
-          reply.locals.theme,
-          DOMPurify.sanitize(request.cookies.identity),
-        ),
-      );
+    return reply.status(200).type("text/html").send(content.valueOf());
   });
   app.get("/onboarding-submitter", async (request, reply) => {
+    const content = await onboardingSubmitter(
+      reply.locals.theme,
+      DOMPurify.sanitize(request.cookies.identity),
+    );
     reply.header(
       "Cache-Control",
       "public, s-maxage=3600, max-age=0, stale-while-revalidate=864000",
     );
-    return reply
-      .status(200)
-      .type("text/html")
-      .send(
-        await onboardingSubmitter(
-          reply.locals.theme,
-          DOMPurify.sanitize(request.cookies.identity),
-        ),
-      );
+    return reply.status(200).type("text/html").send(content.valueOf());
   });
   app.get("/shortcut", async (request, reply) => {
+    const content = await shortcut(reply.locals.theme);
     reply.header(
       "Cache-Control",
       "public, s-maxage=86400, max-age=0, stale-while-revalidate=600000",
     );
-    return reply
-      .status(200)
-      .type("text/html")
-      .send(await shortcut(reply.locals.theme));
+    return reply.status(200).type("text/html").send(content.valueOf());
   });
 
   async function getProfile(
