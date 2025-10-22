@@ -17,6 +17,7 @@ import Arweave from "arweave";
 
 import cache, { lifetimeCache } from "./cache.mjs";
 import log from "./logger.mjs";
+import { resolve as resolveENS } from "./ens.mjs";
 
 const fetchCache = new FileSystemCache({
   cacheDirectory: path.resolve(env.CACHE_DIR),
@@ -455,6 +456,91 @@ function convertTipTapToHTML(doc) {
   };
   
   return convertNode(doc);
+}
+
+export async function extractInterfaceContent(url, ogImageUrl) {
+  // Extract chain ID and tx hash from Interface.social URL
+  // Format: https://app.interface.social/tx/{chainId}/{txHash}
+  const urlObj = new URL(url);
+  const pathParts = urlObj.pathname.split('/').filter(p => p);
+
+  if (pathParts.length < 3 || pathParts[0] !== 'tx') {
+    throw new Error(`Invalid Interface.social URL format: ${url}`);
+  }
+
+  const chainId = parseInt(pathParts[1], 10);
+  const txHash = pathParts[2];
+
+  if (isNaN(chainId) || !txHash.startsWith('0x')) {
+    throw new Error(`Invalid chain ID or tx hash in URL: ${url}`);
+  }
+
+  // Query EthComments GraphQL API
+  const query = {
+    query: `{
+      comments(where: { txHash: "${txHash}", chainId: ${chainId} }) {
+        items {
+          id
+          content
+          author
+          createdAt
+          metadata
+          commentType
+        }
+      }
+    }`
+  };
+
+  const signal = AbortSignal.timeout(10000);
+  const response = await fetch('https://api.ethcomments.xyz/graphql', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(query),
+    signal,
+  });
+
+  if (!response.ok) {
+    throw new Error(`EthComments API request failed: ${response.status}`);
+  }
+
+  const data = await response.json();
+
+  if (!data?.data?.comments?.items || data.data.comments.items.length === 0) {
+    throw new Error(`No comments found for tx ${txHash} on chain ${chainId}`);
+  }
+
+  // Get the first comment (the take itself)
+  const take = data.data.comments.items[0];
+
+  // Resolve author address to ENS/Farcaster profile
+  const authorProfile = await resolveENS(take.author, true);
+
+  // If ENS resolution didn't provide a display name, try to extract username from OG image
+  if ((!authorProfile.displayName || authorProfile.displayName === authorProfile.truncatedAddress) && ogImageUrl) {
+    try {
+      // Extract username from OG image URL parameter, e.g.: ?un=david.int.eth
+      const imageUrlObj = new URL(ogImageUrl);
+      const username = imageUrlObj.searchParams.get('un');
+
+      if (username) {
+        authorProfile.displayName = username;
+        log(`Extracted username from OG image: ${username}`);
+      }
+    } catch (err) {
+      log(`Failed to extract username from OG image URL: ${err.message}`);
+    }
+  }
+
+  return {
+    content: take.content,
+    author: authorProfile,
+    createdAt: take.createdAt,
+    txHash: txHash,
+    chainId: chainId,
+    commentId: take.id,
+  };
 }
 
 export async function extractParagraphContent(url) {
@@ -1050,7 +1136,7 @@ export const metadata = async (
         ogDescription = paragraphPost.description;
         output.ogDescription = DOMPurify.sanitize(paragraphPost.description);
       }
-      
+
       // Generate better title if requested
       if (generateTitle && paragraphPost.content) {
         const postContent = `${paragraphPost.title}: ${paragraphPost.description || paragraphPost.content.substring(0, 500)}`;
@@ -1061,6 +1147,32 @@ export const metadata = async (
       }
     } else {
       log(`No Paragraph data returned for URL: ${url}`);
+    }
+  }
+
+  // Extract Interface.social take content from EthComments (only for /tx/ URLs)
+  if ((hostname === "interface.social" || hostname === "app.interface.social") && urlObj.pathname.startsWith('/tx/')) {
+    try {
+      const interfaceTake = await extractInterfaceContent(url, image);
+      output.interfaceTake = interfaceTake;
+
+      // Override ogDescription with the actual take content
+      if (interfaceTake.content) {
+        ogDescription = interfaceTake.content;
+        output.ogDescription = DOMPurify.sanitize(interfaceTake.content);
+      }
+
+      // Generate better title if requested
+      if (generateTitle && interfaceTake.content) {
+        const authorName = interfaceTake.author.displayName || interfaceTake.author.truncatedAddress;
+        const takeContent = `Take by ${authorName}: ${interfaceTake.content}`;
+        const claudeTitle = await generateClaudeTitle(takeContent);
+        if (claudeTitle) {
+          output.ogTitle = claudeTitle;
+        }
+      }
+    } catch (err) {
+      log(`Error extracting Interface content: ${err.message}`);
     }
   }
 
