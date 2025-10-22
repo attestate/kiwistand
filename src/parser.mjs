@@ -18,6 +18,7 @@ import Arweave from "arweave";
 import cache, { lifetimeCache } from "./cache.mjs";
 import log from "./logger.mjs";
 import { resolve as resolveENS } from "./ens.mjs";
+import { call, encodeFunctionCall, decodeParameters } from "eth-fun";
 
 const fetchCache = new FileSystemCache({
   cacheDirectory: path.resolve(env.CACHE_DIR),
@@ -33,6 +34,91 @@ const arweave = Arweave.init({
   protocol: 'https'
 });
 
+// RPC URLs for different chains
+const rpcUrls = {
+  1: env.RPC_HTTP_HOST, // Ethereum mainnet
+  10: env.OPTIMISM_RPC_HTTP_HOST, // Optimism
+  8453: env.BASE_RPC_HTTP_HOST, // Base
+};
+
+// CAIP link regex: eip155:<chainId>/erc20:<address>
+const CAIP_LINK_REGEX = /eip155:(\d+)\/erc20:(0x[a-fA-F0-9]{40})/g;
+
+/**
+ * Fetches the name for an ERC20 token using eth-fun with cached fetch
+ * @param {number} chainId - The chain ID (e.g., 1 for Ethereum, 8453 for Base)
+ * @param {string} tokenAddress - The ERC20 token contract address
+ * @returns {Promise<string|null>} The token name or null if unable to fetch
+ */
+async function fetchERC20Name(chainId, tokenAddress) {
+  try {
+    const url = rpcUrls[chainId];
+    if (!url) {
+      log(`No RPC URL configured for chain ID ${chainId}`);
+      return null;
+    }
+
+    // Use eth-fun's call with the cached fetch instance
+    const options = {
+      url,
+      fetch, // Uses the cached fetch from node-fetch-cache above
+    };
+
+    // Encode the name() function call
+    const data = encodeFunctionCall(
+      {
+        name: 'name',
+        type: 'function',
+        inputs: []
+      },
+      []
+    );
+
+    // Call the contract
+    const result = await call(options, null, tokenAddress, data);
+
+    // Decode the result
+    const [name] = decodeParameters(['string'], result);
+    return name;
+  } catch (err) {
+    log(`Failed to fetch name for ${tokenAddress} on chain ${chainId}: ${err.message}`);
+    return null;
+  }
+}
+
+/**
+ * Replaces CAIP links (e.g., eip155:8453/erc20:0x...) with token cashtags (e.g., $NAME)
+ * @param {string} text - The text containing potential CAIP links
+ * @returns {Promise<string>} The text with CAIP links replaced by cashtags
+ */
+export async function resolveCAIPLinks(text) {
+  if (!text) return text;
+
+  // Find all CAIP links in the text
+  const matches = [...text.matchAll(CAIP_LINK_REGEX)];
+  if (matches.length === 0) return text;
+
+  // Fetch names for all CAIP links in parallel
+  const fetchPromises = matches.map(async (match) => {
+    const caipLink = match[0];
+    const chainId = parseInt(match[1], 10);
+    const tokenAddress = match[2];
+    const name = await fetchERC20Name(chainId, tokenAddress);
+    return { caipLink, name };
+  });
+
+  const results = await Promise.all(fetchPromises);
+
+  // Replace CAIP links with cashtags
+  let result = text;
+  for (const { caipLink, name } of results) {
+    if (name) {
+      result = result.replace(new RegExp(caipLink.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), `$${name}`);
+    }
+  }
+
+  return result;
+}
 
 const html = htm.bind(vhtml);
 
@@ -533,8 +619,11 @@ export async function extractInterfaceContent(url, ogImageUrl) {
     }
   }
 
+  // Resolve CAIP links in the content (e.g., eip155:8453/erc20:0x... -> $SYMBOL)
+  const resolvedContent = await resolveCAIPLinks(take.content);
+
   return {
-    content: take.content,
+    content: resolvedContent,
     author: authorProfile,
     createdAt: take.createdAt,
     txHash: txHash,
