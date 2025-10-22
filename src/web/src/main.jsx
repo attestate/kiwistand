@@ -945,11 +945,9 @@ async function addKarmaElements() {
 
       createRoot(element).render(
         <StrictMode>
-          <Providers>
-            <Karma address={address} initial={initial}>
-              {initialContent}
-            </Karma>
-          </Providers>
+          <Karma address={address} initial={initial}>
+            {initialContent}
+          </Karma>
         </StrictMode>,
       );
     });
