@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 const NewsletterScrollModal = ({ toast }) => {
   const [email, setEmail] = useState("");
   const [isSubscribing, setIsSubscribing] = useState(false);
-  const [isDismissed, setIsDismissed] = useState(false);
+  const [isDismissed, setIsDismissed] = useState(true); // Start hidden to prevent flash
   const [overlayOpacity, setOverlayOpacity] = useState(0);
   const modalRef = useRef(null);
 
@@ -14,13 +14,14 @@ const NewsletterScrollModal = ({ toast }) => {
       localStorage.removeItem("newsletter-modal-dismissed");
       localStorage.removeItem("newsletter-subscribed");
     }
-    
+
     // Check if user has already subscribed or dismissed
     const dismissed = localStorage.getItem("newsletter-modal-dismissed");
     const subscribed = localStorage.getItem("newsletter-subscribed");
-    
-    if (dismissed || subscribed) {
-      setIsDismissed(true);
+
+    // Only show modal if NOT dismissed and NOT subscribed
+    if (!dismissed && !subscribed) {
+      setIsDismissed(false);
     }
   }, []);
 
