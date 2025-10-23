@@ -620,19 +620,6 @@ async function addConnectedComponents(allowlist, delegations, toast) {
   }
 }
 
-async function addTGLink(allowlist) {
-  const elem = document.querySelector("nav-invite-link");
-  if (elem) {
-    const TelegramLink = (await import("./TelegramLink.jsx")).default;
-    createRoot(elem).render(
-      <StrictMode>
-        <Providers>
-          <TelegramLink allowlist={allowlist} />
-        </Providers>
-      </StrictMode>,
-    );
-  }
-}
 
 async function addModals(allowlist, delegations, toast) {
   const nftmodal = document.querySelector("nav-nft-modal");
