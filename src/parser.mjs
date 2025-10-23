@@ -920,15 +920,12 @@ const checkOgImage = async (url) => {
       return false;
     }
 
-    if (width < height) {
-      log(`Rejecting portrait-oriented image (${width}x${height}): ${url}`);
-      return false;
-    }
-
+    // Allow landscape, square, and slightly portrait images (0.8 to 2.0 aspect ratio)
+    // Reject very portrait images (narrower than 0.8) and very wide images (wider than 2:1)
     const aspectRatio = width / height;
-    if (aspectRatio > 2 || aspectRatio < 16 / 9) {
+    if (aspectRatio < 0.8 || aspectRatio > 2) {
       log(
-        `Rejecting image with aspect ratio out of range (${aspectRatio.toFixed(
+        `Rejecting image with aspect ratio out of range (${width}x${height}, ratio: ${aspectRatio.toFixed(
           2,
         )}): ${url}`,
       );
@@ -1015,22 +1012,32 @@ export const metadata = async (
 
   const { hostname } = urlObj;
 
+  let isFxTwitter = false;
   if (twitterFrontends.includes(hostname)) {
+    log(`[metadata] Original hostname: ${hostname}, converting to fxtwitter.com`);
     urlObj.hostname = "fxtwitter.com";
     url = urlObj.toString();
+    isFxTwitter = true;
   }
 
   let result, canIframe, canonicalLink;
   if (cache.has(url)) {
+    log(`[metadata] Cache HIT for ${url}`);
     const fromCache = cache.get(url);
     result = fromCache.result;
     canonicalLink = fromCache.canonicalLink;
     canIframe = fromCache.canIframe !== undefined ? fromCache.canIframe : true; // Default to true for old cache entries
   } else {
+    log(`[metadata] Cache MISS for ${url}`);
     const signal = AbortSignal.timeout(5000);
+    // Use bot User-Agent for fxtwitter to get actual images instead of warning SVGs
+    const userAgent = isFxTwitter
+      ? "TelegramBot (like TwitterBot)"
+      : env.USER_AGENT;
+    log(`[metadata] Using User-Agent: ${userAgent}`);
     const response = await fetch(url, {
       headers: {
-        "User-Agent": env.USER_AGENT,
+        "User-Agent": userAgent,
       },
       agent: useAgent(url),
       signal,
@@ -1076,6 +1083,7 @@ export const metadata = async (
     try {
       const parsed = await parseWithOGS(html, 1000); // 1 second timeout
       result = parsed.result;
+      log(`[metadata] OGS parsing successful. ogImage: ${JSON.stringify(result.ogImage)}, twitterImage: ${JSON.stringify(result.twitterImage)}`);
     } catch (err) {
       if (err.message === 'OGS parsing timeout') {
         log(`OGS parsing timed out for URL: ${url}`);
@@ -1122,10 +1130,13 @@ export const metadata = async (
   let image;
   if (result.ogImage && result.ogImage.length >= 1) {
     image = result.ogImage[0].url;
+    log(`[metadata] Found ogImage: ${image}`);
   }
   if (result.twitterImage && result.twitterImage.length >= 1) {
     image = result.twitterImage[0].url;
+    log(`[metadata] Found twitterImage: ${image}`);
   }
+  log(`[metadata] Initial image value: ${image}`);
   // Detect if the target has video content (used to avoid rendering text-only previews)
   const hasVideoContent = Boolean(
     (result.ogVideo && result.ogVideo.length >= 1) ||
@@ -1294,10 +1305,17 @@ export const metadata = async (
     output.domain = DOMPurify.sanitize(domain);
   }
   if (image && image.startsWith("https://")) {
+    log(`[metadata] Checking image: ${image}`);
     const exists = await checkOgImage(image);
+    log(`[metadata] checkOgImage result: ${exists}`);
     if (exists) {
       output.image = DOMPurify.sanitize(image);
+      log(`[metadata] Image added to output: ${output.image}`);
+    } else {
+      log(`[metadata] Image validation failed, not adding to output`);
     }
+  } else {
+    log(`[metadata] No valid image URL (image=${image}, startsWith https: ${image?.startsWith("https://")})`);
   }
   if (result.twitterCreator) {
     output.twitterCreator = DOMPurify.sanitize(result.twitterCreator);
