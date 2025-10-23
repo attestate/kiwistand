@@ -26,7 +26,7 @@ const AnalyticsInner = (props) => {
 
   // Get local account and provider
   const provider = getProvider();
-  const localAccount = getLocalAccount(wagmiAddress, props.allowlist);
+  const localAccount = getLocalAccount(wagmiAddress);
 
   // Only use analytics if we have a local account
   // Never use custody wallet for analytics

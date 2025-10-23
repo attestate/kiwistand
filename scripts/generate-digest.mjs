@@ -22,10 +22,10 @@ import log from '../src/logger.mjs';
     let upvotes = [], comments = [];
     await Promise.allSettled([
         store.posts(
-            trie, from, amount, parser, startDatetime, accounts, delegations, href, "amplify"
+            trie, from, amount, parser, startDatetime, delegations, href, "amplify"
         ).then(result => upvotes = result).catch(err => log("Error fetching upvotes:", err)),
         store.posts(
-            trie, from, amount, parser, startDatetime, accounts, delegations, href, "comment"
+            trie, from, amount, parser, startDatetime, delegations, href, "comment"
         ).then(result => comments = result).catch(err => log("Error fetching comments:", err))
     ]);
 

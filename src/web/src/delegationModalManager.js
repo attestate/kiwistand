@@ -1,4 +1,3 @@
-import { eligible } from "@attestate/delegator2";
 import { getLocalAccount } from "./session.mjs";
 
 let modalRef = null;
@@ -29,9 +28,8 @@ export const openDelegationModalForAction = () => {
   }
 };
 
-export const isDelegationModalNeeded = (allowlist, delegations, address) => {
-  const isEligible = eligible(allowlist, delegations, address);
-  const localAccount = getLocalAccount(address, allowlist);
-  
-  return isEligible && !localAccount;
+export const isDelegationModalNeeded = (address) => {
+  const localAccount = getLocalAccount(address);
+  // Show delegation modal if user doesn't have a local signing key
+  return !localAccount;
 };

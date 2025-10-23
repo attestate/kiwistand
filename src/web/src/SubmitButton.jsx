@@ -3,7 +3,7 @@ import { Wallet } from "@ethersproject/wallet";
 import { useAccount, WagmiProvider } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RainbowKitProvider, ConnectButton } from "@rainbow-me/rainbowkit";
-import { eligible } from "@attestate/delegator2";
+import { resolveIdentity } from "@attestate/delegator2";
 import DOMPurify from "isomorphic-dompurify";
 import slugify from "slugify";
 import { sdk } from "@farcaster/miniapp-sdk";
@@ -333,7 +333,7 @@ const SubmitButton = (props) => {
 
   let address;
   const account = useAccount();
-  const localAccount = getLocalAccount(account.address, props.allowlist);
+  const localAccount = getLocalAccount(account.address);
   if (account.isConnected) {
     address = account.address;
   }
@@ -341,7 +341,7 @@ const SubmitButton = (props) => {
     address = localAccount.identity;
   }
   const isEligible =
-    address && eligible(props.allowlist, props.delegations, address);
+    address && resolveIdentity(props.delegations, address);
 
   const provider = useProvider();
   const result = useSigner();
@@ -355,10 +355,10 @@ const SubmitButton = (props) => {
 
   // Check for delegation needs on mount
   useEffect(() => {
-    if (address && isDelegationModalNeeded(props.allowlist, props.delegations, address)) {
+    if (address && isDelegationModalNeeded(props.delegations, address)) {
       openDelegationModalForAction();
     }
-  }, [address, props.allowlist, props.delegations]);
+  }, [address, props.delegations]);
 
   useEffect(() => {
     const titleInput = document.getElementById("titleInput");

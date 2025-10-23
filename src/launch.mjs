@@ -19,7 +19,6 @@ import * as api from "./api.mjs";
 // Dynamic import for http module - only loaded when not in reconcile mode
 import * as store from "./store.mjs";
 import * as cache from "./cache.mjs";
-import mintCrawlPath from "./chainstate/mint.config.crawler.mjs";
 import delegateCrawlPath from "./chainstate/delegate.config.crawler.mjs";
 import * as registry from "./chainstate/registry.mjs";
 import * as karma from "./karma.mjs";
@@ -115,9 +114,6 @@ if (cluster.isPrimary) {
   // WebSocket coordinators are stopped (e.g., via SIGINT). We intentionally
   // don't await them so the server can continue starting up while the
   // crawlers run in the background with their persistent WebSocket connections.
-  crawl(mintCrawlPath).catch((err) =>
-    log(`Mint crawler error: ${err.message}`),
-  );
   crawl(delegateCrawlPath).catch((err) =>
     log(`Delegate crawler error: ${err.message}`),
   );
@@ -172,7 +168,6 @@ const from = null;
 const amount = null;
 const startDatetime = null;
 const parser = JSON.parse;
-const accounts = await registry.accounts();
 const delegations = await registry.delegations();
 const href = null;
 
@@ -187,7 +182,6 @@ await Promise.allSettled([
       amount,
       parser,
       startDatetime,
-      accounts,
       delegations,
       href,
       "amplify",
@@ -201,7 +195,6 @@ await Promise.allSettled([
       amount,
       parser,
       startDatetime,
-      accounts,
       delegations,
       href,
       "comment",

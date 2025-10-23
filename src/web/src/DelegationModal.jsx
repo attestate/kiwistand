@@ -1,7 +1,7 @@
 import { useState, useEffect, useImperativeHandle, forwardRef } from "react";
 import Modal from "react-modal";
 import { useAccount } from "wagmi";
-import { eligible } from "@attestate/delegator2";
+import { resolveIdentity } from "@attestate/delegator2";
 
 import { getLocalAccount } from "./session.mjs";
 import DelegateButton from "./DelegateButton.jsx";
@@ -14,7 +14,7 @@ const SimpleModal = forwardRef((props, ref) => {
   const [showModal, setShowModal] = useState(false);
   const account = useAccount();
 
-  const { toast, allowlist, delegations } = props;
+  const { toast, delegations } = props;
   
   const MODAL_DISMISSED_KEY = `delegation-modal-dismissed-${account.address}`;
 
@@ -32,8 +32,8 @@ const SimpleModal = forwardRef((props, ref) => {
       return;
     }
 
-    const isEligible = eligible(allowlist, delegations, account.address);
-    const localAccount = getLocalAccount(account.address, allowlist);
+    const isEligible = resolveIdentity(delegations, account.address);
+    const localAccount = getLocalAccount(account.address);
     const wasDismissed = localStorage.getItem(MODAL_DISMISSED_KEY) === "true";
 
     if (isEligible && !localAccount && (forceOpen || !wasDismissed)) {
@@ -54,8 +54,8 @@ const SimpleModal = forwardRef((props, ref) => {
 
   useImperativeHandle(ref, () => ({
     openModalForAction: () => {
-      const isEligible = eligible(allowlist, delegations, account.address);
-      const localAccount = getLocalAccount(account.address, allowlist);
+      const isEligible = resolveIdentity(delegations, account.address);
+      const localAccount = getLocalAccount(account.address);
       
       if (isEligible && !localAccount) {
         openModal(true);
@@ -151,7 +151,6 @@ const SimpleModal = forwardRef((props, ref) => {
       </button>
       <DelegateButton
         callback={closeModal}
-        allowlist={allowlist}
         delegations={delegations}
         toast={toast}
         style={{

@@ -4,7 +4,7 @@ import { randomBytes } from "crypto";
 
 import Database from "better-sqlite3";
 import postmark from "postmark";
-import { eligible } from "@attestate/delegator2";
+import { resolveIdentity } from "@attestate/delegator2";
 
 import { EIP712_MESSAGE } from "./constants.mjs";
 import * as id from "./id.mjs";
@@ -72,15 +72,8 @@ export async function syncSuppressions() {
 
 export async function validate(message) {
   const signer = id.ecrecover(message, EIP712_MESSAGE);
-  const allowlist = await registry.allowlist();
   const delegations = await registry.delegations();
-  const identity = eligible(allowlist, delegations, signer);
-
-  if (!identity) {
-    throw new Error(
-      "Body must include a validly signed message from an eligible signer.",
-    );
-  }
+  const identity = resolveIdentity(delegations, signer);
 
   return identity;
 }

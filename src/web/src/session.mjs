@@ -52,7 +52,7 @@ export function getCookie(name) {
 }
 
 export const tenYearsInSeconds = 10 * 365 * 24 * 60 * 60;
-export function getLocalAccount(identity, allowlist) {
+export function getLocalAccount(identity) {
   const schema = /^-kiwi-news-(0x[a-fA-F0-9]{40})-key$/;
   const keys = Object.entries(localStorage).reduce((obj, [key, value]) => {
     const match = key.match(schema);
@@ -65,12 +65,9 @@ export function getLocalAccount(identity, allowlist) {
 
   if (Object.keys(keys).length === 1) {
     const [[key, value]] = Object.entries(keys);
-    if (
-      (identity && key !== identity) ||
-      (allowlist && !allowlist.has(key)) ||
-      !allowlist
-    )
+    if (identity && key !== identity) {
       return;
+    }
 
     setCookie("identity", key, tenYearsInSeconds);
     const signer = new Wallet(value);

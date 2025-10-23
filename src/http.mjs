@@ -55,7 +55,6 @@ import guidelines from "./views/guidelines.mjs";
 import onboarding from "./views/onboarding.mjs";
 import referral from "./views/referral.mjs";
 import gateway from "./views/gateway.mjs";
-import kiwipassmint from "./views/kiwipass-mint.mjs";
 import whattosubmit from "./views/whattosubmit.mjs";
 import onboardingReader from "./views/onboarding-reader.mjs";
 import onboardingCurator from "./views/onboarding-curator.mjs";
@@ -69,8 +68,6 @@ import search from "./views/search.mjs";
 import * as activity from "./views/activity.mjs";
 import submit from "./views/submit.mjs";
 import start from "./views/start.mjs";
-import indexing from "./views/indexing.mjs";
-import invite from "./views/invite.mjs";
 import appOnboarding from "./views/app-onboarding.mjs";
 import appTestflight from "./views/app-testflight.mjs";
 import demonstration from "./views/demonstration.mjs";
@@ -103,7 +100,7 @@ import { sendNotification } from "./neynar.mjs";
 import { timingSafeEqual } from "crypto";
 import { verify, ecrecover } from "./id.mjs";
 import { EIP712_MESSAGE } from "./constants.mjs";
-import { eligible } from "@attestate/delegator2";
+import { resolveIdentity } from "@attestate/delegator2";
 import { invalidateActivityCaches } from "./cloudflarePurge.mjs";
 import { getCastByHashAndConstructUrl } from "./parser.mjs";
 import { sendToChannel } from "./telegram-bot.mjs";
@@ -794,14 +791,6 @@ export async function launch(trie, libp2p, isPrimary = true) {
   app.get("/outbound", async (request, reply) => {
     reply.header("Cache-Control", "no-cache");
     return reply.status(404).send("GET outbound tracking disabled");
-  });
-  app.get("/kiwipass-mint", async (request, reply) => {
-    const content = await kiwipassmint(reply.locals.theme);
-    reply.header(
-      "Cache-Control",
-      "public, s-maxage=86400, max-age=0, stale-while-revalidate=604800",
-    );
-    return reply.status(200).type("text/html").send(content.valueOf());
   });
   app.post("/api/v1/search", async (req, reply) => {
     let response;
@@ -1554,14 +1543,12 @@ export async function launch(trie, libp2p, isPrimary = true) {
     }
     
     // Check if requester is authorized to view analytics
-    // Use eligible to check if requester can act on behalf of submitter
-    const allowlist = await registry.allowlist();
     const delegations = await registry.delegations();
-    
+
     log(`Analytics request - Requester: ${requesterAddress}, Submitter: ${submission.identity}`);
-    
+
     // Check if the requester can act as the submitter (either is the submitter or has delegation)
-    const authorizedIdentity = eligible(allowlist, delegations, requesterAddress);
+    const authorizedIdentity = resolveIdentity(delegations, requesterAddress);
     
     // The requester is authorized if:
     // 1. They ARE the submitter
@@ -1870,24 +1857,6 @@ export async function launch(trie, libp2p, isPrimary = true) {
       .status(200)
       .type("text/html")
       .send(await emailNotifications(reply.locals.theme));
-  });
-  app.get("/invite", async (request, reply) => {
-    const content = await invite(reply.locals.theme);
-
-    reply.header(
-      "Cache-Control",
-      "public, s-maxage=86400, max-age=0, stale-while-revalidate=600000",
-    );
-    return reply.status(200).type("text/html").send(content.valueOf());
-  });
-  app.get("/indexing", async (request, reply) => {
-    const content = await indexing(reply.locals.theme);
-
-    reply.header(
-      "Cache-Control",
-      "public, s-maxage=86400, max-age=0, stale-while-revalidate=600000",
-    );
-    return reply.status(200).type("text/html").send(content.valueOf());
   });
   app.get("/start", async (request, reply) => {
     const content = await start(reply.locals.theme);

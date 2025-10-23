@@ -39,7 +39,6 @@ export function custom(
   if (process.env.NODE_ENV === "production") {
     prefetch = [
       ...prefetch,
-      "https://news.kiwistand.com:8443/api/v1/allowlist?cached=true",
       "https://news.kiwistand.com:8443/api/v1/delegations?cached=true",
     ];
   }

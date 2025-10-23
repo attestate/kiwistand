@@ -6,7 +6,7 @@ import { useAccount, WagmiProvider } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { Wallet } from "@ethersproject/wallet";
-import { eligible } from "@attestate/delegator2";
+import { resolveIdentity } from "@attestate/delegator2";
 
 import { useProvider, client, chains } from "./client.mjs";
 import CommentInput from "./CommentInput.jsx";
@@ -64,7 +64,7 @@ function truncateName(name) {
   return name.slice(0, maxLength) + "...";
 }
 
-export const EmojiReaction = ({ comment, allowlist, delegations, toast }) => {
+export const EmojiReaction = ({ comment, delegations, toast }) => {
   const [isReacting, setIsReacting] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [kiwis, setKiwis] = useState(
@@ -84,7 +84,7 @@ export const EmojiReaction = ({ comment, allowlist, delegations, toast }) => {
   );
 
   const account = useAccount();
-  const localAccount = getLocalAccount(account.address, allowlist);
+  const localAccount = getLocalAccount(account.address);
   const provider = useProvider();
 
   const commonEmojis = ["🥝", "🔥", "👀", "💯", "🤭"];
@@ -120,7 +120,7 @@ export const EmojiReaction = ({ comment, allowlist, delegations, toast }) => {
     async function fetchAvatar() {
       if (signer) {
         const addr = await signer.getAddress();
-        const identityResolved = eligible(allowlist, delegations, addr);
+        const identityResolved = resolveIdentity(delegations, addr);
         if (identityResolved) {
           const resolved = await resolveAvatar(identityResolved);
           setPreResolvedAvatar(resolved);
@@ -129,13 +129,13 @@ export const EmojiReaction = ({ comment, allowlist, delegations, toast }) => {
       }
     }
     fetchAvatar();
-  }, [signer, allowlist, delegations]);
+  }, [signer, delegations]);
 
   const handleReaction = async (emoji, isFromExistingReaction = false) => {
     // Prefer local signer if available; otherwise handle delegation flow for connected wallets
     if (!signer) {
       if (account?.isConnected && account?.address) {
-        if (isDelegationModalNeeded(allowlist, delegations, account.address)) {
+        if (isDelegationModalNeeded(account.address)) {
           openDelegationModalForAction();
           return;
         }
@@ -147,7 +147,7 @@ export const EmojiReaction = ({ comment, allowlist, delegations, toast }) => {
     try {
       const address = await signer.getAddress();
       setIsReacting(true);
-      const identity = eligible(allowlist, delegations, address);
+      const identity = resolveIdentity(delegations, address);
 
       if (!identity) {
         window.location.pathname = "/gateway";
@@ -494,13 +494,13 @@ export const EmojiReaction = ({ comment, allowlist, delegations, toast }) => {
 
 function NotificationOptIn(props) {
   const account = useAccount();
-  const localAccount = getLocalAccount(account.address, props.allowlist);
+  const localAccount = getLocalAccount(account.address);
   const [isMiniApp, setIsMiniApp] = useState(null); // Start with null to indicate loading state
 
   // Compute eligibility synchronously when possible to avoid pop-in
   const identity =
     localAccount?.identity &&
-    eligible(props.allowlist, props.delegations, localAccount.identity);
+    resolveIdentity(props.delegations, localAccount.identity);
 
   useEffect(() => {
     let mounted = true;
@@ -553,12 +553,12 @@ const EmailNotificationLink = (props) => {
   const [status, setStatus] = useState("");
   const [email, setEmail] = useState("");
   const account = useAccount();
-  const localAccount = getLocalAccount(account.address, props.allowlist);
+  const localAccount = getLocalAccount(account.address);
   const provider = useProvider();
   const identity =
     account.address &&
     localAccount?.address &&
-    eligible(props.allowlist, props.delegations, localAccount.address);
+    resolveIdentity(props.delegations, localAccount.address);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -642,7 +642,7 @@ const EmailNotificationLink = (props) => {
 };
 
 const Comment = React.forwardRef(
-  ({ comment, storyIndex, storyTitle, allowlist, delegations, toast, isLastComment }, ref) => {
+  ({ comment, storyIndex, storyTitle, delegations, toast, isLastComment }, ref) => {
     const [isCollapsed, setIsCollapsed] = useState(false);
     const toggleCollapsed = (e) => {
       if (e.target.closest("a")) {
@@ -835,7 +835,6 @@ const Comment = React.forwardRef(
                 </span>
                 <EmojiReaction
                   comment={comment}
-                  allowlist={allowlist}
                   delegations={delegations}
                   toast={toast}
                 />

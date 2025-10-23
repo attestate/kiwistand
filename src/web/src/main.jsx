@@ -138,7 +138,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-async function addSubmitButton(allowlist, delegations, toast) {
+async function addSubmitButton(delegations, toast) {
   const submitButtonContainer = document.getElementById("submit-button");
   if (submitButtonContainer) {
     const SubmitButton = (await import("./SubmitButton.jsx")).default;
@@ -148,7 +148,6 @@ async function addSubmitButton(allowlist, delegations, toast) {
         <Providers>
           <SubmitButton
             toast={toast}
-            allowlist={allowlist}
             delegations={delegations}
           />
         </Providers>
@@ -157,7 +156,7 @@ async function addSubmitButton(allowlist, delegations, toast) {
   }
 }
 
-async function addAnalytics(allowlist) {
+async function addAnalytics() {
   // Run on feed pages, profile pages, and story pages
   const path = window.location.pathname;
   const isFeedPage = path === "/" || path === "/new" || path === "/best";
@@ -180,7 +179,7 @@ async function addAnalytics(allowlist) {
     createRoot(container).render(
       <StrictMode>
         <Providers>
-          <Analytics allowlist={allowlist} />
+          <Analytics />
         </Providers>
       </StrictMode>,
     );
@@ -255,7 +254,7 @@ async function addDynamicNavElements() {
   return;
 }
 
-async function addDynamicComments(allowlist, delegations, toast) {
+async function addDynamicComments(delegations, toast) {
   const sections = document.querySelectorAll(".comment-section");
   if (sections && sections.length > 0) {
     const CommentSection = (await import("./CommentSection.jsx")).default;
@@ -278,7 +277,6 @@ async function addDynamicComments(allowlist, delegations, toast) {
               storyTitle={storyTitle}
               hasPreview={hasPreview}
               alwaysShown={alwaysShown}
-              allowlist={allowlist}
               delegations={delegations}
               toast={toast}
             />
@@ -299,7 +297,6 @@ async function addDynamicComments(allowlist, delegations, toast) {
         <StrictMode>
           <Providers>
             <ChatBubble
-              allowlist={allowlist}
               delegations={delegations}
               storyIndex={storyIndex}
               commentCount={commentCount}
@@ -311,7 +308,7 @@ async function addDynamicComments(allowlist, delegations, toast) {
   }
 }
 
-async function addVotes(allowlist, delegations, toast) {
+async function addVotes(delegations, toast) {
   const voteArrows = document.querySelectorAll(".like-button-container");
   if (voteArrows.length === 0) return;
 
@@ -341,7 +338,6 @@ async function addVotes(allowlist, delegations, toast) {
                   isad={isad}
                   title={title}
                   href={href}
-                  allowlist={allowlist}
                   delegations={delegations}
                   upvoters={upvoters}
                   toast={toast}
@@ -361,7 +357,7 @@ async function addVotes(allowlist, delegations, toast) {
 }
 
 
-async function addEmailSubscriptionForm(allowlist, delegations, toast) {
+async function addEmailSubscriptionForm(delegations, toast) {
   const elem = document.querySelector("email-subscription-form");
   if (elem) {
     const { ConnectedEmailSubscriptionForm } = await import("./Bell.jsx");
@@ -369,34 +365,11 @@ async function addEmailSubscriptionForm(allowlist, delegations, toast) {
       <StrictMode>
         <Providers>
           <ConnectedEmailSubscriptionForm
-            allowlist={allowlist}
             delegations={delegations}
             toast={toast}
             onSuccess={() => {
               window.location.href = "/demonstration";
             }}
-          />
-        </Providers>
-      </StrictMode>,
-    );
-  }
-}
-
-async function addBuyButton(allowlistPromise, delegationsPromise, toast) {
-  const buyButtonContainer = document.querySelector("#buy-button-container");
-  if (buyButtonContainer) {
-    const [allowlist, delegations, { default: BuyButton }] = await Promise.all([
-      allowlistPromise,
-      delegationsPromise,
-      import("./BuyButton.jsx"),
-    ]);
-    createRoot(buyButtonContainer).render(
-      <StrictMode>
-        <Providers>
-          <BuyButton
-            allowlist={allowlist}
-            delegations={delegations}
-            toast={toast}
           />
         </Providers>
       </StrictMode>,
@@ -421,7 +394,7 @@ async function addProfileDisplay() {
   }
 }
 
-async function addCommentInput(toast, allowlist, delegations) {
+async function addCommentInput(toast, delegations) {
   const commentInput = document.querySelector("nav-comment-input");
   if (commentInput) {
     const CommentInputComponent = (await import("./CommentInput.jsx")).default;
@@ -443,7 +416,6 @@ async function addCommentInput(toast, allowlist, delegations) {
           <CommentInputComponent
             storyIndex={storyIndex}
             toast={toast}
-            allowlist={allowlist}
             delegations={delegations}
             style={customStyle}
           />
@@ -453,7 +425,7 @@ async function addCommentInput(toast, allowlist, delegations) {
   }
 }
 
-async function addDelegateButton(allowlist, delegations, toast) {
+async function addDelegateButton(delegations, toast) {
   const delegateButtonContainer = document.querySelector(".delegate-button");
   if (delegateButtonContainer) {
     const DelegateButton = (await import("./DelegateButton.jsx")).default;
@@ -465,7 +437,6 @@ async function addDelegateButton(allowlist, delegations, toast) {
       <StrictMode>
         <Providers>
           <DelegateButton
-            allowlist={allowlist}
             delegations={delegations}
             toast={toast}
             showRedirect={showRedirect}
@@ -477,7 +448,7 @@ async function addDelegateButton(allowlist, delegations, toast) {
   }
 }
 
-async function addConnectedComponents(allowlist, delegations, toast) {
+async function addConnectedComponents(delegations, toast) {
   const connectButton = document.querySelector(".connect-button-wrapper");
   if (connectButton) {
     const { ConnectedTextConnectButton } = await import("./Navigation.jsx");
@@ -485,7 +456,6 @@ async function addConnectedComponents(allowlist, delegations, toast) {
       <StrictMode>
         <Providers>
           <ConnectedTextConnectButton
-            allowlist={allowlist}
             delegations={delegations}
             toast={toast}
           />
@@ -507,7 +477,6 @@ async function addConnectedComponents(allowlist, delegations, toast) {
           <Providers>
             <Bell
               toast={toast}
-              allowlist={allowlist}
               delegations={delegations}
             />
           </Providers>
@@ -553,7 +522,6 @@ async function addConnectedComponents(allowlist, delegations, toast) {
             <Bell
               toast={toast}
               mobile
-              allowlist={allowlist}
               delegations={delegations}
             />
           </Providers>
@@ -570,7 +538,6 @@ async function addConnectedComponents(allowlist, delegations, toast) {
         <Providers>
           <ConnectedProfile
             toast={toast}
-            allowlist={allowlist}
             delegations={delegations}
           />
         </Providers>
@@ -620,8 +587,7 @@ async function addConnectedComponents(allowlist, delegations, toast) {
   }
 }
 
-
-async function addModals(allowlist, delegations, toast) {
+async function addModals(delegations, toast) {
   const nftmodal = document.querySelector("nav-nft-modal");
   if (nftmodal) {
     const NFTModal = (await import("./NFTModal.jsx")).default;
@@ -647,7 +613,6 @@ async function addModals(allowlist, delegations, toast) {
           <DelegationModal
             ref={delegationModalRef}
             toast={toast}
-            allowlist={allowlist}
             delegations={delegations}
           />
         </Providers>
@@ -818,7 +783,7 @@ async function addNewsletterScrollModal(toast) {
   );
 }
 
-async function addAvatar(allowlist) {
+async function addAvatar() {
   const avatarElem = document.querySelectorAll("nav-header-avatar");
   if (avatarElem && avatarElem.length > 0) {
     const Avatar = (await import("./Avatar.jsx")).default;
@@ -826,7 +791,7 @@ async function addAvatar(allowlist) {
       createRoot(element).render(
         <StrictMode>
           <Providers>
-            <Avatar allowlist={allowlist} />
+            <Avatar />
           </Providers>
         </StrictMode>,
       );
@@ -848,7 +813,7 @@ async function addBackButton() {
   }
 }
 
-async function addStoryEmojiReactions(allowlist, delegations, toast) {
+async function addStoryEmojiReactions(delegations, toast) {
   const reactionContainers = document.querySelectorAll(".reactions-container");
   if (reactionContainers && reactionContainers.length > 0) {
     const [commentSection, wagmi, tanstackQuery, rainbowKit, clientConfig] =
@@ -885,7 +850,6 @@ async function addStoryEmojiReactions(allowlist, delegations, toast) {
                   <RainbowKitProvider chains={chains}>
                     <EmojiReaction
                       comment={comment}
-                      allowlist={allowlist}
                       delegations={delegations}
                       toast={toast}
                     />
@@ -1065,72 +1029,31 @@ async function addLeaderboardInteractions() {
 }
 
 
-async function checkMintStatus(address) {
-  const url = new URL(window.location.href);
-  if (url.pathname !== "/indexing") return;
-
-  const [{ fetchAllowList, fetchDelegations }, { Wallet }] = await Promise.all([
-    import("./API.mjs"),
-    import("@ethersproject/wallet"),
-  ]);
-
-  const delegatePk = localStorage.getItem(`-kiwi-news-${address}-key`);
-
-  let delegate;
-  if (delegatePk) {
-    delegate = new Wallet(delegatePk).address;
-  }
-
-  const intervalId = setInterval(async () => {
-    const [allowList, delegations] = await Promise.all([
-      fetchAllowList(true),
-      fetchDelegations(true),
-    ]);
-
-    if (
-      !allowList.has(address) &&
-      !Object.values(delegations).includes(address)
-    ) {
-      console.log("Waiting for mint to be picked up...");
-      return;
-    }
-    if (delegate && !Object.keys(delegations).includes(delegate)) {
-      console.log("Waiting for delegate to be picked up");
-      return;
-    }
-
-    console.log("Mint has been picked up by the node.");
-    clearInterval(intervalId);
-    window.location.href = "/";
-  }, 3000);
-}
-
-async function startWatchAccount(allowlist, delegations, account, isInIOSApp) {
+async function startWatchAccount(delegations, account, isInIOSApp) {
   let signer;
   try {
-    signer = await getSigner(account, allowlist);
+    signer = await getSigner(account);
   } catch (err) {
     // NOTE: Couldn't find a valid local signer, so we're returning and not
     // doing anything.
   }
 
-  checkMintStatus(account.address);
   await processAndSendVotes(signer, account.address);
   window.addEventListener(
     "upvote-storage",
     async () => await processAndSendVotes(signer, account.address),
   );
 
-  const { eligible } = await import("@attestate/delegator2");
+  const { resolveIdentity } = await import("@attestate/delegator2");
   const { getLocalAccount } = await import("./session.mjs");
-  const localAccount = getLocalAccount(account.address, allowlist);
+  const localAccount = getLocalAccount(account.address);
   let address;
   if (localAccount) {
     address = localAccount.identity;
   } else if (account.isConnected) {
     address = account.address;
   }
-  const identity = address && eligible(allowlist, delegations, address);
+  const identity = address && resolveIdentity(delegations, address);
   if (identity) {
     posthog.identify(identity);
 
@@ -1220,9 +1143,9 @@ function hideDesktopLinks() {
   }
 }
 
-async function getSigner(account, allowlist) {
+async function getSigner(account) {
   const { getLocalAccount } = await import("./session.mjs");
-  const localAccount = getLocalAccount(account.address, allowlist);
+  const localAccount = getLocalAccount(account.address);
 
   if (localAccount && localAccount.privateKey) {
     const [{ getProvider }, { Wallet }] = await Promise.all([
@@ -1727,10 +1650,9 @@ async function start() {
   // Add TestFlight QR code
   await addTestFlightQR();
 
-  const { fetchAllowList, fetchDelegations } = await import("./API.mjs");
+  const { fetchDelegations } = await import("./API.mjs");
 
   const cached = true;
-  const allowlistPromise = fetchAllowList(cached);
   const delegationsPromise = fetchDelegations(cached);
 
   // Import watchAccount, getAccount, client and isInIOSApp
@@ -1739,10 +1661,8 @@ async function start() {
 
   // Get initial account and set up watcher
   const initialAccount = await getAccount(client);
-  const allowlist = await allowlistPromise;
   const delegations = await delegationsPromise;
   const identity = await startWatchAccount(
-    allowlist,
     delegations,
     initialAccount,
     isInIOSApp,
@@ -1754,7 +1674,7 @@ async function start() {
   // Watch for future account changes
   watchAccount(client, {
     async onChange(account) {
-      await startWatchAccount(allowlist, delegations, account, isInIOSApp);
+      await startWatchAccount(delegations, account, isInIOSApp);
     },
   });
 
@@ -1763,8 +1683,8 @@ async function start() {
 
   const results0 = await Promise.allSettled([
     import("@rainbow-me/rainbowkit/styles.css"), // Load styles in parallel
-    addDynamicComments(await allowlistPromise, await delegationsPromise, toast),
-    addVotes(await allowlistPromise, await delegationsPromise, toast),
+    addDynamicComments(await delegationsPromise, toast),
+    addVotes(await delegationsPromise, toast),
   ]);
 
   const results1 = await Promise.allSettled([
@@ -1772,19 +1692,16 @@ async function start() {
     addInviteLink(toast),
     addFarcasterShareButtons(),
     addStoryEmojiReactions(
-      await allowlistPromise,
       await delegationsPromise,
       toast,
     ),
     addDecayingPriceLink(),
-    addCommentInput(toast, await allowlistPromise, await delegationsPromise),
-    addTGLink(await allowlistPromise),
+    addCommentInput(toast, await delegationsPromise),
     addEmailSubscriptionForm(
-      await allowlistPromise,
       await delegationsPromise,
       toast,
     ),
-    addModals(await allowlistPromise, await delegationsPromise, toast),
+    addModals(await delegationsPromise, toast),
     addNFTPrice(),
     addKarmaElements(),
     addLeaderboardInteractions(),
@@ -1793,18 +1710,16 @@ async function start() {
     addEmbedDrawer(toast),
     addRewardsDrawer(),
     addNewsletterScrollModal(toast),
-    addAvatar(await allowlistPromise),
+    addAvatar(),
     addBackButton(),
-    addDelegateButton(await allowlistPromise, await delegationsPromise, toast),
-    addBuyButton(allowlistPromise, delegationsPromise, toast),
+    addDelegateButton(await delegationsPromise, toast),
     addProfileDisplay(),
     addConnectedComponents(
-      await allowlistPromise,
       await delegationsPromise,
       toast,
     ),
-    addSubmitButton(await allowlistPromise, await delegationsPromise, toast),
-    addAnalytics(await allowlistPromise),
+    addSubmitButton(await delegationsPromise, toast),
+    addAnalytics(),
   ]);
 
   results0.forEach((result, index) => {

@@ -166,7 +166,6 @@ export default async function (trie, theme) {
   const amount = null;
   const parser = JSON.parse;
   const startDatetime = null;
-  const accounts = await registry.accounts();
   const delegations = await registry.delegations();
   const href = null;
   const messages = await store.posts(
@@ -175,7 +174,6 @@ export default async function (trie, theme) {
     amount,
     parser,
     startDatetime,
-    accounts,
     delegations,
     href,
     "amplify",
@@ -186,7 +184,6 @@ export default async function (trie, theme) {
     amount,
     parser,
     startDatetime,
-    accounts,
     delegations,
     href,
     "comment",
