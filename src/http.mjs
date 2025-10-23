@@ -84,7 +84,6 @@ import { toAddress, resolve, ENS_CACHE_PREFIX } from "./ens.mjs";
 import * as ens from "./ens.mjs";
 import * as karma from "./karma.mjs";
 import * as subscriptions from "./subscriptions.mjs";
-import * as telegram from "./telegram.mjs";
 import * as email from "./email.mjs";
 import * as price from "./price.mjs";
 import * as moderation from "./views/moderation.mjs";
@@ -1061,38 +1060,6 @@ export async function launch(trie, libp2p, isPrimary = true) {
     }
   });
 
-  app.post("/api/v1/telegram", async (request, reply) => {
-    const message = request.body;
-    // NOTE: The message here is ALMOST a compliant Kiwi News amplify or
-    // comment message just to not having to implement an entirely new
-    // validation flow for signing and validating a message. However, we
-    // wouldn't want this message to be circulated on the protocol and so we
-    // intentionally set all properties to TGAUTH.
-    if (
-      !message ||
-      message.title !== "TGAUTH" ||
-      message.href !== "TGAUTH" ||
-      message.type !== "TGAUTH"
-    ) {
-      const code = 400;
-      const httpMessage = "Bad Request";
-      const details = "Body must include title and href with value 'TGAUTH'.";
-      return sendError(reply, code, httpMessage, details);
-    }
-    let inviteLink;
-    try {
-      inviteLink = await telegram.generateLink(message);
-    } catch (err) {
-      const code = 400;
-      const httpMessage = "Bad Request";
-      const details = err.toString();
-      return sendError(reply, code, httpMessage, details);
-    }
-    const code = 200;
-    const httpMessage = "OK";
-    const details = "Successfully generated Telegram link.";
-    return sendStatus(reply, code, httpMessage, details, { link: inviteLink });
-  });
   app.post("/api/v1/subscriptions/:address", async (request, reply) => {
     function isValidWebPushSubscription(subscription) {
       if (!subscription || typeof subscription !== "object") {
