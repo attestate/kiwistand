@@ -1077,70 +1077,6 @@ async function addLeaderboardInteractions() {
   }, 200); // Small delay to ensure DOM is ready
 }
 
-async function addLeaderboardStats(allowlist, delegations) {
-  // Only add if we're on the leaderboard page
-  if (window.location.pathname !== "/community") return;
-
-  // Check if the elements exist
-  const karmaEl = document.querySelector(".user-karma-value");
-  if (!karmaEl) return;
-
-  // Get the current account if available
-  const [{ getAccount }, { client, chains }] = await Promise.all([
-    import("@wagmi/core"),
-    import("./client.mjs"),
-  ]);
-
-  let address;
-  try {
-    const account = await getAccount(client);
-    if (account && account.address) {
-      address = account.address;
-    }
-  } catch (err) {
-    // Try to get from local storage
-    const localAccount = getLocalAccount(null, allowlist);
-    if (localAccount && localAccount.identity) {
-      address = localAccount.identity;
-    }
-  }
-
-  // Create a hidden container for the React component
-  const container = document.createElement("div");
-  container.style.display = "none";
-  document.body.appendChild(container);
-
-  const [LeaderboardStats, wagmi, tanstackQuery, rainbowKit] =
-    await Promise.all([
-      import("./LeaderboardStats.jsx").then((m) => m.default),
-      import("wagmi"),
-      import("@tanstack/react-query"),
-      import("@rainbow-me/rainbowkit"),
-    ]);
-
-  const { WagmiProvider } = wagmi;
-  const { QueryClient, QueryClientProvider } = tanstackQuery;
-  const { RainbowKitProvider } = rainbowKit;
-  const queryClient = new QueryClient();
-
-  createRoot(container).render(
-    <StrictMode>
-      <Providers>
-        <QueryClientProvider client={queryClient}>
-          <WagmiProvider config={client}>
-            <RainbowKitProvider chains={chains}>
-              <LeaderboardStats
-                allowlist={allowlist}
-                delegations={delegations}
-                address={address}
-              />
-            </RainbowKitProvider>
-          </WagmiProvider>
-        </QueryClientProvider>
-      </Providers>
-    </StrictMode>,
-  );
-}
 
 async function checkMintStatus(address) {
   const url = new URL(window.location.href);
@@ -1864,7 +1800,6 @@ async function start() {
     addModals(await allowlistPromise, await delegationsPromise, toast),
     addNFTPrice(),
     addKarmaElements(),
-    addLeaderboardStats(await allowlistPromise, await delegationsPromise),
     addLeaderboardInteractions(),
     addMinuteCountdown(),
     addTutorialDrawers(),
