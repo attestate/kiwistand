@@ -1,19 +1,12 @@
-import { eligibleAt } from "@attestate/delegator2";
+import { resolveIdentity } from "@attestate/delegator2";
 
 import { ecrecover, toDigest } from "../id.mjs";
 import { EIP712_MESSAGE } from "../constants.mjs";
 
-async function enhance({ node, accounts, delegations }) {
+async function enhance({ node, delegations }) {
   const cacheEnabled = false;
   const signer = ecrecover(node, EIP712_MESSAGE, cacheEnabled);
-  const validationTime = new Date(node.timestamp * 1000);
-  const identity = eligibleAt(accounts, delegations, {
-    address: signer,
-    validationTime,
-  });
-  if (!identity) {
-    return null;
-  }
+  const identity = resolveIdentity(delegations, signer);
 
   const { index } = toDigest(node);
 

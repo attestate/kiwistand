@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { WagmiProvider, useAccount } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
-import { eligible } from "@attestate/delegator2";
+import { resolveIdentity } from "@attestate/delegator2";
 
 import { getLocalAccount } from "./session.mjs";
 import { client, chains, getProvider, useIsMiniApp } from "./client.mjs";
@@ -51,7 +51,7 @@ const Avatar = (props) => {
   // --- Logic for Non-Story Pages ---
   let address;
   const account = useAccount();
-  const localAccount = getLocalAccount(account.address, props.allowlist);
+  const localAccount = getLocalAccount(account.address);
 
   // Check if we're in a mini app and get the connected wallet address
   // Note: Using conservative detection for UI - if frame detection passes, we assume mini app for UI purposes
@@ -64,7 +64,7 @@ const Avatar = (props) => {
     address = localAccount.identity;
   }
 
-  // For mini apps, ensure we use the connected address even without allowlist eligibility
+  // For mini apps, ensure we use the connected address even without eligibility
   if (isMiniApp && account.isConnected && !address) {
     address = account.address;
   }

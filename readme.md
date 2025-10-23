@@ -93,7 +93,7 @@ For more information about compression testing, see [test/README-compression.md]
 
 ## Key features
 
-1. **Sybil Protection**: NFT ownership is required for posting and voting, reducing spam and duplicate accounts.
+1. **Delegation-Based Access**: Users can act on their own behalf or through delegated addresses, enabling seamless interactions without repeated wallet confirmations.
 2. **Public Goods Infrastructure**: Data is shared across all nodes using a set reconciliation algorithm, preventing single-entity control.
 3. **Complete Open Source Package**: Kiwi News includes frontend, backend, and protocol code, all under GPL3.
 4. **Streamlined User Interaction**: Kiwi News supports key delegation, which allows automatic signing of user actions. This means users don't have to manually confirm each action via wallet connect or similar methods, making the user experience smoother.

@@ -36,7 +36,6 @@ For a deeper dive into the protocol, see the [Protocol Guide](https://github.com
 - **CORS**: Fully enabled (`Access-Control-Allow-Origin: *`)
 - **Endpoints**:
   - `POST /list` - Paginated list of messages
-  - `GET /allowlist` - Array of allowed Ethereum addresses
   - `GET /delegations` - Delegation mappings
   - `POST /messages` - Submit new messages (stories, comments, upvotes)
 
@@ -86,7 +85,6 @@ This guide provides everything you need to build a simple client that can read t
 Here is a complete, language-agnostic overview of the process:
 
 1.  **Fetch the Feed**: Send a `POST` request to `https://news.kiwistand.com:8443/api/v1/list` with a JSON body like `{"from": 0, "amount": 10, "type": "amplify"}` to get the first 10 stories.
-2.  **Check Authorization**: To upvote, the user's address must hold a Kiwi Pass NFT. You can verify this by fetching `https://news.kiwistand.com:8443/api/v1/allowlist` and checking if the user's address is included.
 3.  **Prepare the Message**: Let's say you want to upvote the first story from the feed. You'll create a JSON object with its `title` and `href`.
 4.  **Sign the Message**: Using an EIP-712 compliant library, sign the message object with the user's Ethereum private key.
 5.  **Submit the Upvote**: Send a `POST` request to `https://news.kiwistand.com:8443/api/v1/messages` with the message object from step 3, plus the `signature` from step 4.
@@ -282,7 +280,6 @@ console.log("Is signature valid?", recoveredAddress.toLowerCase() === signer.toL
 
 ### Other Useful Endpoints (Port 8443)
 
--   **`GET /allowlist`**: Retrieves the list of all Ethereum addresses that hold the Kiwi Pass NFT.
 -   **`GET /delegations`**: Retrieves an object of valid delegations in the form of `to:from`.
 -   **`GET /profile/:address`**: Retrieves profile information (ENS, avatar) for an address.
 -   **`GET /karma/:address`**: Returns the karma score for an address.
@@ -351,8 +348,6 @@ All API responses follow a consistent structure:
 You can test the API endpoints using curl:
 
 ```bash
-# Get the allowlist (port 8443)
-curl https://news.kiwistand.com:8443/api/v1/allowlist
 
 # Get hot feed (port 443, no CORS)
 curl https://news.kiwistand.com/api/v1/feeds/hot

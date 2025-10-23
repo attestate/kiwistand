@@ -18,7 +18,7 @@ import rlp from "@ethereumjs/rlp";
 import { keccak256 } from "ethereum-cryptography/keccak.js";
 import { decode } from "cbor-x";
 import { open } from "lmdb";
-import { eligible, eligibleAt } from "@attestate/delegator2";
+import { resolveIdentity } from "@attestate/delegator2";
 import canonicalize from "canonicalize";
 
 import log from "./logger.mjs";
@@ -306,7 +306,7 @@ export function upvoteID(identity, link, type) {
 }
 
 let messagesAdded = 0;
-async function atomicPut(trie, message, identity, accounts, delegations) {
+async function atomicPut(trie, message, identity, delegations) {
   const marker = upvoteID(identity, message.href, message.type);
   const { canonical, index } = toDigest(message);
   log(
@@ -359,7 +359,7 @@ async function atomicPut(trie, message, identity, accounts, delegations) {
     await trie.put(Buffer.from(index, "hex"), canonical);
     try {
       const cacheEnabled = false;
-      const enhancer = enhance(accounts, delegations, cacheEnabled);
+      const enhancer = enhance(delegations, cacheEnabled);
       const enhancedMessage = await enhancer(message);
       insertMessage(enhancedMessage);
 
@@ -484,9 +484,7 @@ export async function add(
   trie,
   message,
   libp2p,
-  allowlist,
   delegations,
-  accounts,
   synching,
   metadb,
 ) {
@@ -494,9 +492,7 @@ export async function add(
     trie,
     message,
     libp2p,
-    allowlist,
     delegations,
-    accounts,
     synching,
     metadb,
   });
@@ -506,30 +502,12 @@ async function _add({
   trie,
   message,
   libp2p,
-  allowlist,
   delegations,
-  accounts,
   synching = false,
   metadb = upvotes,
 }) {
   const address = verify(message);
-
-  let identity;
-  if (synching) {
-    const validationTime = new Date(message.timestamp * 1000);
-    // TODO: If a V2 message is being added here, we must submit the tokenId
-    // claim of the message to eligibleAt
-    identity = eligibleAt(accounts, delegations, { address, validationTime });
-  } else {
-    identity = eligible(allowlist, delegations, address);
-  }
-  if (!identity) {
-    const err = `Address "${address}" wasn't found in the allow list or delegations list. Dropping message "${JSON.stringify(
-      message,
-    )}".`;
-    log(err);
-    throw new Error("You must mint the Kiwi NFT to upvote and submit!");
-  }
+  const identity = resolveIdentity(delegations, address);
 
   const minTimestampSecs = parseInt(env.MIN_TIMESTAMP_SECS, 10);
   if (message.timestamp < minTimestampSecs) {
@@ -574,7 +552,6 @@ async function _add({
     trie,
     message,
     identity,
-    accounts,
     delegations,
   );
 
@@ -629,7 +606,6 @@ export async function posts(
   amount,
   parser,
   startDatetime,
-  accounts,
   delegations,
   href,
   type,
@@ -645,7 +621,7 @@ export async function posts(
   );
 
   const cacheEnabled = true;
-  const enhancer = enhance(accounts, delegations, cacheEnabled);
+  const enhancer = enhance(delegations, cacheEnabled);
   const posts = (await Promise.allSettled(nodes.map(enhancer)))
     .map(({ value }) => value)
     .filter((elem) => elem !== null);
@@ -654,14 +630,13 @@ export async function posts(
 
 // NOTE: If you're wondering why the enhancer is recreated on each call of
 // posts( and other calls, the reason for it is that we constantly have to
-// re-query accounts and delegations as they're subject to change throughout
-// the application's lifecycle (e.g. when a new person mints/delegates).
-function enhance(accounts, delegations, cacheEnabled) {
+// re-query delegations as they're subject to change throughout
+// the application's lifecycle (e.g. when a new person delegates).
+function enhance(delegations, cacheEnabled) {
   return async (node) => {
     const computeFunc = async () =>
       await piscina.run({
         node,
-        accounts,
         delegations,
       });
 

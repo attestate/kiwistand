@@ -8,11 +8,7 @@ import { differenceInDays } from "date-fns";
 import { utils } from "ethers";
 import { database } from "@attestate/crawler";
 import { organize } from "@attestate/delegator2";
-import * as blockLogs from "@attestate/crawler-call-block-logs";
 
-const { aggregate } = blockLogs.loader;
-
-import mainnet from "./mainnet-mints.mjs";
 import log from "../logger.mjs";
 import { purgeCache } from "../cloudflarePurge.mjs";
 
@@ -20,15 +16,12 @@ const baseURL = `https://news.kiwistand.com:8443`;
 let cachedDelegations = {};
 let lastDelegationsChecksum = null; // Added checksum state
 
-let lastAccountsChecksum = null; // Added checksum state
-
 // Simple initialization function
 export async function initialize() {
   log(`[PID ${process.pid}] Initializing registry data...`);
   console.time(`[PID ${process.pid}] Registry initialization`);
 
   await refreshDelegations();
-  await refreshAccounts();
 
   console.timeEnd(`[PID ${process.pid}] Registry initialization`);
   return true;
@@ -163,90 +156,6 @@ export async function refreshDelegations() {
   lastDelegationsChecksum = currentChecksum;
   await db.close();
   await purgeCache(`${baseURL}/api/v1/delegations?cached=true`);
-}
-
-// NOTE: For the purpose of set reconciliation, we must know the first moment
-// of ownership, so in which block the user minted the NFT. However, for
-// mainnet NFTs we're NOT continuously tracking which addresses hold or
-// transfer the NFTs as this would increase scope and complexity significantly.
-//
-// In addition to that, every holder has been sent an OP NFT some time after
-// MAINNET_MAX_TIMESTAMP, which is when we invalidate the mainnet NFT.
-//
-// We're not increasing or decreasing mainnet NFT holders "balance" property
-// because instead we assume that they have held the token from the date of
-// minting to the moment when we switched over to OP mainnet.
-export function augmentWithMainnet(opAccounts) {
-  const MAINNET_MAX_TIMESTAMP = 1694676249;
-
-  for (let { to, timestamp } of mainnet) {
-    timestamp = parseInt(timestamp, 16);
-    const tokenId = `mainnet-tokenId-${timestamp}`;
-
-    if (!opAccounts[to]) {
-      opAccounts[to] = {};
-    }
-    if (!opAccounts[to].tokens) {
-      opAccounts[to].tokens = {};
-    }
-
-    opAccounts[to].tokens[tokenId] = [
-      {
-        start: timestamp,
-        end: MAINNET_MAX_TIMESTAMP,
-      },
-    ];
-  }
-
-  return opAccounts;
-}
-
-let cachedAccounts = {};
-
-export async function accounts() {
-  return cachedAccounts;
-}
-export async function refreshAccounts() {
-  const path = resolve(process.env.DATA_DIR, "op-call-block-logs-load");
-  // NOTE: On some cloud instances we ran into problems where LMDB reported
-  // MDB_READERS_FULL which exceeded the LMDB default value of 126. So we
-  // increased it and it fixed the issue. So we're passing this option in the
-  // @attestate/crawler.
-  const maxReaders = 500;
-  const db = database.open(path, maxReaders);
-  const name = database.order("op-call-block-logs");
-  const subdb = db.openDB(name);
-  const optimism = await database.all(subdb, "");
-
-  const currentChecksum = calculateCanonicalChecksum(optimism);
-  if (currentChecksum === lastAccountsChecksum) {
-    log(`Didn't find any new accounts to process, skipping refresh`);
-    await db.close();
-    return;
-  }
-
-  const transformed = optimism.map(({ value }) => ({
-    ...value,
-    timestamp: parseInt(value.timestamp, 16),
-  }));
-  const accounts = aggregate(transformed);
-  const result = augmentWithMainnet(accounts);
-
-  cachedAccounts = result;
-  lastAccountsChecksum = currentChecksum;
-  await db.close();
-  await purgeCache(`${baseURL}/api/v1/allowlist?cached=true`);
-}
-
-export async function allowlist() {
-  const accs = await accounts();
-  const currentHolders = new Set();
-  for (let address of Object.keys(accs)) {
-    if (accs[address].balance > 0) {
-      currentHolders.add(address);
-    }
-  }
-  return currentHolders;
 }
 
 export async function aggregateRevenue() {

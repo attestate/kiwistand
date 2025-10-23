@@ -340,49 +340,6 @@ export async function fetchDelegations(cached = false) {
   }
 }
 
-export async function fetchAllowList(cached = false) {
-  const url = new URL(getApiUrl("/api/v1/allowlist", API_PORT));
-  if (cached) url.searchParams.set("cached", "true");
-
-  let response;
-  try {
-    response = await fetch(url);
-    const data = await response.json();
-    return data.data ? new Set(data.data) : new Set();
-  } catch (err) {
-    console.error(err);
-    return new Set();
-  }
-}
-
-function checkMintStatus() {
-  // Get the current URL
-  const url = new URL(window.location.href);
-
-  // Check if we're on the '/indexing' page
-  if (url.pathname === "/indexing") {
-    // Get the 'address' parameter from the URL
-    const address = url.searchParams.get("address");
-
-    // Start the interval to check the allow list and delegations
-    const intervalId = setInterval(async () => {
-      const allowList = await fetchAllowList(true);
-      const delegations = await fetchDelegations(true);
-
-      if (
-        allowList.has(address) ||
-        Object.values(delegations).includes(address)
-      ) {
-        console.log("Mint has been picked up by the node.");
-        clearInterval(intervalId);
-        // Redirect to the '/demonstration' page
-        window.location.href = "/demonstration";
-      } else {
-        console.log("Waiting for mint to be picked up...");
-      }
-    }, 5000); // Check every 5 seconds
-  }
-}
 
 const ETH_USD_PRICE_FEED_ADDRESS = "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419";
 

@@ -5,6 +5,60 @@
 - We are versioning according to [semver.org](https://semver.org)
 - We are currently in the ["Initial development phase"](https://semver.org/#spec-item-4)
 
+## 0.12.0
+
+**BREAKING CHANGE**: Complete removal of Kiwi Pass NFT-based access control system
+
+This release removes the entire NFT/allowlist concept from Kiwistand and simplifies to delegation-only access control.
+
+### Breaking Changes
+
+- **Protocol versions bumped**:
+  - Pubsub topics: `8.0.0 → 9.0.0`
+  - Protocols (leaves/levels): `11.0.0 → 12.0.0`
+- **API Changes**:
+  - Removed `/allowlist` endpoint
+  - Removed `fetchAllowList()` from frontend API
+- **Delegator2 SDK (`@attestate/delegator2`)**:
+  - `eligible(allowlist, delegations, address)` → `resolveIdentity(delegations, address)`
+  - Removed all NFT-related functions: `eligibleAt()`, `extractLegacyObject()`, `legacyEligibleAt()`, `_eligibleAt()`
+
+### Removed Components
+
+**Backend:**
+- `src/chainstate/mainnet-mints.mjs` - Mainnet NFT tracking
+- `src/chainstate/mint.config.crawler.mjs` - NFT mint crawler
+- `src/chainstate/transfer-loader.mjs` - NFT transfer loader
+- Registry functions: `allowlist()`, `refreshAccounts()`, `augmentWithMainnet()`
+
+**Frontend:**
+- `src/web/src/BuyButton.jsx` - NFT purchase component
+- `src/web/src/TelegramLink.jsx` - Telegram integration
+- `src/web/src/LeaderboardStats.jsx` - Community stats
+- `src/views/kiwipass-mint.mjs` - NFT minting page
+- `src/views/indexing.mjs` - NFT indexing wait page
+- `src/views/invite.mjs` - Invite page
+- `src/views/leaderboard.mjs` - Community leaderboard
+- Routes: `/community`, `/invite`, `/indexing`, `/kiwipass-mint`
+
+### How It Works Now
+
+- Any address can act on its own behalf
+- If an address has delegated to another address, `resolveIdentity()` resolves it to the delegator
+- No more NFT/allowlist checks anywhere in the codebase
+- All identity resolution is done purely through the delegation system
+
+### Migration Guide
+
+If you're running a node:
+1. Update to the latest version
+2. The system will automatically work with the new delegation-only model
+3. No manual migration needed - existing delegations continue to work
+
+If you're using the API:
+- Replace calls to `/api/v1/allowlist` with `/api/v1/delegations`
+- Update any code using `eligible()` to use `resolveIdentity()`
+
 ## 0.11.0
 
 (breaking) Fixed critical bug in allowlist crawler that halted allowlist

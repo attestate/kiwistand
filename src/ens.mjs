@@ -5,7 +5,6 @@ import DOMPurify from "isomorphic-dompurify";
 import { fetchBuilder, FileSystemCache } from "node-fetch-cache";
 import { providers, utils } from "ethers";
 
-import { allowlist } from "./chainstate/registry.mjs";
 import { fetchCache } from "./utils.mjs";
 import cache from "./cache.mjs";
 import log from "./logger.mjs";

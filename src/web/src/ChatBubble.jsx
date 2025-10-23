@@ -7,11 +7,11 @@ import { getLocalAccount } from "./session.mjs";
 import { ChatsSVG } from "./icons.jsx";
 import { client, chains } from "./client.mjs";
 
-const ChatBubble = ({ allowlist, delegations, storyIndex, commentCount }) => {
+const ChatBubble = ({ delegations, storyIndex, commentCount }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   let address;
   const account = useAccount();
-  const localAccount = getLocalAccount(account.address, allowlist);
+  const localAccount = getLocalAccount(account.address);
   if (account.isConnected) {
     address = account.address;
   }

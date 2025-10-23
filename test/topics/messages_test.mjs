@@ -105,8 +105,7 @@ test.serial("adding valid message to trie", async (t) => {
   process.env.DATA_DIR = "dbtestA";
   const trie = await store.create();
   const emptyRoot = trie.root();
-  const allowlistFn = () => new Set([address]);
-  const result = await handlers.message(trie, allowlistFn)(evt);
+  const result = await handlers.message(trie)(evt);
   t.true(result);
   await rm("dbtestA", { recursive: true });
 });
@@ -144,13 +143,11 @@ test.serial(
     const emptyRoot = trie.root();
 
     const custodian = "0xee324c588ceF1BF1c1360883E4318834af66366d";
-    const allowlistFn = () => new Set([custodian]);
     const delegationsFn = () => ({
       [address]: custodian,
     });
     const result = await handlers.message(
       trie,
-      allowlistFn,
       delegationsFn,
     )(evt);
     t.true(result);

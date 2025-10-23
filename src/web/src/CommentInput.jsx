@@ -5,7 +5,7 @@ import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { WagmiProvider, useAccount } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Wallet } from "@ethersproject/wallet";
-import { eligible } from "@attestate/delegator2";
+import { resolveIdentity } from "@attestate/delegator2";
 import Drawer from "react-bottom-drawer";
 import slugify from "slugify";
 import DOMPurify from "isomorphic-dompurify";
@@ -275,12 +275,12 @@ const MobileComposer = ({
 };
 
 const CommentInput = (props) => {
-  const { toast, allowlist, delegations } = props;
+  const { toast, delegations } = props;
   const { isMiniApp, loading } = useIsMiniApp();
 
   let address;
   const account = useAccount();
-  const localAccount = getLocalAccount(account.address, allowlist);
+  const localAccount = getLocalAccount(account.address);
   if (account.isConnected) {
     address = account.address;
   }
@@ -308,11 +308,11 @@ const CommentInput = (props) => {
         setIsEligible(false);
         return;
       }
-      const result = eligible(allowlist, delegations, await signer.getAddress());
+      const result = resolveIdentity(delegations, await signer.getAddress());
       setIsEligible(result);
     };
     loadData();
-  }, [signer, address, allowlist, delegations]);
+  }, [signer, address, delegations]);
   
   // Pre-resolve profile (name and avatar) for optimistic UI updates
   useEffect(() => {
@@ -476,7 +476,7 @@ const CommentInput = (props) => {
     const index = getIndex();
 
     // --- Check if delegation is needed ---
-    if (address && isDelegationModalNeeded(allowlist, delegations, address)) {
+    if (address && isDelegationModalNeeded(address)) {
       setIsLoading(false);
       openDelegationModalForAction();
       return;
@@ -726,9 +726,9 @@ const CommentInput = (props) => {
               onClick={(e) => {
                 if (!disableAutoOpen && address && isEligible) {
                   e.preventDefault();
-                  
+
                   // Check if delegation is needed before opening mobile composer
-                  if (isDelegationModalNeeded(allowlist, delegations, address)) {
+                  if (isDelegationModalNeeded(address)) {
                     openDelegationModalForAction();
                   } else {
                     setShowMobileComposer(true);

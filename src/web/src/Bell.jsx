@@ -1,7 +1,7 @@
 // @format
 import React, { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
-import { eligible } from "@attestate/delegator2";
+import { resolveIdentity } from "@attestate/delegator2";
 import SwipeableDrawer from "@mui/material/SwipeableDrawer";
 import { Wallet } from "@ethersproject/wallet";
 
@@ -15,7 +15,6 @@ import { showSpinnerOverlay } from "./spinnerOverlay.js";
 
 const EmailSubscriptionForm = ({
   onSuccess,
-  allowlist,
   delegations,
   toast,
 }) => {
@@ -25,7 +24,7 @@ const EmailSubscriptionForm = ({
   const [subscribeToNewsletter, setSubscribeToNewsletter] = useState(true);
   const [subscribeToUpdates, setSubscribeToUpdates] = useState(true);
   const account = useAccount();
-  const localAccount = getLocalAccount(account.address, allowlist);
+  const localAccount = getLocalAccount(account.address);
   const provider = useProvider();
 
   const handleSubmit = async (e) => {
@@ -264,14 +263,14 @@ let wasTitleSet = false;
 const Bell = (props) => {
   let address;
   const account = useAccount();
-  const localAccount = getLocalAccount(account.address, props.allowlist);
+  const localAccount = getLocalAccount(account.address);
   if (localAccount) {
     address = localAccount.identity;
   } else if (account.isConnected) {
     address = account.address;
   }
   const isEligible =
-    address && eligible(props.allowlist, props.delegations, address);
+    address && resolveIdentity(props.delegations, address);
 
   const localLastUpdate = parseInt(getCookie("lastUpdate"), 10);
   const [lastUpdate, setLastUpdate] = useState(localLastUpdate);
@@ -428,7 +427,6 @@ const Bell = (props) => {
           <TextConnectButton
             className="bell-button"
             style={mobileConnectStyle}
-            allowlist={props.allowlist}
             delegations={props.delegations}
             text="Connect"
           />
@@ -448,7 +446,6 @@ const Bell = (props) => {
       <TextConnectButton
         className={props.mobile ? "mobile-bell" : "bell-button"}
         style={mobileConnectStyle}
-        allowlist={props.allowlist}
         delegations={props.delegations}
         text={
           props.mobile ? (

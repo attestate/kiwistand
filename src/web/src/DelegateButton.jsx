@@ -9,7 +9,7 @@ import posthog from "posthog-js";
 import { useMemo, useEffect, useState } from "react";
 import { Wallet } from "@ethersproject/wallet";
 import { optimism } from "wagmi/chains";
-import { create, eligible } from "@attestate/delegator2";
+import { create, resolveIdentity } from "@attestate/delegator2";
 import useLocalStorageState from "use-local-storage-state";
 import { getAddress } from "@ethersproject/address";
 
@@ -306,7 +306,7 @@ const DelegateButton = (props) => {
     })();
   }, [key, wallet, from.address, props]);
 
-  const localAccount = getLocalAccount(from.address, props.allowlist);
+  const localAccount = getLocalAccount(from.address);
 
   if (!from.address) {
     return (
@@ -315,7 +315,6 @@ const DelegateButton = (props) => {
         <ConnectionDialogue account={from} />
         <ConnectedConnectButton
           required
-          allowlist={props.allowlist}
           delegations={props.delegations}
         />
       </div>

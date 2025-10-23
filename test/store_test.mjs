@@ -1003,61 +1003,6 @@ test("try to add invalidly signed message to store", async (t) => {
   );
 });
 
-test("add with delegated address but from isn't on allow list", async (t) => {
-  env.DATA_DIR = "dbtestA";
-  const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
-  const privateKey =
-    "0xad54bdeade5537fb0a553190159783e45d02d316a992db05cbed606d3ca36b39";
-  const signer = new Wallet(privateKey);
-  t.is(signer.address, address);
-
-  const text = "hello world";
-  const href = "https://example.com";
-  const type = "amplify";
-  const timestamp = 1676559616;
-  const message = id.create(text, href, type, timestamp);
-  const signedMessage = await id.sign(signer, message, EIP712_MESSAGE);
-
-  const trie = {
-    put: (key, value) => {
-      t.truthy(key);
-      t.truthy(value);
-    },
-    root: () => Buffer.from("abc", "hex"),
-    hasCheckpoints: () => false,
-  };
-  const libp2p = null;
-  const list = ["0x0000000000000000000000000000000000000000"];
-  const allowlist = new Set(list);
-  const delegations = {
-    [address]: "0x0000000000000000000000000000000000000001",
-  };
-  const accounts = {
-    [list[0]]: {
-      balance: 1,
-      tokens: {
-        5: [
-          {
-            start: 123,
-          },
-        ],
-      },
-    },
-  };
-
-  await t.throwsAsync(
-    async () =>
-      await store.add(
-        trie,
-        signedMessage,
-        libp2p,
-        allowlist,
-        delegations,
-        accounts,
-      ),
-  );
-});
-
 test("attempting to upvote twice, once with custody and delegate address", async (t) => {
   store.upvotes.clear();
   const address0 = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
@@ -1090,29 +1035,14 @@ test("attempting to upvote twice, once with custody and delegate address", async
     hasCheckpoints: () => false,
   };
   const libp2p = null;
-  const allowlist = new Set([address0]);
   const delegations = {
     [address1]: address0,
-  };
-  const accounts = {
-    [address0]: {
-      balance: 1,
-      tokens: {
-        5: [
-          {
-            start: 123,
-          },
-        ],
-      },
-    },
   };
   await store.add(
     trie,
     signedMessage0,
     libp2p,
-    allowlist,
     delegations,
-    accounts,
   );
   await t.throwsAsync(
     async () =>
@@ -1120,103 +1050,7 @@ test("attempting to upvote twice, once with custody and delegate address", async
         trie,
         signedMessage1,
         libp2p,
-        allowlist,
         delegations,
-        accounts,
-      ),
-  );
-});
-
-test("trying to add a message to store that isn't on allowlist but was delegated", async (t) => {
-  env.DATA_DIR = "dbtestA";
-  const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
-  const privateKey =
-    "0xad54bdeade5537fb0a553190159783e45d02d316a992db05cbed606d3ca36b39";
-  const signer = new Wallet(privateKey);
-  t.is(signer.address, address);
-
-  const text = "hello world";
-  const href = "https://example.com";
-  const type = "amplify";
-  const timestamp = 1676559616;
-  const message = id.create(text, href, type, timestamp);
-  const signedMessage = await id.sign(signer, message, EIP712_MESSAGE);
-
-  const trie = {
-    put: (key, value) => {
-      t.truthy(key);
-      t.truthy(value);
-    },
-    root: () => Buffer.from("abc", "hex"),
-    hasCheckpoints: () => false,
-  };
-  const libp2p = null;
-  const list = [utils.getAddress("0xee324c588cef1bf1c1360883e4318834af66366d")];
-  const allowlist = new Set(list);
-  const delegations = {
-    [address]: list[0],
-  };
-  const accounts = {
-    [list[0]]: {
-      balance: 1,
-      tokens: {
-        5: [
-          {
-            start: 123,
-          },
-        ],
-      },
-    },
-  };
-  await store.add(
-    trie,
-    signedMessage,
-    libp2p,
-    allowlist,
-    delegations,
-    accounts,
-  );
-});
-
-test("trying to add message to store that isn't on allowlist", async (t) => {
-  const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
-  const privateKey =
-    "0xad54bdeade5537fb0a553190159783e45d02d316a992db05cbed606d3ca36b39";
-  const signer = new Wallet(privateKey);
-  t.is(signer.address, address);
-
-  const text = "hello world";
-  const href = "https://example.com";
-  const type = "amplify";
-  const timestamp = 1676559616;
-  const message = id.create(text, href, type, timestamp);
-  const signedMessage = await id.sign(signer, message, EIP712_MESSAGE);
-
-  const trie = {
-    put: (key, value) => {
-      t.fail();
-    },
-    root: () => {},
-  };
-  const libp2p = {
-    pubsub: {
-      publish: (name, message) => {
-        t.fail();
-      },
-    },
-  };
-  const allowlist = new Set();
-  const delegations = {};
-  const accounts = {};
-  await t.throwsAsync(
-    async () =>
-      await store.add(
-        trie,
-        signedMessage,
-        libp2p,
-        allowlist,
-        delegations,
-        accounts,
       ),
   );
 });

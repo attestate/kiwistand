@@ -49,11 +49,7 @@ test("MCP server lists all tools", async (t) => {
       "search-content",
       "get-feed",
       "get-story",
-      "get-url-metadata",
-      "parse-url",
-      "get-user-profile",
-      "get-user-activity",
-      "get-kiwi-price"
+      "get-user-profile"
     ];
     
     t.is(tools.tools.length, expectedTools.length);
@@ -204,49 +200,6 @@ test("MCP get-story tool works", async (t) => {
   }
 });
 
-test("MCP get-url-metadata tool works", async (t) => {
-  const { client, server, transport } = await startMCPServer();
-  
-  try {
-    const result = await client.callTool({
-      name: "get-url-metadata",
-      arguments: {
-        url: "https://ethereum.org",
-        generateTitle: false
-      }
-    });
-    
-    t.truthy(result);
-    t.true(Array.isArray(result.content));
-    
-    const content = JSON.parse(result.content[0].text);
-    t.truthy(content);
-  } finally {
-    await stopMCPServer({ client, server, transport });
-  }
-});
-
-test("MCP parse-url tool works", async (t) => {
-  const { client, server, transport } = await startMCPServer();
-  
-  try {
-    const result = await client.callTool({
-      name: "parse-url",
-      arguments: {
-        url: "https://twitter.com/VitalikButerin/status/1737133819626913857"
-      }
-    });
-    
-    t.truthy(result);
-    t.true(Array.isArray(result.content));
-    
-    const content = JSON.parse(result.content[0].text);
-    t.truthy(content);
-  } finally {
-    await stopMCPServer({ client, server, transport });
-  }
-});
-
 test("MCP get-user-profile tool works", async (t) => {
   const { client, server, transport } = await startMCPServer();
   
@@ -256,46 +209,6 @@ test("MCP get-user-profile tool works", async (t) => {
       arguments: {
         address: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
       }
-    });
-    
-    t.truthy(result);
-    t.true(Array.isArray(result.content));
-    
-    const content = JSON.parse(result.content[0].text);
-    t.truthy(content);
-  } finally {
-    await stopMCPServer({ client, server, transport });
-  }
-});
-
-test("MCP get-user-activity tool works", async (t) => {
-  const { client, server, transport } = await startMCPServer();
-  
-  try {
-    const result = await client.callTool({
-      name: "get-user-activity",
-      arguments: {
-        address: "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176"
-      }
-    });
-    
-    t.truthy(result);
-    t.true(Array.isArray(result.content));
-    
-    const content = JSON.parse(result.content[0].text);
-    t.truthy(content);
-  } finally {
-    await stopMCPServer({ client, server, transport });
-  }
-});
-
-test("MCP get-kiwi-price tool works", async (t) => {
-  const { client, server, transport } = await startMCPServer();
-  
-  try {
-    const result = await client.callTool({
-      name: "get-kiwi-price",
-      arguments: {}
     });
     
     t.truthy(result);

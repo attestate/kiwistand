@@ -9,7 +9,7 @@
     "build": "vite build"
   },
   "dependencies": {
-    "@attestate/delegator2": "0.6.1",
+    "@attestate/delegator2": "0.7.0",
     "@emotion/react": "11.14.0",
     "@emotion/styled": "11.14.0",
     "@ethersproject/contracts": "5.8.0",

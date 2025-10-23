@@ -88,21 +88,6 @@ is part of our move towards better API versioning.
 Endpoints
 ---------
 
-**GET /api/v1/allowlist**
-
-Retrieves the allow list, which includes all Ethereum addresses that have
-minted the NFT on Optimism at the contract located at
-`0x66747bdc903d17c586fa09ee5d6b54cc85bbea45 <https://optimistic.etherscan.io/address/0x66747bdc903d17c586fa09ee5d6b54cc85bbea45>`_.
-Please note that it may take some time for the indexer to pick up a new mint
-(usually around 1-2 minutes).
-
-Request body:
-
-- ``address`` (string): A valid Ethereum address by which the allowlist can be
-  filtered by. If, upon requesting the allowlist endpoint with such an address,
-  the response is an empty array, it means that this address isn't allowlisted.
-  is inclusive.
-
 **GET /api/v1/delegations**
 
 Retrieves an object of valid delegations in the form of ``to:from``, where
@@ -179,10 +164,9 @@ Acceptance Criteria for Messages
    defined in the `.env file <https://github.com/attestate/kiwistand/blob/main/.env-copy>`_.
 3. The timestamp must be accurate according to the amount of seconds defined in
    HTTP_MESSAGES_MAX_PAGE_SIZE (50), as defined in the `.env file <https://github.com/attestate/kiwistand/blob/main/.env-copy>`_.
-4. The message signer's address must be in the allowlist or in the list of
-   delegated addresses.
-5. When running ecrecover on the signature, it must reproduce an address on the
-   allowlist. EIP712 is used as the signing method
+4. The message signer's address must be a valid Ethereum address.
+5. When running ecrecover on the signature, it must reproduce a valid Ethereum
+   address. EIP712 is used as the signing method
    (https://eips.ethereum.org/EIPS/eip-712).
 6. For every link, a combination of address, link, and "amplify" type can only
    exist once. This means that every user can only upvote a link once.

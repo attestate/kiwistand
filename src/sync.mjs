@@ -304,7 +304,7 @@ export async function initiate(
   );
 }
 
-export async function put(trie, message, allowlist, delegations, accounts) {
+export async function put(trie, message, delegations) {
   let missing;
   try {
     missing = deserialize(message);
@@ -340,9 +340,7 @@ export async function put(trie, message, allowlist, delegations, accounts) {
         trie,
         obj,
         libp2p,
-        allowlist,
         delegations,
-        accounts,
         synching,
       );
       log(`Adding to database value (as JSON)`);
@@ -481,10 +479,8 @@ export function handleLeaves(trie, peerFab) {
       // NOTE: We're adding multiple statements here to the try catch
       // because in each of their failure, we want to abort writing into
       // the databases.
-      const allowlist = await registry.allowlist();
-      const accounts = await registry.accounts();
       const delegations = await registry.delegations();
-      await put(trie, message, allowlist, delegations, accounts);
+      await put(trie, message, delegations);
     } catch (err) {
       elog(err, "handleLeaves: Unexpected error");
       peerFab.set();

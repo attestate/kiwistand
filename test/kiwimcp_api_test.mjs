@@ -196,20 +196,6 @@ test("get-user-activity endpoint returns activity feed", async (t) => {
   }
 });
 
-test("get-kiwi-price endpoint returns price info", async (t) => {
-  const result = await callAPI("/api/v1/price");
-  
-  t.truthy(result);
-  if (result.status === "success") {
-    t.is(result.status, "success");
-    t.truthy(result.data);
-    const price = result.data;
-    t.truthy(price.price !== undefined || price.usd !== undefined || price.eth !== undefined);
-  } else {
-    t.truthy(result.price !== undefined || result.usd !== undefined || result.eth !== undefined);
-  }
-});
-
 test("get-top-karma-holders endpoint returns karma rankings", async (t) => {
   const result = await callAPI("/api/v1/karma/top", { limit: 5, offset: 0 });
   

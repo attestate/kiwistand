@@ -199,8 +199,7 @@ test("MCP server provides tool listing", async (t) => {
     "get-url-metadata",
     "parse-url",
     "get-user-profile",
-    "get-user-activity",
-    "get-kiwi-price"
+    "get-user-activity"
   ];
   
   for (const tool of expectedTools) {

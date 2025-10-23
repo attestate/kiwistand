@@ -2,7 +2,7 @@
 import { join } from "path";
 import Database from "better-sqlite3";
 import { utils } from "ethers";
-import { eligible } from "@attestate/delegator2";
+import { resolveIdentity } from "@attestate/delegator2";
 
 import log from "./logger.mjs";
 import { verify, ecrecover, toDigest } from "./id.mjs";
@@ -131,17 +131,12 @@ export async function verifyInteraction(message, signature) {
       throw new Error("Invalid signature");
     }
     
-    // Get the allowlist and delegations
-    const allowlist = await registry.allowlist();
+    // Get the delegations
     const delegations = await registry.delegations();
-    
+
     // Resolve to the identity (custody address) using delegator2
     // This handles both direct custody keys and delegate keys
-    const identity = eligible(allowlist, delegations, signerAddress);
-    
-    if (!identity) {
-      throw new Error(`Address "${signerAddress}" is not eligible (not in allowlist or delegations)`);
-    }
+    const identity = resolveIdentity(delegations, signerAddress);
     
     // Return the identity (custody address), not the signer
     return identity.toLowerCase();

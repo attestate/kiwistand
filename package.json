@@ -64,7 +64,7 @@
     "@anthropic-ai/sdk": "0.33.1",
     "@attestate/crawler": "0.7.1",
     "@attestate/crawler-call-block-logs": "0.6.1",
-    "@attestate/delegator2": "0.6.1",
+    "@attestate/delegator2": "0.7.0",
     "@chainsafe/libp2p-gossipsub": "5.2.1",
     "@chainsafe/libp2p-noise": "10.2.0",
     "@ethereumjs/rlp": "4.0.1",

@@ -1,7 +1,7 @@
 import { useAccount } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useEffect, useState } from "react";
-import { eligible } from "@attestate/delegator2";
+import { resolveIdentity } from "@attestate/delegator2";
 
 import { EthereumSVG } from "./icons.jsx";
 import {
@@ -63,7 +63,7 @@ const ProfileSVG = () => (
 const Profile = (props) => {
   let address;
   const account = useAccount();
-  const localAccount = getLocalAccount(account.address, props.allowlist);
+  const localAccount = getLocalAccount(account.address);
   if (account.isConnected) {
     address = account.address;
   }
@@ -71,7 +71,7 @@ const Profile = (props) => {
     address = localAccount.identity;
   }
   const isEligible =
-    address && eligible(props.allowlist, props.delegations, address);
+    address && resolveIdentity(props.delegations, address);
 
   const isEnabled = isEligible || account.isConnected;
   if (!isEnabled) return null;
@@ -195,7 +195,6 @@ export const PrimaryActionButton = (props) => {
 };
 
 export const TextConnectButton = ({
-  allowlist,
   delegations,
   required,
   style,
@@ -211,8 +210,7 @@ export const TextConnectButton = ({
         // because if the cookie expired, then the user will have been taken to
         // the paywall and this means we'll have to reload the page.
         const localAccount = getLocalAccount(
-          account && account.address,
-          allowlist,
+          account && account.address
         );
 
         let address;
@@ -222,7 +220,7 @@ export const TextConnectButton = ({
         if (localAccount) {
           address = localAccount.identity;
         }
-        const isEligible = address && eligible(allowlist, delegations, address);
+        const isEligible = address && resolveIdentity(delegations, address);
 
         const newIdentityCookie = getCookie("identity");
         if (isEligible && newIdentityCookie && !window.initialIdentityCookie) {
@@ -260,8 +258,7 @@ export const CustomConnectButton = (props) => {
         // because if the cookie expired, then the user will have been taken to
         // the paywall and this means we'll have to reload the page.
         const localAccount = getLocalAccount(
-          account && account.address,
-          props.allowlist,
+          account && account.address
         );
 
         let address;
@@ -272,7 +269,7 @@ export const CustomConnectButton = (props) => {
           address = localAccount.identity;
         }
         const isEligible =
-          address && eligible(props.allowlist, props.delegations, address);
+          address && resolveIdentity(props.delegations, address);
 
         const newIdentityCookie = getCookie("identity");
         if (isEligible && newIdentityCookie && !window.initialIdentityCookie) {

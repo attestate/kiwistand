@@ -18,11 +18,7 @@ export const name = `${prefix}/${version}/${id}`;
 export const handlers = {
   message: (
     trie,
-    allowlistFn = registry.allowlist,
     delegationsFn = registry.delegations,
-    // TODO: We're not testing if accounts is present or not in this call. We
-    // should test this.
-    accountsFn = registry.accounts,
   ) => {
     return async (evt) => {
       if (evt.detail.topic !== name) {
@@ -48,11 +44,9 @@ export const handlers = {
       }
 
       const libp2p = null;
-      const allowlist = await allowlistFn();
       const delegations = await delegationsFn();
-      const accounts = await accountsFn();
       try {
-        await store.add(trie, obj, libp2p, allowlist, delegations, accounts);
+        await store.add(trie, obj, libp2p, delegations);
         return true;
       } catch (err) {
         log(

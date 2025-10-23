@@ -1,10 +1,7 @@
 addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
 
-  if (
-    url.pathname === "/api/v1/allowlist" ||
-    url.pathname === "/api/v1/delegations"
-  ) {
+  if (url.pathname === "/api/v1/delegations") {
     return event.respondWith(fetch(event.request));
   }
 

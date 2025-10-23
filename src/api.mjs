@@ -156,25 +156,16 @@ export function sendStatus(reply, code, message, details, data) {
 export function handleMessage(
   trie,
   libp2p,
-  getAllowlist,
   getDelegations,
-  getAccounts,
 ) {
   return async (request, reply) => {
     const message = request.body;
-    const [allowlistResult, delegationsResult, accountsResult] =
-      await Promise.allSettled([
-        getAllowlist(),
+    const delegationsResult = await Promise.allSettled([
         getDelegations(),
-        getAccounts(),
       ]);
 
-    const allowlist =
-      allowlistResult.status === "fulfilled" ? allowlistResult.value : {};
     const delegations =
-      delegationsResult.status === "fulfilled" ? delegationsResult.value : {};
-    const accounts =
-      accountsResult.status === "fulfilled" ? accountsResult.value : {};
+      delegationsResult[0].status === "fulfilled" ? delegationsResult[0].value : {};
 
     let index;
     try {
@@ -182,9 +173,7 @@ export function handleMessage(
         trie,
         message,
         libp2p,
-        allowlist,
         delegations,
-        accounts,
       );
     } catch (err) {
       // NOTE: If the user has submitted this very link we're redirecting them
@@ -311,43 +300,6 @@ export function handleMessage(
   };
 }
 
-export function listAllowed(getAllowlist) {
-  return async (request, reply) => {
-    let result = Array.from(await getAllowlist());
-    if (request.query.address) {
-      let address;
-      try {
-        address = utils.getAddress(request.query.address);
-      } catch (err) {
-        const code = 400;
-        const message = "Bad Request";
-        const details = "address query string must be an Ethereum address";
-        return sendError(reply, code, message, details);
-      }
-
-      const find = result.find((element) => element === address);
-
-      if (find) {
-        reply.setHeader("Cache-Control", "public, max-age=31536000, immutable");
-        result = [find];
-      } else {
-        result = [];
-      }
-    }
-
-    if (request.query.cached === "true") {
-      reply.header(
-        "Cache-Control",
-        "public, s-maxage=86400, stale-while-revalidate=604800",
-      );
-    }
-
-    const code = 200;
-    const httpMessage = "OK";
-    const details = "Returning allow list";
-    return sendStatus(reply, code, httpMessage, details, result);
-  };
-}
 
 export function listDelegations(getDelegations) {
   return async (request, reply) => {
@@ -371,7 +323,7 @@ export function listDelegations(getDelegations) {
   };
 }
 
-export function listMessages(trie, getAccounts, getDelegations) {
+export function listMessages(trie, getDelegations) {
   const requestValidator = ajv.compile(SCHEMATA.listMessages);
   return async (request, reply) => {
     const result = requestValidator(request.body);
@@ -387,7 +339,6 @@ export function listMessages(trie, getAccounts, getDelegations) {
     const { from, amount } = request.body;
     const parser = JSON.parse;
     const startDatetime = null;
-    const accounts = await getAccounts();
     const delegations = await getDelegations();
     const href = null;
     const type = request.body.type || "amplify";
@@ -397,7 +348,6 @@ export function listMessages(trie, getAccounts, getDelegations) {
       amount,
       parser,
       startDatetime,
-      accounts,
       delegations,
       href,
       type,
@@ -434,18 +384,15 @@ export async function launch(trie, libp2p) {
 
   api.post(
     "/list",
-    listMessages(trie, registry.accounts, registry.delegations),
+    listMessages(trie, registry.delegations),
   );
-  api.get("/allowlist", listAllowed(registry.allowlist));
   api.get("/delegations", listDelegations(registry.delegations));
   api.post(
     "/messages",
     handleMessage(
       trie,
       libp2p,
-      registry.allowlist,
       registry.delegations,
-      registry.accounts,
     ),
   );
 

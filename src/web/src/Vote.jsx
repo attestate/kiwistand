@@ -6,7 +6,7 @@ import { useAccount, WagmiProvider } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Wallet } from "@ethersproject/wallet";
 import { RainbowKitProvider, ConnectButton } from "@rainbow-me/rainbowkit";
-import { eligible } from "@attestate/delegator2";
+import { resolveIdentity } from "@attestate/delegator2";
 import DOMPurify from "isomorphic-dompurify";
 import { sdk } from "@farcaster/frame-sdk";
 
@@ -149,14 +149,14 @@ const Vote = (props) => {
     determineFarcasterClient();
   }, [isMiniApp, loading]);
 
-  const { allowlist, delegations, toast, isad } = props;
+  const { delegations, toast, isad } = props;
   const value = API.messageFab(props.title, props.href);
   const [showKarmaAnimation, setShowKarmaAnimation] = useState(false);
   const animationContainerRef = useRef(null);
 
   let address;
   const account = useAccount();
-  const localAccount = getLocalAccount(account.address, allowlist);
+  const localAccount = getLocalAccount(account.address);
   if (account.isConnected) {
     address = account.address;
   }
@@ -192,7 +192,7 @@ const Vote = (props) => {
     if (
       !isMiniApp &&
       account?.address &&
-      isDelegationModalNeeded(allowlist, delegations, account.address)
+      isDelegationModalNeeded(account.address)
     ) {
       openDelegationModalForAction();
       return;
@@ -350,7 +350,7 @@ const Vote = (props) => {
                 // Traditional eligibility check for wallet users
                 isEligible =
                   signer &&
-                  eligible(allowlist, delegations, await signer.getAddress());
+                  resolveIdentity(delegations, await signer.getAddress());
               }
 
               if (!isEligible && isIOSApp()) {
