@@ -71,7 +71,7 @@ const SiteExplainer = () => {
         Ethereum builders?
       </p>
 
-      <a href="/kiwipass-mint">
+      <a href="/">
         <button
           style={{
             padding: "6px 12px",

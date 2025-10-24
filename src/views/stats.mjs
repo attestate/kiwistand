@@ -40,9 +40,6 @@ export default async function (trie, theme) {
                       <a href="/basics">Basics</a>
                     </li>
                     <li>
-                      <a href="/price">Price</a>
-                    </li>
-                    <li>
                       <a href="/users">Users</a>
                     </li>
                     <li>

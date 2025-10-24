@@ -27,19 +27,6 @@ export default async function submit(theme, url = "", title = "") {
     }
   }
   const path = "/submit";
-  const story = {
-    title: "Ethereum Whitepaper",
-    href: "https://ethereum.org/en/whitepaper/",
-    upvoters: [],
-    avatars: [],
-    timestamp: new Date() / 1000 - 60,
-    identity: "0x00000000000000000000000000000000CafeBabe",
-    displayName: "you",
-  };
-  const rowNumber = 0;
-  const rowStyle =
-    "overflow: hidden; max-width: 600px; min-height: 65px; padding: 1rem 1rem 0 1rem;";
-  const interactive = true;
   return html`
     <html lang="en" op="news">
       <head>
@@ -53,7 +40,6 @@ export default async function submit(theme, url = "", title = "") {
               <tr>
                 ${await Header(theme)}
               </tr>
-              ${Row(rowNumber, "/submit", rowStyle, interactive)(story)}
               <tr>
                 <td>
                   <form style="${formContainerStyle}" onsubmit="event.preventDefault(); return false;">
@@ -69,7 +55,7 @@ export default async function submit(theme, url = "", title = "") {
                         required
                         style="${editableContent}"
                         wrap="soft"
-                        data-placeholder="Ethereum Whitepaper"
+                        data-placeholder="Enter title"
                         onpaste="
                           event.preventDefault();
                           const text = event.clipboardData.getData('text/plain');

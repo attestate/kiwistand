@@ -17,7 +17,6 @@ import {
   chains,
   useIsMiniApp,
 } from "./client.mjs";
-import NFTModal from "./NFTModal.jsx";
 import { getLocalAccount } from "./session.mjs";
 import { SimpleDisconnectButton } from "./Navigation.jsx";
 import ShareModal from "./ShareModal.jsx";
@@ -303,34 +302,6 @@ const SubmitButton = (props) => {
     }
   }, [url]);
 
-  useEffect(() => {
-    const previewLink = document.querySelector(".story-link");
-    const previewDomain = document.querySelector(".story-domain");
-
-    const placeholderTitle = document
-      .querySelector("#titleInput")
-      .getAttribute("data-placeholder");
-    const placeholderUrl = document.querySelector("#urlInput").placeholder;
-    const placeholderDomain = `(${safeExtractDomain(placeholderUrl)})`;
-
-    if (previewLink) {
-      previewLink.textContent = title || placeholderTitle;
-    }
-
-    const canonicalURL = url;
-    if (previewLink && canonicalURL) {
-      previewLink.href = DOMPurify.sanitize(canonicalURL);
-    } else if (previewLink) {
-      previewLink.href = DOMPurify.sanitize(placeholderUrl);
-    }
-
-    if (previewDomain) {
-      previewDomain.textContent = canonicalURL
-        ? `(${safeExtractDomain(canonicalURL)})`
-        : placeholderDomain;
-    }
-  }, [title, url]);
-
   let address;
   const account = useAccount();
   const localAccount = getLocalAccount(account.address);
@@ -501,49 +472,6 @@ const SubmitButton = (props) => {
     window.location.href = storyUrl.href;
   };
 
-  if (!isEligible && account.isConnected) {
-    return (
-      <div>
-        <div
-          style={{
-            padding: "1rem",
-            margin: "1rem 0",
-            background: "#fff3cd",
-            border: "1px solid #856404",
-            borderRadius: "4px",
-            color: "#856404",
-            maxWidth: "600px",
-          }}
-        >
-          <h3 style={{ marginTop: 0 }}>Kiwi Pass Required</h3>
-          <p>
-            Only Kiwi Pass holders can submit stories to Kiwi News. Get your
-            Kiwi Pass to start curating the best crypto content!
-          </p>
-          <p>
-            <a
-              href="/kiwipass-mint"
-              style={{
-                color: "#856404",
-                textDecoration: "underline",
-                fontWeight: "bold",
-              }}
-            >
-              Get your Kiwi Pass →
-            </a>
-          </p>
-        </div>
-        <button
-          id="button-onboarding"
-          style={{ ...buttonStyles, opacity: 0.5, cursor: "not-allowed" }}
-          disabled={true}
-        >
-          Submit (Kiwi Pass Required)
-        </button>
-      </div>
-    );
-  }
-
   const handleShareModalClose = () => {
     setShowShareModal(false);
     // Clear form after closing modal
@@ -654,7 +582,6 @@ const SubmitButton = (props) => {
           }}
           disabled={
             isLoading ||
-            !isEligible ||
             title.length > 80 ||
             url.length > 2048 ||
             title.length === 0 ||

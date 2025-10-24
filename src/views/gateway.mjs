@@ -66,7 +66,7 @@ export default async function (referral) {
                       style="flex-direction: column; display: flex; align-items: center; justify-content: center;"
                     >
                       <a
-                        href="/kiwipass-mint${referral
+                        href="/${referral
                           ? `?referral=${DOMPurify.sanitize(referral)}`
                           : ""}"
                         id="button-onboarding"

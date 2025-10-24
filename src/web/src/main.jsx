@@ -186,36 +186,6 @@ async function addAnalytics() {
   }
 }
 
-async function addDecayingPriceLink() {
-  const linkContainer = document.querySelector(".decaying-price-link");
-  if (linkContainer) {
-    const price = linkContainer.getAttribute("data-price");
-    const Link = (await import("./DecayingPrice.jsx")).default;
-
-    createRoot(linkContainer).render(
-      <StrictMode>
-        <Providers>
-          <Link initialPrice={price} />
-        </Providers>
-      </StrictMode>,
-    );
-  }
-}
-
-async function addInviteLink(toast) {
-  const linkContainer = document.querySelector("#invitelink-container");
-  if (linkContainer) {
-    const InviteLink = (await import("./InviteLink.jsx")).default;
-
-    createRoot(linkContainer).render(
-      <StrictMode>
-        <Providers>
-          <InviteLink toast={toast} />
-        </Providers>
-      </StrictMode>,
-    );
-  }
-}
 
 async function addFarcasterShareButtons() {
   const containers = document.querySelectorAll(
@@ -588,18 +558,6 @@ async function addConnectedComponents(delegations, toast) {
 }
 
 async function addModals(delegations, toast) {
-  const nftmodal = document.querySelector("nav-nft-modal");
-  if (nftmodal) {
-    const NFTModal = (await import("./NFTModal.jsx")).default;
-    createRoot(nftmodal).render(
-      <StrictMode>
-        <Providers>
-          <NFTModal />
-        </Providers>
-      </StrictMode>,
-    );
-  }
-
   const delegationModal = document.querySelector("nav-delegation-modal");
   if (delegationModal) {
     // Use preloaded module or import if not yet loaded
@@ -615,18 +573,6 @@ async function addModals(delegations, toast) {
             toast={toast}
             delegations={delegations}
           />
-        </Providers>
-      </StrictMode>,
-    );
-  }
-
-  const onboarding = document.querySelector(".nav-onboarding-modal");
-  if (onboarding) {
-    const OnboardingModal = (await import("./OnboardingModal.jsx")).default;
-    createRoot(onboarding).render(
-      <StrictMode>
-        <Providers>
-          <OnboardingModal />
         </Providers>
       </StrictMode>,
     );
@@ -692,34 +638,6 @@ async function addTestFlightQR() {
   );
 }
 
-async function addMinuteCountdown() {
-  const elem = document.querySelector(".nav-countdown");
-  if (elem) {
-    const Countdown = (await import("./MinuteCountdown.jsx")).default;
-    createRoot(elem).render(
-      <StrictMode>
-        <Providers>
-          <Countdown />
-        </Providers>
-      </StrictMode>,
-    );
-  }
-}
-
-async function addTutorialDrawers() {
-  const tutorialContainer = document.querySelector("#tutorial-drawers");
-  if (tutorialContainer) {
-    const TutorialDrawers = (await import("./TutorialDrawers.jsx")).default;
-    createRoot(tutorialContainer).render(
-      <StrictMode>
-        <Providers>
-          <TutorialDrawers />
-        </Providers>
-      </StrictMode>,
-    );
-  }
-}
-
 async function addEmbedDrawer(toast) {
   // Create container if it doesn't exist
   if (!document.getElementById("embed-drawer-container")) {
@@ -733,24 +651,6 @@ async function addEmbedDrawer(toast) {
     <StrictMode>
       <Providers>
         <EmbedDrawer toast={toast} />
-      </Providers>
-    </StrictMode>,
-  );
-}
-
-async function addRewardsDrawer() {
-  // Create container if it doesn't exist
-  if (!document.getElementById("rewards-drawer-container")) {
-    const container = document.createElement("div");
-    container.id = "rewards-drawer-container";
-    document.body.appendChild(container);
-  }
-
-  const RewardsDrawer = (await import("./RewardsDrawer.jsx")).default;
-  createRoot(document.getElementById("rewards-drawer-container")).render(
-    <StrictMode>
-      <Providers>
-        <RewardsDrawer />
       </Providers>
     </StrictMode>,
   );
@@ -863,24 +763,6 @@ async function addStoryEmojiReactions(delegations, toast) {
         // Render React component while preserving existing content
         root.render(reactComponent);
       }
-    });
-  }
-}
-
-async function addNFTPrice() {
-  const nftPriceElements = document.querySelectorAll("nft-price");
-  if (nftPriceElements && nftPriceElements.length > 0) {
-    const NFTPrice = (await import("./NFTPrice.jsx")).default;
-    nftPriceElements.forEach((element) => {
-      const fee = element.getAttribute("data-fee");
-      const selector = element.getAttribute("data-selector");
-      createRoot(element).render(
-        <StrictMode>
-          <Providers>
-            <NFTPrice fee={fee} selector={selector} />
-          </Providers>
-        </StrictMode>,
-      );
     });
   }
 }
@@ -1689,26 +1571,20 @@ async function start() {
 
   const results1 = await Promise.allSettled([
     addDynamicNavElements(),
-    addInviteLink(toast),
     addFarcasterShareButtons(),
     addStoryEmojiReactions(
       await delegationsPromise,
       toast,
     ),
-    addDecayingPriceLink(),
     addCommentInput(toast, await delegationsPromise),
     addEmailSubscriptionForm(
       await delegationsPromise,
       toast,
     ),
     addModals(await delegationsPromise, toast),
-    addNFTPrice(),
     addKarmaElements(),
     addLeaderboardInteractions(),
-    addMinuteCountdown(),
-    addTutorialDrawers(),
     addEmbedDrawer(toast),
-    addRewardsDrawer(),
     addNewsletterScrollModal(toast),
     addAvatar(),
     addBackButton(),

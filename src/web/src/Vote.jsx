@@ -18,7 +18,6 @@ import {
   chains,
   useIsMiniApp,
 } from "./client.mjs";
-import NFTModal from "./NFTModal.jsx";
 import theme from "./theme.jsx";
 import { getLocalAccount, isIOSApp } from "./session.mjs";
 import {
@@ -61,20 +60,11 @@ const iconFullSVG = (
 const queryClient = new QueryClient();
 
 const Container = (props) => {
-  const [modalIsOpen, setIsOpen] = useState(false);
-
   return (
     <QueryClientProvider client={queryClient}>
       <WagmiProvider config={client}>
         <RainbowKitProvider chains={chains}>
-          <Vote {...props} setIsOpen={setIsOpen} />
-          <NFTModal
-            headline="Wait a minute!"
-            text="You have to sign up before voting."
-            closeText="Close"
-            modalIsOpen={modalIsOpen}
-            setIsOpen={setIsOpen}
-          />
+          <Vote {...props} />
         </RainbowKitProvider>
       </WagmiProvider>
     </QueryClientProvider>
@@ -298,13 +288,6 @@ const Vote = (props) => {
       setUpvotes(upvotes + 1);
       toast.success("Thanks for your like! Have a 🥝");
       posthog.capture("upvote", { variant: getVariant() });
-    } else if (response.details.includes("You must mint")) {
-      // NOTE: This should technically never happen, but if it does we pop open
-      // the modal to buy the NFT.
-      props.setIsOpen(true);
-      setHasUpvoted(false);
-      setShowKarmaAnimation(false); // Hide animation on error
-      return;
     } else if (response.status === "error") {
       if (
         response.details.includes(

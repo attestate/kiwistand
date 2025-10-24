@@ -13,7 +13,6 @@ const html = htm.bind(vhtml);
 const header = (theme, path) => {
   const isStoryPage = path === "/stories";
   return html` <td style="height: 70px;">
-    <nav-nft-modal />
     <nav-delegation-modal />
     <table
       style="padding:5px 7px 5px 7px;"
@@ -76,10 +75,7 @@ const header = (theme, path) => {
                   : // Default Menu button for non-story pages (React will replace if logged in)
                     html`
                       <div
-                        style="padding: 0 13px 0 7px; background: rgba(0, 0, 0, 0.05); border-radius: 2px; display: ${path ===
-                        "/kiwipass-mint"
-                          ? "none"
-                          : "flex"}; align-items: center;"
+                        style="padding: 0 13px 0 7px; background: rgba(0, 0, 0, 0.05); border-radius: 2px; display: flex; align-items: center;"
                       >
                         <div
                           style="display: flex; cursor: pointer; align-items: center; justify-content: left; padding: 7px 0 7px 7px;"

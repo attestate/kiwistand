@@ -278,7 +278,7 @@ const Bell = (props) => {
   const [readNotifications, setReadNotifications] = useState(0);
   const [isFull, setIsFull] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const link = isEligible ? `/activity?address=${address}` : "/kiwipass-mint";
+  const link = isEligible ? `/activity?address=${address}` : "/";
 
   const handleClick = (event) => {
     // Added event parameter
@@ -341,40 +341,8 @@ const Bell = (props) => {
       };
 
   if (
-    props.mobile &&
-    !isEligible &&
-    !getCookie("identity") &&
-    account?.isConnected
-  ) {
-    return (
-      <a
-        style={mobileBellStyle}
-        title="Sign up"
-        href="/kiwipass-mint"
-        className="mobile-bell"
-      >
-        <div
-          style={
-            props.mobile
-              ? { position: "relative", display: "inline-block" }
-              : {}
-          }
-        >
-          {window.location.pathname === "/kiwipass-mint" ? (
-            <PersonFullSVG />
-          ) : (
-            <PersonSVG />
-          )}
-        </div>
-        <span style={{ fontSize: "9px", marginTop: "2px" }}>Sign up</span>
-      </a>
-    );
-  }
-
-  if (
     (isEligible && !lastUpdate && readNotifications === 0) ||
     window.location.pathname === "/indexing" ||
-    window.location.pathname === "/kiwipass-mint" ||
     window.location.pathname === "/demonstration" ||
     window.location.pathname === "/invite" ||
     window.location.pathname === "/notifications" ||
@@ -419,26 +387,15 @@ const Bell = (props) => {
           backgroundColor: "#E2F266",
         };
 
-    // Minimal change: if desktop, user is connected but not eligible,
-    // show the normal Connect button AND a simple link to /kiwipass-mint
+    // If desktop, user is connected but not eligible, show Connect button
     if (!props.mobile && account?.isConnected && !isEligible) {
       return (
-        <span style={{ display: "inline-flex", gap: "6px", alignItems: "center" }}>
-          <TextConnectButton
-            className="bell-button"
-            style={mobileConnectStyle}
-            delegations={props.delegations}
-            text="Connect"
-          />
-          <a
-            href="/kiwipass-mint"
-            className="meta-link bell-button"
-            title="Sign up"
-            style={mobileConnectStyle}
-          >
-            Sign up
-          </a>
-        </span>
+        <TextConnectButton
+          className="bell-button"
+          style={mobileConnectStyle}
+          delegations={props.delegations}
+          text="Connect"
+        />
       );
     }
 

@@ -28,7 +28,6 @@ import { EIP712_MESSAGE } from "../constants.mjs";
 import Row, { extractDomain } from "./components/row.mjs";
 import { getBest, getLastComment, countImpressions } from "../cache.mjs";
 import { cachedMetadata, metadata } from "../parser.mjs";
-import { getStoriesUSDCEarnings } from "../contest-leaderboard.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -76,14 +75,6 @@ export async function getStories(page, period, domain, options = {}) {
     writers = await moderation.getWriters();
   } catch (err) {
     // noop
-  }
-
-  // Get USDC earnings map once for all stories
-  let storyUsdcEarningsMap = new Map();
-  try {
-    storyUsdcEarningsMap = await getStoriesUSDCEarnings();
-  } catch (err) {
-    log(`Failed to get USDC earnings: ${err}`);
   }
 
   let stories = [];
@@ -153,7 +144,6 @@ export async function getStories(page, period, domain, options = {}) {
 
     // Get impressions count
     const impressions = countImpressions(finalStory.href);
-    const storyEarnings = storyUsdcEarningsMap.get(story.index) || 0;
 
     let storyLink = null;
     if (createStoryLink) {
@@ -170,7 +160,6 @@ export async function getStories(page, period, domain, options = {}) {
       submitter: ensData,
       avatars: avatars,
       isOriginal,
-      storyEarnings,
       storyLink,
     });
   }

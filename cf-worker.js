@@ -13,7 +13,7 @@ addEventListener("fetch", (event) => {
 
   if (targetPaths.includes(path) && !hasIdentityCookie) {
     const gatewayUrl = new URL(url.origin);
-    gatewayUrl.pathname = "/kiwipass-mint";
+    gatewayUrl.pathname = "/";
     gatewayUrl.search = url.search;
     event.respondWith(Response.redirect(gatewayUrl.toString(), 302));
     return;

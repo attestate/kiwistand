@@ -40,11 +40,6 @@ import Row, { extractDomain } from "./components/row.mjs";
 import * as karma from "../karma.mjs";
 import { cachedMetadata } from "../parser.mjs";
 import { getPredictedEngagement } from "../prediction.mjs";
-import { getLeaderboard } from "../leaderboard.mjs";
-import { getStoriesUSDCEarnings, getUsersUSDCEarnings } from "../contest-leaderboard.mjs";
-
-import holders from "./holders.mjs";
-const formatedHolders = holders.map((a) => ethers.utils.getAddress(a));
 
 // Import twitterFrontends for checking Twitter/X links
 import { twitterFrontends } from "../parser.mjs";
@@ -118,16 +113,12 @@ export function identityClassifier(upvoter) {
       // noop
     }
   }
-  const isHolder = formatedHolders.includes(
-    ethers.utils.getAddress(upvoter.identity),
-  );
   const karmaScore = karma.resolve(upvoter.identity, cutoffDate);
   const hasNeynarScore = balance > 90000;
   return {
     ...upvoter,
-    isHolder,
     hasNeynarScore,
-    fromSponsorCommunity: isHolder || hasNeynarScore,
+    fromSponsorCommunity: hasNeynarScore,
     isKiwi: karmaScore >= thresholdKarma,
   };
 }
@@ -480,17 +471,7 @@ export async function index(
 
   async function resolveIds(storyPromises) {
     const stories = [];
-    
-    // Get USDC earnings maps once for all stories
-    let storyUsdcEarningsMap = new Map();
-    let userUsdcEarningsMap = new Map();
-    try {
-      storyUsdcEarningsMap = await getStoriesUSDCEarnings();
-      userUsdcEarningsMap = await getUsersUSDCEarnings();
-    } catch (err) {
-      log(`Failed to get USDC earnings: ${err}`);
-    }
-    
+
     for await (let story of storyPromises) {
       const ensData = await ens.resolve(story.identity); // Resolve ENS for all stories on page
 
@@ -550,9 +531,6 @@ export async function index(
       }
 
       const impressions = countImpressions(story.href); // Get impressions count
-      
-      // Get USDC earnings for this specific story
-      const storyEarnings = storyUsdcEarningsMap.get(story.index) || 0;
 
       stories.push({
         ...story,
@@ -562,7 +540,6 @@ export async function index(
         submitter: ensData,
         avatars: avatars,
         isOriginal,
-        storyEarnings, // Add story-specific USDC earnings
       });
     }
     return stories;
