@@ -15,7 +15,6 @@ import log from '../src/logger.mjs';
     const amount = null;
     const startDatetime = null;
     const parser = JSON.parse;
-    const accounts = await registry.accounts();
     const delegations = await registry.delegations();
     const href = null;
 
