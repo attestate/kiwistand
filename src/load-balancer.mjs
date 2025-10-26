@@ -8,6 +8,7 @@ import log from "./logger.mjs";
 import https from "https";
 import fs from "fs";
 import { createServer as createHttpServer } from "http";
+import { Router as PortoRouter, Route } from "porto/server";
 
 // Exit early in reconcile mode - only API and sync should run
 if (env.NODE_ENV === "reconcile") {
@@ -58,6 +59,28 @@ const workerRoutes = [
 
 async function startLoadBalancer() {
   const app = express();
+
+  // Porto Merchant API for sponsoring transactions
+  const SPONSORED_CONTRACT = '0x418910fef46896eb0bfe38f656e2f7df3eca7198';
+
+  const porto = PortoRouter()
+    .route('/merchant', Route.merchant({
+      address: env.PORTO_MERCHANT_ADDRESS,
+      key: env.PORTO_MERCHANT_PRIVATE_KEY,
+      sponsor: async (request) => {
+        // Check if any call is to the sponsored contract
+        const calls = request.calls || [];
+        const shouldSponsor = calls.some(call =>
+          call.to?.toLowerCase() === SPONSORED_CONTRACT.toLowerCase()
+        );
+        log(`Porto sponsor check: ${shouldSponsor} for ${calls.length} calls`);
+        return shouldSponsor;
+      },
+    }));
+
+  // Mount Porto before any proxying
+  app.use('/porto', porto.listener);
+  log('Porto merchant endpoint mounted at /porto/merchant');
 
   // Configure the number of workers
   const workerCount = Number(env.WORKER_COUNT) || os.cpus().length;

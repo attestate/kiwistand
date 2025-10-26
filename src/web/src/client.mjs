@@ -112,8 +112,12 @@ if (isInIOSApp) {
 } else {
   // Standard configuration with Farcaster mini app support
   // This will be used for all browsers including iOS Safari (not the app)
+  const merchantUrl = typeof window !== 'undefined'
+    ? `${window.location.origin}/porto/merchant`
+    : '/porto/merchant';
+
   const wallets = [
-    portoWallet,
+    () => portoWallet({ merchantUrl }),
     injectedWallet,
     walletConnectWallet,
     coinbaseWallet,

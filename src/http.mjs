@@ -97,7 +97,7 @@ import {
   sendTweet, 
   sendCast, 
   formatSubmissionForTwitter, 
-  formatSubmissionForFarcaster 
+  formatSubmissionForFarcaster
 } from "./social-posting.mjs";
 import { sendBroadcastNotification } from "./onesignal.mjs";
 
