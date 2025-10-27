@@ -4,6 +4,7 @@ import { useAccount } from "wagmi";
 import { resolveIdentity } from "@attestate/delegator2";
 import SwipeableDrawer from "@mui/material/SwipeableDrawer";
 import { Wallet } from "@ethersproject/wallet";
+import { useConnectModal } from "@rainbow-me/rainbowkit";
 
 import { TextConnectButton } from "./Navigation.jsx";
 import * as API from "./API.mjs";
@@ -266,6 +267,7 @@ const Bell = (props) => {
   const account = useAccount();
   const localAccount = getLocalAccount(account.address);
   const loginModalRef = useRef();
+  const { openConnectModal } = useConnectModal();
 
   if (localAccount) {
     address = localAccount.identity;
@@ -394,7 +396,13 @@ const Bell = (props) => {
 
     const handleLoginClick = (e) => {
       e.preventDefault();
-      loginModalRef.current?.openModal();
+      // On iOS, directly open RainbowKit wallet picker
+      if (isIOS() && openConnectModal) {
+        openConnectModal();
+      } else {
+        // On other platforms, show the LoginModal with passkey option
+        loginModalRef.current?.openModal();
+      }
     };
 
     // If desktop, user is connected but not eligible, show Log In button
@@ -408,11 +416,13 @@ const Bell = (props) => {
           >
             Log In
           </button>
-          <LoginModal
-            ref={loginModalRef}
-            delegations={props.delegations}
-            toast={props.toast}
-          />
+          {!isIOS() && (
+            <LoginModal
+              ref={loginModalRef}
+              delegations={props.delegations}
+              toast={props.toast}
+            />
+          )}
         </>
       );
     }
@@ -449,11 +459,13 @@ const Bell = (props) => {
             "Log In" // Desktop text
           )}
         </button>
-        <LoginModal
-          ref={loginModalRef}
-          delegations={props.delegations}
-          toast={props.toast}
-        />
+        {!isIOS() && (
+          <LoginModal
+            ref={loginModalRef}
+            delegations={props.delegations}
+            toast={props.toast}
+          />
+        )}
       </>
     );
   }
