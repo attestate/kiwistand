@@ -8,8 +8,8 @@ import { useConnectModal } from "@rainbow-me/rainbowkit";
 
 import { TextConnectButton } from "./Navigation.jsx";
 import * as API from "./API.mjs";
-import { isIOS, getLocalAccount, getCookie } from "./session.mjs";
-import { useProvider } from "./client.mjs";
+import { getLocalAccount, getCookie } from "./session.mjs";
+import { useProvider, isInIOSApp } from "./client.mjs";
 import { dynamicPrefetch } from "./main.jsx";
 import { sdk } from "@farcaster/frame-sdk";
 import { showSpinnerOverlay } from "./spinnerOverlay.js";
@@ -397,7 +397,7 @@ const Bell = (props) => {
     const handleLoginClick = (e) => {
       e.preventDefault();
       // On iOS, directly open RainbowKit wallet picker
-      if (isIOS() && openConnectModal) {
+      if (isInIOSApp && openConnectModal) {
         openConnectModal();
       } else {
         // On other platforms, show the LoginModal with passkey option
@@ -416,7 +416,7 @@ const Bell = (props) => {
           >
             Log In
           </button>
-          {!isIOS() && (
+          {!isInIOSApp && (
             <LoginModal
               ref={loginModalRef}
               delegations={props.delegations}
@@ -438,20 +438,39 @@ const Bell = (props) => {
             // Using Fragment to group elements for flex layout
             <>
               <svg
-                style={{ width: "24px", height: "24px" }} // Added style for size
+                style={{ width: "24px", height: "24px" }}
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 256 256"
               >
                 <rect width="256" height="256" fill="none" />
-                <path
-                  d="M40,56V184a16,16,0,0,0,16,16H216a8,8,0,0,0,8-8V80a8,8,0,0,0-8-8H56A16,16,0,0,1,40,56h0A16,16,0,0,1,56,40H192"
+                <circle
+                  cx="128"
+                  cy="128"
+                  r="96"
                   fill="none"
                   stroke="currentColor"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth="16"
                 />
-                <circle cx="180" cy="132" r="12" />
+                <circle
+                  cx="128"
+                  cy="120"
+                  r="40"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="16"
+                />
+                <path
+                  d="M63.8,199.37a72,72,0,0,1,128.4,0"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="16"
+                />
               </svg>
               <span style={{ fontSize: "9px", marginTop: "2px" }}>Log In</span>
             </>
@@ -459,7 +478,7 @@ const Bell = (props) => {
             "Log In" // Desktop text
           )}
         </button>
-        {!isIOS() && (
+        {!isInIOSApp && (
           <LoginModal
             ref={loginModalRef}
             delegations={props.delegations}
