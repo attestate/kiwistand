@@ -1,5 +1,5 @@
 // @format
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useAccount } from "wagmi";
 import { resolveIdentity } from "@attestate/delegator2";
 import SwipeableDrawer from "@mui/material/SwipeableDrawer";
@@ -12,6 +12,7 @@ import { useProvider } from "./client.mjs";
 import { dynamicPrefetch } from "./main.jsx";
 import { sdk } from "@farcaster/frame-sdk";
 import { showSpinnerOverlay } from "./spinnerOverlay.js";
+import LoginModal from "./LoginModal.jsx";
 
 const EmailSubscriptionForm = ({
   onSuccess,
@@ -264,6 +265,8 @@ const Bell = (props) => {
   let address;
   const account = useAccount();
   const localAccount = getLocalAccount(account.address);
+  const loginModalRef = useRef();
+
   if (localAccount) {
     address = localAccount.identity;
   } else if (account.isConnected) {
@@ -375,6 +378,7 @@ const Bell = (props) => {
           backgroundColor: "transparent", // No background needed
           textDecoration: "none", // Ensure no underline
           height: "100%", // Fill container height
+          cursor: "pointer",
         }
       : {
           // Desktop styles remain the same
@@ -385,27 +389,42 @@ const Bell = (props) => {
           padding: "10px 10px",
           border: "3px inset #59321C",
           backgroundColor: "#E2F266",
+          cursor: "pointer",
         };
 
-    // If desktop, user is connected but not eligible, show Connect button
+    const handleLoginClick = (e) => {
+      e.preventDefault();
+      loginModalRef.current?.openModal();
+    };
+
+    // If desktop, user is connected but not eligible, show Log In button
     if (!props.mobile && account?.isConnected && !isEligible) {
       return (
-        <TextConnectButton
-          className="bell-button"
-          style={mobileConnectStyle}
-          delegations={props.delegations}
-          text="Connect"
-        />
+        <>
+          <button
+            className="bell-button"
+            style={mobileConnectStyle}
+            onClick={handleLoginClick}
+          >
+            Log In
+          </button>
+          <LoginModal
+            ref={loginModalRef}
+            delegations={props.delegations}
+            toast={props.toast}
+          />
+        </>
       );
     }
 
     return (
-      <TextConnectButton
-        className={props.mobile ? "mobile-bell" : "bell-button"}
-        style={mobileConnectStyle}
-        delegations={props.delegations}
-        text={
-          props.mobile ? (
+      <>
+        <button
+          className={props.mobile ? "mobile-bell" : "bell-button"}
+          style={mobileConnectStyle}
+          onClick={handleLoginClick}
+        >
+          {props.mobile ? (
             // Using Fragment to group elements for flex layout
             <>
               <svg
@@ -424,13 +443,18 @@ const Bell = (props) => {
                 />
                 <circle cx="180" cy="132" r="12" />
               </svg>
-              <span style={{ fontSize: "9px", marginTop: "2px" }}>Connect</span>
+              <span style={{ fontSize: "9px", marginTop: "2px" }}>Log In</span>
             </>
           ) : (
-            "Connect" // Desktop text
-          )
-        }
-      />
+            "Log In" // Desktop text
+          )}
+        </button>
+        <LoginModal
+          ref={loginModalRef}
+          delegations={props.delegations}
+          toast={props.toast}
+        />
+      </>
     );
   }
 
