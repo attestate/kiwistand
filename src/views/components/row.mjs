@@ -163,6 +163,11 @@ const formatDistanceToNowStrict = (date) => {
     .replace(/ seconds?/, "s");
 };
 
+const convertBrTagsToNewlines = (text) => {
+  if (!text) return text;
+  return text.replace(/<br\s*\/?>/gi, '\n');
+};
+
 const ShuffleSVG = html`<svg
   style="width: 24px; color: black;"
   xmlns="http://www.w3.org/2000/svg"
@@ -549,7 +554,7 @@ const row = (
                         </span>
                       </div>
                       <div class="tweet-embed-body">
-                        <p>
+                        <p style="white-space: pre-wrap;">
                           ${(() => {
                             const linkifyNodes = (text) => {
                               const parts = text.split(/(\bhttps?:\/\/[^\s]+)/g);
@@ -561,7 +566,7 @@ const row = (
                                 return DOMPurify.sanitize(part);
                               });
                             };
-                            const desc = (story.metadata.ogDescription || "").trim();
+                            const desc = convertBrTagsToNewlines((story.metadata.ogDescription || "").trim());
                             if (/^https?:\/\/\S+$/i.test(desc)) {
                               return html`<a href="${DOMPurify.sanitize(desc)}" target="_blank" rel="noopener">${DOMPurify.sanitize(desc)}</a>`;
                             }
