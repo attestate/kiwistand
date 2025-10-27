@@ -28,6 +28,7 @@ import {
   portoWallet,
 } from "@rainbow-me/rainbowkit/wallets";
 import { sdk } from "@farcaster/miniapp-sdk";
+import { Mode } from "porto";
 
 const isDesktop = () => {
   return (
@@ -75,6 +76,118 @@ export const isInIOSApp =
 const projectId = "cd46d2fcf6d171fb7c017129868fa211";
 const appName = "Kiwi News";
 
+// Kiwi theme for Porto
+const kiwiTheme = {
+  colorScheme: "light",
+
+  // Primary colors (Kiwi green)
+  focus: "#AFC046",
+  link: "#AFC046",
+  primaryBackground: "#AFC046",
+  primaryContent: "#000000",
+  primaryBorder: "#AFC046",
+  primaryHoveredBackground: "#9BAD3D",
+  primaryHoveredBorder: "#9BAD3D",
+
+  // Base/background colors (Kiwi beige/off-white)
+  baseBackground: "#FFFFFF",
+  baseAltBackground: "#E6E6DF",
+  basePlaneBackground: "#F5F5F0",
+  baseBorder: "#0000001A",
+  baseContent: "#000000",
+  baseContentSecondary: "#666666",
+  baseContentTertiary: "#828282",
+  baseContentPositive: "#4CAF50",
+  baseContentNegative: "#F44336",
+  baseContentWarning: "#FF9800",
+  baseHoveredBackground: "#F0F0E8",
+
+  // Frame/modal colors
+  frameBackground: "#FFFFFF",
+  frameBorder: "#0000001A",
+  frameContent: "#000000",
+  frameRadius: 2,
+
+  // Secondary button colors (black)
+  secondaryBackground: "#000000",
+  secondaryContent: "#FFFFFF",
+  secondaryBorder: "#000000",
+  secondaryHoveredBackground: "#333333",
+  secondaryHoveredBorder: "#333333",
+
+  // Field/input colors
+  fieldBackground: "#FFFFFF",
+  fieldContent: "#000000",
+  fieldContentSecondary: "#666666",
+  fieldContentTertiary: "#828282",
+  fieldBorder: "#0000001A",
+  fieldFocusedBackground: "#FFFFFF",
+  fieldFocusedContent: "#000000",
+  fieldErrorBorder: "#F44336",
+  fieldNegativeBorder: "#F44336",
+  fieldNegativeBackground: "#FFEBEE",
+  fieldPositiveBorder: "#4CAF50",
+  fieldPositiveBackground: "#E8F5E9",
+
+  // Badge colors
+  badgeBackground: "#F5F5F0",
+  badgeContent: "#000000",
+  badgeStrongBackground: "#000000",
+  badgeStrongContent: "#FFFFFF",
+  badgeInfoBackground: "#E3F2FD",
+  badgeInfoContent: "#1976D2",
+  badgeNegativeBackground: "#FFEBEE",
+  badgeNegativeContent: "#D32F2F",
+  badgePositiveBackground: "#E8F5E9",
+  badgePositiveContent: "#388E3C",
+  badgeWarningBackground: "#FFF3E0",
+  badgeWarningContent: "#F57C00",
+
+  // Radius
+  radiusSmall: 2,
+  radiusMedium: 2,
+  radiusLarge: 2,
+
+  // Separator
+  separator: "#0000001A",
+
+  // Distinct (alternative button style)
+  distinctBackground: "#F5F5F0",
+  distinctContent: "#000000",
+  distinctBorder: "#0000001A",
+
+  // Disabled state
+  disabledBackground: "#E0E0E0",
+  disabledBorder: "#CCCCCC",
+  disabledContent: "#9E9E9E",
+
+  // Negative (error) button
+  negativeBackground: "#F44336",
+  negativeContent: "#FFFFFF",
+  negativeBorder: "#F44336",
+  negativeSecondaryBackground: "#FFEBEE",
+  negativeSecondaryContent: "#D32F2F",
+  negativeSecondaryBorder: "#FFCDD2",
+
+  // Positive (success) button
+  positiveBackground: "#4CAF50",
+  positiveContent: "#FFFFFF",
+  positiveBorder: "#4CAF50",
+
+  // Strong (emphasis) button
+  strongBackground: "#000000",
+  strongContent: "#FFFFFF",
+  strongBorder: "#000000",
+
+  // Warning button
+  warningBackground: "#FF9800",
+  warningContent: "#FFFFFF",
+  warningBorder: "#FF9800",
+  warningStrongBackground: "#F57C00",
+  warningStrongContent: "#FFFFFF",
+  warningStrongBorder: "#F57C00",
+};
+
 // Create wagmi config based on environment
 let client;
 
@@ -117,7 +230,10 @@ if (isInIOSApp) {
     : '/porto/merchant';
 
   const wallets = [
-    () => portoWallet({ merchantUrl }),
+    () => portoWallet({
+      merchantUrl,
+      mode: Mode.dialog({ theme: kiwiTheme })
+    }),
     injectedWallet,
     walletConnectWallet,
     coinbaseWallet,

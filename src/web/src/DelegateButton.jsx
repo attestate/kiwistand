@@ -79,103 +79,52 @@ export const ProgressBar = (props) => {
   );
 };
 
+const SparkleIcon = () => (
+  <svg viewBox="0 0 256 256" width="1.2em" height="1.2em" style={{ width: "18px", height: "18px" }}>
+    <path fill="currentColor" d="m230.86 109.25l-61.68-22.43l-22.43-61.68a19.95 19.95 0 0 0-37.5 0L86.82 86.82l-61.68 22.43a19.95 19.95 0 0 0 0 37.5l61.68 22.43l22.43 61.68a19.95 19.95 0 0 0 37.5 0l22.43-61.68l61.68-22.43a19.95 19.95 0 0 0 0-37.5m-75.14 39.29a12 12 0 0 0-7.18 7.18L128 212.21l-20.54-56.49a12 12 0 0 0-7.18-7.18L43.79 128l56.49-20.54a12 12 0 0 0 7.18-7.18L128 43.79l20.54 56.49a12 12 0 0 0 7.18 7.18L212.21 128Z"></path>
+  </svg>
+);
+
 const ConnectionDialogue = (props) => {
   const { pathname } = window.location;
   return (
-    <div
-      style={{
-        wordBreak: "break-word",
-        margin: "0 3px",
-      }}
-    >
-      <h3
-        style={{
-          marginTop: "0",
-          fontSize: "1.2rem",
-          color: "black",
-          marginBottom: "10px",
-          textAlign: "left",
-        }}
-      >
-        {pathname === "/start" ? (
-          <span>Welcome to Kiwi News! </span>
-        ) : (
-          <span>Welcome back!</span>
-        )}
-      </h3>
-      {pathname === "/settings" ? (
-        <p
-          style={{
-            fontWeight: "bold",
-            color: "black",
-            marginBottom: "10px",
-            textAlign: "left",
-          }}
-        >
-          Allow your browser to seamlessly interact on your behalf on the
-          Optimism network:
-        </p>
-      ) : props.account && props.account.isConnected ? (
-        <p
-          style={{
-            color: "black",
-            marginBottom: "10px",
-            textAlign: "left",
-          }}
-        >
-          Please add an application key:
-        </p>
-      ) : (
-        <p
-          style={{
-            fontWeight: "bold",
-            color: "black",
-            marginBottom: "20px",
-            textAlign: "left",
-          }}
-        >
-          Let us onboard you to the app.
-          <br />
-          <br />
-          Please connect the wallet that received the Kiwi Pass NFT.
-        </p>
-      )}
-      <ul
-        style={{
-          textAlign: "left",
-          listStyle: "none",
-          paddingLeft: "0",
-          color: "black",
-          marginBottom: "35px",
-          paddingLeft: "5px",
-          fontSize: "0.9rem",
-        }}
-      >
-        <li
-          style={{ marginLeft: "14px", textIndent: "-14px", marginTop: "8px" }}
-        >
-          <span style={{ color: theme.color }}>•</span> Sign messages without
-          additional prompts.
-        </li>
-        <li
-          style={{ marginLeft: "14px", textIndent: "-14px", marginTop: "5px" }}
-        >
-          <span style={{ color: theme.color }}>•</span> <b>Cost:</b> less than
-          $0.01 on Optimism
-        </li>
-        <li
-          style={{ marginLeft: "14px", textIndent: "-14px", marginTop: "5px" }}
-        >
-          <span style={{ color: theme.color }}>•</span> Learn more about this by{" "}
-          <a
-            style={{ textDecoration: "underline" }}
-            href="https://kiwistand.github.io/kiwi-docs/docs/kiwi-how-works/delegation"
-            target="_blank"
-          >
-            reading our docs
-          </a>
-        </li>
-      </ul>
+    <div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
+      {/* Porto-style title section */}
+      <div style={{ display: "flex", flexDirection: "column", padding: "12px 12px 8px" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "12px", paddingBottom: "4px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <div style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "32px",
+              height: "32px",
+              borderRadius: "50%",
+              backgroundColor: "#E3F2FD",
+              color: "#0588f0",
+            }}>
+              <SparkleIcon />
+            </div>
+            <div style={{ fontSize: "18px", fontWeight: "500", color: "#000000" }}>
+              {pathname === "/start" ? "Welcome to Kiwi News!" : "Setup delegation"}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Porto-style content section */}
+      <div style={{ flexGrow: 1, padding: "0 12px 12px" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          <div style={{ fontSize: "15px", color: "#000000", lineHeight: "22px" }}>
+            {pathname === "/settings"
+              ? "Allow your browser to seamlessly interact on your behalf on the Optimism network"
+              : props.account && props.account.isConnected
+              ? "Add an application key to interact without wallet prompts"
+              : "Connect the wallet that received the Kiwi Pass NFT"
+            }
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
@@ -199,15 +148,20 @@ const DelegateButton = (props) => {
   const { switchChain } = useSwitchChain();
   const [keyName, setKeyName] = useState(null);
 
-  // Extract the style that was coming from the Form wrapper
+  // Porto-style wrapper
   const wrapperStyle = {
-    border: "1px solid rgba(0,0,0,0.1)",
-    backgroundColor: "#E6E6DF",
-    maxWidth: "315px",
-    display: "inline-block",
-    padding: "20px 15px",
-    borderRadius: "2px",
-    boxShadow: "0 6px 20 rgba(0,0,0,0.1)",
+    backgroundColor: "transparent",
+    maxWidth: "100%",
+    width: "100%",
+    display: "flex",
+    flexDirection: "column",
+    padding: "0",
+    borderRadius: "0",
+    boxShadow: "none",
+    border: "none",
+    fontSize: "15px",
+    lineHeight: "1.325",
+    fontFamily: "ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'",
     ...props.style,
   };
 
@@ -229,6 +183,8 @@ const DelegateButton = (props) => {
 
   const [confirmation, setConfirmation] = useState("");
   const provider = useProvider();
+  const [isButtonHovered, setIsButtonHovered] = useState(false);
+  const [isButtonActive, setIsButtonActive] = useState(false);
 
   const [payload, setPayload] = useState(null);
   const [indexedDelegation, setIndexedDelegation] = useState(false);
@@ -309,14 +265,20 @@ const DelegateButton = (props) => {
   const localAccount = getLocalAccount(from.address);
 
   if (!from.address) {
+    // Notify parent that we're not in indexing state
+    if (props.onIndexingStateChange) {
+      props.onIndexingStateChange(false);
+    }
+
     return (
       <div style={wrapperStyle}>
-        <ProgressBar progress={0} />
         <ConnectionDialogue account={from} />
-        <ConnectedConnectButton
-          required
-          delegations={props.delegations}
-        />
+        <div style={{ padding: "0 12px 12px" }}>
+          <ConnectedConnectButton
+            required
+            delegations={props.delegations}
+          />
+        </div>
       </div>
     );
   }
@@ -326,43 +288,76 @@ const DelegateButton = (props) => {
       const delegate = key && wallet ? wallet.address : getNewKey().address;
       window.location.href = `/indexing?address=${from.address}&delegate=${delegate}`;
     } else {
-      const progress = indexedDelegation ? 3 : 1;
+      // Notify parent that we're in indexing state
+      if (props.onIndexingStateChange) {
+        props.onIndexingStateChange(true);
+      }
+
       return (
         <div style={wrapperStyle}>
-          <ProgressBar progress={progress} />
-          <h3
-            style={{
-              marginTop: 0,
-              marginBottom: 0,
-              fontSize: "1.2rem",
-              color: "black",
-            }}
-          >
-            {indexedDelegation
-              ? "Connection successful!"
-              : "Indexing your connection onchain..."}
-          </h3>
-          {!indexedDelegation ? (
-            <p>
-              Thanks! Your key is being added to Optimism (1-2 min).
-              <br />
-              <br />
-              This is so that you can like without having to confirm each time
-              in your wallet
-              <br />
-              <br />
-              Redirecting when complete...
-            </p>
-          ) : (
-            <p>
-              You can now like, submit and comment without needing to confirm
-              the signing manually in your wallet!
-            </p>
-          )}
+          {/* Porto-style success/loading state */}
+          <div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
+            <div style={{ display: "flex", flexDirection: "column", padding: "12px 12px 8px" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "12px", paddingBottom: "4px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <div style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: "32px",
+                    height: "32px",
+                    borderRadius: "50%",
+                    backgroundColor: "#E3F2FD",
+                    color: "#0588f0",
+                  }}>
+                    <SparkleIcon />
+                  </div>
+                  <div style={{ fontSize: "18px", fontWeight: "500", color: "#000000" }}>
+                    {indexedDelegation
+                      ? "Connection successful!"
+                      : "Indexing your connection..."}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div style={{ flexGrow: 1, padding: "0 12px 12px" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                <div style={{ fontSize: "15px", color: "#000000", lineHeight: "22px" }}>
+                  {!indexedDelegation ? (
+                    <>
+                      Thanks! Your key is being added to Optimism (1-2 min).
+                      This allows you to interact without wallet prompts.
+                      <br /><br />
+                      Redirecting when complete...
+                    </>
+                  ) : (
+                    <>
+                      You can now like, submit and comment without needing to confirm
+                      the signing manually in your wallet!
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       );
     }
   }
+  const FaceIdIcon = () => (
+    <svg width="1.2em" height="1.2em" viewBox="0 0 21 22" fill="none" xmlns="http://www.w3.org/2000/svg" className="size-5.25">
+      <path d="M6.125 3.125H4.375C3.4085 3.125 2.625 3.9085 2.625 4.875V6.625" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"></path>
+      <path d="M14.875 3.125H16.625C17.5915 3.125 18.375 3.9085 18.375 4.875V6.625" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"></path>
+      <path d="M14 7.5V9.25" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"></path>
+      <path d="M7 7.5V9.25" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"></path>
+      <path d="M7.875 14.5C7.875 14.5 8.75 15.375 10.5 15.375C12.25 15.375 13.125 14.5 13.125 14.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"></path>
+      <path d="M10.5 7.5V11.875H9.625" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"></path>
+      <path d="M6.125 18.875H4.375C3.4085 18.875 2.625 18.0915 2.625 17.125V15.375" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"></path>
+      <path d="M14.875 18.875H16.625C17.5915 18.875 18.375 18.0915 18.375 17.125V15.375" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"></path>
+    </svg>
+  );
+
   let content;
   let activity;
   let handler;
@@ -370,7 +365,10 @@ const DelegateButton = (props) => {
     content = isLoading ? (
       "Please sign in wallet"
     ) : (
-      <span>Enable on Optimism</span>
+      <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+        <FaceIdIcon />
+        Enable
+      </span>
     );
     activity = !writeContract || (!writeContract && !isError) || isLoading || isSuccess;
     handler = () => config && writeContract(config.request);
@@ -379,36 +377,122 @@ const DelegateButton = (props) => {
     activity = false;
     handler = () => switchChain?.({ chainId: 10 });
   }
+  // Notify parent that we're not in indexing state (showing delegation button)
+  if (props.onIndexingStateChange) {
+    props.onIndexingStateChange(false);
+  }
+
   return (
     <div style={wrapperStyle}>
       <ConnectionDialogue account={from} />
       {isPersistent ? (
-        <div
-          style={{
+        <>
+          {/* Porto-style button footer */}
+          <div style={{
             display: "flex",
-            flexDirection: "row",
-            justifyContent: "space-evenly",
-            gap: "20px",
+            minHeight: "48px",
+            width: "100%",
+            flexDirection: "column",
             alignItems: "center",
-          }}
-        >
-          <button
-            style={{
-              width: "auto",
-              backgroundColor: isLoading ? "grey" : "black",
-              border: isLoading ? "1px solid grey" : "1px solid black",
-            }}
-            className="buy-button"
-            id="button-onboarding"
-            disabled={activity}
-            onClick={handler}
-          >
-            {content}
-          </button>
-          <ConnectedSimpleDisconnectButton />
-        </div>
+            justifyContent: "center",
+            gap: "12px",
+            paddingBottom: "12px",
+          }}>
+            <div style={{
+              display: "flex",
+              width: "100%",
+              gap: "8px",
+            }}>
+              <button
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flex: 1,
+                  height: "38px",
+                  backgroundColor: isLoading
+                    ? "#E0E0E0"
+                    : isButtonHovered && !activity
+                    ? "#9BAD3D"
+                    : "#AFC046",
+                  border: isLoading
+                    ? "1px solid #E0E0E0"
+                    : isButtonHovered && !activity
+                    ? "1px solid #9BAD3D"
+                    : "1px solid #AFC046",
+                  color: "#000000",
+                  borderRadius: "8px",
+                  fontSize: "15px",
+                  fontWeight: "normal",
+                  cursor: activity ? "default" : "pointer",
+                  opacity: activity ? 0.6 : 1,
+                  transform: isButtonActive && !activity ? "translateY(1px)" : "translateY(0)",
+                  transition: "background-color 0.15s ease, border-color 0.15s ease, transform 0.05s ease",
+                  margin: "0 16px",
+                  whiteSpace: "nowrap",
+                }}
+                id="button-onboarding"
+                disabled={activity}
+                onClick={handler}
+                onMouseEnter={() => setIsButtonHovered(true)}
+                onMouseLeave={() => {
+                  setIsButtonHovered(false);
+                  setIsButtonActive(false);
+                }}
+                onMouseDown={() => setIsButtonActive(true)}
+                onMouseUp={() => setIsButtonActive(false)}
+              >
+                <div style={{ display: "flex", alignItems: "center", height: "100%", gap: "8px" }}>
+                  {content}
+                </div>
+              </button>
+            </div>
+
+            {/* Account section */}
+            <div style={{
+              display: "flex",
+              height: "100%",
+              width: "100%",
+              boxSizing: "border-box",
+              alignItems: "center",
+              justifyContent: "space-between",
+              borderTop: "1px solid #0000001A",
+              padding: "12px 4px 0",
+            }}>
+              <div style={{ fontSize: "13px", color: "#666666" }}>Account</div>
+              <button
+                disabled
+                type="button"
+                style={{
+                  margin: "-4px -8px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  borderRadius: "8px",
+                  padding: "4px 8px",
+                  background: "transparent",
+                  border: "none",
+                  cursor: "default",
+                }}
+              >
+                <div
+                  style={{
+                    fontWeight: "500",
+                    fontSize: "14px",
+                    color: "#000000"
+                  }}
+                  title={from.address}
+                >
+                  {from.address ? `${from.address.slice(0, 6)}…${from.address.slice(-6)}` : ""}
+                </div>
+              </button>
+            </div>
+          </div>
+        </>
       ) : (
-        <p>Your browser isn't supporting key storage.</p>
+        <div style={{ padding: "12px", fontSize: "15px", color: "#666666" }}>
+          Your browser isn't supporting key storage.
+        </div>
       )}
     </div>
   );
