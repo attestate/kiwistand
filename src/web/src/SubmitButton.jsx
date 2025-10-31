@@ -326,10 +326,10 @@ const SubmitButton = (props) => {
 
   // Check for delegation needs on mount
   useEffect(() => {
-    if (address && isDelegationModalNeeded(props.delegations, address)) {
+    if (address && isDelegationModalNeeded(address)) {
       openDelegationModalForAction();
     }
-  }, [address, props.delegations]);
+  }, [address]);
 
   useEffect(() => {
     const titleInput = document.getElementById("titleInput");
