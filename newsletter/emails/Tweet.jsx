@@ -2,6 +2,11 @@ import React from "react";
 import { Head, Html, Body, Tailwind, Text, Link, Img, Row, Column, Section } from "@react-email/components";
 
 // --- Helper functions ---
+const convertBrTagsToNewlines = (text) => {
+  if (!text) return text;
+  return text.replace(/<br\s*\/?>/gi, '\n');
+};
+
 const truncateLongWords = (text, maxLength = 20) => {
   if (!text) return "";
   const words = text.split(" ");
@@ -80,9 +85,9 @@ export default function TweetEmail({ story = { metadata: {} } }) {
                     </Column>
                   </Row>
                   <Text style={{ wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>
-                    {metadata.ogDescription && metadata.ogDescription.length > 260
-                      ? metadata.ogDescription.slice(0, 260) + '…'
-                      : metadata.ogDescription}
+                    {metadata.ogDescription && convertBrTagsToNewlines(metadata.ogDescription).length > 260
+                      ? convertBrTagsToNewlines(metadata.ogDescription).slice(0, 260) + '…'
+                      : convertBrTagsToNewlines(metadata.ogDescription)}
                   </Text>
                   {metadata.image && (
                     <Img
