@@ -2,10 +2,26 @@ import htm from "htm";
 import vhtml from "vhtml";
 import DOMPurify from "isomorphic-dompurify";
 import { env } from "process";
+import { createHash } from "crypto";
+import { readFileSync } from "fs";
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
 
 import PwaLinks from "./pwaLinks.mjs";
 
 const html = htm.bind(vhtml);
+
+// Generate CSS cache buster hash based on file content
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+let cssHash = "";
+try {
+  const cssContent = readFileSync(join(__dirname, "../../public/news.css"), "utf8");
+  cssHash = createHash("md5").update(cssContent).digest("hex").substring(0, 8);
+} catch (err) {
+  console.warn("Could not read news.css for cache busting:", err.message);
+  cssHash = Date.now().toString();
+}
 
 // Determine domain dynamically
 let domain = "https://news.kiwistand.com";
@@ -128,8 +144,8 @@ export function custom(
     ${ogDescription
       ? html`<meta property="og:description" content="${ogDescription}" />`
       : ""}
-    <link rel="preload" href="news.css" as="style" />
-    <link rel="stylesheet" href="news.css" />
+    <link rel="preload" href="news.css?v=${cssHash}" as="style" />
+    <link rel="stylesheet" href="news.css?v=${cssHash}" />
     <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
     ${PwaLinks()}
     <title>${ogTitle}</title>
