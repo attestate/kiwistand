@@ -91,6 +91,7 @@ const communityfull = html`<svg
   <rect width="256" height="256" fill="none" />
   <path
     d="M64.12,147.8a4,4,0,0,1-4,4.2H16a8,8,0,0,1-7.8-6.17,8.35,8.35,0,0,1,1.62-6.93A67.79,67.79,0,0,1,37,117.51a40,40,0,1,1,66.46-35.8,3.94,3.94,0,0,1-2.27,4.18A64.08,64.08,0,0,0,64,144C64,145.28,64,146.54,64.12,147.8Zm182-8.91A67.76,67.76,0,0,0,219,117.51a40,40,0,1,0-66.46-35.8,3.94,3.94,0,0,0,2.27,4.18A64.08,64.08,0,0,1,192,144c0,1.28,0,2.54-.12,3.8a4,4,0,0,0,4,4.2H240a8,8,0,0,0,7.8-6.17A8.33,8.33,0,0,0,246.17,138.89Zm-89,43.18a48,48,0,1,0-58.37,0A72.13,72.13,0,0,0,65.07,212,8,8,0,0,0,72,224H184a8,8,0,0,0,6.93-12A72.15,72.15,0,0,0,157.19,182.07Z"
+    fill="currentColor"
   />
 </svg>`;
 const community = html`
@@ -176,6 +177,7 @@ const aboutfull = html`
     <rect width="256" height="256" fill="none" />
     <path
       d="M216,32V192a8,8,0,0,1-8,8H72a16,16,0,0,0-16,16H192a8,8,0,0,1,0,16H48a8,8,0,0,1-8-8V56A32,32,0,0,1,72,24H208A8,8,0,0,1,216,32Z"
+      fill="currentColor"
     />
   </svg>
 `;
@@ -215,6 +217,7 @@ const onboardingfull = html`
     <rect width="256" height="256" fill="none" />
     <path
       d="M176,207.24a119,119,0,0,0,16-7.73V240a8,8,0,0,1-16,0Zm11.76-88.43-56-29.87a8,8,0,0,0-7.52,14.12L171,128l17-9.06Zm64-29.87-120-64a8,8,0,0,0-7.52,0l-120,64a8,8,0,0,0,0,14.12L32,117.87v48.42a15.91,15.91,0,0,0,4.06,10.65C49.16,191.53,78.51,216,128,216a130,130,0,0,0,48-8.76V130.67L171,128l-43,22.93L43.83,106l0,0L25,96,128,41.07,231,96l-18.78,10-.06,0L188,118.94a8,8,0,0,1,4,6.93v73.64a115.63,115.63,0,0,0,27.94-22.57A15.91,15.91,0,0,0,224,166.29V117.87l27.76-14.81a8,8,0,0,0,0-14.12Z"
+      fill="currentColor"
     />
   </svg>
 `;
@@ -292,6 +295,7 @@ export const homefull = html`
     <rect width="256" height="256" fill="none" />
     <path
       d="M224,115.55V208a16,16,0,0,1-16,16H168a16,16,0,0,1-16-16V168a8,8,0,0,0-8-8H112a8,8,0,0,0-8,8v40a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V115.55a16,16,0,0,1,5.17-11.78l80-75.48.11-.11a16,16,0,0,1,21.53,0,1.14,1.14,0,0,0,.11.11l80,75.48A16,16,0,0,1,224,115.55Z"
+      fill="currentColor"
     />
   </svg>
 `;
@@ -397,6 +401,7 @@ const envelopefull = html`
     <rect width="256" height="256" fill="none" />
     <path
       d="M224,48H32a8,8,0,0,0-8,8V192a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A8,8,0,0,0,224,48ZM98.71,128,40,181.81V74.19Zm11.84,10.85,12,11.05a8,8,0,0,0,10.82,0l12-11.05,58,53.15H52.57ZM157.29,128,216,74.18V181.82Z"
+      fill="currentColor"
     />
   </svg>
 `;
@@ -405,6 +410,7 @@ const profilefull = html`
     <rect width="256" height="256" fill="none" />
     <path
       d="M172,120a44,44,0,1,1-44-44A44,44,0,0,1,172,120Zm52-72V208a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V48A16,16,0,0,1,48,32H208A16,16,0,0,1,224,48ZM208,208V48H48V208h3.67a80.58,80.58,0,0,1,26.07-38.25q3.08-2.48,6.36-4.62a4,4,0,0,1,4.81.33,59.82,59.82,0,0,0,78.18,0,4,4,0,0,1,4.81-.33q3.28,2.15,6.36,4.62A80.58,80.58,0,0,1,204.33,208H208Z"
+      fill="currentColor"
     />
   </svg>
 `;
@@ -450,6 +456,7 @@ const settingsfull = html`
     <rect width="256" height="256" fill="none" />
     <path
       d="M216,130.16q.06-2.16,0-4.32l14.92-18.64a8,8,0,0,0,1.48-7.06,107.6,107.6,0,0,0-10.88-26.25,8,8,0,0,0-6-3.93l-23.72-2.64q-1.48-1.56-3-3L186,40.54a8,8,0,0,0-3.94-6,107.29,107.29,0,0,0-26.25-10.86,8,8,0,0,0-7.06,1.48L130.16,40Q128,40,125.84,40L107.2,25.11a8,8,0,0,0-7.06-1.48A107.6,107.6,0,0,0,73.89,34.51a8,8,0,0,0-3.93,6L67.32,64.27q-1.56,1.49-3,3L40.54,70a8,8,0,0,0-6,3.94,107.71,107.71,0,0,0-10.87,26.25,8,8,0,0,0,1.49,7.06L40,125.84Q40,128,40,130.16L25.11,148.8a8,8,0,0,0-1.48,7.06,107.6,107.6,0,0,0,10.88,26.25,8,8,0,0,0,6,3.93l23.72,2.64q1.49,1.56,3,3L70,215.46a8,8,0,0,0,3.94,6,107.71,107.71,0,0,0,26.25,10.87,8,8,0,0,0,7.06-1.49L125.84,216q2.16.06,4.32,0l18.64,14.92a8,8,0,0,0,7.06,1.48,107.21,107.21,0,0,0,26.25-10.88,8,8,0,0,0,3.93-6l2.64-23.72q1.56-1.48,3-3L215.46,186a8,8,0,0,0,6-3.94,107.71,107.71,0,0,0,10.87-26.25,8,8,0,0,0-1.49-7.06ZM128,168a40,40,0,1,1,40-40A40,40,0,0,1,128,168Z"
+      fill="currentColor"
     />
   </svg>
 `;
@@ -557,11 +564,12 @@ const coinfull = html`<svg
   <rect width="256" height="256" fill="none" />
   <path
     d="M184,89.57V84c0-25.08-37.83-44-88-44S8,58.92,8,84v40c0,20.89,26.25,37.49,64,42.46V172c0,25.08,37.83,44,88,44s88-18.92,88-44V132C248,111.3,222.58,94.68,184,89.57ZM56,146.87C36.41,141.4,24,132.39,24,124V109.93c8.16,5.78,19.09,10.44,32,13.57Zm80-23.37c12.91-3.13,23.84-7.79,32-13.57V124c0,8.39-12.41,17.4-32,22.87Zm-16,71.37C100.41,189.4,88,180.39,88,172v-4.17c2.63.1,5.29.17,8,.17,3.88,0,7.67-.13,11.39-.35A121.92,121.92,0,0,0,120,171.41Zm0-44.62A163,163,0,0,1,96,152a163,163,0,0,1-24-1.75V126.46A183.74,183.74,0,0,0,96,128a183.74,183.74,0,0,0,24-1.54Zm64,48a165.45,165.45,0,0,1-48,0V174.4a179.48,179.48,0,0,0,24,1.6,183.74,183.74,0,0,0,24-1.54ZM232,172c0,8.39-12.41,17.4-32,22.87V171.5c12.91-3.13,23.84-7.79,32-13.57Z"
+    fill="currentColor"
   />
 </svg>`;
 
 const sidebar = (path) => html`
-  <div class="sidebar" id="mySidebar" style="color: black;">
+  <div class="sidebar" id="mySidebar" style="color: var(--text-primary);">
     <a class="kiwi-logo" href="/">🥝</a>
     <a
       title="Home"
@@ -570,8 +578,8 @@ const sidebar = (path) => html`
       path === "/new" ||
       path === "/best" ||
       path === "/stories"
-        ? " font-weight: bold; background-color: rgba(0,0,0,0.1);"
-        : "font-weight: normal"}; color: black; text-decoration: none; display: block;"
+        ? " font-weight: bold; background-color: var(--button-bg);"
+        : "font-weight: normal"}; color: var(--text-primary); text-decoration: none; display: block;"
     >
       <div style="display: flex; align-items: center;">
         <div class="svg-container">${path === "/" ? homefull : home}</div>
@@ -581,13 +589,13 @@ const sidebar = (path) => html`
     <div
       id="nav-profile"
       style="${path === "/upvotes"
-        ? " font-weight: bold; background-color: rgba(0,0,0,0.1);"
-        : "font-weight: normal"}; color: black; text-decoration: none; display: block;"
+        ? " font-weight: bold; background-color: var(--button-bg);"
+        : "font-weight: normal"}; color: var(--text-primary); text-decoration: none; display: block;"
     >
       <a
         title="Profile"
         href=""
-        style="color: black; text-decoration: none; display: block;"
+        style="color: var(--text-primary); text-decoration: none; display: block;"
       >
         <div style="display: flex; align-items: center;">
           <div class="svg-container">
@@ -601,7 +609,7 @@ const sidebar = (path) => html`
       title="Wiki"
       href="https://kiwistand.github.io/kiwi-docs/"
       target="_blank"
-      style="color: black; text-decoration: none; display: block;"
+      style="color: var(--text-primary); text-decoration: none; display: block;"
     >
       <div style="display: flex; align-items: center;">
         <div class="svg-container">
@@ -614,7 +622,7 @@ const sidebar = (path) => html`
       <a
         title="Disconnect"
         href=""
-        style="color: black; text-decoration: none; display: block;"
+        style="color: var(--text-primary); text-decoration: none; display: block;"
       >
         <div style="display: flex; align-items: center;">
           <div class="svg-container">${ethereum()}</div>

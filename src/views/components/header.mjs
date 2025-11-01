@@ -29,7 +29,7 @@ const header = (theme, path) => {
             >
               <div class="kn-banner-desk">
                 <a
-                  style="display: flex; align-items: center; gap: 0.5rem; color: black;"
+                  style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-primary);"
                   href="/"
                   onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block';}"
                 >
@@ -54,7 +54,7 @@ const header = (theme, path) => {
                       >
                         <a
                           href="/"
-                          style="color: black; text-decoration: none; font-size: 11pt; display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; padding: 0 5px;"
+                          style="color: var(--text-primary); text-decoration: none; font-size: 11pt; display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; padding: 0 5px;"
                         >
                           <svg
                             height="21px"
@@ -75,7 +75,7 @@ const header = (theme, path) => {
                   : // Default Menu button for non-story pages (React will replace if logged in)
                     html`
                       <div
-                        style="padding: 0 13px 0 7px; background: rgba(0, 0, 0, 0.05); border-radius: 2px; display: flex; align-items: center;"
+                        style="padding: 0 13px 0 7px; background: var(--button-bg); border-radius: 2px; display: flex; align-items: center;"
                       >
                         <div
                           style="display: flex; cursor: pointer; align-items: center; justify-content: left; padding: 7px 0 7px 7px;"
@@ -90,7 +90,7 @@ const header = (theme, path) => {
                             <rect y="30" width="100" height="10"></rect>
                             <rect y="60" width="100" height="10"></rect>
                           </svg>
-                          <span style="color: black; margin-left: 10px;"
+                          <span style="color: var(--text-primary); margin-left: 10px;"
                             >Menu</span
                           >
                         </div>

@@ -148,7 +148,7 @@ const ParagraphFullPost = ({ post }) => {
         case 'figure':
           return `<figure style="margin: 1em 0; text-align: center;">${children}</figure>`;
         case 'figcaption':
-          return `<figcaption style="margin-top: 0.5em; font-style: italic; color: #666;">${children}</figcaption>`;
+          return `<figcaption style="margin-top: 0.5em; font-style: italic; color: var(--text-tertiary);">${children}</figcaption>`;
         case 'hardBreak':
           return '<br>';
         case 'emoji':
@@ -171,7 +171,7 @@ const ParagraphFullPost = ({ post }) => {
           ${DOMPurify.sanitize(post.title)}
         </h2>
         
-        <div style="display: flex; align-items: center; gap: 16px; color: #666; font-size: 14px;">
+        <div style="display: flex; align-items: center; gap: 16px; color: var(--text-tertiary); font-size: 14px;">
           <div style="display: flex; align-items: center; gap: 8px;">
             <svg 
               style="width: 16px; height: 16px;" 
@@ -213,27 +213,27 @@ const ParagraphFullPost = ({ post }) => {
               >
                 <path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z" fill="currentColor"/>
               </svg>
-              <span style="color: #4CAF50;">Permanently stored</span>
+              <span style="color: var(--color-success);">Permanently stored</span>
             </div>
           ` : null}
         </div>
         
         ${post.description ? html`
-          <div style="margin-top: 16px; font-size: 16px; color: #555; line-height: 1.5; font-style: italic;">
+          <div style="margin-top: 16px; font-size: 16px; color: var(--text-muted); line-height: 1.5; font-style: italic;">
             ${DOMPurify.sanitize(post.description)}
           </div>
         ` : null}
       </div>
       
-      <div class="paragraph-post-content" style="font-size: 16px; line-height: 1.6; color: #333;">
+      <div class="paragraph-post-content" style="font-size: 16px; line-height: 1.6; color: var(--text-primary);">
         <style>
           .paragraph-post-content a {
-            color: black;
+            color: var(--text-primary);
             font-weight: 500;
             text-decoration: underline;
           }
           .paragraph-post-content a:visited {
-            color: #828282;
+            color: var(--text-secondary);
           }
           .paragraph-post-content a:hover {
             text-decoration: underline;

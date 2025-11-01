@@ -101,7 +101,7 @@ export default async function (theme, query) {
               ${results.length > 0
                 ? html` <tr>
                     <td
-                      style="padding: 10px 0 15px 11px; text-align: left; color: #666;"
+                      style="padding: 10px 0 15px 11px; text-align: left; color: var(--text-secondary);"
                     >
                       Search results for "${sanitizedQuery}"
                     </td>

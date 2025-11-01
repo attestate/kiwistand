@@ -81,7 +81,7 @@ const Profile = (props) => {
       href={isEnabled ? "/upvotes?address=" + address : ""}
       style={{
         pointerEvents: isEnabled ? "auto" : "none",
-        color: isEnabled ? "black" : "grey",
+        color: isEnabled ? "var(--text-primary)" : "var(--text-disabled)",
         textDecoration: "none",
         display: "block",
       }}
@@ -146,7 +146,7 @@ const DisconnectButton = () => {
             title="Disconnect Wallet"
             onClick={connected && openAccountModal}
             style={{
-              color: connected ? "black" : "grey",
+              color: connected ? "var(--text-primary)" : "var(--text-disabled)",
               pointerEvents: connected ? "auto" : "none",
             }}
             className="sidebar-div"
@@ -235,7 +235,7 @@ export const TextConnectButton = ({
         if ((required && !connected) || (!connected && !isEligible)) {
           return (
             <span
-              style={{ color: "black", ...style }}
+              style={{ color: "var(--text-primary)", ...style }}
               onClick={openConnectModal}
               className={`meta-link ${className}`}
             >

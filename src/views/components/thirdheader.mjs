@@ -7,8 +7,8 @@ const html = htm.bind(vhtml);
 const secondheader = (theme, site) => html`
   <td>
     <div
-      style="color: black; font-size: 1rem; font-weight: bold; display: flex; justify-content:
- space-evenly; background-color: #e6e6df;"
+      style="color: var(--text-primary); font-size: 1rem; font-weight: bold; display: flex; justify-content:
+ space-evenly; background-color: var(--sidebar-beige);"
     >
       <a
         href="/"
@@ -21,7 +21,7 @@ const secondheader = (theme, site) => html`
         >
           <div
             style="${site === "top" || site === "new" || site === "best"
-              ? "border-bottom: 3px solid black; padding: 0.75rem 1.5rem 0.3rem 1.5rem;"
+              ? "border-bottom: 3px solid var(--text-primary); padding: 0.75rem 1.5rem 0.3rem 1.5rem;"
               : "padding-top: 0.75rem;"}"
           >
             Links
@@ -39,7 +39,7 @@ const secondheader = (theme, site) => html`
         >
           <div
             style="${site === "comments"
-              ? "border-bottom: 3px solid black; padding: 0.75rem 1.5rem 0.3rem 1.5rem;"
+              ? "border-bottom: 3px solid var(--text-primary); padding: 0.75rem 1.5rem 0.3rem 1.5rem;"
               : "padding-top: 0.65rem"}"
           >
             Comments
@@ -49,9 +49,9 @@ const secondheader = (theme, site) => html`
     </div>
 
     <div
-      style="margin-top: -2px; padding: 0 1rem 0 1rem; background-color: #e6e6df;"
+      style="margin-top: -2px; padding: 0 1rem 0 1rem; background-color: var(--sidebar-beige);"
     >
-      <hr style="margin: 0; border-top: 0; border-bottom: 1px solid #7f8c8d;" />
+      <hr style="margin: 0; border-top: 0; border-bottom: 1px solid var(--text-muted);" />
     </div>
   </td>
 `;

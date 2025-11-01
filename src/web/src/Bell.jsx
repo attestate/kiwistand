@@ -127,6 +127,8 @@ const EmailSubscriptionForm = ({
             border: "var(--border-thin)",
             borderRadius: "2px",
             fontSize: "11pt",
+            backgroundColor: "var(--bg-white)",
+            color: "var(--text-primary)",
           }}
           required
         />
@@ -138,7 +140,7 @@ const EmailSubscriptionForm = ({
               alignItems: "center",
               marginBottom: "12px",
               fontSize: "11pt",
-              color: "#666",
+              color: "var(--text-tertiary)",
             }}
           >
             <input
@@ -155,7 +157,7 @@ const EmailSubscriptionForm = ({
               display: "flex",
               alignItems: "center",
               fontSize: "11pt",
-              color: "#666",
+              color: "var(--text-tertiary)",
               marginBottom: "12px", // Added margin for spacing
             }}
           >
@@ -173,7 +175,7 @@ const EmailSubscriptionForm = ({
               display: "flex",
               alignItems: "center",
               fontSize: "11pt",
-              color: "#666",
+              color: "var(--text-tertiary)",
             }}
           >
             <input
@@ -192,9 +194,9 @@ const EmailSubscriptionForm = ({
             disabled={status === "sending"}
             style={{
               padding: "8px 16px",
-              background: status === "sending" ? "#828282" : "black",
-              color: "white",
-              border: "none",
+              background: status === "sending" ? "var(--text-secondary)" : "var(--button-primary-bg)",
+              color: status === "sending" ? "var(--bg-white)" : "var(--button-primary-text)",
+              border: status === "sending" ? "none" : "1px solid var(--button-primary-bg)",
               borderRadius: "2px",
               cursor: "pointer",
               fontSize: "11pt",
@@ -246,9 +248,9 @@ const NotificationButton = ({ onEnabled }) => {
       onClick={handleNotificationRequest}
       style={{
         padding: "6px 12px",
-        background: "black",
-        color: "white",
-        border: "var(--border)",
+        background: "var(--button-primary-bg)",
+        color: "var(--button-primary-text)",
+        border: "1px solid var(--button-primary-bg)",
         borderRadius: "2px",
         cursor: "pointer",
         fontSize: "10pt",
@@ -332,13 +334,13 @@ const Bell = (props) => {
         justifyContent: "center", // Center items vertically
         position: "relative",
         textDecoration: "none", // Remove underline from link
-        color: "black", // Ensure text color is black
+        color: "var(--color-black)", // Ensure text color uses theme variable
         height: "100%", // Fill container height
       }
     : {
         // Desktop styles
         padding: "10px 10px",
-        backgroundColor: "var(--bg-off-white)",
+        backgroundColor: "var(--background-color1)",
         border: "var(--border)",
         borderRadius: "2px",
         display: "inline-flex",
@@ -371,7 +373,7 @@ const Bell = (props) => {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          color: "black",
+          color: "var(--color-black)",
           textAlign: "center",
           fontSize: "9pt", // Adjusted size slightly
           padding: "0", // Remove padding for tighter fit
@@ -384,13 +386,13 @@ const Bell = (props) => {
         }
       : {
           // Desktop styles remain the same
-          color: "black",
+          color: "var(--color-black)",
           textAlign: "center",
           fontSize: "9pt",
           display: "inline",
           padding: "10px 10px",
-          border: "3px inset #59321C",
-          backgroundColor: "#E2F266",
+          border: "3px inset var(--full-contrast-color)",
+          backgroundColor: "var(--accent-primary)",
           cursor: "pointer",
         };
 
@@ -438,7 +440,7 @@ const Bell = (props) => {
             // Using Fragment to group elements for flex layout
             <>
               <svg
-                style={{ width: "24px", height: "24px" }}
+                style={{ width: "24px", height: "24px", color: "var(--color-black)" }}
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 256 256"
               >
@@ -527,9 +529,9 @@ const Bell = (props) => {
               position: "absolute",
               top: props.mobile ? "-2px" : "5px", // Adjusted position for mobile
               right: props.mobile ? "-5px" : "8px", // Adjusted position for mobile
-              backgroundColor: "red",
+              backgroundColor: "var(--color-alert)",
               borderRadius: "50%", // Make it round
-              color: "white",
+              color: "var(--text-white)",
               padding: "1px",
               fontSize: "8px",
               fontWeight: "bold",
@@ -561,9 +563,9 @@ const BellSVGFull = (props) => (
   <svg
     style={
       props.mobile
-        ? { width: "24px", height: "24px" } // Explicit size for mobile
+        ? { width: "24px", height: "24px", color: "var(--color-black)" } // Explicit size for mobile
         : {
-            color: "black",
+            color: "var(--color-black)",
             width: "1.5rem", // Desktop size
           }
     }
@@ -571,16 +573,16 @@ const BellSVGFull = (props) => (
     viewBox="0 0 256 256"
   >
     <rect width="256" height="256" fill="none" />
-    <path d="M221.8,175.94C216.25,166.38,208,139.33,208,104a80,80,0,1,0-160,0c0,35.34-8.26,62.38-13.81,71.94A16,16,0,0,0,48,200H88.81a40,40,0,0,0,78.38,0H208a16,16,0,0,0,13.8-24.06ZM128,216a24,24,0,0,1-22.62-16h45.24A24,24,0,0,1,128,216Z" />
+    <path d="M221.8,175.94C216.25,166.38,208,139.33,208,104a80,80,0,1,0-160,0c0,35.34-8.26,62.38-13.81,71.94A16,16,0,0,0,48,200H88.81a40,40,0,0,0,78.38,0H208a16,16,0,0,0,13.8-24.06ZM128,216a24,24,0,0,1-22.62-16h45.24A24,24,0,0,1,128,216Z" fill="currentColor" />
   </svg>
 );
 const BellSVG = (props) => (
   <svg
     style={
       props.mobile
-        ? { width: "24px", height: "24px", ...props.style } // Explicit size for mobile
+        ? { width: "24px", height: "24px", color: "var(--color-black)", ...props.style } // Explicit size for mobile
         : {
-            color: "black",
+            color: "var(--color-black)",
             width: "1.5rem", // Desktop size
             ...props.style,
           }
@@ -610,7 +612,7 @@ const BellSVG = (props) => (
 
 const PersonSVG = () => (
   <svg
-    style={{ width: "24px", height: "24px" }}
+    style={{ width: "24px", height: "24px", color: "var(--color-black)" }}
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 256 256"
   >
@@ -638,11 +640,11 @@ const PersonSVG = () => (
 
 const PersonFullSVG = () => (
   <svg
-    style={{ width: "24px", height: "24px" }}
+    style={{ width: "24px", height: "24px", color: "var(--color-black)" }}
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 256 256"
   >
     <rect width="256" height="256" fill="none" />
-    <path d="M230.93,220a8,8,0,0,1-6.93,4H32a8,8,0,0,1-6.92-12c15.23-26.33,38.7-45.21,66.09-54.16a72,72,0,1,1,73.66,0c27.39,8.95,50.86,27.83,66.09,54.16A8,8,0,0,1,230.93,220Z" />
+    <path d="M230.93,220a8,8,0,0,1-6.93,4H32a8,8,0,0,1-6.92-12c15.23-26.33,38.7-45.21,66.09-54.16a72,72,0,1,1,73.66,0c27.39,8.95,50.86,27.83,66.09,54.16A8,8,0,0,1,230.93,220Z" fill="currentColor" />
   </svg>
 );

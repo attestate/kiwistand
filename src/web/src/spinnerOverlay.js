@@ -12,7 +12,7 @@ function ensureOverlayElement() {
     overlay.style.left = "0";
     overlay.style.width = "100%";
     overlay.style.height = "100%";
-    overlay.style.background = "rgba(255,255,255,0.7)";
+    overlay.style.background = "var(--bg-spinner)";
     overlay.style.zIndex = "9999";
     overlay.style.display = "none";
     overlay.style.justifyContent = "center";

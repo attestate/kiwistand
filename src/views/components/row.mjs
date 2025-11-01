@@ -94,7 +94,7 @@ const heartFilledSVG = html`
 
 const expandSVG = html`
   <svg
-    style="color:black; height: 1rem;"
+    style="color: var(--text-primary); height: 1rem;"
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 256 256"
   >
@@ -169,7 +169,7 @@ const convertBrTagsToNewlines = (text) => {
 };
 
 const ShuffleSVG = html`<svg
-  style="width: 24px; color: black;"
+  style="width: 24px; color: var(--text-primary);"
   xmlns="http://www.w3.org/2000/svg"
   viewBox="0 0 256 256"
 >
@@ -441,7 +441,7 @@ const row = (
       !invert;
 
     return html`
-      <tr style="${invert ? "background-color: black;" : ""}">
+      <tr style="${invert ? "background-color: var(--bg-inverted);" : ""}">
         <td>
           <div
             class="${interactive ? "" : "content-row"} ${invert
@@ -536,7 +536,7 @@ const row = (
                               style="border-radius: 9999px; margin-right: 8px;"
                             />`
                           : html`<div
-                              style="width: 20px; height: 20px; border-radius: 50%; background-color: #e1e8ed; margin-right: 8px; display: flex; align-items: center; justify-content: center;"
+                              style="width: 20px; height: 20px; border-radius: 50%; background-color: var(--button-bg); margin-right: 8px; display: flex; align-items: center; justify-content: center;"
                             >
                               <svg
                                 width="12"
@@ -549,7 +549,7 @@ const row = (
                                 />
                               </svg>
                             </div>`}
-                        <span style="font-weight: 600; color: #0f1419; font-size: 14px;">
+                        <span style="font-weight: 600; color: var(--embed-twitter-text); font-size: 14px;">
                           ${story.metadata.twitterCreator || "@tweet"}
                         </span>
                       </div>
@@ -578,7 +578,7 @@ const row = (
                         ${story.metadata.image
                           ? html`
                               <div
-                                style="margin-top: 12px; position: relative; width: 100%; aspect-ratio: 16 / 9; background: rgba(0,0,0,0.03); overflow: hidden;"
+                                style="margin-top: 12px; position: relative; width: 100%; aspect-ratio: 16 / 9; background: var(--button-bg); overflow: hidden;"
                               >
                                 <img
                                   src="${DOMPurify.sanitize(story.metadata.image)}"
@@ -594,7 +594,7 @@ const row = (
                       </div>
                     </div>
                     <div style="display:flex; justify-content:flex-end; margin-top:8px;">
-                      <span style="font-size: 11px; opacity: 0.55; color:#0f1419;">x.com</span>
+                      <span style="font-size: 11px; opacity: 0.55; color: var(--embed-twitter-text);">x.com</span>
                     </div>
                   </div>
                 </a>`
@@ -687,7 +687,7 @@ const row = (
                               height="20"
                               viewBox="0 0 1000 1000"
                               xmlns="http://www.w3.org/2000/svg"
-                              style="color: #7c65c1; margin-right: 8px;"
+                              style="color: var(--color-farcaster-light); margin-right: 8px;"
                             >
                               <path
                                 d="M257.778 155.556H742.222V844.444H671.111V528.889H257.778V155.556Z"
@@ -698,7 +698,7 @@ const row = (
                                 fill="currentColor"
                               />
                             </svg>`}
-                        <span style="font-weight: 600; color: #12212b; font-size: 14px;">
+                        <span style="font-weight: 600; color: var(--embed-farcaster-text); font-size: 14px;">
                           @${story.metadata.farcasterCast?.author?.username || "farcaster"}
                         </span>
                       </div>
@@ -736,7 +736,7 @@ const row = (
                         </p>
                         ${farcasterImageUrl
                           ? html`
-                              <div style="margin-top: 12px; position: relative; width: 100%; aspect-ratio: 16 / 9; background: rgba(0,0,0,0.03); border-radius: 2px; overflow: hidden;">
+                              <div style="margin-top: 12px; position: relative; width: 100%; aspect-ratio: 16 / 9; background: var(--button-bg); border-radius: 2px; overflow: hidden;">
                                 <img
                                   src="${DOMPurify.sanitize(farcasterImageUrl)}"
                                   alt="Cast image"
@@ -750,7 +750,7 @@ const row = (
                           : null}
                       </div>
                       <div style="display:flex; justify-content:flex-end; margin-top:8px;">
-                        <span style="font-size: 11px; opacity: 0.75; color:#7c65c1;">farcaster.xyz</span>
+                        <span style="font-size: 11px; opacity: 0.75; color: var(--color-farcaster-light);">farcaster.xyz</span>
                       </div>
                     </div>
                   </div>
@@ -815,7 +815,7 @@ const row = (
                   )}', event.currentTarget.getAttribute('target')); }"
                 >
                   <div
-                    style="position: relative; width: 100%; aspect-ratio: 2 / 1; background: rgba(0,0,0,0.03); contain: content; contain-intrinsic-size: 600px 300px;"
+                    style="position: relative; width: 100%; aspect-ratio: 2 / 1; background: var(--button-bg); contain: content; contain-intrinsic-size: 600px 300px;"
                   >
                     <img
                       loading="${isAboveFold ? 'eager' : 'lazy'}"
@@ -836,7 +836,7 @@ const row = (
                         : DOMPurify.sanitize(story.metadata.image)}"
                     />
                     <span
-                      style="gap: 5px; position: absolute; bottom: 8px; left: 16px; background: rgba(255,255,255,0.85); padding: 2px 4px; border-radius: 2px; font-size: 10px !important; line-height: 1; display: inline-flex; align-items: center; font-weight: normal; transform: none; z-index: 5; height: 18px;"
+                      style="gap: 5px; position: absolute; bottom: 8px; left: 16px; background: var(--bg-white); padding: 2px 4px; border-radius: 2px; font-size: 10px !important; line-height: 1; display: inline-flex; align-items: center; font-weight: normal; transform: none; z-index: 5; height: 18px;"
                     >
                       ${![
                         "farcaster.xyz",
@@ -868,7 +868,7 @@ const row = (
               : path === "/stories" && story.metadata && story.metadata.image
               ? html`
                   <div class="row-image-preview" style="display:block; width:100%;">
-                    <div style="position: relative; width: 100%; aspect-ratio: 2 / 1; background: rgba(0,0,0,0.03); border-radius: 2px; contain: content; contain-intrinsic-size: 600px 300px;"></div>
+                    <div style="position: relative; width: 100%; aspect-ratio: 2 / 1; background: var(--button-bg); border-radius: 2px; contain: content; contain-intrinsic-size: 600px 300px;"></div>
                   </div>
                 `
               : null}
@@ -1038,16 +1038,16 @@ const row = (
                                 : `/upvotes?address=${story.identity}`}"
                               class="meta-link meta-item submitter-name"
                               onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block';}"
-                              style="display:inline-block; font-weight: 600; user-select: text; color: black; flex: 0 0 auto;"
+                              style="display:inline-block; font-weight: 600; user-select: text; color: var(--text-primary); flex: 0 0 auto;"
                             >
                               ${story.displayName}
                             </a>`
                           : path === "/demonstration"
-                          ? html`<a class="meta-link meta-item submitter-name" href="javascript:void(0);" style="display:inline-block; font-weight: 600; color: black; flex: 0 0 auto;">${story.displayName}</a>`
-                          : html`<span class="meta-link meta-item submitter-name" style="display:inline-block; font-weight: 600; color: black; flex: 0 0 auto;">${story.displayName}</span>`}
+                          ? html`<a class="meta-link meta-item submitter-name" href="javascript:void(0);" style="display:inline-block; font-weight: 600; color: var(--text-primary); flex: 0 0 auto;">${story.displayName}</a>`
+                          : html`<span class="meta-link meta-item submitter-name" style="display:inline-block; font-weight: 600; color: var(--text-primary); flex: 0 0 auto;">${story.displayName}</span>`}
                         ${submitterKarmaPoints !== null
                           ? html`<span
-                              style="background: rgba(0,0,0,0.06); padding: 2px 6px; border-radius: 999px; font-size: 9px; font-weight: 600; color: black; margin-left: 6px; display: inline-block;"
+                              style="background: var(--button-bg); padding: 2px 6px; border-radius: 999px; font-size: 9px; font-weight: 600; color: var(--text-primary); margin-left: 6px; display: inline-block;"
                             >
                               ${submitterKarmaPoints} 🥝
                             </span>`
@@ -1072,7 +1072,7 @@ const row = (
                                   alt="avatar"
                                   width="${size}"
                                   height="${size}"
-                                  style="z-index: ${index}; width: ${size}px; height: ${size}px; border: 1px solid #828282; border-radius: 2px; margin-left: -${size /
+                                  style="z-index: ${index}; width: ${size}px; height: ${size}px; border: 1px solid var(--text-secondary); border-radius: 2px; margin-left: -${size /
                                   2}px;"
                                 />
                               `,
@@ -1177,11 +1177,11 @@ const row = (
                       >
                         <span
                           class="heart-icon"
-                          style="width: 20px; height: 20px; color: rgba(83, 100, 113, 1); display: flex; align-items: center; justify-content: center;"
+                          style="width: 20px; height: 20px; color: var(--color-vote-default); display: flex; align-items: center; justify-content: center;"
                           >${heartSVG}</span
                         >
                         <span
-                          style="font-size: 13px; color: rgba(83, 100, 113, 1); font-weight: 400;"
+                          style="font-size: 13px; color: var(--color-vote-default); font-weight: 400;"
                           >${story.upvoters ? story.upvoters.length : 0}</span
                         >
                       </button>
@@ -1207,10 +1207,10 @@ const row = (
                             onmouseout="this.style.backgroundColor='transparent'"
                           >
                             <span
-                              style="width: 20px; height: 20px; color: rgba(83, 100, 113, 1); display: flex; align-items: center; justify-content: center;"
+                              style="width: 20px; height: 20px; color: var(--color-vote-default); display: flex; align-items: center; justify-content: center;"
                             >
                               <svg
-                                style="width: 20px; height: 20px; color: rgba(83, 100, 113, 1);"
+                                style="width: 20px; height: 20px; color: var(--color-vote-default);"
                                 xmlns="http://www.w3.org/2000/svg"
                                 viewBox="0 0 256 256"
                               >
@@ -1235,7 +1235,7 @@ const row = (
                             </span>
                             ${commentCount > 0
                               ? html`<span
-                                  style="font-size: 13px; color: rgba(83, 100, 113, 1); font-weight: 400;"
+                                  style="font-size: 13px; color: var(--color-vote-default); font-weight: 400;"
                                   >${commentCount}</span
                                 >`
                               : ""}
@@ -1259,7 +1259,7 @@ const row = (
                         onmouseout="this.style.backgroundColor='transparent'"
                       >
                         <span
-                          style="width: 20px; height: 20px; color: rgba(83, 100, 113, 1); display: flex; align-items: center; justify-content: center;"
+                          style="width: 20px; height: 20px; color: var(--color-vote-default); display: flex; align-items: center; justify-content: center;"
                           >${shareSVG}</span
                         >
                       </button>
@@ -1289,7 +1289,7 @@ const row = (
                             <span
                               style="width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;"
                               >${warpcastSvg(
-                                "width: 20px; height: 20px; color: rgb(124, 101, 193);",
+                                "width: 20px; height: 20px; color: var(--color-farcaster-light);",
                               )}</span
                             >
                           </a>
@@ -1317,7 +1317,7 @@ const row = (
                       ? `/#0x${story.lastComment.index}`
                       : `/new?cached=true#0x${story.lastComment.index}`}');})(),document.querySelector('.comment-preview-0x${story.index}').style.opacity = 0.5,window.addToQueue(new
  CustomEvent('open-comments-0x${story.index}',{detail:{source:'comment-preview'}}));window.dispatchEvent(new HashChangeEvent('hashchange'));"
-                    style="margin: 0; padding: 12px 16px; display: flex; width: 100%; background-color: rgba(166, 110, 78, 0.03);"
+                    style="margin: 0; padding: 12px 16px; display: flex; width: 100%; background-color: var(--background-color1);"
                   >
                     <a
                       class="comment-preview-anchor"
@@ -1345,7 +1345,7 @@ const row = (
                                     alt="previous participant"
                                     width="${size}"
                                     height="${size}"
-                                    style="z-index: ${index}; width: ${size}px; height: ${size}px; border: 1px solid #828282; border-radius: 2px; margin-left: ${index ===
+                                    style="z-index: ${index}; width: ${size}px; height: ${size}px; border: 1px solid var(--text-secondary); border-radius: 2px; margin-left: ${index ===
                                     0
                                       ? "0"
                                       : "5px"};"
@@ -1354,7 +1354,7 @@ const row = (
                               )}
                             </div>
                             <span
-                              style="margin-left: 10px; font-size: 9pt; color: #666;"
+                              style="margin-left: 10px; font-size: 9pt; color: var(--text-tertiary);"
                             >
                               Previous in thread
                             </span>
@@ -1373,7 +1373,7 @@ const row = (
                               alt="avatar"
                               width="32"
                               height="32"
-                              style="width: 32px; height: 32px; border: 1px solid #828282; border-radius: 0;"
+                              style="width: 32px; height: 32px; border: 1px solid var(--text-secondary); border-radius: 0;"
                             />
                           </div>`}
                           <div style="flex: 1; min-width: 0;">
@@ -1451,7 +1451,7 @@ const row = (
 };
 
 export const ChatsSVG = (
-  style = "color: rgba(0,0,0,0.65); width: 25px;",
+  style = "color: var(--text-tertiary); width: 25px;",
 ) => html`
   <svg
     style="${style}"

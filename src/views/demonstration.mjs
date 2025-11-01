@@ -73,7 +73,7 @@ export default async function index(theme) {
             id="hnmain"
             style="border-bottom: 1px solid rgba(0,0,0,0.2); display: flex; justify-content: center;"
           >
-            <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
+            <table border="0" cellpadding="0" cellspacing="0" bgcolor="var(--background-color0)">
               <tr>
                 ${await Header(theme)}
               </tr>
@@ -82,12 +82,12 @@ export default async function index(theme) {
                   style="flex-direction: column; display: flex; justify-content: space-between; align-items: center;"
                 >
                   <p
-                    style="color: black; padding: 1rem 3rem 0 3rem; font-size: 1.5rem; font-weight: bold; text-align: center;"
+                    style="color: var(--text-primary); padding: 1rem 3rem 0 3rem; font-size: 1.5rem; font-weight: bold; text-align: center;"
                   >
                     Try upvoting!
                   </p>
                   <p
-                    style="color: black; margin-top: 0; padding: 0 3rem 1rem 3rem; font-size: 1rem; text-align: center; font-weight: bold;"
+                    style="color: var(--text-primary); margin-top: 0; padding: 0 3rem 1rem 3rem; font-size: 1rem; text-align: center; font-weight: bold;"
                   >
                     Now you can<span style="color: ${theme.color};"
                       ><span> </span> like, submit & comment links.</span
@@ -110,7 +110,7 @@ export default async function index(theme) {
                       >
                         <p
                           style="
-                          color: black;
+                          color: var(--text-primary);
                           font-size: 1rem;
                           font-weight: bold;
                           text-align: center;
@@ -140,7 +140,7 @@ export default async function index(theme) {
                   <tr>
                     <td>
                       <p
-                        style="color: black; padding: 1rem 3rem 1rem 3rem; font-size: 1rem; text-align: center; margin-top: 1rem;"
+                        style="color: var(--text-primary); padding: 1rem 3rem 1rem 3rem; font-size: 1rem; text-align: center; margin-top: 1rem;"
                       >
                         Your next step:
                       </p>

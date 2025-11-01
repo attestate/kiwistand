@@ -197,7 +197,7 @@ export default async function index(theme, page, period, domain) {
         <div class="container">
           ${Sidebar("/best")}
           <div id="hnmain" class="scaled-hnmain">
-            <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
+            <table border="0" cellpadding="0" cellspacing="0" bgcolor="var(--background-color0)">
               <tr>
                 ${await Header(theme)}
               </tr>
@@ -208,7 +208,7 @@ export default async function index(theme, page, period, domain) {
                 ? html`<tr>
                     <td>
                       <p
-                        style="color: black; padding: 5px 10px 5px 10px; font-size: 12pt; font-weight: bold;"
+                        style="color: var(--text-primary); padding: 5px 10px 5px 10px; font-size: 12pt; font-weight: bold;"
                       >
                         <span>Page: ${page}</span>
                       </p>

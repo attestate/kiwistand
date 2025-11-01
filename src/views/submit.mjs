@@ -36,7 +36,7 @@ export default async function submit(theme, url = "", title = "") {
         <div class="container">
           ${Sidebar(path)}
           <div id="hnmain" class="scaled-hnmain">
-            <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
+            <table border="0" cellpadding="0" cellspacing="0" bgcolor="var(--background-color0)">
               <tr>
                 ${await Header(theme)}
               </tr>
@@ -63,7 +63,7 @@ export default async function submit(theme, url = "", title = "") {
                       >
                         ${title}
                       </div>
-                      <span style="font-size: 0.8rem;">
+                      <span style="font-size: 0.8rem; color: var(--text-secondary);">
                         <span>Characters remaining: </span>
                         <span class="remaining"
                           >${80 - title.length}</span
@@ -97,8 +97,8 @@ export default async function submit(theme, url = "", title = "") {
                             style="
                               margin-left: 10px;
                               padding: 0 16px;
-                              background-color: grey;
-                              color: #fff;
+                              background-color: var(--button-primary-bg);
+                              color: var(--button-primary-text);
                               border-radius: 2px;
                               cursor: pointer;
                               font-size: 14px;
@@ -165,14 +165,16 @@ const labelInputContainerStyle = `
 
 const labelStyle = `
    font-size: 16px;
+   color: var(--text-primary);
  `;
 const inputStyle = `
    width: 80%;
    padding: 12px 16px;
    font-size: 16px;
    box-sizing: border-box;
-   border: 2px solid black;
-   background: white;
+   border: 2px solid var(--text-primary);
+   background-color: var(--bg-white);
+   color: var(--text-primary);
    min-height: 50px;
    border-radius: 2px;
 `;
@@ -196,8 +198,8 @@ const fileInputLabelStyle = `
    display: flex;
    align-items: center;
    justify-content: center;
-   background: grey;
-   color: #fff;
+   background: var(--text-disabled);
+   color: var(--text-white);
    border-radius: 2px;
    cursor: pointer;
  `;
@@ -210,12 +212,12 @@ const editableContent = `
    padding: 20px;
    font-size: 19px;
    box-sizing: border-box;
-   border: 1px solid #828282;
+   border: 1px solid var(--text-secondary);
    overflow: auto;
    resize: both;
    white-space: pre-wrap;
-   background-color: #fafafa;
-   color: black;
+   background-color: var(--bg-white);
+   color: var(--text-primary);
    border-radius: 2px;
  `;
 

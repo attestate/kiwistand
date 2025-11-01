@@ -29,7 +29,7 @@ export default async function frameSubscribe(theme) {
                   <h1 style="font-size:1.5rem; margin-bottom:1rem;">
                     Get Kiwi News in Warpcast
                   </h1>
-                  <p style="margin-bottom:2rem; color:#333;">
+                  <p style="margin-bottom:2rem; color:var(--text-tertiary);">
                     Add our mini-app to receive the top-3 curated links daily as
                     Farcaster notifications.
                   </p>

@@ -1,5 +1,5 @@
 export const ChatsSVG = ({
-  style = { color: "rgba(0,0,0,0.65)", width: "25px" },
+  style = { color: "var(--text-tertiary)", width: "25px" },
 }) => (
   <svg style={style} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
     <rect width="256" height="256" fill="none" />

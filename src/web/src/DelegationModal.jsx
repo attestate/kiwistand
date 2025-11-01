@@ -69,15 +69,15 @@ const SimpleModal = forwardRef((props, ref) => {
   // Porto-style modal settings
   const customStyles = {
     overlay: {
-      backgroundColor: "rgba(0, 0, 0, 0.5)",
+      backgroundColor: "var(--bg-overlay)",
       zIndex: 1000,
     },
     content: {
       fontSize: "15px",
       lineHeight: "1.325",
       fontFamily: "ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'",
-      backgroundColor: "#FFFFFF",
-      border: "1px solid #0000001A",
+      backgroundColor: "var(--bg-white)",
+      border: "1px solid rgba(0, 0, 0, 0.1)",
       overflow: "hidden",
       WebkitOverflowScrolling: "touch",
       borderRadius: "2px",
@@ -117,7 +117,7 @@ const SimpleModal = forwardRef((props, ref) => {
     };
   }
   const VerifiedIcon = () => (
-    <svg viewBox="0 0 24 24" width="1.2em" height="1.2em" style={{ height: "16px", width: "16px", color: "#AFC046" }}>
+    <svg viewBox="0 0 24 24" width="1.2em" height="1.2em" style={{ height: "16px", width: "16px", color: "var(--accent-primary)" }}>
       <g fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2">
         <path d="M3.85 8.62a4 4 0 0 1 4.78-4.77a4 4 0 0 1 6.74 0a4 4 0 0 1 4.78 4.78a4 4 0 0 1 0 6.74a4 4 0 0 1-4.77 4.78a4 4 0 0 1-6.75 0a4 4 0 0 1-4.78-4.77a4 4 0 0 1 0-6.76"></path>
         <path d="m9 12l2 2l4-4"></path>
@@ -150,13 +150,13 @@ const SimpleModal = forwardRef((props, ref) => {
         alignItems: "center",
         justifyContent: "space-between",
         height: "33px",
-        borderBottom: "1px solid #0000001A",
+        borderBottom: "1px solid rgba(0, 0, 0, 0.1)",
         padding: "0 0 0 12px",
         userSelect: "none",
         whiteSpace: "nowrap",
         boxSizing: "border-box",
         width: "100%",
-        backgroundColor: "#FFFFFF",
+        backgroundColor: "var(--bg-white)",
       }}>
         <div style={{
           display: "flex",

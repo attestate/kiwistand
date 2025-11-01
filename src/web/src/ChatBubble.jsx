@@ -89,17 +89,17 @@ const ChatBubble = ({ delegations, storyIndex, commentCount }) => {
       <ChatsSVG
         style={{
           color: isDisabled
-            ? "grey"
+            ? "var(--text-disabled)"
             : isExpanded
-            ? "black"
-            : "rgba(0,0,0,0.65)",
+            ? "var(--text-primary)"
+            : "var(--text-tertiary)",
           width: "25px",
         }}
       />
       <span
         style={{
           userSelect: "none",
-          color: isExpanded ? "black" : "rgba(0,0,0,0.65)",
+          color: isExpanded ? "var(--text-primary)" : "var(--text-tertiary)",
           fontSize: "8pt",
           fontWeight: "bold",
         }}

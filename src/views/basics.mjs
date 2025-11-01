@@ -211,12 +211,12 @@ export default async function (trie, theme) {
       fill: "none",
       style: "fill:url(#polygrad);",
       strokeWidth: 0.01,
-      stroke: "white",
+      stroke: "currentColor",
     },
     line: {
       fill: "none",
       strokeWidth: 0.1,
-      stroke: "black",
+      stroke: "currentColor",
     },
     polygonGradient: {
       offSet1: "0%",
@@ -226,11 +226,11 @@ export default async function (trie, theme) {
     },
     xAxis: {
       strokeWidth: 0.1,
-      stroke: "black",
+      stroke: "currentColor",
     },
     yAxis: {
       strokeWidth: 0.1,
-      stroke: "black",
+      stroke: "currentColor",
     },
     xLabel: {
       fontSize: 1,
@@ -240,11 +240,11 @@ export default async function (trie, theme) {
     },
     xGrid: {
       strokeWidth: 0.05,
-      stroke: "lightgrey",
+      stroke: "var(--text-quaternary)",
     },
     yGrid: {
       strokeWidth: 0.05,
-      stroke: "lightgrey",
+      stroke: "var(--text-quaternary)",
     },
     yNumLabels: 10,
   };
@@ -307,7 +307,7 @@ export default async function (trie, theme) {
         <div class="container">
           ${Sidebar()}
           <div id="hnmain" class="scaled-hnmain">
-            <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
+            <table border="0" cellpadding="0" cellspacing="0" bgcolor="var(--background-color0)">
               <tr>
                 ${await Header(theme)}
               </tr>

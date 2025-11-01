@@ -27,7 +27,7 @@ const GuidelinesDrawer = ({ isOpen, onClose, onContinue }) => {
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundColor: "rgba(0, 0, 0, 0.5)",
+          backgroundColor: "var(--bg-overlay)",
           zIndex: 9998,
         }}
       />
@@ -37,8 +37,8 @@ const GuidelinesDrawer = ({ isOpen, onClose, onContinue }) => {
           bottom: 0,
           left: 0,
           right: 0,
-          backgroundColor: "#f6f6ef",
-          borderTop: "2px solid #828282",
+          backgroundColor: "var(--background-color0)",
+          borderTop: "2px solid var(--text-secondary)",
           borderRadius: "16px 16px 0 0",
           padding: "20px",
           zIndex: 9999,
@@ -47,29 +47,29 @@ const GuidelinesDrawer = ({ isOpen, onClose, onContinue }) => {
           overflowY: "auto",
         }}
       >
-        <div style={{ maxWidth: "600px", margin: "0 auto", color: "#000" }}>
-          <h2 style={{ marginTop: 0, color: "#000" }}>📝 Before you submit</h2>
-          
+        <div style={{ maxWidth: "600px", margin: "0 auto", color: "var(--text-primary)" }}>
+          <h2 style={{ marginTop: 0, color: "var(--text-primary)" }}>📝 Before you submit</h2>
+
           <div style={{ marginBottom: "1.5rem" }}>
-            <p style={{ margin: "0 0 0.5rem 0", color: "#000" }}>
-              Kiwi News is for <strong>builders, engineers, and crypto researchers</strong>. 
+            <p style={{ margin: "0 0 0.5rem 0", color: "var(--text-primary)" }}>
+              Kiwi News is for <strong>builders, engineers, and crypto researchers</strong>.
               We're looking for content that teaches, informs, or advances the ecosystem.
             </p>
           </div>
 
           <div style={{ display: "flex", gap: "1rem", marginBottom: "1.5rem" }}>
-            <div style={{ flex: 1, padding: "1rem", background: "#e8f5e9", borderRadius: "8px" }}>
-              <h4 style={{ margin: "0 0 0.5rem 0", color: "#2e7d32" }}>✅ Good content</h4>
-              <ul style={{ margin: 0, paddingLeft: "1.2rem", fontSize: "14px", color: "#000" }}>
+            <div style={{ flex: 1, padding: "1rem", background: "var(--accent-primary-lighter)", borderRadius: "8px" }}>
+              <h4 style={{ margin: "0 0 0.5rem 0", color: "var(--color-success)" }}>✅ Good content</h4>
+              <ul style={{ margin: 0, paddingLeft: "1.2rem", fontSize: "14px", color: "var(--text-primary)" }}>
                 <li>Technical resources</li>
                 <li>Data insights</li>
                 <li>Building updates</li>
                 <li>Research & analysis</li>
               </ul>
             </div>
-            <div style={{ flex: 1, padding: "1rem", background: "#ffebee", borderRadius: "8px" }}>
-              <h4 style={{ margin: "0 0 0.5rem 0", color: "#c62828" }}>❌ Avoid</h4>
-              <ul style={{ margin: 0, paddingLeft: "1.2rem", fontSize: "14px", color: "#000" }}>
+            <div style={{ flex: 1, padding: "1rem", background: "var(--bg-hover-subtle)", borderRadius: "8px" }}>
+              <h4 style={{ margin: "0 0 0.5rem 0", color: "var(--color-voted)" }}>❌ Avoid</h4>
+              <ul style={{ margin: 0, paddingLeft: "1.2rem", fontSize: "14px", color: "var(--text-primary)" }}>
                 <li>Price speculation</li>
                 <li>Clickbait headlines</li>
                 <li>Shilling/promotion</li>
@@ -79,8 +79,8 @@ const GuidelinesDrawer = ({ isOpen, onClose, onContinue }) => {
           </div>
 
           <div style={{ marginBottom: "1.5rem" }}>
-            <h4 style={{ color: "#000" }}>Title tips:</h4>
-            <ul style={{ paddingLeft: "1.2rem", color: "#000" }}>
+            <h4 style={{ color: "var(--text-primary)" }}>Title tips:</h4>
+            <ul style={{ paddingLeft: "1.2rem", color: "var(--text-primary)" }}>
               <li>Use the original title when possible</li>
               <li>No emojis or excessive punctuation</li>
               <li>Avoid ALL CAPS</li>
@@ -94,7 +94,7 @@ const GuidelinesDrawer = ({ isOpen, onClose, onContinue }) => {
               style={{
                 padding: "10px 20px",
                 background: "transparent",
-                border: "1px solid #828282",
+                border: "1px solid var(--text-secondary)",
                 borderRadius: "4px",
                 cursor: "pointer",
                 fontSize: "16px",
@@ -106,9 +106,9 @@ const GuidelinesDrawer = ({ isOpen, onClose, onContinue }) => {
               onClick={onContinue}
               style={{
                 padding: "10px 20px",
-                background: "#000",
-                color: "#fff",
-                border: "none",
+                background: "var(--button-primary-bg)",
+                color: "var(--button-primary-text)",
+                border: "1px solid var(--button-primary-bg)",
                 borderRadius: "4px",
                 cursor: "pointer",
                 fontSize: "16px",

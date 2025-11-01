@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import posthog from "posthog-js";
-import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
+import { RainbowKitProvider, useConnectModal } from "@rainbow-me/rainbowkit";
 import { WagmiProvider, useAccount } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Wallet } from "@ethersproject/wallet";
@@ -13,9 +13,10 @@ import { sdk } from "@farcaster/frame-sdk";
 
 import * as API from "./API.mjs";
 import { getLocalAccount } from "./session.mjs";
-import { chains, client, useProvider, useSigner, useIsMiniApp } from "./client.mjs";
+import { chains, client, useProvider, useSigner, useIsMiniApp, isInIOSApp } from "./client.mjs";
 import { resolveAvatar } from "./Avatar.jsx";
 import { openDelegationModalForAction, isDelegationModalNeeded } from "./delegationModalManager.js";
+import LoginModal from "./LoginModal.jsx";
 
 // Configure slugify extension
 slugify.extend({ "′": "", "'": "" });
@@ -37,6 +38,20 @@ function truncateName(name) {
 }
 
 const SiteExplainer = () => {
+  const loginModalRef = useRef();
+  const { openConnectModal } = useConnectModal();
+
+  const handleConnect = (e) => {
+    e.preventDefault();
+    // On iOS, directly open RainbowKit wallet picker
+    if (isInIOSApp && openConnectModal) {
+      openConnectModal();
+    } else {
+      // On other platforms, show the LoginModal with passkey option
+      loginModalRef.current?.openModal();
+    }
+  };
+
   return (
     <div
       className="site-explainer"
@@ -52,40 +67,34 @@ const SiteExplainer = () => {
       <p
         style={{
           fontSize: "11pt",
-          margin: "0 0 8px 0",
-          color: "#666",
-        }}
-      >
-        Kiwi is Ethereum Hacker News, built for handpicked, long-form content
-        and deep discussions.
-      </p>
-
-      <p
-        style={{
-          fontSize: "11pt",
           margin: "0 0 12px 0",
-          color: "#666",
+          color: "var(--text-tertiary)",
         }}
       >
         Want to leave a comment, like this link or join our community of 500+
-        Ethereum builders?
+        hackers and builders?
       </p>
 
-      <a href="/">
-        <button
-          style={{
-            padding: "6px 12px",
-            background: "black",
-            color: "white",
-            border: "var(--border)",
-            borderRadius: "2px",
-            cursor: "pointer",
-            fontSize: "10pt",
-          }}
-        >
-          Sign up
-        </button>
-      </a>
+      <button
+        onClick={handleConnect}
+        style={{
+          padding: "6px 12px",
+          background: "var(--button-primary-bg)",
+          color: "var(--button-primary-text)",
+          border: "1px solid var(--button-primary-bg)",
+          borderRadius: "2px",
+          cursor: "pointer",
+          fontSize: "10pt",
+        }}
+      >
+        Connect to comment
+      </button>
+
+      <LoginModal
+        ref={loginModalRef}
+        allowPasskeyLogin={true}
+        allowEmailLogin={false}
+      />
     </div>
   );
 };
@@ -148,7 +157,7 @@ const MobileComposer = ({
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundColor: "white",
+          backgroundColor: "var(--bg-white)",
           zIndex: 998,
         }}
       />
@@ -164,7 +173,7 @@ const MobileComposer = ({
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundColor: "white",
+          backgroundColor: "var(--bg-white)",
           zIndex: 999,
           display: "flex",
           flexDirection: "column",
@@ -184,7 +193,7 @@ const MobileComposer = ({
           borderBottom: "var(--border)",
           position: "sticky",
           top: 0,
-          backgroundColor: "white",
+          backgroundColor: "var(--bg-white)",
           zIndex: 1000,
         }}
       >
@@ -200,6 +209,7 @@ const MobileComposer = ({
             border: "none",
             fontSize: "1rem",
             cursor: "pointer",
+            color: "var(--text-primary)",
           }}
         >
           Cancel
@@ -214,14 +224,14 @@ const MobileComposer = ({
                   // Silently fail if haptics not supported
                 }
               }
-              
+
               onSubmit(e);
             }}
           disabled={isLoading}
           style={{
-            background: "black",
-            color: "white",
-            border: "none",
+            background: "var(--button-primary-bg)",
+            color: "var(--button-primary-text)",
+            border: "1px solid var(--button-primary-bg)",
             padding: "0.5rem 1rem",
             borderRadius: "2px",
             fontSize: "0.9rem",
@@ -249,7 +259,8 @@ const MobileComposer = ({
           height: "100%",
           overflowY: "auto",
           touchAction: "auto",
-          backgroundColor: "white",
+          backgroundColor: "var(--bg-white)",
+          color: "var(--text-primary)",
         }}
         onTouchMove={(e) => e.stopPropagation()}
         value={text}
@@ -260,10 +271,10 @@ const MobileComposer = ({
           padding: "0.5rem 1rem",
           borderTop: "var(--border)",
           fontSize: "0.8rem",
-          color: "#666",
+          color: "var(--text-tertiary)",
           position: "sticky",
           bottom: 0,
-          backgroundColor: "white",
+          backgroundColor: "var(--bg-white)",
           zIndex: 1000,
         }}
       >
@@ -681,7 +692,6 @@ const CommentInput = (props) => {
     return () => document.removeEventListener("keydown", handleKeyPress);
   }, [text, address, isEligible]);
 
-  
   if (isEligible === false) {
     return (
       <div
@@ -694,7 +704,7 @@ const CommentInput = (props) => {
       </div>
     );
   }
-  
+
   return (
     <div
       style={{
@@ -741,7 +751,7 @@ const CommentInput = (props) => {
                 gap: "10px",
                 padding: "10px",
                 borderRadius: "2px",
-                backgroundColor: "white",
+                backgroundColor: "var(--bg-white)",
                 border: "var(--border)",
                 cursor: address && isEligible ? "pointer" : "not-allowed",
                 opacity: address && isEligible ? 1 : 0.5,
@@ -757,7 +767,7 @@ const CommentInput = (props) => {
                       width: "32px",
                       height: "32px",
                       borderRadius: "2px",
-                      border: "1px solid #828282",
+                      border: "1px solid var(--text-secondary)",
                       display: "block",
                     }}
                   />
@@ -768,15 +778,15 @@ const CommentInput = (props) => {
                       width: "32px",
                       height: "32px",
                       borderRadius: "2px",
-                      border: "1px solid #E0E0E0",
-                      backgroundColor: "#F8F8F8",
+                      border: "var(--border-subtle)",
+                      backgroundColor: "var(--bg-hover)",
                     }}
                   />
                 )}
               </div>
               <span
                 style={{
-                  color: "#828282",
+                  color: "var(--text-secondary)",
                   fontSize: "0.9rem",
                   flex: 1,
                 }}
@@ -797,7 +807,8 @@ const CommentInput = (props) => {
                 display: "block",
                 width: "100%",
                 border: "var(--border)",
-                backgroundColor: "white",
+                backgroundColor: "var(--bg-white)",
+                color: "var(--text-primary)",
                 fontSize: "1rem",
                 borderRadius: "2px",
                 resize: "vertical",
@@ -828,7 +839,13 @@ const CommentInput = (props) => {
             >
               <button
                 id="button-onboarding"
-                style={{ marginBottom: "10px", width: "auto" }}
+                style={{
+                  marginBottom: "10px",
+                  width: "auto",
+                  backgroundColor: "var(--button-primary-bg)",
+                  color: "var(--button-primary-text)",
+                  border: "1px solid var(--button-primary-bg)"
+                }}
                 disabled={isLoading || !address || !isEligible}
                 onClick={async (e) => {
                   // Add haptic feedback for comment submission only in frames

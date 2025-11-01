@@ -46,7 +46,7 @@ const ShareModal = ({ isOpen, onClose, title, url, storyUrl }) => {
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: "rgba(0, 0, 0, 0.5)",
+        backgroundColor: "var(--bg-overlay)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -56,7 +56,7 @@ const ShareModal = ({ isOpen, onClose, title, url, storyUrl }) => {
     >
       <div
         style={{
-          backgroundColor: "white",
+          backgroundColor: "var(--bg-white)",
           borderRadius: "8px",
           padding: "2rem",
           maxWidth: "500px",
@@ -71,7 +71,7 @@ const ShareModal = ({ isOpen, onClose, title, url, storyUrl }) => {
           <h2 style={{ margin: "0 0 0.5rem 0", fontSize: "24px" }}>
             🥝 Success! Your story has been submitted
           </h2>
-          <p style={{ color: "#666", margin: "0", fontSize: "14px" }}>
+          <p style={{ color: "var(--text-tertiary)", margin: "0", fontSize: "14px" }}>
             Share your submission with your network
           </p>
         </div>
@@ -82,7 +82,7 @@ const ShareModal = ({ isOpen, onClose, title, url, storyUrl }) => {
             style={{
               padding: "16px",
               backgroundColor: "#472A91",
-              color: "white",
+              color: "var(--text-white)",
               border: "none",
               borderRadius: "4px",
               cursor: "pointer",
@@ -149,9 +149,9 @@ const ShareModal = ({ isOpen, onClose, title, url, storyUrl }) => {
             onClick={handleGoToStory}
             style={{
               padding: "16px",
-              backgroundColor: "#fff",
-              color: "#000",
-              border: "2px solid #000",
+              backgroundColor: "var(--bg-white)",
+              color: "var(--text-primary)",
+              border: "2px solid var(--bg-black)",
               borderRadius: "4px",
               cursor: "pointer",
               fontSize: "16px",

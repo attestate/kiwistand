@@ -298,7 +298,7 @@ export const EmojiReaction = ({ comment, delegations, toast }) => {
                   display: "inline-flex",
                   alignItems: "center",
                   gap: "4px",
-                  backgroundColor: alreadyReacted ? "rgba(175, 192, 70, 0.1)" : "rgba(0, 0, 0, 0.02)",
+                  backgroundColor: alreadyReacted ? "var(--accent-primary-light)" : "var(--bg-hover-minimal)",
                   border: "none",
                   borderRadius: "20px",
                   padding: "6px 12px",
@@ -310,11 +310,11 @@ export const EmojiReaction = ({ comment, delegations, toast }) => {
                 }}
                 onMouseEnter={(e) => {
                   if (!isntLoggedIn && !isOwnComment && !alreadyReacted && !hasReacted) {
-                    e.currentTarget.style.backgroundColor = "rgba(0, 0, 0, 0.05)";
+                    e.currentTarget.style.backgroundColor = "var(--bg-hover-subtle)";
                   }
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = alreadyReacted ? "rgba(175, 192, 70, 0.1)" : "rgba(0, 0, 0, 0.02)";
+                  e.currentTarget.style.backgroundColor = alreadyReacted ? "var(--accent-primary-light)" : "var(--bg-hover-minimal)";
                 }}
               >
                 <span style={{ fontSize: "16px" }}>{reaction.emoji}</span>
@@ -371,7 +371,7 @@ export const EmojiReaction = ({ comment, delegations, toast }) => {
                   ));
                 })()}
                 {reactionCounts[reaction.emoji] > 1 && (
-                  <span style={{ color: "#666", fontSize: "13px", fontWeight: "500" }}>
+                  <span style={{ color: "var(--text-tertiary)", fontSize: "13px", fontWeight: "500" }}>
                     {reactionCounts[reaction.emoji]}
                   </span>
                 )}
@@ -393,11 +393,11 @@ export const EmojiReaction = ({ comment, delegations, toast }) => {
             padding: "8px 14px",
             minWidth: "48px",
             minHeight: "40px",
-            background: isExpanded ? "rgba(0, 0, 0, 0.04)" : "transparent",
+            background: isExpanded ? "var(--button-bg)" : "transparent",
             border: "none",
             borderRadius: "20px",
             fontSize: "16px",
-            color: isExpanded ? "#666" : "#888",
+            color: isExpanded ? "var(--text-tertiary)" : "var(--text-muted)",
             cursor: "pointer",
             fontFamily: "var(--font-family)",
             WebkitAppearance: "none",
@@ -405,7 +405,7 @@ export const EmojiReaction = ({ comment, delegations, toast }) => {
           }}
           onMouseEnter={(e) => {
             if (!isntLoggedIn && !isExpanded) {
-              e.target.style.backgroundColor = "rgba(0, 0, 0, 0.04)";
+              e.target.style.backgroundColor = "var(--bg-hover-minimal)";
             }
           }}
           onMouseLeave={(e) => {
@@ -431,11 +431,11 @@ export const EmojiReaction = ({ comment, delegations, toast }) => {
             display: "flex",
             alignItems: "center",
             gap: "4px",
-            backgroundColor: "white",
+            backgroundColor: "var(--bg-white)",
             borderRadius: "24px",
             padding: "6px",
-            boxShadow: "0 2px 12px rgba(0, 0, 0, 0.12)",
-            border: "1px solid rgba(0, 0, 0, 0.08)",
+            boxShadow: "var(--shadow-default)",
+            border: "var(--border-thin)",
             zIndex: 10,
             animation: "fadeIn 0.15s ease-out",
           }}
@@ -462,7 +462,7 @@ export const EmojiReaction = ({ comment, delegations, toast }) => {
                   width: "48px",
                   height: "48px",
                   padding: "0",
-                  background: alreadyReacted ? "rgba(175, 192, 70, 0.1)" : "transparent",
+                  background: alreadyReacted ? "var(--accent-primary-light)" : "transparent",
                   border: "none",
                   borderRadius: "50%",
                   fontSize: "20px",
@@ -473,12 +473,12 @@ export const EmojiReaction = ({ comment, delegations, toast }) => {
                 }}
                 onMouseEnter={(e) => {
                   if (!disabled) {
-                    e.target.style.backgroundColor = "rgba(0, 0, 0, 0.08)";
+                    e.target.style.backgroundColor = "var(--bg-hover)";
                     e.target.style.transform = "scale(1.1)";
                   }
                 }}
                 onMouseLeave={(e) => {
-                  e.target.style.backgroundColor = alreadyReacted ? "rgba(175, 192, 70, 0.1)" : "transparent";
+                  e.target.style.backgroundColor = alreadyReacted ? "var(--accent-primary-light)" : "transparent";
                   e.target.style.transform = "scale(1)";
                 }}
               >
@@ -537,7 +537,7 @@ function NotificationOptIn(props) {
         style={{
           fontSize: "11pt",
           margin: "0 0 8px 0",
-          color: "#666",
+          color: "var(--text-tertiary)",
         }}
       >
         Get email notifications when someone replies to your comments or
@@ -619,6 +619,8 @@ const EmailNotificationLink = (props) => {
           border: "var(--border-thin)",
           borderRadius: "2px",
           fontSize: "10pt",
+          backgroundColor: "var(--bg-white)",
+          color: "var(--text-primary)",
         }}
         required
       />
@@ -627,9 +629,9 @@ const EmailNotificationLink = (props) => {
         disabled={status === "sending" || !localAccount}
         style={{
           padding: "6px 12px",
-          background: status === "sending" ? "#828282" : "black",
-          color: "white",
-          border: "var(--border)",
+          background: status === "sending" ? "var(--text-secondary)" : "var(--button-primary-bg)",
+          color: status === "sending" ? "var(--bg-white)" : "var(--button-primary-text)",
+          border: status === "sending" ? "var(--border)" : "1px solid var(--button-primary-bg)",
           borderRadius: "2px",
           cursor: "pointer",
           fontSize: "10pt",
@@ -682,10 +684,10 @@ const Comment = React.forwardRef(
         ref={ref}
         style={{
           boxShadow: isTargeted
-            ? "0 0 0 2px rgb(175, 192, 70)"
+            ? "0 0 0 2px var(--accent-primary)"
             : undefined,
-          color: "black",
-          backgroundColor: isTargeted ? "#fefef8" : "white",
+          color: "var(--text-primary)",
+          backgroundColor: isTargeted ? "var(--bg-hover-minimal)" : "var(--bg-white)",
           border: "var(--border)",
           padding: `0.75rem`,
           borderRadius: "2px",
@@ -712,7 +714,7 @@ const Comment = React.forwardRef(
                   style={{
                     width: "32px",
                     height: "32px",
-                    border: "1px solid #828282",
+                    border: "1px solid var(--text-secondary)",
                     borderRadius: "0",
                   }}
                 />
@@ -813,10 +815,10 @@ const Comment = React.forwardRef(
                           <div
                             key={i}
                             style={{
-                              borderLeft: "3px solid #ccc",
+                              borderLeft: "3px solid var(--text-secondary)",
                               paddingLeft: "10px",
                               margin: "8px 0 0 0",
-                              color: "#666",
+                              color: "var(--text-tertiary)",
                             }}
                           >
                             {line.substring(2)}
@@ -953,9 +955,9 @@ const CommentsSection = (props) => {
           style={{
             border: "var(--border)",
             borderRadius: "2px",
-            background: "white",
+            background: "var(--bg-white)",
             padding: "0.75rem",
-            color: "#666",
+            color: "var(--text-tertiary)",
           }}
         >
           Loading comments…

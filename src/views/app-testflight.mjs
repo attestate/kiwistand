@@ -38,32 +38,32 @@ export default async function (theme) {
                     <div
                       style="margin-bottom: 40px; display: flex; align-items: center; gap: 12px;"
                     >
-                      <div style="color: black; font-weight: 500;">
+                      <div style="color: var(--text-primary); font-weight: 500;">
                         iOS App Setup
                       </div>
-                      <div style="color: #666;">→</div>
-                      <div style="color: #666;">1. Backup Key</div>
-                      <div style="color: #666;">→</div>
-                      <div style="color: black; font-weight: 600;">
+                      <div style="color: var(--text-tertiary);">→</div>
+                      <div style="color: var(--text-tertiary);">1. Backup Key</div>
+                      <div style="color: var(--text-tertiary);">→</div>
+                      <div style="color: var(--text-primary); font-weight: 600;">
                         2. Install App
                       </div>
                     </div>
 
                     <!-- Card Container -->
                     <div
-                      style="border: 1px solid rgba(219, 105, 141, 0.5); background: white;"
+                      style="border: 1px solid rgba(219, 105, 141, 0.5); background: var(--bg-white);"
                     >
                       <div style="padding: 32px;">
                         <div
                           style="text-align: center; max-width: 500px; margin: 0 auto;"
                         >
                           <h3
-                            style="margin-top: 0; font-size: 1.2rem; color: black; margin-bottom: 20px;"
+                            style="margin-top: 0; font-size: 1.2rem; color: var(--text-primary); margin-bottom: 20px;"
                           >
                             Continue to TestFlight
                           </h3>
                           <p
-                            style="color: black; margin-bottom: 20px; text-align: left;"
+                            style="color: var(--text-primary); margin-bottom: 20px; text-align: left;"
                           >
                             You'll be taken to TestFlight to install the app.
                             Just follow their instructions to complete the
@@ -71,7 +71,7 @@ export default async function (theme) {
                           </p>
                           <a
                             href="https://testflight.apple.com/join/6jyvYECH"
-                            style="font-weight: bold; display: inline-block; padding: 10px 20px; color: black; text-decoration: none; border-radius: 2px;"
+                            style="font-weight: bold; display: inline-block; padding: 10px 20px; color: var(--text-primary); text-decoration: none; border-radius: 2px;"
                           >
                             Open TestFlight
                           </a>

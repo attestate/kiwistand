@@ -121,7 +121,7 @@ const NewsletterScrollModal = ({ toast }) => {
           left: 0;
           right: 0;
           bottom: 0;
-          background-color: rgba(0, 0, 0, 0);
+          background-color: transparent;
           z-index: 4; /* Below the modal container */
           pointer-events: none;
           transition: background-color 0.1s ease-out;
@@ -135,10 +135,10 @@ const NewsletterScrollModal = ({ toast }) => {
           position: relative;
           width: 90%;
           max-width: 500px;
-          background-color: #f6f6ef;
+          background-color: var(--background-color0);
           border-radius: 0;
           padding: 26px 24px 32px 24px;
-          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+          box-shadow: var(--shadow-default);
           font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         }
 
@@ -150,21 +150,21 @@ const NewsletterScrollModal = ({ toast }) => {
           border: none;
           font-size: 28px;
           cursor: pointer;
-          color: #666;
+          color: var(--text-tertiary);
           padding: 4px;
           line-height: 1;
           transition: color 0.2s;
         }
 
         .newsletter-close-btn:hover {
-          color: #142615;
+          color: var(--text-primary);
         }
 
         .newsletter-logo {
           width: 64px;
           height: 64px;
           margin: 0 auto 24px;
-          background-color: #142615;
+          background-color: var(--text-primary);
           border-radius: 50%;
           display: flex;
           align-items: center;
@@ -183,7 +183,7 @@ const NewsletterScrollModal = ({ toast }) => {
           font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
           text-align: center;
           margin: 0 0 12px 0;
-          color: #142615;
+          color: var(--text-primary);
           line-height: 1.2;
         }
 
@@ -191,7 +191,7 @@ const NewsletterScrollModal = ({ toast }) => {
           font-size: 12pt;
           font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
           text-align: center;
-          color: #666;
+          color: var(--text-tertiary);
           margin: 0 0 28px 0;
           line-height: 1.2;
         }
@@ -201,18 +201,18 @@ const NewsletterScrollModal = ({ toast }) => {
           padding: 7px 14px;
           font-size: 11pt;
           font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-          color: #142615;
-          border: 1px solid #142615;
+          color: var(--text-primary);
+          border: var(--border-thin);
           border-radius: 0;
           margin-bottom: 8px;
-          background-color: #f6f6ef;
+          background-color: var(--bg-white);
           outline: none;
           transition: border-color 0.2s;
           box-sizing: border-box;
         }
 
         .newsletter-input:focus {
-          border-color: #c5d54e;
+          border-color: var(--accent-primary);
         }
 
         .newsletter-submit {
@@ -221,16 +221,16 @@ const NewsletterScrollModal = ({ toast }) => {
           font-size: 12pt;
           font-weight: bold;
           font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-          background-color: #c5d54e;
-          color: #142615;
-          border: 1px solid #142615;
+          background-color: var(--accent-primary);
+          color: var(--color-black);
+          border: var(--border-thin);
           border-radius: 0;
           cursor: pointer;
           transition: background-color 0.2s;
         }
 
         .newsletter-submit:hover:not(:disabled) {
-          background-color: #b5c43e;
+          background-color: var(--accent-primary-hover);
         }
 
         .newsletter-submit:disabled {
@@ -243,7 +243,7 @@ const NewsletterScrollModal = ({ toast }) => {
           font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
           font-weight: normal;
           text-align: center;
-          color: #999;
+          color: var(--text-quaternary);
           margin-top: 12px;
           margin-bottom: 0;
         }
@@ -253,8 +253,10 @@ const NewsletterScrollModal = ({ toast }) => {
       <div
         className={`newsletter-modal-backdrop ${overlayOpacity > 0.1 ? 'interactive' : ''}`}
         onClick={handleClose}
-        style={{ 
-          backgroundColor: `rgba(0, 0, 0, ${overlayOpacity})` 
+        style={{
+          // Dynamic opacity overlay - using rgba with calculated opacity
+          // Base color matches --bg-overlay but with dynamic alpha
+          backgroundColor: `rgba(0, 0, 0, ${overlayOpacity})`
         }}
       />
 

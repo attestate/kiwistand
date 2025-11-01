@@ -68,10 +68,10 @@ const TestFlightQR = () => {
         bottom: consentBannerVisible ? '80px' : '20px',
         right: '20px',
         zIndex: 1000,
-        backgroundColor: 'white',
+        backgroundColor: 'var(--bg-white)',
         borderRadius: '8px',
         boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
-        border: '1px solid #e0e0e0',
+        border: '1px solid var(--border-thin)',
         padding: '16px',
         width: '200px',
         transition: 'bottom 0.3s ease-in-out',
@@ -93,9 +93,9 @@ const TestFlightQR = () => {
           style={{ borderRadius: '4px' }}
         />
         
-        <p style={{ 
-          fontSize: '12px', 
-          color: '#666',
+        <p style={{
+          fontSize: '12px',
+          color: 'var(--text-tertiary)',
           textAlign: 'center',
           margin: 0,
           lineHeight: '1.4'

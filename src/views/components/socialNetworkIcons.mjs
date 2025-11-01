@@ -15,7 +15,7 @@ export function SocialButton(url, icon, text, isImg) {
   >
     <button
       class="feed-button"
-      style="display: flex; align-items: center; gap: 5px;  font-size: 0.9rem; border-radius: 2px; cursor: pointer; padding: 5px 10px; background-color: transparent; border: 1px solid #828282; color: #828282;"
+      style="display: flex; align-items: center; gap: 5px;  font-size: 0.9rem; border-radius: 2px; cursor: pointer; padding: 5px 10px; background-color: transparent; border: 1px solid var(--text-secondary); color: var(--text-secondary);"
     >
       ${isImg
         ? html`<img

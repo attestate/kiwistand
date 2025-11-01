@@ -97,7 +97,7 @@ function generateCommentRow(activity, identity, bgColor, theme, i) {
         src="${DOMPurify.sanitize(identity.safeAvatar)}"
         loading="lazy"
         alt="avatar"
-        style="border: 1px solid #828282; width: 28px; height: 28px; border-radius: 2px; margin-top: 1.5rem;"
+        style="border: 1px solid var(--text-secondary); width: 28px; height: 28px; border-radius: 2px; margin-top: 1.5rem;"
       />`
     : "";
 
@@ -112,7 +112,7 @@ function generateCommentRow(activity, identity, bgColor, theme, i) {
           href="${link}"
           onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block';}"
         >
-          <div style="display: flex; border-bottom: 1px solid rgba(0,0,0,0.1);">
+          <div style="display: flex; border-bottom: var(--border-subtle);">
             <div
               style="flex: 0.15; display: flex; align-items: start; justify-content: center;"
             >
@@ -121,7 +121,7 @@ function generateCommentRow(activity, identity, bgColor, theme, i) {
             <div
               style="padding-top: 10px; flex: 0.85; display: flex; flex-direction: column;"
             >
-              <div style="font-size: 0.9rem; margin-right: 1rem;">
+              <div style="font-size: 0.9rem; margin-right: 1rem; color: var(--text-primary);">
                 <p
                   class="notification-title"
                   style="margin-top: 8px; margin-bottom: 2px;"
@@ -181,7 +181,7 @@ function generateRow(lastUpdate, theme) {
               onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block';}"
             >
               <div
-                style="display: flex; border-bottom: 1px solid rgba(0,0,0,0.1);"
+                style="display: flex; border-bottom: var(--border-subtle);"
               >
                 <div
                   style="flex: 0.15; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative;"
@@ -196,7 +196,7 @@ function generateRow(lastUpdate, theme) {
                               src="${DOMPurify.sanitize(identity.safeAvatar)}"
                               loading="lazy"
                               alt="reactor avatar"
-                              style="width: 36px; height: 36px; border: 1px solid #828282; border-radius: 2px; background-color: white; box-shadow: 0 0 3px rgba(0,0,0,0.2);"
+                              style="width: 36px; height: 36px; border: 1px solid var(--text-secondary); border-radius: 2px; background-color: var(--bg-white); box-shadow: var(--shadow-default);"
                             />
                           </div>
                           <div
@@ -217,7 +217,7 @@ function generateRow(lastUpdate, theme) {
                 <div
                   style="padding-top: 10px; flex: 0.85; display: flex; flex-direction: column;"
                 >
-                  <div style="font-size: 0.9rem; margin-right: 1rem;">
+                  <div style="font-size: 0.9rem; margin-right: 1rem; color: var(--text-primary);">
                     <p
                       class="notification-title"
                       style="margin-top: 8px; margin-bottom: 2px;"
@@ -236,7 +236,7 @@ function generateRow(lastUpdate, theme) {
                     <p
                       style="line-height: 1.2; white-space: pre-wrap; margin: 5px 0 1rem 0; word-break: break-word;"
                     >
-                      <span style="text-align: justify; color: #666;"
+                      <span style="text-align: justify; color: var(--text-tertiary);"
                         >${DOMPurify.sanitize(
                           truncateComment(commentTitle),
                         )}</span
@@ -271,7 +271,7 @@ function generateRow(lastUpdate, theme) {
             onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block';}"
           >
             <div
-              style="display: flex; border-bottom: 1px solid rgba(0,0,0,0.1);"
+              style="display: flex; border-bottom: var(--border-subtle);"
             >
               <div
                 style="flex: 0.15; display: flex; flex-direction: column; align-items: center; justify-content: center;"
@@ -303,13 +303,13 @@ function generateRow(lastUpdate, theme) {
                             src="${DOMPurify.sanitize(identity.safeAvatar)}"
                             loading="lazy"
                             alt="avatar"
-                            style="width: ${size}px; height: ${size}px; border: 1px solid #828282; border-radius: 2px; margin-left: 15px;"
+                            style="width: ${size}px; height: ${size}px; border: 1px solid var(--text-secondary); border-radius: 2px; margin-left: 15px;"
                           />
                         `,
                       )}
                     </div>`
                   : ""}
-                <div style="font-size: 0.9rem; margin-right: 1rem;">
+                <div style="font-size: 0.9rem; margin-right: 1rem; color: var(--text-primary);">
                   <p style="margin-top: 8px; margin-bottom: 2px;">
                     <strong>
                       ${identity.displayName}
@@ -358,7 +358,7 @@ export async function page(
       <tr>
         <td
           class="feed-container"
-          style="text-align: center; vertical-align: middle; min-height: 100vh; padding: 20px; color: #828282;"
+          style="text-align: center; vertical-align: middle; min-height: 100vh; padding: 20px; color: var(--text-secondary);"
         >
           <p>No notifications yet</p>
         </td>
@@ -381,13 +381,13 @@ export async function page(
         <div class="container">
           ${Sidebar()}
           <div id="hnmain" class="scaled-hnmain">
-            <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
+            <table border="0" cellpadding="0" cellspacing="0" bgcolor="var(--background-color0)">
               <tr>
                 ${await Header(theme)}
               </tr>
               <tr>
                 <td
-                  style="text-align: center; padding: 1rem; background-color: #f0f0f0; font-size: 0.8rem; color: #333;"
+                  style="text-align: center; padding: 1rem; background-color: var(--background-color0); font-size: 0.8rem; color: var(--text-primary);"
                 >
                   <span
                     style="vertical-align: middle; display: inline-flex; align-items: center; flex-wrap: wrap; justify-content: center;"

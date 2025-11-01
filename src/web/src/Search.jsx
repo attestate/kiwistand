@@ -103,11 +103,11 @@ const SearchInterface = () => {
             }}
           >
             <span style={{ display: "flex", alignItems: "center", gap: "2px" }}>
-              <UpvoteSVG style={{ width: "25px", fill: "rgba(0,0,0,0.75)" }} />
+              <UpvoteSVG style={{ width: "25px", fill: "var(--full-contrast-color)" }} />
               {result.votes || 0}
             </span>
             <span style={{ display: "flex", alignItems: "center", gap: "2px" }}>
-              <ChatsSVG style={{ width: "20px", color: "black" }} />
+              <ChatsSVG style={{ width: "20px", color: "var(--text-primary)" }} />
               {result.comments || 0}
             </span>
           </div>
@@ -128,11 +128,12 @@ const SearchInterface = () => {
           border: "none",
           borderRadius: "2px",
           cursor: "pointer",
-          color: "black",
+          backgroundColor: "transparent",
+          color: "var(--text-primary)",
           WebkitTapHighlightColor: "transparent",
           WebkitAppearance: "none",
           appearance: "none",
-          WebkitTextFillColor: "black",
+          WebkitTextFillColor: "var(--text-primary)",
         }}
         aria-label="Open search"
       >
@@ -216,7 +217,8 @@ const SearchInterface = () => {
                   fontSize: "0.75rem",
                   border: "var(--border-thin)",
                   borderRadius: "2px",
-                  backgroundColor: "white",
+                  backgroundColor: "var(--bg-white)",
+                  color: "var(--text-primary)",
                   fontFamily: "var(--font-family)",
                   outline: "none",
                 }}
@@ -227,9 +229,9 @@ const SearchInterface = () => {
                 style={{
                   flex: "1",
                   padding: "8px 12px",
-                  background: "black",
-                  color: "white",
-                  border: "var(--border)",
+                  background: "var(--button-primary-bg)",
+                  color: "var(--button-primary-text)",
+                  border: "1px solid var(--button-primary-bg)",
                   borderRadius: "2px",
                   cursor: "pointer",
                   fontSize: "10pt",

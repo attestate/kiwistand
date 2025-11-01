@@ -70,7 +70,7 @@ export default async function (url, theme) {
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            background-color: #f6f6ef;
+            background-color: var(--background-color0);
           }
           .embed-header {
             background-color: ${theme.color};
@@ -86,7 +86,7 @@ export default async function (url, theme) {
             display: inline-flex;
             align-items: center;
             text-decoration: none;
-            color: black;
+            color: var(--text-primary);
             font-size: 11pt;
             min-height: 44px;
             min-width: 44px;
@@ -106,7 +106,7 @@ export default async function (url, theme) {
             font-size: 11pt;
           }
           .embed-info a {
-            color: black;
+            color: var(--text-primary);
             text-decoration: none;
             display: flex;
             align-items: center;
@@ -135,7 +135,7 @@ export default async function (url, theme) {
             transform: translate(-50%, -50%);
             width: 40px;
             height: 40px;
-            border: 4px solid #f3f3f3;
+            border: 4px solid var(--middle-beige);
             border-top: 4px solid ${theme.color};
             border-radius: 50%;
             animation: spin 1s linear infinite;

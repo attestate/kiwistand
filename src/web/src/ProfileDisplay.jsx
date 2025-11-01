@@ -80,7 +80,7 @@ const ProfileDisplay = () => {
             viewBox="0 0 24 24"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
-            style={{ color: "white" }}
+            style={{ color: "var(--text-white)" }}
           >
             <path
               d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"
@@ -96,13 +96,13 @@ const ProfileDisplay = () => {
             style={{
               fontWeight: 600,
               fontSize: "24px",
-              color: "#111827",
+              color: "var(--text-primary)",
               margin: "0 0 8px 0",
             }}
           >
             Connect your wallet
           </h2>
-          <p style={{ color: "#6b7280", fontSize: "16px", margin: 0 }}>
+          <p style={{ color: "var(--text-tertiary)", fontSize: "16px", margin: 0 }}>
             to get your Kiwi Pass
           </p>
         </div>
@@ -114,14 +114,14 @@ const ProfileDisplay = () => {
     return (
       <>
         <div className="profile-avatar-placeholder" style={{ margin: "0 auto" }}>
-          <div style={{ color: "white" }}>...</div>
+          <div style={{ color: "var(--text-white)" }}>...</div>
         </div>
         <div style={{ marginTop: "20px" }}>
           <h2
             style={{
               fontWeight: 600,
               fontSize: "24px",
-              color: "#111827",
+              color: "var(--text-primary)",
               margin: "0 0 8px 0",
             }}
           >
@@ -143,7 +143,7 @@ const ProfileDisplay = () => {
         />
       ) : (
         <div className="profile-avatar-placeholder" style={{ margin: "0 auto" }}>
-          <span style={{ color: "white", fontSize: "24px", fontWeight: 600 }}>
+          <span style={{ color: "var(--text-white)", fontSize: "24px", fontWeight: 600 }}>
             {profile?.displayName?.slice(0, 2).toUpperCase() || "??"}
           </span>
         </div>
@@ -153,13 +153,13 @@ const ProfileDisplay = () => {
           style={{
             fontWeight: 600,
             fontSize: "24px",
-            color: "#111827",
+            color: "var(--text-primary)",
             margin: "0 0 8px 0",
           }}
         >
           {profile?.displayName || profile?.truncatedAddress}
         </h2>
-        <p style={{ color: "#6b7280", fontSize: "16px", margin: 0 }}>
+        <p style={{ color: "var(--text-tertiary)", fontSize: "16px", margin: 0 }}>
           Ready to join Kiwi
         </p>
       </div>

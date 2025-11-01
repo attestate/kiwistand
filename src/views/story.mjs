@@ -383,7 +383,7 @@ export default async function (trie, theme, index, value, referral, commentIndex
         <div class="container">
           ${Sidebar(path)}
           <div id="hnmain" class="scaled-hnmain">
-            <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
+            <table border="0" cellpadding="0" cellspacing="0" bgcolor="var(--background-color0)">
               <thead>
                 <tr>
                   ${Header(theme, path)}
@@ -407,7 +407,7 @@ export default async function (trie, theme, index, value, referral, commentIndex
                 ? html`<tr>
                     <td style="padding: 12px 0;">
                       <div style="margin: 0 11px;">
-                        <div style="font-size: 10pt; font-weight: 500; margin-bottom: 12px; color: #828282;">
+                        <div style="font-size: 10pt; font-weight: 500; margin-bottom: 12px; color: var(--text-secondary);">
                           Recommended by ${upvoterProfiles.length} ${upvoterProfiles.length === 1 ? 'curator' : 'curators'}
                         </div>
                         <div style="display: flex; flex-wrap: wrap; gap: 8px;">
@@ -415,9 +415,9 @@ export default async function (trie, theme, index, value, referral, commentIndex
                             (upvoter) =>
                               html`<a
                                 href="/upvotes?address=${upvoter.address}"
-                                style="display: flex; align-items: center; text-decoration: none; color: inherit; background-color: white; padding: 4px 8px; border: var(--border); border-radius: 2px; transition: all 0.2s; font-size: 10pt;"
+                                style="display: flex; align-items: center; text-decoration: none; color: inherit; background-color: var(--bg-white); padding: 4px 8px; border: var(--border); border-radius: 2px; transition: all 0.2s; font-size: 10pt;"
                                 onmouseover="this.style.borderColor='var(--hn-orange-border)'; this.style.backgroundColor='var(--bg-off-white)';"
-                                onmouseout="this.style.borderColor='var(--border-color)'; this.style.backgroundColor='white';"
+                                onmouseout="this.style.borderColor='var(--border-color)'; this.style.backgroundColor='var(--bg-white)';"
                               >
                                 ${upvoter.safeAvatar
                                   ? html`<img
@@ -434,7 +434,7 @@ export default async function (trie, theme, index, value, referral, commentIndex
                           )}
                           ${upvoterProfiles.length > 20
                             ? html`<div
-                                style="display: flex; align-items: center; padding: 4px 8px; color: #828282; font-size: 10pt;"
+                                style="display: flex; align-items: center; padding: 4px 8px; color: var(--text-secondary); font-size: 10pt;"
                               >
                                 +${upvoterProfiles.length - 20} more
                               </div>`
@@ -457,7 +457,7 @@ export default async function (trie, theme, index, value, referral, commentIndex
                                 : "scroll-margin-base"}"
                               style="${comment.flagged
                                 ? "opacity: 0.5"
-                                : ""}; color: black; border: var(--border); background-color: white; padding: 0.75rem; border-radius: 2px; display: block; margin-bottom: 16px; white-space: pre-wrap; line-height: 1.3; word-break: break-word; overflow-wrap: break-word;"
+                                : ""}; color: var(--text-primary); border: var(--border); background-color: var(--bg-white); padding: 0.75rem; border-radius: 2px; display: block; margin-bottom: 16px; white-space: pre-wrap; line-height: 1.3; word-break: break-word; overflow-wrap: break-word;"
                             >
                               <div style="display: flex; align-items: flex-start;">
                                 ${comment.avatar
@@ -538,7 +538,7 @@ export default async function (trie, theme, index, value, referral, commentIndex
                                               .split("\n")
                                               .map((line) => {
                                                 if (line.startsWith(">")) {
-                                                  return `<div style="border-left: 3px solid #ccc; padding-left: 10px; margin: 8px 0 0 0; color: #666;">${DOMPurify.sanitize(
+                                                  return `<div style="border-left: 3px solid var(--text-quaternary); padding-left: 10px; margin: 8px 0 0 0; color: var(--text-tertiary);">${DOMPurify.sanitize(
                                                     line.substring(2),
                                                   )}</div>`;
                                                 }
@@ -590,7 +590,7 @@ export default async function (trie, theme, index, value, referral, commentIndex
                                                     .map(
                                                       (reaction) => html`
                                                         <button
-                                                          style="display: inline-flex; align-items: center; gap: 4px; background-color: rgba(0, 0, 0, 0.02); border: none; border-radius: 20px; padding: 6px 12px; min-height: 40px; cursor: pointer; font-family: var(--font-family);"
+                                                          style="display: inline-flex; align-items: center; gap: 4px; background-color: var(--bg-hover-minimal); border: none; border-radius: 20px; padding: 6px 12px; min-height: 40px; cursor: pointer; font-family: var(--font-family);"
                                                           disabled
                                                         >
                                                           <span style="font-size: 16px;">${reaction.emoji}</span>
@@ -605,12 +605,12 @@ export default async function (trie, theme, index, value, referral, commentIndex
                                                                   alt=""
                                                                   width="16"
                                                                   height="16"
-                                                                  style="width: 16px; height: 16px; border-radius: 50%; margin-left: ${i === 0 ? "0" : "-6px"}; border: 1.5px solid white;"
+                                                                  style="width: 16px; height: 16px; border-radius: 50%; margin-left: ${i === 0 ? "0" : "-6px"}; border: 1.5px solid var(--bg-white);"
                                                                 />
                                                               `,
                                                             )}
                                                           ${reaction.reactors.length > 1
-                                                            ? html`<span style="color: #666; font-size: 13px; font-weight: 500;">${reaction.reactors.length}</span>`
+                                                            ? html`<span style="color: var(--text-tertiary); font-size: 13px; font-weight: 500;">${reaction.reactors.length}</span>`
                                                             : null}
                                                         </button>
                                                       `,
@@ -620,14 +620,14 @@ export default async function (trie, theme, index, value, referral, commentIndex
                                             : null}
                                           <button
                                             class="react-toggle-btn"
-                                            style="display: inline-flex; align-items: center; justify-content: center; padding: 8px 14px; min-width: 48px; min-height: 40px; background: transparent; border: none; border-radius: 20px; font-size: 16px; color: #888; cursor: pointer; font-family: var(--font-family);"
+                                            style="display: inline-flex; align-items: center; justify-content: center; padding: 8px 14px; min-width: 48px; min-height: 40px; background: transparent; border: none; border-radius: 20px; font-size: 16px; color: var(--text-muted); cursor: pointer; font-family: var(--font-family);"
                                             disabled
                                           >
                                             <span style="font-size: 20px; line-height: 1;">+</span>
                                           </button>
                                           <div
                                             class="emoji-picker-options"
-                                            style="display: none; position: absolute; top: 100%; left: 0; margin-top: 4px; align-items: center; gap: 4px; background-color: white; border-radius: 24px; padding: 6px; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12); border: 1px solid rgba(0, 0, 0, 0.08); z-index: 10;"
+                                            style="display: none; position: absolute; top: 100%; left: 0; margin-top: 4px; align-items: center; gap: 4px; background-color: var(--bg-white); border-radius: 24px; padding: 6px; box-shadow: var(--shadow-default); border: var(--border-subtle); z-index: 10;"
                                           >
                                             ${["🥝", "🔥", "👀", "💯", "🤭"].map(
                                               (emoji) => html`
@@ -655,22 +655,22 @@ export default async function (trie, theme, index, value, referral, commentIndex
                     <div class="comment-input-ssr-placeholder" style="margin: 0 11px 16px 11px;">
                       <div class="comment-input-desktop-ssr">
                         <textarea
-                          style="font-size: 1rem; border: var(--border); background-color: white; display: block; width: 100%; padding: 10px; border-radius: 2px; resize: vertical;"
+                          style="font-size: 1rem; border: var(--border); background-color: var(--bg-white); color: var(--text-primary); display: block; width: 100%; padding: 10px; border-radius: 2px; resize: vertical;"
                           rows="12"
                           disabled
                         ></textarea>
-                        <span style="color: #828282; font-size: 10pt;">Characters remaining: 10,000</span>
+                        <span style="color: var(--text-secondary); font-size: 10pt;">Characters remaining: 10,000</span>
                         <br />
                         <br />
                         <div style="display: flex; align-items: center; justify-content: space-between;">
                           <button
-                            style="width: auto; padding: 8px 16px; background-color: var(--hn-orange); color: white; border: none; border-radius: 2px; font-size: 10pt; cursor: not-allowed; opacity: 0.5; margin-bottom: 10px;"
+                            style="width: auto; padding: 8px 16px; background-color: var(--hn-orange); color: var(--bg-white); border: none; border-radius: 2px; font-size: 10pt; cursor: not-allowed; opacity: 0.5; margin-bottom: 10px;"
                             id="button-onboarding"
                             disabled
                           >
                             Loading...
                           </button>
-                          <span class="meta-link drawer-link" style="font-size: 0.8rem; color: #828282;">comment guidelines</span>
+                          <span class="meta-link drawer-link" style="font-size: 0.8rem; color: var(--text-secondary);">comment guidelines</span>
                         </div>
                       </div>
                     </div>

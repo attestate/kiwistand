@@ -393,7 +393,7 @@ const Vote = (props) => {
             onMouseOver={(e) =>
               !hasUpvoted &&
               (e.currentTarget.style.backgroundColor =
-                "rgba(249, 24, 128, 0.1)")
+                "var(--bg-hover-minimal)")
             }
             onMouseOut={(e) =>
               (e.currentTarget.style.backgroundColor = "transparent")
@@ -405,7 +405,7 @@ const Vote = (props) => {
               style={{
                 width: "20px",
                 height: "20px",
-                color: hasUpvoted ? "#ff6b6b" : "rgba(83, 100, 113, 1)",
+                color: hasUpvoted ? "var(--color-voted)" : "var(--color-vote-default)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -416,7 +416,7 @@ const Vote = (props) => {
             <span
               style={{
                 fontSize: "13px",
-                color: "rgba(83, 100, 113, 1)",
+                color: "var(--color-vote-default)",
                 fontWeight: "400",
               }}
             >

@@ -38,9 +38,9 @@ export default async function (theme) {
                     <!-- Header -->
                     <h1
                       style="
-                      font-size: 28px; 
-                      font-weight: 600; 
-                      color: black; 
+                      font-size: 28px;
+                      font-weight: 600;
+                      color: var(--text-primary);
                       margin-bottom: 16px;
                       text-align: left;
                     "
@@ -52,15 +52,15 @@ export default async function (theme) {
                     <div
                       style="margin-bottom: 32px; display: flex; align-items: center; gap: 12px;"
                     >
-                      <div style="color: black; font-weight: 500;">
+                      <div style="color: var(--text-primary); font-weight: 500;">
                         TestFlight Setup
                       </div>
-                      <div style="color: #666;">→</div>
-                      <div style="color: black; font-weight: 600;">
+                      <div style="color: var(--text-tertiary);">→</div>
+                      <div style="color: var(--text-primary); font-weight: 600;">
                         1. Backup Key
                       </div>
-                      <div style="color: #666;">→</div>
-                      <div style="color: #666;">2. Install Beta App</div>
+                      <div style="color: var(--text-tertiary);">→</div>
+                      <div style="color: var(--text-tertiary);">2. Install Beta App</div>
                     </div>
 
                     <!-- Card Container -->

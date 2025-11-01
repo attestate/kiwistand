@@ -81,31 +81,34 @@ export default async function (trie, theme, identity, tab = "submissions") {
             font-size: 14px;
           }
           .stat {
-            color: #828282;
+            color: var(--text-secondary);
           }
           .stat strong {
-            color: black;
+            color: var(--text-primary);
           }
           .tabs {
             margin: 15px 0;
-            border-bottom: 1px solid #ccc;
+            border-bottom: 1px solid var(--border-subtle);
           }
           .tab {
             display: inline-block;
             padding: 8px 16px;
             margin-right: 5px;
-            color: #828282;
+            color: var(--text-secondary);
             text-decoration: none;
             border-bottom: 2px solid transparent;
           }
+          .tab:hover {
+            color: var(--text-primary);
+          }
           .tab.active {
-            color: black;
-            border-bottom-color: black;
+            color: var(--text-primary);
+            border-bottom-color: var(--text-primary);
           }
           .submission-row {
             margin: 10px 0;
             padding: 8px 0;
-            border-bottom: 1px solid #f0f0f0;
+            border-bottom: 1px solid var(--border-subtle);
           }
           .submission-title {
             font-size: 14px;
@@ -113,11 +116,17 @@ export default async function (trie, theme, identity, tab = "submissions") {
           }
           .submission-meta {
             font-size: 12px;
-            color: #828282;
+            color: var(--text-secondary);
           }
           .domain {
-            color: #828282;
+            color: var(--text-secondary);
             font-size: 12px;
+          }
+          .submission-title a {
+            color: var(--text-primary);
+          }
+          .submission-meta a {
+            color: var(--text-secondary);
           }
         </style>
       </head>
@@ -125,23 +134,23 @@ export default async function (trie, theme, identity, tab = "submissions") {
         <div class="container">
           ${Sidebar(path)}
           <div id="hnmain" class="scaled-hnmain">
-            <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
+            <table border="0" cellpadding="0" cellspacing="0" bgcolor="var(--background-color0)">
               <tr>
                 ${Header(theme)}
               </tr>
               <tr>
                 <td>
                   <div
-                    style="max-width: 900px; margin: 20px auto; padding: 0 20px; overflow-wrap: break-word; color: black; font-size: 16px; line-height: 1.5;"
+                    style="max-width: 900px; margin: 20px auto; padding: 0 20px; overflow-wrap: break-word; color: var(--text-primary); font-size: 16px; line-height: 1.5;"
                   >
                     <span
-                      style="margin-bottom: 10px; font-weight: bold; display: flex; align-items: center; gap: 10px;"
+                      style="margin-bottom: 10px; font-weight: bold; display: flex; align-items: center; gap: 10px; color: var(--text-primary);"
                     >
                       ${ensData.safeAvatar &&
                       html` <a href="${ensData.safeAvatar}" target="_blank">
                         <img
                           src="${ensData.safeAvatar}"
-                          style="border: 1px solid #828282; width: 30px; height: 30px; border-radius: 2px;"
+                          style="border: 1px solid var(--text-secondary); width: 30px; height: 30px; border-radius: 2px;"
                       /></a>`}
                       <a
                         target="_blank"
@@ -166,7 +175,7 @@ export default async function (trie, theme, identity, tab = "submissions") {
                       <span class="stat">Submissions: <strong>${totalSubmissions}</strong></span>
                     </div>
                     
-                    <span style="font-size: 0.8rem;">
+                    <span style="font-size: 0.8rem; color: var(--text-secondary);">
                       ${description
                         ? html`${DOMPurify.sanitize(description)}<br />`
                         : html`<span><br /></span>`}

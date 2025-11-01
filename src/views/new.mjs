@@ -177,7 +177,7 @@ export default async function (trie, theme) {
         <div class="container">
           ${Sidebar(path)}
           <div id="hnmain" class="scaled-hnmain">
-            <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
+            <table border="0" cellpadding="0" cellspacing="0" bgcolor="var(--background-color0)">
               <tr>
                 ${Header(theme)}
               </tr>

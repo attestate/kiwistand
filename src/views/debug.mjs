@@ -217,13 +217,13 @@ export default async function debug(theme) {
           body {
             font-family: Verdana, Geneva, sans-serif;
             font-size: 10pt;
-            color: #333;
+            color: var(--text-tertiary);
           }
           .debug-header {
-            background-color: #f6f6ef;
+            background-color: var(--background-color0);
             padding: 20px;
             text-align: center;
-            border-bottom: 2px solid #ff6600;
+            border-bottom: 2px solid var(--contrast-color);
           }
           .debug-description {
             max-width: 800px;
@@ -232,8 +232,8 @@ export default async function debug(theme) {
             line-height: 1.6;
           }
           .variation-label {
-            background-color: #ff6600;
-            color: white;
+            background-color: var(--contrast-color);
+            color: var(--text-white);
             padding: 5px 10px;
             margin: 20px 0 10px 0;
             font-weight: bold;
@@ -253,7 +253,7 @@ export default async function debug(theme) {
         <div class="container">
           ${Sidebar("/debug")}
           <div id="hnmain">
-            <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
+            <table border="0" cellpadding="0" cellspacing="0" bgcolor="var(--background-color0)">
               <tr>
                 ${await Header(theme)}
               </tr>

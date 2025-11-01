@@ -591,9 +591,21 @@ async function addToaster() {
       <Providers>
         <Toaster
           toastOptions={{
+            style: {
+              background: "var(--bg-white)",
+              color: "var(--text-primary)",
+              border: "var(--border)",
+            },
             success: {
               iconTheme: {
                 primary: "rgb(175, 192, 70)",
+              },
+            },
+            error: {
+              style: {
+                background: "var(--bg-white)",
+                color: "var(--text-primary)",
+                border: "var(--border)",
               },
             },
           }}
@@ -1346,7 +1358,7 @@ async function reorderStories(identity) {
         width: 36px;
         height: 36px;
         border-radius: 50%;
-        border-left-color: #09f;
+        border-left-color: var(--color-link-blue);
         animation: spin 1s ease infinite;
       }
       @keyframes spin {

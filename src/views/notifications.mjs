@@ -40,7 +40,7 @@ export default async function (theme) {
         <div class="container">
           ${Sidebar()}
           <div id="hnmain">
-            <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
+            <table border="0" cellpadding="0" cellspacing="0" bgcolor="var(--background-color0)">
               <tr>
                 ${await Header(theme, path)}
               </tr>
@@ -52,7 +52,7 @@ export default async function (theme) {
                     <div
                       style="display: flex; align-items: center; justify-content: center; flex-direction: column; max-width: 20rem;"
                     >
-                      <h2 style="color: black;">Turn on push notifications</h2>
+                      <h2 style="color: var(--text-primary);">Turn on push notifications</h2>
                       <p style="text-align: center;">
                         We'll send you notifications <b>only</b> when there are
                         new comments on your story. No spam, we promise!
@@ -65,7 +65,7 @@ export default async function (theme) {
               <tr>
                 <td>
                   <p
-                    style="color: black; padding: 1rem 3rem 1rem 3rem; font-size: 1rem; text-align: center; margin-top: 1rem;"
+                    style="color: var(--text-primary); padding: 1rem 3rem 1rem 3rem; font-size: 1rem; text-align: center; margin-top: 1rem;"
                   >
                     Your next step:
                   </p>

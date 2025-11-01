@@ -62,14 +62,14 @@ export default function FarcasterShareButton({ title, slug, index, onShared }) {
       className="farcaster-share-react"
       style={{
         ...buttonStyle,
-        backgroundColor: hover ? "rgba(124, 101, 193, 0.1)" : "transparent",
+        backgroundColor: hover ? "var(--color-farcaster-light)" : "transparent",
       }}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       onClick={handleClick}
       aria-label="Share on Farcaster"
     >
-      <Fcicon style={{ width: 20, height: 20, color: "rgb(124, 101, 193)" }} />
+      <Fcicon style={{ width: 20, height: 20, color: "var(--color-farcaster-purple)" }} />
     </button>
   );
 }

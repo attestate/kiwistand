@@ -100,16 +100,16 @@ export default async function (theme) {
         <div class="container">
           ${Sidebar()}
           <div id="hnmain" class="scaled-hnmain">
-            <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
-              <tr style="background-color: rgb(246, 246, 239);">
-                <td style="padding: 1rem; text-align: center; color: black;">
+            <table border="0" cellpadding="0" cellspacing="0" bgcolor="var(--background-color0)">
+              <tr style="background-color: var(--background-color0);">
+                <td style="padding: 1rem; text-align: center; color: var(--text-primary);">
                   <h1>What to submit</h1>
                   <br />
                   <br />
                   <div class="flex-container flex-image-left">
                     <div class="image-left">
                       <img
-                        style="background-color: rgba(0,0,0,0.1); border-radius: 2px; border: 1px solid #828282;"
+                        style="background-color: var(--bg-hover-subtle); border-radius: 2px; border: 1px solid var(--text-secondary);"
                         src="crypto-aligned.png"
                       />
                     </div>
@@ -135,7 +135,7 @@ export default async function (theme) {
                     </div>
                     <div class="image-right">
                       <img
-                        style="background-color: rgba(0,0,0,0.1); border-radius: 2px; border: 1px solid #828282;"
+                        style="background-color: var(--bg-hover-subtle); border-radius: 2px; border: 1px solid var(--text-secondary);"
                         src="text-to-speech.png"
                       />
                     </div>
@@ -145,7 +145,7 @@ export default async function (theme) {
                   <div class="flex-container flex-image-left">
                     <div class="image-left">
                       <img
-                        style="border-radius: 2px; border: 1px solid #828282;"
+                        style="border-radius: 2px; border: 1px solid var(--text-secondary);"
                         src="bell-curve.png"
                       />
                     </div>
@@ -163,7 +163,7 @@ export default async function (theme) {
               <tr>
                 <td>
                   <p
-                    style="color: black; padding: 1rem 3rem 1rem 3rem; font-size: 1rem; text-align: center; margin-top: 1rem;"
+                    style="color: var(--text-primary); padding: 1rem 3rem 1rem 3rem; font-size: 1rem; text-align: center; margin-top: 1rem;"
                   >
                     Your next step:
                   </p>
@@ -185,14 +185,14 @@ export default async function (theme) {
         </div>
         <div
           id="bookmark-modal"
-          style="display: none; position: fixed; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4);"
+          style="display: none; position: fixed; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: var(--bg-overlay);"
         >
           <div
-            style="background-color: #fefefe; margin: 15% auto; padding: 20px; border: 1px solid #888; width: 80%;"
+            style="background-color: var(--bg-white); margin: 15% auto; padding: 20px; border: 1px solid var(--text-muted); width: 80%;"
           >
             <span
               id="close-modal"
-              style="color: #aaa; float: right; font-size: 28px; font-weight: bold;"
+              style="color: var(--text-muted); float: right; font-size: 28px; font-weight: bold;"
               >&times;</span
             >
             <p id="bookmark-instructions"></p>

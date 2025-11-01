@@ -27,7 +27,7 @@ const SparkleIcon = () => (
 );
 
 const VerifiedIcon = () => (
-  <svg viewBox="0 0 24 24" width="1.2em" height="1.2em" style={{ height: "16px", width: "16px", color: "#AFC046" }}>
+  <svg viewBox="0 0 24 24" width="1.2em" height="1.2em" style={{ height: "16px", width: "16px", color: "var(--accent-primary)" }}>
     <g fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2">
       <path d="M3.85 8.62a4 4 0 0 1 4.78-4.77a4 4 0 0 1 6.74 0a4 4 0 0 1 4.78 4.78a4 4 0 0 1 0 6.74a4 4 0 0 1-4.77 4.78a4 4 0 0 1-6.75 0a4 4 0 0 1-4.78-4.77a4 4 0 0 1 0-6.76"></path>
       <path d="m9 12l2 2l4-4"></path>
@@ -97,8 +97,8 @@ const LoginModal = forwardRef((props, ref) => {
       fontSize: "15px",
       lineHeight: "1.325",
       fontFamily: "ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'",
-      backgroundColor: "#FFFFFF",
-      border: "1px solid #0000001A",
+      backgroundColor: "var(--bg-white)",
+      border: "var(--border-subtle)",
       overflow: "hidden",
       WebkitOverflowScrolling: "touch",
       borderRadius: "2px",
@@ -158,13 +158,13 @@ const LoginModal = forwardRef((props, ref) => {
         alignItems: "center",
         justifyContent: "space-between",
         height: "33px",
-        borderBottom: "1px solid #0000001A",
+        borderBottom: "var(--border-thin)",
         padding: "0 0 0 12px",
         userSelect: "none",
         whiteSpace: "nowrap",
         boxSizing: "border-box",
         width: "100%",
-        backgroundColor: "#FFFFFF",
+        backgroundColor: "var(--bg-white)",
       }}>
         <div style={{
           display: "flex",
@@ -236,12 +236,12 @@ const LoginModal = forwardRef((props, ref) => {
                 width: "32px",
                 height: "32px",
                 borderRadius: "50%",
-                backgroundColor: "#E3F2FD",
-                color: "#0588f0",
+                backgroundColor: "var(--color-porto-bg)",
+                color: "var(--color-porto-blue)",
               }}>
                 <SparkleIcon />
               </div>
-              <div style={{ fontSize: "18px", fontWeight: "500", color: "#000000" }}>
+              <div style={{ fontSize: "18px", fontWeight: "500", color: "var(--text-primary)" }}>
                 Welcome to Kiwi News!
               </div>
             </div>
@@ -251,7 +251,7 @@ const LoginModal = forwardRef((props, ref) => {
         {/* Porto-style content section */}
         <div style={{ flexGrow: 1, padding: "0 12px 12px" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-            <div style={{ fontSize: "15px", color: "#000000", lineHeight: "22px" }}>
+            <div style={{ fontSize: "15px", color: "var(--text-primary)", lineHeight: "22px" }}>
               Please sign in to continue
             </div>
           </div>
@@ -281,9 +281,9 @@ const LoginModal = forwardRef((props, ref) => {
                 alignItems: "center",
                 justifyContent: "center",
                 height: "38px",
-                backgroundColor: isButtonHovered ? "#9BAD3D" : "#AFC046",
-                border: isButtonHovered ? "1px solid #9BAD3D" : "1px solid #AFC046",
-                color: "#000000",
+                backgroundColor: isButtonHovered ? "var(--accent-primary-hover)" : "var(--accent-primary)",
+                border: isButtonHovered ? "1px solid var(--accent-primary-hover)" : "1px solid var(--accent-primary)",
+                color: "var(--bg-black)",
                 borderRadius: "8px",
                 fontSize: "15px",
                 fontWeight: "normal",
@@ -316,8 +316,8 @@ const LoginModal = forwardRef((props, ref) => {
                 justifyContent: "center",
                 height: "38px",
                 backgroundColor: "transparent",
-                border: "1px solid #0000001A",
-                color: "#000000",
+                border: "var(--border-thin)",
+                color: "var(--text-primary)",
                 borderRadius: "8px",
                 fontSize: "15px",
                 fontWeight: "normal",

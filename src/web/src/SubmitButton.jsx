@@ -143,20 +143,14 @@ const UrlInput = (props) => {
               url.length > 2048 ||
               url.length === 0 ||
               (!url.startsWith("https://") && !url.startsWith("http://"))
-                ? "2px solid black"
-                : "1px solid green",
-            color:
-              url.length > 2048 ||
-              url.length === 0 ||
-              (!url.startsWith("https://") && !url.startsWith("http://"))
-                ? "black"
-                : "#828282",
-
+                ? "2px solid var(--text-primary)"
+                : "1px solid var(--accent-primary)",
+            color: "var(--text-primary)",
             width: "80%",
             padding: "12px 16px",
             fontSize: "16px",
             boxSizing: "border-box",
-            background: "white",
+            background: "var(--bg-white)",
             minHeight: "50px",
           }}
           value={url}
@@ -174,8 +168,8 @@ const UrlInput = (props) => {
           style={{
             marginLeft: "10px",
             padding: "0 16px",
-            backgroundColor: "#000",
-            color: "#fff",
+            backgroundColor: "var(--button-primary-bg)",
+            color: "var(--button-primary-text)",
             borderRadius: "2px",
             cursor: "pointer",
             fontSize: "14px",
@@ -232,7 +226,7 @@ const SubmitButton = (props) => {
         canonicalURL.includes("/public")
           ? canonicalURL
           : canonicalURL + "/public",
-      )}" style="border: 1px solid black; max-width: 100%; max-height: 500px; display: block; margin: 0 auto;" alt="Uploaded image" />`;
+      )}" style="border: 1px solid var(--text-primary); max-width: 100%; max-height: 500px; display: block; margin: 0 auto;" alt="Uploaded image" />`;
       return;
     }
 
@@ -287,7 +281,7 @@ const SubmitButton = (props) => {
             const remaining = 80 - title.length;
             document.querySelector(".remaining").textContent = remaining;
             document.querySelector(".remaining").style.color =
-              remaining > 0 ? "#828282" : "red";
+              remaining > 0 ? "var(--text-secondary)" : "var(--color-error)";
             setTitle(title);
           }
           setIsGeneratingTitle(false);
@@ -341,7 +335,7 @@ const SubmitButton = (props) => {
         const remaining = 80 - titleInput.textContent.length;
         document.querySelector(".remaining").textContent = remaining;
         document.querySelector(".remaining").style.color =
-          remaining > 0 ? "#828282" : "red";
+          remaining > 0 ? "var(--text-secondary)" : "var(--color-error)";
       });
     }
 
@@ -504,13 +498,13 @@ const SubmitButton = (props) => {
               top: "-120px",
               left: "50%",
               transform: "translateX(-50%)",
-              backgroundColor: "#f6f6ef",
+              backgroundColor: "var(--background-color0)",
               padding: "1.5rem",
               borderRadius: "8px",
               textAlign: "center",
               width: "280px",
-              border: "2px solid #16CA16",
-              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+              border: "2px solid var(--accent-primary)",
+              boxShadow: "var(--shadow-default)",
               zIndex: 100,
             }}
           >
@@ -524,10 +518,10 @@ const SubmitButton = (props) => {
             >
               🥝
             </div>
-            <h3 style={{ margin: "0 0 0.5rem 0", color: "#000", fontSize: "1.1rem" }}>
+            <h3 style={{ margin: "0 0 0.5rem 0", color: "var(--text-primary)", fontSize: "1.1rem" }}>
               AI Title Magic
             </h3>
-            <p style={{ margin: 0, color: "#828282", fontSize: "13px" }}>
+            <p style={{ margin: 0, color: "var(--text-secondary)", fontSize: "13px" }}>
               Generating a catchy title for your link...
             </p>
           </div>
@@ -541,25 +535,25 @@ const SubmitButton = (props) => {
             top: "-140px",
             left: "50%",
             transform: "translateX(-50%)",
-            backgroundColor: "#fff3cd",
+            backgroundColor: "var(--bg-white)",
             padding: "1rem",
             borderRadius: "8px",
             textAlign: "center",
             width: "320px",
-            border: "2px solid #856404",
-            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+            border: "2px solid var(--text-primary)",
+            boxShadow: "var(--shadow-default)",
             zIndex: 100,
             cursor: "pointer",
           }}
         >
           <div style={{ fontSize: "1.5rem", marginBottom: "0.5rem" }}>⚠️</div>
-          <h3 style={{ margin: "0 0 0.5rem 0", color: "#856404", fontSize: "1rem" }}>
+          <h3 style={{ margin: "0 0 0.5rem 0", color: "var(--text-primary)", fontSize: "1rem" }}>
             AI Title Magic Failed
           </h3>
-          <p style={{ margin: "0 0 0.5rem 0", color: "#856404", fontSize: "13px" }}>
+          <p style={{ margin: "0 0 0.5rem 0", color: "var(--text-secondary)", fontSize: "13px" }}>
             Please enter a title manually.
           </p>
-          <p style={{ margin: 0, color: "#856404", fontSize: "11px", fontStyle: "italic" }}>
+          <p style={{ margin: 0, color: "var(--text-tertiary)", fontSize: "11px", fontStyle: "italic" }}>
             Tap to dismiss
           </p>
         </div>

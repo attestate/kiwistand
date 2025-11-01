@@ -184,10 +184,10 @@ export default async function commentDebug(theme) {
           body {
             font-family: Verdana, Geneva, sans-serif;
             font-size: 10pt;
-            color: #333;
+            color: var(--text-primary);
           }
           .debug-header {
-            background-color: #f6f6ef;
+            background-color: var(--background-color0);
             padding: 20px;
             text-align: center;
             border-bottom: 2px solid #ff6600;
@@ -200,7 +200,7 @@ export default async function commentDebug(theme) {
           }
           .category-label {
             background-color: #ff6600;
-            color: white;
+            color: var(--bg-white);
             padding: 5px 10px;
             margin: 20px 0 10px 0;
             font-weight: bold;
@@ -209,13 +209,13 @@ export default async function commentDebug(theme) {
           .comment-preview-container {
             margin: 20px;
             padding: 20px;
-            background: white;
-            border: 1px solid #ddd;
+            background: var(--bg-white);
+            border: 1px solid var(--border-subtle);
             border-radius: 4px;
           }
           .comment-meta {
             font-size: 9pt;
-            color: #828282;
+            color: var(--text-secondary);
             margin-bottom: 10px;
           }
           .comment-text {
@@ -226,14 +226,14 @@ export default async function commentDebug(theme) {
             word-break: break-word;
           }
           .story-context {
-            background: #f6f6ef;
+            background: var(--background-color0);
             padding: 10px;
             margin-bottom: 10px;
             border-radius: 2px;
           }
           .preview-image {
             margin-top: 15px;
-            border: 1px solid #ddd;
+            border: 1px solid var(--border-subtle);
             max-width: 600px;
           }
           .avatar {
@@ -255,16 +255,16 @@ export default async function commentDebug(theme) {
           }
           .all-comments-table th {
             background: #ff6600;
-            color: white;
+            color: var(--bg-white);
             padding: 8px;
             text-align: left;
           }
           .all-comments-table td {
             padding: 8px;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid var(--border-subtle);
           }
           .all-comments-table tr:nth-child(even) {
-            background: #f6f6ef;
+            background: var(--background-color0);
           }
         </style>
       </head>
@@ -272,7 +272,7 @@ export default async function commentDebug(theme) {
         <div class="container">
           ${Sidebar("/comment-debug")}
           <div id="hnmain">
-            <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
+            <table border="0" cellpadding="0" cellspacing="0" bgcolor="var(--background-color0)">
               <tr>
                 ${await Header(theme)}
               </tr>
@@ -298,7 +298,7 @@ export default async function commentDebug(theme) {
                       <div class="story-context">
                         <strong>Story:</strong> ${comment.submission_title}
                         <br/>
-                        <span style="font-size: 9pt; color: #666;">
+                        <span style="font-size: 9pt; color: var(--text-tertiary);">
                           ${comment.submission_href}
                         </span>
                       </div>
@@ -307,7 +307,7 @@ export default async function commentDebug(theme) {
                         <img class="avatar" src="${comment.profile.avatar}" alt="avatar" />
                         <div>
                           <strong>${comment.profile.displayName}</strong>
-                          ${comment.profile.ens ? html`<span style="color: #666;"> (${comment.profile.ens})</span>` : ''}
+                          ${comment.profile.ens ? html`<span style="color: var(--text-tertiary);"> (${comment.profile.ens})</span>` : ''}
                           ${comment.profile.farcaster ? html`<span style="color: #7c65c1;"> • Farcaster</span>` : ''}
                         </div>
                       </div>
@@ -325,24 +325,24 @@ export default async function commentDebug(theme) {
                       <div style="margin-top: 15px;">
                         <strong>Preview URL (for meta tags):</strong>
                         <br/>
-                        <code style="background: #f0f0f0; padding: 4px; font-size: 9pt; word-break: break-all;">
+                        <code style="background: var(--border-subtle); padding: 4px; font-size: 9pt; word-break: break-all;">
                           https://news.kiwistand.com/stories/${getSlug(comment.submission_title)}?index=0x${comment.story_index}&commentIndex=${comment.index}
                         </code>
                         <br/><br/>
                         <strong>Direct link (with hash):</strong>
                         <br/>
-                        <code style="background: #f0f0f0; padding: 4px; font-size: 9pt; word-break: break-all;">
+                        <code style="background: var(--border-subtle); padding: 4px; font-size: 9pt; word-break: break-all;">
                           https://news.kiwistand.com/stories/${getSlug(comment.submission_title)}?index=0x${comment.story_index}#${comment.index}
                         </code>
                         <br/><br/>
                         <a href="/stories/${getSlug(comment.submission_title)}?index=0x${comment.story_index}#${comment.index}" 
                            target="_blank"
-                           style="color: #ff6600; text-decoration: none; padding: 8px 16px; background: white; border: 1px solid #ff6600; border-radius: 2px; display: inline-block; margin-right: 10px;">
+                           style="color: #ff6600; text-decoration: none; padding: 8px 16px; background: var(--bg-white); border: 1px solid #ff6600; border-radius: 2px; display: inline-block; margin-right: 10px;">
                           View Comment →
                         </a>
                         <a href="/stories/${getSlug(comment.submission_title)}?index=0x${comment.story_index}&commentIndex=${comment.index}" 
                            target="_blank"
-                           style="color: white; text-decoration: none; padding: 8px 16px; background: #ff6600; border: 1px solid #ff6600; border-radius: 2px; display: inline-block;">
+                           style="color: var(--text-white); text-decoration: none; padding: 8px 16px; background: #ff6600; border: 1px solid #ff6600; border-radius: 2px; display: inline-block;">
                           Generate Preview
                         </a>
                       </div>
@@ -351,17 +351,17 @@ export default async function commentDebug(theme) {
                         <div style="margin-top: 20px;">
                           <h4>OG Preview (1200x630):</h4>
                           <img 
-                            src="/previews/${comment.story_index}-comment-${comment.index}.jpg" 
-                            alt="OG Preview" 
-                            style="max-width: 100%; border: 1px solid #ddd;"
+                            src="/previews/${comment.story_index}-comment-${comment.index}.jpg"
+                            alt="OG Preview"
+                            style="max-width: 100%; border: 1px solid var(--border-subtle);"
                             onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%221200%22 height=%22630%22%3E%3Crect width=%221200%22 height=%22630%22 fill=%22%23f6f6ef%22/%3E%3Ctext x=%22600%22 y=%22315%22 text-anchor=%22middle%22 font-family=%22Arial%22 font-size=%2224%22 fill=%22%23999%22%3EGenerating preview...%3C/text%3E%3C/svg%3E'"
                           />
                           <br/><br/>
                           <h4>Farcaster Frame Preview (1200x800):</h4>
-                          <img 
-                            src="/previews/${comment.story_index}-comment-${comment.index}-frame.jpg" 
-                            alt="Frame Preview" 
-                            style="max-width: 100%; border: 1px solid #ddd;"
+                          <img
+                            src="/previews/${comment.story_index}-comment-${comment.index}-frame.jpg"
+                            alt="Frame Preview"
+                            style="max-width: 100%; border: 1px solid var(--border-subtle);"
                             onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%221200%22 height=%22800%22%3E%3Crect width=%221200%22 height=%22800%22 fill=%22%23f6f6ef%22/%3E%3Ctext x=%22600%22 y=%22400%22 text-anchor=%22middle%22 font-family=%22Arial%22 font-size=%2224%22 fill=%22%23999%22%3EGenerating preview...%3C/text%3E%3C/svg%3E'"
                           />
                         </div>

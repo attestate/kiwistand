@@ -15,7 +15,7 @@ function row() {
           style="padding: 0.5rem 1rem 0.5rem 1rem; display: flex; flex-direction: column; align-items: start;"
         >
           <div style="margin-bottom: 0.5rem;">
-            <span style="color: black; font-weight: bold; font-size: 14pt;"
+            <span style="color: var(--text-primary); font-weight: bold; font-size: 14pt;"
               >Subscribe to Kiwi News
             </span>
             <p>

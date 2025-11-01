@@ -22,7 +22,7 @@ export default async function (theme) {
         <div class="container">
           ${Sidebar()}
           <div id="hnmain" class="scaled-hnmain">
-            <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f6f6ef">
+            <table border="0" cellpadding="0" cellspacing="0" bgcolor="var(--background-color0)">
               <tr>
                 ${await Header(theme)}
               </tr>
@@ -31,17 +31,17 @@ export default async function (theme) {
                   <div
                     style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px;"
                   >
-                    <h1 style="color: #333; margin-bottom: 0;">
+                    <h1 style="color: var(--text-tertiary); margin-bottom: 0;">
                       Submit to Kiwi
                     </h1>
-                    <p style="color: #555;">
+                    <p style="color: var(--text-muted);">
                       Easily share links directly to Kiwi News with our iOS
                       Shortcut.
                     </p>
 
                     <video
                       controls
-                      style="background-color: black; border: 7px solid black; border-radius: 18px; max-width: 50vw; max-height: 80vh;"
+                      style="background-color: var(--bg-black); border: 7px solid var(--bg-black); border-radius: 18px; max-width: 50vw; max-height: 80vh;"
                     >
                       <source src="${videoUrl}" type="video/mp4" />
                       Your browser does not support the video tag.

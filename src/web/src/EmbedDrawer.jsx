@@ -238,7 +238,7 @@ const EmbedDrawer = ({ toast }) => {
       PaperProps={{
         style: {
           width: "100%",
-          backgroundColor: "#f6f6ef",
+          backgroundColor: "var(--background-color0)",
           fontFamily: "var(--font-family)",
           display: "flex",
           flexDirection: "column",
@@ -252,13 +252,13 @@ const EmbedDrawer = ({ toast }) => {
         position: "relative" 
       }}>
         {/* Header */}
-        <div style={{ 
-          backgroundColor: "#f6f6ef",
+        <div style={{
+          backgroundColor: "var(--background-color0)",
           padding: "10px 15px",
           display: "flex",
           alignItems: "center",
           gap: "10px",
-          borderBottom: "1px solid #ccc",
+          borderBottom: "var(--border-subtle)",
           minHeight: "44px"
         }}>
           {/* Back button */}
@@ -270,7 +270,7 @@ const EmbedDrawer = ({ toast }) => {
               display: "inline-flex",
               alignItems: "center",
               textDecoration: "none",
-              color: "black",
+              color: "var(--text-primary)",
               fontSize: "11pt",
               fontFamily: "Verdana, Geneva, sans-serif",
               padding: "5px",
@@ -297,8 +297,8 @@ const EmbedDrawer = ({ toast }) => {
             flex: 1,
             display: "flex",
             alignItems: "center",
-            backgroundColor: "white",
-            border: "1px solid #d0d0d0",
+            backgroundColor: "var(--bg-white)",
+            border: "var(--border-subtle)",
             borderRadius: "4px",
             padding: "0 12px",
             height: "32px",
@@ -310,7 +310,7 @@ const EmbedDrawer = ({ toast }) => {
               style={{
                 background: "none",
                 border: "none",
-                color: "#666",
+                color: "var(--text-tertiary)",
                 textDecoration: "none",
                 display: "flex",
                 alignItems: "center",
@@ -348,10 +348,10 @@ const EmbedDrawer = ({ toast }) => {
               }
             }}
             style={{
-              background: "#afc046",
-              border: "1px solid #98ad35",
+              background: "var(--accent-primary)",
+              border: "1px solid var(--accent-primary-hover)",
               borderRadius: "4px",
-              color: "black",
+              color: "var(--text-primary)",
               fontSize: "10pt",
               fontFamily: "Verdana, Geneva, sans-serif",
               padding: "6px 16px",
@@ -379,11 +379,11 @@ const EmbedDrawer = ({ toast }) => {
         </div>
 
         {/* Iframe container */}
-        <div style={{ 
-          flex: 1, 
+        <div style={{
+          flex: 1,
           position: "relative",
           overflow: "hidden",
-          backgroundColor: "white"
+          backgroundColor: "var(--bg-white)"
         }}>
           {/* Loading spinner */}
           {isLoading && (
@@ -400,8 +400,8 @@ const EmbedDrawer = ({ toast }) => {
               <div style={{
                 width: "100%",
                 height: "100%",
-                border: "4px solid #f3f3f3",
-                borderTop: "4px solid #afc046",
+                border: "4px solid var(--background-color0)",
+                borderTop: "4px solid var(--accent-primary)",
                 borderRadius: "50%",
                 animation: "embed-drawer-spin 1s linear infinite"
               }} />
@@ -420,7 +420,7 @@ const EmbedDrawer = ({ toast }) => {
                 width: "100%",
                 height: "100%",
                 border: "none",
-                backgroundColor: "white"
+                backgroundColor: "var(--bg-white)"
               }}
               sandbox="allow-scripts allow-same-origin"
               referrerPolicy="no-referrer"
@@ -447,10 +447,10 @@ const EmbedDrawer = ({ toast }) => {
                   }
                 }}
                 style={{
-                  background: "rgba(175, 192, 70, 0.95)",
-                  border: "1px solid #98ad35",
+                  background: "var(--accent-primary)",
+                  border: "1px solid var(--accent-primary-hover)",
                   borderRadius: "4px",
-                  color: "black",
+                  color: "var(--text-primary)",
                   fontSize: "12pt",
                   fontFamily: "Verdana, Geneva, sans-serif",
                   padding: "8px 16px",
@@ -494,10 +494,10 @@ const EmbedDrawer = ({ toast }) => {
                 textAlign: "center"
               }}
             >
-              <p style={{ 
-                margin: "0 0 20px 0", 
-                fontSize: "14px", 
-                color: "#666"
+              <p style={{
+                margin: "0 0 20px 0",
+                fontSize: "14px",
+                color: "var(--text-tertiary)"
               }}>
                 Can't show this site here
               </p>
@@ -510,10 +510,10 @@ const EmbedDrawer = ({ toast }) => {
                   }
                 }}
                 style={{
-                  background: "#afc046",
-                  border: "1px solid #98ad35",
+                  background: "var(--accent-primary)",
+                  border: "1px solid var(--accent-primary-hover)",
                   borderRadius: "4px",
-                  color: "black",
+                  color: "var(--text-primary)",
                   fontSize: "14pt",
                   fontFamily: "Verdana, Geneva, sans-serif",
                   padding: "12px 32px",

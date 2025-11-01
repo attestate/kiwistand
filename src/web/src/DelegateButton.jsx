@@ -54,25 +54,25 @@ export const ProgressBar = (props) => {
       <div
         style={{
           flex: 1,
-          backgroundColor: progress >= 0 ? theme.color : "black",
+          backgroundColor: progress >= 0 ? theme.color : "var(--text-secondary)",
         }}
       ></div>
       <div
         style={{
           flex: 1,
-          backgroundColor: progress >= 1 ? theme.color : "black",
+          backgroundColor: progress >= 1 ? theme.color : "var(--text-secondary)",
         }}
       ></div>
       <div
         style={{
           flex: 1,
-          backgroundColor: progress >= 2 ? theme.color : "black",
+          backgroundColor: progress >= 2 ? theme.color : "var(--text-secondary)",
         }}
       ></div>
       <div
         style={{
           flex: 1,
-          backgroundColor: progress >= 3 ? theme.color : "black",
+          backgroundColor: progress >= 3 ? theme.color : "var(--text-secondary)",
         }}
       ></div>
     </div>
@@ -100,12 +100,12 @@ const ConnectionDialogue = (props) => {
               width: "32px",
               height: "32px",
               borderRadius: "50%",
-              backgroundColor: "#E3F2FD",
-              color: "#0588f0",
+              backgroundColor: "var(--color-porto-bg)",
+              color: "var(--color-porto-blue)",
             }}>
               <SparkleIcon />
             </div>
-            <div style={{ fontSize: "18px", fontWeight: "500", color: "#000000" }}>
+            <div style={{ fontSize: "18px", fontWeight: "500", color: "var(--text-primary)" }}>
               {pathname === "/start" ? "Welcome to Kiwi News!" : "Setup delegation"}
             </div>
           </div>
@@ -115,7 +115,7 @@ const ConnectionDialogue = (props) => {
       {/* Porto-style content section */}
       <div style={{ flexGrow: 1, padding: "0 12px 12px" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-          <div style={{ fontSize: "15px", color: "#000000", lineHeight: "22px" }}>
+          <div style={{ fontSize: "15px", color: "var(--text-primary)", lineHeight: "22px" }}>
             {pathname === "/settings"
               ? "Allow your browser to seamlessly interact on your behalf on the Optimism network"
               : props.account && props.account.isConnected
@@ -307,12 +307,12 @@ const DelegateButton = (props) => {
                     width: "32px",
                     height: "32px",
                     borderRadius: "50%",
-                    backgroundColor: "#E3F2FD",
-                    color: "#0588f0",
+                    backgroundColor: "var(--color-porto-bg)",
+                    color: "var(--color-porto-blue)",
                   }}>
                     <SparkleIcon />
                   </div>
-                  <div style={{ fontSize: "18px", fontWeight: "500", color: "#000000" }}>
+                  <div style={{ fontSize: "18px", fontWeight: "500", color: "var(--text-primary)" }}>
                     {indexedDelegation
                       ? "Connection successful!"
                       : "Indexing your connection..."}
@@ -323,7 +323,7 @@ const DelegateButton = (props) => {
 
             <div style={{ flexGrow: 1, padding: "0 12px 12px" }}>
               <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                <div style={{ fontSize: "15px", color: "#000000", lineHeight: "22px" }}>
+                <div style={{ fontSize: "15px", color: "var(--text-primary)", lineHeight: "22px" }}>
                   {!indexedDelegation ? (
                     <>
                       Thanks! Your key is being added to Optimism (1-2 min).
@@ -411,16 +411,16 @@ const DelegateButton = (props) => {
                   flex: 1,
                   height: "38px",
                   backgroundColor: isLoading
-                    ? "#E0E0E0"
+                    ? "var(--bg-hover)"
                     : isButtonHovered && !activity
-                    ? "#9BAD3D"
-                    : "#AFC046",
+                    ? "var(--accent-primary-hover)"
+                    : "var(--accent-primary)",
                   border: isLoading
-                    ? "1px solid #E0E0E0"
+                    ? "1px solid var(--bg-hover)"
                     : isButtonHovered && !activity
-                    ? "1px solid #9BAD3D"
-                    : "1px solid #AFC046",
-                  color: "#000000",
+                    ? "1px solid var(--accent-primary-hover)"
+                    : "1px solid var(--accent-primary)",
+                  color: "var(--text-primary)",
                   borderRadius: "8px",
                   fontSize: "15px",
                   fontWeight: "normal",
@@ -456,10 +456,10 @@ const DelegateButton = (props) => {
               boxSizing: "border-box",
               alignItems: "center",
               justifyContent: "space-between",
-              borderTop: "1px solid #0000001A",
+              borderTop: "var(--border-subtle)",
               padding: "12px 4px 0",
             }}>
-              <div style={{ fontSize: "13px", color: "#666666" }}>Account</div>
+              <div style={{ fontSize: "13px", color: "var(--text-tertiary)" }}>Account</div>
               <button
                 disabled
                 type="button"
@@ -479,7 +479,7 @@ const DelegateButton = (props) => {
                   style={{
                     fontWeight: "500",
                     fontSize: "14px",
-                    color: "#000000"
+                    color: "var(--text-primary)"
                   }}
                   title={from.address}
                 >
@@ -490,7 +490,7 @@ const DelegateButton = (props) => {
           </div>
         </>
       ) : (
-        <div style={{ padding: "12px", fontSize: "15px", color: "#666666" }}>
+        <div style={{ padding: "12px", fontSize: "15px", color: "var(--text-tertiary)" }}>
           Your browser isn't supporting key storage.
         </div>
       )}

@@ -78,14 +78,14 @@ const BackButton = () => {
     <div style={{ display: "flex", alignItems: "center", padding: "0 7px", height: "100%", width: "100%" }}>
       <a
         href="/"
-        style={{ 
-          color: "black", 
-          textDecoration: "none", 
-          fontSize: "11pt", 
-          display: "inline-flex", 
-          alignItems: "center", 
-          minHeight: "44px", 
-          minWidth: "44px", 
+        style={{
+          color: "var(--text-primary)",
+          textDecoration: "none",
+          fontSize: "11pt",
+          display: "inline-flex",
+          alignItems: "center",
+          minHeight: "44px",
+          minWidth: "44px",
           padding: "0 5px",
           cursor: "pointer"
         }}

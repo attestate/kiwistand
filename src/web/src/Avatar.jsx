@@ -135,7 +135,7 @@ const Avatar = (props) => {
           href="/"
           onClick={handleBackClick}
           style={{
-            color: "black",
+            color: "var(--text-primary)",
             textDecoration: "none",
             fontSize: "11pt",
             display: "inline-flex",
@@ -198,7 +198,7 @@ const Avatar = (props) => {
                 borderRadius: "2px",
                 height: "18px",
                 width: "18px",
-                border: "1px solid #828282",
+                border: "1px solid var(--text-secondary)",
               }}
             />
             <div
@@ -215,7 +215,7 @@ const Avatar = (props) => {
                   fontWeight: "bold",
                   fontSize: "8px",
                   marginTop: "-2px",
-                  color: "black",
+                  color: "var(--text-primary)",
                 }}
               >
                 {points > 0 ? points.toString() : "0"}
@@ -230,7 +230,7 @@ const Avatar = (props) => {
                     fontWeight: "bold",
                     fontSize: "8px",
                     marginTop: "0px",
-                    color: "#00b67a",
+                    color: "var(--color-success)",
                     cursor: "pointer",
                   }}
                   title="Click to dismiss"
@@ -250,7 +250,7 @@ const Avatar = (props) => {
           display: "flex",
           alignItems: "center",
           padding: "0 13px 0 7px",
-          background: "rgba(0, 0, 0, 0.05)",
+          background: "var(--bg-hover-subtle)",
           borderRadius: "2px",
         }}
       >
@@ -267,7 +267,7 @@ const Avatar = (props) => {
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            style={{ userSelect: "none", paddingTop: "2px" }}
+            style={{ userSelect: "none", paddingTop: "2px", fill: "var(--text-primary)" }}
             viewBox="0 0 100 80"
             width="20"
             height="20"
@@ -277,7 +277,7 @@ const Avatar = (props) => {
             <rect y="60" width="100" height="10"></rect>
           </svg>
           <span
-            style={{ userSelect: "none", color: "black", marginLeft: "10px" }}
+            style={{ userSelect: "none", color: "var(--text-primary)", marginLeft: "10px" }}
           >
             Menu
           </span>

@@ -91,8 +91,8 @@ export default function AnalyticsConsent() {
       bottom: isDesktop ? 0 : 'calc(45px + env(safe-area-inset-bottom, 0px))', // Match mobile bottom nav height
       left: 0,
       right: 0,
-      backgroundColor: '#f6f6ef',
-      borderTop: '1px solid #ff6600',
+      backgroundColor: 'var(--background-color0)',
+      borderTop: 'var(--border)',
       padding: '12px 15px',
       zIndex: 1000,
       boxShadow: '0 -2px 5px rgba(0, 0, 0, 0.05)'
@@ -107,55 +107,43 @@ export default function AnalyticsConsent() {
         gap: isDesktop ? '0' : '10px'
       }}>
         <div>
-          <p style={{ margin: 0, fontSize: '14px' }}>
+          <p style={{ margin: 0, fontSize: '14px', color: 'var(--text-primary)' }}>
             We use analytics cookies to improve our site. You can opt out if you prefer.
             See our <a href="/privacy-policy">Privacy Policy</a>.
           </p>
         </div>
-        <div style={{ 
-          display: 'flex', 
+        <div style={{
+          display: 'flex',
           gap: '10px',
           width: isDesktop ? 'auto' : '100%',
           justifyContent: isDesktop ? 'flex-end' : 'space-between'
         }}>
-          <button 
+          <button
             onClick={declineAnalytics}
+            className="analytics-consent-decline"
             style={{
-              backgroundColor: 'white',
-              color: 'black',
-              border: '1px solid #c6c6c6',
+              backgroundColor: 'var(--bg-white)',
+              color: 'var(--text-primary)',
+              border: 'var(--border-thin)',
               padding: '8px 12px',
               cursor: 'pointer',
               fontSize: '14px',
-              transition: 'all 0.2s'
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.backgroundColor = '#f0f0f0';
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.backgroundColor = 'white';
+              borderRadius: '2px'
             }}
           >
             Opt Out
           </button>
-          <button 
+          <button
             onClick={acceptAnalytics}
+            className="analytics-consent-accept"
             style={{
-              backgroundColor: 'black',
-              color: 'white',
-              border: '1px solid #c6c6c6',
+              backgroundColor: 'var(--button-primary-bg)',
+              color: 'var(--button-primary-text)',
+              border: '1px solid var(--button-primary-bg)',
               padding: '8px 12px',
               cursor: 'pointer',
               fontSize: '14px',
-              transition: 'all 0.2s'
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.backgroundColor = 'white';
-              e.currentTarget.style.color = 'black';
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.backgroundColor = 'black';
-              e.currentTarget.style.color = 'white';
+              borderRadius: '2px'
             }}
           >
             Continue
