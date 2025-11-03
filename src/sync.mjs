@@ -80,7 +80,8 @@ export async function toWire(message, sink) {
 // NOTE: it-length-prefixed's default configuration will throw errors for
 // messages that are longer than 4MB, so we're doubling it here.
 // NOTE: 2024-09-09, we're doubling it again
-export const maxDataLength = 1024 * 1024 * 4 * 2 * 2;
+// NOTE: 2025-01-03, doubling it once more to 32MB
+export const maxDataLength = 1024 * 1024 * 4 * 2 * 2 * 2;
 export async function fromWire(source) {
   const decoded = lp.decode({ maxDataLength })(source);
   const process = async (_source) => {

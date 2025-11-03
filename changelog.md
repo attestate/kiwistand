@@ -5,6 +5,19 @@
 - We are versioning according to [semver.org](https://semver.org)
 - We are currently in the ["Initial development phase"](https://semver.org/#spec-item-4)
 
+## 0.13.0
+
+**BREAKING CHANGE**: Increase P2P sync message size limit to 32MB
+
+- Increased `maxDataLength` from 16MB to 32MB in sync protocol (`src/sync.mjs`)
+- Fixes "message length too long" errors during trie reconciliation
+- Required as trie grows larger and deeper levels contain more nodes to sync
+- **Protocol versions bumped**:
+  - Pubsub topics (roots/messages): `9.0.0 → 10.0.0`
+  - Protocols (leaves/levels): `12.0.0 → 13.0.0`
+
+**Migration**: All nodes must upgrade to maintain P2P connectivity. Nodes on different protocol versions will not sync with each other.
+
 ## 0.12.0
 
 **BREAKING CHANGE**: Complete removal of Kiwi Pass NFT-based access control system
