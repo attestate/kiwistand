@@ -40,10 +40,9 @@ const isDesktop = () => {
 // Setup chains and transports
 export const chains = [optimism, mainnet, arbitrum, base];
 const transports = {
-  [optimism.id]: http('https://opt-mainnet.g.alchemy.com/v2/TfAhzs116ThO7Fwod1gzpTJmH0Cudxp7'),
-  [mainnet.id]: http('https://eth-mainnet.g.alchemy.com/v2/TfAhzs116ThO7Fwod1gzpTJmH0Cudxp7'),
-  [arbitrum.id]: http('https://arb-mainnet.g.alchemy.com/v2/TfAhzs116ThO7Fwod1gzpTJmH0Cudxp7'),
-  [base.id]: http('https://base-mainnet.g.alchemy.com/v2/TfAhzs116ThO7Fwod1gzpTJmH0Cudxp7'),
+  [optimism.id]: http('https://optimism-mainnet.infura.io/v3/ddb924190df54c22a268ae7671ed0f55'),
+  [mainnet.id]: http('https://mainnet.infura.io/v3/ddb924190df54c22a268ae7671ed0f55'),
+  [base.id]: http('https://base-mainnet.infura.io/v3/ddb924190df54c22a268ae7671ed0f55'),
 };
 
 export const useIsMiniApp = () => {
