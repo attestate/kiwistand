@@ -4,7 +4,6 @@
   "description": "kiwistand is the p2p node client for kiwinews.xyz, a web3 writer friendly Hacker News that nobody controls but everybody co-owns",
   "main": "./src/index.mjs",
   "scripts": {
-    "postinstall": "npm rebuild better-sqlite3",
     "clean:assets": "rm src/public/assets/*",
     "build": "npm run clean:assets && cd src/web && NODE_ENV=production npm run build && cp ../public/.vite/manifest.json ../public/manifest.json",
     "test": "DEBUG=\"-@attestate/delegator2*\" ava --timeout=30s --serial --verbose",
@@ -49,7 +48,7 @@
     "ethereum"
   ],
   "engines": {
-    "node": "^20.0.0"
+    "node": "^22.0.0"
   },
   "author": "The Kiwi News Developers",
   "license": "GPL-3.0-only",
