@@ -32,7 +32,6 @@
     "porto": "0.2.23",
     "posthog-js": "1.222.0",
     "react": "^18.2.0",
-    "react-bottom-drawer": "0.1.1",
     "react-dom": "^18.2.0",
     "react-hot-toast": "2.4.1",
     "react-modal": "3.16.1",

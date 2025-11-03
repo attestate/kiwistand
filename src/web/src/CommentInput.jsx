@@ -6,7 +6,6 @@ import { WagmiProvider, useAccount } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Wallet } from "@ethersproject/wallet";
 import { resolveIdentity } from "@attestate/delegator2";
-import Drawer from "react-bottom-drawer";
 import slugify from "slugify";
 import DOMPurify from "isomorphic-dompurify";
 import { sdk } from "@farcaster/frame-sdk";
@@ -862,7 +861,6 @@ const CommentInput = (props) => {
               >
                 {isLoading ? "Submitting..." : "Add comment"}
               </button>
-              <CommentGuidelines />
             </div>
           )}
         </>
@@ -871,55 +869,6 @@ const CommentInput = (props) => {
   );
 };
 
-const CommentGuidelines = () => {
-  const [open, setOpen] = useState(false);
-
-  return (
-    <>
-      <Drawer
-        className="drawer"
-        isVisible={open}
-        onClose={() => setOpen(false)}
-      >
-        <h4>What comments are we looking for?</h4>
-        <ol>
-          <li>
-            <strong>Extra Context: </strong>
-            Explain why you think the story is interesting.
-          </li>
-          <br />
-          <li>
-            <strong>Insider's perspective: </strong>
-            Have you been involved? What was <i>your</i> experience?
-          </li>
-          <br />
-          <li>
-            <strong>Debunks: </strong>
-            Do you believe the material is false or misleading? Tell us why!
-          </li>
-          <br />
-          <li>
-            <strong>Impact on you: </strong>
-            How were you impacted?
-          </li>
-          <br />
-          <li>
-            <strong>Questions: </strong>
-            Ask for more information.
-          </li>
-          <br />
-        </ol>
-      </Drawer>
-      <span
-        className="meta-link drawer-link"
-        style={{ fontSize: "0.8rem" }}
-        onClick={() => setOpen(true)}
-      >
-        comment guidelines
-      </span>
-    </>
-  );
-};
 
 const queryClient = new QueryClient();
 
