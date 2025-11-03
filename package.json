@@ -4,6 +4,7 @@
   "description": "kiwistand is the p2p node client for kiwinews.xyz, a web3 writer friendly Hacker News that nobody controls but everybody co-owns",
   "main": "./src/index.mjs",
   "scripts": {
+    "postinstall": "npm rebuild better-sqlite3",
     "clean:assets": "rm src/public/assets/*",
     "build": "npm run clean:assets && cd src/web && NODE_ENV=production npm run build && cp ../public/.vite/manifest.json ../public/manifest.json",
     "test": "DEBUG=\"-@attestate/delegator2*\" ava --timeout=30s --serial --verbose",
@@ -28,7 +29,7 @@
     "dev:anon:ssl": "cross-env NODE_ENV=dev API_PORT=8443 HTTP_PORT=4000 DATA_DIR=anon CUSTOM_PROTOCOL=https:// BIND_ADDRESS_V4=\"0.0.0.0\" PORT=0 IS_BOOTSTRAP_NODE=false USE_EPHEMERAL_ID=true npm run dev:ssl",
     "dev:staging": "nodemon --watch src/views --exec 'cross-env NODE_ENV=dev API_PORT=8443 HTTP_PORT=443 DATA_DIR=anon BIND_ADDRESS_V4=\"0.0.0.0\" PORT=0 IS_BOOTSTRAP_NODE=false USE_EPHEMERAL_ID=true npm run dev'",
     "migration:1": "node -r dotenv/config scripts/migration1.mjs",
-    "sync": "node -r dotenv/config ./src/gen_db.mjs",
+    "sync": "cross-env DEBUG=\"@attestate/*\" node -r dotenv/config ./src/gen_db.mjs",
     "sync:cache": "rsync -avz root@91.107.210.214:./kiwistand/cache/database.db* root@91.107.210.214:./kiwistand/cache/interactions.db* ./cache/ && cp ./cache/database.db ./cache/database.db.prod",
     "test:bot-submission": "node -r dotenv/config ./scripts/test_submission.mjs",
     "create:farcaster-signer": "node ./scripts/create-farcaster-signer.mjs",
@@ -58,8 +59,8 @@
   "homepage": "https://github.com/attestate/kiwistand#readme",
   "dependencies": {
     "@anthropic-ai/sdk": "0.33.1",
-    "@attestate/crawler": "0.7.2",
-    "@attestate/crawler-call-block-logs": "0.6.1",
+    "@attestate/crawler": "0.7.3",
+    "@attestate/crawler-call-block-logs": "0.6.2",
     "@attestate/delegator2": "0.7.0",
     "@chainsafe/libp2p-gossipsub": "5.2.1",
     "@chainsafe/libp2p-noise": "10.2.0",
