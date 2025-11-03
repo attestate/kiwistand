@@ -58,7 +58,7 @@
   "homepage": "https://github.com/attestate/kiwistand#readme",
   "dependencies": {
     "@anthropic-ai/sdk": "0.33.1",
-    "@attestate/crawler": "0.7.1",
+    "@attestate/crawler": "0.7.2",
     "@attestate/crawler-call-block-logs": "0.6.1",
     "@attestate/delegator2": "0.7.0",
     "@chainsafe/libp2p-gossipsub": "5.2.1",
@@ -121,6 +121,7 @@
     "open-graph-scraper-lite": "2.0.0",
     "piscina": "4.7.0",
     "pm2": "5.3.0",
+    "porto": "0.2.35",
     "postmark": "4.0.5",
     "preact": "10.18.1",
     "request-filtering-agent": "2.0.1",
