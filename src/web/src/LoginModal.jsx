@@ -1,4 +1,4 @@
-import { useState, useEffect, useImperativeHandle, forwardRef } from "react";
+import React, { useState, useEffect, useImperativeHandle, forwardRef } from "react";
 import Modal from "react-modal";
 import { useAccount, useConnect } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";

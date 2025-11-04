@@ -1,5 +1,5 @@
 // @format
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 import posthog from "posthog-js";
 import { useAccount, WagmiProvider } from "wagmi";

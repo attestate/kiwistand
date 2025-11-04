@@ -1,6 +1,6 @@
 import { useAccount } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { resolveIdentity } from "@attestate/delegator2";
 
 import { EthereumSVG } from "./icons.jsx";

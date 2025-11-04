@@ -6,7 +6,7 @@ import {
   useSwitchChain,
 } from "wagmi";
 import posthog from "posthog-js";
-import { useMemo, useEffect, useState } from "react";
+import React, { useMemo, useEffect, useState } from "react";
 import { Wallet } from "@ethersproject/wallet";
 import { optimism } from "wagmi/chains";
 import { create, resolveIdentity } from "@attestate/delegator2";

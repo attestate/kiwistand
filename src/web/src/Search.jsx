@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import SwipeableDrawer from "@mui/material/SwipeableDrawer";
 import { ChatsSVG } from "./icons.jsx";
 import { isIOS } from "./session.mjs";

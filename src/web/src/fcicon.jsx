@@ -1,3 +1,5 @@
+import React from "react";
+
 const fcicon = (props) => {
   return (
     <svg style={props.style} viewBox="0 0 24 24" fill="none">

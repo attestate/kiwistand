@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 import DOMPurify from "isomorphic-dompurify";
 import { sdk } from "@farcaster/miniapp-sdk";
 

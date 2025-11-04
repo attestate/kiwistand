@@ -1,7 +1,7 @@
 import "vite/modulepreload-polyfill";
 import "./request_monitor.js";
 import PullToRefresh from "pulltorefreshjs";
-import { StrictMode, createRef } from "react";
+import React, { StrictMode, createRef } from "react";
 import { createRoot } from "react-dom/client";
 import sdk from "@farcaster/frame-sdk";
 import { Providers } from "./providers.jsx";

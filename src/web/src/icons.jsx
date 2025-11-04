@@ -1,3 +1,5 @@
+import React from "react";
+
 export const ChatsSVG = ({
   style = { color: "var(--text-tertiary)", width: "25px" },
 }) => (

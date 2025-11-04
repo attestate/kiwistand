@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import posthog from "posthog-js";
 import { RainbowKitProvider, useConnectModal } from "@rainbow-me/rainbowkit";
