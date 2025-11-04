@@ -33,13 +33,14 @@ const header = (theme, path) => {
                   href="/"
                   onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block';}"
                 >
-                  <img
-                    style="filter: saturate(90%); width: 35px; height: 35px;"
-                    src="kiwi-icon.webp"
-                    width="200"
-                    height="200"
-                  />
-                  Kiwi News</a
+                  <div
+                    class="kiwi-logo-img"
+                    style="width: 35px; height: 35px;"
+                  ></div>
+                  <div style="display: flex; flex-direction: column; gap: 0;">
+                    <span>Kiwi News</span>
+                    <span class="anon-mode-label">anon-mode</span>
+                  </div></a
                 >
               </div>
               <nav-header-avatar
@@ -106,12 +107,10 @@ const header = (theme, path) => {
                 <span style="padding: 0 20px 0 20px" ; class="pagetop">
                   <b class="hnname">
                     <span>
-                      <img
-                        style="filter: saturate(90%); width: 40px; height: 40px;"
-                        src="kiwi-icon.webp"
-                        width="200"
-                        height="200"
-                      />
+                      <div
+                        class="kiwi-logo-img"
+                        style="width: 40px; height: 40px;"
+                      ></div>
                     </span>
                   </b>
                 </span>

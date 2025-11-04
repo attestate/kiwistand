@@ -1,94 +1,98 @@
 :root {
-     --font-family: 'Inter', Verdana, Geneva, sans-serif;
+     /* ANONYMOUS HACKER THEME - Matrix/Terminal Style */
+     --font-family: 'Courier New', 'Courier', monospace;
 
-     /* Background colors */
-     --background-color0: #f6f6ef;
-     --background-color1: rgba(166, 110, 78, 0.06);
-     --bg-off-white: #f6f6ef;
-     --bg-page: #f9f9f9;
-     --bg-white: #ffffff;
-     --bg-black: #000000;
-     --bg-inverted: #000000;
-     --bg-content-row: #f6f6ef;
-     --bg-hover: rgba(0, 0, 0, 0.08);
-     --bg-hover-subtle: rgba(0, 0, 0, 0.05);
-     --bg-hover-minimal: rgba(0, 0, 0, 0.02);
-     --bg-overlay: rgba(0, 0, 0, 0.5);
-     --bg-spinner: rgba(255, 255, 255, 0.7);
+     /* Logo image - can be changed per theme */
+     --logo-image: url('/kiwi-icon-anon.png');
 
-     /* Text colors */
-     --text-primary: #000000;
-     --text-secondary: #828282;
-     --text-tertiary: #666666;
-     --text-muted: #888888;
-     --text-quaternary: #999999;
-     --text-pagetop: #222222;
-     --text-disabled: grey;
-     --text-white: #ffffff;
-     --visited-link: #828282;
-     --color-black: #000000;
-     --button-bg: rgba(0, 0, 0, 0.08);
-     --button-active-bg: rgba(0, 0, 0, 0.15);
+     /* Background colors - Layered blacks/greys for depth */
+     --background-color0: #0d0d0d;        /* Base background - darkest */
+     --background-color1: rgba(0, 255, 0, 0.03);
+     --bg-off-white: #0d0d0d;            /* Same as base */
+     --bg-page: #000000;                  /* Pure black for page */
+     --bg-white: #1a1a1a;                 /* Elevated surfaces - lighter grey */
+     --bg-black: #00FF00;
+     --bg-inverted: #00FF00;
+     --bg-content-row: #151515;           /* Content cards - slightly elevated */
+     --bg-hover: rgba(0, 255, 0, 0.12);   /* Stronger hover for visibility */
+     --bg-hover-subtle: rgba(0, 255, 0, 0.06);
+     --bg-hover-minimal: rgba(0, 255, 0, 0.03);
+     --bg-overlay: rgba(0, 0, 0, 0.95);
+     --bg-spinner: rgba(0, 0, 0, 0.9);
 
-     /* Border colors */
-     --contrast-color: rgba(166, 110, 78, 0.75);
-     --border: 1px solid rgba(166, 110, 78, 0.15);
-     --border-thin: 1px solid rgba(166, 110, 78, 0.1);
-     --border-line: 1px solid rgba(166, 110, 78, 0.15);
-     --border-thick: 1px solid rgba(166, 110, 78, 0.2);
-     --border-inset: 1px inset rgba(166, 110, 78, 0.15);
-     --border-subtle: 1px solid rgba(0, 0, 0, 0.1);
-     --border-embed: 1px solid #e6e6df;
-     --full-contrast-color: rgba(166, 110, 78, 1);
+     /* Text colors - Matrix green with proper hierarchy */
+     --text-primary: #00FF00;             /* Brightest - main content */
+     --text-secondary: #00DD00;           /* Slightly dimmer */
+     --text-tertiary: #00BB00;            /* More subdued */
+     --text-muted: #009900;               /* Muted */
+     --text-quaternary: #007700;          /* Most subtle */
+     --text-pagetop: #00FF00;
+     --text-disabled: #005500;            /* Very dim for disabled */
+     --text-white: #00FF00;
+     --visited-link: #009999;             /* Cyan-ish for visited */
+     --color-black: #00FF00;
+     --button-bg: rgba(0, 255, 0, 0.08);
+     --button-active-bg: rgba(0, 255, 0, 0.15);
 
-     /* Beige/neutral colors */
-     --header-beige: #fafafa;
-     --middle-beige: #f3f3f3;
-     --sidebar-beige: #e6e6df;
-     --table-bg: #f8f8f7;
-     --table-bg-mobile: rgb(255, 255, 250);
+     /* Border colors - Subtle green borders for separation */
+     --contrast-color: rgba(0, 255, 0, 0.6);
+     --border: 1px solid rgba(0, 255, 0, 0.2);
+     --border-thin: 1px solid rgba(0, 255, 0, 0.12);
+     --border-line: 1px solid rgba(0, 255, 0, 0.2);
+     --border-thick: 1px solid rgba(0, 255, 0, 0.35);
+     --border-inset: 1px inset rgba(0, 255, 0, 0.2);
+     --border-subtle: 1px solid rgba(0, 255, 0, 0.1);
+     --border-embed: 1px solid rgba(0, 255, 0, 0.18);
+     --full-contrast-color: rgba(0, 255, 0, 1);
 
-     /* Brand/accent colors */
-     --accent-primary: #AFC046;
-     --accent-primary-hover: #9BAD3D;
-     --accent-primary-light: rgba(175, 192, 70, 0.1);
-     --accent-primary-lighter: rgba(175, 192, 70, 0.15);
-     --accent-primary-glow: rgba(175, 192, 70, 0.2);
-    --accent-primary-bright: rgba(175, 192, 70, 0.4);
-    --accent-primary-focus: rgba(175, 192, 70, 0.5);
+     /* Terminal/neutral colors - Different elevation levels */
+     --header-beige: #0a0a0a;            /* Header slightly lighter than page */
+     --middle-beige: #121212;            /* Mid-level surfaces */
+     --sidebar-beige: #0f0f0f;           /* Sidebar elevation */
+     --table-bg: #0d0d0d;                /* Table background */
+     --table-bg-mobile: #0d0d0d;
 
-     /* Button colors */
-     --button-primary-bg: #8B6F47;
-     --button-primary-bg-hover: #A0845A;
-     --button-primary-text: #f5f5f5;
+     /* Brand/accent colors - Bright hacker green */
+     --accent-primary: #00FF00;
+     --accent-primary-hover: #00FF41;
+     --accent-primary-light: rgba(0, 255, 0, 0.15);
+     --accent-primary-lighter: rgba(0, 255, 0, 0.2);
+     --accent-primary-glow: rgba(0, 255, 0, 0.3);
+     --accent-primary-bright: rgba(0, 255, 0, 0.5);
+     --accent-primary-focus: rgba(0, 255, 0, 0.6);
 
-     /* State colors */
-     --color-voted: #ff6b6b;
-     --color-vote-default: rgba(83, 100, 113, 1);
-     --color-success: #00b67a;
-     --color-link-blue: #007bff;
-     --color-warning-bg: #fff3cd;
-     --color-warning-border: #856404;
-     --color-warning-text: #856404;
-     --color-alert: red;
-     --color-notification: #3DC617;
+     /* Button colors - Green on dark with elevation */
+     --button-primary-bg: #003300;
+     --button-primary-bg-hover: #004d00;
+     --button-primary-text: #00FF00;
 
-     /* Porto/integration colors */
-     --color-porto-bg: #E3F2FD;
-     --color-porto-blue: #0588f0;
-     --color-farcaster-purple: #472a91;
-     --color-farcaster-light: #7c65c1;
+     /* State colors - Terminal aesthetic */
+     --color-voted: #00FF00;
+     --color-vote-default: rgba(0, 220, 0, 1);
+     --color-success: #00FF00;
+     --color-link-blue: #00FFFF;
+     --color-warning-bg: rgba(255, 255, 0, 0.1);
+     --color-warning-border: #FFFF00;
+     --color-warning-text: #FFFF00;
+     --color-alert: #FF0000;
+     --color-notification: #00FF00;
 
-     /* Embed colors */
-     --embed-bg: #ffffff;
-     --embed-text: #12212b;
-     --embed-farcaster-text: #12212b;
-     --embed-twitter-text: #0f1419;
-     --embed-link: #536471;
+     /* Porto/integration colors - Terminal variants */
+     --color-porto-bg: rgba(0, 255, 255, 0.1);
+     --color-porto-blue: #00FFFF;
+     --color-farcaster-purple: #00DD00;
+     --color-farcaster-light: #00BB00;
 
-     /* UI element colors */
-     --shadow-default: 0 4px 12px rgba(0, 0, 0, 0.15);
-     --shadow-glow: 0 0 5px black;
+     /* Embed colors - Elevated surfaces */
+     --embed-bg: #1a1a1a;                /* Elevated like cards */
+     --embed-text: #00FF00;
+     --embed-farcaster-text: #00FF00;
+     --embed-twitter-text: #00FF00;
+     --embed-link: #00FFFF;
+
+     /* UI element colors - Green glow effects */
+     --shadow-default: 0 0 10px rgba(0, 255, 0, 0.2);
+     --shadow-glow: 0 0 10px rgba(0, 255, 0, 0.4);
  }
 
  /* Dark mode - OS-level preference */
@@ -1178,6 +1182,27 @@ body.react-loaded .comment-input-ssr-placeholder {
      margin-bottom: 2em;
      max-width: 60%;
 }
+ /* Kiwi logo using CSS variable for background image */
+ .kiwi-logo-img {
+     background-image: var(--logo-image);
+     background-size: contain;
+     background-repeat: no-repeat;
+     background-position: center;
+     display: inline-block;
+ }
+ /* Anon mode label - creepy handwritten style */
+ .anon-mode-label {
+     font-family: 'Comic Sans MS', 'Comic Sans', cursive;
+     font-size: 9pt;
+     font-weight: 400;
+     letter-spacing: 0.05em;
+     color: #CC0000;
+     margin-top: -3px;
+     font-style: italic;
+     text-transform: lowercase;
+     opacity: 0.9;
+     text-shadow: 0 0 4px rgba(255, 0, 0, 0.4);
+ }
  .notification-text {
      font-size: 1.2em;
      max-width: 70%;
