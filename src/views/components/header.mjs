@@ -117,13 +117,6 @@ const header = (theme, path) => {
               </a>
               <div class="desktop-nav">
                 <a
-                  class="meta-link"
-                  href="/"
-                  data-no-instant
-                  onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block';}"
-                  >Feed</a
-                >
-                <a
                   class="meta-link primary-action"
                   href="/submit"
                   data-no-instant

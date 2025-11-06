@@ -400,7 +400,7 @@ export default async function (trie, theme, index, value, referral, commentIndex
                   false, // invert
                   "", // query
                   false, // debugMode
-                  true, // isAboveFold = true for main story
+                  false, // isAboveFold = false for lazy loading
                 )({ ...story, index }, 0)}
               </tbody>
               ${upvoterProfiles.length > 0

@@ -287,6 +287,43 @@
      --shadow-glow: 0 0 10px rgba(124, 152, 133, 0.3);
 }
 
+/* Block all external images and preview containers in anon mode for privacy */
+[data-theme="anon"] .tweet-preview-container,
+[data-theme="anon"] .tweet-embed-container,
+[data-theme="anon"] .farcaster-preview-container,
+[data-theme="anon"] .farcaster-embed-container {
+  display: none !important;
+}
+
+/* Hide all external images in anon mode except localhost and Cloudflare imagedelivery */
+[data-theme="anon"] img[src^="http://"]:not([src*="localhost"]):not([src*="imagedelivery.net"]),
+[data-theme="anon"] img[src^="https://"]:not([src*="imagedelivery.net"]) {
+  display: none !important;
+}
+
+/* Also hide avatar placeholder divs when they don't contain an image */
+[data-theme="anon"] div[style*="width: 32px"]:has(img[src^="http://"]:not([src*="localhost"]):not([src*="imagedelivery.net"])),
+[data-theme="anon"] div[style*="width: 32px"]:has(img[src^="https://"]:not([src*="imagedelivery.net"])) {
+  display: none !important;
+}
+
+/* Hide row-image-preview containers unless they contain Cloudflare images */
+[data-theme="anon"] .row-image-preview:not(:has(img[src*="imagedelivery.net"])) {
+  display: none !important;
+}
+
+/* Allow localhost, local paths, and Cloudflare imagedelivery (our own uploads) in anon mode */
+[data-theme="anon"] img[src^="http://localhost"],
+[data-theme="anon"] img[src^="/"],
+[data-theme="anon"] img[src*="imagedelivery.net"] {
+  display: revert !important;
+}
+
+/* Show titles in anon mode even when previews are hidden */
+[data-theme="anon"] .anon-only-title {
+  display: block !important;
+}
+
  .scroll-margin-base, .scroll-margin-with-image {
    scroll-margin-top: 100px;
  }

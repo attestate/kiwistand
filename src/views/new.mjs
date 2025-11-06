@@ -196,7 +196,7 @@ export default async function (trie, theme) {
                     false,
                     query,
                     false, // debugMode
-                    i < 2, // isAboveFold = true for first 2 items only
+                    false, // isAboveFold = false for lazy loading
                   )(item, i),
               )}
             </table>

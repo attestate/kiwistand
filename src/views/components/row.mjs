@@ -891,8 +891,8 @@ const row = (
                   class="story-link-container-wrapper"
                   style="display:flex; justify-content: center; flex-direction: column; flex-grow: 1; line-height: 1.3; padding-right: 14px;"
                 >
-                  ${!(canRenderTweetPreview || canRenderFarcasterPreview)
-                    ? html`<span>
+                  <span class="${canRenderTweetPreview || canRenderFarcasterPreview ? 'anon-only-title' : ''}" style="${canRenderTweetPreview || canRenderFarcasterPreview ? 'display: none;' : ''}">
+                    <span>
                     <span class="story-link-container">
                       <a
                         data-no-instant
@@ -1001,8 +1001,8 @@ const row = (
                       </a>
                       <span> </span>
                     </span>
-                  </span>`
-                    : ""}
+                  </span>
+                  </span>
                   <div
                     class="story-subtitle subtitle-flex"
                   style="font-size: 9pt; margin-top: ${ 

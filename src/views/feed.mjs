@@ -843,10 +843,6 @@ export default async function (trie, theme, page, domain, identity, hash, varian
           name="description"
           content="Crypto news for builders"
         />
-        <script
-          defer
-          src="https://unpkg.com/@zoralabs/zorb@^0.0/dist/zorb-web-component.umd.js"
-        ></script>
       </head>
       <body
         data-instant-allow-query-string
@@ -876,7 +872,7 @@ export default async function (trie, theme, page, domain, identity, hash, varian
                   false,
                   undefined,
                   false, // debugMode
-                  true, // isAboveFold = true for pinned story
+                  false, // isAboveFold = false for lazy loading
                 )(pinnedStory, 0)
               }
               ${stories // Render first 3 stories
@@ -893,7 +889,7 @@ export default async function (trie, theme, page, domain, identity, hash, varian
                       false,
                       currentQuery,
                       false, // debugMode
-                      i < 2, // isAboveFold = true for first 2 stories only
+                      false, // isAboveFold = false for lazy loading
                     )(story, i),
                 )}
               <!-- Contest preview and ad disabled on request -->

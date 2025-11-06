@@ -1030,7 +1030,6 @@ async function startWatchAccount(delegations, account, isInIOSApp) {
     }
     return;
   }
-  dynamicPrefetch(`https://api.ensdata.net/${identity}?farcaster=true`);
   return identity;
 }
 

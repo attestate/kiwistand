@@ -62,8 +62,6 @@ export function custom(
   ogTitle = DOMPurify.sanitize(ogTitle);
   ogDescription = DOMPurify.sanitize(ogDescription);
   return html`
-    <link rel="preconnect" href="https://www.googletagmanager.com" />
-    <link rel="preconnect" href="https://api.ensdata.net/" />
     <link
       rel="preload"
       as="style"

@@ -227,7 +227,7 @@ export default async function index(theme, page, period, domain) {
                     false, // invert
                     "", // query
                     false, // debugMode
-                    i < 2, // isAboveFold = true for first 2 stories only
+                    false, // isAboveFold = false for lazy loading
                   )(story, i),
               )}
               <tr class="spacer" style="height:15px"></tr>
