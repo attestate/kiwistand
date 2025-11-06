@@ -133,12 +133,7 @@ const footer = (theme, path) => html`
     </div>
 
     ${scripts}
-    <script
-      defer
-      src="https://www.googletagmanager.com/gtag/js?id=G-21BKTD0NKN"
-    ></script>
-    <script defer src="ga.js"></script>
-    <script async src="instantpage.js" type="module"></script>
+    <script src="conditional-tracking.js"></script>
     <nav-signup-dialogue />
   </footer>
 `;
