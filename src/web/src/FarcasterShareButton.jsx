@@ -21,14 +21,18 @@ export default function FarcasterShareButton({ title, slug, index, onShared }) {
 
   const handleClick = async (e) => {
     e.preventDefault();
-    try {
-      if (navigator.sendBeacon) {
-        const url = new URL(window.location.origin + "/share");
-        url.searchParams.set("url", window.location.href);
-        url.searchParams.set("type", "farcaster");
-        navigator.sendBeacon(url.toString());
-      }
-    } catch {}
+    // Skip share tracking in anon mode
+    const isAnonMode = localStorage.getItem('anon-mode') === 'true';
+    if (!isAnonMode) {
+      try {
+        if (navigator.sendBeacon) {
+          const url = new URL(window.location.origin + "/share");
+          url.searchParams.set("url", window.location.href);
+          url.searchParams.set("type", "farcaster");
+          navigator.sendBeacon(url.toString());
+        }
+      } catch {}
+    }
 
     const kiwiUrl = `https://news.kiwistand.com/stories/${slug}?index=${index}`;
     const composeUrl = `https://farcaster.xyz/~/compose?text=${encodeURIComponent(
