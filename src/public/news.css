@@ -191,8 +191,8 @@
 
 /* Anonymous Hacker Theme - Matrix/Terminal Style */
 [data-theme="anon"] {
-     /* ANONYMOUS HACKER THEME - Matrix/Terminal Style */
-     --font-family: 'Courier New', 'Courier', monospace;
+     /* ANONYMOUS THEME */
+     --font-family: 'Inter', Verdana, Geneva, sans-serif;
 
      /* Logo image - can be changed per theme */
      --logo-image: url('/kiwi-icon-anon.png');
@@ -212,17 +212,17 @@
      --bg-overlay: rgba(0, 0, 0, 0.95);
      --bg-spinner: rgba(0, 0, 0, 0.9);
 
-     /* Text colors - Matrix green with proper hierarchy */
-     --text-primary: #00FF00;             /* Brightest - main content */
-     --text-secondary: #00DD00;           /* Slightly dimmer */
-     --text-tertiary: #00BB00;            /* More subdued */
-     --text-muted: #009900;               /* Muted */
-     --text-quaternary: #007700;          /* Most subtle */
-     --text-pagetop: #00FF00;
-     --text-disabled: #005500;            /* Very dim for disabled */
-     --text-white: #00FF00;
-     --visited-link: #009999;             /* Cyan-ish for visited */
-     --color-black: #00FF00;
+     /* Text colors - Subtle green with proper hierarchy */
+     --text-primary: #d0d0d0;             /* Light grey - main content */
+     --text-secondary: #a0a0a0;           /* Medium grey */
+     --text-tertiary: #808080;            /* Darker grey */
+     --text-muted: #666666;               /* Muted grey */
+     --text-quaternary: #555555;          /* Most subtle */
+     --text-pagetop: #d0d0d0;
+     --text-disabled: #444444;            /* Very dim for disabled */
+     --text-white: #d0d0d0;
+     --visited-link: #888888;             /* Dimmer for visited */
+     --color-black: #d0d0d0;
      --button-bg: rgba(0, 255, 0, 0.08);
      --button-active-bg: rgba(0, 255, 0, 0.15);
 
@@ -244,47 +244,47 @@
      --table-bg: #0d0d0d;                /* Table background */
      --table-bg-mobile: #0d0d0d;
 
-     /* Brand/accent colors - Bright hacker green */
-     --accent-primary: #00FF00;
-     --accent-primary-hover: #00FF41;
-     --accent-primary-light: rgba(0, 255, 0, 0.15);
-     --accent-primary-lighter: rgba(0, 255, 0, 0.2);
-     --accent-primary-glow: rgba(0, 255, 0, 0.3);
-     --accent-primary-bright: rgba(0, 255, 0, 0.5);
-     --accent-primary-focus: rgba(0, 255, 0, 0.6);
+     /* Brand/accent colors - Subtle accent */
+     --accent-primary: #7c9885;
+     --accent-primary-hover: #8fa896;
+     --accent-primary-light: rgba(124, 152, 133, 0.15);
+     --accent-primary-lighter: rgba(124, 152, 133, 0.2);
+     --accent-primary-glow: rgba(124, 152, 133, 0.3);
+     --accent-primary-bright: rgba(124, 152, 133, 0.5);
+     --accent-primary-focus: rgba(124, 152, 133, 0.6);
 
-     /* Button colors - Green on dark with elevation */
-     --button-primary-bg: #003300;
-     --button-primary-bg-hover: #004d00;
-     --button-primary-text: #00FF00;
+     /* Button colors - Subtle on dark */
+     --button-primary-bg: #2a2a2a;
+     --button-primary-bg-hover: #333333;
+     --button-primary-text: #d0d0d0;
 
-     /* State colors - Terminal aesthetic */
-     --color-voted: #00FF00;
-     --color-vote-default: rgba(0, 220, 0, 1);
-     --color-success: #00FF00;
-     --color-link-blue: #00FFFF;
-     --color-warning-bg: rgba(255, 255, 0, 0.1);
-     --color-warning-border: #FFFF00;
-     --color-warning-text: #FFFF00;
-     --color-alert: #FF0000;
-     --color-notification: #00FF00;
+     /* State colors - Muted */
+     --color-voted: #7c9885;
+     --color-vote-default: rgba(160, 160, 160, 1);
+     --color-success: #7c9885;
+     --color-link-blue: #8faab8;
+     --color-warning-bg: rgba(200, 180, 100, 0.1);
+     --color-warning-border: #c8b464;
+     --color-warning-text: #c8b464;
+     --color-alert: #d08080;
+     --color-notification: #7c9885;
 
-     /* Porto/integration colors - Terminal variants */
-     --color-porto-bg: rgba(0, 255, 255, 0.1);
-     --color-porto-blue: #00FFFF;
-     --color-farcaster-purple: #00DD00;
-     --color-farcaster-light: #00BB00;
+     /* Porto/integration colors - Muted variants */
+     --color-porto-bg: rgba(143, 170, 184, 0.1);
+     --color-porto-blue: #8faab8;
+     --color-farcaster-purple: #9d91a8;
+     --color-farcaster-light: #a89db3;
 
      /* Embed colors - Elevated surfaces */
-     --embed-bg: #1a1a1a;                /* Elevated like cards */
-     --embed-text: #00FF00;
-     --embed-farcaster-text: #00FF00;
-     --embed-twitter-text: #00FF00;
-     --embed-link: #00FFFF;
+     --embed-bg: #1a1a1a;
+     --embed-text: #d0d0d0;
+     --embed-farcaster-text: #d0d0d0;
+     --embed-twitter-text: #d0d0d0;
+     --embed-link: #8faab8;
 
-     /* UI element colors - Green glow effects */
-     --shadow-default: 0 0 10px rgba(0, 255, 0, 0.2);
-     --shadow-glow: 0 0 10px rgba(0, 255, 0, 0.4);
+     /* UI element colors - Subtle shadows */
+     --shadow-default: 0 0 10px rgba(0, 0, 0, 0.5);
+     --shadow-glow: 0 0 10px rgba(124, 152, 133, 0.3);
 }
 
  .scroll-margin-base, .scroll-margin-with-image {
