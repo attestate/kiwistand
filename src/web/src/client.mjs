@@ -15,7 +15,7 @@ import {
   useConnectorClient,
   createConnector,
 } from "wagmi";
-import { mainnet, optimism, base, arbitrum } from "wagmi/chains";
+import { mainnet, optimism } from "wagmi/chains";
 import { createWalletClient, custom, getAddress } from "viem";
 import {
   injectedWallet,
@@ -38,12 +38,10 @@ const isDesktop = () => {
 };
 
 // Setup chains and transports
-export const chains = [optimism, mainnet, arbitrum, base];
+export const chains = [optimism, mainnet];
 const transports = {
   [optimism.id]: http('https://opt-mainnet.g.alchemy.com/v2/TfAhzs116ThO7Fwod1gzpTJmH0Cudxp7'),
   [mainnet.id]: http('https://eth-mainnet.g.alchemy.com/v2/TfAhzs116ThO7Fwod1gzpTJmH0Cudxp7'),
-  [arbitrum.id]: http('https://arb-mainnet.g.alchemy.com/v2/TfAhzs116ThO7Fwod1gzpTJmH0Cudxp7'),
-  [base.id]: http('https://base-mainnet.g.alchemy.com/v2/TfAhzs116ThO7Fwod1gzpTJmH0Cudxp7'),
 };
 
 export const useIsMiniApp = () => {
