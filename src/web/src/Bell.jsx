@@ -366,6 +366,11 @@ const Bell = (props) => {
   }
 
   // Render Connect Button if not connected/eligible
+  // If wallet is connected, don't show login button (they should use disconnect in sidebar)
+  if (account?.isConnected) {
+    return null;
+  }
+
   if (!getCookie("identity") || !isEligible) {
     const mobileConnectStyle = props.mobile
       ? {
@@ -406,28 +411,6 @@ const Bell = (props) => {
         loginModalRef.current?.openModal();
       }
     };
-
-    // If desktop, user is connected but not eligible, show Log In button
-    if (!props.mobile && account?.isConnected && !isEligible) {
-      return (
-        <>
-          <button
-            className="bell-button"
-            style={mobileConnectStyle}
-            onClick={handleLoginClick}
-          >
-            Log In
-          </button>
-          {!isInIOSApp && (
-            <LoginModal
-              ref={loginModalRef}
-              delegations={props.delegations}
-              toast={props.toast}
-            />
-          )}
-        </>
-      );
-    }
 
     return (
       <>

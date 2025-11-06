@@ -181,8 +181,17 @@ export function hasSingleLocalStorageKey() {
   return keys.length === 1;
 }
 
-// Logout that clears essential session data
-export function logout() {
+// Logout that clears essential session data and disconnects wallet
+export async function logout() {
+  // Disconnect wallet if connected
+  try {
+    const { disconnect } = await import('@wagmi/core');
+    const { client } = await import('./client.mjs');
+    await disconnect(client);
+  } catch (err) {
+    console.log('Could not disconnect wallet:', err);
+  }
+
   // Clear wallet key(s) from localStorage
   const walletKeySchema = /^-kiwi-news-(0x[a-fA-F0-9]{40})-key$/;
   // Clear delegation modal dismissed flags
