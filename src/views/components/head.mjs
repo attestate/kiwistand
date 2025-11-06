@@ -125,6 +125,7 @@ export function custom(
 
       /* Remove custom @font-face to avoid double-loading Inter; use Google CSS above */
     </style>
+    <script src="theme-init.js"></script>
     <script src="event-queue.js"></script>
     <meta charset="utf-8" />
     <meta name="referrer" content="origin" />
