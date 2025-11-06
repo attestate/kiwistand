@@ -1020,9 +1020,10 @@ export function getSubmission(index, href, identityFilter, hrefs, bannedAddresse
   }
 
   if (href) {
-    const normalizedHref = normalizeUrl(href, {
-      stripWWW: false,
-    });
+    // Skip normalization for text posts and kiwi references
+    const normalizedHref = (href.startsWith('data:') || href.startsWith('kiwi:'))
+      ? href
+      : normalizeUrl(href, { stripWWW: false });
     submission = db
       .prepare(
         `
@@ -1213,9 +1214,10 @@ export function insertMessage(message) {
     message;
 
   if (type === "amplify") {
-    const normalizedHref = normalizeUrl(href, {
-      stripWWW: false,
-    });
+    // Skip normalization for text posts and kiwi references
+    const normalizedHref = (href.startsWith('data:') || href.startsWith('kiwi:'))
+      ? href
+      : normalizeUrl(href, { stripWWW: false });
     const submissionExists =
       db
         .prepare(`SELECT COUNT(*) AS count FROM submissions WHERE href = ?`)
@@ -1322,7 +1324,10 @@ export function countComments(submissionId, bannedAddresses = []) {
 export async function storeMiniAppUpvote({ fid, href, title, timestamp, walletAddress }) {
   try {
     // Normalize the URL to prevent duplicate upvotes on same story
-    const normalizedHref = normalizeUrl(href, { stripWWW: false });
+    // Skip normalization for text posts and kiwi references
+    const normalizedHref = (href.startsWith('data:') || href.startsWith('kiwi:'))
+      ? href
+      : normalizeUrl(href, { stripWWW: false });
     
     // Check if this user has already upvoted this normalized URL
     const existingUpvote = db.prepare(`

@@ -125,10 +125,15 @@ export async function getStories(page, period, domain, options = {}) {
     upvoterProfiles.sort((a, b) => b.neynarScore - a.neynarScore);
     avatars = upvoterProfiles.slice(0, 5).map(p => p.avatar);
 
+    // Skip normalization for text posts and kiwi references
+    const normalizedStoryHref = (story.href.startsWith('data:') || story.href.startsWith('kiwi:'))
+      ? story.href
+      : normalizeUrl(story.href);
+
     // Check if story is original
     const isOriginal = Object.keys(writers).some(
       (domain) =>
-        normalizeUrl(story.href).startsWith(domain) &&
+        normalizedStoryHref.startsWith(domain) &&
         writers[domain] === story.identity,
     );
 
@@ -137,7 +142,10 @@ export async function getStories(page, period, domain, options = {}) {
     let finalStory = augmentedStory || story;
 
     // Handle image blocking based on policy
-    const href = normalizeUrl(finalStory.href, { stripWWW: false });
+    // Skip normalization for text posts and kiwi references
+    const href = (finalStory.href.startsWith('data:') || finalStory.href.startsWith('kiwi:'))
+      ? finalStory.href
+      : normalizeUrl(finalStory.href, { stripWWW: false });
     if (href && policy?.images?.includes(href) && finalStory.metadata?.image) {
       delete finalStory.metadata.image;
     }

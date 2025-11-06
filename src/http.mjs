@@ -1510,9 +1510,10 @@ export async function launch(trie, libp2p, isPrimary = true) {
     let submission;
     try {
       // Normalize the URL to match how it's stored in the database
-      const normalizedHref = normalizeUrl(message.href, {
-        stripWWW: false,
-      });
+      // Skip normalization for text posts and kiwi references
+      const normalizedHref = (message.href.startsWith('data:') || message.href.startsWith('kiwi:'))
+        ? message.href
+        : normalizeUrl(message.href, { stripWWW: false });
       // Get the submission by href
       submission = getSubmission(null, normalizedHref);
     } catch (err) {
@@ -1539,11 +1540,12 @@ export async function launch(trie, libp2p, isPrimary = true) {
       log(`Unauthorized analytics access attempt by ${requesterAddress} for story by ${submission.identity}`);
       return sendError(reply, 403, "Forbidden", "Not authorized to view analytics for this story");
     }
-    
+
     // Get analytics data (use normalized URL to match stored data)
-    const normalizedHref = normalizeUrl(message.href, {
-      stripWWW: false,
-    });
+    // Skip normalization for text posts and kiwi references
+    const normalizedHref = (message.href.startsWith('data:') || message.href.startsWith('kiwi:'))
+      ? message.href
+      : normalizeUrl(message.href, { stripWWW: false });
     const impressions = countImpressions(normalizedHref);
     const clicks = countOutbounds(normalizedHref);
     

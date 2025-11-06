@@ -301,13 +301,26 @@ export async function descend(trie, level, exclude = []) {
 
 // NOTE: We use `utils.getAddress` from ethers here to make sure we hash a
 // canonical key into the database.
-export function upvoteID(identity, link, type) {
-  return `${utils.getAddress(identity)}|${normalizeUrl(link)}|${type}`;
+export function upvoteID(identity, link, type, message = null) {
+  // Handle kiwi: references (upvotes of text posts)
+  if (link.startsWith('kiwi:0x')) {
+    return `${utils.getAddress(identity)}|${link}|${type}`;
+  }
+
+  // Handle original text submissions - use their computed index
+  if (link.startsWith('data:text/plain,') && message) {
+    const { index } = toDigest(message);
+    return `${utils.getAddress(identity)}|kiwi:0x${index}|${type}`;
+  }
+
+  // Regular URLs
+  const normalizedLink = link.startsWith('data:') ? link : normalizeUrl(link);
+  return `${utils.getAddress(identity)}|${normalizedLink}|${type}`;
 }
 
 let messagesAdded = 0;
 async function atomicPut(trie, message, identity, delegations) {
-  const marker = upvoteID(identity, message.href, message.type);
+  const marker = upvoteID(identity, message.href, message.type, message);
   const { canonical, index } = toDigest(message);
   log(
     `Attempting to store message with index "${index}" and message: "${JSON.stringify(
@@ -698,7 +711,9 @@ export async function leaves(
         continue;
       }
       if (
-        (href && normalizeUrl(parsed.href) !== normalizeUrl(href)) ||
+        (href && (parsed.href.startsWith('data:') || href.startsWith('data:')
+          ? parsed.href !== href
+          : normalizeUrl(parsed.href) !== normalizeUrl(href))) ||
         (type && type !== parsed.type)
       ) {
         continue;

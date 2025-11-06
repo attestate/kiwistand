@@ -438,9 +438,13 @@ export async function index(
       const links = result.links.map((link) =>
         normalizeUrl(link, { stripWWW: false }),
       );
-      rankedStories = rankedStories.filter(({ href }) =>
-        links.includes(normalizeUrl(href, { stripWWW: false })),
-      );
+      rankedStories = rankedStories.filter(({ href }) => {
+        // Skip normalization for text posts and kiwi references
+        const normalizedHref = (href.startsWith('data:') || href.startsWith('kiwi:'))
+          ? href
+          : normalizeUrl(href, { stripWWW: false });
+        return links.includes(normalizedHref);
+      });
     }
   }
 
@@ -515,16 +519,24 @@ export async function index(
           }));
       }
 
+      // Skip normalization for text posts and kiwi references
+      const normalizedStoryHref = (story.href.startsWith('data:') || story.href.startsWith('kiwi:'))
+        ? story.href
+        : normalizeUrl(story.href);
+
       const isOriginal = Object.keys(writers).some(
         (domain) =>
-          normalizeUrl(story.href).startsWith(domain) &&
+          normalizedStoryHref.startsWith(domain) &&
           writers[domain] === story.identity,
       );
 
       const augmentedStory = await addMetadata(story); // Add metadata
       if (augmentedStory) {
         story = augmentedStory;
-        const href = normalizeUrl(story.href, { stripWWW: false });
+        // Skip normalization for text posts and kiwi references
+        const href = (story.href.startsWith('data:') || story.href.startsWith('kiwi:'))
+          ? story.href
+          : normalizeUrl(story.href, { stripWWW: false });
         if (href && policy?.images.includes(href) && story.metadata?.image) {
           delete story.metadata.image;
         }
@@ -688,9 +700,13 @@ export async function index(
                   );
                   // Resolve participants if needed (simplified here)
                 }
+                // Skip normalization for text posts and kiwi references
+                const normalizedHref = (story.href.startsWith('data:') || story.href.startsWith('kiwi:'))
+                  ? story.href
+                  : normalizeUrl(story.href);
                 const isOriginal = Object.keys(writers).some(
                   (d) =>
-                    normalizeUrl(story.href).startsWith(d) &&
+                    normalizedHref.startsWith(d) &&
                     writers[d] === story.identity,
                 );
                 // Predicted stories don't have an original 'score' from topstories.
@@ -745,7 +761,13 @@ export async function index(
   if (policy?.pinned?.length > 0 && page === 0) {
     const pinnedUrl = policy.pinned[0];
     const pinnedIndex = stories.findIndex(
-      (story) => normalizeUrl(story.href, { stripWWW: false }) === pinnedUrl,
+      (story) => {
+        // Skip normalization for text posts and kiwi references
+        const normalizedHref = (story.href.startsWith('data:') || story.href.startsWith('kiwi:'))
+          ? story.href
+          : normalizeUrl(story.href, { stripWWW: false });
+        return normalizedHref === pinnedUrl;
+      },
     );
     if (pinnedIndex !== -1) {
       [pinnedStory] = stories.splice(pinnedIndex, 1); // Remove from list and store

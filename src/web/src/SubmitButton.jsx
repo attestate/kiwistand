@@ -28,6 +28,11 @@ export function getSlug(title) {
 }
 
 function safeExtractDomain(link) {
+  // Return empty string for text posts (data: and kiwi: URLs)
+  if (link.startsWith('data:') || link.startsWith('kiwi:')) {
+    return '';
+  }
+
   let parsedUrl;
   try {
     parsedUrl = new URL(link);
@@ -44,15 +49,18 @@ const UrlInput = (props) => {
   const { url, setURL, toast } = props;
   const [checkedURLs, setCheckedURLs] = useState(new Set());
   const [isUploading, setIsUploading] = useState(false);
+  const [isTextMode, setIsTextMode] = useState(false);
+  const [textContent, setTextContent] = useState("");
 
   useEffect(() => {
     if (
       !checkedURLs.has(url) &&
-      (url.includes("http") || url.includes("https"))
+      (url.includes("http") || url.includes("https")) &&
+      !isTextMode
     ) {
       fetchMetadata(url);
     }
-  }, [url]);
+  }, [url, isTextMode]);
 
   const fetchMetadata = async (url) => {
     try {
@@ -121,68 +129,177 @@ const UrlInput = (props) => {
     }
   };
 
+  // Handle toggle between URL and Text mode
+  const handleModeToggle = () => {
+    const newMode = !isTextMode;
+    setIsTextMode(newMode);
+
+    if (newMode) {
+      // Switching to text mode - decode if there's a data URL
+      if (url.startsWith("data:text/plain,")) {
+        const decoded = decodeURIComponent(url.replace("data:text/plain,", ""));
+        setTextContent(decoded);
+      } else {
+        setTextContent("");
+      }
+      setURL("");
+    } else {
+      // Switching to URL mode - encode text if there is any
+      if (textContent.trim()) {
+        const encoded = `data:text/plain,${encodeURIComponent(textContent)}`;
+        setURL(encoded);
+      }
+      setTextContent("");
+    }
+  };
+
+  // Update URL when text content changes in text mode
+  useEffect(() => {
+    if (isTextMode && textContent.trim()) {
+      const encoded = `data:text/plain,${encodeURIComponent(textContent)}`;
+      setURL(encoded);
+    } else if (isTextMode) {
+      setURL("");
+    }
+  }, [textContent, isTextMode]);
+
   return (
     <div style={{ maxWidth: "600px" }}>
-      <label
-        style={{ marginBottom: "5px", display: "block", fontSize: "16px" }}
-      >
-        Link:
-      </label>
-      <div style={{ display: "flex", alignItems: "center" }}>
-        <input
-          placeholder="Enter or paste article URL"
-          id="urlInput"
-          type="text"
-          name="link"
-          size="50"
-          maxLength="2048"
-          required
+      {/* Tabs */}
+      <div style={{
+        display: "flex",
+        gap: 0,
+        borderBottom: "1px solid var(--text-secondary)",
+        marginBottom: "15px"
+      }}>
+        <button
+          type="button"
+          className="tab-button tab-link"
+          onClick={() => setIsTextMode(false)}
           style={{
-            borderRadius: "2px",
-            border:
-              url.length > 2048 ||
-              url.length === 0 ||
-              (!url.startsWith("https://") && !url.startsWith("http://"))
-                ? "2px solid var(--text-primary)"
-                : "1px solid var(--accent-primary)",
-            color: "var(--text-primary)",
-            width: "80%",
-            padding: "12px 16px",
-            fontSize: "16px",
-            boxSizing: "border-box",
-            background: "var(--bg-white)",
-            minHeight: "50px",
-          }}
-          value={url}
-          onChange={(e) => setURL(e.target.value)}
-        />
-        <input
-          type="file"
-          id="imageUpload"
-          accept="image/*"
-          onChange={handleImageUpload}
-          style={{ display: "none" }}
-        />
-        <label
-          htmlFor="imageUpload"
-          style={{
-            marginLeft: "10px",
-            padding: "0 16px",
-            backgroundColor: "var(--button-primary-bg)",
-            color: "var(--button-primary-text)",
-            borderRadius: "2px",
-            cursor: "pointer",
+            padding: "10px 20px",
             fontSize: "14px",
-            height: "50px" /* Match exactly the height of the URL input */,
-            boxSizing: "border-box",
-            display: "flex",
-            textAlign: "center",
-            alignItems: "center",
-            justifyContent: "center",
+            backgroundColor: "transparent",
+            color: "var(--text-primary)",
+            border: "none",
+            borderBottom: !isTextMode ? "2px solid var(--hn-orange)" : "2px solid transparent",
+            cursor: "pointer",
+            fontWeight: !isTextMode ? "600" : "normal",
           }}
         >
-          {isUploading ? "Uploading..." : "Upload Image"}
-        </label>
+          Link
+        </button>
+        <button
+          type="button"
+          className="tab-button tab-text"
+          onClick={() => setIsTextMode(true)}
+          style={{
+            padding: "10px 20px",
+            fontSize: "14px",
+            backgroundColor: "transparent",
+            color: "var(--text-primary)",
+            border: "none",
+            borderBottom: isTextMode ? "2px solid var(--hn-orange)" : "2px solid transparent",
+            cursor: "pointer",
+            fontWeight: isTextMode ? "600" : "normal",
+          }}
+        >
+          Text
+        </button>
+      </div>
+
+      {/* Link Tab Content */}
+      <div
+        className="tab-content tab-content-link"
+        style={{ display: !isTextMode ? "block" : "none" }}
+      >
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <input
+            placeholder="Enter or paste article URL"
+            id="urlInput"
+            type="text"
+            name="link"
+            size="50"
+            maxLength="2048"
+            required
+            style={{
+              borderRadius: "2px",
+              border:
+                url.length > 2048 ||
+                url.length === 0 ||
+                (!url.startsWith("https://") && !url.startsWith("http://") && !url.startsWith("data:text/plain,"))
+                  ? "2px solid var(--text-primary)"
+                  : "1px solid var(--accent-primary)",
+              color: "var(--text-primary)",
+              width: "80%",
+              padding: "12px 16px",
+              fontSize: "16px",
+              boxSizing: "border-box",
+              background: "var(--bg-white)",
+              minHeight: "50px",
+            }}
+            value={url}
+            onChange={(e) => setURL(e.target.value)}
+          />
+          <input
+            type="file"
+            id="imageUpload"
+            accept="image/*"
+            onChange={handleImageUpload}
+            style={{ display: "none" }}
+          />
+          <label
+            htmlFor="imageUpload"
+            style={{
+              marginLeft: "10px",
+              padding: "0 16px",
+              backgroundColor: "var(--button-primary-bg)",
+              color: "var(--button-primary-text)",
+              borderRadius: "2px",
+              cursor: "pointer",
+              fontSize: "14px",
+              height: "50px",
+              boxSizing: "border-box",
+              display: "flex",
+              textAlign: "center",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            {isUploading ? "Uploading..." : "Upload Image"}
+          </label>
+        </div>
+      </div>
+
+      {/* Text Tab Content */}
+      <div
+        className="tab-content tab-content-text"
+        style={{ display: isTextMode ? "block" : "none" }}
+      >
+        <div style={{ display: "flex", alignItems: "flex-start" }}>
+          <textarea
+            placeholder="Enter your text content here..."
+            id="textInput"
+            rows="6"
+            maxLength="2048"
+            required
+            style={{
+              borderRadius: "2px",
+              border: "2px solid var(--text-primary)",
+              color: "var(--text-primary)",
+              width: "100%",
+              padding: "12px 16px",
+              fontSize: "16px",
+              boxSizing: "border-box",
+              background: "var(--bg-white)",
+              resize: "vertical",
+              fontFamily: "inherit",
+              minHeight: "50px",
+            }}
+            value={textContent}
+            onChange={(e) => setTextContent(e.target.value)}
+          />
+        </div>
       </div>
     </div>
   );
@@ -220,6 +337,14 @@ const SubmitButton = (props) => {
     const embedPreview = document.getElementById("embed-preview");
 
     const canonicalURL = url;
+
+    // Skip preview for text posts (data: URLs)
+    if (canonicalURL.startsWith("data:text/plain,")) {
+      if (embedPreview) {
+        embedPreview.innerHTML = "";
+      }
+      return;
+    }
 
     if (canonicalURL.includes("imagedelivery.net")) {
       embedPreview.innerHTML = `<img src="${DOMPurify.sanitize(
@@ -388,7 +513,8 @@ const SubmitButton = (props) => {
     if (
       canonicalURL.length === 0 ||
       (!canonicalURL.startsWith("https://") &&
-        !canonicalURL.startsWith("http://"))
+        !canonicalURL.startsWith("http://") &&
+        !canonicalURL.startsWith("data:text/plain,"))
     ) {
       toast.error("Please add a valid link.");
       setIsLoading(false);
@@ -580,7 +706,7 @@ const SubmitButton = (props) => {
             url.length > 2048 ||
             title.length === 0 ||
             url.length === 0 ||
-            (!url.startsWith("https://") && !url.startsWith("http://"))
+            (!url.startsWith("https://") && !url.startsWith("http://") && !url.startsWith("data:text/plain,"))
           }
         >
           {isLoading

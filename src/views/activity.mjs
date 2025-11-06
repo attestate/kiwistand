@@ -44,9 +44,10 @@ const generateFeed = (messages) => {
   messages
     .sort((a, b) => a.timestamp - b.timestamp)
     .forEach((message) => {
-      const href = normalizeUrl(!!message.href && message.href, {
-        stripWWW: false,
-      });
+      // Skip normalization for text posts and kiwi references
+      const href = (message.href && (message.href.startsWith('data:') || message.href.startsWith('kiwi:')))
+        ? message.href
+        : normalizeUrl(!!message.href && message.href, { stripWWW: false });
 
       if (!groupedMessages[href]) {
         groupedMessages[href] = {

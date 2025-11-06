@@ -217,6 +217,10 @@ const ShuffleSVG = html`<svg
 </svg>`;
 
 export function extractDomain(link) {
+  // Return empty string for text posts (data: and kiwi: URLs)
+  if (link.startsWith('data:') || link.startsWith('kiwi:')) {
+    return '';
+  }
   const parsedUrl = new URL(link);
   const parts = parsedUrl.hostname.split(".");
   const tld = parts.slice(-2).join(".");
@@ -303,15 +307,18 @@ const row = (
 ) => {
   const size = 12;
   return (story, i) => {
-    try {
-      // NOTE: Normally it can't happen, but when we deploy a new ad contract
-      // then story can indeed be empty, and so this made several functions in
-      // the row component panic, which is why we now check before we continue
-      // the rendering.
-      new URL(story.href);
-    } catch (err) {
-      log(`Fault during row render for story href: ${story.href}`);
-      return;
+    // Skip URL validation for text posts (data: and kiwi: URLs)
+    if (!story.href.startsWith('data:') && !story.href.startsWith('kiwi:')) {
+      try {
+        // NOTE: Normally it can't happen, but when we deploy a new ad contract
+        // then story can indeed be empty, and so this made several functions in
+        // the row component panic, which is why we now check before we continue
+        // the rendering.
+        new URL(story.href);
+      } catch (err) {
+        log(`Fault during row render for story href: ${story.href}`);
+        return;
+      }
     }
 
     const submissionId = `kiwi:0x${story.index}`;
@@ -355,6 +362,9 @@ const row = (
 
     // Check if the image is a Cloudflare image
     const isCloudflare = isCloudflareImage(story.href) || (debugMode && story.href && story.href.includes("placehold.co"));
+
+    // Check if this is a text post (data: or kiwi: URL)
+    const isTextPost = story.href && (story.href.startsWith('data:') || story.href.startsWith('kiwi:'));
 
     // Condition for displaying mobile image:
     // - Must have image data (metadata or cloudflare)
@@ -415,6 +425,28 @@ const row = (
 
       if (imageEmbed) {
         farcasterImageUrl = imageEmbed.metadata?.image?.url || imageEmbed.url;
+      }
+    }
+
+    // Check if we can render a text post preview and extract text content
+    // Only show on story page, not on feeds
+    let textPostContent = null;
+    const canRenderTextPostPreview =
+      isTextPost &&
+      story.href &&
+      story.href.startsWith('data:text/plain,') &&
+      path === "/stories";
+
+    if (canRenderTextPostPreview) {
+      try {
+        textPostContent = decodeURIComponent(story.href.replace('data:text/plain,', ''));
+        // Truncate to first 300 characters for preview
+        if (textPostContent.length > 300) {
+          textPostContent = textPostContent.substring(0, 300) + '...';
+        }
+      } catch (err) {
+        // If decoding fails, don't render text preview
+        textPostContent = null;
       }
     }
 
@@ -898,15 +930,15 @@ const row = (
                         data-no-instant
                         href="${path === "/submit" || path === "/demonstration"
                           ? "javascript:void(0);"
-                          : isCloudflare && story.index
+                          : (isCloudflare || isTextPost) && story.index
                           ? `/stories/${getSlug(story.title)}?index=0x${
                               story.index
                             }`
                           : DOMPurify.sanitize(story.href)}"
-                        onclick="${isCloudflare && story.index
-                          ? `if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) { var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block'; if(localStorage.getItem('anon-mode')!=='true'){navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${DOMPurify.sanitize(
+                        onclick="${(isCloudflare || isTextPost) && story.index
+                          ? `if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) { var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block'; ${isTextPost ? '' : `if(localStorage.getItem('anon-mode')!=='true'){navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${DOMPurify.sanitize(
                               story.href,
-                            )}'))}; }`
+                            )}'))};`} }`
                           : `event.preventDefault(); if(localStorage.getItem('anon-mode')!=='true'){navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${DOMPurify.sanitize(
                               story.href,
                             )}'))}; if (window.ReactNativeWebView || window !== window.parent) { 
@@ -974,7 +1006,7 @@ const row = (
                           : 'class="story-link"'}
                         target="${path === "/submit" ||
                         path === "/demonstration" ||
-                        (isCloudflare && story.index)
+                        ((isCloudflare || isTextPost) && story.index)
                           ? "_self"
                           : "_blank"}"
                         style="user-select: text; line-height: 15pt; font-size: 13pt; padding-right: 14px;"
@@ -1109,6 +1141,7 @@ const row = (
                         path === "/best" ||
                         path === "/stories") &&
                       !isCloudflare &&
+                      !isTextPost &&
                       !displayImage
                         ? html`
                             <span class="domain-text domain-flex meta-item" style="padding-right: 12px; display: inline-flex; align-items: center; min-width: 0; gap: 4px; flex-shrink: 1;">
@@ -1155,6 +1188,16 @@ const row = (
                   </div>
                 </div>
               </div>
+              ${canRenderTextPostPreview && textPostContent
+                ? html`<div
+                    class="text-post-preview"
+                    style="padding: 12px 20px; margin-top: 8px;"
+                  >
+                    <div style="white-space: pre-wrap; word-break: break-word; line-height: 1.6; font-size: 13px; color: var(--text-primary); opacity: 0.85;">
+                      ${DOMPurify.sanitize(textPostContent)}
+                    </div>
+                  </div>`
+                : null}
               ${!interactive
                 ? html`<div
                     class="interaction-bar"

@@ -156,11 +156,22 @@ export async function generatePreview(index, commentIndex = null) {
 export default async function (trie, theme, index, value, referral, commentIndex = null) {
   const path = "/stories";
 
-  let data = cachedMetadata(value.href, false, value.title);
+  // Handle text posts (data:text/plain URLs)
+  let textContent = null;
+  if (value.href && value.href.startsWith("data:text/plain,")) {
+    textContent = decodeURIComponent(value.href.replace("data:text/plain,", ""));
+  }
+
+  // Skip metadata fetching for text posts and kiwi: references
+  let data = null;
+  if (!value.href.startsWith("data:") && !value.href.startsWith("kiwi:")) {
+    data = cachedMetadata(value.href, false, value.title);
+  }
 
   const story = {
     ...value,
     metadata: data,
+    textContent,
   };
 
   // Collect all identities that need resolving
@@ -345,9 +356,10 @@ export default async function (trie, theme, index, value, referral, commentIndex
         : value.href + "/w=1200,q=80,fit=cover,f=auto";
       frameImage = ogImage; // Use same for Cloudflare images
     } else {
-      // Fall back to the generated preview
-      ogImage = `${baseUrl}/previews/${index}.jpg`;
-      frameImage = `${baseUrl}/previews/${index.substring(2)}-frame.jpg`;
+      // Fall back to the generated preview (remove 0x prefix to match file names)
+      const hexIndex = index.substring(2);
+      ogImage = `${baseUrl}/previews/${hexIndex}.jpg`;
+      frameImage = `${baseUrl}/previews/${hexIndex}-frame.jpg`;
     }
     
     ogDescription = data && data.ogDescription

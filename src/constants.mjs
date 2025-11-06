@@ -125,7 +125,7 @@ const upvote = {
     href: {
       type: "string",
       format: "uri",
-      pattern: "^https?://",
+      pattern: "^(https?://|data:text/plain,|kiwi:0x)",
       maxLength: 2048,
     },
     signature: {

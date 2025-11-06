@@ -960,6 +960,11 @@ export const cachedMetadata = (
   generateTitle = false,
   submittedTitle = undefined,
 ) => {
+  // Skip metadata fetching for text posts (data: and kiwi: URLs)
+  if (url && (url.startsWith('data:') || url.startsWith('kiwi:'))) {
+    return null;
+  }
+
   // Normalize the URL for consistent cache keys
   const normalizedUrl = normalizeUrl(url, { stripWWW: false });
 
@@ -1516,6 +1521,11 @@ ${context}`;
 
 
 function safeExtractDomain(link) {
+  // Return empty string for text posts (data: and kiwi: URLs)
+  if (link && (link.startsWith('data:') || link.startsWith('kiwi:'))) {
+    return '';
+  }
+
   let parsedUrl;
   try {
     parsedUrl = new URL(link);

@@ -298,10 +298,15 @@ export function flag(leaves, config) {
 export function moderate(leaves, config, path) {
   let result = leaves
     .map((leaf) => {
-      const alternativeTitle = config.titles[normalizeUrl(leaf.href)];
+      // Skip normalization for text posts and kiwi references
+      const normalizedLeafHref = (leaf.href.startsWith('data:') || leaf.href.startsWith('kiwi:'))
+        ? leaf.href
+        : normalizeUrl(leaf.href);
+
+      const alternativeTitle = config.titles[normalizedLeafHref];
       const nextTitle = alternativeTitle ? alternativeTitle : leaf.title;
 
-      const alternativeHref = config.hrefs[normalizeUrl(leaf.href)];
+      const alternativeHref = config.hrefs[normalizedLeafHref];
       const nextHref = alternativeHref ? alternativeHref : leaf.href;
 
       return {
@@ -314,7 +319,13 @@ export function moderate(leaves, config, path) {
     .filter(
       ({ identity }) => !config.addresses.includes(identity.toLowerCase()),
     )
-    .filter(({ href }) => !config.links.includes(normalizeUrl(href)));
+    .filter(({ href }) => {
+      // Skip normalization for text posts and kiwi references
+      const normalizedHref = (href.startsWith('data:') || href.startsWith('kiwi:'))
+        ? href
+        : normalizeUrl(href);
+      return !config.links.includes(normalizedHref);
+    });
 
   // NOTE: When we change the URL of a story then any upvoter who upvotes the
   // story after the moderation will, for the first time, upvote a new link
@@ -323,11 +334,20 @@ export function moderate(leaves, config, path) {
   // of the "moderation_hrefs" table
   if (path === "/new") {
     result = result.filter(
-      ({ href }) => !Object.values(config.hrefs).includes(normalizeUrl(href)),
+      ({ href }) => {
+        // Skip normalization for text posts and kiwi references
+        const normalizedHref = (href.startsWith('data:') || href.startsWith('kiwi:'))
+          ? href
+          : normalizeUrl(href);
+        return !Object.values(config.hrefs).includes(normalizedHref);
+      },
     );
   }
   result = result.map((leaf) => {
-    const norm = normalizeUrl(leaf.href, { stripWWW: false });
+    // Skip normalization for text posts and kiwi references
+    const norm = (leaf.href.startsWith('data:') || leaf.href.startsWith('kiwi:'))
+      ? leaf.href
+      : normalizeUrl(leaf.href, { stripWWW: false });
     return { ...leaf, label: (config.labels && config.labels[norm]) || "" };
   });
   return result;

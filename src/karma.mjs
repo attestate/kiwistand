@@ -72,7 +72,10 @@ export function count(messages, endDate) {
   const submissions = new Map();
 
   messages.forEach((message) => {
-    const normalizedUrl = normalizeUrl(message.href);
+    // Skip normalization for text posts and kiwi references
+    const normalizedUrl = (message.href.startsWith('data:') || message.href.startsWith('kiwi:'))
+      ? message.href
+      : normalizeUrl(message.href);
 
     if (!submissions.has(normalizedUrl)) {
       submissions.set(normalizedUrl, message.identity);

@@ -24,7 +24,10 @@ const classify = (messages) => {
   return messages
     .sort((a, b) => a.timestamp - b.timestamp)
     .map((message) => {
-      const href = normalizeUrl(!!message.href && message.href);
+      // Skip normalization for text posts and kiwi references
+      const href = (message.href && (message.href.startsWith('data:') || message.href.startsWith('kiwi:')))
+        ? message.href
+        : normalizeUrl(!!message.href && message.href);
 
       if (message.type === "amplify") {
         if (!firstAmplify[href]) {

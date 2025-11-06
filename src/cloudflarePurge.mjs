@@ -73,7 +73,10 @@ function invalidateNotifications(address) {
  */
 function invalidateUpvoteActivityCaches(message) {
   try {
-    const normalizedHref = normalizeUrl(message.href, { stripWWW: false });
+    // Skip normalization for text posts and kiwi references
+    const normalizedHref = (message.href.startsWith('data:') || message.href.startsWith('kiwi:'))
+      ? message.href
+      : normalizeUrl(message.href, { stripWWW: false });
 
     // Get the submission to find its author
     const submission = getSubmission(null, normalizedHref);

@@ -72,46 +72,77 @@ export default async function submit(theme, url = "", title = "") {
                     </div>
                     <div id="submit-button">
                       <div style="${labelInputContainerStyle}">
-                        <label for="link" style="${labelStyle}">Link:</label>
-                        <div style="display: flex; align-items: center;">
-                          <input
-                            placeholder="Enter or paste article URL"
-                            id="urlInput"
-                            type="text"
-                            name="link"
-                            size="50"
-                            maxlength="2048"
-                            required
-                            style="${inputStyle}"
-                            value="${url}"
-                          />
-                          <input
-                            type="file"
-                            id="imageUpload"
-                            accept="image/*"
-                            style="display: none;"
+                        <div style="display: flex; gap: 0; border-bottom: 1px solid var(--text-secondary); margin-bottom: 15px;">
+                          <button
+                            type="button"
+                            class="tab-button tab-link"
+                            style="padding: 10px 20px; background: none; border: none; border-bottom: 2px solid var(--hn-orange); cursor: pointer; font-size: 14px; font-weight: 600; color: var(--text-primary);"
                             disabled
-                          />
-                          <label
-                            for="imageUpload"
-                            style="
-                              margin-left: 10px;
-                              padding: 0 16px;
-                              background-color: var(--button-primary-bg);
-                              color: var(--button-primary-text);
-                              border-radius: 2px;
-                              cursor: pointer;
-                              font-size: 14px;
-                              height: 50px;
-                              box-sizing: border-box;
-                              display: flex;
-                              align-items: center;
-                              justify-content: center;
-                              text-align: center;
-                            "
                           >
-                            Upload Image
-                          </label>
+                            Link
+                          </button>
+                          <button
+                            type="button"
+                            class="tab-button tab-text"
+                            style="padding: 10px 20px; background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; font-size: 14px; font-weight: 400; color: var(--text-secondary);"
+                            disabled
+                          >
+                            Text
+                          </button>
+                        </div>
+
+                        <div class="tab-content tab-content-link">
+                          <div style="display: flex; align-items: center;">
+                            <input
+                              placeholder="Enter or paste article URL"
+                              id="urlInput"
+                              type="text"
+                              name="link"
+                              size="50"
+                              maxlength="2048"
+                              required
+                              style="${inputStyle}"
+                              value="${url}"
+                            />
+                            <input
+                              type="file"
+                              id="imageUpload"
+                              accept="image/*"
+                              style="display: none;"
+                              disabled
+                            />
+                            <label
+                              for="imageUpload"
+                              style="
+                                margin-left: 10px;
+                                padding: 0 16px;
+                                background-color: var(--button-primary-bg);
+                                color: var(--button-primary-text);
+                                border-radius: 2px;
+                                cursor: pointer;
+                                font-size: 14px;
+                                height: 50px;
+                                box-sizing: border-box;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                text-align: center;
+                              "
+                            >
+                              Upload Image
+                            </label>
+                          </div>
+                        </div>
+
+                        <div class="tab-content tab-content-text" style="display: none;">
+                          <textarea
+                            placeholder="Enter your text content here..."
+                            id="textInput"
+                            rows="6"
+                            maxlength="2048"
+                            style="border-radius: 2px; border: 2px solid var(--text-primary); color: var(--text-primary); width: 100%; padding: 12px 16px; font-size: 16px; box-sizing: border-box; background: var(--bg-white); resize: vertical; font-family: inherit;"
+                            disabled
+                          ></textarea>
                         </div>
                       </div>
                       <button
