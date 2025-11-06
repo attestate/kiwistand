@@ -30,7 +30,7 @@ export default async function submit(theme, url = "", title = "") {
   return html`
     <html lang="en" op="news">
       <head>
-        ${prefetchHead(["/", "/best"])}
+        ${prefetchHead(["/"])}
       </head>
       <body ontouchstart="">
         <div class="container">

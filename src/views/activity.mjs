@@ -371,7 +371,7 @@ export async function page(
   const content = html`
     <html lang="en" op="news">
       <head>
-        ${prefetchHead(["/", "/new?cached=true", "/submit", ...preloadNotifs])}
+        ${prefetchHead(["/", ...preloadNotifs])}
       </head>
       <body
         data-instant-allow-query-string

@@ -52,12 +52,13 @@ export function custom(
       },
     },
   });
-  if (process.env.NODE_ENV === "production") {
-    prefetch = [
-      ...prefetch,
-      "https://news.kiwistand.com:8443/api/v1/delegations?cached=true",
-    ];
-  }
+  // Removed delegation API prefetch - was causing 503 errors
+  // if (process.env.NODE_ENV === "production") {
+  //   prefetch = [
+  //     ...prefetch,
+  //     "https://news.kiwistand.com:8443/api/v1/delegations?cached=true",
+  //   ];
+  // }
   ogImage = DOMPurify.sanitize(ogImage);
   ogTitle = DOMPurify.sanitize(ogTitle);
   ogDescription = DOMPurify.sanitize(ogDescription);

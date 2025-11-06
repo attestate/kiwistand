@@ -3,33 +3,33 @@
   font-style: normal;
   font-weight: 300;
   font-display: optional;
-  src: url(/fonts/inter-300.ttf) format('truetype');
+  src: url(/fonts/Inter-Light.woff2) format('woff2');
 }
 @font-face {
   font-family: 'Inter';
   font-style: normal;
   font-weight: 400;
   font-display: optional;
-  src: url(/fonts/inter-400.ttf) format('truetype');
+  src: url(/fonts/Inter-Regular.woff2) format('woff2');
 }
 @font-face {
   font-family: 'Inter';
   font-style: normal;
   font-weight: 500;
   font-display: optional;
-  src: url(/fonts/inter-500.ttf) format('truetype');
+  src: url(/fonts/Inter-Medium.woff2) format('woff2');
 }
 @font-face {
   font-family: 'Inter';
   font-style: normal;
   font-weight: 600;
   font-display: optional;
-  src: url(/fonts/inter-600.ttf) format('truetype');
+  src: url(/fonts/Inter-SemiBold.woff2) format('woff2');
 }
 @font-face {
   font-family: 'Inter';
   font-style: normal;
   font-weight: 700;
   font-display: optional;
-  src: url(/fonts/inter-700.ttf) format('truetype');
+  src: url(/fonts/Inter-Bold.woff2) format('woff2');
 }
