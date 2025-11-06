@@ -62,18 +62,16 @@ export function custom(
   ogTitle = DOMPurify.sanitize(ogTitle);
   ogDescription = DOMPurify.sanitize(ogDescription);
   return html`
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preconnect" href="https://www.googletagmanager.com" />
     <link rel="preconnect" href="https://api.ensdata.net/" />
     <link
       rel="preload"
       as="style"
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=optional"
+      href="/fonts/inter.css"
     />
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=optional"
+      href="/fonts/inter.css"
     />
     <style>
       /* Critical CSS to prevent layout shift */
