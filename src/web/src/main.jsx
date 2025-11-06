@@ -1391,12 +1391,13 @@ async function reorderStories(identity) {
   await new Promise((resolve) => setTimeout(resolve, 50));
 
   let seenIds = new Set();
+  let lastClickedId = null;
 
   if (!isAnonMode) {
     const { getClickedContentIds, getLastClickedContentId, getFrequentlyImpressedContentIds } =
       await import("./tracker.mjs");
     const clickedIds = getClickedContentIds();
-    const lastClickedId = getLastClickedContentId();
+    lastClickedId = getLastClickedContentId();
     const frequentlyImpressedIds = getFrequentlyImpressedContentIds(3); // Threshold of 3 impressions
     seenIds = new Set([...clickedIds, ...frequentlyImpressedIds]);
   }
