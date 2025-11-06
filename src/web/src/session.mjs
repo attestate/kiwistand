@@ -174,6 +174,41 @@ export function isRunningPWA() {
   );
 }
 
+// Check if user has a single localStorage wallet key (logged in without wallet connection)
+export function hasSingleLocalStorageKey() {
+  const schema = /^-kiwi-news-(0x[a-fA-F0-9]{40})-key$/;
+  const keys = Object.keys(localStorage).filter(k => k.match(schema));
+  return keys.length === 1;
+}
+
+// Logout that clears essential session data
+export function logout() {
+  // Clear wallet key(s) from localStorage
+  const walletKeySchema = /^-kiwi-news-(0x[a-fA-F0-9]{40})-key$/;
+  // Clear delegation modal dismissed flags
+  const delegationModalSchema = /^delegation-modal-dismissed-0x[a-fA-F0-9]{40}$/;
+
+  Object.keys(localStorage).forEach(key => {
+    if (key.match(walletKeySchema) || key.match(delegationModalSchema)) {
+      localStorage.removeItem(key);
+    }
+  });
+
+  // Clear identity and lastUpdate from localStorage (fallback storage)
+  localStorage.removeItem('identity');
+  localStorage.removeItem('lastUpdate');
+
+  // Clear anon-mode flag
+  localStorage.removeItem('anon-mode');
+
+  // Clear identity and lastUpdate cookies
+  document.cookie = 'identity=;path=/;max-age=0';
+  document.cookie = 'lastUpdate=;path=/;max-age=0';
+
+  // Reload the page to reset app state
+  window.location.reload();
+}
+
 // Helper to add auth params to URLs in mini app context
 export function addAuthParams(url) {
   // Only modify URLs in iframe/mini app context

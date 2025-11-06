@@ -10,6 +10,8 @@ import {
   isSafariOnIOS,
   isChromeOnAndroid,
   isRunningPWA,
+  hasSingleLocalStorageKey,
+  logout,
 } from "./session.mjs";
 
 const shorten = (address) =>
@@ -111,11 +113,6 @@ export const SimpleDisconnectButton = (props) => {
 
   // If in anon mode, show logout button
   if (isAnonMode) {
-    const handleLogout = () => {
-      localStorage.clear();
-      window.location.reload();
-    };
-
     return (
       <span
         className="meta-link"
@@ -123,7 +120,7 @@ export const SimpleDisconnectButton = (props) => {
           userSelect: "none",
           cursor: "pointer",
         }}
-        onClick={handleLogout}
+        onClick={logout}
       >
         Log out
       </span>
@@ -139,6 +136,22 @@ export const SimpleDisconnectButton = (props) => {
           }, 300);
           return () => clearTimeout(timer);
         }, [mounted, account, chain]);
+
+        // If not connected to wallet but has local key, show logout
+        if (!account && hasSingleLocalStorageKey()) {
+          return (
+            <span
+              className="meta-link"
+              style={{
+                userSelect: "none",
+                cursor: "pointer",
+              }}
+              onClick={logout}
+            >
+              Log out
+            </span>
+          );
+        }
 
         return (
           <span
@@ -165,15 +178,10 @@ const DisconnectButton = () => {
 
   // If in anon mode, show logout button
   if (isAnonMode) {
-    const handleLogout = () => {
-      localStorage.clear();
-      window.location.reload();
-    };
-
     return (
       <div
         title="Log out"
-        onClick={handleLogout}
+        onClick={logout}
         style={{
           color: "var(--text-primary)",
           cursor: "pointer",
@@ -200,6 +208,35 @@ const DisconnectButton = () => {
     <ConnectButton.Custom>
       {({ account, chain, mounted, openConnectModal, openAccountModal }) => {
         const connected = account && chain && mounted;
+
+        // If not connected to wallet but has local key, show logout
+        if (!connected && hasSingleLocalStorageKey()) {
+          return (
+            <div
+              title="Log out"
+              onClick={logout}
+              style={{
+                color: "var(--text-primary)",
+                cursor: "pointer",
+              }}
+              className="sidebar-div"
+            >
+              <div
+                style={{
+                  fontVariant: "small-caps",
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                <div className="svg-container">
+                  <EthereumSVG />
+                </div>
+                <span>Log out</span>
+              </div>
+            </div>
+          );
+        }
+
         if (!connected) return null;
         return (
           <div
