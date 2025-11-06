@@ -521,6 +521,10 @@ function NotificationOptIn(props) {
     };
   }, []);
 
+  // Don't show in anon mode
+  const isAnonMode = localStorage.getItem('anon-mode') === 'true';
+  if (isAnonMode) return null;
+
   // Don't render until we know the mini app status to avoid flash
   if (!identity || isMiniApp === null || isMiniApp === true) return null;
 

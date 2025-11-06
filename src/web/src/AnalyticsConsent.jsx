@@ -6,18 +6,24 @@ export default function AnalyticsConsent() {
   
   useEffect(() => {
     const checkConsentAndMiniApp = async () => {
+      // Don't show analytics consent in anon mode
+      const isAnonMode = localStorage.getItem('anon-mode') === 'true';
+      if (isAnonMode) {
+        return;
+      }
+
       // Check if we're in a mini app context
       const isMiniApp = window.sdk ? await window.sdk.isInMiniApp() : false;
-      
+
       // Check if analytics consent was already decided
       const analyticsConsent = localStorage.getItem('kiwi-analytics-consent');
-      
+
       if (isMiniApp) {
         // Don't show analytics consent banner in mini app, but enable analytics by default
         enableAnalytics();
         return;
       }
-      
+
       if (analyticsConsent === null) {
         // Analytics are enabled by default, but we still show the banner
         setVisible(true);
@@ -29,7 +35,7 @@ export default function AnalyticsConsent() {
         enableAnalytics();
       }
     };
-    
+
     checkConsentAndMiniApp().catch(console.error);
     
     // Add window resize listener to detect desktop/mobile

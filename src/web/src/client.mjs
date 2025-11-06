@@ -191,7 +191,17 @@ const kiwiTheme = {
 // Create wagmi config based on environment
 let client;
 
-if (isInIOSApp) {
+// Check if we're in anon mode - if so, create minimal config without wallet connectors
+const isAnonMode = typeof localStorage !== 'undefined' && localStorage.getItem('anon-mode') === 'true';
+
+if (isAnonMode) {
+  // Minimal config for anon mode - no wallet connectors, no RainbowKit analytics
+  client = createConfig({
+    chains,
+    connectors: [], // No connectors needed in anon mode
+    transports,
+  });
+} else if (isInIOSApp) {
   // iOS app configuration - exclude Coinbase Wallet, browser wallet, and Porto
   const wallets = [
     // portoWallet excluded on iOS app

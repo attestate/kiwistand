@@ -8,6 +8,19 @@ import { client } from "./client.mjs";
 const queryClient = new QueryClient();
 
 export function Providers({ children }) {
+  // In anon mode, skip RainbowKit to avoid Coinbase analytics tracking
+  const isAnonMode = typeof localStorage !== 'undefined' && localStorage.getItem('anon-mode') === 'true';
+
+  if (isAnonMode) {
+    return (
+      <QueryClientProvider client={queryClient}>
+        <WagmiProvider config={client}>
+          {children}
+        </WagmiProvider>
+      </QueryClientProvider>
+    );
+  }
+
   return (
     <QueryClientProvider client={queryClient}>
       <WagmiProvider config={client}>

@@ -94,6 +94,7 @@ const GuidelinesDrawer = ({ isOpen, onClose, onContinue }) => {
               style={{
                 padding: "10px 20px",
                 background: "transparent",
+                color: "var(--text-primary)",
                 border: "1px solid var(--text-secondary)",
                 borderRadius: "4px",
                 cursor: "pointer",

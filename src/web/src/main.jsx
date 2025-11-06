@@ -676,6 +676,10 @@ async function addEmbedDrawer(toast) {
 }
 
 async function addNewsletterScrollModal(toast) {
+  // Don't show newsletter modal in anon mode
+  const isAnonMode = localStorage.getItem('anon-mode') === 'true';
+  if (isAnonMode) return;
+
   // Only show on feed pages where users are likely to be reading
   const path = window.location.pathname;
   const shouldShow = path === "/" || path === "/new" || path === "/best";

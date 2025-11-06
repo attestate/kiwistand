@@ -107,6 +107,29 @@ export const SimpleDisconnectButton = (props) => {
     label = props.label;
   }
   const [stable, setStable] = useState("loading");
+  const isAnonMode = localStorage.getItem('anon-mode') === 'true';
+
+  // If in anon mode, show logout button
+  if (isAnonMode) {
+    const handleLogout = () => {
+      localStorage.clear();
+      window.location.reload();
+    };
+
+    return (
+      <span
+        className="meta-link"
+        style={{
+          userSelect: "none",
+          cursor: "pointer",
+        }}
+        onClick={handleLogout}
+      >
+        Log out
+      </span>
+    );
+  }
+
   return (
     <ConnectButton.Custom>
       {({ account, chain, mounted, openAccountModal }) => {
@@ -116,14 +139,16 @@ export const SimpleDisconnectButton = (props) => {
           }, 300);
           return () => clearTimeout(timer);
         }, [mounted, account, chain]);
+
         return (
           <span
             className="meta-link"
             style={{
               userSelect: "none",
               transition: "opacity 0.3s ease-out",
-              opacity: stable === "loading" || stable ? "1" : "0.2",
+              opacity: stable === "loading" || stable ? "1" : "0",
               pointerEvents: stable ? "auto" : "none",
+              cursor: stable ? "pointer" : "default",
             }}
             onClick={openAccountModal}
           >
@@ -136,6 +161,41 @@ export const SimpleDisconnectButton = (props) => {
 };
 
 const DisconnectButton = () => {
+  const isAnonMode = localStorage.getItem('anon-mode') === 'true';
+
+  // If in anon mode, show logout button
+  if (isAnonMode) {
+    const handleLogout = () => {
+      localStorage.clear();
+      window.location.reload();
+    };
+
+    return (
+      <div
+        title="Log out"
+        onClick={handleLogout}
+        style={{
+          color: "var(--text-primary)",
+          cursor: "pointer",
+        }}
+        className="sidebar-div"
+      >
+        <div
+          style={{
+            fontVariant: "small-caps",
+            display: "flex",
+            alignItems: "center",
+          }}
+        >
+          <div className="svg-container">
+            <EthereumSVG />
+          </div>
+          <span>Log out</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <ConnectButton.Custom>
       {({ account, chain, mounted, openConnectModal, openAccountModal }) => {

@@ -41,6 +41,23 @@ const CloseIcon = () => (
   </svg>
 );
 
+const GhostIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="1.2em" height="1.2em">
+    <rect width="256" height="256" fill="none"/>
+    <circle cx="100" cy="116" r="12"/>
+    <circle cx="156" cy="116" r="12"/>
+    <path d="M216,216l-29.33-24-29.34,24L128,192,98.67,216,69.33,192,40,216V120a88,88,0,0,1,176,0Z" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="16"/>
+  </svg>
+);
+
+const WalletIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="1.2em" height="1.2em">
+    <rect width="256" height="256" fill="none"/>
+    <path d="M40,56V184a16,16,0,0,0,16,16H216a8,8,0,0,0,8-8V80a8,8,0,0,0-8-8H56A16,16,0,0,1,40,56h0A16,16,0,0,1,56,40H192" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="16"/>
+    <circle cx="180" cy="132" r="12"/>
+  </svg>
+);
+
 const LoginModal = forwardRef((props, ref) => {
   const [showModal, setShowModal] = useState(false);
   const [isButtonHovered, setIsButtonHovered] = useState(false);
@@ -339,7 +356,10 @@ const LoginModal = forwardRef((props, ref) => {
               }}
               onClick={handleConnectWallet}
             >
-              Connect wallet
+              <div style={{ display: "flex", alignItems: "center", height: "100%", gap: "8px" }}>
+                <WalletIcon />
+                <span>Connect wallet</span>
+              </div>
             </button>
 
             {/* Tertiary button - Anon mode */}
@@ -364,7 +384,10 @@ const LoginModal = forwardRef((props, ref) => {
               onMouseEnter={() => setIsAnonButtonHovered(true)}
               onMouseLeave={() => setIsAnonButtonHovered(false)}
             >
-              Anon mode
+              <div style={{ display: "flex", alignItems: "center", height: "100%", gap: "8px" }}>
+                <GhostIcon />
+                <span>Anon mode</span>
+              </div>
             </button>
           </div>
         </div>
