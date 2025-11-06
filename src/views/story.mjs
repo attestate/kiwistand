@@ -356,10 +356,9 @@ export default async function (trie, theme, index, value, referral, commentIndex
         : value.href + "/w=1200,q=80,fit=cover,f=auto";
       frameImage = ogImage; // Use same for Cloudflare images
     } else {
-      // Fall back to the generated preview (remove 0x prefix to match file names)
-      const hexIndex = index.substring(2);
-      ogImage = `${baseUrl}/previews/${hexIndex}.jpg`;
-      frameImage = `${baseUrl}/previews/${hexIndex}-frame.jpg`;
+      // Fall back to the generated preview (index already has 0x prefix removed in http.mjs)
+      ogImage = `${baseUrl}/previews/${index}.jpg`;
+      frameImage = `${baseUrl}/previews/${index}-frame.jpg`;
     }
     
     ogDescription = data && data.ogDescription
