@@ -90,10 +90,12 @@ import theme from "./theme.jsx";
 import posthog from "posthog-js";
 window.posthog = posthog; // Make available globally but don't initialize
 
+// Check anon mode once at startup
+const isAnonMode = localStorage.getItem('anon-mode') === 'true';
+
 // Skip PostHog in anon mode or if user has explicitly opted out
-const anonMode = localStorage.getItem('anon-mode') === 'true';
 const analyticsConsent = localStorage.getItem("kiwi-analytics-consent");
-if (!anonMode && analyticsConsent !== "false") {
+if (!isAnonMode && analyticsConsent !== "false") {
   // Initialize unless explicitly opted out or in anon mode
   posthog.init("phc_F3mfkyH5tKKSVxnMbJf0ALcPA98s92s3Jw8a7eqpBGw", {
     api_host: "https://eu.i.posthog.com",
@@ -966,7 +968,7 @@ async function startWatchAccount(delegations, account, isInIOSApp) {
       );
     };
 
-    if (shouldLoadTracker()) {
+    if (shouldLoadTracker() && !isAnonMode) {
       import("./tracker.mjs")
         .then((tracker) => {
           // Initialize once; afterwards only update signer/identity
@@ -1003,7 +1005,7 @@ async function startWatchAccount(delegations, account, isInIOSApp) {
         p === "/" || p === "/new" || p === "/best" || p.startsWith("/stories")
       );
     };
-    if (shouldLoadTracker()) {
+    if (shouldLoadTracker() && !isAnonMode) {
       import("./tracker.mjs")
         .then((tracker) => {
           if (!window.__kiwiTrackerInit) {
@@ -1388,13 +1390,16 @@ async function reorderStories(identity) {
   // A small delay to ensure spinner is rendered before potential blocking work.
   await new Promise((resolve) => setTimeout(resolve, 50));
 
-  const { getClickedContentIds, getLastClickedContentId, getFrequentlyImpressedContentIds } =
-    await import("./tracker.mjs");
-  const clickedIds = getClickedContentIds();
-  const lastClickedId = getLastClickedContentId();
-  const frequentlyImpressedIds = getFrequentlyImpressedContentIds(3); // Threshold of 3 impressions
+  let seenIds = new Set();
 
-  const seenIds = new Set([...clickedIds, ...frequentlyImpressedIds]);
+  if (!isAnonMode) {
+    const { getClickedContentIds, getLastClickedContentId, getFrequentlyImpressedContentIds } =
+      await import("./tracker.mjs");
+    const clickedIds = getClickedContentIds();
+    const lastClickedId = getLastClickedContentId();
+    const frequentlyImpressedIds = getFrequentlyImpressedContentIds(3); // Threshold of 3 impressions
+    seenIds = new Set([...clickedIds, ...frequentlyImpressedIds]);
+  }
 
   if (seenIds.size > 0 || identity) {
     const seenRows = [];
