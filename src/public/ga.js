@@ -1,3 +1,6 @@
+// Skip all analytics in anon mode
+if (localStorage.getItem('anon-mode') === 'true') return;
+
 window.dataLayer = window.dataLayer || [];
 function gtag() {
   dataLayer.push(arguments);

@@ -90,10 +90,11 @@ import theme from "./theme.jsx";
 import posthog from "posthog-js";
 window.posthog = posthog; // Make available globally but don't initialize
 
-// Initialize PostHog by default unless user has explicitly opted out
+// Skip PostHog in anon mode or if user has explicitly opted out
+const anonMode = localStorage.getItem('anon-mode') === 'true';
 const analyticsConsent = localStorage.getItem("kiwi-analytics-consent");
-if (analyticsConsent !== "false") {
-  // Initialize unless explicitly opted out
+if (!anonMode && analyticsConsent !== "false") {
+  // Initialize unless explicitly opted out or in anon mode
   posthog.init("phc_F3mfkyH5tKKSVxnMbJf0ALcPA98s92s3Jw8a7eqpBGw", {
     api_host: "https://eu.i.posthog.com",
     person_profiles: "identified_only",
