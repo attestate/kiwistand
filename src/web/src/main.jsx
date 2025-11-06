@@ -1571,8 +1571,10 @@ async function start() {
     isInIOSApp,
   );
 
-  // Reorder stories based on seen status
-  await reorderStories(identity);
+  // Reorder stories based on seen status (skip in anon mode)
+  if (!isAnonMode) {
+    await reorderStories(identity);
+  }
 
   // Watch for future account changes
   watchAccount(client, {
