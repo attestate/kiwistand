@@ -331,6 +331,10 @@ async function addVotes(delegations, toast) {
 
 
 async function addEmailSubscriptionForm(delegations, toast) {
+  // Skip email subscription form in anon mode
+  const isAnonMode = localStorage.getItem('anon-mode') === 'true';
+  if (isAnonMode) return;
+
   const elem = document.querySelector("email-subscription-form");
   if (elem) {
     const { ConnectedEmailSubscriptionForm } = await import("./Bell.jsx");
@@ -440,7 +444,7 @@ async function addConnectedComponents(delegations, toast) {
   // Check if we're on mobile based on the breakpoint in news.css (max-width: 640px)
   const isMobileView = window.innerWidth <= 640;
 
-  if (!isMobileView) {
+  if (!isMobileView && !isAnonMode) {
     const bellButton = document.querySelector("#bell");
     if (bellButton) {
       const Bell = (await import("./Bell.jsx")).default;
@@ -485,7 +489,7 @@ async function addConnectedComponents(delegations, toast) {
     });
   }
 
-  if (isMobileView) {
+  if (isMobileView && !isAnonMode) {
     const mobileBellButton = document.querySelector(".mobile-bell-container");
     if (mobileBellButton) {
       const Bell = (await import("./Bell.jsx")).default;
@@ -952,7 +956,9 @@ async function startWatchAccount(delegations, account, isInIOSApp) {
   }
   const identity = address && resolveIdentity(delegations, address);
   if (identity) {
-    posthog.identify(identity);
+    if (!isAnonMode) {
+      posthog.identify(identity);
+    }
 
     // Set iOS wallet for push notifications
     if (isInIOSApp && window.setKiwiWallet) {
@@ -1275,7 +1281,7 @@ function trackLinkImpressions() {
 
           // Also capture impression in PostHog with variant for A/B analysis
           try {
-            if (typeof posthog !== "undefined") {
+            if (!isAnonMode && typeof posthog !== "undefined") {
               const variantMeta = document.querySelector(
                 'meta[name="kiwi-variant"]',
               );
@@ -1326,7 +1332,7 @@ function trackLinkImpressions() {
         }
       }
 
-      if (typeof posthog !== "undefined") {
+      if (!isAnonMode && typeof posthog !== "undefined") {
         try {
           const variantMeta = document.querySelector(
             'meta[name="kiwi-variant"]',
@@ -1489,7 +1495,7 @@ async function start() {
   }
 
   // Ensure variant is available on all subsequent PostHog events
-  if (window.location.pathname === "/" && typeof posthog !== "undefined") {
+  if (!isAnonMode && window.location.pathname === "/" && typeof posthog !== "undefined") {
     try {
       const variantMeta = document.querySelector('meta[name="kiwi-variant"]');
       const variant = variantMeta?.content || "unknown";
@@ -1501,7 +1507,7 @@ async function start() {
   initTerminalAds();
 
   // Track A/B test variant via PostHog
-  if (window.location.pathname === "/" && typeof posthog !== "undefined") {
+  if (!isAnonMode && window.location.pathname === "/" && typeof posthog !== "undefined") {
     const variantMeta = document.querySelector('meta[name="kiwi-variant"]');
     const variant = variantMeta?.content || "unknown";
     posthog?.capture?.("feed_page_view", { variant });

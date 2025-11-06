@@ -548,7 +548,10 @@ const CommentInput = (props) => {
         );
         API.send(value, signature, false); // Fire and forget
         toast.success("Comment added successfully!"); // Confirmation of *sending*
-        posthog.capture("comment_created", { variant: getFeedVariant() });
+        const isAnonMode = localStorage.getItem('anon-mode') === 'true';
+        if (!isAnonMode) {
+          posthog.capture("comment_created", { variant: getFeedVariant() });
+        }
       } catch (err) {
         console.error("Signing/Sending error (optimistic path):", err);
         toast.error(`Error: ${err.message}`);
@@ -580,7 +583,10 @@ const CommentInput = (props) => {
 
         // Success! Clear local state and reload
         toast.success("Comment submitted successfully!");
-        posthog.capture("comment_created", { variant: getFeedVariant() });
+        const isAnonMode = localStorage.getItem('anon-mode') === 'true';
+        if (!isAnonMode) {
+          posthog.capture("comment_created", { variant: getFeedVariant() });
+        }
         localStorage.removeItem(`-kiwi-news-comment-${address}-${index}`);
         setText(""); // Clear input
 

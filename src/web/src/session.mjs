@@ -52,7 +52,26 @@ export function getCookie(name) {
 }
 
 export const tenYearsInSeconds = 10 * 365 * 24 * 60 * 60;
+
+// Cache anon wallet per page session to avoid infinite re-renders
+let _sessionAnonWallet = null;
+
 export function getLocalAccount(identity) {
+  // Check for anon mode first - if enabled, return same wallet for this page session
+  const isAnonMode = localStorage.getItem('anon-mode') === 'true';
+  if (isAnonMode) {
+    // Use cached wallet for this page session, create new one only if not exists
+    if (!_sessionAnonWallet) {
+      const wallet = Wallet.createRandom();
+      _sessionAnonWallet = {
+        identity: wallet.address,
+        privateKey: wallet.privateKey,
+        signer: wallet.address,
+      };
+    }
+    return _sessionAnonWallet;
+  }
+
   const schema = /^-kiwi-news-(0x[a-fA-F0-9]{40})-key$/;
   const keys = Object.entries(localStorage).reduce((obj, [key, value]) => {
     const match = key.match(schema);
@@ -161,24 +180,24 @@ export function addAuthParams(url) {
   if (window.parent === window && !window.location.search.includes('miniapp=true')) {
     return url;
   }
-  
+
   try {
     const urlObj = new URL(url, window.location.origin);
     const identity = getCookie("identity");
-    
+
     // Always preserve miniapp param
     if (window.location.search.includes('miniapp=true')) {
       urlObj.searchParams.set('miniapp', 'true');
     }
-    
+
     // Add identity if available and it's a protected path
     const protectedPaths = ['/profile', '/submit', '/upvotes'];
     const needsAuth = protectedPaths.some(path => urlObj.pathname.startsWith(path));
-    
+
     if (identity && needsAuth) {
       urlObj.searchParams.set('identity', identity);
     }
-    
+
     return urlObj.pathname + urlObj.search;
   } catch (e) {
     return url;

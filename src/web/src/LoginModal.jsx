@@ -45,6 +45,7 @@ const LoginModal = forwardRef((props, ref) => {
   const [showModal, setShowModal] = useState(false);
   const [isButtonHovered, setIsButtonHovered] = useState(false);
   const [isButtonActive, setIsButtonActive] = useState(false);
+  const [isAnonButtonHovered, setIsAnonButtonHovered] = useState(false);
   const account = useAccount();
   const { connectors, connect } = useConnect();
   const { openConnectModal } = useConnectModal();
@@ -85,6 +86,16 @@ const LoginModal = forwardRef((props, ref) => {
     if (openConnectModal) {
       openConnectModal();
     }
+  };
+
+  const handleAnonMode = () => {
+    // Enable anon mode
+    localStorage.setItem('anon-mode', 'true');
+    // Set the theme
+    document.documentElement.setAttribute('data-theme', 'anon');
+    closeModal();
+    // Reload to apply all anon mode changes
+    window.location.reload();
   };
 
   // Porto-style modal settings
@@ -329,6 +340,31 @@ const LoginModal = forwardRef((props, ref) => {
               onClick={handleConnectWallet}
             >
               Connect wallet
+            </button>
+
+            {/* Tertiary button - Anon mode */}
+            <button
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                height: "38px",
+                backgroundColor: isAnonButtonHovered ? "rgba(0, 255, 0, 0.1)" : "transparent",
+                border: isAnonButtonHovered ? "1px solid #00FF00" : "var(--border-thin)",
+                color: isAnonButtonHovered ? "#00FF00" : "var(--text-primary)",
+                borderRadius: "8px",
+                fontSize: "15px",
+                fontWeight: "normal",
+                cursor: "pointer",
+                transition: "all 0.15s ease",
+                margin: "0 16px",
+                whiteSpace: "nowrap",
+              }}
+              onClick={handleAnonMode}
+              onMouseEnter={() => setIsAnonButtonHovered(true)}
+              onMouseLeave={() => setIsAnonButtonHovered(false)}
+            >
+              Anon mode
             </button>
           </div>
         </div>

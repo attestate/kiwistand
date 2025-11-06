@@ -287,7 +287,10 @@ const Vote = (props) => {
       // Update UI state
       setUpvotes(upvotes + 1);
       toast.success("Thanks for your like! Have a 🥝");
-      posthog.capture("upvote", { variant: getVariant() });
+      const isAnonMode = localStorage.getItem('anon-mode') === 'true';
+      if (!isAnonMode) {
+        posthog.capture("upvote", { variant: getVariant() });
+      }
     } else if (response.status === "error") {
       if (
         response.details.includes(
