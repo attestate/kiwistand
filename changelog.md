@@ -5,6 +5,45 @@
 - We are versioning according to [semver.org](https://semver.org)
 - We are currently in the ["Initial development phase"](https://semver.org/#spec-item-4)
 
+## 0.14.0
+
+**BREAKING CHANGE**: Add text post support with inline content
+
+This release adds support for submitting text-only posts using `data:text/plain,` URLs, allowing users to share thoughts and discussions directly without requiring external links.
+
+### Breaking Changes
+
+- **Protocol versions bumped**:
+  - Pubsub topics (roots/messages): `10.0.0 → 11.0.0`
+  - Protocols (leaves/levels): `13.0.0 → 14.0.0`
+- **Validation schema updated**:
+  - `href` field now accepts `data:text/plain,` URLs (up to 2048 chars)
+  - Pattern: `^(https?://|data:text/plain,|kiwi:0x)`
+
+### New Features
+
+- **Text Post Submission**: New textarea in submit form with 2048 character limit
+- **Inline Storage**: Text content stored as `data:text/plain,` URLs with `encodeURIComponent` encoding
+- **Story Display**: Text content renders on story pages between subtitle and action buttons
+- **Feed Behavior**: Text posts appear in feeds without preview (consistent with comment links)
+- **No Domain Badge**: Text posts don't show domain badges (data: and kiwi: URLs)
+- **Preview Generation**: OG images generated with empty domain for social sharing
+
+### Security
+
+- **DOMPurify** sanitization at all rendering points
+- **Frontend validation**: maxLength constraint (2048 characters)
+- **Safe encoding**: encodeURIComponent for storage
+- **Title sanitization**: getSlug() uses DOMPurify
+
+### Bug Fixes
+
+- Fixed frame image path generation (was incorrectly stripping extra characters from index)
+
+### Migration
+
+All nodes must upgrade to maintain P2P connectivity. Nodes on different protocol versions will not sync with each other. Text posts will only be recognized by nodes running 0.14.0+.
+
 ## 0.13.0
 
 **BREAKING CHANGE**: Increase P2P sync message size limit to 32MB
