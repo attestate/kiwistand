@@ -2350,6 +2350,45 @@ export async function launch(trie, libp2p, isPrimary = true) {
     });
   });
 
+  app.get("/api/v1/favicon", async (request, reply) => {
+    const { domain } = request.query;
+
+    if (!domain) {
+      const code = 400;
+      const httpMessage = "Bad Request";
+      const details = "Missing domain parameter";
+      return sendError(reply, code, httpMessage, details);
+    }
+
+    try {
+      // Fetch favicon directly from the domain
+      const faviconUrl = `https://${domain}/favicon.ico`;
+      const response = await fetch(faviconUrl);
+
+      if (!response.ok) {
+        const code = 404;
+        const httpMessage = "Not Found";
+        const details = "Favicon not found for domain";
+        return sendError(reply, code, httpMessage, details);
+      }
+
+      const buffer = await response.arrayBuffer();
+      const contentType = response.headers.get("content-type") || "image/x-icon";
+
+      // Set aggressive caching headers (24 hours CDN, 30 days stale)
+      reply.header("Cache-Control", "public, s-maxage=86400, max-age=86400, stale-while-revalidate=2592000");
+      reply.header("Content-Type", contentType);
+
+      return reply.send(Buffer.from(buffer));
+    } catch (err) {
+      log(`Error fetching favicon for ${domain}: ${err.toString()}`);
+      const code = 500;
+      const httpMessage = "Internal Server Error";
+      const details = "Failed to fetch favicon";
+      return sendError(reply, code, httpMessage, details);
+    }
+  });
+
   server.listen(env.HTTP_PORT, () =>
     log(`Launched HTTPS server at PORT: ${env.HTTP_PORT}`),
   );

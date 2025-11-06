@@ -849,7 +849,7 @@ const row = (
                         "arbiscan.io",
                       ].includes(extractedDomain)
                         ? html`<img
-                            src="https://www.google.com/s2/favicons?sz=32&domain_url=${encodeURIComponent(
+                            src="/api/v1/favicon?domain=${encodeURIComponent(
                               extractedDomain,
                             )}"
                             width="10"
@@ -1124,7 +1124,7 @@ const row = (
                                 "arbiscan.io",
                               ].includes(extractedDomain)
                                 ? html`<img
-                                    src="https://www.google.com/s2/favicons?sz=32&domain_url=${encodeURIComponent(
+                                    src="/api/v1/favicon?domain=${encodeURIComponent(
                                       extractedDomain,
                                     )}"
                                     width="10"
