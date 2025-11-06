@@ -1482,8 +1482,10 @@ async function start() {
     sdk.actions.addFrame();
   }
 
-  // Initialize link impression tracking
-  trackLinkImpressions();
+  // Initialize link impression tracking (skip in anon mode)
+  if (!isAnonMode) {
+    trackLinkImpressions();
+  }
 
   // Ensure variant is available on all subsequent PostHog events
   if (window.location.pathname === "/" && typeof posthog !== "undefined") {
