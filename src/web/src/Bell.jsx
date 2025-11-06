@@ -366,12 +366,13 @@ const Bell = (props) => {
   }
 
   // Render Connect Button if not connected/eligible
-  // If wallet is connected, don't show login button (they should use disconnect in sidebar)
-  if (account?.isConnected) {
-    return null;
-  }
-
+  // If wallet is connected but not logged in/eligible, hide the login button
+  // (users should use disconnect in sidebar instead)
   if (!getCookie("identity") || !isEligible) {
+    // Don't show login button if wallet is already connected
+    if (account?.isConnected) {
+      return null;
+    }
     const mobileConnectStyle = props.mobile
       ? {
           display: "flex", // Changed to flex for column layout
