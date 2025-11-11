@@ -54,7 +54,10 @@ const EmbedDrawer = ({ toast }) => {
     'x.com',
     'twitter.com',
     'github.com',
-    'drive.google.com'
+    'drive.google.com',
+    'youtube.com',
+    'youtu.be',
+    'm.youtube.com'
   ];
 
   // Expose open/close methods globally
