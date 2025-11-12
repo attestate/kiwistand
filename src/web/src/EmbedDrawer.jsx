@@ -386,7 +386,7 @@ const EmbedDrawer = ({ toast }) => {
           flex: 1,
           position: "relative",
           overflow: "hidden",
-          backgroundColor: "var(--bg-white)"
+          backgroundColor: "#ffffff"
         }}>
           {/* Loading spinner */}
           {isLoading && (
@@ -423,7 +423,7 @@ const EmbedDrawer = ({ toast }) => {
                 width: "100%",
                 height: "100%",
                 border: "none",
-                backgroundColor: "var(--bg-white)"
+                backgroundColor: "#ffffff"
               }}
               sandbox="allow-scripts allow-same-origin"
               referrerPolicy="no-referrer"
