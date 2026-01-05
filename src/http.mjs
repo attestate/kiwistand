@@ -22,7 +22,7 @@ import "express-async-errors";
 import { sub } from "date-fns";
 import DOMPurify from "isomorphic-dompurify";
 import { getSlug } from "./utils.mjs";
-import { extractDomain } from "./views/components/row.mjs";
+import Row, { extractDomain } from "./views/components/row.mjs";
 import { createServer as createHttpServer } from "http";
 import { FileSystemCache, getCacheKey } from "node-fetch-cache";
 
@@ -1333,6 +1333,146 @@ export async function launch(trie, libp2p, isPrimary = true) {
     const httpMessage = "OK";
     const details = `${request.params.name} feed`;
     return sendStatus(reply, code, httpMessage, details, { stories });
+  });
+
+  // Cache for endless scroll stories (refreshed every 30s)
+  let cachedEndlessStories = null;
+  let cachedEndlessStoriesTime = 0;
+  const ENDLESS_CACHE_TTL = 30000; // 30 seconds
+
+  let endlessCacheRefreshing = false;
+
+  // Resolve ENS data for a batch of stories
+  async function resolveStoriesENS(stories) {
+    const resolved = [];
+    for (const story of stories) {
+      const ensData = await ens.resolve(story.identity);
+      // Don't skip - show truncated address if no ENS/Lens/Farcaster
+
+      // Skip avatar resolution for endless scroll - too slow
+      let avatars = [];
+
+      resolved.push({
+        ...story,
+        displayName: ensData.displayName,
+        submitter: ensData,
+        avatars,
+      });
+    }
+    return resolved;
+  }
+
+  async function refreshEndlessCache() {
+    const variant = currentVariant;
+    const config = variantConfigs[variant] || variantConfigs.control;
+    const lookback = sub(new Date(), { weeks: 6 });
+
+    const results = await index(
+      trie,
+      999, // Non-zero page to skip the 7-day filter for page 0
+      undefined,
+      lookback,
+      false, // Don't paginate
+      false, // appCuration
+      config.algorithm,
+      true,  // skipAgeFilter - include older stories for endless scroll
+      true,  // skipResolve - skip ENS resolution for fast caching
+    );
+
+    cachedEndlessStories = results.stories;
+    cachedEndlessStoriesTime = Date.now();
+  }
+
+  async function getEndlessStories() {
+    const now = Date.now();
+
+    // If cache is fresh, return it
+    if (cachedEndlessStories && (now - cachedEndlessStoriesTime) < ENDLESS_CACHE_TTL) {
+      return cachedEndlessStories;
+    }
+
+    // If cache exists but is stale, return stale and refresh in background
+    if (cachedEndlessStories && !endlessCacheRefreshing) {
+      endlessCacheRefreshing = true;
+      refreshEndlessCache().finally(() => { endlessCacheRefreshing = false; });
+      return cachedEndlessStories;
+    }
+
+    // No cache yet, must wait for initial load
+    await refreshEndlessCache();
+    return cachedEndlessStories;
+  }
+
+  // Pre-warm the cache
+  setImmediate(async () => {
+    try {
+      await getEndlessStories();
+      log("Endless scroll cache warmed");
+    } catch (err) {
+      log("Failed to warm endless scroll cache: " + err.message);
+    }
+  });
+
+  // Endless scroll endpoint - returns just HTML rows for a page
+  app.get("/api/v1/feed/rows", async (request, reply) => {
+    let page = parseInt(request.query.page);
+    if (isNaN(page) || page < 1) {
+      page = 1; // Default to page 1 for endless scroll (page 0 is already loaded)
+    }
+
+    const totalStories = parseInt(env.TOTAL_STORIES, 10);
+
+    let allStories;
+    try {
+      allStories = await getEndlessStories();
+    } catch (err) {
+      log(`Error in /api/v1/feed/rows: ${err.stack}`);
+      return reply.status(500).send("");
+    }
+
+    // Filter out stories from last 2 days (those are on the initial page)
+    const twoDaysAgo = Math.floor(Date.now() / 1000) - (2 * 24 * 60 * 60);
+    const olderStories = allStories.filter(s => s.timestamp < twoDaysAgo);
+
+    // Manually paginate the results (page 1 = stories 0-39, page 2 = 40-79, etc.)
+    const start = totalStories * (page - 1);
+    const end = totalStories * page;
+    const rawStories = olderStories.slice(start, end);
+
+    if (rawStories.length === 0) {
+      reply.header("Cache-Control", "public, s-maxage=60, max-age=0");
+      return reply.status(200).type("text/html").send("");
+    }
+
+    // Resolve ENS data only for this page's stories
+    const stories = await resolveStoriesENS(rawStories);
+
+    if (stories.length === 0) {
+      reply.header("Cache-Control", "public, s-maxage=60, max-age=0");
+      return reply.status(200).type("text/html").send("");
+    }
+
+    // Render stories as HTML rows
+    const rowsHtml = stories.map((story, i) =>
+      Row(
+        start,
+        "/",
+        "margin-bottom: 20px;",
+        null,
+        null,
+        null,
+        false,
+        `?page=${page}`,
+        false, // debugMode
+        false, // isAboveFold
+      )(story, i)
+    ).join("");
+
+    reply.header(
+      "Cache-Control",
+      "public, s-maxage=20, max-age=0, stale-while-revalidate=86400",
+    );
+    return reply.status(200).type("text/html").send(rowsHtml);
   });
 
   app.get("/api/v1/profile/:address", async (request, reply) => {

@@ -258,10 +258,10 @@ async function calculateNeynarUpvotes(upvoters) {
   return weightedUpvotes;
 }
 
-export async function topstories(leaves, algorithm = 'control') {
+export async function topstories(leaves, algorithm = 'control', skipNeynar = false) {
   // Check if we're using Lobsters algorithm
   const useLobstersAlgo = algorithm === 'lobsters';
-  
+
   return Promise.allSettled(leaves
     .map(async (story) => {
       let commentCount;
@@ -270,7 +270,10 @@ export async function topstories(leaves, algorithm = 'control') {
       } catch (e) {
         commentCount = 0;
       }
-      const upvotes = await calculateNeynarUpvotes(story.upvoters);
+      // Skip Neynar weighting for endless scroll (uses simple count)
+      const upvotes = skipNeynar
+        ? story.upvoters?.length || 1
+        : await calculateNeynarUpvotes(story.upvoters);
       
       let score;
       
@@ -388,6 +391,8 @@ export async function index(
   paginate = true,
   appCuration = false,
   algorithm = 'control',
+  skipAgeFilter = false,
+  skipResolve = false,
 ) {
   const lookbackUnixTime = Math.floor(lookback.getTime() / 1000);
   const limit = -1;
@@ -398,7 +403,8 @@ export async function index(
   let moderatedLeaves = moderation.moderate(leaves, policy, path); // Use a different var name
 
   // 1. Calculate initial ranking based on ACTUAL engagement
-  let rankedStories = await topstories(moderatedLeaves, algorithm); // Use moderated leaves with algorithm
+  // Skip Neynar weighting when skipResolve is true (for fast endless scroll caching)
+  let rankedStories = await topstories(moderatedLeaves, algorithm, skipResolve);
 
   // 2. Filter ranked stories based on age/engagement rules
   rankedStories = rankedStories.filter(({ index, identity, upvotes, timestamp }) => {
@@ -417,11 +423,17 @@ export async function index(
       return false;
     }
     // General engagement filter (applied after ranking)
-    if (storyAgeInDays <= 2) {
-      return upvotes > 1;
+    if (skipAgeFilter) {
+      // For endless scroll: include all stories (no engagement filter)
+      return true;
     } else {
-      // storyAgeInDays > 2
-      return upvotes + commentCount > 3;
+      // For initial page: stricter filters
+      if (storyAgeInDays <= 2) {
+        return upvotes > 1;
+      } else {
+        // storyAgeInDays > 2
+        return upvotes + commentCount > 3;
+      }
     }
   });
 
@@ -556,22 +568,26 @@ export async function index(
     }
     return stories;
   }
-  let stories = await resolveIds(pageStories); // Process the current page
+  let stories;
+  if (skipResolve) {
+    // Skip ENS resolution - return raw stories for caching
+    stories = pageStories;
+  } else {
+    stories = await resolveIds(pageStories); // Process the current page
 
-  // 7. Filter based on resolved submitter name
-  stories = stories.filter((story) => {
-    const hasProperName =
-      story.submitter &&
-      (story.submitter.ens ||
-        story.submitter.lens ||
-        story.submitter.farcaster);
-    return hasProperName;
-  });
+    // 7. Filter based on resolved submitter name
+    stories = stories.filter((story) => {
+      const hasProperName =
+        story.submitter &&
+        (story.submitter.ens ||
+          story.submitter.lens ||
+          story.submitter.farcaster);
+      return hasProperName;
+    });
+  }
 
-  // 8. FINAL SORT before prediction injection
-  stories = stories
-    .map((story) => story)
-    .sort((a, b) => (b.score || 0) - (a.score || 0)); // Sort by score
+  // 8. FINAL SORT before prediction injection - always by score
+  stories = stories.sort((a, b) => (b.score || 0) - (a.score || 0));
 
   // 9. Prediction Injection Logic (Page 0 ONLY - applied AFTER final sort)
   if (page === 0 && paginate && stories.length > 0) {
@@ -779,12 +795,14 @@ export async function index(
   // We filter from the *final* stories list.
   let originals = stories.filter((story) => story.isOriginal).slice(0, 2); // Take top 2 originals *remaining* in the list
 
-  // 12. FINAL FILTER: Remove stories older than 2 days
-  const twoDaysInSeconds = 2 * 24 * 60 * 60;
-  const nowTimestamp = getUnixTime(new Date());
-  stories = stories.filter(
-    (story) => nowTimestamp - story.timestamp <= twoDaysInSeconds,
-  );
+  // 12. FINAL FILTER: Remove stories older than 2 days (skip for endless scroll)
+  if (!skipAgeFilter) {
+    const twoDaysInSeconds = 2 * 24 * 60 * 60;
+    const nowTimestamp = getUnixTime(new Date());
+    stories = stories.filter(
+      (story) => nowTimestamp - story.timestamp <= twoDaysInSeconds,
+    );
+  }
 
   // Return final data
   return {
@@ -932,6 +950,11 @@ export default async function (trie, theme, page, domain, identity, hash, varian
                       false, // isAboveFold = false for all remaining stories
                     )(story, i + 3), // Adjust index offset
                 )}
+              <tr>
+                <td style="text-align: center; padding: 20px 0;">
+                  <div id="feed-sentinel"></div>
+                </td>
+              </tr>
             </table>
             ${Footer(theme, path)}
           </div>

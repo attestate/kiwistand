@@ -4,6 +4,7 @@ import PullToRefresh from "pulltorefreshjs";
 import React, { StrictMode, createRef } from "react";
 import { createRoot } from "react-dom/client";
 import sdk from "@farcaster/frame-sdk";
+import DOMPurify from "isomorphic-dompurify";
 import { Providers } from "./providers.jsx";
 import {
   initSpinnerOverlay,
@@ -1454,6 +1455,116 @@ async function reorderStories(identity) {
   parent.style.opacity = "1";
 }
 
+// Endless scroll for main feed
+function initEndlessScroll() {
+  // Only run on the main feed page
+  if (window.location.pathname !== '/') return;
+
+  let currentPage = 0;
+  let isLoading = false;
+  let hasMore = true;
+
+  const sentinel = document.getElementById('feed-sentinel');
+  const feedTable = document.querySelector('#hnmain table');
+
+  if (!sentinel || !feedTable) return;
+
+  // Get domain filter from URL if present
+  const urlParams = new URLSearchParams(window.location.search);
+  const domain = urlParams.get('domain');
+
+  async function loadMore() {
+    if (isLoading || !hasMore) return;
+
+    isLoading = true;
+    currentPage++;
+
+    // Show loading indicator
+    sentinel.textContent = 'Loading...';
+
+    try {
+      let url = `/api/v1/feed/rows?page=${currentPage}`;
+      if (domain) url += `&domain=${encodeURIComponent(domain)}`;
+
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error('Failed to fetch');
+      }
+
+      const html = await response.text();
+
+      if (!html || html.trim() === '') {
+        hasMore = false;
+        sentinel.style.display = 'none';
+        return;
+      }
+
+      // Sanitize HTML before inserting into DOM
+      const sanitizedHtml = DOMPurify.sanitize(html, {
+        ADD_TAGS: ['iframe'],
+        ADD_ATTR: ['target', 'onclick', 'onmouseover', 'onmouseout', 'onerror', 'loading', 'data-no-instant', 'data-story-link', 'data-external-link', 'data-title', 'data-href', 'data-upvoters', 'data-story-index', 'data-comment-count', 'data-story-title', 'data-story-slug', 'data-story-href', 'data-submitter', 'data-content-id', 'data-content-type', 'data-has-preview', 'data-editorpicks', 'data-isad'],
+      });
+
+      // Insert new rows before the sentinel's parent row
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = sanitizedHtml;
+
+      // Find the table body where stories are rendered
+      const tableRows = feedTable.querySelectorAll('tr');
+      const lastStoryRow = sentinel.closest('tr') || tableRows[tableRows.length - 1];
+
+      // Insert each new row
+      const fragment = document.createDocumentFragment();
+      while (tempDiv.firstChild) {
+        fragment.appendChild(tempDiv.firstChild);
+      }
+      lastStoryRow.parentNode.insertBefore(fragment, lastStoryRow);
+
+      // Notify to initialize React components on new rows
+      window.dispatchEvent(new Event('kiwi-rows-loaded'));
+
+      // Prefetch next page
+      if (hasMore) {
+        const prefetchUrl = `/api/v1/feed/rows?page=${currentPage + 1}${domain ? '&domain=' + encodeURIComponent(domain) : ''}`;
+        const link = document.createElement('link');
+        link.rel = 'prefetch';
+        link.href = prefetchUrl;
+        document.head.appendChild(link);
+      }
+
+    } catch (err) {
+      console.error('Endless scroll error:', err);
+      // On error, allow retry
+      currentPage--;
+    } finally {
+      isLoading = false;
+      sentinel.textContent = '';
+    }
+  }
+
+  // Set up intersection observer
+  const observer = new IntersectionObserver(
+    (entries) => {
+      if (entries[0].isIntersecting) {
+        loadMore();
+      }
+    },
+    {
+      rootMargin: '200px', // Start loading before user reaches the bottom
+      threshold: 0
+    }
+  );
+
+  observer.observe(sentinel);
+
+  // Also prefetch first page on load
+  const prefetchUrl = `/api/v1/feed/rows?page=1${domain ? '&domain=' + encodeURIComponent(domain) : ''}`;
+  const link = document.createElement('link');
+  link.rel = 'prefetch';
+  link.href = prefetchUrl;
+  document.head.appendChild(link);
+}
+
 async function start() {
   initFarcasterFrame()
     .then()
@@ -1659,6 +1770,23 @@ async function start() {
   try {
     document.body.classList.add("react-loaded");
   } catch {}
+
+  // Initialize endless scroll for main feed
+  initEndlessScroll();
+
+  // Listen for endless scroll loading new rows
+  window.addEventListener('kiwi-rows-loaded', async () => {
+    // Re-initialize React components on newly loaded rows
+    await Promise.allSettled([
+      addVotes(delegations, toast),
+      addDynamicComments(delegations, toast),
+      addFarcasterShareButtons(),
+    ]);
+    // Re-track impressions for new links (skip in anon mode)
+    if (!isAnonMode) {
+      trackLinkImpressions();
+    }
+  });
 }
 
 start();

@@ -260,30 +260,6 @@ const secondheader = (theme, site, period, domain, query) => {
                 </a>
               `
             : ""}
-          ${site === "search" ||
-          site === "top" ||
-          site === "new" ||
-          site === "best"
-            ? html`
-                <a data-no-instant class="feed-button-link" href="/best">
-                  <button
-                    onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block'; ${animation}}"
-                    class="feed-button"
-                    style=${`font-variant: small-caps; margin-left: 10px; font-size: 1.01rem; border: none; outline: none; border-radius: 2px; cursor: pointer; padding: 6px 15px; background-color: ${
-                      site === "best" ? "var(--button-active-bg)" : "var(--button-bg)"
-                    }; color: var(--text-primary);`}
-                  >
-                    <span
-                      style="font-weight: ${site === "best"
-                        ? "bold"
-                        : "normal"};"
-                    >
-                      ${site === "best" ? trophyFullSVG : trophySVG} Top
-                    </span>
-                  </button>
-                </a>
-              `
-            : ""}
         </div>
         ${site === "search" ||
         site === "top" ||
