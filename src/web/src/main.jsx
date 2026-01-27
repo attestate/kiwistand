@@ -658,14 +658,11 @@ async function addAnalyticsConsent() {
 }
 
 async function addTestFlightQR() {
-  if (!document.getElementById("testflight-qr-container")) {
-    const container = document.createElement("div");
-    container.id = "testflight-qr-container";
-    document.body.appendChild(container);
-  }
+  const container = document.getElementById("testflight-qr-container");
+  if (!container) return;
 
   const TestFlightQR = (await import("./TestFlightQR.jsx")).default;
-  createRoot(document.getElementById("testflight-qr-container")).render(
+  createRoot(container).render(
     <StrictMode>
       <Providers>
         <TestFlightQR />

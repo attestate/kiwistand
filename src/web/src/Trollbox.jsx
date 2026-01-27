@@ -71,8 +71,9 @@ export default function Trollbox() {
   signerRef.current = signer;
 
   const scrollToBottom = useCallback(() => {
-    if (shouldAutoScroll.current && messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    const container = messagesContainerRef.current;
+    if (shouldAutoScroll.current && container) {
+      container.scrollTop = container.scrollHeight;
     }
   }, []);
 
@@ -215,6 +216,7 @@ export default function Trollbox() {
         height: "100%",
         fontFamily: "var(--font-family, Inter, system-ui, sans-serif)",
         fontSize: "13px",
+        minHeight: 0,
       }}
     >
       <div
