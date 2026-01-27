@@ -30,6 +30,7 @@ import * as registry from "./chainstate/registry.mjs";
 import log from "./logger.mjs";
 import theme from "./theme.mjs";
 import feed, { index } from "./views/feed.mjs";
+import { setupRoutes as setupTrollboxRoutes } from "./trollbox.mjs";
 
 // Global error handlers to catch crashes and log them properly
 process.on("uncaughtException", (err) => {
@@ -2530,6 +2531,8 @@ export async function launch(trie, libp2p, isPrimary = true) {
       return sendError(reply, code, httpMessage, details);
     }
   });
+
+  await setupTrollboxRoutes(app);
 
   server.listen(env.HTTP_PORT, () =>
     log(`Launched HTTPS server at PORT: ${env.HTTP_PORT}`),

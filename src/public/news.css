@@ -2114,3 +2114,24 @@ a.meta-link:hover, span.meta-link:hover {
   background-color: var(--button-primary-bg-hover) !important;
   color: var(--button-primary-text) !important;
 }
+
+/* Trollbox Panel */
+.trollbox-panel {
+  width: 280px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  align-self: flex-start;
+  border-left: var(--border-thin, 1px solid rgba(166,110,78,0.15));
+  background: var(--bg-white, #fff);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+@media (max-width: 1100px) {
+  .trollbox-panel {
+    display: none;
+  }
+}

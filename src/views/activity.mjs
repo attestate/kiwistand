@@ -13,6 +13,7 @@ import * as ens from "../ens.mjs";
 import Header from "./components/header.mjs";
 import Sidebar from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
+import Trollbox from "./components/trollbox.mjs";
 import { prefetchHead } from "./components/head.mjs";
 import { iconSVG } from "./components/row.mjs";
 import { getSlug } from "../utils.mjs";
@@ -453,6 +454,7 @@ export async function page(
             </table>
             ${Footer(theme, "/activity")}
           </div>
+          ${Trollbox()}
         </div>
       </body>
     </html>

@@ -11,6 +11,7 @@ import Header from "./components/header.mjs";
 import SecondHeader from "./components/secondheader.mjs";
 import Sidebar from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
+import Trollbox from "./components/trollbox.mjs";
 import { custom } from "./components/head.mjs";
 import * as store from "../store.mjs";
 import * as moderation from "./moderation.mjs";
@@ -211,6 +212,7 @@ export default async function (trie, theme) {
             </table>
             ${Footer(theme, "/new")}
           </div>
+          ${Trollbox()}
         </div>
       </body>
     </html>

@@ -213,6 +213,7 @@ async function startLoadBalancer() {
       );
     });
   }
+
 }
 
 // Only run the load balancer if this file is called directly

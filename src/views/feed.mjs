@@ -34,6 +34,7 @@ import cache, {
   // Removed getRecommendations import
 } from "../cache.mjs";
 import * as curation from "./curation.mjs";
+import Trollbox from "./components/trollbox.mjs";
 import log from "../logger.mjs";
 import { EIP712_MESSAGE } from "../constants.mjs";
 import Row, { extractDomain } from "./components/row.mjs";
@@ -958,6 +959,7 @@ export default async function (trie, theme, page, domain, identity, hash, varian
             </table>
             ${Footer(theme, path)}
           </div>
+          ${Trollbox()}
         </div>
       </body>
     </html>

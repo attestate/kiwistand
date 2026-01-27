@@ -19,6 +19,7 @@ import Header from "./components/header.mjs";
 import SecondHeader from "./components/secondheader.mjs";
 import Sidebar from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
+import Trollbox from "./components/trollbox.mjs";
 import { custom } from "./components/head.mjs";
 import * as store from "../store.mjs";
 import * as id from "../id.mjs";
@@ -281,6 +282,7 @@ export default async function index(theme, page, period, domain) {
             </table>
             ${Footer(theme, "/best")}
           </div>
+          ${Trollbox()}
         </div>
       </body>
     </html>
