@@ -162,6 +162,7 @@ export async function setupRoutes(app) {
       : cachedMessages.slice(-MAX_HISTORY);
 
     cleanOnlineUsers();
+    res.header("Cache-Control", "no-cache");
     res.json({
       messages,
       online: onlineUsers.size,
