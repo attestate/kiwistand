@@ -27,7 +27,10 @@ function addressColor(address) {
     hash = address.charCodeAt(i) + ((hash << 5) - hash);
   }
   const hue = Math.abs(hash) % 360;
-  return `hsl(${hue}, 70%, 40%)`;
+  const isDark = window.matchMedia?.("(prefers-color-scheme: dark)").matches ||
+    document.documentElement.getAttribute("data-theme") === "anon";
+  const lightness = isDark ? 65 : 40;
+  return `hsl(${hue}, 70%, ${lightness}%)`;
 }
 
 function formatTime(ts) {
@@ -225,10 +228,10 @@ export default function Trollbox() {
           justifyContent: "space-between",
           alignItems: "center",
           padding: "8px 12px",
-          borderBottom: "1px solid var(--border-color, rgba(166,110,78,0.15))",
+          borderBottom: "var(--border)",
           fontWeight: 600,
           fontSize: "12px",
-          color: "var(--text-secondary, #666)",
+          color: "var(--text-secondary)",
           textTransform: "uppercase",
           letterSpacing: "0.5px",
         }}
@@ -238,7 +241,7 @@ export default function Trollbox() {
           style={{
             fontSize: "11px",
             fontWeight: 400,
-            color: "#4a9",
+            color: "var(--color-success, #4a9)",
           }}
         >
           {onlineCount} online
@@ -260,7 +263,7 @@ export default function Trollbox() {
         {messages.length === 0 && (
           <div
             style={{
-              color: "#999",
+              color: "var(--text-tertiary)",
               textAlign: "center",
               padding: "20px 10px",
               fontSize: "12px",
@@ -276,7 +279,7 @@ export default function Trollbox() {
           >
             <span
               style={{
-                color: "#999",
+                color: "var(--text-tertiary)",
                 fontSize: "11px",
                 marginRight: "4px",
               }}
@@ -294,7 +297,7 @@ export default function Trollbox() {
             >
               {msg.displayName}:
             </span>
-            <span style={{ color: "var(--text-primary, #333)" }}>
+            <span style={{ color: "var(--text-primary)" }}>
               {msg.text}
             </span>
           </div>
@@ -305,7 +308,7 @@ export default function Trollbox() {
       <div
         style={{
           padding: "8px",
-          borderTop: "1px solid var(--border-color, rgba(166,110,78,0.15))",
+          borderTop: "var(--border)",
         }}
       >
         {authenticated ? (
@@ -321,11 +324,11 @@ export default function Trollbox() {
               style={{
                 flex: 1,
                 padding: "6px 8px",
-                border: "1px solid var(--border-color, rgba(166,110,78,0.2))",
-                borderRadius: "4px",
+                border: "var(--border)",
+                borderRadius: "2px",
                 fontSize: "13px",
-                background: "var(--bg-white, #fff)",
-                color: "var(--text-primary, #333)",
+                background: "var(--bg-white)",
+                color: "var(--text-primary)",
                 outline: "none",
                 opacity: sending ? 0.6 : 1,
               }}
@@ -335,7 +338,7 @@ export default function Trollbox() {
           <div
             style={{
               textAlign: "center",
-              color: "#999",
+              color: "var(--text-tertiary)",
               fontSize: "12px",
               padding: "4px",
             }}

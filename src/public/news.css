@@ -2139,9 +2139,9 @@ a.meta-link:hover, span.meta-link:hover {
 .trollbox-panel {
   flex: 1;
   min-height: 280px;
-  border: 1px solid rgba(166,110,78,0.15);
+  border: var(--border);
   border-radius: 2px;
-  background: var(--color-bg-secondary, #f7f5f3);
+  background: var(--bg-white);
   display: flex;
   flex-direction: column;
   overflow: hidden;

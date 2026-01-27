@@ -4,9 +4,9 @@ const TestFlightQR = () => {
   return (
     <div
       style={{
-        backgroundColor: '#fff',
+        backgroundColor: 'var(--bg-white)',
         borderRadius: '2px',
-        border: '1px solid rgba(166,110,78,0.15)',
+        border: 'var(--border)',
         padding: '16px',
       }}
     >
@@ -16,7 +16,7 @@ const TestFlightQR = () => {
         alignItems: 'center',
         gap: '12px'
       }}>
-        <span style={{ fontSize: '14px', fontWeight: 500 }}>Get Kiwi App</span>
+        <span style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-primary)' }}>Get Kiwi App</span>
 
         <img
           src="/testflight-qr.png"
