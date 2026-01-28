@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import { WagmiProvider, useAccount } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
@@ -22,6 +22,7 @@ const AnalyticsInner = (props) => {
   const [analyticsData, setAnalyticsData] = useState({});
   const [loading, setLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const fetchInitiatedRef = useRef(false);
   const { address: wagmiAddress } = useAccount();
 
   // Get local account and provider
@@ -30,12 +31,15 @@ const AnalyticsInner = (props) => {
 
   // Only use analytics if we have a local account
   // Never use custody wallet for analytics
-  let address = localAccount ? localAccount.identity : null;
-  let signer = null;
-  
-  if (localAccount && localAccount.privateKey) {
-    signer = new Wallet(localAccount.privateKey, provider);
-  }
+  const address = localAccount ? localAccount.identity : null;
+
+  // Memoize signer to prevent useEffect from re-running on every render
+  const signer = useMemo(() => {
+    if (localAccount && localAccount.privateKey) {
+      return new Wallet(localAccount.privateKey, provider);
+    }
+    return null;
+  }, [localAccount?.privateKey, provider]);
 
   useEffect(() => {
     // Find all story analytics placeholders on the page
@@ -78,10 +82,11 @@ const AnalyticsInner = (props) => {
 
     // Fetch analytics for all user's stories
     const fetchAllAnalytics = async () => {
-      // Prevent multiple requests
-      if (loading || hasError || Object.keys(analyticsData).length > 0) {
+      // Prevent multiple requests using ref (survives StrictMode double-mount)
+      if (fetchInitiatedRef.current) {
         return;
       }
+      fetchInitiatedRef.current = true;
 
       setLoading(true);
 
