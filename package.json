@@ -57,6 +57,7 @@
   },
   "homepage": "https://github.com/attestate/kiwistand#readme",
   "dependencies": {
+    "@mozilla/readability": "^0.5.0",
     "@anthropic-ai/sdk": "0.33.1",
     "@attestate/crawler": "0.7.4",
     "@attestate/crawler-call-block-logs": "0.6.2",
@@ -102,6 +103,7 @@
     "http-proxy-middleware": "3.0.3",
     "isbot": "3.7.0",
     "isomorphic-dompurify": "2.12.0",
+    "jsdom": "^24.0.0",
     "it-all": "2.0.0",
     "it-length-prefixed": "8.0.4",
     "it-map": "2.0.0",

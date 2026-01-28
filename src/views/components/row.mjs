@@ -19,6 +19,7 @@ import log from "../../logger.mjs";
 import { twitterFrontends } from "../../parser.mjs";
 import ParagraphFullPost from "./paragraph-full-post.mjs";
 import * as karma from "../../karma.mjs";
+import { isDomainFailed, isStoryFailed } from "../../lib/listen/failed-domains.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -82,6 +83,82 @@ const shareSVG = html`
     />
   </svg>
 `;
+
+const playSVG = html`
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 256 256"
+    width="20"
+    height="20"
+  >
+    <rect width="256" height="256" fill="none" />
+    <path
+      d="M228.23,134.69,72.23,214.69A8,8,0,0,1,60,208V48a8,8,0,0,1,12.23-6.69l156,80A8,8,0,0,1,228.23,134.69Z"
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="16"
+    />
+  </svg>
+`;
+
+// Non-listenable domains - don't show listen button for these
+const nonListenableDomains = [
+  // Social media (Twitter only - Farcaster handled via Neynar API)
+  "x.com",
+  "twitter.com",
+  "xcancel.com",
+  "nitter.net",
+  "nitter.it",
+  "nitter.at",
+  "nitter.poast.org",
+  // Video
+  "youtube.com",
+  "youtu.be",
+  "m.youtube.com",
+  // Code / markets
+  "github.com",
+  "polymarket.com",
+  // Image CDNs
+  "imagedelivery.net",
+  "imgur.com",
+  "i.imgur.com",
+  "cloudinary.com",
+  "imgbb.com",
+  "pbs.twimg.com",
+  "media.tenor.com",
+  "giphy.com",
+];
+
+// Image/media file extensions
+const nonListenableExtensions = [
+  ".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg", ".ico", ".bmp",
+  ".mp4", ".webm", ".mov", ".avi", ".mp3", ".wav", ".ogg",
+  ".pdf",
+];
+
+function isListenableUrl(href) {
+  if (!href) return false;
+  if (href.startsWith("data:")) return false;
+  try {
+    const url = new URL(href);
+    // Check blocked domains
+    const isBlockedDomain = nonListenableDomains.some(
+      (d) => url.hostname === d || url.hostname.endsWith(`.${d}`),
+    );
+    if (isBlockedDomain) return false;
+    // Check file extensions (case-insensitive)
+    const pathname = url.pathname.toLowerCase();
+    const hasBlockedExt = nonListenableExtensions.some((ext) => pathname.endsWith(ext));
+    if (hasBlockedExt) return false;
+    // Check if domain has previously failed
+    if (isDomainFailed(href)) return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 const heartFilledSVG = html`
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
@@ -1302,35 +1379,28 @@ const row = (
                         >
                       </button>
                     </div>
-                    ${path === "/stories"
+                    ${isListenableUrl(story.href) && !isStoryFailed("0x" + story.index)
                       ? html`<div
-                          class="farcaster-share-button-container"
-                          data-story-title="${DOMPurify.sanitize(story.title)}"
-                          data-story-slug="${getSlug(story.title)}"
+                          class="listen-button-container"
                           data-story-index="0x${story.index}"
+                          data-story-title="${DOMPurify.sanitize(story.title)}"
                           style="flex: 1; display: flex; justify-content: center;"
                         >
-                          <a
-                            href="https://farcaster.xyz/~/compose?text=${encodeURIComponent(
-                              DOMPurify.sanitize(story.title),
-                            )}&embeds[]=${encodeURIComponent(
-                              `https://news.kiwistand.com/stories/${getSlug(
-                                story.title,
-                              )}?index=0x${story.index}`,
-                            )}"
-                            target="_blank"
-                            class="interaction-button farcaster-share-fallback"
-                            style="min-width: 40px; padding: 8px; border: none; background: transparent; border-radius: 999px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s ease; text-decoration: none; color: inherit;"
-                            onmouseover="this.style.backgroundColor='rgba(124, 101, 193, 0.1)'"
+                          <button
+                            class="interaction-button listen-button"
+                            style="min-width: 40px; padding: 8px; border: none; background: transparent; border-radius: 999px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s ease; position: relative;"
+                            onmouseover="this.style.backgroundColor='rgba(108, 92, 231, 0.1)'"
                             onmouseout="this.style.backgroundColor='transparent'"
                           >
                             <span
-                              style="width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;"
-                              >${warpcastSvg(
-                                "width: 20px; height: 20px; color: var(--color-farcaster-light);",
-                              )}</span
+                              style="width: 20px; height: 20px; color: var(--color-vote-default); display: flex; align-items: center; justify-content: center;"
+                              >${playSVG}</span
                             >
-                          </a>
+                            <span
+                              style="position: absolute; top: -2px; right: -2px; background: var(--accent-primary); color: var(--text-primary); font-size: 8px; font-weight: 600; padding: 1px 3px; border-radius: 3px; line-height: 1;"
+                              >NEW</span
+                            >
+                          </button>
                         </div>`
                       : ""}
                   </div>`

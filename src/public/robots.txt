@@ -3,3 +3,4 @@ Disallow: /outbound
 Disallow: /best?*domain=
 Disallow: /?*domain=
 Disallow: /*.eth?*
+Disallow: /api/v1/listen

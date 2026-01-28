@@ -689,6 +689,45 @@ async function addEmbedDrawer(toast) {
   );
 }
 
+async function addListenDrawer(toast) {
+  // Create container if it doesn't exist
+  if (!document.getElementById("listen-drawer-container")) {
+    const container = document.createElement("div");
+    container.id = "listen-drawer-container";
+    document.body.appendChild(container);
+  }
+
+  const ListenDrawer = (await import("./ListenDrawer.jsx")).default;
+  createRoot(document.getElementById("listen-drawer-container")).render(
+    <StrictMode>
+      <Providers>
+        <ListenDrawer toast={toast} />
+      </Providers>
+    </StrictMode>,
+  );
+
+  // Add click handlers for listen buttons
+  addListenButtonHandlers();
+}
+
+function addListenButtonHandlers() {
+  document.querySelectorAll(".listen-button-container").forEach((container) => {
+    const btn = container.querySelector(".listen-button");
+    if (!btn || btn.dataset.listenerAdded) return;
+    btn.dataset.listenerAdded = "true";
+
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const index = container.dataset.storyIndex;
+      const title = container.dataset.storyTitle;
+      if (window.openListenDrawer) {
+        window.openListenDrawer(index, title);
+      }
+    });
+  });
+}
+
 async function addNewsletterScrollModal(toast) {
   // Don't show newsletter modal in anon mode
   const isAnonMode = localStorage.getItem('anon-mode') === 'true';
@@ -1741,6 +1780,7 @@ async function start() {
     addKarmaElements(),
     addLeaderboardInteractions(),
     addEmbedDrawer(toast),
+    addListenDrawer(toast),
     addNewsletterScrollModal(toast),
     addAvatar(),
     addBackButton(),
@@ -1800,6 +1840,8 @@ async function start() {
     if (!isAnonMode) {
       trackLinkImpressions();
     }
+    // Re-add listen button handlers for new rows
+    addListenButtonHandlers();
   });
 }
 

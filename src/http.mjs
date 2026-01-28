@@ -6,6 +6,7 @@
 //   to handle stale-while-revalidate since Cloudflare doesn't support this natively
 
 import { env } from "process";
+import fs from "node:fs";
 import path from "path";
 import cluster from "cluster";
 import Cloudflare from "cloudflare";
@@ -101,6 +102,21 @@ import {
   formatSubmissionForFarcaster
 } from "./social-posting.mjs";
 import { sendBroadcastNotification } from "./onesignal.mjs";
+import { extractArticleCached } from "./lib/listen/extract.mjs";
+import {
+  initCache as initListenCache,
+  generateSpeech,
+  generateSpeechProgressive,
+  getAudioPath,
+  getGenerationStatus,
+} from "./lib/listen/tts.mjs";
+import {
+  initFailedDomains,
+  markDomainFailed,
+  isDomainFailed,
+  markStoryFailed,
+  isStoryFailed,
+} from "./lib/listen/failed-domains.mjs";
 
 const app = express();
 
@@ -604,6 +620,10 @@ export function handleClusterMessage(trie, recompute) {
 export async function launch(trie, libp2p, isPrimary = true) {
   // Store the original HTTP_PORT value to use as the base for all port calculations
   const originalPort = parseInt(env.HTTP_PORT);
+
+  // Initialize listen cache (for TTS audio)
+  initListenCache();
+  initFailedDomains();
 
   // Set up IPC message handling for worker processes
   if (!isPrimary && cluster.worker) {
@@ -2530,6 +2550,299 @@ export async function launch(trie, libp2p, isPrimary = true) {
       const details = "Failed to fetch favicon";
       return sendError(reply, code, httpMessage, details);
     }
+  });
+
+  // Listen feature routes - TTS audio for articles
+  // SECURITY: Only accepts story index, looks up URL from database
+  // This prevents the API from being used as a free ElevenLabs proxy
+  const nonListenableDomains = [
+    // Social media (Twitter only - Farcaster handled via Neynar API)
+    "x.com",
+    "twitter.com",
+    "xcancel.com",
+    "nitter.net",
+    "nitter.it",
+    "nitter.at",
+    "nitter.poast.org",
+    // Video
+    "youtube.com",
+    "youtu.be",
+    "m.youtube.com",
+    // Code / markets
+    "github.com",
+    "polymarket.com",
+    // Image CDNs
+    "imagedelivery.net",
+    "imgur.com",
+    "i.imgur.com",
+    "cloudinary.com",
+    "imgbb.com",
+    "pbs.twimg.com",
+    "media.tenor.com",
+    "giphy.com",
+  ];
+
+  const nonListenableExtensions = [
+    ".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg", ".ico", ".bmp",
+    ".mp4", ".webm", ".mov", ".avi", ".mp3", ".wav", ".ogg",
+    ".pdf",
+  ];
+
+  function isListenableUrl(href) {
+    if (!href) return false;
+    if (href.startsWith("data:")) return false;
+    try {
+      const url = new URL(href);
+      // Check blocked domains
+      const isBlockedDomain = nonListenableDomains.some(
+        (d) => url.hostname === d || url.hostname.endsWith(`.${d}`),
+      );
+      if (isBlockedDomain) return false;
+      // Check file extensions
+      const pathname = url.pathname.toLowerCase();
+      const hasBlockedExt = nonListenableExtensions.some((ext) => pathname.endsWith(ext));
+      if (hasBlockedExt) return false;
+      // Check if domain has previously failed
+      if (isDomainFailed(href)) return false;
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  app.post("/api/v1/listen/extract", async (request, reply) => {
+    const { index } = request.body;
+    if (!index) {
+      return sendError(reply, 400, "Bad Request", "Missing index parameter");
+    }
+
+    // Check if this story has previously failed extraction
+    if (isStoryFailed(index)) {
+      return sendError(
+        reply,
+        400,
+        "Bad Request",
+        "This article cannot be converted to audio",
+      );
+    }
+
+    // Look up story from database by index - this ensures only submitted articles can be listened to
+    let submission;
+    try {
+      submission = getSubmission(index);
+    } catch (err) {
+      log(`Listen extract: story not found for index ${index}`);
+      return sendError(reply, 404, "Not Found", "Story not found in database");
+    }
+
+    if (!submission || !submission.href) {
+      return sendError(reply, 404, "Not Found", "Story not found in database");
+    }
+
+    // Check if URL is listenable
+    if (!isListenableUrl(submission.href)) {
+      return sendError(
+        reply,
+        400,
+        "Bad Request",
+        "This content type cannot be converted to audio",
+      );
+    }
+
+    try {
+      const article = await extractArticleCached(submission.href);
+      return reply.status(200).json({
+        title: article.title,
+        plainText: article.plainText,
+        wrappedHtml: article.wrappedHtml,
+      });
+    } catch (err) {
+      log(`Listen extract error for ${submission.href}: ${err.message}`);
+      const msg = err.message.toLowerCase();
+      // Mark domain as failed if it's a bot-blocking or access issue
+      if (
+        msg.includes("access denied") ||
+        msg.includes("403") ||
+        msg.includes("captcha") ||
+        msg.includes("javascript") ||
+        msg.includes("login")
+      ) {
+        markDomainFailed(submission.href);
+      }
+      // Mark story as failed if content is too short or not extractable
+      if (
+        msg.includes("too short") ||
+        msg.includes("landing page") ||
+        msg.includes("could not extract") ||
+        msg.includes("not an article")
+      ) {
+        markStoryFailed(index);
+      }
+      return sendError(
+        reply,
+        500,
+        "Internal Server Error",
+        err.message || "Failed to extract article content",
+      );
+    }
+  });
+
+  // In-progress TTS generation lock to prevent concurrent requests for first chunk
+  const ttsInProgress = new Map();
+
+  app.post("/api/v1/listen/tts", async (request, reply) => {
+    const { index } = request.body;
+
+    if (!index) {
+      return sendError(reply, 400, "Bad Request", "Missing index parameter");
+    }
+
+    // Verify story exists in database
+    let submission;
+    try {
+      submission = getSubmission(index);
+    } catch (err) {
+      return sendError(reply, 404, "Not Found", "Story not found in database");
+    }
+
+    if (!submission || !submission.href) {
+      return sendError(reply, 404, "Not Found", "Story not found in database");
+    }
+
+    // Check if URL is listenable
+    if (!isListenableUrl(submission.href)) {
+      return sendError(
+        reply,
+        400,
+        "Bad Request",
+        "This content type cannot be converted to audio",
+      );
+    }
+
+    try {
+      // Check cache first - generateSpeechProgressive returns cached result if available
+      const result = await generateSpeechProgressive(
+        null, // Don't pass text yet - let it check cache first
+        env.ELEVENLABS_API_KEY,
+        env.ELEVENLABS_VOICE_ID,
+        index,
+      );
+
+      if (result.cached) {
+        return reply.status(200).json({
+          audioId: result.audioId,
+          chunks: result.chunks,
+          timestamps: result.timestamps,
+          totalDuration: result.totalDuration,
+          status: "complete",
+        });
+      }
+    } catch (err) {
+      // Cache miss - continue to extract and generate
+    }
+
+    // Check if already in progress for this story (first chunk generation)
+    if (ttsInProgress.has(index)) {
+      // Wait for the existing first-chunk request to complete
+      try {
+        const result = await ttsInProgress.get(index);
+        return reply.status(200).json({
+          audioId: result.audioId,
+          chunks: result.chunks,
+          timestamps: result.timestamps,
+          totalDuration: result.totalDuration,
+          status: result.status,
+          totalChunks: result.totalChunks,
+        });
+      } catch (err) {
+        return sendError(reply, 500, "Internal Server Error", "Failed to generate audio");
+      }
+    }
+
+    // Create a promise for first chunk generation (remaining chunks generated in background)
+    const generationPromise = (async () => {
+      // Extract article on backend (don't trust client text)
+      const article = await extractArticleCached(submission.href);
+
+      if (article.plainText.length > 50000) {
+        throw new Error("Article text too long for audio generation");
+      }
+
+      // Progressive generation: returns immediately after first chunk
+      const result = await generateSpeechProgressive(
+        article.plainText,
+        env.ELEVENLABS_API_KEY,
+        env.ELEVENLABS_VOICE_ID,
+        index,
+      );
+      return result;
+    })();
+
+    ttsInProgress.set(index, generationPromise);
+
+    try {
+      const result = await generationPromise;
+      return reply.status(200).json({
+        audioId: result.audioId,
+        chunks: result.chunks,
+        timestamps: result.timestamps,
+        totalDuration: result.totalDuration,
+        status: result.status,
+        totalChunks: result.totalChunks,
+      });
+    } catch (err) {
+      log(`Listen TTS error: ${err.message}`);
+      return sendError(
+        reply,
+        500,
+        "Internal Server Error",
+        err.message || "Failed to generate audio",
+      );
+    } finally {
+      ttsInProgress.delete(index);
+    }
+  });
+
+  // Status endpoint for polling progressive generation
+  app.get("/api/v1/listen/tts/status/:audioId", (request, reply) => {
+    const { audioId } = request.params;
+
+    // Validate audioId format: 16-char hex string
+    if (!/^[a-f0-9]{16}$/.test(audioId)) {
+      return sendError(reply, 400, "Bad Request", "Invalid audio ID format");
+    }
+
+    const status = getGenerationStatus(audioId);
+
+    return reply.status(200).json({
+      audioId,
+      ...status,
+    });
+  });
+
+  app.get("/api/v1/listen/audio/:id", (request, reply) => {
+    const { id } = request.params;
+
+    // Validate audioId format: hex string with optional _chunkIndex suffix
+    // e.g., "abc123def456" (legacy) or "abc123def456_0" (chunk)
+    if (!/^[a-f0-9]{16}(_\d+)?$/.test(id)) {
+      return sendError(reply, 400, "Bad Request", "Invalid audio ID format");
+    }
+
+    const audioPath = getAudioPath(id);
+
+    if (!fs.existsSync(audioPath)) {
+      return sendError(reply, 404, "Not Found", "Audio not found");
+    }
+
+    const stat = fs.statSync(audioPath);
+    reply.setHeader("Content-Type", "audio/mpeg");
+    reply.setHeader("Content-Length", stat.size);
+    reply.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+    reply.setHeader("Accept-Ranges", "bytes");
+
+    const stream = fs.createReadStream(audioPath);
+    stream.pipe(reply);
   });
 
   await setupTrollboxRoutes(app);

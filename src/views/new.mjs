@@ -20,11 +20,14 @@ import Row, { extractDomain } from "./components/row.mjs";
 import log from "../logger.mjs";
 import { purgeCache } from "../cloudflarePurge.mjs";
 import { cachedMetadata } from "../parser.mjs";
+import { eagerExtractArticle } from "../lib/listen/extract.mjs";
 
 const html = htm.bind(vhtml);
 
 async function addMetadata(post) {
   const data = cachedMetadata(post.href);
+  // Eagerly extract article text for Listen feature (non-blocking)
+  eagerExtractArticle(post.href);
   return {
     ...post,
     metadata: data,

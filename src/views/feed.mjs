@@ -40,6 +40,7 @@ import { EIP712_MESSAGE } from "../constants.mjs";
 import Row, { extractDomain } from "./components/row.mjs";
 import * as karma from "../karma.mjs";
 import { cachedMetadata } from "../parser.mjs";
+import { eagerExtractArticle } from "../lib/listen/extract.mjs";
 import { getPredictedEngagement } from "../prediction.mjs";
 
 // Import twitterFrontends for checking Twitter/X links
@@ -375,6 +376,8 @@ export async function topstories(leaves, algorithm = 'control', skipNeynar = fal
 
 async function addMetadata(post) {
   const data = cachedMetadata(post.href);
+  // Eagerly extract article text for Listen feature (non-blocking)
+  eagerExtractArticle(post.href);
   return {
     ...post,
     metadata: data,

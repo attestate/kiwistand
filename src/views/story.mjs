@@ -34,6 +34,7 @@ import * as karma from "../karma.mjs";
 import { truncateName, getSlug, isCloudflareImage } from "../utils.mjs";
 import { identityClassifier } from "./feed.mjs";
 import { render, cachedMetadata } from "../parser.mjs";
+import { eagerExtractArticle } from "../lib/listen/extract.mjs";
 import { getSubmission } from "../cache.mjs";
 import * as preview from "../preview.mjs";
 import ShareIcon from "./components/shareicon.mjs";
@@ -167,6 +168,8 @@ export default async function (trie, theme, index, value, referral, commentIndex
   let data = null;
   if (!value.href.startsWith("data:") && !value.href.startsWith("kiwi:")) {
     data = cachedMetadata(value.href, false, value.title);
+    // Eagerly extract article text for Listen feature (non-blocking)
+    eagerExtractArticle(value.href);
   }
 
   const story = {
