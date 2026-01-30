@@ -2127,6 +2127,7 @@ a.meta-link:hover, span.meta-link:hover {
   flex-direction: column;
   gap: 16px;
   max-height: calc(100vh - 32px);
+  overflow: hidden;
 }
 
 @media (max-width: 1100px) {
@@ -2137,8 +2138,7 @@ a.meta-link:hover, span.meta-link:hover {
 
 /* Trollbox Panel */
 .trollbox-panel {
-  flex: 1;
-  min-height: 280px;
+  height: 400px;
   border: var(--border);
   border-radius: 2px;
   background: var(--bg-white);

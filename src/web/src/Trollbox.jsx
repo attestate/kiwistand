@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useAccount } from "wagmi";
 import { Wallet } from "@ethersproject/wallet";
 import { getLocalAccount } from "./session.mjs";
+import { openDelegationModalForAction, isDelegationModalNeeded } from "./delegationModalManager.js";
 
 // EIP-712 domain for trollbox auth (must match server)
 const TROLLBOX_DOMAIN = {
@@ -63,6 +64,8 @@ export default function Trollbox() {
 
   const account = useAccount();
   const localAccount = getLocalAccount(account.address);
+
+  const needsDelegation = account.isConnected && account.address && isDelegationModalNeeded(account.address);
 
   let signer = null;
   if (localAccount && localAccount.privateKey) {
@@ -216,10 +219,11 @@ export default function Trollbox() {
       style={{
         display: "flex",
         flexDirection: "column",
-        height: "100%",
+        flex: 1,
         fontFamily: "var(--font-family, Inter, system-ui, sans-serif)",
         fontSize: "13px",
         minHeight: 0,
+        overflow: "hidden",
       }}
     >
       <div
@@ -252,7 +256,7 @@ export default function Trollbox() {
         ref={messagesContainerRef}
         onScroll={handleScroll}
         style={{
-          flex: 1,
+          maxHeight: "300px",
           overflowY: "auto",
           padding: "8px",
           display: "flex",
@@ -309,6 +313,7 @@ export default function Trollbox() {
         style={{
           padding: "8px",
           borderTop: "var(--border)",
+          flexShrink: 0,
         }}
       >
         {authenticated ? (
@@ -334,6 +339,22 @@ export default function Trollbox() {
               }}
             />
           </div>
+        ) : needsDelegation ? (
+          <button
+            onClick={() => openDelegationModalForAction()}
+            style={{
+              width: "100%",
+              padding: "8px",
+              border: "var(--border)",
+              borderRadius: "2px",
+              fontSize: "12px",
+              background: "var(--bg-white)",
+              color: "var(--text-primary)",
+              cursor: "pointer",
+            }}
+          >
+            Enable chat
+          </button>
         ) : (
           <div
             style={{
