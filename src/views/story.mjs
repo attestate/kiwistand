@@ -36,6 +36,7 @@ import { identityClassifier } from "./feed.mjs";
 import { render, cachedMetadata } from "../parser.mjs";
 import { eagerExtractArticle } from "../lib/listen/extract.mjs";
 import { getSubmission } from "../cache.mjs";
+import { purgeCache } from "../cloudflarePurge.mjs";
 import * as preview from "../preview.mjs";
 import ShareIcon from "./components/shareicon.mjs";
 import { warpcastSvg } from "./components/socialNetworkIcons.mjs";
@@ -167,7 +168,13 @@ export default async function (trie, theme, index, value, referral, commentIndex
   // Skip metadata fetching for text posts and kiwi: references
   let data = null;
   if (!value.href.startsWith("data:") && !value.href.startsWith("kiwi:")) {
-    data = cachedMetadata(value.href, false, value.title);
+    const slug = getSlug(value.title);
+    const storyUrl = `https://news.kiwistand.com/stories/${slug}?index=${index}`;
+    data = cachedMetadata(value.href, false, value.title, () => {
+      purgeCache(storyUrl).catch((err) =>
+        log(`Failed to purge story page cache after metadata fetch: ${err}`)
+      );
+    });
     // Eagerly extract article text for Listen feature (non-blocking)
     eagerExtractArticle(value.href);
   }

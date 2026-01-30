@@ -1064,6 +1064,7 @@ export const cachedMetadata = (
   url,
   generateTitle = false,
   submittedTitle = undefined,
+  onFetched = null,
 ) => {
   // Skip metadata fetching for text posts (data: and kiwi: URLs)
   if (url && (url.startsWith('data:') || url.startsWith('kiwi:'))) {
@@ -1094,6 +1095,10 @@ export const cachedMetadata = (
       if (freshData) {
         cache.set(normalizedUrl, freshData);
         log(`Stored metadata in cache for ${normalizedUrl}`);
+        // Call the onFetched callback if provided
+        if (onFetched) {
+          onFetched(freshData);
+        }
       }
     })
     .catch((err) => {
