@@ -1,7 +1,7 @@
 //@format
 import { JSDOM } from "jsdom";
 import { Readability } from "@mozilla/readability";
-import { extractWarpcastContent } from "../../parser.mjs";
+import { extractWarpcastContent, extractTwitterContent, twitterFrontends } from "../../parser.mjs";
 
 // Minimum characters for a valid article (filters out landing pages)
 const MIN_ARTICLE_LENGTH = 500;
@@ -16,6 +16,16 @@ function isFarcasterUrl(url) {
   try {
     const parsed = new URL(url);
     return parsed.hostname === "warpcast.com" || parsed.hostname === "farcaster.xyz";
+  } catch {
+    return false;
+  }
+}
+
+// Check if URL is a Twitter/X post
+function isTwitterUrl(url) {
+  try {
+    const parsed = new URL(url);
+    return twitterFrontends.includes(parsed.hostname);
   } catch {
     return false;
   }
@@ -51,10 +61,52 @@ async function extractFarcasterArticle(url) {
   };
 }
 
+// Extract Twitter/X post content via fxtwitter
+async function extractTwitterArticle(url) {
+  const content = await extractTwitterContent(url);
+  if (!content || !content.text) {
+    throw new Error("Could not fetch Twitter post");
+  }
+
+  const plainText = content.text.trim();
+
+  // Check minimum content length
+  if (plainText.length < MIN_ARTICLE_LENGTH) {
+    throw new Error(
+      `Twitter post too short (${plainText.length} chars, need ${MIN_ARTICLE_LENGTH}). Only long-form posts are supported.`
+    );
+  }
+
+  // Split into paragraphs by double newlines or single newlines
+  const paragraphs = plainText.split(/\n\n+|\n/).filter(p => p.trim());
+  // Convert to element format expected by wrapParagraphs
+  const elements = paragraphs.map(p => ({ type: "text", content: p }));
+  const wrappedHtml = wrapParagraphs(elements);
+
+  // Format title based on content type
+  let platform = "X";
+  if (content.type === "thread") {
+    platform = "X Thread";
+  } else if (content.type === "article") {
+    platform = "X Article";
+  }
+  const title = `${content.author.displayName || content.author.username} on ${platform}`;
+
+  return {
+    title,
+    plainText,
+    wrappedHtml,
+  };
+}
+
 export async function extractArticle(url) {
   // Handle Farcaster URLs via Neynar API
   if (isFarcasterUrl(url)) {
     return extractFarcasterArticle(url);
+  }
+  // Handle Twitter/X URLs via fxtwitter
+  if (isTwitterUrl(url)) {
+    return extractTwitterArticle(url);
   }
   const res = await fetch(url, {
     headers: {

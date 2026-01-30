@@ -105,14 +105,6 @@ const playSVG = html`
 
 // Non-listenable domains - don't show listen button for these
 const nonListenableDomains = [
-  // Social media (Twitter only - Farcaster handled via Neynar API)
-  "x.com",
-  "twitter.com",
-  "xcancel.com",
-  "nitter.net",
-  "nitter.it",
-  "nitter.at",
-  "nitter.poast.org",
   // Video
   "youtube.com",
   "youtu.be",

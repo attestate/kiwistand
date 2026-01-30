@@ -4,14 +4,6 @@ import { generateSpeech } from "./tts.mjs";
 
 // Non-listenable domains
 const nonListenableDomains = [
-  // Social media (Twitter only - Farcaster handled via Neynar API)
-  "x.com",
-  "twitter.com",
-  "xcancel.com",
-  "nitter.net",
-  "nitter.it",
-  "nitter.at",
-  "nitter.poast.org",
   // Video
   "youtube.com",
   "youtu.be",

@@ -2556,14 +2556,6 @@ export async function launch(trie, libp2p, isPrimary = true) {
   // SECURITY: Only accepts story index, looks up URL from database
   // This prevents the API from being used as a free ElevenLabs proxy
   const nonListenableDomains = [
-    // Social media (Twitter only - Farcaster handled via Neynar API)
-    "x.com",
-    "twitter.com",
-    "xcancel.com",
-    "nitter.net",
-    "nitter.it",
-    "nitter.at",
-    "nitter.poast.org",
     // Video
     "youtube.com",
     "youtu.be",

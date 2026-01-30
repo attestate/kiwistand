@@ -452,6 +452,111 @@ export async function extractWarpcastContent(identifier, type = "url") {
   }
 }
 
+export async function extractTwitterContent(url) {
+  try {
+    // Convert URL to fxtwitter.com
+    const urlObj = new URL(url);
+    // Handle all Twitter frontends
+    if (twitterFrontends.includes(urlObj.hostname)) {
+      urlObj.hostname = "fxtwitter.com";
+    }
+
+    const signal = AbortSignal.timeout(10000);
+    const response = await fetch(urlObj.toString(), {
+      headers: {
+        "User-Agent": "TelegramBot (like TwitterBot)",
+      },
+      signal,
+    });
+
+    if (!response.ok) {
+      log(`Failed to fetch Twitter content: ${response.status}`);
+      return null;
+    }
+
+    const html = await response.text();
+    const dom = parser(html);
+
+    // Extract author from og:title (format: "@username" or "Display Name (@username)")
+    const ogTitle = dom.querySelector('meta[property="og:title"]')?.getAttribute("content") || "";
+    let username = "";
+    let displayName = "";
+
+    // Try to extract from og:title
+    const usernameMatch = ogTitle.match(/@(\w+)/);
+    if (usernameMatch) {
+      username = usernameMatch[1];
+      // Display name is everything before the (@username) part
+      const displayMatch = ogTitle.match(/^(.+?)\s*\(@\w+\)$/);
+      displayName = displayMatch ? displayMatch[1].trim() : username;
+    }
+
+    // Determine content type from og:site_name
+    const ogSiteName = dom.querySelector('meta[property="og:site_name"]')?.getAttribute("content") || "";
+    let type = "tweet";
+    if (ogSiteName.includes("Thread")) {
+      type = "thread";
+    } else if (ogSiteName.includes("Article")) {
+      type = "article";
+    }
+
+    // Extract text content from <p> tags inside <article> element
+    // Filter out engagement metrics, profile info, and other metadata
+    const article = dom.querySelector("article");
+    let text = "";
+
+    if (article) {
+      const paragraphs = article.querySelectorAll("p");
+      const textParts = [];
+      for (const p of paragraphs) {
+        const pText = p.textContent?.trim();
+        if (!pText) continue;
+
+        // Skip engagement metrics (likes, retweets, views, replies)
+        if (/^[💬🔁❤️👁️📌🔗📆\s\d.,KMB]+$/.test(pText)) continue;
+        if (/^\d+(\.\d+)?[KMB]?\s+(Following|Followers|Posts)/.test(pText)) continue;
+
+        // Skip if it's just a username handle
+        if (/^@\w+$/.test(pText)) continue;
+
+        // Skip profile stats lines (e.g., "3.9K Following")
+        if (/^\d[\d.,]*[KMB]?\s+(Following|Followers|Posts|Likes|Media)$/i.test(pText)) continue;
+
+        // Skip date strings (e.g., "2013-11-06")
+        if (/^\d{4}-\d{2}-\d{2}$/.test(pText)) continue;
+
+        // Skip URL-only lines (e.g., "ns. com")
+        if (/^[\w\s]*\.\s*\w{2,}$/.test(pText) && pText.length < 30) continue;
+
+        textParts.push(pText);
+      }
+      text = textParts.join("\n\n");
+    }
+
+    // Fallback to og:description if article extraction failed or too short
+    if (!text || text.length < 50) {
+      text = dom.querySelector('meta[property="og:description"]')?.getAttribute("content") || "";
+    }
+
+    if (!text) {
+      log("Could not extract Twitter content text");
+      return null;
+    }
+
+    return {
+      text,
+      author: {
+        username,
+        displayName: displayName || username,
+      },
+      type,
+    };
+  } catch (error) {
+    log(`Error extracting Twitter content: ${error.message}`);
+    return null;
+  }
+}
+
 export async function getCastByHashAndConstructUrl(castHash) {
   // Fetch cast data from Neynar API and construct proper Farcaster URL
   // Format: https://farcaster.xyz/{username}/{shortHash}
