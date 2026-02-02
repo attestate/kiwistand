@@ -159,6 +159,21 @@ if (cluster.isPrimary) {
 // and re-validates all messages from the DB. However, the store.cache function
 // is necessary to be run as it generates the markers that prevent double
 // upvoting from happening.
+// Schedule newest.recompute early - before the slow store.posts() call
+// The SQLite tables persist between runs, so listNewest() has data
+if (!reconcileMode) {
+  setImmediate(() => {
+    newest
+      .recompute(trie)
+      .then(() => log("/new computed"))
+      .catch((err) => log(`/new recompute failed: ${err.stack || err}`));
+  });
+  // Periodic refresh
+  setInterval(async () => {
+    await Promise.all([newest.recompute(trie)]);
+  }, 1800000);
+}
+
 const from = null;
 const amount = null;
 const startDatetime = null;
@@ -221,16 +236,7 @@ setImmediate(() => {
     });
 });
 
-if (!reconcileMode) {
-  // Make feed computation during startup non-blocking
-  setImmediate(() => {
-    newest.recompute(trie).then(() => log("/new computed"));
-  });
-  // TODO: Unclear if this is still necessary
-  setInterval(async () => {
-    await Promise.all([newest.recompute(trie)]);
-  }, 1800000);
-}
+// NOTE: newest.recompute() is now scheduled earlier in the file, before store.posts()
 
 // These operations should only run in the primary process
 if (cluster.isPrimary && productionMode && env.POSTMARK_API_KEY) {

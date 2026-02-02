@@ -51,9 +51,10 @@ export async function recompute() {
   if (inProgress) return;
   inProgress = true;
 
-  const limit = 25;
-  let counts = listNewest(limit);
-  const path = "/new";
+  try {
+    const limit = 25;
+    let counts = listNewest(limit);
+    const path = "/new";
 
   const [listsResult, writersResult] = await Promise.allSettled([
     moderation.getLists(),
@@ -160,11 +161,16 @@ export async function recompute() {
     }),
   );
 
-  stories = nextStories.sort((a, b) => b.timestamp - a.timestamp);
-  inProgress = false;
-  purgeCache("https://news.kiwistand.com/new?cached=true").catch((err) =>
-    log(`Error refreshing /new?cached=true`),
-  );
+    stories = nextStories.sort((a, b) => b.timestamp - a.timestamp);
+    purgeCache("https://news.kiwistand.com/new?cached=true").catch((err) =>
+      log(`Error refreshing /new?cached=true`),
+    );
+  } catch (err) {
+    log(`recompute error: ${err.stack || err}`);
+    throw err;
+  } finally {
+    inProgress = false;
+  }
 }
 
 export default async function (trie, theme) {
