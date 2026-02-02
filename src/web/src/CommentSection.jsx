@@ -67,7 +67,9 @@ function truncateName(name) {
 export const EmojiReaction = ({ comment, delegations, toast }) => {
   const [isReacting, setIsReacting] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
-  // Current emojis
+  const [pickerTop, setPickerTop] = useState(0);
+  const buttonRef = useRef(null);
+  // Current emojis (in picker order)
   const [kiwis, setKiwis] = useState(
     comment.reactions?.find((r) => r.emoji === "🥝")?.reactors || [],
   );
@@ -80,8 +82,11 @@ export const EmojiReaction = ({ comment, delegations, toast }) => {
   const [fires, setFires] = useState(
     comment.reactions?.find((r) => r.emoji === "🔥")?.reactors || [],
   );
-  const [smiles, setSmiles] = useState(
-    comment.reactions?.find((r) => r.emoji === "😊")?.reactors || [],
+  const [eyes, setEyes] = useState(
+    comment.reactions?.find((r) => r.emoji === "👀")?.reactors || [],
+  );
+  const [hundreds, setHundreds] = useState(
+    comment.reactions?.find((r) => r.emoji === "💯")?.reactors || [],
   );
   const [cries, setCries] = useState(
     comment.reactions?.find((r) => r.emoji === "😢")?.reactors || [],
@@ -89,12 +94,9 @@ export const EmojiReaction = ({ comment, delegations, toast }) => {
   const [parties, setParties] = useState(
     comment.reactions?.find((r) => r.emoji === "🎉")?.reactors || [],
   );
-  // Legacy emojis - still need to track for existing reactions
-  const [eyes, setEyes] = useState(
-    comment.reactions?.find((r) => r.emoji === "👀")?.reactors || [],
-  );
-  const [hundreds, setHundreds] = useState(
-    comment.reactions?.find((r) => r.emoji === "💯")?.reactors || [],
+  // Legacy emojis - still need to track for existing reactions display
+  const [smiles, setSmiles] = useState(
+    comment.reactions?.find((r) => r.emoji === "😊")?.reactors || [],
   );
   const [laughs, setLaughs] = useState(
     comment.reactions?.find((r) => r.emoji === "🤭")?.reactors || [],
@@ -154,6 +156,9 @@ export const EmojiReaction = ({ comment, delegations, toast }) => {
   }, [signer, delegations]);
 
   const handleReaction = async (emoji, isFromExistingReaction = false) => {
+    // Close picker immediately
+    setIsExpanded(false);
+
     // Prefer local signer if available; otherwise handle delegation flow for connected wallets
     if (!signer) {
       if (account?.isConnected && account?.address) {
@@ -264,9 +269,6 @@ export const EmojiReaction = ({ comment, delegations, toast }) => {
           }
           break;
       }
-
-      // Collapse after successful reaction
-      setIsExpanded(false);
 
       // Send reaction in background
       const response = await API.send(value, signature);
@@ -447,7 +449,14 @@ export const EmojiReaction = ({ comment, delegations, toast }) => {
       {/* React button - larger touch target */}
       {!isOwnComment && !hasReacted && (
         <button
-          onClick={() => setIsExpanded(!isExpanded)}
+          ref={buttonRef}
+          onClick={() => {
+            if (!isExpanded && buttonRef.current) {
+              const rect = buttonRef.current.getBoundingClientRect();
+              setPickerTop(rect.bottom + 4);
+            }
+            setIsExpanded(!isExpanded);
+          }}
           disabled={false}
           style={{
             display: "inline-flex",
@@ -487,21 +496,21 @@ export const EmojiReaction = ({ comment, delegations, toast }) => {
       {isExpanded && (
         <div
           style={{
-            position: "absolute",
-            top: "100%",
-            left: "0",
-            marginTop: "4px",
+            position: "fixed",
+            top: `${pickerTop}px`,
+            left: "12px",
+            right: "12px",
             display: "flex",
             alignItems: "center",
+            justifyContent: "center",
             gap: "4px",
-            maxWidth: "calc(100vw - 40px)",
             overflowX: "auto",
             backgroundColor: "var(--bg-white)",
             borderRadius: "24px",
-            padding: "6px 8px",
+            padding: "6px",
             boxShadow: "var(--shadow-default)",
             border: "var(--border-thin)",
-            zIndex: 10,
+            zIndex: 1000,
             animation: "fadeIn 0.15s ease-out",
             WebkitOverflowScrolling: "touch",
           }}
@@ -528,8 +537,8 @@ export const EmojiReaction = ({ comment, delegations, toast }) => {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  width: "40px",
-                  height: "40px",
+                  width: "36px",
+                  height: "36px",
                   padding: "0",
                   background: alreadyReacted ? "var(--accent-primary-light)" : "transparent",
                   border: "none",
@@ -539,6 +548,7 @@ export const EmojiReaction = ({ comment, delegations, toast }) => {
                   WebkitAppearance: "none",
                   opacity: disabled ? 0.5 : 1,
                   transition: "all 0.15s ease",
+                  flexShrink: 0,
                 }}
                 onMouseEnter={(e) => {
                   if (!disabled) {
