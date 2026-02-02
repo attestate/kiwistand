@@ -141,10 +141,9 @@ export function identityFilter(upvoter, submitter) {
 }
 
 const provider = new ethers.providers.JsonRpcProvider(env.BASE_RPC_HTTP_HOST);
-
-export async function getNeynarScore(address) {
-  const contractAddress = "0xd3C43A38D1D3E47E9c420a733e439B03FAAdebA8";
-  const abi = [
+const neynarScoreContract = new ethers.Contract(
+  "0xd3C43A38D1D3E47E9c420a733e439B03FAAdebA8",
+  [
     {
       inputs: [{ internalType: "address", name: "verifier", type: "address" }],
       name: "getScore",
@@ -152,10 +151,11 @@ export async function getNeynarScore(address) {
       stateMutability: "view",
       type: "function",
     },
-  ];
+  ],
+  provider,
+);
 
-  const contract = new ethers.Contract(contractAddress, abi, provider);
-
+export async function getNeynarScore(address) {
   let timeoutId;
   const timeout = new Promise((_, reject) => {
     timeoutId = setTimeout(() => reject(new Error("Timeout")), 5000);
@@ -163,7 +163,7 @@ export async function getNeynarScore(address) {
 
   let score;
   try {
-    score = await Promise.race([contract.getScore(address), timeout]);
+    score = await Promise.race([neynarScoreContract.getScore(address), timeout]);
   } finally {
     clearTimeout(timeoutId);
   }
@@ -264,6 +264,22 @@ export async function topstories(leaves, algorithm = 'control', skipNeynar = fal
   // Check if we're using Lobsters algorithm
   const useLobstersAlgo = algorithm === 'lobsters';
 
+  // Pre-compute means once (not per-story) - O(n) instead of O(n²)
+  let precomputedMeanUpvoteRatio = null;
+  let precomputedMeanCTR = null;
+  if (!useLobstersAlgo) {
+    try {
+      precomputedMeanUpvoteRatio = meanUpvoteRatio(leaves);
+    } catch (e) {
+      // noop
+    }
+    try {
+      precomputedMeanCTR = meanCTR(leaves);
+    } catch (e) {
+      // noop
+    }
+  }
+
   return Promise.allSettled(leaves
     .map(async (story) => {
       let commentCount;
@@ -311,43 +327,45 @@ export async function topstories(leaves, algorithm = 'control', skipNeynar = fal
           score = score * 0.9 + 0.1 * Math.log(outboundClicks);
         }
 
-        try {
-          const upvoteRatio = meanUpvoteRatio(leaves);
-          const storyRatio = calculateUpvoteClickRatio(story);
-          const upvotePerformance = storyRatio / upvoteRatio;
+        if (precomputedMeanUpvoteRatio !== null) {
+          try {
+            const storyRatio = calculateUpvoteClickRatio(story);
+            const upvotePerformance = storyRatio / precomputedMeanUpvoteRatio;
 
-          const clicks = countOutbounds(story.href);
-          const sampleSize = upvotes + clicks;
-          const confidenceFactor = Math.pow(
-            Math.min(1, sampleSize / 1_000_000),
-            2,
-          );
+            const clicks = countOutbounds(story.href);
+            const sampleSize = upvotes + clicks;
+            const confidenceFactor = Math.pow(
+              Math.min(1, sampleSize / 1_000_000),
+              2,
+            );
 
-          const adjustedPerformance = upvotePerformance * confidenceFactor;
+            const adjustedPerformance = upvotePerformance * confidenceFactor;
 
-          score *= adjustedPerformance;
-        } catch (e) {
-          // If Upvote-Click ratio can't be calculated, we just keep the current
-          // score
+            score *= adjustedPerformance;
+          } catch (e) {
+            // If Upvote-Click ratio can't be calculated, we just keep the current
+            // score
+          }
         }
 
         // Try to apply CTR adjustment if available
-        try {
-          const meanCtrValue = meanCTR(leaves);
-          const ctr = calculateCTR(story);
-          const ctrPerformance = ctr / meanCtrValue;
+        if (precomputedMeanCTR !== null) {
+          try {
+            const ctr = calculateCTR(story);
+            const ctrPerformance = ctr / precomputedMeanCTR;
 
-          const impressions = countImpressions(story.href);
-          const confidenceFactor = Math.pow(
-            Math.min(1, impressions / 1_000_000),
-            2,
-          );
+            const impressions = countImpressions(story.href);
+            const confidenceFactor = Math.pow(
+              Math.min(1, impressions / 1_000_000),
+              2,
+            );
 
-          const adjustedPerformance = ctrPerformance * confidenceFactor;
+            const adjustedPerformance = ctrPerformance * confidenceFactor;
 
-          score *= adjustedPerformance;
-        } catch (e) {
-          // If CTR can't be calculated, we just keep the current score
+            score *= adjustedPerformance;
+          } catch (e) {
+            // If CTR can't be calculated, we just keep the current score
+          }
         }
 
         const scoreBeforeDecay = score;

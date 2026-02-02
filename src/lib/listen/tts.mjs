@@ -2,6 +2,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
+import { LRUCache } from "lru-cache";
 
 // Use data directory for cache, consistent with other Kiwi data
 const DATA_DIR = process.env.DATA_DIR || "data";
@@ -12,8 +13,15 @@ const MAX_CHUNK_SIZE = 10000;
 // First chunk is small for fast initial playback (~2-3s instead of 10-20s)
 const FIRST_CHUNK_SIZE = 1000;
 
-// In-memory index: cacheKey -> { audioId, chunks, timestamps, totalDuration }
-const cache = new Map();
+// LRU cache for TTS metadata - audio files stay on disk, this is just the index
+const cache = new LRUCache({
+  max: 1000, // Max 1000 TTS entries in memory
+  maxSize: 100 * 1024 * 1024, // 100MB max for timestamps arrays
+  sizeCalculation: (value) => {
+    // Estimate: timestamps array is the main memory consumer
+    return JSON.stringify(value).length;
+  },
+});
 
 // Track in-progress background generations: audioId -> { completed, total, timestamps, cacheKey }
 const pendingGenerations = new Map();

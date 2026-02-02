@@ -1,13 +1,24 @@
 //@format
 import { JSDOM } from "jsdom";
 import { Readability } from "@mozilla/readability";
+import { LRUCache } from "lru-cache";
 import { extractWarpcastContent, extractTwitterContent, twitterFrontends } from "../../parser.mjs";
 
 // Minimum characters for a valid article (filters out landing pages)
 const MIN_ARTICLE_LENGTH = 500;
 
-// Cache for pre-extracted articles: url -> { title, plainText, wrappedHtml, extractedAt }
-const extractionCache = new Map();
+// LRU cache for pre-extracted articles with size limit to prevent memory leaks
+const extractionCache = new LRUCache({
+  max: 500, // Max 500 articles
+  maxSize: 50 * 1024 * 1024, // 50MB max
+  sizeCalculation: (value) => {
+    // Estimate size: title + plainText + wrappedHtml
+    return (value.title?.length || 0) +
+           (value.plainText?.length || 0) +
+           (value.wrappedHtml?.length || 0);
+  },
+  ttl: 1000 * 60 * 60 * 24, // 24 hour TTL
+});
 // URLs currently being extracted (prevent duplicate work)
 const extractionInProgress = new Set();
 
