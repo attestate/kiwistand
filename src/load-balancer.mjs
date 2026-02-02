@@ -90,11 +90,23 @@ async function startLoadBalancer() {
   const primaryPort = originalPort + 1;
   const workerBasePort = primaryPort + 1;
 
-  // Create array of worker URLs
-  const workers = [];
+  // Pre-create proxy instances once (not per-request)
+  const workerProxies = [];
   for (let i = 0; i < workerCount; i++) {
-    workers.push(`http://localhost:${workerBasePort + i}`);
+    workerProxies.push(createProxyMiddleware({
+      target: `http://localhost:${workerBasePort + i}`,
+      changeOrigin: true,
+      ws: false,
+      logLevel: "warn",
+    }));
   }
+
+  const primaryProxy = createProxyMiddleware({
+    target: `http://localhost:${primaryPort}`,
+    changeOrigin: true,
+    ws: false,
+    logLevel: "warn",
+  });
 
   // Simple round-robin load balancer
   let currentWorker = 0;
@@ -130,33 +142,18 @@ async function startLoadBalancer() {
 
     if (shouldProxy) {
       // Get next worker in round-robin fashion
-      const target = workers[currentWorker];
-      currentWorker = (currentWorker + 1) % workers.length;
+      const workerIndex = currentWorker;
+      currentWorker = (currentWorker + 1) % workerProxies.length;
 
       log(
-        `Load balancer: Proxying ${req.method} ${req.url} to worker at ${target}`,
+        `Load balancer: Proxying ${req.method} ${req.url} to worker ${workerIndex}`,
       );
 
-      const proxy = createProxyMiddleware({
-        target,
-        changeOrigin: true,
-        ws: false,
-        logLevel: "warn",
-        pathRewrite: (path, req) => path, // keep path unchanged
-      });
-
-      return proxy(req, res, next);
+      return workerProxies[workerIndex](req, res, next);
     }
 
     // If not a worker route, proxy to the primary process
     log(`Load balancer: Proxying ${req.method} ${req.url} to primary process`);
-    const primaryProxy = createProxyMiddleware({
-      target: `http://localhost:${primaryPort}`,
-      changeOrigin: true,
-      ws: false,
-      logLevel: "warn",
-    });
-
     return primaryProxy(req, res, next);
   });
 
@@ -176,6 +173,8 @@ async function startLoadBalancer() {
       rejectUnauthorized: false,
     };
     server = https.createServer(options, app);
+    server.keepAliveTimeout = 65000;
+    server.headersTimeout = 66000;
     server.listen(port, () => {
       log(`Load balancer started with HTTPS on port ${port}`);
       log(`Primary process expected on port ${primaryPort}`);
@@ -192,6 +191,8 @@ async function startLoadBalancer() {
       rejectUnauthorized: false,
     };
     server = https.createServer(options, app);
+    server.keepAliveTimeout = 65000;
+    server.headersTimeout = 66000;
     server.listen(port, () => {
       log(`Load balancer started with HTTPS on port ${port}`);
       log(`Primary process expected on port ${primaryPort}`);
@@ -203,6 +204,8 @@ async function startLoadBalancer() {
     });
   } else {
     server = createHttpServer(app);
+    server.keepAliveTimeout = 65000;
+    server.headersTimeout = 66000;
     server.listen(port, () => {
       log(`Load balancer started on port ${port}`);
       log(`Primary process expected on port ${primaryPort}`);

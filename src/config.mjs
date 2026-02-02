@@ -55,6 +55,8 @@ if (IS_BOOTSTRAP_NODE) {
   );
   config.connectionManager = {
     autoDial: true,
+    maxConnections: 100,
+    minConnections: 5,
   };
 }
 

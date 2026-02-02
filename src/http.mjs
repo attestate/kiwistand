@@ -178,6 +178,10 @@ async function getQuickAuthContextFromRequest(req, { require = false, resolveAdd
 // Always use HTTP for internal servers since SSL is terminated at the load balancer
 const server = createHttpServer(app);
 
+// Prevent socket accumulation from clients that disconnect without proper close
+server.keepAliveTimeout = 65000; // 65 seconds
+server.headersTimeout = 66000; // Must exceed keepAliveTimeout
+
 let cachedFeed = null;
 
 // Enable compression for all responses
