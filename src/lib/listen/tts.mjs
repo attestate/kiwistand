@@ -239,6 +239,9 @@ async function callElevenLabs(text, apiKey, voiceId) {
       text,
       model_id: "eleven_turbo_v2_5",
       output_format: "mp3_44100_128",
+      voice_settings: {
+        speed: 1.25,
+      },
     }),
   });
 

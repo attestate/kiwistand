@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import SwipeableDrawer from "@mui/material/SwipeableDrawer";
+import DOMPurify from "isomorphic-dompurify";
+import linkifyHtml from "linkify-html";
 
 const ListenDrawer = ({ toast }) => {
   const [open, setOpen] = useState(false);
@@ -184,6 +186,14 @@ const ListenDrawer = ({ toast }) => {
         [data-theme="anon"] .listen-article .s.active {
           background-color: rgba(0, 255, 0, 0.15);
         }
+        .listen-article a {
+          word-break: break-all;
+          overflow-wrap: break-word;
+          color: var(--text-secondary);
+        }
+        .listen-article a:hover {
+          text-decoration: underline;
+        }
       `;
       document.head.appendChild(style);
     }
@@ -270,7 +280,20 @@ const ListenDrawer = ({ toast }) => {
           return;
         }
 
-        setArticleHtml(data.wrappedHtml);
+        const processedHtml = DOMPurify.sanitize(
+          linkifyHtml(data.wrappedHtml, {
+            target: "_blank",
+            rel: "noopener noreferrer",
+            validate: {
+              url: (value) => /^https?:\/\//.test(value),
+              email: () => false,
+            },
+          }),
+          {
+            ADD_ATTR: ["target", "rel", "data-s", "data-start-word"],
+          },
+        );
+        setArticleHtml(processedHtml);
         setIsExtracting(false);
 
         // Step 2: Generate/fetch TTS with progressive loading
@@ -322,7 +345,7 @@ const ListenDrawer = ({ toast }) => {
         // Only cache if fully complete
         if (ttsData.status === "complete") {
           cacheRef.current.set(index, {
-            articleHtml: data.wrappedHtml,
+            articleHtml: processedHtml,
             chunks: ttsData.chunks,
             timestamps: ttsData.timestamps,
             totalDuration: ttsData.totalDuration,
