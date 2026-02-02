@@ -6,6 +6,7 @@ import { utils } from "ethers";
 import { resolveIdentity } from "@attestate/delegator2";
 
 import * as registry from "./chainstate/registry.mjs";
+import { LRUCache } from "lru-cache";
 import * as ens from "./ens.mjs";
 import log from "./logger.mjs";
 
@@ -35,8 +36,8 @@ let dirty = false;
 let onlineUsers = new Map(); // address -> { displayName, lastSeen }
 const ONLINE_TIMEOUT_MS = 30000; // 30 seconds
 
-// Display name cache
-const displayNameCache = new Map(); // address -> displayName
+// Display name cache with LRU eviction
+const displayNameCache = new LRUCache({ max: 1000 });
 
 async function resolveDisplayName(address) {
   if (displayNameCache.has(address)) {

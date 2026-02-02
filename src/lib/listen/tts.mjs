@@ -14,13 +14,9 @@ const MAX_CHUNK_SIZE = 10000;
 const FIRST_CHUNK_SIZE = 1000;
 
 // LRU cache for TTS metadata - audio files stay on disk, this is just the index
+// High limit since regeneration costs money (ElevenLabs API) - metadata is small (~1KB each)
 const cache = new LRUCache({
-  max: 1000, // Max 1000 TTS entries in memory
-  maxSize: 100 * 1024 * 1024, // 100MB max for timestamps arrays
-  sizeCalculation: (value) => {
-    // Estimate: timestamps array is the main memory consumer
-    return JSON.stringify(value).length;
-  },
+  max: 50000, // 50k entries should cover most usage without eviction
 });
 
 // Track in-progress background generations: audioId -> { completed, total, timestamps, cacheKey }
