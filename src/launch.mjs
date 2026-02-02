@@ -52,6 +52,7 @@ if (cluster.isPrimary) {
   cache.initializeLtCache();
   cache.initializeImpressions();
   cache.initializeShares();
+  cache.initializeListens();
 
   // Run cache cleanup in background (non-blocking)
   const cleanupProcess = fork("./scripts/cleanup-cache.mjs", [], {

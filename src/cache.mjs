@@ -139,6 +139,34 @@ export function initializeShares() {
   return false;
 }
 
+export function initializeListens() {
+  const exists = db
+    .prepare(
+      `SELECT name FROM sqlite_master WHERE type='table' AND name='listens'`,
+    )
+    .get();
+  if (exists) {
+    log(
+      "Aborting cache.initializeListens early because table already exists",
+    );
+    return true;
+  }
+
+  log("Creating listens table");
+  db.exec(`CREATE TABLE IF NOT EXISTS listens (
+     id INTEGER PRIMARY KEY AUTOINCREMENT,
+     url TEXT NOT NULL,
+     hash TEXT NOT NULL,
+     duration_listened INTEGER NOT NULL,
+     total_duration INTEGER NOT NULL,
+     timestamp INTEGER NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS idx_listens_url ON listens(url);
+  CREATE INDEX IF NOT EXISTS idx_listens_hash ON listens(hash);
+  CREATE INDEX IF NOT EXISTS idx_listens_timestamp ON listens(timestamp);`);
+  return false;
+}
+
 export function initialize(messages) {
   let isSetup = true;
   const tables = ["fingerprints", "submissions", "upvotes", "comments"];
@@ -516,11 +544,41 @@ export function countShares(url) {
 
   const query = db.prepare(`
      SELECT COUNT(DISTINCT hash) AS uniqueHashCount
-     FROM shares 
+     FROM shares
      WHERE url = ?
    `);
   const result = query.get(normalizedUrl);
   return result ? result.uniqueHashCount : 0;
+}
+
+export function trackListen(url, hash, durationListened, totalDuration) {
+  const normalizedUrl = normalizeUrl(url, {
+    stripWWW: false,
+  });
+  const timestamp = Math.floor(Date.now() / 1000);
+  const insert = db.prepare(
+    `INSERT INTO listens(url, hash, duration_listened, total_duration, timestamp) VALUES (?,?,?,?,?)`,
+  );
+  insert.run(normalizedUrl, hash, durationListened, totalDuration, timestamp);
+}
+
+export function countListens(url) {
+  const normalizedUrl = normalizeUrl(url, {
+    stripWWW: false,
+  });
+
+  const query = db.prepare(`
+     SELECT
+       COUNT(DISTINCT hash) AS uniqueListeners,
+       SUM(CAST(duration_listened AS REAL) / CAST(total_duration AS REAL)) AS completionSum
+     FROM listens
+     WHERE url = ? AND total_duration > 0
+   `);
+  const result = query.get(normalizedUrl);
+  return {
+    uniqueListeners: result ? result.uniqueListeners : 0,
+    completionSum: result && result.completionSum ? result.completionSum : 0,
+  };
 }
 
 export function getNumberOfOnlineUsers() {

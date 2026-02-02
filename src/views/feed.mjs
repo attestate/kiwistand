@@ -27,6 +27,7 @@ import cache, {
   countImpressions,
   countOutbounds,
   countShares,
+  countListens,
   getLastComment,
   getSubmission,
   listNewest,
@@ -325,6 +326,16 @@ export async function topstories(leaves, algorithm = 'control', skipNeynar = fal
         const outboundClicks = countOutbounds(story.href) + 1;
         if (outboundClicks > 0) {
           score = score * 0.9 + 0.1 * Math.log(outboundClicks);
+        }
+
+        // Add listen signal - completionSum rewards full listens
+        try {
+          const listenData = countListens(story.href);
+          if (listenData.completionSum > 0) {
+            score = score * 0.9 + 0.1 * Math.log(1 + listenData.completionSum);
+          }
+        } catch (e) {
+          // Table may not exist yet, ignore
         }
 
         if (precomputedMeanUpvoteRatio !== null) {

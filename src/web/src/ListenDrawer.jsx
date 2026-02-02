@@ -33,6 +33,7 @@ const ListenDrawer = ({ toast }) => {
   const cacheRef = useRef(new Map()); // Cache: storyIndex -> { articleHtml, chunks, timestamps }
   const loadingRef = useRef(null); // Currently loading story index
   const totalDurationRef = useRef(0); // Server-provided total duration
+  const storyIndexRef = useRef(null); // Track storyIndex for tracking in callbacks
 
   const iOS =
     typeof navigator !== "undefined" &&
@@ -52,6 +53,11 @@ const ListenDrawer = ({ toast }) => {
   useEffect(() => {
     currentChunkRef.current = currentChunk;
   }, [currentChunk]);
+
+  // Keep storyIndexRef in sync for tracking in callbacks
+  useEffect(() => {
+    storyIndexRef.current = storyIndex;
+  }, [storyIndex]);
 
   // Seek to a global time position, handling chunk boundaries
   const seekTo = useCallback(
@@ -566,6 +572,16 @@ const ListenDrawer = ({ toast }) => {
   };
 
   const handleClose = useCallback(() => {
+    // Track listen if meaningful (>10 seconds, valid durations)
+    const totalDur = totalDurationRef.current;
+    const listenedTime = getGlobalTime();
+
+    if (listenedTime >= 10 && totalDur > 0 && storyIndex) {
+      navigator.sendBeacon(
+        `/listen?index=${storyIndex}&durationListened=${Math.floor(listenedTime)}&totalDuration=${Math.floor(totalDur)}`
+      );
+    }
+
     setOpen(false);
     window.drawerIsOpen = false;
     // Pause all chunk audio elements
@@ -588,7 +604,7 @@ const ListenDrawer = ({ toast }) => {
       setCurrentChunk(0);
       currentChunkRef.current = 0;
     }, 300);
-  }, [stopHighlightLoop, clearHighlights]);
+  }, [stopHighlightLoop, clearHighlights, getGlobalTime, storyIndex]);
 
   // Preload chunk audio elements and set up event handlers
   // This effect handles progressive loading by only adding new chunks
@@ -652,6 +668,14 @@ const ListenDrawer = ({ toast }) => {
         } else {
           // Last chunk ended and generation complete - stop playback
           console.log(`[playback] All chunks finished`);
+          // Track completed listen
+          const totalDur = totalDurationRef.current;
+          const idx = storyIndexRef.current;
+          if (totalDur > 0 && idx) {
+            navigator.sendBeacon(
+              `/listen?index=${idx}&durationListened=${Math.floor(totalDur)}&totalDuration=${Math.floor(totalDur)}`
+            );
+          }
           setIsPlaying(false);
           stopHighlightLoop();
           clearHighlights();

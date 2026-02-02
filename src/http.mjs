@@ -79,6 +79,7 @@ import {
   trackOutbound,
   trackImpression,
   trackShare,
+  trackListen,
   countOutbounds,
   countImpressions,
   storeMiniAppUpvote,
@@ -799,6 +800,31 @@ export async function launch(trie, libp2p, isPrimary = true) {
 
     const hash = fingerprint.generate(request);
     trackShare(url, hash, type);
+    return reply.status(204).send();
+  });
+
+  app.post("/listen", async (request, reply) => {
+    reply.header("Cache-Control", "no-cache");
+    const { index, durationListened, totalDuration } = request.query;
+    if (!index) {
+      return reply.status(400).send("Index parameter is required");
+    }
+    if (!durationListened || !totalDuration) {
+      return reply.status(400).send("Duration parameters are required");
+    }
+    if (!fingerprint) {
+      return reply.status(204).send();
+    }
+
+    let sub;
+    try {
+      sub = getSubmission(index);
+    } catch {
+      return reply.status(404).send("Story not found");
+    }
+
+    const hash = fingerprint.generate(request);
+    trackListen(sub.href, hash, parseInt(durationListened), parseInt(totalDuration));
     return reply.status(204).send();
   });
   // Disabled GET outbound tracking due to spam abuse - POST still works for sendBeacon
