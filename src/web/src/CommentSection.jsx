@@ -67,12 +67,29 @@ function truncateName(name) {
 export const EmojiReaction = ({ comment, delegations, toast }) => {
   const [isReacting, setIsReacting] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  // Current emojis
   const [kiwis, setKiwis] = useState(
     comment.reactions?.find((r) => r.emoji === "🥝")?.reactors || [],
+  );
+  const [thumbsUp, setThumbsUp] = useState(
+    comment.reactions?.find((r) => r.emoji === "👍")?.reactors || [],
+  );
+  const [hearts, setHearts] = useState(
+    comment.reactions?.find((r) => r.emoji === "❤️")?.reactors || [],
   );
   const [fires, setFires] = useState(
     comment.reactions?.find((r) => r.emoji === "🔥")?.reactors || [],
   );
+  const [smiles, setSmiles] = useState(
+    comment.reactions?.find((r) => r.emoji === "😊")?.reactors || [],
+  );
+  const [cries, setCries] = useState(
+    comment.reactions?.find((r) => r.emoji === "😢")?.reactors || [],
+  );
+  const [parties, setParties] = useState(
+    comment.reactions?.find((r) => r.emoji === "🎉")?.reactors || [],
+  );
+  // Legacy emojis - still need to track for existing reactions
   const [eyes, setEyes] = useState(
     comment.reactions?.find((r) => r.emoji === "👀")?.reactors || [],
   );
@@ -87,14 +104,19 @@ export const EmojiReaction = ({ comment, delegations, toast }) => {
   const localAccount = getLocalAccount(account.address);
   const provider = useProvider();
 
-  const commonEmojis = ["🥝", "🔥", "👀", "💯", "🤭"];
+  const commonEmojis = ["🥝", "👍", "❤️", "🔥", "👀", "💯", "😢", "🎉"];
   const address = localAccount?.identity;
   const hasReacted =
     address &&
     (kiwis.includes(address) ||
+      thumbsUp.includes(address) ||
+      hearts.includes(address) ||
       fires.includes(address) ||
       eyes.includes(address) ||
       hundreds.includes(address) ||
+      cries.includes(address) ||
+      parties.includes(address) ||
+      smiles.includes(address) ||
       laughs.includes(address));
   const isntLoggedIn = !localAccount?.identity;
 
@@ -195,6 +217,16 @@ export const EmojiReaction = ({ comment, delegations, toast }) => {
             setKiwis([...kiwis, identity]);
           }
           break;
+        case "👍":
+          if (!thumbsUp.includes(identity)) {
+            setThumbsUp([...thumbsUp, identity]);
+          }
+          break;
+        case "❤️":
+          if (!hearts.includes(identity)) {
+            setHearts([...hearts, identity]);
+          }
+          break;
         case "🔥":
           if (!fires.includes(identity)) {
             setFires([...fires, identity]);
@@ -208,6 +240,22 @@ export const EmojiReaction = ({ comment, delegations, toast }) => {
         case "💯":
           if (!hundreds.includes(identity)) {
             setHundreds([...hundreds, identity]);
+          }
+          break;
+        case "😢":
+          if (!cries.includes(identity)) {
+            setCries([...cries, identity]);
+          }
+          break;
+        case "🎉":
+          if (!parties.includes(identity)) {
+            setParties([...parties, identity]);
+          }
+          break;
+        // Legacy emojis (can still be displayed, but not added via picker)
+        case "😊":
+          if (!smiles.includes(identity)) {
+            setSmiles([...smiles, identity]);
           }
           break;
         case "🤭":
@@ -253,9 +301,15 @@ export const EmojiReaction = ({ comment, delegations, toast }) => {
   
   const reactionCounts = {
     "🥝": kiwis.length,
+    "👍": thumbsUp.length,
+    "❤️": hearts.length,
     "🔥": fires.length,
     "👀": eyes.length,
     "💯": hundreds.length,
+    "😢": cries.length,
+    "🎉": parties.length,
+    // Legacy emojis
+    "😊": smiles.length,
     "🤭": laughs.length,
   };
   
@@ -286,9 +340,15 @@ export const EmojiReaction = ({ comment, delegations, toast }) => {
           {existingReactions.map((reaction) => {
             const alreadyReacted = (
               reaction.emoji === "🥝" && kiwis.includes(address) ||
+              reaction.emoji === "👍" && thumbsUp.includes(address) ||
+              reaction.emoji === "❤️" && hearts.includes(address) ||
               reaction.emoji === "🔥" && fires.includes(address) ||
               reaction.emoji === "👀" && eyes.includes(address) ||
               reaction.emoji === "💯" && hundreds.includes(address) ||
+              reaction.emoji === "😢" && cries.includes(address) ||
+              reaction.emoji === "🎉" && parties.includes(address) ||
+              // Legacy emojis
+              reaction.emoji === "😊" && smiles.includes(address) ||
               reaction.emoji === "🤭" && laughs.includes(address)
             );
             
@@ -434,22 +494,28 @@ export const EmojiReaction = ({ comment, delegations, toast }) => {
             display: "flex",
             alignItems: "center",
             gap: "4px",
+            maxWidth: "calc(100vw - 40px)",
+            overflowX: "auto",
             backgroundColor: "var(--bg-white)",
             borderRadius: "24px",
-            padding: "6px",
+            padding: "6px 8px",
             boxShadow: "var(--shadow-default)",
             border: "var(--border-thin)",
             zIndex: 10,
             animation: "fadeIn 0.15s ease-out",
+            WebkitOverflowScrolling: "touch",
           }}
         >
           {commonEmojis.map((emoji) => {
             const alreadyReacted = (
               emoji === "🥝" && kiwis.includes(address) ||
+              emoji === "👍" && thumbsUp.includes(address) ||
+              emoji === "❤️" && hearts.includes(address) ||
               emoji === "🔥" && fires.includes(address) ||
               emoji === "👀" && eyes.includes(address) ||
               emoji === "💯" && hundreds.includes(address) ||
-              emoji === "🤭" && laughs.includes(address)
+              emoji === "😢" && cries.includes(address) ||
+              emoji === "🎉" && parties.includes(address)
             );
             const disabled = isReacting || isOwnComment || alreadyReacted;
             
@@ -462,13 +528,13 @@ export const EmojiReaction = ({ comment, delegations, toast }) => {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  width: "48px",
-                  height: "48px",
+                  width: "40px",
+                  height: "40px",
                   padding: "0",
                   background: alreadyReacted ? "var(--accent-primary-light)" : "transparent",
                   border: "none",
                   borderRadius: "50%",
-                  fontSize: "20px",
+                  fontSize: "18px",
                   cursor: disabled ? "default" : "pointer",
                   WebkitAppearance: "none",
                   opacity: disabled ? 0.5 : 1,
