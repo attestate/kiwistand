@@ -6,6 +6,7 @@ import { getCacheKey } from "node-fetch-cache";
 import DOMPurify from "isomorphic-dompurify";
 import slugify from "slugify";
 import { LRUCache } from "lru-cache";
+import cacache from "cacache";
 import cache from "./cache.mjs"; // Import the default cache
 
 slugify.extend({ 
@@ -26,7 +27,7 @@ slugify.extend({
 const initialFetches = new LRUCache({
   max: 1000 // Limit to 1,000 entries using LRU eviction
 });
-export function fetchCache(fetch, fileSystemCache) {
+export function fetchCache(fetch, fileSystemCache, cacheDirectory) {
   // Renamed 'cache' param to avoid conflict
   if (!fetch || !fileSystemCache) {
     throw new Error("fetch and fileSystemCache must be passed to fetchCache");
@@ -36,6 +37,12 @@ export function fetchCache(fetch, fileSystemCache) {
     const cacheKey = getCacheKey(url, options);
     // Try getting from the file system cache first
     let cachedValue = await fileSystemCache.get(cacheKey);
+
+    // Compact index in background after cache hit to prevent bloat
+    if (cachedValue && cacheDirectory) {
+      cacache.index.compact(cacheDirectory, cacheKey, () => true)
+        .catch(err => console.error("Index compact failed:", err));
+    }
 
     async function doFetch() {
       try {

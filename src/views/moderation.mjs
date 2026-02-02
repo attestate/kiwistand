@@ -11,12 +11,13 @@ import { EIP712_MESSAGE } from "../constants.mjs";
 import { fetchCache } from "../utils.mjs";
 
 const oneSec = 1000;
+export const cacheDirectory = path.resolve(env.CACHE_DIR, "newcache");
 const cache = new FileSystemCache({
-  cacheDirectory: path.resolve(env.CACHE_DIR, "newcache"),
+  cacheDirectory: cacheDirectory,
   ttl: oneSec * 60 * 1, // 1min
 });
 const fetch = fetchBuilder.withCache(cache);
-const fetchStaleWhileRevalidate = fetchCache(fetch, cache);
+const fetchStaleWhileRevalidate = fetchCache(fetch, cache, cacheDirectory);
 
 const url =
   "https://opensheet.elk.sh/1kh9zHwzekLb7toabpdSfd87pINBpyVU6Q8jLliBXtEc/";

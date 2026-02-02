@@ -11,12 +11,13 @@ import log from "./logger.mjs";
 
 const provider = new providers.JsonRpcProvider(env.RPC_HTTP_HOST);
 
+const fsCacheDirectory = path.resolve(env.CACHE_DIR);
 const fsCache = new FileSystemCache({
-  cacheDirectory: path.resolve(env.CACHE_DIR),
+  cacheDirectory: fsCacheDirectory,
   ttl: 86400000 * 5, // 72 hours
 });
 const cachedFetch = fetchBuilder.withCache(fsCache);
-const fetchStaleWhileRevalidate = fetchCache(cachedFetch, fsCache);
+const fetchStaleWhileRevalidate = fetchCache(cachedFetch, fsCache, fsCacheDirectory);
 
 export async function toAddress(name) {
   const address = await provider.resolveName(name);
