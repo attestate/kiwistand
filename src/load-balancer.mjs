@@ -144,16 +144,10 @@ async function startLoadBalancer() {
       // Get next worker in round-robin fashion
       const workerIndex = currentWorker;
       currentWorker = (currentWorker + 1) % workerProxies.length;
-
-      log(
-        `Load balancer: Proxying ${req.method} ${req.url} to worker ${workerIndex}`,
-      );
-
       return workerProxies[workerIndex](req, res, next);
     }
 
     // If not a worker route, proxy to the primary process
-    log(`Load balancer: Proxying ${req.method} ${req.url} to primary process`);
     return primaryProxy(req, res, next);
   });
 
