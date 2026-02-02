@@ -2,13 +2,11 @@ import React, { useRef, useState, useEffect } from "react";
 import posthog from "posthog-js";
 import { formatDistanceToNowStrict } from "date-fns";
 import Linkify from "linkify-react";
-import { useAccount, WagmiProvider } from "wagmi";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
+import { useAccount } from "wagmi";
 import { Wallet } from "@ethersproject/wallet";
 import { resolveIdentity } from "@attestate/delegator2";
 
-import { useProvider, client, chains } from "./client.mjs";
+import { useProvider } from "./client.mjs";
 import CommentInput from "./CommentInput.jsx";
 import * as API from "./API.mjs";
 import { getLocalAccount, isIOS, isAndroid, isRunningPWA } from "./session.mjs";
@@ -1048,9 +1046,7 @@ const CommentsSection = (props) => {
       </div>
     );
   }
-  
-  const queryClient = new QueryClient();
-  
+
   return (
     <div
       className="comment-section"
@@ -1064,31 +1060,25 @@ const CommentsSection = (props) => {
         fontSize: "1rem",
       }}
     >
-      <QueryClientProvider client={queryClient}>
-        <WagmiProvider config={client}>
-          <RainbowKitProvider chains={chains}>
-            {comments.length > 0 &&
-              comments.map((comment, index) => (
-                <Comment
-                  {...props}
-                  ref={index === comments.length - 1 ? lastCommentRef : null}
-                  key={comment.index}
-                  comment={comment}
-                  storyIndex={storyIndex}
-                  storyTitle={storyTitle}
-                  isLastComment={index === comments.length - 1}
-                />
-              ))}
-            <NotificationOptIn {...props} />
-            <CommentInput 
-              {...props} 
-              comments={comments}
-              setComments={setComments}
-              style={{ margin: "0" }} 
-            />
-          </RainbowKitProvider>
-        </WagmiProvider>
-      </QueryClientProvider>
+      {comments.length > 0 &&
+        comments.map((comment, index) => (
+          <Comment
+            {...props}
+            ref={index === comments.length - 1 ? lastCommentRef : null}
+            key={comment.index}
+            comment={comment}
+            storyIndex={storyIndex}
+            storyTitle={storyTitle}
+            isLastComment={index === comments.length - 1}
+          />
+        ))}
+      <NotificationOptIn {...props} />
+      <CommentInput
+        {...props}
+        comments={comments}
+        setComments={setComments}
+        style={{ margin: "0" }}
+      />
     </div>
   );
 };
