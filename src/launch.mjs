@@ -30,11 +30,12 @@ import { purgeCache } from "./cloudflarePurge.mjs";
 import { generateDigestData } from "./digest.mjs";
 
 // Monitor event loop blocking - grep logs for "Event loop blocked" to find offenders
+// Using 200ms threshold to reduce noise; 50ms fires too often during normal I/O
 blockedAt(
   (time, stack) => {
     log(`Event loop blocked for ${time}ms. Stack:\n${stack.join("\n")}`);
   },
-  { threshold: 50 },
+  { threshold: 200 },
 );
 
 const reconcileMode = env.NODE_ENV === "reconcile";
