@@ -33,6 +33,7 @@ export default async function (referral) {
                   <div style="display: flex; align-items: center; gap: 12px;">
                     <img
                       src="pwa_icon.png"
+                      loading="lazy"
                       style="width: 50px; border-radius: 0.75rem;"
                     />
                     <span style="font-size: 24px; font-weight: bold;"
@@ -48,6 +49,7 @@ export default async function (referral) {
                   <img
                     src="/webapp.webp"
                     alt="Decentralized HN"
+                    loading="lazy"
                     style="flex: 1 1 auto; max-width: 50%; object-fit: contain; max-height: 80vh; padding-bottom: 20px;"
                   />
                   <div

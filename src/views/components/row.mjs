@@ -20,6 +20,7 @@ import { twitterFrontends } from "../../parser.mjs";
 import ParagraphFullPost from "./paragraph-full-post.mjs";
 import * as karma from "../../karma.mjs";
 import { isDomainFailed, isStoryFailed } from "../../lib/listen/failed-domains.mjs";
+import { getImageLoading } from "../utils/imageLoading.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -629,7 +630,7 @@ const row = (
                               )}"
                               width="20"
                               height="20"
-                              loading="${isAboveFold ? 'eager' : 'lazy'}"
+                              loading="${getImageLoading(isAboveFold, story.metadata.twitterAuthorAvatar)}"
                               style="border-radius: 9999px; margin-right: 8px;"
                             />`
                           : html`<div
@@ -683,7 +684,7 @@ const row = (
                                   width="600"
                                   height="338"
                                   style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block;"
-                                  loading="${isAboveFold ? 'eager' : 'lazy'}"
+                                  loading="${getImageLoading(isAboveFold, story.metadata.image)}"
                                 />
                               </div>
                             `
@@ -776,7 +777,7 @@ const row = (
                               )}"
                               width="20"
                               height="20"
-                              loading="${isAboveFold ? 'eager' : 'lazy'}"
+                              loading="${getImageLoading(isAboveFold, story.metadata.farcasterCast.author.pfp)}"
                               style="border-radius: 9999px; margin-right: 8px;"
                             />`
                           : html`<svg
@@ -840,7 +841,7 @@ const row = (
                                   width="600"
                                   height="338"
                                   style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 2px;"
-                                  loading="${isAboveFold ? 'eager' : 'lazy'}"
+                                  loading="${getImageLoading(isAboveFold, farcasterImageUrl)}"
                                 />
                               </div>
                             `
@@ -915,7 +916,7 @@ const row = (
                     style="position: relative; width: 100%; aspect-ratio: 2 / 1; background: var(--button-bg); contain: content; contain-intrinsic-size: 600px 300px;"
                   >
                     <img
-                      loading="${isAboveFold ? 'eager' : 'lazy'}"
+                      loading="${getImageLoading(isAboveFold, isCloudflare ? story.href : story.metadata.image)}"
                       width="600"
                       height="300"
                       style="position: absolute; inset: 0; object-fit:${isCloudflare
@@ -952,7 +953,7 @@ const row = (
                             width="10"
                             height="10"
                             style="margin-right: 5px; display: inline-block; vertical-align: middle; width: 10px; height: 10px; object-fit: contain;"
-                            loading="${isAboveFold ? 'eager' : 'lazy'}"
+                            loading="${getImageLoading(isAboveFold, '/api/v1/favicon')}"
                             onerror="this.style.display='none'"
                           />`
                         : ""}
@@ -1164,7 +1165,7 @@ const row = (
                             ${story.avatars.slice(0, 5).map(
                               (avatar, index) => html`
                                 <img
-                                  loading="${isAboveFold ? 'eager' : 'lazy'}"
+                                  loading="${getImageLoading(isAboveFold, avatar)}"
                                   src="${avatar}"
                                   alt="avatar"
                                   width="${size}"
@@ -1228,7 +1229,7 @@ const row = (
                                     width="10"
                                     height="10"
                                     style="vertical-align: middle; position: relative; top: -1px; margin-right: 3px; opacity: 0.7; display: inline-block; flex-shrink: 0; width: 10px; height: 10px; object-fit: contain;"
-                                    loading="${isAboveFold ? 'eager' : 'lazy'}"
+                                    loading="${getImageLoading(isAboveFold, '/api/v1/favicon')}"
                                     onerror="this.style.display='none'"
                                   />`
                                 : ""}
@@ -1438,7 +1439,7 @@ const row = (
                               ${story.lastComment.previousParticipants.map(
                                 (participant, index) => html`
                                   <img
-                                    loading="${isAboveFold ? 'eager' : 'lazy'}"
+                                    loading="${getImageLoading(isAboveFold, participant.safeAvatar)}"
                                     src="${DOMPurify.sanitize(
                                       participant.safeAvatar,
                                     )}"
@@ -1466,7 +1467,7 @@ const row = (
                             style="width: 32px; flex-shrink: 0; margin-right: 14px;"
                           >
                             <img
-                              loading="${isAboveFold ? 'eager' : 'lazy'}"
+                              loading="${getImageLoading(isAboveFold, story.lastComment.identity.safeAvatar)}"
                               src="${DOMPurify.sanitize(
                                 story.lastComment.identity.safeAvatar,
                               )}"

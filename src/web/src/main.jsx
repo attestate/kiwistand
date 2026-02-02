@@ -94,14 +94,23 @@ window.posthog = posthog; // Make available globally but don't initialize
 // Check anon mode once at startup
 const isAnonMode = localStorage.getItem('anon-mode') === 'true';
 
-// Skip PostHog in anon mode or if user has explicitly opted out
+// Defer PostHog initialization to avoid blocking main thread
 const analyticsConsent = localStorage.getItem("kiwi-analytics-consent");
 if (!isAnonMode && analyticsConsent !== "false") {
-  // Initialize unless explicitly opted out or in anon mode
-  posthog.init("phc_F3mfkyH5tKKSVxnMbJf0ALcPA98s92s3Jw8a7eqpBGw", {
-    api_host: "https://eu.i.posthog.com",
-    person_profiles: "identified_only",
-  });
+  // Initialize during idle time to avoid blocking render
+  const initPostHog = () => {
+    posthog.init("phc_F3mfkyH5tKKSVxnMbJf0ALcPA98s92s3Jw8a7eqpBGw", {
+      api_host: "https://eu.i.posthog.com",
+      person_profiles: "identified_only",
+    });
+  };
+
+  if (typeof requestIdleCallback !== "undefined") {
+    requestIdleCallback(initPostHog, { timeout: 3000 });
+  } else {
+    // Fallback for Safari - defer to after initial render
+    setTimeout(initPostHog, 100);
+  }
 }
 
 window.isSidebarOpen = false;

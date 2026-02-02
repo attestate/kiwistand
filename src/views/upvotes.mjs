@@ -150,6 +150,7 @@ export default async function (trie, theme, identity, tab = "submissions") {
                       html` <a href="${ensData.safeAvatar}" target="_blank">
                         <img
                           src="${ensData.safeAvatar}"
+                          loading="lazy"
                           style="border: 1px solid var(--text-secondary); width: 30px; height: 30px; border-radius: 2px;"
                       /></a>`}
                       <a

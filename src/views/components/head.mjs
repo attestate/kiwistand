@@ -63,6 +63,23 @@ export function custom(
   ogTitle = DOMPurify.sanitize(ogTitle);
   ogDescription = DOMPurify.sanitize(ogDescription);
   return html`
+    <link rel="preconnect" href="https://www.googletagmanager.com" />
+    <link rel="preconnect" href="https://imagedelivery.net" />
+    <link rel="preconnect" href="https://api.ensdata.net" />
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      href="/fonts/Inter-Regular.woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      href="/fonts/Inter-SemiBold.woff2"
+      crossorigin
+    />
     <link
       rel="preload"
       as="style"
