@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, useMemo } from "react";
 import posthog from "posthog-js";
 import { formatDistanceToNowStrict } from "date-fns";
 import Linkify from "linkify-react";
@@ -314,6 +314,18 @@ export const EmojiReaction = ({ comment, delegations, toast }) => {
   };
   
   const existingReactions = comment.reactions?.filter(r => r.reactors?.length > 0) || [];
+  const userReactions = useMemo(() => ({
+    "🥝": kiwis.includes(address),
+    "👍": thumbsUp.includes(address),
+    "❤️": hearts.includes(address),
+    "🔥": fires.includes(address),
+    "👀": eyes.includes(address),
+    "💯": hundreds.includes(address),
+    "😢": cries.includes(address),
+    "🎉": parties.includes(address),
+    "😊": smiles.includes(address),
+    "🤭": laughs.includes(address),
+  }), [address, kiwis, thumbsUp, hearts, fires, eyes, hundreds, cries, parties, smiles, laughs]);
   
   return (
     <div
@@ -338,19 +350,7 @@ export const EmojiReaction = ({ comment, delegations, toast }) => {
           }}
         >
           {existingReactions.map((reaction) => {
-            const alreadyReacted = (
-              reaction.emoji === "🥝" && kiwis.includes(address) ||
-              reaction.emoji === "👍" && thumbsUp.includes(address) ||
-              reaction.emoji === "❤️" && hearts.includes(address) ||
-              reaction.emoji === "🔥" && fires.includes(address) ||
-              reaction.emoji === "👀" && eyes.includes(address) ||
-              reaction.emoji === "💯" && hundreds.includes(address) ||
-              reaction.emoji === "😢" && cries.includes(address) ||
-              reaction.emoji === "🎉" && parties.includes(address) ||
-              // Legacy emojis
-              reaction.emoji === "😊" && smiles.includes(address) ||
-              reaction.emoji === "🤭" && laughs.includes(address)
-            );
+            const alreadyReacted = userReactions[reaction.emoji];
             
             return (
               <button
