@@ -38,10 +38,18 @@ export function fetchCache(fetch, fileSystemCache, cacheDirectory) {
     // Try getting from the file system cache first
     let cachedValue = await fileSystemCache.get(cacheKey);
 
-    // Compact index in background after cache hit to prevent bloat
+    // Compact index in background after cache hit to prevent bloat.
+    // node-fetch-cache stores entries under "${key}body" and "${key}meta".
     if (cachedValue && cacheDirectory) {
-      cacache.index.compact(cacheDirectory, cacheKey, () => true)
-        .catch(err => console.error("Index compact failed:", err));
+      const filterFn = () => true;
+      cacache.index.compact(cacheDirectory, `${cacheKey}body`, filterFn)
+        .catch(err => {
+          if (err.code !== "ENOENT") console.error("Index compact failed:", err);
+        });
+      cacache.index.compact(cacheDirectory, `${cacheKey}meta`, filterFn)
+        .catch(err => {
+          if (err.code !== "ENOENT") console.error("Index compact failed:", err);
+        });
     }
 
     async function doFetch() {
