@@ -27,6 +27,9 @@ export async function generateDigestData() {
     const desiredStoryCount = 5;
     const fetchAmount = 12;
     const bannedDomains = new Set(["imagedelivery.net"]);
+    const bannedIndexes = new Set([
+      "69809847cd276be92605e39bbe250aadb468bd4afb2ea05598fbf2905b4fb2cecd7a4505",
+    ]);
 
     // 1. Fetch the top stories using the same function as the website,
     //    but with options for fresh, complete data.
@@ -40,6 +43,10 @@ export async function generateDigestData() {
     log(`Found ${stories.length} total stories before filtering.`);
 
     const filteredStories = stories.filter((story) => {
+      if (story.index && bannedIndexes.has(story.index)) {
+        return false;
+      }
+
       const metadataDomain = story.metadata?.domain?.toLowerCase?.();
       let hrefDomain = null;
       try {
