@@ -717,6 +717,7 @@ async function addListenDrawer(toast) {
 
   // Add click handlers for listen buttons
   addListenButtonHandlers();
+  addAiButtonHandlers();
 }
 
 function addListenButtonHandlers() {
@@ -732,6 +733,92 @@ function addListenButtonHandlers() {
       const title = container.dataset.storyTitle;
       if (window.openListenDrawer) {
         window.openListenDrawer(index, title);
+      }
+    });
+  });
+}
+
+function closeAiDropdown() {
+  const portal = document.getElementById("ai-drawer-portal");
+  if (portal) portal.remove();
+  const backdrop = document.getElementById("ai-backdrop");
+  if (backdrop) backdrop.remove();
+}
+
+function openAiDropdown(trigger) {
+  // Close any existing dropdown first
+  closeAiDropdown();
+
+  const menu = trigger.querySelector(".ai-dropdown-menu");
+  if (!menu) return;
+  const isMobile = window.innerWidth <= 640;
+
+  // Backdrop
+  const backdrop = document.createElement("div");
+  backdrop.id = "ai-backdrop";
+  backdrop.style.cssText = isMobile
+    ? "position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg-overlay);z-index:9998;"
+    : "position:fixed;top:0;left:0;right:0;bottom:0;z-index:9998;";
+  backdrop.addEventListener("click", closeAiDropdown);
+  document.body.appendChild(backdrop);
+
+  // Portal with cloned menu items
+  const portal = document.createElement("div");
+  portal.id = "ai-drawer-portal";
+  portal.innerHTML = menu.innerHTML;
+
+  if (isMobile) {
+    portal.className = "ai-drawer-portal";
+  } else {
+    const rect = trigger.getBoundingClientRect();
+    portal.className = "ai-portal-dropdown";
+    portal.style.position = "fixed";
+    portal.style.top = (rect.bottom + 4) + "px";
+    portal.style.left = (rect.left + rect.width / 2) + "px";
+    portal.style.transform = "translateX(-50%)";
+    portal.style.zIndex = "9999";
+  }
+
+  document.body.appendChild(portal);
+
+  // Bind handlers on portaled elements
+  const copyBtn = portal.querySelector(".ai-copy-btn");
+  if (copyBtn) {
+    copyBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      const url = window.location.origin + copyBtn.dataset.copyPath;
+      navigator.clipboard.writeText(url).then(() => {
+        if (window.toast && window.toast.success) {
+          window.toast.success("Copied to clipboard!");
+        }
+      }).catch(() => {
+        if (window.toast && window.toast.error) {
+          window.toast.error("Could not copy");
+        }
+      });
+      closeAiDropdown();
+    });
+  }
+
+  portal.querySelectorAll(".ai-dropdown-link").forEach((link) => {
+    link.addEventListener("click", closeAiDropdown);
+  });
+}
+
+function addAiButtonHandlers() {
+  document.querySelectorAll(".ai-dropdown-trigger").forEach((trigger) => {
+    const btn = trigger.querySelector(".ai-button");
+    if (!btn || btn.dataset.listenerAdded) return;
+    btn.dataset.listenerAdded = "true";
+
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const existing = document.getElementById("ai-drawer-portal");
+      if (existing) {
+        closeAiDropdown();
+      } else {
+        openAiDropdown(trigger);
       }
     });
   });
@@ -1834,6 +1921,9 @@ async function start() {
     document.body.classList.add("react-loaded");
   } catch {}
 
+  // Bind AI button handlers for server-rendered rows
+  addAiButtonHandlers();
+
   // Initialize endless scroll for main feed
   initEndlessScroll();
 
@@ -1851,6 +1941,7 @@ async function start() {
     }
     // Re-add listen button handlers for new rows
     addListenButtonHandlers();
+    addAiButtonHandlers();
   });
 }
 

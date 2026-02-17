@@ -1816,7 +1816,60 @@ export async function launch(trie, libp2p, isPrimary = true) {
     );
     return reply.status(200).type("text/html").send(content.valueOf());
   });
-  
+
+  app.get("/stories/context", async (request, reply) => {
+    const index = request.query.index;
+    if (!index) {
+      return reply.status(400).type("text/plain").send("Missing index parameter");
+    }
+
+    let submission;
+    try {
+      submission = await generateStory(index);
+    } catch (err) {
+      return reply.status(404).type("text/plain").send(err.message);
+    }
+
+    let articleText = "";
+    try {
+      const extracted = await extractArticleCached(submission.href);
+      if (extracted && extracted.plainText) {
+        articleText = extracted.plainText;
+      }
+    } catch (err) {
+      // Extraction failed - continue with title, URL, and comments
+    }
+
+    // Resolve comment author display names
+    const comments = submission.comments || [];
+    const profiles = await Promise.all(
+      comments.map((c) => ens.resolve(c.identity)),
+    );
+
+    let md = `# ${submission.title}\n\nSource: ${submission.href}\n`;
+
+    if (articleText) {
+      md += `\n${articleText}\n`;
+    }
+
+    if (comments.length > 0) {
+      md += `\n## Comments\n\n`;
+      comments.forEach((comment, i) => {
+        const name = profiles[i]?.displayName || profiles[i]?.truncatedAddress || comment.identity;
+        md += `**${name}**: ${comment.title}\n\n`;
+      });
+    }
+
+    reply.header(
+      "Cache-Control",
+      "public, s-maxage=3600, max-age=0, stale-while-revalidate=86400",
+    );
+    return reply
+      .status(200)
+      .type("text/plain; charset=utf-8")
+      .send(md);
+  });
+
   app.get("/stories/:slug?", async (request, reply) => {
     let referral;
     try {

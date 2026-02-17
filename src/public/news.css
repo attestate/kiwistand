@@ -2146,3 +2146,111 @@ a.meta-link:hover, span.meta-link:hover {
   flex-direction: column;
   overflow: hidden;
 }
+
+/* AI Dropdown */
+@keyframes aiSlideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.ai-dropdown-trigger {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+button.ai-button {
+  min-width: 40px;
+  padding: 8px;
+  border: none;
+  background: transparent;
+  border-radius: 999px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s ease;
+}
+
+button.ai-button:hover {
+  background-color: rgba(108, 92, 231, 0.1);
+}
+
+.ai-button-icon {
+  width: 20px;
+  height: 20px;
+  color: var(--color-vote-default);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ai-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  text-decoration: none;
+  color: var(--text-primary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background-color 0.1s;
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.ai-portal-dropdown a.ai-dropdown-item,
+.ai-portal-dropdown a.ai-dropdown-item:visited,
+.ai-portal-dropdown a.ai-dropdown-item:active,
+.ai-drawer-portal a.ai-dropdown-item,
+.ai-drawer-portal a.ai-dropdown-item:visited,
+.ai-drawer-portal a.ai-dropdown-item:active {
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.ai-dropdown-item:hover {
+  background-color: var(--bg-hover-subtle);
+}
+
+/* Desktop: portaled dropdown near button */
+.ai-portal-dropdown {
+  background: var(--background-color0);
+  border: var(--border-embed);
+  border-radius: 2px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  min-width: 180px;
+  padding: 4px 0;
+  overflow: hidden;
+}
+
+/* Mobile: portaled bottom drawer */
+.ai-drawer-portal {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  background: var(--background-color0);
+  border-top: 2px solid var(--text-secondary);
+  border-radius: 2px 2px 0 0;
+  padding: 8px 0;
+  padding-bottom: env(safe-area-inset-bottom, 8px);
+  animation: aiSlideUp 0.3s ease-out;
+}
+
+.ai-drawer-portal .ai-dropdown-item {
+  gap: 12px;
+  padding: 14px 20px;
+  font-size: 15px;
+}
+
+.ai-drawer-portal .ai-dropdown-item svg {
+  width: 22px;
+  height: 22px;
+}
