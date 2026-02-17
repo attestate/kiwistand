@@ -67,7 +67,7 @@ import appTestflight from "./views/app-testflight.mjs";
 import notifications from "./views/notifications.mjs";
 import debug from "./views/debug.mjs";
 import commentDebug from "./views/comment-debug.mjs";
-import { parse, metadata } from "./parser.mjs";
+import { parse, metadata, cachedMetadata } from "./parser.mjs";
 import { toAddress, resolve, ENS_CACHE_PREFIX } from "./ens.mjs";
 import * as ens from "./ens.mjs";
 import * as karma from "./karma.mjs";
@@ -1501,6 +1501,20 @@ export async function launch(trie, libp2p, isPrimary = true) {
     if (stories.length === 0) {
       reply.header("Cache-Control", "public, s-maxage=60, max-age=0");
       return reply.status(200).type("text/html").send("");
+    }
+
+    // Add rich metadata (OG images, Farcaster/Twitter previews) to each story
+    const policy = await moderation.getLists();
+    for (const story of stories) {
+      story.metadata = cachedMetadata(story.href);
+      if (story.metadata?.image) {
+        const href = (story.href.startsWith('data:') || story.href.startsWith('kiwi:'))
+          ? story.href
+          : normalizeUrl(story.href, { stripWWW: false });
+        if (href && policy?.images?.includes(href)) {
+          delete story.metadata.image;
+        }
+      }
     }
 
     // Render stories as HTML rows
