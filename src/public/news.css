@@ -2218,11 +2218,6 @@ button.ai-button:hover {
   background-color: var(--bg-hover-subtle);
 }
 
-@media (max-width: 640px) {
-  .ai-desktop-only {
-    display: none;
-  }
-}
 
 /* Desktop: portaled dropdown near button */
 .ai-portal-dropdown {

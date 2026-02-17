@@ -1441,7 +1441,7 @@ const row = (
                                 Ask in ChatGPT
                               </a>
                               <a
-                                class="ai-dropdown-item ai-dropdown-link ai-desktop-only"
+                                class="ai-dropdown-item ai-dropdown-link"
                                 href="https://claude.ai/new?q=${encodeURIComponent("Please read and analyze this article so I can ask questions about it: " + domain + "/stories/context?index=0x" + story.index)}"
                                 target="_blank"
                                 rel="noopener noreferrer"
