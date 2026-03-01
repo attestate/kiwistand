@@ -1318,6 +1318,10 @@ body.react-loaded .comment-input-ssr-placeholder {
      margin-bottom: 2em;
      max-width: 60%;
 }
+.kiwi-wordmark {
+  color: var(--text-primary);
+}
+
  /* Kiwi logo using CSS variable for background image */
  .kiwi-logo-img {
      background-image: var(--logo-image);
@@ -1344,6 +1348,7 @@ body.react-loaded .comment-input-ssr-placeholder {
  /* Show anon-mode label only when anon theme is active */
  [data-theme="anon"] .anon-mode-label {
      display: block;
+     margin-left: 5px;
  }
  .notification-text {
      font-size: 1.2em;
@@ -1528,9 +1533,9 @@ body.react-loaded .comment-input-ssr-placeholder {
       align-items: center;
     }
     .desktop-nav {
-      width: 47%;
       display: flex;
-      justify-content: space-between;
+      justify-content: flex-end;
+      margin-left: auto;
       margin-top: 5px;
       white-space: nowrap;
       gap: 20px;
