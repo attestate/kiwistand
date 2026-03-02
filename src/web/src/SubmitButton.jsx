@@ -745,6 +745,20 @@ const queryClient = new QueryClient();
 const Form = (props) => {
   const urlInput = document.getElementById("urlInput");
   const [url, setURL] = useState(urlInput.value);
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("focus") !== "url") return;
+
+    const focusUrlInput = () => {
+      const input = document.getElementById("urlInput");
+      if (!input) return;
+      input.focus();
+      input.select();
+    };
+
+    focusUrlInput();
+    requestAnimationFrame(focusUrlInput);
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>

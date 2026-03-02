@@ -4,6 +4,7 @@ import vhtml from "vhtml";
 import Header from "./components/header.mjs";
 import Footer from "./components/footer.mjs";
 import Sidebar from "./components/sidebar.mjs";
+import Trollbox from "./components/trollbox.mjs";
 import { prefetchHead } from "./components/head.mjs";
 import Row, { extractDomain } from "./components/row.mjs";
 import * as parser from "../parser.mjs";
@@ -166,6 +167,7 @@ export default async function submit(theme, url = "", title = "") {
             </table>
             ${Footer(theme)}
           </div>
+          ${Trollbox()}
         </div>
       </body>
     </html>

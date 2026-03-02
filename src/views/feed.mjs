@@ -916,6 +916,62 @@ export default async function (trie, theme, page, domain, identity, hash, varian
           name="description"
           content="Crypto news for builders"
         />
+        <style>
+          .feed-submit-row {
+            padding: 12px 16px;
+            margin-top: 0;
+            margin-bottom: 20px;
+          }
+          .feed-submit-label {
+            margin: 0 0 8px 0;
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+          }
+          .feed-submit-form {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            width: 100%;
+          }
+          .feed-submit-input {
+            flex: 1;
+            min-width: 0;
+            height: 44px;
+            padding: 10px 12px;
+            font-size: 15px;
+            box-sizing: border-box;
+            border: 1px solid var(--text-secondary);
+            background: var(--bg-white);
+            color: var(--text-primary);
+            border-radius: 2px;
+          }
+          .feed-submit-btn {
+            height: 44px;
+            padding: 0 12px;
+            box-sizing: border-box;
+            border: 1px solid var(--text-disabled);
+            border-radius: 2px;
+            background: var(--text-disabled);
+            color: var(--text-white);
+            font-size: 14px;
+            font-weight: 600;
+            line-height: 1;
+            white-space: nowrap;
+            cursor: pointer;
+            opacity: 0.9;
+          }
+          .feed-submit-status {
+            display: none;
+          }
+          @media (max-width: 640px) {
+            .feed-submit-row {
+              display: none !important;
+            }
+          }
+        </style>
       </head>
       <body
         data-instant-allow-query-string
@@ -931,6 +987,48 @@ export default async function (trie, theme, page, domain, identity, hash, varian
               </tr>
               <tr>
                 ${SecondHeader(theme, "top")}
+              </tr>
+              <tr>
+                <td>
+                  <div class="content-row feed-submit-row">
+                    <div class="feed-submit-label">Submit an article</div>
+                    <form
+                      id="feed-submit-launcher"
+                      class="feed-submit-form"
+                      action="/submit"
+                      method="GET"
+                      onpointerdown="
+                        window.location.href = '/submit?focus=url';
+                        return false;
+                      "
+                      onsubmit="
+                        event.preventDefault();
+                        window.location.href = '/submit?focus=url';
+                        return false;
+                      "
+                    >
+                      <input
+                        id="feed-submit-url"
+                        class="feed-submit-input"
+                        type="text"
+                        name="url"
+                        placeholder="Paste a link"
+                        maxlength="2048"
+                      />
+                      <button
+                        id="feed-submit-btn"
+                        class="feed-submit-btn"
+                        type="submit"
+                      >
+                        Submit
+                      </button>
+                    </form>
+                    <div
+                      id="feed-submit-status"
+                      class="feed-submit-status"
+                    ></div>
+                  </div>
+                </td>
               </tr>
               ${
                 // Render pinned story only if it exists
