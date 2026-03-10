@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" width="1200" height="800"
+     font-family="'Helvetica Neue', Helvetica, Arial, sans-serif">
+
+  <defs>
+    <marker id="arr" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#555"/>
+    </marker>
+  </defs>
+
+  <rect width="1200" height="800" fill="#ffffff"/>
+
+  <!-- ========================================= -->
+  <!-- OPTIMISM MAINNET                          -->
+  <!-- ========================================= -->
+  <rect x="20" y="20" width="780" height="80" rx="6"
+        fill="#f3f3f3" stroke="#aaaaaa" stroke-width="1.5"/>
+  <text x="38" y="42" font-size="14" font-weight="bold" fill="#888888">Optimism Mainnet</text>
+  <rect x="50" y="47" width="720" height="42" rx="4"
+        fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+  <text x="410" y="74" text-anchor="middle" font-size="17" font-weight="bold" fill="#1a1a1a">Delegator2 Contract</text>
+
+  <!-- Delegator2 → crawler -->
+  <path d="M 410,100 L 410,160" stroke="#555" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+  <text x="418" y="134" font-size="11" fill="#888" font-style="italic">delegation events</text>
+
+  <!-- ========================================= -->
+  <!-- KIWI NEWS NODE                            -->
+  <!-- ========================================= -->
+  <rect x="20" y="125" width="780" height="480" rx="6"
+        fill="#f3f3f3" stroke="#aaaaaa" stroke-width="1.5"/>
+  <text x="38" y="150" font-size="18" font-weight="bold" fill="#2c2c2c">Kiwi News Node</text>
+
+  <!-- attestate/crawler -->
+  <rect x="50" y="160" width="720" height="68" rx="4"
+        fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+  <text x="410" y="191" text-anchor="middle" font-size="17" font-weight="bold" fill="#1a1a1a">attestate/crawler</text>
+  <text x="410" y="213" text-anchor="middle" font-size="13" fill="#666">Extract · Transform · Load</text>
+
+  <!-- crawler → LMDB -->
+  <path d="M 150,228 L 150,253" stroke="#555" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+
+  <!-- LMDB (P2P state) -->
+  <rect x="50" y="255" width="200" height="55" rx="4"
+        fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+  <text x="150" y="289" text-anchor="middle" font-size="17" font-weight="bold" fill="#1a1a1a">LMDB</text>
+
+  <!-- LMDB → gossipsub -->
+  <path d="M 150,310 L 150,338" stroke="#555" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+
+  <!-- libp2p gossipsub -->
+  <rect x="50" y="340" width="720" height="68" rx="4"
+        fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+  <text x="410" y="371" text-anchor="middle" font-size="17" font-weight="bold" fill="#1a1a1a">libp2p gossipsub</text>
+  <text x="410" y="393" text-anchor="middle" font-size="13" fill="#666">Set Reconciliation Protocol</text>
+
+  <!-- gossipsub → Web API -->
+  <path d="M 410,408 L 410,428" stroke="#555" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+
+  <!-- Web API -->
+  <rect x="50" y="430" width="720" height="150" rx="4"
+        fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+  <text x="410" y="458" text-anchor="middle" font-size="17" font-weight="bold" fill="#1a1a1a">Web API</text>
+  <text x="410" y="477" text-anchor="middle" font-size="13" fill="#666">Node.js · Views</text>
+
+  <!-- Web API sub-boxes: LMDB + SQLite -->
+  <rect x="75" y="487" width="150" height="38" rx="3"
+        fill="#f9f9f9" stroke="#999" stroke-width="1"/>
+  <text x="150" y="511" text-anchor="middle" font-size="14" font-weight="bold" fill="#333">LMDB</text>
+
+  <rect x="245" y="487" width="150" height="38" rx="3"
+        fill="#f9f9f9" stroke="#999" stroke-width="1"/>
+  <text x="320" y="511" text-anchor="middle" font-size="14" font-weight="bold" fill="#333">SQLite</text>
+
+  <!-- Kiwi News Node → Cloudflare -->
+  <path d="M 410,605 L 410,623" stroke="#555" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+
+  <!-- ========================================= -->
+  <!-- CLOUDFLARE CDN                            -->
+  <!-- ========================================= -->
+  <rect x="20" y="625" width="780" height="65" rx="4"
+        fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+  <text x="410" y="653" text-anchor="middle" font-size="17" font-weight="bold" fill="#1a1a1a">Cloudflare CDN</text>
+  <text x="410" y="673" text-anchor="middle" font-size="13" fill="#666">Edge Cache · Global CDN</text>
+
+  <!-- Cloudflare → Browser -->
+  <path d="M 410,690 L 410,713" stroke="#555" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+
+  <!-- ========================================= -->
+  <!-- USER'S BROWSER                            -->
+  <!-- ========================================= -->
+  <rect x="20" y="715" width="780" height="65" rx="4"
+        fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+  <text x="410" y="743" text-anchor="middle" font-size="17" font-weight="bold" fill="#1a1a1a">User's Browser</text>
+  <text x="410" y="763" text-anchor="middle" font-size="13" fill="#666">Client-side JS · Service Worker Cache</text>
+
+  <!-- ========================================= -->
+  <!-- RIGHT COLUMN: Peer + Identity APIs        -->
+  <!-- ========================================= -->
+
+  <!-- Another Kiwi Node (pill) — aligned with gossipsub -->
+  <rect x="862" y="340" width="185" height="68" rx="34"
+        fill="#f0f0f0" stroke="#999" stroke-width="1.5"/>
+  <text x="954" y="368" text-anchor="middle" font-size="15" font-weight="bold" fill="#2c2c2c">Another</text>
+  <text x="954" y="390" text-anchor="middle" font-size="15" font-weight="bold" fill="#2c2c2c">Kiwi Node</text>
+
+  <!-- gossipsub ↔ Another Kiwi Node (horizontal only) -->
+  <path d="M 800,360 L 860,360" stroke="#555" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+  <path d="M 860,388 L 800,388" stroke="#555" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+  <text x="804" y="352" font-size="11" fill="#888" font-style="italic">gossip sync</text>
+
+  <!-- Identity APIs — aligned with Web API -->
+  <rect x="862" y="452" width="185" height="78" rx="4"
+        fill="#ffffff" stroke="#888" stroke-width="1.5"/>
+  <text x="954" y="481" text-anchor="middle" font-size="15" font-weight="bold" fill="#1a1a1a">Identity APIs</text>
+  <text x="954" y="500" text-anchor="middle" font-size="12" fill="#666">ENSData · Neynar</text>
+  <text x="954" y="518" text-anchor="middle" font-size="12" fill="#666">· Lens</text>
+
+  <!-- Identity APIs → Web API (horizontal, pointing left) -->
+  <path d="M 860,491 L 772,491" stroke="#555" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+  <text x="796" y="483" font-size="11" fill="#888" font-style="italic">identity</text>
+
+</svg>
