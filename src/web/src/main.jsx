@@ -6,11 +6,7 @@ import { createRoot } from "react-dom/client";
 import sdk from "@farcaster/frame-sdk";
 import DOMPurify from "isomorphic-dompurify";
 import { Providers } from "./providers.jsx";
-import {
-  initSpinnerOverlay,
-  showSpinnerOverlay,
-  hideSpinnerOverlay,
-} from "./spinnerOverlay.js";
+import { initSpinnerOverlay } from "./spinnerOverlay.js";
 import {
   setDelegationModalRef,
   preloadDelegationModal,
@@ -1497,112 +1493,6 @@ function trackLinkImpressions() {
   });
 }
 
-async function reorderStories(identity) {
-  // Only on the main feed page
-  const path = window.location.pathname;
-  if (path !== "/") return;
-
-  const contentRows = Array.from(
-    document.querySelectorAll("[data-content-id]"),
-  );
-  if (contentRows.length === 0) return;
-
-  const parent = contentRows[0].parentNode;
-
-  let spinnerIcon;
-  const spinner = showSpinnerOverlay();
-
-  if (spinner) {
-    const spinnerStyle = `
-      .spinner-icon {
-        border: 4px solid rgba(0, 0, 0, 0.1);
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        border-left-color: var(--color-link-blue);
-        animation: spin 1s ease infinite;
-      }
-      @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-      }
-    `;
-
-    let styleSheet = document.getElementById("spinner-overlay-style");
-    if (!styleSheet) {
-      styleSheet = document.createElement("style");
-      styleSheet.id = "spinner-overlay-style";
-      styleSheet.type = "text/css";
-      styleSheet.innerText = spinnerStyle;
-      document.head.appendChild(styleSheet);
-    }
-
-    spinnerIcon = document.createElement("div");
-    spinnerIcon.className = "spinner-icon";
-    spinner.appendChild(spinnerIcon);
-  }
-
-  parent.style.transition = "opacity 0.2s ease-in-out";
-  parent.style.opacity = "0.5";
-
-  // A small delay to ensure spinner is rendered before potential blocking work.
-  await new Promise((resolve) => setTimeout(resolve, 50));
-
-  let seenIds = new Set();
-  let lastClickedId = null;
-
-  if (!isAnonMode) {
-    const { getClickedContentIds, getLastClickedContentId, getFrequentlyImpressedContentIds } =
-      await import("./tracker.mjs");
-    const clickedIds = getClickedContentIds();
-    lastClickedId = getLastClickedContentId();
-    const frequentlyImpressedIds = getFrequentlyImpressedContentIds(3); // Threshold of 3 impressions
-    seenIds = new Set([...clickedIds, ...frequentlyImpressedIds]);
-  }
-
-  if (seenIds.size > 0 || identity) {
-    const seenRows = [];
-    const unseenRows = [];
-
-    contentRows.forEach((row) => {
-      const contentId = row.dataset.contentId;
-
-      const likeButton = row.querySelector(".like-button-container");
-      let upvoters = [];
-      if (likeButton) {
-        try {
-          upvoters = JSON.parse(likeButton.getAttribute("data-upvoters")) || [];
-        } catch (e) {
-          // Ignore parsing errors
-        }
-      }
-
-      const isUpvotedByUser = identity ? upvoters.includes(identity) : false;
-
-      // Keep last-clicked story at its original position ONLY if not upvoted
-      if (contentId === lastClickedId && !isUpvotedByUser) {
-        unseenRows.push(row);
-        return;
-      }
-
-      if (isUpvotedByUser || seenIds.has(contentId)) {
-        seenRows.push(row);
-      } else {
-        unseenRows.push(row);
-      }
-    });
-
-    // Only reorder if there's a mix of seen and unseen stories visible
-    if (seenRows.length > 0 && unseenRows.length > 0) {
-      unseenRows.forEach((row) => parent.appendChild(row));
-      seenRows.forEach((row) => parent.appendChild(row));
-    }
-  }
-
-  hideSpinnerOverlay();
-  parent.style.opacity = "1";
-}
-
 // Endless scroll for main feed
 function initEndlessScroll() {
   // Only run on the main feed page
@@ -1838,11 +1728,6 @@ async function start() {
     initialAccount,
     isInIOSApp,
   );
-
-  // Reorder stories based on seen status (skip in anon mode)
-  if (!isAnonMode) {
-    await reorderStories(identity);
-  }
 
   // Watch for future account changes
   watchAccount(client, {
