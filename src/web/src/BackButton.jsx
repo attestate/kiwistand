@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 import sdk from "@farcaster/frame-sdk";
+import { useWebHaptics } from "web-haptics/react";
 
 const BackButton = () => {
   const [canGoBack, setCanGoBack] = useState(false);
   const [referrer, setReferrer] = useState(null);
   const [isMiniApp, setIsMiniApp] = useState(false);
+  const haptic = useWebHaptics();
 
   useEffect(() => {
     // Check if we're in a mini app
@@ -41,6 +43,7 @@ const BackButton = () => {
 
   const handleBackClick = async (e) => {
     e.preventDefault();
+    haptic.trigger("selection");
     
     // Handle webview/iframe context
     if (isMiniApp || window.ReactNativeWebView || window !== window.parent) {

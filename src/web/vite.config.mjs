@@ -49,6 +49,7 @@ export default defineConfig(({ mode }) => {
         "pulltorefreshjs",
         "posthog-js",
         "@farcaster/frame-sdk",
+        "web-haptics",
       ],
       entries: ["src/main.jsx"],
       // Ensure fresh optimization when server restarts

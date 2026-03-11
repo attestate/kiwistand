@@ -24,6 +24,7 @@ import {
   openDelegationModalForAction,
   isDelegationModalNeeded,
 } from "./delegationModalManager.js";
+import { useWebHaptics } from "web-haptics/react";
 
 export const iconSVG = (
   <svg
@@ -106,6 +107,7 @@ const Vote = (props) => {
 
   const { isMiniApp, loading } = useIsMiniApp();
   const [isFarcasterClient, setIsFarcasterClient] = useState(false);
+  const haptic = useWebHaptics();
 
   useEffect(() => {
     const determineFarcasterClient = async () => {
@@ -160,6 +162,11 @@ const Vote = (props) => {
     props.upvoters.includes(address),
   );
   const [upvotes, setUpvotes] = useState(props.upvoters.length);
+  const triggerLocalHaptic = (preset) => {
+    if (!isFarcasterClient) {
+      haptic.trigger(preset);
+    }
+  };
 
   let signer, isLocal;
   if (localAccount && localAccount.privateKey) {
@@ -175,6 +182,7 @@ const Vote = (props) => {
     // Check wallet connection for both mini app and traditional users
     if (!isFarcasterClient && !signer) {
       toast.error("Please connect your wallet to like");
+      triggerLocalHaptic("warning");
       return;
     }
 
@@ -185,6 +193,7 @@ const Vote = (props) => {
       isDelegationModalNeeded(account.address)
     ) {
       openDelegationModalForAction();
+      triggerLocalHaptic("warning");
       return;
     }
 
@@ -287,6 +296,7 @@ const Vote = (props) => {
       // Update UI state
       setUpvotes(upvotes + 1);
       toast.success("Thanks for your like! Have a 🥝");
+      triggerLocalHaptic("success");
       const isAnonMode = localStorage.getItem('anon-mode') === 'true';
       if (!isAnonMode) {
         posthog.capture("upvote", { variant: getVariant() });
@@ -302,10 +312,12 @@ const Vote = (props) => {
         toast.success(
           "Your vote was already recorded! The feed may need to refresh to show it. 🥝",
         );
+        triggerLocalHaptic("selection");
       } else {
         setHasUpvoted(false);
         setShowKarmaAnimation(false); // Hide animation on error
         toast.error(`Sad Kiwi :( "${response.details}"`);
+        triggerLocalHaptic("error");
       }
       return;
     }
@@ -341,6 +353,7 @@ const Vote = (props) => {
 
               if (!isEligible && isIOSApp()) {
                 toast.error("Login to upvote");
+                triggerLocalHaptic("warning");
                 return;
               }
 
@@ -350,6 +363,7 @@ const Vote = (props) => {
                 } else {
                   toast.error("Connect your wallet to sign up");
                 }
+                triggerLocalHaptic("warning");
                 return;
               }
 
@@ -362,6 +376,7 @@ const Vote = (props) => {
                 url.pathname = "/submit";
                 url.searchParams.set("url", DOMPurify.sanitize(props.href));
                 window.location.href = url.href;
+                triggerLocalHaptic("selection");
                 return;
               }
 

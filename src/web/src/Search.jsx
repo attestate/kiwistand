@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import SwipeableDrawer from "@mui/material/SwipeableDrawer";
 import { ChatsSVG } from "./icons.jsx";
 import { isIOS } from "./session.mjs";
+import { useWebHaptics } from "web-haptics/react";
 
 // List of paths where the search component should be hidden
 const HIDDEN_PATHS = [
@@ -30,6 +31,7 @@ const SearchInterface = () => {
   const [isMobile, setIsMobile] = useState(false);
   const inputRef = useRef(null);
   const debounceTimer = useRef(null);
+  const haptic = useWebHaptics();
 
   const iOS =
     typeof navigator !== "undefined" &&
@@ -53,6 +55,7 @@ const SearchInterface = () => {
 
   const handleSearch = (value) => {
     if (value.trim()) {
+      haptic.trigger("medium");
       window.location.href = `/search?q=${encodeURIComponent(value.trim())}`;
     }
   };
@@ -82,6 +85,7 @@ const SearchInterface = () => {
           <a
             href={result.url}
             target={isIOS() ? "_self" : "_blank"}
+            onClick={() => haptic.trigger("selection")}
             style={{
               fontSize: "13pt",
               lineHeight: "1.4",
@@ -122,7 +126,10 @@ const SearchInterface = () => {
   return (
     <>
       <button
-        onClick={() => setIsOpen(true)}
+        onClick={() => {
+          haptic.trigger("selection");
+          setIsOpen(true);
+        }}
         style={{
           padding: "5px",
           border: "none",

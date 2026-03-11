@@ -14,6 +14,7 @@ import { dynamicPrefetch } from "./main.jsx";
 import { sdk } from "@farcaster/frame-sdk";
 import { showSpinnerOverlay } from "./spinnerOverlay.js";
 import LoginModal from "./LoginModal.jsx";
+import { useWebHaptics } from "web-haptics/react";
 
 const EmailSubscriptionForm = ({
   onSuccess,
@@ -216,6 +217,7 @@ export { ConnectedEmailSubscriptionForm };
 
 const NotificationButton = ({ onEnabled }) => {
   const [permissionStatus, setPermissionStatus] = useState("default");
+  const haptic = useWebHaptics();
 
   useEffect(() => {
     const handlePermissionResult = (event) => {
@@ -238,6 +240,7 @@ const NotificationButton = ({ onEnabled }) => {
   }, [onEnabled]);
 
   const handleNotificationRequest = () => {
+    haptic.trigger("medium");
     if (window.requestIOSNotifications) {
       window.requestIOSNotifications();
     }
@@ -270,6 +273,7 @@ const Bell = (props) => {
   const localAccount = getLocalAccount(account.address);
   const loginModalRef = useRef();
   const { openConnectModal } = useConnectModal();
+  const haptic = useWebHaptics();
 
   if (localAccount) {
     address = localAccount.identity;
@@ -290,6 +294,7 @@ const Bell = (props) => {
   const handleClick = (event) => {
     // Added event parameter
     setIsFull(!isFull);
+    haptic.trigger("selection");
     if (
       !event.ctrlKey &&
       !event.metaKey &&
@@ -404,6 +409,7 @@ const Bell = (props) => {
 
     const handleLoginClick = (e) => {
       e.preventDefault();
+      haptic.trigger("medium");
       // On iOS, directly open RainbowKit wallet picker
       if (isInIOSApp && openConnectModal) {
         openConnectModal();

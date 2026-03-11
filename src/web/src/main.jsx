@@ -6,6 +6,7 @@ import { createRoot } from "react-dom/client";
 import sdk from "@farcaster/frame-sdk";
 import DOMPurify from "isomorphic-dompurify";
 import { Providers } from "./providers.jsx";
+import { bindHapticsToElements } from "./haptics.js";
 import { initSpinnerOverlay } from "./spinnerOverlay.js";
 import {
   setDelegationModalRef,
@@ -1636,6 +1637,11 @@ async function start() {
     });
   }
 
+  // Bind haptics for primary navigation interactions
+  bindHapticsToElements(".bottom-nav a", "selection");
+  bindHapticsToElements(".kn-banner-desk a, .mobile-center", "selection");
+  bindHapticsToElements(".second-header button", "selection");
+
   const urlParams = new URL(window.location.href).searchParams;
   if (urlParams.get("miniapp") === "true") {
     sdk.actions.addFrame();
@@ -1827,6 +1833,9 @@ async function start() {
     // Re-add listen button handlers for new rows
     addListenButtonHandlers();
     addAiButtonHandlers();
+    bindHapticsToElements(".bottom-nav a", "selection");
+    bindHapticsToElements(".kn-banner-desk a, .mobile-center", "selection");
+    bindHapticsToElements(".second-header button", "selection");
   });
 }
 

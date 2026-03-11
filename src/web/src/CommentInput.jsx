@@ -9,6 +9,7 @@ import { resolveIdentity } from "@attestate/delegator2";
 import slugify from "slugify";
 import DOMPurify from "isomorphic-dompurify";
 import { sdk } from "@farcaster/frame-sdk";
+import { useWebHaptics } from "web-haptics/react";
 
 import * as API from "./API.mjs";
 import { getLocalAccount } from "./session.mjs";
@@ -287,6 +288,7 @@ const MobileComposer = ({
 const CommentInput = (props) => {
   const { toast, delegations } = props;
   const { isMiniApp, loading } = useIsMiniApp();
+  const haptic = useWebHaptics();
 
   let address;
   const account = useAccount();
@@ -489,6 +491,7 @@ const CommentInput = (props) => {
     if (address && isDelegationModalNeeded(address)) {
       setIsLoading(false);
       openDelegationModalForAction();
+      haptic.trigger("warning");
       return;
     }
 
@@ -498,6 +501,7 @@ const CommentInput = (props) => {
     if ((text.length < 15 || text.length > 10_000) && !isValidMilady) {
       toast.error("Comment must be between 15 and 10000 characters.");
       setIsLoading(false);
+      haptic.trigger("error");
       return;
     }
 
@@ -548,6 +552,7 @@ const CommentInput = (props) => {
         );
         API.send(value, signature, false); // Fire and forget
         toast.success("Comment added successfully!"); // Confirmation of *sending*
+        haptic.trigger("success");
         const isAnonMode = localStorage.getItem('anon-mode') === 'true';
         if (!isAnonMode) {
           posthog.capture("comment_created", { variant: getFeedVariant() });
@@ -555,6 +560,7 @@ const CommentInput = (props) => {
       } catch (err) {
         console.error("Signing/Sending error (optimistic path):", err);
         toast.error(`Error: ${err.message}`);
+        haptic.trigger("error");
         // Consider removing the optimistic comment here if signing/initial send fails
       } finally {
          setIsLoading(false);
@@ -578,11 +584,13 @@ const CommentInput = (props) => {
         if (response && response.status === "error") {
           toast.error(`Failed to submit comment: ${response.details || 'Unknown server error'}`);
           setIsLoading(false);
+          haptic.trigger("error");
           return;
         }
 
         // Success! Clear local state and reload
         toast.success("Comment submitted successfully!");
+        haptic.trigger("success");
         const isAnonMode = localStorage.getItem('anon-mode') === 'true';
         if (!isAnonMode) {
           posthog.capture("comment_created", { variant: getFeedVariant() });
@@ -610,6 +618,7 @@ const CommentInput = (props) => {
         console.error("Signing/Sending error (reload path):", err);
         toast.error(`Error: ${err.message}`);
         setIsLoading(false);
+        haptic.trigger("error");
       }
     }
   };
