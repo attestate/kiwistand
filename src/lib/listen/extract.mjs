@@ -420,6 +420,12 @@ export function eagerExtractArticle(url) {
       console.log(`[listen] Eager extracted: ${url.slice(0, 60)}...`);
     })
     .catch((err) => {
+      extractionCache.set(url, {
+        text: null,
+        failed: true,
+        error: err.message,
+        extractedAt: Date.now(),
+      });
       // Don't log errors for expected failures (paywalls, etc.)
       if (!err.message.includes("too short") && !err.message.includes("paywall")) {
         console.log(`[listen] Eager extract failed for ${url.slice(0, 40)}: ${err.message}`);
@@ -434,6 +440,9 @@ export function eagerExtractArticle(url) {
 export async function extractArticleCached(url) {
   const cached = extractionCache.get(url);
   if (cached) {
+    if (cached.failed) {
+      return null;
+    }
     console.log(`[listen] Cache hit for extraction: ${url.slice(0, 60)}...`);
     return cached;
   }
