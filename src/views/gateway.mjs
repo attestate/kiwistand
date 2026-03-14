@@ -8,8 +8,6 @@ import Header from "./components/header.mjs";
 import { ethereum } from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
 import Head from "./components/head.mjs";
-import * as ens from "../ens.mjs";
-
 const html = htm.bind(vhtml);
 
 export default async function (referral) {

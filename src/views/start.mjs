@@ -6,8 +6,6 @@ import Header from "./components/header.mjs";
 import Sidebar from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
 import { custom } from "./components/head.mjs";
-import * as ens from "../ens.mjs";
-
 const html = htm.bind(vhtml);
 export default async function index(theme) {
   const ogImage = "https://news.kiwistand.com/start_preview.jpeg";
