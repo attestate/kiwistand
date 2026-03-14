@@ -1102,6 +1102,13 @@ export const cachedMetadata = (
       }
     })
     .catch((err) => {
+      const failure = {
+        failed: true,
+        error: err?.message || String(err),
+        timestamp: Date.now(),
+      };
+      cache.set(normalizedUrl, failure);
+      cache.set(url, failure);
       log(`Metadata fetch failed for ${url}: ${err}`);
     })
     .finally(() => {
@@ -1157,6 +1164,14 @@ export const metadata = async (
       agent: useAgent(url),
       signal,
     });
+
+    const contentTypeHeader = response.headers.get("content-type") || "";
+    if (contentTypeHeader && !contentTypeHeader.includes("text/html")) {
+      if (response.body && typeof response.body.cancel === "function") {
+        response.body.cancel();
+      }
+      throw new Error(`Unsupported content type for metadata: ${contentTypeHeader}`);
+    }
 
     // Check iframe compatibility
     const xFrameOptions = response.headers.get('x-frame-options');

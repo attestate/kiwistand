@@ -13,9 +13,11 @@ const extractionCache = new LRUCache({
   maxSize: 50 * 1024 * 1024, // 50MB max
   sizeCalculation: (value) => {
     // Estimate size: title + plainText + wrappedHtml
-    return (value.title?.length || 0) +
-           (value.plainText?.length || 0) +
-           (value.wrappedHtml?.length || 0);
+    const estimated =
+      (value?.title?.length || 0) +
+      (value?.plainText?.length || 0) +
+      (value?.wrappedHtml?.length || 0);
+    return estimated > 0 ? estimated : 1;
   },
   ttl: 1000 * 60 * 60 * 24, // 24 hour TTL
 });
