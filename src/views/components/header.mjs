@@ -1,12 +1,7 @@
 //@format
-import { env } from "process";
-
 import htm from "htm";
 import vhtml from "vhtml";
 import { utils } from "ethers";
-
-import * as ens from "../../ens.mjs";
-import * as karma from "../../karma.mjs";
 
 const html = htm.bind(vhtml);
 
