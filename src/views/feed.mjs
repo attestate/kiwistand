@@ -247,14 +247,20 @@ function meanUpvoteRatio(leaves) {
 }
 
 async function calculateNeynarUpvotes(upvoters) {
+  if (!Array.isArray(upvoters) || upvoters.length === 0) {
+    return 0;
+  }
+
+  const results = await Promise.allSettled(
+    upvoters.map((upvoter) => ens.resolve(upvoter)),
+  );
+
   let weightedUpvotes = 0;
-  for (const upvoter of upvoters) {
-    try {
-      const profile = await ens.resolve(upvoter);
-      const neynarScore = profile.neynarScore || 0;
-      const upvoteValue = 1 + neynarScore;
-      weightedUpvotes += upvoteValue;
-    } catch (err) {
+  for (const result of results) {
+    if (result.status === "fulfilled") {
+      const neynarScore = result.value.neynarScore || 0;
+      weightedUpvotes += 1 + neynarScore;
+    } else {
       weightedUpvotes += 1; // fallback to 1 if resolution fails
     }
   }
