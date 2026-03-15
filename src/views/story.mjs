@@ -34,7 +34,6 @@ import * as karma from "../karma.mjs";
 import { truncateName, getSlug, isCloudflareImage } from "../utils.mjs";
 import { identityClassifier } from "./feed.mjs";
 import { render, cachedMetadata } from "../parser.mjs";
-import { eagerExtractArticle } from "../lib/listen/extract.mjs";
 import { getSubmission } from "../cache.mjs";
 import { purgeCache } from "../cloudflarePurge.mjs";
 import * as preview from "../preview.mjs";
@@ -175,8 +174,6 @@ export default async function (trie, theme, index, value, referral, commentIndex
         log(`Failed to purge story page cache after metadata fetch: ${err}`)
       );
     });
-    // Eagerly extract article text for Listen feature (non-blocking)
-    eagerExtractArticle(value.href);
   }
 
   const story = {

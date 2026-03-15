@@ -27,7 +27,6 @@ import cache, {
   countImpressions,
   countOutbounds,
   countShares,
-  countListens,
   getLastComment,
   getSubmission,
   listNewest,
@@ -41,7 +40,6 @@ import { EIP712_MESSAGE } from "../constants.mjs";
 import Row, { extractDomain } from "./components/row.mjs";
 import * as karma from "../karma.mjs";
 import { cachedMetadata } from "../parser.mjs";
-import { eagerExtractArticle } from "../lib/listen/extract.mjs";
 import { getPredictedEngagement } from "../prediction.mjs";
 
 // Import twitterFrontends for checking Twitter/X links
@@ -334,16 +332,6 @@ export async function topstories(leaves, algorithm = 'control', skipNeynar = fal
           score = score * 0.9 + 0.1 * Math.log(outboundClicks);
         }
 
-        // Add listen signal - completionSum rewards full listens
-        try {
-          const listenData = countListens(story.href);
-          if (listenData.completionSum > 0) {
-            score = score * 0.9 + 0.1 * Math.log(1 + listenData.completionSum);
-          }
-        } catch (e) {
-          // Table may not exist yet, ignore
-        }
-
         if (precomputedMeanUpvoteRatio !== null) {
           try {
             const storyRatio = calculateUpvoteClickRatio(story);
@@ -411,8 +399,6 @@ export async function topstories(leaves, algorithm = 'control', skipNeynar = fal
 
 async function addMetadata(post) {
   const data = cachedMetadata(post.href);
-  // Eagerly extract article text for Listen feature (non-blocking)
-  eagerExtractArticle(post.href);
   return {
     ...post,
     metadata: data,

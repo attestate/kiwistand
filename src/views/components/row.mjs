@@ -20,7 +20,6 @@ import log from "../../logger.mjs";
 import { twitterFrontends } from "../../parser.mjs";
 import ParagraphFullPost from "./paragraph-full-post.mjs";
 import * as karma from "../../karma.mjs";
-import { isDomainFailed, isStoryFailed } from "../../lib/listen/failed-domains.mjs";
 import { getImageLoading } from "../utils/imageLoading.mjs";
 
 let domain = "https://news.kiwistand.com";
@@ -91,74 +90,6 @@ const shareSVG = html`
     />
   </svg>
 `;
-
-const playSVG = html`
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 256 256"
-    width="20"
-    height="20"
-  >
-    <rect width="256" height="256" fill="none" />
-    <path
-      d="M228.23,134.69,72.23,214.69A8,8,0,0,1,60,208V48a8,8,0,0,1,12.23-6.69l156,80A8,8,0,0,1,228.23,134.69Z"
-      fill="none"
-      stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="16"
-    />
-  </svg>
-`;
-
-// Non-listenable domains - don't show listen button for these
-const nonListenableDomains = [
-  // Video
-  "youtube.com",
-  "youtu.be",
-  "m.youtube.com",
-  // Code / markets
-  "github.com",
-  "polymarket.com",
-  // Image CDNs
-  "imagedelivery.net",
-  "imgur.com",
-  "i.imgur.com",
-  "cloudinary.com",
-  "imgbb.com",
-  "pbs.twimg.com",
-  "media.tenor.com",
-  "giphy.com",
-];
-
-// Image/media file extensions
-const nonListenableExtensions = [
-  ".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg", ".ico", ".bmp",
-  ".mp4", ".webm", ".mov", ".avi", ".mp3", ".wav", ".ogg",
-  ".pdf",
-];
-
-function isListenableUrl(href) {
-  if (!href) return false;
-  if (href.startsWith("data:")) return false;
-  try {
-    const url = new URL(href);
-    // Check blocked domains
-    const isBlockedDomain = nonListenableDomains.some(
-      (d) => url.hostname === d || url.hostname.endsWith(`.${d}`),
-    );
-    if (isBlockedDomain) return false;
-    // Check file extensions (case-insensitive)
-    const pathname = url.pathname.toLowerCase();
-    const hasBlockedExt = nonListenableExtensions.some((ext) => pathname.endsWith(ext));
-    if (hasBlockedExt) return false;
-    // Check if domain has previously failed
-    if (isDomainFailed(href)) return false;
-    return true;
-  } catch {
-    return false;
-  }
-}
 
 const aiSparkleSVG = html`
   <svg
@@ -1402,27 +1333,7 @@ const row = (
                         >
                       </button>
                     </div>
-                    ${isListenableUrl(story.href) && !isStoryFailed("0x" + story.index)
-                      ? html`<div
-                          class="listen-button-container"
-                          data-story-index="0x${story.index}"
-                          data-story-title="${DOMPurify.sanitize(story.title)}"
-                          style="flex: 1; display: flex; justify-content: center;"
-                        >
-                          <button
-                            class="interaction-button listen-button"
-                            style="min-width: 40px; padding: 8px; border: none; background: transparent; border-radius: 999px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s ease; position: relative;"
-                            onmouseover="this.style.backgroundColor='rgba(108, 92, 231, 0.1)'"
-                            onmouseout="this.style.backgroundColor='transparent'"
-                          >
-                            <span
-                              style="width: 20px; height: 20px; color: var(--color-vote-default); display: flex; align-items: center; justify-content: center;"
-                              >${playSVG}</span
-                            >
-                          </button>
-                        </div>`
-                      : ""}
-                    ${isListenableUrl(story.href)
+                    ${!isTextPost && story.href && !story.href.startsWith('data:') && !story.href.startsWith('kiwi:')
                       ? html`<div
                           style="flex: 1; display: flex; justify-content: center;"
                         >

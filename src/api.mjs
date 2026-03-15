@@ -21,8 +21,6 @@ import * as registry from "./chainstate/registry.mjs";
 import * as newest from "./views/new.mjs";
 // Dynamic import for generatePreview - only loaded when not in reconcile mode
 let generatePreview = null;
-// Dynamic import for generateTTS - only loaded when not in reconcile mode
-let generateTTS = null;
 import { getSubmission, isReactionComment } from "./cache.mjs";
 import { triggerUpvoteNotification } from "./subscriptions.mjs";
 
@@ -277,14 +275,6 @@ export function handleMessage(
         });
       });
 
-      // Pre-generate TTS audio for new submissions (fire-and-forget)
-      if (generateTTS && message.href) {
-        setImmediate(() => {
-          generateTTS(`0x${index}`, message.href).catch((err) => {
-            log(`TTS pre-generation failed for 0x${index}: ${err.message}`);
-          });
-        });
-      }
     }
     
     // Generate preview for comments (excluding emoji reactions)
@@ -387,12 +377,6 @@ export async function launch(trie, libp2p) {
       log(`Warning: Could not load story module: ${err.message}`);
     }
 
-    try {
-      const listenModule = await import("./lib/listen/index.mjs");
-      generateTTS = listenModule.generateTTS;
-    } catch (err) {
-      log(`Warning: Could not load listen module: ${err.message}`);
-    }
   }
   
   api.use((err, req, res, next) => {
