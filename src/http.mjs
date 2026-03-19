@@ -12,6 +12,7 @@ import Piscina from "piscina";
 import Cloudflare from "cloudflare";
 import { createClient as createQuickAuthClient, Errors } from "@farcaster/quick-auth";
 
+import sirv from "sirv";
 import morgan from "morgan";
 import express from "express";
 import cookieParser from "cookie-parser";
@@ -237,7 +238,7 @@ app.use(
 );
 app.use(
   "/assets",
-  express.static("src/public/assets", {
+  sirv("src/public/assets", {
     setHeaders: (res, pathName) => {
       if (env.NODE_ENV === "production") {
         res.setHeader(
@@ -250,7 +251,7 @@ app.use(
 );
 
 app.use(
-  express.static("src/public", {
+  sirv("src/public", {
     setHeaders: (res, pathName) => {
       if (env.NODE_ENV !== "production") return;
       if (!/\/assets\//.test(pathName)) {

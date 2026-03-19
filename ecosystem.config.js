@@ -11,6 +11,7 @@ module.exports = {
         NODE_ENV: "production",
         HTTP_PORT: "3000",
         WORKER_COUNT: 10,
+        UV_THREADPOOL_SIZE: 16,
       },
     },
     {
@@ -19,6 +20,7 @@ module.exports = {
       env: {
         NODE_PATH: "./node_modules",
         NODE_ENV: "production",
+        UV_THREADPOOL_SIZE: 16,
         THEME: "kiwi",
         HTTP_PORT: 3000,
         API_PORT: 8443,
