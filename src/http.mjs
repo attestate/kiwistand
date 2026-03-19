@@ -8,6 +8,7 @@
 import { env } from "process";
 import path from "path";
 import cluster from "cluster";
+import Piscina from "piscina";
 import Cloudflare from "cloudflare";
 import { createClient as createQuickAuthClient, Errors } from "@farcaster/quick-auth";
 
@@ -166,6 +167,13 @@ const server = createHttpServer(app);
 // Prevent socket accumulation from clients that disconnect without proper close
 server.keepAliveTimeout = 65000; // 65 seconds
 server.headersTimeout = 66000; // Must exceed keepAliveTimeout
+
+// NOTE: Pool is at module level to avoid spawning extra workers on repeated calls.
+const feedPiscina = new Piscina({
+  filename: path.resolve("./src/workers/feedWorker.mjs"),
+  minThreads: 1,
+  maxThreads: 1,
+});
 
 let cachedFeed = null;
 
@@ -647,8 +655,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
       console.time("initial-feed-computation");
       // Start with control variant
       currentVariant = 'control';
-      const initialFeedFunction = feedFunctions[currentVariant];
-      cachedFeed = await initialFeedFunction(trie, theme, 0, null, undefined, undefined, currentVariant);
+      cachedFeed = await feedPiscina.run({ theme, variant: currentVariant });
       console.timeEnd("initial-feed-computation");
       log(`Initial cached feed ready (variant: ${currentVariant})`);
     } catch (err) {
@@ -664,9 +671,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
         // Alternate between variants for 50/50 split
         variantCounter++;
         currentVariant = variants[variantCounter % 2];
-        const feedFunction = feedFunctions[currentVariant];
-        
-        const newFeed = await feedFunction(trie, theme, 0, null, undefined, undefined, currentVariant);
+        const newFeed = await feedPiscina.run({ theme, variant: currentVariant });
         cachedFeed = newFeed;
         
         const elapsed = Date.now() - startTime;
