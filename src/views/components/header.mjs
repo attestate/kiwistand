@@ -152,6 +152,22 @@ const header = (theme, path) => {
               </a>
               <div class="desktop-nav">
                 <a
+                  href="https://t.me/+QGAviVT67m00Njc8"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Join our Telegram community"
+                  class="meta-link"
+                  style="display: flex; align-items: center; color: #2CA5E0;"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="14" height="14" fill="none" stroke="#2CA5E0" stroke-linecap="round" stroke-linejoin="round" stroke-width="16">
+                    <rect width="256" height="256" fill="none" stroke="none"/>
+                    <path d="M80,134.87,170.26,214a8,8,0,0,0,13.09-4.21L224,33.22a1,1,0,0,0-1.34-1.15L20,111.38A6.23,6.23,0,0,0,21,123.3Z"/>
+                    <line x1="80" y1="134.87" x2="223.41" y2="32.09"/>
+                    <path d="M124.37,173.78,93.76,205.54A8,8,0,0,1,80,200V134.87"/>
+                  </svg>
+                  <span style="margin-left: 4px;">Join our TG</span>
+                </a>
+                <a
                   class="meta-link primary-action"
                   href="/submit"
                   data-no-instant
