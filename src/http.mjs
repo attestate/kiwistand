@@ -6,8 +6,9 @@
 //   to handle stale-while-revalidate since Cloudflare doesn't support this natively
 
 import { env } from "process";
-import path from "path";
+import path, { resolve } from "path";
 import cluster from "cluster";
+import Piscina from "piscina";
 import Cloudflare from "cloudflare";
 import { createClient as createQuickAuthClient, Errors } from "@farcaster/quick-auth";
 
@@ -29,8 +30,12 @@ import { FileSystemCache, getCacheKey } from "node-fetch-cache";
 import * as registry from "./chainstate/registry.mjs";
 import log from "./logger.mjs";
 import theme from "./theme.mjs";
-import feed, { index } from "./views/feed.mjs";
+import { index } from "./views/feed.mjs";
 import { setupRoutes as setupTrollboxRoutes } from "./trollbox.mjs";
+
+const feedPool = new Piscina({
+  filename: resolve("./src/workers/feed.mjs"),
+});
 
 // Global error handlers to catch crashes and log them properly
 process.on("uncaughtException", (err) => {
@@ -627,19 +632,12 @@ export async function launch(trie, libp2p, isPrimary = true) {
   const variants = ['control', 'lobsters'];
   let currentVariant = 'control';
   let variantCounter = 0; // Use counter for deterministic 50/50 split
-  
-  // Map variants to their functions (only 2 for simplified test)
-  const feedFunctions = {
-    control: feed,
-    lobsters: feed  // Both use same feed function now, just with different params
-  };
-  
-  // Map variant names to algorithm selection
+
   const variantConfigs = {
-    control: { algorithm: 'control' },  // Original algorithm
-    lobsters: { algorithm: 'lobsters' }  // Lobsters algorithm
+    control: { algorithm: 'control' },
+    lobsters: { algorithm: 'lobsters' },
   };
-  
+
   // Start computing the feed in the background to avoid blocking server startup
   // The first request to / might be slower if the feed isn't ready yet
   setImmediate(async () => {
@@ -647,8 +645,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
       console.time("initial-feed-computation");
       // Start with control variant
       currentVariant = 'control';
-      const initialFeedFunction = feedFunctions[currentVariant];
-      cachedFeed = await initialFeedFunction(trie, theme, 0, null, undefined, undefined, currentVariant);
+      cachedFeed = await feedPool.run({ page: 0, variant: currentVariant });
       console.timeEnd("initial-feed-computation");
       log(`Initial cached feed ready (variant: ${currentVariant})`);
     } catch (err) {
@@ -664,9 +661,8 @@ export async function launch(trie, libp2p, isPrimary = true) {
         // Alternate between variants for 50/50 split
         variantCounter++;
         currentVariant = variants[variantCounter % 2];
-        const feedFunction = feedFunctions[currentVariant];
-        
-        const newFeed = await feedFunction(trie, theme, 0, null, undefined, undefined, currentVariant);
+
+        const newFeed = await feedPool.run({ page: 0, variant: currentVariant });
         cachedFeed = newFeed;
         
         const elapsed = Date.now() - startTime;
@@ -1764,17 +1760,11 @@ export async function launch(trie, libp2p, isPrimary = true) {
         content = cachedFeed;
       } else {
         // Use whichever variant is currently in rotation (no user-specific selection)
-        const feedFunction = feedFunctions[currentVariant];
-        
-        content = await feedFunction(
-          trie,
-          reply.locals.theme,
+        content = await feedPool.run({
           page,
-          DOMPurify.sanitize(request.query.domain),
-          identity,
-          hash,
-          currentVariant, // Pass variant as 7th parameter
-        );
+          domain: DOMPurify.sanitize(request.query.domain),
+          variant: currentVariant,
+        });
       }
     } catch (err) {
       log(`Error in /: ${err.stack}`);
