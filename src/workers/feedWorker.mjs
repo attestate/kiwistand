@@ -11,7 +11,7 @@ initializeLtCache();
 initializeImpressions();
 initializeShares();
 
-export default async function ({ theme, variant }) {
+export default async function ({ theme, variant, page = 0, domain = null, identity = undefined, hash = undefined }) {
   // trie is not used inside feed generation - all data comes from SQLite
-  return feed(null, theme, 0, null, undefined, undefined, variant);
+  return feed(null, theme, page, domain, identity, hash, variant);
 }

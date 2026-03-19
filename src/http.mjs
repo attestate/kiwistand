@@ -1769,18 +1769,14 @@ export async function launch(trie, libp2p, isPrimary = true) {
       ) {
         content = cachedFeed;
       } else {
-        // Use whichever variant is currently in rotation (no user-specific selection)
-        const feedFunction = feedFunctions[currentVariant];
-        
-        content = await feedFunction(
-          trie,
-          reply.locals.theme,
+        content = await feedPiscina.run({
+          theme: reply.locals.theme,
+          variant: currentVariant,
           page,
-          DOMPurify.sanitize(request.query.domain),
+          domain: DOMPurify.sanitize(request.query.domain),
           identity,
           hash,
-          currentVariant, // Pass variant as 7th parameter
-        );
+        });
       }
     } catch (err) {
       log(`Error in /: ${err.stack}`);
