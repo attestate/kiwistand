@@ -363,11 +363,14 @@ const row = (
     const clicks = countOutbounds(story.href, outboundsLookbackHours);
     const extractedDomain = extractDomain(DOMPurify.sanitize(story.href));
     // Use the twitterFrontends list from parser.mjs for comprehensive coverage
-    const isTweet = twitterFrontends.some((domain) => {
-      return (
-        extractedDomain === domain || extractedDomain.endsWith(`.${domain}`)
-      );
-    });
+    const isTweet =
+      twitterFrontends.some((domain) => {
+        return (
+          extractedDomain === domain || extractedDomain.endsWith(`.${domain}`)
+        );
+      }) ||
+      (extractedDomain === "firefly.social" &&
+        story.href.includes("/post/x/"));
 
     // Check if this is a Farcaster cast (only actual cast URLs)
     const isFarcasterCast =
@@ -378,7 +381,9 @@ const row = (
       (story.href.includes("farcaster.xyz/") &&
         !story.href.includes("miniapps.farcaster.xyz") &&
         !story.href.includes("docs.farcaster.xyz") &&
-        !story.href.includes("api.farcaster.xyz"));
+        !story.href.includes("api.farcaster.xyz")) ||
+      (extractedDomain === "firefly.social" &&
+        story.href.includes("/post/farcaster/"));
 
     // Check if this is a Paragraph.xyz post
     const isParagraphPost = extractedDomain === "paragraph.xyz";
@@ -582,20 +587,21 @@ const row = (
                     <div>
                       <div style="display: flex; align-items: center; margin-bottom: 12px;">
                         ${story.metadata.twitterAuthorAvatar
-                          ? html`<img
-                              src="${DOMPurify.sanitize(
-                                story.metadata.twitterAuthorAvatar,
-                              )}"
-                              alt="${DOMPurify.sanitize(
-                                story.metadata.twitterCreator || "Author",
-                              )}"
-                              width="20"
-                              height="20"
-                              loading="${getImageLoading(isAboveFold, story.metadata.twitterAuthorAvatar)}"
-                              style="border-radius: 9999px; margin-right: 8px;"
-                            />`
+                          ? html`<div style="width: 20px; height: 20px; border-radius: 50%; overflow: hidden; margin-right: 8px; flex-shrink: 0;">
+                              <img
+                                src="${DOMPurify.sanitize(
+                                  story.metadata.twitterAuthorAvatar,
+                                )}"
+                                alt="${DOMPurify.sanitize(
+                                  story.metadata.twitterCreator || "Author",
+                                )}"
+                                width="20"
+                                height="20"
+                                loading="${getImageLoading(isAboveFold, story.metadata.twitterAuthorAvatar)}"
+                                style="object-fit: cover; display: block;"
+                              /></div>`
                           : html`<div
-                              style="width: 20px; height: 20px; border-radius: 50%; background-color: var(--button-bg); margin-right: 8px; display: flex; align-items: center; justify-content: center;"
+                              style="width: 20px; height: 20px; border-radius: 50%; background-color: var(--button-bg); margin-right: 8px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;"
                             >
                               <svg
                                 width="12"
@@ -625,19 +631,18 @@ const row = (
                                 return DOMPurify.sanitize(part);
                               });
                             };
-                            const desc = convertBrTagsToNewlines((story.metadata.ogDescription || "").trim());
+                            const desc = convertBrTagsToNewlines((story.metadata.ogDescription || "").trim()).replace(/\n\nQuoting .+$/s, "").trim();
                             if (/^https?:\/\/\S+$/i.test(desc)) {
                               return html`<a href="${DOMPurify.sanitize(desc)}" target="_blank" rel="noopener">${DOMPurify.sanitize(desc)}</a>`;
                             }
-                            const sliced = desc.slice(0, 260);
-                            const nodes = linkifyNodes(sliced);
-                            return html`${nodes}${desc.length > 260 ? '…' : ''}`;
+                            const nodes = linkifyNodes(desc);
+                            return html`${nodes}`;
                           })()}
                         </p>
                         ${story.metadata.image
                           ? html`
                               <div
-                                style="margin-top: 12px; position: relative; width: 100%; aspect-ratio: 16 / 9; background: var(--button-bg); overflow: hidden;"
+                                style="margin-top: 12px; position: relative; width: 100%; aspect-ratio: 16 / 9; background: var(--button-bg); overflow: hidden; border-radius: 12px; border: 1px solid rgba(0,0,0,0.1);"
                               >
                                 <img
                                   src="${DOMPurify.sanitize(story.metadata.image)}"
@@ -788,9 +793,13 @@ const row = (
                             if (/^https?:\/\/\S+$/i.test(desc)) {
                               return html`<a href="${DOMPurify.sanitize(desc)}" target="_blank" rel="noopener">${DOMPurify.sanitize(desc)}</a>`;
                             }
-                            const sliced = desc.slice(0, 260);
-                            const nodes = linkifyNodes(sliced);
-                            return html`${nodes}${desc.length > 260 ? '…' : ''}`;
+                            if (desc.length <= 280) {
+                              const nodes = linkifyNodes(desc);
+                              return html`${nodes}`;
+                            }
+                            const preview = desc.slice(0, 280);
+                            const rest = desc.slice(280);
+                            return html`<details style="display:inline;"><summary style="display:inline; list-style:none; cursor:pointer;">${linkifyNodes(preview)}<span style="opacity:0.6;">… <span style="text-decoration:underline;">show more</span></span></summary>${linkifyNodes(rest)}</details>`;
                           })()}
                         </p>
                         ${farcasterImageUrl

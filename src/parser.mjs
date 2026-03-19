@@ -920,10 +920,10 @@ const checkOgImage = async (url) => {
       return false;
     }
 
-    // Allow landscape, square, and slightly portrait images (0.8 to 2.0 aspect ratio)
-    // Reject very portrait images (narrower than 0.8) and very wide images (wider than 2:1)
+    // Allow landscape, square, and portrait images (0.3 to 2.0 aspect ratio)
+    // Reject very narrow sliver images and very wide images (wider than 2:1)
     const aspectRatio = width / height;
-    if (aspectRatio < 0.8 || aspectRatio > 2) {
+    if (aspectRatio < 0.3 || aspectRatio > 2) {
       log(
         `Rejecting image with aspect ratio out of range (${width}x${height}, ratio: ${aspectRatio.toFixed(
           2,
@@ -1025,6 +1025,18 @@ export const metadata = async (
     urlObj = new URL(url);
   } catch {
     throw new Error("Invalid URL");
+  }
+
+  // Transform firefly.social/post/x/{id} to fxtwitter.com for tweet previews
+  if (urlObj.hostname === "firefly.social" && urlObj.pathname.startsWith("/post/")) {
+    const pathParts = urlObj.pathname.split("/").filter(Boolean);
+    // pathParts: ["post", "x"|"farcaster"|..., "{id}"]
+    if (pathParts.length >= 3 && pathParts[1] === "x") {
+      log(`[metadata] Firefly X link, converting to fxtwitter.com`);
+      urlObj.hostname = "fxtwitter.com";
+      urlObj.pathname = `/i/web/status/${pathParts[2]}`;
+      url = urlObj.toString();
+    }
   }
 
   const { hostname } = urlObj;
@@ -1215,8 +1227,15 @@ export const metadata = async (
   let output = {};
 
   // Always extract Farcaster cast data for preview, regardless of generateTitle
-  if (hostname === "farcaster.xyz" || hostname === "warpcast.com") {
-    const cast = await extractWarpcastContent(url, "url");
+  const fireflyFarcasterHash =
+    hostname === "firefly.social" &&
+    urlObj.pathname.startsWith("/post/farcaster/")
+      ? urlObj.pathname.split("/").filter(Boolean)[2]
+      : null;
+  if (hostname === "farcaster.xyz" || hostname === "warpcast.com" || fireflyFarcasterHash) {
+    const cast = fireflyFarcasterHash
+      ? await extractWarpcastContent(fireflyFarcasterHash, "hash")
+      : await extractWarpcastContent(url, "url");
     if (cast) {
       // Store cast data for preview component
       output.farcasterCast = {
@@ -1354,35 +1373,28 @@ export const metadata = async (
     output.ogDescription = DOMPurify.sanitize(ogDescription);
   }
   
-  // For tweets, extract author info and fetch their profile for avatar
+  // For tweets, fetch author avatar via fxtwitter JSON API using the tweet ID
   if (twitterFrontends.includes(hostname) && !ogDescription?.includes("x.com/i/article/")) {
     try {
-      // Extract username from the tweet URL (format: /username/status/id)
-      const pathParts = urlObj.pathname.split('/');
-      if (pathParts.length >= 3 && pathParts[2] === 'status') {
-        const username = pathParts[1];
-        
-        // Fetch the author's profile page to get their avatar
-        const profileUrl = `https://x.com/${username}`;
-        const profileResponse = await fetch(profileUrl, {
-          headers: {
-            "User-Agent": env.USER_AGENT,
-          },
-          agent: useAgent(profileUrl),
+      const tweetId = urlObj.pathname.split('/').filter(Boolean).pop();
+      if (tweetId && /^\d+$/.test(tweetId)) {
+        const apiUrl = `https://api.fxtwitter.com/status/${tweetId}`;
+        const apiResponse = await fetch(apiUrl, {
+          headers: { "User-Agent": env.USER_AGENT },
           signal: AbortSignal.timeout(3000),
         });
-        
-        if (profileResponse.ok) {
-          const profileHtml = await profileResponse.text();
-          const profileParsed = await ogs({ html: profileHtml });
-          
-          if (profileParsed.result && profileParsed.result.ogImage && profileParsed.result.ogImage.length > 0) {
-            output.twitterAuthorAvatar = DOMPurify.sanitize(profileParsed.result.ogImage[0].url);
+        if (apiResponse.ok) {
+          const apiData = await apiResponse.json();
+          if (apiData?.tweet?.author?.avatar_url) {
+            output.twitterAuthorAvatar = DOMPurify.sanitize(apiData.tweet.author.avatar_url);
+          }
+          if (apiData?.tweet?.author?.screen_name) {
+            output.twitterCreator = DOMPurify.sanitize(`@${apiData.tweet.author.screen_name}`);
           }
         }
       }
     } catch (err) {
-      log(`Failed to fetch Twitter author avatar: ${err.message}`);
+      log(`Failed to fetch Twitter author info: ${err.message}`);
     }
   }
   if (canonicalLink) {
