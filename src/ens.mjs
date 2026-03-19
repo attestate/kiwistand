@@ -25,6 +25,40 @@ export async function toAddress(name) {
   throw new Error("Couldn't convert to address");
 }
 
+async function fetchEnstateData(address, forceFetch) {
+  try {
+    utils.getAddress(address);
+  } catch (err) {
+    return;
+  }
+
+  try {
+    const url = `https://enstate.rs/a/${address}`;
+    const signal = AbortSignal.timeout(5000);
+    const fetchFn = forceFetch ? fetch : fetchStaleWhileRevalidate;
+    const response = await fetchFn(url, { signal });
+
+    if (!response.ok) return;
+
+    const data = await response.json();
+    // Only useful if the address has an ENS name registered
+    if (!data.name) return;
+
+    const truncatedAddress =
+      address.slice(0, 6) + "..." + address.slice(address.length - 4);
+
+    return {
+      ens: data.name,
+      displayName: data.display || data.name,
+      address,
+      truncatedAddress,
+      // avatar deliberately omitted: euc.li returns full-size images
+    };
+  } catch (err) {
+    return;
+  }
+}
+
 async function fetchNeynarData(address, forceFetch) {
   try {
     utils.getAddress(address);
@@ -218,6 +252,22 @@ export async function fetchENSData(address, forceFetch) {
   } catch (error) {
     // Silently handle ENS failures - they're common
 
+    // Try enstate.rs as fallback for ENS name (avatar intentionally skipped)
+    try {
+      const enstateData = await fetchEnstateData(address, forceFetch);
+      if (enstateData) {
+        // Also fetch Neynar so we still get a Farcaster avatar when available
+        const neynarData = await fetchNeynarData(address, forceFetch);
+        return {
+          ...enstateData,
+          ...(neynarData || {}),
+          displayName: enstateData.ens,
+        };
+      }
+    } catch (enstateError) {
+      // Silently handle enstate.rs fallback failures
+    }
+
     // Try Neynar as fallback
     try {
       const neynarData = await fetchNeynarData(address);
@@ -364,4 +414,23 @@ export async function resolve(address, forceFetch = false) {
 
   // Return minimal profile immediately
   return minimalProfile;
+}
+
+// For batch/background jobs (e.g. recompute) — always awaits full resolution
+// using the FS stale-while-revalidate cache so it's fast on repeat calls,
+// but returns the actual profile instead of a minimal placeholder.
+export async function resolveForBatch(address) {
+  const normalizedAddress = address.toLowerCase();
+  const cacheKey = `${ENS_CACHE_PREFIX}${normalizedAddress}`;
+
+  if (cache.has(cacheKey)) {
+    const cached = cache.get(cacheKey);
+    if (cached.ens || cached.farcaster || cached.lens || cached.neynar) {
+      return cached;
+    }
+  }
+
+  const completeProfile = await _resolve(normalizedAddress);
+  cache.set(cacheKey, completeProfile);
+  return completeProfile;
 }

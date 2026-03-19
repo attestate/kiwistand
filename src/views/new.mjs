@@ -79,7 +79,7 @@ export async function recompute() {
 
       const lastComment = getLastComment(`kiwi:0x${story.index}`, config.addresses || []);
       if (lastComment && lastComment.identity) {
-        lastComment.identity = await ens.resolve(lastComment.identity);
+        lastComment.identity = await ens.resolveForBatch(lastComment.identity);
         const uniqueIdentities = new Set(
           lastComment.previousParticipants
             .map((p) => p.identity)
@@ -87,7 +87,7 @@ export async function recompute() {
         );
 
         const resolvedParticipants = await Promise.allSettled(
-          [...uniqueIdentities].map((identity) => ens.resolve(identity)),
+          [...uniqueIdentities].map((identity) => ens.resolveForBatch(identity)),
         );
 
         lastComment.previousParticipants = resolvedParticipants
@@ -102,13 +102,13 @@ export async function recompute() {
           }));
       }
 
-      const ensData = await ens.resolve(story.identity);
+      const ensData = await ens.resolveForBatch(story.identity);
 
       let avatars = [];
       let upvoterProfiles = [];
       await Promise.allSettled(
         story.upvoters.map(async (upvoter) => {
-          const profile = await ens.resolve(upvoter);
+          const profile = await ens.resolveForBatch(upvoter);
           if (profile.safeAvatar) {
             upvoterProfiles.push({
               avatar: profile.safeAvatar,
