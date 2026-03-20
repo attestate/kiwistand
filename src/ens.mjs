@@ -374,10 +374,9 @@ export async function resolve(address, forceFetch = false) {
   const cacheKey = `${ENS_CACHE_PREFIX}${normalizedAddress}`;
 
   // Check if we have complete data in cache (not just minimal profile)
-  if (cache.has(cacheKey) && !forceFetch) {
-    const cached = cache.get(cacheKey);
-    // Only return cached data if it's been fully resolved (has ENS, Farcaster, or Lens data)
-    if (cached.ens || cached.farcaster || cached.lens || cached.neynar) {
+  if (!forceFetch) {
+    const cached = await cache.get(cacheKey);
+    if (cached && (cached.ens || cached.farcaster || cached.lens || cached.neynar)) {
       return cached;
     }
   }
@@ -399,7 +398,7 @@ export async function resolve(address, forceFetch = false) {
     (async () => {
       try {
         const completeProfile = await _resolve(normalizedAddress);
-        cache.set(cacheKey, completeProfile);
+        await cache.set(cacheKey, completeProfile);
 
         return completeProfile;
       } catch (err) {
@@ -423,14 +422,12 @@ export async function resolveForBatch(address) {
   const normalizedAddress = address.toLowerCase();
   const cacheKey = `${ENS_CACHE_PREFIX}${normalizedAddress}`;
 
-  if (cache.has(cacheKey)) {
-    const cached = cache.get(cacheKey);
-    if (cached.ens || cached.farcaster || cached.lens || cached.neynar) {
-      return cached;
-    }
+  const cached = await cache.get(cacheKey);
+  if (cached && (cached.ens || cached.farcaster || cached.lens || cached.neynar)) {
+    return cached;
   }
 
   const completeProfile = await _resolve(normalizedAddress);
-  cache.set(cacheKey, completeProfile);
+  await cache.set(cacheKey, completeProfile);
   return completeProfile;
 }

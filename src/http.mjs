@@ -649,23 +649,6 @@ export async function launch(trie, libp2p, isPrimary = true) {
     lobsters: { algorithm: 'lobsters' }  // Lobsters algorithm
   };
   
-  // Build a metadata map from the /new feed stories (computed in the main
-  // process) so the Piscina worker can pre-populate its isolated LRU cache.
-  function buildMetadataMap() {
-    const map = {};
-    for (const story of newAPI.getStories()) {
-      if (
-        story.href &&
-        story.metadata &&
-        !story.metadata.failed &&
-        Object.keys(story.metadata).length > 0
-      ) {
-        map[story.href] = story.metadata;
-      }
-    }
-    return map;
-  }
-
   // Start computing the feed in the background to avoid blocking server startup
   // The first request to / might be slower if the feed isn't ready yet
   setImmediate(async () => {
@@ -673,7 +656,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
       console.time("initial-feed-computation");
       // Start with control variant
       currentVariant = 'control';
-      cachedFeed = await feedPiscina.run({ theme, variant: currentVariant, metadataMap: buildMetadataMap() });
+      cachedFeed = await feedPiscina.run({ theme, variant: currentVariant });
       console.timeEnd("initial-feed-computation");
       log(`Initial cached feed ready (variant: ${currentVariant})`);
     } catch (err) {
@@ -689,7 +672,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
         // Alternate between variants for 50/50 split
         variantCounter++;
         currentVariant = variants[variantCounter % 2];
-        const newFeed = await feedPiscina.run({ theme, variant: currentVariant, metadataMap: buildMetadataMap() });
+        const newFeed = await feedPiscina.run({ theme, variant: currentVariant });
         cachedFeed = newFeed;
         
         const elapsed = Date.now() - startTime;
@@ -1485,7 +1468,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
     // Add rich metadata (OG images, Farcaster/Twitter previews) to each story
     const policy = await moderation.getLists();
     for (const story of stories) {
-      story.metadata = cachedMetadata(story.href);
+      story.metadata = await cachedMetadata(story.href);
       if (story.metadata?.image) {
         const href = (story.href.startsWith('data:') || story.href.startsWith('kiwi:'))
           ? story.href

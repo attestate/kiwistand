@@ -57,18 +57,17 @@ export function fetchCache(fetch, fileSystemCache, cacheDirectory) {
         const networkResponse = await fetch(url, options);
         if (networkResponse.ok) {
           const buffer = await networkResponse.buffer();
-          // Update the default in-memory cache (LRU) with this network response.
-          cache.set(cacheKey, {
-            // Use default cache.set
+          // Update the cache with this network response.
+          await cache.set(cacheKey, {
             bodyStream: buffer,
             metaData: {
               status: networkResponse.status,
-              headers: networkResponse.headers.raw(),
+              headers: Object.fromEntries(networkResponse.headers.entries()),
             },
           });
           return new Response(buffer, {
             status: networkResponse.status,
-            headers: networkResponse.headers.raw(),
+            headers: Object.fromEntries(networkResponse.headers.entries()),
           });
         }
       } catch (error) {
@@ -89,9 +88,9 @@ export function fetchCache(fetch, fileSystemCache, cacheDirectory) {
       // casting it to one before handing it back to the business logic.
       return new Response(cachedValue.bodyStream, cachedValue.metaData);
     }
-    // If file system cache missed, try the default in-memory cache (LRU)
-    const staleValue = cache.get(cacheKey); // Use default cache.get
-    if (staleValue) {
+    // If file system cache missed, try the SQLite cache
+    const staleValue = await cache.get(cacheKey);
+    if (staleValue !== undefined) {
       return new Response(staleValue.bodyStream, staleValue.metaData);
     }
 

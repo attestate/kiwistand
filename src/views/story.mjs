@@ -169,7 +169,7 @@ export default async function (trie, theme, index, value, referral, commentIndex
   if (!value.href.startsWith("data:") && !value.href.startsWith("kiwi:")) {
     const slug = getSlug(value.title);
     const storyUrl = `https://news.kiwistand.com/stories/${slug}?index=${index}`;
-    data = cachedMetadata(value.href, false, value.title, () => {
+    data = await cachedMetadata(value.href, false, value.title, () => {
       purgeCache(storyUrl).catch((err) =>
         log(`Failed to purge story page cache after metadata fetch: ${err}`)
       );

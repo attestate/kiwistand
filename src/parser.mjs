@@ -957,7 +957,7 @@ const getYTId = (url) => {
 // Track URLs currently being fetched to prevent duplicate processing
 const inFlightFetches = new Map();
 
-export const cachedMetadata = (
+export const cachedMetadata = async (
   url,
   generateTitle = false,
   submittedTitle = undefined,
@@ -972,9 +972,9 @@ export const cachedMetadata = (
   const normalizedUrl = normalizeUrl(url, { stripWWW: false });
 
   // Check if we have the data in cache
-  if (cache.has(normalizedUrl)) {
-    // Return cached data without fetching again
-    return cache.get(normalizedUrl);
+  const cached = await cache.get(normalizedUrl);
+  if (cached !== undefined) {
+    return cached;
   }
 
   // Check if another worker is already fetching this URL
@@ -988,9 +988,9 @@ export const cachedMetadata = (
 
   // If not in cache, return empty object and trigger background fetch
   metadata(url, generateTitle, submittedTitle)
-    .then((freshData) => {
+    .then(async (freshData) => {
       if (freshData) {
-        cache.set(normalizedUrl, freshData, { ttl: METADATA_SUCCESS_TTL });
+        await cache.set(normalizedUrl, freshData, { ttlMs: METADATA_SUCCESS_TTL });
         log(`Stored metadata in cache for ${normalizedUrl}`);
         // Call the onFetched callback if provided
         if (onFetched) {
@@ -998,14 +998,14 @@ export const cachedMetadata = (
         }
       }
     })
-    .catch((err) => {
+    .catch(async (err) => {
       const failure = {
         failed: true,
         error: err?.message || String(err),
         timestamp: Date.now(),
       };
-      cache.set(normalizedUrl, failure, { ttl: METADATA_FAILURE_TTL });
-      cache.set(url, failure, { ttl: METADATA_FAILURE_TTL });
+      await cache.set(normalizedUrl, failure, { ttlMs: METADATA_FAILURE_TTL });
+      await cache.set(url, failure, { ttlMs: METADATA_FAILURE_TTL });
       log(`Metadata fetch failed for ${url}: ${err}`);
     })
     .finally(() => {
@@ -1052,9 +1052,9 @@ export const metadata = async (
   }
 
   let result, canIframe, canonicalLink;
-  if (cache.has(url)) {
+  const fromCache = await cache.get(url);
+  if (fromCache !== undefined) {
     log(`[metadata] Cache HIT for ${url}`);
-    const fromCache = cache.get(url);
     result = fromCache.result;
     canonicalLink = fromCache.canonicalLink;
     canIframe = fromCache.canIframe !== undefined ? fromCache.canIframe : true; // Default to true for old cache entries
@@ -1147,7 +1147,7 @@ export const metadata = async (
 
     // Cache only the small pieces of data, NOT the full HTML
     if (result) {
-      cache.set(url, { result, canIframe, canonicalLink }, { ttl: METADATA_SUCCESS_TTL });
+      await cache.set(url, { result, canIframe, canonicalLink }, { ttlMs: METADATA_SUCCESS_TTL });
     }
   }
 
@@ -1449,7 +1449,7 @@ export async function isRelevantToKiwiNews(
 
   // Check LRU cache first
   if (!raw) {
-    const cachedRelevance = cache.get(cacheKey);
+    const cachedRelevance = await cache.get(cacheKey);
     if (cachedRelevance !== undefined) {
       // LRUCache returns undefined for a cache miss
       log(`Relevance LRU cache hit for ${link}: ${cachedRelevance}`);
@@ -1548,7 +1548,7 @@ ${context}`;
 
   // Cache the result in LRU cache
   if (!raw) {
-    cache.set(cacheKey, isRelevant);
+    cache.set(cacheKey, isRelevant).catch(() => {});
   }
 
   return isRelevant;

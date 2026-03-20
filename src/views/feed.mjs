@@ -99,20 +99,29 @@ const cutoffDate = new Date("2025-01-15");
 const thresholdKarma = 5;
 // Minimum karma needed for a story to surface with only a single upvote
 const singleUpvoteKarmaThreshold = 50;
+// Local sync read-through cache for Neynar scores, backed by async SQLite cache
+const neynarScoreLocalCache = new Map();
+
 export function identityClassifier(upvoter) {
   let balance = 0;
 
   const cacheKey = `neynar-score-${upvoter.identity}`;
-  if (cache.has(cacheKey)) {
-    balance = cache.get(cacheKey);
+  if (neynarScoreLocalCache.has(cacheKey)) {
+    balance = neynarScoreLocalCache.get(cacheKey);
   } else {
-    try {
-      getNeynarScore(upvoter.identity)
-        .then((balance) => cache.set(cacheKey, balance))
-        .catch((err) => log(`Error in getNeynarScore: ${err.stack}`));
-    } catch (err) {
-      // noop
-    }
+    // Async: populate local cache from SQLite cache, or fetch from network
+    cache.get(cacheKey).then((cached) => {
+      if (cached !== undefined && cached !== null) {
+        neynarScoreLocalCache.set(cacheKey, cached);
+      } else {
+        getNeynarScore(upvoter.identity)
+          .then((score) => {
+            neynarScoreLocalCache.set(cacheKey, score);
+            return cache.set(cacheKey, score);
+          })
+          .catch((err) => log(`Error in getNeynarScore: ${err.stack}`));
+      }
+    }).catch((err) => log(`Error reading neynar score cache: ${err.stack}`));
   }
   const karmaScore = karma.resolve(upvoter.identity, cutoffDate);
   const hasNeynarScore = balance > 90000;
@@ -398,7 +407,7 @@ export async function topstories(leaves, algorithm = 'control', skipNeynar = fal
 }
 
 async function addMetadata(post) {
-  let data = cachedMetadata(post.href);
+  let data = await cachedMetadata(post.href);
   if (!data || Object.keys(data).length === 0) {
     try {
       data = await metadata(post.href);
@@ -657,13 +666,13 @@ export async function index(
       );
       
       // Load metadata and lastComment for candidates to check content type
-      const candidatesWithMetadata = potentialCandidates.map((candidate) => {
-        let metadata, lastComment;
+      const candidatesWithMetadata = await Promise.all(potentialCandidates.map(async (candidate) => {
+        let candidateMetadata, lastComment;
         try {
-          metadata = cachedMetadata(candidate.href);
+          candidateMetadata = await cachedMetadata(candidate.href);
         } catch (err) {
           log(`Error getting metadata for ${candidate.href}: ${err}`);
-          metadata = null;
+          candidateMetadata = null;
         }
         try {
           lastComment = getLastComment(`kiwi:0x${candidate.index}`, policy.addresses || []);
@@ -671,8 +680,8 @@ export async function index(
           log(`Error getting last comment for ${candidate.index}: ${err}`);
           lastComment = null;
         }
-        return { ...candidate, metadata, lastComment };
-      });
+        return { ...candidate, metadata: candidateMetadata, lastComment };
+      }));
       
       // Filter to only allowed content types
       const candidates = candidatesWithMetadata.filter(isAllowedContentTypeForPrediction);

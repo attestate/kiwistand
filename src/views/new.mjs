@@ -24,7 +24,7 @@ import { cachedMetadata, metadata } from "../parser.mjs";
 const html = htm.bind(vhtml);
 
 async function addMetadata(post) {
-  let data = cachedMetadata(post.href);
+  let data = await cachedMetadata(post.href);
 
   if (!data || Object.keys(data).length === 0) {
     try {

@@ -28,7 +28,7 @@ import log from "../logger.mjs";
 import { EIP712_MESSAGE } from "../constants.mjs";
 import Row, { extractDomain } from "./components/row.mjs";
 import { getBest, getLastComment, countImpressions } from "../cache.mjs";
-import { cachedMetadata, metadata } from "../parser.mjs";
+import { metadata } from "../parser.mjs";
 
 const html = htm.bind(vhtml);
 

@@ -1,34 +1,16 @@
-import { LRUCache } from "lru-cache"; // Import LRUCache
-// Use LRUCache with a size limit for consistent memory management
-// This cache stores both:
-// 1. Metadata objects (small, ~5KB each from parser.mjs)
-// 2. HTTP response buffers (large, ~100-500KB each from utils.mjs)
-// Using maxSize ensures memory usage stays bounded regardless of entry count
-const cache = new LRUCache({
-  max: 10000, // Still allow up to 10k entries
-  maxSize: 100 * 1024 * 1024, // But limit total size to 100MB
-  sizeCalculation: (value) => {
-    // Calculate size based on what's stored
-    if (value.bodyStream) {
-      // HTTP response buffer from utils.mjs
-      return value.bodyStream.length;
-    } else if (value.result) {
-      // Metadata from parser.mjs - estimate ~5KB
-      return 5000;
-    }
-    // Fallback for other cache entries
-    return 1000;
-  },
-  // Keep entries around long enough for feed recompute cycles and normal browsing
-  // patterns. A short TTL (10m) caused metadata to expire between /new refreshes,
-  // which made previews appear and disappear unpredictably.
-  ttl: 1000 * 60 * 60 * 6, // 6 hours
-  updateAgeOnGet: true,
+import { join } from "path";
+import { SqliteCache } from "cache-sqlite-lru-ttl";
+// SQLite-backed LRU cache shared across all cluster workers and persisted to
+// disk. Replaces the previous in-memory LRU which caused each cluster worker
+// to maintain its own isolated cache, leading to inconsistent metadata display.
+const cache = new SqliteCache({
+  database: join(process.env.CACHE_DIR, "metadata-cache.db"),
+  defaultTtlMs: 1000 * 60 * 60 * 6, // 6 hours
+  maxItems: 10000,
+  compress: true,
 });
 export default cache;
 
-
-import { join } from "path";
 
 import { subYears, formatISO } from "date-fns";
 import Database from "better-sqlite3";
