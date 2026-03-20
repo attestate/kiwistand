@@ -11,6 +11,20 @@ import PwaLinks from "./pwaLinks.mjs";
 
 const html = htm.bind(vhtml);
 
+function decodeHtmlEntities(value) {
+  if (!value || typeof value !== "string" || !value.includes("&")) {
+    return value;
+  }
+
+  return value
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, "\"")
+    .replace(/&#39;/g, "'")
+    .replace(/&#x27;/g, "'");
+}
+
 // Generate CSS cache buster hash based on file content
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -59,9 +73,9 @@ export function custom(
   //     "https://news.kiwistand.com:8443/api/v1/delegations?cached=true",
   //   ];
   // }
-  ogImage = DOMPurify.sanitize(ogImage);
-  ogTitle = DOMPurify.sanitize(ogTitle);
-  ogDescription = DOMPurify.sanitize(ogDescription);
+  ogImage = DOMPurify.sanitize(decodeHtmlEntities(ogImage));
+  ogTitle = DOMPurify.sanitize(decodeHtmlEntities(ogTitle));
+  ogDescription = DOMPurify.sanitize(decodeHtmlEntities(ogDescription));
   return html`
     <link rel="preconnect" href="https://www.googletagmanager.com" />
     <link rel="preconnect" href="https://imagedelivery.net" />
