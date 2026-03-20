@@ -121,6 +121,8 @@ export async function resolveCAIPLinks(text) {
 }
 
 const html = htm.bind(vhtml);
+const METADATA_SUCCESS_TTL = 1000 * 60 * 60 * 6; // 6 hours
+const METADATA_FAILURE_TTL = 1000 * 60 * 5; // 5 minutes
 
 // Helper to run OGS in a worker thread with timeout
 async function parseWithOGS(htmlContent, timeout = 1000) {
@@ -988,7 +990,7 @@ export const cachedMetadata = (
   metadata(url, generateTitle, submittedTitle)
     .then((freshData) => {
       if (freshData) {
-        cache.set(normalizedUrl, freshData);
+        cache.set(normalizedUrl, freshData, { ttl: METADATA_SUCCESS_TTL });
         log(`Stored metadata in cache for ${normalizedUrl}`);
         // Call the onFetched callback if provided
         if (onFetched) {
@@ -1002,8 +1004,8 @@ export const cachedMetadata = (
         error: err?.message || String(err),
         timestamp: Date.now(),
       };
-      cache.set(normalizedUrl, failure);
-      cache.set(url, failure);
+      cache.set(normalizedUrl, failure, { ttl: METADATA_FAILURE_TTL });
+      cache.set(url, failure, { ttl: METADATA_FAILURE_TTL });
       log(`Metadata fetch failed for ${url}: ${err}`);
     })
     .finally(() => {
@@ -1144,7 +1146,7 @@ export const metadata = async (
 
     // Cache only the small pieces of data, NOT the full HTML
     if (result) {
-      cache.set(url, { result, canIframe, canonicalLink });
+      cache.set(url, { result, canIframe, canonicalLink }, { ttl: METADATA_SUCCESS_TTL });
     }
   }
 

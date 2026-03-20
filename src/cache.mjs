@@ -19,8 +19,11 @@ const cache = new LRUCache({
     // Fallback for other cache entries
     return 1000;
   },
-  // Optional: add TTL so entries expire after 10 minutes
-  ttl: 1000 * 60 * 10,
+  // Keep entries around long enough for feed recompute cycles and normal browsing
+  // patterns. A short TTL (10m) caused metadata to expire between /new refreshes,
+  // which made previews appear and disappear unpredictably.
+  ttl: 1000 * 60 * 60 * 6, // 6 hours
+  updateAgeOnGet: true,
 });
 export default cache;
 

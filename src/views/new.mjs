@@ -19,16 +19,34 @@ import { getLastComment, listNewest, countImpressions } from "../cache.mjs";
 import Row, { extractDomain } from "./components/row.mjs";
 import log from "../logger.mjs";
 import { purgeCache } from "../cloudflarePurge.mjs";
-import { cachedMetadata } from "../parser.mjs";
+import { cachedMetadata, metadata } from "../parser.mjs";
 
 const html = htm.bind(vhtml);
 
 async function addMetadata(post) {
-  const data = cachedMetadata(post.href);
+  let data = cachedMetadata(post.href);
+
+  if (!data || Object.keys(data).length === 0) {
+    try {
+      data = await metadata(post.href);
+    } catch (err) {
+      data = {};
+    }
+  }
+
   return {
     ...post,
     metadata: data,
   };
+}
+
+function hasUsableMetadata(metadata) {
+  return (
+    metadata &&
+    typeof metadata === "object" &&
+    !metadata.failed &&
+    Object.keys(metadata).length > 0
+  );
 }
 
 let stories = [];
@@ -52,6 +70,9 @@ export async function recompute() {
     const limit = 25;
     let counts = listNewest(limit);
     const path = "/new";
+    const previousStoriesByIndex = new Map(
+      stories.map((story) => [story.index, story]),
+    );
 
   const [listsResult, writersResult] = await Promise.allSettled([
     moderation.getLists(),
@@ -135,6 +156,16 @@ export async function recompute() {
 
       const augmentedStory = await addMetadata(story);
       let finalStory = augmentedStory || story;
+      const previousStory = previousStoriesByIndex.get(story.index);
+      if (
+        !hasUsableMetadata(finalStory.metadata) &&
+        hasUsableMetadata(previousStory?.metadata)
+      ) {
+        finalStory = {
+          ...finalStory,
+          metadata: previousStory.metadata,
+        };
+      }
 
       // Skip normalization for text posts and kiwi references
       const href = (finalStory.href.startsWith('data:') || finalStory.href.startsWith('kiwi:'))
