@@ -168,10 +168,20 @@ if (!reconcileMode) {
       .then(() => log("/new computed"))
       .catch((err) => log(`/new recompute failed: ${err.stack || err}`));
   });
-  // Periodic refresh
-  setInterval(async () => {
-    await Promise.all([newest.recompute(trie)]);
-  }, 1800000);
+  // Periodic refresh — run frequently so metadata stays warm in the main
+  // process LRU cache. The hot feed now runs in Piscina workers (isolated
+  // cache), so it no longer warms the main process cache as a side effect.
+  (function scheduleNewRecompute() {
+    setTimeout(async () => {
+      try {
+        await newest.recompute(trie);
+      } catch (err) {
+        log(`/new periodic recompute failed: ${err.stack || err}`);
+      } finally {
+        scheduleNewRecompute();
+      }
+    }, 10000); // 10 seconds
+  })();
 }
 
 const from = null;
