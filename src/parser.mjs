@@ -1060,7 +1060,8 @@ export const metadata = async (
     canIframe = fromCache.canIframe !== undefined ? fromCache.canIframe : true; // Default to true for old cache entries
   } else {
     log(`[metadata] Cache MISS for ${url}`);
-    const signal = AbortSignal.timeout(5000);
+    // fxtwitter averages ~4.6s on prod — give it more headroom
+    const signal = AbortSignal.timeout(isFxTwitter ? 10000 : 5000);
     // Use bot User-Agent for fxtwitter to get actual images instead of warning SVGs
     const userAgent = isFxTwitter
       ? "TelegramBot (like TwitterBot)"
