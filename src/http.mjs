@@ -649,6 +649,23 @@ export async function launch(trie, libp2p, isPrimary = true) {
     lobsters: { algorithm: 'lobsters' }  // Lobsters algorithm
   };
   
+  // Build a metadata map from the /new feed stories (computed in the main
+  // process) so the Piscina worker can pre-populate its isolated LRU cache.
+  function buildMetadataMap() {
+    const map = {};
+    for (const story of newAPI.getStories()) {
+      if (
+        story.href &&
+        story.metadata &&
+        !story.metadata.failed &&
+        Object.keys(story.metadata).length > 0
+      ) {
+        map[story.href] = story.metadata;
+      }
+    }
+    return map;
+  }
+
   // Start computing the feed in the background to avoid blocking server startup
   // The first request to / might be slower if the feed isn't ready yet
   setImmediate(async () => {
@@ -656,7 +673,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
       console.time("initial-feed-computation");
       // Start with control variant
       currentVariant = 'control';
-      cachedFeed = await feedPiscina.run({ theme, variant: currentVariant });
+      cachedFeed = await feedPiscina.run({ theme, variant: currentVariant, metadataMap: buildMetadataMap() });
       console.timeEnd("initial-feed-computation");
       log(`Initial cached feed ready (variant: ${currentVariant})`);
     } catch (err) {
@@ -664,7 +681,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
       cachedFeed = null;
     }
   });
-  
+
   (function updateCachedFeed() {
     setTimeout(async () => {
       const startTime = Date.now();
@@ -672,7 +689,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
         // Alternate between variants for 50/50 split
         variantCounter++;
         currentVariant = variants[variantCounter % 2];
-        const newFeed = await feedPiscina.run({ theme, variant: currentVariant });
+        const newFeed = await feedPiscina.run({ theme, variant: currentVariant, metadataMap: buildMetadataMap() });
         cachedFeed = newFeed;
         
         const elapsed = Date.now() - startTime;
