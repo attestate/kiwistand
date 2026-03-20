@@ -7,7 +7,11 @@ import DOMPurify from "isomorphic-dompurify";
 import slugify from "slugify";
 import { LRUCache } from "lru-cache";
 import cacache from "cacache";
-import cache from "./cache.mjs"; // Import the default cache
+// Local in-memory stale cache for HTTP response buffers.
+// Uses LRU (not the shared SQLite metadata cache) because:
+// - Values are large binary Buffers (100-500KB) not suitable for CBOR/SQLite
+// - HTTP responses don't need to be shared across workers or survive restarts
+const responseCache = new LRUCache({ max: 500, maxSize: 50 * 1024 * 1024, sizeCalculation: (v) => v.bodyStream?.length || 1000 });
 
 slugify.extend({ 
   "\u2032": "", // prime
@@ -57,8 +61,7 @@ export function fetchCache(fetch, fileSystemCache, cacheDirectory) {
         const networkResponse = await fetch(url, options);
         if (networkResponse.ok) {
           const buffer = await networkResponse.buffer();
-          // Update the cache with this network response.
-          await cache.set(cacheKey, {
+          responseCache.set(cacheKey, {
             bodyStream: buffer,
             metaData: {
               status: networkResponse.status,
@@ -88,9 +91,9 @@ export function fetchCache(fetch, fileSystemCache, cacheDirectory) {
       // casting it to one before handing it back to the business logic.
       return new Response(cachedValue.bodyStream, cachedValue.metaData);
     }
-    // If file system cache missed, try the SQLite cache
-    const staleValue = await cache.get(cacheKey);
-    if (staleValue !== undefined) {
+    // If file system cache missed, try the local in-memory stale cache
+    const staleValue = responseCache.get(cacheKey);
+    if (staleValue) {
       return new Response(staleValue.bodyStream, staleValue.metaData);
     }
 
