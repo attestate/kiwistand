@@ -29,6 +29,7 @@ import {
 } from "@rainbow-me/rainbowkit/wallets";
 import { sdk } from "@farcaster/miniapp-sdk";
 import { Mode } from "porto";
+import { from as dialogFrom, handleResponse } from "porto/Dialog";
 
 const isDesktop = () => {
   return (
@@ -70,6 +71,88 @@ export const useIsMiniApp = () => {
 export const isInIOSApp =
   typeof document !== "undefined" &&
   document.documentElement.classList.contains("kiwi-ios-app");
+
+function iosNativeRenderer() {
+  let processing = false;
+
+  return dialogFrom({
+    name: "ios-native",
+    setup(parameters) {
+      const { host, internal } = parameters;
+      const { store } = internal;
+
+      async function handle(request) {
+        const { request: rpcRequest } = request;
+        const redirectUri = "kiwi-news://porto-callback";
+
+        const url = new URL(host);
+        url.pathname = `${url.pathname.replace(/\/$/, "")}/${rpcRequest.method}`;
+
+        const params = rpcRequest.params ?? [];
+        const searchParams = new URLSearchParams({
+          id: String(rpcRequest.id),
+          jsonrpc: "2.0",
+          method: rpcRequest.method,
+          redirectUri,
+        });
+        if (params.length > 0) {
+          searchParams.set("params", JSON.stringify(params));
+        }
+        url.search = searchParams.toString();
+
+        return new Promise((resolve) => {
+          window.__portoNativeCallback = ({ status, payload, message }) => {
+            if (status === "success") {
+              handleResponse(store, {
+                id: rpcRequest.id,
+                jsonrpc: "2.0",
+                result: payload ? JSON.parse(payload) : undefined,
+              });
+            } else {
+              handleResponse(store, {
+                id: rpcRequest.id,
+                jsonrpc: "2.0",
+                error: {
+                  code: 4001,
+                  message: message || "User rejected request",
+                },
+              });
+            }
+            window.__portoNativeCallback = null;
+            resolve();
+          };
+
+          window.webkit.messageHandlers.portoRequest.postMessage({
+            url: url.toString(),
+          });
+        });
+      }
+
+      return {
+        async syncRequests(requests) {
+          if (processing) return;
+          const [request] = requests;
+          if (!request) return;
+          processing = true;
+          try {
+            await handle(request);
+          } finally {
+            processing = false;
+          }
+        },
+        close() {},
+        destroy() {
+          window.__portoNativeCallback = null;
+        },
+        open() {},
+        async secure() {
+          return { frame: false, host: true, protocol: true };
+        },
+      };
+    },
+    supportsHeadless: false,
+  });
+}
 
 const projectId = "cd46d2fcf6d171fb7c017129868fa211";
 const appName = "Kiwi News";
@@ -200,12 +283,20 @@ if (isAnonMode) {
     transports,
   });
 } else if (isInIOSApp) {
-  // iOS app configuration - exclude Coinbase Wallet, browser wallet, and Porto
+  // iOS app configuration - use Porto with native ASWebAuthenticationSession renderer
+  const merchantUrl = typeof window !== "undefined"
+    ? `${window.location.origin}/porto/merchant`
+    : "/porto/merchant";
+
   const wallets = [
-    // portoWallet excluded on iOS app
-    // injectedWallet excluded on iOS app (browser wallet)
+    () => portoWallet({
+      merchantUrl,
+      mode: Mode.dialog({
+        theme: kiwiTheme,
+        renderer: iosNativeRenderer(),
+      }),
+    }),
     walletConnectWallet,
-    // coinbaseWallet excluded on iOS app (popup issues)
     metaMaskWallet,
     rainbowWallet,
     trustWallet,
