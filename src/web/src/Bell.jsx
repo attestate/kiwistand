@@ -9,7 +9,7 @@ import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { TextConnectButton } from "./Navigation.jsx";
 import * as API from "./API.mjs";
 import { getLocalAccount, getCookie } from "./session.mjs";
-import { useProvider, isInIOSApp } from "./client.mjs";
+import { useProvider } from "./client.mjs";
 import { dynamicPrefetch } from "./main.jsx";
 import { sdk } from "@farcaster/frame-sdk";
 import { showSpinnerOverlay } from "./spinnerOverlay.js";
@@ -410,13 +410,7 @@ const Bell = (props) => {
     const handleLoginClick = (e) => {
       e.preventDefault();
       haptic.trigger("medium");
-      // On iOS, directly open RainbowKit wallet picker
-      if (isInIOSApp && openConnectModal) {
-        openConnectModal();
-      } else {
-        // On other platforms, show the LoginModal with passkey option
-        loginModalRef.current?.openModal();
-      }
+      loginModalRef.current?.openModal();
     };
 
     return (
@@ -470,13 +464,11 @@ const Bell = (props) => {
             "Log In" // Desktop text
           )}
         </button>
-        {!isInIOSApp && (
-          <LoginModal
-            ref={loginModalRef}
-            delegations={props.delegations}
-            toast={props.toast}
-          />
-        )}
+        <LoginModal
+          ref={loginModalRef}
+          delegations={props.delegations}
+          toast={props.toast}
+        />
       </>
     );
   }
