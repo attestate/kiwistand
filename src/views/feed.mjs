@@ -2,7 +2,6 @@
 import { env } from "process";
 import { URL } from "url";
 
-import ethers from "ethers";
 import htm from "htm";
 import vhtml from "vhtml";
 import normalizeUrl from "normalize-url";
@@ -99,36 +98,10 @@ const cutoffDate = new Date("2025-01-15");
 const thresholdKarma = 5;
 // Minimum karma needed for a story to surface with only a single upvote
 const singleUpvoteKarmaThreshold = 50;
-// Local sync read-through cache for Neynar scores, backed by async SQLite cache
-const neynarScoreLocalCache = new Map();
-
 export function identityClassifier(upvoter) {
-  let balance = 0;
-
-  const cacheKey = `neynar-score-${upvoter.identity}`;
-  if (neynarScoreLocalCache.has(cacheKey)) {
-    balance = neynarScoreLocalCache.get(cacheKey);
-  } else {
-    // Async: populate local cache from SQLite cache, or fetch from network
-    cache.get(cacheKey).then((cached) => {
-      if (cached !== undefined && cached !== null) {
-        neynarScoreLocalCache.set(cacheKey, cached);
-      } else {
-        getNeynarScore(upvoter.identity)
-          .then((score) => {
-            neynarScoreLocalCache.set(cacheKey, score);
-            return cache.set(cacheKey, score);
-          })
-          .catch((err) => log(`Error in getNeynarScore: ${err.stack}`));
-      }
-    }).catch((err) => log(`Error reading neynar score cache: ${err.stack}`));
-  }
   const karmaScore = karma.resolve(upvoter.identity, cutoffDate);
-  const hasNeynarScore = balance > 90000;
   return {
     ...upvoter,
-    hasNeynarScore,
-    fromSponsorCommunity: hasNeynarScore,
     isKiwi: karmaScore >= thresholdKarma,
   };
 }
@@ -142,42 +115,12 @@ export function identityFilter(upvoter, submitter) {
     log(`Error in identity classifier ${err.stack}`);
     throw err;
   }
-  if (upvoter.fromSponsorCommunity || upvoter.isKiwi) {
+  if (upvoter.isKiwi) {
     return upvoter;
   }
   throw new Error("Not eligible to upvote");
 }
 
-const provider = new ethers.providers.JsonRpcProvider(env.BASE_RPC_HTTP_HOST);
-const neynarScoreContract = new ethers.Contract(
-  "0xd3C43A38D1D3E47E9c420a733e439B03FAAdebA8",
-  [
-    {
-      inputs: [{ internalType: "address", name: "verifier", type: "address" }],
-      name: "getScore",
-      outputs: [{ internalType: "uint24", name: "", type: "uint24" }],
-      stateMutability: "view",
-      type: "function",
-    },
-  ],
-  provider,
-);
-
-export async function getNeynarScore(address) {
-  let timeoutId;
-  const timeout = new Promise((_, reject) => {
-    timeoutId = setTimeout(() => reject(new Error("Timeout")), 5000);
-  });
-
-  let score;
-  try {
-    score = await Promise.race([neynarScoreContract.getScore(address), timeout]);
-  } finally {
-    clearTimeout(timeoutId);
-  }
-
-  return score;
-}
 
 const formatAge = (ageInMinutes) => {
   const hours = Math.floor(ageInMinutes / 60);
