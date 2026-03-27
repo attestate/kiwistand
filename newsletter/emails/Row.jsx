@@ -128,7 +128,7 @@ export default function RowEmail({ story = {} }) {
   const isTweet = extractedDomain.includes("twitter.com") || extractedDomain.includes("x.com");
   const isFarcasterCast = extractedDomain.includes("warpcast.com") || extractedDomain.includes("farcaster.xyz");
 
-  const canRenderTweetPreview = isTweet && metadata && metadata.ogDescription;
+  const canRenderTweetPreview = isTweet && !metadata?.isXArticle && metadata && metadata.ogDescription;
   const canRenderFarcasterPreview = isFarcasterCast && metadata && (metadata.farcasterCast || metadata.ogDescription);
 
   let farcasterImageUrl = null;
