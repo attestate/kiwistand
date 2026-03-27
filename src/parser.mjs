@@ -454,6 +454,44 @@ export async function extractWarpcastContent(identifier, type = "url") {
   }
 }
 
+export async function extractBlueskyContent(url) {
+  try {
+    const urlObj = new URL(url);
+    const parts = urlObj.pathname.split("/").filter(Boolean);
+    // URL shape: /profile/{handle}/post/{rkey}
+    if (parts.length < 4 || parts[0] !== "profile" || parts[2] !== "post")
+      return null;
+    const handle = parts[1];
+    const rkey = parts[3];
+    const atUri = `at://${handle}/app.bsky.feed.post/${rkey}`;
+    const apiUrl = `https://public.api.bsky.app/xrpc/app.bsky.feed.getPostThread?uri=${encodeURIComponent(atUri)}`;
+    const response = await fetch(apiUrl, {
+      headers: { "User-Agent": env.USER_AGENT },
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!response.ok) return null;
+    const data = await response.json();
+    const post = data?.thread?.post;
+    if (!post) return null;
+    const images =
+      post.embed?.images
+        ?.map((img) => img.thumb || img.fullsize)
+        .filter(Boolean) || [];
+    return {
+      author: {
+        handle: post.author.handle,
+        displayName: post.author.displayName || post.author.handle,
+        avatar: post.author.avatar || null,
+      },
+      text: post.record?.text || "",
+      images,
+    };
+  } catch (err) {
+    log(`Failed to fetch Bluesky post: ${err.message}`);
+    return null;
+  }
+}
+
 export async function getCastByHashAndConstructUrl(castHash) {
   // Fetch cast data from Neynar API and construct proper Farcaster URL
   // Format: https://farcaster.xyz/{username}/{shortHash}
@@ -1258,6 +1296,21 @@ export const metadata = async (
       }
     } else {
       log(`No cast data returned for URL: ${url}`);
+    }
+  }
+
+  // Extract Bluesky post data
+  if (hostname === "bsky.app" && urlObj.pathname.includes("/post/")) {
+    const blueskyPost = await extractBlueskyContent(url);
+    if (blueskyPost) {
+      output.blueskyPost = blueskyPost;
+      if (generateTitle && blueskyPost.text) {
+        const postContent = `Bluesky post by ${blueskyPost.author.displayName}: ${blueskyPost.text}`;
+        const claudeTitle = await generateClaudeTitle(postContent);
+        if (claudeTitle) output.ogTitle = claudeTitle;
+      }
+    } else {
+      log(`No Bluesky data returned for URL: ${url}`);
     }
   }
 

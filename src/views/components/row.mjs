@@ -385,6 +385,10 @@ const row = (
       (extractedDomain === "firefly.social" &&
         story.href.includes("/post/farcaster/"));
 
+    // Check if this is a Bluesky post
+    const isBlueskyPost =
+      extractedDomain === "bsky.app" && story.href.includes("/post/");
+
     // Check if this is a Paragraph.xyz post
     const isParagraphPost = extractedDomain === "paragraph.xyz";
 
@@ -439,6 +443,10 @@ const row = (
       isFarcasterCast &&
       story.metadata &&
       (story.metadata.farcasterCast || story.metadata.ogDescription);
+
+    // Check if we have what we need to render a Bluesky post preview
+    const canRenderBlueskyPreview =
+      isBlueskyPost && story.metadata && story.metadata.blueskyPost;
 
     // Extract first image from Farcaster cast embeds
     let farcasterImageUrl = null;
@@ -822,6 +830,115 @@ const row = (
                     </div>
                   </div>
                 </a>`
+              : canRenderBlueskyPreview
+              ? html`<a
+                  class="bluesky-preview-container"
+                  data-no-instant
+                  href="${DOMPurify.sanitize(story.href)}"
+                  target="_blank"
+                  onclick="event.preventDefault(); if(localStorage.getItem('anon-mode')!=='true'){navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${DOMPurify.sanitize(
+                    story.href,
+                  )}'))}; window.open('${DOMPurify.sanitize(story.href)}', '_blank');"
+                  style="text-decoration:none; color:inherit; display:block;"
+                >
+                  <div class="bluesky-embed-container">
+                    <div>
+                      <div style="display: flex; align-items: center; margin-bottom: 12px;">
+                        ${story.metadata.blueskyPost.author.avatar
+                          ? html`<img
+                              src="${DOMPurify.sanitize(
+                                story.metadata.blueskyPost.author.avatar,
+                              )}"
+                              alt="${DOMPurify.sanitize(
+                                story.metadata.blueskyPost.author.handle ||
+                                  "bluesky",
+                              )}"
+                              width="20"
+                              height="20"
+                              loading="${getImageLoading(isAboveFold, story.metadata.blueskyPost.author.avatar)}"
+                              style="border-radius: 9999px; margin-right: 8px;"
+                            />`
+                          : html`<svg
+                              width="20"
+                              height="20"
+                              viewBox="0 0 600 530"
+                              xmlns="http://www.w3.org/2000/svg"
+                              style="color: var(--color-bluesky); margin-right: 8px; flex-shrink: 0;"
+                            >
+                              <path
+                                d="m135.72 44.03c66.496 49.921 138.02 151.14 164.28 205.46 26.262-54.316 97.782-155.54 164.28-205.46 47.98-36.021 125.72-63.892 125.72 24.795 0 17.712-10.155 148.79-16.111 170.07-20.703 73.984-96.144 92.854-163.25 81.433 117.3 19.964 147.14 86.092 82.697 152.22-122.39 125.59-175.91-31.511-189.63-71.766-2.514-7.3797-3.6904-10.832-3.7077-7.8964-0.0173-2.9357-1.1937 0.51669-3.7077 7.8964-13.714 40.255-67.233 197.36-189.63 71.766-64.444-66.128-34.605-132.26 82.697-152.22-67.108 11.421-142.55-7.4491-163.25-81.433-5.9562-21.282-16.111-152.36-16.111-170.07 0-88.687 77.742-60.816 125.72-24.795z"
+                                fill="currentColor"
+                              />
+                            </svg>`}
+                        <span style="font-weight: 600; color: var(--embed-farcaster-text); font-size: 14px;">
+                          @${DOMPurify.sanitize(
+                            story.metadata.blueskyPost.author.handle ||
+                              "bluesky",
+                          )}
+                        </span>
+                      </div>
+                      <div class="bluesky-embed-body">
+                        <p>
+                          ${(() => {
+                            const linkifyNodes = (text) => {
+                              const parts = text.split(/(\bhttps?:\/\/[^\s]+)/g);
+                              return parts.map((part) => {
+                                if (/^\bhttps?:\/\//.test(part)) {
+                                  const display =
+                                    part.length > 40
+                                      ? part.substring(0, 40) + "…"
+                                      : part;
+                                  return html`<a
+                                    href="${DOMPurify.sanitize(part)}"
+                                    target="_blank"
+                                    rel="noopener"
+                                    >${DOMPurify.sanitize(display)}</a
+                                  >`;
+                                }
+                                return DOMPurify.sanitize(part);
+                              });
+                            };
+                            const text = (
+                              story.metadata.blueskyPost.text || ""
+                            ).trim();
+                            if (/^https?:\/\/\S+$/i.test(text)) {
+                              return html`<a
+                                href="${DOMPurify.sanitize(text)}"
+                                target="_blank"
+                                rel="noopener"
+                                >${DOMPurify.sanitize(text)}</a
+                              >`;
+                            }
+                            const sliced = text.slice(0, 300);
+                            return html`${linkifyNodes(sliced)}${text.length > 300 ? "…" : ""}`;
+                          })()}
+                        </p>
+                        ${story.metadata.blueskyPost.images &&
+                        story.metadata.blueskyPost.images[0]
+                          ? html`
+                              <div
+                                style="margin-top: 12px; position: relative; width: 100%; aspect-ratio: 16 / 9; background: var(--button-bg); border-radius: 2px; overflow: hidden;"
+                              >
+                                <img
+                                  src="${DOMPurify.sanitize(
+                                    story.metadata.blueskyPost.images[0],
+                                  )}"
+                                  alt="Post image"
+                                  width="600"
+                                  height="338"
+                                  style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 2px;"
+                                  loading="${getImageLoading(isAboveFold, story.metadata.blueskyPost.images[0])}"
+                                />
+                              </div>
+                            `
+                          : null}
+                      </div>
+                      <div style="display:flex; justify-content:flex-end; margin-top:8px;">
+                        <span style="font-size: 11px; opacity: 0.75; color: var(--color-bluesky);">bsky.app</span>
+                      </div>
+                    </div>
+                  </div>
+                </a>`
               : displayImage
               ? html` <a
                   data-no-instant
@@ -830,15 +947,15 @@ const row = (
                   href="${DOMPurify.sanitize(story.href)}"
                   onclick="event.preventDefault(); if(localStorage.getItem('anon-mode')!=='true'){navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${DOMPurify.sanitize(
                     story.href,
-                  )}'))}; if (window.ReactNativeWebView || window !== window.parent) { 
+                  )}'))}; if (window.ReactNativeWebView || window !== window.parent) {
                     (function() {
                       var targetUrl = '${DOMPurify.sanitize(story.href)}';
                       var canIframe = ${story.metadata && story.metadata.canIframe !== undefined ? story.metadata.canIframe : true};
-                      
+
                       try {
                         var urlObj = new window.URL(targetUrl);
                         var hostname = urlObj.hostname.toLowerCase();
-                        
+
                         // Domains that should always use openUrl
                         var alwaysOpenDomains = [
                           'x.com',
@@ -944,21 +1061,21 @@ const row = (
                 ? "with-comment-preview"
                 : `without-comment-preview without-comment-preview-0x${story.index}`}"
               style="display: flex; flex-direction: column; padding: ${
-                canRenderTweetPreview || canRenderFarcasterPreview ? "8px 20px" : "12px 20px"
+                canRenderTweetPreview || canRenderFarcasterPreview || canRenderBlueskyPreview ? "8px 20px" : "12px 20px"
               }; box-sizing: border-box;"
               class:mobile-information-row
             >
               <div
                 class="content-container"
                 style="display: flex; align-items: start; gap: 12px; margin-bottom: ${
-                  canRenderTweetPreview || canRenderFarcasterPreview ? "4px" : "8px"
+                  canRenderTweetPreview || canRenderFarcasterPreview || canRenderBlueskyPreview ? "4px" : "8px"
                 }; width: 100%;"
               >
                 <div
                   class="story-link-container-wrapper"
                   style="display:flex; justify-content: center; flex-direction: column; flex-grow: 1; line-height: 1.3; padding-right: 14px;"
                 >
-                  <span class="${canRenderTweetPreview || canRenderFarcasterPreview ? 'anon-only-title' : ''}" style="${canRenderTweetPreview || canRenderFarcasterPreview ? 'display: none;' : ''}">
+                  <span class="${canRenderTweetPreview || canRenderFarcasterPreview || canRenderBlueskyPreview ? 'anon-only-title' : ''}" style="${canRenderTweetPreview || canRenderFarcasterPreview || canRenderBlueskyPreview ? 'display: none;' : ''}">
                     <span>
                     <span class="story-link-container">
                       <a

@@ -82,6 +82,7 @@
      --color-porto-blue: #0588f0;
      --color-farcaster-purple: #472a91;
      --color-farcaster-light: #7c65c1;
+     --color-bluesky: #0085ff;
 
      /* Embed colors */
      --embed-bg: #ffffff;
@@ -175,6 +176,7 @@
      --color-porto-blue: #4dabf7;
      --color-farcaster-purple: #9580d4;
      --color-farcaster-light: #b8a8e8;
+     --color-bluesky: #4db8ff;
 
      /* Embed colors */
      --embed-bg: #222222;
@@ -274,6 +276,7 @@
      --color-porto-blue: #8faab8;
      --color-farcaster-purple: #9d91a8;
      --color-farcaster-light: #a89db3;
+     --color-bluesky: #8faab8;
 
      /* Embed colors - Elevated surfaces */
      --embed-bg: #1a1a1a;
@@ -291,7 +294,9 @@
 [data-theme="anon"] .tweet-preview-container,
 [data-theme="anon"] .tweet-embed-container,
 [data-theme="anon"] .farcaster-preview-container,
-[data-theme="anon"] .farcaster-embed-container {
+[data-theme="anon"] .farcaster-embed-container,
+[data-theme="anon"] .bluesky-preview-container,
+[data-theme="anon"] .bluesky-embed-container {
   display: none !important;
 }
 
@@ -1071,14 +1076,51 @@ body.react-loaded .comment-input-ssr-placeholder {
   font-weight: 400;
 }
 
+.bluesky-embed-container * {
+  box-sizing: border-box;
+}
+
+.bluesky-embed-container {
+  position: relative;
+  padding: 20px !important;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  border-radius: 0;
+  margin: 0;
+  background: var(--embed-bg);
+  color: var(--embed-text);
+  border: none;
+  border-bottom: 1px solid var(--sidebar-beige);
+  box-shadow: none;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.bluesky-embed-body {
+  margin-top: 0.75rem !important;
+}
+
+.bluesky-embed-body p {
+  font-size: 0.95rem;
+  line-height: 1.5rem;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+  color: var(--embed-text);
+  font-weight: 400;
+  margin: 0;
+  padding: 0;
+}
+
 /* Link styling inside preview bodies (make URLs useful but subtle) */
-.tweet-embed-body a, .farcaster-embed-body a {
+.tweet-embed-body a, .farcaster-embed-body a, .bluesky-embed-body a {
   color: var(--embed-link); /* Twitter-style link color */
   text-decoration: none;
   opacity: 1;
 }
 
-.tweet-embed-body a:hover, .farcaster-embed-body a:hover {
+.tweet-embed-body a:hover, .farcaster-embed-body a:hover, .bluesky-embed-body a:hover {
   text-decoration: underline;
 }
 
