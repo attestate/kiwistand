@@ -89,7 +89,7 @@ export async function generateDigestData() {
         ctr * 20;
 
       log(`[digest] ${story.href.slice(0, 60)} — upvotes:${upvotes} comments:${comments} clicks:${clicks} impressions:${impressions} ctr:${ctr.toFixed(3)} score:${score.toFixed(1)}`);
-      return { ...story, _digestScore: score };
+      return { ...story, _digestScore: score, clicks, comments };
     });
 
     scoredStories.sort((a, b) => b._digestScore - a._digestScore);

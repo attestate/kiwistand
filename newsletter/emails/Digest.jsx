@@ -6,6 +6,7 @@ import path from "path";
 import RowEmail from "./Row.jsx";
 import TweetEmail from "./Tweet.jsx";
 import FarcasterEmail from "./Farcaster.jsx";
+import BlueskyEmail from "./Bluesky.jsx";
 
 // Load digest data
 let digestStories = [];
@@ -24,6 +25,7 @@ export default function DigestEmail({ stories = digestStories }) {
     Row: RowEmail,
     Tweet: TweetEmail,
     Farcaster: FarcasterEmail,
+    Bluesky: BlueskyEmail,
   };
 
   const bannedDomains = ['imagedelivery.net'];
@@ -51,13 +53,14 @@ export default function DigestEmail({ stories = digestStories }) {
     const isTweetDomain = domain.includes('twitter.com') || domain.includes('x.com');
 
     if (isTweetDomain) {
-      const tweetContainsXArticle =
-        story.metadata &&
-        story.metadata.ogDescription &&
+      // X articles and video-only tweets render better as regular cards
+      const isXArticle =
+        story.metadata?.ogDescription &&
         (story.metadata.ogDescription.includes("x.com/i/article/") ||
           story.metadata.ogDescription.includes("twitter.com/i/article/"));
+      const isVideoTweet = story.metadata?.hasVideo && !story.metadata?.image;
 
-      if (tweetContainsXArticle) {
+      if (isXArticle || isVideoTweet) {
         return 'Row';
       }
       return 'Tweet';
@@ -66,6 +69,11 @@ export default function DigestEmail({ stories = digestStories }) {
     if (domain.includes('warpcast.com') || domain.includes('farcaster.xyz')) {
       return 'Farcaster';
     }
+
+    if (domain.includes('bsky.app') && story.metadata?.blueskyPost) {
+      return 'Bluesky';
+    }
+
     return 'Row';
   };
 

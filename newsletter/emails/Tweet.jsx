@@ -105,6 +105,9 @@ export default function TweetEmail({ story = { metadata: {} } }) {
                 submitted by <Link href={submitterProfileLink} style={{ fontWeight: 600, color: '#000000 !important', textDecoration: 'none' }}>{displayName}</Link>
                 {' • '}
                 <Link href={story.storyLink} style={{ color: '#000000 !important', textDecoration: 'none' }}>{extractedDomain}</Link>
+                {story.upvotes ? ` • ${story.upvotes} upvotes` : ''}
+                {story.comments ? ` • ${story.comments} comments` : ''}
+                {story.clicks ? ` • ${story.clicks} clicks` : ''}
               </Text>
             </Section>
           </Column>

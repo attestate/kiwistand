@@ -116,6 +116,9 @@ export default function RowEmail({ story = {} }) {
     metadata,
     identity,
     displayName,
+    upvotes,
+    comments,
+    clicks,
   } = story;
 
   const submitterProfileLink =
@@ -162,6 +165,9 @@ export default function RowEmail({ story = {} }) {
             submitted by <Link href={submitterProfileLink} style={{ fontWeight: 600, color: '#000000 !important', textDecoration: 'none' }}>{displayName}</Link>
             {' • '}
             <Link href={story.storyLink} style={{ color: '#000000 !important', textDecoration: 'none' }}>{extractedDomain}</Link>
+            {upvotes ? ` • ${upvotes} upvotes` : ''}
+            {comments ? ` • ${comments} comments` : ''}
+            {clicks ? ` • ${clicks} clicks` : ''}
           </Text>
         </Section>
       </Section>
