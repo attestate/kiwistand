@@ -10,6 +10,7 @@ import * as store from "./store.mjs";
 import * as registry from "./chainstate/registry.mjs";
 import DOMPurify from "isomorphic-dompurify";
 import slugify from "slugify";
+import { countOutbounds, countComments } from "./cache.mjs";
 
 function getSlug(title) {
   if (!title) {
@@ -25,7 +26,7 @@ export async function generateDigestData() {
 
   try {
     const desiredStoryCount = 5;
-    const fetchAmount = 12;
+    const fetchAmount = 25;
     const bannedDomains = new Set(["imagedelivery.net"]);
     const bannedIndexes = new Set([
       "69809847cd276be92605e39bbe250aadb468bd4afb2ea05598fbf2905b4fb2cecd7a4505",
@@ -72,8 +73,28 @@ export async function generateDigestData() {
       log("No stories found. Aborting digest generation.");
       return;
     }
-    
-    const selectedStories = filteredStories.slice(0, desiredStoryCount);
+
+    // Compute composite score: upvotes + comments + clicks + CTR bonus
+    const scoredStories = filteredStories.map((story) => {
+      const upvotes = story.upvotes || 0;
+      const impressions = story.impressions || 0;
+      const clicks = countOutbounds(story.href);
+      const comments = countComments(`kiwi:0x${story.index}`);
+      const ctr = impressions > 0 ? clicks / impressions : 0;
+
+      const score =
+        upvotes * 3 +
+        comments * 2 +
+        clicks * 1 +
+        ctr * 20;
+
+      log(`[digest] ${story.href.slice(0, 60)} — upvotes:${upvotes} comments:${comments} clicks:${clicks} impressions:${impressions} ctr:${ctr.toFixed(3)} score:${score.toFixed(1)}`);
+      return { ...story, _digestScore: score };
+    });
+
+    scoredStories.sort((a, b) => b._digestScore - a._digestScore);
+
+    const selectedStories = scoredStories.slice(0, desiredStoryCount);
     log(`Selected top ${selectedStories.length} stories.`);
 
     const generatedAt = new Date();
