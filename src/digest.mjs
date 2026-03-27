@@ -85,8 +85,7 @@ export async function generateDigestData() {
       const score =
         upvotes * 3 +
         comments * 2 +
-        clicks * 1 +
-        ctr * 20;
+        clicks * 1;
 
       log(`[digest] ${story.href.slice(0, 60)} — upvotes:${upvotes} comments:${comments} clicks:${clicks} impressions:${impressions} ctr:${ctr.toFixed(3)} score:${score.toFixed(1)}`);
       return { ...story, _digestScore: score, clicks, comments };

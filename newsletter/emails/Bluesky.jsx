@@ -24,7 +24,7 @@ export default function BlueskyEmail({ story = { metadata: {} } }) {
     <>
       <Section style={container} bgcolor="#f6f6ef">
         <Section style={{ ...embedContainer, backgroundColor: '#ffffff', borderBottom: '1px solid #e6e6df' }} bgcolor="#ffffff">
-          <Link href={story.storyLink} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
+          <Link href={story.storyLink} style={{ textDecoration: 'none', color: '#000000 !important', display: 'block' }}>
             <Row>
               <Column width="30">
                 {post?.author?.avatar ? (
@@ -43,7 +43,7 @@ export default function BlueskyEmail({ story = { metadata: {} } }) {
                 </Text>
               </Column>
             </Row>
-            <Text style={{ wordBreak: 'break-word', whiteSpace: 'pre-wrap', margin: '8px 0 0' }}>
+            <Text style={{ wordBreak: 'break-word', whiteSpace: 'pre-wrap', margin: '8px 0 0', color: '#000000' }}>
               {post?.text && post.text.length > 260
                 ? post.text.slice(0, 260) + '…'
                 : post?.text}
