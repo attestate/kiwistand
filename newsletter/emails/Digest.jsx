@@ -54,10 +54,7 @@ export default function DigestEmail({ stories = digestStories }) {
 
     if (isTweetDomain) {
       // X articles and video-only tweets render better as regular cards
-      const isXArticle =
-        story.metadata?.ogDescription &&
-        (story.metadata.ogDescription.includes("x.com/i/article/") ||
-          story.metadata.ogDescription.includes("twitter.com/i/article/"));
+      const isXArticle = story.metadata?.isXArticle;
       const isVideoTweet = story.metadata?.hasVideo && !story.metadata?.image;
 
       if (isXArticle || isVideoTweet) {

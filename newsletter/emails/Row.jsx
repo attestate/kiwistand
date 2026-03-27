@@ -158,7 +158,11 @@ export default function RowEmail({ story = {} }) {
 
         <Section style={{ padding: '12px 12px 12px 12px' }}>
           <Link href={story.storyLink} style={{ lineHeight: '15pt', fontSize: '13pt', color: '#000000 !important', textDecoration: 'none' }}>
-            {truncateLongWords(metadata?.compliantTitle || title)}
+            {truncateLongWords(
+              (metadata?.isXArticle && metadata?.ogTitle)
+                ? metadata.ogTitle
+                : metadata?.compliantTitle || title
+            )}
           </Link>
 
           <Text style={{ fontSize: '9pt', marginTop: '3px', marginBottom: '0', lineHeight: '1.4', color: '#666' }}>
