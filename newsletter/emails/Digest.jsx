@@ -99,11 +99,11 @@ export default function DigestEmail({ stories = digestStories }) {
             </Text>
             <Section style={{ marginTop: '10px', marginBottom: '15px' }}>
               <Row>
-                <Column width="40">
-                  <Img src="https://news.kiwistand.com/kiwi-icon-email.png" alt="Kiwi News" width="35" height="35" />
+                <Column width="44">
+                  <Img src="https://news.kiwistand.com/kiwi-icon-email.png" alt="" width="35" height="35" />
                 </Column>
                 <Column>
-                  <Text style={title}>Kiwi News</Text>
+                  <Img src="https://news.kiwistand.com/kiwi-wordmark-email.png" alt="Kiwi News" width="213" height="54" />
                 </Column>
               </Row>
             </Section>
