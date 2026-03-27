@@ -103,7 +103,7 @@ export default function DigestEmail({ stories = digestStories }) {
                   <Img src="https://news.kiwistand.com/kiwi-icon-email.png" alt="" width="35" height="35" />
                 </Column>
                 <Column>
-                  <Img src="https://news.kiwistand.com/kiwi-wordmark-email.png" alt="Kiwi News" width="213" height="54" />
+                  <Img src="https://news.kiwistand.com/kiwi-wordmark-email.png" alt="Kiwi News" width="106" height="27" />
                 </Column>
               </Row>
             </Section>
