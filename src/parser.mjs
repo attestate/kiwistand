@@ -863,7 +863,7 @@ async function extractCanonicalLink(html) {
   return DOMPurify.sanitize(node.href);
 }
 
-const checkOgImage = async (url) => {
+const checkOgImage = async (url, { maxAspectRatio = 2 } = {}) => {
   const signal = AbortSignal.timeout(5000);
   try {
     const res = await fetch(url, {
@@ -922,10 +922,10 @@ const checkOgImage = async (url) => {
       return false;
     }
 
-    // Allow landscape, square, and portrait images (0.3 to 2.0 aspect ratio)
-    // Reject very narrow sliver images and very wide images (wider than 2:1)
+    // Allow landscape, square, and portrait images (0.3 to maxAspectRatio)
+    // Reject very narrow sliver images and very wide images
     const aspectRatio = width / height;
-    if (aspectRatio < 0.3 || aspectRatio > 2) {
+    if (aspectRatio < 0.3 || aspectRatio > maxAspectRatio) {
       log(
         `Rejecting image with aspect ratio out of range (${width}x${height}, ratio: ${aspectRatio.toFixed(
           2,
@@ -1323,7 +1323,41 @@ export const metadata = async (
     }
   }
 
-  if (generateTitle) {
+  // Fetch fxtwitter JSON API for author info and article detection
+  let isXArticle = false;
+  if (isFxTwitter) {
+    try {
+      const tweetId = urlObj.pathname.split('/').filter(Boolean).pop();
+      if (tweetId && /^\d+$/.test(tweetId)) {
+        const apiUrl = `https://api.fxtwitter.com/status/${tweetId}`;
+        const apiResponse = await fetch(apiUrl, {
+          headers: { "User-Agent": env.USER_AGENT },
+          signal: AbortSignal.timeout(3000),
+        });
+        if (apiResponse.ok) {
+          const apiData = await apiResponse.json();
+          if (apiData?.tweet?.author?.avatar_url) {
+            output.twitterAuthorAvatar = DOMPurify.sanitize(apiData.tweet.author.avatar_url);
+          }
+          if (apiData?.tweet?.author?.screen_name) {
+            output.twitterCreator = DOMPurify.sanitize(`@${apiData.tweet.author.screen_name}`);
+          }
+          if (apiData?.tweet?.article) {
+            isXArticle = true;
+            output.isXArticle = true;
+            const articleTitle = apiData.tweet.article.title || result.ogTitle;
+            if (articleTitle) {
+              output.ogTitle = DOMPurify.sanitize(articleTitle);
+            }
+          }
+        }
+      }
+    } catch (err) {
+      log(`Failed to fetch fxtwitter API info: ${err.message}`);
+    }
+  }
+
+  if (!isXArticle && generateTitle) {
     if (
       twitterFrontends.includes(hostname) &&
       !ogDescription?.includes("x.com/i/article/")
@@ -1353,7 +1387,7 @@ export const metadata = async (
   }
   if (image && image.startsWith("https://")) {
     log(`[metadata] Checking image: ${image}`);
-    const exists = await checkOgImage(image);
+    const exists = await checkOgImage(image, isXArticle ? { maxAspectRatio: 3 } : undefined);
     log(`[metadata] checkOgImage result: ${exists}`);
     if (exists) {
       output.image = DOMPurify.sanitize(image);
@@ -1364,7 +1398,7 @@ export const metadata = async (
   } else {
     log(`[metadata] No valid image URL (image=${image}, startsWith https: ${image?.startsWith("https://")})`);
   }
-  if (result.twitterCreator) {
+  if (!output.twitterCreator && result.twitterCreator) {
     output.twitterCreator = DOMPurify.sanitize(result.twitterCreator);
   }
   // Forward useful media hints to the UI layer
@@ -1374,31 +1408,6 @@ export const metadata = async (
   if (ogDescription) {
     // Store the original, potentially longer description in the output object
     output.ogDescription = DOMPurify.sanitize(ogDescription);
-  }
-  
-  // For tweets, fetch author avatar via fxtwitter JSON API using the tweet ID
-  if (twitterFrontends.includes(hostname) && !ogDescription?.includes("x.com/i/article/")) {
-    try {
-      const tweetId = urlObj.pathname.split('/').filter(Boolean).pop();
-      if (tweetId && /^\d+$/.test(tweetId)) {
-        const apiUrl = `https://api.fxtwitter.com/status/${tweetId}`;
-        const apiResponse = await fetch(apiUrl, {
-          headers: { "User-Agent": env.USER_AGENT },
-          signal: AbortSignal.timeout(3000),
-        });
-        if (apiResponse.ok) {
-          const apiData = await apiResponse.json();
-          if (apiData?.tweet?.author?.avatar_url) {
-            output.twitterAuthorAvatar = DOMPurify.sanitize(apiData.tweet.author.avatar_url);
-          }
-          if (apiData?.tweet?.author?.screen_name) {
-            output.twitterCreator = DOMPurify.sanitize(`@${apiData.tweet.author.screen_name}`);
-          }
-        }
-      }
-    } catch (err) {
-      log(`Failed to fetch Twitter author info: ${err.message}`);
-    }
   }
   if (canonicalLink) {
     output.canonicalLink = DOMPurify.sanitize(canonicalLink);

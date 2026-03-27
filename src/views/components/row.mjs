@@ -430,6 +430,7 @@ const row = (
       story.metadata &&
       story.metadata.ogDescription &&
       !tweetContainsXArticle &&
+      !story.metadata.isXArticle &&
       // If the tweet is primarily video, avoid rendering text-only faux screenshot
       !story.metadata.hasVideo;
 
@@ -785,9 +786,7 @@ const row = (
                               if (/^https?:\/\/\S+$/i.test(text)) {
                                 return html`<a href="${DOMPurify.sanitize(text)}" target="_blank" rel="noopener">${DOMPurify.sanitize(text)}</a>`;
                               }
-                              const sliced = text.slice(0, 260);
-                              const nodes = linkifyNodes(sliced);
-                              return html`${nodes}${text.length > 260 ? '…' : ''}`;
+                              return html`${linkifyNodes(text)}`;
                             }
                             const desc = (story.metadata.ogDescription || "").trim();
                             if (/^https?:\/\/\S+$/i.test(desc)) {
@@ -1047,25 +1046,20 @@ const row = (
                           : "_blank"}"
                         style="user-select: text; line-height: 15pt; font-size: 13pt; padding-right: 14px;"
                       >
-                        ${story.isOriginal
-                          ? html`<mark
-                              style="background-color: rgba(255,255,0, 0.05); padding: 0px 2px;"
-                              >${truncateLongWords(
-                                DOMPurify.sanitize(
-                                  story.metadata &&
-                                    story.metadata.compliantTitle
-                                    ? story.metadata.compliantTitle
-                                    : story.title,
-                                ),
-                              )}</mark
-                            >`
-                          : html`${truncateLongWords(
-                              DOMPurify.sanitize(
-                                story.metadata && story.metadata.compliantTitle
-                                  ? story.metadata.compliantTitle
-                                  : story.title,
-                              ),
-                            )}`}
+                        ${(() => {
+                          const displayTitle =
+                            story.metadata && story.metadata.isXArticle && story.metadata.ogTitle
+                              ? story.metadata.ogTitle
+                              : story.metadata && story.metadata.compliantTitle
+                              ? story.metadata.compliantTitle
+                              : story.title;
+                          return story.isOriginal
+                            ? html`<mark
+                                style="background-color: rgba(255,255,0, 0.05); padding: 0px 2px;"
+                                >${truncateLongWords(DOMPurify.sanitize(displayTitle))}</mark
+                              >`
+                            : html`${truncateLongWords(DOMPurify.sanitize(displayTitle))}`;
+                        })()}
                       </a>
                       <span> </span>
                     </span>
