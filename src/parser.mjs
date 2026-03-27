@@ -1093,9 +1093,18 @@ export const metadata = async (
   const fromCache = await cache.get(url);
   if (fromCache !== undefined) {
     log(`[metadata] Cache HIT for ${url}`);
-    result = fromCache.result;
-    canonicalLink = fromCache.canonicalLink;
-    canIframe = fromCache.canIframe !== undefined ? fromCache.canIframe : true; // Default to true for old cache entries
+    if ('result' in fromCache) {
+      // Raw OGS format written by metadata(): { result, canIframe, canonicalLink }
+      result = fromCache.result;
+      canonicalLink = fromCache.canonicalLink;
+      canIframe = fromCache.canIframe !== undefined ? fromCache.canIframe : true; // Default to true for old cache entries
+    } else if (!fromCache.failed) {
+      // Final processed format written by cachedMetadata(): { image, ogTitle, domain, ... }
+      // Return it directly to avoid losing the already-validated image URL
+      log(`[metadata] Cache HIT has pre-processed format, returning directly`);
+      return fromCache;
+    }
+    // If fromCache.failed, fall through to the !result early return below
   } else {
     log(`[metadata] Cache MISS for ${url}`);
     // fxtwitter averages ~4.6s on prod — give it more headroom
