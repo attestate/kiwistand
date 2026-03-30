@@ -1412,6 +1412,10 @@ export const metadata = async (
             if (articleTitle) {
               output.ogTitle = DOMPurify.sanitize(articleTitle);
             }
+            const coverUrl = apiData.tweet.article.cover_media?.media_info?.original_img_url;
+            if (coverUrl && coverUrl.startsWith("https://")) {
+              image = coverUrl;
+            }
           }
         }
       }

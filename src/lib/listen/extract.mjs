@@ -30,6 +30,64 @@ function isFarcasterUrl(url) {
   }
 }
 
+function isXUrl(url) {
+  try {
+    const parsed = new URL(url);
+    return parsed.hostname === "x.com" || parsed.hostname === "twitter.com";
+  } catch {
+    return false;
+  }
+}
+
+async function extractXArticle(url) {
+  const parsed = new URL(url);
+  const parts = parsed.pathname.split("/").filter(Boolean);
+  const tweetId = parts[parts.length - 1];
+  if (!tweetId || !/^\d+$/.test(tweetId)) {
+    throw new Error("Could not extract tweet ID from URL");
+  }
+
+  const apiUrl = `https://api.fxtwitter.com/status/${tweetId}`;
+  const res = await fetch(apiUrl, {
+    headers: { "User-Agent": "Mozilla/5.0" },
+    signal: AbortSignal.timeout(5000),
+  });
+  if (!res.ok) throw new Error(`fxtwitter API returned ${res.status}`);
+  const data = await res.json();
+  const tweet = data?.tweet;
+  if (!tweet) throw new Error("No tweet data from fxtwitter");
+
+  // X article — extract from Draft.js content blocks
+  if (tweet.article) {
+    const blocks = tweet.article.content?.blocks || [];
+    const plainText = blocks
+      .map(b => b.text?.trim())
+      .filter(Boolean)
+      .join("\n\n");
+
+    if (plainText.length < MIN_ARTICLE_LENGTH) {
+      throw new Error(`X article too short (${plainText.length} chars, need ${MIN_ARTICLE_LENGTH}).`);
+    }
+
+    const elements = blocks
+      .filter(b => b.text?.trim())
+      .map(b => ({ type: "text", content: b.text.trim() }));
+    const wrappedHtml = wrapParagraphs(elements);
+    const title = tweet.article.title || tweet.text || "X Article";
+    return { title, plainText, wrappedHtml };
+  }
+
+  // Regular tweet — use tweet text
+  const plainText = tweet.text?.trim() || "";
+  if (plainText.length < MIN_ARTICLE_LENGTH) {
+    throw new Error(`Tweet too short (${plainText.length} chars, need ${MIN_ARTICLE_LENGTH}).`);
+  }
+  const elements = [{ type: "text", content: plainText }];
+  const wrappedHtml = wrapParagraphs(elements);
+  const handle = tweet.author?.screen_name ? `@${tweet.author.screen_name}` : "X";
+  return { title: `${handle} on X`, plainText, wrappedHtml };
+}
+
 async function extractFarcasterArticle(url) {
   const cast = await extractWarpcastContent(url, "url");
   if (!cast || !cast.text) {
@@ -55,6 +113,10 @@ async function extractFarcasterArticle(url) {
 export async function extractArticle(url) {
   if (isFarcasterUrl(url)) {
     return extractFarcasterArticle(url);
+  }
+
+  if (isXUrl(url)) {
+    return extractXArticle(url);
   }
 
   const res = await fetch(url, {
