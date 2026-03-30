@@ -1115,87 +1115,86 @@ export const metadata = async (
       ? "TelegramBot (like TwitterBot)"
       : env.USER_AGENT;
     log(`[metadata] Using User-Agent: ${userAgent}`);
-    const response = await fetch(url, {
-      headers: {
-        "User-Agent": userAgent,
-      },
-      agent: useAgent(url),
-      signal,
-    });
 
-    const contentTypeHeader = response.headers.get("content-type") || "";
-    if (contentTypeHeader && !contentTypeHeader.includes("text/html")) {
-      if (response.body && typeof response.body.cancel === "function") {
-        response.body.cancel();
+    // For fxtwitter, wrap the HTML fetch in try-catch so a timeout doesn't
+    // abort the whole function — we can still get article data from the JSON API.
+    const doHtmlFetch = async () => {
+      const response = await fetch(url, {
+        headers: { "User-Agent": userAgent },
+        agent: useAgent(url),
+        signal,
+      });
+
+      const contentTypeHeader = response.headers.get("content-type") || "";
+      if (contentTypeHeader && !contentTypeHeader.includes("text/html")) {
+        if (response.body && typeof response.body.cancel === "function") {
+          response.body.cancel();
+        }
+        throw new Error(`Unsupported content type for metadata: ${contentTypeHeader}`);
       }
-      throw new Error(`Unsupported content type for metadata: ${contentTypeHeader}`);
-    }
 
-    // Check iframe compatibility
-    const xFrameOptions = response.headers.get('x-frame-options');
-    const csp = response.headers.get('content-security-policy');
+      // Check iframe compatibility
+      const xFrameOptions = response.headers.get('x-frame-options');
+      const csp = response.headers.get('content-security-policy');
 
-    canIframe = true;
-    if (xFrameOptions && (xFrameOptions.toLowerCase() === 'deny' || xFrameOptions.toLowerCase() === 'sameorigin')) {
-      canIframe = false;
-    }
-    if (csp) {
-      // Check for frame-ancestors directive
-      if (csp.includes('frame-ancestors')) {
-        // Extract the frame-ancestors value
-        const frameAncestorsMatch = csp.match(/frame-ancestors\s+([^;]+)/);
-        if (frameAncestorsMatch) {
-          const frameAncestorsValue = frameAncestorsMatch[1].trim();
-          // Default to blocking unless explicitly allowed
-          canIframe = false;
-
-          // Only allow if it explicitly allows all origins
-          if (frameAncestorsValue.includes('*') && !frameAncestorsValue.includes("'self'")) {
-            canIframe = true;
-          }
-          // Check if it only allows specific domains (like Substack allowing only *.substack.com)
-          else if (frameAncestorsValue.includes('https://') || frameAncestorsValue.includes('http://')) {
-            // If it specifies specific domains, it won't work from kiwistand.com
+      canIframe = true;
+      if (xFrameOptions && (xFrameOptions.toLowerCase() === 'deny' || xFrameOptions.toLowerCase() === 'sameorigin')) {
+        canIframe = false;
+      }
+      if (csp) {
+        if (csp.includes('frame-ancestors')) {
+          const frameAncestorsMatch = csp.match(/frame-ancestors\s+([^;]+)/);
+          if (frameAncestorsMatch) {
+            const frameAncestorsValue = frameAncestorsMatch[1].trim();
+            canIframe = false;
+            if (frameAncestorsValue.includes('*') && !frameAncestorsValue.includes("'self'")) {
+              canIframe = true;
+            } else if (frameAncestorsValue.includes('https://') || frameAncestorsValue.includes('http://')) {
+              canIframe = false;
+            }
+          } else {
             canIframe = false;
           }
-        } else {
-          // If frame-ancestors is present but we can't parse it, block to be safe
-          canIframe = false;
         }
       }
-    }
 
-    const html = await response.text();
+      const html = await response.text();
 
-    // Run OGS in a worker thread with timeout to prevent blocking
-    try {
-      const parsed = await parseWithOGS(html, 1000); // 1 second timeout
-      result = parsed.result;
-      log(`[metadata] OGS parsing successful. ogImage: ${JSON.stringify(result.ogImage)}, twitterImage: ${JSON.stringify(result.twitterImage)}`);
-    } catch (err) {
-      if (err.message === 'OGS parsing timeout') {
-        log(`OGS parsing timed out for URL: ${url}`);
-        throw new Error("Metadata parsing timeout - likely binary or malformed content");
-      }
-      log(`OGS parsing error for URL ${url}: ${err.message}`);
-      throw err;
-    }
-
-    // Extract canonical link before caching (html not needed after this)
-    // NOTE: Hey's and Rekt News's canonical link implementation is wrong and
-    // always links back to the root
-    const domain = safeExtractDomain(url);
-    if (domain !== "hey.xyz" && domain !== "rekt.news") {
       try {
-        canonicalLink = await extractCanonicalLink(html);
+        const parsed = await parseWithOGS(html, 1000);
+        result = parsed.result;
+        log(`[metadata] OGS parsing successful. ogImage: ${JSON.stringify(result.ogImage)}, twitterImage: ${JSON.stringify(result.twitterImage)}`);
       } catch (err) {
-        log(`Failed to extract canonical link ${err.stack}`);
+        if (err.message === 'OGS parsing timeout') {
+          log(`OGS parsing timed out for URL: ${url}`);
+          throw new Error("Metadata parsing timeout - likely binary or malformed content");
+        }
+        log(`OGS parsing error for URL ${url}: ${err.message}`);
+        throw err;
       }
-    }
 
-    // Cache only the small pieces of data, NOT the full HTML
-    if (result) {
-      await cache.set(url, { result, canIframe, canonicalLink }, { ttlMs: METADATA_SUCCESS_TTL });
+      const domain = safeExtractDomain(url);
+      if (domain !== "hey.xyz" && domain !== "rekt.news") {
+        try {
+          canonicalLink = await extractCanonicalLink(html);
+        } catch (err) {
+          log(`Failed to extract canonical link ${err.stack}`);
+        }
+      }
+
+      if (result) {
+        await cache.set(url, { result, canIframe, canonicalLink }, { ttlMs: METADATA_SUCCESS_TTL });
+      }
+    };
+
+    if (isFxTwitter) {
+      try {
+        await doHtmlFetch();
+      } catch (err) {
+        log(`[metadata] fxtwitter HTML fetch failed (${err.message}), will try JSON API fallback`);
+      }
+    } else {
+      await doHtmlFetch();
     }
   }
 
@@ -1205,7 +1204,9 @@ export const metadata = async (
   }
 
   // Check if result is undefined or invalid
-  if (!result) {
+  // For fxtwitter, don't bail yet — the JSON API (called below after output={})
+  // can still provide X article data even when the HTML fetch timed out.
+  if (!result && !isFxTwitter) {
     log(`No metadata result for URL: ${url}`);
     return {
       domain: DOMPurify.sanitize(domain),
@@ -1276,6 +1277,61 @@ export const metadata = async (
     ...twitterFrontends,
   ];
   let output = {};
+
+  // Fetch fxtwitter JSON API for author info and X article detection.
+  // Runs before any result-dependent processing so X articles work even
+  // when the HTML fetch timed out.
+  let isXArticle = false;
+  if (isFxTwitter) {
+    try {
+      const tweetId = urlObj.pathname.split('/').filter(Boolean).pop();
+      if (tweetId && /^\d+$/.test(tweetId)) {
+        const apiUrl = `https://api.fxtwitter.com/status/${tweetId}`;
+        const apiResponse = await fetch(apiUrl, {
+          headers: { "User-Agent": env.USER_AGENT },
+          signal: AbortSignal.timeout(5000),
+        });
+        if (apiResponse.ok) {
+          const apiData = await apiResponse.json();
+          if (apiData?.tweet?.author?.avatar_url) {
+            output.twitterAuthorAvatar = DOMPurify.sanitize(apiData.tweet.author.avatar_url);
+          }
+          if (apiData?.tweet?.author?.screen_name) {
+            output.twitterCreator = DOMPurify.sanitize(`@${apiData.tweet.author.screen_name}`);
+          }
+          if (apiData?.tweet?.article) {
+            isXArticle = true;
+            output.isXArticle = true;
+            const articleTitle = apiData.tweet.article.title || result?.ogTitle;
+            if (articleTitle) {
+              output.ogTitle = DOMPurify.sanitize(articleTitle);
+            }
+            const coverUrl = apiData.tweet.article.cover_media?.media_info?.original_img_url;
+            if (coverUrl && coverUrl.startsWith("https://")) {
+              output.image = DOMPurify.sanitize(coverUrl);
+            }
+            // X articles have all needed data from the API — return early
+            output.domain = DOMPurify.sanitize(domain);
+            output.canIframe = false;
+            return output;
+          }
+        }
+      }
+    } catch (err) {
+      log(`Failed to fetch fxtwitter API info: ${err.message}`);
+    }
+    // Regular tweet with no HTML result (HTML fetch timed out, not an article)
+    if (!result) {
+      log(`No metadata result for fxtwitter URL: ${url}`);
+      return {
+        domain: DOMPurify.sanitize(domain),
+        ogTitle: "",
+        ogDescription: "",
+        canIframe: false,
+        ...output, // keep author avatar/creator if we got them
+      };
+    }
+  }
 
   // Always extract Farcaster cast data for preview, regardless of generateTitle
   const fireflyFarcasterHash =
@@ -1386,43 +1442,6 @@ export const metadata = async (
     }
   }
 
-  // Fetch fxtwitter JSON API for author info and article detection
-  let isXArticle = false;
-  if (isFxTwitter) {
-    try {
-      const tweetId = urlObj.pathname.split('/').filter(Boolean).pop();
-      if (tweetId && /^\d+$/.test(tweetId)) {
-        const apiUrl = `https://api.fxtwitter.com/status/${tweetId}`;
-        const apiResponse = await fetch(apiUrl, {
-          headers: { "User-Agent": env.USER_AGENT },
-          signal: AbortSignal.timeout(3000),
-        });
-        if (apiResponse.ok) {
-          const apiData = await apiResponse.json();
-          if (apiData?.tweet?.author?.avatar_url) {
-            output.twitterAuthorAvatar = DOMPurify.sanitize(apiData.tweet.author.avatar_url);
-          }
-          if (apiData?.tweet?.author?.screen_name) {
-            output.twitterCreator = DOMPurify.sanitize(`@${apiData.tweet.author.screen_name}`);
-          }
-          if (apiData?.tweet?.article) {
-            isXArticle = true;
-            output.isXArticle = true;
-            const articleTitle = apiData.tweet.article.title || result.ogTitle;
-            if (articleTitle) {
-              output.ogTitle = DOMPurify.sanitize(articleTitle);
-            }
-            const coverUrl = apiData.tweet.article.cover_media?.media_info?.original_img_url;
-            if (coverUrl && coverUrl.startsWith("https://")) {
-              image = coverUrl;
-            }
-          }
-        }
-      }
-    } catch (err) {
-      log(`Failed to fetch fxtwitter API info: ${err.message}`);
-    }
-  }
 
   if (!isXArticle && generateTitle) {
     if (
