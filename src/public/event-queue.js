@@ -1,3 +1,7 @@
+// This script runs synchronously in <head> (no defer/async) so that
+// window.addToQueue is available as soon as the DOM starts rendering.
+// This allows upvote buttons and other interactive elements to queue
+// events before main.jsx (React) has loaded and taken over.
 window.eventQueue = window.eventQueue || [];
 
 function addToQueue(evt) {

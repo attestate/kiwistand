@@ -21,8 +21,12 @@ export function isControlledImage(src) {
   }
 }
 
-// Helper to determine image loading strategy
-// Only eagerly load if: above fold AND from a controlled domain
+// Helper to determine image loading strategy.
+// We only eagerly load images from domains we fully control (our own CDN).
+// Third-party images (pbs.twimg.com, api.ensdata.net, etc.) are ALWAYS lazy,
+// even above the fold. This is intentional: a slow external host would
+// otherwise block our entire page render, which is worse than a slightly
+// delayed LCP. Do not change this without considering that trade-off.
 export function getImageLoading(isAboveFold, src) {
   if (!isAboveFold) return "lazy";
   return isControlledImage(src) ? "eager" : "lazy";
