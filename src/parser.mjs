@@ -1014,7 +1014,7 @@ export const cachedMetadata = async (
     // metadata() crashes after writing its mid-processing cache entry.
     // They have no `domain` field — fall through to re-fetch so the image
     // gets properly extracted.
-    if (cached.result !== undefined || cached.failed) {
+    if (cached.result !== undefined) {
       // not a processed entry — fall through
     } else {
       return cached;
