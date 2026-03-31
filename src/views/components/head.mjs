@@ -37,6 +37,17 @@ try {
   cssHash = Date.now().toString();
 }
 
+// Read Vite manifest to get JS bundle URL for early modulepreload
+let mainJsUrl = null;
+if (env.NODE_ENV === "production") {
+  try {
+    const manifest = JSON.parse(readFileSync(join(__dirname, "../../public/manifest.json"), "utf-8"));
+    mainJsUrl = manifest["src/main.jsx"]?.file ? `/${manifest["src/main.jsx"].file}` : null;
+  } catch (err) {
+    // Ignore in non-production or if manifest missing
+  }
+}
+
 // Determine domain dynamically
 let domain = "https://news.kiwistand.com";
 if (env.CUSTOM_PROTOCOL && env.CUSTOM_HOST_NAME) {
@@ -80,6 +91,8 @@ export function custom(
     <link rel="preconnect" href="https://www.googletagmanager.com" />
     <link rel="preconnect" href="https://imagedelivery.net" />
     <link rel="preconnect" href="https://api.ensdata.net" />
+    <link rel="preconnect" href="https://pbs.twimg.com" />
+    ${mainJsUrl ? html`<link rel="modulepreload" href="${mainJsUrl}" />` : ""}
     <link
       rel="preload"
       as="font"
