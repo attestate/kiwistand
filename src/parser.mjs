@@ -1470,17 +1470,13 @@ export const metadata = async (
   }
   if (image && image.startsWith("https://")) {
     log(`[metadata] Checking image: ${image}`);
-    try {
-      const exists = await checkOgImage(image);
-      log(`[metadata] checkOgImage result: ${exists}`);
-      if (exists) {
-        output.image = DOMPurify.sanitize(image);
-        log(`[metadata] Image added to output: ${output.image}`);
-      } else {
-        log(`[metadata] Image validation failed, not adding to output`);
-      }
-    } catch (err) {
-      log(`[metadata] checkOgImage threw, skipping image: ${err.message}`);
+    const exists = await checkOgImage(image);
+    log(`[metadata] checkOgImage result: ${exists}`);
+    if (exists) {
+      output.image = DOMPurify.sanitize(image);
+      log(`[metadata] Image added to output: ${output.image}`);
+    } else {
+      log(`[metadata] Image validation failed, not adding to output`);
     }
   } else {
     log(`[metadata] No valid image URL (image=${image}, startsWith https: ${image?.startsWith("https://")})`);
