@@ -644,8 +644,13 @@ const row = (
                             if (/^https?:\/\/\S+$/i.test(desc)) {
                               return html`<a href="${DOMPurify.sanitize(desc)}" target="_blank" rel="noopener">${DOMPurify.sanitize(desc)}</a>`;
                             }
-                            const nodes = linkifyNodes(desc);
-                            return html`${nodes}`;
+                            if (desc.length <= 280) {
+                              const nodes = linkifyNodes(desc);
+                              return html`${nodes}`;
+                            }
+                            const preview = desc.slice(0, 280);
+                            const rest = desc.slice(280);
+                            return html`<details class="embed-show-more" style="display:inline;"><summary style="display:inline; list-style:none; cursor:pointer;">${linkifyNodes(preview)}<span style="opacity:0.6;">… <span style="color: var(--color); text-decoration:underline;">show more</span></span></summary>${linkifyNodes(rest)}</details>`;
                           })()}
                         </p>
                         ${story.metadata.image
@@ -806,7 +811,7 @@ const row = (
                             }
                             const preview = desc.slice(0, 280);
                             const rest = desc.slice(280);
-                            return html`<details style="display:inline;"><summary style="display:inline; list-style:none; cursor:pointer;">${linkifyNodes(preview)}<span style="opacity:0.6;">… <span style="text-decoration:underline;">show more</span></span></summary>${linkifyNodes(rest)}</details>`;
+                            return html`<details class="embed-show-more" style="display:inline;"><summary style="display:inline; list-style:none; cursor:pointer;">${linkifyNodes(preview)}<span style="opacity:0.6;">… <span style="color: var(--color); text-decoration:underline;">show more</span></span></summary>${linkifyNodes(rest)}</details>`;
                           })()}
                         </p>
                         ${farcasterImageUrl
@@ -909,8 +914,12 @@ const row = (
                                 >${DOMPurify.sanitize(text)}</a
                               >`;
                             }
-                            const sliced = text.slice(0, 300);
-                            return html`${linkifyNodes(sliced)}${text.length > 300 ? "…" : ""}`;
+                            if (text.length <= 280) {
+                              return html`${linkifyNodes(text)}`;
+                            }
+                            const preview = text.slice(0, 280);
+                            const rest = text.slice(280);
+                            return html`<details class="embed-show-more" style="display:inline;"><summary style="display:inline; list-style:none; cursor:pointer;">${linkifyNodes(preview)}<span style="opacity:0.6;">… <span style="color: var(--color); text-decoration:underline;">show more</span></span></summary>${linkifyNodes(rest)}</details>`;
                           })()}
                         </p>
                         ${story.metadata.blueskyPost.images &&
