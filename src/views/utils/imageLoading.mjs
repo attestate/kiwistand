@@ -21,6 +21,28 @@ export function isControlledImage(src) {
   }
 }
 
+// Transform Twitter/X image URLs to use a reasonable size instead of the
+// original upload. pbs.twimg.com URLs often include ?name=orig which serves
+// the full-resolution original (can be 4000px+, several MB). We downgrade to
+// ?name=large (max 2048px) which is still more than enough for feed thumbnails
+// displayed at ~600px CSS width, and saves 60-90% on image transfer size.
+export function transformImageUrl(src) {
+  if (!src) return src;
+  try {
+    const url = new URL(src);
+    if (url.hostname === "pbs.twimg.com") {
+      const name = url.searchParams.get("name");
+      if (name === "orig") {
+        url.searchParams.set("name", "large");
+        return url.toString();
+      }
+    }
+  } catch {
+    // Ignore invalid URLs
+  }
+  return src;
+}
+
 // Helper to determine image loading strategy.
 // We only eagerly load images from domains we fully control (our own CDN).
 // Third-party images (pbs.twimg.com, api.ensdata.net, etc.) are ALWAYS lazy,

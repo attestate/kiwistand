@@ -20,7 +20,7 @@ import log from "../../logger.mjs";
 import { twitterFrontends } from "../../parser.mjs";
 import ParagraphFullPost from "./paragraph-full-post.mjs";
 import * as karma from "../../karma.mjs";
-import { getImageLoading } from "../utils/imageLoading.mjs";
+import { getImageLoading, transformImageUrl } from "../utils/imageLoading.mjs";
 
 let domain = "https://news.kiwistand.com";
 if (env.CUSTOM_PROTOCOL && env.CUSTOM_HOST_NAME) {
@@ -654,7 +654,7 @@ const row = (
                                 style="margin-top: 12px; position: relative; width: 100%; aspect-ratio: 16 / 9; background: var(--button-bg); overflow: hidden; border-radius: 12px; border: 1px solid rgba(0,0,0,0.1);"
                               >
                                 <img
-                                  src="${DOMPurify.sanitize(story.metadata.image)}"
+                                  src="${DOMPurify.sanitize(transformImageUrl(story.metadata.image))}"
                                   alt="Tweet image"
                                   width="600"
                                   height="338"
