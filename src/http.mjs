@@ -263,6 +263,26 @@ app.use(
     },
   }),
 );
+// Early Hints: Cloudflare caches Link headers and sends them as 103
+// before the origin responds, so browsers start fetching CSS/JS immediately.
+import { readFileSync } from "fs";
+if (env.NODE_ENV === "production") {
+  try {
+    const mf = JSON.parse(readFileSync("src/public/manifest.json", "utf-8"));
+    const entry = mf["src/main.jsx"];
+    const links = ["</news.css>; rel=preload; as=style"];
+    if (entry?.file) links.push(`</${entry.file}>; rel=preload; as=script`);
+    for (const k of entry?.imports || []) {
+      if (mf[k]?.file) links.push(`</${mf[k].file}>; rel=preload; as=script`);
+    }
+    const linkHeader = links.join(", ");
+    app.use((req, res, next) => {
+      if (!req.path.includes(".")) res.setHeader("Link", linkHeader);
+      next();
+    });
+  } catch (e) {}
+}
+
 app.use(express.json());
 app.use(cookieParser());
 
