@@ -648,8 +648,7 @@ const row = (
                               return html`${linkifyNodes(desc)}`;
                             }
                             const preview = desc.slice(0, 280);
-                            const rest = desc.slice(280);
-                            return html`<span class="embed-truncated">${linkifyNodes(preview)}<span style="opacity:0.6;">…</span></span><span class="embed-full" style="display:none;">${linkifyNodes(desc)}</span><span class="embed-show-more" style="display:inline; cursor:pointer; color: var(--feed-link-color, #1d9bf0);"> show more</span>`;
+                            return html`<span class="embed-show-more-container" data-full-text="${DOMPurify.sanitize(desc)}">${linkifyNodes(preview)}<span style="opacity:0.6;">…</span></span>`;
                           })()}
                         </p>
                         ${story.metadata.image
@@ -808,7 +807,7 @@ const row = (
                               return html`${linkifyNodes(desc)}`;
                             }
                             const preview = desc.slice(0, 280);
-                            return html`<span class="embed-truncated">${linkifyNodes(preview)}<span style="opacity:0.6;">…</span></span><span class="embed-full" style="display:none;">${linkifyNodes(desc)}</span><span class="embed-show-more" style="display:inline; cursor:pointer; color: var(--feed-link-color, #1d9bf0);"> show more</span>`;
+                            return html`<span class="embed-show-more-container" data-full-text="${DOMPurify.sanitize(desc)}">${linkifyNodes(preview)}<span style="opacity:0.6;">…</span></span>`;
                           })()}
                         </p>
                         ${farcasterImageUrl
@@ -915,7 +914,7 @@ const row = (
                               return html`${linkifyNodes(text)}`;
                             }
                             const preview = text.slice(0, 280);
-                            return html`<span class="embed-truncated">${linkifyNodes(preview)}<span style="opacity:0.6;">…</span></span><span class="embed-full" style="display:none;">${linkifyNodes(text)}</span><span class="embed-show-more" style="display:inline; cursor:pointer; color: var(--feed-link-color, #1d9bf0);"> show more</span>`;
+                            return html`<span class="embed-show-more-container" data-full-text="${DOMPurify.sanitize(text)}">${linkifyNodes(preview)}<span style="opacity:0.6;">…</span></span>`;
                           })()}
                         </p>
                         ${story.metadata.blueskyPost.images &&
