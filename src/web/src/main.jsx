@@ -1566,6 +1566,13 @@ function initEndlessScroll() {
 }
 
 async function start() {
+  // Manually trigger wagmi reconnect (deferred from mount via
+  // reconnectOnMount={false} in providers.jsx to reduce TBT).
+  // Fire-and-forget: don't await, so it doesn't block start().
+  Promise.all([import("@wagmi/core"), import("./client.mjs")])
+    .then(([{ reconnect }, { client }]) => reconnect(client))
+    .catch(() => {});
+
   initFarcasterFrame()
     .then()
     .catch((err) => console.log(err));
