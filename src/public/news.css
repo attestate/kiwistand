@@ -1124,15 +1124,6 @@ body.react-loaded .comment-input-ssr-placeholder {
   text-decoration: underline;
 }
 
-details.embed-show-more summary::-webkit-details-marker {
-  display: none;
-}
-
-details.embed-show-more summary::marker {
-  display: none;
-  content: "";
-}
-
 /* mobile device */
 @media only screen and (min-width : 300px) and (max-width : 640px) {
     .scroll-margin-base {

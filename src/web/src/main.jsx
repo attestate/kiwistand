@@ -1642,6 +1642,29 @@ async function start() {
     initKiwiRotation(".hnname span img");
   });
 
+  // Handle "show more" / "show less" toggle for truncated embed previews
+  document.addEventListener("click", function (e) {
+    const btn = e.target.closest(".embed-show-more");
+    if (!btn) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const container = btn.closest("p") || btn.parentElement;
+    if (!container) return;
+    const truncated = container.querySelector(".embed-truncated");
+    const full = container.querySelector(".embed-full");
+    if (!truncated || !full) return;
+    const isExpanded = full.style.display !== "none";
+    if (isExpanded) {
+      truncated.style.display = "";
+      full.style.display = "none";
+      btn.textContent = " show more";
+    } else {
+      truncated.style.display = "none";
+      full.style.display = "";
+      btn.textContent = " show less";
+    }
+  });
+
   makeCommentsVisited();
   window.addEventListener("hashchange", makeCommentsVisited);
   window.addEventListener("beforeunload", makeUpvoteNotificationsVisited, {

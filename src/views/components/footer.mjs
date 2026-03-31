@@ -133,7 +133,6 @@ const footer = (theme, path) => html`
     </div>
 
     ${scripts}
-    <script src="embed-show-more.js"></script>
     <script src="conditional-tracking.js"></script>
     <nav-signup-dialogue />
   </footer>

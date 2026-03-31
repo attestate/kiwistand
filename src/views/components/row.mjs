@@ -645,12 +645,11 @@ const row = (
                               return html`<a href="${DOMPurify.sanitize(desc)}" target="_blank" rel="noopener">${DOMPurify.sanitize(desc)}</a>`;
                             }
                             if (desc.length <= 280) {
-                              const nodes = linkifyNodes(desc);
-                              return html`${nodes}`;
+                              return html`${linkifyNodes(desc)}`;
                             }
                             const preview = desc.slice(0, 280);
                             const rest = desc.slice(280);
-                            return html`<details class="embed-show-more" style="display:inline;"><summary style="display:inline; list-style:none; cursor:pointer;">${linkifyNodes(preview)}<span style="opacity:0.6;">… <span style="color: var(--color); text-decoration:underline;">show more</span></span></summary>${linkifyNodes(rest)}</details>`;
+                            return html`<span class="embed-truncated">${linkifyNodes(preview)}<span style="opacity:0.6;">…</span></span><span class="embed-full" style="display:none;">${linkifyNodes(desc)}</span><span class="embed-show-more" style="display:inline; cursor:pointer; color: var(--feed-link-color, #1d9bf0);"> show more</span>`;
                           })()}
                         </p>
                         ${story.metadata.image
@@ -806,12 +805,10 @@ const row = (
                               return html`<a href="${DOMPurify.sanitize(desc)}" target="_blank" rel="noopener">${DOMPurify.sanitize(desc)}</a>`;
                             }
                             if (desc.length <= 280) {
-                              const nodes = linkifyNodes(desc);
-                              return html`${nodes}`;
+                              return html`${linkifyNodes(desc)}`;
                             }
                             const preview = desc.slice(0, 280);
-                            const rest = desc.slice(280);
-                            return html`<details class="embed-show-more" style="display:inline;"><summary style="display:inline; list-style:none; cursor:pointer;">${linkifyNodes(preview)}<span style="opacity:0.6;">… <span style="color: var(--color); text-decoration:underline;">show more</span></span></summary>${linkifyNodes(rest)}</details>`;
+                            return html`<span class="embed-truncated">${linkifyNodes(preview)}<span style="opacity:0.6;">…</span></span><span class="embed-full" style="display:none;">${linkifyNodes(desc)}</span><span class="embed-show-more" style="display:inline; cursor:pointer; color: var(--feed-link-color, #1d9bf0);"> show more</span>`;
                           })()}
                         </p>
                         ${farcasterImageUrl
@@ -918,8 +915,7 @@ const row = (
                               return html`${linkifyNodes(text)}`;
                             }
                             const preview = text.slice(0, 280);
-                            const rest = text.slice(280);
-                            return html`<details class="embed-show-more" style="display:inline;"><summary style="display:inline; list-style:none; cursor:pointer;">${linkifyNodes(preview)}<span style="opacity:0.6;">… <span style="color: var(--color); text-decoration:underline;">show more</span></span></summary>${linkifyNodes(rest)}</details>`;
+                            return html`<span class="embed-truncated">${linkifyNodes(preview)}<span style="opacity:0.6;">…</span></span><span class="embed-full" style="display:none;">${linkifyNodes(text)}</span><span class="embed-show-more" style="display:inline; cursor:pointer; color: var(--feed-link-color, #1d9bf0);"> show more</span>`;
                           })()}
                         </p>
                         ${story.metadata.blueskyPost.images &&
