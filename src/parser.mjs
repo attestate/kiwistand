@@ -1010,7 +1010,15 @@ export const cachedMetadata = async (
   // Check if we have the data in cache
   const cached = await cache.get(normalizedUrl);
   if (cached !== undefined) {
-    return cached;
+    // Raw OGS entries ({ result, canIframe, canonicalLink }) leak here when
+    // metadata() crashes after writing its mid-processing cache entry.
+    // They have no `domain` field — fall through to re-fetch so the image
+    // gets properly extracted.
+    if (cached.result !== undefined || cached.failed) {
+      // not a processed entry — fall through
+    } else {
+      return cached;
+    }
   }
 
   // Check if another worker is already fetching this URL
