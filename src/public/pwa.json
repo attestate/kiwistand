@@ -3,15 +3,9 @@
   "name": "Kiwi News",
   "icons": [
     {
-      "src": "pwa_icon.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "pwa_icon.png",
-      "sizes": "512x512",
-      "type": "image/png",
+      "src": "pwa_icon.webp",
+      "sizes": "192x192 512x512",
+      "type": "image/webp",
       "purpose": "any"
     },
     {
