@@ -1,7 +1,11 @@
 import { defineConfig } from "vite";
 import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 import react from "@vitejs/plugin-react-swc";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 let https = false;
 if (
@@ -57,6 +61,11 @@ export default defineConfig(({ mode }) => {
     },
     resolve: {
       dedupe: ["@noble/curves", "@noble/hashes", "@scure/bip32", "@scure/bip39"],
+      alias: {
+        // Farcaster SDK pulls in @solana/web3.js (~280KB) for Solana wallet
+        // support we don't use. Stub it out.
+        "@solana/web3.js": path.resolve(__dirname, "src/stubs/solana-web3.js"),
+      },
     },
     build: {
       outDir: "../public",
