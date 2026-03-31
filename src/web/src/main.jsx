@@ -85,8 +85,9 @@ async function applySafeAreaInsets() {
 
 import { isIOS, isRunningPWA, getCookie, getLocalAccount } from "./session.mjs";
 import theme from "./theme.jsx";
-import posthog from "posthog-js";
-window.posthog = posthog; // Make available globally but don't initialize
+// posthog-js is loaded dynamically during idle time to keep it out of the
+// main bundle. window.posthog is set when it resolves. All callers use
+// window.posthog?.method?.() optional chaining for safety.
 
 // Check anon mode once at startup
 const isAnonMode = localStorage.getItem('anon-mode') === 'true';
@@ -94,8 +95,9 @@ const isAnonMode = localStorage.getItem('anon-mode') === 'true';
 // Defer PostHog initialization to avoid blocking main thread
 const analyticsConsent = localStorage.getItem("kiwi-analytics-consent");
 if (!isAnonMode && analyticsConsent !== "false") {
-  // Initialize during idle time to avoid blocking render
-  const initPostHog = () => {
+  const initPostHog = async () => {
+    const { default: posthog } = await import("posthog-js");
+    window.posthog = posthog;
     posthog.init("phc_F3mfkyH5tKKSVxnMbJf0ALcPA98s92s3Jw8a7eqpBGw", {
       api_host: "https://eu.i.posthog.com",
       person_profiles: "identified_only",
@@ -105,7 +107,6 @@ if (!isAnonMode && analyticsConsent !== "false") {
   if (typeof requestIdleCallback !== "undefined") {
     requestIdleCallback(initPostHog, { timeout: 3000 });
   } else {
-    // Fallback for Safari - defer to after initial render
     setTimeout(initPostHog, 100);
   }
 }
@@ -1067,7 +1068,7 @@ async function startWatchAccount(delegations, account, isInIOSApp) {
   const identity = address && resolveIdentity(delegations, address);
   if (identity) {
     if (!isAnonMode) {
-      posthog.identify(identity);
+      window.posthog?.identify?.(identity);
     }
 
     // Set iOS wallet for push notifications
