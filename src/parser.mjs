@@ -902,7 +902,7 @@ async function extractCanonicalLink(html) {
   return DOMPurify.sanitize(node.href);
 }
 
-const checkOgImage = async (url, { maxAspectRatio = 2 } = {}) => {
+const checkOgImage = async (url) => {
   const signal = AbortSignal.timeout(5000);
   try {
     const res = await fetch(url, {
@@ -961,14 +961,11 @@ const checkOgImage = async (url, { maxAspectRatio = 2 } = {}) => {
       return false;
     }
 
-    // Allow landscape, square, and portrait images (0.3 to maxAspectRatio)
-    // Reject very narrow sliver images and very wide images
+    // Only reject extremely narrow slivers (banners < 0.1 ratio)
     const aspectRatio = width / height;
-    if (aspectRatio < 0.3 || aspectRatio > maxAspectRatio) {
+    if (aspectRatio < 0.1) {
       log(
-        `Rejecting image with aspect ratio out of range (${width}x${height}, ratio: ${aspectRatio.toFixed(
-          2,
-        )}): ${url}`,
+        `Rejecting image with extreme aspect ratio (${width}x${height}, ratio: ${aspectRatio.toFixed(2)}): ${url}`,
       );
       return false;
     }
@@ -1161,7 +1158,7 @@ export const metadata = async (
       const html = await response.text();
 
       try {
-        const parsed = await parseWithOGS(html, 1000);
+        const parsed = await parseWithOGS(html, 5000);
         result = parsed.result;
         log(`[metadata] OGS parsing successful. ogImage: ${JSON.stringify(result.ogImage)}, twitterImage: ${JSON.stringify(result.twitterImage)}`);
       } catch (err) {
@@ -1473,7 +1470,7 @@ export const metadata = async (
   }
   if (image && image.startsWith("https://")) {
     log(`[metadata] Checking image: ${image}`);
-    const exists = await checkOgImage(image, isXArticle ? { maxAspectRatio: 3 } : undefined);
+    const exists = await checkOgImage(image);
     log(`[metadata] checkOgImage result: ${exists}`);
     if (exists) {
       output.image = DOMPurify.sanitize(image);
