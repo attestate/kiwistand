@@ -15,6 +15,7 @@ import { sdk } from "@farcaster/frame-sdk";
 import { showSpinnerOverlay } from "./spinnerOverlay.js";
 import LoginModal from "./LoginModal.jsx";
 import { useWebHaptics } from "web-haptics/react";
+import { openDelegationModalForAction } from "./delegationModalManager.js";
 
 const EmailSubscriptionForm = ({
   onSuccess,
@@ -282,6 +283,7 @@ const Bell = (props) => {
   }
   const isEligible =
     address && resolveIdentity(props.delegations, address);
+  const needsDelegation = isEligible && !localAccount && account?.isConnected;
 
   const localLastUpdate = parseInt(getCookie("lastUpdate"), 10);
   const [lastUpdate, setLastUpdate] = useState(localLastUpdate);
@@ -353,7 +355,7 @@ const Bell = (props) => {
       };
 
   if (
-    (isEligible && !lastUpdate && readNotifications === 0) ||
+    (!needsDelegation && isEligible && !lastUpdate && readNotifications === 0) ||
     window.location.pathname === "/indexing" ||
     window.location.pathname === "/demonstration" ||
     window.location.pathname === "/invite" ||
@@ -375,8 +377,75 @@ const Bell = (props) => {
   // (users should use disconnect in sidebar instead)
   if (!getCookie("identity") || !isEligible) {
     // Don't show login button if wallet is already connected
-    if (account?.isConnected) {
+    if (account?.isConnected && !needsDelegation) {
       return null;
+    }
+    if (needsDelegation) {
+      const mobileDelegationStyle = props.mobile
+        ? {
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "var(--color-black)",
+            textAlign: "center",
+            fontSize: "9pt",
+            padding: "0",
+            flexGrow: 1,
+            border: "none",
+            backgroundColor: "transparent",
+            textDecoration: "none",
+            height: "100%",
+            cursor: "pointer",
+          }
+        : {
+            color: "var(--color-black)",
+            textAlign: "center",
+            fontSize: "9pt",
+            display: "inline",
+            padding: "10px 10px",
+            border: "3px inset var(--full-contrast-color)",
+            backgroundColor: "var(--accent-primary)",
+            cursor: "pointer",
+          };
+
+      const handleDelegationClick = (e) => {
+        e.preventDefault();
+        haptic.trigger("medium");
+        openDelegationModalForAction();
+      };
+
+      return (
+        <button
+          className={props.mobile ? "mobile-bell" : "bell-button"}
+          style={mobileDelegationStyle}
+          onClick={handleDelegationClick}
+        >
+          {props.mobile ? (
+            <>
+              <svg
+                style={{ width: "24px", height: "24px", color: "var(--color-black)" }}
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 256 256"
+              >
+                <rect width="256" height="256" fill="none" />
+                <path
+                  d="M93.17,122.83A71.68,71.68,0,0,1,88,95.91c0-38.58,31.08-70.64,69.64-71.87A72,72,0,0,1,232,98.36C230.73,136.92,198.67,168,160.09,168a71.68,71.68,0,0,1-26.92-5.17h0L120,176H96v24H72v24H40a8,8,0,0,1-8-8V187.31a8,8,0,0,1,2.34-5.65l58.83-58.83Z"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="16"
+                />
+                <circle cx="180" cy="76" r="12" />
+              </svg>
+              <span style={{ fontSize: "9px", marginTop: "2px" }}>Sign in</span>
+            </>
+          ) : (
+            "Sign in"
+          )}
+        </button>
+      );
     }
     const mobileConnectStyle = props.mobile
       ? {
