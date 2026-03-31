@@ -55,6 +55,9 @@ export default defineConfig(({ mode }) => {
       // Ensure fresh optimization when server restarts
       force: true,
     },
+    resolve: {
+      dedupe: ["@noble/curves", "@noble/hashes", "@scure/bip32", "@scure/bip39"],
+    },
     build: {
       outDir: "../public",
       manifest: true,
@@ -64,7 +67,6 @@ export default defineConfig(({ mode }) => {
         output: {
           // Manual chunk splitting to reduce unused JavaScript
           manualChunks: {
-            // Split vendor code into separate chunks
             "react-vendor": ["react", "react-dom"],
             "ui-vendor": ["@mui/material", "@emotion/react", "@emotion/styled"],
             "wallet-vendor": ["@rainbow-me/rainbowkit", "wagmi", "viem"],
