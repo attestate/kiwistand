@@ -37,12 +37,23 @@ try {
   cssHash = Date.now().toString();
 }
 
-// Read Vite manifest to get JS bundle URL for early modulepreload
+// Read Vite manifest to get JS bundle URLs for early modulepreload.
+// Without this, the browser discovers dependency chunks (react-vendor,
+// wallet-vendor, ui-vendor) only after downloading and parsing main.js,
+// creating a cascade waterfall that delays TTI by 1-2s on mobile.
 let mainJsUrl = null;
+let mainJsDeps = [];
 if (env.NODE_ENV === "production") {
   try {
     const manifest = JSON.parse(readFileSync(join(__dirname, "../../public/manifest.json"), "utf-8"));
-    mainJsUrl = manifest["src/main.jsx"]?.file ? `/${manifest["src/main.jsx"].file}` : null;
+    const entry = manifest["src/main.jsx"];
+    if (entry) {
+      mainJsUrl = entry.file ? `/${entry.file}` : null;
+      mainJsDeps = (entry.imports || [])
+        .map((key) => manifest[key]?.file)
+        .filter(Boolean)
+        .map((file) => `/${file}`);
+    }
   } catch (err) {
     // Ignore in non-production or if manifest missing
   }
@@ -93,6 +104,7 @@ export function custom(
     <link rel="preconnect" href="https://api.ensdata.net" />
     <link rel="preconnect" href="https://pbs.twimg.com" />
     ${mainJsUrl ? html`<link rel="modulepreload" href="${mainJsUrl}" />` : ""}
+    ${mainJsDeps.map((url) => html`<link rel="modulepreload" href="${url}" />`)}
     <link
       rel="preload"
       as="font"
