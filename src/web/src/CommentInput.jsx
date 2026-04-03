@@ -649,7 +649,8 @@ const CommentInput = (props) => {
     // Only auto-focus on desktop when there are no existing comments
     const hasNoComments = !props.comments || props.comments.length === 0;
     
-    if (!isMobile && hasNoComments && textareaRef.current && address && isEligible) {
+    const isStoryPage = window.location.pathname.startsWith("/stories/");
+    if (!isStoryPage && !isMobile && hasNoComments && textareaRef.current && address && isEligible) {
       // Small delay to ensure smooth rendering
       setTimeout(() => {
         if (textareaRef.current) {
