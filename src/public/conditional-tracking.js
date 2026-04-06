@@ -5,6 +5,11 @@
     return;
   }
 
+  // Skip all tracking in iOS native app
+  if (document.documentElement.classList.contains('kiwi-ios-app')) {
+    return;
+  }
+
   // Load Google Tag Manager
   var gtag = document.createElement('script');
   gtag.defer = true;

@@ -1,11 +1,17 @@
 import React, { useState, useEffect } from 'react';
+import { isIOSApp } from './session.mjs';
 
 export default function AnalyticsConsent() {
   const [visible, setVisible] = useState(false);
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 641);
-  
+
   useEffect(() => {
     const checkConsentAndMiniApp = async () => {
+      // Don't show analytics consent in iOS native app
+      if (isIOSApp()) {
+        return;
+      }
+
       // Don't show analytics consent in anon mode
       const isAnonMode = localStorage.getItem('anon-mode') === 'true';
       if (isAnonMode) {
