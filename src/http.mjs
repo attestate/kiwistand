@@ -2588,6 +2588,38 @@ export async function launch(trie, libp2p, isPrimary = true) {
     });
   });
 
+  app.get("/api/v1/ens-name", async (request, reply) => {
+    reply.header("Cache-Control", "no-cache");
+
+    if (!env.NAMESTONE_API_KEY) {
+      return sendError(reply, 500, "Internal Server Error", "Missing Namestone API key");
+    }
+
+    const { address } = request.query;
+    if (!address) {
+      return sendError(reply, 400, "Bad Request", "Missing required parameter: address");
+    }
+
+    try {
+      const url = `https://namestone.com/api/public_v1/get-names?domain=kiwinews.eth&address=${encodeURIComponent(address)}`;
+      const response = await fetch(url, {
+        headers: { "Authorization": env.NAMESTONE_API_KEY },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        log(`Namestone get-names error: ${JSON.stringify(data)}`);
+        return sendError(reply, response.status, "Namestone API Error", data.message || "Failed to look up ENS name");
+      }
+
+      return sendStatus(reply, 200, "OK", "ENS name lookup", data);
+    } catch (err) {
+      log(`Error calling Namestone get-names: ${err.toString()}`);
+      return sendError(reply, 500, "Internal Server Error", "Failed to look up ENS name");
+    }
+  });
+
   app.post("/api/v1/ens-name", async (request, reply) => {
     reply.header("Cache-Control", "no-cache");
 

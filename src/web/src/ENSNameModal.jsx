@@ -2,10 +2,24 @@ import React, { useState, useEffect, useImperativeHandle, forwardRef } from "rea
 import Modal from "react-modal";
 import { useAccount } from "wagmi";
 
-import { getLocalAccount } from "./session.mjs";
 
 if (document.querySelector("nav-ens-name-modal")) {
   Modal.setAppElement("nav-ens-name-modal");
+}
+
+async function checkENSName(address) {
+  try {
+    const res = await fetch(`/api/v1/ens-name?address=${encodeURIComponent(address)}`);
+    if (!res.ok) return null;
+    const json = await res.json();
+    // Namestone returns an array of name records
+    if (json.data && Array.isArray(json.data) && json.data.length > 0) {
+      return json.data[0];
+    }
+    return null;
+  } catch {
+    return null;
+  }
 }
 
 const ENSNameModal = forwardRef((props, ref) => {
@@ -21,7 +35,6 @@ const ENSNameModal = forwardRef((props, ref) => {
   const { toast } = props;
 
   const MODAL_DISMISSED_KEY = `ens-name-modal-dismissed-${account.address}`;
-  const ENS_REGISTERED_KEY = `ens-name-registered-${account.address}`;
 
   function closeModal() {
     setShowModal(false);
@@ -35,28 +48,33 @@ const ENSNameModal = forwardRef((props, ref) => {
     if (!account.address || !account.isConnected) return;
 
     const shouldShow = localStorage.getItem("show-ens-name-modal") === "true";
-    if (shouldShow) {
-      localStorage.removeItem("show-ens-name-modal");
+    if (!shouldShow) return;
 
-      const wasRegistered = localStorage.getItem(ENS_REGISTERED_KEY) === "true";
-      const wasDismissed = localStorage.getItem(MODAL_DISMISSED_KEY) === "true";
+    localStorage.removeItem("show-ens-name-modal");
 
-      if (!wasRegistered && !wasDismissed) {
+    const wasDismissed = localStorage.getItem(MODAL_DISMISSED_KEY) === "true";
+    if (wasDismissed) return;
+
+    // Check on-chain via Namestone whether user already has a name
+    checkENSName(account.address).then((existing) => {
+      if (!existing) {
         setShowModal(true);
       }
-    }
+    });
   }, [account.address, account.isConnected]);
 
   useImperativeHandle(ref, () => ({
     openAfterDelegation: () => {
       if (!account.address) return;
 
-      const wasRegistered = localStorage.getItem(ENS_REGISTERED_KEY) === "true";
       const wasDismissed = localStorage.getItem(MODAL_DISMISSED_KEY) === "true";
+      if (wasDismissed) return;
 
-      if (!wasRegistered && !wasDismissed) {
-        setShowModal(true);
-      }
+      checkENSName(account.address).then((existing) => {
+        if (!existing) {
+          setShowModal(true);
+        }
+      });
     },
   }));
 
@@ -138,7 +156,6 @@ const ENSNameModal = forwardRef((props, ref) => {
         return;
       }
 
-      localStorage.setItem(ENS_REGISTERED_KEY, "true");
       setIsSuccess(true);
       toast.success(`${name}.kiwinews.eth registered!`);
       setTimeout(() => {
