@@ -1,10 +1,28 @@
-import React, { useState, useEffect, useImperativeHandle, forwardRef } from "react";
+import React, { useState, useEffect, useRef, useImperativeHandle, forwardRef } from "react";
 import Modal from "react-modal";
-import { useAccount } from "wagmi";
-import { resolveIdentity } from "@attestate/delegator2";
+import { useAccount, useSendCalls } from "wagmi";
+import { encodeFunctionData } from "viem";
+import { Wallet } from "@ethersproject/wallet";
+import { getAddress } from "@ethersproject/address";
+import { create, resolveIdentity } from "@attestate/delegator2";
+import { optimism } from "wagmi/chains";
+import posthog from "posthog-js";
 
 import { getLocalAccount } from "./session.mjs";
+import { fetchDelegations } from "./API.mjs";
 import DelegateButton from "./DelegateButton.jsx";
+
+const DELEGATOR3 = "0x418910fef46896eb0bfe38f656e2f7df3eca7198";
+
+const delegatorAbi = [
+  {
+    inputs: [{ internalType: "bytes32[3]", name: "data", type: "bytes32[3]" }],
+    name: "etch",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+];
 
 if (document.querySelector("nav-delegation-modal")) {
   Modal.setAppElement("nav-delegation-modal");
@@ -64,6 +82,63 @@ const SimpleModal = forwardRef((props, ref) => {
   useEffect(() => {
     openModal();
   }, [account.address, account.isConnected]);
+
+  // --- Porto auto-delegation ---
+  const isPorto = account.connector?.id === "xyz.ithaca.porto";
+  const hasLocalKey = account.address ? !!getLocalAccount(account.address) : true;
+  const { sendCalls, isPending: isSendCallsPending, isSuccess: isSendCallsSuccess, data: sendCallsData } = useSendCalls();
+  const [portoKey, setPortoKey] = useState(null);
+  const [portoPayload, setPortoPayload] = useState(null);
+  const [portoFired, setPortoFired] = useState(false);
+  const [portoKeyStored, setPortoKeyStored] = useState(false);
+  const pollRef = useRef(null);
+
+  useEffect(() => {
+    if (!isPorto || !account.address || hasLocalKey) return;
+    const generate = async () => {
+      const key = Wallet.createRandom();
+      const payload = await create(key, account.address, key.address, true);
+      setPortoKey(key);
+      setPortoPayload(payload);
+    };
+    generate();
+  }, [isPorto, account.address, hasLocalKey]);
+
+  useEffect(() => {
+    if (!portoPayload || !portoKey || portoFired || isSendCallsPending || hasLocalKey) return;
+    const calldata = encodeFunctionData({
+      abi: delegatorAbi,
+      functionName: "etch",
+      args: [portoPayload],
+    });
+    sendCalls({ calls: [{ to: DELEGATOR3, data: calldata }], chainId: optimism.id });
+    setPortoFired(true);
+  }, [portoPayload, portoKey, portoFired, isSendCallsPending, hasLocalKey]);
+
+  useEffect(() => {
+    if (!isSendCallsSuccess || !sendCallsData || !portoKey || !account.address || portoKeyStored) return;
+    const keyName = `-kiwi-news-${getAddress(account.address)}-key`;
+    localStorage.setItem(keyName, portoKey.privateKey);
+    setPortoKeyStored(true);
+  }, [isSendCallsSuccess, sendCallsData, portoKey, account.address, portoKeyStored]);
+
+  useEffect(() => {
+    if (!portoKeyStored || !portoKey) return;
+    const check = async () => {
+      const d = await fetchDelegations(true);
+      if (Object.keys(d).includes(portoKey.address)) {
+        clearInterval(pollRef.current);
+        const isAnonMode = localStorage.getItem("anon-mode") === "true";
+        if (!isAnonMode) posthog.capture("delegation_performed");
+        localStorage.setItem("show-ens-name-modal", "true");
+        window.location.pathname = "/";
+      }
+    };
+    check();
+    pollRef.current = setInterval(check, 5000);
+    return () => clearInterval(pollRef.current);
+  }, [portoKeyStored, portoKey]);
+  // --- end Porto auto-delegation ---
 
   useImperativeHandle(ref, () => ({
     openModalForAction: () => {

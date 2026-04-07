@@ -597,7 +597,6 @@ async function addModals(delegations, toast) {
   if (delegationModal) {
     // Use preloaded module or import if not yet loaded
     const DelegationModal = (await preloadDelegationModal()).default;
-    const PortoAutoDelegation = (await import("./PortoAutoDelegation.jsx")).default;
     const delegationModalRef = createRef();
     setDelegationModalRef(delegationModalRef);
 
@@ -609,7 +608,6 @@ async function addModals(delegations, toast) {
             toast={toast}
             delegations={delegations}
           />
-          <PortoAutoDelegation delegations={delegations} />
         </Providers>
       </StrictMode>,
     );
