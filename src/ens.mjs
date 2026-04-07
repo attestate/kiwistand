@@ -120,6 +120,41 @@ async function fetchNeynarData(address, forceFetch) {
   }
 }
 
+async function fetchNamestoneData(address) {
+  if (!env.NAMESTONE_API_KEY) return;
+
+  try {
+    utils.getAddress(address);
+  } catch (err) {
+    return;
+  }
+
+  try {
+    const url = `https://namestone.com/api/public_v1/get-names?domain=kiwinews.eth&address=${encodeURIComponent(address)}`;
+    const signal = AbortSignal.timeout(5000);
+    const response = await fetch(url, {
+      signal,
+      headers: { Authorization: env.NAMESTONE_API_KEY },
+    });
+
+    if (!response.ok) return;
+
+    const data = await response.json();
+    if (!Array.isArray(data) || data.length === 0) return;
+
+    const entry = data[0];
+    if (!entry.name) return;
+
+    return {
+      name: `${entry.name}.kiwinews.eth`,
+      displayName: entry.name,
+      avatar: entry.text_records?.avatar || null,
+    };
+  } catch (err) {
+    return;
+  }
+}
+
 async function fetchLensData(address, forceFetch) {
   try {
     utils.getAddress(address);
@@ -319,6 +354,9 @@ export async function _resolve(normalizedAddress, forceFetch) {
     neynarProfile = await fetchNeynarData(normalizedAddress, forceFetch);
   }
 
+  // Check Namestone for a .kiwinews.eth subname
+  const namestoneProfile = await fetchNamestoneData(normalizedAddress);
+
   // Get Neynar score from API data (if available)
   let neynarScore = 0;
   if (ensProfile?.farcaster?.score) {
@@ -342,6 +380,9 @@ export async function _resolve(normalizedAddress, forceFetch) {
   if (!safeAvatar && lensProfile?.avatar) {
     safeAvatar = lensProfile.avatar;
   }
+  if (!safeAvatar && namestoneProfile?.avatar) {
+    safeAvatar = namestoneProfile.avatar;
+  }
 
   let displayName = DOMPurify.sanitize(ensProfile.ens);
   if (!displayName && ensProfile?.farcaster?.username) {
@@ -353,6 +394,9 @@ export async function _resolve(normalizedAddress, forceFetch) {
   if (!displayName && lensProfile?.username) {
     displayName = `${DOMPurify.sanitize(lensProfile.username)}`;
   }
+  if (!displayName && namestoneProfile?.name) {
+    displayName = DOMPurify.sanitize(namestoneProfile.name);
+  }
   if (!displayName) {
     displayName = ensProfile.truncatedAddress;
   }
@@ -361,6 +405,7 @@ export async function _resolve(normalizedAddress, forceFetch) {
     safeAvatar: DOMPurify.sanitize(safeAvatar),
     ...ensProfile,
     ...(neynarProfile && { neynar: neynarProfile }),
+    ...(namestoneProfile && { namestone: namestoneProfile }),
     lens: lensProfile,
     displayName,
     neynarScore,
@@ -376,7 +421,7 @@ export async function resolve(address, forceFetch = false) {
   // Check if we have complete data in cache (not just minimal profile)
   if (!forceFetch) {
     const cached = await cache.get(cacheKey);
-    if (cached && (cached.ens || cached.farcaster || cached.lens || cached.neynar)) {
+    if (cached && (cached.ens || cached.farcaster || cached.lens || cached.neynar || cached.namestone)) {
       return cached;
     }
   }
@@ -423,7 +468,7 @@ export async function resolveForBatch(address) {
   const cacheKey = `${ENS_CACHE_PREFIX}${normalizedAddress}`;
 
   const cached = await cache.get(cacheKey);
-  if (cached && (cached.ens || cached.farcaster || cached.lens || cached.neynar)) {
+  if (cached && (cached.ens || cached.farcaster || cached.lens || cached.neynar || cached.namestone)) {
     return cached;
   }
 

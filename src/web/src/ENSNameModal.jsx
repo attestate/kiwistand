@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useImperativeHandle, forwardRef } from "react";
 import Modal from "react-modal";
 import { useAccount } from "wagmi";
+import { getLocalAccount } from "./session.mjs";
 
 if (document.querySelector("nav-ens-name-modal")) {
   Modal.setAppElement("nav-ens-name-modal");
@@ -38,21 +39,26 @@ const ENSNameModal = forwardRef((props, ref) => {
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState("");
   const account = useAccount();
+  // After page reload wagmi's reconnect is async (reconnectOnMount=false),
+  // so account.address may be undefined even though the delegation key is
+  // already in localStorage. Fall back to the locally stored identity.
+  const localAccount = getLocalAccount(account.address);
+  const address = account.address || (localAccount ? localAccount.identity : null);
 
   const { toast } = props;
 
-  const MODAL_DISMISSED_KEY = `ens-name-modal-dismissed-${account.address}`;
+  const MODAL_DISMISSED_KEY = `ens-name-modal-dismissed-${address}`;
 
   function closeModal() {
     setShowModal(false);
-    if (account.address) {
+    if (address) {
       localStorage.setItem(MODAL_DISMISSED_KEY, "true");
     }
   }
 
   // Auto-open after delegation completes (detected via localStorage flag)
   useEffect(() => {
-    if (!account.address || !account.isConnected) return;
+    if (!address) return;
 
     const shouldShow = localStorage.getItem("show-ens-name-modal") === "true";
     if (!shouldShow) return;
@@ -62,21 +68,21 @@ const ENSNameModal = forwardRef((props, ref) => {
     const wasDismissed = localStorage.getItem(MODAL_DISMISSED_KEY) === "true";
     if (wasDismissed) return;
 
-    checkENSName(account.address).then((existing) => {
+    checkENSName(address).then((existing) => {
       if (!existing) {
         setShowModal(true);
       }
     });
-  }, [account.address, account.isConnected]);
+  }, [address]);
 
   useImperativeHandle(ref, () => ({
     openAfterDelegation: () => {
-      if (!account.address) return;
+      if (!address) return;
 
       const wasDismissed = localStorage.getItem(MODAL_DISMISSED_KEY) === "true";
       if (wasDismissed) return;
 
-      checkENSName(account.address).then((existing) => {
+      checkENSName(address).then((existing) => {
         if (!existing) {
           setShowModal(true);
         }
@@ -146,7 +152,7 @@ const ENSNameModal = forwardRef((props, ref) => {
       return;
     }
 
-    if (!account.address) {
+    if (!address) {
       setError("Wallet not connected. Please reconnect and try again.");
       return;
     }
@@ -161,7 +167,7 @@ const ENSNameModal = forwardRef((props, ref) => {
 
     const body = {
       name: name.toLowerCase(),
-      address: account.address,
+      address: address,
     };
     if (avatarUrl) {
       body.avatar = avatarUrl;
@@ -530,7 +536,7 @@ const ENSNameModal = forwardRef((props, ref) => {
               }}>
                 <button
                   onClick={handleSubmit}
-                  disabled={isSubmitting || !name.trim() || !account.address}
+                  disabled={isSubmitting || !name.trim() || !address}
                   onMouseEnter={() => setIsButtonHovered(true)}
                   onMouseLeave={() => {
                     setIsButtonHovered(false);
@@ -544,12 +550,12 @@ const ENSNameModal = forwardRef((props, ref) => {
                     justifyContent: "center",
                     flex: 1,
                     height: "38px",
-                    backgroundColor: isSubmitting || !name.trim() || !account.address
+                    backgroundColor: isSubmitting || !name.trim() || !address
                       ? "var(--bg-hover)"
                       : isButtonHovered
                       ? "var(--accent-primary-hover)"
                       : "var(--accent-primary)",
-                    border: isSubmitting || !name.trim() || !account.address
+                    border: isSubmitting || !name.trim() || !address
                       ? "1px solid var(--bg-hover)"
                       : isButtonHovered
                       ? "1px solid var(--accent-primary-hover)"
@@ -558,15 +564,15 @@ const ENSNameModal = forwardRef((props, ref) => {
                     borderRadius: "8px",
                     fontSize: "15px",
                     fontWeight: "normal",
-                    cursor: isSubmitting || !name.trim() || !account.address ? "default" : "pointer",
-                    opacity: isSubmitting || !name.trim() || !account.address ? 0.6 : 1,
+                    cursor: isSubmitting || !name.trim() || !address ? "default" : "pointer",
+                    opacity: isSubmitting || !name.trim() || !address ? 0.6 : 1,
                     transform: isButtonActive ? "translateY(1px)" : "translateY(0)",
                     transition: "background-color 0.15s ease, border-color 0.15s ease, transform 0.05s ease",
                     margin: "0 16px",
                     whiteSpace: "nowrap",
                   }}
                 >
-                  {isSubmitting ? "Creating..." : !account.address ? "Connecting wallet..." : "Create profile"}
+                  {isSubmitting ? "Creating..." : !address ? "Connecting wallet..." : "Create profile"}
                 </button>
               </div>
 
@@ -603,9 +609,9 @@ const ENSNameModal = forwardRef((props, ref) => {
                       fontSize: "14px",
                       color: "var(--text-primary)"
                     }}
-                    title={account.address}
+                    title={address}
                   >
-                    {account.address ? `${account.address.slice(0, 6)}…${account.address.slice(-6)}` : ""}
+                    {address ? `${address.slice(0, 6)}…${address.slice(-6)}` : ""}
                   </div>
                 </button>
               </div>
