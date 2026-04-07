@@ -2,24 +2,31 @@ import React, { useState, useEffect, useImperativeHandle, forwardRef } from "rea
 import Modal from "react-modal";
 import { useAccount } from "wagmi";
 
-
 if (document.querySelector("nav-ens-name-modal")) {
   Modal.setAppElement("nav-ens-name-modal");
 }
 
 async function checkENSName(address) {
+  let res;
   try {
-    const res = await fetch(`/api/v1/ens-name?address=${encodeURIComponent(address)}`);
-    if (!res.ok) return null;
-    const json = await res.json();
-    // Namestone returns an array of name records
-    if (json.data && Array.isArray(json.data) && json.data.length > 0) {
-      return json.data[0];
-    }
-    return null;
+    res = await fetch(`/api/v1/ens-name?address=${encodeURIComponent(address)}`);
   } catch {
     return null;
   }
+
+  if (!res.ok) return null;
+
+  let json;
+  try {
+    json = await res.json();
+  } catch {
+    return null;
+  }
+
+  if (json.data && Array.isArray(json.data) && json.data.length > 0) {
+    return json.data[0];
+  }
+  return null;
 }
 
 const ENSNameModal = forwardRef((props, ref) => {
@@ -55,7 +62,6 @@ const ENSNameModal = forwardRef((props, ref) => {
     const wasDismissed = localStorage.getItem(MODAL_DISMISSED_KEY) === "true";
     if (wasDismissed) return;
 
-    // Check on-chain via Namestone whether user already has a name
     checkENSName(account.address).then((existing) => {
       if (!existing) {
         setShowModal(true);
@@ -89,35 +95,49 @@ const ENSNameModal = forwardRef((props, ref) => {
 
     setIsUploading(true);
 
+    let tokenData;
     try {
       const tokenResponse = await fetch("/api/v1/image-upload-token");
-      if (!tokenResponse.ok) throw new Error("Failed to get upload token");
+      if (!tokenResponse.ok) {
+        toast.error("Failed to get upload token");
+        setIsUploading(false);
+        return;
+      }
+      tokenData = await tokenResponse.json();
+    } catch (err) {
+      toast.error("Failed to connect to upload service");
+      setIsUploading(false);
+      return;
+    }
 
-      const tokenData = await tokenResponse.json();
-      const { uploadURL } = tokenData.data;
+    const { uploadURL } = tokenData.data;
+    const formData = new FormData();
+    formData.append("file", file);
 
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const uploadResponse = await fetch(uploadURL, {
+    let uploadResponse;
+    try {
+      uploadResponse = await fetch(uploadURL, {
         method: "POST",
         body: formData,
       });
-
-      if (!uploadResponse.ok) throw new Error("Failed to upload image");
-
-      const imageId = tokenData.data.id;
-      const accountHash = uploadURL.split("/").slice(-2)[0];
-      const imageUrl = `https://imagedelivery.net/${accountHash}/${imageId}/public`;
-
-      setAvatarUrl(imageUrl);
-      toast.success("Avatar uploaded");
     } catch (err) {
-      console.error("Upload error:", err);
-      toast.error("Error uploading avatar: " + err.message);
-    } finally {
+      toast.error("Failed to upload image");
       setIsUploading(false);
+      return;
     }
+
+    if (!uploadResponse.ok) {
+      toast.error("Failed to upload image");
+      setIsUploading(false);
+      return;
+    }
+
+    const imageId = tokenData.data.id;
+    const accountHash = uploadURL.split("/").slice(-2)[0];
+    const imageUrl = `https://imagedelivery.net/${accountHash}/${imageId}/public`;
+
+    setAvatarUrl(imageUrl);
+    setIsUploading(false);
   };
 
   const handleSubmit = async () => {
@@ -134,42 +154,51 @@ const ENSNameModal = forwardRef((props, ref) => {
     setIsSubmitting(true);
     setError("");
 
-    try {
-      const body = {
-        name: name.toLowerCase(),
-        address: account.address,
-      };
-      if (avatarUrl) {
-        body.avatar = avatarUrl;
-      }
+    const body = {
+      name: name.toLowerCase(),
+      address: account.address,
+    };
+    if (avatarUrl) {
+      body.avatar = avatarUrl;
+    }
 
-      const response = await fetch("/api/v1/ens-name", {
+    let response;
+    try {
+      response = await fetch("/api/v1/ens-name", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.details || "Failed to register name");
-        return;
-      }
-
-      setIsSuccess(true);
-      toast.success(`${name}.kiwinews.eth registered!`);
-      setTimeout(() => {
-        closeModal();
-        setIsSuccess(false);
-        setName("");
-        setAvatarUrl("");
-      }, 2000);
     } catch (err) {
-      console.error("Registration error:", err);
-      setError("Failed to register name. Please try again.");
-    } finally {
+      setError("Failed to connect. Please try again.");
       setIsSubmitting(false);
+      return;
     }
+
+    let data;
+    try {
+      data = await response.json();
+    } catch (err) {
+      setError("Unexpected response. Please try again.");
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (!response.ok) {
+      setError(data.details || "Failed to create profile");
+      setIsSubmitting(false);
+      return;
+    }
+
+    setIsSuccess(true);
+    toast.success("Profile created!");
+    setTimeout(() => {
+      closeModal();
+      setIsSuccess(false);
+      setName("");
+      setAvatarUrl("");
+    }, 2000);
+    setIsSubmitting(false);
   };
 
   const customStyles = {
@@ -182,7 +211,7 @@ const ENSNameModal = forwardRef((props, ref) => {
       lineHeight: "1.325",
       fontFamily: "ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'",
       backgroundColor: "var(--bg-white)",
-      border: "1px solid rgba(0, 0, 0, 0.1)",
+      border: "var(--border-subtle)",
       overflow: "hidden",
       WebkitOverflowScrolling: "touch",
       borderRadius: "2px",
@@ -253,7 +282,7 @@ const ENSNameModal = forwardRef((props, ref) => {
   return (
     <Modal
       isOpen={showModal}
-      contentLabel="ENS Name Registration"
+      contentLabel="Create Profile"
       shouldCloseOnOverlayClick={false}
       style={customStyles}
       closeTimeoutMS={0}
@@ -264,7 +293,7 @@ const ENSNameModal = forwardRef((props, ref) => {
         alignItems: "center",
         justifyContent: "space-between",
         height: "33px",
-        borderBottom: "1px solid rgba(0, 0, 0, 0.1)",
+        borderBottom: "var(--border-subtle)",
         padding: "0 0 0 12px",
         userSelect: "none",
         whiteSpace: "nowrap",
@@ -361,7 +390,7 @@ const ENSNameModal = forwardRef((props, ref) => {
                 <SparkleIcon />
               </div>
               <div style={{ fontSize: "18px", fontWeight: "500", color: "var(--text-primary)" }}>
-                {isSuccess ? "Name registered!" : "Claim your ENS name"}
+                {isSuccess ? "You're all set!" : "Create your profile"}
               </div>
             </div>
           </div>
@@ -371,8 +400,8 @@ const ENSNameModal = forwardRef((props, ref) => {
         <div style={{ flexGrow: 1, padding: "0 12px 12px" }}>
           <div style={{ fontSize: "15px", color: "var(--text-primary)", lineHeight: "22px" }}>
             {isSuccess
-              ? `You're now ${name}.kiwinews.eth! Your ENS name will be visible across Kiwi News.`
-              : "Get a free kiwinews.eth subdomain so others can identify you"
+              ? "Your profile is live! Others can now find you on Kiwi News."
+              : "Pick a display name and avatar so others can recognize you"
             }
           </div>
         </div>
@@ -384,7 +413,7 @@ const ENSNameModal = forwardRef((props, ref) => {
               <div style={{
                 display: "flex",
                 alignItems: "center",
-                border: "1px solid rgba(0, 0, 0, 0.15)",
+                border: "var(--border-subtle)",
                 borderRadius: "8px",
                 overflow: "hidden",
               }}>
@@ -410,7 +439,7 @@ const ENSNameModal = forwardRef((props, ref) => {
                   padding: "10px 12px",
                   fontSize: "15px",
                   color: "var(--text-tertiary)",
-                  borderLeft: "1px solid rgba(0, 0, 0, 0.1)",
+                  borderLeft: "var(--border-subtle)",
                   whiteSpace: "nowrap",
                   backgroundColor: "var(--bg-hover-subtle)",
                 }}>
@@ -436,7 +465,7 @@ const ENSNameModal = forwardRef((props, ref) => {
                 color: "var(--text-tertiary)",
                 marginBottom: "6px",
               }}>
-                Avatar (optional)
+                Profile picture (optional)
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                 {avatarUrl && (
@@ -447,7 +476,7 @@ const ENSNameModal = forwardRef((props, ref) => {
                       width: "40px",
                       height: "40px",
                       borderRadius: "2px",
-                      border: "1px solid rgba(0, 0, 0, 0.1)",
+                      border: "var(--border-subtle)",
                       objectFit: "cover",
                     }}
                   />
@@ -459,7 +488,7 @@ const ENSNameModal = forwardRef((props, ref) => {
                   height: "34px",
                   padding: "0 14px",
                   backgroundColor: "var(--bg-hover-subtle)",
-                  border: "1px solid rgba(0, 0, 0, 0.15)",
+                  border: "var(--border-subtle)",
                   borderRadius: "8px",
                   fontSize: "14px",
                   color: "var(--text-primary)",
@@ -532,7 +561,7 @@ const ENSNameModal = forwardRef((props, ref) => {
                     whiteSpace: "nowrap",
                   }}
                 >
-                  {isSubmitting ? "Registering..." : "Register name"}
+                  {isSubmitting ? "Creating..." : "Create profile"}
                 </button>
               </div>
 
