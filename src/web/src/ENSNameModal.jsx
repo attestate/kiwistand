@@ -8,25 +8,26 @@ if (document.querySelector("nav-ens-name-modal")) {
 }
 
 async function checkENSName(address) {
-  let res;
+  // Check Namestone for an existing .kiwinews.eth subname
   try {
-    res = await fetch(`/api/v1/ens-name?address=${encodeURIComponent(address)}`);
-  } catch {
-    return null;
-  }
+    const res = await fetch(`/api/v1/ens-name?address=${encodeURIComponent(address)}`);
+    if (res.ok) {
+      const json = await res.json();
+      if (json.data && Array.isArray(json.data) && json.data.length > 0) {
+        return json.data[0];
+      }
+    }
+  } catch {}
 
-  if (!res.ok) return null;
-
-  let json;
+  // Check for a mainnet ENS name (reverse record)
   try {
-    json = await res.json();
-  } catch {
-    return null;
-  }
+    const res = await fetch(`https://enstate.rs/a/${address}`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.name) return data;
+    }
+  } catch {}
 
-  if (json.data && Array.isArray(json.data) && json.data.length > 0) {
-    return json.data[0];
-  }
   return null;
 }
 
