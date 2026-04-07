@@ -67,14 +67,11 @@ async function startLoadBalancer() {
     .route('/merchant', Route.merchant({
       address: env.PORTO_MERCHANT_ADDRESS,
       key: env.PORTO_MERCHANT_PRIVATE_KEY,
-      sponsor: async (request) => {
-        // Check if any call is to the sponsored contract
+      sponsor: (request) => {
         const calls = request.calls || [];
-        const shouldSponsor = calls.some(call =>
+        return calls.some(call =>
           call.to?.toLowerCase() === SPONSORED_CONTRACT.toLowerCase()
         );
-        log(`Porto sponsor check: ${shouldSponsor} for ${calls.length} calls`);
-        return shouldSponsor;
       },
     }));
 

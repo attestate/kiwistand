@@ -157,116 +157,102 @@ function iosNativeRenderer() {
 const projectId = "cd46d2fcf6d171fb7c017129868fa211";
 const appName = "Kiwi News";
 
-// Kiwi theme for Porto
+// Kiwi theme for Porto — must use actual color values, not CSS variables,
+// because the Porto dialog runs in an iframe on id.porto.sh
 const kiwiTheme = {
   colorScheme: "light",
+  focus: "#AFC046",
+  link: "#AFC046",
+  primaryBackground: "#AFC046",
+  primaryContent: "#000000",
+  primaryBorder: "#AFC046",
+  primaryHoveredBackground: "#9BAD3D",
+  primaryHoveredBorder: "#9BAD3D",
 
-  // Primary colors (Kiwi green)
-  focus: "var(--accent-primary)",
-  link: "var(--accent-primary)",
-  primaryBackground: "var(--accent-primary)",
-  primaryContent: "var(--text-primary)",
-  primaryBorder: "var(--accent-primary)",
-  primaryHoveredBackground: "var(--accent-primary-hover)",
-  primaryHoveredBorder: "var(--accent-primary-hover)",
+  baseBackground: "#ffffff",
+  baseAltBackground: "#e6e6df",
+  basePlaneBackground: "#f6f6ef",
+  baseBorder: "#e5e5e5",
+  baseContent: "#000000",
+  baseContentSecondary: "#666666",
+  baseContentTertiary: "#828282",
+  baseContentPositive: "#228B22",
+  baseContentNegative: "#ff6600",
+  baseContentWarning: "#b7791f",
+  baseHoveredBackground: "#f5f5f5",
 
-  // Base/background colors (Kiwi beige/off-white)
-  baseBackground: "var(--bg-white)",
-  baseAltBackground: "var(--sidebar-beige)",
-  basePlaneBackground: "var(--bg-off-white)",
-  baseBorder: "rgba(0, 0, 0, 0.1)",
-  baseContent: "var(--text-primary)",
-  baseContentSecondary: "var(--text-tertiary)",
-  baseContentTertiary: "var(--text-secondary)",
-  baseContentPositive: "var(--color-success)",
-  baseContentNegative: "var(--color-alert)",
-  baseContentWarning: "var(--color-warning-text)",
-  baseHoveredBackground: "var(--bg-hover-subtle)",
-
-  // Frame/modal colors
-  frameBackground: "var(--bg-white)",
-  frameBorder: "rgba(0, 0, 0, 0.1)",
-  frameContent: "var(--text-primary)",
+  frameBackground: "#ffffff",
+  frameBorder: "#e5e5e5",
+  frameContent: "#000000",
   frameRadius: 2,
 
-  // Secondary button colors (black)
-  secondaryBackground: "var(--text-primary)",
-  secondaryContent: "var(--bg-white)",
-  secondaryBorder: "var(--text-primary)",
-  secondaryHoveredBackground: "var(--text-tertiary)",
-  secondaryHoveredBorder: "var(--text-tertiary)",
+  secondaryBackground: "#000000",
+  secondaryContent: "#ffffff",
+  secondaryBorder: "#000000",
+  secondaryHoveredBackground: "#666666",
+  secondaryHoveredBorder: "#666666",
 
-  // Field/input colors
-  fieldBackground: "var(--bg-white)",
-  fieldContent: "var(--text-primary)",
-  fieldContentSecondary: "var(--text-tertiary)",
-  fieldContentTertiary: "var(--text-secondary)",
-  fieldBorder: "rgba(0, 0, 0, 0.1)",
-  fieldFocusedBackground: "var(--bg-white)",
-  fieldFocusedContent: "var(--text-primary)",
-  fieldErrorBorder: "var(--color-alert)",
-  fieldNegativeBorder: "var(--color-alert)",
-  fieldNegativeBackground: "var(--color-warning-bg)",
-  fieldPositiveBorder: "var(--color-success)",
-  fieldPositiveBackground: "var(--accent-primary-light)",
+  fieldBackground: "#ffffff",
+  fieldContent: "#000000",
+  fieldContentSecondary: "#666666",
+  fieldContentTertiary: "#828282",
+  fieldBorder: "#e5e5e5",
+  fieldFocusedBackground: "#ffffff",
+  fieldFocusedContent: "#000000",
+  fieldErrorBorder: "#ff6600",
+  fieldNegativeBorder: "#ff6600",
+  fieldNegativeBackground: "#fff3e0",
+  fieldPositiveBorder: "#228B22",
+  fieldPositiveBackground: "#f5f7e6",
 
-  // Badge colors
-  badgeBackground: "var(--bg-off-white)",
-  badgeContent: "var(--text-primary)",
-  badgeStrongBackground: "var(--text-primary)",
-  badgeStrongContent: "var(--bg-white)",
-  badgeInfoBackground: "var(--color-porto-bg)",
-  badgeInfoContent: "var(--color-link-blue)",
-  badgeNegativeBackground: "var(--color-warning-bg)",
-  badgeNegativeContent: "var(--color-alert)",
-  badgePositiveBackground: "var(--accent-primary-light)",
-  badgePositiveContent: "var(--color-success)",
-  badgeWarningBackground: "var(--color-warning-bg)",
-  badgeWarningContent: "var(--color-warning-text)",
+  badgeBackground: "#f6f6ef",
+  badgeContent: "#000000",
+  badgeStrongBackground: "#000000",
+  badgeStrongContent: "#ffffff",
+  badgeInfoBackground: "#e8f0fe",
+  badgeInfoContent: "#1a73e8",
+  badgeNegativeBackground: "#fff3e0",
+  badgeNegativeContent: "#ff6600",
+  badgePositiveBackground: "#f5f7e6",
+  badgePositiveContent: "#228B22",
+  badgeWarningBackground: "#fff3e0",
+  badgeWarningContent: "#b7791f",
 
-  // Radius
   radiusSmall: 2,
   radiusMedium: 2,
   radiusLarge: 2,
 
-  // Separator
-  separator: "rgba(0, 0, 0, 0.1)",
+  separator: "#e5e5e5",
 
-  // Distinct (alternative button style)
-  distinctBackground: "var(--bg-off-white)",
-  distinctContent: "var(--text-primary)",
-  distinctBorder: "rgba(0, 0, 0, 0.1)",
+  distinctBackground: "#f6f6ef",
+  distinctContent: "#000000",
+  distinctBorder: "#e5e5e5",
 
-  // Disabled state
-  disabledBackground: "var(--button-bg)",
-  disabledBorder: "var(--text-disabled)",
-  disabledContent: "var(--text-disabled)",
+  disabledBackground: "#e6e6df",
+  disabledBorder: "#999999",
+  disabledContent: "#999999",
 
-  // Negative (error) button
-  negativeBackground: "var(--color-alert)",
-  negativeContent: "var(--bg-white)",
-  negativeBorder: "var(--color-alert)",
-  negativeSecondaryBackground: "var(--color-warning-bg)",
-  negativeSecondaryContent: "var(--color-alert)",
-  negativeSecondaryBorder: "var(--color-warning-border)",
+  negativeBackground: "#ff6600",
+  negativeContent: "#ffffff",
+  negativeBorder: "#ff6600",
+  negativeSecondaryBackground: "#fff3e0",
+  negativeSecondaryContent: "#ff6600",
+  negativeSecondaryBorder: "#e6a817",
 
-  // Positive (success) button
-  positiveBackground: "var(--color-success)",
-  positiveContent: "var(--bg-white)",
-  positiveBorder: "var(--color-success)",
+  positiveBackground: "#228B22",
+  positiveContent: "#ffffff",
+  positiveBorder: "#228B22",
 
-  // Strong (emphasis) button
-  strongBackground: "var(--text-primary)",
-  strongContent: "var(--bg-white)",
-  strongBorder: "var(--text-primary)",
+  strongBackground: "#000000",
+  strongContent: "#ffffff",
+  strongBorder: "#000000",
 
-  // Warning button
-  warningBackground: "var(--color-warning-text)",
-  warningContent: "var(--bg-white)",
-  warningBorder: "var(--color-warning-text)",
-  warningStrongBackground: "var(--color-warning-border)",
-  warningStrongContent: "var(--bg-white)",
-  warningStrongBorder: "var(--color-warning-border)",
+  warningBackground: "#b7791f",
+  warningContent: "#ffffff",
+  warningBorder: "#b7791f",
+  warningStrongBackground: "#e6a817",
+  warningStrongContent: "#ffffff",
+  warningStrongBorder: "#e6a817",
 };
 
 // Create wagmi config based on environment

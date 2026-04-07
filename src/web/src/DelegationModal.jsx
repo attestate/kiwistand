@@ -35,6 +35,11 @@ const SimpleModal = forwardRef((props, ref) => {
       return;
     }
 
+    if (!account.address) {
+      closeModal();
+      return;
+    }
+
     const isEligible = resolveIdentity(delegations, account.address);
     const localAccount = getLocalAccount(account.address);
     const wasDismissed = localStorage.getItem(MODAL_DISMISSED_KEY) === "true";

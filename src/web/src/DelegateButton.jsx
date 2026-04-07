@@ -1,10 +1,12 @@
 import {
   useSimulateContract,
   useWriteContract,
+  useSendCalls,
   useAccount,
   useChainId,
   useSwitchChain,
 } from "wagmi";
+import { encodeFunctionData } from "viem";
 import posthog from "posthog-js";
 import React, { useMemo, useEffect, useState } from "react";
 import { Wallet } from "@ethersproject/wallet";
@@ -203,6 +205,8 @@ const DelegateButton = (props) => {
     if (from.address) generate();
   }, [from.address]);
 
+  const isPorto = from.connector?.id === 'xyz.ithaca.porto';
+
   const prepArgs = {
     address,
     abi,
@@ -214,12 +218,23 @@ const DelegateButton = (props) => {
   const { data: config, error, isError } = useSimulateContract(prepArgs);
 
   const {
-    data,
+    data: writeData,
     writeContract,
-    isPending: isLoading,
-    isSuccess: isWriteSuccess,
+    isPending: isWriteLoading,
+    isSuccess: isWriteContractSuccess,
   } = useWriteContract();
-  const isSuccess = isWriteSuccess && data && data.hash !== "null";
+
+  const {
+    data: sendCallsData,
+    sendCalls,
+    isPending: isSendCallsLoading,
+    isSuccess: isSendCallsSuccess,
+  } = useSendCalls();
+
+  const isLoading = isPorto ? isSendCallsLoading : isWriteLoading;
+  const data = isPorto ? sendCallsData : writeData;
+  const isWriteSuccess = isPorto ? isSendCallsSuccess : isWriteContractSuccess;
+  const isSuccess = isWriteSuccess && data;
   if (isSuccess) {
     setKey(getNewKey().privateKey);
   }
@@ -373,8 +388,24 @@ const DelegateButton = (props) => {
         Enable
       </span>
     );
-    activity = !writeContract || (!writeContract && !isError) || isLoading || isSuccess;
-    handler = () => config && writeContract(config.request);
+    if (isPorto) {
+      activity = !payload || isLoading || isSuccess;
+      handler = () => {
+        if (!payload) return;
+        const calldata = encodeFunctionData({
+          abi,
+          functionName: "etch",
+          args: [payload],
+        });
+        sendCalls({
+          calls: [{ to: address, data: calldata }],
+          chainId: optimism.id,
+        });
+      };
+    } else {
+      activity = !writeContract || (!writeContract && !isError) || isLoading || isSuccess;
+      handler = () => config && writeContract(config.request);
+    }
   } else {
     content = <span>Switch to Optimism</span>;
     activity = false;
