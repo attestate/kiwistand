@@ -146,6 +146,11 @@ const ENSNameModal = forwardRef((props, ref) => {
       return;
     }
 
+    if (!account.address) {
+      setError("Wallet not connected. Please reconnect and try again.");
+      return;
+    }
+
     if (!/^[a-zA-Z0-9_-]+$/.test(name)) {
       setError("Name can only contain letters, numbers, hyphens, and underscores");
       return;

@@ -2633,10 +2633,14 @@ export async function launch(trie, libp2p, isPrimary = true) {
       return sendError(reply, 500, "Internal Server Error", "Missing Namestone API key");
     }
 
-    const { name, address, avatar } = request.body;
+    const { name, address, avatar } = request.body || {};
 
-    if (!name || !address) {
-      return sendError(reply, 400, "Bad Request", "Missing required fields: name, address");
+    if (!name) {
+      return sendError(reply, 400, "Bad Request", "Missing required field: name");
+    }
+
+    if (!address) {
+      return sendError(reply, 400, "Bad Request", "Missing required field: address");
     }
 
     if (!/^[a-zA-Z0-9_-]+$/.test(name)) {
