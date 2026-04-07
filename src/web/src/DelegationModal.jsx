@@ -25,6 +25,11 @@ const SimpleModal = forwardRef((props, ref) => {
       return;
     }
 
+    // Porto users get auto-delegation, skip the modal entirely
+    if (account.connector?.id === "xyz.ithaca.porto") {
+      return;
+    }
+
     // Allow modal on main pages and any story page (including dynamic routes like /stories/some-title)
     const allowedPaths = ["/", "/new", "/submit", "/gateway", "/best"];
     const isStoryPage = window.location.pathname.startsWith("/stories");
