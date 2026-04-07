@@ -2588,6 +2588,101 @@ export async function launch(trie, libp2p, isPrimary = true) {
     });
   });
 
+  app.get("/api/v1/ens-name", async (request, reply) => {
+    reply.header("Cache-Control", "no-cache");
+
+    if (!env.NAMESTONE_API_KEY) {
+      return sendError(reply, 500, "Internal Server Error", "Missing Namestone API key");
+    }
+
+    const { address } = request.query;
+    if (!address) {
+      return sendError(reply, 400, "Bad Request", "Missing required parameter: address");
+    }
+
+    let response;
+    try {
+      const url = `https://namestone.com/api/public_v1/get-names?domain=kiwinews.eth&address=${encodeURIComponent(address)}`;
+      response = await fetch(url, {
+        headers: { "Authorization": env.NAMESTONE_API_KEY },
+      });
+    } catch (err) {
+      log(`Error connecting to Namestone get-names: ${err.toString()}`);
+      return sendError(reply, 500, "Internal Server Error", "Failed to connect to Namestone");
+    }
+
+    if (!response.ok) {
+      log(`Namestone get-names error: status ${response.status}`);
+      return sendError(reply, response.status, "Namestone API Error", `Namestone responded with status ${response.status}`);
+    }
+
+    let data;
+    try {
+      data = await response.json();
+    } catch (err) {
+      return sendError(reply, 500, "Internal Server Error", "Failed to parse Namestone response");
+    }
+
+    return sendStatus(reply, 200, "OK", "ENS name lookup", data);
+  });
+
+  app.post("/api/v1/ens-name", async (request, reply) => {
+    reply.header("Cache-Control", "no-cache");
+
+    if (!env.NAMESTONE_API_KEY) {
+      return sendError(reply, 500, "Internal Server Error", "Missing Namestone API key");
+    }
+
+    const { name, address, avatar } = request.body;
+
+    if (!name || !address) {
+      return sendError(reply, 400, "Bad Request", "Missing required fields: name, address");
+    }
+
+    if (!/^[a-zA-Z0-9_-]+$/.test(name)) {
+      return sendError(reply, 400, "Bad Request", "Name can only contain letters, numbers, hyphens, and underscores");
+    }
+
+    const body = {
+      domain: "kiwinews.eth",
+      name,
+      address,
+    };
+
+    if (avatar) {
+      body.text_records = { avatar };
+    }
+
+    let response;
+    try {
+      response = await fetch("https://namestone.com/api/public_v1/set-name", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": env.NAMESTONE_API_KEY,
+        },
+        body: JSON.stringify(body),
+      });
+    } catch (err) {
+      log(`Error connecting to Namestone set-name: ${err.toString()}`);
+      return sendError(reply, 500, "Internal Server Error", "Failed to connect to Namestone");
+    }
+
+    if (!response.ok) {
+      log(`Namestone set-name error: status ${response.status}`);
+      return sendError(reply, response.status, "Namestone API Error", `Namestone responded with status ${response.status}`);
+    }
+
+    let data;
+    try {
+      data = await response.json();
+    } catch (err) {
+      return sendError(reply, 500, "Internal Server Error", "Failed to parse Namestone response");
+    }
+
+    return sendStatus(reply, 200, "OK", "ENS name set successfully", data);
+  });
+
   app.get("/api/v1/favicon", async (request, reply) => {
     const { domain } = request.query;
 
