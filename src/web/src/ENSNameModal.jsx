@@ -530,7 +530,7 @@ const ENSNameModal = forwardRef((props, ref) => {
               }}>
                 <button
                   onClick={handleSubmit}
-                  disabled={isSubmitting || !name.trim()}
+                  disabled={isSubmitting || !name.trim() || !account.address}
                   onMouseEnter={() => setIsButtonHovered(true)}
                   onMouseLeave={() => {
                     setIsButtonHovered(false);
@@ -544,12 +544,12 @@ const ENSNameModal = forwardRef((props, ref) => {
                     justifyContent: "center",
                     flex: 1,
                     height: "38px",
-                    backgroundColor: isSubmitting || !name.trim()
+                    backgroundColor: isSubmitting || !name.trim() || !account.address
                       ? "var(--bg-hover)"
                       : isButtonHovered
                       ? "var(--accent-primary-hover)"
                       : "var(--accent-primary)",
-                    border: isSubmitting || !name.trim()
+                    border: isSubmitting || !name.trim() || !account.address
                       ? "1px solid var(--bg-hover)"
                       : isButtonHovered
                       ? "1px solid var(--accent-primary-hover)"
@@ -558,15 +558,15 @@ const ENSNameModal = forwardRef((props, ref) => {
                     borderRadius: "8px",
                     fontSize: "15px",
                     fontWeight: "normal",
-                    cursor: isSubmitting || !name.trim() ? "default" : "pointer",
-                    opacity: isSubmitting || !name.trim() ? 0.6 : 1,
+                    cursor: isSubmitting || !name.trim() || !account.address ? "default" : "pointer",
+                    opacity: isSubmitting || !name.trim() || !account.address ? 0.6 : 1,
                     transform: isButtonActive ? "translateY(1px)" : "translateY(0)",
                     transition: "background-color 0.15s ease, border-color 0.15s ease, transform 0.05s ease",
                     margin: "0 16px",
                     whiteSpace: "nowrap",
                   }}
                 >
-                  {isSubmitting ? "Creating..." : "Create profile"}
+                  {isSubmitting ? "Creating..." : !account.address ? "Connecting wallet..." : "Create profile"}
                 </button>
               </div>
 
