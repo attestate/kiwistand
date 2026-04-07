@@ -263,6 +263,7 @@ const DelegateButton = (props) => {
               if (!isAnonMode) {
                 posthog.capture("delegation_performed");
               }
+              localStorage.setItem("show-ens-name-modal", "true");
               props.callback();
               // NOTE: We have to reload the page here because the Vote
               // component isn't reloading based on the updates in the

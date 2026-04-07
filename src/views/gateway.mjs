@@ -18,6 +18,7 @@ export default async function (referral) {
       </head>
       <body ontouchstart="">
         <nav-delegation-modal />
+        <nav-ens-name-modal />
         <div class="container">
           <div
             id="hnmain"
