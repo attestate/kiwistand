@@ -555,6 +555,11 @@ export async function data(
     }),
   );
 
+  // Re-sort: Promise.allSettled resolves in non-deterministic order when
+  // callbacks contain awaits (e.g. ENS resolution), so the push order above
+  // does not match the original sort from line 519.
+  notifications.sort((a, b) => b.timestamp - a.timestamp);
+
   let lastUpdate = "0";
   if (notifications.length > 0) {
     lastUpdate = notifications[0].timestamp;
