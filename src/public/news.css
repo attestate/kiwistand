@@ -2125,7 +2125,7 @@ a.meta-link:hover, span.meta-link:hover {
   box-shadow: 0 0 0 2px var(--accent-primary);
   animation: highlight 0.3s ease-out;
   position: relative;
-  z-index: 100;
+  z-index: 1;
 }
 
 /* Don't apply gray filter to last-clicked content */
