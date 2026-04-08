@@ -282,7 +282,6 @@ if (isAnonMode) {
         renderer: iosNativeRenderer(),
       }),
     }),
-    walletConnectWallet,
     metaMaskWallet,
     rainbowWallet,
     trustWallet,
