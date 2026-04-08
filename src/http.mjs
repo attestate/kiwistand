@@ -55,7 +55,6 @@ import newest, * as newAPI from "./views/new.mjs";
 import best, * as bestAPI from "./views/best.mjs";
 import privacy from "./views/privacy.mjs";
 import guidelines from "./views/guidelines.mjs";
-import gateway from "./views/gateway.mjs";
 import upvotes from "./views/upvotes.mjs";
 import stats from "./views/stats.mjs";
 import users from "./views/users.mjs";
@@ -1745,22 +1744,6 @@ export async function launch(trie, libp2p, isPrimary = true) {
     });
   });
 
-  app.get("/gateway", async (request, reply) => {
-    let referral;
-    try {
-      referral = utils.getAddress(request.query.referral);
-    } catch (err) {
-      //noop
-    }
-
-    const content = await gateway(referral);
-    reply.header(
-      "Cache-Control",
-      "public, s-maxage=86400, max-age=0, stale-while-revalidate=259200",
-    );
-    return reply.status(200).type("text/html").send(content.valueOf());
-  });
-
   app.get("/", async (request, reply) => {
     let identity, hash;
     if (request.query.custom === "true") {
@@ -2121,7 +2104,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
     // Cookie version - not cacheable
     const address = request.cookies.identity;
     if (!address) {
-      return reply.redirect(301, `/gateway`);
+      return reply.redirect(301, `/`);
     }
 
     let data;
@@ -2186,7 +2169,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
   app.get("/profile", async (request, reply) => {
     if (!utils.isAddress(request.cookies.identity)) {
       // NOTE: We redirect to community in case the user isn't logged in
-      return reply.redirect(301, `/gateway`);
+      return reply.redirect(301, `/`);
     }
     return reply.redirect(301, `/upvotes?address=${request.cookies.identity}`);
   });
@@ -2215,12 +2198,6 @@ export async function launch(trie, libp2p, isPrimary = true) {
   });
 
   app.get("/submit", async (request, reply) => {
-    // Check if the 'identity' cookie exists and is a valid address
-    // if (!utils.isAddress(request.cookies.identity)) {
-    //   // If not, redirect to /gateway
-    //   return reply.redirect(301, `/gateway`);
-    // }
-
     let { url, title, castHash } = request.query;
     
     // Handle Farcaster share extension: convert castHash to Farcaster URL

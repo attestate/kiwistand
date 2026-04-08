@@ -26,7 +26,7 @@ const SimpleModal = forwardRef((props, ref) => {
     }
 
     // Allow modal on main pages and any story page (including dynamic routes like /stories/some-title)
-    const allowedPaths = ["/", "/new", "/submit", "/gateway", "/best"];
+    const allowedPaths = ["/", "/new", "/submit", "/best"];
     const isStoryPage = window.location.pathname.startsWith("/stories");
     const isAllowedPath = allowedPaths.includes(window.location.pathname) || isStoryPage;
 
