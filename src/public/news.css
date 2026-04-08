@@ -1246,15 +1246,6 @@ body.react-loaded .comment-input-ssr-placeholder {
     #hnmain {
       border: none;
     }
-    .gateway-container {
-      padding: 0 5vw !important;
-    }
-    .gateway-container img, .gateway-banner {
-      max-width: 80% !important;
-    }
-    .gateway-banner {
-      margin-top: -20rem;
-    }
     footer {
       padding-bottom: 100px;
     }
@@ -1449,15 +1440,6 @@ body.react-loaded .comment-input-ssr-placeholder {
 }
 /* Media query for medium screens */
  @media (min-width: 641px) {
-    .gateway-container {
-      padding: 0 5vw !important;
-    }
-    .gateway-container img, .gateway-banner {
-      max-width: 55% !important;
-    }
-    .gateway-banner {
-      margin-top: 5rem;
-    }
     footer {
       padding-bottom: 100px;
     }
@@ -1608,13 +1590,6 @@ body.react-loaded .comment-input-ssr-placeholder {
     }
     .sidebar {
       display: none;
-    }
-    .gateway-banner {
-      max-width: 400px !important;
-      margin-top: 5rem;
-    }
-    .gateway-container img {
-      max-width: 45% !important;
     }
     .feed-button:hover {
       background-color: rgba(0, 0, 0, 0.15) !important;

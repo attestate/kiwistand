@@ -175,7 +175,7 @@ export const EmojiReaction = ({ comment, delegations, toast }) => {
       const identity = resolveIdentity(delegations, address);
 
       if (!identity) {
-        window.location.pathname = "/gateway";
+        window.location.pathname = "/";
         return;
       }
 

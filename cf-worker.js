@@ -12,10 +12,10 @@ addEventListener("fetch", (event) => {
     ?.includes("identity");
 
   if (targetPaths.includes(path) && !hasIdentityCookie) {
-    const gatewayUrl = new URL(url.origin);
-    gatewayUrl.pathname = "/";
-    gatewayUrl.search = url.search;
-    event.respondWith(Response.redirect(gatewayUrl.toString(), 302));
+    const redirectUrl = new URL(url.origin);
+    redirectUrl.pathname = "/";
+    redirectUrl.search = url.search;
+    event.respondWith(Response.redirect(redirectUrl.toString(), 302));
     return;
   }
 
