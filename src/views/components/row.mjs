@@ -1391,7 +1391,7 @@ const row = (
                             href="/stories/${getSlug(
                               story.title,
                             )}?index=0x${story.index}"
-                            onclick="event.preventDefault(); window.dispatchEvent(new CustomEvent('open-comments-0x${story.index}', { detail: { source: 'chat-bubble' } })); window.dispatchEvent(new HashChangeEvent('hashchange')); const commentPreview = document.querySelector('.comment-preview-0x${story.index}'); if (commentPreview) { commentPreview.style.opacity = 1; } const borderElem = document.querySelector('.without-comment-preview-0x${story.index}'); if (borderElem) { borderElem.classList.toggle('no-border'); }"
+                            onclick="event.preventDefault(); this.classList.toggle('comment-button-active'); window.dispatchEvent(new CustomEvent('open-comments-0x${story.index}', { detail: { source: 'chat-bubble' } })); window.dispatchEvent(new HashChangeEvent('hashchange')); const commentPreview = document.querySelector('.comment-preview-0x${story.index}'); if (commentPreview) { commentPreview.style.opacity = 1; } const borderElem = document.querySelector('.without-comment-preview-0x${story.index}'); if (borderElem) { borderElem.classList.toggle('no-border'); }"
                             style="min-width: 60px; padding: 8px 12px; border: none; background: transparent; border-radius: 999px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.15s ease; text-decoration: none; color: inherit;"
                             onmouseover="this.style.backgroundColor='rgba(29, 155, 240, 0.1)'"
                             onmouseout="this.style.backgroundColor='transparent'"
@@ -1512,7 +1512,7 @@ const row = (
                     "/"
                       ? `/#0x${story.lastComment.index}`
                       : `/new?cached=true#0x${story.lastComment.index}`}');})(),document.querySelector('.comment-preview-0x${story.index}').style.opacity = 0.5,window.addToQueue(new
- CustomEvent('open-comments-0x${story.index}',{detail:{source:'comment-preview'}}));window.dispatchEvent(new HashChangeEvent('hashchange'));"
+ CustomEvent('open-comments-0x${story.index}',{detail:{source:'comment-preview'}}));window.dispatchEvent(new HashChangeEvent('hashchange'));var cb=document.getElementById('chat-bubble-${story.index}');if(cb)cb.classList.toggle('comment-button-active');"
                     style="margin: 0; padding: 12px 16px; display: flex; width: 100%; background-color: var(--background-color1);"
                   >
                     <a
