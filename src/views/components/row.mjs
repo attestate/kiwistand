@@ -1020,7 +1020,8 @@ const row = (
                         : DOMPurify.sanitize(story.metadata.image)}"
                     />
                     <span
-                      style="gap: 5px; position: absolute; bottom: 8px; left: 16px; background: var(--bg-white); padding: 2px 4px; border-radius: 2px; font-size: 10px !important; line-height: 1; display: inline-flex; align-items: center; font-weight: normal; transform: none; z-index: 5; height: 18px;"
+                      class="domain-overlay"
+                      style="gap: 5px; position: absolute; bottom: 8px; left: 20px; background: var(--bg-white); padding: 2px 4px; border-radius: 2px; font-size: 10px !important; line-height: 1; display: inline-flex; align-items: center; font-weight: normal; transform: none; z-index: 5; height: 18px;"
                     >
                       ${![
                         "farcaster.xyz",
@@ -1184,8 +1185,8 @@ const row = (
                   </span>
                   <div
                     class="story-subtitle subtitle-flex"
-                  style="font-size: 9pt; margin-top: ${ 
-                    canRenderTweetPreview || canRenderFarcasterPreview ? "-4px" : "3px"
+                  style="font-size: 9pt; margin-top: ${
+                    canRenderTweetPreview || canRenderFarcasterPreview ? "-4px" : "20px"
                   }; display: flex; flex-wrap: wrap; align-items: center; column-gap: 6px; row-gap: 2px;"
                   >
                   <span class="meta-item" style="opacity: 0.8; gap: 4px; white-space: nowrap; flex-wrap: nowrap; min-width: 0;">
@@ -1357,11 +1358,11 @@ const row = (
                       data-href="${DOMPurify.sanitize(story.href)}"
                       data-upvoters="${JSON.stringify(story.upvoters)}"
                       class="like-button-container"
-                      style="flex: 1; display: flex; justify-content: center;"
+                      style="flex: 1; display: flex; justify-content: flex-start;"
                     >
                       <button
                         class="interaction-button like-button"
-                        style="min-width: 60px; padding: 8px 12px; border: none; background: transparent; border-radius: 999px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.15s ease;"
+                        style="min-width: 60px; padding: 8px 12px 8px 0; border: none; background: transparent; border-radius: 999px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.15s ease;"
                         onmouseover="this.style.backgroundColor='rgba(249, 24, 128, 0.1)'"
                         onmouseout="this.style.backgroundColor='transparent'"
                       >

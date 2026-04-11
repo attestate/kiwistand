@@ -838,6 +838,7 @@ body {
   }
   /* Strong gutters for content rows */
   .content-row .mobile-information-row { padding-left: 16px !important; padding-right: 16px !important; box-sizing: border-box; }
+  .content-row .domain-overlay { left: 16px !important; }
   .content-row .story-link-container-wrapper { padding-right: 16px !important; }
   .content-row .story-link { padding-right: 16px !important; }
   .content-row .domain-text { padding-right: 12px !important; }
@@ -1176,7 +1177,7 @@ body.react-loaded .comment-input-ssr-placeholder {
     }
   .story-subtitle {
   opacity: 0.9;
-  margin-top: 5px !important;
+  margin-top: 16px !important;
   font-size: 12px !important;
   padding-right: 0;
   padding-top: 2px;
