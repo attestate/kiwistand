@@ -1376,22 +1376,18 @@ export async function launch(trie, libp2p, isPrimary = true) {
 
   // Resolve ENS data for a batch of stories
   async function resolveStoriesENS(stories) {
-    const resolved = [];
-    for (const story of stories) {
+    const results = await Promise.allSettled(stories.map(async (story) => {
       const ensData = await ens.resolve(story.identity);
-      // Don't skip - show truncated address if no ENS/Lens/Farcaster
-
-      // Skip avatar resolution for endless scroll - too slow
-      let avatars = [];
-
-      resolved.push({
+      return {
         ...story,
         displayName: ensData.displayName,
         submitter: ensData,
-        avatars,
-      });
-    }
-    return resolved;
+        avatars: [], // Skip avatar resolution for endless scroll - too slow
+      };
+    }));
+    return results
+      .filter(r => r.status === "fulfilled")
+      .map(r => r.value);
   }
 
   async function refreshEndlessCache() {
@@ -1486,7 +1482,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
 
     // Add rich metadata (OG images, Farcaster/Twitter previews) to each story
     const policy = await moderation.getLists();
-    for (const story of stories) {
+    await Promise.allSettled(stories.map(async (story) => {
       story.metadata = await cachedMetadata(story.href);
       if (story.metadata?.image) {
         const href = (story.href.startsWith('data:') || story.href.startsWith('kiwi:'))
@@ -1496,7 +1492,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
           delete story.metadata.image;
         }
       }
-    }
+    }));
 
     // Render stories as HTML rows
     const rowsHtml = stories.map((story, i) =>
