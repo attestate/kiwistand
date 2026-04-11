@@ -428,6 +428,12 @@ button, a, .interaction-element {
   display: flex;
   align-self: stretch;
 }
+.comment-button.comment-button-active span {
+  color: rgb(29, 155, 240) !important;
+}
+.comment-button.comment-button-active svg {
+  color: rgb(29, 155, 240) !important;
+}
 html {
   background-color: var(--bg-page);
   min-height: 100%;
