@@ -68,7 +68,7 @@ import notifications from "./views/notifications.mjs";
 import debug from "./views/debug.mjs";
 import commentDebug from "./views/comment-debug.mjs";
 import { parse, metadata, cachedMetadata } from "./parser.mjs";
-import { toAddress, resolve, clearProfileCache } from "./ens.mjs";
+import { toAddress, resolve, ENS_CACHE_PREFIX } from "./ens.mjs";
 import * as ens from "./ens.mjs";
 import * as karma from "./karma.mjs";
 import * as subscriptions from "./subscriptions.mjs";
@@ -85,13 +85,14 @@ import {
 } from "./cache.mjs";
 import normalizeUrl from "normalize-url";
 import * as interactions from "./interactions.mjs";
+import appCache from "./cache.mjs"; // For LRU cache used by ENS profiles
 import frameSubscribe from "./views/frame-subscribe.mjs";
 import { sendNotification } from "./neynar.mjs";
 import { timingSafeEqual } from "crypto";
 import { verify, ecrecover } from "./id.mjs";
 import { EIP712_MESSAGE } from "./constants.mjs";
 import { resolveIdentity } from "@attestate/delegator2";
-import { invalidateActivityCaches, purgeCache } from "./cloudflarePurge.mjs";
+import { invalidateActivityCaches } from "./cloudflarePurge.mjs";
 import { getCastByHashAndConstructUrl } from "./parser.mjs";
 import { sendToChannel } from "./telegram-bot.mjs";
 import { 
@@ -879,7 +880,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
 
     let address;
     try {
-      address = utils.getAddress(rawAddress);
+      address = utils.getAddress(rawAddress); // Validates and normalizes
     } catch (err) {
       return sendError(
         res,
@@ -889,21 +890,95 @@ export async function launch(trie, libp2p, isPrimary = true) {
       );
     }
 
+    let lruProfileHandled = false; // Tracks if the LRU operation was attempted without throwing an error
+    let lruProfileExistedAndCleared = false; // Tracks if the item was actually found and deleted
+
+    let fsCacheEntriesProcessed = 0;
+    let fsCacheErrors = [];
+
+    // 1. Clear processed ENS profile from LRU Cache
+    const ensProfileLruKey = `${ENS_CACHE_PREFIX}${address.toLowerCase()}`;
     try {
-      await clearProfileCache(address);
+      if (appCache.has(ensProfileLruKey)) {
+        appCache.delete(ensProfileLruKey);
+        log(`Cleared ENS profile from LRU cache for key: ${ensProfileLruKey}`);
+        lruProfileExistedAndCleared = true;
+      } else {
+        log(
+          `ENS profile key not found in LRU cache (no action needed): ${ensProfileLruKey}`,
+        );
+      }
+      lruProfileHandled = true;
+    } catch (err) {
+      log(
+        `Error during ENS profile LRU cache operation for key ${ensProfileLruKey}: ${err.toString()}`,
+      );
+      // lruProfileHandled remains false
+    }
+
+    // 2. Clear related raw data from FileSystemCache
+    const fsHttpCache = new FileSystemCache({
+      cacheDirectory: path.resolve(env.CACHE_DIR),
+      ttl: 86400000 * 7, // 7 days
+    });
+
+    const potentialEnsDataUrls = [];
+    potentialEnsDataUrls.push(`https://ensdata.net/${address}?farcaster=true`);
+    if (env.ENSDATA_KEY) {
+      potentialEnsDataUrls.push(
+        `https://ensdata.net/${env.ENSDATA_KEY}/${address}?farcaster=true`,
+      );
+    }
+
+    for (const urlToClear of potentialEnsDataUrls) {
+      try {
+        const fsCacheKey = getCacheKey(urlToClear);
+        await fsHttpCache.remove(fsCacheKey);
+        log(
+          `Processed removal from FileSystemCache for URL: ${urlToClear} (key: ${fsCacheKey})`,
+        );
+        fsCacheEntriesProcessed++;
+      } catch (err) {
+        const errorMsg = `Failed to process FileSystemCache removal for URL ${urlToClear}: ${err.toString()}`;
+        log(errorMsg);
+        fsCacheErrors.push(errorMsg);
+      }
+    }
+
+    let responseStatus = 200;
+    let responseMessage = "Profile cache clearing process completed.";
+    let responseDetails = `LRU Profile Cache for ${address}: `;
+
+    if (lruProfileHandled) {
+      responseDetails += lruProfileExistedAndCleared
+        ? "Cleared. "
+        : "Was not present. ";
+    } else {
+      responseDetails += "Error during operation. ";
+      responseStatus = 500;
+      responseMessage =
+        "Profile cache clearing encountered critical issues with LRU cache.";
+    }
+
+    responseDetails += `FileSystemCache for ${address}-related URLs: ${fsCacheEntriesProcessed} entries processed.`;
+    if (fsCacheErrors.length > 0) {
+      responseDetails += ` FS Cache Issues: ${fsCacheErrors.join("; ")}`;
+      // If LRU was fine but FS had errors, status remains 200 but with error details.
+    }
+
+    if (responseStatus === 200) {
       return sendStatus(
         res,
-        200,
-        "Profile cache clearing process completed.",
-        `Caches cleared for ${address}.`,
+        responseStatus,
+        responseMessage,
+        responseDetails.trim(),
       );
-    } catch (err) {
-      log(`Error clearing profile cache for ${address}: ${err}`);
+    } else {
       return sendError(
         res,
-        500,
-        "Internal Server Error",
-        `Failed to clear profile cache for ${address}.`,
+        responseStatus,
+        responseMessage,
+        responseDetails.trim(),
       );
     }
   });
@@ -2584,22 +2659,6 @@ export async function launch(trie, libp2p, isPrimary = true) {
       data = await response.json();
     } catch (err) {
       return sendError(reply, 500, "Internal Server Error", "Failed to parse Namestone response");
-    }
-
-    // Clear all cached profile data so the new username is visible immediately
-    try {
-      const normalizedAddress = utils.getAddress(address);
-
-      await clearProfileCache(normalizedAddress);
-
-      purgeCache(`https://news.kiwistand.com/upvotes?address=${normalizedAddress}`).catch(
-        (err) => log(`Failed to purge profile page cache: ${err}`),
-      );
-      purgeCache(`https://news.kiwistand.com/api/v1/profile/${normalizedAddress}`).catch(
-        (err) => log(`Failed to purge profile API cache: ${err}`),
-      );
-    } catch (err) {
-      log(`Error clearing caches after ENS name registration: ${err}`);
     }
 
     return sendStatus(reply, 200, "OK", "ENS name set successfully", data);

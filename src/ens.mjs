@@ -2,7 +2,7 @@ import { env } from "process";
 import path from "path";
 
 import DOMPurify from "isomorphic-dompurify";
-import { fetchBuilder, FileSystemCache, getCacheKey } from "node-fetch-cache";
+import { fetchBuilder, FileSystemCache } from "node-fetch-cache";
 import { providers, utils } from "ethers";
 
 import { fetchCache } from "./utils.mjs";
@@ -343,35 +343,6 @@ export async function fetchENSData(address, forceFetch) {
 
 // Create a prefix for ENS cache entries to ensure uniqueness
 export const ENS_CACHE_PREFIX = "ens-profile-";
-
-export async function clearProfileCache(address) {
-  const normalizedAddress = utils.getAddress(address);
-  const lowerAddress = normalizedAddress.toLowerCase();
-
-  // 1. Clear in-memory LRU cache
-  const cacheKey = `${ENS_CACHE_PREFIX}${lowerAddress}`;
-  if (cache.has(cacheKey)) {
-    cache.delete(cacheKey);
-    log(`Cleared ENS profile LRU cache for: ${lowerAddress}`);
-  }
-
-  // 2. Clear FileSystem cache for API responses
-  const urlsToClear = [
-    `https://api.ensdata.net/${normalizedAddress}?farcaster=true`,
-  ];
-  if (env.ENSDATA_KEY) {
-    urlsToClear.push(
-      `https://api.ensdata.net/${normalizedAddress}?farcaster=true&special=${env.ENSDATA_KEY}`,
-    );
-  }
-  for (const url of urlsToClear) {
-    try {
-      await fsCache.remove(getCacheKey(url));
-    } catch (err) {
-      log(`Failed to clear FS cache for ${url}: ${err}`);
-    }
-  }
-}
 
 export async function _resolve(normalizedAddress, forceFetch) {
   const ensProfile = await fetchENSData(normalizedAddress, forceFetch);
