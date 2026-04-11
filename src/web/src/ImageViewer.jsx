@@ -20,6 +20,14 @@ const ImageViewer = () => {
     };
   }, []);
 
+  useEffect(() => {
+    if (!open) return;
+    document.body.style.touchAction = "none";
+    return () => {
+      document.body.style.touchAction = "";
+    };
+  }, [open]);
+
   return (
     <Dialog
       open={open}
@@ -33,11 +41,16 @@ const ImageViewer = () => {
           maxWidth: "95vw",
           maxHeight: "95vh",
           overflow: "visible",
+          touchAction: "none",
         },
       }}
       slotProps={{
         backdrop: {
-          style: { backgroundColor: "rgba(0,0,0,0.9)", cursor: "zoom-out" },
+          style: {
+            backgroundColor: "rgba(0,0,0,0.9)",
+            cursor: "zoom-out",
+            touchAction: "none",
+          },
         },
       }}
     >
@@ -49,6 +62,7 @@ const ImageViewer = () => {
             maxWidth: "95vw",
             maxHeight: "95vh",
             objectFit: "contain",
+            touchAction: "none",
           }}
           alt="Full size"
         />
