@@ -1448,7 +1448,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
       page = 1; // Default to page 1 for endless scroll (page 0 is already loaded)
     }
 
-    const totalStories = parseInt(env.TOTAL_STORIES, 10);
+    const endlessPageSize = 10;
 
     let allStories;
     try {
@@ -1462,9 +1462,9 @@ export async function launch(trie, libp2p, isPrimary = true) {
     const twoDaysAgo = Math.floor(Date.now() / 1000) - (2 * 24 * 60 * 60);
     const olderStories = allStories.filter(s => s.timestamp < twoDaysAgo);
 
-    // Manually paginate the results (page 1 = stories 0-39, page 2 = 40-79, etc.)
-    const start = totalStories * (page - 1);
-    const end = totalStories * page;
+    // Manually paginate the results (page 1 = stories 0-9, page 2 = 10-19, etc.)
+    const start = endlessPageSize * (page - 1);
+    const end = endlessPageSize * page;
     const rawStories = olderStories.slice(start, end);
 
     if (rawStories.length === 0) {
