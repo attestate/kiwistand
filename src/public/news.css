@@ -396,7 +396,6 @@
 .submit-button:active,
 .bottom-nav > a:active,
 .sidebar-toggle:active,
-.sidebar a:active,
 .bell-button:active {
   touch-action: manipulation;
   transform: scale(0.95);
@@ -416,9 +415,6 @@ button, a, .interaction-element {
 .feed-button-link,
 .vote-button-container,
 .sidebar-toggle,
-.sidebar > a:active,
-.sidebar-div:active,
-#nav-profile:active,
 #nav-submit:active,
 #nav-settings:active {
   -webkit-tap-highlight-color: transparent;
@@ -1418,26 +1414,6 @@ body.react-loaded .comment-input-ssr-placeholder {
          max-width: 40%;
     }
 }
- .sidebar {
-     position: fixed;
-    /* Fixed position for mobile */
-     z-index: 120;
-     top: 0;
-     width: 75%;
-     height: 100%;
-     left: -75%;
-     background-color: var(--header-beige);
-     overflow-x: hidden;
-     transition: 0.5s;
-     border-right: none;
-     padding-top: 35%;
-}
- .sidebar a {
-     color: var(--text-primary) !important;
-}
- .sidebar svg {
-     color: var(--text-primary);
-}
 /* Media query for medium screens */
  @media (min-width: 641px) {
     footer {
@@ -1449,18 +1425,8 @@ body.react-loaded .comment-input-ssr-placeholder {
     .third-header, #bell {
       display: none;
     }
-     .sidebar {
-         width: 40%;
-        /* modified width for medium screens */
-         position: fixed;
-        /* Static position for medium screens */
-         padding-top: 15%;
-    }
 }
- #mySidebar > hr {
-     border: none;
-     border-top: 1px solid var(--text-primary);
-}
+
  .sidebar-toggle {
      display: flex;
 }
@@ -1470,14 +1436,8 @@ body.react-loaded .comment-input-ssr-placeholder {
  .kn-banner-desk {
      display: none;
 }
- .sidebar a[href="/submit"] {
-     display: none;
-}
  a[href="/submit"] {
      display: flex;
-}
- .sidebar .kiwi-logo {
-     display: none;
 }
  #hnmain > table {
      width: 100%;
@@ -1588,9 +1548,6 @@ body.react-loaded .comment-input-ssr-placeholder {
     .desktop-nav a, .desktop-nav span {
       flex-shrink: 0;
     }
-    .sidebar {
-      display: none;
-    }
     .feed-button:hover {
       background-color: rgba(0, 0, 0, 0.15) !important;
     }
@@ -1647,9 +1604,6 @@ body.react-loaded .comment-input-ssr-placeholder {
     .submit-button {
          display: none;
     }
-     .sidebar a[href="/submit"] {
-         display: block;
-    }
      .container {
          display: flex;
          justify-content: center;
@@ -1666,83 +1620,13 @@ body.react-loaded .comment-input-ssr-placeholder {
       font-size: 1.1rem;
       font-weight:600;
     }
-     .sidebar .kiwi-logo {
-         display: block;
-         font-size: 1.9rem;
-         margin: 14px 14px 14px 10px !important;
-    }
-     .sidebar {
-         z-index: 6;
-         overflow: hidden;
-         background-color: var(--sidebar-beige);
-         min-width: 75px;
-         height: 100vh;
-         border-right: none;
-         width: auto;
-        /* modified width for large screens */
-         position: sticky;
-        /* Static position for large screens */
-         top: 0;
-         padding-top: 0;
-         border-bottom-left-radius: 2px;
-         margin-left:3vw;
-    }
      .sidebar-toggle, .story-back-button {
          display: none;
-    }
-    #mySidebar {
-      padding-right: 0.8rem;
-      border-left: var(--border-subtle);
-      border-bottom: var(--border-subtle);
-      border-bottom-left-radius: 2px;
-      background: var(--sidebar-beige);
-    }
-     #mySidebar > hr {
-      display: none;
     }
     #hnmain {
       border-bottom-right-radius: 2px;
       border-right: var(--border);
     }
-    .svg-container svg {
-      width: 1.75rem;
-    }
-    .svg-container svg:hover{
-      color: var(--text-tertiary);
-    }
-    .svg-container {
-      width: auto;
-    }
-    .svg-container + span {
-      margin: 0 0.25rem 0 0.75rem;
-      font-size: 1rem;
-    }
-    .sidebar a, .sidebar-div {
-      font-size: 2em;
-      margin-left: 0 !important;
-      margin-right: 0 !important;
-      padding-left: 1rem !important;
-    }
-    .sidebar a:not(.kiwi-logo):hover, #nav-disconnect:hover {
-      background-color: var(--bg-hover-subtle);
-      border-radius: 2px;
-      border-top-left-radius: 0;
-      border-bottom-left-radius: 0;
-    }
-    .sidebar .icon-svg {
-      width: 36px;
-      height: 36px;
-    }
-    .sidebar-div {
-      font-size: 2em;
-    }
-}
- .sidebar a {
-    padding: 0.3rem 0 0.3rem 0;
-    margin: 0.3rem 0 0 0;
-    font-size: 1.7rem;
-    font-variant: small-caps;
-    min-width: 140px;
 }
  .svg-container {
      width: 19%;
@@ -1750,48 +1634,6 @@ body.react-loaded .comment-input-ssr-placeholder {
 }
  .svg-container svg {
      width: 2rem;
-}
- .sidebar .icon-svg {
-     padding: 0 20px 0 5px;
-}
- @media (min-width: 640px) {
-     .sidebar a {
-         font-size: 2em;
-        /* Adjust to preferred size */
-    }
-     .sidebar .icon-svg {
-         width: 36px;
-         height: 36px;
-    }
-}
- .sidebar-div {
-     padding: 0.3rem 0 0.3rem 0;
-     margin: 0.3rem 10px 0 0;
-     color: var(--text-primary);
-     text-decoration: none;
-     display: block;
-     font-size: 1.7rem;
-     cursor: pointer;
-     min-width: 140px;
-}
- @media (min-width: 640px) {
-     .sidebar-div {
-         font-size: 2em;
-    }
-}
- #overlay {
-     display: none;
-    /* Initially hidden */
-     position: fixed;
-    /* Full-screen positioning */
-     width: 100%;
-     height: 100%;
-     top: 0;
-     left: 0;
-     background-color: var(--bg-overlay);
-    /* Semi-transparent black */
-     z-index: 10;
-    /* Overlay should be on top of everything else */
 }
  .story-link {
      color: var(--text-primary);

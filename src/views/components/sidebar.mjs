@@ -569,68 +569,6 @@ const coinfull = html`<svg
 </svg>`;
 
 const sidebar = (path) => html`
-  <div class="sidebar" id="mySidebar" style="color: var(--text-primary);">
-    <a class="kiwi-logo" href="/">🥝</a>
-    <a
-      title="Home"
-      href="/"
-      style="${path === "/" ||
-      path === "/new" ||
-      path === "/best" ||
-      path === "/stories"
-        ? " font-weight: bold; background-color: var(--button-bg);"
-        : "font-weight: normal"}; color: var(--text-primary); text-decoration: none; display: block;"
-    >
-      <div style="display: flex; align-items: center;">
-        <div class="svg-container">${path === "/" ? homefull : home}</div>
-        <span>Home</span>
-      </div>
-    </a>
-    <div
-      id="nav-profile"
-      style="${path === "/upvotes"
-        ? " font-weight: bold; background-color: var(--button-bg);"
-        : "font-weight: normal"}; color: var(--text-primary); text-decoration: none; display: block;"
-    >
-      <a
-        title="Profile"
-        href=""
-        style="color: var(--text-primary); text-decoration: none; display: block;"
-      >
-        <div style="display: flex; align-items: center;">
-          <div class="svg-container">
-            ${path === "/upvotes" ? profilefull : profile}
-          </div>
-          <span>Profile</span>
-        </div>
-      </a>
-    </div>
-    <a
-      title="Wiki"
-      href="https://kiwistand.github.io/kiwi-docs/"
-      target="_blank"
-      style="color: var(--text-primary); text-decoration: none; display: block;"
-    >
-      <div style="display: flex; align-items: center;">
-        <div class="svg-container">
-          ${path === "/welcome" ? aboutfull : about}
-        </div>
-        <span>Wiki</span>
-      </div>
-    </a>
-    <div id="nav-disconnect">
-      <a
-        title="Disconnect"
-        href=""
-        style="color: var(--text-primary); text-decoration: none; display: block;"
-      >
-        <div style="display: flex; align-items: center;">
-          <div class="svg-container">${ethereum()}</div>
-          <span>Disconnect</span>
-        </div>
-      </a>
-    </div>
-  </div>
-  <div id="overlay"></div>
+  <div id="sidebar-drawer"></div>
 `;
 export default sidebar;

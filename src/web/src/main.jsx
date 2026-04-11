@@ -115,42 +115,14 @@ if (!isAnonMode && analyticsConsent !== "false") {
   }
 }
 
-window.isSidebarOpen = false;
-
-function toggleSidebar() {
-  const sidebar = document.querySelector(".sidebar");
-  const overlay = document.querySelector("#overlay");
-  var sidebarWidth;
-  window.isSidebarOpen = !window.isSidebarOpen;
-
-  if (window.innerWidth >= 1200) {
-    sidebarWidth = window.isSidebarOpen ? "-25%" : "0";
-  } else if (window.innerWidth >= 768 && window.innerWidth < 1200) {
-    sidebarWidth = window.isSidebarOpen ? "-40%" : "0";
-  } else {
-    sidebarWidth = window.isSidebarOpen ? "-75%" : "0";
-  }
-
-  sidebar.style.left = sidebarWidth;
-
-  // If the sidebar is open, show the overlay, else hide it
-  overlay.style.display = window.isSidebarOpen ? "none" : "block";
-  document.body.style.overflow = window.isSidebarOpen ? "auto" : "hidden";
-}
-
-// Instead of a document-wide click handler, add specific handlers
+// Sidebar toggle buttons open the SwipeableDrawer via window.openSidebar
 document.addEventListener("DOMContentLoaded", () => {
-  // Add click handler for sidebar toggle buttons
   const toggleButtons = document.querySelectorAll(".sidebar-toggle");
   toggleButtons.forEach((button) => {
-    button.addEventListener("click", toggleSidebar);
+    button.addEventListener("click", () => {
+      if (window.openSidebar) window.openSidebar();
+    });
   });
-
-  // Add click handler for overlay to close sidebar
-  const overlay = document.querySelector("#overlay");
-  if (overlay) {
-    overlay.addEventListener("click", toggleSidebar);
-  }
 });
 
 async function addTrollbox() {
@@ -535,33 +507,6 @@ async function addConnectedComponents(delegations, toast) {
     }
   }
 
-  const profileLink = document.querySelector("#nav-profile");
-  if (profileLink) {
-    const { ConnectedProfile } = await import("./Navigation.jsx");
-    createRoot(profileLink).render(
-      <StrictMode>
-        <Providers>
-          <ConnectedProfile
-            toast={toast}
-            delegations={delegations}
-          />
-        </Providers>
-      </StrictMode>,
-    );
-  }
-
-  const disconnect = document.querySelector("#nav-disconnect");
-  if (disconnect) {
-    const { ConnectedDisconnectButton } = await import("./Navigation.jsx");
-    createRoot(disconnect).render(
-      <StrictMode>
-        <Providers>
-          <ConnectedDisconnectButton toast={toast} />
-        </Providers>
-      </StrictMode>,
-    );
-  }
-
   const simpledisconnect = document.querySelector(
     "nav-simple-disconnect-button",
   );
@@ -695,6 +640,20 @@ async function addTestFlightQR() {
     <StrictMode>
       <Providers>
         <TestFlightQR />
+      </Providers>
+    </StrictMode>,
+  );
+}
+
+async function addSidebarDrawer(delegations, toast) {
+  const container = document.getElementById("sidebar-drawer");
+  if (!container) return;
+
+  const SidebarDrawer = (await import("./SidebarDrawer.jsx")).default;
+  createRoot(container).render(
+    <StrictMode>
+      <Providers>
+        <SidebarDrawer delegations={delegations} toast={toast} />
       </Providers>
     </StrictMode>,
   );
@@ -1758,6 +1717,7 @@ async function start() {
     addKarmaElements(),
     addLeaderboardInteractions(),
     addEmbedDrawer(toast),
+    addSidebarDrawer(await delegationsPromise, toast),
     addNewsletterScrollModal(toast),
     addAvatar(),
     addBackButton(),
