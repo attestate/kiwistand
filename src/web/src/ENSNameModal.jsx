@@ -204,6 +204,14 @@ const ENSNameModal = forwardRef((props, ref) => {
 
     setIsSuccess(true);
     toast.success("Profile created!");
+
+    // Clear server-side profile caches so the new username shows immediately
+    try {
+      await fetch(`/api/v1/cache/profile?address=${encodeURIComponent(address)}`);
+    } catch (err) {
+      // Non-critical: profile will update on next cache expiry
+    }
+
     setTimeout(() => {
       closeModal();
       setIsSuccess(false);
