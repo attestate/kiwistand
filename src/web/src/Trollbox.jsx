@@ -245,7 +245,7 @@ export default function Trollbox() {
           style={{
             fontSize: "11px",
             fontWeight: 400,
-            color: "var(--color-success, #4a9)",
+            color: "#a6b052",
           }}
         >
           {onlineCount} online
