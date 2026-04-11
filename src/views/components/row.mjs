@@ -630,7 +630,7 @@ const row = (
                       <div class="tweet-embed-body">
                         <p style="white-space: pre-wrap;">
                           ${(() => {
-                            const unlinkifyNodes = (text) => {
+                            const formatText = (text) => {
                               const parts = text.split(/(\bhttps?:\/\/[^\s]+)/g);
                               return parts.map((part) => {
                                 if (/^\bhttps?:\/\//.test(part)) {
@@ -644,7 +644,7 @@ const row = (
                             if (/^https?:\/\/\S+$/i.test(desc)) {
                               return html`<span class="preview-url">${DOMPurify.sanitize(desc)}</span>`;
                             }
-                            const nodes = unlinkifyNodes(desc);
+                            const nodes = formatText(desc);
                             return html`${nodes}`;
                           })()}
                         </p>
@@ -778,7 +778,7 @@ const row = (
                       <div class="farcaster-embed-body">
                         <p>
                           ${(() => {
-                            const unlinkifyNodes = (text) => {
+                            const formatText = (text) => {
                               const parts = text.split(/(\bhttps?:\/\/[^\s]+)/g);
                               return parts.map((part) => {
                                 if (/^\bhttps?:\/\//.test(part)) {
@@ -794,19 +794,19 @@ const row = (
                               if (/^https?:\/\/\S+$/i.test(text)) {
                                 return html`<span class="preview-url">${DOMPurify.sanitize(text)}</span>`;
                               }
-                              return html`${unlinkifyNodes(text)}`;
+                              return html`${formatText(text)}`;
                             }
                             const desc = (story.metadata.ogDescription || "").trim();
                             if (/^https?:\/\/\S+$/i.test(desc)) {
                               return html`<span class="preview-url">${DOMPurify.sanitize(desc)}</span>`;
                             }
                             if (desc.length <= 280) {
-                              const nodes = unlinkifyNodes(desc);
+                              const nodes = formatText(desc);
                               return html`${nodes}`;
                             }
                             const preview = desc.slice(0, 280);
                             const rest = desc.slice(280);
-                            return html`<details style="display:inline;"><summary style="display:inline; list-style:none; cursor:pointer;">${unlinkifyNodes(preview)}<span style="opacity:0.6;">… <span style="text-decoration:underline;">show more</span></span></summary>${unlinkifyNodes(rest)}</details>`;
+                            return html`<details style="display:inline;"><summary style="display:inline; list-style:none; cursor:pointer;">${formatText(preview)}<span style="opacity:0.6;">… <span style="text-decoration:underline;">show more</span></span></summary>${formatText(rest)}</details>`;
                           })()}
                         </p>
                         ${farcasterImageUrl
@@ -880,7 +880,7 @@ const row = (
                       <div class="bluesky-embed-body">
                         <p>
                           ${(() => {
-                            const unlinkifyNodes = (text) => {
+                            const formatText = (text) => {
                               const parts = text.split(/(\bhttps?:\/\/[^\s]+)/g);
                               return parts.map((part) => {
                                 if (/^\bhttps?:\/\//.test(part)) {
@@ -904,7 +904,7 @@ const row = (
                               >`;
                             }
                             const sliced = text.slice(0, 300);
-                            return html`${unlinkifyNodes(sliced)}${text.length > 300 ? "…" : ""}`;
+                            return html`${formatText(sliced)}${text.length > 300 ? "…" : ""}`;
                           })()}
                         </p>
                         ${story.metadata.blueskyPost.images &&
