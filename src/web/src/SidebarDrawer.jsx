@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import SwipeableDrawer from "@mui/material/SwipeableDrawer";
 import { ConnectedProfile, ConnectedDisconnectButton } from "./Navigation.jsx";
-import { EthereumSVG } from "./icons.jsx";
 
 const HomeSVG = () => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
@@ -79,27 +78,6 @@ const SidebarDrawer = ({ delegations, toast }) => {
   const isHome =
     path === "/" || path === "/new" || path === "/best" || path === "/stories";
 
-  const linkStyle = {
-    color: "var(--text-primary)",
-    textDecoration: "none",
-    display: "block",
-    padding: "0.3rem 0",
-    margin: "0.3rem 0 0 0",
-    fontSize: "1.7rem",
-    fontVariant: "small-caps",
-    minWidth: "140px",
-  };
-
-  const activeBg = { fontWeight: "bold", backgroundColor: "var(--button-bg)" };
-  const inactiveBg = { fontWeight: "normal" };
-
-  const iconContainer = {
-    width: "19%",
-    paddingLeft: "10px",
-  };
-
-  const iconSvg = { width: "2rem" };
-
   return (
     <SwipeableDrawer
       anchor="left"
@@ -111,69 +89,108 @@ const SidebarDrawer = ({ delegations, toast }) => {
       SwipeAreaProps={{ sx: { width: 20 } }}
       PaperProps={{
         sx: {
-          width: "75%",
+          width: "80%",
           maxWidth: 300,
           backgroundColor: "var(--header-beige)",
           color: "var(--text-primary)",
-          paddingTop: "35%",
-          "& .sidebar-div": {
-            padding: "0.3rem 0",
-            margin: "0.3rem 0 0 0",
-            color: "var(--text-primary)",
-            textDecoration: "none",
-            display: "block",
-            fontSize: "1.7rem",
-            cursor: "pointer",
-            minWidth: "140px",
-            fontVariant: "small-caps",
-          },
-          "& svg": {
-            color: "var(--text-primary)",
-          },
+          paddingTop: "env(safe-area-inset-top, 0px)",
         },
       }}
     >
-      <a
-        href="/"
-        style={{
-          ...linkStyle,
-          ...(isHome ? activeBg : inactiveBg),
-        }}
-        onClick={() => setOpen(false)}
-      >
-        <div style={{ display: "flex", alignItems: "center" }}>
-          <div style={iconContainer}>
-            <div style={iconSvg}>
-              {isHome ? <HomeFullSVG /> : <HomeSVG />}
-            </div>
-          </div>
+      <style>{`
+        .sidebar-nav {
+          display: flex;
+          flex-direction: column;
+          padding: 48px 16px 24px 0;
+        }
+        .sidebar-nav > a,
+        .sidebar-nav > div {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          padding: 14px 24px;
+          color: var(--text-primary);
+          text-decoration: none;
+          font-size: 1.25rem;
+          cursor: pointer;
+          border-radius: 0 32px 32px 0;
+          transition: background-color 0.15s;
+        }
+        .sidebar-nav > a:active,
+        .sidebar-nav > div:active {
+          background-color: var(--button-bg);
+        }
+        .sidebar-nav .sidebar-div {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          padding: 14px 24px;
+          font-size: 1.25rem;
+          cursor: pointer;
+          border-radius: 0 32px 32px 0;
+          color: var(--text-primary);
+          margin: 0;
+          min-width: unset;
+          font-variant: normal;
+          transition: background-color 0.15s;
+        }
+        .sidebar-nav .sidebar-div:active {
+          background-color: var(--button-bg);
+        }
+        .sidebar-nav svg {
+          width: 28px;
+          height: 28px;
+          flex-shrink: 0;
+          color: var(--text-primary);
+        }
+        .sidebar-nav .svg-container {
+          width: 28px;
+          height: 28px;
+          padding: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .sidebar-nav a > div,
+        .sidebar-nav .sidebar-div > div {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+        }
+        .sidebar-nav span {
+          font-size: 1.25rem;
+        }
+        .sidebar-nav .active-nav {
+          font-weight: bold;
+          background-color: var(--button-bg);
+        }
+      `}</style>
+
+      <div className="sidebar-nav">
+        <a
+          href="/"
+          className={isHome ? "active-nav" : ""}
+          onClick={() => setOpen(false)}
+        >
+          {isHome ? <HomeFullSVG /> : <HomeSVG />}
           <span>Home</span>
-        </div>
-      </a>
+        </a>
 
-      <ConnectedProfile toast={toast} delegations={delegations} />
+        <ConnectedProfile toast={toast} delegations={delegations} />
 
-      <a
-        href="https://kiwistand.github.io/kiwi-docs/"
-        target="_blank"
-        rel="noopener noreferrer"
-        style={{
-          ...linkStyle,
-          ...(path === "/welcome" ? activeBg : inactiveBg),
-        }}
-        onClick={() => setOpen(false)}
-      >
-        <div style={{ display: "flex", alignItems: "center" }}>
-          <div style={iconContainer}>
-            <div style={iconSvg}>
-              {path === "/welcome" ? <AboutFullSVG /> : <AboutSVG />}
-            </div>
-          </div>
+        <a
+          href="https://kiwistand.github.io/kiwi-docs/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className={path === "/welcome" ? "active-nav" : ""}
+          onClick={() => setOpen(false)}
+        >
+          {path === "/welcome" ? <AboutFullSVG /> : <AboutSVG />}
           <span>Wiki</span>
-        </div>
-      </a>
+        </a>
 
-      <ConnectedDisconnectButton toast={toast} />
+        <ConnectedDisconnectButton toast={toast} />
+      </div>
     </SwipeableDrawer>
   );
 };
