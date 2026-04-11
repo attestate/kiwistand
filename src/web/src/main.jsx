@@ -1453,8 +1453,17 @@ function trackLinkImpressions() {
 
 // Endless scroll for main feed
 function initEndlessScroll() {
-  // Only run on the main feed page
-  if (window.location.pathname !== '/') return;
+  const path = window.location.pathname;
+
+  // Determine API endpoint based on current page
+  let apiBase;
+  if (path === '/') {
+    apiBase = '/api/v1/feed/rows';
+  } else if (path === '/new') {
+    apiBase = '/api/v1/new/rows';
+  } else {
+    return;
+  }
 
   let currentPage = 0;
   let isLoading = false;
@@ -1479,7 +1488,7 @@ function initEndlessScroll() {
     sentinel.textContent = 'Loading...';
 
     try {
-      let url = `/api/v1/feed/rows?page=${currentPage}`;
+      let url = `${apiBase}?page=${currentPage}`;
       if (domain) url += `&domain=${encodeURIComponent(domain)}`;
 
       const response = await fetch(url);
@@ -1521,7 +1530,7 @@ function initEndlessScroll() {
 
       // Prefetch next page
       if (hasMore) {
-        const prefetchUrl = `/api/v1/feed/rows?page=${currentPage + 1}${domain ? '&domain=' + encodeURIComponent(domain) : ''}`;
+        const prefetchUrl = `${apiBase}?page=${currentPage + 1}${domain ? '&domain=' + encodeURIComponent(domain) : ''}`;
         const link = document.createElement('link');
         link.rel = 'prefetch';
         link.href = prefetchUrl;
@@ -1554,7 +1563,7 @@ function initEndlessScroll() {
   observer.observe(sentinel);
 
   // Also prefetch first page on load
-  const prefetchUrl = `/api/v1/feed/rows?page=1${domain ? '&domain=' + encodeURIComponent(domain) : ''}`;
+  const prefetchUrl = `${apiBase}?page=1${domain ? '&domain=' + encodeURIComponent(domain) : ''}`;
   const link = document.createElement('link');
   link.rel = 'prefetch';
   link.href = prefetchUrl;

@@ -246,6 +246,11 @@ export default async function (trie, theme) {
                     false, // isAboveFold = false for lazy loading
                   )(item, i),
               )}
+              <tr>
+                <td style="text-align: center; padding: 20px 0;">
+                  <div id="feed-sentinel"></div>
+                </td>
+              </tr>
             </table>
             ${Footer(theme, "/new")}
           </div>

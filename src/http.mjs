@@ -82,6 +82,7 @@ import {
   countOutbounds,
   countImpressions,
   storeMiniAppUpvote,
+  listNewest,
 } from "./cache.mjs";
 import normalizeUrl from "normalize-url";
 import * as interactions from "./interactions.mjs";
@@ -1507,6 +1508,98 @@ export async function launch(trie, libp2p, isPrimary = true) {
         `?page=${page}`,
         false, // debugMode
         false, // isAboveFold
+      )(story, i)
+    ).join("");
+
+    reply.header(
+      "Cache-Control",
+      "public, s-maxage=20, max-age=0, stale-while-revalidate=86400",
+    );
+    return reply.status(200).type("text/html").send(rowsHtml);
+  });
+
+  // Endless scroll endpoint for /new — returns HTML rows for older stories
+  app.get("/api/v1/new/rows", async (request, reply) => {
+    let page = parseInt(request.query.page);
+    if (isNaN(page) || page < 1) {
+      page = 1;
+    }
+
+    const endlessPageSize = 10;
+
+    // Use the oldest story on the initial /new page as the cursor so we
+    // never overlap with already-rendered stories.
+    const initialStories = newAPI.getStories();
+    const oldestTimestamp = initialStories.length > 0
+      ? initialStories[initialStories.length - 1].timestamp
+      : Math.floor(Date.now() / 1000);
+
+    // Fetch enough stories older than the initial page to fill this page.
+    // Over-fetch to account for moderation filtering.
+    const fetchLimit = endlessPageSize * page + 20;
+    let allStories = listNewest(fetchLimit + initialStories.length);
+
+    // Only keep stories older than the initial page
+    allStories = allStories.filter(s => s.timestamp < oldestTimestamp);
+
+    // Apply moderation
+    const policy = await moderation.getLists();
+    allStories = moderation.moderate(allStories, policy, "/new");
+
+    // Paginate
+    const start = endlessPageSize * (page - 1);
+    const end = endlessPageSize * page;
+    const rawStories = allStories.slice(start, end);
+
+    if (rawStories.length === 0) {
+      reply.header("Cache-Control", "public, s-maxage=60, max-age=0");
+      return reply.status(200).type("text/html").send("");
+    }
+
+    // Resolve ENS data in parallel
+    const ensResults = await Promise.allSettled(rawStories.map(async (story) => {
+      const ensData = await ens.resolve(story.identity);
+      return {
+        ...story,
+        displayName: ensData.displayName,
+        submitter: ensData,
+        avatars: [],
+      };
+    }));
+    const stories = ensResults
+      .filter(r => r.status === "fulfilled")
+      .map(r => r.value);
+
+    if (stories.length === 0) {
+      reply.header("Cache-Control", "public, s-maxage=60, max-age=0");
+      return reply.status(200).type("text/html").send("");
+    }
+
+    // Resolve metadata in parallel
+    await Promise.allSettled(stories.map(async (story) => {
+      story.metadata = await cachedMetadata(story.href);
+      if (story.metadata?.image) {
+        const href = (story.href.startsWith('data:') || story.href.startsWith('kiwi:'))
+          ? story.href
+          : normalizeUrl(story.href, { stripWWW: false });
+        if (href && policy?.images?.includes(href)) {
+          delete story.metadata.image;
+        }
+      }
+    }));
+
+    const rowsHtml = stories.map((story, i) =>
+      Row(
+        start,
+        "/new",
+        "margin-bottom: 20px;",
+        null,
+        null,
+        null,
+        false,
+        `?cached=true`,
+        false,
+        false,
       )(story, i)
     ).join("");
 
