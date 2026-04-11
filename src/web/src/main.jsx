@@ -1734,6 +1734,7 @@ async function start() {
     addEmbedDrawer(toast),
     addSidebarDrawer(await delegationsPromise, toast),
     addImageViewer(),
+    addSidebarDrawer(await delegationsPromise, toast),
     addNewsletterScrollModal(toast),
     addAvatar(),
     addBackButton(),
