@@ -630,21 +630,21 @@ const row = (
                       <div class="tweet-embed-body">
                         <p style="white-space: pre-wrap;">
                           ${(() => {
-                            const linkifyNodes = (text) => {
+                            const unlinkifyNodes = (text) => {
                               const parts = text.split(/(\bhttps?:\/\/[^\s]+)/g);
                               return parts.map((part) => {
                                 if (/^\bhttps?:\/\//.test(part)) {
                                   const display = part.length > 40 ? part.substring(0, 40) + "…" : part;
-                                  return html`<a href="${DOMPurify.sanitize(part)}" target="_blank" rel="noopener">${DOMPurify.sanitize(display)}</a>`;
+                                  return html`<span class="preview-url">${DOMPurify.sanitize(display)}</span>`;
                                 }
                                 return DOMPurify.sanitize(part);
                               });
                             };
                             const desc = convertBrTagsToNewlines((story.metadata.ogDescription || "").trim()).replace(/\n\nQuoting .+$/s, "").trim();
                             if (/^https?:\/\/\S+$/i.test(desc)) {
-                              return html`<a href="${DOMPurify.sanitize(desc)}" target="_blank" rel="noopener">${DOMPurify.sanitize(desc)}</a>`;
+                              return html`<span class="preview-url">${DOMPurify.sanitize(desc)}</span>`;
                             }
-                            const nodes = linkifyNodes(desc);
+                            const nodes = unlinkifyNodes(desc);
                             return html`${nodes}`;
                           })()}
                         </p>
@@ -778,12 +778,12 @@ const row = (
                       <div class="farcaster-embed-body">
                         <p>
                           ${(() => {
-                            const linkifyNodes = (text) => {
+                            const unlinkifyNodes = (text) => {
                               const parts = text.split(/(\bhttps?:\/\/[^\s]+)/g);
                               return parts.map((part) => {
                                 if (/^\bhttps?:\/\//.test(part)) {
                                   const display = part.length > 40 ? part.substring(0, 40) + "…" : part;
-                                  return html`<a href="${DOMPurify.sanitize(part)}" target="_blank" rel="noopener">${DOMPurify.sanitize(display)}</a>`;
+                                  return html`<span class="preview-url">${DOMPurify.sanitize(display)}</span>`;
                                 }
                                 return DOMPurify.sanitize(part);
                               });
@@ -792,21 +792,21 @@ const row = (
                             if (story.metadata.farcasterCast?.text) {
                               const text = story.metadata.farcasterCast.text.trim();
                               if (/^https?:\/\/\S+$/i.test(text)) {
-                                return html`<a href="${DOMPurify.sanitize(text)}" target="_blank" rel="noopener">${DOMPurify.sanitize(text)}</a>`;
+                                return html`<span class="preview-url">${DOMPurify.sanitize(text)}</span>`;
                               }
-                              return html`${linkifyNodes(text)}`;
+                              return html`${unlinkifyNodes(text)}`;
                             }
                             const desc = (story.metadata.ogDescription || "").trim();
                             if (/^https?:\/\/\S+$/i.test(desc)) {
-                              return html`<a href="${DOMPurify.sanitize(desc)}" target="_blank" rel="noopener">${DOMPurify.sanitize(desc)}</a>`;
+                              return html`<span class="preview-url">${DOMPurify.sanitize(desc)}</span>`;
                             }
                             if (desc.length <= 280) {
-                              const nodes = linkifyNodes(desc);
+                              const nodes = unlinkifyNodes(desc);
                               return html`${nodes}`;
                             }
                             const preview = desc.slice(0, 280);
                             const rest = desc.slice(280);
-                            return html`<details style="display:inline;"><summary style="display:inline; list-style:none; cursor:pointer;">${linkifyNodes(preview)}<span style="opacity:0.6;">… <span style="text-decoration:underline;">show more</span></span></summary>${linkifyNodes(rest)}</details>`;
+                            return html`<details style="display:inline;"><summary style="display:inline; list-style:none; cursor:pointer;">${unlinkifyNodes(preview)}<span style="opacity:0.6;">… <span style="text-decoration:underline;">show more</span></span></summary>${unlinkifyNodes(rest)}</details>`;
                           })()}
                         </p>
                         ${farcasterImageUrl
@@ -880,7 +880,7 @@ const row = (
                       <div class="bluesky-embed-body">
                         <p>
                           ${(() => {
-                            const linkifyNodes = (text) => {
+                            const unlinkifyNodes = (text) => {
                               const parts = text.split(/(\bhttps?:\/\/[^\s]+)/g);
                               return parts.map((part) => {
                                 if (/^\bhttps?:\/\//.test(part)) {
@@ -888,11 +888,8 @@ const row = (
                                     part.length > 40
                                       ? part.substring(0, 40) + "…"
                                       : part;
-                                  return html`<a
-                                    href="${DOMPurify.sanitize(part)}"
-                                    target="_blank"
-                                    rel="noopener"
-                                    >${DOMPurify.sanitize(display)}</a
+                                  return html`<span class="preview-url"
+                                    >${DOMPurify.sanitize(display)}</span
                                   >`;
                                 }
                                 return DOMPurify.sanitize(part);
@@ -902,15 +899,12 @@ const row = (
                               story.metadata.blueskyPost.text || ""
                             ).trim();
                             if (/^https?:\/\/\S+$/i.test(text)) {
-                              return html`<a
-                                href="${DOMPurify.sanitize(text)}"
-                                target="_blank"
-                                rel="noopener"
-                                >${DOMPurify.sanitize(text)}</a
+                              return html`<span class="preview-url"
+                                >${DOMPurify.sanitize(text)}</span
                               >`;
                             }
                             const sliced = text.slice(0, 300);
-                            return html`${linkifyNodes(sliced)}${text.length > 300 ? "…" : ""}`;
+                            return html`${unlinkifyNodes(sliced)}${text.length > 300 ? "…" : ""}`;
                           })()}
                         </p>
                         ${story.metadata.blueskyPost.images &&

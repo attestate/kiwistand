@@ -1115,15 +1115,9 @@ body.react-loaded .comment-input-ssr-placeholder {
   padding: 0;
 }
 
-/* Link styling inside preview bodies (make URLs useful but subtle) */
-.tweet-embed-body a, .farcaster-embed-body a, .bluesky-embed-body a {
-  color: var(--embed-link); /* Twitter-style link color */
-  text-decoration: none;
-  opacity: 1;
-}
-
-.tweet-embed-body a:hover, .farcaster-embed-body a:hover, .bluesky-embed-body a:hover {
-  text-decoration: underline;
+/* URL styling inside preview bodies (non-clickable, displayed as text) */
+.tweet-embed-body .preview-url, .farcaster-embed-body .preview-url, .bluesky-embed-body .preview-url {
+  color: var(--embed-link);
 }
 
 
