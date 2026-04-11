@@ -1,13 +1,14 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
+import Dialog from "@mui/material/Dialog";
 
 const ImageViewer = () => {
   const [open, setOpen] = useState(false);
   const [imageUrl, setImageUrl] = useState("");
 
-  const handleClose = useCallback(() => {
+  const handleClose = () => {
     setOpen(false);
     setTimeout(() => setImageUrl(""), 300);
-  }, []);
+  };
 
   useEffect(() => {
     window.openImageViewer = (url) => {
@@ -19,63 +20,40 @@ const ImageViewer = () => {
     };
   }, []);
 
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e) => {
-      if (e.key === "Escape") handleClose();
-    };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [open, handleClose]);
-
-  if (!open) return null;
-
   return (
-    <div
-      onClick={handleClose}
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 9999,
-        background: "rgba(0,0,0,0.9)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        cursor: "zoom-out",
+    <Dialog
+      open={open}
+      onClose={handleClose}
+      maxWidth={false}
+      PaperProps={{
+        style: {
+          background: "transparent",
+          boxShadow: "none",
+          margin: 0,
+          maxWidth: "95vw",
+          maxHeight: "95vh",
+          overflow: "visible",
+        },
+      }}
+      slotProps={{
+        backdrop: {
+          style: { backgroundColor: "rgba(0,0,0,0.9)", cursor: "zoom-out" },
+        },
       }}
     >
-      <button
-        onClick={handleClose}
-        style={{
-          position: "absolute",
-          top: 16,
-          right: 16,
-          background: "none",
-          border: "none",
-          color: "#fff",
-          fontSize: "28px",
-          cursor: "pointer",
-          lineHeight: 1,
-          padding: "8px",
-        }}
-        aria-label="Close"
-      >
-        &#x2715;
-      </button>
       {imageUrl && (
         <img
           src={imageUrl}
-          onClick={(e) => e.stopPropagation()}
           style={{
+            display: "block",
             maxWidth: "95vw",
-            maxHeight: "90vh",
+            maxHeight: "95vh",
             objectFit: "contain",
-            cursor: "default",
           }}
           alt="Full size"
         />
       )}
-    </div>
+    </Dialog>
   );
 };
 
