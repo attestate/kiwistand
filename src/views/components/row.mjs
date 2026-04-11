@@ -942,12 +942,14 @@ const row = (
               : displayImage
               ? html` <a
                   data-no-instant
-                  style="display: block; width: 100%;"
+                  style="display: block; width: 100%;${isCloudflare ? " cursor: zoom-in;" : ""}"
                   class="row-image-preview"
                   href="${DOMPurify.sanitize(story.href)}"
-                  onclick="event.preventDefault(); if(localStorage.getItem('anon-mode')!=='true'){navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${DOMPurify.sanitize(
-                    story.href,
-                  )}'))}; if (window.ReactNativeWebView || window !== window.parent) {
+                  onclick="${isCloudflare
+                    ? `event.preventDefault(); if(window.openImageViewer) { window.openImageViewer('${DOMPurify.sanitize(story.href)}'); }`
+                    : `event.preventDefault(); if(localStorage.getItem('anon-mode')!=='true'){navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent('${DOMPurify.sanitize(
+                        story.href,
+                      )}'))}; if (window.ReactNativeWebView || window !== window.parent) {
                     (function() {
                       var targetUrl = '${DOMPurify.sanitize(story.href)}';
                       var canIframe = ${story.metadata && story.metadata.canIframe !== undefined ? story.metadata.canIframe : true};
@@ -965,14 +967,14 @@ const row = (
                           'farcaster.xyz',
                           'warpcast.com'
                         ];
-                        
+
                         // Check if it's a Substack domain
                         var isSubstack = hostname.endsWith('.substack.com');
-                        
+
                         var shouldAlwaysOpen = isSubstack || alwaysOpenDomains.some(function(domain) {
                           return hostname === domain || hostname.endsWith('.' + domain);
                         });
-                        
+
                         if (shouldAlwaysOpen) {
                           if (window.sdk && window.sdk.actions && window.sdk.actions.openUrl) {
                             window.sdk.actions.openUrl(targetUrl);
@@ -995,8 +997,8 @@ const row = (
                       }
                     })();
                   } else { window.open('${DOMPurify.sanitize(
-                    story.href,
-                  )}', event.currentTarget.getAttribute('target')); }"
+                        story.href,
+                      )}', event.currentTarget.getAttribute('target')); }`}"
                 >
                   <div
                     style="position: relative; width: 100%; aspect-ratio: 2 / 1; background: var(--button-bg); contain: content; contain-intrinsic-size: 600px 300px;"
