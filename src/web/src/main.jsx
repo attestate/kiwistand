@@ -677,6 +677,21 @@ async function addEmbedDrawer(toast) {
   );
 }
 
+async function addImageViewer() {
+  if (!document.getElementById("image-viewer-container")) {
+    const container = document.createElement("div");
+    container.id = "image-viewer-container";
+    document.body.appendChild(container);
+  }
+
+  const ImageViewer = (await import("./ImageViewer.jsx")).default;
+  createRoot(document.getElementById("image-viewer-container")).render(
+    <StrictMode>
+      <ImageViewer />
+    </StrictMode>,
+  );
+}
+
 function closeAiDropdown() {
   const portal = document.getElementById("ai-drawer-portal");
   if (portal) portal.remove();
@@ -1718,6 +1733,7 @@ async function start() {
     addLeaderboardInteractions(),
     addEmbedDrawer(toast),
     addSidebarDrawer(await delegationsPromise, toast),
+    addImageViewer(),
     addNewsletterScrollModal(toast),
     addAvatar(),
     addBackButton(),
