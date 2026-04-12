@@ -15,7 +15,7 @@ import Trollbox from "./components/trollbox.mjs";
 import { custom } from "./components/head.mjs";
 import * as store from "../store.mjs";
 import * as moderation from "./moderation.mjs";
-import { getLastComment, listNewest, countImpressions } from "../cache.mjs";
+import { getLastComment, listNewest, countImpressions, lifetimeCache } from "../cache.mjs";
 import Row, { extractDomain } from "./components/row.mjs";
 import log from "../logger.mjs";
 import { purgeCache } from "../cloudflarePurge.mjs";
@@ -59,6 +59,12 @@ export function getLatestTimestamp() {
     throw new Error("No stories available");
   }
   return stories[0].timestamp;
+}
+
+const HTML_CACHE_KEY = "new-html";
+
+export function getCachedHtml() {
+  return lifetimeCache.get(HTML_CACHE_KEY);
 }
 
 let inProgress = false;
@@ -170,6 +176,15 @@ export async function recompute() {
   );
 
     stories = nextStories.sort((a, b) => b.timestamp - a.timestamp);
+
+    // Pre-render and cache the HTML (same pattern as /best)
+    try {
+      const rendered = await renderPage(null);
+      lifetimeCache.set(HTML_CACHE_KEY, rendered);
+    } catch (err) {
+      log(`/new HTML cache render failed: ${err.message}`);
+    }
+
     purgeCache("https://news.kiwistand.com/new?cached=true").catch((err) =>
       log(`Error refreshing /new?cached=true`),
     );
@@ -181,7 +196,7 @@ export async function recompute() {
   }
 }
 
-export default async function (trie, theme) {
+async function renderPage(theme) {
   let items = stories;
   const path = "/new";
   const ogImage = "https://news.kiwistand.com/kiwi_new_feed_page.png";
@@ -236,3 +251,5 @@ export default async function (trie, theme) {
     </html>
   `;
 }
+
+export default renderPage;

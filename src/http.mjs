@@ -1977,9 +1977,6 @@ export async function launch(trie, libp2p, isPrimary = true) {
     return reply.status(200).type("text/html").send(content.valueOf());
   });
   app.get("/new", async (request, reply) => {
-    const content = await newest(trie, reply.locals.theme);
-    let timestamp;
-
     // NOTE: Especially for international customers /new got embarassingly slow
     // taking up to 2s to load as the page had to served previously from
     // Germany and not via Cloudflare. Now when the `cached` QS is present
@@ -1995,6 +1992,12 @@ export async function launch(trie, libp2p, isPrimary = true) {
       reply.header("Cache-Control", "no-cache");
     }
 
+    const cached = newAPI.getCachedHtml();
+    if (cached) {
+      return reply.status(200).type("text/html").send(cached.valueOf());
+    }
+
+    const content = await newest(trie, reply.locals.theme);
     return reply.status(200).type("text/html").send(content.valueOf());
   });
   app.get("/best", async (request, reply) => {
