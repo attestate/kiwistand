@@ -20,10 +20,21 @@ const TROLLBOX_TYPES = {
 const POLL_INTERVAL = 3000;
 const HEARTBEAT_INTERVAL = 15000;
 
-// Kiwi-branded name color — uses the accent-primary palette so names match
-// the rest of the site instead of a random per-address hue.
-function addressColor() {
-  return "var(--accent-primary-hover)";
+// Deterministic kiwi-family color from address. Restricts the hue to the
+// yellow-green range around the kiwi accent (#AFC046 ≈ hue 68) so names
+// stay visually on-brand while still being distinguishable per user.
+function addressColor(address) {
+  if (!address) return "var(--accent-primary-hover)";
+  let hash = 0;
+  for (let i = 0; i < address.length; i++) {
+    hash = address.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const hue = 50 + (Math.abs(hash) % 45); // 50–94: yellow → kiwi → lime
+  const isDark = window.matchMedia?.("(prefers-color-scheme: dark)").matches ||
+    document.documentElement.getAttribute("data-theme") === "anon";
+  const lightness = isDark ? 60 : 38;
+  const saturation = isDark ? 55 : 55;
+  return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
 }
 
 function formatTime(ts) {
@@ -284,7 +295,7 @@ export default function Trollbox() {
             </span>
             <span
               style={{
-                color: addressColor(),
+                color: addressColor(msg.address),
                 fontWeight: 600,
                 marginRight: "4px",
                 cursor: "default",
