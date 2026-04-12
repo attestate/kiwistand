@@ -395,6 +395,22 @@ export default async function (trie, theme, index, value, referral, commentIndex
       "@type": "WebPage",
       "url": value.href,
     },
+    "commentCount": story.comments.length,
+    "interactionStatistic": {
+      "@type": "InteractionCounter",
+      "interactionType": "https://schema.org/LikeAction",
+      "userInteractionCount": story.upvoters.length,
+    },
+    ...(story.comments.length > 0 ? {
+      "comment": story.comments.slice(0, 5).map((c) => ({
+        "@type": "Comment",
+        "text": c.title,
+        "author": {
+          "@type": "Person",
+          "name": c.displayName,
+        },
+      })),
+    } : {}),
     ...(ogDescription ? { "description": ogDescription } : {}),
   });
 
