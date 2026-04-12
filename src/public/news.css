@@ -98,6 +98,7 @@
 
  /* Dark mode - OS-level preference */
  @media (prefers-color-scheme: dark) {
+
   :root {
      /* Background colors */
      --background-color0: #1a1a1a;
@@ -189,6 +190,7 @@
      --shadow-default: 0 4px 12px rgba(0, 0, 0, 0.4);
      --shadow-glow: 0 0 5px rgba(255, 255, 255, 0.2);
   }
+
 }
 
 /* Anonymous Hacker Theme - Matrix/Terminal Style */
@@ -332,9 +334,6 @@
  .scroll-margin-base, .scroll-margin-with-image {
    scroll-margin-top: 100px;
  }
-.newsletter-row {
-  margin-bottom: 5px;
-}
 .notification:link {
   color: var(--text-primary) !important;
 }
@@ -368,10 +367,6 @@
 .connect-button-wrapper {
   display: inline;
 }
-.redacted {
-    -webkit-box-decoration-break: clone;
-    filter: blur(2px);
-}
 .footer-table strong {
   display: inline-block;
   margin: 0 0 7px 0;
@@ -390,7 +385,6 @@
   border-top: 1px solid var(--text-secondary) !important;
 }
 
-.vote-button-container:active,
 .chat-bubble.interaction-element:active,
 .feed-button-link:active,
 .submit-button:active,
@@ -413,10 +407,7 @@ button, a, .interaction-element {
 
 .chat-bubble-container,
 .feed-button-link,
-.vote-button-container,
-.sidebar-toggle,
-#nav-submit:active,
-#nav-settings:active {
+.sidebar-toggle {
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -448,33 +439,23 @@ body {
 .story-link-container {
   display: inline;
 }
-.comment-text-link {
-  color: var(--text-primary) !important;
-}
-.comment-text-link:visited {
-  color: var(--visited-link) !important;
-}
-.story-domain a:hover {
-  text-decoration: underline;
-}
 .share-container {
    display: none;
 }
 .inverse-share-container {
   display: inline;
 }
-.tipsbuttoncontainer {
-  display: inline;
-}
 @media screen and (max-width: 640px) {
+
   .share-container {
     display: inline;
   }
   .inverse-share-container {
     display: none;
   }
+
 }
-.hnname span:active, .votearrow:active {
+.hnname span:active {
   transform: scale(0.80);
   transition: transform 0.3s;
   display: inline-block;
@@ -590,33 +571,18 @@ body {
  .pagetop a:visited {
      color:var(--text-primary);
 }
- .topsel a:link, .topsel a:visited {
-     color:var(--bg-white);
-}
  .subtext a:link, .subtext a:visited {
      color:var(--text-secondary);
 }
  .subtext a:hover {
      text-decoration:underline;
 }
- .comhead a:link, .subtext a:visited {
+ .subtext a:visited {
      color:var(--text-secondary);
-}
- .comhead a:hover {
-     text-decoration:underline;
-}
- .hnmore a:link, .hnmore a:visited {
-     color:var(--text-secondary);
-}
- .hnmore {
-     text-decoration:underline;
 }
  .default p {
      margin-top: 8px;
      margin-bottom: 0px;
-}
- .pagebreak {
-    page-break-before:always
 }
  pre {
      overflow: auto;
@@ -627,36 +593,12 @@ body {
  pre:hover {
      overflow:auto 
 }
-.votearrow {
-  color: var(--text-secondary);
-  font-size: 1.5rem;
-}
 .heart-icon svg {
   width: 100%;
   height: 100%;
 }
 .like-notification .heart-icon svg {
   color: var(--text-primary);
-}
-.pulsate {
-  animation: pulsate 1s infinite;
-}
- table.padtab td {
-     padding:0px 10px 
-}
- .votearrow.rotate180 {
-     -webkit-transform: rotate(180deg) scale(1.7,1.7);
-    /* Chrome and other webkit browsers */
-     -moz-transform: rotate(180deg) scale(1.7,1.7);
-    /* FF */
-     -o-transform: rotate(180deg) scale(1.7,1.7);
-    /* Opera */
-     -ms-transform: rotate(180deg) scale(1.7,1.7);
-    /* IE9 */
-     transform: rotate(180deg) scale(1.7,1.7);
-    /* W3C complaint browsers */
-    /* IE8 and below */
-     -ms-filter: "progid:DXImageTransform.Microsoft.Matrix(M11=-1, M12=0, M21=0, M22=-1, DX=0, DY=0, SizingMethod='auto expand')";
 }
 
 /* Onoarding page styles */
@@ -719,9 +661,11 @@ body {
 }
 
 @media (max-width: 640px) {
+
   #button-onboarding {
     font-size: 1rem;
   }
+
 }
 
   #button-onboarding {
@@ -747,20 +691,14 @@ body {
   #button-onboarding:hover svg {
     color: var(--button-primary-text) !important;
   }
-  .primary-action-button:hover,
   #button-onboarding:hover,
-  .button-primary:hover,
-  .buy-button:hover,
-  .friend-buy-button:hover {
+.button-primary:hover {
     background-color: var(--button-primary-bg-hover);
     border-color: var(--button-primary-bg-hover);
     color: var(--button-primary-text) !important;
   }
-  .primary-action-button:active,
   #button-onboarding:active,
-  .button-primary:active,
-  .buy-button:active,
-  .friend-buy-button:active {
+.button-primary:active {
     transform: scale(0.98);
     background-color: var(--button-primary-bg-hover);
     border-color: var(--button-primary-bg-hover);
@@ -783,13 +721,6 @@ body {
       border-top-left-radius: 0;
       border-top-right-radius: 0;
     }
-  
-.canon-font {
-  font-size: 11pt;
-}
-.canon-image {
-  flex: 0 0 30%;
-}
 /* Unified row image preview */
 .row-image-preview {
   display: block;
@@ -802,6 +733,7 @@ body {
 }
 
 @media (min-width: 641px) {
+
   .row-image-preview {
     margin: 0;
     margin-bottom: 0;
@@ -815,9 +747,11 @@ body {
     width: 100% !important;
     margin: 0 !important;
   }
+
 }
 
 @media (max-width: 640px) {
+
   .row-image-preview {
     margin: 0;
   }
@@ -826,9 +760,6 @@ body {
     border-radius: 0;
     width: 100% !important;
   }
-  /* Ensure SSR placeholder shows mobile version to avoid swapping */
-  /* On mobile, show the compact placeholder and hide desktop-sized */
-  .comment-input-mobile-ssr { display: block !important; }
   .comment-input-desktop-ssr { display: none !important; }
   /* Reserve space for comment input React mount to avoid jump */
   .comment-input-host { 
@@ -841,6 +772,7 @@ body {
   .content-row .story-link-container-wrapper { padding-right: 16px !important; }
   .content-row .story-link { padding-right: 16px !important; }
   .content-row .domain-text { padding-right: 12px !important; }
+
 }
 
 /* (dup guard) */
@@ -860,7 +792,7 @@ body {
 
 /* Desktop defaults for SSR comment input placeholders */
 @media (min-width: 641px) {
-  .comment-input-mobile-ssr { display: none !important; }
+
   .comment-input-desktop-ssr { display: block !important; }
   /* Desktop: Reserve appropriate height when SSR placeholder is present */
   .comment-input-host:has(.comment-input-ssr-placeholder) {
@@ -870,6 +802,7 @@ body {
   body.react-loaded .comment-input-host {
     min-height: auto;
   }
+
 }
 
 /* Hide React comment input until React has mounted; SSR placeholder stays visible */
@@ -926,62 +859,6 @@ body.react-loaded .comment-input-ssr-placeholder {
   box-sizing: border-box;
 }
 
-.farcaster-embed-metadata {
-  display: grid;
-  grid-template-columns: 40px 1fr;
-  grid-gap: 0.75rem;
-  align-items: center;
-  line-height: 1.2;
-  container: metadata / inline-size;
-}
-
-.farcaster-embed-timestamp {
-  grid-column: 1 / -1;
-  opacity: 0.5;
-  font-size: 0.75rem;
-  line-height: 1.25rem;
-}
-
-@container metadata (min-width: 260px) {
-  .farcaster-embed-metadata {
-    grid-template-columns: 40px 1.5fr 1fr;
-  }
-
-  .farcaster-embed-timestamp {
-    grid-column: 3;
-    text-align: right;
-  }
-}
-
-.farcaster-embed-author-avatar-container {
-  width: 40px;
-  height: 40px;
-  border-radius: 9999px;
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-}
-
-.farcaster-embed-author-avatar {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.farcaster-embed-author p {
-  font-size: 0.875rem;
-  line-height: 1.25rem;
-}
-
-.farcaster-embed-author-display-name {
-  color: var(--embed-farcaster-text);
-  font-weight: 600;
-}
-
-.farcaster-embed-author-username {
-  opacity: 0.7;
-  color: var(--color-farcaster-light);
-}
-
 .farcaster-embed-body {
   margin-top: 0.75rem;
 }
@@ -995,46 +872,6 @@ body.react-loaded .comment-input-ssr-placeholder {
   font-weight: 400;
   margin: 0;
   padding: 0;
-}
-
-.farcaster-embed-stats {
-  margin-top: 0.75rem !important;
-  margin-bottom: -0.25rem !important;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  container: stats / inline-size;
-}
-
-.farcaster-embed-stats ul {
-  display: flex;
-  gap: 1rem;
-  list-style-type: none;
-}
-
-.farcaster-embed-stats-link {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  font-size: 0.75rem;
-  line-height: 1.25rem;
-  opacity: 0.5;
-  text-decoration: none;
-  color: inherit;
-}
-
-.farcaster-embed-farcaster-icon {
-  display: flex;
-}
-
-.farcaster-embed-farcaster-link {
-  display: inline-block;
-  transition: transform 0.15s ease-out;
-  text-decoration: none;
-}
-
-.farcaster-embed-farcaster-link:hover {
-  transform: scale(1.1);
 }
 
 /* Tweet embed styles */
@@ -1059,10 +896,6 @@ body.react-loaded .comment-input-ssr-placeholder {
 /* Ensure inner images inherit outer card clip and don't create extra corners */
 .tweet-preview-container img, .farcaster-preview-container img {
   border-radius: 0 !important;
-}
-
-.tweet-embed-header {
-  margin-bottom: 0.75rem;
 }
 
 .tweet-embed-body {
@@ -1126,23 +959,14 @@ body.react-loaded .comment-input-ssr-placeholder {
   text-decoration: underline;
 }
 
-
 /* mobile device */
 @media only screen and (min-width : 300px) and (max-width : 640px) {
+
     .scroll-margin-base {
       scroll-margin-top: 140px;
     }
     .scroll-margin-with-image {
       scroll-margin-top: calc(50vw + 100px);
-    }
-    .contest-entries {
-     display: none;
-    }
-    .last-edition-link {
-     display: none;
-    }
-    .newsletter-row {
-      margin-bottom: 20px;
     }
     .share-container {
       font-size: 10pt;
@@ -1161,9 +985,6 @@ body.react-loaded .comment-input-ssr-placeholder {
       padding-right: 8px;
       max-width: 100%;
       overflow: hidden;
-    }
-    .story-domain {
-      font-size: 9pt;
     }
     .story-link {
       opacity: 0.9;
@@ -1200,11 +1021,6 @@ body.react-loaded .comment-input-ssr-placeholder {
   align-items: center;
   height: 18px;
   line-height: 18px;
-}
-
-/* Hide domain when analytics are shown to prevent overflow */
-.story-subtitle.has-analytics .domain-hideable {
-  display: none !important;
 }
 
 /* Fix domain text overflow on mobile */
@@ -1251,23 +1067,10 @@ body.react-loaded .comment-input-ssr-placeholder {
     footer {
       padding-bottom: 100px;
     }
-    .notification-bar {
-      bottom: 51px !important;
-    }
-    .third-header, #bell {
+    #bell {
       display: none;
     }
-    .canon-image {
-      flex: 0 0 45%;
-    }
-    .canon-font {
-      font-size: 8pt;
-    }
      #hnmain {
-         width: 100%;
-         min-width: 0;
-    }
-    #boxmain {
          width: 100%;
          min-width: 0;
     }
@@ -1293,14 +1096,6 @@ body.react-loaded .comment-input-ssr-placeholder {
          display: block;
          font-size: 18px;
     }
-     table.comment-tree .comment a {
-         display: inline-block;
-         max-width: 200px;
-         overflow: hidden;
-         white-space: nowrap;
-         text-overflow: ellipsis;
-         vertical-align:top;
-    }
      .title {
          display: table-row;
          font-size: 13pt;
@@ -1309,29 +1104,11 @@ body.react-loaded .comment-input-ssr-placeholder {
      .subtext {
          font-size: 9pt;
     }
-     .votearrow.rotate180 {
-         -webkit-transform: rotate(180deg) scale(1.7,1.7);
-        /* Chrome and other webkit browsers */
-         -moz-transform: rotate(180deg) scale(1.7,1.7);
-        /* FF */
-         -o-transform: rotate(180deg) scale(1.7,1.7);
-        /* Opera */
-         -ms-transform: rotate(180deg) scale(1.7,1.7);
-        /* IE9 */
-         transform: rotate(180deg) scale(1.7,1.7);
-        /* W3C complaint browsers */
-    }
-     .votelinks {
-         min-width: 18px;
-    }
-     .votelinks a {
-         display: block;
-         margin-bottom: 9px;
-    }
      input[type='text'], input[type='number'], textarea {
          font-size: 16px;
          width: 90%;
     }
+
 }
 /* Comment section styles */
 
@@ -1339,19 +1116,9 @@ body.react-loaded .comment-input-ssr-placeholder {
  #menu {
      padding-top: 10px;
 }
- @media screen and (max-width: 600px) {
-     .hide-on-mobile {
-         display: none !important;
-    }
-}
  #content {
      flex: 1;
      padding: 20px;
-}
- .kiwi-svg {
-     height: auto;
-     margin-bottom: 2em;
-     max-width: 60%;
 }
 .kiwi-wordmark {
   color: var(--text-primary);
@@ -1406,31 +1173,24 @@ body.react-loaded .comment-input-ssr-placeholder {
      display: block;
      margin-left: 5px;
  }
- .notification-text {
-     font-size: 1.2em;
-     max-width: 70%;
-     margin: 0 auto;
-}
  @media (min-width: 641px) {
+
      .feed-container {
          max-width: 60%;
          margin: 0 auto;
     }
-     .kiwi-svg {
-         max-width: 40%;
-    }
+
 }
 /* Media query for medium screens */
  @media (min-width: 641px) {
+
     footer {
       padding-bottom: 100px;
     }
-    .notification-bar {
-      bottom: 51px !important;
-    }
-    .third-header, #bell {
+    #bell {
       display: none;
     }
+
 }
 
  .sidebar-toggle {
@@ -1464,16 +1224,15 @@ body.react-loaded .comment-input-ssr-placeholder {
 }
 
 @media (display-mode: standalone) {
+
    .submit-button {
      bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
    }
    .bottom-nav {
      padding-bottom: calc(env(safe-area-inset-bottom, 0px));
    }
-   .notification-bar {
-     bottom: calc(51px + env(safe-area-inset-bottom, 51px)) !important;
-   }
- }
+ 
+}
 .bottom-nav > a > svg,
 .mobile-bell-container a > svg,
 .mobile-bell-container svg {
@@ -1500,6 +1259,7 @@ body.react-loaded .comment-input-ssr-placeholder {
 
 /* Media query for larger screens */
  @media (min-width: 641px) {
+
     /* Use mobile layout for rows on desktop */
     #hnmain > table {
       background-color: var(--table-bg-mobile);
@@ -1560,9 +1320,6 @@ body.react-loaded .comment-input-ssr-placeholder {
     [data-theme="dark"] .feed-button:hover {
       background-color: rgba(255, 255, 255, 0.15) !important;
     }
-    .story-link:not(.redacted):hover {
-      text-decoration: underline;
-    }
     /* Desktop alignment for subtitle items */
     .subtitle-flex { 
       align-items: baseline !important; 
@@ -1578,9 +1335,6 @@ body.react-loaded .comment-input-ssr-placeholder {
       align-items: baseline;
       white-space: nowrap;
     }
-    .notification-bar {
-      bottom: 0px !important;
-    }
     #hnmain {
       width: 70ch;
       border-radius: 2px;
@@ -1589,9 +1343,6 @@ body.react-loaded .comment-input-ssr-placeholder {
     }
     #bell {
       display: block;
-    }
-    .third-header {
-      display: table-row;
     }
     .bottom-nav {
       display: none !important;
@@ -1633,6 +1384,7 @@ body.react-loaded .comment-input-ssr-placeholder {
       border-bottom-right-radius: 2px;
       border-right: var(--border);
     }
+
 }
  .svg-container {
      width: 19%;
@@ -1677,12 +1429,6 @@ a.meta-link:hover, span.meta-link:hover {
      fill: var(--color-farcaster-purple);
      cursor: pointer;
 }
-
-.vote-button-container {
-  min-height: 100%;
-  display: flex;
-  align-self: stretch;
-}
 .comment-preview .interaction-element:hover {
   cursor:pointer !important;
   background-color: var(--bg-hover) !important;
@@ -1715,47 +1461,6 @@ a.meta-link:hover, span.meta-link:hover {
   text-shadow: 0px 0px 2px white;
   animation: karma-float 0.7s ease-out forwards;
 }
- 
-#top-bar {
-  top: 0;
-  left: 0;
-  right: 0;
-  background-color: var(--text-primary);
-  padding: 1rem;
-  display: flex;
-  justify-content: space-between; // Updated this line
-  align-items: center;
-  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
-}
-#center-content {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-grow: 1; // Added this line
-}
-#top-bar p {
-  margin: 0;
-  padding: 0;
-  font-size: 14px;
-}
-#top-bar button {
-  background-color: var(--color-notification);
-  color: var(--bg-white);
-  border: none;
-  padding: 5px 10px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-  margin-left: 10px;
-}
-#top-bar button:hover {
-  background-color: var(--color-link-blue);
-}
-#close-button {
-  cursor: pointer;
-  padding: 5px;
-  color: var(--bg-white);
-}
 
 .filter-tab:hover {
   background-color: var(--bg-hover-minimal);
@@ -1766,17 +1471,21 @@ a.meta-link:hover, span.meta-link:hover {
    color: var(--text-quaternary);
 }
 @media only screen and (min-width: 641px) {
+
   .desktop-search {
     display: block !important;
   }
+
 }
 @media only screen and (max-width: 640px) {
+
   .desktop-search {
     display: none !important;
   }
   #static-desktop-search {
     display: none !important;
   }
+
 }
 
 /* Spinner overlay styles */
@@ -1800,59 +1509,18 @@ a.meta-link:hover, span.meta-link:hover {
   color: var(--text-secondary);
 }
 
-/* Leaderboard Preview Styles */
-.leaderboard-preview-container {
-  background-color: var(--table-bg);
-  padding: 15px;
-  border-top: var(--border);
-  border-bottom: var(--border);
-  margin-bottom: 20px;
-}
-
-.leaderboard-preview-container h2 {
-  font-size: 18px;
-  margin-top: 0;
-  margin-bottom: 10px;
-  color: var(--text-primary);
-}
-
-.leaderboard-preview-container .leaderboard-list div {
-  display: flex;
-  justify-content: space-between;
-  padding: 5px 0;
-}
-
-.leaderboard-preview-container .leaderboard-list div div {
-  color: var(--text-primary);
-}
-
-.leaderboard-preview-container a {
-  color: var(--color-link-blue);
-  text-decoration: none;
-}
-
 /* Safari-specific fixes for content row borders */
 @supports (-webkit-appearance: none) {
+
   .content-row {
     border: 1px solid rgba(166, 110, 78, 0.15) !important;
     background-color: var(--bg-content-row) !important;
   }
+
 }
 
 /* Removed dropdown UI; share button now copies link */
 .share-button-container { position: relative; }
-
-/* When a share dropdown is open, ensure the row sits above neighbors */
-/* dropdown-open no longer used */
-
-/* No dropdown to hide/show by viewport anymore */
-
-/* Hide mobile spacer on desktop */
-@media only screen and (min-width: 641px) {
-  .mobile-only-spacer {
-    display: none !important;
-  }
-}
 
 /* Emoji reaction styles - Telegram-like subtle design */
 .react-toggle-btn:hover:not(:disabled) {
@@ -1877,6 +1545,7 @@ a.meta-link:hover, span.meta-link:hover {
 
 /* Fix analytics overflow on mobile */
 @media (max-width: 768px) {
+
   /* Only style analytics that are actually shown (not display: none) */
   .story-analytics:not([style*="display: none"]) {
     display: inline !important;
@@ -1896,6 +1565,7 @@ a.meta-link:hover, span.meta-link:hover {
   .story-analytics:not([style*="display: none"]) ~ .domain-flex {
     display: none !important;
   }
+
 }
 
 /* Fix for emoji reaction container layout shift */
@@ -1916,6 +1586,7 @@ a.meta-link:hover, span.meta-link:hover {
 
 /* Disable hover effect on desktop for clicked content */
 @media (min-width: 769px) {
+
   .clicked-content:hover {
     background-color: transparent !important;
     filter: grayscale(50%) opacity(0.85); /* Keep the same styling, no change on hover */
@@ -1923,10 +1594,9 @@ a.meta-link:hover, span.meta-link:hover {
 
   /* Also disable the hover background color that's applied inline or via other classes */
   .content-row.clicked-content:hover,
-  .row-container.clicked-content:hover,
-  div.clicked-content:hover,
-  tr:has(.clicked-content):hover,
-  td:has(.clicked-content):hover {
+div.clicked-content:hover,
+tr:has(.clicked-content):hover,
+td:has(.clicked-content):hover {
     background-color: transparent !important;
   }
 
@@ -1935,6 +1605,7 @@ a.meta-link:hover, span.meta-link:hover {
   .clicked-content * {
     transition: none !important;
   }
+
 }
 
 /* Override for inverted rows to maintain their style */
@@ -2022,9 +1693,11 @@ a.meta-link:hover, span.meta-link:hover {
 }
 
 @media (max-width: 1100px) {
+
   .right-column {
     display: none;
   }
+
 }
 
 /* Trollbox Panel */
@@ -2110,9 +1783,11 @@ button.ai-button:hover {
 }
 
 @media (max-width: 640px) {
+
   .ai-desktop-only {
     display: none;
   }
+
 }
 
 /* Desktop: portaled dropdown near button */
