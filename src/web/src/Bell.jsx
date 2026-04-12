@@ -362,7 +362,6 @@ const Bell = (props) => {
     window.location.pathname === "/notifications" ||
     window.location.pathname === "/whattosubmit" ||
     window.location.pathname === "/pwa" ||
-    window.location.pathname === "/start" ||
     window.location.pathname === "/friends"
   ) {
     // Render nothing for these specific paths or conditions

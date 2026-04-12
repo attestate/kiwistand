@@ -28,7 +28,7 @@ const workerRoutes = [
   "/best",
   "/community",
   "/retention",
-  "/users",
+
   "/basics",
   "/stats",
   "/about",
@@ -42,7 +42,7 @@ const workerRoutes = [
   "/email-notifications",
   "/invite",
   "/indexing",
-  "/start",
+
   "/settings",
   "/why",
   "/subscribe",
