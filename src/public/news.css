@@ -478,7 +478,7 @@ body {
   box-sizing: border-box;
   cursor: pointer;
 }
-.feed-button:hover{
+.feed-button:not(.active):hover{
   background-color: var(--bg-hover);
 }
 .feed-button:active {
@@ -1314,10 +1314,10 @@ body.react-loaded .comment-input-ssr-placeholder {
     .desktop-nav a, .desktop-nav span {
       flex-shrink: 0;
     }
-    .feed-button:hover {
+    .feed-button:not(.active):hover {
       background-color: rgba(0, 0, 0, 0.15) !important;
     }
-    [data-theme="dark"] .feed-button:hover {
+    [data-theme="dark"] .feed-button:not(.active):hover {
       background-color: rgba(255, 255, 255, 0.15) !important;
     }
     /* Desktop alignment for subtitle items */

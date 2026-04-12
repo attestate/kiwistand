@@ -177,120 +177,6 @@ export const fireSVG = html`
   </svg>
 `;
 
-export const sparkleFullSVG = html`<svg
-  style="${style}"
-  xmlns="http://www.w3.org/2000/svg"
-  viewBox="0 0 256 256"
->
-  <rect width="256" height="256" fill="none" />
-  <path
-    d="M208,144a15.78,15.78,0,0,1-10.42,14.94L146,178l-19,51.62a15.92,15.92,0,0,1-29.88,0L78,178l-51.62-19a15.92,15.92,0,0,1,0-29.88L78,110l19-51.62a15.92,15.92,0,0,1,29.88,0L146,110l51.62,19A15.78,15.78,0,0,1,208,144ZM152,48h16V64a8,8,0,0,0,16,0V48h16a8,8,0,0,0,0-16H184V16a8,8,0,0,0-16,0V32H152a8,8,0,0,0,0,16Zm88,32h-8V72a8,8,0,0,0-16,0v8h-8a8,8,0,0,0,0,16h8v8a8,8,0,0,0,16,0V96h8a8,8,0,0,0,0-16Z"
-    fill="currentColor"
-  />
-</svg>`;
-
-export const sparkleSVG = html`
-  <svg
-    style="${style}"
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 256 256"
-  >
-    <rect width="256" height="256" fill="none" />
-    <path
-      d="M112,64.15 L132.22,119 a8,8,0,0,0,4.74,4.74 L191.85,144 L137,164.22 a8,8,0,0,0,-4.74,4.74 L112,223.85 L91.78,169 A8,8,0,0,0,87,164.22 L32.15,144 L87,123.78 A8,8,0,0,0,91.78,119 Z"
-      fill="none"
-      stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="16"
-    />
-    <line
-      x1="176"
-      y1="16"
-      x2="176"
-      y2="64"
-      fill="none"
-      stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="16"
-    />
-    <line
-      x1="152"
-      y1="40"
-      x2="200"
-      y2="40"
-      fill="none"
-      stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="16"
-    />
-    <line
-      x1="224"
-      y1="72"
-      x2="224"
-      y2="104"
-      fill="none"
-      stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="16"
-    />
-    <line
-      x1="208"
-      y1="88"
-      x2="240"
-      y2="88"
-      fill="none"
-      stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="16"
-    />
-  </svg>
-`;
-
-export const clockFullSVG = html`<svg
-  style="${style}"
-  xmlns="http://www.w3.org/2000/svg"
-  viewBox="0 0 256 256"
->
-  <rect width="256" height="256" fill="none" />
-  <path
-    d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm56,112H128a8,8,0,0,1-8-8V72a8,8,0,0,1,16,0v48h48a8,8,0,0,1,0,16Z"
-    fill="currentColor"
-  />
-</svg>`;
-
-export const clockSVG = html`
-  <svg
-    style="${style}"
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 256 256"
-  >
-    <rect width="256" height="256" fill="none" />
-    <circle
-      cx="128"
-      cy="128"
-      r="96"
-      fill="none"
-      stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="16"
-    />
-    <polyline
-      points="128,72 128,128 184,128"
-      fill="none"
-      stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="16"
-    />
-  </svg>
-`;
-
 const periodIconStyle = (theme, period, category) =>
   `color: ${
     period === category ? "var(--text-primary)" : "var(--text-secondary)"
@@ -325,10 +211,14 @@ const secondheader = (theme, site, period, domain, query) => {
                 <a data-no-instant class="feed-button-link" href="/">
                   <button
                     onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block'; ${animation}}"
-                    class="feed-button"
-                    style=${`font-variant: small-caps; font-size: 1.01rem; border: none; outline: none; border-radius: 2px; cursor: pointer; padding: 6px 15px; background-color: ${
-                      site === "top" ? "var(--button-active-bg)" : "var(--button-bg)"
-                    }; color: var(--text-primary);`}
+                    class="feed-button${site === "top" ? " active" : ""}"
+                    style=${`font-variant: small-caps; font-size: 1.01rem; outline: none; border-radius: 2px; cursor: pointer; padding: 5px 14px; background-color: ${
+                      site === "top" ? "var(--accent-primary)" : "var(--bg-white)"
+                    }; border: 1px solid ${
+                      site === "top" ? "var(--accent-primary-hover)" : "rgba(0, 0, 0, 0.15)"
+                    }; color: ${
+                      site === "top" ? "var(--text-white)" : "var(--text-primary)"
+                    };`}
                   >
                     <span
                       style="font-weight: ${site === "top"
@@ -353,10 +243,14 @@ const secondheader = (theme, site, period, domain, query) => {
                 >
                   <button
                     onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block'; ${animation}}"
-                    class="feed-button"
-                    style=${`font-variant: small-caps; margin-left: 10px; font-size: 1.01rem; border: none; outline: none; border-radius: 2px; cursor: pointer; padding: 6px 15px; background-color: ${
-                      site === "new" ? "var(--button-active-bg)" : "var(--button-bg)"
-                    }; color: var(--text-primary); position:relative;`}
+                    class="feed-button${site === "new" ? " active" : ""}"
+                    style=${`font-variant: small-caps; margin-left: 10px; font-size: 1.01rem; outline: none; border-radius: 2px; cursor: pointer; padding: 5px 14px; background-color: ${
+                      site === "new" ? "var(--accent-primary)" : "var(--bg-white)"
+                    }; border: 1px solid ${
+                      site === "new" ? "var(--accent-primary-hover)" : "rgba(0, 0, 0, 0.15)"
+                    }; color: ${
+                      site === "new" ? "var(--text-white)" : "var(--text-primary)"
+                    }; position:relative;`}
                   >
                     <span
                       id="new-dot"
@@ -367,7 +261,7 @@ const secondheader = (theme, site, period, domain, query) => {
                         ? "bold"
                         : "normal"};"
                     >
-                      ${site === "new" ? sparkleFullSVG : sparkleSVG}
+                      ${site === "new" ? broadcastFullSVG : broadcastSVG(style)}
                       <span> New </span>
                     </span>
                   </button>
@@ -386,10 +280,14 @@ const secondheader = (theme, site, period, domain, query) => {
                 >
                   <button
                     onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block'; ${animation}}"
-                    class="feed-button"
-                    style=${`font-variant: small-caps; margin-left: 10px; font-size: 1.01rem; border: none; outline: none; border-radius: 2px; cursor: pointer; padding: 6px 15px; background-color: ${
-                      site === "best" ? "var(--button-active-bg)" : "var(--button-bg)"
-                    }; color: var(--text-primary);`}
+                    class="feed-button${site === "best" ? " active" : ""}"
+                    style=${`font-variant: small-caps; margin-left: 10px; font-size: 1.01rem; outline: none; border-radius: 2px; cursor: pointer; padding: 5px 14px; background-color: ${
+                      site === "best" ? "var(--accent-primary)" : "var(--bg-white)"
+                    }; border: 1px solid ${
+                      site === "best" ? "var(--accent-primary-hover)" : "rgba(0, 0, 0, 0.15)"
+                    }; color: ${
+                      site === "best" ? "var(--text-white)" : "var(--text-primary)"
+                    };`}
                   >
                     <span
                       style="font-weight: ${site === "best"
@@ -397,28 +295,6 @@ const secondheader = (theme, site, period, domain, query) => {
                         : "normal"};"
                     >
                       ${site === "best" ? trophyFullSVG : trophySVG} Best
-                    </span>
-                  </button>
-                </a>
-              `
-            : ""}
-          ${site === "search" ||
-          site === "top" ||
-          site === "new" ||
-          site === "best"
-            ? html`
-                <a
-                  data-no-instant
-                  class="feed-button-link"
-                  href="/best?period=day"
-                >
-                  <button
-                    onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block'; ${animation}}"
-                    class="feed-button"
-                    style=${`font-variant: small-caps; margin-left: 10px; font-size: 1.01rem; border: none; outline: none; border-radius: 2px; cursor: pointer; padding: 6px 15px; background-color: var(--button-bg); color: var(--text-primary);`}
-                  >
-                    <span style="font-weight: normal;">
-                      ${clockSVG} Latest
                     </span>
                   </button>
                 </a>
