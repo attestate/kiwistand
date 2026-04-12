@@ -130,8 +130,6 @@ async function addTrollbox() {
   if (!container) return;
 
   const Trollbox = (await import("./Trollbox.jsx")).default;
-  // Clear the SSR placeholder content
-  container.innerHTML = "";
   createRoot(container).render(
     <StrictMode>
       <Providers>
@@ -633,7 +631,7 @@ async function addAnalyticsConsent() {
 
 async function addTestFlightQR() {
   const container = document.getElementById("testflight-qr-container");
-  if (!container) return;
+  if (!container || container.children.length > 0) return;
 
   const TestFlightQR = (await import("./TestFlightQR.jsx")).default;
   createRoot(container).render(

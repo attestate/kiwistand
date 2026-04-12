@@ -35,7 +35,32 @@ export default function Trollbox() {
           </div>
         </div>
       </aside>
-      <div id="testflight-qr-container"></div>
+      <div id="testflight-qr-container">
+        <div
+          style="background-color:var(--bg-white);border-radius:2px;border:var(--border);padding:16px;"
+        >
+          <div
+            style="display:flex;flex-direction:column;align-items:center;gap:12px;"
+          >
+            <span
+              style="font-size:14px;font-weight:500;color:var(--text-primary);"
+              >Get Kiwi App</span
+            >
+            <img
+              src="/testflight-qr.png"
+              alt="TestFlight QR Code"
+              width="150"
+              height="150"
+              style="border-radius:4px;"
+            />
+            <p
+              style="font-size:12px;color:var(--text-tertiary);text-align:center;margin:0;line-height:1.4;"
+            >
+              Scan with iPhone to join<br />TestFlight beta
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   `;
 }
