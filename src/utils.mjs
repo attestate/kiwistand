@@ -102,7 +102,7 @@ export function fetchCache(fetch, fileSystemCache, cacheDirectory) {
 }
 
 export function getSlug(title) {
-  return slugify(DOMPurify.sanitize(title));
+  return slugify(DOMPurify.sanitize(title), { strict: true });
 }
 
 let lastCall;
