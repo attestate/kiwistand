@@ -424,6 +424,7 @@ button, a, .interaction-element {
 html {
   background-color: var(--bg-page);
   min-height: 100%;
+  scrollbar-gutter: stable;
 }
 body {
   min-height: 100dvh;
@@ -1702,6 +1703,12 @@ td:has(.clicked-content):hover {
     display: none;
   }
 
+}
+
+@media (min-width: 1101px) {
+  .right-column {
+    order: 1;
+  }
 }
 
 /* Trollbox Panel */

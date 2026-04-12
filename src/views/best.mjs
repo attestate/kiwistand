@@ -217,6 +217,7 @@ export default async function index(theme, page, period, domain) {
       >
         <div class="container">
           ${Sidebar("/best")}
+          ${Trollbox()}
           <div id="hnmain" class="scaled-hnmain">
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="var(--background-color0)">
               <tr>
@@ -294,7 +295,6 @@ export default async function index(theme, page, period, domain) {
             </table>
             ${Footer(theme, "/best")}
           </div>
-          ${Trollbox()}
         </div>
       </body>
     </html>

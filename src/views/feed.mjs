@@ -913,6 +913,7 @@ export default async function (trie, theme, page, domain, identity, hash, varian
       >
         <div class="container">
           ${Sidebar(path)}
+          ${Trollbox()}
           <div id="hnmain" class="scaled-hnmain">
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f8f8f7">
               <tr>
@@ -981,7 +982,6 @@ export default async function (trie, theme, page, domain, identity, hash, varian
             </table>
             ${Footer(theme, path)}
           </div>
-          ${Trollbox()}
         </div>
       </body>
     </html>

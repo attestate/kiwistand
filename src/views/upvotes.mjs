@@ -134,6 +134,7 @@ export default async function (trie, theme, identity, tab = "submissions") {
       <body ontouchstart="">
         <div class="container">
           ${Sidebar(path)}
+          ${Trollbox()}
           <div id="hnmain" class="scaled-hnmain">
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="var(--background-color0)">
               <tr>
@@ -265,7 +266,6 @@ export default async function (trie, theme, identity, tab = "submissions") {
             </table>
             ${Footer(theme)}
           </div>
-          ${Trollbox()}
         </div>
       </body>
     </html>

@@ -382,6 +382,7 @@ export async function page(
       >
         <div class="container">
           ${Sidebar()}
+          ${Trollbox()}
           <div id="hnmain" class="scaled-hnmain">
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="var(--background-color0)">
               <tr>
@@ -454,7 +455,6 @@ export async function page(
             </table>
             ${Footer(theme, "/activity")}
           </div>
-          ${Trollbox()}
         </div>
       </body>
     </html>
