@@ -22,7 +22,7 @@ export default async function (url, theme) {
     }
     
   } catch (error) {
-    return html`
+    return "<!DOCTYPE html>" + html`
       <html lang="en" op="news">
         <head>
           ${head}
@@ -53,7 +53,7 @@ export default async function (url, theme) {
 
   const sanitizedUrl = DOMPurify.sanitize(targetUrl.href);
 
-  return html`
+  return "<!DOCTYPE html>" + html`
     <html lang="en" op="news">
       <head>
         ${head}

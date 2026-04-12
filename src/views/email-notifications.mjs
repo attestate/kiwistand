@@ -9,7 +9,7 @@ import Head from "./components/head.mjs";
 const html = htm.bind(vhtml);
 
 export default async function (theme) {
-  return html`
+  return "<!DOCTYPE html>" + html`
     <html lang="en" op="news">
       <head>
         ${Head}

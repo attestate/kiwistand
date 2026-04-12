@@ -11,7 +11,7 @@ const html = htm.bind(vhtml);
 // Mini App landing page for Warpcast frame
 export default async function frameSubscribe(theme) {
   const path = "/miniapp";
-  return html`
+  return "<!DOCTYPE html>" + html`
     <html lang="en" op="news">
       <head>
         ${custom()}

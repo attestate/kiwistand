@@ -11,7 +11,7 @@ export default async function (theme) {
   const videoUrl = "shortcut.mp4";
   const shortcutUrl =
     "https://www.icloud.com/shortcuts/711553cd22924328818215a2fdf79bdb";
-  return html`
+  return "<!DOCTYPE html>" + html`
     <html lang="en" op="news">
       <head>
         ${Head}

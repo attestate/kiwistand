@@ -12,7 +12,7 @@ const html = htm.bind(vhtml);
 const path = "/notifications";
 
 export default async function (theme) {
-  return html`
+  return "<!DOCTYPE html>" + html`
     <html lang="en" op="news">
       <head>
         ${Head}

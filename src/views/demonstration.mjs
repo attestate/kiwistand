@@ -30,7 +30,7 @@ export default async function index(theme) {
     },
   ];
 
-  return html`
+  return "<!DOCTYPE html>" + html`
     <html lang="en" op="news">
       <head>
         ${Head}

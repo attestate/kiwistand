@@ -64,7 +64,7 @@ export default async function (theme, query) {
   const ogImage = "https://news.kiwistand.com/kiwi_search_page.png";
   const prefetch = ["/", "/new", "/submit", "/best"];
   const path = "/search";
-  return html`
+  return "<!DOCTYPE html>" + html`
     <html lang="en" op="news">
       <head>
         ${custom(ogImage, `Search: ${sanitizedQuery} | Kiwi News`, `Search results for ${sanitizedQuery} on Kiwi News`, "", prefetch)}

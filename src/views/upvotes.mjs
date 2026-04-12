@@ -63,7 +63,7 @@ export default async function (trie, theme, identity, tab = "submissions") {
   // Get karma rank
   const allKarma = karma.ranking();
   const rank = allKarma.findIndex(k => k.identity.toLowerCase() === identity.toLowerCase()) + 1;
-  return html`
+  return "<!DOCTYPE html>" + html`
     <html lang="en" op="news">
       <head>
         ${custom(

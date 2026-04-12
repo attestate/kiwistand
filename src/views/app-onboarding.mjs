@@ -11,7 +11,7 @@ const html = htm.bind(vhtml);
 const path = "/app-onboarding";
 
 export default async function (theme) {
-  return html`
+  return "<!DOCTYPE html>" + html`
     <html lang="en" op="news">
       <head>
         ${custom()}

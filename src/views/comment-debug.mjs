@@ -174,7 +174,7 @@ export default async function commentDebug(theme) {
   const enrichedComments = await enrichComments(sampleComments);
   const categorized = categorizeComments(enrichedComments);
   
-  return html`
+  return "<!DOCTYPE html>" + html`
     <html lang="en" op="news">
       <head>
         ${Head}

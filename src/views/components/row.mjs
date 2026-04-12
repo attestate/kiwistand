@@ -674,6 +674,7 @@ const row = (
               : canRenderFarcasterPreview
               ? html`<a
                   class="farcaster-preview-container farcaster-cast-link"
+                  aria-label="View post on Farcaster"
                   data-no-instant
                   href="${DOMPurify.sanitize(story.href)}"
                   data-cast-hash="${story.metadata.farcasterCast &&
@@ -1004,6 +1005,7 @@ const row = (
                     style="position: relative; width: 100%; aspect-ratio: 2 / 1; background: var(--button-bg); contain: content; contain-intrinsic-size: 600px 300px;"
                   >
                     <img
+                      alt="${DOMPurify.sanitize(story.title)}"
                       loading="${getImageLoading(isAboveFold, isCloudflare ? story.href : story.metadata.image)}"
                       width="600"
                       height="300"
@@ -1035,6 +1037,7 @@ const row = (
                         "arbiscan.io",
                       ].includes(extractedDomain)
                         ? html`<img
+                            alt=""
                             src="/api/v1/favicon?domain=${encodeURIComponent(
                               extractedDomain,
                             )}"
@@ -1280,6 +1283,7 @@ const row = (
                                 "arbiscan.io",
                               ].includes(extractedDomain)
                                 ? html`<img
+                                    alt=""
                                     src="/api/v1/favicon?domain=${encodeURIComponent(
                                       extractedDomain,
                                     )}"
@@ -1363,6 +1367,7 @@ const row = (
                         >
                           <a
                             class="interaction-button comment-button"
+                            aria-label="Comments"
                             id="chat-bubble-${story.index}"
                             href="/stories/${getSlug(
                               story.title,
@@ -1414,6 +1419,7 @@ const row = (
                     >
                       <button
                         class="interaction-button share-button"
+                        aria-label="Share"
                         data-story-title="${DOMPurify.sanitize(story.title)}"
                         data-story-slug="${getSlug(story.title)}"
                         data-story-index="0x${story.index}"
@@ -1434,7 +1440,7 @@ const row = (
                           style="flex: 1; display: flex; justify-content: center;"
                         >
                           <div class="ai-dropdown-trigger">
-                            <button class="interaction-button ai-button" type="button">
+                            <button class="interaction-button ai-button" type="button" aria-label="AI tools">
                               <span class="ai-button-icon">${aiSparkleSVG}</span>
                             </button>
                             <div class="ai-dropdown-menu" style="display:none;">

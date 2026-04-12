@@ -28,7 +28,7 @@ export default async function submit(theme, url = "", title = "") {
     }
   }
   const path = "/submit";
-  return html`
+  return "<!DOCTYPE html>" + html`
     <html lang="en" op="news">
       <head>
         ${custom(undefined, "Submit | Kiwi News", "Submit a link to share with the Kiwi News community.", undefined, ["/"])}

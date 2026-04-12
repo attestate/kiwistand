@@ -414,7 +414,7 @@ export default async function (trie, theme, index, value, referral, commentIndex
     ...(ogDescription ? { "description": ogDescription } : {}),
   });
 
-  return html`
+  return "<!DOCTYPE html>" + html`
     <html lang="en" op="news">
       <head>
         <base href="/" />
@@ -437,7 +437,7 @@ export default async function (trie, theme, index, value, referral, commentIndex
         <div class="container">
           ${Sidebar(path)}
           ${Trollbox()}
-          <div id="hnmain" class="scaled-hnmain">
+          <main id="hnmain" class="scaled-hnmain" role="main">
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="var(--background-color0)">
               <thead>
                 <tr>
@@ -745,7 +745,7 @@ export default async function (trie, theme, index, value, referral, commentIndex
             <div class="desktop-only-footer">
               ${Footer(theme, path)}
             </div>
-          </div>
+          </main>
         </div>
       </body>
     </html>

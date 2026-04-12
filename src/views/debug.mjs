@@ -207,7 +207,7 @@ export default async function debug(theme) {
   const mockStories = createMockStories();
   const rowRenderer = Row(0, "/debug", "", false, false, null, false, "", true); // debugMode = true
   
-  return html`
+  return "<!DOCTYPE html>" + html`
     <html lang="en" op="news">
       <head>
         ${Head}

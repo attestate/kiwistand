@@ -202,7 +202,7 @@ async function renderPage(theme) {
   const ogImage = "https://news.kiwistand.com/kiwi_new_feed_page.png";
   const prefetch = ["/", "/submit", "/best"];
   const query = "?cached=true";
-  return html`
+  return "<!DOCTYPE html>" + html`
     <html lang="en" op="news">
       <head>
         ${custom(ogImage, "New | Kiwi News - latest crypto submissions", "Freshly submitted crypto links and web3 stories, updated in real time.", undefined, prefetch, "https://news.kiwistand.com/new?cached=true")}
@@ -215,7 +215,7 @@ async function renderPage(theme) {
         <div class="container">
           ${Sidebar(path)}
           ${Trollbox()}
-          <div id="hnmain" class="scaled-hnmain">
+          <main id="hnmain" class="scaled-hnmain" role="main">
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="var(--background-color0)">
               <tr>
                 ${Header(theme)}
@@ -245,7 +245,7 @@ async function renderPage(theme) {
               </tr>
             </table>
             ${Footer(theme, "/new")}
-          </div>
+          </main>
         </div>
       </body>
     </html>

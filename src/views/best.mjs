@@ -205,7 +205,7 @@ export default async function index(theme, page, period, domain) {
     "/best?period=year",
     "/best?period=all",
   ];
-  return html`
+  return "<!DOCTYPE html>" + html`
     <html lang="en" op="news">
       <head>
         ${custom(ogImage, "Best | Kiwi News - top crypto stories", "The highest-voted crypto and web3 stories on Kiwi News.", undefined, prefetch, "https://news.kiwistand.com/best")}
@@ -218,7 +218,7 @@ export default async function index(theme, page, period, domain) {
         <div class="container">
           ${Sidebar("/best")}
           ${Trollbox()}
-          <div id="hnmain" class="scaled-hnmain">
+          <main id="hnmain" class="scaled-hnmain" role="main">
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="var(--background-color0)">
               <tr>
                 ${await Header(theme)}
@@ -294,7 +294,7 @@ export default async function index(theme, page, period, domain) {
               </tr>
             </table>
             ${Footer(theme, "/best")}
-          </div>
+          </main>
         </div>
       </body>
     </html>

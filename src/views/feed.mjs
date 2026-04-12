@@ -901,7 +901,7 @@ export default async function (trie, theme, page, domain, identity, hash, varian
   const description = "The best crypto links, curated by the Kiwi community. Web3, Ethereum, DeFi and more.";
   const twitterCard = undefined;
   const prefetch = ["/new?cached=true", "/submit", "/best"];
-  return html`
+  return "<!DOCTYPE html>" + html`
     <html lang="en" op="news">
       <head>
         ${custom(ogImage, title, description, twitterCard, prefetch, "https://news.kiwistand.com/", null, variant)}
@@ -914,7 +914,7 @@ export default async function (trie, theme, page, domain, identity, hash, varian
         <div class="container">
           ${Sidebar(path)}
           ${Trollbox()}
-          <div id="hnmain" class="scaled-hnmain">
+          <main id="hnmain" class="scaled-hnmain" role="main">
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f8f8f7">
               <tr>
                 ${await Header(theme)}
@@ -981,7 +981,7 @@ export default async function (trie, theme, page, domain, identity, hash, varian
               </tr>
             </table>
             ${Footer(theme, path)}
-          </div>
+          </main>
         </div>
       </body>
     </html>
