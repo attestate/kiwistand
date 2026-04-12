@@ -66,6 +66,7 @@ export const EmojiReaction = ({ comment, delegations, toast }) => {
   const [isReacting, setIsReacting] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [pickerTop, setPickerTop] = useState(0);
+  const [pickerLeft, setPickerLeft] = useState(12);
   const buttonRef = useRef(null);
   // Current emojis (in picker order)
   const [kiwis, setKiwis] = useState(
@@ -92,6 +93,9 @@ export const EmojiReaction = ({ comment, delegations, toast }) => {
   const [parties, setParties] = useState(
     comment.reactions?.find((r) => r.emoji === "🎉")?.reactors || [],
   );
+  const [joys, setJoys] = useState(
+    comment.reactions?.find((r) => r.emoji === "😂")?.reactors || [],
+  );
   // Legacy emojis - still need to track for existing reactions display
   const [smiles, setSmiles] = useState(
     comment.reactions?.find((r) => r.emoji === "😊")?.reactors || [],
@@ -104,7 +108,7 @@ export const EmojiReaction = ({ comment, delegations, toast }) => {
   const localAccount = getLocalAccount(account.address);
   const provider = useProvider();
 
-  const commonEmojis = ["🥝", "👍", "❤️", "🔥", "👀", "💯", "😢", "🎉"];
+  const commonEmojis = ["🥝", "👍", "❤️", "🔥", "😂", "👀", "💯", "😢", "🎉"];
   const address = localAccount?.identity;
   const hasReacted =
     address &&
@@ -116,6 +120,7 @@ export const EmojiReaction = ({ comment, delegations, toast }) => {
       hundreds.includes(address) ||
       cries.includes(address) ||
       parties.includes(address) ||
+      joys.includes(address) ||
       smiles.includes(address) ||
       laughs.includes(address));
   const isntLoggedIn = !localAccount?.identity;
@@ -255,6 +260,11 @@ export const EmojiReaction = ({ comment, delegations, toast }) => {
             setParties([...parties, identity]);
           }
           break;
+        case "😂":
+          if (!joys.includes(identity)) {
+            setJoys([...joys, identity]);
+          }
+          break;
         // Legacy emojis (can still be displayed, but not added via picker)
         case "😊":
           if (!smiles.includes(identity)) {
@@ -304,6 +314,7 @@ export const EmojiReaction = ({ comment, delegations, toast }) => {
     "👍": thumbsUp.length,
     "❤️": hearts.length,
     "🔥": fires.length,
+    "😂": joys.length,
     "👀": eyes.length,
     "💯": hundreds.length,
     "😢": cries.length,
@@ -312,20 +323,21 @@ export const EmojiReaction = ({ comment, delegations, toast }) => {
     "😊": smiles.length,
     "🤭": laughs.length,
   };
-  
+
   const existingReactions = comment.reactions?.filter(r => r.reactors?.length > 0) || [];
   const userReactions = useMemo(() => ({
     "🥝": kiwis.includes(address),
     "👍": thumbsUp.includes(address),
     "❤️": hearts.includes(address),
     "🔥": fires.includes(address),
+    "😂": joys.includes(address),
     "👀": eyes.includes(address),
     "💯": hundreds.includes(address),
     "😢": cries.includes(address),
     "🎉": parties.includes(address),
     "😊": smiles.includes(address),
     "🤭": laughs.includes(address),
-  }), [address, kiwis, thumbsUp, hearts, fires, eyes, hundreds, cries, parties, smiles, laughs]);
+  }), [address, kiwis, thumbsUp, hearts, fires, eyes, hundreds, cries, parties, joys, smiles, laughs]);
   
   return (
     <div
@@ -452,6 +464,18 @@ export const EmojiReaction = ({ comment, delegations, toast }) => {
             if (!isExpanded && buttonRef.current) {
               const rect = buttonRef.current.getBoundingClientRect();
               setPickerTop(rect.bottom + 4);
+              // Anchor picker to the button's left edge, but keep it within
+              // the viewport with a 12px safety margin on both sides.
+              const estimatedWidth = Math.min(
+                window.innerWidth - 24,
+                commonEmojis.length * 44 + 12,
+              );
+              let left = rect.left;
+              if (left + estimatedWidth > window.innerWidth - 12) {
+                left = window.innerWidth - 12 - estimatedWidth;
+              }
+              if (left < 12) left = 12;
+              setPickerLeft(left);
             }
             setIsExpanded(!isExpanded);
           }}
@@ -496,11 +520,12 @@ export const EmojiReaction = ({ comment, delegations, toast }) => {
           style={{
             position: "fixed",
             top: `${pickerTop}px`,
-            left: "12px",
-            right: "12px",
+            left: `${pickerLeft}px`,
+            maxWidth: "calc(100vw - 24px)",
+            width: "max-content",
             display: "flex",
             alignItems: "center",
-            justifyContent: "center",
+            justifyContent: "flex-start",
             gap: "4px",
             overflowX: "auto",
             backgroundColor: "var(--bg-white)",
@@ -519,6 +544,7 @@ export const EmojiReaction = ({ comment, delegations, toast }) => {
               emoji === "👍" && thumbsUp.includes(address) ||
               emoji === "❤️" && hearts.includes(address) ||
               emoji === "🔥" && fires.includes(address) ||
+              emoji === "😂" && joys.includes(address) ||
               emoji === "👀" && eyes.includes(address) ||
               emoji === "💯" && hundreds.includes(address) ||
               emoji === "😢" && cries.includes(address) ||
