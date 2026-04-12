@@ -257,6 +257,7 @@ const MobileComposer = ({
           outline: "none",
           width: "100%",
           height: "100%",
+          boxSizing: "border-box",
           overflowY: "auto",
           touchAction: "auto",
           backgroundColor: "var(--bg-white)",
