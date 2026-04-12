@@ -248,33 +248,16 @@ app.use(
   }),
 );
 
-// Serve sitemaps directly from disk so hourly regeneration is picked up
-// (sirv caches its file manifest at init and won't see new files)
-app.get("/sitemap*.xml", (req, res) => {
-  const fileName = path.basename(req.path);
-  if (!/^sitemap[a-z0-9-]*\.xml$/.test(fileName)) {
-    return res.status(404).end();
-  }
-  const filePath = path.join("src/public", fileName);
-  try {
-    const xml = readFileSync(filePath, "utf-8");
-    if (env.NODE_ENV === "production") {
-      res.setHeader(
-        "Cache-Control",
-        "public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400",
-      );
-    }
-    res.type("application/xml").send(xml);
-  } catch {
-    res.status(404).end();
-  }
-});
-
 app.use(
   sirv("src/public", {
     setHeaders: (res, pathName) => {
       if (env.NODE_ENV !== "production") return;
-      if (!/\/assets\//.test(pathName)) {
+      if (/sitemap.*\.xml/.test(pathName)) {
+        res.setHeader(
+          "Cache-Control",
+          "public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400",
+        );
+      } else if (!/\/assets\//.test(pathName)) {
         res.setHeader(
           "Cache-Control",
           "public, max-age=86400, s-maxage=604800, immutable, stale-while-revalidate=2592000",

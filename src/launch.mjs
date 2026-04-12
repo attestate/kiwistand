@@ -86,16 +86,8 @@ if (cluster.isPrimary) {
   await api.launch(trie, node);
 
   if (!reconcileMode) {
-    // Generate sitemaps before starting the HTTP server so they're
-    // available immediately when the first request arrives
-    generateSitemaps();
-
     const http = await import("./http.mjs");
     await http.launch(trie, node, true); // true indicates primary process
-
-    // Refresh sitemaps every hour
-    setInterval(generateSitemaps, 60 * 60 * 1000);
-
     // Purge homepage cache on server restart in production
     if (productionMode) {
       purgeCache("https://news.kiwistand.com/")
@@ -113,6 +105,10 @@ if (cluster.isPrimary) {
           );
       }, 25000);
     }
+
+    // Generate sitemaps on startup, then refresh every hour
+    generateSitemaps();
+    setInterval(generateSitemaps, 60 * 60 * 1000);
   }
 
   // NOTE: The crawl functions return promises that resolve only when the
