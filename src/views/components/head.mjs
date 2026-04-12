@@ -172,8 +172,7 @@ export function custom(
     <meta name="referrer" content="origin" />
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1, maximum-scale=1,
- user-scalable=0, viewport-fit=cover"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
     />
     <meta name="fc:frame" content="${embedMetaContent}" />
     ${variant ? html`<meta name="kiwi-variant" content="${variant}" />` : ""}
