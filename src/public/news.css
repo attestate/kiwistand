@@ -1826,3 +1826,178 @@ button.ai-button:hover {
   width: 22px;
   height: 22px;
 }
+
+/* Top Stories Carousel */
+.top-stories-section {
+  padding: 12px 11px 8px 11px;
+}
+
+.top-stories-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.top-stories-title {
+  font-size: 0.95rem;
+  font-weight: bold;
+  color: var(--text-primary);
+  margin: 0;
+  font-variant: small-caps;
+}
+
+.top-stories-nav {
+  display: flex;
+  gap: 4px;
+}
+
+.top-stories-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: var(--button-bg);
+  border-radius: 2px;
+  cursor: pointer;
+  color: var(--text-primary);
+  padding: 0;
+  transition: background-color 0.15s;
+}
+
+.top-stories-arrow:hover {
+  background: var(--button-active-bg);
+}
+
+.top-stories-scroll {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 4px;
+}
+
+.top-stories-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.top-story-card {
+  flex: 0 0 240px;
+  scroll-snap-align: start;
+  border: var(--border-thin);
+  border-radius: 2px;
+  overflow: hidden;
+  text-decoration: none;
+  color: var(--text-primary);
+  background: var(--bg-white);
+  transition: box-shadow 0.15s;
+  display: flex;
+  flex-direction: column;
+}
+
+.top-story-card:hover {
+  box-shadow: var(--shadow-default);
+}
+
+.top-story-card:visited {
+  color: var(--visited-link);
+}
+
+.top-story-image {
+  width: 100%;
+  height: 120px;
+  overflow: hidden;
+  background: var(--button-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.top-story-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.top-story-no-image {
+  background: linear-gradient(135deg, var(--accent-primary-light), var(--button-bg));
+}
+
+.top-story-domain-large {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.top-story-content {
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.top-story-title {
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: inherit;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.top-story-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: auto;
+}
+
+.top-story-avatars {
+  display: flex;
+  flex-shrink: 0;
+}
+
+.top-story-avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1.5px solid var(--bg-white);
+  object-fit: cover;
+  margin-right: -6px;
+}
+
+.top-story-avatar:last-child {
+  margin-right: 0;
+}
+
+.top-story-stats {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 640px) {
+  .top-story-card {
+    flex: 0 0 200px;
+  }
+
+  .top-story-image {
+    height: 100px;
+  }
+
+  .top-stories-section {
+    padding: 10px 8px 6px 8px;
+  }
+}
