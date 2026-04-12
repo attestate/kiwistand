@@ -478,8 +478,8 @@ body {
   box-sizing: border-box;
   cursor: pointer;
 }
-.feed-button:hover{
-  background-color: var(--bg-hover);
+.feed-button:not(.active):hover{
+  background-color: var(--accent-primary-light);
 }
 .feed-button:active {
   transform: scale(0.95);
@@ -1314,11 +1314,11 @@ body.react-loaded .comment-input-ssr-placeholder {
     .desktop-nav a, .desktop-nav span {
       flex-shrink: 0;
     }
-    .feed-button:hover {
-      background-color: rgba(0, 0, 0, 0.15) !important;
+    .feed-button:not(.active):hover {
+      background-color: var(--accent-primary-lighter) !important;
     }
-    [data-theme="dark"] .feed-button:hover {
-      background-color: rgba(255, 255, 255, 0.15) !important;
+    [data-theme="dark"] .feed-button:not(.active):hover {
+      background-color: var(--accent-primary-lighter) !important;
     }
     /* Desktop alignment for subtitle items */
     .subtitle-flex { 
