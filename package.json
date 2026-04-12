@@ -144,6 +144,7 @@
     "concurrently": "8.0.1",
     "csv-parser": "3.2.0",
     "csv-writer": "1.6.0",
+    "preact-render-to-string": "^6.6.7",
     "puppeteer": "24.16.1",
     "vite": "4.3.1"
   },
