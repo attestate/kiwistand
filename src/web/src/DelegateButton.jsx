@@ -108,7 +108,7 @@ const ConnectionDialogue = (props) => {
               <SparkleIcon />
             </div>
             <div style={{ fontSize: "18px", fontWeight: "500", color: "var(--text-primary)" }}>
-              {pathname === "/start" ? "Welcome to Kiwi News!" : "Setup delegation"}
+              {"Setup delegation"}
             </div>
           </div>
         </div>
@@ -303,10 +303,6 @@ const DelegateButton = (props) => {
   }
 
   if (key && wallet) {
-    if (window.location.pathname === "/start") {
-      const delegate = key && wallet ? wallet.address : getNewKey().address;
-      window.location.href = `/indexing?address=${from.address}&delegate=${delegate}`;
-    } else {
       // Notify parent that we're in indexing state
       if (props.onIndexingStateChange) {
         props.onIndexingStateChange(true);
@@ -362,7 +358,6 @@ const DelegateButton = (props) => {
           </div>
         </div>
       );
-    }
   }
   const FaceIdIcon = () => (
     <svg width="1.2em" height="1.2em" viewBox="0 0 21 22" fill="none" xmlns="http://www.w3.org/2000/svg" className="size-5.25">

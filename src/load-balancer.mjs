@@ -27,10 +27,7 @@ const workerRoutes = [
   "/stories",
   "/best",
   "/community",
-  "/retention",
-  "/users",
-  "/basics",
-  "/stats",
+
   "/about",
   "/passkeys",
   "/app-onboarding",
@@ -42,7 +39,7 @@ const workerRoutes = [
   "/email-notifications",
   "/invite",
   "/indexing",
-  "/start",
+
   "/settings",
   "/why",
   "/subscribe",

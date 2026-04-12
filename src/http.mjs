@@ -56,13 +56,11 @@ import best, * as bestAPI from "./views/best.mjs";
 import privacy from "./views/privacy.mjs";
 import guidelines from "./views/guidelines.mjs";
 import upvotes from "./views/upvotes.mjs";
-import stats from "./views/stats.mjs";
-import users from "./views/users.mjs";
-import basics from "./views/basics.mjs";
+
 import search from "./views/search.mjs";
 import * as activity from "./views/activity.mjs";
 import submit from "./views/submit.mjs";
-import start from "./views/start.mjs";
+
 import appTestflight from "./views/app-testflight.mjs";
 import notifications from "./views/notifications.mjs";
 import debug from "./views/debug.mjs";
@@ -2027,32 +2025,6 @@ export async function launch(trie, libp2p, isPrimary = true) {
     );
     return reply.status(200).type("text/html").send(content.valueOf());
   });
-  app.get("/users", async (request, reply) => {
-    const content = await users(trie, reply.locals.theme);
-    reply.header(
-      "Cache-Control",
-      "public, max-age=0, no-transform, must-revalidate, stale-while-revalidate=120",
-    );
-    return reply.status(200).type("text/html").send(content.valueOf());
-  });
-
-  app.get("/basics", async (request, reply) => {
-    const content = await basics(trie, reply.locals.theme);
-    reply.header(
-      "Cache-Control",
-      "public, max-age=0, no-transform, must-revalidate, stale-while-revalidate=120",
-    );
-    return reply.status(200).type("text/html").send(content.valueOf());
-  });
-  app.get("/stats", async (request, reply) => {
-    const content = await stats(trie, reply.locals.theme);
-    reply.header(
-      "Cache-Control",
-      "public, max-age=0, no-transform, must-revalidate, stale-while-revalidate=120",
-    );
-    return reply.status(200).type("text/html").send(content.valueOf());
-  });
-
   app.get("/debug", async (request, reply) => {
     const content = await debug(reply.locals.theme);
     reply.header("Cache-Control", "no-cache");
@@ -2078,15 +2050,6 @@ export async function launch(trie, libp2p, isPrimary = true) {
     const content = await notifications(reply.locals.theme);
 
     reply.header("Cache-Control", "public, max-age=0");
-    return reply.status(200).type("text/html").send(content.valueOf());
-  });
-  app.get("/start", async (request, reply) => {
-    const content = await start(reply.locals.theme);
-
-    reply.header(
-      "Cache-Control",
-      "public, s-maxage=86400, max-age=0, stale-while-revalidate=600000",
-    );
     return reply.status(200).type("text/html").send(content.valueOf());
   });
   // Shared function for handling activity data retrieval
