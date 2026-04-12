@@ -30,7 +30,7 @@ import cache, {
   getSubmission,
   listNewest,
   countComments,
-  // Removed getRecommendations import
+  getBest,
 } from "../cache.mjs";
 import * as curation from "./curation.mjs";
 import Trollbox from "./components/trollbox.mjs";
@@ -40,6 +40,7 @@ import Row, { extractDomain } from "./components/row.mjs";
 import * as karma from "../karma.mjs";
 import { cachedMetadata, metadata } from "../parser.mjs";
 import { getPredictedEngagement } from "../prediction.mjs";
+import TopStoriesCarousel from "./components/top-stories.mjs";
 
 // Import twitterFrontends for checking Twitter/X links
 import { twitterFrontends } from "../parser.mjs";
@@ -796,6 +797,60 @@ const expandSVG = html`<svg
   />
 </svg>`;
 
+async function fetchTopStories(feedStoryHrefs) {
+  const weekAgo = Math.floor(Date.now() / 1000) - 7 * 24 * 60 * 60;
+  let topRaw = getBest(30, 0, null, "", weekAgo);
+
+  // Apply moderation
+  const policy = await moderation.getLists();
+  topRaw = moderation.moderate(topRaw, policy, "/");
+
+  // Filter out stories already in the main feed (keep more to account for image filtering)
+  const filtered = topRaw.filter(
+    (story) => !feedStoryHrefs.has(story.href),
+  ).slice(0, 16);
+
+  if (filtered.length === 0) return [];
+
+  const enriched = await Promise.all(
+    filtered.map(async (story) => {
+      const [ensData, meta] = await Promise.all([
+        ens.resolve(story.identity),
+        cachedMetadata(story.href),
+      ]);
+
+      // Resolve a few upvoter avatars (up to 3, excluding submitter)
+      const otherUpvoters = (story.upvoters || [])
+        .filter((addr) => addr !== story.identity)
+        .slice(0, 3);
+
+      const upvoterResults = await Promise.allSettled(
+        otherUpvoters.map((addr) => ens.resolve(addr)),
+      );
+
+      const upvoterAvatars = upvoterResults
+        .filter((r) => r.status === "fulfilled" && r.value.safeAvatar)
+        .map((r) => r.value.safeAvatar);
+
+      const commentCnt = countComments(`kiwi:0x${story.index}`, policy.addresses || []);
+
+      return {
+        ...story,
+        metadata: meta || {},
+        submitter: ensData,
+        displayName: ensData.displayName,
+        upvoterAvatars,
+        commentCount: commentCnt,
+      };
+    }),
+  );
+
+  // Only show stories that have an OG image
+  return enriched
+    .filter((story) => story.metadata?.image && story.metadata.image.startsWith("https://"))
+    .slice(0, 8);
+}
+
 export default async function (trie, theme, page, domain, identity, hash, variant) {
   const path = "/";
   const totalStories = parseInt(env.TOTAL_STORIES, 10);
@@ -810,6 +865,18 @@ export default async function (trie, theme, page, domain, identity, hash, varian
 
   // Destructure content
   const { originals, stories, start, pinnedStory } = content;
+
+  // Fetch top stories for the carousel (only on page 0, no domain filter)
+  let topStories = [];
+  if (page === 0 && !domain) {
+    const feedHrefs = new Set(stories.map((s) => s.href));
+    if (pinnedStory) feedHrefs.add(pinnedStory.href);
+    try {
+      topStories = await fetchTopStories(feedHrefs);
+    } catch (err) {
+      log(`Error fetching top stories for carousel: ${err.message}`);
+    }
+  }
 
   let currentQuery = "";
   if (page && domain) {
@@ -854,6 +921,7 @@ export default async function (trie, theme, page, domain, identity, hash, varian
               <tr>
                 ${SecondHeader(theme, "top")}
               </tr>
+              ${topStories.length > 0 ? TopStoriesCarousel(topStories) : ""}
               ${
                 // Render pinned story only if it exists
                 pinnedStory &&
