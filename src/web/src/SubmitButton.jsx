@@ -24,7 +24,7 @@ import GuidelinesDrawer, { useGuidelinesCheck } from "./GuidelinesDrawer.jsx";
 import { openDelegationModalForAction, isDelegationModalNeeded } from "./delegationModalManager.js";
 
 export function getSlug(title) {
-  return slugify(DOMPurify.sanitize(title));
+  return slugify(DOMPurify.sanitize(title), { strict: true });
 }
 
 function safeExtractDomain(link) {

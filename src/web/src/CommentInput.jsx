@@ -23,7 +23,7 @@ slugify.extend({ "′": "", "'": "" });
 
 // Implement getSlug exactly as in src/utils.mjs
 export function getSlug(title) {
-  return slugify(DOMPurify.sanitize(title));
+  return slugify(DOMPurify.sanitize(title), { strict: true });
 }
 
 function truncateName(name) {

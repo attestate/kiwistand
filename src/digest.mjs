@@ -17,7 +17,7 @@ function getSlug(title) {
     return "";
   }
   // This mimics the logic from the main codebase
-  return slugify(DOMPurify.sanitize(title));
+  return slugify(DOMPurify.sanitize(title), { strict: true });
 }
 
 export async function generateDigestData() {
