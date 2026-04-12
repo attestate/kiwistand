@@ -50,7 +50,8 @@ function TopStoryCard(story) {
   const image = story.metadata?.image
     ? transformImageUrl(DOMPurify.sanitize(story.metadata.image))
     : null;
-  const upvoteCount = story.upvotes || 0;
+  const likeCount = story.upvotes || 0;
+  const commentCount = story.commentCount || 0;
 
   // Collect avatars from submitter + upvoter ENS data
   const avatars = [];
@@ -101,7 +102,7 @@ function TopStoryCard(story) {
             )}
           </div>
           <span class="top-story-stats">
-            ${upvoteCount} upvotes${domain ? html` · ${domain}` : ""}
+            ${likeCount} likes${commentCount > 0 ? html` · ${commentCount} comments` : ""}${domain ? html` · ${domain}` : ""}
           </span>
         </div>
       </div>

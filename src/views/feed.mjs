@@ -799,16 +799,16 @@ const expandSVG = html`<svg
 
 async function fetchTopStories(feedStoryHrefs) {
   const weekAgo = Math.floor(Date.now() / 1000) - 7 * 24 * 60 * 60;
-  let topRaw = getBest(15, 0, null, "", weekAgo);
+  let topRaw = getBest(30, 0, null, "", weekAgo);
 
   // Apply moderation
   const policy = await moderation.getLists();
   topRaw = moderation.moderate(topRaw, policy, "/");
 
-  // Filter out stories already in the main feed
+  // Filter out stories already in the main feed (keep more to account for image filtering)
   const filtered = topRaw.filter(
     (story) => !feedStoryHrefs.has(story.href),
-  ).slice(0, 8);
+  ).slice(0, 16);
 
   if (filtered.length === 0) return [];
 
@@ -832,17 +832,23 @@ async function fetchTopStories(feedStoryHrefs) {
         .filter((r) => r.status === "fulfilled" && r.value.safeAvatar)
         .map((r) => r.value.safeAvatar);
 
+      const commentCnt = countComments(`kiwi:0x${story.index}`, policy.addresses || []);
+
       return {
         ...story,
         metadata: meta || {},
         submitter: ensData,
         displayName: ensData.displayName,
         upvoterAvatars,
+        commentCount: commentCnt,
       };
     }),
   );
 
-  return enriched;
+  // Only show stories that have an OG image
+  return enriched
+    .filter((story) => story.metadata?.image && story.metadata.image.startsWith("https://"))
+    .slice(0, 8);
 }
 
 export default async function (trie, theme, page, domain, identity, hash, variant) {
