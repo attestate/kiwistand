@@ -176,11 +176,20 @@ export function custom(
     />
     <meta name="fc:frame" content="${embedMetaContent}" />
     ${variant ? html`<meta name="kiwi-variant" content="${variant}" />` : ""}
+    ${ogDescription
+      ? html`<meta name="description" content="${ogDescription}" />`
+      : html`<meta name="description" content="Kiwi News - handpicked web3 alpha" />`}
+    <meta property="og:type" content="${canonicalUrl && canonicalUrl.includes("/stories/") ? "article" : "website"}" />
+    ${canonicalUrl
+      ? html`<meta property="og:url" content="${canonicalUrl}" />`
+      : ""}
+    <meta property="og:site_name" content="Kiwi News" />
     ${ogImage ? html`<meta property="og:image" content="${ogImage}" />` : null}
     ${ogImage
       ? html`<meta property="twitter:image" content="${ogImage}" />`
       : null}
     <meta property="twitter:card" content="${twitterCard}" />
+    <meta name="twitter:site" content="@KiwiNewsHQ" />
     <meta property="og:title" content="${ogTitle}" />
     ${ogDescription
       ? html`<meta property="og:description" content="${ogDescription}" />`

@@ -380,6 +380,24 @@ export default async function (trie, theme, index, value, referral, commentIndex
     ? `${baseUrl}/stories/${slug}?index=0x${index}&commentIndex=${commentIndex}`
     : `${baseUrl}/stories/${slug}?index=0x${index}`;
 
+  const jsonLd = JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "DiscussionForumPosting",
+    "headline": value.title,
+    "url": canonicalUrl,
+    "image": ogImage,
+    "datePublished": new Date(value.timestamp * 1000).toISOString(),
+    "author": {
+      "@type": "Person",
+      "name": story.submitter.displayName,
+    },
+    "sharedContent": {
+      "@type": "WebPage",
+      "url": value.href,
+    },
+    ...(ogDescription ? { "description": ogDescription } : {}),
+  });
+
   return html`
     <html lang="en" op="news">
       <head>
@@ -393,6 +411,7 @@ export default async function (trie, theme, index, value, referral, commentIndex
           canonicalUrl,
           frameImage,
         )}
+        <script type="application/ld+json">${jsonLd}</script>
       </head>
       <body
         data-instant-allow-query-string

@@ -76,12 +76,7 @@ export default async function (theme, query) {
   return html`
     <html lang="en" op="news">
       <head>
-        ${custom(ogImage, "Search", "", "", prefetch)}
-        <title>Search Results for "${sanitizedQuery}"</title>
-        <meta
-          name="description"
-          content="Search results for ${sanitizedQuery} on Kiwi News"
-        />
+        ${custom(ogImage, `Search: ${sanitizedQuery} | Kiwi News`, `Search results for ${sanitizedQuery} on Kiwi News`, "", prefetch)}
       </head>
       <body
         data-instant-allow-query-string

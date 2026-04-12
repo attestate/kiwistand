@@ -14,7 +14,7 @@ import Header from "./components/header.mjs";
 import Sidebar from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
 import Trollbox from "./components/trollbox.mjs";
-import { prefetchHead } from "./components/head.mjs";
+import { custom } from "./components/head.mjs";
 import { iconSVG } from "./components/row.mjs";
 import { getSlug } from "../utils.mjs";
 // Define the brand green color directly
@@ -373,7 +373,7 @@ export async function page(
   const content = html`
     <html lang="en" op="news">
       <head>
-        ${prefetchHead(["/", ...preloadNotifs])}
+        ${custom(undefined, "Activity | Kiwi News", "Your latest notifications and activity on Kiwi News.", undefined, ["/", ...preloadNotifs])}
       </head>
       <body
         data-instant-allow-query-string

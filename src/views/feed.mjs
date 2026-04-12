@@ -855,18 +855,14 @@ export default async function (trie, theme, page, domain, identity, hash, varian
   // Removed A/B Test for Support Banner and supportBannerComponent variable
 
   const ogImage = "https://news.kiwistand.com/kiwi_hot_feed_page.png";
-  const title = undefined;
-  const description = undefined;
+  const title = "Kiwi News - handpicked crypto news for builders";
+  const description = "The best crypto links, curated by the Kiwi community. Web3, Ethereum, DeFi and more.";
   const twitterCard = undefined;
   const prefetch = ["/new?cached=true", "/submit", "/best"];
   return html`
     <html lang="en" op="news">
       <head>
-        ${custom(ogImage, title, description, twitterCard, prefetch, null, null, variant)}
-        <meta
-          name="description"
-          content="Crypto news for builders"
-        />
+        ${custom(ogImage, title, description, twitterCard, prefetch, "https://news.kiwistand.com/", null, variant)}
         <style>
           .feed-submit-row {
             padding: 12px 16px;

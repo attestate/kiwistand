@@ -5,7 +5,7 @@ import Header from "./components/header.mjs";
 import Footer from "./components/footer.mjs";
 import Sidebar from "./components/sidebar.mjs";
 import Trollbox from "./components/trollbox.mjs";
-import { prefetchHead } from "./components/head.mjs";
+import { custom } from "./components/head.mjs";
 import Row, { extractDomain } from "./components/row.mjs";
 import * as parser from "../parser.mjs";
 
@@ -31,7 +31,7 @@ export default async function submit(theme, url = "", title = "") {
   return html`
     <html lang="en" op="news">
       <head>
-        ${prefetchHead(["/"])}
+        ${custom(undefined, "Submit | Kiwi News", "Submit a link to share with the Kiwi News community.", undefined, ["/"])}
       </head>
       <body ontouchstart="">
         <div class="container">

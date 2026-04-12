@@ -210,11 +210,7 @@ export default async function (trie, theme) {
   return html`
     <html lang="en" op="news">
       <head>
-        ${custom(ogImage, undefined, undefined, undefined, prefetch)}
-        <meta
-          name="description"
-          content="Fresh crypto news daily"
-        />
+        ${custom(ogImage, "New | Kiwi News - latest crypto submissions", "Freshly submitted crypto links and web3 stories, updated in real time.", undefined, prefetch, "https://news.kiwistand.com/new?cached=true")}
       </head>
       <body
         data-instant-allow-query-string

@@ -192,11 +192,7 @@ export default async function index(theme, page, period, domain) {
   return html`
     <html lang="en" op="news">
       <head>
-        ${custom(ogImage, undefined, undefined, undefined, prefetch)}
-        <meta
-          name="description"
-          content="Fresh crypto news daily"
-        />
+        ${custom(ogImage, "Best | Kiwi News - top crypto stories", "The highest-voted crypto and web3 stories on Kiwi News.", undefined, prefetch, "https://news.kiwistand.com/best")}
       </head>
       <body
         data-instant-allow-query-string
