@@ -1406,11 +1406,15 @@ a.meta-link, span.meta-link {
   color: var(--text-secondary);
   fill: var(--text-secondary);
 }
+a.meta-link:visited {
+  color: var(--text-secondary);
+}
 .meta-link {
   transition: opacity 0.3s ease-out;
 }
-a.meta-link:hover, span.meta-link:hover {
+a.meta-link:hover, a.meta-link:visited:hover, span.meta-link:hover {
   text-decoration: underline;
+  color: var(--text-secondary);
 }
 
 .meta-link.primary-action {

@@ -20,18 +20,44 @@ const TROLLBOX_TYPES = {
 const POLL_INTERVAL = 3000;
 const HEARTBEAT_INTERVAL = 15000;
 
-// Deterministic color from address
+// Curated kiwi-family palette — all hand-picked shades around the kiwi
+// accent (#AFC046) so names stay on-brand. Each theme has its own set
+// tuned for contrast against the background.
+const KIWI_NAME_COLORS_LIGHT = [
+  "#6B8E23", // olive drab
+  "#7A9A2E", // darker kiwi
+  "#8BA83C", // mid kiwi
+  "#9BAD3D", // accent-primary-hover
+  "#AFC046", // accent-primary
+  "#556B2F", // dark olive
+  "#4F7942", // fern
+  "#5C8A3A", // leaf
+  "#85A31E", // bright olive
+  "#708238", // moss
+];
+const KIWI_NAME_COLORS_DARK = [
+  "#AFC046", // accent-primary
+  "#C5DC5A", // accent-primary-hover (dark)
+  "#D4E85C", // bright lime
+  "#B8D04A", // lime
+  "#9BBE3F", // kiwi
+  "#CDDC39", // material lime
+  "#A8C73D", // olive lime
+  "#BFD65F", // pale kiwi
+  "#D8E86B", // pale lime
+  "#A3C748", // grass
+];
+
 function addressColor(address) {
-  if (!address) return "#888";
+  if (!address) return "var(--accent-primary-hover)";
   let hash = 0;
   for (let i = 0; i < address.length; i++) {
     hash = address.charCodeAt(i) + ((hash << 5) - hash);
   }
-  const hue = Math.abs(hash) % 360;
   const isDark = window.matchMedia?.("(prefers-color-scheme: dark)").matches ||
     document.documentElement.getAttribute("data-theme") === "anon";
-  const lightness = isDark ? 65 : 40;
-  return `hsl(${hue}, 70%, ${lightness}%)`;
+  const palette = isDark ? KIWI_NAME_COLORS_DARK : KIWI_NAME_COLORS_LIGHT;
+  return palette[Math.abs(hash) % palette.length];
 }
 
 function formatTime(ts) {
