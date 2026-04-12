@@ -1124,6 +1124,26 @@ export function getSubmission(index, href, identityFilter, hrefs, bannedAddresse
   };
 }
 
+export function listSitemapMonths() {
+  return db.prepare(`
+    SELECT DISTINCT strftime('%Y-%m', timestamp, 'unixepoch') AS month
+    FROM submissions
+    ORDER BY month DESC
+  `).all().map((row) => row.month);
+}
+
+export function listSitemapEntries(month) {
+  const rows = db.prepare(`
+    SELECT id, title, timestamp FROM submissions
+    WHERE strftime('%Y-%m', timestamp, 'unixepoch') = ?
+    ORDER BY timestamp DESC
+  `).all(month);
+  return rows.map((row) => {
+    const [, index] = row.id.split("0x");
+    return { index, title: row.title, timestamp: row.timestamp };
+  });
+}
+
 export function listNewest(limit = 30, lookbackUnixTime) {
   const query = `
      SELECT * FROM submissions

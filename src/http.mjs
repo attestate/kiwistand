@@ -252,7 +252,12 @@ app.use(
   sirv("src/public", {
     setHeaders: (res, pathName) => {
       if (env.NODE_ENV !== "production") return;
-      if (!/\/assets\//.test(pathName)) {
+      if (/sitemap.*\.xml/.test(pathName)) {
+        res.setHeader(
+          "Cache-Control",
+          "public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400",
+        );
+      } else if (!/\/assets\//.test(pathName)) {
         res.setHeader(
           "Cache-Control",
           "public, max-age=86400, s-maxage=604800, immutable, stale-while-revalidate=2592000",

@@ -105,6 +105,10 @@ if (cluster.isPrimary) {
           );
       }, 25000);
     }
+
+    // Generate sitemaps on startup, then refresh every hour
+    generateSitemaps();
+    setInterval(generateSitemaps, 60 * 60 * 1000);
   }
 
   // NOTE: The crawl functions return promises that resolve only when the
@@ -169,10 +173,14 @@ if (!reconcileMode) {
       .recompute(trie)
       .then(() => log("/new computed"))
       .catch((err) => log(`/new recompute failed: ${err.stack || err}`));
+    best
+      .recompute()
+      .then(() => log("/best computed"))
+      .catch((err) => log(`/best recompute failed: ${err.stack || err}`));
   });
   // Periodic refresh
   setInterval(async () => {
-    await Promise.all([newest.recompute(trie)]);
+    await Promise.all([newest.recompute(trie), best.recompute()]);
   }, 1800000);
 }
 

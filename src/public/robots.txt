@@ -4,3 +4,5 @@ Disallow: /best?*domain=
 Disallow: /?*domain=
 Disallow: /*.eth?*
 Disallow: /api/v1/listen
+
+Sitemap: https://news.kiwistand.com/sitemap.xml

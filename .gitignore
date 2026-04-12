@@ -29,6 +29,7 @@ dbtestA
 dbtestB
 backup
 src/public/bundle.js.map
+src/public/sitemap*.xml
 anon-corrupt
 # DAppNodeSDK release directories
   build_*
