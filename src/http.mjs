@@ -56,9 +56,7 @@ import best, * as bestAPI from "./views/best.mjs";
 import privacy from "./views/privacy.mjs";
 import guidelines from "./views/guidelines.mjs";
 import upvotes from "./views/upvotes.mjs";
-import stats from "./views/stats.mjs";
 
-import basics from "./views/basics.mjs";
 import search from "./views/search.mjs";
 import * as activity from "./views/activity.mjs";
 import submit from "./views/submit.mjs";
@@ -2027,23 +2025,6 @@ export async function launch(trie, libp2p, isPrimary = true) {
     );
     return reply.status(200).type("text/html").send(content.valueOf());
   });
-  app.get("/basics", async (request, reply) => {
-    const content = await basics(trie, reply.locals.theme);
-    reply.header(
-      "Cache-Control",
-      "public, max-age=0, no-transform, must-revalidate, stale-while-revalidate=120",
-    );
-    return reply.status(200).type("text/html").send(content.valueOf());
-  });
-  app.get("/stats", async (request, reply) => {
-    const content = await stats(trie, reply.locals.theme);
-    reply.header(
-      "Cache-Control",
-      "public, max-age=0, no-transform, must-revalidate, stale-while-revalidate=120",
-    );
-    return reply.status(200).type("text/html").send(content.valueOf());
-  });
-
   app.get("/debug", async (request, reply) => {
     const content = await debug(reply.locals.theme);
     reply.header("Cache-Control", "no-cache");
