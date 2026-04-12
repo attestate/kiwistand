@@ -91,7 +91,6 @@ export async function recompute() {
         nextStories.push({
           ...story,
           displayName: "Feedbot",
-          avatars: [],
           upvoters: [],
           isOriginal: false,
         });
@@ -124,24 +123,6 @@ export async function recompute() {
       }
 
       const ensData = await ens.resolveForBatch(story.identity);
-
-      let avatars = [];
-      let upvoterProfiles = [];
-      await Promise.allSettled(
-        story.upvoters.map(async (upvoter) => {
-          const profile = await ens.resolveForBatch(upvoter);
-          if (profile.safeAvatar) {
-            upvoterProfiles.push({
-              avatar: profile.safeAvatar,
-              address: upvoter,
-              neynarScore: profile.neynarScore || 0
-            });
-          }
-        }),
-      );
-      // Sort by neynarScore descending and take top 5
-      upvoterProfiles.sort((a, b) => b.neynarScore - a.neynarScore);
-      avatars = upvoterProfiles.slice(0, 5).map(p => p.avatar);
 
       // Skip normalization for text posts and kiwi references
       const normalizedStoryHref = (story.href.startsWith('data:') || story.href.startsWith('kiwi:'))
@@ -183,7 +164,6 @@ export async function recompute() {
         lastComment,
         displayName: ensData.displayName,
         submitter: ensData,
-        avatars: avatars,
         isOriginal,
       });
     }),

@@ -26,15 +26,6 @@ async function processSearchResults(results) {
         story.displayName = ensData.displayName;
         story.submitter = ensData;
 
-        let avatars = [];
-        for await (let upvoter of story.upvoters.slice(0, 5)) {
-          const profile = await ens.resolve(upvoter.identity);
-          if (profile.safeAvatar) {
-            avatars.push(profile.safeAvatar);
-          }
-        }
-        story.avatars = avatars;
-
         const row = Row(0, "/search", "margin-bottom: 20px;", null, null, null);
         return row(story, i);
       } else {

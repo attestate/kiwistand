@@ -27,10 +27,44 @@ import * as moderation from "./moderation.mjs";
 import log from "../logger.mjs";
 import { EIP712_MESSAGE } from "../constants.mjs";
 import Row, { extractDomain } from "./components/row.mjs";
-import { getBest, getLastComment, countImpressions } from "../cache.mjs";
+import { getBest, getLastComment, countImpressions, lifetimeCache } from "../cache.mjs";
 import { metadata } from "../parser.mjs";
 
 const html = htm.bind(vhtml);
+
+let recomputeInProgress = false;
+
+const HTML_CACHE_PREFIX = "best-html:";
+
+function htmlCacheKey(period, page, domain) {
+  return `${HTML_CACHE_PREFIX}${period}:${page}:${domain || ""}`;
+}
+
+export function getCachedHtml(page, period, domain) {
+  return lifetimeCache.get(htmlCacheKey(period, page, domain));
+}
+
+export async function recompute() {
+  if (recomputeInProgress) return;
+  recomputeInProgress = true;
+  try {
+    const periods = ["day", "week", "month", "year", "all"];
+    const page = 0;
+    await Promise.all(
+      periods.map(async (period) => {
+        try {
+          const rendered = await index(null, page, period, "");
+          lifetimeCache.set(htmlCacheKey(period, page, ""), rendered);
+        } catch (err) {
+          log(`recompute /best period=${period} failed: ${err.message}`);
+        }
+      }),
+    );
+    log("recompute /best done");
+  } finally {
+    recomputeInProgress = false;
+  }
+}
 
 // Add metadata to a post
 async function addMetadata(post, raw = false) {
@@ -67,117 +101,99 @@ export async function getStories(page, period, domain, options = {}) {
   const orderBy = null;
   let result = getBest(amount, from, orderBy, domain, startDatetime);
 
-  const policy = await moderation.getLists();
+  const [policy, writers] = await Promise.all([
+    moderation.getLists(),
+    moderation.getWriters().catch(() => ({})),
+  ]);
   const path = "/best";
   result = moderation.moderate(result, policy, path);
 
-  let writers = [];
-  try {
-    writers = await moderation.getWriters();
-  } catch (err) {
-    // noop
-  }
+  const stories = await Promise.all(
+    result.map(async (story) => {
+      // Get last comment + resolve ENS + fetch metadata in parallel
+      const lastComment = getLastComment(`kiwi:0x${story.index}`, policy.addresses || []);
 
-  let stories = [];
-  for await (let story of result) {
-    // Get last comment
-    const lastComment = getLastComment(`kiwi:0x${story.index}`, policy.addresses || []);
-    if (lastComment && lastComment.identity) {
-      lastComment.identity = await ens.resolve(lastComment.identity, forceFetch);
-      const uniqueIdentities = new Set(
-        lastComment.previousParticipants
-          .map((p) => p.identity)
-          .filter((identity) => identity !== lastComment.identity),
-      );
+      const lastCommentPromise = (async () => {
+        if (lastComment && lastComment.identity) {
+          lastComment.identity = await ens.resolve(lastComment.identity, forceFetch);
+          const uniqueIdentities = new Set(
+            lastComment.previousParticipants
+              .map((p) => p.identity)
+              .filter((identity) => identity !== lastComment.identity),
+          );
 
-      const resolvedParticipants = await Promise.allSettled(
-        [...uniqueIdentities].map((identity) => ens.resolve(identity, forceFetch)),
-      );
+          const resolvedParticipants = await Promise.allSettled(
+            [...uniqueIdentities].map((identity) => ens.resolve(identity, forceFetch)),
+          );
 
-      lastComment.previousParticipants = resolvedParticipants
-        .filter(
-          (result) =>
-            result.status === "fulfilled" && result.value.safeAvatar,
-        )
-        .map((result) => ({
-          identity: result.value.identity,
-          safeAvatar: result.value.safeAvatar,
-          displayName: result.value.displayName,
-        }));
-    }
+          lastComment.previousParticipants = resolvedParticipants
+            .filter(
+              (r) => r.status === "fulfilled" && r.value.safeAvatar,
+            )
+            .map((r) => ({
+              identity: r.value.identity,
+              safeAvatar: r.value.safeAvatar,
+              displayName: r.value.displayName,
+            }));
+        }
+      })();
 
-    // Resolve ENS data for submitter
-    const ensData = await ens.resolve(story.identity, forceFetch);
+      const ensPromise = ens.resolve(story.identity, forceFetch);
+      const metadataPromise = addMetadata(story, rawMetadata);
 
-    // Get upvoter avatars
-    let avatars = [];
-    let upvoterProfiles = [];
-    for await (let upvoter of story.upvoters) {
-      const profile = await ens.resolve(upvoter, forceFetch);
-      if (profile.safeAvatar) {
-        upvoterProfiles.push({
-          avatar: profile.safeAvatar,
-          address: upvoter,
-          neynarScore: profile.neynarScore || 0
-        });
+      const [, ensData, augmentedStory] = await Promise.all([
+        lastCommentPromise,
+        ensPromise,
+        metadataPromise,
+      ]);
+
+      let finalStory = augmentedStory || story;
+
+      // Handle image blocking based on policy
+      const href = (finalStory.href.startsWith('data:') || finalStory.href.startsWith('kiwi:'))
+        ? finalStory.href
+        : normalizeUrl(finalStory.href, { stripWWW: false });
+      if (href && policy?.images?.includes(href) && finalStory.metadata?.image) {
+        delete finalStory.metadata.image;
       }
-    }
-    // Sort by neynarScore descending and take top 5
-    upvoterProfiles.sort((a, b) => b.neynarScore - a.neynarScore);
-    avatars = upvoterProfiles.slice(0, 5).map(p => p.avatar);
 
-    // Skip normalization for text posts and kiwi references
-    const normalizedStoryHref = (story.href.startsWith('data:') || story.href.startsWith('kiwi:'))
-      ? story.href
-      : normalizeUrl(story.href);
+      const impressions = countImpressions(finalStory.href);
 
-    // Check if story is original
-    const isOriginal = Object.keys(writers).some(
-      (domain) =>
-        normalizedStoryHref.startsWith(domain) &&
-        writers[domain] === story.identity,
-    );
+      // Skip normalization for text posts and kiwi references
+      const normalizedStoryHref = (story.href.startsWith('data:') || story.href.startsWith('kiwi:'))
+        ? story.href
+        : normalizeUrl(story.href);
 
-    // Add metadata
-    const augmentedStory = await addMetadata(story, rawMetadata);
-    let finalStory = augmentedStory || story;
+      const isOriginal = Object.keys(writers).some(
+        (d) =>
+          normalizedStoryHref.startsWith(d) &&
+          writers[d] === story.identity,
+      );
 
-    // Handle image blocking based on policy
-    // Skip normalization for text posts and kiwi references
-    const href = (finalStory.href.startsWith('data:') || finalStory.href.startsWith('kiwi:'))
-      ? finalStory.href
-      : normalizeUrl(finalStory.href, { stripWWW: false });
-    if (href && policy?.images?.includes(href) && finalStory.metadata?.image) {
-      delete finalStory.metadata.image;
-    }
+      let storyLink = null;
+      if (createStoryLink) {
+        const sanitizedTitle = DOMPurify.sanitize(story.title || "");
+        const slug = slugify(sanitizedTitle);
+        storyLink = `https://news.kiwistand.com/stories/${slug}?index=0x${story.index}`;
+      }
 
-    // Get impressions count
-    const impressions = countImpressions(finalStory.href);
-
-    let storyLink = null;
-    if (createStoryLink) {
-      const sanitizedTitle = DOMPurify.sanitize(story.title || "");
-      const slug = slugify(sanitizedTitle);
-      storyLink = `https://news.kiwistand.com/stories/${slug}?index=0x${story.index}`;
-    }
-
-    stories.push({
-      ...finalStory,
-      impressions,
-      lastComment,
-      displayName: ensData.displayName,
-      submitter: ensData,
-      avatars: avatars,
-      isOriginal,
-      storyLink,
-    });
-  }
+      return {
+        ...finalStory,
+        impressions,
+        lastComment,
+        displayName: ensData.displayName,
+        submitter: ensData,
+        isOriginal,
+        storyLink,
+      };
+    }),
+  );
   return stories;
 }
 
 export default async function index(theme, page, period, domain) {
   const totalStories = parseInt(env.TOTAL_STORIES, 10);
-  const stories = await getStories(page, period, domain);
+  const stories = await getStories(page, period, domain || "");
   const ogImage = "https://news.kiwistand.com/kiwi_top_feed_page.png";
   const prefetch = [
     "/",

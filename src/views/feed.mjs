@@ -475,23 +475,6 @@ export async function index(
     for await (let story of storyPromises) {
       const ensData = await ens.resolve(story.identity); // Resolve ENS for all stories on page
 
-      let avatars = [];
-      let upvoterProfiles = [];
-      
-      for await (let upvoter of story.upvoters) {
-        const profile = await ens.resolve(upvoter);
-        if (profile.safeAvatar) {
-          upvoterProfiles.push({
-            avatar: profile.safeAvatar,
-            address: upvoter,
-            neynarScore: profile.neynarScore || 0
-          });
-        }
-      }
-      // Sort by neynarScore descending and take top 5
-      upvoterProfiles.sort((a, b) => b.neynarScore - a.neynarScore);
-      avatars = upvoterProfiles.slice(0, 5).map(p => p.avatar);
-
       const lastComment = getLastComment(`kiwi:0x${story.index}`, policy.addresses || []);
       if (lastComment && lastComment.identity) {
         lastComment.identity = await ens.resolve(lastComment.identity);
@@ -546,7 +529,6 @@ export async function index(
         lastComment,
         displayName: ensData.displayName,
         submitter: ensData,
-        avatars: avatars,
         isOriginal,
       });
     }
@@ -685,14 +667,8 @@ export async function index(
             // Select the top predicted stories to use as replacements
             const replacementStories = predicted.slice(0, numToActuallyReplace);
 
-            // Pre-resolve additional data (avatars, lastComment) for replacement stories
             const finalReplacementPromises = replacementStories.map(
               async (story) => {
-                let avatars = [];
-                for await (let upvoter of story.upvoters.slice(0, 5)) {
-                  const profile = await ens.resolve(upvoter);
-                  if (profile.safeAvatar) avatars.push(profile.safeAvatar);
-                }
                 const lastComment = getLastComment(`kiwi:0x${story.index}`, policy.addresses || []);
                 if (lastComment && lastComment.identity) {
                   lastComment.identity = await ens.resolve(
@@ -716,7 +692,6 @@ export async function index(
                 // Impressions already added when creating candidates
                 return {
                   ...story,
-                  avatars,
                   lastComment,
                   isOriginal,
                   displayName: story.submitter.displayName, // Already resolved

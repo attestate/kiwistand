@@ -1236,32 +1236,6 @@ const row = (
                         <span style="opacity:0.6; white-space: pre;"> • </span>
                       `;
                     })()}
-                      ${path !== "/stories" &&
-                      story.avatars &&
-                      story.avatars.length > 3 &&
-                      html`
-                        <span>
-                          <span
-                            style="margin-left: ${size /
-                            2}px; top: 2px; display: inline-flex; position:relative;"
-                          >
-                            ${story.avatars.slice(0, 5).map(
-                              (avatar, index) => html`
-                                <img
-                                  loading="${getImageLoading(isAboveFold, avatar)}"
-                                  src="${avatar}"
-                                  alt="avatar"
-                                  width="${size}"
-                                  height="${size}"
-                                  style="z-index: ${index}; width: ${size}px; height: ${size}px; border: 1px solid var(--text-secondary); border-radius: 2px; margin-left: -${size /
-                                  2}px;"
-                                />
-                              `,
-                            )}
-                          </span>
-                          <span style="opacity:0.6; white-space: pre;"> • </span>
-                        </span>
-                      `}
                       ${story.index
                         ? html`
                             <a

@@ -23,11 +23,13 @@ import delegateCrawlPath from "./chainstate/delegate.config.crawler.mjs";
 import * as registry from "./chainstate/registry.mjs";
 import * as karma from "./karma.mjs";
 import * as newest from "./views/new.mjs";
+import * as best from "./views/best.mjs";
 import * as email from "./email.mjs";
 import * as moderation from "./views/moderation.mjs";
 import diskcheck from "./diskcheck.mjs";
 import { purgeCache } from "./cloudflarePurge.mjs";
 import { generateDigestData } from "./digest.mjs";
+import { generateSitemaps } from "./sitemap.mjs";
 
 // Monitor event loop blocking - grep logs for "Event loop blocked" to find offenders
 // Using 200ms threshold to reduce noise; 50ms fires too often during normal I/O

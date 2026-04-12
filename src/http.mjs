@@ -1381,7 +1381,6 @@ export async function launch(trie, libp2p, isPrimary = true) {
         ...story,
         displayName: ensData.displayName,
         submitter: ensData,
-        avatars: [], // Skip avatar resolution for endless scroll - too slow
       };
     }));
     return results
@@ -1561,7 +1560,6 @@ export async function launch(trie, libp2p, isPrimary = true) {
         ...story,
         displayName: ensData.displayName,
         submitter: ensData,
-        avatars: [],
       };
     }));
     const stories = ensResults
@@ -2006,13 +2004,23 @@ export async function launch(trie, libp2p, isPrimary = true) {
       period = "week";
     }
 
+    const domain = DOMPurify.sanitize(request.query.domain) || "";
+    const cached = bestAPI.getCachedHtml(page, period, domain);
+    if (cached) {
+      reply.header(
+        "Cache-Control",
+        "public, s-maxage=3600, max-age=0, stale-while-revalidate=2592000",
+      );
+      return reply.status(200).type("text/html").send(cached);
+    }
+
     let content;
     try {
       content = await best(
         reply.locals.theme,
         page,
         period,
-        DOMPurify.sanitize(request.query.domain),
+        domain,
       );
     } catch (err) {
       log(`Error rendering /best ${err.stack}`);

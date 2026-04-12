@@ -668,7 +668,7 @@ export function getBest(amount, from, orderBy, domain, startDatetime) {
   const query = `
      SELECT
        s.*,
-       (SELECT COUNT(*) FROM upvotes WHERE href = s.href) AS upvotesCount,
+       COUNT(u.id) AS upvotesCount,
        GROUP_CONCAT(u.identity) AS upvoters
      FROM
        submissions s

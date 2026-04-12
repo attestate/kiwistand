@@ -19,6 +19,7 @@ import { SCHEMATA } from "./constants.mjs";
 let sendToCluster = null;
 import * as registry from "./chainstate/registry.mjs";
 import * as newest from "./views/new.mjs";
+import * as best from "./views/best.mjs";
 // Dynamic import for generatePreview - only loaded when not in reconcile mode
 let generatePreview = null;
 import { getSubmission, isReactionComment } from "./cache.mjs";
@@ -253,6 +254,9 @@ export function handleMessage(
         newest
           .recompute(trie)
           .catch((err) => log(`Recomputation of new feed failed`));
+        best
+          .recompute()
+          .catch((err) => log(`Recomputation of best feed failed`));
       });
     }
 
