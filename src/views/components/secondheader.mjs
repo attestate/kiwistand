@@ -213,18 +213,14 @@ const secondheader = (theme, site, period, domain, query) => {
                     onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block'; ${animation}}"
                     class="feed-button${site === "top" ? " active" : ""}"
                     style=${`font-variant: small-caps; font-size: 1.01rem; outline: none; border-radius: 2px; cursor: pointer; padding: 5px 14px; background-color: ${
-                      site === "top" ? "var(--accent-primary)" : "var(--bg-white)"
+                      site === "top" ? "var(--accent-primary)" : "transparent"
                     }; border: 1px solid ${
-                      site === "top" ? "var(--accent-primary-hover)" : "rgba(0, 0, 0, 0.15)"
+                      site === "top" ? "var(--accent-primary)" : "var(--accent-primary-bright)"
                     }; color: ${
-                      site === "top" ? "var(--text-white)" : "var(--text-primary)"
+                      site === "top" ? "#000" : "var(--text-primary)"
                     };`}
                   >
-                    <span
-                      style="font-weight: ${site === "top"
-                        ? "bold"
-                        : "normal"};"
-                    >
+                    <span>
                       ${site === "top" ? fireFullSVG : fireSVG} Hot
                     </span>
                   </button>
@@ -245,22 +241,18 @@ const secondheader = (theme, site, period, domain, query) => {
                     onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block'; ${animation}}"
                     class="feed-button${site === "new" ? " active" : ""}"
                     style=${`font-variant: small-caps; margin-left: 10px; font-size: 1.01rem; outline: none; border-radius: 2px; cursor: pointer; padding: 5px 14px; background-color: ${
-                      site === "new" ? "var(--accent-primary)" : "var(--bg-white)"
+                      site === "new" ? "var(--accent-primary)" : "transparent"
                     }; border: 1px solid ${
-                      site === "new" ? "var(--accent-primary-hover)" : "rgba(0, 0, 0, 0.15)"
+                      site === "new" ? "var(--accent-primary)" : "var(--accent-primary-bright)"
                     }; color: ${
-                      site === "new" ? "var(--text-white)" : "var(--text-primary)"
+                      site === "new" ? "#000" : "var(--text-primary)"
                     }; position:relative;`}
                   >
                     <span
                       id="new-dot"
                       style="display: none; position: absolute; top: -5px; right: -5px; width: 8px; height: 8px; border-radius: 2px; background-color: var(--color-notification);"
                     ></span>
-                    <span
-                      style="font-weight: ${site === "new"
-                        ? "bold"
-                        : "normal"};"
-                    >
+                    <span>
                       ${site === "new" ? broadcastFullSVG : broadcastSVG(style)}
                       <span> New </span>
                     </span>
@@ -282,18 +274,14 @@ const secondheader = (theme, site, period, domain, query) => {
                     onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block'; ${animation}}"
                     class="feed-button${site === "best" ? " active" : ""}"
                     style=${`font-variant: small-caps; margin-left: 10px; font-size: 1.01rem; outline: none; border-radius: 2px; cursor: pointer; padding: 5px 14px; background-color: ${
-                      site === "best" ? "var(--accent-primary)" : "var(--bg-white)"
+                      site === "best" ? "var(--accent-primary)" : "transparent"
                     }; border: 1px solid ${
-                      site === "best" ? "var(--accent-primary-hover)" : "rgba(0, 0, 0, 0.15)"
+                      site === "best" ? "var(--accent-primary)" : "var(--accent-primary-bright)"
                     }; color: ${
-                      site === "best" ? "var(--text-white)" : "var(--text-primary)"
+                      site === "best" ? "#000" : "var(--text-primary)"
                     };`}
                   >
-                    <span
-                      style="font-weight: ${site === "best"
-                        ? "bold"
-                        : "normal"};"
-                    >
+                    <span>
                       ${site === "best" ? trophyFullSVG : trophySVG} Best
                     </span>
                   </button>
