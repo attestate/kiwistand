@@ -1,9 +1,8 @@
-// Hosts we will proxy through Cloudflare image resizing. This is an
-// allowlist, not a blocklist: only images whose source host appears here
-// get rewritten, and the /cdn-cgi/image/ endpoint itself rejects any
-// source not in this set. That way, even if someone discovers the
-// resizer URL they cannot point it at arbitrary origins and use our
-// zone as a free image CDN.
+// Hosts whose images we will proxy through Cloudflare image resizing.
+// This is an allowlist, not a blocklist: only sources listed here can
+// be fetched through the /_img endpoint below. Prevents the endpoint
+// from being used as a free general-purpose image CDN and blocks SSRF
+// against internal hosts.
 const IMAGE_PROXY_ALLOWED_HOSTS = new Set([
   "pbs.twimg.com",
   "api.ensdata.net",
@@ -26,27 +25,29 @@ const IMAGE_PROXY_SKIP_HOSTS = new Set([
 // 600px wide; 800 gives us some headroom for high-DPI screens without
 // paying for full-resolution originals.
 const IMAGE_PROXY_DEFAULT_WIDTH = 800;
+const IMAGE_PROXY_MAX_WIDTH = 2048;
+const IMAGE_PROXY_MIN_WIDTH = 16;
 const IMAGE_PROXY_QUALITY = 75;
-const CDN_CGI_IMAGE_PREFIX = "/cdn-cgi/image/";
+const IMAGE_PROXY_PATH = "/_img";
+const IMAGE_PROXY_CACHE_CONTROL = "public, max-age=31536000, immutable";
 
 addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
 
-  // Guard the Cloudflare image resizing endpoint. Only sources on the
-  // allowlist may be transformed; everything else gets a 403. This is
-  // the abuse-protection layer — without it, /cdn-cgi/image/ would let
-  // anyone resize any image through our zone.
-  //
-  // Note: depending on how Image Resizing is configured on the zone,
-  // these requests may be intercepted by Cloudflare before the Worker
-  // runs. If that's the case this guard is a no-op and a WAF rule or
-  // "Resize via Workers only" setting should be used instead. Leaving
-  // the guard in place is harmless either way.
-  if (url.pathname.startsWith(CDN_CGI_IMAGE_PREFIX)) {
-    if (!isAllowedImageRequest(url)) {
-      return event.respondWith(new Response("Forbidden", { status: 403 }));
-    }
-    return event.respondWith(fetch(event.request));
+  // Image proxy endpoint — "Transform via Workers" mode. We do NOT
+  // expose the public /cdn-cgi/image/ URL format. Instead, this
+  // Worker-owned endpoint is the only way to trigger a resize, so we
+  // fully control inputs (host allowlist, width clamping, SSRF
+  // protection) and there is no general-purpose resize URL to abuse.
+  if (url.pathname === IMAGE_PROXY_PATH) {
+    return event.respondWith(handleImageProxy(event));
+  }
+
+  // Defense-in-depth: hard-block /cdn-cgi/image/ in case it's still
+  // reachable on the zone. We route all resizes through the endpoint
+  // above, so nothing legitimate should ever hit this path.
+  if (url.pathname.startsWith("/cdn-cgi/image/")) {
+    return event.respondWith(new Response("Forbidden", { status: 403 }));
   }
 
   if (url.pathname === "/api/v1/delegations") {
@@ -70,26 +71,82 @@ addEventListener("fetch", (event) => {
   event.respondWith(swr({ request: event.request, event }));
 });
 
-// Parse the source URL out of a /cdn-cgi/image/OPTIONS/SOURCE path and
-// check it against the allowlist.
-function isAllowedImageRequest(url) {
-  const remainder = url.pathname.slice(CDN_CGI_IMAGE_PREFIX.length);
-  const firstSlash = remainder.indexOf("/");
-  if (firstSlash === -1) return false;
-  const sourcePath = remainder.slice(firstSlash + 1);
-  // The source URL was passed through as-is (not encoded) by our
-  // rewriter, so its own query string will be merged into url.search.
-  // Reconstruct by appending it.
-  const sourceRaw = sourcePath + url.search;
-  try {
-    const parsed = new URL(sourceRaw);
-    if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
-      return false;
-    }
-    return IMAGE_PROXY_ALLOWED_HOSTS.has(parsed.hostname);
-  } catch {
-    return false;
+// Serves a resized image for an allowlisted third-party source.
+// Validates inputs, calls Cloudflare image resizing via fetch() with
+// the `cf.image` options, and caches the result at the edge with a
+// long immutable TTL (URLs include full source + width, so they are
+// safely cacheable forever).
+async function handleImageProxy(event) {
+  const request = event.request;
+  if (request.method !== "GET" && request.method !== "HEAD") {
+    return new Response("Method Not Allowed", { status: 405 });
   }
+
+  const url = new URL(request.url);
+  const src = url.searchParams.get("u");
+  if (!src) return new Response("Missing 'u' parameter", { status: 400 });
+
+  let parsed;
+  try {
+    parsed = new URL(src);
+  } catch {
+    return new Response("Invalid source URL", { status: 400 });
+  }
+  if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
+    return new Response("Forbidden", { status: 403 });
+  }
+  if (!IMAGE_PROXY_ALLOWED_HOSTS.has(parsed.hostname)) {
+    return new Response("Forbidden", { status: 403 });
+  }
+
+  const requestedWidth = Number(url.searchParams.get("w"));
+  const width = Number.isFinite(requestedWidth) && requestedWidth > 0
+    ? Math.max(IMAGE_PROXY_MIN_WIDTH, Math.min(IMAGE_PROXY_MAX_WIDTH, Math.floor(requestedWidth)))
+    : IMAGE_PROXY_DEFAULT_WIDTH;
+
+  // Normalize the cache key so ?u=...&w=800 and ?w=800&u=... hit the
+  // same cache entry regardless of query-string ordering.
+  const cacheKeyUrl = new URL(url.origin + IMAGE_PROXY_PATH);
+  cacheKeyUrl.searchParams.set("u", parsed.toString());
+  cacheKeyUrl.searchParams.set("w", String(width));
+  const cacheKey = new Request(cacheKeyUrl.toString(), { method: "GET" });
+
+  const cache = caches.default;
+  const cached = await cache.match(cacheKey);
+  if (cached) return cached;
+
+  const imageRes = await fetch(parsed.toString(), {
+    cf: {
+      image: {
+        width,
+        quality: IMAGE_PROXY_QUALITY,
+        format: "auto",
+        fit: "scale-down",
+      },
+    },
+  });
+
+  if (!imageRes.ok) {
+    // Don't cache failures — origins go up and down and we want to
+    // recover the next time someone asks.
+    return new Response("Upstream error", {
+      status: 502,
+      headers: { "cache-control": "no-store" },
+    });
+  }
+
+  const headers = new Headers(imageRes.headers);
+  headers.set("cache-control", IMAGE_PROXY_CACHE_CONTROL);
+  headers.delete("set-cookie");
+  headers.delete("cf-cache-status");
+
+  const response = new Response(imageRes.body, {
+    status: imageRes.status,
+    headers,
+  });
+
+  event.waitUntil(cache.put(cacheKey, response.clone()));
+  return response;
 }
 
 function shouldProxyImageSrc(src) {
@@ -108,9 +165,8 @@ function shouldProxyImageSrc(src) {
   }
 }
 
-function buildCfImageUrl(src, width) {
-  const opts = `width=${width},quality=${IMAGE_PROXY_QUALITY},format=auto`;
-  return `${CDN_CGI_IMAGE_PREFIX}${opts}/${src}`;
+function buildProxyImageUrl(src, width) {
+  return `${IMAGE_PROXY_PATH}?u=${encodeURIComponent(src)}&w=${width}`;
 }
 
 class ImgProxyRewriter {
@@ -120,7 +176,7 @@ class ImgProxyRewriter {
   element(el) {
     const src = el.getAttribute("src");
     if (!shouldProxyImageSrc(src)) return;
-    el.setAttribute("src", buildCfImageUrl(src, this.width));
+    el.setAttribute("src", buildProxyImageUrl(src, this.width));
     // srcset would need per-candidate rewriting; for now we only touch
     // src and let the single-width transform handle high-DPI via the
     // browser's natural upscaling. Add srcset handling here if needed.
@@ -128,7 +184,7 @@ class ImgProxyRewriter {
 }
 
 // Rewrites <img src="..."> in HTML responses to route allowlisted
-// third-party images through Cloudflare's image resizer. Returns the
+// third-party images through our image proxy endpoint. Returns the
 // original response untouched for non-HTML content types.
 function transformHtmlImages(response) {
   const contentType = response.headers.get("content-type") || "";
