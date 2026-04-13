@@ -1,54 +1,45 @@
-// Hosts whose images we will proxy through Cloudflare image resizing.
-// This is an allowlist, not a blocklist: only sources listed here can
-// be fetched through the /_img endpoint below. Prevents the endpoint
-// from being used as a free general-purpose image CDN and blocks SSRF
-// against internal hosts.
-const IMAGE_PROXY_ALLOWED_HOSTS = new Set([
-  "pbs.twimg.com",
-  "api.ensdata.net",
-]);
+// Third-party <img> sources in rendered HTML get uploaded to Cloudflare
+// Images on first encounter and their src is rewritten to the resulting
+// imagedelivery.net URL on subsequent renders. End result: all images
+// in kiwistand pages are served from Cloudflare Images, giving us free
+// resize/format negotiation with no public transform endpoint to
+// protect. Uploads run in the background via event.waitUntil, so the
+// first visitor to a new image still gets a working (un-optimized)
+// page — the second visitor at the same edge PoP gets the optimized
+// one.
+//
+// Requires two bindings on the Worker:
+//   - IMAGE_KV      (Workers KV namespace for src -> imagedelivery URL)
+//   - CF_API_TOKEN  (secret, Cloudflare Images: Edit scope)
+//   - CF_ACCOUNT_ID (plain var, your CF account ID)
 
-// Hosts we intentionally skip even if they show up in <img> tags:
-// - imagedelivery.net: already Cloudflare Images, has its own variants
-// - news.kiwistand.com: same-origin, Polish handles it
-// - i.ytimg.com: YouTube thumbnails are already CDN-optimized and some
-//   origins refuse requests from the CF resizer UA
-// - localhost: dev
-const IMAGE_PROXY_SKIP_HOSTS = new Set([
+// Hosts we do NOT upload:
+//   - imagedelivery.net: already Cloudflare Images
+//   - news.kiwistand.com: same-origin, Polish handles it
+//   - i.ytimg.com: YouTube thumbnails are already CDN-optimized and
+//     some origins reject the CF Images fetcher
+//   - localhost: dev
+const IMAGE_SKIP_HOSTS = new Set([
   "imagedelivery.net",
   "news.kiwistand.com",
   "i.ytimg.com",
   "localhost",
 ]);
 
-// Default width for row thumbnails. The CSS renders these around
-// 600px wide; 800 gives us some headroom for high-DPI screens without
-// paying for full-resolution originals.
-const IMAGE_PROXY_DEFAULT_WIDTH = 800;
-const IMAGE_PROXY_MAX_WIDTH = 2048;
-const IMAGE_PROXY_MIN_WIDTH = 16;
-const IMAGE_PROXY_QUALITY = 75;
-const IMAGE_PROXY_PATH = "/_img";
-const IMAGE_PROXY_CACHE_CONTROL = "public, max-age=31536000, immutable";
+// KV key prefix and TTL for the src -> imagedelivery.net mapping.
+// Mappings live for a year and refresh naturally as they're re-used.
+const IMAGE_MAP_PREFIX = "img-map:";
+const IMAGE_MAP_TTL_SECONDS = 60 * 60 * 24 * 365;
+
+// Pending-upload sentinel. When we kick off an upload we write a short-
+// lived marker so concurrent renders of the same story don't race and
+// trigger duplicate uploads from the same edge. Value "-" is a sentinel
+// meaning "upload in progress, don't start another".
+const IMAGE_PENDING_SENTINEL = "-";
+const IMAGE_PENDING_TTL_SECONDS = 120;
 
 addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
-
-  // Image proxy endpoint — "Transform via Workers" mode. We do NOT
-  // expose the public /cdn-cgi/image/ URL format. Instead, this
-  // Worker-owned endpoint is the only way to trigger a resize, so we
-  // fully control inputs (host allowlist, width clamping, SSRF
-  // protection) and there is no general-purpose resize URL to abuse.
-  if (url.pathname === IMAGE_PROXY_PATH) {
-    return event.respondWith(handleImageProxy(event));
-  }
-
-  // Defense-in-depth: hard-block /cdn-cgi/image/ in case it's still
-  // reachable on the zone. We route all resizes through the endpoint
-  // above, so nothing legitimate should ever hit this path.
-  if (url.pathname.startsWith("/cdn-cgi/image/")) {
-    return event.respondWith(new Response("Forbidden", { status: 403 }));
-  }
 
   if (url.pathname === "/api/v1/delegations") {
     return event.respondWith(fetch(event.request));
@@ -71,85 +62,7 @@ addEventListener("fetch", (event) => {
   event.respondWith(swr({ request: event.request, event }));
 });
 
-// Serves a resized image for an allowlisted third-party source.
-// Validates inputs, calls Cloudflare image resizing via fetch() with
-// the `cf.image` options, and caches the result at the edge with a
-// long immutable TTL (URLs include full source + width, so they are
-// safely cacheable forever).
-async function handleImageProxy(event) {
-  const request = event.request;
-  if (request.method !== "GET" && request.method !== "HEAD") {
-    return new Response("Method Not Allowed", { status: 405 });
-  }
-
-  const url = new URL(request.url);
-  const src = url.searchParams.get("u");
-  if (!src) return new Response("Missing 'u' parameter", { status: 400 });
-
-  let parsed;
-  try {
-    parsed = new URL(src);
-  } catch {
-    return new Response("Invalid source URL", { status: 400 });
-  }
-  if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
-    return new Response("Forbidden", { status: 403 });
-  }
-  if (!IMAGE_PROXY_ALLOWED_HOSTS.has(parsed.hostname)) {
-    return new Response("Forbidden", { status: 403 });
-  }
-
-  const requestedWidth = Number(url.searchParams.get("w"));
-  const width = Number.isFinite(requestedWidth) && requestedWidth > 0
-    ? Math.max(IMAGE_PROXY_MIN_WIDTH, Math.min(IMAGE_PROXY_MAX_WIDTH, Math.floor(requestedWidth)))
-    : IMAGE_PROXY_DEFAULT_WIDTH;
-
-  // Normalize the cache key so ?u=...&w=800 and ?w=800&u=... hit the
-  // same cache entry regardless of query-string ordering.
-  const cacheKeyUrl = new URL(url.origin + IMAGE_PROXY_PATH);
-  cacheKeyUrl.searchParams.set("u", parsed.toString());
-  cacheKeyUrl.searchParams.set("w", String(width));
-  const cacheKey = new Request(cacheKeyUrl.toString(), { method: "GET" });
-
-  const cache = caches.default;
-  const cached = await cache.match(cacheKey);
-  if (cached) return cached;
-
-  const imageRes = await fetch(parsed.toString(), {
-    cf: {
-      image: {
-        width,
-        quality: IMAGE_PROXY_QUALITY,
-        format: "auto",
-        fit: "scale-down",
-      },
-    },
-  });
-
-  if (!imageRes.ok) {
-    // Don't cache failures — origins go up and down and we want to
-    // recover the next time someone asks.
-    return new Response("Upstream error", {
-      status: 502,
-      headers: { "cache-control": "no-store" },
-    });
-  }
-
-  const headers = new Headers(imageRes.headers);
-  headers.set("cache-control", IMAGE_PROXY_CACHE_CONTROL);
-  headers.delete("set-cookie");
-  headers.delete("cf-cache-status");
-
-  const response = new Response(imageRes.body, {
-    status: imageRes.status,
-    headers,
-  });
-
-  event.waitUntil(cache.put(cacheKey, response.clone()));
-  return response;
-}
-
-function shouldProxyImageSrc(src) {
+function shouldUploadImage(src) {
   if (!src) return false;
   if (src.startsWith("data:")) return false;
   if (src.startsWith("/")) return false;
@@ -158,39 +71,129 @@ function shouldProxyImageSrc(src) {
     if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
       return false;
     }
-    if (IMAGE_PROXY_SKIP_HOSTS.has(parsed.hostname)) return false;
-    return IMAGE_PROXY_ALLOWED_HOSTS.has(parsed.hostname);
+    if (IMAGE_SKIP_HOSTS.has(parsed.hostname)) return false;
+    return true;
   } catch {
     return false;
   }
 }
 
-function buildProxyImageUrl(src, width) {
-  return `${IMAGE_PROXY_PATH}?u=${encodeURIComponent(src)}&w=${width}`;
-}
-
-class ImgProxyRewriter {
-  constructor(width) {
-    this.width = width;
+// HTMLRewriter element handler. For each <img src> pointing at a
+// third-party host we look up an existing mapping in KV and rewrite
+// src if present; otherwise we leave the original URL in place and
+// schedule a background upload so future renders at this edge get the
+// optimized version.
+class ImgUploadRewriter {
+  constructor(event) {
+    this.event = event;
   }
-  element(el) {
+  async element(el) {
+    if (typeof IMAGE_KV === "undefined") return;
     const src = el.getAttribute("src");
-    if (!shouldProxyImageSrc(src)) return;
-    el.setAttribute("src", buildProxyImageUrl(src, this.width));
-    // srcset would need per-candidate rewriting; for now we only touch
-    // src and let the single-width transform handle high-DPI via the
-    // browser's natural upscaling. Add srcset handling here if needed.
+    if (!shouldUploadImage(src)) return;
+
+    const key = IMAGE_MAP_PREFIX + src;
+    let mapped;
+    try {
+      mapped = await IMAGE_KV.get(key);
+    } catch {
+      return;
+    }
+
+    if (mapped && mapped !== IMAGE_PENDING_SENTINEL) {
+      el.setAttribute("src", mapped);
+      return;
+    }
+
+    if (mapped === IMAGE_PENDING_SENTINEL) {
+      // Another render already kicked off an upload for this URL;
+      // leave the original src in place and wait it out.
+      return;
+    }
+
+    // First time seeing this URL at this edge. Mark pending and kick
+    // off the upload in the background.
+    this.event.waitUntil(uploadImageToCfImages(src, key));
   }
 }
 
-// Rewrites <img src="..."> in HTML responses to route allowlisted
-// third-party images through our image proxy endpoint. Returns the
-// original response untouched for non-HTML content types.
-function transformHtmlImages(response) {
+async function uploadImageToCfImages(src, key) {
+  if (
+    typeof IMAGE_KV === "undefined" ||
+    typeof CF_API_TOKEN === "undefined" ||
+    typeof CF_ACCOUNT_ID === "undefined"
+  ) {
+    return;
+  }
+
+  // Claim the upload so concurrent handlers back off. KV writes are
+  // eventually consistent across edges, so this only prevents duplicate
+  // uploads from the *same* edge in close succession — good enough.
+  try {
+    await IMAGE_KV.put(key, IMAGE_PENDING_SENTINEL, {
+      expirationTtl: IMAGE_PENDING_TTL_SECONDS,
+    });
+  } catch {
+    return;
+  }
+
+  let deliveryUrl;
+  try {
+    const form = new FormData();
+    form.append("url", src);
+    form.append("requireSignedURLs", "false");
+
+    const res = await fetch(
+      `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/images/v1`,
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${CF_API_TOKEN}` },
+        body: form,
+      },
+    );
+
+    if (!res.ok) {
+      // Clear the pending marker so a future render can retry.
+      await IMAGE_KV.delete(key).catch(() => {});
+      return;
+    }
+
+    const data = await res.json();
+    if (!data?.success || !data.result?.variants?.length) {
+      await IMAGE_KV.delete(key).catch(() => {});
+      return;
+    }
+
+    // CF Images returns a list of variant URLs, e.g.
+    //   https://imagedelivery.net/<hash>/<id>/public
+    // The "public" variant is the default full-image delivery.
+    deliveryUrl =
+      data.result.variants.find((v) => v.endsWith("/public")) ||
+      data.result.variants[0];
+  } catch {
+    await IMAGE_KV.delete(key).catch(() => {});
+    return;
+  }
+
+  if (!deliveryUrl) return;
+
+  try {
+    await IMAGE_KV.put(key, deliveryUrl, {
+      expirationTtl: IMAGE_MAP_TTL_SECONDS,
+    });
+  } catch {
+    // If the final write fails, leave the pending marker to expire
+    // naturally so a future render can retry.
+  }
+}
+
+// Runs HTMLRewriter over text/html responses before they are cached
+// by the SWR layer. Non-HTML responses pass through untouched.
+function transformHtmlImages(response, event) {
   const contentType = response.headers.get("content-type") || "";
   if (!contentType.includes("text/html")) return response;
   return new HTMLRewriter()
-    .on("img", new ImgProxyRewriter(IMAGE_PROXY_DEFAULT_WIDTH))
+    .on("img", new ImgUploadRewriter(event))
     .transform(response);
 }
 
@@ -248,7 +251,7 @@ async function fetchAndCache({ cacheKey, request, event }) {
   // already-transformed HTML and don't pay the rewriter cost per request.
   // If the image allowlist or target width changes, purge the edge cache
   // via cloudflarePurge.mjs to pick up the new rules.
-  const originRes = transformHtmlImages(rawOriginRes);
+  const originRes = transformHtmlImages(rawOriginRes, event);
 
   const cacheControl = resolveCacheControlHeaders(request, originRes);
   const headers = {
