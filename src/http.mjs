@@ -266,6 +266,11 @@ app.use(
     },
   }),
 );
+app.get("/previews/:file", (req, res, next) => {
+  res.sendFile(path.resolve(`src/public/previews/${req.params.file}`), (err) => {
+    if (err) next();
+  });
+});
 // Early Hints: Cloudflare caches Link headers and sends them as 103
 // before the origin responds, so browsers start fetching CSS/JS immediately.
 import { readFileSync } from "fs";
