@@ -2,7 +2,10 @@ User-agent: *
 Disallow: /outbound
 Disallow: /best?*domain=
 Disallow: /?*domain=
-Disallow: /*.eth?*
-Disallow: /api/v1/listen
+Disallow: /*.eth
+Disallow: /api/
+Disallow: /submit
+Disallow: /kiwipass-mint
+Disallow: /welcome
 
 Sitemap: https://news.kiwistand.com/sitemap.xml
