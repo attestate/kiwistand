@@ -29,6 +29,7 @@ For a deeper dive into the protocol, see the [Protocol Guide](https://github.com
   - `GET /profile/:address` - User profile data (ENS, avatars, social links)
   - `GET /karma/:address` - User karma scores
   - `GET /stories?index=:index` - Single story details
+  - `GET /stories/context?index=:index` - LLM-friendly plain-text rendering of a story (title, source URL, extracted article text, and comments)
 
 ### Port 8443 - Core API (Read/Write)
 - **Base URL**: `https://news.kiwistand.com:8443/api/v1`
@@ -198,6 +199,17 @@ When you receive a message, you need to determine the author's identity. Here is
 
 -   **Endpoint**: `GET https://news.kiwistand.com/api/v1/stories?index=<message_index>`
 -   **Description**: Retrieves the full details for a single story, including all of its comments in the response. Comments are included directly in the story response object, not requiring a separate API call.
+
+#### Fetching a Story as LLM Context
+
+-   **Endpoint**: `GET https://news.kiwistand.com/stories/context?index=<message_index>`
+-   **Response**: `text/plain; charset=utf-8` (Markdown, not JSON)
+-   **Description**: Returns an LLM-friendly rendering of a story containing the title, the source URL, the extracted plain-text article body (when extraction succeeds), and all comments with their authors' display names. Designed to be pasted into or fetched by an LLM so it can answer questions about a Kiwi story without a client having to stitch together `/stories`, article extraction, and ENS resolution. The `index` query parameter must be the `0x`-prefixed message index, e.g. `/stories/context?index=0x63b0bef1...`. Cached for one hour.
+
+**Example:**
+```bash
+curl "https://news.kiwistand.com/stories/context?index=0x63b0bef1..."
+```
 
 ### Writing to the API
 
