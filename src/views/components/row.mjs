@@ -442,7 +442,7 @@ const row = (
     const canRenderFarcasterPreview =
       isFarcasterCast &&
       story.metadata &&
-      (story.metadata.farcasterCast || story.metadata.ogDescription);
+      story.metadata.farcasterCast;
 
     // Check if we have what we need to render a Bluesky post preview
     const canRenderBlueskyPreview =
