@@ -18,11 +18,16 @@
 //   - news.kiwistand.com: same-origin, Polish handles it
 //   - i.ytimg.com: YouTube thumbnails are already CDN-optimized and
 //     some origins reject the CF Images fetcher
+//   - ensdata.net, openseauserdata.com: avatars — small, numerous,
+//     per-user; uploading them bloats CF Images storage without any
+//     meaningful performance win
 //   - localhost: dev
 const IMAGE_SKIP_HOSTS = new Set([
   "imagedelivery.net",
   "news.kiwistand.com",
   "i.ytimg.com",
+  "ensdata.net",
+  "openseauserdata.com",
   "localhost",
 ]);
 
