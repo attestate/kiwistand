@@ -6,6 +6,7 @@ const NewsletterScrollModal = ({ toast }) => {
   const [isDismissed, setIsDismissed] = useState(true); // Start hidden to prevent flash
   const [overlayOpacity, setOverlayOpacity] = useState(0);
   const modalRef = useRef(null);
+  const hasTrackedShownRef = useRef(false);
 
   useEffect(() => {
     // For testing: add ?newsletter=test to URL to reset and show modal
@@ -47,6 +48,12 @@ const NewsletterScrollModal = ({ toast }) => {
       
       // Set overlay opacity based on visibility (max 0.5)
       setOverlayOpacity(visibilityPercentage * 0.5);
+
+      // Fire posthog event the first time the modal scrolls into view
+      if (visibilityPercentage > 0 && !hasTrackedShownRef.current) {
+        hasTrackedShownRef.current = true;
+        window.posthog?.capture?.("newsletter_modal_shown");
+      }
     };
 
     window.addEventListener("scroll", handleScroll);
