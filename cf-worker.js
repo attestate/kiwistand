@@ -315,11 +315,13 @@ function resolveEdgeCacheControl({ sMaxage, staleWhileRevalidate }) {
     return { value: "immutable", staleAt };
   }
 
-  // Don't add staleWhileRevalidate to the cache time sent to Cloudflare
-  // The worker handles SWR internally, Cloudflare should only cache for sMaxage
-  return { 
-    value: `max-age=${sMaxage}`, 
-    staleAt 
+  // Keep the response in CF cache for the full SWR window so the worker
+  // can serve stale while revalidating. The worker's shouldRevalidate()
+  // uses x-edge-cache-stale-at to decide freshness independently.
+  const cacheSeconds = sMaxage + (staleWhileRevalidate || 0);
+  return {
+    value: `max-age=${cacheSeconds}`,
+    staleAt
   };
 }
 
