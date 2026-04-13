@@ -1061,6 +1061,9 @@ async function startWatchAccount(delegations, account, isInIOSApp) {
   }
   const identity = address && resolveIdentity(delegations, address);
   if (identity) {
+    try {
+      document.body.classList.add("kiwi-logged-in");
+    } catch {}
     if (!isAnonMode) {
       window.posthog?.identify?.(identity);
     }
@@ -1101,6 +1104,9 @@ async function startWatchAccount(delegations, account, isInIOSApp) {
         });
     }
   } else {
+    try {
+      document.body.classList.remove("kiwi-logged-in");
+    } catch {}
     hideDesktopLinks();
 
     // Clear iOS wallet when disconnected

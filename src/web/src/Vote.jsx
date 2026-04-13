@@ -432,6 +432,7 @@ const Vote = (props) => {
               {hasUpvoted ? iconFullSVG : iconSVG}
             </span>
             <span
+              className="like-count"
               style={{
                 fontSize: "13px",
                 color: "var(--color-vote-default)",
