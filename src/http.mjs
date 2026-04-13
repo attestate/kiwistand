@@ -273,7 +273,10 @@ if (env.NODE_ENV === "production") {
   try {
     const mf = JSON.parse(readFileSync("src/public/manifest.json", "utf-8"));
     const entry = mf["src/main.jsx"];
-    const links = ["</news.css>; rel=preload; as=style"];
+    const { createHash } = await import("crypto");
+    const cssContent = readFileSync("src/public/news.css", "utf8");
+    const cssHash = createHash("md5").update(cssContent).digest("hex").substring(0, 8);
+    const links = [`</news.css?v=${cssHash}>; rel=preload; as=style`];
     if (entry?.file) links.push(`</${entry.file}>; rel=preload; as=script`);
     for (const k of entry?.imports || []) {
       if (mf[k]?.file) links.push(`</${mf[k].file}>; rel=preload; as=script`);
