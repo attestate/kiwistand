@@ -1024,7 +1024,7 @@ const row = (
                         : DOMPurify.sanitize(story.metadata.image)}"
                     />
                     <span
-                      style="gap: 5px; position: absolute; bottom: 8px; left: 16px; background: var(--bg-white); padding: 2px 4px; border-radius: 2px; font-size: 10px !important; line-height: 1; display: inline-flex; align-items: center; font-weight: normal; transform: none; z-index: 5; height: 18px;"
+                      style="gap: 5px; position: absolute; bottom: 8px; left: 16px; background: var(--bg-white); padding: 2px 4px; border-radius: 2px; font-size: 10px !important; line-height: 1; display: inline-flex; align-items: center; font-weight: normal; transform: none; z-index: 5; height: 18px; white-space: nowrap;"
                     >
                       ${![
                         "farcaster.xyz",
