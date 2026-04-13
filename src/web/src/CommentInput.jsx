@@ -817,11 +817,12 @@ const CommentInput = (props) => {
                 toggleNavigationItems();
               }}
               onBlur={toggleNavigationItems}
-              rows="6"
+              rows="12"
               cols="80"
               style={{
                 display: "block",
                 width: "100%",
+                boxSizing: "border-box",
                 border: "var(--border)",
                 backgroundColor: "var(--bg-white)",
                 color: "var(--text-primary)",
