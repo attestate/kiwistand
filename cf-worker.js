@@ -1,3 +1,48 @@
+// Third-party <img> sources in rendered HTML get uploaded to Cloudflare
+// Images on first encounter and their src is rewritten to the resulting
+// imagedelivery.net URL on subsequent renders. End result: all images
+// in kiwistand pages are served from Cloudflare Images, giving us free
+// resize/format negotiation with no public transform endpoint to
+// protect. Uploads run in the background via event.waitUntil, so the
+// first visitor to a new image still gets a working (un-optimized)
+// page — the second visitor at the same edge PoP gets the optimized
+// one.
+//
+// Requires two bindings on the Worker:
+//   - IMAGE_KV      (Workers KV namespace for src -> imagedelivery URL)
+//   - CF_API_TOKEN  (secret, Cloudflare Images: Edit scope)
+//   - CF_ACCOUNT_ID (plain var, your CF account ID)
+
+// Hosts we do NOT upload:
+//   - imagedelivery.net: already Cloudflare Images
+//   - news.kiwistand.com: same-origin, Polish handles it
+//   - i.ytimg.com: YouTube thumbnails are already CDN-optimized and
+//     some origins reject the CF Images fetcher
+//   - ensdata.net, openseauserdata.com: avatars — small, numerous,
+//     per-user; uploading them bloats CF Images storage without any
+//     meaningful performance win
+//   - localhost: dev
+const IMAGE_SKIP_HOSTS = new Set([
+  "imagedelivery.net",
+  "news.kiwistand.com",
+  "i.ytimg.com",
+  "ensdata.net",
+  "openseauserdata.com",
+  "localhost",
+]);
+
+// KV key prefix and TTL for the src -> imagedelivery.net mapping.
+// Mappings live for a year and refresh naturally as they're re-used.
+const IMAGE_MAP_PREFIX = "img-map:";
+const IMAGE_MAP_TTL_SECONDS = 60 * 60 * 24 * 365;
+
+// Pending-upload sentinel. When we kick off an upload we write a short-
+// lived marker so concurrent renders of the same story don't race and
+// trigger duplicate uploads from the same edge. Value "-" is a sentinel
+// meaning "upload in progress, don't start another".
+const IMAGE_PENDING_SENTINEL = "-";
+const IMAGE_PENDING_TTL_SECONDS = 120;
+
 addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
 
@@ -21,6 +66,141 @@ addEventListener("fetch", (event) => {
 
   event.respondWith(swr({ request: event.request, event }));
 });
+
+function shouldUploadImage(src) {
+  if (!src) return false;
+  if (src.startsWith("data:")) return false;
+  if (src.startsWith("/")) return false;
+  try {
+    const parsed = new URL(src);
+    if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
+      return false;
+    }
+    if (IMAGE_SKIP_HOSTS.has(parsed.hostname)) return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// HTMLRewriter element handler. For each <img src> pointing at a
+// third-party host we look up an existing mapping in KV and rewrite
+// src if present; otherwise we leave the original URL in place and
+// schedule a background upload so future renders at this edge get the
+// optimized version.
+class ImgUploadRewriter {
+  constructor(event) {
+    this.event = event;
+  }
+  async element(el) {
+    if (typeof IMAGE_KV === "undefined") return;
+    const src = el.getAttribute("src");
+    if (!shouldUploadImage(src)) return;
+
+    const key = IMAGE_MAP_PREFIX + src;
+    let mapped;
+    try {
+      mapped = await IMAGE_KV.get(key);
+    } catch {
+      return;
+    }
+
+    if (mapped && mapped !== IMAGE_PENDING_SENTINEL) {
+      el.setAttribute("src", mapped);
+      return;
+    }
+
+    if (mapped === IMAGE_PENDING_SENTINEL) {
+      // Another render already kicked off an upload for this URL;
+      // leave the original src in place and wait it out.
+      return;
+    }
+
+    // First time seeing this URL at this edge. Mark pending and kick
+    // off the upload in the background.
+    this.event.waitUntil(uploadImageToCfImages(src, key));
+  }
+}
+
+async function uploadImageToCfImages(src, key) {
+  if (
+    typeof IMAGE_KV === "undefined" ||
+    typeof CF_API_TOKEN === "undefined" ||
+    typeof CF_ACCOUNT_ID === "undefined"
+  ) {
+    return;
+  }
+
+  // Claim the upload so concurrent handlers back off. KV writes are
+  // eventually consistent across edges, so this only prevents duplicate
+  // uploads from the *same* edge in close succession — good enough.
+  try {
+    await IMAGE_KV.put(key, IMAGE_PENDING_SENTINEL, {
+      expirationTtl: IMAGE_PENDING_TTL_SECONDS,
+    });
+  } catch {
+    return;
+  }
+
+  let deliveryUrl;
+  try {
+    const form = new FormData();
+    form.append("url", src);
+    form.append("requireSignedURLs", "false");
+
+    const res = await fetch(
+      `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/images/v1`,
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${CF_API_TOKEN}` },
+        body: form,
+      },
+    );
+
+    if (!res.ok) {
+      // Clear the pending marker so a future render can retry.
+      await IMAGE_KV.delete(key).catch(() => {});
+      return;
+    }
+
+    const data = await res.json();
+    if (!data?.success || !data.result?.variants?.length) {
+      await IMAGE_KV.delete(key).catch(() => {});
+      return;
+    }
+
+    // CF Images returns a list of variant URLs, e.g.
+    //   https://imagedelivery.net/<hash>/<id>/public
+    // The "public" variant is the default full-image delivery.
+    deliveryUrl =
+      data.result.variants.find((v) => v.endsWith("/public")) ||
+      data.result.variants[0];
+  } catch {
+    await IMAGE_KV.delete(key).catch(() => {});
+    return;
+  }
+
+  if (!deliveryUrl) return;
+
+  try {
+    await IMAGE_KV.put(key, deliveryUrl, {
+      expirationTtl: IMAGE_MAP_TTL_SECONDS,
+    });
+  } catch {
+    // If the final write fails, leave the pending marker to expire
+    // naturally so a future render can retry.
+  }
+}
+
+// Runs HTMLRewriter over text/html responses before they are cached
+// by the SWR layer. Non-HTML responses pass through untouched.
+function transformHtmlImages(response, event) {
+  const contentType = response.headers.get("content-type") || "";
+  if (!contentType.includes("text/html")) return response;
+  return new HTMLRewriter()
+    .on("img", new ImgUploadRewriter(event))
+    .transform(response);
+}
 
 const CACHE_STALE_AT_HEADER = "x-edge-cache-stale-at";
 const CACHE_STATUS_HEADER = "x-edge-cache-status";
@@ -70,7 +250,13 @@ async function swr({ request, event }) {
 
 async function fetchAndCache({ cacheKey, request, event }) {
   const cache = caches.default;
-  const originRes = await fetch(request);  // No cache busting
+  const rawOriginRes = await fetch(request);  // No cache busting
+
+  // Rewrite <img> tags before caching, so cache hits serve the
+  // already-transformed HTML and don't pay the rewriter cost per request.
+  // If the image allowlist or target width changes, purge the edge cache
+  // via cloudflarePurge.mjs to pick up the new rules.
+  const originRes = transformHtmlImages(rawOriginRes, event);
 
   const cacheControl = resolveCacheControlHeaders(request, originRes);
   const headers = {
