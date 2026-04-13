@@ -1,4 +1,5 @@
 import { readFile, writeFile, access } from "fs/promises";
+import { readFileSync } from "fs";
 import { resolve } from "path";
 import { env } from "process";
 
@@ -46,7 +47,7 @@ export function writersFrame(username, avatar) {
         : ""}
       <p
         style=${{
-          fontFamily: "VerdanaBold",
+          fontFamily: "InterSemiBold",
           fontSize: "4rem",
           color: "black",
           margin: "0 0 1rem 0",
@@ -76,98 +77,184 @@ export function cfTransform(url, size) {
 }
 
 const emojiMatcher = emojiRegex();
+
+let _kiwiIconSrc = null;
+function getKiwiIconSrc() {
+  if (!_kiwiIconSrc) {
+    const buf = readFileSync(resolve("./kiwi-icon.png"));
+    _kiwiIconSrc = `data:image/png;base64,${buf.toString("base64")}`;
+  }
+  return _kiwiIconSrc;
+}
+
 export function story(title, displayName, avatar, domain) {
   title = title.replace(emojiMatcher, "");
+  const kiwiIconSrc = getKiwiIconSrc();
+
+  // Adaptive font size based on title length
+  let titleFontSize = "54px";
+  let titleLineHeight = 1.2;
+  if (title.length > 120) {
+    titleFontSize = "36px";
+    titleLineHeight = 1.3;
+  } else if (title.length > 80) {
+    titleFontSize = "42px";
+    titleLineHeight = 1.25;
+  } else if (title.length < 30) {
+    titleFontSize = "60px";
+    titleLineHeight = 1.15;
+  }
+
   return html`
     <div
       style=${{
         height: "100%",
         width: "100%",
         display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-        backgroundColor: "#F6F6EF",
-        color: "#828282",
-        padding: "0 5vw 0 5vw",
+        backgroundColor: "#fafaf7",
       }}
     >
-      <p
-        style=${{
-          fontFamily: "VerdanaBold",
-          fontSize: "4.5rem",
-          color: "black",
-          padding: "1.5rem 1rem",
-          lineHeight: 1.05,
-          margin: 0,
-          backgroundColor: "rgba(0,0,0,0.1)",
-          borderRadius: "2px",
-          border: "2px solid rgba(0,0,0,0.1)",
-        }}
-      >
-        ${title}
-      </p>
-      ${domain
-        ? html`
-            <p
-              style=${{
-                fontSize: "1.8rem",
-                margin: "0.5rem 0 0 0",
-                opacity: 0.7,
-              }}
-            >
-              ${domain}
-            </p>
-          `
-        : null}
-      <p
-        style=${{
-          fontSize: "2rem",
-          marginBottom: 0,
-          marginTop: domain ? "1rem" : 0,
-        }}
-      >
-        submitted by
-      </p>
       <div
         style=${{
-          marginTop: "0.5rem",
+          width: "10px",
+          height: "100%",
+          backgroundColor: "#AFC046",
           display: "flex",
-          alignItems: "center",
+          flexShrink: 0,
+        }}
+      ></div>
+      <div
+        style=${{
+          display: "flex",
+          flexDirection: "column",
+          flex: 1,
+          padding: "40px 56px 40px 48px",
         }}
       >
-        ${avatar
-          ? html`
-              <img
-                style=${{
-                  height: "3rem",
-                  width: "3rem",
-                  borderRadius: "2px",
-                  border: "2px solid black",
-                  marginRight: "1rem",
-                }}
-                src="${cfTransform(avatar, 500)}"
-              />
-            `
-          : null}
         <div
           style=${{
             display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            height: "3rem",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: "8px",
           }}
         >
-          <p
+          <div
             style=${{
-              fontFamily: "VerdanaBold",
-              color: "black",
-              fontSize: "3rem",
-              marginTop: 0,
-              paddingTop: 0,
+              display: "flex",
+              alignItems: "center",
+              gap: "12px",
+            }}
+          >
+            <img
+              style=${{
+                width: "36px",
+                height: "36px",
+                borderRadius: "6px",
+              }}
+              src="${kiwiIconSrc}"
+            />
+            <div
+              style=${{
+                fontSize: "24px",
+                fontFamily: "InterSemiBold",
+                color: "#333",
+                display: "flex",
+              }}
+            >
+              Kiwi News
+            </div>
+          </div>
+          ${domain
+            ? html`
+                <div
+                  style=${{
+                    fontSize: "20px",
+                    color: "#aaa",
+                    display: "flex",
+                  }}
+                >
+                  ${domain}
+                </div>
+              `
+            : null}
+        </div>
+        <div
+          style=${{
+            display: "flex",
+            alignItems: "center",
+            flex: 1,
+          }}
+        >
+          <div
+            style=${{
+              fontFamily: "InterSemiBold",
+              fontSize: titleFontSize,
+              color: "#111",
+              lineHeight: titleLineHeight,
+              display: "flex",
+              wordBreak: "break-word",
+            }}
+          >
+            ${title}
+          </div>
+        </div>
+        <div
+          style=${{
+            display: "flex",
+            alignItems: "center",
+            gap: "14px",
+            borderTop: "2px solid #e8e5dc",
+            paddingTop: "20px",
+            marginTop: "8px",
+          }}
+        >
+          ${avatar
+            ? html`
+                <img
+                  style=${{
+                    width: "40px",
+                    height: "40px",
+                    borderRadius: "20px",
+                    border: "2px solid #ddd",
+                  }}
+                  src="${cfTransform(avatar, 500)}"
+                />
+              `
+            : html`
+                <div
+                  style=${{
+                    width: "40px",
+                    height: "40px",
+                    borderRadius: "20px",
+                    backgroundColor: "#AFC046",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <div
+                    style=${{
+                      color: "white",
+                      fontSize: "18px",
+                      fontFamily: "InterSemiBold",
+                      display: "flex",
+                    }}
+                  >
+                    ${displayName.charAt(0).toUpperCase()}
+                  </div>
+                </div>
+              `}
+          <div
+            style=${{
+              fontFamily: "InterSemiBold",
+              fontSize: "22px",
+              color: "#555",
+              display: "flex",
             }}
           >
             ${displayName}
-          </p>
+          </div>
         </div>
       </div>
     </div>
@@ -302,7 +389,7 @@ export function comment(commentText, authorName, authorAvatar, storyTitle, times
           <div style=${{ flex: 1, display: "flex", flexDirection: "column" }}>
             <div
               style=${{
-                fontFamily: "VerdanaBold",
+                fontFamily: "InterSemiBold",
                 fontSize: "1.4rem",
                 color: "black",
                 marginBottom: "0.8rem",
@@ -560,7 +647,7 @@ export function commentFrame(commentText, authorName, authorAvatar, storyTitle, 
           <div style=${{ flex: 1, display: "flex", flexDirection: "column" }}>
             <div
               style=${{
-                fontFamily: "VerdanaBold",
+                fontFamily: "InterSemiBold",
                 fontSize: "1.2rem",
                 color: "black",
                 marginBottom: "0.6rem",
@@ -677,96 +764,171 @@ export function commentFrame(commentText, authorName, authorAvatar, storyTitle, 
 
 export function storyFrame(title, displayName, avatar, domain) {
   title = title.replace(emojiMatcher, "");
+  const kiwiIconSrc = getKiwiIconSrc();
+
+  let titleFontSize = "50px";
+  let titleLineHeight = 1.2;
+  if (title.length > 120) {
+    titleFontSize = "34px";
+    titleLineHeight = 1.3;
+  } else if (title.length > 80) {
+    titleFontSize = "40px";
+    titleLineHeight = 1.25;
+  } else if (title.length < 30) {
+    titleFontSize = "56px";
+    titleLineHeight = 1.15;
+  }
+
   return html`
     <div
       style=${{
         height: "100%",
         width: "100%",
         display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-        backgroundColor: "#F6F6EF",
-        color: "#828282",
-        padding: "2rem",
+        backgroundColor: "#fafaf7",
       }}
     >
-      <p
+      <div
         style=${{
-          fontFamily: "VerdanaBold",
-          fontSize: "3.5rem",
-          color: "black",
-          padding: "1rem",
-          lineHeight: 1.1,
-          margin: "0 0 1rem 0",
-          backgroundColor: "rgba(0,0,0,0.1)",
-          borderRadius: "2px",
-          border: "2px solid rgba(0,0,0,0.1)",
-          textAlign: "center",
+          width: "10px",
+          height: "100%",
+          backgroundColor: "#AFC046",
+          display: "flex",
+          flexShrink: 0,
         }}
-      >
-        ${title}
-      </p>
-      ${domain
-        ? html`
-            <p
-              style=${{
-                fontSize: "1.5rem",
-                margin: "-0.5rem 0 1rem 0",
-                opacity: 0.7,
-                textAlign: "center",
-              }}
-            >
-              ${domain}
-            </p>
-          `
-        : null}
+      ></div>
       <div
         style=${{
           display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: "1rem",
+          flexDirection: "column",
+          flex: 1,
+          padding: "40px 52px 40px 44px",
         }}
       >
-        ${avatar
-          ? html`
-              <img
-                style=${{
-                  height: "2.5rem",
-                  width: "2.5rem",
-                  borderRadius: "2px",
-                  border: "2px solid black",
-                }}
-                src="${cfTransform(avatar, 300)}"
-              />
-            `
-          : null}
         <div
           style=${{
             display: "flex",
-            flexDirection: "column",
             alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: "8px",
           }}
         >
-          <p
+          <div
             style=${{
-              fontSize: "1.5rem",
-              margin: "0 0 0.2rem 0",
-              color: "black",
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
             }}
           >
-            submitted by
-          </p>
-          <p
+            <img
+              style=${{
+                width: "32px",
+                height: "32px",
+                borderRadius: "5px",
+              }}
+              src="${kiwiIconSrc}"
+            />
+            <div
+              style=${{
+                fontSize: "22px",
+                fontFamily: "InterSemiBold",
+                color: "#333",
+                display: "flex",
+              }}
+            >
+              Kiwi News
+            </div>
+          </div>
+          ${domain
+            ? html`
+                <div
+                  style=${{
+                    fontSize: "18px",
+                    color: "#aaa",
+                    display: "flex",
+                  }}
+                >
+                  ${domain}
+                </div>
+              `
+            : null}
+        </div>
+        <div
+          style=${{
+            display: "flex",
+            alignItems: "center",
+            flex: 1,
+          }}
+        >
+          <div
             style=${{
-              fontFamily: "VerdanaBold",
-              color: "black",
-              fontSize: "2rem",
-              margin: 0,
+              fontFamily: "InterSemiBold",
+              fontSize: titleFontSize,
+              color: "#111",
+              lineHeight: titleLineHeight,
+              display: "flex",
+              wordBreak: "break-word",
+            }}
+          >
+            ${title}
+          </div>
+        </div>
+        <div
+          style=${{
+            display: "flex",
+            alignItems: "center",
+            gap: "12px",
+            borderTop: "2px solid #e8e5dc",
+            paddingTop: "18px",
+            marginTop: "8px",
+          }}
+        >
+          ${avatar
+            ? html`
+                <img
+                  style=${{
+                    width: "36px",
+                    height: "36px",
+                    borderRadius: "18px",
+                    border: "2px solid #ddd",
+                  }}
+                  src="${cfTransform(avatar, 300)}"
+                />
+              `
+            : html`
+                <div
+                  style=${{
+                    width: "36px",
+                    height: "36px",
+                    borderRadius: "18px",
+                    backgroundColor: "#AFC046",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <div
+                    style=${{
+                      color: "white",
+                      fontSize: "16px",
+                      fontFamily: "InterSemiBold",
+                      display: "flex",
+                    }}
+                  >
+                    ${displayName.charAt(0).toUpperCase()}
+                  </div>
+                </div>
+              `}
+          <div
+            style=${{
+              fontFamily: "InterSemiBold",
+              fontSize: "20px",
+              color: "#555",
+              display: "flex",
             }}
           >
             ${displayName}
-          </p>
+          </div>
         </div>
       </div>
     </div>
@@ -784,27 +946,27 @@ export async function generate(name, body, isFrame = false) {
     // File doesn't exist, we continue with the generation
   }
 
-  const fontData = await readFile("./Verdana.ttf");
-  const fontDataBold = await readFile("./Verdana-Bold.ttf");
-  const verdanaBold = {
-    name: "VerdanaBold",
+  const fontData = await readFile("./Inter-Regular.ttf");
+  const fontDataBold = await readFile("./Inter-SemiBold.ttf");
+  const interSemiBold = {
+    name: "InterSemiBold",
     data: fontDataBold,
-    weight: 700,
-    style: "bold",
+    weight: 600,
+    style: "normal",
   };
-  const verdana = {
-    name: "Verdana",
+  const inter = {
+    name: "Inter",
     data: fontData,
-    weight: 700,
+    weight: 400,
     style: "normal",
   };
 
   // Farcaster frames must be 3:2 aspect ratio per docs, OG images use 1.91:1
   const dimensions = isFrame ? { width: 1200, height: 800 } : { width: 1200, height: 630 };
-  
+
   const svgData = await satori(body, {
     ...dimensions,
-    fonts: [verdana, verdanaBold],
+    fonts: [inter, interSemiBold],
   });
   await sharp(Buffer.from(svgData))
     .jpeg({
