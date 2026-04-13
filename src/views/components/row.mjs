@@ -1351,6 +1351,7 @@ const row = (
                           >${heartSVG}</span
                         >
                         <span
+                          class="like-count"
                           style="font-size: 13px; color: var(--color-vote-default); font-weight: 400;"
                           >${story.upvoters ? story.upvoters.length : 0}</span
                         >

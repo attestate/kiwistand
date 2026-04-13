@@ -602,6 +602,15 @@ body {
   color: var(--text-primary);
 }
 
+/* Hide like counts from non-logged-in users. The body gets the
+   `kiwi-logged-in` class from main.jsx once an identity is resolved. */
+.like-count {
+  display: none;
+}
+body.kiwi-logged-in .like-count {
+  display: inline;
+}
+
 /* Onoarding page styles */
 
 .section {
