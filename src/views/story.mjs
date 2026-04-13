@@ -710,7 +710,7 @@ export default async function (trie, theme, index, value, referral, commentIndex
                     <div class="comment-input-ssr-placeholder" style="margin: 0 11px 16px 11px;">
                       <div class="comment-input-desktop-ssr">
                         <textarea
-                          style="font-size: 1rem; border: var(--border); background-color: var(--bg-white); color: var(--text-primary); display: block; width: 100%; padding: 10px; border-radius: 2px; resize: vertical;"
+                          style="font-size: 1rem; border: var(--border); background-color: var(--bg-white); color: var(--text-primary); display: block; width: 100%; box-sizing: border-box; padding: 10px; border-radius: 2px; resize: vertical;"
                           rows="12"
                           disabled
                         ></textarea>

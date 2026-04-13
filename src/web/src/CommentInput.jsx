@@ -822,6 +822,7 @@ const CommentInput = (props) => {
               style={{
                 display: "block",
                 width: "100%",
+                boxSizing: "border-box",
                 border: "var(--border)",
                 backgroundColor: "var(--bg-white)",
                 color: "var(--text-primary)",
