@@ -635,14 +635,14 @@ const row = (
                               return parts.map((part) => {
                                 if (/^\bhttps?:\/\//.test(part)) {
                                   const display = part.length > 40 ? part.substring(0, 40) + "…" : part;
-                                  return html`<a href="${DOMPurify.sanitize(part)}" target="_blank" rel="noopener">${DOMPurify.sanitize(display)}</a>`;
+                                  return html`<span style="text-decoration:underline;">${DOMPurify.sanitize(display)}</span>`;
                                 }
                                 return DOMPurify.sanitize(part);
                               });
                             };
                             const desc = convertBrTagsToNewlines((story.metadata.ogDescription || "").trim()).replace(/\n\nQuoting .+$/s, "").trim();
                             if (/^https?:\/\/\S+$/i.test(desc)) {
-                              return html`<a href="${DOMPurify.sanitize(desc)}" target="_blank" rel="noopener">${DOMPurify.sanitize(desc)}</a>`;
+                              return html`<span style="text-decoration:underline;">${DOMPurify.sanitize(desc)}</span>`;
                             }
                             const nodes = linkifyNodes(desc);
                             return html`${nodes}`;
@@ -784,7 +784,7 @@ const row = (
                               return parts.map((part) => {
                                 if (/^\bhttps?:\/\//.test(part)) {
                                   const display = part.length > 40 ? part.substring(0, 40) + "…" : part;
-                                  return html`<a href="${DOMPurify.sanitize(part)}" target="_blank" rel="noopener">${DOMPurify.sanitize(display)}</a>`;
+                                  return html`<span style="text-decoration:underline;">${DOMPurify.sanitize(display)}</span>`;
                                 }
                                 return DOMPurify.sanitize(part);
                               });
@@ -793,13 +793,13 @@ const row = (
                             if (story.metadata.farcasterCast?.text) {
                               const text = story.metadata.farcasterCast.text.trim();
                               if (/^https?:\/\/\S+$/i.test(text)) {
-                                return html`<a href="${DOMPurify.sanitize(text)}" target="_blank" rel="noopener">${DOMPurify.sanitize(text)}</a>`;
+                                return html`<span style="text-decoration:underline;">${DOMPurify.sanitize(text)}</span>`;
                               }
                               return html`${linkifyNodes(text)}`;
                             }
                             const desc = (story.metadata.ogDescription || "").trim();
                             if (/^https?:\/\/\S+$/i.test(desc)) {
-                              return html`<a href="${DOMPurify.sanitize(desc)}" target="_blank" rel="noopener">${DOMPurify.sanitize(desc)}</a>`;
+                              return html`<span style="text-decoration:underline;">${DOMPurify.sanitize(desc)}</span>`;
                             }
                             if (desc.length <= 280) {
                               const nodes = linkifyNodes(desc);
@@ -889,11 +889,9 @@ const row = (
                                     part.length > 40
                                       ? part.substring(0, 40) + "…"
                                       : part;
-                                  return html`<a
-                                    href="${DOMPurify.sanitize(part)}"
-                                    target="_blank"
-                                    rel="noopener"
-                                    >${DOMPurify.sanitize(display)}</a
+                                  return html`<span
+                                    style="text-decoration:underline;"
+                                    >${DOMPurify.sanitize(display)}</span
                                   >`;
                                 }
                                 return DOMPurify.sanitize(part);
@@ -903,11 +901,9 @@ const row = (
                               story.metadata.blueskyPost.text || ""
                             ).trim();
                             if (/^https?:\/\/\S+$/i.test(text)) {
-                              return html`<a
-                                href="${DOMPurify.sanitize(text)}"
-                                target="_blank"
-                                rel="noopener"
-                                >${DOMPurify.sanitize(text)}</a
+                              return html`<span
+                                style="text-decoration:underline;"
+                                >${DOMPurify.sanitize(text)}</span
                               >`;
                             }
                             const sliced = text.slice(0, 300);
