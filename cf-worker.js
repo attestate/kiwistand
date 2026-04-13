@@ -250,7 +250,16 @@ async function swr({ request, event }) {
 
 async function fetchAndCache({ cacheKey, request, event }) {
   const cache = caches.default;
-  const rawOriginRes = await fetch(request);  // No cache busting
+  let rawOriginRes;
+  try {
+    rawOriginRes = await fetch(addCacheBustParam(request), { cf: { cacheEverything: false } });
+  } catch (err) {
+    console.error("SWR fetch failed:", err.message, request.url);
+    return new Response("Origin fetch failed", { status: 502 });
+  }
+
+  console.log("SWR fetch:", request.url, "status:", rawOriginRes.status,
+    "cc:", rawOriginRes.headers.get("cache-control"));
 
   // Rewrite <img> tags before caching, so cache hits serve the
   // already-transformed HTML and don't pay the rewriter cost per request.
@@ -268,6 +277,7 @@ async function fetchAndCache({ cacheKey, request, event }) {
   // Clone for cache storage if needed
   if (cacheControl?.edge) {
     const responseForCache = originRes.clone();
+    console.log("SWR cache.put:", request.url, "max-age:", cacheControl.edge.value);
     event.waitUntil(
       cache.put(
         cacheKey,
@@ -280,8 +290,12 @@ async function fetchAndCache({ cacheKey, request, event }) {
           "cf-cache-status": null,
           vary: null,
         }),
-      ),
+      ).then(() => console.log("SWR cache.put OK:", request.url))
+        .catch((err) => console.error("SWR cache.put FAILED:", request.url, err.message)),
     );
+  } else {
+    console.warn("SWR no edge cache:", request.url, "ok:", rawOriginRes.ok,
+      "cacheControl:", JSON.stringify(cacheControl));
   }
 
   return addHeaders(originRes, {
@@ -315,10 +329,10 @@ function resolveEdgeCacheControl({ sMaxage, staleWhileRevalidate }) {
     return { value: "immutable", staleAt };
   }
 
-  // Keep the response in CF cache for the full SWR window so the worker
-  // can serve stale while revalidating. The worker's shouldRevalidate()
-  // uses x-edge-cache-stale-at to decide freshness independently.
-  const cacheSeconds = sMaxage + (staleWhileRevalidate || 0);
+  // Keep response in CF cache long enough for SWR to work. Use 10x
+  // sMaxage as retention — long enough to serve stale while revalidating,
+  // short enough that stuck entries self-heal.
+  const cacheSeconds = sMaxage * 10;
   return {
     value: `max-age=${cacheSeconds}`,
     staleAt
@@ -368,12 +382,18 @@ function toCacheKey(req) {
 }
 
 function shouldRevalidate(res) {
-  const status = res.headers.get(CACHE_STATUS_HEADER);
-  if (status === CacheStatus.REVALIDATING) return false;
-
   const staleAt = Number(res.headers.get(CACHE_STALE_AT_HEADER));
   if (!staleAt) return true;
-  return Date.now() > staleAt;
+
+  const now = Date.now();
+  if (now <= staleAt) return false; // still fresh
+
+  const status = res.headers.get(CACHE_STATUS_HEADER);
+  if (status === CacheStatus.REVALIDATING) {
+    // If stuck in REVALIDATING for over 30s, retry
+    return (now - staleAt) > 30000;
+  }
+  return true;
 }
 
 function addCacheBustParam(request) {
