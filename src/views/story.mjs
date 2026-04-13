@@ -2,6 +2,7 @@
 import { env } from "process";
 import { URL } from "url";
 import { existsSync } from "fs";
+import serialize from "serialize-javascript";
 
 import htm from "htm";
 import vhtml from "vhtml";
@@ -380,7 +381,7 @@ export default async function (trie, theme, index, value, referral, commentIndex
     ? `${baseUrl}/stories/${slug}?index=0x${index}&commentIndex=${commentIndex}`
     : `${baseUrl}/stories/${slug}?index=0x${index}`;
 
-  const jsonLd = JSON.stringify({
+  const jsonLd = serialize({
     "@context": "https://schema.org",
     "@type": "DiscussionForumPosting",
     "headline": value.title,
@@ -412,7 +413,7 @@ export default async function (trie, theme, index, value, referral, commentIndex
       })),
     } : {}),
     ...(ogDescription ? { "description": ogDescription } : {}),
-  });
+  }, { isJSON: true });
 
   return "<!DOCTYPE html>" + html`
     <html lang="en" op="news">
@@ -427,7 +428,7 @@ export default async function (trie, theme, index, value, referral, commentIndex
           canonicalUrl,
           frameImage,
         )}
-        <script type="application/ld+json">${jsonLd}</script>
+        <script type="application/ld+json" dangerouslySetInnerHTML=${{ __html: jsonLd }}></script>
       </head>
       <body
         data-instant-allow-query-string
