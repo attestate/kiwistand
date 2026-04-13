@@ -1327,7 +1327,7 @@ const row = (
                       <button
                         class="interaction-button like-button"
                         aria-label="Upvote"
-                        style="min-width: 60px; padding: 8px 12px; border: none; background: transparent; border-radius: 999px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.15s ease;"
+                        style="min-width: 60px; padding: 8px 12px; border: none; background: transparent; border-radius: 2px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.15s ease;"
                         onmouseover="this.style.backgroundColor='rgba(249, 24, 128, 0.1)'"
                         onmouseout="this.style.backgroundColor='transparent'"
                       >

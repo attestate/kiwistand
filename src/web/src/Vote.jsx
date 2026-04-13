@@ -399,7 +399,7 @@ const Vote = (props) => {
               padding: "8px 12px",
               border: "none",
               background: "transparent",
-              borderRadius: "999px",
+              borderRadius: "2px",
               cursor: hasUpvoted ? "not-allowed" : "pointer",
               display: "flex",
               alignItems: "center",

@@ -212,7 +212,7 @@ const secondheader = (theme, site, period, domain, query) => {
                   <button
                     onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block'; ${animation}}"
                     class="feed-button${site === "top" ? " active" : ""}"
-                    style=${`font-variant: small-caps; font-size: 1.01rem; outline: none; border-radius: 2px; cursor: pointer; padding: 5px 14px; background-color: ${
+                    style=${`font-size: 1.01rem; outline: none; border-radius: 2px; cursor: pointer; padding: 5px 14px; background-color: ${
                       site === "top" ? "var(--accent-primary)" : "transparent"
                     }; border: 1px solid ${
                       site === "top" ? "var(--accent-primary)" : "var(--accent-primary-bright)"
@@ -240,7 +240,7 @@ const secondheader = (theme, site, period, domain, query) => {
                   <button
                     onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block'; ${animation}}"
                     class="feed-button${site === "new" ? " active" : ""}"
-                    style=${`font-variant: small-caps; margin-left: 10px; font-size: 1.01rem; outline: none; border-radius: 2px; cursor: pointer; padding: 5px 14px; background-color: ${
+                    style=${`margin-left: 10px; font-size: 1.01rem; outline: none; border-radius: 2px; cursor: pointer; padding: 5px 14px; background-color: ${
                       site === "new" ? "var(--accent-primary)" : "transparent"
                     }; border: 1px solid ${
                       site === "new" ? "var(--accent-primary)" : "var(--accent-primary-bright)"
@@ -273,7 +273,7 @@ const secondheader = (theme, site, period, domain, query) => {
                   <button
                     onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block'; ${animation}}"
                     class="feed-button${site === "best" ? " active" : ""}"
-                    style=${`font-variant: small-caps; margin-left: 10px; font-size: 1.01rem; outline: none; border-radius: 2px; cursor: pointer; padding: 5px 14px; background-color: ${
+                    style=${`margin-left: 10px; font-size: 1.01rem; outline: none; border-radius: 2px; cursor: pointer; padding: 5px 14px; background-color: ${
                       site === "best" ? "var(--accent-primary)" : "transparent"
                     }; border: 1px solid ${
                       site === "best" ? "var(--accent-primary)" : "var(--accent-primary-bright)"
