@@ -106,6 +106,13 @@ if (!isAnonMode && analyticsConsent !== "false") {
       api_host: "https://eu.i.posthog.com",
       person_profiles: "identified_only",
     });
+    // Register `is_ios_app` as a super property so every subsequent event
+    // (story_impression, outbound_click, feed_page_view, etc.) is tagged
+    // with whether the user is inside the native iOS app wrapper. This
+    // lets us segment any event in PostHog by iOS app usage.
+    try {
+      posthog.register({ is_ios_app: isIOSApp() });
+    } catch (_) {}
   };
 
   if (typeof requestIdleCallback !== "undefined") {
