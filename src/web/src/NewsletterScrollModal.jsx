@@ -1,71 +1,114 @@
 import React, { useState, useEffect, useRef } from "react";
+import Modal from "react-modal";
+
+if (typeof document !== "undefined") {
+  Modal.setAppElement("body");
+}
+
+const modalStyles = {
+  overlay: {
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    zIndex: 120,
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  content: {
+    position: "relative",
+    inset: "unset",
+    width: "90%",
+    maxWidth: "500px",
+    backgroundColor: "var(--background-color0)",
+    borderRadius: 0,
+    padding: "26px 24px 32px 24px",
+    boxShadow: "var(--shadow-default)",
+    fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+    border: "none",
+  },
+};
 
 const NewsletterScrollModal = ({ toast }) => {
   const [email, setEmail] = useState("");
   const [isSubscribing, setIsSubscribing] = useState(false);
-  const [isDismissed, setIsDismissed] = useState(true); // Start hidden to prevent flash
-  const [overlayOpacity, setOverlayOpacity] = useState(0);
-  const modalRef = useRef(null);
+  const [isOpen, setIsOpen] = useState(false);
+  const [shouldShow, setShouldShow] = useState(false);
+  const dismissed = useRef(false);
+  const triggerRef = useRef(null);
   const hasTrackedShownRef = useRef(false);
 
   useEffect(() => {
-    // For testing: add ?newsletter=test to URL to reset and show modal
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('newsletter') === 'test') {
       localStorage.removeItem("newsletter-modal-dismissed");
       localStorage.removeItem("newsletter-subscribed");
     }
 
-    // Check if user has already subscribed or dismissed
     const dismissed = localStorage.getItem("newsletter-modal-dismissed");
     const subscribed = localStorage.getItem("newsletter-subscribed");
 
-    // Only show modal if NOT dismissed and NOT subscribed
     if (!dismissed && !subscribed) {
-      setIsDismissed(false);
+      setShouldShow(true);
     }
   }, []);
 
   useEffect(() => {
-    if (!modalRef.current) return;
+    if (!shouldShow || isOpen) return;
 
     const handleScroll = () => {
-      const modal = modalRef.current;
-      if (!modal || isDismissed) return;
+      if (dismissed.current) return;
 
-      const rect = modal.getBoundingClientRect();
-      const windowHeight = window.innerHeight;
-      
-      // Calculate how much of the modal is visible
-      let visibilityPercentage = 0;
-      
-      if (rect.bottom > 0 && rect.top < windowHeight) {
-        // Modal is at least partially visible
-        const visibleHeight = Math.min(rect.bottom, windowHeight) - Math.max(rect.top, 0);
-        const modalHeight = rect.height;
-        visibilityPercentage = visibleHeight / modalHeight;
-      }
-      
-      // Set overlay opacity based on visibility (max 0.5)
-      setOverlayOpacity(visibilityPercentage * 0.5);
+      // Only trigger if user has genuinely scrolled down (not pull-to-refresh)
+      if (window.scrollY < 100) return;
 
-      // Fire posthog event the first time the modal scrolls into view
-      if (visibilityPercentage > 0 && !hasTrackedShownRef.current) {
-        hasTrackedShownRef.current = true;
-        window.posthog?.capture?.("newsletter_modal_shown");
+      const trigger = triggerRef.current;
+      if (!trigger) return;
+
+      const rect = trigger.getBoundingClientRect();
+      if (rect.top <= window.innerHeight) {
+        if (!hasTrackedShownRef.current) {
+          hasTrackedShownRef.current = true;
+          window.posthog?.capture?.("newsletter_modal_shown");
+        }
+        setIsOpen(true);
       }
     };
 
     window.addEventListener("scroll", handleScroll);
-    handleScroll(); // Check initial position
+    handleScroll();
 
     return () => {
       window.removeEventListener("scroll", handleScroll);
     };
-  }, [isDismissed]);
+  }, [shouldShow, isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    function preventScroll(e) {
+      e.preventDefault();
+    }
+
+    document.addEventListener("touchmove", preventScroll, {
+      passive: false,
+      capture: true,
+    });
+    document.addEventListener("wheel", preventScroll, {
+      passive: false,
+      capture: true,
+    });
+
+    return () => {
+      document.removeEventListener("touchmove", preventScroll, {
+        capture: true,
+      });
+      document.removeEventListener("wheel", preventScroll, { capture: true });
+    };
+  }, [isOpen]);
 
   const handleClose = () => {
-    setIsDismissed(true);
+    dismissed.current = true;
+    setIsOpen(false);
+    setShouldShow(false);
     localStorage.setItem("newsletter-modal-dismissed", "true");
   };
 
@@ -74,9 +117,8 @@ const NewsletterScrollModal = ({ toast }) => {
     if (!email || isSubscribing) return;
 
     setIsSubscribing(true);
-    
+
     try {
-      // Subscribe to newsletter
       const response = await fetch(
         "/api/v1/newsletter/subscribe",
         {
@@ -91,7 +133,8 @@ const NewsletterScrollModal = ({ toast }) => {
       if (response.ok) {
         localStorage.setItem("newsletter-subscribed", "true");
         toast.success("Successfully subscribed to Kiwi News Newsletter!");
-        setIsDismissed(true);
+        setIsOpen(false);
+        setShouldShow(false);
       } else {
         toast.error("Failed to subscribe. Please try again.");
       }
@@ -103,50 +146,16 @@ const NewsletterScrollModal = ({ toast }) => {
     }
   };
 
-  if (isDismissed) return null;
-
   return (
     <>
       <style>{`
-        .newsletter-container {
+        .newsletter-trigger {
           position: absolute;
-          top: 150vh; /* Position it 1.5 viewport heights down the page */
+          top: 150vh;
           left: 0;
-          right: 0;
-          width: 100%;
-          display: flex;
-          justify-content: center;
-          align-items: flex-start;
-          z-index: 5; /* Below nav which is typically z-index: 6 or higher */
-          padding: 20px 20px 0 20px;
-          box-sizing: border-box;
-        }
-
-        .newsletter-modal-backdrop {
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background-color: transparent;
-          z-index: 4; /* Below the modal container */
+          width: 1px;
+          height: 1px;
           pointer-events: none;
-          transition: background-color 0.1s ease-out;
-        }
-
-        .newsletter-modal-backdrop.interactive {
-          pointer-events: auto;
-        }
-
-        .newsletter-modal {
-          position: relative;
-          width: 90%;
-          max-width: 500px;
-          background-color: var(--background-color0);
-          border-radius: 0;
-          padding: 26px 24px 32px 24px;
-          box-shadow: var(--shadow-default);
-          font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         }
 
         .newsletter-close-btn {
@@ -189,18 +198,18 @@ const NewsletterScrollModal = ({ toast }) => {
           font-weight: 700;
           font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
           text-align: center;
-          margin: 0 0 12px 0;
+          margin: 0 0 8px 0;
           color: var(--text-primary);
           line-height: 1.2;
         }
 
-        .newsletter-subtitle {
-          font-size: 12pt;
+        .newsletter-social-proof {
+          font-size: 10pt;
           font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
           text-align: center;
-          color: var(--text-tertiary);
-          margin: 0 0 28px 0;
-          line-height: 1.2;
+          color: var(--text-secondary);
+          font-weight: 600;
+          margin: 0 0 20px 0;
         }
 
         .newsletter-input {
@@ -254,73 +263,69 @@ const NewsletterScrollModal = ({ toast }) => {
           margin-top: 12px;
           margin-bottom: 0;
         }
+
+        .newsletter-footer a {
+          color: var(--text-tertiary);
+          text-decoration: underline;
+        }
+
+        .newsletter-footer a:hover {
+          color: var(--text-secondary);
+        }
       `}</style>
 
-      {/* Dark backdrop that fades based on scroll position */}
-      <div
-        className={`newsletter-modal-backdrop ${overlayOpacity > 0.1 ? 'interactive' : ''}`}
-        onClick={handleClose}
-        style={{
-          // Dynamic opacity overlay - using rgba with calculated opacity
-          // Base color matches --bg-overlay but with dynamic alpha
-          backgroundColor: `rgba(0, 0, 0, ${overlayOpacity})`
-        }}
-      />
+      {shouldShow && <div className="newsletter-trigger" ref={triggerRef} />}
 
-      {/* Container positioned absolutely on the page */}
-      <div className="newsletter-container">
-        <div className="newsletter-modal" ref={modalRef}>
-          {/* Close button */}
-          <button
-            onClick={handleClose}
-            className="newsletter-close-btn"
-            aria-label="Close"
-          >
-            ×
-          </button>
+      <Modal
+        isOpen={isOpen}
+        onRequestClose={handleClose}
+        style={modalStyles}
+        shouldCloseOnOverlayClick={true}
+      >
+        <button
+          onClick={handleClose}
+          className="newsletter-close-btn"
+          aria-label="Close"
+        >
+          ×
+        </button>
 
-          {/* Kiwi Logo */}
-          <div className="newsletter-logo">
-            <img src="/kiwi-icon.webp" alt="Kiwi" />
-          </div>
-
-          {/* Heading */}
-          <h2 className="newsletter-title">
-            Subscribe to<br />Kiwi News Newsletter
-          </h2>
-
-          {/* Subheading */}
-          <p className="newsletter-subtitle">
-            Get weekly updates with curated stories and trusted insights, handpicked for you.
-          </p>
-
-          {/* Email Form */}
-          <form onSubmit={handleSubscribe}>
-            <input
-              type="email"
-              className="newsletter-input"
-              placeholder="Enter your e-mail..."
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={isSubscribing}
-              required
-            />
-
-            <button
-              type="submit"
-              className="newsletter-submit"
-              disabled={isSubscribing}
-            >
-              {isSubscribing ? "Subscribing..." : "Subscribe"}
-            </button>
-          </form>
-
-          {/* Footer text */}
-          <p className="newsletter-footer">
-            Subscription is free. You may cancel anytime at no cost.
-          </p>
+        <div className="newsletter-logo">
+          <img src="/kiwi-icon.webp" alt="Kiwi" />
         </div>
-      </div>
+
+        <h2 className="newsletter-title">
+          Top 5 crypto links. Every Friday.
+        </h2>
+
+        <p className="newsletter-social-proof">
+          Join 800+ readers
+        </p>
+
+        <form onSubmit={handleSubscribe}>
+          <input
+            type="email"
+            className="newsletter-input"
+            placeholder="you@email.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            disabled={isSubscribing}
+            required
+          />
+
+          <button
+            type="submit"
+            className="newsletter-submit"
+            disabled={isSubscribing}
+          >
+            {isSubscribing ? "Joining..." : "Get Friday's digest"}
+          </button>
+        </form>
+
+        <p className="newsletter-footer">
+          Free forever. Unsubscribe anytime. <a href="https://buttondown.com/kiwi-news-weekly/archive/" target="_blank" rel="noopener noreferrer">See past issues</a>
+        </p>
+      </Modal>
     </>
   );
 };
