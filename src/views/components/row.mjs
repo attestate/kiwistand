@@ -591,6 +591,7 @@ const row = (
                     story.href,
                   )}', event.currentTarget.getAttribute('target')); }"
                   style="text-decoration:none; color:inherit; display:block;"
+                  aria-label="${DOMPurify.sanitize(story.title)}"
                 >
                   <div class="tweet-embed-container">
                     <div>
@@ -674,7 +675,6 @@ const row = (
               : canRenderFarcasterPreview
               ? html`<a
                   class="farcaster-preview-container farcaster-cast-link"
-                  aria-label="View post on Farcaster"
                   data-no-instant
                   href="${DOMPurify.sanitize(story.href)}"
                   data-cast-hash="${story.metadata.farcasterCast &&
@@ -1337,6 +1337,7 @@ const row = (
                     >
                       <button
                         class="interaction-button like-button"
+                        aria-label="Upvote"
                         style="min-width: 60px; padding: 8px 12px; border: none; background: transparent; border-radius: 999px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.15s ease;"
                         onmouseover="this.style.backgroundColor='rgba(249, 24, 128, 0.1)'"
                         onmouseout="this.style.backgroundColor='transparent'"
@@ -1364,7 +1365,7 @@ const row = (
                         >
                           <a
                             class="interaction-button comment-button"
-                            aria-label="Comments"
+                            aria-label="${commentCount > 0 ? commentCount + " " : ""}comments"
                             id="chat-bubble-${story.index}"
                             href="/stories/${getSlug(
                               story.title,
