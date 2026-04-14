@@ -11,6 +11,7 @@ import {
   isChromeOnAndroid,
   isRunningPWA,
   hasSingleLocalStorageKey,
+  hasStaleDelegationKeys,
   logout,
 } from "./session.mjs";
 
@@ -174,6 +175,8 @@ export const SimpleDisconnectButton = (props) => {
 };
 
 const DisconnectButton = () => {
+  const staleAuth = hasStaleDelegationKeys();
+
   const isAnonMode = localStorage.getItem('anon-mode') === 'true';
 
   // If in anon mode, show logout button
@@ -237,6 +240,32 @@ const DisconnectButton = () => {
           );
         }
 
+        if (!connected && staleAuth) {
+          return (
+            <div
+              title="Log out"
+              onClick={logout}
+              style={{
+                color: "var(--text-primary)",
+                cursor: "pointer",
+              }}
+              className="sidebar-div"
+            >
+              <div
+                style={{
+                  fontVariant: "small-caps",
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                <div className="svg-container">
+                  <EthereumSVG />
+                </div>
+                <span>Log out</span>
+              </div>
+            </div>
+          );
+        }
         if (!connected) return null;
         return (
           <div

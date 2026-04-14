@@ -376,7 +376,7 @@ const Bell = (props) => {
   // (users should use disconnect in sidebar instead)
   if (!getCookie("identity") || !isEligible) {
     // Don't show login button if wallet is already connected
-    if (account?.isConnected && !needsDelegation) {
+    if (account?.isConnected && account?.address && !needsDelegation) {
       return null;
     }
     if (needsDelegation) {

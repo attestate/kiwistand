@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useImperativeHandle, forwardRef } from "react";
 import Modal from "react-modal";
-import { useAccount, useConnect } from "wagmi";
+import { useAccount, useConnect, useDisconnect } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 
 if (typeof document !== "undefined") {
@@ -65,6 +65,7 @@ const LoginModal = forwardRef((props, ref) => {
   const [isAnonButtonHovered, setIsAnonButtonHovered] = useState(false);
   const account = useAccount();
   const { connectors, connect } = useConnect();
+  const { disconnectAsync } = useDisconnect();
   const { openConnectModal } = useConnectModal();
 
   const { toast, delegations } = props;
@@ -82,12 +83,21 @@ const LoginModal = forwardRef((props, ref) => {
     closeModal,
   }));
 
-  const handlePasskeyLogin = () => {
+  const handlePasskeyLogin = async () => {
     const portoConnector = connectors.find(
       (connector) => connector.id === 'xyz.ithaca.porto',
     );
 
     if (portoConnector) {
+      // Porto ghost state: wagmi thinks connected but no address.
+      // Disconnect first so connect() triggers a fresh passkey prompt.
+      if (account?.isConnected && !account?.address) {
+        try {
+          await disconnectAsync();
+        } catch (err) {
+          console.log('Porto disconnect before reconnect:', err);
+        }
+      }
       connect({ connector: portoConnector });
       closeModal();
     } else {

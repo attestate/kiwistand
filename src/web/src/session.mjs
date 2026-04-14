@@ -181,6 +181,11 @@ export function hasSingleLocalStorageKey() {
   return keys.length === 1;
 }
 
+export function hasStaleDelegationKeys() {
+  const delegationSchema = /^delegation-modal-dismissed-0x[a-fA-F0-9]{40}$/;
+  return Object.keys(localStorage).some(k => k.match(delegationSchema));
+}
+
 // Logout that clears essential session data and disconnects wallet
 export async function logout() {
   // Disconnect wallet if connected
