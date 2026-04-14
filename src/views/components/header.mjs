@@ -77,7 +77,7 @@ const header = (theme, path) => {
                     style="width: 35px; height: 35px;"
                   ></div>
                   <div style="display: flex; flex-direction: column; gap: 0;">
-                    ${KiwiWordmark(28)}
+                    ${KiwiWordmark(25)}
                     <span class="anon-mode-label">anon-mode</span>
                   </div></a
                 >
@@ -148,7 +148,7 @@ const header = (theme, path) => {
                     class="kiwi-logo-img mobile-logo-icon"
                     style="width: 22px; height: 22px;"
                   ></div>
-                  ${KiwiWordmark(18)}
+                  ${KiwiWordmark(25)}
                 </span>
               </a>
               <div class="desktop-nav">
