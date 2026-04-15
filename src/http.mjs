@@ -296,15 +296,16 @@ app.use(cookieParser());
 app.post("/api/v1/neynar/notify", async (req, res) => {
   const adminKey = process.env.ADMIN_KEY;
   if (!adminKey) {
-    log("ADMIN_KEY is not configured; refusing /api/v1/neynar/notify request");
-    return res.status(503).json({
-      status: "error",
-      message: "Service Unavailable",
-    });
+    return sendError(
+      res,
+      503,
+      "Service Unavailable",
+      "ADMIN_KEY is not configured",
+    );
   }
   const apiKey = req.header("x-admin-key");
   if (!apiKey) {
-    return res.status(401).json({ status: "error", message: "Unauthorized" });
+    return sendError(res, 401, "Unauthorized", "missing x-admin-key header");
   }
   const apiKeyBuf = Buffer.from(apiKey);
   const adminKeyBuf = Buffer.from(adminKey);
@@ -312,7 +313,7 @@ app.post("/api/v1/neynar/notify", async (req, res) => {
     apiKeyBuf.length !== adminKeyBuf.length ||
     !timingSafeEqual(apiKeyBuf, adminKeyBuf)
   ) {
-    return res.status(401).json({ status: "error", message: "Unauthorized" });
+    return sendError(res, 401, "Unauthorized", "invalid x-admin-key");
   }
   const { target_url, tag } = req.body;
   
