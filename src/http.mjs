@@ -302,7 +302,7 @@ app.post("/api/v1/neynar/notify", async (req, res) => {
       message: "Service Unavailable",
     });
   }
-  const apiKey = req.header("x-admin-key") || "";
+  const apiKey = req.header("x-admin-key");
   if (!apiKey) {
     return res.status(401).json({ status: "error", message: "Unauthorized" });
   }
