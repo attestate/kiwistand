@@ -294,8 +294,18 @@ app.use(cookieParser());
 
 // Route for Neynar notifications
 app.post("/api/v1/neynar/notify", async (req, res) => {
+  const adminKey = process.env.ADMIN_KEY;
+  if (!adminKey) {
+    log("ADMIN_KEY is not configured; refusing /api/v1/neynar/notify request");
+    return res.status(503).json({
+      status: "error",
+      message: "Service Unavailable",
+    });
+  }
   const apiKey = req.header("x-admin-key") || "";
-  const adminKey = process.env.ADMIN_KEY || "";
+  if (!apiKey) {
+    return res.status(401).json({ status: "error", message: "Unauthorized" });
+  }
   const apiKeyBuf = Buffer.from(apiKey);
   const adminKeyBuf = Buffer.from(adminKey);
   if (
