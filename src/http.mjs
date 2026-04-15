@@ -267,9 +267,20 @@ app.use(
   }),
 );
 app.get("/previews/:file", (req, res, next) => {
-  res.sendFile(path.resolve(`src/public/previews/${req.params.file}`), (err) => {
-    if (err) next();
-  });
+  // Reject any path traversal attempts. Express decodes URL params, so
+  // `%2e%2e%2f` arrives here as `../` — refuse anything that isn't a plain
+  // filename confined to the previews directory.
+  const file = req.params.file;
+  if (file.includes("/") || file.includes("\\") || file.includes("\0") || file.includes("..")) {
+    return next();
+  }
+  res.sendFile(
+    file,
+    { root: path.resolve("src/public/previews"), dotfiles: "deny" },
+    (err) => {
+      if (err) next();
+    },
+  );
 });
 // Early Hints: Cloudflare caches Link headers and sends them as 103
 // before the origin responds, so browsers start fetching CSS/JS immediately.
