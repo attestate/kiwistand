@@ -185,7 +185,9 @@ export default async function (url, theme) {
             src="${sanitizedUrl}"
             sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
             onload="this.parentElement.querySelector('.loading-spinner').style.display = 'none';"
-            onerror="this.parentElement.innerHTML = '<div style=\"text-align: center; padding: 50px;\"><h3>This site cannot be displayed in the embed view</h3><p>The website blocks embedding for security reasons.</p><a href=\"${sanitizedUrl}\" style=\"color: ${theme.color};\">Open the site directly</a></div>';"
+            data-fallback-url="${sanitizedUrl}"
+            data-fallback-color="${theme.color}"
+            onerror="var d=document.createElement('div');d.style.cssText='text-align:center;padding:50px';var h=document.createElement('h3');h.textContent='This site cannot be displayed in the embed view';var p=document.createElement('p');p.textContent='The website blocks embedding for security reasons.';var a=document.createElement('a');a.href=this.dataset.fallbackUrl;a.style.color=this.dataset.fallbackColor;a.textContent='Open the site directly';d.append(h,p,a);this.parentElement.textContent='';this.parentElement.appendChild(d);"
           ></iframe>
         </div>
       </body>

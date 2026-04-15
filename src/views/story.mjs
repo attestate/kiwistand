@@ -567,9 +567,10 @@ export default async function (trie, theme, index, value, referral, commentIndex
                                         class="caster-link share-link"
                                         title="Share"
                                         style="white-space: nowrap;"
-                                        onclick="event.preventDefault(); navigator.share({url: '${baseUrl}/stories/${getSlug(
+                                        data-share-url="${baseUrl}/stories/${getSlug(
                                           value.title,
-                                        )}?index=0x${index}&commentIndex=${comment.index}'});"
+                                        )}?index=0x${index}&commentIndex=${comment.index}"
+                                        onclick="event.preventDefault(); navigator.share({url: this.dataset.shareUrl});"
                                       >
                                         ${ShareIcon(
                                           "padding: 0 3px 1px 0; vertical-align: middle; height: 13px; width: 13px;",
@@ -613,9 +614,9 @@ export default async function (trie, theme, index, value, referral, commentIndex
                                                                     sanitizedUrl.startsWith("https://staging.kiwistand.com");
                                                   return `<a class="meta-link selectable-link" href="${sanitizedUrl}" target="${
                                                     isInternal ? "_self" : "_blank"
-                                                  }" onclick="${
-                                                    !isInternal 
-                                                      ? `if (window.ReactNativeWebView || window !== window.parent) { event.preventDefault(); window.sdk.actions.openUrl('${sanitizedUrl}'); }`
+                                                  }" data-url="${sanitizedUrl}" onclick="${
+                                                    !isInternal
+                                                      ? `if (window.ReactNativeWebView || window !== window.parent) { event.preventDefault(); window.sdk.actions.openUrl(this.dataset.url); }`
                                                       : ""
                                                   }">${sanitizedUrl}</a>`;
                                                 }

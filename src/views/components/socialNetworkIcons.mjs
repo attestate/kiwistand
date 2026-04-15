@@ -11,7 +11,8 @@ export function SocialButton(url, icon, text, isImg) {
   return html`<a 
     target="_blank" 
     href="javascript:void(0);"
-    onclick="if (window.ReactNativeWebView || window !== window.parent) { window.sdk.actions.openUrl('${url}'); } else { window.open('${url}', '_blank'); }"
+    data-url="${url}"
+    onclick="if (window.ReactNativeWebView || window !== window.parent) { window.sdk.actions.openUrl(this.dataset.url); } else { window.open(this.dataset.url, '_blank'); }"
   >
     <button
       class="feed-button"
