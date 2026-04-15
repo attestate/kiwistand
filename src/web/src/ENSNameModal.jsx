@@ -2,6 +2,9 @@ import React, { useState, useEffect, useImperativeHandle, forwardRef } from "rea
 import Modal from "react-modal";
 import { useAccount } from "wagmi";
 import { getLocalAccount } from "./session.mjs";
+import { Wallet } from "@ethersproject/wallet";
+import { getProvider, useSigner } from "./client.mjs";
+import * as API from "./API.mjs";
 
 if (document.querySelector("nav-ens-name-modal")) {
   Modal.setAppElement("nav-ens-name-modal");
@@ -40,6 +43,7 @@ const ENSNameModal = forwardRef((props, ref) => {
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState("");
   const account = useAccount();
+  const walletSigner = useSigner();
   // After page reload wagmi's reconnect is async (reconnectOnMount=false),
   // so account.address may be undefined even though the delegation key is
   // already in localStorage. Fall back to the locally stored identity.
@@ -47,6 +51,8 @@ const ENSNameModal = forwardRef((props, ref) => {
   const address = account.address || (localAccount ? localAccount.identity : null);
 
   const { toast } = props;
+  const ENS_NAME_AUTH_TYPE = "ens-name";
+  const ENS_NAME_AUTH_TITLE = "kiwi ens name registration";
 
   const MODAL_DISMISSED_KEY = `ens-name-modal-dismissed-${address}`;
 
@@ -157,6 +163,13 @@ const ENSNameModal = forwardRef((props, ref) => {
       setError("Wallet not connected. Please reconnect and try again.");
       return;
     }
+    const activeSigner = localAccount?.privateKey
+      ? new Wallet(localAccount.privateKey, getProvider())
+      : walletSigner;
+    if (!activeSigner) {
+      setError("Wallet signer unavailable. Please reconnect and try again.");
+      return;
+    }
 
     if (!/^[a-zA-Z0-9_-]+$/.test(name)) {
       setError("Name can only contain letters, numbers, hyphens, and underscores");
@@ -166,13 +179,48 @@ const ENSNameModal = forwardRef((props, ref) => {
     setIsSubmitting(true);
     setError("");
 
-    const body = {
-      name: name.toLowerCase(),
-      address: address,
+    const normalizedName = name.toLowerCase();
+    const normalizedAddress = address.toLowerCase();
+    const signedAt = Math.floor(Date.now() / 1000);
+    const href = `kiwi://ens-name?address=${encodeURIComponent(normalizedAddress)}&name=${encodeURIComponent(normalizedName)}&avatar=${encodeURIComponent(avatarUrl || "")}`;
+    const message = {
+      title: ENS_NAME_AUTH_TITLE,
+      href,
+      type: ENS_NAME_AUTH_TYPE,
+      timestamp: signedAt,
     };
-    if (avatarUrl) {
-      body.avatar = avatarUrl;
+
+    let signature;
+    try {
+      if (activeSigner._signTypedData) {
+        signature = await activeSigner._signTypedData(
+          API.EIP712_DOMAIN,
+          API.EIP712_TYPES,
+          message,
+        );
+      } else if (activeSigner.signTypedData) {
+        signature = await activeSigner.signTypedData({
+          domain: API.EIP712_DOMAIN,
+          types: API.EIP712_TYPES,
+          primaryType: "Message",
+          message,
+        });
+      } else {
+        throw new Error("signer does not support typed data signing");
+      }
+    } catch (err) {
+      setError("Signature was rejected. Please try again.");
+      setIsSubmitting(false);
+      return;
     }
+
+    const body = {
+      name: normalizedName,
+      address,
+      signedAt,
+      signature,
+    };
+    if (avatarUrl) body.avatar = avatarUrl;
 
     let response;
     try {

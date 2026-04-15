@@ -104,6 +104,19 @@ import { sendBroadcastNotification } from "./onesignal.mjs";
 import { extractArticleCached } from "./lib/listen/extract.mjs";
 
 const app = express();
+const ENS_NAME_SIGNATURE_TTL_SECONDS = 5 * 60;
+const ENS_NAME_AUTH_TYPE = "ens-name";
+const ENS_NAME_AUTH_TITLE = "kiwi ens name registration";
+
+function buildEnsNameAuthMessage({ address, name, avatar, timestamp }) {
+  const href = `kiwi://ens-name?address=${encodeURIComponent(String(address).toLowerCase())}&name=${encodeURIComponent(name)}&avatar=${encodeURIComponent(avatar || "")}`;
+  return {
+    title: ENS_NAME_AUTH_TITLE,
+    href,
+    type: ENS_NAME_AUTH_TYPE,
+    timestamp,
+  };
+}
 
 // Initialize Quick Auth client
 const quickAuthClient = createQuickAuthClient();
@@ -2705,7 +2718,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
       return sendError(reply, 500, "Internal Server Error", "Missing Namestone API key");
     }
 
-    const { name, address, avatar } = request.body || {};
+    const { name, address, avatar, signature, signedAt } = request.body || {};
 
     if (!name) {
       return sendError(reply, 400, "Bad Request", "Missing required field: name");
@@ -2714,15 +2727,66 @@ export async function launch(trie, libp2p, isPrimary = true) {
     if (!address) {
       return sendError(reply, 400, "Bad Request", "Missing required field: address");
     }
+    if (!signature) {
+      return sendError(reply, 401, "Unauthorized", "Missing required field: signature");
+    }
+    if (!signedAt) {
+      return sendError(reply, 400, "Bad Request", "Missing required field: signedAt");
+    }
 
     if (!/^[a-zA-Z0-9_-]+$/.test(name)) {
       return sendError(reply, 400, "Bad Request", "Name can only contain letters, numbers, hyphens, and underscores");
     }
 
+    let normalizedAddress;
+    const normalizedName = name.toLowerCase();
+    try {
+      normalizedAddress = utils.getAddress(address);
+    } catch (err) {
+      return sendError(reply, 400, "Bad Request", "Invalid Ethereum address");
+    }
+
+    const signedAtSeconds = Number(signedAt);
+    if (!Number.isInteger(signedAtSeconds) || signedAtSeconds <= 0) {
+      return sendError(reply, 400, "Bad Request", "Invalid signedAt value");
+    }
+    const nowSeconds = Math.floor(Date.now() / 1000);
+    if (
+      signedAtSeconds < nowSeconds - ENS_NAME_SIGNATURE_TTL_SECONDS ||
+      signedAtSeconds > nowSeconds + ENS_NAME_SIGNATURE_TTL_SECONDS
+    ) {
+      return sendError(reply, 401, "Unauthorized", "Expired or invalid signature timestamp");
+    }
+
+    const message = buildEnsNameAuthMessage({
+      address: normalizedAddress,
+      name: normalizedName,
+      avatar: avatar || "",
+      timestamp: signedAtSeconds,
+    });
+
+    let recoveredAddress;
+    try {
+      recoveredAddress = utils.getAddress(
+        ecrecover({ ...message, signature }, EIP712_MESSAGE),
+      );
+    } catch (err) {
+      return sendError(reply, 401, "Unauthorized", "Invalid signature");
+    }
+    const delegations = await registry.delegations();
+    const authorizedIdentity = resolveIdentity(delegations, recoveredAddress);
+    const isAuthorized =
+      recoveredAddress.toLowerCase() === normalizedAddress.toLowerCase() ||
+      (authorizedIdentity &&
+        authorizedIdentity.toLowerCase() === normalizedAddress.toLowerCase());
+    if (!isAuthorized) {
+      return sendError(reply, 401, "Unauthorized", "Signature/address mismatch");
+    }
+
     const body = {
       domain: "kiwinews.eth",
-      name,
-      address,
+      name: normalizedName,
+      address: normalizedAddress,
     };
 
     if (avatar) {
