@@ -19,7 +19,6 @@ import cookieParser from "cookie-parser";
 import compression from "compression";
 import cors from "cors";
 import { utils } from "ethers";
-import { handleFaucetRequest } from "./faucet.mjs";
 import "express-async-errors";
 import { sub } from "date-fns";
 import DOMPurify from "isomorphic-dompurify";
@@ -2377,11 +2376,6 @@ export async function launch(trie, libp2p, isPrimary = true) {
     const content = await search(reply.locals.theme, query);
     reply.header("Cache-Control", "no-cache");
     return reply.status(200).type("text/html").send(content.valueOf());
-  });
-
-  app.post("/api/v1/faucet", async (request, reply) => {
-    reply.header("Cache-Control", "no-cache");
-    return handleFaucetRequest(request, reply);
   });
 
   app.post("/api/v1/miniapp-upvote", async (request, reply) => {
