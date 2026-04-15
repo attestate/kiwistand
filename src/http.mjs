@@ -2789,7 +2789,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
 
     let response;
     try {
-      response = await fetch("https://namestone.com/api/public_v1/set-name", {
+      response = await fetch("https://namestone.com/api/public_v1/claim-name", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -2798,13 +2798,13 @@ export async function launch(trie, libp2p, isPrimary = true) {
         body: JSON.stringify(body),
       });
     } catch (err) {
-      log(`Error connecting to Namestone set-name: ${err.toString()}`);
+      log(`Error connecting to Namestone claim-name: ${err.toString()}`);
       return sendError(reply, 500, "Internal Server Error", "Failed to connect to Namestone");
     }
 
     if (!response.ok) {
-      log(`Namestone set-name error: status ${response.status}`);
-      return sendError(reply, response.status, "Namestone API Error", `Namestone responded with status ${response.status}`);
+      log(`Namestone claim-name error: status ${response.status}`);
+      return sendError(reply, 409, "Conflict", "This name is already taken or could not be claimed");
     }
 
     let data;
@@ -2814,7 +2814,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
       return sendError(reply, 500, "Internal Server Error", "Failed to parse Namestone response");
     }
 
-    return sendStatus(reply, 200, "OK", "ENS name set successfully", data);
+    return sendStatus(reply, 200, "OK", "ENS name claimed successfully", data);
   });
 
   app.get("/api/v1/favicon", async (request, reply) => {
