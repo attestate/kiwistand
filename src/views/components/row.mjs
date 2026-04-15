@@ -650,7 +650,7 @@ const row = (
                         ${story.metadata.image
                           ? html`
                               <div
-                                style="margin-top: 12px; position: relative; width: 100%; aspect-ratio: 16 / 9; background: var(--button-bg); overflow: hidden; border-radius: 12px; border: 1px solid rgba(0,0,0,0.1);"
+                                style="margin-top: 12px; position: relative; width: 100%; aspect-ratio: 16 / 9; background: var(--button-bg); overflow: hidden; border-radius: 2px; border: 1px solid rgba(0,0,0,0.1);"
                               >
                                 <img
                                   src="${DOMPurify.sanitize(transformImageUrl(story.metadata.image))}"
