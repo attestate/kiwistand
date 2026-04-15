@@ -808,7 +808,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
       return reply.status(400).send("URL parameter is required");
     }
     if (!fingerprint) {
-      return reply.redirect(url);
+      return reply.status(204).send();
     }
 
     const hash = fingerprint.generate(request);
