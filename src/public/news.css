@@ -1070,6 +1070,10 @@ body.react-loaded .comment-input-ssr-placeholder {
       /* Create a local stacking context we can raise when menus are open */
       position: relative;
       z-index: 0;
+      transition: box-shadow 0.15s;
+    }
+    .content-row:hover {
+      box-shadow: var(--shadow-default);
     }
     #hnmain {
       border: none;
@@ -1612,6 +1616,7 @@ div.clicked-content:hover,
 tr:has(.clicked-content):hover,
 td:has(.clicked-content):hover {
     background-color: transparent !important;
+    box-shadow: none !important;
   }
 
   /* Prevent any background color changes on hover for clicked content */
