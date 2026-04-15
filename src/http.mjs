@@ -292,20 +292,24 @@ if (env.NODE_ENV === "production") {
 app.use(express.json());
 app.use(cookieParser());
 
-// Route for Neynar notifications
-app.post("/api/v1/neynar/notify", async (req, res) => {
+// Verifies the x-admin-key header against the ADMIN_KEY env var using a
+// constant-time comparison. Returns true if the caller is authorized;
+// otherwise writes an error response and returns false.
+function requireAdminAuth(req, res) {
   const adminKey = process.env.ADMIN_KEY;
   if (!adminKey) {
-    return sendError(
+    sendError(
       res,
       503,
       "Service Unavailable",
       "ADMIN_KEY is not configured",
     );
+    return false;
   }
   const apiKey = req.header("x-admin-key");
   if (!apiKey) {
-    return sendError(res, 401, "Unauthorized", "missing x-admin-key header");
+    sendError(res, 401, "Unauthorized", "missing x-admin-key header");
+    return false;
   }
   const apiKeyBuf = Buffer.from(apiKey);
   const adminKeyBuf = Buffer.from(adminKey);
@@ -313,8 +317,15 @@ app.post("/api/v1/neynar/notify", async (req, res) => {
     apiKeyBuf.length !== adminKeyBuf.length ||
     !timingSafeEqual(apiKeyBuf, adminKeyBuf)
   ) {
-    return sendError(res, 401, "Unauthorized", "invalid x-admin-key");
+    sendError(res, 401, "Unauthorized", "invalid x-admin-key");
+    return false;
   }
+  return true;
+}
+
+// Route for Neynar notifications
+app.post("/api/v1/neynar/notify", async (req, res) => {
+  if (!requireAdminAuth(req, res)) return;
   const { target_url, tag } = req.body;
   
   if (!target_url || !tag) {
@@ -885,6 +896,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
 
   // Endpoint for clearing profile-specific caches
   app.get("/api/v1/cache/profile", async (req, res) => {
+    if (!requireAdminAuth(req, res)) return;
     const { address: rawAddress } = req.query;
 
     if (!rawAddress) {
@@ -1002,6 +1014,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
   });
 
   app.delete("/api/v1/cache", async (req, res) => {
+    if (!requireAdminAuth(req, res)) return;
     const { url } = req.body;
 
     if (!url) {
