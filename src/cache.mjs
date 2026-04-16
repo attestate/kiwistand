@@ -1149,33 +1149,60 @@ export function listNewest(limit = 30, lookbackUnixTime) {
      SELECT * FROM submissions
      ${lookbackUnixTime ? "WHERE timestamp > ?" : ""}
      ORDER BY timestamp DESC
-     LIMIT ?
+     ${limit > 0 ? "LIMIT ?" : ""}
    `;
-  const params = lookbackUnixTime ? [lookbackUnixTime, limit] : [limit];
+  const params = lookbackUnixTime
+    ? limit > 0
+      ? [lookbackUnixTime, limit]
+      : [lookbackUnixTime]
+    : limit > 0
+      ? [limit]
+      : [];
   const submissions = db.prepare(query).all(params);
 
-  const submissionsWithUpvotes = submissions.map((submission) => {
-    const upvotes =
-      db
-        .prepare(
-          `
-       SELECT COUNT(*) AS count FROM upvotes
-       WHERE href = ?
-     `,
-        )
-        .get(submission.href).count + 1;
+  if (submissions.length === 0) return [];
 
+  const hrefs = submissions.map((s) => s.href);
+
+  // Batch upvote queries in chunks to stay within SQLite variable limits
+  const CHUNK_SIZE = 500;
+  const countByHref = new Map();
+  const upvotersByHref = new Map();
+
+  for (let i = 0; i < hrefs.length; i += CHUNK_SIZE) {
+    const chunk = hrefs.slice(i, i + CHUNK_SIZE);
+    const placeholders = chunk.map(() => "?").join(",");
+
+    const countRows = db
+      .prepare(
+        `SELECT href, COUNT(*) AS count FROM upvotes
+         WHERE href IN (${placeholders})
+         GROUP BY href`,
+      )
+      .all(chunk);
+    for (const r of countRows) countByHref.set(r.href, r.count);
+
+    const upvoterRows = db
+      .prepare(
+        `SELECT href, identity FROM upvotes
+         WHERE href IN (${placeholders})`,
+      )
+      .all(chunk);
+    for (const row of upvoterRows) {
+      let list = upvotersByHref.get(row.href);
+      if (!list) {
+        list = [];
+        upvotersByHref.set(row.href, list);
+      }
+      list.push(row.identity);
+    }
+  }
+
+  const submissionsWithUpvotes = submissions.map((submission) => {
+    const upvotes = (countByHref.get(submission.href) || 0) + 1;
     const upvoters = [
       submission.identity,
-      ...db
-        .prepare(
-          `
-       SELECT identity FROM upvotes
-       WHERE href = ?
-     `,
-        )
-        .all(submission.href)
-        .map((upvote) => upvote.identity),
+      ...(upvotersByHref.get(submission.href) || []),
     ];
 
     const [, index] = submission.id.split("0x");
