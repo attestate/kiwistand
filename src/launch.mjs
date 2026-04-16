@@ -166,7 +166,7 @@ if (cluster.isPrimary) {
 // upvoting from happening.
 // Schedule newest.recompute early - before the slow store.posts() call
 // The SQLite tables persist between runs, so listNewest() has data
-if (!reconcileMode) {
+if (!reconcileMode && !cluster.isPrimary) {
   setImmediate(() => {
     newest
       .recompute(trie)
