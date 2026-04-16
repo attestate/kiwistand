@@ -63,7 +63,6 @@ export function custom(
   prefetch = [],
   canonicalUrl = null,
   frameImage = null,
-  variant = null,
 ) {
   const embedMetaContent = JSON.stringify({
     version: "next",
@@ -175,7 +174,6 @@ export function custom(
       content="width=device-width, initial-scale=1, viewport-fit=cover"
     />
     <meta name="fc:frame" content="${embedMetaContent}" />
-    ${variant ? html`<meta name="kiwi-variant" content="${variant}" />` : ""}
     ${ogDescription
       ? html`<meta name="description" content="${ogDescription}" />`
       : html`<meta name="description" content="Kiwi News - handpicked web3 alpha" />`}

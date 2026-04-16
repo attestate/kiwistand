@@ -95,16 +95,6 @@ const KarmaAnimation = ({ active }) => {
 };
 
 const Vote = (props) => {
-  // Read current feed variant from meta tag (if present)
-  const getVariant = () => {
-    try {
-      const el = document.querySelector('meta[name="kiwi-variant"]');
-      return el?.content || "unknown";
-    } catch (_) {
-      return "unknown";
-    }
-  };
-
   const { isMiniApp, loading } = useIsMiniApp();
   const [isFarcasterClient, setIsFarcasterClient] = useState(false);
   const haptic = useWebHaptics();
@@ -299,7 +289,7 @@ const Vote = (props) => {
       triggerLocalHaptic("success");
       const isAnonMode = localStorage.getItem('anon-mode') === 'true';
       if (!isAnonMode) {
-        posthog.capture("upvote", { variant: getVariant() });
+        posthog.capture("upvote");
       }
     } else if (response.status === "error") {
       if (

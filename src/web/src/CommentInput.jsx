@@ -556,7 +556,7 @@ const CommentInput = (props) => {
         haptic.trigger("success");
         const isAnonMode = localStorage.getItem('anon-mode') === 'true';
         if (!isAnonMode) {
-          posthog.capture("comment_created", { variant: getFeedVariant() });
+          posthog.capture("comment_created");
         }
       } catch (err) {
         console.error("Signing/Sending error (optimistic path):", err);
@@ -594,7 +594,7 @@ const CommentInput = (props) => {
         haptic.trigger("success");
         const isAnonMode = localStorage.getItem('anon-mode') === 'true';
         if (!isAnonMode) {
-          posthog.capture("comment_created", { variant: getFeedVariant() });
+          posthog.capture("comment_created");
         }
         localStorage.removeItem(`-kiwi-news-comment-${address}-${index}`);
         setText(""); // Clear input
@@ -903,12 +903,3 @@ const Container = (props) => {
 };
 
 export default Container;
-// Helper to read feed variant from meta
-function getFeedVariant() {
-  try {
-    const el = document.querySelector('meta[name="kiwi-variant"]');
-    return el?.content || "unknown";
-  } catch (_) {
-    return "unknown";
-  }
-}

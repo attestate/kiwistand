@@ -284,15 +284,9 @@ export const EmojiReaction = ({ comment, delegations, toast }) => {
         toast.success("Reaction added!");
         const isAnonMode = localStorage.getItem('anon-mode') === 'true';
         if (!isAnonMode) {
-          let variant = "unknown";
-          try {
-            const el = document.querySelector('meta[name="kiwi-variant"]');
-            variant = el?.content || "unknown";
-          } catch (_) {}
           posthog.capture("emoji_reaction", {
             emoji: emoji,
             from_existing: isFromExistingReaction,
-            variant,
           });
         }
       } else {

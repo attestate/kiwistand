@@ -691,34 +691,14 @@ export async function launch(trie, libp2p, isPrimary = true) {
     log(`Worker ${process.pid} ready to receive IPC messages`);
   }
 
-  // Simple 2-variant A/B test: control vs lobsters
-  // 50/50 split for maximum statistical power
-  const variants = ['control', 'lobsters'];
-  let currentVariant = 'control';
-  let variantCounter = 0; // Use counter for deterministic 50/50 split
-  
-  // Map variants to their functions (only 2 for simplified test)
-  const feedFunctions = {
-    control: feed,
-    lobsters: feed  // Both use same feed function now, just with different params
-  };
-  
-  // Map variant names to algorithm selection
-  const variantConfigs = {
-    control: { algorithm: 'control' },  // Original algorithm
-    lobsters: { algorithm: 'lobsters' }  // Lobsters algorithm
-  };
-  
   // Start computing the feed in the background to avoid blocking server startup
   // The first request to / might be slower if the feed isn't ready yet
   setImmediate(async () => {
     try {
       console.time("initial-feed-computation");
-      // Start with control variant
-      currentVariant = 'control';
-      cachedFeed = await feedPiscina.run({ theme, variant: currentVariant });
+      cachedFeed = await feedPiscina.run({ theme });
       console.timeEnd("initial-feed-computation");
-      log(`Initial cached feed ready (variant: ${currentVariant})`);
+      log(`Initial cached feed ready`);
     } catch (err) {
       log("Failed to compute initial cached feed: " + err);
       cachedFeed = null;
@@ -729,14 +709,11 @@ export async function launch(trie, libp2p, isPrimary = true) {
     setTimeout(async () => {
       const startTime = Date.now();
       try {
-        // Alternate between variants for 50/50 split
-        variantCounter++;
-        currentVariant = variants[variantCounter % 2];
-        const newFeed = await feedPiscina.run({ theme, variant: currentVariant });
+        const newFeed = await feedPiscina.run({ theme });
         cachedFeed = newFeed;
-        
+
         const elapsed = Date.now() - startTime;
-        log(`Cached feed updated in ${elapsed}ms (variant: ${currentVariant})`);
+        log(`Cached feed updated in ${elapsed}ms`);
       } catch (err) {
         log("Failed to update cached feed: " + err);
         log("Error stack: " + err.stack);
@@ -744,7 +721,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
       } finally {
         updateCachedFeed();
       }
-    }, 15000); // Changed to 15 seconds for faster variant switching
+    }, 30000);
   })();
 
   app.use((err, req, res, next) => {
@@ -1305,11 +1282,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
       });
       const paginate = false;
       const appCuration = request.query.curation === "true";
-      
-      // Use variant from query param for testing, otherwise use current rotation
-      const variant = request.query.variant || currentVariant;
-      const config = variantConfigs[variant] || variantConfigs.control;
-      
+
       try {
         results = await index(
           trie,
@@ -1318,10 +1291,9 @@ export async function launch(trie, libp2p, isPrimary = true) {
           lookback,
           paginate,
           appCuration,
-          config.algorithm, // Pass algorithm selection
         );
       } catch (err) {
-        log(`Error in api/v1/feeds/hot (variant: ${variant || 'control'}): ${err.stack}`);
+        log(`Error in api/v1/feeds/hot: ${err.stack}`);
         const code = 500;
         const httpMessage = "Internal Server Error";
         const details = "Error generating feed";
@@ -1433,8 +1405,6 @@ export async function launch(trie, libp2p, isPrimary = true) {
   }
 
   async function refreshEndlessCache() {
-    const variant = currentVariant;
-    const config = variantConfigs[variant] || variantConfigs.control;
     const lookback = sub(new Date(), { weeks: 6 });
 
     const results = await index(
@@ -1444,7 +1414,6 @@ export async function launch(trie, libp2p, isPrimary = true) {
       lookback,
       false, // Don't paginate
       false, // appCuration
-      config.algorithm,
       true,  // skipAgeFilter - include older stories for endless scroll
       true,  // skipResolve - skip ENS resolution for fast caching
     );
@@ -1903,7 +1872,6 @@ export async function launch(trie, libp2p, isPrimary = true) {
       } else {
         content = await feedPiscina.run({
           theme: reply.locals.theme,
-          variant: currentVariant,
           page,
           domain: DOMPurify.sanitize(request.query.domain),
           identity,

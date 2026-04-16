@@ -1396,14 +1396,10 @@ function trackLinkImpressions() {
             console.log("Error tracking impression:", err);
           }
 
-          // Also capture impression in PostHog with variant for A/B analysis
+          // Capture impression in PostHog
           try {
             if (!isAnonMode && typeof posthog !== "undefined") {
-              const variantMeta = document.querySelector(
-                'meta[name="kiwi-variant"]',
-              );
-              const variant = variantMeta?.content || "unknown";
-              posthog?.capture?.("story_impression", { href, variant });
+              posthog?.capture?.("story_impression", { href });
             }
           } catch (_) {}
 
@@ -1451,11 +1447,7 @@ function trackLinkImpressions() {
 
       if (!isAnonMode && typeof posthog !== "undefined") {
         try {
-          const variantMeta = document.querySelector(
-            'meta[name="kiwi-variant"]',
-          );
-          const variant = variantMeta?.content || "unknown";
-          posthog?.capture?.("outbound_click", { href, variant });
+          posthog?.capture?.("outbound_click", { href });
         } catch (_) {}
       }
     });
@@ -1636,25 +1628,8 @@ async function start() {
     trackLinkImpressions();
   }
 
-  // Ensure variant is available on all subsequent PostHog events
-  if (!isAnonMode && window.location.pathname === "/" && typeof posthog !== "undefined") {
-    try {
-      const variantMeta = document.querySelector('meta[name="kiwi-variant"]');
-      const variant = variantMeta?.content || "unknown";
-      posthog?.register?.({ variant });
-    } catch (_) {}
-  }
-
   // Initialize terminal ad animations
   initTerminalAds();
-
-  // Track A/B test variant via PostHog
-  if (!isAnonMode && window.location.pathname === "/" && typeof posthog !== "undefined") {
-    const variantMeta = document.querySelector('meta[name="kiwi-variant"]');
-    const variant = variantMeta?.content || "unknown";
-    posthog?.capture?.("feed_page_view", { variant });
-    console.log("caputred", variant);
-  }
   // NOTE: There are clients which had the identity cookie sent to 1 week and
   // they're now encountering the paywall. So in case this happens but their
   // local storage contains the respective private key, we want them to reload

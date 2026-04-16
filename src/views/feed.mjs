@@ -218,24 +218,19 @@ async function calculateNeynarUpvotes(upvoters) {
   return weightedUpvotes;
 }
 
-export async function topstories(leaves, algorithm = 'control', skipNeynar = false) {
-  // Check if we're using Lobsters algorithm
-  const useLobstersAlgo = algorithm === 'lobsters';
-
+export async function topstories(leaves, skipNeynar = false) {
   // Pre-compute means once (not per-story) - O(n) instead of O(n²)
   let precomputedMeanUpvoteRatio = null;
   let precomputedMeanCTR = null;
-  if (!useLobstersAlgo) {
-    try {
-      precomputedMeanUpvoteRatio = meanUpvoteRatio(leaves);
-    } catch (e) {
-      // noop
-    }
-    try {
-      precomputedMeanCTR = meanCTR(leaves);
-    } catch (e) {
-      // noop
-    }
+  try {
+    precomputedMeanUpvoteRatio = meanUpvoteRatio(leaves);
+  } catch (e) {
+    // noop
+  }
+  try {
+    precomputedMeanCTR = meanCTR(leaves);
+  } catch (e) {
+    // noop
   }
 
   return Promise.allSettled(leaves
@@ -250,93 +245,71 @@ export async function topstories(leaves, algorithm = 'control', skipNeynar = fal
       const upvotes = skipNeynar
         ? story.upvoters?.length || 1
         : await calculateNeynarUpvotes(story.upvoters);
-      
+
+      // Add shares with double weight of upvotes
+      const shares = countShares(story.href);
+      const sharesAsUpvotes = shares * 2; // Each share counts as 2 upvotes
+
       let score;
-      
-      if (useLobstersAlgo) {
-        // Lobsters algorithm: negative hotness with simple time decay
-        // Base score: log10(upvotes + comments*0.5)
-        const baseScore = Math.log10(Math.max(1, upvotes + commentCount * 0.5));
-        
-        // Time penalty: hours_age / 6 (reduced from /2 for better balance)
-        const hoursAge = itemAge(story.timestamp) / 60; // Convert minutes to hours
-        const timePenalty = hoursAge / 6;
-        
-        // Lobsters uses negative scores for sorting (more negative = lower rank)
-        // We'll invert this to keep positive scores for consistency with sorting
-        score = baseScore - timePenalty;
-        
-        // Ensure score doesn't go negative (would break our sorting)
-        score = Math.max(0.001, score);
+      if (upvotes > 2) {
+        score = Math.log((upvotes + sharesAsUpvotes) * 0.4 + commentCount * 0.6);
       } else {
-        // Original control algorithm
-        // Add shares with double weight of upvotes
-        const shares = countShares(story.href);
-        const sharesAsUpvotes = shares * 2; // Each share counts as 2 upvotes
-        
-        if (upvotes > 2) {
-          score = Math.log((upvotes + sharesAsUpvotes) * 0.4 + commentCount * 0.6);
-        } else {
-          score = Math.log(upvotes + sharesAsUpvotes);
+        score = Math.log(upvotes + sharesAsUpvotes);
+      }
+
+      const outboundClicks = countOutbounds(story.href) + 1;
+      if (outboundClicks > 0) {
+        score = score * 0.9 + 0.1 * Math.log(outboundClicks);
+      }
+
+      if (precomputedMeanUpvoteRatio !== null) {
+        try {
+          const storyRatio = calculateUpvoteClickRatio(story);
+          const upvotePerformance = storyRatio / precomputedMeanUpvoteRatio;
+
+          const clicks = countOutbounds(story.href);
+          const sampleSize = upvotes + clicks;
+          const confidenceFactor = Math.pow(
+            Math.min(1, sampleSize / 1_000_000),
+            2,
+          );
+
+          const adjustedPerformance = upvotePerformance * confidenceFactor;
+
+          score *= adjustedPerformance;
+        } catch (e) {
+          // If Upvote-Click ratio can't be calculated, we just keep the current
+          // score
         }
+      }
 
-        const outboundClicks = countOutbounds(story.href) + 1;
-        if (outboundClicks > 0) {
-          score = score * 0.9 + 0.1 * Math.log(outboundClicks);
+      // Try to apply CTR adjustment if available
+      if (precomputedMeanCTR !== null) {
+        try {
+          const ctr = calculateCTR(story);
+          const ctrPerformance = ctr / precomputedMeanCTR;
+
+          const impressions = countImpressions(story.href);
+          const confidenceFactor = Math.pow(
+            Math.min(1, impressions / 1_000_000),
+            2,
+          );
+
+          const adjustedPerformance = ctrPerformance * confidenceFactor;
+
+          score *= adjustedPerformance;
+        } catch (e) {
+          // If CTR can't be calculated, we just keep the current score
         }
+      }
 
-        if (precomputedMeanUpvoteRatio !== null) {
-          try {
-            const storyRatio = calculateUpvoteClickRatio(story);
-            const upvotePerformance = storyRatio / precomputedMeanUpvoteRatio;
+      const storyAgeInDays = itemAge(story.timestamp) / (60 * 24); // Convert minutes to days
+      const decay = Math.sqrt(itemAge(story.timestamp));
 
-            const clicks = countOutbounds(story.href);
-            const sampleSize = upvotes + clicks;
-            const confidenceFactor = Math.pow(
-              Math.min(1, sampleSize / 1_000_000),
-              2,
-            );
-
-            const adjustedPerformance = upvotePerformance * confidenceFactor;
-
-            score *= adjustedPerformance;
-          } catch (e) {
-            // If Upvote-Click ratio can't be calculated, we just keep the current
-            // score
-          }
-        }
-
-        // Try to apply CTR adjustment if available
-        if (precomputedMeanCTR !== null) {
-          try {
-            const ctr = calculateCTR(story);
-            const ctrPerformance = ctr / precomputedMeanCTR;
-
-            const impressions = countImpressions(story.href);
-            const confidenceFactor = Math.pow(
-              Math.min(1, impressions / 1_000_000),
-              2,
-            );
-
-            const adjustedPerformance = ctrPerformance * confidenceFactor;
-
-            score *= adjustedPerformance;
-          } catch (e) {
-            // If CTR can't be calculated, we just keep the current score
-          }
-        }
-
-        const scoreBeforeDecay = score;
-        const storyAgeInDays = itemAge(story.timestamp) / (60 * 24); // Convert minutes to days
-        const decay = Math.sqrt(itemAge(story.timestamp));
-
-        // No freshness boost in control algorithm anymore
-        
-        if (storyAgeInDays < 5) {
-          score = score / Math.pow(decay, 5);
-        } else {
-          score = score / Math.pow(decay, storyAgeInDays);
-        }
+      if (storyAgeInDays < 5) {
+        score = score / Math.pow(decay, 5);
+      } else {
+        score = score / Math.pow(decay, storyAgeInDays);
       }
 
       story.score = score * 10000000;
@@ -375,7 +348,6 @@ export async function index(
   }),
   paginate = true,
   appCuration = false,
-  algorithm = 'control',
   skipAgeFilter = false,
   skipResolve = false,
 ) {
@@ -389,7 +361,7 @@ export async function index(
 
   // 1. Calculate initial ranking based on ACTUAL engagement
   // Skip Neynar weighting when skipResolve is true (for fast endless scroll caching)
-  let rankedStories = await topstories(moderatedLeaves, algorithm, skipResolve);
+  let rankedStories = await topstories(moderatedLeaves, skipResolve);
 
   // 2. Filter ranked stories based on age/engagement rules
   rankedStories = rankedStories.filter(({ index, identity, upvotes, timestamp }) => {
@@ -851,17 +823,11 @@ async function fetchTopStories(feedStoryHrefs) {
     .slice(0, 8);
 }
 
-export default async function (trie, theme, page, domain, identity, hash, variant) {
+export default async function (trie, theme, page, domain, identity, hash) {
   const path = "/";
   const totalStories = parseInt(env.TOTAL_STORIES, 10);
 
-  // Removed Stripe URLs
-
-  // Map variant to algorithm
-  const algorithm = variant === 'lobsters' ? 'lobsters' : 'control';
-  
-  // Always call the standard index function, regardless of identity/hash
-  const content = await index(trie, page, domain, sub(new Date(), { days: 3 }), true, false, algorithm);
+  const content = await index(trie, page, domain, sub(new Date(), { days: 3 }));
 
   // Destructure content
   const { originals, stories, start, pinnedStory } = content;
@@ -904,7 +870,7 @@ export default async function (trie, theme, page, domain, identity, hash, varian
   return "<!DOCTYPE html>" + html`
     <html lang="en" op="news">
       <head>
-        ${custom(ogImage, title, description, twitterCard, prefetch, "https://news.kiwistand.com/", null, variant)}
+        ${custom(ogImage, title, description, twitterCard, prefetch, "https://news.kiwistand.com/")}
       </head>
       <body
         data-instant-allow-query-string
