@@ -68,9 +68,18 @@ export function getCachedHtml() {
 }
 
 let inProgress = false;
+let pendingRecompute = false;
+let debounceTimer = null;
+const RECOMPUTE_DEBOUNCE_MS = 5000;
+
 export async function recompute() {
-  if (inProgress) return;
+  if (inProgress || debounceTimer) {
+    pendingRecompute = true;
+    return;
+  }
+
   inProgress = true;
+  pendingRecompute = false;
 
   try {
     const limit = 25;
@@ -193,6 +202,15 @@ export async function recompute() {
     throw err;
   } finally {
     inProgress = false;
+    if (pendingRecompute) {
+      pendingRecompute = false;
+      debounceTimer = setTimeout(() => {
+        debounceTimer = null;
+        recompute().catch((err) =>
+          log(`Debounced recompute failed: ${err.stack || err}`),
+        );
+      }, RECOMPUTE_DEBOUNCE_MS);
+    }
   }
 }
 
