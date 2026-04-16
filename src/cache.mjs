@@ -529,52 +529,31 @@ export function getNumberOfOnlineUsers() {
 // Calculate karma directly from SQLite database
 export function calculateKarmaFromDB(identity, endDate) {
   try {
-    let dateFilter = "";
-    let params = [identity];
+    let dateFilterSubmissions = "";
+    let dateFilterUpvotes = "";
 
     if (endDate) {
-      const endTimestamp = Math.floor(endDate.getTime() / 1000);
-      dateFilter = "AND s.timestamp <= ?";
-      params.push(endTimestamp);
+      dateFilterSubmissions = "AND s.timestamp <= ?";
+      dateFilterUpvotes = "AND u.timestamp <= ?";
     }
 
-    // Count submissions
-    const submissionsQuery = `
-      SELECT COUNT(*) as count, href
+    const query = `
+      SELECT COUNT(DISTINCT s.href) + COUNT(u.rowid) AS total_karma
       FROM submissions s
-      WHERE s.identity = ? ${dateFilter}
-      GROUP BY href
+      LEFT JOIN upvotes u ON s.href = u.href ${dateFilterUpvotes}
+      WHERE s.identity = ? ${dateFilterSubmissions}
     `;
 
-    const submissions = db.prepare(submissionsQuery).all(params);
-
-    // For each submission, count upvotes
-    let totalKarma = 0;
-
-    for (const submission of submissions) {
-      // Each submission gives 1 base point
-      totalKarma += 1;
-
-      // Count upvotes for this submission
-      let upvotesQuery = `
-        SELECT COUNT(*) as count
-        FROM upvotes u
-        WHERE u.href = ?
-      `;
-
-      const upvoteParams = [submission.href];
-
-      // Add timestamp filter if needed
-      if (endDate) {
-        upvotesQuery += " AND u.timestamp <= ?";
-        upvoteParams.push(Math.floor(endDate.getTime() / 1000));
-      }
-
-      const upvotes = db.prepare(upvotesQuery).get(upvoteParams);
-      totalKarma += upvotes.count;
+    let fullParams;
+    if (endDate) {
+      const endTimestamp = Math.floor(endDate.getTime() / 1000);
+      fullParams = [endTimestamp, identity, endTimestamp];
+    } else {
+      fullParams = [identity];
     }
 
-    return totalKarma;
+    const result = db.prepare(query).get(fullParams);
+    return result.total_karma;
   } catch (err) {
     log(`Error calculating karma from DB: ${err.toString()}`);
     return 0;
