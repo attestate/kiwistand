@@ -330,6 +330,13 @@ const Bell = (props) => {
     fetchAndUpdateNotifications();
   }, [address]); // Removed isLoading from dependency array to avoid potential loop
 
+  useEffect(() => {
+    window.webkit?.messageHandlers?.kiwiNative?.postMessage({
+      action: "notificationCount",
+      count: notificationCount,
+    });
+  }, [notificationCount]);
+
   const mobileBellStyle = props.mobile
     ? {
         padding: "0", // Remove padding
