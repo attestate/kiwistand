@@ -799,7 +799,7 @@ const expandSVG = html`<svg
 
 async function fetchTopStories(feedStoryHrefs) {
   const weekAgo = Math.floor(Date.now() / 1000) - 7 * 24 * 60 * 60;
-  let topRaw = getBest(30, 0, null, "", weekAgo);
+  let topRaw = getBest(80, 0, null, "", weekAgo);
 
   // Apply moderation
   const policy = await moderation.getLists();
@@ -808,7 +808,7 @@ async function fetchTopStories(feedStoryHrefs) {
   // Filter out stories already in the main feed (keep more to account for image filtering)
   const filtered = topRaw.filter(
     (story) => !feedStoryHrefs.has(story.href),
-  ).slice(0, 16);
+  ).slice(0, 40);
 
   if (filtered.length === 0) return [];
 
