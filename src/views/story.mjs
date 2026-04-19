@@ -461,7 +461,7 @@ export default async function (trie, theme, index, value, referral, commentIndex
               </tbody>
               ${upvoterProfiles.length > 0
                 ? html`<tr>
-                    <td style="padding: 12px 0;">
+                    <td style="padding: 12px 0 28px 0;">
                       <div style="margin: 0 11px;">
                         <div style="font-size: 10pt; font-weight: 500; margin-bottom: 12px; color: var(--text-secondary);">
                           Recommended by ${upvoterProfiles.length} ${upvoterProfiles.length === 1 ? 'curator' : 'curators'}
