@@ -801,7 +801,7 @@ const Comment = React.forwardRef(
           display: "block",
           marginBottom: isLastComment ? "28px" : "12px",
           whiteSpace: "pre-wrap",
-          lineHeight: "1.2",
+          lineHeight: "1.3",
           wordBreak: "break-word",
           overflowWrap: "break-word",
           transition: "all 0.2s ease",
@@ -882,10 +882,7 @@ const Comment = React.forwardRef(
             </div>
             {!isCollapsed && (
               <>
-                <span
-                  className="comment-text"
-                  style={{ fontSize: "11pt", lineHeight: "1.15" }}
-                >
+                <span className="comment-text">
                   <Linkify
                     options={{
                       className: "meta-link selectable-link",
