@@ -21,32 +21,41 @@ const extractionCache = new LRUCache({
   ttl: 1000 * 60 * 60 * 24, // 24 hour TTL
 });
 
-function isFarcasterUrl(url) {
+function getFarcasterCastRef(url) {
   try {
     const parsed = new URL(url);
-    return parsed.hostname === "warpcast.com" || parsed.hostname === "farcaster.xyz";
+    if (parsed.hostname === "warpcast.com" || parsed.hostname === "farcaster.xyz") {
+      return { type: "url", value: url };
+    }
+    if (parsed.hostname === "firefly.social" && parsed.pathname.startsWith("/post/farcaster/")) {
+      const hash = parsed.pathname.split("/").filter(Boolean)[2];
+      if (hash) return { type: "hash", value: hash };
+    }
+    return null;
   } catch {
-    return false;
+    return null;
   }
 }
 
-function isXUrl(url) {
+function getXTweetId(url) {
   try {
     const parsed = new URL(url);
-    return parsed.hostname === "x.com" || parsed.hostname === "twitter.com";
+    if (parsed.hostname === "x.com" || parsed.hostname === "twitter.com") {
+      const parts = parsed.pathname.split("/").filter(Boolean);
+      const id = parts[parts.length - 1];
+      return id && /^\d+$/.test(id) ? id : null;
+    }
+    if (parsed.hostname === "firefly.social" && parsed.pathname.startsWith("/post/x/")) {
+      const id = parsed.pathname.split("/").filter(Boolean)[2];
+      return id && /^\d+$/.test(id) ? id : null;
+    }
+    return null;
   } catch {
-    return false;
+    return null;
   }
 }
 
-async function extractXArticle(url) {
-  const parsed = new URL(url);
-  const parts = parsed.pathname.split("/").filter(Boolean);
-  const tweetId = parts[parts.length - 1];
-  if (!tweetId || !/^\d+$/.test(tweetId)) {
-    throw new Error("Could not extract tweet ID from URL");
-  }
-
+async function extractXArticle(tweetId) {
   const apiUrl = `https://api.fxtwitter.com/status/${tweetId}`;
   const res = await fetch(apiUrl, {
     headers: { "User-Agent": "Mozilla/5.0" },
@@ -88,8 +97,8 @@ async function extractXArticle(url) {
   return { title: `${handle} on X`, plainText, wrappedHtml };
 }
 
-async function extractFarcasterArticle(url) {
-  const cast = await extractWarpcastContent(url, "url");
+async function extractFarcasterArticle(ref) {
+  const cast = await extractWarpcastContent(ref.value, ref.type);
   if (!cast || !cast.text) {
     throw new Error("Could not fetch Farcaster post");
   }
@@ -111,12 +120,14 @@ async function extractFarcasterArticle(url) {
 }
 
 export async function extractArticle(url) {
-  if (isFarcasterUrl(url)) {
-    return extractFarcasterArticle(url);
+  const farcasterRef = getFarcasterCastRef(url);
+  if (farcasterRef) {
+    return extractFarcasterArticle(farcasterRef);
   }
 
-  if (isXUrl(url)) {
-    return extractXArticle(url);
+  const xTweetId = getXTweetId(url);
+  if (xTweetId) {
+    return extractXArticle(xTweetId);
   }
 
   const res = await fetch(url, {
