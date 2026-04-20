@@ -65,8 +65,8 @@ async function extractXArticle(url) {
       .filter(Boolean)
       .join("\n\n");
 
-    if (plainText.length < MIN_ARTICLE_LENGTH) {
-      throw new Error(`X article too short (${plainText.length} chars, need ${MIN_ARTICLE_LENGTH}).`);
+    if (!plainText) {
+      throw new Error("X article has no text content");
     }
 
     const elements = blocks
@@ -77,10 +77,10 @@ async function extractXArticle(url) {
     return { title, plainText, wrappedHtml };
   }
 
-  // Regular tweet — use tweet text
+  // Regular tweet — use tweet text. No minimum length: the tweet IS the content.
   const plainText = tweet.text?.trim() || "";
-  if (plainText.length < MIN_ARTICLE_LENGTH) {
-    throw new Error(`Tweet too short (${plainText.length} chars, need ${MIN_ARTICLE_LENGTH}).`);
+  if (!plainText) {
+    throw new Error("Tweet has no text content");
   }
   const elements = [{ type: "text", content: plainText }];
   const wrappedHtml = wrapParagraphs(elements);
