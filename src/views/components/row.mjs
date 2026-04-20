@@ -7,6 +7,7 @@ import {
 } from "date-fns";
 import { URL } from "url";
 import DOMPurify from "isomorphic-dompurify";
+import { decode as decodeHtmlEntities } from "html-entities";
 import ethers from "ethers";
 import { getSlug, isCloudflareImage } from "../../utils.mjs";
 
@@ -634,14 +635,14 @@ const row = (
                               return parts.map((part) => {
                                 if (/^\bhttps?:\/\//.test(part)) {
                                   const display = part.length > 40 ? part.substring(0, 40) + "…" : part;
-                                  return html`<span style="text-decoration:underline;">${DOMPurify.sanitize(display)}</span>`;
+                                  return html`<span style="text-decoration:underline;">${decodeHtmlEntities(DOMPurify.sanitize(display))}</span>`;
                                 }
-                                return DOMPurify.sanitize(part);
+                                return decodeHtmlEntities(DOMPurify.sanitize(part));
                               });
                             };
                             const desc = convertBrTagsToNewlines((story.metadata.ogDescription || "").trim()).replace(/\n\nQuoting .+$/s, "").trim();
                             if (/^https?:\/\/\S+$/i.test(desc)) {
-                              return html`<span style="text-decoration:underline;">${DOMPurify.sanitize(desc)}</span>`;
+                              return html`<span style="text-decoration:underline;">${decodeHtmlEntities(DOMPurify.sanitize(desc))}</span>`;
                             }
                             const nodes = linkifyNodes(desc);
                             return html`${nodes}`;
@@ -780,22 +781,22 @@ const row = (
                               return parts.map((part) => {
                                 if (/^\bhttps?:\/\//.test(part)) {
                                   const display = part.length > 40 ? part.substring(0, 40) + "…" : part;
-                                  return html`<span style="text-decoration:underline;">${DOMPurify.sanitize(display)}</span>`;
+                                  return html`<span style="text-decoration:underline;">${decodeHtmlEntities(DOMPurify.sanitize(display))}</span>`;
                                 }
-                                return DOMPurify.sanitize(part);
+                                return decodeHtmlEntities(DOMPurify.sanitize(part));
                               });
                             };
 
                             if (story.metadata.farcasterCast?.text) {
                               const text = story.metadata.farcasterCast.text.trim();
                               if (/^https?:\/\/\S+$/i.test(text)) {
-                                return html`<span style="text-decoration:underline;">${DOMPurify.sanitize(text)}</span>`;
+                                return html`<span style="text-decoration:underline;">${decodeHtmlEntities(DOMPurify.sanitize(text))}</span>`;
                               }
                               return html`${linkifyNodes(text)}`;
                             }
                             const desc = (story.metadata.ogDescription || "").trim();
                             if (/^https?:\/\/\S+$/i.test(desc)) {
-                              return html`<span style="text-decoration:underline;">${DOMPurify.sanitize(desc)}</span>`;
+                              return html`<span style="text-decoration:underline;">${decodeHtmlEntities(DOMPurify.sanitize(desc))}</span>`;
                             }
                             if (desc.length <= 280) {
                               const nodes = linkifyNodes(desc);
@@ -886,10 +887,10 @@ const row = (
                                       : part;
                                   return html`<span
                                     style="text-decoration:underline;"
-                                    >${DOMPurify.sanitize(display)}</span
+                                    >${decodeHtmlEntities(DOMPurify.sanitize(display))}</span
                                   >`;
                                 }
-                                return DOMPurify.sanitize(part);
+                                return decodeHtmlEntities(DOMPurify.sanitize(part));
                               });
                             };
                             const text = (
@@ -898,7 +899,7 @@ const row = (
                             if (/^https?:\/\/\S+$/i.test(text)) {
                               return html`<span
                                 style="text-decoration:underline;"
-                                >${DOMPurify.sanitize(text)}</span
+                                >${decodeHtmlEntities(DOMPurify.sanitize(text))}</span
                               >`;
                             }
                             const sliced = text.slice(0, 300);
