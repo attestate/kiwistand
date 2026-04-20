@@ -2,7 +2,7 @@
 import { JSDOM } from "jsdom";
 import { Readability } from "@mozilla/readability";
 import { LRUCache } from "lru-cache";
-import { extractWarpcastContent } from "../../parser.mjs";
+import { extractWarpcastContent, extractBlueskyContent } from "../../parser.mjs";
 
 // Minimum characters for a valid article (filters out landing pages)
 const MIN_ARTICLE_LENGTH = 500;
@@ -24,7 +24,18 @@ const extractionCache = new LRUCache({
 function isFarcasterUrl(url) {
   try {
     const parsed = new URL(url);
-    return parsed.hostname === "warpcast.com" || parsed.hostname === "farcaster.xyz";
+    if (parsed.hostname === "warpcast.com" || parsed.hostname === "farcaster.xyz") return true;
+    if (parsed.hostname === "firefly.social" && parsed.pathname.startsWith("/post/farcaster/")) return true;
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+function isBlueskyUrl(url) {
+  try {
+    const parsed = new URL(url);
+    return parsed.hostname === "bsky.app" && parsed.pathname.includes("/post/");
   } catch {
     return false;
   }
@@ -33,7 +44,9 @@ function isFarcasterUrl(url) {
 function isXUrl(url) {
   try {
     const parsed = new URL(url);
-    return parsed.hostname === "x.com" || parsed.hostname === "twitter.com";
+    if (parsed.hostname === "x.com" || parsed.hostname === "twitter.com") return true;
+    if (parsed.hostname === "firefly.social" && parsed.pathname.startsWith("/post/x/")) return true;
+    return false;
   } catch {
     return false;
   }
@@ -89,23 +102,46 @@ async function extractXArticle(url) {
 }
 
 async function extractFarcasterArticle(url) {
-  const cast = await extractWarpcastContent(url, "url");
+  const parsed = new URL(url);
+  let cast;
+  if (parsed.hostname === "firefly.social" && parsed.pathname.startsWith("/post/farcaster/")) {
+    const hash = parsed.pathname.split("/").filter(Boolean)[2];
+    cast = hash ? await extractWarpcastContent(hash, "hash") : null;
+  } else {
+    cast = await extractWarpcastContent(url, "url");
+  }
   if (!cast || !cast.text) {
     throw new Error("Could not fetch Farcaster post");
   }
 
   const plainText = cast.text.trim();
-
-  if (plainText.length < MIN_ARTICLE_LENGTH) {
-    throw new Error(
-      `Farcaster post too short (${plainText.length} chars, need ${MIN_ARTICLE_LENGTH}).`
-    );
+  if (!plainText) {
+    throw new Error("Farcaster post has no text content");
   }
 
   const paragraphs = plainText.split(/\n\n+|\n/).filter(p => p.trim());
   const elements = paragraphs.map(p => ({ type: "text", content: p }));
   const wrappedHtml = wrapParagraphs(elements);
   const title = `${cast.author.displayName || cast.author.username} on Farcaster`;
+
+  return { title, plainText, wrappedHtml };
+}
+
+async function extractBlueskyPost(url) {
+  const post = await extractBlueskyContent(url);
+  if (!post || !post.text) {
+    throw new Error("Could not fetch Bluesky post");
+  }
+
+  const plainText = post.text.trim();
+  if (!plainText) {
+    throw new Error("Bluesky post has no text content");
+  }
+
+  const paragraphs = plainText.split(/\n\n+|\n/).filter(p => p.trim());
+  const elements = paragraphs.map(p => ({ type: "text", content: p }));
+  const wrappedHtml = wrapParagraphs(elements);
+  const title = `${post.author.displayName || post.author.handle} on Bluesky`;
 
   return { title, plainText, wrappedHtml };
 }
@@ -117,6 +153,10 @@ export async function extractArticle(url) {
 
   if (isXUrl(url)) {
     return extractXArticle(url);
+  }
+
+  if (isBlueskyUrl(url)) {
+    return extractBlueskyPost(url);
   }
 
   const res = await fetch(url, {
