@@ -161,5 +161,9 @@
     "require": [
       "dotenv/config"
     ]
+  },
+  "overrides": {
+    "protobufjs": "^7.6.5",
+    "@protobufjs/utf8": "^1.1.2"
   }
 }
