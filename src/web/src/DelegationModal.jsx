@@ -71,7 +71,7 @@ const SimpleModal = forwardRef((props, ref) => {
     }
   }));
 
-  // Porto-style modal settings
+  // Modal settings
   const customStyles = {
     overlay: {
       backgroundColor: "var(--bg-overlay)",
@@ -104,7 +104,7 @@ const SimpleModal = forwardRef((props, ref) => {
     },
   };
 
-  // Apply Porto drawer style for mobile (bottom drawer)
+  // Apply drawer style for mobile (bottom drawer)
   if (window.innerWidth < 480) {
     customStyles.content = {
       ...customStyles.content,
@@ -149,7 +149,7 @@ const SimpleModal = forwardRef((props, ref) => {
       style={customStyles}
       closeTimeoutMS={0}
     >
-      {/* Porto-style header */}
+      {/* header */}
       <div style={{
         display: "flex",
         alignItems: "center",

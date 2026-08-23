@@ -1,24 +1,10 @@
 import React, { useState, useEffect, useImperativeHandle, forwardRef } from "react";
 import Modal from "react-modal";
-import { useAccount, useConnect, useDisconnect } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 
 if (typeof document !== "undefined") {
   Modal.setAppElement("body");
 }
-
-const FaceIdIcon = () => (
-  <svg width="1.2em" height="1.2em" viewBox="0 0 21 22" fill="none" xmlns="http://www.w3.org/2000/svg" className="size-5.25">
-    <path d="M6.125 3.125H4.375C3.4085 3.125 2.625 3.9085 2.625 4.875V6.625" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"></path>
-    <path d="M14.875 3.125H16.625C17.5915 3.125 18.375 3.9085 18.375 4.875V6.625" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"></path>
-    <path d="M14 7.5V9.25" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"></path>
-    <path d="M7 7.5V9.25" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"></path>
-    <path d="M7.875 14.5C7.875 14.5 8.75 15.375 10.5 15.375C12.25 15.375 13.125 14.5 13.125 14.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"></path>
-    <path d="M10.5 7.5V11.875H9.625" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"></path>
-    <path d="M6.125 18.875H4.375C3.4085 18.875 2.625 18.0915 2.625 17.125V15.375" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"></path>
-    <path d="M14.875 18.875H16.625C17.5915 18.875 18.375 18.0915 18.375 17.125V15.375" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"></path>
-  </svg>
-);
 
 const SparkleIcon = () => (
   <svg viewBox="0 0 256 256" width="1.2em" height="1.2em" style={{ width: "18px", height: "18px" }}>
@@ -63,12 +49,7 @@ const LoginModal = forwardRef((props, ref) => {
   const [isButtonHovered, setIsButtonHovered] = useState(false);
   const [isButtonActive, setIsButtonActive] = useState(false);
   const [isAnonButtonHovered, setIsAnonButtonHovered] = useState(false);
-  const account = useAccount();
-  const { connectors, connect } = useConnect();
-  const { disconnectAsync } = useDisconnect();
   const { openConnectModal } = useConnectModal();
-
-  const { toast, delegations } = props;
 
   function openModal() {
     setShowModal(true);
@@ -82,31 +63,6 @@ const LoginModal = forwardRef((props, ref) => {
     openModal,
     closeModal,
   }));
-
-  const handlePasskeyLogin = async () => {
-    const portoConnector = connectors.find(
-      (connector) => connector.id === 'xyz.ithaca.porto',
-    );
-
-    if (portoConnector) {
-      // Porto ghost state: wagmi thinks connected but no address.
-      // Disconnect first so connect() triggers a fresh passkey prompt.
-      if (account?.isConnected && !account?.address) {
-        try {
-          await disconnectAsync();
-        } catch (err) {
-          console.log('Porto disconnect before reconnect:', err);
-        }
-      }
-      connect({ connector: portoConnector });
-      closeModal();
-    } else {
-      console.error("Porto connector not found");
-      if (toast) {
-        toast.error("Passkey login not available");
-      }
-    }
-  };
 
   const handleConnectWallet = () => {
     closeModal();
@@ -125,7 +81,7 @@ const LoginModal = forwardRef((props, ref) => {
     window.location.reload();
   };
 
-  // Porto-style modal settings
+  // Modal settings
   const customStyles = {
     overlay: {
       backgroundColor: "rgba(0, 0, 0, 0.5)",
@@ -158,7 +114,7 @@ const LoginModal = forwardRef((props, ref) => {
     },
   };
 
-  // Apply Porto drawer style for mobile (bottom drawer)
+  // Apply drawer style for mobile (bottom drawer)
   if (typeof window !== "undefined" && window.innerWidth < 480) {
     customStyles.content = {
       ...customStyles.content,
@@ -190,7 +146,7 @@ const LoginModal = forwardRef((props, ref) => {
       style={customStyles}
       closeTimeoutMS={0}
     >
-      {/* Porto-style header */}
+      {/* header */}
       <div style={{
         display: "flex",
         alignItems: "center",
@@ -263,7 +219,7 @@ const LoginModal = forwardRef((props, ref) => {
 
       {/* Modal content */}
       <div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
-        {/* Porto-style title section */}
+        {/* title section */}
         <div style={{ display: "flex", flexDirection: "column", padding: "12px 12px 8px" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: "12px", paddingBottom: "4px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -274,8 +230,8 @@ const LoginModal = forwardRef((props, ref) => {
                 width: "32px",
                 height: "32px",
                 borderRadius: "50%",
-                backgroundColor: "var(--color-porto-bg)",
-                color: "var(--color-porto-blue)",
+                backgroundColor: "var(--color-badge-bg)",
+                color: "var(--color-badge-icon)",
               }}>
                 <SparkleIcon />
               </div>
@@ -286,7 +242,7 @@ const LoginModal = forwardRef((props, ref) => {
           </div>
         </div>
 
-        {/* Porto-style content section */}
+        {/* content section */}
         <div style={{ flexGrow: 1, padding: "0 12px 12px" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
             <div style={{ fontSize: "15px", color: "var(--text-primary)", lineHeight: "22px" }}>
@@ -295,7 +251,7 @@ const LoginModal = forwardRef((props, ref) => {
           </div>
         </div>
 
-        {/* Porto-style button footer */}
+        {/* button footer */}
         <div style={{
           display: "flex",
           minHeight: "48px",
@@ -312,7 +268,7 @@ const LoginModal = forwardRef((props, ref) => {
             flexDirection: "column",
             gap: "8px",
           }}>
-            {/* Primary button - Continue with Passkeys */}
+            {/* Primary button - Connect wallet */}
             <button
               style={{
                 display: "inline-flex",
@@ -331,7 +287,7 @@ const LoginModal = forwardRef((props, ref) => {
                 margin: "0 16px",
                 whiteSpace: "nowrap",
               }}
-              onClick={handlePasskeyLogin}
+              onClick={handleConnectWallet}
               onMouseEnter={() => setIsButtonHovered(true)}
               onMouseLeave={() => {
                 setIsButtonHovered(false);
@@ -339,32 +295,6 @@ const LoginModal = forwardRef((props, ref) => {
               }}
               onMouseDown={() => setIsButtonActive(true)}
               onMouseUp={() => setIsButtonActive(false)}
-            >
-              <div style={{ display: "flex", alignItems: "center", height: "100%", gap: "8px" }}>
-                <FaceIdIcon />
-                <span>Continue with Passkeys</span>
-              </div>
-            </button>
-
-            {/* Secondary button - Connect wallet */}
-            <button
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                height: "38px",
-                backgroundColor: "transparent",
-                border: "var(--border-thin)",
-                color: "var(--text-primary)",
-                borderRadius: "8px",
-                fontSize: "15px",
-                fontWeight: "normal",
-                cursor: "pointer",
-                transition: "background-color 0.15s ease",
-                margin: "0 16px",
-                whiteSpace: "nowrap",
-              }}
-              onClick={handleConnectWallet}
             >
               <div style={{ display: "flex", alignItems: "center", height: "100%", gap: "8px" }}>
                 <WalletIcon />

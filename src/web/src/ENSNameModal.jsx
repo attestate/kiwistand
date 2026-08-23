@@ -355,7 +355,7 @@ const ENSNameModal = forwardRef((props, ref) => {
       style={customStyles}
       closeTimeoutMS={0}
     >
-      {/* Porto-style header */}
+      {/* header */}
       <div style={{
         display: "flex",
         alignItems: "center",
@@ -452,8 +452,8 @@ const ENSNameModal = forwardRef((props, ref) => {
                 width: "32px",
                 height: "32px",
                 borderRadius: "50%",
-                backgroundColor: "var(--color-porto-bg)",
-                color: "var(--color-porto-blue)",
+                backgroundColor: "var(--color-badge-bg)",
+                color: "var(--color-badge-icon)",
               }}>
                 <SparkleIcon />
               </div>

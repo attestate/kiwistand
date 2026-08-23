@@ -77,9 +77,9 @@
      --color-alert: red;
      --color-notification: #3DC617;
 
-     /* Porto/integration colors */
-     --color-porto-bg: #E3F2FD;
-     --color-porto-blue: #0588f0;
+     /* Badge/integration colors */
+     --color-badge-bg: #E3F2FD;
+     --color-badge-icon: #0588f0;
      --color-farcaster-purple: #472a91;
      --color-farcaster-light: #7c65c1;
      --color-bluesky: #0085ff;
@@ -172,9 +172,9 @@
      --color-alert: #ff6b6b;
      --color-notification: #5EE432;
 
-     /* Porto/integration colors */
-     --color-porto-bg: #1a2332;
-     --color-porto-blue: #4dabf7;
+     /* Badge/integration colors */
+     --color-badge-bg: #1a2332;
+     --color-badge-icon: #4dabf7;
      --color-farcaster-purple: #9580d4;
      --color-farcaster-light: #b8a8e8;
      --color-bluesky: #4db8ff;
@@ -273,9 +273,9 @@
      --color-alert: #d08080;
      --color-notification: #7c9885;
 
-     /* Porto/integration colors - Muted variants */
-     --color-porto-bg: rgba(143, 170, 184, 0.1);
-     --color-porto-blue: #8faab8;
+     /* Badge/integration colors - Muted variants */
+     --color-badge-bg: rgba(143, 170, 184, 0.1);
+     --color-badge-icon: #8faab8;
      --color-farcaster-purple: #9d91a8;
      --color-farcaster-light: #a89db3;
      --color-bluesky: #8faab8;

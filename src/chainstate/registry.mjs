@@ -60,7 +60,7 @@ export async function refreshDelegations() {
   // 2. Delegator3 (0x418910fef46896eb0bfe38f656e2f7df3eca7198):
   //    - New contract deployed at block 140309527
   //    - Emits: Delegate(bytes32[3] data, address sender)
-  //    - Sender is emitted directly in event (supports EIP-7702 & Porto wallets)
+  //    - Sender is emitted directly in event (supports EIP-7702 & smart accounts)
   //
   // HISTORICAL CONTEXT:
   // - Initially attempted to re-crawl all Delegator2 logs with complex recovery

@@ -1,12 +1,10 @@
 import {
   useSimulateContract,
   useWriteContract,
-  useSendCalls,
   useAccount,
   useChainId,
   useSwitchChain,
 } from "wagmi";
-import { encodeFunctionData } from "viem";
 import posthog from "posthog-js";
 import React, { useMemo, useEffect, useState } from "react";
 import { Wallet } from "@ethersproject/wallet";
@@ -91,7 +89,7 @@ const ConnectionDialogue = (props) => {
   const { pathname } = window.location;
   return (
     <div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
-      {/* Porto-style title section */}
+      {/* title section */}
       <div style={{ display: "flex", flexDirection: "column", padding: "12px 12px 8px" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: "12px", paddingBottom: "4px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -102,8 +100,8 @@ const ConnectionDialogue = (props) => {
               width: "32px",
               height: "32px",
               borderRadius: "50%",
-              backgroundColor: "var(--color-porto-bg)",
-              color: "var(--color-porto-blue)",
+              backgroundColor: "var(--color-badge-bg)",
+              color: "var(--color-badge-icon)",
             }}>
               <SparkleIcon />
             </div>
@@ -114,7 +112,7 @@ const ConnectionDialogue = (props) => {
         </div>
       </div>
 
-      {/* Porto-style content section */}
+      {/* content section */}
       <div style={{ flexGrow: 1, padding: "0 12px 12px" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
           <div style={{ fontSize: "15px", color: "var(--text-primary)", lineHeight: "22px" }}>
@@ -150,7 +148,7 @@ const DelegateButton = (props) => {
   const { switchChain } = useSwitchChain();
   const [keyName, setKeyName] = useState(null);
 
-  // Porto-style wrapper
+  // Modal wrapper
   const wrapperStyle = {
     backgroundColor: "transparent",
     maxWidth: "100%",
@@ -205,8 +203,6 @@ const DelegateButton = (props) => {
     if (from.address) generate();
   }, [from.address]);
 
-  const isPorto = from.connector?.id === 'xyz.ithaca.porto';
-
   const prepArgs = {
     address,
     abi,
@@ -224,17 +220,9 @@ const DelegateButton = (props) => {
     isSuccess: isWriteContractSuccess,
   } = useWriteContract();
 
-  const {
-    data: sendCallsData,
-    sendCalls,
-    isPending: isSendCallsLoading,
-    isSuccess: isSendCallsSuccess,
-  } = useSendCalls();
-
-  const isLoading = isPorto ? isSendCallsLoading : isWriteLoading;
-  const data = isPorto ? sendCallsData : writeData;
-  const isWriteSuccess = isPorto ? isSendCallsSuccess : isWriteContractSuccess;
-  const isSuccess = isWriteSuccess && data;
+  const isLoading = isWriteLoading;
+  const data = writeData;
+  const isSuccess = isWriteContractSuccess && data;
   if (isSuccess) {
     setKey(getNewKey().privateKey);
   }
@@ -310,7 +298,7 @@ const DelegateButton = (props) => {
 
       return (
         <div style={wrapperStyle}>
-          {/* Porto-style success/loading state */}
+          {/* success/loading state */}
           <div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
             <div style={{ display: "flex", flexDirection: "column", padding: "12px 12px 8px" }}>
               <div style={{ display: "flex", flexDirection: "column", gap: "12px", paddingBottom: "4px" }}>
@@ -322,8 +310,8 @@ const DelegateButton = (props) => {
                     width: "32px",
                     height: "32px",
                     borderRadius: "50%",
-                    backgroundColor: "var(--color-porto-bg)",
-                    color: "var(--color-porto-blue)",
+                    backgroundColor: "var(--color-badge-bg)",
+                    color: "var(--color-badge-icon)",
                   }}>
                     <SparkleIcon />
                   </div>
@@ -359,49 +347,13 @@ const DelegateButton = (props) => {
         </div>
       );
   }
-  const FaceIdIcon = () => (
-    <svg width="1.2em" height="1.2em" viewBox="0 0 21 22" fill="none" xmlns="http://www.w3.org/2000/svg" className="size-5.25">
-      <path d="M6.125 3.125H4.375C3.4085 3.125 2.625 3.9085 2.625 4.875V6.625" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"></path>
-      <path d="M14.875 3.125H16.625C17.5915 3.125 18.375 3.9085 18.375 4.875V6.625" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"></path>
-      <path d="M14 7.5V9.25" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"></path>
-      <path d="M7 7.5V9.25" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"></path>
-      <path d="M7.875 14.5C7.875 14.5 8.75 15.375 10.5 15.375C12.25 15.375 13.125 14.5 13.125 14.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"></path>
-      <path d="M10.5 7.5V11.875H9.625" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"></path>
-      <path d="M6.125 18.875H4.375C3.4085 18.875 2.625 18.0915 2.625 17.125V15.375" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"></path>
-      <path d="M14.875 18.875H16.625C17.5915 18.875 18.375 18.0915 18.375 17.125V15.375" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"></path>
-    </svg>
-  );
-
   let content;
   let activity;
   let handler;
   if (chainId === 10) {
-    content = isLoading ? (
-      "Please sign in wallet"
-    ) : (
-      <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-        <FaceIdIcon />
-        Enable
-      </span>
-    );
-    if (isPorto) {
-      activity = !payload || isLoading || isSuccess;
-      handler = () => {
-        if (!payload) return;
-        const calldata = encodeFunctionData({
-          abi,
-          functionName: "etch",
-          args: [payload],
-        });
-        sendCalls({
-          calls: [{ to: address, data: calldata }],
-          chainId: optimism.id,
-        });
-      };
-    } else {
-      activity = !writeContract || (!writeContract && !isError) || isLoading || isSuccess;
-      handler = () => config && writeContract(config.request);
-    }
+    content = isLoading ? "Please sign in wallet" : <span>Enable</span>;
+    activity = !writeContract || (!writeContract && !isError) || isLoading || isSuccess;
+    handler = () => config && writeContract(config.request);
   } else {
     content = <span>Switch to Optimism</span>;
     activity = false;
@@ -417,7 +369,7 @@ const DelegateButton = (props) => {
       <ConnectionDialogue account={from} />
       {isPersistent ? (
         <>
-          {/* Porto-style button footer */}
+          {/* button footer */}
           <div style={{
             display: "flex",
             minHeight: "48px",
