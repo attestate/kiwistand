@@ -14,7 +14,7 @@ import {
   isBefore,
   format,
 } from "date-fns";
-import linkifyStr from "linkify-string";
+import linkifyHtml from "linkify-html";
 import DOMPurify from "isomorphic-dompurify";
 
 import * as curation from "./curation.mjs";
@@ -42,6 +42,44 @@ import ShareIcon from "./components/shareicon.mjs";
 import { warpcastSvg } from "./components/socialNetworkIcons.mjs";
 
 const html = htm.bind(vhtml);
+
+const isInternalLink = (href) =>
+  href.startsWith("https://news.kiwistand.com") ||
+  href.startsWith("https://staging.kiwistand.com");
+
+// Never build the anchors by hand here. DOMPurify serializes text nodes, so it
+// leaves quotes unencoded, and a URL like `https://x"onmouseover="alert(1)`
+// interpolated into href="" injects attributes. linkify-html escapes them.
+function linkifyComment(title) {
+  const body = title
+    .split("\n")
+    .map((line) => {
+      if (line.startsWith(">")) {
+        return `<div style="border-left: 3px solid var(--text-quaternary); padding-left: 10px; margin: 8px 0 0 0; color: var(--text-tertiary);">${DOMPurify.sanitize(
+          line.substring(2),
+        )}</div>`;
+      }
+      return line.trim() ? `<div>${DOMPurify.sanitize(line)}</div>` : "<br/>";
+    })
+    .join("");
+
+  return linkifyHtml(body, {
+    className: "meta-link selectable-link",
+    target: (href) => (isInternalLink(href) ? "_self" : "_blank"),
+    attributes: (href) => ({
+      "data-url": href,
+      onclick: isInternalLink(href)
+        ? ""
+        : `if (window.ReactNativeWebView || window !== window.parent) { event.preventDefault(); window.sdk.actions.openUrl(this.dataset.url); }`,
+    }),
+    // Keep the old regex's scope: explicit http(s) only, no bare domains and
+    // no mailto: harvesting of addresses typed into comments.
+    validate: {
+      url: (value) => /^https?:\/\//.test(value),
+      email: () => false,
+    },
+  });
+}
 
 export async function generateStory(index) {
   const hexRegex = /^0x[a-fA-F0-9]{72}$/;
@@ -591,36 +629,9 @@ export default async function (trie, theme, index, value, referral, commentIndex
                                     : html`<span
                                           class="comment-text"
                                           dangerouslySetInnerHTML=${{
-                                            __html: comment.title
-                                              .split("\n")
-                                              .map((line) => {
-                                                if (line.startsWith(">")) {
-                                                  return `<div style="border-left: 3px solid var(--text-quaternary); padding-left: 10px; margin: 8px 0 0 0; color: var(--text-tertiary);">${DOMPurify.sanitize(
-                                                    line.substring(2),
-                                                  )}</div>`;
-                                                }
-                                                return line.trim()
-                                                  ? `<div>${DOMPurify.sanitize(
-                                                      line,
-                                                    )}</div>`
-                                                  : "<br/>";
-                                              })
-                                              .join("")
-                                              .replace(
-                                                /(https?:\/\/[^\s<]+)/g,
-                                                (url) => {
-                                                  const sanitizedUrl = DOMPurify.sanitize(url);
-                                                  const isInternal = sanitizedUrl.startsWith("https://news.kiwistand.com") || 
-                                                                    sanitizedUrl.startsWith("https://staging.kiwistand.com");
-                                                  return `<a class="meta-link selectable-link" href="${sanitizedUrl}" target="${
-                                                    isInternal ? "_self" : "_blank"
-                                                  }" data-url="${sanitizedUrl}" onclick="${
-                                                    !isInternal
-                                                      ? `if (window.ReactNativeWebView || window !== window.parent) { event.preventDefault(); window.sdk.actions.openUrl(this.dataset.url); }`
-                                                      : ""
-                                                  }">${sanitizedUrl}</a>`;
-                                                }
-                                              ),
+                                            __html: linkifyComment(
+                                              comment.title,
+                                            ),
                                           }}
                                         ></span>
                                         <div
