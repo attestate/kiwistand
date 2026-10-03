@@ -165,7 +165,8 @@
       "USER_AGENT": "KiwiNewsBot/1.0 (https://news.kiwistand.com)"
     },
     "nodeArguments": [
-      "--no-warnings"
+      "--no-warnings",
+      "--no-experimental-require-module"
     ],
     "require": [
       "dotenv/config",
