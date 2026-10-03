@@ -79,6 +79,7 @@ import {
   countImpressions,
   storeMiniAppUpvote,
   listNewest,
+  countComments,
 } from "./cache.mjs";
 import normalizeUrl from "normalize-url";
 import * as interactions from "./interactions.mjs";
@@ -1357,7 +1358,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
       }
 
       try {
-        stories = await bestAPI.getStories(page, period, request.query.domain);
+        stories = await bestAPI.getStories(page, period, request.query.domain || "");
       } catch (err) {
         log(`error in /api/v1/feeds/best: ${err.stack}`);
       }
@@ -1369,6 +1370,12 @@ export async function launch(trie, libp2p, isPrimary = true) {
       reply.header("Cache-Control", "public, max-age=0, must-revalidate");
       return sendError(reply, code, httpMessage, details);
     }
+
+    // NOTE: Same count the website's story rows show (row.mjs).
+    stories = stories.map((story) => ({
+      ...story,
+      commentCount: countComments(`kiwi:0x${story.index}`),
+    }));
 
     // Add optional limit parameter to control response size
     let limit = parseInt(request.query.limit);
