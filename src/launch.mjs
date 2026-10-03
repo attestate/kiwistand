@@ -33,12 +33,16 @@ import { generateSitemaps } from "./sitemap.mjs";
 
 // Monitor event loop blocking - grep logs for "Event loop blocked" to find offenders
 // Using 200ms threshold to reduce noise; 50ms fires too often during normal I/O
-blockedAt(
-  (time, stack) => {
-    log(`Event loop blocked for ${time}ms. Stack:\n${stack.join("\n")}`);
-  },
-  { threshold: 200 },
-);
+// Opt-in via BLOCKED_AT=true: it captures a stack trace for every async
+// resource, which cost ~190ms of CPU per hot-feed request in production.
+if (env.BLOCKED_AT === "true") {
+  blockedAt(
+    (time, stack) => {
+      log(`Event loop blocked for ${time}ms. Stack:\n${stack.join("\n")}`);
+    },
+    { threshold: 200 },
+  );
+}
 
 const reconcileMode = env.NODE_ENV === "reconcile";
 const productionMode = env.NODE_ENV === "production";

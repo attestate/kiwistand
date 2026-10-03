@@ -34,6 +34,7 @@ test("that repo contains a .env-copy file with all possible configuration option
     "PORT",
     "IS_BOOTSTRAP_NODE",
     "USE_EPHEMERAL_ID",
+    "BLOCKED_AT",
     "IPV4",
     "HTTP_MESSAGES_MAX_PAGE_SIZE",
     "DATA_DIR",
