@@ -48,6 +48,12 @@ voice). Each round updates this file.
       in chat). One-time login on the server with phone number and code.
 - [ ] Decide: submit under your name, or a separate scout account.
 
+### P2P sync (#184)
+- [ ] Review and merge #184 (after #183).
+- [ ] Decide how nodes should treat the 2 upvotes the duplicate check rejects
+      during sync (roots never match otherwise): keep them in the trie but
+      out of counts, or compare leaf sets instead of roots. See #184.
+
 ### iOS app / App Store
 - [ ] Demo wallet for the reviewer (seed only in App Store Connect notes).
 - [ ] Google Form for reports and deletion requests (prefilled link with
