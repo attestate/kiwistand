@@ -408,6 +408,15 @@ async function atomicPut(trie, message, identity, delegations) {
           `https://news.kiwistand.com/api/v1/stories?index=${commentIndex}`,
         ).catch((err) => log(`Failed to purge Cloudflare cache: ${err}`));
 
+        // NOTE: A reader can refetch between the purge above and the moment
+        // every HTTP worker has the comment, and that response would be
+        // cached for a day. Purging again a bit later drops such a copy.
+        setTimeout(() => {
+          purgeCache(
+            `https://news.kiwistand.com/api/v1/stories?index=${commentIndex}`,
+          ).catch((err) => log(`Failed to purge Cloudflare cache: ${err}`));
+        }, 10000);
+
         // Purge context endpoint so LLM prompts include new comments
         purgeCache(
           `https://news.kiwistand.com/stories/context?index=${commentIndex}`,
