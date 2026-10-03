@@ -1,7 +1,9 @@
 name: Deploy
 
 # Tests every push to main and, if they pass, does what `npm run deploy`
-# does by hand: build the web bundle, rsync to the server, then restart.
+# does by hand: build the web bundle and rsync it to the server. If the
+# DEPLOY_RESTART_CMD variable is set, it then runs that on the server
+# (e.g. `cd kiwistand && npm ci --omit=dev && pm2 restart all`).
 #
 # Needs these repository secrets:
 #   DEPLOY_SSH_KEY      private key whose public key is in the server's
@@ -10,6 +12,7 @@ name: Deploy
 # and these repository variables:
 #   DEPLOY_ENABLED      "true" turns deploys on (until then only tests run)
 #   DEPLOY_RESTART_CMD  optional: what runs on the server after the rsync
+#                       (unset: nothing, like `npm run deploy`)
 
 on:
   push:
@@ -62,7 +65,7 @@ jobs:
             --exclude=anonlocal --exclude=cache --exclude=docs --exclude=anon \
             --exclude=node_modules --exclude=.git --exclude=bootstrap --exclude=data
 
-      - name: Install and restart on server
+      - name: Restart on server
+        if: vars.DEPLOY_RESTART_CMD != ''
         run: |
-          ssh -i ~/.ssh/id_deploy root@91.107.210.214 \
-            "${{ vars.DEPLOY_RESTART_CMD || 'cd kiwistand && npm ci && pm2 restart all' }}"
+          ssh -i ~/.ssh/id_deploy root@91.107.210.214 "${{ vars.DEPLOY_RESTART_CMD }}"
