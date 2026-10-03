@@ -17,6 +17,7 @@ User-agent: CCBot
 Allow: /llms.txt
 Allow: /stories/context
 Allow: /feed.xml
+Allow: /new.xml
 Disallow: /outbound
 Disallow: /redirect/
 Disallow: /best?*domain=

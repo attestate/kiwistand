@@ -74,6 +74,7 @@ const footer = (theme, path) => html`
         <strong>Resources</strong><br />
         <a href="/privacy-policy">Privacy Policy</a><br />
         <a href="/shortcut">iOS Shortcut</a><br />
+        RSS: <a href="/feed.xml">Hot</a> · <a href="/new.xml">New</a><br />
       </div>
       <div>
         <strong>Community</strong><br />

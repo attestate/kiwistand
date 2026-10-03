@@ -45,10 +45,10 @@ function describe(story) {
   return parts.join("\n\n");
 }
 
-// Renders stories (as returned by feed.mjs' index(), i.e. the data behind
-// /api/v1/feeds/hot) as an RSS 2.0 feed. Each item links to the Kiwi story
-// page (discussion), the original article is in the description.
-export function hotFeed(stories, now = new Date()) {
+// Renders stories (as returned by feed.mjs' index() or new.mjs'
+// getStories()) as an RSS 2.0 feed. Each item links to the Kiwi story page
+// (discussion), the original article is in the description.
+function renderFeed(stories, channel, now) {
   const items = stories
     .filter((story) => story && story.index && story.title)
     .map((story) => {
@@ -75,11 +75,11 @@ export function hotFeed(stories, now = new Date()) {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:dc="http://purl.org/dc/elements/1.1/">
   <channel>
-    <title>Kiwi News</title>
-    <link>${BASE_URL}/</link>
-    <description>Handpicked crypto news for builders, curated by the Kiwi community. Trending stories from the front page.</description>
+    <title>${channel.title}</title>
+    <link>${BASE_URL}${channel.page}</link>
+    <description>${channel.description}</description>
     <language>en</language>
-    <atom:link href="${BASE_URL}/feed.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="${BASE_URL}${channel.path}" rel="self" type="application/rss+xml" />
     <lastBuildDate>${now.toUTCString()}</lastBuildDate>
     <ttl>10</ttl>
     <image>
@@ -91,4 +91,34 @@ ${items.join("\n")}
   </channel>
 </rss>
 `;
+}
+
+// The front page's trending stories (/api/v1/feeds/hot).
+export function hotFeed(stories, now = new Date()) {
+  return renderFeed(
+    stories,
+    {
+      title: "Kiwi News",
+      page: "/",
+      path: "/feed.xml",
+      description:
+        "Handpicked crypto news for builders, curated by the Kiwi community. Trending stories from the front page.",
+    },
+    now,
+  );
+}
+
+// Every new submission, newest first (/api/v1/feeds/new).
+export function newFeed(stories, now = new Date()) {
+  return renderFeed(
+    stories,
+    {
+      title: "Kiwi News: New",
+      page: "/new",
+      path: "/new.xml",
+      description:
+        "Every new submission to Kiwi News, the crypto link aggregator curated by its community, newest first.",
+    },
+    now,
+  );
 }

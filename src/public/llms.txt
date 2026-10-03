@@ -21,6 +21,7 @@ Story pages live at `https://news.kiwistand.com/stories/<slug>?index=0x<index>`.
 - [Hot feed JSON](https://news.kiwistand.com/api/v1/feeds/hot): trending stories, `?page=0` paginates
 - [Hot feed RSS](https://news.kiwistand.com/feed.xml): the same trending stories as RSS 2.0; items link to the Kiwi story page, the description holds the original link
 - [New feed JSON](https://news.kiwistand.com/api/v1/feeds/new): newest stories
+- [New feed RSS](https://news.kiwistand.com/new.xml): the same newest stories as RSS 2.0
 - [Best feed JSON](https://news.kiwistand.com/api/v1/feeds/best?period=week): top stories for a period
 - [Story JSON](https://news.kiwistand.com/api/v1/stories?index=0x...): one story including its comments
 - [Profile JSON](https://news.kiwistand.com/api/v1/profile/0x...): ENS name, avatar and social links of an address
