@@ -1,5 +1,23 @@
+# Kiwi News welcomes search engines and AI crawlers on public content.
+# Agents: start with https://news.kiwistand.com/llms.txt
 User-agent: *
+User-agent: Googlebot
+User-agent: Bingbot
+User-agent: Google-Extended
+User-agent: GPTBot
+User-agent: OAI-SearchBot
+User-agent: ChatGPT-User
+User-agent: ClaudeBot
+User-agent: Claude-SearchBot
+User-agent: Claude-User
+User-agent: PerplexityBot
+User-agent: Perplexity-User
+User-agent: Applebot-Extended
+User-agent: CCBot
+Allow: /llms.txt
+Allow: /stories/context
 Disallow: /outbound
+Disallow: /redirect/
 Disallow: /best?*domain=
 Disallow: /?*domain=
 Disallow: /*.eth

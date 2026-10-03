@@ -901,10 +901,35 @@ export default async function (trie, theme, page, domain, identity, hash, varian
   const description = "The best crypto links, curated by the Kiwi community. Web3, Ethereum, DeFi and more.";
   const twitterCard = undefined;
   const prefetch = ["/new?cached=true", "/submit", "/best"];
+  const jsonLd = JSON.stringify([
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      name: "Kiwi News",
+      url: "https://news.kiwistand.com/",
+      potentialAction: {
+        "@type": "SearchAction",
+        target: "https://news.kiwistand.com/search?q={search_term_string}",
+        "query-input": "required name=search_term_string",
+      },
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      name: "Kiwi News",
+      url: "https://news.kiwistand.com/",
+      logo: "https://news.kiwistand.com/pwa_icon.png",
+      sameAs: [
+        "https://x.com/KiwiNewsHQ",
+        "https://github.com/attestate/kiwistand",
+      ],
+    },
+  ]);
   return "<!DOCTYPE html>" + html`
     <html lang="en" op="news">
       <head>
         ${custom(ogImage, title, description, twitterCard, prefetch, "https://news.kiwistand.com/", null, variant)}
+        <script type="application/ld+json" dangerouslySetInnerHTML=${{ __html: jsonLd }}></script>
       </head>
       <body
         data-instant-allow-query-string

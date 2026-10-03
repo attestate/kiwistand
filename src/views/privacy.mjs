@@ -8,7 +8,7 @@ import vhtml from "vhtml";
 import Header from "./components/header.mjs";
 import Sidebar from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
-import Head from "./components/head.mjs";
+import { custom } from "./components/head.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -16,7 +16,14 @@ export default async function (theme) {
   return "<!DOCTYPE html>" + html`
     <html lang="en" op="news">
       <head>
-        ${Head}
+        ${custom(
+          undefined,
+          "Privacy Policy | Kiwi News",
+          "How Kiwi News collects, uses and protects your data.",
+          undefined,
+          [],
+          "https://news.kiwistand.com/privacy-policy",
+        )}
       </head>
       <body>
         <div class="container">

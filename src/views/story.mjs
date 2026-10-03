@@ -408,9 +408,13 @@ export default async function (trie, theme, index, value, referral, commentIndex
       frameImage = `${baseUrl}/previews/${index}-frame.jpg`;
     }
     
-    ogDescription = data && data.ogDescription
-      ? data.ogDescription
-      : "Crypto news for builders";
+    const source = value.href.startsWith("http")
+      ? ` (${extractDomain(value.href)})`
+      : "";
+    const fallback = textContent
+      ? textContent.slice(0, 160)
+      : `${value.title}${source}, discussed on Kiwi News.`;
+    ogDescription = data && data.ogDescription ? data.ogDescription : fallback;
     ogTitle = value.title;
   }
   
@@ -430,10 +434,12 @@ export default async function (trie, theme, index, value, referral, commentIndex
       "@type": "Person",
       "name": story.submitter.displayName,
     },
-    "sharedContent": {
-      "@type": "WebPage",
-      "url": value.href,
-    },
+    ...(value.href.startsWith("http") ? {
+      "sharedContent": {
+        "@type": "WebPage",
+        "url": value.href,
+      },
+    } : {}),
     "commentCount": story.comments.length,
     "interactionStatistic": {
       "@type": "InteractionCounter",
@@ -444,6 +450,7 @@ export default async function (trie, theme, index, value, referral, commentIndex
       "comment": story.comments.slice(0, 5).map((c) => ({
         "@type": "Comment",
         "text": c.title,
+        "dateCreated": new Date(c.timestamp * 1000).toISOString(),
         "author": {
           "@type": "Person",
           "name": c.displayName,
@@ -466,7 +473,16 @@ export default async function (trie, theme, index, value, referral, commentIndex
           canonicalUrl,
           frameImage,
         )}
+        ${commentIndex
+          ? html`<meta name="robots" content="noindex, follow" />`
+          : null}
         <script type="application/ld+json" dangerouslySetInnerHTML=${{ __html: jsonLd }}></script>
+        <link
+          rel="alternate"
+          type="text/plain"
+          title="LLM-friendly story context"
+          href="${baseUrl}/stories/context?index=0x${index}"
+        />
       </head>
       <body
         data-instant-allow-query-string

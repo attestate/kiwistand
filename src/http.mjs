@@ -241,6 +241,24 @@ app.use((req, res, next) => {
   next();
 });
 
+// NOTE: Personal, search and machine-only pages shouldn't end up in search
+// indexes. We use a header (not robots.txt) so crawlers can still see it.
+const noindexPaths = new Set([
+  "/activity",
+  "/notifications",
+  "/search",
+  "/submit",
+  "/stories/context",
+  "/debug",
+  "/comment-debug",
+]);
+app.use((req, res, next) => {
+  if (noindexPaths.has(req.path) || req.path.startsWith("/api/")) {
+    res.setHeader("X-Robots-Tag", "noindex");
+  }
+  next();
+});
+
 app.use(
   morgan(
     ':remote-addr - :remote-user ":method :url" :status ":referrer" ":user-agent"',
