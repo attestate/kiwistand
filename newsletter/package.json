@@ -13,20 +13,27 @@
     "eml:digest": "node scripts/make-eml.mjs out/Digest.html out/Digest.eml 'Kiwi Digest (Preview)'",
     "eml:tweet": "node scripts/make-eml.mjs out/Tweet.html out/Tweet.eml 'Kiwi Tweet (Preview)'",
     "eml:farcaster": "node scripts/make-eml.mjs out/Farcaster.html out/Farcaster.eml 'Kiwi Farcaster (Preview)'",
-    "eml:row": "node scripts/make-eml.mjs out/Row.html out/Row.eml 'Kiwi Row (Preview)'"
+    "eml:row": "node scripts/make-eml.mjs out/Row.html out/Row.eml 'Kiwi Row (Preview)'",
+    "export:sample": "DIGEST_DATA=fixtures/digest.json email export",
+    "check": "node scripts/validate.mjs",
+    "screenshots": "node scripts/screenshots.mjs"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "@react-email/preview-server": "4.2.8",
+    "doiuse-email": "^0.4.1",
+    "html-validate": "^11.16.1",
+    "playwright": "^1.56.1",
     "react-email": "4.2.8"
   },
   "dependencies": {
     "@react-email/components": "0.5.1",
+    "dotenv": "^16.0.3",
     "react": "19.1.1",
     "react-dom": "19.1.1",
-    "string-strip-html": "^13.4.5",
-    "slugify": "^1.6.6"
+    "slugify": "^1.6.6",
+    "string-strip-html": "^13.4.5"
   }
 }

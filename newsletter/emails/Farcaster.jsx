@@ -81,9 +81,9 @@ export default function FarcasterEmail({ story = { metadata: { farcasterCast: { 
   // Return just the content for Digest, not a full HTML document
   return (
     <>
-      <Section style={container} bgcolor="#f6f6ef">
-        <Section style={{...farcasterEmbedContainer, backgroundColor: '#ffffff', borderBottom: '1px solid #e6e6df' }} bgcolor="#ffffff">
-          <Link href={story.storyLink} style={{...previewContainer, color: '#000000 !important', textDecoration: 'none'}}>
+      <Section style={container} className="k-card" bgcolor="#f6f6ef">
+        <Section style={{...farcasterEmbedContainer, backgroundColor: '#ffffff', borderBottom: '1px solid #e6e6df' }} className="k-embed" bgcolor="#ffffff">
+          <Link href={story.storyLink} className="k-link" style={{...previewContainer, color: '#000000', textDecoration: 'none'}}>
               <Row>
                 <Column width="30">
                   <Img
@@ -95,7 +95,7 @@ export default function FarcasterEmail({ story = { metadata: { farcasterCast: { 
                   />
                 </Column>
                 <Column>
-                  <Text style={{ fontWeight: 600, color: '#12212b', fontSize: '14px' }}>
+                  <Text className="k-text" style={{ fontWeight: 600, color: '#12212b', fontSize: '14px' }}>
                     @{metadata.farcasterCast.author.username || "farcaster"}
                   </Text>
                 </Column>
@@ -116,11 +116,11 @@ export default function FarcasterEmail({ story = { metadata: { farcasterCast: { 
           </Link>
         </Section>
 
-        <Section style={{ padding: '12px 20px 10px 12px', backgroundColor: '#f6f6ef' }} bgcolor="#f6f6ef">
-           <Text style={{ fontSize: '9pt', marginTop: '3px', marginBottom: '0', lineHeight: '1.4', color: '#666' }}>
-            submitted by <Link href={submitterProfileLink} style={{ fontWeight: 600, color: '#000000 !important', textDecoration: 'none' }}>{displayName}</Link>
+        <Section style={{ padding: '12px 20px 10px 12px', backgroundColor: '#f6f6ef' }} className="k-card" bgcolor="#f6f6ef">
+           <Text className="k-muted" style={{ fontSize: '9pt', marginTop: '3px', marginBottom: '0', lineHeight: '1.4', color: '#666' }}>
+            submitted by <Link href={submitterProfileLink} className="k-link" style={{ fontWeight: 600, color: '#000000', textDecoration: 'none' }}>{displayName}</Link>
             {' • '}
-            <Link href={story.storyLink} style={{ color: '#000000 !important', textDecoration: 'none' }}>{extractedDomain}</Link>
+            <Link href={story.storyLink} className="k-link" style={{ color: '#000000', textDecoration: 'none' }}>{extractedDomain}</Link>
             {story.upvotes ? ` • ${story.upvotes} upvotes` : ''}
             {story.comments ? ` • ${story.comments} comments` : ''}
             {story.clicks ? ` • ${story.clicks} clicks` : ''}
@@ -128,7 +128,7 @@ export default function FarcasterEmail({ story = { metadata: { farcasterCast: { 
         </Section>
       </Section>
       <Section style={{ padding: '12px 0' }}>
-        <Link href={story.storyLink} style={buttonStyle}>Read the story</Link>
+        <Link href={story.storyLink} className="k-button" style={buttonStyle}>Read on Kiwi</Link>
       </Section>
     </>
   );
@@ -163,7 +163,7 @@ const farcasterEmbedContainer = {
 
 const buttonStyle = {
   backgroundColor: '#000000',
-  color: '#ffffff !important',
+  color: '#ffffff',
   padding: '10px 20px',
   borderRadius: '0',
   textDecoration: 'none',

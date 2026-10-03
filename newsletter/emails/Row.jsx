@@ -124,7 +124,14 @@ export default function RowEmail({ story = {} }) {
   const submitterProfileLink =
     story.submitterLink || `https://news.kiwistand.com/upvotes?address=${identity}`;
 
-  const extractedDomain = extractDomain(href);
+  const isTextPost = typeof href === "string" && href.startsWith("data:");
+  let textPost = "";
+  if (isTextPost) {
+    try {
+      textPost = decodeURIComponent(href.replace(/^data:text\/plain,/, ""));
+    } catch {}
+  }
+  const extractedDomain = isTextPost ? "" : extractDomain(href);
   const isTweet = extractedDomain.includes("twitter.com") || extractedDomain.includes("x.com");
   const isFarcasterCast = extractedDomain.includes("warpcast.com") || extractedDomain.includes("farcaster.xyz");
 
@@ -144,12 +151,12 @@ export default function RowEmail({ story = {} }) {
   // Return just the content for Digest, not a full HTML document  
   return (
     <>
-      <Section style={container} bgcolor="#f6f6ef">
+      <Section style={container} className="k-card" bgcolor="#f6f6ef">
         {displayImage ? (
           <Link href={story.storyLink}>
             <Img
               src={metadata.image}
-              alt="Story image"
+              alt=""
               width="100%"
               style={{ aspectRatio: '2 / 1', objectFit: 'cover' }}
             />
@@ -157,7 +164,7 @@ export default function RowEmail({ story = {} }) {
         ) : null}
 
         <Section style={{ padding: '12px 12px 12px 12px' }}>
-          <Link href={story.storyLink} style={{ lineHeight: '15pt', fontSize: '13pt', color: '#000000 !important', textDecoration: 'none' }}>
+          <Link href={story.storyLink} className="k-link" style={{ lineHeight: '15pt', fontSize: '13pt', color: '#000000', textDecoration: 'none' }}>
             {truncateLongWords(
               (metadata?.isXArticle && metadata?.ogTitle)
                 ? metadata.ogTitle
@@ -165,18 +172,28 @@ export default function RowEmail({ story = {} }) {
             )}
           </Link>
 
-          <Text style={{ fontSize: '9pt', marginTop: '3px', marginBottom: '0', lineHeight: '1.4', color: '#666' }}>
-            submitted by <Link href={submitterProfileLink} style={{ fontWeight: 600, color: '#000000 !important', textDecoration: 'none' }}>{displayName}</Link>
-            {' • '}
-            <Link href={story.storyLink} style={{ color: '#000000 !important', textDecoration: 'none' }}>{extractedDomain}</Link>
-            {upvotes ? ` • ${upvotes} upvotes` : ''}
-            {comments ? ` • ${comments} comments` : ''}
-            {clicks ? ` • ${clicks} clicks` : ''}
+          {textPost ? (
+            <Text className="k-text" style={{ fontSize: '14px', lineHeight: '21px', margin: '6px 0 0 0', whiteSpace: 'pre-wrap' }}>
+              {truncateComment(textPost, 280)}
+            </Text>
+          ) : null}
+
+          <Text className="k-muted" style={{ fontSize: '9pt', marginTop: '3px', marginBottom: '0', lineHeight: '1.4', color: '#666' }}>
+            submitted by <Link href={submitterProfileLink} className="k-link" style={{ fontWeight: 600, color: '#000000', textDecoration: 'none' }}>{displayName}</Link>
+            {/* Text posts (data: links) have no domain. */}
+            {isTextPost ? ' • text post' : (
+              <>
+                {' • '}
+                <Link href={story.storyLink} className="k-link" style={{ color: '#000000', textDecoration: 'none' }}>{extractedDomain}</Link>
+              </>
+            )}
+            {upvotes ? ` • ${upvotes} upvote${upvotes === 1 ? '' : 's'}` : ''}
+            {comments ? ` • ${comments} comment${comments === 1 ? '' : 's'}` : ''}
           </Text>
         </Section>
       </Section>
       <Section style={{ padding: '12px 0' }}>
-        <Link href={story.storyLink} style={buttonStyle}>Read the story</Link>
+        <Link href={story.storyLink} className="k-button" style={buttonStyle}>Read on Kiwi</Link>
       </Section>
     </>
   );
@@ -220,7 +237,7 @@ const farcasterEmbedContainer = {
 
 const buttonStyle = {
   backgroundColor: '#000000',
-  color: '#ffffff !important',
+  color: '#ffffff',
   padding: '10px 20px',
   borderRadius: '0',
   textDecoration: 'none',
