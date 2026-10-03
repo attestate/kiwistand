@@ -24,7 +24,8 @@ export function withTimeout(promise, ms) {
 }
 
 // A preview is "good" when it renders as an embed (tweet, cast, Bluesky
-// post) or has an image that isn't a Cloudflare challenge page.
+// post, or an image post uploaded to Kiwi, which the site shows as the image
+// itself) or has an image that isn't a Cloudflare challenge page.
 export function score(href, data) {
   const host = hostOf(href);
   const isTweet = twitterFrontends.includes(host) || host === "firefly.social";
@@ -32,6 +33,7 @@ export function score(href, data) {
     data.farcasterCast ||
       data.blueskyPost ||
       data.isXArticle ||
+      host === "imagedelivery.net" ||
       (isTweet && data.ogDescription),
   );
   const title = Boolean(data.ogTitle) && !isGenericTitle(data.ogTitle, host);

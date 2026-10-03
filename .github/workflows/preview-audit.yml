@@ -12,6 +12,11 @@ on:
       - .github/workflows/preview-audit.yml
   workflow_dispatch:
 
+# A newer push makes the running audit moot.
+concurrency:
+  group: preview-audit-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   audit:
     runs-on: ubuntu-latest
