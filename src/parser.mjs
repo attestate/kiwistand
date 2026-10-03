@@ -1037,8 +1037,11 @@ const checkOgImage = async (url) => {
       const sizeInBytes = parseInt(contentLength, 10);
       const sizeInMB = sizeInBytes / (1024 * 1024);
 
-      // Reject images larger than 2MB
-      if (sizeInMB > 2) {
+      // Reject images larger than 5MB (Twitter's summary_large_image limit,
+      // like the dimension limits below). This used to be 2MB, which
+      // rejected the og:image of e.g. blog.ethereum.org, ethereum.org and
+      // dlnews.com (2-4MB) in the preview audit.
+      if (sizeInMB > 5) {
         log(`Rejecting oversized image (${sizeInMB.toFixed(1)}MB): ${url}`);
         return false;
       }
@@ -1334,24 +1337,33 @@ export const metadata = async (
     };
   }
 
+  // NOTE: og:image first, twitter:image as the fallback when og:image is
+  // missing or fails checkOgImage (e.g. a16zcrypto.com serves a resized
+  // og:image but the full-size original as twitter:image).
   let image;
+  let fallbackImage;
   if (result.ogImage && result.ogImage.length >= 1) {
     image = result.ogImage[0].url;
     log(`[metadata] Found ogImage: ${image}`);
   }
   if (result.twitterImage && result.twitterImage.length >= 1) {
-    image = result.twitterImage[0].url;
-    log(`[metadata] Found twitterImage: ${image}`);
+    const twitterImage = result.twitterImage[0].url;
+    log(`[metadata] Found twitterImage: ${twitterImage}`);
+    if (!image) image = twitterImage;
+    else if (twitterImage !== image) fallbackImage = twitterImage;
   }
   // NOTE: Some sites put a relative or protocol-relative path in og:image
   // ("/og.png", "//cdn.example.com/og.png"); resolve it against the page.
-  if (image && !/^https?:\/\//i.test(image)) {
+  const absolute = (candidate) => {
+    if (!candidate || /^https?:\/\//i.test(candidate)) return candidate;
     try {
-      image = new URL(image, url).href;
+      return new URL(candidate, url).href;
     } catch {
-      image = undefined;
+      return undefined;
     }
-  }
+  };
+  image = absolute(image);
+  fallbackImage = absolute(fallbackImage);
   log(`[metadata] Initial image value: ${image}`);
   // Detect if the target has video content (used to avoid rendering text-only previews)
   const hasVideoContent = Boolean(
@@ -1618,22 +1630,28 @@ export const metadata = async (
   if (domain) {
     output.domain = DOMPurify.sanitize(domain);
   }
-  if (isGenericImage(image)) {
-    log(`[metadata] Skipping generic site-wide image: ${image}`);
-    image = undefined;
-  }
-  if (image && image.startsWith("https://")) {
-    log(`[metadata] Checking image: ${image}`);
-    const exists = await checkOgImage(image);
+  const candidates = [image, fallbackImage].filter((candidate) => {
+    if (!candidate) return false;
+    if (isGenericImage(candidate)) {
+      log(`[metadata] Skipping generic site-wide image: ${candidate}`);
+      return false;
+    }
+    if (!candidate.startsWith("https://")) {
+      log(`[metadata] No valid image URL (image=${candidate}, not https)`);
+      return false;
+    }
+    return true;
+  });
+  for (const candidate of candidates) {
+    log(`[metadata] Checking image: ${candidate}`);
+    const exists = await checkOgImage(candidate);
     log(`[metadata] checkOgImage result: ${exists}`);
     if (exists) {
-      output.image = DOMPurify.sanitize(image);
+      output.image = DOMPurify.sanitize(candidate);
       log(`[metadata] Image added to output: ${output.image}`);
-    } else {
-      log(`[metadata] Image validation failed, not adding to output`);
+      break;
     }
-  } else {
-    log(`[metadata] No valid image URL (image=${image}, startsWith https: ${image?.startsWith("https://")})`);
+    log(`[metadata] Image validation failed, not adding to output`);
   }
   if (!output.twitterCreator && result.twitterCreator) {
     output.twitterCreator = DOMPurify.sanitize(result.twitterCreator);
