@@ -1,4 +1,5 @@
 import fetch from "node-fetch";
+import { utils } from "ethers";
 import log from "./logger.mjs";
 import normalizeUrl from "normalize-url";
 import {
@@ -63,9 +64,22 @@ function invalidateNotifications(address) {
   purgeCache(`https://news.kiwistand.com/activity?address=${address}`).catch(
     (err) => log(`Failed to purge activity cache: ${err}`),
   );
-  purgeCache(
-    `https://news.kiwistand.com/api/v1/activity?address=${address}`,
-  ).catch((err) => log(`Failed to purge activity cache: ${err}`));
+  // NOTE: Purges match the URL exactly, so cover the spellings clients use
+  // (the iOS app sends the checksummed address), and purge again once every
+  // HTTP worker has the new message, in case a reader refetched in between.
+  const spellings = new Set([address]);
+  try {
+    spellings.add(utils.getAddress(address));
+    spellings.add(address.toLowerCase());
+  } catch {}
+  const purgeApi = () =>
+    spellings.forEach((spelling) =>
+      purgeCache(
+        `https://news.kiwistand.com/api/v1/activity?address=${spelling}`,
+      ).catch((err) => log(`Failed to purge activity cache: ${err}`)),
+    );
+  purgeApi();
+  setTimeout(purgeApi, 10000);
 }
 
 /**
