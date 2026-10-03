@@ -23,5 +23,9 @@ jobs:
     - run: npm ci
     # Run the offline tests (live-network tests are excluded)
     - run: npm run test:offline
-      env: 
+      env:
         HTTP_MESSAGES_MAX_PAGE_SIZE: "500"
+        # Logs every require() of an ES module with the requiring CommonJS
+        # file, to find the one behind the intermittent Node 22 abort
+        # "v8::Module::IsGraphAsync must be used on an instantiated module".
+        NODE_OPTIONS: --trace-require-module=all
