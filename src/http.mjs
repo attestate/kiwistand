@@ -2200,9 +2200,10 @@ export async function launch(trie, libp2p, isPrimary = true) {
     reply.header("Cache-Control", "public, max-age=0");
     return reply.status(200).type("text/html").send(content.valueOf());
   });
-  // Shared function for handling activity data retrieval
-  async function handleActivityRequest(address, lastUpdate) {
-    const skipDetails = true;
+  // GET resolves ENS. skipDetails drops reactions and replaces identities
+  // with []. For a like, message.identity is the author, so the liker is gone.
+  // The iOS app renders this payload.
+  async function handleActivityRequest(address, lastUpdate, skipDetails) {
     const data = await activity.data(
       trie,
       DOMPurify.sanitize(address),
@@ -2228,7 +2229,8 @@ export async function launch(trie, libp2p, isPrimary = true) {
     try {
       data = await handleActivityRequest(
         request.query.address,
-        request.query.lastUpdate
+        request.query.lastUpdate,
+        false,
       );
     } catch (err) {
       log(`Error getting activity data: ${err.stack}`);
@@ -2260,8 +2262,8 @@ export async function launch(trie, libp2p, isPrimary = true) {
     }
 
     try {
-      // Just call the function to update the server cache
-      await handleActivityRequest(address, lastUpdate);
+      // Beacon only moves the read cursor. Skip ENS.
+      await handleActivityRequest(address, lastUpdate, true);
     } catch (err) {
       log(`Error in sendBeacon activity update: ${err.stack}`);
       // sendBeacon can't read this anyway, just return 400
