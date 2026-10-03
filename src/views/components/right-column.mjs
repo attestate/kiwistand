@@ -17,7 +17,6 @@ export default function RightColumn() {
             <span
               style="font-size:14px;font-weight:500;color:var(--text-primary);"
               >New: native iOS app</span>
-            >
             <img
               src="/testflight-qr.png"
               alt="TestFlight QR Code"
