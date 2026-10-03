@@ -30,6 +30,8 @@ import cache, {
   getSubmission,
   listNewest,
   countComments,
+  countCommentsBatch,
+  countEngagements,
   getBest,
 } from "../cache.mjs";
 import * as curation from "./curation.mjs";
@@ -138,11 +140,30 @@ const itemAge = (timestamp) => {
   return ageInMinutes;
 };
 
+// Returns the precomputed counts from countEngagements for a story, or does
+// the per-story queries when no precomputed counts are given.
+function engagementsFor(story, engagements) {
+  if (!engagements) {
+    return {
+      outbounds: countOutbounds(story.href),
+      impressions: countImpressions(story.href),
+      shares: countShares(story.href),
+    };
+  }
+  const counts = engagements.get(story.href);
+  if (!counts) {
+    throw new Error(`Couldn't normalize href "${story.href}"`);
+  }
+  return counts;
+}
+
 // Calculate click-through rate (CTR) for a story
-export function calculateCTR(story) {
+export function calculateCTR(story, engagements) {
   // Get normalized clicks and impressions counts
-  const clicks = countOutbounds(story.href);
-  const impressions = countImpressions(story.href);
+  const { outbounds: clicks, impressions } = engagementsFor(
+    story,
+    engagements,
+  );
 
   // Only calculate CTR if we have impressions, otherwise throw
   if (impressions > 0) {
@@ -153,8 +174,8 @@ export function calculateCTR(story) {
 }
 
 // Calculate upvote-to-click ratio
-export function calculateUpvoteClickRatio(story) {
-  const clicks = countOutbounds(story.href);
+export function calculateUpvoteClickRatio(story, engagements) {
+  const { outbounds: clicks } = engagementsFor(story, engagements);
   const upvotes = story.upvotes;
 
   if (clicks > 0) {
@@ -163,11 +184,11 @@ export function calculateUpvoteClickRatio(story) {
   throw new Error("No clicks available for CTR calculation");
 }
 
-function meanCTR(leaves) {
+function meanCTR(leaves, engagements) {
   const ctrs = [];
   for (let leaf of leaves) {
     try {
-      const ctr = calculateCTR(leaf);
+      const ctr = calculateCTR(leaf, engagements);
       ctrs.push(ctr);
     } catch (err) {
       // noop
@@ -180,11 +201,11 @@ function meanCTR(leaves) {
   throw new Error("CTRs length is not available");
 }
 
-function meanUpvoteRatio(leaves) {
+function meanUpvoteRatio(leaves, engagements) {
   const ratios = [];
   for (let leaf of leaves) {
     try {
-      const ratio = calculateUpvoteClickRatio(leaf);
+      const ratio = calculateUpvoteClickRatio(leaf, engagements);
       ratios.push(ratio);
     } catch (err) {
       // noop
@@ -222,17 +243,26 @@ export async function topstories(leaves, algorithm = 'control', skipNeynar = fal
   // Check if we're using Lobsters algorithm
   const useLobstersAlgo = algorithm === 'lobsters';
 
+  // Fetch comment, share, outbound and impression counts for all stories in a
+  // few grouped queries instead of several synchronous queries per story.
+  const commentCounts = countCommentsBatch(
+    leaves.map((story) => `kiwi:0x${story.index}`),
+  );
+  const engagements = useLobstersAlgo
+    ? null
+    : countEngagements(leaves.map((story) => story.href));
+
   // Pre-compute means once (not per-story) - O(n) instead of O(n²)
   let precomputedMeanUpvoteRatio = null;
   let precomputedMeanCTR = null;
   if (!useLobstersAlgo) {
     try {
-      precomputedMeanUpvoteRatio = meanUpvoteRatio(leaves);
+      precomputedMeanUpvoteRatio = meanUpvoteRatio(leaves, engagements);
     } catch (e) {
       // noop
     }
     try {
-      precomputedMeanCTR = meanCTR(leaves);
+      precomputedMeanCTR = meanCTR(leaves, engagements);
     } catch (e) {
       // noop
     }
@@ -240,12 +270,7 @@ export async function topstories(leaves, algorithm = 'control', skipNeynar = fal
 
   return Promise.allSettled(leaves
     .map(async (story) => {
-      let commentCount;
-      try {
-        commentCount = countComments(`kiwi:0x${story.index}`);
-      } catch (e) {
-        commentCount = 0;
-      }
+      const commentCount = commentCounts.get(`kiwi:0x${story.index}`) || 0;
       // Skip Neynar weighting for endless scroll (uses simple count)
       const upvotes = skipNeynar
         ? story.upvoters?.length || 1
@@ -270,8 +295,9 @@ export async function topstories(leaves, algorithm = 'control', skipNeynar = fal
         score = Math.max(0.001, score);
       } else {
         // Original control algorithm
+        const counts = engagementsFor(story, engagements);
         // Add shares with double weight of upvotes
-        const shares = countShares(story.href);
+        const shares = counts.shares;
         const sharesAsUpvotes = shares * 2; // Each share counts as 2 upvotes
         
         if (upvotes > 2) {
@@ -280,17 +306,17 @@ export async function topstories(leaves, algorithm = 'control', skipNeynar = fal
           score = Math.log(upvotes + sharesAsUpvotes);
         }
 
-        const outboundClicks = countOutbounds(story.href) + 1;
+        const outboundClicks = counts.outbounds + 1;
         if (outboundClicks > 0) {
           score = score * 0.9 + 0.1 * Math.log(outboundClicks);
         }
 
         if (precomputedMeanUpvoteRatio !== null) {
           try {
-            const storyRatio = calculateUpvoteClickRatio(story);
+            const storyRatio = calculateUpvoteClickRatio(story, engagements);
             const upvotePerformance = storyRatio / precomputedMeanUpvoteRatio;
 
-            const clicks = countOutbounds(story.href);
+            const clicks = counts.outbounds;
             const sampleSize = upvotes + clicks;
             const confidenceFactor = Math.pow(
               Math.min(1, sampleSize / 1_000_000),
@@ -309,10 +335,10 @@ export async function topstories(leaves, algorithm = 'control', skipNeynar = fal
         // Try to apply CTR adjustment if available
         if (precomputedMeanCTR !== null) {
           try {
-            const ctr = calculateCTR(story);
+            const ctr = calculateCTR(story, engagements);
             const ctrPerformance = ctr / precomputedMeanCTR;
 
-            const impressions = countImpressions(story.href);
+            const impressions = counts.impressions;
             const confidenceFactor = Math.pow(
               Math.min(1, impressions / 1_000_000),
               2,
@@ -392,9 +418,12 @@ export async function index(
   let rankedStories = await topstories(moderatedLeaves, algorithm, skipResolve);
 
   // 2. Filter ranked stories based on age/engagement rules
+  const commentCounts = countCommentsBatch(
+    rankedStories.map(({ index }) => `kiwi:0x${index}`),
+  );
   rankedStories = rankedStories.filter(({ index, identity, upvotes, timestamp }) => {
     const storyAgeInDays = itemAge(timestamp) / (60 * 24);
-    const commentCount = countComments(`kiwi:0x${index}`) || 0;
+    const commentCount = commentCounts.get(`kiwi:0x${index}`) || 0;
     const submitterKarma = identity
       ? karma.resolve(identity, cutoffDate)
       : 0;

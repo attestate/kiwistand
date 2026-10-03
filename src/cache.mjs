@@ -513,6 +513,58 @@ export function countShares(url) {
   return result ? result.uniqueHashCount : 0;
 }
 
+function countUniqueHashesByUrl(table, normalizedUrls) {
+  const counts = new Map();
+  if (normalizedUrls.length === 0) return counts;
+  const rows = db
+    .prepare(
+      `SELECT url, COUNT(DISTINCT hash) AS uniqueHashCount
+       FROM ${table}
+       WHERE url IN (SELECT value FROM json_each(?))
+       GROUP BY url`,
+    )
+    .all(JSON.stringify(normalizedUrls));
+  for (const row of rows) {
+    counts.set(row.url, row.uniqueHashCount);
+  }
+  return counts;
+}
+
+// Batched version of countOutbounds, countImpressions and countShares: runs
+// one query per table for all hrefs instead of several queries per href.
+// Returns a Map from the original href to { outbounds, impressions, shares },
+// or to null when the href can't be normalized (the single-URL functions
+// throw in that case).
+export function countEngagements(hrefs) {
+  const normalized = new Map();
+  for (const href of new Set(hrefs)) {
+    try {
+      normalized.set(href, normalizeUrl(href, { stripWWW: false }));
+    } catch (err) {
+      normalized.set(href, null);
+    }
+  }
+
+  const urls = [...new Set(normalized.values())].filter((url) => url !== null);
+  const outbounds = countUniqueHashesByUrl("fingerprints", urls);
+  const impressions = countUniqueHashesByUrl("impressions", urls);
+  const shares = countUniqueHashesByUrl("shares", urls);
+
+  const result = new Map();
+  for (const [href, url] of normalized) {
+    if (url === null) {
+      result.set(href, null);
+      continue;
+    }
+    result.set(href, {
+      outbounds: outbounds.get(url) || 0,
+      impressions: impressions.get(url) || 0,
+      shares: shares.get(url) || 0,
+    });
+  }
+  return result;
+}
+
 export function getNumberOfOnlineUsers() {
   const timestamp24HoursAgo = Math.floor(Date.now() / 1000 - 24 * 60 * 60);
 
@@ -1308,6 +1360,28 @@ export function countComments(submissionId, bannedAddresses = []) {
     log(`countComments error for ${submissionId}: ${err.toString()}`);
     return 0;
   }
+}
+
+// Batched version of countComments (without banned addresses): returns a Map
+// from submission id to its comment count in a single query.
+export function countCommentsBatch(submissionIds) {
+  const counts = new Map();
+  if (submissionIds.length === 0) return counts;
+  try {
+    const rows = db
+      .prepare(
+        `SELECT submission_id, COUNT(*) AS count FROM comments
+         WHERE submission_id IN (SELECT value FROM json_each(?))
+         GROUP BY submission_id`,
+      )
+      .all(JSON.stringify([...new Set(submissionIds)]));
+    for (const row of rows) {
+      counts.set(row.submission_id, row.count);
+    }
+  } catch (err) {
+    log(`countCommentsBatch error: ${err.toString()}`);
+  }
+  return counts;
 }
 
 export async function storeMiniAppUpvote({ fid, href, title, timestamp, walletAddress }) {
