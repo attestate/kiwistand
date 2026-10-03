@@ -43,3 +43,5 @@ scripts/training_data.csv
 scripts/preprocessing_info.json
 scripts/tfjs_upvotes_model/
 scripts/tfjs_comments_model/
+test-cache
+test-data

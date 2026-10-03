@@ -10,10 +10,10 @@ import { sign, create } from "../src/id.mjs";
 import {
   handleMessage,
   listMessages,
-  listAllowed,
   listDelegations,
 } from "../src/api.mjs";
 import * as store from "../src/store.mjs";
+import { initializeLtCache } from "../src/cache.mjs";
 import { EIP712_MESSAGE } from "../src/constants.mjs";
 
 async function removeTestFolders() {
@@ -53,101 +53,8 @@ test("list delegation addresses", async (t) => {
   t.deepEqual(response.data, delegations());
 });
 
-test("list allowed addresses with invalid Ethereum address", async (t) => {
-  const notAnAddress = "this is not an address";
-  const mockRequest = {
-    query: {
-      address: notAnAddress,
-    },
-  };
-  const mockReply = {
-    status: (code) => ({
-      json: (response) => response,
-    }),
-    setHeader: () => {},
-  };
-
-  const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
-  const list = [address];
-  const allowlist = () => new Set(list);
-  const response = await listAllowed(allowlist)(mockRequest, mockReply);
-
-  t.is(response.status, "error");
-  t.is(response.code, 400);
-  t.is(response.message, "Bad Request");
-  t.truthy(response.details);
-});
-
-test("list allowed addresses with empty response", async (t) => {
-  const zeroAddress = "0x0000000000000000000000000000000000000000";
-  const mockRequest = {
-    query: {
-      address: zeroAddress,
-    },
-  };
-  const mockReply = {
-    status: (code) => ({
-      json: (response) => response,
-    }),
-    setHeader: () => {},
-  };
-
-  const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
-  const list = [address];
-  const allowlist = () => new Set(list);
-  const response = await listAllowed(allowlist)(mockRequest, mockReply);
-
-  t.is(response.status, "success");
-  t.is(response.code, 200);
-  t.is(response.message, "OK");
-  t.is(response.data.length, 0);
-  t.deepEqual(response.data, []);
-});
-
-test("list allowed addresses through query", async (t) => {
-  const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
-  const mockRequest = {
-    query: {
-      address,
-    },
-  };
-  const mockReply = {
-    status: (code) => ({
-      json: (response) => response,
-    }),
-    setHeader: () => {},
-  };
-
-  const list = [address];
-  const allowlist = () => new Set(list);
-  const response = await listAllowed(allowlist)(mockRequest, mockReply);
-
-  t.is(response.status, "success");
-  t.is(response.code, 200);
-  t.is(response.message, "OK");
-  t.is(response.data.length, 1);
-  t.deepEqual(response.data, list);
-});
-
-test("list allowed addresses", async (t) => {
-  const mockRequest = { query: {} };
-  const mockReply = {
-    status: (code) => ({
-      json: (response) => response,
-    }),
-  };
-
-  const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
-  const list = [address];
-  const allowlist = () => new Set(list);
-  const response = await listAllowed(allowlist)(mockRequest, mockReply);
-
-  t.is(response.status, "success");
-  t.is(response.code, 200);
-  t.is(response.message, "OK");
-  t.is(response.data.length, 1);
-  t.deepEqual(response.data, list);
-});
+// NOTE: The "list allowed addresses" tests were removed together with
+// `listAllowed` from src/api.mjs (the allowlist endpoint no longer exists).
 
 test("listMessages success", async (t) => {
   const mockRequest = {
@@ -181,38 +88,19 @@ test("listMessages success", async (t) => {
   });
 
   env.DATA_DIR = "dbtestA";
+  // NOTE: store.posts caches enhanced posts in ltCache, which src/launch.mjs
+  // normally creates on startup.
+  initializeLtCache();
   const trie = await store.create();
   const libp2p = null;
-  const allowlist = new Set([address]);
   const delegations = {};
-  const accounts = {
-    [address]: {
-      balance: 1,
-      tokens: {
-        0: [
-          {
-            start: 123,
-          },
-        ],
-      },
-    },
-  };
-  await store.add(
-    trie,
-    signedMessage,
-    libp2p,
-    allowlist,
-    delegations,
-    accounts,
-  );
+  await store.add(trie, signedMessage, libp2p, delegations);
 
-  const getAccounts = () => accounts;
   const getDelegations = () => ({});
-  const response = await listMessages(
-    trie,
-    getAccounts,
-    getDelegations,
-  )(mockRequest, mockReply);
+  const response = await listMessages(trie, getDelegations)(
+    mockRequest,
+    mockReply,
+  );
 
   t.is(response.status, "success");
   t.is(response.code, 200);
@@ -224,12 +112,16 @@ test("listMessages success", async (t) => {
   await rm("dbtestA", { recursive: true });
 });
 
-test("handleMessage should send back an error upon invalid address signer", async (t) => {
+// NOTE: This used to assert "You must mint" for a non-allowlisted signer.
+// The allowlist/NFT gate was removed from store.add, so it now asserts the
+// error path with an invalid signature instead.
+test("handleMessage should send back an error upon invalid signature", async (t) => {
   const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
   const privateKey =
     "0xad54bdeade5537fb0a553190159783e45d02d316a992db05cbed606d3ca36b39";
   const signer = new Wallet(privateKey);
   t.is(signer.address, address);
+  t.plan(5);
 
   const text = "hello world";
   const href = "https://example.com";
@@ -239,39 +131,24 @@ test("handleMessage should send back an error upon invalid address signer", asyn
   const signedMessage = await sign(signer, message, EIP712_MESSAGE);
 
   const request = {
-    body: signedMessage,
+    body: { ...signedMessage, signature: "0x00" },
   };
 
   const reply = {
     status: (code) => reply,
     json: (response) => {
-      console.log(response);
       t.is(response.status, "error");
       t.is(response.code, 400);
       t.is(response.message, "Bad Request");
-      t.true(response.details.includes("You must mint"));
+      t.truthy(response.details);
     },
   };
 
   env.DATA_DIR = "dbtestA";
   const trie = await store.create();
   const libp2p = null;
-  const zeroAddr = "0x0000000000000000000000000000000000000000";
-  const allowlist = () => new Set([zeroAddr]);
   const delegations = () => ({});
-  const accounts = () => ({
-    [zeroAddr]: {
-      balance: 1,
-      tokens: {
-        5: [
-          {
-            start: 123,
-          },
-        ],
-      },
-    },
-  });
-  const handler = handleMessage(trie, libp2p, allowlist, delegations, accounts);
+  const handler = handleMessage(trie, libp2p, delegations);
 
   await handler(request, reply);
 
@@ -313,21 +190,8 @@ test("handleMessage should handle a valid message and return 200 OK", async (t) 
   env.DATA_DIR = "dbtestA";
   const trie = await store.create();
   const libp2p = null;
-  const allowlist = () => new Set([address]);
   const delegations = () => ({});
-  const accounts = () => ({
-    [address]: {
-      balance: 1,
-      tokens: {
-        5: [
-          {
-            start: 123,
-          },
-        ],
-      },
-    },
-  });
-  const handler = handleMessage(trie, libp2p, allowlist, delegations, accounts);
+  const handler = handleMessage(trie, libp2p, delegations);
 
   await handler(request, reply);
 
