@@ -1720,17 +1720,6 @@ td:has(.clicked-content):hover {
   }
 }
 
-/* Trollbox Panel */
-.trollbox-panel {
-  height: 400px;
-  border: var(--border);
-  border-radius: 2px;
-  background: var(--bg-white);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
 /* AI Dropdown */
 @keyframes aiSlideUp {
   from { transform: translateY(100%); }

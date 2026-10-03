@@ -33,7 +33,7 @@ import cache, {
   getBest,
 } from "../cache.mjs";
 import * as curation from "./curation.mjs";
-import Trollbox from "./components/trollbox.mjs";
+import RightColumn from "./components/right-column.mjs";
 import log from "../logger.mjs";
 import { EIP712_MESSAGE } from "../constants.mjs";
 import Row, { extractDomain } from "./components/row.mjs";
@@ -913,7 +913,7 @@ export default async function (trie, theme, page, domain, identity, hash, varian
       >
         <div class="container">
           ${Sidebar(path)}
-          ${Trollbox()}
+          ${RightColumn()}
           <main id="hnmain" class="scaled-hnmain" role="main">
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f8f8f7">
               <tr>

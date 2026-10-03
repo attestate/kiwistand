@@ -19,7 +19,7 @@ import * as moderation from "./moderation.mjs";
 import * as karma from "../karma.mjs";
 import * as preview from "../preview.mjs";
 import Row from "./components/row.mjs";
-import Trollbox from "./components/trollbox.mjs";
+import RightColumn from "./components/right-column.mjs";
 import { getSubmissions, getSubmissionCount, getContributionsData } from "../cache.mjs";
 import { metadata } from "../parser.mjs";
 import { truncate } from "../utils.mjs";
@@ -134,7 +134,7 @@ export default async function (trie, theme, identity, tab = "submissions") {
       <body ontouchstart="">
         <div class="container">
           ${Sidebar(path)}
-          ${Trollbox()}
+          ${RightColumn()}
           <div id="hnmain" class="scaled-hnmain">
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="var(--background-color0)">
               <tr>
