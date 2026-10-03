@@ -225,10 +225,16 @@ export async function extractSnapshotProposal(url) {
       body: JSON.stringify({ query, variables: { id: match[1] } }),
       signal: AbortSignal.timeout(5000),
     });
-    if (!response.ok) return null;
+    if (!response.ok) {
+      log(`Snapshot API ${response.status} for ${url}`);
+      return null;
+    }
     const data = await response.json();
     const proposal = data?.data?.proposal;
-    if (!proposal?.title) return null;
+    if (!proposal?.title) {
+      log(`Snapshot API: no proposal for ${url}: ${JSON.stringify(data).slice(0, 300)}`);
+      return null;
+    }
     return {
       title: proposal.title,
       body: proposal.body || "",
@@ -1336,6 +1342,15 @@ export const metadata = async (
   if (result.twitterImage && result.twitterImage.length >= 1) {
     image = result.twitterImage[0].url;
     log(`[metadata] Found twitterImage: ${image}`);
+  }
+  // NOTE: Some sites put a relative or protocol-relative path in og:image
+  // ("/og.png", "//cdn.example.com/og.png"); resolve it against the page.
+  if (image && !/^https?:\/\//i.test(image)) {
+    try {
+      image = new URL(image, url).href;
+    } catch {
+      image = undefined;
+    }
   }
   log(`[metadata] Initial image value: ${image}`);
   // Detect if the target has video content (used to avoid rendering text-only previews)
