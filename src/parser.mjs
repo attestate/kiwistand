@@ -192,7 +192,7 @@ export function isGenericTitle(title, hostname) {
 // (e.g. arxiv's logo) make every preview of that site look identical, so we
 // treat them as no image.
 const genericImagePrefixes = ["https://static.arxiv.org/icons/"];
-function isGenericImage(url) {
+export function isGenericImage(url) {
   if (!url) return false;
   return genericImagePrefixes.some((prefix) => url.startsWith(prefix));
 }

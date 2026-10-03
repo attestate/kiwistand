@@ -4,7 +4,7 @@
 // preview-audit.mjs and preview-audit-http.mjs, so both measure the same).
 import { setTimeout as sleep } from "timers/promises";
 
-import { isGenericTitle, twitterFrontends } from "../src/parser.mjs";
+import { isGenericImage, isGenericTitle, twitterFrontends } from "../src/parser.mjs";
 
 export function hostOf(href) {
   try {
@@ -35,7 +35,9 @@ export function score(href, data) {
       (isTweet && data.ogDescription),
   );
   const title = Boolean(data.ogTitle) && !isGenericTitle(data.ogTitle, host);
-  const image = Boolean(data.image);
+  // A site-wide logo (see isGenericImage) doesn't count as an image, whichever
+  // parser produced it.
+  const image = Boolean(data.image) && !isGenericImage(data.image);
   const description = Boolean(data.ogDescription);
   const cloudflare = Boolean(data.isCloudflareChallenge);
   const good = embed || (image && !cloudflare);
