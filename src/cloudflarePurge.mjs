@@ -89,6 +89,15 @@ function invalidateUpvoteActivityCaches(message) {
       purgeCache(storyUrl).catch((err) => 
         log(`Failed to purge story page cache: ${err}`)
       );
+      // NOTE: The iOS app reads the same data as JSON.
+      purgeCache(
+        `https://news.kiwistand.com/api/v1/stories?index=0x${submission.index}`,
+      ).catch((err) => log(`Failed to purge story API cache: ${err}`));
+      for (const tab of ["submissions", "top"]) {
+        purgeCache(
+          `https://news.kiwistand.com/upvotes?address=${submission.identity}&format=json&tab=${tab}`,
+        ).catch((err) => log(`Failed to purge profile API cache: ${err}`));
+      }
     }
   } catch (error) {
     log(`Error invalidating upvote activity cache: ${error}`);
