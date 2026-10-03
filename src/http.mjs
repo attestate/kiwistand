@@ -53,7 +53,8 @@ import newest, * as newAPI from "./views/new.mjs";
 import best, * as bestAPI from "./views/best.mjs";
 import privacy from "./views/privacy.mjs";
 import guidelines from "./views/guidelines.mjs";
-import upvotes from "./views/upvotes.mjs";
+import upvotes, * as upvotesAPI from "./views/upvotes.mjs";
+import * as reports from "./reports.mjs";
 
 import search from "./views/search.mjs";
 import * as activity from "./views/activity.mjs";
@@ -2030,13 +2031,6 @@ export async function launch(trie, libp2p, isPrimary = true) {
       reply.header("Cache-Control", "no-cache");
     }
 
-    // NOTE: ?format=json returns the data the page is rendered from, e.g.
-    // for the iOS app. It's a query parameter (not the Accept header) since
-    // the Cloudflare worker keys its cache by URL only.
-    if (request.query.format === "json") {
-      return reply.status(200).json({ stories: newAPI.getStories() });
-    }
-
     const cached = newAPI.getCachedHtml();
     if (cached) {
       return reply.status(200).type("text/html").send(cached.valueOf());
@@ -2295,6 +2289,19 @@ export async function launch(trie, libp2p, isPrimary = true) {
     }
 
     const tab = request.query.tab || "submissions";
+
+    // NOTE: ?format=json returns the data the page is rendered from, e.g.
+    // for the iOS app. It's a query parameter (not the Accept header) since
+    // the Cloudflare worker keys its cache by URL only.
+    if (request.query.format === "json") {
+      reply.header(
+        "Cache-Control",
+        "public, s-maxage=300, max-age=0, stale-while-revalidate=86400",
+      );
+      const data = await upvotesAPI.data(request.query.address, tab);
+      return reply.status(200).json(data);
+    }
+
     const content = await upvotes(
       trie,
       reply.locals.theme,
@@ -2881,6 +2888,8 @@ export async function launch(trie, libp2p, isPrimary = true) {
     }
   });
 
+
+  reports.setupRoutes(app, { sendError, sendStatus, requireAdminAuth });
 
   server.listen(env.HTTP_PORT, () =>
     log(`Launched HTTPS server at PORT: ${env.HTTP_PORT}`),
