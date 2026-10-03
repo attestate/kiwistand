@@ -28,8 +28,11 @@ voice). Each round updates this file.
 - [ ] Google Analytics and/or PostHog: referrers, landing pages, returning
       users. A read-only PostHog personal API key would let Claude query
       directly.
-- [ ] Cloudflare analytics: a read-only API token (Analytics:Read) to see
-      search and AI crawler traffic.
+- [ ] Cloudflare analytics: the connected Cloudflare MCP ("Developer
+      Platform") covers Workers/KV/D1/R2 but not traffic analytics. For search
+      and AI crawler traffic, also connect Cloudflare's "Radar/GraphQL
+      Analytics" MCP or give a read-only API token (Account Analytics:Read,
+      Zone Analytics:Read).
 
 ### Newsletter
 - [ ] Add the weekly job to the server's crontab (Mondays 08:00), creating a
@@ -57,4 +60,6 @@ voice). Each round updates this file.
 - Native iOS app (attestate/kiwinews-ios#1), login via own wallet picker +
   Base over the Mobile Wallet Protocol.
 - JSON endpoints and cache purges for the app (#180, #181, #182), Cloudflare
-  worker no longer serves stale copies forever.
+  worker no longer serves stale copies forever. Checked via the Cloudflare
+  MCP (2026-10-03): the deployed `stale-while-revalidate` worker matches
+  `cf-worker.js` in the repo.
