@@ -28,7 +28,10 @@ async function sendDigest() {
     let htmlContent = await fs.readFile(outPath, 'utf-8');
     htmlContent = extractBody(htmlContent);
 
-    // 2) Create a new email draft in Buttondown
+    // 2) Create the email in Buttondown: a draft to review by default, or
+    // sent right away with --publish.
+    const publish = process.argv.includes("--publish");
+    const status = publish ? "about_to_send" : "draft";
     const subject = `Kiwi News Weekly Digest — ${formatDateForSubject()}`;
     const createEmailResponse = await fetch('https://api.buttondown.email/v1/emails', {
       method: 'POST',
@@ -36,7 +39,7 @@ async function sendDigest() {
         'Authorization': `Token ${apiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ subject, body: htmlContent, status: 'draft' }),
+      body: JSON.stringify({ subject, body: htmlContent, status }),
     });
 
     if (!createEmailResponse.ok) {
@@ -47,7 +50,7 @@ async function sendDigest() {
 
     const emailData = await createEmailResponse.json();
     const id = emailData.id;
-    console.log(`Created Buttondown draft with ID: ${id}`);
+    console.log(`Created Buttondown ${publish ? "email (sending)" : "draft"} with ID: ${id}`);
   } catch(err) {
     console.error("Error", err);
   }

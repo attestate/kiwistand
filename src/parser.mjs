@@ -175,6 +175,119 @@ function isCloudflareChallengePage(title) {
   );
 }
 
+// NOTE: SPAs and bot-blocked sites often return just their own name as the
+// title (e.g. "objkt.com" on objkt.com, "Snapshot" on snapshot.org, "Reuters"
+// on reuters.com). Such a title says nothing about the link, so we treat it as
+// missing and let the submitted title be used instead.
+export function isGenericTitle(title, hostname) {
+  if (!title || !hostname) return false;
+  const normalized = title.trim().toLowerCase();
+  const host = hostname.toLowerCase().replace(/^www\./, "");
+  const domain = host.split(".").slice(-2).join(".");
+  const name = domain.split(".")[0];
+  return [host, domain, name].includes(normalized);
+}
+
+// NOTE: Site-wide fallback images that are the same for every page of a site
+// (e.g. arxiv's logo) make every preview of that site look identical, so we
+// treat them as no image.
+const genericImagePrefixes = ["https://static.arxiv.org/icons/"];
+export function isGenericImage(url) {
+  if (!url) return false;
+  return genericImagePrefixes.some((prefix) => url.startsWith(prefix));
+}
+
+function ipfsToHttps(uri) {
+  if (!uri || !uri.startsWith("ipfs://")) return uri;
+  return `https://ipfs.io/ipfs/${uri.slice("ipfs://".length)}`;
+}
+
+// NOTE: snapshot.org is a hash-routed SPA, so its HTML only ever says
+// "Snapshot". Proposal URLs look like
+// https://snapshot.org/#/s:balancer.eth/proposal/0x... (or without "s:"), and
+// the public hub GraphQL API gives us the proposal's title, body and the
+// space's avatar. Returns null on any failure so callers keep current behavior.
+export async function extractSnapshotProposal(url) {
+  try {
+    const { hash } = new URL(url);
+    const match = hash.match(/\/proposal\/([A-Za-z0-9]+)/);
+    if (!match) return null;
+
+    const query = `query Proposal($id: String!) {
+      proposal(id: $id) { title body space { name avatar } }
+    }`;
+    const response = await fetch("https://hub.snapshot.org/graphql", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "User-Agent": env.USER_AGENT,
+      },
+      body: JSON.stringify({ query, variables: { id: match[1] } }),
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!response.ok) {
+      log(`Snapshot API ${response.status} for ${url}`);
+      return null;
+    }
+    const data = await response.json();
+    const proposal = data?.data?.proposal;
+    if (!proposal?.title) {
+      log(`Snapshot API: no proposal for ${url}: ${JSON.stringify(data).slice(0, 300)}`);
+      return null;
+    }
+    return {
+      title: proposal.title,
+      body: proposal.body || "",
+      image: ipfsToHttps(proposal.space?.avatar),
+    };
+  } catch (err) {
+    log(`Failed to fetch Snapshot proposal for ${url}: ${err.message}`);
+    return null;
+  }
+}
+
+// NOTE: objkt.com is an SPA whose HTML only says "objkt.com". Token URLs look
+// like https://objkt.com/tokens/KT1.../42 (or the older /asset/KT1.../42), and
+// objkt's public Hasura API returns the token's name, description and preview.
+// Returns null on any failure so callers keep current behavior.
+export async function extractObjktToken(url) {
+  try {
+    const { pathname } = new URL(url);
+    const match = pathname.match(/^\/(?:tokens|asset)\/([^/]+)\/([^/]+)/);
+    if (!match) return null;
+
+    const query = `query Token($contract: String!, $id: String!) {
+      token(where: { fa_contract: { _eq: $contract }, token_id: { _eq: $id } }, limit: 1) {
+        name description display_uri thumbnail_uri
+      }
+    }`;
+    const response = await fetch("https://data.objkt.com/v3/graphql", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "User-Agent": env.USER_AGENT,
+      },
+      body: JSON.stringify({
+        query,
+        variables: { contract: match[1], id: match[2] },
+      }),
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!response.ok) return null;
+    const data = await response.json();
+    const token = data?.data?.token?.[0];
+    if (!token?.name) return null;
+    return {
+      title: token.name,
+      description: token.description || "",
+      image: ipfsToHttps(token.display_uri || token.thumbnail_uri),
+    };
+  } catch (err) {
+    log(`Failed to fetch objkt token for ${url}: ${err.message}`);
+    return null;
+  }
+}
+
 const filtered = [
   "kiwistand.com",
   "kiwinews.xyz",
@@ -924,8 +1037,11 @@ const checkOgImage = async (url) => {
       const sizeInBytes = parseInt(contentLength, 10);
       const sizeInMB = sizeInBytes / (1024 * 1024);
 
-      // Reject images larger than 2MB
-      if (sizeInMB > 2) {
+      // Reject images larger than 5MB (Twitter's summary_large_image limit,
+      // like the dimension limits below). This used to be 2MB, which
+      // rejected the og:image of e.g. blog.ethereum.org, ethereum.org and
+      // dlnews.com (2-4MB) in the preview audit.
+      if (sizeInMB > 5) {
         log(`Rejecting oversized image (${sizeInMB.toFixed(1)}MB): ${url}`);
         return false;
       }
@@ -1221,15 +1337,33 @@ export const metadata = async (
     };
   }
 
+  // NOTE: og:image first, twitter:image as the fallback when og:image is
+  // missing or fails checkOgImage (e.g. a16zcrypto.com serves a resized
+  // og:image but the full-size original as twitter:image).
   let image;
+  let fallbackImage;
   if (result.ogImage && result.ogImage.length >= 1) {
     image = result.ogImage[0].url;
     log(`[metadata] Found ogImage: ${image}`);
   }
   if (result.twitterImage && result.twitterImage.length >= 1) {
-    image = result.twitterImage[0].url;
-    log(`[metadata] Found twitterImage: ${image}`);
+    const twitterImage = result.twitterImage[0].url;
+    log(`[metadata] Found twitterImage: ${twitterImage}`);
+    if (!image) image = twitterImage;
+    else if (twitterImage !== image) fallbackImage = twitterImage;
   }
+  // NOTE: Some sites put a relative or protocol-relative path in og:image
+  // ("/og.png", "//cdn.example.com/og.png"); resolve it against the page.
+  const absolute = (candidate) => {
+    if (!candidate || /^https?:\/\//i.test(candidate)) return candidate;
+    try {
+      return new URL(candidate, url).href;
+    } catch {
+      return undefined;
+    }
+  };
+  image = absolute(image);
+  fallbackImage = absolute(fallbackImage);
   log(`[metadata] Initial image value: ${image}`);
   // Detect if the target has video content (used to avoid rendering text-only previews)
   const hasVideoContent = Boolean(
@@ -1447,6 +1581,24 @@ export const metadata = async (
     }
   }
 
+  if (hostname === "snapshot.org" || hostname.endsWith("snapshot.box")) {
+    const proposal = await extractSnapshotProposal(url);
+    if (proposal) {
+      output.ogTitle = DOMPurify.sanitize(proposal.title);
+      if (proposal.body) ogDescription = proposal.body.substring(0, 500);
+      if (proposal.image) image = proposal.image;
+    }
+  }
+
+  if (hostname === "objkt.com" || hostname === "www.objkt.com") {
+    const token = await extractObjktToken(url);
+    if (token) {
+      output.ogTitle = DOMPurify.sanitize(token.title);
+      if (token.description) ogDescription = token.description.substring(0, 500);
+      if (token.image) image = token.image;
+    }
+  }
+
 
   if (!isXArticle && generateTitle) {
     if (
@@ -1468,6 +1620,8 @@ export const metadata = async (
       log(`Cloudflare challenge page title detected, skipping title assignment for URL: ${url}`);
       output.isCloudflareChallenge = true; // Flag to indicate this is a Cloudflare page
       // Don't set the title, leave it empty
+    } else if (isGenericTitle(ogTitle, hostname)) {
+      log(`Generic site-name title "${ogTitle}" skipped for URL: ${url}`);
     } else {
       output.ogTitle = ogTitle;
     }
@@ -1476,18 +1630,28 @@ export const metadata = async (
   if (domain) {
     output.domain = DOMPurify.sanitize(domain);
   }
-  if (image && image.startsWith("https://")) {
-    log(`[metadata] Checking image: ${image}`);
-    const exists = await checkOgImage(image);
+  const candidates = [image, fallbackImage].filter((candidate) => {
+    if (!candidate) return false;
+    if (isGenericImage(candidate)) {
+      log(`[metadata] Skipping generic site-wide image: ${candidate}`);
+      return false;
+    }
+    if (!candidate.startsWith("https://")) {
+      log(`[metadata] No valid image URL (image=${candidate}, not https)`);
+      return false;
+    }
+    return true;
+  });
+  for (const candidate of candidates) {
+    log(`[metadata] Checking image: ${candidate}`);
+    const exists = await checkOgImage(candidate);
     log(`[metadata] checkOgImage result: ${exists}`);
     if (exists) {
-      output.image = DOMPurify.sanitize(image);
+      output.image = DOMPurify.sanitize(candidate);
       log(`[metadata] Image added to output: ${output.image}`);
-    } else {
-      log(`[metadata] Image validation failed, not adding to output`);
+      break;
     }
-  } else {
-    log(`[metadata] No valid image URL (image=${image}, startsWith https: ${image?.startsWith("https://")})`);
+    log(`[metadata] Image validation failed, not adding to output`);
   }
   if (!output.twitterCreator && result.twitterCreator) {
     output.twitterCreator = DOMPurify.sanitize(result.twitterCreator);

@@ -86,8 +86,20 @@ if (cluster.isPrimary) {
   await api.launch(trie, node);
 
   if (!reconcileMode) {
-    // Generate sitemaps before HTTP server so sirv sees them at init
-    generateSitemaps();
+    // Generate sitemaps before the HTTP server starts, then hourly so new
+    // stories and comments show up without a restart. generateSitemaps() is
+    // synchronous, so two runs can't overlap; errors are logged, not thrown,
+    // so a failed run can't crash the primary process. http.mjs serves the
+    // sitemap files from disk on each request (not via sirv's startup index).
+    const refreshSitemaps = () => {
+      try {
+        generateSitemaps();
+      } catch (err) {
+        log(`Sitemap generation failed: ${err.stack || err}`);
+      }
+    };
+    refreshSitemaps();
+    setInterval(refreshSitemaps, 60 * 60 * 1000).unref();
 
     const http = await import("./http.mjs");
     await http.launch(trie, node, true); // true indicates primary process

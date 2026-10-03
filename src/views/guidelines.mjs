@@ -6,7 +6,7 @@ import vhtml from "vhtml";
 import Header from "./components/header.mjs";
 import Sidebar from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
-import Head from "./components/head.mjs";
+import { custom } from "./components/head.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -14,7 +14,14 @@ export default async function (theme) {
   return "<!DOCTYPE html>" + html`
     <html lang="en" op="news">
       <head>
-        ${Head}
+        ${custom(
+          undefined,
+          "Guidelines | Kiwi News",
+          "What to submit and how to comment on Kiwi News, the community-curated crypto news site.",
+          undefined,
+          [],
+          "https://news.kiwistand.com/guidelines",
+        )}
       </head>
       <body>
         <div class="container">
