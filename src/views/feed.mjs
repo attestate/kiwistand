@@ -101,8 +101,24 @@ const cutoffDate = new Date("2025-01-15");
 const thresholdKarma = 5;
 // Minimum karma needed for a story to surface with only a single upvote
 const singleUpvoteKarmaThreshold = 50;
+
+// Karma as of the fixed cutoffDate only changes when a peer sync backfills
+// pre-cutoff messages, but karma.resolve runs a SQL join per call and the
+// hot feed asked for it once per story and upvoter on every request. Memoize
+// it per identity and refresh hourly to pick up any backfill.
+const cutoffKarmaTTL = 60 * 60 * 1000;
+const cutoffKarmaCache = new Map();
+function cutoffKarma(identity) {
+  const now = Date.now();
+  const cached = cutoffKarmaCache.get(identity);
+  if (cached && now - cached.at < cutoffKarmaTTL) return cached.points;
+  const points = karma.resolve(identity, cutoffDate);
+  cutoffKarmaCache.set(identity, { points, at: now });
+  return points;
+}
+
 export function identityClassifier(upvoter) {
-  const karmaScore = karma.resolve(upvoter.identity, cutoffDate);
+  const karmaScore = cutoffKarma(upvoter.identity);
   return {
     ...upvoter,
     isKiwi: karmaScore >= thresholdKarma,
@@ -424,11 +440,11 @@ export async function index(
   rankedStories = rankedStories.filter(({ index, identity, upvotes, timestamp }) => {
     const storyAgeInDays = itemAge(timestamp) / (60 * 24);
     const commentCount = commentCounts.get(`kiwi:0x${index}`) || 0;
-    const submitterKarma = identity
-      ? karma.resolve(identity, cutoffDate)
-      : 0;
-
-    if (upvotes <= 1 && submitterKarma < singleUpvoteKarmaThreshold) {
+    // Karma only matters for single-upvote stories, so skip the lookup otherwise.
+    if (
+      upvotes <= 1 &&
+      (identity ? cutoffKarma(identity) : 0) < singleUpvoteKarmaThreshold
+    ) {
       return false;
     }
 
