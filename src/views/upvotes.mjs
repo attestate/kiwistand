@@ -243,12 +243,6 @@ export default async function (trie, theme, identity, tab = "submissions") {
                             "Lens",
                           )
                         : ""}
-                      ${SocialButton(
-                        `https://app.interface.social/profile/${identity}`,
-                        "/interface_logo.png",
-                        "Interface",
-                        true,
-                      )}
                     </div>
                     
                     <!-- Tabs like Reddit/HN -->
