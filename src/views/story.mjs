@@ -23,7 +23,7 @@ import Header from "./components/header.mjs";
 import SecondHeader from "./components/secondheader.mjs";
 import Sidebar from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
-import Trollbox from "./components/trollbox.mjs";
+import RightColumn from "./components/right-column.mjs";
 import * as head from "./components/head.mjs";
 import * as store from "../store.mjs";
 import * as id from "../id.mjs";
@@ -475,7 +475,7 @@ export default async function (trie, theme, index, value, referral, commentIndex
       >
         <div class="container">
           ${Sidebar(path)}
-          ${Trollbox()}
+          ${RightColumn()}
           <main id="hnmain" class="scaled-hnmain" role="main">
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="var(--background-color0)">
               <thead>

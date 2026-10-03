@@ -4,7 +4,7 @@ import vhtml from "vhtml";
 import Header from "./components/header.mjs";
 import Footer from "./components/footer.mjs";
 import Sidebar from "./components/sidebar.mjs";
-import Trollbox from "./components/trollbox.mjs";
+import RightColumn from "./components/right-column.mjs";
 import { custom } from "./components/head.mjs";
 import Row, { extractDomain } from "./components/row.mjs";
 import * as parser from "../parser.mjs";
@@ -36,7 +36,7 @@ export default async function submit(theme, url = "", title = "") {
       <body ontouchstart="">
         <div class="container">
           ${Sidebar(path)}
-          ${Trollbox()}
+          ${RightColumn()}
           <div id="hnmain" class="scaled-hnmain">
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="var(--background-color0)">
               <tr>

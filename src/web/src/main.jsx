@@ -132,20 +132,6 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-async function addTrollbox() {
-  const container = document.getElementById("trollbox");
-  if (!container) return;
-
-  const Trollbox = (await import("./Trollbox.jsx")).default;
-  createRoot(container).render(
-    <StrictMode>
-      <Providers>
-        <Trollbox />
-      </Providers>
-    </StrictMode>,
-  );
-}
-
 async function addSubmitButton(delegations, toast) {
   const submitButtonContainer = document.getElementById("submit-button");
   if (submitButtonContainer) {
@@ -1766,7 +1752,6 @@ async function start() {
     ),
     addSubmitButton(await delegationsPromise, toast),
     addAnalytics(),
-    addTrollbox(),
   ]);
 
   results0.forEach((result, index) => {
