@@ -8,7 +8,9 @@ import * as registry from "./registry.mjs";
 // NOTE: The crawler polls the first host for new blocks every 5s and
 // rotates its eth_getLogs requests through all hosts, so that the load can
 // be spread across several providers' free tiers.
-const hosts = env.OPTIMISM_CRAWLER_RPC_HOSTS.split(",");
+const hosts = (
+  env.OPTIMISM_CRAWLER_RPC_HOSTS || env.OPTIMISM_RPC_HTTP_HOST
+).split(",");
 
 export default {
   environment: {
