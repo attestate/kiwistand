@@ -5,12 +5,20 @@ import * as blockLogs from "@attestate/crawler-call-block-logs";
 import * as delegations from "./delegations.mjs";
 import * as registry from "./registry.mjs";
 
+// NOTE: The crawler polls the first host for new blocks every 5s and
+// rotates its eth_getLogs requests through all hosts, so that the load can
+// be spread across several providers' free tiers.
+const hosts = (
+  env.OPTIMISM_CRAWLER_RPC_HOSTS || env.OPTIMISM_RPC_HTTP_HOST
+).split(",");
+
 export default {
   environment: {
     // NOTE: We're hard-coding these values here as they're mandated (falsely)
     // by the @attestate/crawler but since kiwistand will never use them for
     // anything.
-    rpcHttpHost: env.OPTIMISM_RPC_HTTP_HOST,
+    rpcHttpHost: hosts,
+    pollingInterval: 5000,
     // NOTE: We found that Infura's v3 endpoints don't like when we send
     // "Authorization: Bearer undefined" and so to make "environment.rpcApiKey"
     // in crawler-call-block-logs.state to not set an Authorization header,
@@ -89,13 +97,16 @@ export default {
       concurrent: 10,
     },
   },
-  endpoints: {
-    [process.env.OPTIMISM_RPC_HTTP_HOST]: {
-      timeout: 10_000,
-      // Respect Alchemy per-key throughput with a conservative cap
-      // Adjust upward if your plan allows higher RPS
-      requestsPerUnit: 15,
-      unit: "second",
-    },
-  },
+  endpoints: Object.fromEntries(
+    hosts.map((host) => [
+      host,
+      {
+        timeout: 10_000,
+        // Respect per-key throughput with a conservative cap
+        // Adjust upward if your plan allows higher RPS
+        requestsPerUnit: 15,
+        unit: "second",
+      },
+    ]),
+  ),
 };
