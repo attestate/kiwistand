@@ -3,8 +3,8 @@ name: Node.js CI
 on:
   push:
     branches: [ main ]
+  # Every PR, also those stacked on another PR's branch.
   pull_request:
-    branches: [ main ]
   workflow_dispatch:
 
 jobs:
