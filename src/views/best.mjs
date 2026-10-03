@@ -28,7 +28,7 @@ import log from "../logger.mjs";
 import { EIP712_MESSAGE } from "../constants.mjs";
 import Row, { extractDomain } from "./components/row.mjs";
 import { getBest, getLastComment, countImpressions, lifetimeCache } from "../cache.mjs";
-import { metadata } from "../parser.mjs";
+import { cachedMetadata, metadata } from "../parser.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -66,13 +66,18 @@ export async function recompute() {
   }
 }
 
-// Add metadata to a post
+// Add metadata to a post. Page renders read the metadata cache only (a miss
+// kicks off a background fetch) because pages > 0 render per request, and
+// blocking on live fetches for every story made the gateway time out. The
+// digest (raw) still waits for a full fetch.
 async function addMetadata(post, raw = false) {
   try {
-    const data = await metadata(post.href, false, undefined, raw);
+    const data = raw
+      ? await metadata(post.href)
+      : (await cachedMetadata(post.href)) || {};
     return {
       ...post,
-      metadata: data,
+      metadata: data.failed ? {} : data,
     };
   } catch (err) {
     return {
