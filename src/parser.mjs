@@ -171,7 +171,11 @@ function isCloudflareChallengePage(title) {
     lowercaseTitle.includes("checking your browser") ||
     lowercaseTitle.includes("cloudflare") ||
     lowercaseTitle === "please wait..." ||
-    lowercaseTitle.includes("ddos protection")
+    lowercaseTitle.includes("ddos protection") ||
+    lowercaseTitle.includes("vercel security checkpoint") ||
+    lowercaseTitle.includes("security checkpoint") ||
+    lowercaseTitle === "one moment, please..." ||
+    lowercaseTitle.includes("one moment, please")
   );
 }
 
@@ -190,7 +194,10 @@ export function isGenericTitle(title, hostname) {
 // NOTE: Site-wide fallback images that are the same for every page of a site
 // (e.g. arxiv's logo) make every preview of that site look identical, so we
 // treat them as no image.
-const genericImagePrefixes = ["https://static.arxiv.org/icons/"];
+const genericImagePrefixes = [
+  "https://static.arxiv.org/icons/",
+  "https://abs.twimg.com/rweb/ssr/default",
+];
 export function isGenericImage(url) {
   if (!url) return false;
   return genericImagePrefixes.some((prefix) => url.startsWith(prefix));
@@ -923,18 +930,33 @@ async function extractCanonicalLink(html) {
   return DOMPurify.sanitize(node.href);
 }
 
-const checkOgImage = async (url) => {
-  const signal = AbortSignal.timeout(5000);
+const CRAWLER_UA =
+  "facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)";
+
+const checkOgImage = async (url, userAgent = env.USER_AGENT) => {
+  // NOTE: Multi-megabyte PNGs (blog.ethereum.org's cards are ~3MB) do not
+  // finish inside 5s from the server, and the preview was dropped.
+  const signal = AbortSignal.timeout(15000);
   try {
     const res = await fetch(url, {
       agent: useAgent(url),
       signal,
       headers: {
-        "User-Agent": env.USER_AGENT,
+        "User-Agent": userAgent,
       },
     });
 
     if (!res.ok) {
+      if (
+        (res.status === 401 || res.status === 403 || res.status === 429) &&
+        userAgent !== CRAWLER_UA
+      ) {
+        if (res.body && typeof res.body.cancel === "function") {
+          res.body.cancel();
+        }
+        log(`Image ${res.status} for ${url}, retrying with crawler UA`);
+        return checkOgImage(url, CRAWLER_UA);
+      }
       log(`Failed to fetch image with status ${res.status}: ${url}`);
       return false;
     }
@@ -1137,22 +1159,22 @@ export const metadata = async (
     // If fromCache.failed, fall through to the !result early return below
   } else {
     log(`[metadata] Cache MISS for ${url}`);
-    // fxtwitter averages ~4.6s on prod — give it more headroom
-    const signal = AbortSignal.timeout(isFxTwitter ? 10000 : 5000);
     // Use bot User-Agent for fxtwitter to get actual images instead of warning SVGs
     const userAgent = isFxTwitter
       ? "TelegramBot (like TwitterBot)"
       : env.USER_AGENT;
     log(`[metadata] Using User-Agent: ${userAgent}`);
+    let lastStatus = 0;
 
     // For fxtwitter, wrap the HTML fetch in try-catch so a timeout doesn't
     // abort the whole function — we can still get article data from the JSON API.
-    const doHtmlFetch = async () => {
+    const doHtmlFetch = async (fetchUa = userAgent, timeoutMs = isFxTwitter ? 10000 : 8000) => {
       const response = await fetch(url, {
-        headers: { "User-Agent": userAgent },
+        headers: { "User-Agent": fetchUa },
         agent: useAgent(url),
-        signal,
+        signal: AbortSignal.timeout(timeoutMs),
       });
+      lastStatus = response.status;
 
       const contentTypeHeader = response.headers.get("content-type") || "";
       if (contentTypeHeader && !contentTypeHeader.includes("text/html")) {
@@ -1211,7 +1233,7 @@ export const metadata = async (
         }
       }
 
-      if (result) {
+      if (result && !isCloudflareChallengePage(result.ogTitle)) {
         await cache.set(url, { result, canIframe, canonicalLink }, { ttlMs: METADATA_SUCCESS_TTL });
       }
     };
@@ -1223,7 +1245,39 @@ export const metadata = async (
         log(`[metadata] fxtwitter HTML fetch failed (${err.message}), will try JSON API fallback`);
       }
     } else {
-      await doHtmlFetch();
+      try {
+        await doHtmlFetch();
+      } catch (err) {
+        log(`[metadata] HTML fetch failed (${err.message}), retrying with crawler UA`);
+      }
+      // NOTE: Sites like theblock.co and nytimes.com serve a challenge (or 403)
+      // to a browser UA and the real og:image to a crawler UA. One retry.
+      const hasPreview =
+        result &&
+        !isCloudflareChallengePage(result.ogTitle) &&
+        ((result.ogImage && result.ogImage.length) ||
+          (result.twitterImage && result.twitterImage.length) ||
+          result.ogDescription);
+      const blocked =
+        !hasPreview &&
+        (!result ||
+          isCloudflareChallengePage(result.ogTitle) ||
+          lastStatus === 401 ||
+          lastStatus === 403 ||
+          lastStatus === 429 ||
+          lastStatus >= 500);
+      if (blocked) {
+        const previous = result;
+        try {
+          await doHtmlFetch(CRAWLER_UA, 8000);
+          if (result && isCloudflareChallengePage(result.ogTitle)) {
+            result = previous;
+          }
+        } catch (err) {
+          log(`[metadata] Crawler retry failed: ${err.message}`);
+          if (!result) result = previous;
+        }
+      }
     }
   }
 
@@ -1250,11 +1304,11 @@ export const metadata = async (
   // og:image but the full-size original as twitter:image).
   let image;
   let fallbackImage;
-  if (result.ogImage && result.ogImage.length >= 1) {
+  if (result?.ogImage && result.ogImage.length >= 1) {
     image = result.ogImage[0].url;
     log(`[metadata] Found ogImage: ${image}`);
   }
-  if (result.twitterImage && result.twitterImage.length >= 1) {
+  if (result?.twitterImage && result.twitterImage.length >= 1) {
     const twitterImage = result.twitterImage[0].url;
     log(`[metadata] Found twitterImage: ${twitterImage}`);
     if (!image) image = twitterImage;
@@ -1275,10 +1329,10 @@ export const metadata = async (
   log(`[metadata] Initial image value: ${image}`);
   // Detect if the target has video content (used to avoid rendering text-only previews)
   const hasVideoContent = Boolean(
-    (result.ogVideo && result.ogVideo.length >= 1) ||
-      (result.twitterPlayer && result.twitterPlayer.length >= 1) ||
-      (result.twitterCard && String(result.twitterCard).toLowerCase() === "player") ||
-      (result.ogType && String(result.ogType).toLowerCase().includes("video"))
+    (result?.ogVideo && result.ogVideo.length >= 1) ||
+      (result?.twitterPlayer && result.twitterPlayer.length >= 1) ||
+      (result?.twitterCard && String(result.twitterCard).toLowerCase() === "player") ||
+      (result?.ogType && String(result.ogType).toLowerCase().includes("video"))
   );
   if (hostname === "youtu.be" || hostname.endsWith("youtube.com")) {
     const id = getYTId(url);
@@ -1287,8 +1341,8 @@ export const metadata = async (
     }
   }
 
-  const { ogTitle } = result;
-  let { ogDescription } = result;
+  const ogTitle = result?.ogTitle;
+  let ogDescription = result?.ogDescription;
 
   // Check if the title is a Cloudflare challenge page
   if (isCloudflareChallengePage(ogTitle)) {
@@ -1345,6 +1399,11 @@ export const metadata = async (
           }
           if (apiData?.tweet?.author?.screen_name) {
             output.twitterCreator = DOMPurify.sanitize(`@${apiData.tweet.author.screen_name}`);
+          }
+          // NOTE: The feed renders a tweet card only when ogDescription is set.
+          // fxtwitter's HTML fetch often times out (~4.6s); the JSON text is enough.
+          if (apiData?.tweet?.text && !result?.ogDescription) {
+            output.ogDescription = DOMPurify.sanitize(apiData.tweet.text);
           }
           if (apiData?.tweet?.article) {
             isXArticle = true;
@@ -1494,7 +1553,7 @@ export const metadata = async (
       twitterFrontends.includes(hostname) &&
       !ogDescription?.includes("x.com/i/article/")
     ) {
-      const tweetAuthor = result.ogTitle || result.twitterCreator;
+      const tweetAuthor = result?.ogTitle || result?.twitterCreator;
       const tweetContent = `Tweet by ${tweetAuthor}: ${ogDescription}`;
       const claudeTitle = await generateClaudeTitle(tweetContent);
       if (claudeTitle) {
@@ -1542,7 +1601,17 @@ export const metadata = async (
     }
     log(`[metadata] Image validation failed, not adding to output`);
   }
-  if (!output.twitterCreator && result.twitterCreator) {
+  if (!output.image && hostname === "github.com") {
+    const parts = urlObj.pathname.split("/").filter(Boolean);
+    if (parts.length >= 2) {
+      const card = `https://opengraph.githubassets.com/1/${parts[0]}/${parts[1]}`;
+      log(`[metadata] Trying GitHub social card: ${card}`);
+      if (await checkOgImage(card)) {
+        output.image = card;
+      }
+    }
+  }
+  if (!output.twitterCreator && result?.twitterCreator) {
     output.twitterCreator = DOMPurify.sanitize(result.twitterCreator);
   }
   // Forward useful media hints to the UI layer
