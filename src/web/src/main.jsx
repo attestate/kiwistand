@@ -12,10 +12,6 @@ import {
   setDelegationModalRef,
   preloadDelegationModal,
 } from "./delegationModalManager.js";
-import {
-  setENSNameModalRef,
-  preloadENSNameModal,
-} from "./ensNameModalManager.js";
 import { isSafariOnIOS, isIOSApp } from "./session.mjs";
 
 // Make SDK available globally for use in other parts of the app
@@ -543,24 +539,6 @@ async function addModals(delegations, toast) {
             ref={delegationModalRef}
             toast={toast}
             delegations={delegations}
-          />
-        </Providers>
-      </StrictMode>,
-    );
-  }
-
-  const ensNameModal = document.querySelector("nav-ens-name-modal");
-  if (ensNameModal) {
-    const ENSNameModal = (await preloadENSNameModal()).default;
-    const ensNameModalRef = createRef();
-    setENSNameModalRef(ensNameModalRef);
-
-    createRoot(ensNameModal).render(
-      <StrictMode>
-        <Providers>
-          <ENSNameModal
-            ref={ensNameModalRef}
-            toast={toast}
           />
         </Providers>
       </StrictMode>,
@@ -1714,7 +1692,6 @@ async function start() {
 
   // Preload modals early to avoid delays
   preloadDelegationModal();
-  preloadENSNameModal();
 
   const results0 = await Promise.allSettled([
     import("@rainbow-me/rainbowkit/styles.css"), // Load styles in parallel
