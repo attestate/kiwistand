@@ -7,6 +7,10 @@
 // blockers (403s for Googlebot, noindex, wrong canonicals, broken sitemaps)
 // show up without Search Console. Runs in .github/workflows/metrics.yml.
 //
+// NOTE: The runner is a datacenter IP, so this shows what an unverified
+// client gets. Cloudflare may treat the real crawlers (verified by IP) more
+// leniently; Cloudflare's Security Events show what they actually got.
+//
 //   node scripts/crawl-check.mjs [--site https://news.kiwistand.com]
 import { parseArgs } from "util";
 
@@ -23,6 +27,11 @@ const agents = {
   "OAI-SearchBot": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; OAI-SearchBot/1.0; +https://openai.com/searchbot",
   PerplexityBot: "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; PerplexityBot/1.0; +https://perplexity.ai/perplexitybot)",
   "Claude-SearchBot": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Claude-SearchBot/1.0; +https://www.anthropic.com)",
+  // Link previews when a Kiwi link is shared on X, Farcaster, Telegram, Slack.
+  Twitterbot: "Twitterbot/1.0",
+  facebookexternalhit: "facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)",
+  TelegramBot: "TelegramBot (like TwitterBot)",
+  Slackbot: "Slackbot-LinkExpanding 1.0 (+https://api.slack.com/robots)",
 };
 
 const pick = (html, pattern) => html.match(pattern)?.[1]?.trim().slice(0, 100) ?? "–";

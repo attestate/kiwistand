@@ -33,6 +33,28 @@ only sees consented browsers), then find where returning readers drop off.
 
 ## Needs Tim
 
+### Urgent: Cloudflare challenges crawlers on story pages
+The crawl check (`scripts/crawl-check.mjs`, metrics workflow) gets a
+**403 "Just a moment…" challenge with `noindex,nofollow`** on `/new`,
+`/best` and every story page, for all user agents (browser, Googlebot,
+Bingbot, OAI-SearchBot, PerplexityBot, Claude-SearchBot); only `/`,
+robots.txt and llms.txt return 200. It runs from a datacenter IP, so real
+crawlers (verified by IP) may be let through, but new engaged visitors from
+Google, Farcaster and X all went to zero in Q2 2026, which fits link
+previews and crawlers being challenged.
+- [ ] Cloudflare → Security → Events: filter Action = Managed Challenge,
+      Path contains `/stories/`. Which rule or feature is it (a custom
+      rule, Bot Fight Mode, Security Level "I'm under attack")? Are
+      Googlebot / Twitterbot / facebookexternalhit / TelegramBot in there?
+- [ ] If it's a custom rule: add `and not cf.client.bot` to its expression,
+      or put a Skip rule for `(cf.client.bot)` first (Cloudflare's
+      recommendation). If it's Bot Fight Mode (Free plan), it can't be
+      skipped by rules; consider turning it off and using a custom rule
+      instead. If it's "I'm under attack", switch the security level back.
+- [ ] Afterwards Search Console → URL inspection on a story page → "Test
+      live URL" should show 200 and the page.
+
+
 ### Previews
 - [ ] Run the audit on the server and send Claude the Markdown report:
       `node scripts/preview-audit.mjs --days 180` (see the script header for options).
