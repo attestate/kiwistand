@@ -16,6 +16,7 @@ User-agent: Applebot-Extended
 User-agent: CCBot
 Allow: /llms.txt
 Allow: /stories/context
+Allow: /feed.xml
 Disallow: /outbound
 Disallow: /redirect/
 Disallow: /best?*domain=

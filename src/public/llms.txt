@@ -19,6 +19,7 @@ Story pages live at `https://news.kiwistand.com/stories/<slug>?index=0x<index>`.
 
 - [Story as LLM context](https://news.kiwistand.com/stories/context?index=0x...): plain-text Markdown with the title, source URL, extracted article text and all comments. Best choice to answer questions about one story. Every story page links to it via `<link rel="alternate" type="text/plain">`.
 - [Hot feed JSON](https://news.kiwistand.com/api/v1/feeds/hot): trending stories, `?page=0` paginates
+- [Hot feed RSS](https://news.kiwistand.com/feed.xml): the same trending stories as RSS 2.0; items link to the Kiwi story page, the description holds the original link
 - [New feed JSON](https://news.kiwistand.com/api/v1/feeds/new): newest stories
 - [Best feed JSON](https://news.kiwistand.com/api/v1/feeds/best?period=week): top stories for a period
 - [Story JSON](https://news.kiwistand.com/api/v1/stories?index=0x...): one story including its comments
@@ -75,9 +76,7 @@ If you only want to build a client against the Kiwi News API, use the public ins
 -   **Core API (Read/Write)**: `https://news.kiwistand.com:8443/api/v1`
 -   **Public Feeds (Read-only)**: `https://news.kiwistand.com/api/v1`
 
-**Note**: For browser-based applications, you'll need to handle CORS:
-- Port 8443 endpoints work directly from browsers
-- Port 443 endpoints require a server-side proxy due to lack of CORS headers
+**Note**: Both ports send `Access-Control-Allow-Origin: *` (the `cors` middleware with default options in `src/http.mjs` and `src/api.mjs`), so browser apps can call either one directly.
 
 ### For Node Operators (Advanced)
 
@@ -190,7 +189,7 @@ For curated feeds, use the GET endpoints on port 443:
     - `GET https://news.kiwistand.com/api/v1/feeds/new`
     - `GET https://news.kiwistand.com/api/v1/feeds/best`
 -   **Query Parameters**: `?page=0` for pagination
--   **Note**: These endpoints don't support CORS, so browser clients need a proxy
+-   **Note**: CORS is enabled (`Access-Control-Allow-Origin: *`), so browser clients can call these directly
 
 **Response Format for /feeds/* endpoints:**
 ```json
@@ -334,12 +333,9 @@ console.log("Is signature valid?", recoveredAddress.toLowerCase() === signer.toL
 
 ### CORS Handling
 
-Since port 443 endpoints don't support CORS, browser-based clients have two options:
+Both ports allow cross-origin requests (`Access-Control-Allow-Origin: *`, preflights are cached for 24 hours), so browser clients can fetch the endpoints directly. A server-side proxy is optional, e.g. to add your own caching.
 
-1. **Server-side Proxy**: Create API routes in your framework (Next.js, Express, etc.) to proxy requests
-2. **Use Port 8443 Only**: Stick to the core API endpoints which have CORS enabled
-
-### Example Next.js Proxy Route
+### Example Next.js Proxy Route (optional)
 
 ```javascript
 // app/api/proxy/feeds/[name]/route.ts
@@ -389,7 +385,7 @@ You can test the API endpoints using curl:
 
 ```bash
 
-# Get hot feed (port 443, no CORS)
+# Get hot feed (port 443)
 curl https://news.kiwistand.com/api/v1/feeds/hot
 
 # Get stories list (port 8443)
@@ -444,7 +440,7 @@ const storiesWithComments = await Promise.all(
 ## Common Pitfalls
 
 1. **Using wrong port**: Remember port 8443 for core API, port 443 for public feeds
-2. **CORS issues**: Port 443 endpoints need a proxy for browser access
+2. **CORS**: Both ports send `Access-Control-Allow-Origin: *`; no proxy is needed for browser access
 3. **Missing required fields**: The API validates JSON schemas strictly
 4. **Timestamp format**: Use UNIX timestamps in seconds, not milliseconds
 5. **Signature format**: Ensure signatures include the "0x" prefix
