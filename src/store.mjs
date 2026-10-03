@@ -651,7 +651,9 @@ export async function posts(
   const enhancer = enhance(delegations, cacheEnabled);
   const posts = (await Promise.allSettled(nodes.map(enhancer)))
     .map(({ value }) => value)
-    .filter((elem) => elem !== null);
+    // NOTE: Rejected results have no `value`, so they map to `undefined`; we
+    // drop those as well as explicit `null`s.
+    .filter((elem) => elem !== null && elem !== undefined);
   return posts;
 }
 

@@ -100,35 +100,32 @@ export function handleDiscovery(evt) {
   log(`discovered ${evt.detail.id.toString()}`);
 }
 
+// NOTE: Returns a `stop` function that ends the advertisement loop (used in
+// tests, where an endless loop would keep publishing after assertions ran).
 export function advertise(trie, node, timeout) {
-  let lastRoot;
+  let stopped = false;
   async function loop() {
     // NOTE: We initially didn't send the same root twice, given that it
     // increases the gossiped messages. However, this lead to cases where two
     // nodes wouldn't synchronize (for unknown reasons).
     //
-    //if (lastRoot && Buffer.compare(lastRoot, trie.root()) === 0) {
-    //  log(
-    //    `Last root "${lastRoot.toString(
-    //      "hex"
-    //    )}" is equal to current root "${trie
-    //      .root()
-    //      .toString("hex")}", so advertisement is canceled`
-    //  );
-    //} else {
-    const rootMsg = encode({ root: trie.root().toString("hex") });
-    log(
-      `Advertising new root to peers: "${roots.name}" and message: "${rootMsg}"`,
-    );
-    node.pubsub.publish(roots.name, rootMsg);
-    //}
-
-    lastRoot = trie.root();
-    await setTimeout(timeout);
-    return await loop();
+    // NOTE: This used to be `return await loop()` (async recursion), which
+    // grows an ever longer promise chain over the process lifetime. A plain
+    // loop does the same without retaining previous iterations.
+    while (!stopped) {
+      const rootMsg = encode({ root: trie.root().toString("hex") });
+      log(
+        `Advertising new root to peers: "${roots.name}" and message: "${rootMsg}"`,
+      );
+      node.pubsub.publish(roots.name, rootMsg);
+      await setTimeout(timeout);
+    }
   }
 
   loop();
+  return () => {
+    stopped = true;
+  };
 }
 
 // TODO: serialize and deserialize should be mappable functions
@@ -168,6 +165,49 @@ export function send(libp2p) {
   };
 }
 
+function timestampOf(leaf) {
+  try {
+    const { timestamp } = JSON.parse(decode(leaf.node.value()));
+    return Number.isFinite(timestamp) ? timestamp : Infinity;
+  } catch (err) {
+    return Infinity;
+  }
+}
+
+// NOTE: Leaves are sent in chunks so that a large difference (e.g. a fresh
+// node) doesn't produce a single wire message above `maxDataLength`.
+export const leavesChunkSize = 500;
+export async function sendLeaves(innerSend, peerId, missingLeaves) {
+  // NOTE: The receiving node rejects a comment whose parent it doesn't have
+  // yet, and a comment's timestamp is always greater than its parent's. So
+  // sending all leaves in ascending timestamp order ensures that parents
+  // arrive before their children, also across chunks.
+  const sorted = missingLeaves
+    .map((leaf) => ({ leaf, timestamp: timestampOf(leaf) }))
+    .sort((a, b) =>
+      a.timestamp === b.timestamp ? 0 : a.timestamp < b.timestamp ? -1 : 1,
+    )
+    .map(({ leaf }) => leaf);
+
+  log(`Sending "${sorted.length}" missing leaves to peer node`);
+  for (let i = 0; i < sorted.length; i += leavesChunkSize) {
+    const chunk = sorted.slice(i, i + leavesChunkSize);
+    await innerSend(
+      peerId,
+      `/${leaves.id}/${leaves.version}`,
+      serialize(chunk),
+    );
+  }
+}
+
+// NOTE: Missing leaves used to be sent to the peer level by level, right after
+// each level's comparison. But a comment and its parent are generally at
+// different depths of the trie (the position depends on the key, not on the
+// thread structure), and the peer rejects a comment whose parent it doesn't
+// have yet. So whenever a comment sat at a shallower level than its (also
+// missing) parent, it got dropped and needed another full sync round - one
+// round per level of comment nesting. We hence collect the missing leaves of
+// all levels and send them, sorted by timestamp, once the descent is done.
 export async function initiate(
   trie, // is ideally an immutable copy of the system's trie.
   peerId,
@@ -175,6 +215,40 @@ export async function initiate(
   level = 0,
   innerSend,
   peerFab,
+) {
+  const pending = { leaves: [] };
+  try {
+    return await initiateLevel(
+      trie,
+      peerId,
+      exclude,
+      level,
+      innerSend,
+      peerFab,
+      pending,
+    );
+  } finally {
+    // NOTE: If the descent was aborted midway (e.g. an invalid response at a
+    // deeper level), we still hand over the leaves we already know are
+    // missing, as the level-by-level sending did before.
+    if (pending.leaves.length > 0) {
+      try {
+        await sendLeaves(innerSend, peerId, pending.leaves);
+      } catch (err) {
+        elog(err, "initiate: Failed while sending leaves after abort");
+      }
+    }
+  }
+}
+
+async function initiateLevel(
+  trie,
+  peerId,
+  exclude,
+  level,
+  innerSend,
+  peerFab,
+  pending,
 ) {
   const lastSyncPeer = peerFab.get();
   if (lastSyncPeer && lastSyncPeer.equals(peerId) && level === 0) {
@@ -210,6 +284,20 @@ export async function initiate(
     elog(err, "initiate: failed descending and aborting.");
     peerFab.set();
     return;
+  }
+
+  if (remotes.length === 0 && pending.leaves.length > 0) {
+    // NOTE: We send the leaves before the final (empty) levels message, as the
+    // latter makes the peer end the sync.
+    const missingLeaves = pending.leaves;
+    pending.leaves = [];
+    try {
+      await sendLeaves(innerSend, peerId, missingLeaves);
+    } catch (err) {
+      elog(err, "initiate: Failed while sending leaves");
+      peerFab.set();
+      return;
+    }
   }
 
   let response;
@@ -267,21 +355,7 @@ export async function initiate(
   }
   missing = missing.filter(({ node }) => node instanceof LeafNode);
 
-  if (missing.length > 0) {
-    log(`Sending "${missing.length}" missing leaves to peer node`);
-    try {
-      await innerSend(
-        peerId,
-        `/${leaves.id}/${leaves.version}`,
-        // TODO: This might go wrong and we might wanna try catch it separately.
-        serialize(missing),
-      );
-    } catch (err) {
-      elog(err, "initiate: Failed while sending leaves");
-      peerFab.set();
-      return;
-    }
-  }
+  pending.leaves.push(...missing);
 
   let allMatches = [...exclude];
   if (response.match && response.match.length !== 0) {
@@ -295,13 +369,14 @@ export async function initiate(
     }
     allMatches = [...allMatches, ...matches.map(({ hash }) => hash)];
   }
-  return await initiate(
+  return await initiateLevel(
     trie,
     peerId,
     allMatches,
     level + 1,
     innerSend,
     peerFab,
+    pending,
   );
 }
 
@@ -316,14 +391,18 @@ export async function put(trie, message, delegations) {
     throw err;
   }
 
-  for await (let { node, key } of missing) {
+  // NOTE: We first decode all received leaves and only then add them to the
+  // store. A single undecodable leaf used to `break` out of the loop (and an
+  // unparsable one used to `throw`), which silently dropped every leaf that
+  // came after it in the batch.
+  const objs = [];
+  for (const { node } of missing) {
     let value;
     try {
       value = decode(node.value());
     } catch (err) {
       elog(err, `put: can't decode node value "${node.value()}"`);
-      break;
-      throw err;
+      continue;
     }
 
     let obj;
@@ -331,19 +410,31 @@ export async function put(trie, message, delegations) {
       obj = JSON.parse(value);
     } catch (err) {
       elog(err, `put: Can't JSON-parse value "${value}"`);
-      throw err;
+      continue;
     }
+    objs.push(obj);
+  }
 
+  // NOTE: Leaves arrive in trie order, i.e. ordered by their key's nibbles as
+  // found by the trie walk, and not in causal order. But `store.add` rejects
+  // a comment whose parent (story or comment) isn't in the trie yet. So when a
+  // comment and its parent were part of the same batch and the comment came
+  // first, the comment was dropped and only re-sent in a later sync round
+  // (one extra round per level of comment nesting). A comment's timestamp is
+  // enforced to be strictly greater than its parent's, so adding the messages
+  // in ascending timestamp order guarantees parents are stored first.
+  objs.sort((a, b) => {
+    const tsA = Number.isFinite(a?.timestamp) ? a.timestamp : Infinity;
+    const tsB = Number.isFinite(b?.timestamp) ? b.timestamp : Infinity;
+    if (tsA === tsB) return 0;
+    return tsA < tsB ? -1 : 1;
+  });
+
+  for (const obj of objs) {
     const libp2p = null;
     const synching = true;
     try {
-      await store.add(
-        trie,
-        obj,
-        libp2p,
-        delegations,
-        synching,
-      );
+      await store.add(trie, obj, libp2p, delegations, synching);
       log(`Adding to database value (as JSON)`);
     } catch (err) {
       // NOTE: We're not bubbling the error up here because we want to be
