@@ -68,8 +68,14 @@ export function getCachedHtml() {
 }
 
 let inProgress = false;
+// NOTE: A submission that arrives while a recompute is running must not be
+// dropped, so we run once more afterwards.
+let rerun = false;
 export async function recompute() {
-  if (inProgress) return;
+  if (inProgress) {
+    rerun = true;
+    return;
+  }
   inProgress = true;
 
   try {
@@ -193,6 +199,10 @@ export async function recompute() {
     throw err;
   } finally {
     inProgress = false;
+    if (rerun) {
+      rerun = false;
+      recompute().catch((err) => log(`recompute rerun error: ${err}`));
+    }
   }
 }
 
