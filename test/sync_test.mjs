@@ -6,6 +6,10 @@ import test from "ava";
 import { pipe } from "it-pipe";
 import { pushable } from "it-pushable";
 import * as lp from "it-length-prefixed";
+import { createLibp2p } from "libp2p";
+import { tcp } from "@libp2p/tcp";
+import { noise } from "@chainsafe/libp2p-noise";
+import { mplex } from "@libp2p/mplex";
 
 import all from "it-all";
 import { encode, decode } from "cbor-x";
@@ -18,6 +22,11 @@ import {
   toWire,
   advertise,
   syncPeerFactory,
+  chunkList,
+  maxMessageBytes,
+  send,
+  handleLevels,
+  receive,
 } from "../src/sync.mjs";
 import { bootstrap } from "../src/id.mjs";
 import * as store from "../src/store.mjs";
@@ -232,4 +241,102 @@ test("serializing from wire", async (t) => {
 
   const actual = await fromWire(stream);
   t.deepEqual(actual, [message]);
+});
+
+test("chunkList stays under the byte budget and keeps order", (t) => {
+  const items = Array.from({ length: 40 }, (_, i) => ({
+    n: i,
+    blob: "y".repeat(80),
+  }));
+  const maxBytes = 400;
+  const chunks = chunkList(items, maxBytes);
+  t.true(chunks.length > 1);
+  t.deepEqual(
+    chunks.flat().map((item) => item.n),
+    items.map((item) => item.n),
+  );
+  for (const chunk of chunks) {
+    const size = encode(chunk).length;
+    if (chunk.length > 1) t.true(size <= maxBytes);
+  }
+});
+
+// Two real libp2p nodes, both speaking the current (chunked) protocol.
+// The trie is bigger than one frame, so a single leaves/levels message would
+// have been the thing that used to force maxDataLength up.
+test.serial("two nodes on the new protocol sync a trie bigger than one frame", async (t) => {
+  t.is(PROTOCOL.protocols.leaves.version, "15.0.0");
+  t.is(PROTOCOL.protocols.levels.version, "15.0.0");
+
+  const dirA = "dbtestChunkA";
+  const dirB = "dbtestChunkB";
+  await rm(dirA, { recursive: true, force: true });
+  await rm(dirB, { recursive: true, force: true });
+
+  env.DATA_DIR = dirA;
+  const trieA = await store.create();
+  const value = Buffer.from("x".repeat(8000));
+  const leafCount = 150;
+  for (let i = 0; i < leafCount; i++) {
+    const key = Buffer.from(i.toString(16).padStart(64, "0"), "hex");
+    await trieA.put(key, value);
+  }
+
+  env.DATA_DIR = dirB;
+  const trieB = await store.create();
+  t.notDeepEqual(trieA.root(), trieB.root());
+
+  const options = () => ({
+    addresses: { listen: ["/ip4/127.0.0.1/tcp/0"] },
+    transports: [tcp()],
+    streamMuxers: [mplex()],
+    connectionEncryption: [noise()],
+  });
+  const nodeA = await createLibp2p(options());
+  const nodeB = await createLibp2p(options());
+  await nodeA.start();
+  await nodeB.start();
+
+  const { levels, leaves } = PROTOCOL.protocols;
+  const peerFabB = syncPeerFactory();
+  await nodeB.handle(
+    `/${levels.id}/${levels.version}`,
+    handleLevels(trieB, peerFabB),
+  );
+  let leafFrames = 0;
+  await nodeB.handle(
+    `/${leaves.id}/${leaves.version}`,
+    receive(peerFabB, trieB, false, async (message) => {
+      leafFrames += 1;
+      await simplePut(trieB, message);
+    }),
+  );
+
+  const addr = nodeB.getMultiaddrs()[0];
+  await nodeA.dial(addr);
+
+  const frames = [];
+  const innerSend = async (peerId, protocol, message) => {
+    const bytes = encode(message).length;
+    frames.push({ protocol, bytes, count: message.length });
+    if (message.length > 1) t.true(bytes <= maxMessageBytes);
+    return send(nodeA)(peerId, protocol, message);
+  };
+
+  try {
+    await initiate(trieA, nodeB.peerId, [], 0, innerSend, syncPeerFactory());
+    t.deepEqual(trieA.root(), trieB.root());
+    t.true(leafFrames > 1, `expected several leaf frames, got ${leafFrames}`);
+    const biggest = frames.reduce((max, frame) => Math.max(max, frame.bytes), 0);
+    t.log(
+      `frames=${frames.length} leafFrames=${leafFrames} biggest=${biggest} budget=${maxMessageBytes}`,
+    );
+    t.true(frames.length > leafFrames);
+    t.true(biggest <= maxMessageBytes);
+  } finally {
+    await nodeA.stop();
+    await nodeB.stop();
+    await rm(dirA, { recursive: true, force: true });
+    await rm(dirB, { recursive: true, force: true });
+  }
 });
