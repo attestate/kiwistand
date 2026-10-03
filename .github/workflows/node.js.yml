@@ -13,17 +13,15 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [18.x]
+        node-version: [22.x]
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
     - run: npm ci
-    # Install node-fetch for compression tests
-    - run: npm install node-fetch@2
-    # Run all tests
-    - run: npm run test
+    # Run the offline tests (live-network tests are excluded)
+    - run: npm run test:offline
       env: 
         HTTP_MESSAGES_MAX_PAGE_SIZE: "500"

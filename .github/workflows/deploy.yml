@@ -1,0 +1,68 @@
+name: Deploy
+
+# Tests every push to main and, if they pass, does what `npm run deploy`
+# does by hand: build the web bundle, rsync to the server, then restart.
+#
+# Needs these repository secrets:
+#   DEPLOY_SSH_KEY      private key whose public key is in the server's
+#                       ~/.ssh/authorized_keys
+#   DEPLOY_KNOWN_HOSTS  output of `ssh-keyscan 91.107.210.214`
+# and these repository variables:
+#   DEPLOY_ENABLED      "true" turns deploys on (until then only tests run)
+#   DEPLOY_RESTART_CMD  optional: what runs on the server after the rsync
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# One deploy at a time; a newer push waits for the running one.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+      - run: npm ci
+      - run: npm run test:offline
+        env:
+          HTTP_MESSAGES_MAX_PAGE_SIZE: "500"
+
+  deploy:
+    needs: test
+    if: vars.DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+      - run: cd src/web && npm install
+      - run: npm run build
+
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          echo "${{ secrets.DEPLOY_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+
+      # Same excludes as `npm run rsync`.
+      - name: Rsync to server
+        run: |
+          rsync -avz -e "ssh -i ~/.ssh/id_deploy" . root@91.107.210.214:./kiwistand \
+            --exclude=.claude --exclude=src/iOS --exclude=certificates \
+            --exclude=anonlocal --exclude=cache --exclude=docs --exclude=anon \
+            --exclude=node_modules --exclude=.git --exclude=bootstrap --exclude=data
+
+      - name: Install and restart on server
+        run: |
+          ssh -i ~/.ssh/id_deploy root@91.107.210.214 \
+            "${{ vars.DEPLOY_RESTART_CMD || 'cd kiwistand && npm ci && pm2 restart all' }}"
