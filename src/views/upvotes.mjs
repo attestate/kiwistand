@@ -36,11 +36,35 @@ import {
 
 const html = htm.bind(vhtml);
 
+// NOTE: The data the profile page is rendered from. Also served as JSON via
+// /upvotes?address=…&format=json, e.g. for the iOS app.
+export async function data(identity, tab = "submissions") {
+  const profile = await ens.resolve(identity);
+  const points = karma.resolve(identity);
+  const limit = 30;
+  const offset = 0;
+  const orderBy = tab === "top" ? "votes" : "new";
+  const submissions = getSubmissions(identity, limit, offset, orderBy);
+  const totalSubmissions = getSubmissionCount(identity);
+  const rank =
+    karma
+      .ranking()
+      .findIndex((k) => k.identity.toLowerCase() === identity.toLowerCase()) +
+    1;
+  return { profile, karma: points, rank, submissions, totalSubmissions };
+}
+
 export default async function (trie, theme, identity, tab = "submissions") {
   if (!utils.isAddress(identity)) {
     return html`Not a valid address`;
   }
-  const ensData = await ens.resolve(identity);
+  const {
+    profile: ensData,
+    karma: points,
+    rank,
+    submissions,
+    totalSubmissions,
+  } = await data(identity, tab);
 
   let ogImage = ensData.safeAvatar;
 
@@ -50,19 +74,7 @@ export default async function (trie, theme, identity, tab = "submissions") {
     ? ensData.farcaster.bio
     : "";
   const twitterCard = "summary";
-  const points = karma.resolve(identity);
   const path = "/upvotes";
-  
-  // Fetch user's submissions 
-  const limit = 30;
-  const offset = 0;
-  const orderBy = tab === "top" ? "votes" : "new";
-  const submissions = getSubmissions(identity, limit, offset, orderBy);
-  const totalSubmissions = getSubmissionCount(identity);
-  
-  // Get karma rank
-  const allKarma = karma.ranking();
-  const rank = allKarma.findIndex(k => k.identity.toLowerCase() === identity.toLowerCase()) + 1;
   return "<!DOCTYPE html>" + html`
     <html lang="en" op="news">
       <head>
