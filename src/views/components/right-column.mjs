@@ -16,7 +16,7 @@ export default function RightColumn() {
           >
             <span
               style="font-size:14px;font-weight:500;color:var(--text-primary);"
-              >Get Kiwi App</span
+              >New: native iOS app</span>
             >
             <img
               src="/testflight-qr.png"
@@ -28,7 +28,7 @@ export default function RightColumn() {
             <p
               style="font-size:12px;color:var(--text-tertiary);text-align:center;margin:0;line-height:1.4;"
             >
-              Scan with iPhone to join<br />TestFlight beta
+              Rebuilt from scratch. Scan with<br />your iPhone to try it on TestFlight
             </p>
           </div>
         </div>

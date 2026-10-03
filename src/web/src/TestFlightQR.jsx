@@ -16,7 +16,7 @@ const TestFlightQR = () => {
         alignItems: 'center',
         gap: '12px'
       }}>
-        <span style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-primary)' }}>Get Kiwi App</span>
+        <span style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-primary)' }}>New: native iOS app</span>
 
         <img
           src="/testflight-qr.png"
@@ -33,7 +33,7 @@ const TestFlightQR = () => {
           margin: 0,
           lineHeight: '1.4'
         }}>
-          Scan with iPhone to join<br />TestFlight beta
+          Rebuilt from scratch. Scan with<br />your iPhone to try it on TestFlight
         </p>
       </div>
     </div>
