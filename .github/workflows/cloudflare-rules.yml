@@ -1,7 +1,7 @@
 name: Cloudflare rules
 
-# Lets public pages (stories, /new, /best, /feed.xml) skip Super Bot Fight
-# Mode, so link previews and AI agents aren't challenged. See
+# Lets the RSS feed, sitemaps, robots.txt, llms.txt and farcaster.json skip
+# Super Bot Fight Mode, so feed readers aren't challenged. See
 # scripts/cloudflare-rules.mjs. Run it by hand: Actions → Cloudflare rules →
 # Run workflow. Without "apply" it only prints a summary and the change.
 #

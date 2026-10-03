@@ -2,13 +2,14 @@
 // @format
 //
 // Shows a summary of the zone's Cloudflare bot setup and, with --apply, adds (or
-// updates) one custom rule that lets public GET pages skip Super Bot Fight
-// Mode: story pages, /new, /best and /feed.xml. Bot Fight Mode's "definitely
-// automated" setting answers those pages with a managed challenge, which also
-// hits link-preview fetchers (Farcaster, X, Telegram) and AI agents from cloud
-// IPs. The same content is public via /api/ (already exempt), so the challenge
-// doesn't stop scrapers, only legitimate fetchers. Everything else (WAF
-// managed rules, rate limiting, the other custom rules) keeps running.
+// updates) one custom rule that lets machine-readable files skip Super Bot
+// Fight Mode: the RSS feed, sitemaps, robots.txt, llms.txt and farcaster.json.
+// Their clients (RSS readers, Farcaster) can't solve the managed challenge
+// that "definitely automated" traffic gets, and Cloudflare's firewall events
+// show RSS readers on cloud IPs being challenged on /feed.xml. HTML pages keep
+// the challenge: there it mostly stops scrapers, and verified crawlers
+// (Googlebot, Bingbot, ClaudeBot, Applebot) already pass. Everything else
+// (WAF managed rules, rate limiting, the other custom rules) keeps running.
 //
 // Runs in .github/workflows/cloudflare-rules.yml.
 //
@@ -32,9 +33,9 @@ if (!token || !zone) {
 const REF = "kiwi_public_pages_skip_sbfm";
 const rule = {
   ref: REF,
-  description: "Public pages: skip Super Bot Fight Mode (link previews, AI agents)",
+  description: "Feeds and machine-readable files: skip Super Bot Fight Mode",
   expression:
-    '(http.request.method eq "GET" and (starts_with(http.request.uri.path, "/stories/") or http.request.uri.path in {"/new" "/best" "/feed.xml"}))',
+    '(http.request.method in {"GET" "HEAD"} and (http.request.uri.path in {"/feed.xml" "/robots.txt" "/llms.txt" "/.well-known/farcaster.json"} or (starts_with(http.request.uri.path, "/sitemap") and ends_with(http.request.uri.path, ".xml"))))',
   action: "skip",
   action_parameters: { phases: ["http_request_sbfm"] },
   logging: { enabled: true },
