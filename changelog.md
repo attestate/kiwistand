@@ -5,6 +5,20 @@
 - We are versioning according to [semver.org](https://semver.org)
 - We are currently in the ["Initial development phase"](https://semver.org/#spec-item-4)
 
+## Unreleased
+
+**BREAKING CHANGE**: Chunk trie sync so one frame no longer grows with the tree
+
+Sync used to put every node of a level, and then every missing leaf, into a single length-prefixed message. That payload grew with the trie, which is why `maxDataLength` went 4MB → 8MB → 16MB → 32MB.
+
+A level and its missing leaves are now sent as several frames of at most 1 MiB. Each frame is the same CBOR array as before, so the receiver stores it the same way. `maxDataLength` is 2 MiB: a ceiling for one frame, not for the trie. It does not need to move again as the tree grows.
+
+- **Protocol versions bumped**:
+  - Pubsub topics (roots/messages): `11.0.0 → 12.0.0`
+  - Protocols (leaves/levels): `14.0.0 → 15.0.0`
+
+**Migration**: All nodes must upgrade together. A 15.0.0 node will not sync with a 14.0.0 node.
+
 ## 0.14.0
 
 **BREAKING CHANGE**: Add text post support with inline content

@@ -77,11 +77,39 @@ export async function toWire(message, sink) {
   return await sink(encoded);
 }
 
-// NOTE: it-length-prefixed's default configuration will throw errors for
-// messages that are longer than 4MB, so we're doubling it here.
-// NOTE: 2024-09-09, we're doubling it again
-// NOTE: 2025-01-03, doubling it once more to 32MB
-export const maxDataLength = 1024 * 1024 * 4 * 2 * 2 * 2;
+// One frame is at most 1 MiB. A level (and the missing leaves under it) used
+// to go out as a single length-prefixed message, so the cap had to double
+// every time the trie grew (4MB, then 8, 16, 32). Frames stay this size and
+// the trie can grow without another bump. maxDataLength is only headroom for
+// one frame: the length prefix, plus a comparison object that is slightly
+// larger than the request it answers. A single node bigger than
+// maxMessageBytes is still sent alone; it must fit under maxDataLength.
+export const maxMessageBytes = 1024 * 1024;
+export const maxDataLength = maxMessageBytes * 2;
+
+// Split a list into chunks whose CBOR encoding stays within maxBytes.
+// encode([item]) includes a one-element array header, so summing those
+// lengths overestimates the real array and chunks land under the budget.
+// A single item larger than maxBytes is emitted as its own chunk.
+export function chunkList(items, maxBytes = maxMessageBytes) {
+  if (!Array.isArray(items) || items.length === 0) return [];
+  const chunks = [];
+  let current = [];
+  let bytes = 0;
+  for (const item of items) {
+    const itemBytes = encode([item]).length;
+    if (current.length > 0 && bytes + itemBytes > maxBytes) {
+      chunks.push(current);
+      current = [];
+      bytes = 0;
+    }
+    current.push(item);
+    bytes += itemBytes;
+  }
+  if (current.length > 0) chunks.push(current);
+  return chunks;
+}
+
 export async function fromWire(source) {
   const decoded = lp.decode({ maxDataLength })(source);
   const process = async (_source) => {
@@ -202,27 +230,26 @@ export async function initiate(
 
   let remotes;
   try {
-    remotes = await store.descend(trie, level, exclude);
+    remotes = serialize(await store.descend(trie, level, exclude));
   } catch (err) {
     elog(err, "initiate: failed descending and aborting.");
     peerFab.set();
     return;
   }
 
-  let response;
-  try {
-    response = await innerSend(
-      peerId,
-      `/${levels.id}/${levels.version}`,
-      serialize(remotes),
-    );
-  } catch (err) {
-    elog(err, "initiate: error when sending levels");
-    peerFab.set();
-    return;
-  }
+  const levelsProtocol = `/${levels.id}/${levels.version}`;
+  const leavesProtocol = `/${leaves.id}/${leaves.version}`;
 
+  // An empty level used to be sent once and then end the walk. chunkList
+  // would drop it, so keep that send explicit.
   if (remotes.length === 0) {
+    try {
+      await innerSend(peerId, levelsProtocol, remotes);
+    } catch (err) {
+      elog(err, "initiate: error when sending levels");
+      peerFab.set();
+      return;
+    }
     log(
       `Ending initiate on level: "${level}" with root: "${trie
         .root()
@@ -232,66 +259,89 @@ export async function initiate(
     return;
   }
 
-  let isValidResponse;
-  try {
-    isValidResponse = comparisonValidator(response);
-  } catch (err) {
-    elog(
-      err,
-      "initiate: response of received levels comparison was schema-invalid",
-    );
-    peerFab.set();
-    return;
-  }
+  const levelChunks = chunkList(remotes);
+  log(
+    `Sending level "${level}" (${remotes.length} nodes) in "${levelChunks.length}" frame(s)`,
+  );
 
-  if (!isValidResponse) {
-    log(
-      `Wrongly formatted comparison message: ${JSON.stringify(
-        comparisonValidator.errors,
-      )}. Instead got "${JSON.stringify(response)}". Aborting initiate.`,
-    );
-    peerFab.set();
-    return;
-  }
-
-  let missing;
-  try {
-    missing = deserialize(response.missing);
-  } catch (err) {
-    elog(err, "initiate: deserializing response to parse 'missing' failed");
-    peerFab.set();
-    return;
-  }
-  missing = missing.filter(({ node }) => node instanceof LeafNode);
-
-  if (missing.length > 0) {
-    log(`Sending "${missing.length}" missing leaves to peer node`);
-    try {
-      await innerSend(
-        peerId,
-        `/${leaves.id}/${leaves.version}`,
-        // TODO: This might go wrong and we might wanna try catch it separately.
-        serialize(missing),
-      );
-    } catch (err) {
-      elog(err, "initiate: Failed while sending leaves");
-      peerFab.set();
-      return;
-    }
-  }
-
+  // Same order as one message: compare each frame, keep the missing leaves,
+  // then send those (themselves framed) before descending.
+  const missingLeaves = [];
   let allMatches = [...exclude];
-  if (response.match && response.match.length !== 0) {
-    let matches;
+
+  for (const chunk of levelChunks) {
+    let response;
     try {
-      matches = deserialize(response.match);
+      response = await innerSend(peerId, levelsProtocol, chunk);
     } catch (err) {
-      elog(err, "initiate: deserializing 'matches' failed");
+      elog(err, "initiate: error when sending levels");
       peerFab.set();
       return;
     }
-    allMatches = [...allMatches, ...matches.map(({ hash }) => hash)];
+
+    let isValidResponse;
+    try {
+      isValidResponse = comparisonValidator(response);
+    } catch (err) {
+      elog(
+        err,
+        "initiate: response of received levels comparison was schema-invalid",
+      );
+      peerFab.set();
+      return;
+    }
+
+    if (!isValidResponse) {
+      log(
+        `Wrongly formatted comparison message: ${JSON.stringify(
+          comparisonValidator.errors,
+        )}. Instead got "${JSON.stringify(response)}". Aborting initiate.`,
+      );
+      peerFab.set();
+      return;
+    }
+
+    let missing;
+    try {
+      missing = deserialize(response.missing);
+    } catch (err) {
+      elog(err, "initiate: deserializing response to parse 'missing' failed");
+      peerFab.set();
+      return;
+    }
+    for (const entry of missing) {
+      if (entry.node instanceof LeafNode) missingLeaves.push(entry);
+    }
+
+    if (response.match && response.match.length !== 0) {
+      let matches;
+      try {
+        matches = deserialize(response.match);
+      } catch (err) {
+        elog(err, "initiate: deserializing 'matches' failed");
+        peerFab.set();
+        return;
+      }
+      allMatches = [...allMatches, ...matches.map(({ hash }) => hash)];
+    }
   }
+
+  if (missingLeaves.length > 0) {
+    const leafChunks = chunkList(serialize(missingLeaves));
+    log(
+      `Sending "${missingLeaves.length}" missing leaves in "${leafChunks.length}" frame(s)`,
+    );
+    for (const chunk of leafChunks) {
+      try {
+        await innerSend(peerId, leavesProtocol, chunk);
+      } catch (err) {
+        elog(err, "initiate: Failed while sending leaves");
+        peerFab.set();
+        return;
+      }
+    }
+  }
+
   return await initiate(
     trie,
     peerId,
