@@ -22,9 +22,9 @@ export default function BlueskyEmail({ story = { metadata: {} } }) {
 
   return (
     <>
-      <Section style={container} bgcolor="#f6f6ef">
-        <Section style={{ ...embedContainer, backgroundColor: '#ffffff', borderBottom: '1px solid #e6e6df' }} bgcolor="#ffffff">
-          <Link href={story.storyLink} style={{ textDecoration: 'none', color: '#000000 !important', display: 'block' }}>
+      <Section style={container} className="k-card" bgcolor="#f6f6ef">
+        <Section style={{ ...embedContainer, backgroundColor: '#ffffff', borderBottom: '1px solid #e6e6df' }} className="k-embed" bgcolor="#ffffff">
+          <Link href={story.storyLink} className="k-link" style={{ textDecoration: 'none', color: '#000000', display: 'block' }}>
             <Row>
               <Column width="30">
                 {post?.author?.avatar ? (
@@ -43,7 +43,7 @@ export default function BlueskyEmail({ story = { metadata: {} } }) {
                 </Text>
               </Column>
             </Row>
-            <Text style={{ wordBreak: 'break-word', whiteSpace: 'pre-wrap', margin: '8px 0 0', color: '#000000' }}>
+            <Text className="k-text" style={{ wordBreak: 'break-word', whiteSpace: 'pre-wrap', margin: '8px 0 0', color: '#000000' }}>
               {post?.text && post.text.length > 260
                 ? post.text.slice(0, 260) + '…'
                 : post?.text}
@@ -59,11 +59,11 @@ export default function BlueskyEmail({ story = { metadata: {} } }) {
           </Link>
         </Section>
 
-        <Section style={{ padding: '12px 20px 10px 12px', backgroundColor: '#f6f6ef' }} bgcolor="#f6f6ef">
-          <Text style={{ fontSize: '9pt', marginTop: '3px', marginBottom: '0', lineHeight: '1.4', color: '#666' }}>
-            submitted by <Link href={submitterProfileLink} style={{ fontWeight: 600, color: '#000000 !important', textDecoration: 'none' }}>{displayName}</Link>
+        <Section style={{ padding: '12px 20px 10px 12px', backgroundColor: '#f6f6ef' }} className="k-card" bgcolor="#f6f6ef">
+          <Text className="k-muted" style={{ fontSize: '9pt', marginTop: '3px', marginBottom: '0', lineHeight: '1.4', color: '#666' }}>
+            submitted by <Link href={submitterProfileLink} className="k-link" style={{ fontWeight: 600, color: '#000000', textDecoration: 'none' }}>{displayName}</Link>
             {' • '}
-            <Link href={story.storyLink} style={{ color: '#000000 !important', textDecoration: 'none' }}>bsky.app</Link>
+            <Link href={story.storyLink} className="k-link" style={{ color: '#000000', textDecoration: 'none' }}>bsky.app</Link>
             {story.upvotes ? ` • ${story.upvotes} upvotes` : ''}
             {story.comments ? ` • ${story.comments} comments` : ''}
             {story.clicks ? ` • ${story.clicks} clicks` : ''}
@@ -71,7 +71,7 @@ export default function BlueskyEmail({ story = { metadata: {} } }) {
         </Section>
       </Section>
       <Section style={{ padding: '12px 0' }}>
-        <Link href={story.storyLink} style={buttonStyle}>Read the story</Link>
+        <Link href={story.storyLink} className="k-button" style={buttonStyle}>Read on Kiwi</Link>
       </Section>
     </>
   );
@@ -93,7 +93,7 @@ const embedContainer = {
 
 const buttonStyle = {
   backgroundColor: '#000000',
-  color: '#ffffff !important',
+  color: '#ffffff',
   padding: '10px 20px',
   borderRadius: '0',
   textDecoration: 'none',

@@ -1,0 +1,131 @@
+{
+  "generatedAt": "2026-10-03T12:00:00.000Z",
+  "stories": [
+    {
+      "href": "data:text/plain,I%20used%20Opus%205.5%20to%20completely%20rewrite%20the%20app%20from%20scratch%20%F0%9F%98%82",
+      "title": "Kiwi News iOS now available as native swift UI apl",
+      "timestamp": 1791032480,
+      "identity": "0xee324c588ceF1BF1c1360883E4318834af66366d",
+      "index": "6ac0fca090b3eb85ed707efc511954dc0381d7e1b1f6fef8020a539ef1fd3bb169c815c1",
+      "displayName": "timdaub.eth",
+      "upvotes": 2,
+      "impressions": 7,
+      "metadata": {
+        "domain": "",
+        "ogTitle": "",
+        "ogDescription": "",
+        "canIframe": false
+      },
+      "storyLink": "https://news.kiwistand.com/stories/Kiwi-News-iOS-now-available-as-native-swift-UI-apl?index=0x6ac0fca090b3eb85ed707efc511954dc0381d7e1b1f6fef8020a539ef1fd3bb169c815c1&utm_source=kiwi-newsletter&utm_medium=email",
+      "comments": 3,
+      "clicks": 0,
+      "submitterLink": "https://news.kiwistand.com/upvotes?address=0xee324c588ceF1BF1c1360883E4318834af66366d&utm_source=kiwi-newsletter"
+    },
+    {
+      "href": "https://arstechnica.com/ai/2026/09/openai-says-planned-gpt-6-1-is-too-insecure-to-release",
+      "title": "OpenAI says planned GPT-6.1 is too insecure to release",
+      "timestamp": 1790749939,
+      "identity": "0xC304Eef1023e0b6e644f8ED8f8c629fD0973c52d",
+      "index": "6abcacf3335f6c96dcee3af16215e056b0b85128cf2ea7a9eaceee9064f6c434ea934ce2",
+      "displayName": "mishaderidder.eth",
+      "upvotes": 2,
+      "impressions": 23,
+      "metadata": {
+        "ogTitle": "OpenAI says planned GPT-6.1 is too insecure to release",
+        "domain": "arstechnica.com",
+        "image": "https://cdn.arstechnica.net/wp-content/uploads/2026/09/GettyImages-1822585391-1152x648.jpg",
+        "ogDescription": "Similar performance, security trade-offs also seen in current public models.",
+        "canIframe": false
+      },
+      "storyLink": "https://news.kiwistand.com/stories/OpenAI-says-planned-GPT-6-1-is-too-insecure-to-release?index=0x6abcacf3335f6c96dcee3af16215e056b0b85128cf2ea7a9eaceee9064f6c434ea934ce2&utm_source=kiwi-newsletter&utm_medium=email",
+      "comments": 0,
+      "clicks": 0,
+      "submitterLink": "https://news.kiwistand.com/upvotes?address=0xC304Eef1023e0b6e644f8ED8f8c629fD0973c52d&utm_source=kiwi-newsletter"
+    },
+    {
+      "href": "https://x.com/SlowMist_Team/status/2105855276536725599",
+      "title": "Aave Loop Safe module: fake Safe spoofs isModuleEnabled, drains 114 ETH",
+      "timestamp": 1791055303,
+      "identity": "0xC0B37550389d7569a1f23f2A4721b04689353D80",
+      "index": "6ac155c7f5b0e3c2b518328f5476b243e335295f73c2f3ea745b1e65d2b69b61db1ca684",
+      "displayName": "0xC0B3...3D80",
+      "upvotes": 2,
+      "impressions": 2,
+      "metadata": {
+        "twitterAuthorAvatar": "https://pbs.twimg.com/profile_images/1635467425788616705/f0L6oae__200x200.png",
+        "twitterCreator": "@SlowMist_Team",
+        "domain": "fxtwitter.com",
+        "image": "https://pbs.twimg.com/profile_images/1635467425788616705/f0L6oae__400x400.png",
+        "ogDescription": "\ud83d\udea8SlowMist TI Alert\ud83d\udea8<br><br>\ud83d\udcb8 @aave  v3 Loop Safe Module Loss: ~114.09 ETH<br><br>\ud83d\udd0d Root Cause: FlashLoopAdapter's open()/close() access control only checks ISafe(msg.sender).isModuleEnabled(address(this)), which is spoofable via a fake Safe that always returns true. Its _swap() then executes http://router.call with fully attacker-controlled router and calldata. Since the adapter is an enabled module of the victim Safes, the attacker set router=victim Safe and data=execTransactionFromModule to drain weETH and Aave collateral.<br><br>\ud83d\udccc Attacker: 0x42c2633438609881c8fBAb82414eb9A0c45F9353<br>\ud83d\udccc Victim: 0xe3b23e47df7cd85876ac6cb05bdb9d7cd5b28520, 0xcfedf95a3653a128dfc2e4288758a1a1850d169f<br>\ud83d\udccc Vulnerable Contract: 0x16bb8b912da187870c23ec6756bb3fad061283d8<br><br>Impact: ~114.09 ETH stolen from two Safe multisigs via forged Safe authentication and arbitrary module execution; ~1300 WETH debt repaid to unlock collateral.<br><br>Powered by http://SlowMist.AI<br>Tx: https://etherscan.io/tx/0x75328f916b1a0878724d364da5eb12b255160b894cb36c63ed5d718efc616fc4",
+        "canIframe": true
+      },
+      "storyLink": "https://news.kiwistand.com/stories/Aave-Loop-Safe-module-fake-Safe-spoofs-isModuleEnabled-drains-114-ETH?index=0x6ac155c7f5b0e3c2b518328f5476b243e335295f73c2f3ea745b1e65d2b69b61db1ca684&utm_source=kiwi-newsletter&utm_medium=email",
+      "comments": 0,
+      "clicks": 0,
+      "submitterLink": "https://news.kiwistand.com/upvotes?address=0xC0B37550389d7569a1f23f2A4721b04689353D80&utm_source=kiwi-newsletter"
+    },
+    {
+      "href": "https://blog.ethereum.org/en/2026/10/01/introducing-zkapi",
+      "title": "Introducing zkAPI: private usage credits for any API",
+      "timestamp": 1790893245,
+      "identity": "0xC304Eef1023e0b6e644f8ED8f8c629fD0973c52d",
+      "index": "6abedcbddc8adbfb0a17cbaf5185b0a063238792e27452968dfd548f1b84b02e71197524",
+      "displayName": "mishaderidder.eth",
+      "upvotes": 2,
+      "impressions": 33,
+      "metadata": {
+        "ogTitle": "Introducing zkAPI: private usage credits for any API | Ethereum Foundation Blog",
+        "domain": "ethereum.org",
+        "twitterCreator": "@ethereum",
+        "ogDescription": "tl;dr: zkAPI lets you pay for a metered API without being known. Deposit credits into an Ethereum vault once, then authorize bounded usage with zero-knowledge...",
+        "canIframe": true
+      },
+      "storyLink": "https://news.kiwistand.com/stories/Introducing-zkAPI-private-usage-credits-for-any-API?index=0x6abedcbddc8adbfb0a17cbaf5185b0a063238792e27452968dfd548f1b84b02e71197524&utm_source=kiwi-newsletter&utm_medium=email",
+      "comments": 0,
+      "clicks": 0,
+      "submitterLink": "https://news.kiwistand.com/upvotes?address=0xC304Eef1023e0b6e644f8ED8f8c629fD0973c52d&utm_source=kiwi-newsletter"
+    },
+    {
+      "href": "https://larvalabs.com/writing/2026-10-2-18-0/introducing-the-larva-labs-catalog",
+      "title": "Introducing the Larva Labs Catalog",
+      "timestamp": 1790979260,
+      "identity": "0xC304Eef1023e0b6e644f8ED8f8c629fD0973c52d",
+      "index": "6ac02cbc8579ff81dc9a54723594eac701f7d84890d81e42a06d5251b253044810dc0dd5",
+      "displayName": "mishaderidder.eth",
+      "upvotes": 2,
+      "impressions": 19,
+      "metadata": {
+        "ogTitle": "Larva Labs / Introducing the Larva Labs Catalog",
+        "domain": "larvalabs.com",
+        "image": "https://larvalabs.com/public/images/blog/catalog/thumbnail.png",
+        "ogDescription": "A unified, complete, and searchable view of all our works.",
+        "canIframe": true
+      },
+      "storyLink": "https://news.kiwistand.com/stories/Introducing-the-Larva-Labs-Catalog?index=0x6ac02cbc8579ff81dc9a54723594eac701f7d84890d81e42a06d5251b253044810dc0dd5&utm_source=kiwi-newsletter&utm_medium=email",
+      "comments": 0,
+      "clicks": 0,
+      "submitterLink": "https://news.kiwistand.com/upvotes?address=0xC304Eef1023e0b6e644f8ED8f8c629fD0973c52d&utm_source=kiwi-newsletter"
+    },
+    {
+      "href": "https://thedefiant.io/news/blockchains/base-ships-cobalt-with-conditional-transactions-and-a-seize-function",
+      "title": "Base Ships Cobalt With Conditional Transactions And A Seize Function",
+      "timestamp": 1790846802,
+      "identity": "0xe8BbE391340E0a3bf1aC13166c41266b65598CE9",
+      "index": "6abe27522746f221af659fb223b0bf7eb0629b4f6b0735a9c91e78b9b73edc317d6837e3",
+      "displayName": "rvolz.eth",
+      "upvotes": 2,
+      "impressions": 19,
+      "metadata": {
+        "domain": "thedefiant.io",
+        "ogTitle": "",
+        "ogDescription": "",
+        "canIframe": false,
+        "isCloudflareChallenge": true
+      },
+      "storyLink": "https://news.kiwistand.com/stories/Base-Ships-Cobalt-With-Conditional-Transactions-And-A-Seize-Function?index=0x6abe27522746f221af659fb223b0bf7eb0629b4f6b0735a9c91e78b9b73edc317d6837e3&utm_source=kiwi-newsletter&utm_medium=email",
+      "comments": 0,
+      "clicks": 0,
+      "submitterLink": "https://news.kiwistand.com/upvotes?address=0xe8BbE391340E0a3bf1aC13166c41266b65598CE9&utm_source=kiwi-newsletter"
+    }
+  ]
+}

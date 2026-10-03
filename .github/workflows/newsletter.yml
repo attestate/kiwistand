@@ -1,0 +1,86 @@
+name: Newsletter
+
+# Weekly digest: generates the top stories on the server (it needs the
+# node's data), renders the email there, checks it on the runner
+# (newsletter/scripts/validate.mjs) and hands it to Buttondown.
+#
+# Scheduled runs send to subscribers once the repository variable
+# NEWSLETTER_ENABLED is "true". A manual run (Actions → Newsletter → Run
+# workflow) creates a Buttondown draft unless "send" is ticked.
+#
+# Needs the repository secret BUTTON_DOWN_API_KEY and the deploy SSH
+# secrets (DEPLOY_SSH_KEY, DEPLOY_KNOWN_HOSTS, see deploy.yml).
+
+on:
+  schedule:
+    # Sundays 14:43 UTC (16:43 in Berlin, 10:43 in New York).
+    - cron: "43 14 * * 0"
+  workflow_dispatch:
+    inputs:
+      send:
+        description: "Send to all subscribers (unticked: Buttondown draft only)"
+        type: boolean
+        default: false
+
+concurrency:
+  group: newsletter
+  cancel-in-progress: false
+
+jobs:
+  newsletter:
+    if: github.event_name == 'workflow_dispatch' || vars.NEWSLETTER_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          echo "${{ secrets.DEPLOY_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+
+      - name: Generate and render the digest on the server
+        run: |
+          ssh -i ~/.ssh/id_deploy root@91.107.210.214 \
+            'set -e; cd kiwistand/newsletter && npm ci --no-audit --no-fund && npm run export'
+
+      - name: Copy the digest back
+        run: |
+          scp -i ~/.ssh/id_deploy root@91.107.210.214:kiwistand/digest-data.json ./digest-data.json
+          mkdir -p newsletter/out
+          scp -i ~/.ssh/id_deploy root@91.107.210.214:kiwistand/newsletter/out/Digest.html newsletter/out/Digest.html
+
+      - name: Install newsletter dependencies
+        run: npm ci --prefix newsletter --no-audit --no-fund
+
+      - name: Check the email
+        working-directory: newsletter
+        run: node scripts/validate.mjs out/Digest.html --min-stories 3
+
+      - name: Hand it to Buttondown
+        working-directory: newsletter
+        env:
+          BUTTON_DOWN_API_KEY: ${{ secrets.BUTTON_DOWN_API_KEY }}
+        run: |
+          if [ "${{ github.event_name }}" = "schedule" ] || [ "${{ inputs.send }}" = "true" ]; then
+            node send.mjs --publish
+          else
+            node send.mjs
+          fi
+
+      - name: Keep the rendered email
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: newsletter
+          path: |
+            newsletter/out/Digest.html
+            digest-data.json
+          if-no-files-found: ignore
+          retention-days: 30
