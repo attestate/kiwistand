@@ -64,6 +64,22 @@ export function custom(
   canonicalUrl = null,
   frameImage = null,
   variant = null,
+  // NOTE: Optional extras so callers don't have to pass more positional args:
+  // - documentTitle: <title> if it should differ from og:title (e.g. with a
+  //   " | Kiwi News" suffix for search results while cards stay clean)
+  // - ogType: explicit og:type, otherwise guessed from the canonical URL
+  // - publishedTime: ISO 8601 date for article:published_time
+  // - author: URL of the author's profile for article:author
+  // - authorName: display name for <meta name="author">
+  // - rss: adds <link rel="alternate" type="application/rss+xml">
+  {
+    documentTitle = null,
+    ogType = null,
+    publishedTime = null,
+    author = null,
+    authorName = null,
+    rss = false,
+  } = {},
 ) {
   const embedMetaContent = JSON.stringify({
     version: "next",
@@ -85,8 +101,14 @@ export function custom(
   //   ];
   // }
   ogImage = DOMPurify.sanitize(decodeHtmlEntities(ogImage));
-  ogTitle = DOMPurify.sanitize(decodeHtmlEntities(ogTitle));
-  ogDescription = DOMPurify.sanitize(decodeHtmlEntities(ogDescription));
+  ogTitle = decodeHtmlEntities(DOMPurify.sanitize(decodeHtmlEntities(ogTitle)));
+  ogDescription = decodeHtmlEntities(DOMPurify.sanitize(decodeHtmlEntities(ogDescription)));
+  documentTitle = documentTitle
+    ? decodeHtmlEntities(DOMPurify.sanitize(decodeHtmlEntities(documentTitle)))
+    : ogTitle;
+  ogType =
+    ogType ||
+    (canonicalUrl && canonicalUrl.includes("/stories/") ? "article" : "website");
   return html`
     <link rel="preconnect" href="https://www.googletagmanager.com" />
     <link rel="preconnect" href="https://imagedelivery.net" />
@@ -179,7 +201,12 @@ export function custom(
     ${ogDescription
       ? html`<meta name="description" content="${ogDescription}" />`
       : html`<meta name="description" content="Kiwi News - handpicked web3 alpha" />`}
-    <meta property="og:type" content="${canonicalUrl && canonicalUrl.includes("/stories/") ? "article" : "website"}" />
+    <meta property="og:type" content="${ogType}" />
+    ${publishedTime
+      ? html`<meta property="article:published_time" content="${publishedTime}" />`
+      : null}
+    ${author ? html`<meta property="article:author" content="${author}" />` : null}
+    ${authorName ? html`<meta name="author" content="${authorName}" />` : null}
     ${canonicalUrl
       ? html`<meta property="og:url" content="${canonicalUrl}" />`
       : ""}
@@ -198,7 +225,15 @@ export function custom(
     <link rel="stylesheet" href="news.css?v=${cssHash}" />
     <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
     ${PwaLinks()}
-    <title>${ogTitle}</title>
+    <title>${documentTitle}</title>
+    ${rss
+      ? html`<link
+          rel="alternate"
+          type="application/rss+xml"
+          title="Kiwi News (hot)"
+          href="${domain}/feed.xml"
+        />`
+      : null}
     ${canonicalUrl
       ? html`<link rel="canonical" href="${canonicalUrl}" />`
       : null}

@@ -35,7 +35,7 @@ import * as karma from "../karma.mjs";
 import { truncateName, getSlug, isCloudflareImage } from "../utils.mjs";
 import { identityClassifier } from "./feed.mjs";
 import { render, cachedMetadata } from "../parser.mjs";
-import { getSubmission } from "../cache.mjs";
+import { getSubmission, getBest } from "../cache.mjs";
 import { purgeCache } from "../cloudflarePurge.mjs";
 import * as preview from "../preview.mjs";
 import ShareIcon from "./components/shareicon.mjs";
@@ -193,6 +193,35 @@ export async function generatePreview(index, commentIndex = null) {
   }
 }
 
+
+// NOTE: "More from <site>" links give crawlers and readers a path from a story
+// page to older story pages. It uses getBest(), the same query that powers
+// /best?domain=, and the regular moderation lists (both are already cached).
+export async function moreFromSite(href, index, limit = 5) {
+  if (!href || !href.startsWith("https://") || isCloudflareImage(href)) {
+    return { site: "", stories: [] };
+  }
+  let site;
+  try {
+    site = new URL(href).hostname.replace(/^www\./, "");
+  } catch (err) {
+    return { site: "", stories: [] };
+  }
+  if (!site) return { site: "", stories: [] };
+
+  try {
+    const candidates = getBest(limit * 2 + 1, 0, null, site, 0);
+    const policy = await moderation.getLists();
+    const stories = moderation
+      .moderate(candidates, policy, "/stories")
+      .filter((story) => story.index !== index)
+      .slice(0, limit);
+    return { site, stories };
+  } catch (err) {
+    log(`moreFromSite failed for ${site}: ${err.toString()}`);
+    return { site, stories: [] };
+  }
+}
 
 export default async function (trie, theme, index, value, referral, commentIndex = null) {
   const path = "/stories";
@@ -418,6 +447,8 @@ export default async function (trie, theme, index, value, referral, commentIndex
     ogTitle = value.title;
   }
   
+  const related = await moreFromSite(value.href, index);
+
   const slug = getSlug(value.title);
   const canonicalUrl = commentIndex 
     ? `${baseUrl}/stories/${slug}?index=0x${index}&commentIndex=${commentIndex}`
@@ -472,6 +503,15 @@ export default async function (trie, theme, index, value, referral, commentIndex
           ["/", "/new?cached=true", "/submit"],
           canonicalUrl,
           frameImage,
+          null,
+          {
+            documentTitle: `${ogTitle} | Kiwi News`,
+            ogType: "article",
+            publishedTime: new Date(value.timestamp * 1000).toISOString(),
+            author: `${baseUrl}/upvotes?address=${story.identity}`,
+            authorName: story.submitter.displayName,
+            rss: true,
+          },
         )}
         ${commentIndex
           ? html`<meta name="robots" content="noindex, follow" />`
@@ -493,6 +533,7 @@ export default async function (trie, theme, index, value, referral, commentIndex
           ${Sidebar(path)}
           ${RightColumn()}
           <main id="hnmain" class="scaled-hnmain" role="main">
+            <h1 class="visually-hidden">${value.title}</h1>
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="var(--background-color0)">
               <thead>
                 <tr>
@@ -769,6 +810,31 @@ export default async function (trie, theme, index, value, referral, commentIndex
                   </div>
                 </td>
               </tr>
+              ${related.stories.length > 0
+                ? html`<tr>
+                    <td style="padding: 0 0 12px 0;">
+                      <div style="margin: 0 11px;">
+                        <h2
+                          style="font-size: 10pt; font-weight: 500; margin: 0 0 8px 0; color: var(--text-secondary);"
+                        >
+                          More from ${related.site} on Kiwi News
+                        </h2>
+                        <ul style="list-style: none; margin: 0; padding: 0; font-size: 10pt; line-height: 1.4;">
+                          ${related.stories.map(
+                            (item) => html`<li style="margin-bottom: 6px;">
+                              <a
+                                class="meta-link"
+                                style="color: var(--text-primary);"
+                                href="/stories/${getSlug(item.title)}?index=0x${item.index}"
+                                >${item.title}</a
+                              >
+                            </li>`,
+                          )}
+                        </ul>
+                      </div>
+                    </td>
+                  </tr>`
+                : null}
               <tr style="height: 40px;"></tr>
             </table>
             <div class="desktop-only-footer">

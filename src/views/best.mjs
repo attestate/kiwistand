@@ -219,6 +219,13 @@ export default async function index(theme, page, period, domain) {
           ${Sidebar("/best")}
           ${RightColumn()}
           <main id="hnmain" class="scaled-hnmain" role="main">
+            <h1 class="visually-hidden">
+              Best crypto stories on Kiwi News${period === "all"
+                ? " of all time"
+                : period === "day"
+                  ? " today"
+                  : ` this ${period}`}
+            </h1>
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="var(--background-color0)">
               <tr>
                 ${await Header(theme)}

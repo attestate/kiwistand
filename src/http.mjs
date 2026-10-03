@@ -101,6 +101,8 @@ import {
 } from "./social-posting.mjs";
 import { sendBroadcastNotification } from "./onesignal.mjs";
 import { extractArticleCached } from "./lib/listen/extract.mjs";
+import { hotFeed as hotFeedRSS } from "./rss.mjs";
+import { readFile } from "fs/promises";
 
 const app = express();
 const ENS_NAME_SIGNATURE_TTL_SECONDS = 5 * 60;
@@ -277,6 +279,26 @@ app.use(
     },
   }),
 );
+
+// NOTE: The primary process regenerates the sitemaps hourly (launch.mjs). sirv
+// indexes src/public once at startup (including each file's Content-Length),
+// so it would serve stale lengths for rewritten sitemaps and 404 for new
+// months. Read them from disk on every request instead.
+app.get(/^\/sitemap(-static|-\d{4}-\d{2})?\.xml$/, async (req, res, next) => {
+  let xml;
+  try {
+    xml = await readFile(path.join("src/public", req.path));
+  } catch (err) {
+    return next();
+  }
+  if (env.NODE_ENV === "production") {
+    res.setHeader(
+      "Cache-Control",
+      "public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400",
+    );
+  }
+  res.type("application/xml").send(xml);
+});
 
 app.use(
   sirv("src/public", {
@@ -1971,6 +1993,38 @@ export async function launch(trie, libp2p, isPrimary = true) {
       "public, s-maxage=20, max-age=0, stale-while-revalidate=86400",
     );
     return reply.status(200).type("text/html").send(content.valueOf());
+  });
+
+  // RSS 2.0 rendering of the hot feed, same data as /api/v1/feeds/hot.
+  app.get("/feed.xml", async (request, reply) => {
+    const config = variantConfigs[currentVariant] || variantConfigs.control;
+    let results;
+    try {
+      results = await index(
+        trie,
+        0,
+        undefined,
+        sub(new Date(), { weeks: 3 }),
+        false,
+        false,
+        config.algorithm,
+      );
+    } catch (err) {
+      log(`Error in /feed.xml: ${err.stack}`);
+      return reply.status(500).type("text/plain").send("Internal Server Error");
+    }
+    const stories = results.stories.map((story) => ({
+      ...story,
+      commentCount: countComments(`kiwi:0x${story.index}`),
+    }));
+    reply.header(
+      "Cache-Control",
+      "public, s-maxage=300, max-age=0, stale-while-revalidate=86400",
+    );
+    return reply
+      .status(200)
+      .type("application/rss+xml; charset=utf-8")
+      .send(hotFeedRSS(stories));
   });
 
   app.get("/stories/context", async (request, reply) => {

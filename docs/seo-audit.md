@@ -1,4 +1,4 @@
-# SEO and AI-agent audit (phase 1, code only)
+# SEO and AI-agent audit (phases 1 and 2, code only)
 
 Date: 2026-10-03. Source: code in this repo only (no live crawl, no analytics).
 Impact: H/M/L. Effort: S (< 1h), M (half a day), L (needs data or design).
@@ -15,10 +15,10 @@ generic description and no canonical.
 
 | Page | Title | Description | Canonical | JSON-LD | Indexable | Sitemap |
 |---|---|---|---|---|---|---|
-| `/` (feed.mjs) | "Kiwi News - handpicked crypto news for builders" | specific | `/` (also for `?page=N`) | WebSite + SearchAction + Organization (FIXED) | yes; `?domain=` blocked in robots | static |
+| `/` (feed.mjs) | "Kiwi News - handpicked crypto news for builders"; hidden `<h1>` and RSS `rel=alternate` (phase 2) | specific | `/` (also for `?page=N`) | WebSite + SearchAction + Organization (FIXED) | yes; `?domain=` blocked in robots | static |
 | `/new` | specific | specific | `/new?cached=true` | none | yes | static (`/new?cached=true`) |
 | `/best` | specific | specific | `/best` for all periods/pages | none | yes; `?domain=` blocked | static |
-| `/stories/<slug>?index=0x…` | story title | og:description of the article, else a story-specific fallback (FIXED, was "Crypto news for builders" on every such page) | canonical slug URL; wrong slugs 308-redirect | DiscussionForumPosting | yes | monthly sitemaps |
+| `/stories/<slug>?index=0x…` | "<story> \| Kiwi News", og:title = story title, hidden `<h1>`, `og:type=article` + `article:*` tags (phase 2) | og:description of the article, else a story-specific fallback (FIXED, was "Crypto news for builders" on every such page) | canonical slug URL; wrong slugs 308-redirect | DiscussionForumPosting | yes | monthly sitemaps, lastmod = latest comment, regenerated hourly (phase 2) |
 | `/stories/…&commentIndex=…` | "Comment on: …" | comment text | self (includes commentIndex) | same as story | now `noindex, follow` (FIXED) | no |
 | `/stories/context?index=…` | text/plain Markdown | – | – | – | now `X-Robots-Tag: noindex`, explicitly allowed for crawlers (FIXED) | no |
 | `/upvotes?address=…` (profile) | "<name> (<karma> 🥝) on Kiwi News" | specific | self | none | yes | no |
@@ -33,7 +33,7 @@ generic description and no canonical.
 
 ## Findings
 
-### Fixed in this pass
+### Fixed in phase 1
 
 1. **H/S – Duplicate comment-permalink pages.** Every comment on a story page
    links to `…&commentIndex=<id>`, which rendered a near-copy of the story
@@ -79,24 +79,84 @@ generic description and no canonical.
    JSON) and a "How to cite" section. The existing developer guide is kept
    below unchanged.
 
+### Fixed in phase 2
+
+Numbers refer to the phase 1 "Open" table.
+
+- **#1 – `<h1>`.** Story pages now have exactly one `<h1>` with the story
+  title; `/`, `/new` and `/best` have one describing the page ("Kiwi News:
+  handpicked crypto news for builders", "New crypto stories on Kiwi News",
+  "Best crypto stories on Kiwi News this week/today/of all time"). All are
+  visually hidden with a new `.visually-hidden` class (standard clip
+  pattern, `src/public/news.css`), placed as the first child of `<main>`.
+  Why not wrap the visible title link in `Row()`: the link sits inside two
+  `<span>`s (an `<h1>` there is invalid HTML), `Row()` is shared by every
+  feed, and for tweet/cast previews the title span is `display: none`, so
+  the heading would disappear on exactly those stories. The hidden `<h1>`
+  carries the same text as the visible title, so it isn't cloaking.
+  Profile pages still have no `<h1>`.
+- **#2 – Story `<title>` suffix.** `custom()` takes an options object as
+  its last parameter; `documentTitle` sets `<title>` separately from
+  `og:title`. Story pages: `<title>` = "<story> | Kiwi News", og:title stays
+  the bare title. While there: `<title>`, og:title and the description were
+  double-escaped (`&` showed as `&amp;amp;`, i.e. "&amp;" in SERPs) because
+  DOMPurify returns HTML that vhtml escapes again; the sanitized value is
+  now entity-decoded before vhtml escapes it once.
+- **#3 – Sitemap `lastmod` and schedule.** `lastmod` is the later of
+  submission time and the latest comment (one grouped `MAX(timestamp)`
+  query over `comments` on a read-only SQLite connection, since `cache.mjs`
+  doesn't export its handle). `launch.mjs` regenerates sitemaps at start
+  and then hourly; the job is synchronous (can't overlap itself) and wrapped
+  in try/catch (can't crash the primary). Files are written to a temp file
+  and renamed. Because sirv indexes `src/public` once at startup (with
+  Content-Length), `http.mjs` now serves `/sitemap*.xml` from disk per
+  request; otherwise rewritten sitemaps would be served with stale lengths
+  and new months would 404 until a restart.
+- **#5 – Article OG tags.** Story pages send `og:type=article`,
+  `article:published_time` (submission time, ISO 8601), `article:author`
+  (submitter's Kiwi profile URL) and `<meta name="author">` (display name).
+  og:type is now set explicitly by the caller (falls back to the old URL
+  guess).
+- **#7 – RSS.** `/feed.xml` is an RSS 2.0 rendering of the hot feed, built
+  with the same `index()` call as `/api/v1/feeds/hot` (`src/rss.mjs`,
+  route in `src/http.mjs`). Items link to the Kiwi story page (guid,
+  comments), the description has the original link (or text-post body),
+  upvotes, comments and submitter; `dc:creator` is the submitter.
+  `Cache-Control: public, s-maxage=300, max-age=0,
+  stale-while-revalidate=86400`, so Cloudflare absorbs polling and no purge
+  is needed. `<link rel="alternate" type="application/rss+xml">` is on `/`
+  and story pages, robots.txt has `Allow: /feed.xml`, llms.txt lists it.
+- **#9 – CORS in llms.txt.** Both `src/http.mjs` (port 443) and
+  `src/api.mjs` (8443) use `cors()` without an `origin` option, which sends
+  `Access-Control-Allow-Origin: *` on every response. llms.txt now says so
+  everywhere; the "requires a server-side proxy" claims are gone (the
+  Next.js proxy example is kept, marked optional). Still worth one
+  `curl -sI -H "Origin: https://example.com" https://news.kiwistand.com/api/v1/feeds/hot`
+  after deploy in case Cloudflare strips the header.
+- **#14 – Internal linking.** Story pages for https links show "More from
+  <host> on Kiwi News": up to 5 other story pages from the same host (www.
+  stripped, subdomains kept so `co.uk`-style suffixes don't group unrelated
+  sites), top-voted first. Data comes from `getBest(…, domain)` (the query
+  behind `/best?domain=`, one scan of `submissions`) filtered through the
+  regular moderation lists; story pages are cached for a day at Cloudflare,
+  so the query runs rarely. Not shown for text posts and Cloudflare images,
+  or when there are no other stories from that host.
+
+Deploy note: robots.txt and llms.txt are served with
+`s-maxage=604800, immutable`, so purge both in Cloudflare after deploy.
+
 ### Open
 
 | # | Impact | Effort | Finding |
 |---|---|---|---|
-| 1 | H | S | **No `<h1>` on `/`, `/new`, `/best`, story and profile pages.** The story title is only a link inside the row table. A story page should have exactly one `<h1>` with the title. Needs a decision on markup inside `Row()` (visual risk), so not done here. |
-| 2 | M | S | **Story `<title>` has no brand suffix.** `<title>` and `og:title` are the same variable in `head.mjs`. A separate `title` (e.g. "<story> \| Kiwi News") would help SERP recognition while keeping og:title clean for cards. Needs an extra parameter on `custom()`. |
-| 3 | M | M | **Sitemap `lastmod` is the submission time.** Pages change when comments/upvotes arrive. Use `MAX(comment.timestamp)` per story. Also only regenerated at process start (`launch.mjs`); stories submitted after a deploy only appear on the next restart. Schedule `generateSitemaps()` hourly. |
 | 4 | M | M | **Sitemap doesn't exclude moderated stories.** Moderation (`views/moderation.mjs`) is fetched async from a config sheet and only filters feeds; story pages of hidden stories still render 200, so the sitemap is at least consistent with them. Decide whether moderated stories should 404/noindex, then drop them from the sitemap. |
-| 5 | M | S | **Story pages: no `article:published_time` / `article:author` OG tags** and og:type is guessed from the URL. Cheap to add when touching `head.mjs`. |
 | 6 | M | M | **Profiles (`/upvotes?address=`) have no JSON-LD** (`ProfilePage` + `Person` with ENS/Farcaster `sameAs`) and aren't in any sitemap. Only worth it if Search Console shows profile impressions. |
-| 7 | M | M | **No RSS/Atom feed.** Many aggregators and agents look for `<link rel="alternate" type="application/rss+xml">`. The JSON feeds exist; an RSS rendering of `/api/v1/feeds/hot` would be small. |
 | 8 | L | S | **`/stories/context` is served as `text/plain`** although it's Markdown; `text/markdown; charset=utf-8` is more precise for agents. Left as is because the iOS app or other clients may depend on it. |
-| 9 | L | S | **llms.txt contradicts itself on CORS** for port 443 ("Fully enabled" vs "require a server-side proxy"). The code applies `cors()` with default `*` to all routes, so port 443 probably does send CORS headers; verify with `curl -I` against production and fix the developer section. |
 | 10 | L | S | **`/llms-full.txt`** (top stories of the week rendered as Markdown with links to `/stories/context`) would let agents get a snapshot in one fetch. Not trivial (needs a route), skipped. |
 | 11 | L | S | **`/` canonical is `/` for `?page=N`.** Google advises self-canonicals on paginated pages; low impact since stories are discovered via sitemaps anyway. Same for `/best?period=…`. |
 | 12 | L | S | **`/new` canonical contains `?cached=true`.** Consistent with the sitemap, so harmless, but `/new` and `/new?cached=true` are both crawlable variants. |
 | 13 | L | S | **Pages using the default `Head`** (`/notifications`, `/email-notifications`, `/demonstration`, `/shortcut`, app onboarding pages) share the generic title and description. Mostly app/utility pages; give them `custom()` titles or noindex if they show up in Search Console. |
-| 14 | L | S | **Internal linking.** Story pages link to submitter/commenter/curator profiles and the nav, but not to related stories or the domain listing (`/?domain=` is robots-blocked). A "more from <domain>" or "related" block would strengthen crawl paths to older stories. |
+| 15 | L | S | **No `<h1>` on profile pages** (`/upvotes?address=`). Left over from #1; same hidden-heading approach would work. |
 
 ## AI crawler handling
 
