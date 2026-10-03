@@ -13,6 +13,24 @@ voice). Each round updates this file.
 | Newsletter | Weekly digest is built and sent automatically (draft first, auto-send once trusted) | Crontab on the server |
 | Telegram scout (later) | Suggest stories from channels/groups using `AGENTS.md` criteria; Tim says yes/no and why; criteria get sharper | Channel/group list, Telegram API access |
 
+## Baseline (PostHog, 2026-10-03)
+
+Consented visitors only; bots excluded. "Engaged" = 2+ pageviews in the
+month. One-hit visitors are mostly referral spam (www.aocr.org, Chrome,
+1 view each) and single hits on /best from CN, so they're left out.
+
+| Month | Engaged visitors | Upvoters | Commenters | Upvotes | Outbound clicks |
+|---|---|---|---|---|---|
+| 2025-09 | 686 | 49 | 9 | 306 | 880 |
+| 2025-12 | 417 | 24 | 9 | 299 | 415 |
+| 2026-03 | 187 | 14 | 7 | 298 | 729 |
+| 2026-06 | 105 | 4 | 3 | 118 | 181 |
+| 2026-09 | 43 | 5 | 4 | 68 | 104 |
+
+Last 30 days: almost no search (2 visits), social (2) or AI (1) referrals;
+74% direct. Next: cross-check upvotes with the protocol data (PostHog
+only sees consented browsers), then find where returning readers drop off.
+
 ## Needs Tim
 
 ### Previews
