@@ -52,7 +52,6 @@ const header = (theme, path) => {
   const isStoryPage = path === "/stories";
   return html` <td style="height: 70px;">
     <nav-delegation-modal />
-    <nav-ens-name-modal />
     <table
       style="padding:5px 7px 5px 7px;"
       width="100%"

@@ -51,7 +51,6 @@ test("that repo contains a .env-copy file with all possible configuration option
     "USER_AGENT",
     "CF_API_TOKEN",
     "CF_ZONE_ID",
-    "NAMESTONE_API_KEY",
   ];
   try {
     await access(envPath, constants.F_OK);

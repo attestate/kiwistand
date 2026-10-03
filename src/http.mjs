@@ -105,19 +105,6 @@ import { hotFeed as hotFeedRSS } from "./rss.mjs";
 import { readFile } from "fs/promises";
 
 const app = express();
-const ENS_NAME_SIGNATURE_TTL_SECONDS = 5 * 60;
-const ENS_NAME_AUTH_TYPE = "ens-name";
-const ENS_NAME_AUTH_TITLE = "kiwi ens name registration";
-
-function buildEnsNameAuthMessage({ address, name, avatar, timestamp }) {
-  const href = `kiwi://ens-name?address=${encodeURIComponent(String(address).toLowerCase())}&name=${encodeURIComponent(name)}&avatar=${encodeURIComponent(avatar || "")}`;
-  return {
-    title: ENS_NAME_AUTH_TITLE,
-    href,
-    type: ENS_NAME_AUTH_TYPE,
-    timestamp,
-  };
-}
 
 // Initialize Quick Auth client
 const quickAuthClient = createQuickAuthClient();
@@ -2786,44 +2773,6 @@ export async function launch(trie, libp2p, isPrimary = true) {
     });
   });
 
-  app.get("/api/v1/ens-name", async (request, reply) => {
-    reply.header("Cache-Control", "no-cache");
-
-    if (!env.NAMESTONE_API_KEY) {
-      return sendError(reply, 500, "Internal Server Error", "Missing Namestone API key");
-    }
-
-    const { address } = request.query;
-    if (!address) {
-      return sendError(reply, 400, "Bad Request", "Missing required parameter: address");
-    }
-
-    let response;
-    try {
-      const url = `https://namestone.com/api/public_v1/get-names?domain=kiwinews.eth&address=${encodeURIComponent(address)}`;
-      response = await fetch(url, {
-        headers: { "Authorization": env.NAMESTONE_API_KEY },
-      });
-    } catch (err) {
-      log(`Error connecting to Namestone get-names: ${err.toString()}`);
-      return sendError(reply, 500, "Internal Server Error", "Failed to connect to Namestone");
-    }
-
-    if (!response.ok) {
-      log(`Namestone get-names error: status ${response.status}`);
-      return sendError(reply, response.status, "Namestone API Error", `Namestone responded with status ${response.status}`);
-    }
-
-    let data;
-    try {
-      data = await response.json();
-    } catch (err) {
-      return sendError(reply, 500, "Internal Server Error", "Failed to parse Namestone response");
-    }
-
-    return sendStatus(reply, 200, "OK", "ENS name lookup", data);
-  });
-
   app.get("/api/v1/primary-name", async (request, reply) => {
     reply.header("Cache-Control", "no-cache");
 
@@ -2843,117 +2792,6 @@ export async function launch(trie, libp2p, isPrimary = true) {
     }
   });
 
-  app.post("/api/v1/ens-name", async (request, reply) => {
-    reply.header("Cache-Control", "no-cache");
-
-    if (!env.NAMESTONE_API_KEY) {
-      return sendError(reply, 500, "Internal Server Error", "Missing Namestone API key");
-    }
-
-    const { name, address, avatar, signature, signedAt } = request.body || {};
-
-    if (!name) {
-      return sendError(reply, 400, "Bad Request", "Missing required field: name");
-    }
-
-    if (!address) {
-      return sendError(reply, 400, "Bad Request", "Missing required field: address");
-    }
-    if (!signature) {
-      return sendError(reply, 401, "Unauthorized", "Missing required field: signature");
-    }
-    if (!signedAt) {
-      return sendError(reply, 400, "Bad Request", "Missing required field: signedAt");
-    }
-
-    if (!/^[a-zA-Z0-9_-]+$/.test(name)) {
-      return sendError(reply, 400, "Bad Request", "Name can only contain letters, numbers, hyphens, and underscores");
-    }
-
-    let normalizedAddress;
-    const normalizedName = name.toLowerCase();
-    try {
-      normalizedAddress = utils.getAddress(address);
-    } catch (err) {
-      return sendError(reply, 400, "Bad Request", "Invalid Ethereum address");
-    }
-
-    const signedAtSeconds = Number(signedAt);
-    if (!Number.isInteger(signedAtSeconds) || signedAtSeconds <= 0) {
-      return sendError(reply, 400, "Bad Request", "Invalid signedAt value");
-    }
-    const nowSeconds = Math.floor(Date.now() / 1000);
-    if (
-      signedAtSeconds < nowSeconds - ENS_NAME_SIGNATURE_TTL_SECONDS ||
-      signedAtSeconds > nowSeconds + ENS_NAME_SIGNATURE_TTL_SECONDS
-    ) {
-      return sendError(reply, 401, "Unauthorized", "Expired or invalid signature timestamp");
-    }
-
-    const message = buildEnsNameAuthMessage({
-      address: normalizedAddress,
-      name: normalizedName,
-      avatar: avatar || "",
-      timestamp: signedAtSeconds,
-    });
-
-    let recoveredAddress;
-    try {
-      recoveredAddress = utils.getAddress(
-        ecrecover({ ...message, signature }, EIP712_MESSAGE),
-      );
-    } catch (err) {
-      return sendError(reply, 401, "Unauthorized", "Invalid signature");
-    }
-    const delegations = await registry.delegations();
-    const authorizedIdentity = resolveIdentity(delegations, recoveredAddress);
-    const isAuthorized =
-      recoveredAddress.toLowerCase() === normalizedAddress.toLowerCase() ||
-      (authorizedIdentity &&
-        authorizedIdentity.toLowerCase() === normalizedAddress.toLowerCase());
-    if (!isAuthorized) {
-      return sendError(reply, 401, "Unauthorized", "Signature/address mismatch");
-    }
-
-    const body = {
-      domain: "kiwinews.eth",
-      name: normalizedName,
-      address: normalizedAddress,
-    };
-
-    if (avatar) {
-      body.text_records = { avatar };
-    }
-
-    let response;
-    try {
-      response = await fetch("https://namestone.com/api/public_v1/claim-name", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": env.NAMESTONE_API_KEY,
-        },
-        body: JSON.stringify(body),
-      });
-    } catch (err) {
-      log(`Error connecting to Namestone claim-name: ${err.toString()}`);
-      return sendError(reply, 500, "Internal Server Error", "Failed to connect to Namestone");
-    }
-
-    if (!response.ok) {
-      log(`Namestone claim-name error: status ${response.status}`);
-      return sendError(reply, 409, "Conflict", "This name is already taken or could not be claimed");
-    }
-
-    let data;
-    try {
-      data = await response.json();
-    } catch (err) {
-      return sendError(reply, 500, "Internal Server Error", "Failed to parse Namestone response");
-    }
-
-    return sendStatus(reply, 200, "OK", "ENS name claimed successfully", data);
-  });
 
   app.get("/api/v1/favicon", async (request, reply) => {
     const { domain } = request.query;
