@@ -54,7 +54,6 @@ import best, * as bestAPI from "./views/best.mjs";
 import privacy from "./views/privacy.mjs";
 import guidelines from "./views/guidelines.mjs";
 import upvotes, * as upvotesAPI from "./views/upvotes.mjs";
-import * as reports from "./reports.mjs";
 
 import search from "./views/search.mjs";
 import * as activity from "./views/activity.mjs";
@@ -2888,8 +2887,6 @@ export async function launch(trie, libp2p, isPrimary = true) {
     }
   });
 
-
-  reports.setupRoutes(app, { sendError, sendStatus, requireAdminAuth });
 
   server.listen(env.HTTP_PORT, () =>
     log(`Launched HTTPS server at PORT: ${env.HTTP_PORT}`),
