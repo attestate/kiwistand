@@ -1,12 +1,9 @@
-import { resolveIdentity } from "@attestate/delegator2";
-
 import { ecrecover, toDigest } from "../id.mjs";
 import { EIP712_MESSAGE } from "../constants.mjs";
 
-async function enhance({ node, delegations }) {
+async function enhance({ node }) {
   const cacheEnabled = false;
   const signer = ecrecover(node, EIP712_MESSAGE, cacheEnabled);
-  const identity = resolveIdentity(delegations, signer);
 
   const { index } = toDigest(node);
 
@@ -14,7 +11,6 @@ async function enhance({ node, delegations }) {
     index,
     ...node,
     signer,
-    identity,
   };
 }
 export default enhance;

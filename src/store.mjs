@@ -649,23 +649,58 @@ export async function posts(
 
   const cacheEnabled = true;
   const enhancer = enhance(delegations, cacheEnabled);
-  const posts = (await Promise.allSettled(nodes.map(enhancer)))
+  // NOTE: Enhancing all nodes at once blocked the event loop for 10+ seconds
+  // at startup: every node's canonicalize() and cache lookup ran in a single
+  // synchronous burst and every cache miss was queued on piscina at once. So
+  // we only keep a few enhancements per piscina thread in flight and yield to
+  // the event loop regularly.
+  const results = new Array(nodes.length);
+  let next = 0;
+  const runner = async () => {
+    let processed = 0;
+    while (next < nodes.length) {
+      const i = next++;
+      try {
+        results[i] = { value: await enhancer(nodes[i]) };
+      } catch (err) {
+        results[i] = {};
+      }
+      if (++processed % ENHANCE_YIELD_INTERVAL === 0) {
+        await new Promise((resolve) => setImmediate(resolve));
+      }
+    }
+  };
+  const concurrency = piscina.options.maxThreads * ENHANCE_TASKS_PER_THREAD;
+  await Promise.all(Array.from({ length: concurrency }, runner));
+
+  const posts = results
     .map(({ value }) => value)
     .filter((elem) => elem !== null);
   return posts;
 }
 
+const ENHANCE_TASKS_PER_THREAD = 4;
+const ENHANCE_YIELD_INTERVAL = 10;
+
 // NOTE: If you're wondering why the enhancer is recreated on each call of
 // posts( and other calls, the reason for it is that we constantly have to
 // re-query delegations as they're subject to change throughout
 // the application's lifecycle (e.g. when a new person delegates).
+//
+// The piscina worker only recovers the signer. Resolving the identity is a
+// cheap lookup, so we do it here instead of copying the whole delegations
+// object to the worker for every node.
 function enhance(delegations, cacheEnabled) {
   return async (node) => {
-    const computeFunc = async () =>
-      await piscina.run({
+    const computeFunc = async () => {
+      const result = await piscina.run({
         node,
-        delegations,
       });
+      return {
+        ...result,
+        identity: resolveIdentity(delegations, result.signer),
+      };
+    };
 
     if (cacheEnabled) {
       const cacheKey = canonicalize(node);
