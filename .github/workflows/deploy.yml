@@ -47,8 +47,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22.x
-      - run: cd src/web && npm install
-      - run: npm run build
+      # The web client has its own lockfile. Use it verbatim so production
+      # builds are reproducible instead of letting `npm install` update it.
+      - name: Install web dependencies
+        run: npm ci --prefix src/web
+      - name: Build web bundle
+        run: npm run build
 
       - name: Set up SSH
         run: |
