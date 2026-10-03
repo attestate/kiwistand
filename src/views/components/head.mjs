@@ -232,6 +232,12 @@ export function custom(
           type="application/rss+xml"
           title="Kiwi News (hot)"
           href="${domain}/feed.xml"
+        />
+        <link
+          rel="alternate"
+          type="application/rss+xml"
+          title="Kiwi News (new)"
+          href="${domain}/new.xml"
         />`
       : null}
     ${canonicalUrl

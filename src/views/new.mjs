@@ -215,7 +215,7 @@ async function renderPage(theme) {
   return "<!DOCTYPE html>" + html`
     <html lang="en" op="news">
       <head>
-        ${custom(ogImage, "New | Kiwi News - latest crypto submissions", "Freshly submitted crypto links and web3 stories, updated in real time.", undefined, prefetch, "https://news.kiwistand.com/new?cached=true")}
+        ${custom(ogImage, "New | Kiwi News - latest crypto submissions", "Freshly submitted crypto links and web3 stories, updated in real time.", undefined, prefetch, "https://news.kiwistand.com/new?cached=true", null, null, { rss: true })}
       </head>
       <body
         data-instant-allow-query-string

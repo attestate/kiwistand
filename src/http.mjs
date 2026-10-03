@@ -101,7 +101,7 @@ import {
 } from "./social-posting.mjs";
 import { sendBroadcastNotification } from "./onesignal.mjs";
 import { extractArticleCached } from "./lib/listen/extract.mjs";
-import { hotFeed as hotFeedRSS } from "./rss.mjs";
+import { hotFeed as hotFeedRSS, newFeed as newFeedRSS } from "./rss.mjs";
 import { readFile } from "fs/promises";
 
 const app = express();
@@ -2012,6 +2012,28 @@ export async function launch(trie, libp2p, isPrimary = true) {
       .status(200)
       .type("application/rss+xml; charset=utf-8")
       .send(hotFeedRSS(stories));
+  });
+
+  // RSS 2.0 rendering of the new feed, same data as /api/v1/feeds/new.
+  app.get("/new.xml", async (request, reply) => {
+    let stories;
+    try {
+      stories = newAPI.getStories().map((story) => ({
+        ...story,
+        commentCount: countComments(`kiwi:0x${story.index}`),
+      }));
+    } catch (err) {
+      log(`Error in /new.xml: ${err.stack}`);
+      return reply.status(500).type("text/plain").send("Internal Server Error");
+    }
+    reply.header(
+      "Cache-Control",
+      "public, s-maxage=60, max-age=0, stale-while-revalidate=86400",
+    );
+    return reply
+      .status(200)
+      .type("application/rss+xml; charset=utf-8")
+      .send(newFeedRSS(stories));
   });
 
   app.get("/stories/context", async (request, reply) => {
