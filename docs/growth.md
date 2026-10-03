@@ -55,6 +55,14 @@ previews and crawlers being challenged.
       live URL" should show 200 and the page.
 
 
+### After deploying #183
+- [ ] Purge `/robots.txt` and `/llms.txt` in Cloudflare (cached as
+      immutable for 7 days); check `https://news.kiwistand.com/feed.xml`
+      and a story page's `<title>` ("… | Kiwi News").
+- [ ] Search Console → Sitemaps: resubmit `sitemap.xml`; add
+      `https://news.kiwistand.com/feed.xml` nowhere (RSS is for readers
+      and agents, linked from the pages).
+
 ### Previews
 - [ ] Run the audit on the server and send Claude the Markdown report:
       `node scripts/preview-audit.mjs --days 180` (see the script header for options).
