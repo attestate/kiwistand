@@ -1,4 +1,11 @@
 import { join } from "path";
+// NOTE: cache-sqlite-lru-ttl is CommonJS and require()s the ESM-only
+// debounce. Node 22 handles that (require(esm)), but crashes with "FATAL
+// ERROR: v8::Module::IsGraphAsync must be used on an instantiated module"
+// when the require happens while debounce is still being linked by another
+// import, as seen in CI. Importing debounce first makes sure it's fully
+// loaded before anything requires it.
+import "debounce";
 import { SqliteCache } from "cache-sqlite-lru-ttl";
 // SQLite-backed LRU cache shared across all cluster workers and persisted to
 // disk. Replaces the previous in-memory LRU which caused each cluster worker

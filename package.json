@@ -7,6 +7,7 @@
     "clean:assets": "rm src/public/assets/*",
     "build": "npm run clean:assets && cd src/web && NODE_ENV=production npm run build && cp ../public/.vite/manifest.json ../public/manifest.json",
     "test": "DEBUG=\"-@attestate/delegator2*\" ava --timeout=30s --serial --verbose",
+    "test:offline": "DEBUG=\"-@attestate/delegator2*\" ava --timeout=60s --serial --verbose \"test/**/*_test.mjs\" \"!test/kiwimcp_*_test.mjs\" \"!test/compression_test.mjs\"",
     "test:compression": "NODE_TLS_REJECT_UNAUTHORIZED=0 ava test/compression_test.mjs --timeout=30s --verbose",
     "connect": "ssh root@91.107.210.214",
     "deploy": "npm run build && npm run rsync",
@@ -91,6 +92,7 @@
     "cors": "2.8.5",
     "cross-env": "7.0.3",
     "date-fns": "2.29.3",
+    "debounce": "3.0.0",
     "debug": "4.3.4",
     "dotenv": "16.0.3",
     "emoji-regex": "10.3.0",
@@ -151,16 +153,26 @@
     "files": [
       "**/*_test.mjs"
     ],
-    "environmentArguments": {
-      "DEBUG": "attestate*",
-      "HTTP_MESSAGES_MAX_PAGE_SIZE": "500"
+    "environmentVariables": {
+      "NODE_ENV": "test",
+      "CACHE_DIR": "test-cache",
+      "DATA_DIR": "test-data",
+      "HTTP_MESSAGES_MAX_PAGE_SIZE": "500",
+      "MIN_TIMESTAMP_SECS": "1672527600",
+      "MAX_TIMESTAMP_DELTA_SECS": "60",
+      "ROOT_ADVERTISEMENT_TIMEOUT": "60000",
+      "IS_BOOTSTRAP_NODE": "false",
+      "USE_EPHEMERAL_ID": "true",
+      "USER_AGENT": "KiwiNewsBot/1.0 (https://news.kiwistand.com)"
     },
     "nodeArguments": [
       "--no-warnings"
     ],
     "require": [
-      "dotenv/config"
-    ]
+      "dotenv/config",
+      "./test/setup.mjs"
+    ],
+    "workerThreads": false
   },
   "overrides": {
     "protobufjs": "^7.6.5",

@@ -26,6 +26,7 @@ test("that repo contains a .env-copy file with all possible configuration option
   const expr = new RegExp(".*=.*", "gm");
   const allOptions = [
     "OPTIMISM_RPC_HTTP_HOST",
+    "OPTIMISM_CRAWLER_RPC_HOSTS",
     "RPC_HTTP_HOST",
     "DEBUG",
     "NODE_ENV",
@@ -45,8 +46,22 @@ test("that repo contains a .env-copy file with all possible configuration option
     "API_PORT",
     "TOTAL_STORIES",
     "TOTAL_USERS",
+    "ENSDATA_KEY",
+    "CF_IMAGES_SECRET",
+    "USER_AGENT",
+    "CF_API_TOKEN",
+    "CF_ZONE_ID",
+    "NAMESTONE_API_KEY",
   ];
-  await access(envPath, constants.F_OK);
+  try {
+    await access(envPath, constants.F_OK);
+  } catch (err) {
+    // NOTE: Fresh checkouts and CI have no .env; tests get their env from
+    // ava.environmentVariables in package.json instead.
+    t.log("Skipping .env comparison as there is no .env file");
+    t.is(content.match(expr).length, allOptions.length);
+    return;
+  }
   const envContent = (await readFile(envPath)).toString();
   const envMatches = envContent.match(expr);
   const copyMatches = content.match(expr);
