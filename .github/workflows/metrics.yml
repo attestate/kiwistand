@@ -9,6 +9,7 @@ on:
   push:
     paths:
       - scripts/metrics-report.mjs
+      - scripts/crawl-check.mjs
       - .github/workflows/metrics.yml
   workflow_dispatch:
 
@@ -27,4 +28,5 @@ jobs:
           CLOUDFLARE_ZONE_ID: ${{ vars.CLOUDFLARE_ZONE_ID }}
           GSC_SERVICE_ACCOUNT: ${{ secrets.GSC_SERVICE_ACCOUNT }}
           GSC_SITE_URL: ${{ vars.GSC_SITE_URL }}
+      - run: node scripts/crawl-check.mjs | tee -a metrics-report.md
       - run: cat metrics-report.md >> "$GITHUB_STEP_SUMMARY"

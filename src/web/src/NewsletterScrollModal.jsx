@@ -110,6 +110,7 @@ const NewsletterScrollModal = ({ toast }) => {
     setIsOpen(false);
     setShouldShow(false);
     localStorage.setItem("newsletter-modal-dismissed", "true");
+    window.posthog?.capture?.("newsletter_modal_dismissed");
   };
 
   const handleSubscribe = async (e) => {
@@ -132,6 +133,7 @@ const NewsletterScrollModal = ({ toast }) => {
 
       if (response.ok) {
         localStorage.setItem("newsletter-subscribed", "true");
+        window.posthog?.capture?.("newsletter_subscribed", { source: "scroll_modal" });
         toast.success("Successfully subscribed to Kiwi News Newsletter!");
         setIsOpen(false);
         setShouldShow(false);
