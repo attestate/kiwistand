@@ -7,6 +7,12 @@ for (const dir of [process.env.CACHE_DIR, process.env.DATA_DIR]) {
   if (dir) mkdirSync(dir, { recursive: true });
 }
 
-// See src/cache.mjs: load the ESM-only debounce before any CommonJS module
-// require()s it.
-await import("debounce");
+
+// With NODE_OPTIONS=--trace-require-module=all (set in CI), Node reports each
+// require() of an ES module as a warning; ava's --no-warnings hides those,
+// so print them here. There should be none: see src/cache.mjs.
+process.on("warning", (warning) => {
+  if (/loading ES Module/.test(warning.message)) {
+    console.error(`[require(esm)] ${warning.message}`);
+  }
+});
