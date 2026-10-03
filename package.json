@@ -92,6 +92,7 @@
     "cors": "2.8.5",
     "cross-env": "7.0.3",
     "date-fns": "2.29.3",
+    "debounce": "3.0.0",
     "debug": "4.3.4",
     "dotenv": "16.0.3",
     "emoji-regex": "10.3.0",

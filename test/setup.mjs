@@ -6,3 +6,7 @@ import { mkdirSync } from "fs";
 for (const dir of [process.env.CACHE_DIR, process.env.DATA_DIR]) {
   if (dir) mkdirSync(dir, { recursive: true });
 }
+
+// See src/cache.mjs: load the ESM-only debounce before any CommonJS module
+// require()s it.
+await import("debounce");
