@@ -176,9 +176,8 @@ function isCloudflareChallengePage(title) {
 }
 
 // NOTE: SPAs and bot-blocked sites often return just their own name as the
-// title (e.g. "objkt.com" on objkt.com, "Snapshot" on snapshot.org, "Reuters"
-// on reuters.com). Such a title says nothing about the link, so we treat it as
-// missing and let the submitted title be used instead.
+// title. Such a title says nothing about the link, so we treat it as missing
+// and let the submitted title be used instead.
 export function isGenericTitle(title, hostname) {
   if (!title || !hostname) return false;
   const normalized = title.trim().toLowerCase();
@@ -195,97 +194,6 @@ const genericImagePrefixes = ["https://static.arxiv.org/icons/"];
 export function isGenericImage(url) {
   if (!url) return false;
   return genericImagePrefixes.some((prefix) => url.startsWith(prefix));
-}
-
-function ipfsToHttps(uri) {
-  if (!uri || !uri.startsWith("ipfs://")) return uri;
-  return `https://ipfs.io/ipfs/${uri.slice("ipfs://".length)}`;
-}
-
-// NOTE: snapshot.org is a hash-routed SPA, so its HTML only ever says
-// "Snapshot". Proposal URLs look like
-// https://snapshot.org/#/s:balancer.eth/proposal/0x... (or without "s:"), and
-// the public hub GraphQL API gives us the proposal's title, body and the
-// space's avatar. Returns null on any failure so callers keep current behavior.
-export async function extractSnapshotProposal(url) {
-  try {
-    const { hash } = new URL(url);
-    const match = hash.match(/\/proposal\/([A-Za-z0-9]+)/);
-    if (!match) return null;
-
-    const query = `query Proposal($id: String!) {
-      proposal(id: $id) { title body space { name avatar } }
-    }`;
-    const response = await fetch("https://hub.snapshot.org/graphql", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "User-Agent": env.USER_AGENT,
-      },
-      body: JSON.stringify({ query, variables: { id: match[1] } }),
-      signal: AbortSignal.timeout(5000),
-    });
-    if (!response.ok) {
-      log(`Snapshot API ${response.status} for ${url}`);
-      return null;
-    }
-    const data = await response.json();
-    const proposal = data?.data?.proposal;
-    if (!proposal?.title) {
-      log(`Snapshot API: no proposal for ${url}: ${JSON.stringify(data).slice(0, 300)}`);
-      return null;
-    }
-    return {
-      title: proposal.title,
-      body: proposal.body || "",
-      image: ipfsToHttps(proposal.space?.avatar),
-    };
-  } catch (err) {
-    log(`Failed to fetch Snapshot proposal for ${url}: ${err.message}`);
-    return null;
-  }
-}
-
-// NOTE: objkt.com is an SPA whose HTML only says "objkt.com". Token URLs look
-// like https://objkt.com/tokens/KT1.../42 (or the older /asset/KT1.../42), and
-// objkt's public Hasura API returns the token's name, description and preview.
-// Returns null on any failure so callers keep current behavior.
-export async function extractObjktToken(url) {
-  try {
-    const { pathname } = new URL(url);
-    const match = pathname.match(/^\/(?:tokens|asset)\/([^/]+)\/([^/]+)/);
-    if (!match) return null;
-
-    const query = `query Token($contract: String!, $id: String!) {
-      token(where: { fa_contract: { _eq: $contract }, token_id: { _eq: $id } }, limit: 1) {
-        name description display_uri thumbnail_uri
-      }
-    }`;
-    const response = await fetch("https://data.objkt.com/v3/graphql", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "User-Agent": env.USER_AGENT,
-      },
-      body: JSON.stringify({
-        query,
-        variables: { contract: match[1], id: match[2] },
-      }),
-      signal: AbortSignal.timeout(5000),
-    });
-    if (!response.ok) return null;
-    const data = await response.json();
-    const token = data?.data?.token?.[0];
-    if (!token?.name) return null;
-    return {
-      title: token.name,
-      description: token.description || "",
-      image: ipfsToHttps(token.display_uri || token.thumbnail_uri),
-    };
-  } catch (err) {
-    log(`Failed to fetch objkt token for ${url}: ${err.message}`);
-    return null;
-  }
 }
 
 const filtered = [
@@ -1580,25 +1488,6 @@ export const metadata = async (
       log(`Error extracting Interface content: ${err.message}`);
     }
   }
-
-  if (hostname === "snapshot.org" || hostname.endsWith("snapshot.box")) {
-    const proposal = await extractSnapshotProposal(url);
-    if (proposal) {
-      output.ogTitle = DOMPurify.sanitize(proposal.title);
-      if (proposal.body) ogDescription = proposal.body.substring(0, 500);
-      if (proposal.image) image = proposal.image;
-    }
-  }
-
-  if (hostname === "objkt.com" || hostname === "www.objkt.com") {
-    const token = await extractObjktToken(url);
-    if (token) {
-      output.ogTitle = DOMPurify.sanitize(token.title);
-      if (token.description) ogDescription = token.description.substring(0, 500);
-      if (token.image) image = token.image;
-    }
-  }
-
 
   if (!isXArticle && generateTitle) {
     if (
