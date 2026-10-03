@@ -36,10 +36,14 @@ const isDesktop = () => {
 };
 
 // Setup chains and transports
+// NOTE: The frontend uses public RPCs on purpose. Any API key shipped in the
+// bundle is public and gets abused (e.g. eth_getLogs on mainnet). The browser
+// only needs a handful of light calls (balance, ENS of the connected wallet,
+// delegation tx receipts), which public endpoints rate-limit per visitor IP.
 export const chains = [optimism, mainnet];
 const transports = {
-  [optimism.id]: http('https://opt-mainnet.g.alchemy.com/v2/TfAhzs116ThO7Fwod1gzpTJmH0Cudxp7'),
-  [mainnet.id]: http('https://eth-mainnet.g.alchemy.com/v2/TfAhzs116ThO7Fwod1gzpTJmH0Cudxp7'),
+  [optimism.id]: http("https://mainnet.optimism.io"),
+  [mainnet.id]: http("https://ethereum-rpc.publicnode.com"),
 };
 
 export const useIsMiniApp = () => {
