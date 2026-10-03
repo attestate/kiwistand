@@ -78,7 +78,10 @@ test("advertising root periodically", async (t) => {
     },
   };
   const timeout = 10;
-  await advertise(trie, node, timeout);
+  // NOTE: The first publish happens synchronously; we stop the loop right
+  // away so that it can't publish again (and exceed t.plan) during teardown.
+  const stop = advertise(trie, node, timeout);
+  stop();
   t.true(publishCalled);
 
   await rm("dbtestA", { recursive: true });

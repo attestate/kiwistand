@@ -100,35 +100,32 @@ export function handleDiscovery(evt) {
   log(`discovered ${evt.detail.id.toString()}`);
 }
 
+// NOTE: Returns a `stop` function that ends the advertisement loop (used in
+// tests, where an endless loop would keep publishing after assertions ran).
 export function advertise(trie, node, timeout) {
-  let lastRoot;
+  let stopped = false;
   async function loop() {
     // NOTE: We initially didn't send the same root twice, given that it
     // increases the gossiped messages. However, this lead to cases where two
     // nodes wouldn't synchronize (for unknown reasons).
     //
-    //if (lastRoot && Buffer.compare(lastRoot, trie.root()) === 0) {
-    //  log(
-    //    `Last root "${lastRoot.toString(
-    //      "hex"
-    //    )}" is equal to current root "${trie
-    //      .root()
-    //      .toString("hex")}", so advertisement is canceled`
-    //  );
-    //} else {
-    const rootMsg = encode({ root: trie.root().toString("hex") });
-    log(
-      `Advertising new root to peers: "${roots.name}" and message: "${rootMsg}"`,
-    );
-    node.pubsub.publish(roots.name, rootMsg);
-    //}
-
-    lastRoot = trie.root();
-    await setTimeout(timeout);
-    return await loop();
+    // NOTE: This used to be `return await loop()` (async recursion), which
+    // grows an ever longer promise chain over the process lifetime. A plain
+    // loop does the same without retaining previous iterations.
+    while (!stopped) {
+      const rootMsg = encode({ root: trie.root().toString("hex") });
+      log(
+        `Advertising new root to peers: "${roots.name}" and message: "${rootMsg}"`,
+      );
+      node.pubsub.publish(roots.name, rootMsg);
+      await setTimeout(timeout);
+    }
   }
 
   loop();
+  return () => {
+    stopped = true;
+  };
 }
 
 // TODO: serialize and deserialize should be mappable functions
