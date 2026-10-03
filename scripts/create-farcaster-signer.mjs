@@ -7,6 +7,11 @@ import {
   Configuration,
 } from "@neynar/nodejs-sdk";
 
+if (!env.NEYNAR_API_KEY || !env.NEYNAR_API_KEY.trim()) {
+  console.error("NEYNAR_API_KEY environment variable is required");
+  process.exit(1);
+}
+
 const neynarConfig = new Configuration({
   apiKey: env.NEYNAR_API_KEY,
 });
@@ -14,11 +19,6 @@ const neynarConfig = new Configuration({
 const neynarClient = new NeynarAPIClient(neynarConfig);
 
 async function createSigner() {
-  if (!env.NEYNAR_API_KEY) {
-    console.error("NEYNAR_API_KEY environment variable is required");
-    process.exit(1);
-  }
-
   try {
     console.log("Creating a new Farcaster signer...");
     const signer = await neynarClient.createSigner();
