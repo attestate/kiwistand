@@ -2030,6 +2030,13 @@ export async function launch(trie, libp2p, isPrimary = true) {
       reply.header("Cache-Control", "no-cache");
     }
 
+    // NOTE: ?format=json returns the data the page is rendered from, e.g.
+    // for the iOS app. It's a query parameter (not the Accept header) since
+    // the Cloudflare worker keys its cache by URL only.
+    if (request.query.format === "json") {
+      return reply.status(200).json({ stories: newAPI.getStories() });
+    }
+
     const cached = newAPI.getCachedHtml();
     if (cached) {
       return reply.status(200).type("text/html").send(cached.valueOf());
