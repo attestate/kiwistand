@@ -1543,6 +1543,20 @@ export async function launch(trie, libp2p, isPrimary = true) {
     }));
 
     // Render stories as HTML rows
+    // NOTE: The iOS app pages through the same stories as JSON.
+    if (request.query.format === "json") {
+      reply.header(
+        "Cache-Control",
+        "public, s-maxage=20, max-age=0, stale-while-revalidate=86400",
+      );
+      return reply.json({
+        stories: stories.map((story) => ({
+          ...story,
+          commentCount: countComments(`kiwi:0x${story.index}`),
+        })),
+      });
+    }
+
     const rowsHtml = stories.map((story, i) =>
       Row(
         start,
@@ -1633,6 +1647,20 @@ export async function launch(trie, libp2p, isPrimary = true) {
         }
       }
     }));
+
+    // NOTE: The iOS app pages through the same stories as JSON.
+    if (request.query.format === "json") {
+      reply.header(
+        "Cache-Control",
+        "public, s-maxage=20, max-age=0, stale-while-revalidate=86400",
+      );
+      return reply.json({
+        stories: stories.map((story) => ({
+          ...story,
+          commentCount: countComments(`kiwi:0x${story.index}`),
+        })),
+      });
+    }
 
     const rowsHtml = stories.map((story, i) =>
       Row(
