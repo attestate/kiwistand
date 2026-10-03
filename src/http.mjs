@@ -2705,6 +2705,25 @@ export async function launch(trie, libp2p, isPrimary = true) {
     return sendStatus(reply, 200, "OK", "ENS name lookup", data);
   });
 
+  app.get("/api/v1/primary-name", async (request, reply) => {
+    reply.header("Cache-Control", "no-cache");
+
+    let address;
+    try {
+      address = utils.getAddress(request.query.address);
+    } catch (err) {
+      return sendError(reply, 400, "Bad Request", "Invalid Ethereum address provided.");
+    }
+
+    try {
+      const name = await ens.primaryName(address);
+      return sendStatus(reply, 200, "OK", "Primary ENS name lookup", { name });
+    } catch (err) {
+      log(`Error looking up primary ENS name for ${address}: ${err.toString()}`);
+      return sendError(reply, 502, "Bad Gateway", "Failed to look up primary ENS name");
+    }
+  });
+
   app.post("/api/v1/ens-name", async (request, reply) => {
     reply.header("Cache-Control", "no-cache");
 

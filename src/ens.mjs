@@ -25,6 +25,12 @@ export async function toAddress(name) {
   throw new Error("Couldn't convert to address");
 }
 
+// NOTE: Asks the chain directly (no cache, no third-party API). Returns null
+// when the address has no primary name and throws when the lookup fails.
+export async function primaryName(address) {
+  return await provider.lookupAddress(address);
+}
+
 async function fetchEnstateData(address, forceFetch) {
   try {
     utils.getAddress(address);

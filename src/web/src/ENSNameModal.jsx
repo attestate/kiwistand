@@ -10,28 +10,21 @@ if (document.querySelector("nav-ens-name-modal")) {
   Modal.setAppElement("nav-ens-name-modal");
 }
 
-async function checkENSName(address) {
-  // Check Namestone for an existing .kiwinews.eth subname
-  try {
-    const res = await fetch(`/api/v1/ens-name?address=${encodeURIComponent(address)}`);
-    if (res.ok) {
-      const json = await res.json();
-      if (json.data && Array.isArray(json.data) && json.data.length > 0) {
-        return json.data[0];
-      }
-    }
-  } catch {}
+// Resolves to true if the address has a .kiwinews.eth subname (Namestone) or
+// a primary ENS name (looked up on chain by our server), and false if it has
+// neither. Rejects if a lookup fails, so that we don't ask people who already
+// have a name just because a lookup was down.
+async function hasENSName(address) {
+  const query = `address=${encodeURIComponent(address)}`;
+  const [subnames, primary] = await Promise.all([
+    fetch(`/api/v1/ens-name?${query}`),
+    fetch(`/api/v1/primary-name?${query}`),
+  ]);
+  if (!subnames.ok || !primary.ok) throw new Error("ENS name lookup failed");
 
-  // Check for a mainnet ENS name (reverse record)
-  try {
-    const res = await fetch(`https://enstate.rs/a/${address}`);
-    if (res.ok) {
-      const data = await res.json();
-      if (data.name) return data;
-    }
-  } catch {}
-
-  return null;
+  const { data: names } = await subnames.json();
+  const { data } = await primary.json();
+  return (Array.isArray(names) && names.length > 0) || !!data?.name;
 }
 
 const ENSNameModal = forwardRef((props, ref) => {
@@ -75,11 +68,11 @@ const ENSNameModal = forwardRef((props, ref) => {
     const wasDismissed = localStorage.getItem(MODAL_DISMISSED_KEY) === "true";
     if (wasDismissed) return;
 
-    checkENSName(address).then((existing) => {
-      if (!existing) {
-        setShowModal(true);
-      }
-    });
+    hasENSName(address)
+      .then((hasName) => {
+        if (!hasName) setShowModal(true);
+      })
+      .catch(() => {});
   }, [address]);
 
   useImperativeHandle(ref, () => ({
@@ -89,11 +82,11 @@ const ENSNameModal = forwardRef((props, ref) => {
       const wasDismissed = localStorage.getItem(MODAL_DISMISSED_KEY) === "true";
       if (wasDismissed) return;
 
-      checkENSName(address).then((existing) => {
-        if (!existing) {
-          setShowModal(true);
-        }
-      });
+      hasENSName(address)
+        .then((hasName) => {
+          if (!hasName) setShowModal(true);
+        })
+        .catch(() => {});
     },
   }));
 
