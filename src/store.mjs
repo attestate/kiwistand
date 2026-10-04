@@ -32,6 +32,7 @@ import { newWalk } from "./WalkController.mjs";
 import { purgeCache, invalidateActivityCaches } from "./cloudflarePurge.mjs";
 import { insertMessage, isReactionComment } from "./cache.mjs";
 import { triggerNotification } from "./subscriptions.mjs";
+import { warmLink } from "./linksafety.mjs";
 
 const maxReaders = 500;
 
@@ -581,6 +582,12 @@ async function _add({
     identity,
     delegations,
   );
+
+  // NOTE: Check a new story's link right away (in the background) so that a
+  // malicious link is hidden before most people see it.
+  if (!synching && message.type === "amplify") {
+    warmLink(message.href);
+  }
 
   if (!libp2p) {
     log(

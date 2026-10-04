@@ -48,7 +48,10 @@ process.on("unhandledRejection", (reason, promise) => {
     console.error(reason.stack);
   }
 });
-import story, { generateStory } from "./views/story.mjs";
+import story, {
+  generateStory,
+  assertLinkNotBlocked,
+} from "./views/story.mjs";
 import newest, * as newAPI from "./views/new.mjs";
 import best, * as bestAPI from "./views/best.mjs";
 import privacy from "./views/privacy.mjs";
@@ -819,6 +822,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
     let sub;
     try {
       sub = getSubmission(req.params.index);
+      assertLinkNotBlocked(sub, req.params.index);
     } catch {
       return res.status(404).send("Not found");
     }
@@ -1834,6 +1838,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
       const policy = await moderation.getLists();
       const bannedAddresses = policy.addresses || [];
       submission = getSubmission(index, null, null, null, bannedAddresses);
+      assertLinkNotBlocked(submission, index);
     } catch (err) {
       log(`/api/v1/stories: Error in getSubmission: ${err.stack}`);
       const code = 404;

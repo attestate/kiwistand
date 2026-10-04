@@ -40,6 +40,7 @@ import { purgeCache } from "../cloudflarePurge.mjs";
 import * as preview from "../preview.mjs";
 import ShareIcon from "./components/shareicon.mjs";
 import { warpcastSvg } from "./components/socialNetworkIcons.mjs";
+import * as linksafety from "../linksafety.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -81,6 +82,17 @@ function linkifyComment(title) {
   });
 }
 
+// NOTE: Stories whose link was flagged as malicious are hidden everywhere,
+// including their story page (served as 404 by the callers).
+export function assertLinkNotBlocked(submission, index) {
+  if (submission && linksafety.isBlocked(submission.href)) {
+    log(`linksafety: hid story "${index}" with blocked link "${submission.href}"`);
+    throw new Error(
+      "This story was hidden because its link was flagged as malicious.",
+    );
+  }
+}
+
 export async function generateStory(index) {
   const hexRegex = /^0x[a-fA-F0-9]{72}$/;
 
@@ -100,6 +112,7 @@ export async function generateStory(index) {
     );
     throw new Error("Index wasn't found");
   }
+  assertLinkNotBlocked(submission, index);
 
   return submission;
 }
@@ -117,6 +130,7 @@ export async function generatePreview(index, commentIndex = null) {
     );
     throw new Error("Index wasn't found");
   }
+  assertLinkNotBlocked(submission, index);
   
   // If commentIndex is provided, generate comment preview instead
   if (commentIndex) {

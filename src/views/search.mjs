@@ -9,6 +9,7 @@ import Footer from "./components/footer.mjs";
 import { custom } from "./components/head.mjs";
 import Row from "./components/row.mjs";
 import cache, { getSubmission } from "../cache.mjs";
+import * as linksafety from "../linksafety.mjs";
 const html = htm.bind(vhtml);
 
 async function processSearchResults(results) {
@@ -17,6 +18,7 @@ async function processSearchResults(results) {
       let story;
       try {
         story = getSubmission(`0x${result.index}`);
+        if (story && linksafety.isBlocked(story.href)) return null;
       } catch (err) {
         console.log(err);
         return null;

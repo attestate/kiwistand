@@ -162,7 +162,8 @@
       "ROOT_ADVERTISEMENT_TIMEOUT": "60000",
       "IS_BOOTSTRAP_NODE": "false",
       "USE_EPHEMERAL_ID": "true",
-      "USER_AGENT": "KiwiNewsBot/1.0 (https://news.kiwistand.com)"
+      "USER_AGENT": "KiwiNewsBot/1.0 (https://news.kiwistand.com)",
+      "LINK_SAFETY_DISABLED": "true"
     },
     "nodeArguments": [
       "--no-warnings",
