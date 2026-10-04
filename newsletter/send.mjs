@@ -65,6 +65,21 @@ async function sendDigest() {
       console.error('Error: digest-data.json is missing or older than 6 hours; not sending.');
       process.exit(1);
     }
+    // Send at most one issue a week. A manual run and a (late) scheduled
+    // run can both happen on the same Sunday; the workflow's concurrency
+    // group runs them one after the other, so the second one sees the
+    // first one's email here. If Buttondown can't tell us, don't send.
+    if (publish) {
+      const recent = await recentlySentEmail(apiKey);
+      if (recent === undefined) {
+        console.error('Error: could not check Buttondown for this week\'s issue; not sending.');
+        process.exit(1);
+      }
+      if (recent) {
+        console.log(`Already sent this week: "${recent.subject}" (${recent.status}, ${recent.publish_date || recent.creation_date}). Not sending again.`);
+        return;
+      }
+    }
     const subject = subjectFor(digest);
     console.log(`Subject: ${subject}`);
     const createEmailResponse = await fetch('https://api.buttondown.email/v1/emails', {
@@ -88,6 +103,27 @@ async function sendDigest() {
   } catch(err) {
     console.error("Error", err);
     process.exit(1);
+  }
+}
+
+// The newest email that went (or is going) out in the last 6 days, null if
+// none, undefined if Buttondown couldn't be asked.
+const SENDING = ["about_to_send", "in_flight", "scheduled", "sent"];
+async function recentlySentEmail(apiKey, now = Date.now()) {
+  try {
+    const response = await fetch('https://api.buttondown.email/v1/emails?ordering=-creation_date', {
+      headers: { 'Authorization': `Token ${apiKey}` },
+    });
+    if (!response.ok) return undefined;
+    const { results } = await response.json();
+    if (!Array.isArray(results)) return undefined;
+    const weekAgo = now - 6 * 24 * 60 * 60 * 1000;
+    return results.find((email) => {
+      const when = new Date(email.publish_date || email.creation_date).getTime();
+      return SENDING.includes(email.status) && when > weekAgo;
+    }) ?? null;
+  } catch {
+    return undefined;
   }
 }
 
