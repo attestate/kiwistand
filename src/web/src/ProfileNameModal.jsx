@@ -81,6 +81,32 @@ const ProfileNameModal = forwardRef((props, ref) => {
       .catch(() => {});
   }, [address]);
 
+  // Accounts created without a wallet (see session.mjs createLocalAccount)
+  // announce themselves once with a `kiwi:account-created` event, or with
+  // window.kiwiAccountCreated if that happened before this modal mounted.
+  // window.openNameModal lets any other part of the page open the modal.
+  useEffect(() => {
+    if (!address) return;
+
+    const openIfNoName = () => {
+      hasName(address)
+        .then((hasName) => {
+          if (!hasName) setShowModal(true);
+        })
+        .catch(() => {});
+    };
+    if (window.kiwiAccountCreated) {
+      window.kiwiAccountCreated = false;
+      openIfNoName();
+    }
+    window.addEventListener("kiwi:account-created", openIfNoName);
+    window.openNameModal = () => setShowModal(true);
+    return () => {
+      window.removeEventListener("kiwi:account-created", openIfNoName);
+      delete window.openNameModal;
+    };
+  }, [address]);
+
   useImperativeHandle(ref, () => ({
     openAfterDelegation: () => {
       if (!address) return;
