@@ -9,7 +9,7 @@ import * as id from "../id.mjs";
 import log from "../logger.mjs";
 import { EIP712_MESSAGE } from "../constants.mjs";
 import { fetchCache } from "../utils.mjs";
-import * as linksafety from "../linksafety.mjs";
+import { isBlocked } from "../linksafety.mjs";
 
 const oneSec = 1000;
 export const cacheDirectory = path.resolve(env.CACHE_DIR, "newcache");
@@ -328,9 +328,7 @@ export function moderate(leaves, config, path) {
         : normalizeUrl(href);
       return !config.links.includes(normalizedHref);
     })
-    // NOTE: Hides stories whose link was flagged as malicious (see
-    // src/linksafety.mjs). Unchecked links are checked in the background.
-    .filter(({ href }) => !linksafety.isBlocked(href));
+    .filter(({ href }) => !isBlocked(href));
 
   // NOTE: When we change the URL of a story then any upvoter who upvotes the
   // story after the moderation will, for the first time, upvote a new link
