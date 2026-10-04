@@ -27,6 +27,7 @@ anon
 anonlocal
 dbtestA
 dbtestB
+dbtestChunkB
 backup
 src/public/bundle.js.map
 src/public/sitemap*.xml

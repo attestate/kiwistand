@@ -12,6 +12,10 @@ import {
   setDelegationModalRef,
   preloadDelegationModal,
 } from "./delegationModalManager.js";
+import {
+  setProfileNameModalRef,
+  preloadProfileNameModal,
+} from "./profileNameModalManager.js";
 import { isSafariOnIOS, isIOSApp } from "./session.mjs";
 
 // Make SDK available globally for use in other parts of the app
@@ -540,6 +544,21 @@ async function addModals(delegations, toast) {
             toast={toast}
             delegations={delegations}
           />
+        </Providers>
+      </StrictMode>,
+    );
+  }
+
+  const profileNameModal = document.querySelector("nav-profile-name-modal");
+  if (profileNameModal) {
+    const ProfileNameModal = (await preloadProfileNameModal()).default;
+    const profileNameModalRef = createRef();
+    setProfileNameModalRef(profileNameModalRef);
+
+    createRoot(profileNameModal).render(
+      <StrictMode>
+        <Providers>
+          <ProfileNameModal ref={profileNameModalRef} toast={toast} />
         </Providers>
       </StrictMode>,
     );
@@ -1692,6 +1711,7 @@ async function start() {
 
   // Preload modals early to avoid delays
   preloadDelegationModal();
+  preloadProfileNameModal();
 
   const results0 = await Promise.allSettled([
     import("@rainbow-me/rainbowkit/styles.css"), // Load styles in parallel

@@ -8,6 +8,7 @@ import { providers, utils } from "ethers";
 import { fetchCache } from "./utils.mjs";
 import cache from "./cache.mjs";
 import log from "./logger.mjs";
+import * as profiles from "./profiles.mjs";
 
 const provider = new providers.JsonRpcProvider(env.RPC_HTTP_HOST);
 
@@ -315,7 +316,39 @@ export async function fetchENSData(address, forceFetch) {
 // Create a prefix for ENS cache entries to ensure uniqueness
 export const ENS_CACHE_PREFIX = "ens-profile-";
 
+// NOTE: Kiwi profile names live in the node's local database (no network), so
+// we read them on every resolve. Overlaying them on cached profiles means a
+// newly chosen name shows up right away, across all cluster workers.
+function withKiwiProfile(profile, normalizedAddress) {
+  const kiwi = profiles.get(normalizedAddress);
+  if (!kiwi || (!kiwi.name && !kiwi.avatar)) return profile;
+  const overlaid = { ...profile, kiwi };
+  if (kiwi.name) {
+    overlaid.displayName = DOMPurify.sanitize(kiwi.name);
+    // NOTE: A Kiwi name resolves the profile even when ENS etc. didn't.
+    delete overlaid.error;
+    delete overlaid.message;
+  }
+  if (kiwi.avatar) overlaid.safeAvatar = DOMPurify.sanitize(kiwi.avatar);
+  return overlaid;
+}
+
+// NOTE: Caches hold the profile without the Kiwi overlay. A cached profile is
+// good enough to return when it has any name source, including a Kiwi name.
+function isComplete(cached, normalizedAddress) {
+  if (!cached) return false;
+  if (cached.ens || cached.farcaster || cached.lens || cached.neynar) {
+    return true;
+  }
+  return !!profiles.get(normalizedAddress)?.name;
+}
+
 export async function _resolve(normalizedAddress, forceFetch) {
+  const base = await resolveBase(normalizedAddress, forceFetch);
+  return withKiwiProfile(base, normalizedAddress);
+}
+
+async function resolveBase(normalizedAddress, forceFetch) {
   const ensProfile = await fetchENSData(normalizedAddress, forceFetch);
   const lensProfile = await fetchLensData(normalizedAddress, forceFetch);
 
@@ -382,8 +415,8 @@ export async function resolve(address, forceFetch = false) {
   // Check if we have complete data in cache (not just minimal profile)
   if (!forceFetch) {
     const cached = await cache.get(cacheKey);
-    if (cached && (cached.ens || cached.farcaster || cached.lens || cached.neynar)) {
-      return cached;
+    if (isComplete(cached, normalizedAddress)) {
+      return withKiwiProfile(cached, normalizedAddress);
     }
   }
 
@@ -392,18 +425,21 @@ export async function resolve(address, forceFetch = false) {
     address.slice(0, 6) +
     "..." +
     address.slice(address.length - 4, address.length);
-  const minimalProfile = {
-    address,
-    truncatedAddress,
-    displayName: truncatedAddress,
-    safeAvatar: null,
-  };
+  const minimalProfile = withKiwiProfile(
+    {
+      address,
+      truncatedAddress,
+      displayName: truncatedAddress,
+      safeAvatar: null,
+    },
+    normalizedAddress,
+  );
 
   if (!forceFetch) {
     // Trigger background fetch and update cache when done - don't await
     (async () => {
       try {
-        const completeProfile = await _resolve(normalizedAddress);
+        const completeProfile = await resolveBase(normalizedAddress);
         await cache.set(cacheKey, completeProfile);
 
         return completeProfile;
@@ -429,11 +465,11 @@ export async function resolveForBatch(address) {
   const cacheKey = `${ENS_CACHE_PREFIX}${normalizedAddress}`;
 
   const cached = await cache.get(cacheKey);
-  if (cached && (cached.ens || cached.farcaster || cached.lens || cached.neynar)) {
-    return cached;
+  if (isComplete(cached, normalizedAddress)) {
+    return withKiwiProfile(cached, normalizedAddress);
   }
 
-  const completeProfile = await _resolve(normalizedAddress);
+  const completeProfile = await resolveBase(normalizedAddress);
   await cache.set(cacheKey, completeProfile);
-  return completeProfile;
+  return withKiwiProfile(completeProfile, normalizedAddress);
 }

@@ -90,7 +90,11 @@ import { timingSafeEqual } from "crypto";
 import { verify, ecrecover } from "./id.mjs";
 import { EIP712_MESSAGE } from "./constants.mjs";
 import { resolveIdentity } from "@attestate/delegator2";
-import { invalidateActivityCaches } from "./cloudflarePurge.mjs";
+import * as profiles from "./profiles.mjs";
+import {
+  invalidateActivityCaches,
+  purgeCache,
+} from "./cloudflarePurge.mjs";
 import { getCastByHashAndConstructUrl } from "./parser.mjs";
 import { sendToChannel } from "./telegram-bot.mjs";
 import { 
@@ -2871,6 +2875,101 @@ export async function launch(trie, libp2p, isPrimary = true) {
       log(`Error looking up primary ENS name for ${address}: ${err.toString()}`);
       return sendError(reply, 502, "Bad Gateway", "Failed to look up primary ENS name");
     }
+  });
+
+  // Free, node-run Kiwi profile names (replaces Namestone's *.kiwinews.eth).
+  // The body has the same shape as the removed POST /api/v1/ens-name:
+  // { name, address, avatar?, signedAt, signature }, where signature is an
+  // EIP712 signature over profiles.buildMessage(...). An empty name removes it.
+  app.post("/api/v1/profile", async (request, reply) => {
+    reply.header("Cache-Control", "no-cache");
+
+    let data;
+    try {
+      const delegations = await registry.delegations();
+      data = await profiles.save(request.body, { delegations });
+    } catch (err) {
+      if (err instanceof profiles.ProfileError) {
+        return sendError(reply, err.code, err.httpMessage, err.details);
+      }
+      log(`Error saving profile: ${err.toString()}`);
+      return sendError(
+        reply,
+        500,
+        "Internal Server Error",
+        "Failed to save profile",
+      );
+    }
+
+    // NOTE: Names are read from the local DB on every resolve, but drop the
+    // cached profile anyway and recompute the new feed, which bakes in names.
+    try {
+      await appCache.delete(`${ENS_CACHE_PREFIX}${data.address}`);
+    } catch (err) {
+      log(`Failed to clear profile cache for ${data.address}: ${err}`);
+    }
+    const spellings = new Set([data.address, utils.getAddress(data.address)]);
+    for (const spelling of spellings) {
+      purgeCache(
+        `https://news.kiwistand.com/api/v1/profile/${spelling}`,
+      ).catch((err) => log(`Failed to purge profile cache: ${err}`));
+    }
+    sendToCluster("recompute-new-feed");
+    setImmediate(() => {
+      newAPI
+        .recompute()
+        .catch((err) =>
+          log(`Recomputation of new feed failed after profile update: ${err}`),
+        );
+    });
+
+    return sendStatus(reply, 200, "OK", "profile saved", data);
+  });
+
+  app.get("/api/v1/profile-name/:name", async (request, reply) => {
+    reply.header("Cache-Control", "no-cache");
+    let profile;
+    try {
+      profile = profiles.byName(request.params.name);
+    } catch (err) {
+      log(`Error looking up profile name: ${err.toString()}`);
+      return sendError(
+        reply,
+        500,
+        "Internal Server Error",
+        "Failed to look up profile name",
+      );
+    }
+    if (!profile) {
+      return sendError(reply, 404, "Not Found", "No profile with this name");
+    }
+    return sendStatus(reply, 200, "OK", "profile name lookup", profile);
+  });
+
+  app.get("/api/v1/profiles", async (request, reply) => {
+    reply.header("Cache-Control", "no-cache");
+    const since = request.query.since ? Number(request.query.since) : 0;
+    if (!Number.isInteger(since) || since < 0) {
+      return sendError(
+        reply,
+        400,
+        "Bad Request",
+        "since must be a non-negative unix timestamp in seconds",
+      );
+    }
+    let records;
+    try {
+      records = profiles.list(since);
+    } catch (err) {
+      log(`Error listing profiles: ${err.toString()}`);
+      return sendError(
+        reply,
+        500,
+        "Internal Server Error",
+        "Failed to list profiles",
+      );
+    }
+    return sendStatus(reply, 200, "OK", "signed profile records", records);
   });
 
 
