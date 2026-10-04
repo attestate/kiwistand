@@ -170,7 +170,7 @@ export const EmojiReaction = ({ comment, delegations, toast }) => {
           return;
         }
       }
-      toast.error("Please connect your wallet first");
+      toast.error("Please log in first");
       return;
     }
 

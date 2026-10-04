@@ -92,6 +92,19 @@ export function getLocalAccount(identity) {
     const signer = new Wallet(value);
     return { identity: key, privateKey: value, signer: signer.address };
   }
+  // NOTE: When there are several keys in localStorage and the caller didn't
+  // pass an identity (e.g. no wallet connected), fall back to the wallet-less
+  // local account if the user created or restored one.
+  const localAccountAddress = getLocalAccountAddress();
+  if (
+    Object.keys(keys).length > 1 &&
+    !identity &&
+    localAccountAddress &&
+    keys[localAccountAddress]
+  ) {
+    identity = localAccountAddress;
+  }
+
   if (Object.keys(keys).length > 1 && identity && keys[identity]) {
     const signer = new Wallet(keys[identity]);
     setCookie("identity", identity, tenYearsInSeconds);
@@ -103,6 +116,153 @@ export function getLocalAccount(identity) {
   }
 
   return null;
+}
+
+// ---------------------------------------------------------------------------
+// Wallet-less local accounts
+//
+// A local account is a secp256k1 key generated in the browser. Nodes accept
+// any validly signed EIP-712 message and `resolveIdentity(delegations, signer)`
+// returns the signer itself when it has no delegation, so the key's own
+// address IS the user's identity - no onchain transaction, no gas, no wallet.
+//
+// The private key is stored under the same `-kiwi-news-<identity>-key` schema
+// used for delegated app keys (with <identity> = the key's own address), so
+// every existing signing path (Vote, CommentInput, SubmitButton, Bell, ...)
+// picks it up through getLocalAccount() without changes.
+// ---------------------------------------------------------------------------
+const LOCAL_ACCOUNT_MARKER = "-kiwi-news-local-account";
+const LOCAL_ACCOUNT_BACKED_UP = "-kiwi-news-local-account-backed-up";
+const ACCOUNT_CREATED_FLAG = "-kiwi-news-account-created";
+
+function keyStorageName(address) {
+  return `-kiwi-news-${address}-key`;
+}
+
+function mnemonicStorageName(address) {
+  return `-kiwi-news-${address}-mnemonic`;
+}
+
+export function getLocalAccountAddress() {
+  try {
+    const address = localStorage.getItem(LOCAL_ACCOUNT_MARKER);
+    if (address && localStorage.getItem(keyStorageName(address))) {
+      return address;
+    }
+  } catch (err) {}
+  return null;
+}
+
+function saveLocalAccount(wallet, phrase) {
+  const { address, privateKey } = wallet;
+  // A local account replaces anon mode (whose wallet is per page session)
+  localStorage.removeItem("anon-mode");
+  localStorage.setItem(keyStorageName(address), privateKey);
+  if (phrase) {
+    localStorage.setItem(mnemonicStorageName(address), phrase);
+  } else {
+    localStorage.removeItem(mnemonicStorageName(address));
+  }
+  localStorage.setItem(LOCAL_ACCOUNT_MARKER, address);
+  setCookie("identity", address, tenYearsInSeconds);
+  return { address, privateKey, phrase };
+}
+
+// Generates a brand new wallet-less account and stores it in this browser.
+export function createLocalAccount() {
+  const wallet = Wallet.createRandom();
+  const phrase = wallet.mnemonic && wallet.mnemonic.phrase;
+  localStorage.removeItem(LOCAL_ACCOUNT_BACKED_UP);
+  return saveLocalAccount(wallet, phrase);
+}
+
+export function normalizeRecoveryInput(input) {
+  return String(input || "")
+    .trim()
+    .toLowerCase()
+    .split(/\s+/)
+    .filter(Boolean)
+    .join(" ");
+}
+
+// Restores an account from a 12-word recovery phrase (or a raw private key).
+export function restoreLocalAccount(input) {
+  const normalized = normalizeRecoveryInput(input);
+  if (!normalized) throw new Error("Please enter your recovery phrase");
+
+  let wallet;
+  let phrase;
+  if (/^(0x)?[0-9a-f]{64}$/.test(normalized)) {
+    const key = normalized.startsWith("0x") ? normalized : `0x${normalized}`;
+    wallet = new Wallet(key);
+  } else {
+    try {
+      wallet = Wallet.fromMnemonic(normalized);
+    } catch (err) {
+      throw new Error(
+        "That doesn't look like a valid recovery phrase. Check the words and their order.",
+      );
+    }
+    phrase = normalized;
+  }
+  // The user evidently has the backup, so don't nag them again.
+  localStorage.setItem(LOCAL_ACCOUNT_BACKED_UP, "true");
+  return saveLocalAccount(wallet, phrase);
+}
+
+// Returns the recovery material of the wallet-less account, if there is one.
+export function getLocalAccountBackup() {
+  const address = getLocalAccountAddress();
+  if (!address) return null;
+  return {
+    address,
+    privateKey: localStorage.getItem(keyStorageName(address)),
+    phrase: localStorage.getItem(mnemonicStorageName(address)),
+    backedUp: localStorage.getItem(LOCAL_ACCOUNT_BACKED_UP) === "true",
+  };
+}
+
+export function markLocalAccountBackedUp() {
+  try {
+    localStorage.setItem(LOCAL_ACCOUNT_BACKED_UP, "true");
+  } catch (err) {}
+}
+
+// Called right before reloading after account creation, so that the next page
+// load can announce the new account (see announceAccountCreated).
+export function flagAccountCreated(address) {
+  try {
+    localStorage.setItem(ACCOUNT_CREATED_FLAG, address);
+  } catch (err) {}
+}
+
+// Runs once on the first page load after a wallet-less account was created.
+// If a name modal entry point is available it's opened directly; otherwise a
+// `kiwi:account-created` window event is dispatched (detail: { address }) and
+// `window.kiwiAccountCreated` is set so late listeners can still pick it up.
+export function announceAccountCreated() {
+  let address;
+  try {
+    address = localStorage.getItem(ACCOUNT_CREATED_FLAG);
+    if (!address) return;
+    localStorage.removeItem(ACCOUNT_CREATED_FLAG);
+  } catch (err) {
+    return;
+  }
+
+  const detail = { address };
+  window.kiwiAccountCreated = detail;
+  const opener =
+    (typeof window.openNameModal === "function" && window.openNameModal) ||
+    (typeof window.showENSNameModal === "function" && window.showENSNameModal);
+  if (opener) {
+    try {
+      opener(detail);
+    } catch (err) {
+      console.error("Could not open name modal:", err);
+    }
+  }
+  window.dispatchEvent(new CustomEvent("kiwi:account-created", { detail }));
 }
 
 export function isIOS() {
@@ -186,8 +346,27 @@ export function hasStaleDelegationKeys() {
   return Object.keys(localStorage).some(k => k.match(delegationSchema));
 }
 
-// Logout that clears essential session data and disconnects wallet
-export async function logout() {
+// Logout that clears essential session data and disconnects wallet.
+//
+// NOTE: A wallet-less local account only exists in this browser, so deleting
+// its key without a backup loses the account for good. Unless called with
+// { force: true }, we first show a warning that offers the recovery phrase.
+export async function logout(options) {
+  const force = !!(options && options.force === true);
+  if (!force && getLocalAccountBackup()) {
+    try {
+      const { openAccountModal } = await import("./AccountModal.jsx");
+      openAccountModal("logout");
+      return;
+    } catch (err) {
+      console.error("Could not open logout warning:", err);
+      const confirmed = window.confirm(
+        "Your Kiwi account only exists in this browser. If you haven't saved your recovery phrase, logging out deletes your account forever. Log out anyway?",
+      );
+      if (!confirmed) return;
+    }
+  }
+
   // Disconnect wallet if connected
   try {
     const { disconnect } = await import('@wagmi/core');
@@ -207,6 +386,15 @@ export async function logout() {
       localStorage.removeItem(key);
     }
   });
+
+  // Clear wallet-less local account data (recovery phrase and markers)
+  const mnemonicSchema = /^-kiwi-news-(0x[a-fA-F0-9]{40})-mnemonic$/;
+  Object.keys(localStorage).forEach((key) => {
+    if (key.match(mnemonicSchema)) localStorage.removeItem(key);
+  });
+  localStorage.removeItem(LOCAL_ACCOUNT_MARKER);
+  localStorage.removeItem(LOCAL_ACCOUNT_BACKED_UP);
+  localStorage.removeItem(ACCOUNT_CREATED_FLAG);
 
   // Clear identity and lastUpdate from localStorage (fallback storage)
   localStorage.removeItem('identity');

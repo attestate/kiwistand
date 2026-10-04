@@ -2,6 +2,8 @@ import React, { useState, useEffect, useImperativeHandle, forwardRef } from "rea
 import Modal from "react-modal";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 
+import { createLocalAccount, restoreLocalAccount } from "./session.mjs";
+
 if (typeof document !== "undefined") {
   Modal.setAppElement("body");
 }
@@ -44,14 +46,29 @@ const WalletIcon = () => (
   </svg>
 );
 
+const KeyIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="1.2em" height="1.2em">
+    <rect width="256" height="256" fill="none"/>
+    <path d="M93.17,122.83A71.68,71.68,0,0,1,88,95.91c0-38.58,31.08-70.64,69.64-71.87A72,72,0,0,1,232,98.36C230.73,136.92,198.67,168,160.09,168a71.68,71.68,0,0,1-26.92-5.17h0L120,176H96v24H72v24H40a8,8,0,0,1-8-8V187.31a8,8,0,0,1,2.34-5.65l58.83-58.83Z" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="16"/>
+    <circle cx="180" cy="76" r="12"/>
+  </svg>
+);
+
 const LoginModal = forwardRef((props, ref) => {
   const [showModal, setShowModal] = useState(false);
-  const [isButtonHovered, setIsButtonHovered] = useState(false);
   const [isButtonActive, setIsButtonActive] = useState(false);
   const [isAnonButtonHovered, setIsAnonButtonHovered] = useState(false);
+  const [isCreateButtonHovered, setIsCreateButtonHovered] = useState(false);
+  const [isWalletButtonHovered, setIsWalletButtonHovered] = useState(false);
+  const [view, setView] = useState("main"); // "main" | "restore"
+  const [recoveryInput, setRecoveryInput] = useState("");
+  const [restoreError, setRestoreError] = useState("");
   const { openConnectModal } = useConnectModal();
 
   function openModal() {
+    setView("main");
+    setRecoveryInput("");
+    setRestoreError("");
     setShowModal(true);
   }
 
@@ -69,6 +86,40 @@ const LoginModal = forwardRef((props, ref) => {
     if (openConnectModal) {
       openConnectModal();
     }
+  };
+
+  const handleCreateAccount = async () => {
+    let account;
+    try {
+      account = createLocalAccount();
+    } catch (err) {
+      console.error("Could not create account:", err);
+      if (props.toast) props.toast.error("Couldn't create your account");
+      return;
+    }
+    closeModal();
+    // Show the recovery phrase right away; the modal reloads the page when
+    // the user continues so every component picks up the new identity.
+    try {
+      const { openAccountModal } = await import("./AccountModal.jsx");
+      openAccountModal("created");
+    } catch (err) {
+      console.error("Could not open backup modal:", err);
+      window.location.reload();
+    }
+  };
+
+  const handleRestore = (e) => {
+    e.preventDefault();
+    try {
+      restoreLocalAccount(recoveryInput);
+    } catch (err) {
+      setRestoreError(err.message);
+      return;
+    }
+    setRecoveryInput("");
+    closeModal();
+    window.location.reload();
   };
 
   const handleAnonMode = () => {
@@ -246,12 +297,91 @@ const LoginModal = forwardRef((props, ref) => {
         <div style={{ flexGrow: 1, padding: "0 12px 12px" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
             <div style={{ fontSize: "15px", color: "var(--text-primary)", lineHeight: "22px" }}>
-              Please sign in to continue
+              {view === "restore"
+                ? "Enter the 12-word recovery phrase you saved when you created your account."
+                : "Please sign in to continue"}
             </div>
           </div>
         </div>
 
-        {/* button footer */}
+        {view === "restore" ? (
+          <form
+            onSubmit={handleRestore}
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "8px",
+              padding: "0 16px 12px",
+            }}
+          >
+            <textarea
+              value={recoveryInput}
+              onChange={(e) => {
+                setRecoveryInput(e.target.value);
+                setRestoreError("");
+              }}
+              rows={3}
+              autoFocus
+              autoComplete="off"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              placeholder="word1 word2 word3 ..."
+              aria-label="Recovery phrase"
+              style={{
+                width: "100%",
+                boxSizing: "border-box",
+                padding: "8px",
+                fontSize: "14px",
+                fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+                border: "var(--border-thin)",
+                borderRadius: "4px",
+                backgroundColor: "var(--bg-white)",
+                color: "var(--text-primary)",
+                resize: "vertical",
+              }}
+            />
+            {restoreError && (
+              <div style={{ color: "var(--color-error, #d32f2f)", fontSize: "13px" }}>
+                {restoreError}
+              </div>
+            )}
+            <button
+              type="submit"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                height: "38px",
+                backgroundColor: "var(--accent-primary)",
+                border: "1px solid var(--accent-primary)",
+                color: "var(--bg-black)",
+                borderRadius: "8px",
+                fontSize: "15px",
+                cursor: "pointer",
+              }}
+            >
+              Log in
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setView("main");
+                setRestoreError("");
+              }}
+              style={{
+                background: "none",
+                border: "none",
+                color: "var(--text-secondary)",
+                fontSize: "13px",
+                cursor: "pointer",
+                textDecoration: "underline",
+              }}
+            >
+              Back
+            </button>
+          </form>
+        ) : (
         <div style={{
           display: "flex",
           minHeight: "48px",
@@ -268,15 +398,15 @@ const LoginModal = forwardRef((props, ref) => {
             flexDirection: "column",
             gap: "8px",
           }}>
-            {/* Primary button - Connect wallet */}
+            {/* Primary button - Create a wallet-less account */}
             <button
               style={{
                 display: "inline-flex",
                 alignItems: "center",
                 justifyContent: "center",
                 height: "38px",
-                backgroundColor: isButtonHovered ? "var(--accent-primary-hover)" : "var(--accent-primary)",
-                border: isButtonHovered ? "1px solid var(--accent-primary-hover)" : "1px solid var(--accent-primary)",
+                backgroundColor: isCreateButtonHovered ? "var(--accent-primary-hover)" : "var(--accent-primary)",
+                border: isCreateButtonHovered ? "1px solid var(--accent-primary-hover)" : "1px solid var(--accent-primary)",
                 color: "var(--bg-black)",
                 borderRadius: "8px",
                 fontSize: "15px",
@@ -287,14 +417,42 @@ const LoginModal = forwardRef((props, ref) => {
                 margin: "0 16px",
                 whiteSpace: "nowrap",
               }}
-              onClick={handleConnectWallet}
-              onMouseEnter={() => setIsButtonHovered(true)}
+              onClick={handleCreateAccount}
+              onMouseEnter={() => setIsCreateButtonHovered(true)}
               onMouseLeave={() => {
-                setIsButtonHovered(false);
+                setIsCreateButtonHovered(false);
                 setIsButtonActive(false);
               }}
               onMouseDown={() => setIsButtonActive(true)}
               onMouseUp={() => setIsButtonActive(false)}
+            >
+              <div style={{ display: "flex", alignItems: "center", height: "100%", gap: "8px" }}>
+                <SparkleIcon />
+                <span>Create account (no wallet needed)</span>
+              </div>
+            </button>
+
+            {/* Secondary button - Connect wallet */}
+            <button
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                height: "38px",
+                backgroundColor: isWalletButtonHovered ? "var(--accent-primary)" : "transparent",
+                border: isWalletButtonHovered ? "1px solid var(--accent-primary)" : "var(--border-thin)",
+                color: isWalletButtonHovered ? "var(--bg-black)" : "var(--text-primary)",
+                borderRadius: "8px",
+                fontSize: "15px",
+                fontWeight: "normal",
+                cursor: "pointer",
+                transition: "all 0.15s ease",
+                margin: "0 16px",
+                whiteSpace: "nowrap",
+              }}
+              onClick={handleConnectWallet}
+              onMouseEnter={() => setIsWalletButtonHovered(true)}
+              onMouseLeave={() => setIsWalletButtonHovered(false)}
             >
               <div style={{ display: "flex", alignItems: "center", height: "100%", gap: "8px" }}>
                 <WalletIcon />
@@ -329,8 +487,31 @@ const LoginModal = forwardRef((props, ref) => {
                 <span>Anon mode</span>
               </div>
             </button>
+
+            {/* Restore an existing wallet-less account */}
+            <button
+              type="button"
+              onClick={() => setView("restore")}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "6px",
+                background: "none",
+                border: "none",
+                color: "var(--text-secondary)",
+                fontSize: "13px",
+                cursor: "pointer",
+                textDecoration: "underline",
+                margin: "0 16px",
+              }}
+            >
+              <KeyIcon />
+              <span>Log in with recovery phrase</span>
+            </button>
           </div>
         </div>
+        )}
       </div>
     </Modal>
   );

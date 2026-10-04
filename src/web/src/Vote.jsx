@@ -181,7 +181,7 @@ const Vote = (props) => {
 
     // Check wallet connection for both mini app and traditional users
     if (!isFarcasterClient && !signer) {
-      toast.error("Please connect your wallet to like");
+      toast.error("Please log in to like");
       triggerLocalHaptic("warning");
       return;
     }
@@ -361,7 +361,7 @@ const Vote = (props) => {
                 if (isFarcasterClient) {
                   toast.error("Unable to access your Farcaster profile");
                 } else {
-                  toast.error("Connect your wallet to sign up");
+                  toast.error("Log in or create an account to like");
                 }
                 triggerLocalHaptic("warning");
                 return;

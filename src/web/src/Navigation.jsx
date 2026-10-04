@@ -12,8 +12,60 @@ import {
   isRunningPWA,
   hasSingleLocalStorageKey,
   hasStaleDelegationKeys,
+  getLocalAccountBackup,
   logout,
 } from "./session.mjs";
+
+const openBackup = async () => {
+  const { openAccountModal } = await import("./AccountModal.jsx");
+  openAccountModal("backup");
+};
+
+// Sidebar entry that lets wallet-less accounts view their recovery phrase.
+const BackupAccountButton = () => {
+  const backup = getLocalAccountBackup();
+  if (!backup) return null;
+  return (
+    <div
+      title="Back up account"
+      onClick={openBackup}
+      style={{
+        color: "var(--text-primary)",
+        cursor: "pointer",
+      }}
+      className="sidebar-div"
+    >
+      <div
+        style={{
+          fontVariant: "small-caps",
+          display: "flex",
+          alignItems: "center",
+        }}
+      >
+        <div className="svg-container">
+          <EthereumSVG />
+        </div>
+        <span>
+          Back up account
+          {!backup.backedUp && (
+            <span
+              title="Not backed up yet"
+              style={{
+                display: "inline-block",
+                width: "7px",
+                height: "7px",
+                marginLeft: "6px",
+                borderRadius: "50%",
+                backgroundColor: "var(--color-error, #d32f2f)",
+                verticalAlign: "middle",
+              }}
+            />
+          )}
+        </span>
+      </div>
+    </div>
+  );
+};
 
 const shorten = (address) =>
   address.slice(0, 6) +
@@ -139,7 +191,10 @@ export const SimpleDisconnectButton = (props) => {
         }, [mounted, account, chain]);
 
         // If not connected to wallet but has local key, show logout
-        if (!account && hasSingleLocalStorageKey()) {
+        if (
+          !account &&
+          (hasSingleLocalStorageKey() || getLocalAccountBackup())
+        ) {
           return (
             <span
               className="meta-link"
@@ -213,8 +268,13 @@ const DisconnectButton = () => {
         const connected = account && chain && mounted;
 
         // If not connected to wallet but has local key, show logout
-        if (!connected && hasSingleLocalStorageKey()) {
+        if (
+          !connected &&
+          (hasSingleLocalStorageKey() || getLocalAccountBackup())
+        ) {
           return (
+            <>
+            <BackupAccountButton />
             <div
               title="Log out"
               onClick={logout}
@@ -237,6 +297,7 @@ const DisconnectButton = () => {
                 <span>Log out</span>
               </div>
             </div>
+            </>
           );
         }
 

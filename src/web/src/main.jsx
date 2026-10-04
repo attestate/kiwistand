@@ -83,7 +83,13 @@ async function applySafeAreaInsets() {
   }
 }
 
-import { isIOS, isRunningPWA, getCookie, getLocalAccount } from "./session.mjs";
+import {
+  isIOS,
+  isRunningPWA,
+  getCookie,
+  getLocalAccount,
+  announceAccountCreated,
+} from "./session.mjs";
 import theme from "./theme.jsx";
 // posthog-js is loaded dynamically during idle time to keep it out of the
 // main bundle. window.posthog is set when it resolves. All callers use
@@ -1760,6 +1766,14 @@ async function start() {
   try {
     document.body.classList.add("react-loaded");
   } catch {}
+
+  // First page load after creating a wallet-less account: open the name
+  // modal (if available) / dispatch `kiwi:account-created`.
+  try {
+    announceAccountCreated();
+  } catch (err) {
+    console.error("announceAccountCreated failed:", err);
+  }
 
   // Bind AI button handlers for server-rendered rows
   addAiButtonHandlers();
