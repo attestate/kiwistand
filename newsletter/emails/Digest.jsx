@@ -124,7 +124,7 @@ export default function DigestEmail({ stories = digestStories }) {
                 reactions, notifications, and sharing links straight from Safari.
                 It's in beta on TestFlight, and we'd love your feedback.
               </Text>
-              <Link href={TESTFLIGHT_URL} className="k-button" style={buttonStyle}>Get the beta</Link>
+              <Link href={TESTFLIGHT_URL} className="k-button" style={buttonStyle}><span className="k-button-text" style={{ color: '#ffffff' }}>Get the beta</span></Link>
             </Section>
 
             {storiesToRender.map((story, index) => {
@@ -141,7 +141,7 @@ export default function DigestEmail({ stories = digestStories }) {
 
             <Section style={footerSection}>
               <Text style={footerText} className="k-text">
-                More every day on <Link href={withUtm("https://news.kiwistand.com/", "footer")} className="k-link" style={footerLink}>news.kiwistand.com</Link>.
+                More every day on <Link href={withUtm("https://news.kiwistand.com/", "footer")} className="k-link" style={footerLink}><span className="k-link" style={{ color: '#000000' }}>news.kiwistand.com</span></Link>.
                 On a computer? Scan the code to get the iPhone beta:
               </Text>
               <Img
@@ -204,6 +204,7 @@ const darkModeCSS = `
     .k-kiwi { color: #b5cc3a !important; }
     .k-hr { border-color: #3a3a34 !important; }
     .k-button { background-color: #ecece6 !important; color: #111111 !important; }
+    .k-button-text { color: #111111 !important; }
   }
   [data-ogsc] .k-text { color: #ecece6 !important; }
   [data-ogsc] .k-link { color: #ffffff !important; }
@@ -212,7 +213,7 @@ const darkModeCSS = `
   [data-ogsb] .k-card { background-color: #23231f !important; }
   [data-ogsb] .k-embed { background-color: #2b2b27 !important; }
   [data-ogsb] .k-button { background-color: #ecece6 !important; }
-  [data-ogsc] .k-button { color: #111111 !important; }
+  [data-ogsc] .k-button, [data-ogsc] .k-button-text { color: #111111 !important; }
 `;
 
 // --- Styles ---

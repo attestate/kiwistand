@@ -164,13 +164,13 @@ export default function RowEmail({ story = {} }) {
         ) : null}
 
         <Section style={{ padding: '12px 12px 12px 12px' }}>
-          <Link href={story.storyLink} className="k-link" style={{ lineHeight: '15pt', fontSize: '13pt', color: '#000000', textDecoration: 'none' }}>
+          <Link href={story.storyLink} className="k-link" style={{ lineHeight: '15pt', fontSize: '13pt', color: '#000000', textDecoration: 'none' }}><span className="k-link" style={{ color: '#000000' }}>
             {truncateLongWords(
               (metadata?.isXArticle && metadata?.ogTitle)
                 ? metadata.ogTitle
                 : metadata?.compliantTitle || title
             )}
-          </Link>
+          </span></Link>
 
           {textPost ? (
             <Text className="k-text" style={{ fontSize: '14px', lineHeight: '21px', margin: '6px 0 0 0', whiteSpace: 'pre-wrap' }}>
@@ -179,12 +179,12 @@ export default function RowEmail({ story = {} }) {
           ) : null}
 
           <Text className="k-muted" style={{ fontSize: '9pt', marginTop: '3px', marginBottom: '0', lineHeight: '1.4', color: '#666' }}>
-            submitted by <Link href={submitterProfileLink} className="k-link" style={{ fontWeight: 600, color: '#000000', textDecoration: 'none' }}>{displayName}</Link>
+            submitted by <Link href={submitterProfileLink} className="k-link" style={{ fontWeight: 600, color: '#000000', textDecoration: 'none' }}><span className="k-link" style={{ color: '#000000' }}>{displayName}</span></Link>
             {/* Text posts (data: links) have no domain. */}
             {isTextPost ? ' • text post' : (
               <>
                 {' • '}
-                <Link href={story.storyLink} className="k-link" style={{ color: '#000000', textDecoration: 'none' }}>{extractedDomain}</Link>
+                <Link href={story.storyLink} className="k-link" style={{ color: '#000000', textDecoration: 'none' }}><span className="k-link" style={{ color: '#000000' }}>{extractedDomain}</span></Link>
               </>
             )}
             {upvotes ? ` • ${upvotes} upvote${upvotes === 1 ? '' : 's'}` : ''}
@@ -193,7 +193,7 @@ export default function RowEmail({ story = {} }) {
         </Section>
       </Section>
       <Section style={{ padding: '12px 0' }}>
-        <Link href={story.storyLink} className="k-button" style={buttonStyle}>Read on Kiwi</Link>
+        <Link href={story.storyLink} className="k-button" style={buttonStyle}><span className="k-button-text" style={{ color: '#ffffff' }}>Read on Kiwi</span></Link>
       </Section>
     </>
   );
