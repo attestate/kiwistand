@@ -9,6 +9,7 @@ import * as id from "../id.mjs";
 import log from "../logger.mjs";
 import { EIP712_MESSAGE } from "../constants.mjs";
 import { fetchCache } from "../utils.mjs";
+import { isBlocked } from "../linksafety.mjs";
 
 const oneSec = 1000;
 export const cacheDirectory = path.resolve(env.CACHE_DIR, "newcache");
@@ -326,7 +327,8 @@ export function moderate(leaves, config, path) {
         ? href
         : normalizeUrl(href);
       return !config.links.includes(normalizedHref);
-    });
+    })
+    .filter(({ href }) => !isBlocked(href));
 
   // NOTE: When we change the URL of a story then any upvoter who upvotes the
   // story after the moderation will, for the first time, upvote a new link

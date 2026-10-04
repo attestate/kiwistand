@@ -40,6 +40,7 @@ import { purgeCache } from "../cloudflarePurge.mjs";
 import * as preview from "../preview.mjs";
 import ShareIcon from "./components/shareicon.mjs";
 import { warpcastSvg } from "./components/socialNetworkIcons.mjs";
+import { isBlocked } from "../linksafety.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -99,6 +100,9 @@ export async function generateStory(index) {
       `Requested index "${index}" but didn't find because of error "${err.toString()}"`,
     );
     throw new Error("Index wasn't found");
+  }
+  if (isBlocked(submission.href)) {
+    throw new Error("This story's link was flagged as malicious.");
   }
 
   return submission;
