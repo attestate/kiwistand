@@ -73,7 +73,6 @@ const footer = (theme, path) => html`
       <div>
         <strong>Resources</strong><br />
         <a href="/privacy-policy">Privacy Policy</a><br />
-        <a href="/shortcut">iOS Shortcut</a><br />
         RSS: <a href="/feed.xml">Hot</a> · <a href="/new.xml">New</a><br />
       </div>
       <div>
@@ -108,16 +107,6 @@ const footer = (theme, path) => html`
     <div
       style="display: flex; justify-content: center; align-items: center; gap: 0.5rem;"
     >
-      <a href="https://etherium.foundation/" target="_blank">
-        <img
-          loading="lazy"
-          src="/etherium.webp"
-          alt="Powered by Ethereum"
-          style="height: 4.5rem; width: auto;"
-          width="650"
-          height="288"
-        />
-      </a>
       <div>
         <span>This instance of Kiwi News is hosted by </span>
         <a
