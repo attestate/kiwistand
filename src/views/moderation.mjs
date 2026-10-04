@@ -127,7 +127,13 @@ export async function getLists() {
   // Process results
   let links = [];
   if (linksResult.status === "fulfilled") {
-    links = linksResult.value.map(({ link }) => normalizeUrl(link));
+    // Text posts (data:) and kiwi: references are compared as-is in
+    // moderate(), so they mustn't be normalized here either.
+    links = linksResult.value.map(({ link }) =>
+      link.startsWith("data:") || link.startsWith("kiwi:")
+        ? link
+        : normalizeUrl(link),
+    );
   } else {
     log(`banlist_links: Couldn't get config: ${linksResult.reason}`);
   }
