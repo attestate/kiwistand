@@ -1062,6 +1062,85 @@ const getYTId = (url) => {
 // Track URLs currently being fetched to prevent duplicate processing
 const inFlightFetches = new Map();
 
+// Fetches a link's metadata and stores it (or the failure) in the cache.
+// Callers check inFlightFetches first; the returned promise never rejects.
+function fetchAndStore(url, normalizedUrl, generateTitle, submittedTitle, onFetched) {
+  inFlightFetches.set(normalizedUrl, true);
+  return metadata(url, generateTitle, submittedTitle)
+    .then(async (freshData) => {
+      if (freshData) {
+        await cache.set(normalizedUrl, freshData, { ttlMs: METADATA_SUCCESS_TTL });
+        log(`Stored metadata in cache for ${normalizedUrl}`);
+        // Call the onFetched callback if provided
+        if (onFetched) {
+          onFetched(freshData);
+        }
+      }
+    })
+    .catch(async (err) => {
+      const failure = {
+        failed: true,
+        error: err?.message || String(err),
+        timestamp: Date.now(),
+      };
+      await cache.set(normalizedUrl, failure, { ttlMs: METADATA_FAILURE_TTL });
+      await cache.set(url, failure, { ttlMs: METADATA_FAILURE_TTL });
+      log(`Metadata fetch failed for ${url}: ${err}`);
+    })
+    .catch(() => {})
+    .finally(() => {
+      inFlightFetches.delete(normalizedUrl);
+    });
+}
+
+// Background warming of link previews (e.g. for the next endless scroll
+// pages). Unlike cachedMetadata, which starts a fetch per miss right away,
+// this runs at most WARM_CONCURRENCY fetches at a time, so a cold cache
+// can't start dozens of page fetches and HTML parses at once on the event
+// loop that also serves requests. Already queued URLs are skipped.
+const WARM_CONCURRENCY = 3;
+const WARM_QUEUE_LIMIT = 200;
+const warmQueue = [];
+const warmQueued = new Set();
+let warmRunning = 0;
+
+export function warmMetadata(urls) {
+  for (const url of urls) {
+    if (!url || url.startsWith("data:") || url.startsWith("kiwi:")) continue;
+    let normalizedUrl;
+    try {
+      normalizedUrl = normalizeUrl(url, { stripWWW: false });
+    } catch {
+      continue;
+    }
+    if (warmQueued.has(normalizedUrl) || inFlightFetches.get(normalizedUrl)) continue;
+    if (warmQueue.length >= WARM_QUEUE_LIMIT) break;
+    warmQueued.add(normalizedUrl);
+    warmQueue.push({ url, normalizedUrl });
+  }
+  while (warmRunning < WARM_CONCURRENCY && warmQueue.length > 0) {
+    warmRunning += 1;
+    warmNext().finally(() => {
+      warmRunning -= 1;
+      warmMetadata([]);
+    });
+  }
+}
+
+async function warmNext() {
+  const { url, normalizedUrl } = warmQueue.shift();
+  try {
+    const cached = await cache.get(normalizedUrl);
+    if (cached !== undefined && cached.result === undefined) return;
+    if (inFlightFetches.get(normalizedUrl)) return;
+    await fetchAndStore(url, normalizedUrl);
+  } catch (err) {
+    log(`Failed to warm metadata for ${url}: ${err?.message || err}`);
+  } finally {
+    warmQueued.delete(normalizedUrl);
+  }
+}
+
 export const cachedMetadata = async (
   url,
   generateTitle = false,
@@ -1096,35 +1175,8 @@ export const cachedMetadata = async (
     return {}; // Someone else is fetching, just return empty
   }
 
-  // Mark that we're fetching this URL
-  inFlightFetches.set(normalizedUrl, true);
-
   // If not in cache, return empty object and trigger background fetch
-  metadata(url, generateTitle, submittedTitle)
-    .then(async (freshData) => {
-      if (freshData) {
-        await cache.set(normalizedUrl, freshData, { ttlMs: METADATA_SUCCESS_TTL });
-        log(`Stored metadata in cache for ${normalizedUrl}`);
-        // Call the onFetched callback if provided
-        if (onFetched) {
-          onFetched(freshData);
-        }
-      }
-    })
-    .catch(async (err) => {
-      const failure = {
-        failed: true,
-        error: err?.message || String(err),
-        timestamp: Date.now(),
-      };
-      await cache.set(normalizedUrl, failure, { ttlMs: METADATA_FAILURE_TTL });
-      await cache.set(url, failure, { ttlMs: METADATA_FAILURE_TTL });
-      log(`Metadata fetch failed for ${url}: ${err}`);
-    })
-    .finally(() => {
-      // Clear the in-flight flag
-      inFlightFetches.delete(normalizedUrl);
-    });
+  fetchAndStore(url, normalizedUrl, generateTitle, submittedTitle, onFetched);
 
   // Return empty object immediately since we have nothing cached
   return {};

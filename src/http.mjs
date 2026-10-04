@@ -63,7 +63,7 @@ import appTestflight from "./views/app-testflight.mjs";
 import notifications from "./views/notifications.mjs";
 import debug from "./views/debug.mjs";
 import commentDebug from "./views/comment-debug.mjs";
-import { parse, metadata, cachedMetadata } from "./parser.mjs";
+import { parse, metadata, cachedMetadata, warmMetadata } from "./parser.mjs";
 import { toAddress, resolve, ENS_CACHE_PREFIX } from "./ens.mjs";
 import * as ens from "./ens.mjs";
 import * as karma from "./karma.mjs";
@@ -1471,21 +1471,12 @@ export async function launch(trie, libp2p, isPrimary = true) {
   // longer on any rendered page, so their 6h cache entries have usually
   // expired. And the response that triggered the fetch is the one the CDN
   // and the client's <link rel="prefetch"> keep. So we warm the next pages
-  // in the background, off the request path: on a miss cachedMetadata starts
-  // a deduplicated fetch and returns at once; on a hit it's a SQLite read.
+  // in the background, off the request path, through parser.mjs's warm
+  // queue (deduplicated, at most a few fetches at a time).
   const ENDLESS_WARM_AHEAD = 30; // stories, i.e. three pages
-  function warmMetadata(stories) {
+  function warmStoryPreviews(stories) {
     if (!stories || stories.length === 0) return;
-    setImmediate(() => {
-      for (const story of stories) {
-        if (!story?.href) continue;
-        try {
-          cachedMetadata(story.href).catch(() => {});
-        } catch (err) {
-          // invalid href, nothing to warm
-        }
-      }
-    });
+    setImmediate(() => warmMetadata(stories.map((story) => story?.href)));
   }
 
   function olderEndlessStories(allStories) {
@@ -1515,7 +1506,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
     cachedEndlessStoriesTime = Date.now();
 
     // Have the first scroll-loaded pages' previews ready before anyone scrolls
-    warmMetadata(
+    warmStoryPreviews(
       olderEndlessStories(cachedEndlessStories).slice(0, ENDLESS_WARM_AHEAD),
     );
   }
@@ -1576,7 +1567,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
     const rawStories = olderStories.slice(start, end);
 
     // Warm previews for this page (in case it was cold) and the next ones
-    warmMetadata(olderStories.slice(start, end + ENDLESS_WARM_AHEAD));
+    warmStoryPreviews(olderStories.slice(start, end + ENDLESS_WARM_AHEAD));
 
     if (rawStories.length === 0) {
       reply.header("Cache-Control", "public, s-maxage=60, max-age=0");
@@ -1659,7 +1650,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
         const older = listNewest(
           initialStories.length + ENDLESS_WARM_AHEAD,
         ).filter((s) => s.timestamp < oldestTimestamp);
-        warmMetadata(older.slice(0, ENDLESS_WARM_AHEAD));
+        warmStoryPreviews(older.slice(0, ENDLESS_WARM_AHEAD));
       } catch (err) {
         log(`Failed to warm /new rows metadata: ${err.message}`);
       }
@@ -1701,7 +1692,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
     const rawStories = allStories.slice(start, end);
 
     // Warm previews for this page (in case it was cold) and the next ones
-    warmMetadata(allStories.slice(start, end + ENDLESS_WARM_AHEAD));
+    warmStoryPreviews(allStories.slice(start, end + ENDLESS_WARM_AHEAD));
 
     if (rawStories.length === 0) {
       reply.header("Cache-Control", "public, s-maxage=60, max-age=0");
