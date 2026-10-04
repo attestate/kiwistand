@@ -63,7 +63,7 @@ import appTestflight from "./views/app-testflight.mjs";
 import notifications from "./views/notifications.mjs";
 import debug from "./views/debug.mjs";
 import commentDebug from "./views/comment-debug.mjs";
-import { parse, metadata, cachedMetadata } from "./parser.mjs";
+import { parse, metadata, cachedMetadata, warmMetadata } from "./parser.mjs";
 import { toAddress, resolve, ENS_CACHE_PREFIX } from "./ens.mjs";
 import * as ens from "./ens.mjs";
 import * as karma from "./karma.mjs";
@@ -1465,6 +1465,26 @@ export async function launch(trie, libp2p, isPrimary = true) {
       .map(r => r.value);
   }
 
+  // NOTE: The rows endpoints only read link previews from the metadata cache
+  // (cachedMetadata never waits on the network), so a cold entry renders a
+  // row without its preview. Scroll-loaded stories are 2+ days old and no
+  // longer on any rendered page, so their 6h cache entries have usually
+  // expired. And the response that triggered the fetch is the one the CDN
+  // and the client's <link rel="prefetch"> keep. So we warm the next pages
+  // in the background, off the request path, through parser.mjs's warm
+  // queue (deduplicated, at most a few fetches at a time).
+  const ENDLESS_WARM_AHEAD = 30; // stories, i.e. three pages
+  function warmStoryPreviews(stories) {
+    if (!stories || stories.length === 0) return;
+    setImmediate(() => warmMetadata(stories.map((story) => story?.href)));
+  }
+
+  function olderEndlessStories(allStories) {
+    // Stories from the last 2 days are on the initial page
+    const twoDaysAgo = Math.floor(Date.now() / 1000) - (2 * 24 * 60 * 60);
+    return allStories.filter(s => s.timestamp < twoDaysAgo);
+  }
+
   async function refreshEndlessCache() {
     const variant = currentVariant;
     const config = variantConfigs[variant] || variantConfigs.control;
@@ -1484,6 +1504,11 @@ export async function launch(trie, libp2p, isPrimary = true) {
 
     cachedEndlessStories = results.stories;
     cachedEndlessStoriesTime = Date.now();
+
+    // Have the first scroll-loaded pages' previews ready before anyone scrolls
+    warmStoryPreviews(
+      olderEndlessStories(cachedEndlessStories).slice(0, ENDLESS_WARM_AHEAD),
+    );
   }
 
   async function getEndlessStories() {
@@ -1534,13 +1559,15 @@ export async function launch(trie, libp2p, isPrimary = true) {
     }
 
     // Filter out stories from last 2 days (those are on the initial page)
-    const twoDaysAgo = Math.floor(Date.now() / 1000) - (2 * 24 * 60 * 60);
-    const olderStories = allStories.filter(s => s.timestamp < twoDaysAgo);
+    const olderStories = olderEndlessStories(allStories);
 
     // Manually paginate the results (page 1 = stories 0-9, page 2 = 10-19, etc.)
     const start = endlessPageSize * (page - 1);
     const end = endlessPageSize * page;
     const rawStories = olderStories.slice(start, end);
+
+    // Warm previews for this page (in case it was cold) and the next ones
+    warmStoryPreviews(olderStories.slice(start, end + ENDLESS_WARM_AHEAD));
 
     if (rawStories.length === 0) {
       reply.header("Cache-Control", "public, s-maxage=60, max-age=0");
@@ -1606,6 +1633,30 @@ export async function launch(trie, libp2p, isPrimary = true) {
     return reply.status(200).type("text/html").send(rowsHtml);
   });
 
+  // Warm the previews of the first scroll-loaded /new pages when someone
+  // opens /new (at most once a minute), so the first rows and the page the
+  // client prefetches right after them aren't cold.
+  let lastNewRowsWarm = 0;
+  function warmNewRows() {
+    const now = Date.now();
+    if (now - lastNewRowsWarm < 60000) return;
+    lastNewRowsWarm = now;
+    setImmediate(() => {
+      try {
+        const initialStories = newAPI.getStories();
+        if (initialStories.length === 0) return;
+        const oldestTimestamp =
+          initialStories[initialStories.length - 1].timestamp;
+        const older = listNewest(
+          initialStories.length + ENDLESS_WARM_AHEAD,
+        ).filter((s) => s.timestamp < oldestTimestamp);
+        warmStoryPreviews(older.slice(0, ENDLESS_WARM_AHEAD));
+      } catch (err) {
+        log(`Failed to warm /new rows metadata: ${err.message}`);
+      }
+    });
+  }
+
   // Endless scroll endpoint for /new — returns HTML rows for older stories
   app.get("/api/v1/new/rows", async (request, reply) => {
     let page = parseInt(request.query.page);
@@ -1622,9 +1673,10 @@ export async function launch(trie, libp2p, isPrimary = true) {
       ? initialStories[initialStories.length - 1].timestamp
       : Math.floor(Date.now() / 1000);
 
-    // Fetch enough stories older than the initial page to fill this page.
+    // Fetch enough stories older than the initial page to fill this page
+    // and the pages whose previews we warm ahead.
     // Over-fetch to account for moderation filtering.
-    const fetchLimit = endlessPageSize * page + 20;
+    const fetchLimit = endlessPageSize * page + ENDLESS_WARM_AHEAD + 20;
     let allStories = listNewest(fetchLimit + initialStories.length);
 
     // Only keep stories older than the initial page
@@ -1638,6 +1690,9 @@ export async function launch(trie, libp2p, isPrimary = true) {
     const start = endlessPageSize * (page - 1);
     const end = endlessPageSize * page;
     const rawStories = allStories.slice(start, end);
+
+    // Warm previews for this page (in case it was cold) and the next ones
+    warmStoryPreviews(allStories.slice(start, end + ENDLESS_WARM_AHEAD));
 
     if (rawStories.length === 0) {
       reply.header("Cache-Control", "public, s-maxage=60, max-age=0");
@@ -2145,6 +2200,8 @@ export async function launch(trie, libp2p, isPrimary = true) {
     } else {
       reply.header("Cache-Control", "no-cache");
     }
+
+    warmNewRows();
 
     const cached = newAPI.getCachedHtml();
     if (cached) {
