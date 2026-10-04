@@ -904,16 +904,39 @@ export async function extractParagraphContent(url) {
   }
 }
 
-async function extractCanonicalLink(html) {
-  const dom = parser(html);
-  const node = dom.querySelector('link[rel="canonical"]');
-  if (!node) return;
+// The page's <link rel="canonical">, resolved against the page URL. Clients
+// replace a submitted link with it, so the same article submitted under two
+// URLs (e.g. blog.ethereum.org/en/… and blog.ethereum.org/…) counts as one
+// story. Ignored when it points at the site's front page from a deeper page
+// (a common CMS misconfiguration) or isn't reachable.
+export function canonicalFromHTML(html, pageURL) {
+  const node = parser(html).querySelector('link[rel="canonical"]');
+  // NOTE: node-html-parser has no `.href` property; read the attribute.
+  const href = node?.getAttribute("href")?.trim();
+  if (!href) return;
+
+  let canonical, page;
+  try {
+    canonical = new URL(href, pageURL);
+    page = new URL(pageURL);
+  } catch (err) {
+    return;
+  }
+  if (canonical.protocol !== "https:" && canonical.protocol !== "http:") return;
+  const isRoot = (url) => url.pathname === "/" || url.pathname === "";
+  if (isRoot(canonical) && !isRoot(page)) return;
+  return canonical.href;
+}
+
+async function extractCanonicalLink(html, pageURL) {
+  const canonical = canonicalFromHTML(html, pageURL);
+  if (!canonical) return;
 
   let response;
   try {
     const signal = AbortSignal.timeout(5000);
-    response = await fetch(node._attrs.href, {
-      agent: useAgent(node._attrs.href),
+    response = await fetch(canonical, {
+      agent: useAgent(canonical),
       headers: {
         "User-Agent": env.USER_AGENT,
       },
@@ -927,7 +950,7 @@ async function extractCanonicalLink(html) {
     return;
   }
 
-  return DOMPurify.sanitize(node.href);
+  return DOMPurify.sanitize(canonical);
 }
 
 const CRAWLER_UA =
@@ -1227,7 +1250,7 @@ export const metadata = async (
       const domain = safeExtractDomain(url);
       if (domain !== "hey.xyz" && domain !== "rekt.news") {
         try {
-          canonicalLink = await extractCanonicalLink(html);
+          canonicalLink = await extractCanonicalLink(html, url);
         } catch (err) {
           log(`Failed to extract canonical link ${err.stack}`);
         }
