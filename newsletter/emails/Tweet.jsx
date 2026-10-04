@@ -84,7 +84,7 @@ export default function TweetEmail({ story = { metadata: {} } }) {
                       </Text>
                     </Column>
                   </Row>
-                  <Text style={{ wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>
+                  <Text className="k-text" style={{ wordBreak: 'break-word', whiteSpace: 'pre-wrap', color: '#0f1419' }}>
                     {metadata.ogDescription && convertBrTagsToNewlines(metadata.ogDescription).length > 260
                       ? convertBrTagsToNewlines(metadata.ogDescription).slice(0, 260) + '…'
                       : convertBrTagsToNewlines(metadata.ogDescription)}
@@ -102,9 +102,9 @@ export default function TweetEmail({ story = { metadata: {} } }) {
 
             <Section style={{ padding: '12px 20px 10px 12px', backgroundColor: '#f6f6ef' }} className="k-card" bgcolor="#f6f6ef">
                 <Text className="k-muted" style={{ fontSize: '9pt', marginTop: '3px', marginBottom: '0', lineHeight: '1.4', color: '#666' }}>
-                submitted by <Link href={submitterProfileLink} className="k-link" style={{ fontWeight: 600, color: '#000000', textDecoration: 'none' }}>{displayName}</Link>
+                submitted by <Link href={submitterProfileLink} className="k-link" style={{ fontWeight: 600, color: '#000000', textDecoration: 'none' }}><span className="k-link" style={{ color: '#000000' }}>{displayName}</span></Link>
                 {' • '}
-                <Link href={story.storyLink} className="k-link" style={{ color: '#000000', textDecoration: 'none' }}>{extractedDomain}</Link>
+                <Link href={story.storyLink} className="k-link" style={{ color: '#000000', textDecoration: 'none' }}><span className="k-link" style={{ color: '#000000' }}>{extractedDomain}</span></Link>
                 {story.upvotes ? ` • ${story.upvotes} upvotes` : ''}
                 {story.comments ? ` • ${story.comments} comments` : ''}
                 {story.clicks ? ` • ${story.clicks} clicks` : ''}
@@ -114,7 +114,7 @@ export default function TweetEmail({ story = { metadata: {} } }) {
         </Row>
       </Section>
       <Section style={{ padding: '12px 0' }}>
-        <Link href={story.storyLink} className="k-button" style={buttonStyle}>Read on Kiwi</Link>
+        <Link href={story.storyLink} className="k-button" style={buttonStyle}><span className="k-button-text" style={{ color: '#ffffff' }}>Read on Kiwi</span></Link>
       </Section>
     </>
   );

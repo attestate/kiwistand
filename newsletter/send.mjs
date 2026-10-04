@@ -26,13 +26,8 @@ async function readDigest() {
   }
 }
 
-// Leads with the week's top story, which gets more opens than a date.
-function subjectFor(digest) {
-  const top = digest?.stories?.[0];
-  const title = top?.metadata?.compliantTitle || top?.title;
-  if (!title) return `Kiwi News Weekly Digest — ${formatDateForSubject()}`;
-  const short = title.length > 70 ? `${title.slice(0, 69).trimEnd()}…` : title;
-  return `Kiwi Weekly: ${short}`;
+function subjectFor() {
+  return `Kiwi News Weekly Digest — ${formatDateForSubject()}`;
 }
 
 async function sendDigest() {
