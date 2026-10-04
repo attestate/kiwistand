@@ -25,6 +25,7 @@ export default function BlueskyEmail({ story = { metadata: {} } }) {
       <Section style={container} className="k-card" bgcolor="#f6f6ef">
         <Section style={{ ...embedContainer, backgroundColor: '#ffffff', borderBottom: '1px solid #e6e6df' }} className="k-embed" bgcolor="#ffffff">
           <Link href={story.storyLink} className="k-link" style={{ textDecoration: 'none', color: '#000000', display: 'block' }}>
+            <div>{/* keeps the card text out of reach of Buttondown's `a > *` link color rule */}
             <Row>
               <Column width="30">
                 {post?.author?.avatar ? (
@@ -56,14 +57,15 @@ export default function BlueskyEmail({ story = { metadata: {} } }) {
                 style={{ marginTop: '12px', objectFit: 'cover' }}
               />
             )}
+            </div>
           </Link>
         </Section>
 
         <Section style={{ padding: '12px 20px 10px 12px', backgroundColor: '#f6f6ef' }} className="k-card" bgcolor="#f6f6ef">
           <Text className="k-muted" style={{ fontSize: '9pt', marginTop: '3px', marginBottom: '0', lineHeight: '1.4', color: '#666' }}>
-            submitted by <Link href={submitterProfileLink} className="k-link" style={{ fontWeight: 600, color: '#000000', textDecoration: 'none' }}><span className="k-link" style={{ color: '#000000' }}>{displayName}</span></Link>
+            submitted by <Link href={submitterProfileLink} className="k-link" style={{ fontWeight: 600, color: '#000000', textDecoration: 'none' }}><span><span className="k-link" style={{ color: '#000000' }}>{displayName}</span></span></Link>
             {' • '}
-            <Link href={story.storyLink} className="k-link" style={{ color: '#000000', textDecoration: 'none' }}><span className="k-link" style={{ color: '#000000' }}>bsky.app</span></Link>
+            <Link href={story.storyLink} className="k-link" style={{ color: '#000000', textDecoration: 'none' }}><span><span className="k-link" style={{ color: '#000000' }}>bsky.app</span></span></Link>
             {story.upvotes ? ` • ${story.upvotes} upvotes` : ''}
             {story.comments ? ` • ${story.comments} comments` : ''}
             {story.clicks ? ` • ${story.clicks} clicks` : ''}
@@ -71,7 +73,7 @@ export default function BlueskyEmail({ story = { metadata: {} } }) {
         </Section>
       </Section>
       <Section style={{ padding: '12px 0' }}>
-        <Link href={story.storyLink} className="k-button" style={buttonStyle}><span className="k-button-text" style={{ color: '#ffffff' }}>Read on Kiwi</span></Link>
+        <Link href={story.storyLink} className="k-button" style={buttonStyle}><span><span className="k-button-text" style={{ color: '#ffffff' }}>Read on Kiwi</span></span></Link>
       </Section>
     </>
   );
