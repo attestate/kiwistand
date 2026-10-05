@@ -747,10 +747,34 @@ function addAiButtonHandlers() {
   });
 }
 
+async function addNewsletterFeedCard() {
+  const elem = document.querySelector("newsletter-card");
+  if (!elem) return;
+
+  const { default: NewsletterFeedCard, shouldHideCard } = await import(
+    "./NewsletterFeedCard.jsx"
+  );
+  if (shouldHideCard()) {
+    // Already subscribed, dismissed, or anon mode: drop the server-rendered
+    // fallback row entirely.
+    (elem.closest("tr") || elem).remove();
+    return;
+  }
+
+  createRoot(elem).render(
+    <StrictMode>
+      <NewsletterFeedCard />
+    </StrictMode>,
+  );
+}
+
 async function addNewsletterScrollModal(toast) {
   // Don't show newsletter modal in anon mode
   const isAnonMode = localStorage.getItem('anon-mode') === 'true';
   if (isAnonMode) return;
+
+  // The hot feed has an inline sign-up card; don't also pop up the modal there.
+  if (document.querySelector("newsletter-card")) return;
 
   // Only show on feed pages where users are likely to be reading
   const path = window.location.pathname;
@@ -1718,6 +1742,7 @@ async function start() {
     addSidebarDrawer(await delegationsPromise, toast),
     addImageViewer(),
     addSidebarDrawer(await delegationsPromise, toast),
+    addNewsletterFeedCard(),
     addNewsletterScrollModal(toast),
     addAvatar(),
     addBackButton(),
