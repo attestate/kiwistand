@@ -67,6 +67,10 @@ async function sendDigest() {
       headers: {
         'Authorization': `Token ${apiKey}`,
         'Content-Type': 'application/json',
+        // Buttondown refuses to send through the API (400
+        // sending_requires_confirmation) until a request confirms it with
+        // this header.
+        ...(publish ? { 'X-Buttondown-Live-Dangerously': 'true' } : {}),
       },
       body: JSON.stringify({ subject, body: htmlContent, status }),
     });
