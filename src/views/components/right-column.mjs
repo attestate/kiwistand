@@ -2,9 +2,11 @@
 import htm from "htm";
 import vhtml from "vhtml";
 
+import { NewsletterCardElement } from "./newsletter-card.mjs";
+
 const html = htm.bind(vhtml);
 
-export default function RightColumn() {
+export default function RightColumn({ newsletter = false } = {}) {
   return html`
     <div class="right-column" style="width:280px;flex-shrink:0;">
       <div id="testflight-qr-container">
@@ -32,6 +34,7 @@ export default function RightColumn() {
           </div>
         </div>
       </div>
+      ${newsletter ? NewsletterCardElement("sidebar") : null}
     </div>
   `;
 }

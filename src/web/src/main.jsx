@@ -748,24 +748,28 @@ function addAiButtonHandlers() {
 }
 
 async function addNewsletterFeedCard() {
-  const elem = document.querySelector("newsletter-card");
-  if (!elem) return;
+  // One in the hot feed, and on desktop one below the QR code in the right
+  // column (CSS shows only one of them).
+  const elems = document.querySelectorAll("newsletter-card");
+  if (!elems.length) return;
 
   const { default: NewsletterFeedCard, shouldHideCard } = await import(
     "./NewsletterFeedCard.jsx"
   );
-  if (shouldHideCard()) {
-    // Already subscribed, dismissed, or anon mode: drop the server-rendered
-    // fallback row entirely.
-    (elem.closest("tr") || elem).remove();
-    return;
-  }
-
-  createRoot(elem).render(
-    <StrictMode>
-      <NewsletterFeedCard />
-    </StrictMode>,
-  );
+  const hide = shouldHideCard();
+  elems.forEach((elem) => {
+    if (hide) {
+      // Already subscribed, dismissed, or anon mode: drop the server-rendered
+      // fallback entirely.
+      (elem.closest("tr") || elem).remove();
+      return;
+    }
+    createRoot(elem).render(
+      <StrictMode>
+        <NewsletterFeedCard source={elem.dataset.source || "feed_card"} />
+      </StrictMode>,
+    );
+  });
 }
 
 async function addNewsletterScrollModal(toast) {

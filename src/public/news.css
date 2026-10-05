@@ -2134,6 +2134,21 @@ newsletter-card {
 [data-theme="anon"] .newsletter-card-error {
   color: #ff8a80;
 }
+/* Desktop: the card sits below the QR code in the right column instead of
+   in the feed. Same breakpoint as .right-column. */
+@media (min-width: 1101px) {
+  .newsletter-card-row {
+    display: none;
+  }
+}
+.right-column .newsletter-card {
+  margin: 0;
+  background-color: var(--bg-white);
+  border: var(--border);
+}
+.right-column .newsletter-card-form {
+  flex-direction: column;
+}
 @media (max-width: 360px) {
   .newsletter-card-form {
     flex-direction: column;

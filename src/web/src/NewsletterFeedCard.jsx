@@ -37,7 +37,7 @@ export function shouldHideCard() {
   );
 }
 
-const NewsletterFeedCard = () => {
+const NewsletterFeedCard = ({ source = "feed_card" }) => {
   const [hidden, setHidden] = useState(false);
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState("idle"); // idle | sending | success
@@ -51,7 +51,7 @@ const NewsletterFeedCard = () => {
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries.some((entry) => entry.isIntersecting)) {
-          window.posthog?.capture?.("newsletter_card_shown");
+          window.posthog?.capture?.("newsletter_card_shown", { source });
           observer.disconnect();
         }
       },
@@ -65,7 +65,7 @@ const NewsletterFeedCard = () => {
 
   const handleDismiss = () => {
     writeFlag(DISMISSED_KEY);
-    window.posthog?.capture?.("newsletter_card_dismissed");
+    window.posthog?.capture?.("newsletter_card_dismissed", { source });
     setHidden(true);
   };
 
@@ -90,7 +90,7 @@ const NewsletterFeedCard = () => {
       if (!response.ok) throw new Error(`Status ${response.status}`);
       writeFlag(SUBSCRIBED_KEY);
       window.posthog?.capture?.("newsletter_subscribed", {
-        source: "feed_card",
+        source,
       });
       setStatus("success");
     } catch (err) {
