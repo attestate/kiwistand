@@ -2054,6 +2054,11 @@ newsletter-card {
   line-height: 1.4;
   color: var(--text-secondary);
 }
+.newsletter-card-more {
+  color: var(--text-primary);
+  text-decoration: underline;
+  white-space: nowrap;
+}
 .newsletter-card-success {
   margin-bottom: 0;
   color: var(--text-primary);
