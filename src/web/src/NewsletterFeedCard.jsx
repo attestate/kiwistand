@@ -121,7 +121,12 @@ const NewsletterFeedCard = () => {
         </p>
       ) : (
         <>
-          <p className="newsletter-card-copy">{COPY}</p>
+          <p className="newsletter-card-copy">
+            {COPY}{" "}
+            <a className="newsletter-card-more" href="/newsletter">
+              What's in it?
+            </a>
+          </p>
           <form
             className="newsletter-card-form"
             method="post"
