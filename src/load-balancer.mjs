@@ -46,7 +46,6 @@ const workerRoutes = [
   "/guidelines",
   "/whattosubmit",
   "/welcome",
-  "/shortcut",
   "/profile",
   "/upvotes",
   "/submit",
