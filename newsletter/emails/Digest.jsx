@@ -94,15 +94,16 @@ export default function DigestEmail({ stories = digestStories }) {
             <Section style={{ marginTop: '10px', marginBottom: '15px' }}>
               <Row>
                 <Column width="44">
-                  <Img src="https://news.kiwistand.com/kiwi-icon-email.png" alt="" width="35" height="35" style={{ borderRadius: '50%' }} />
+                  <Img src="https://news.kiwistand.com/kiwi-icon-email-transparent.png" alt="" width="35" height="35" />
                 </Column>
                 <Column>
-                  {/* Live text instead of the transparent wordmark PNG, which
-                      disappeared on dark backgrounds. */}
-                  <Text style={wordmark}>
-                    <span style={{ color: '#7a8f1c' }} className="k-kiwi">Kiwi</span>{' '}
-                    <span className="k-text">News</span>
-                  </Text>
+                  {/* The website's wordmark. Black "news" for light mode; mail
+                      apps that support dark mode swap in the light version
+                      (see .k-wm-* in darkModeStyles). */}
+                  <Img className="k-wm-light" src="https://news.kiwistand.com/kiwi-wordmark-email-light.png" alt="Kiwi News" width="176" height="25" />
+                  <div className="k-wm-dark" style={{ display: 'none', maxHeight: 0, overflow: 'hidden', msoHide: 'all' }}>
+                    <Img src="https://news.kiwistand.com/kiwi-wordmark-email-dark.png" alt="Kiwi News" width="176" height="25" />
+                  </div>
                 </Column>
               </Row>
             </Section>
@@ -205,7 +206,11 @@ const darkModeCSS = `
     .k-hr { border-color: #3a3a34 !important; }
     .k-button { background-color: #ecece6 !important; color: #111111 !important; }
     .k-button-text { color: #111111 !important; }
+    .k-wm-light { display: none !important; }
+    .k-wm-dark { display: block !important; max-height: none !important; }
   }
+  [data-ogsc] .k-wm-light { display: none !important; }
+  [data-ogsc] .k-wm-dark { display: block !important; max-height: none !important; }
   [data-ogsc] .k-text { color: #ecece6 !important; }
   [data-ogsc] .k-link { color: #ffffff !important; }
   [data-ogsc] .k-muted { color: #a8a89e !important; }
@@ -262,13 +267,6 @@ const preheader = {
   overflow: "hidden",
 };
 
-const wordmark = {
-  fontSize: "22px",
-  fontWeight: "700",
-  lineHeight: "35px",
-  margin: "0",
-  color: "#111111",
-};
 
 const appSection = {
   border: "1px solid #e6e6df",
