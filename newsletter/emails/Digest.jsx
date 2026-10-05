@@ -124,7 +124,7 @@ export default function DigestEmail({ stories = digestStories }) {
                 reactions, notifications, and sharing links straight from Safari.
                 It's in beta on TestFlight, and we'd love your feedback.
               </Text>
-              <Link href={TESTFLIGHT_URL} className="k-button" style={buttonStyle}><span className="k-button-text" style={{ color: '#ffffff' }}>Get the beta</span></Link>
+              <Link href={TESTFLIGHT_URL} className="k-button" style={buttonStyle}><span><span className="k-button-text" style={{ color: '#ffffff' }}>Get the beta</span></span></Link>
             </Section>
 
             {storiesToRender.map((story, index) => {
@@ -141,7 +141,7 @@ export default function DigestEmail({ stories = digestStories }) {
 
             <Section style={footerSection}>
               <Text style={footerText} className="k-text">
-                More every day on <Link href={withUtm("https://news.kiwistand.com/", "footer")} className="k-link" style={footerLink}><span className="k-link" style={{ color: '#000000' }}>news.kiwistand.com</span></Link>.
+                More every day on <Link href={withUtm("https://news.kiwistand.com/", "footer")} className="k-link" style={footerLink}><span><span className="k-link" style={{ color: '#000000' }}>news.kiwistand.com</span></span></Link>.
                 On a computer? Scan the code to get the iPhone beta:
               </Text>
               <Img
