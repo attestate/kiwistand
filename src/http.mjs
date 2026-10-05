@@ -53,6 +53,7 @@ import newest, * as newAPI from "./views/new.mjs";
 import best, * as bestAPI from "./views/best.mjs";
 import privacy from "./views/privacy.mjs";
 import guidelines from "./views/guidelines.mjs";
+import newsletterPage from "./views/newsletter.mjs";
 import upvotes, * as upvotesAPI from "./views/upvotes.mjs";
 
 import search from "./views/search.mjs";
@@ -493,8 +494,15 @@ app.post(
   const email =
     typeof req.body?.email === "string" ? req.body.email.trim() : req.body?.email;
 
+  // NOTE: A form may ask to be sent back to the /newsletter landing page,
+  // which renders the outcome itself. Only that path is allowed (no open
+  // redirect).
+  const backToLanding = isForm && req.body?.redirect === "/newsletter";
+
   const fail = (status, error, details) =>
-    isForm
+    backToLanding
+      ? res.redirect(303, "/newsletter?error=1")
+      : isForm
       ? newsletterFormPage(
           res,
           status,
@@ -506,7 +514,9 @@ app.post(
       : res.status(status).json(details ? { error, details } : { error });
 
   const ok = (payload) =>
-    isForm
+    backToLanding
+      ? res.redirect(303, "/newsletter?subscribed=1")
+      : isForm
       ? newsletterFormPage(
           res,
           200,
@@ -2479,6 +2489,26 @@ export async function launch(trie, libp2p, isPrimary = true) {
       "Cache-Control",
       "public, s-maxage=86400, max-age=0, stale-while-revalidate=600000",
     );
+    return reply.status(200).type("text/html").send(content.valueOf());
+  });
+  app.get("/newsletter", async (request, reply) => {
+    let status = null;
+    if (request.query.subscribed === "1") status = "subscribed";
+    else if (request.query.error === "1") status = "error";
+
+    const content = await newsletterPage(reply.locals.theme, { status });
+    if (status) {
+      // NOTE: Result pages are per-visitor and canonicalize to /newsletter.
+      reply.header("Cache-Control", "no-store");
+      reply.header("X-Robots-Tag", "noindex");
+    } else {
+      // NOTE: Shorter edge TTL than /guidelines because "This week's picks"
+      // changes as votes come in.
+      reply.header(
+        "Cache-Control",
+        "public, s-maxage=3600, max-age=0, stale-while-revalidate=86400",
+      );
+    }
     return reply.status(200).type("text/html").send(content.valueOf());
   });
 

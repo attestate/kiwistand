@@ -75,6 +75,7 @@ const STATIC_SITEMAP = `<?xml version="1.0" encoding="UTF-8"?>
   <url><loc>${BASE_URL}/</loc><changefreq>hourly</changefreq><priority>1.0</priority></url>
   <url><loc>${BASE_URL}/new?cached=true</loc><changefreq>hourly</changefreq><priority>0.9</priority></url>
   <url><loc>${BASE_URL}/best</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>${BASE_URL}/newsletter</loc><changefreq>weekly</changefreq><priority>0.6</priority></url>
   <url><loc>${BASE_URL}/guidelines</loc><changefreq>monthly</changefreq><priority>0.3</priority></url>
 </urlset>`;
 

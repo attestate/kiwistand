@@ -44,6 +44,7 @@ const workerRoutes = [
   "/subscribe",
   "/privacy-policy",
   "/guidelines",
+  "/newsletter",
   "/whattosubmit",
   "/welcome",
   "/profile",
