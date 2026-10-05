@@ -87,13 +87,15 @@ export default function FarcasterEmail({ story = { metadata: { farcasterCast: { 
             <div>{/* keeps the card text out of reach of Buttondown's `a > *` link color rule */}
               <Row>
                 <Column width="30">
-                  <Img
-                    src={metadata.farcasterCast.author.pfp}
-                    alt={metadata.farcasterCast.author.username || "Author"}
-                    width="20"
-                    height="20"
-                    style={{ borderRadius: '9999px', marginRight: '8px' }}
-                  />
+                  {metadata.farcasterCast.author.pfp && (
+                    <Img
+                      src={metadata.farcasterCast.author.pfp}
+                      alt={metadata.farcasterCast.author.username || "Author"}
+                      width="20"
+                      height="20"
+                      style={{ borderRadius: '9999px', marginRight: '8px' }}
+                    />
+                  )}
                 </Column>
                 <Column>
                   <Text className="k-text" style={{ fontWeight: 600, color: '#12212b', fontSize: '14px' }}>

@@ -71,13 +71,15 @@ export default function TweetEmail({ story = { metadata: {} } }) {
                 <div>{/* keeps the card text out of reach of Buttondown's `a > *` link color rule */}
                   <Row>
                     <Column width="30">
-                      <Img
-                        src={metadata.twitterAuthorAvatar}
-                        alt={metadata.twitterCreator || "Author"}
-                        width="20"
-                        height="20"
-                        style={{ borderRadius: '9999px', marginRight: '8px' }}
-                      />
+                      {metadata.twitterAuthorAvatar && (
+                        <Img
+                          src={metadata.twitterAuthorAvatar}
+                          alt={metadata.twitterCreator || "Author"}
+                          width="20"
+                          height="20"
+                          style={{ borderRadius: '9999px', marginRight: '8px' }}
+                        />
+                      )}
                     </Column>
                     <Column>
                       <Text className="k-text" style={{ fontWeight: 600, color: '#0f1419', fontSize: '14px' }}>
