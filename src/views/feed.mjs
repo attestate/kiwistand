@@ -43,6 +43,7 @@ import * as karma from "../karma.mjs";
 import { cachedMetadata, metadata } from "../parser.mjs";
 import { getPredictedEngagement } from "../prediction.mjs";
 import TopStoriesCarousel from "./components/top-stories.mjs";
+import NewsletterCard from "./components/newsletter-card.mjs";
 
 // Import twitterFrontends for checking Twitter/X links
 import { twitterFrontends } from "../parser.mjs";
@@ -941,6 +942,12 @@ export default async function (trie, theme, page, domain, identity, hash, varian
 
   // Removed A/B Test for Support Banner and supportBannerComponent variable
 
+  // Inline newsletter sign-up: only on the unfiltered first page of the hot
+  // feed. Endless-scroll pages come from /api/v1/feed/rows and never get it.
+  const NEWSLETTER_CARD_AFTER = 5;
+  const showNewsletterCard =
+    page === 0 && !domain && stories.length >= NEWSLETTER_CARD_AFTER;
+
   const ogImage = "https://news.kiwistand.com/kiwi_hot_feed_page.png";
   const title = "Kiwi News - handpicked crypto news for builders";
   const description = "The best crypto links, curated by the Kiwi community. Web3, Ethereum, DeFi and more.";
@@ -1032,21 +1039,24 @@ export default async function (trie, theme, page, domain, identity, hash, varian
               <!-- Contest preview and ad disabled on request -->
               ${stories // Render remaining stories
                 .slice(3)
-                .map(
-                  (story, i) =>
-                    Row(
-                      start, // Use start index from content
-                      "/",
-                      "margin-bottom: 20px;",
-                      null,
-                      null,
-                      null,
-                      false,
-                      currentQuery,
-                      false, // debugMode
-                      false, // isAboveFold = false for all remaining stories
-                    )(story, i + 3), // Adjust index offset
-                )}
+                .map((story, i) => [
+                  Row(
+                    start, // Use start index from content
+                    "/",
+                    "margin-bottom: 20px;",
+                    null,
+                    null,
+                    null,
+                    false,
+                    currentQuery,
+                    false, // debugMode
+                    false, // isAboveFold = false for all remaining stories
+                  )(story, i + 3), // Adjust index offset
+                  // Newsletter sign-up card after the 5th story, front page only
+                  showNewsletterCard && i + 3 === NEWSLETTER_CARD_AFTER - 1
+                    ? NewsletterCard()
+                    : null,
+                ])}
               <tr>
                 <td style="text-align: center; padding: 20px 0;">
                   <div id="feed-sentinel"></div>
