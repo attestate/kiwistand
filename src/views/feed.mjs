@@ -990,7 +990,7 @@ export default async function (trie, theme, page, domain, identity, hash, varian
       >
         <div class="container">
           ${Sidebar(path)}
-          ${RightColumn()}
+          ${RightColumn({ newsletter: showNewsletterCard })}
           <main id="hnmain" class="scaled-hnmain" role="main">
             <h1 class="visually-hidden">
               Kiwi News: handpicked crypto news for builders
