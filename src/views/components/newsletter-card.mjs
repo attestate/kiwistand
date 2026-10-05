@@ -20,8 +20,7 @@ export default function NewsletterCard() {
           <div class="newsletter-card">
             <div class="newsletter-card-title">${headline}</div>
             <p class="newsletter-card-copy">
-              ${copy}
-              <a class="newsletter-card-more" href="/newsletter">What's in it?</a>
+              ${copy}${" "}<a class="newsletter-card-more" href="/newsletter">What's in it?</a>
             </p>
             <form
               class="newsletter-card-form"
