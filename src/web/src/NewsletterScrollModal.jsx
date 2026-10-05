@@ -297,7 +297,7 @@ const NewsletterScrollModal = ({ toast }) => {
         </div>
 
         <h2 className="newsletter-title">
-          Top 5 crypto links. Every Friday.
+          Top 5 crypto links. Every Sunday.
         </h2>
 
         <p className="newsletter-social-proof">
