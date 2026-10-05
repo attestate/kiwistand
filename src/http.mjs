@@ -494,8 +494,15 @@ app.post(
   const email =
     typeof req.body?.email === "string" ? req.body.email.trim() : req.body?.email;
 
+  // NOTE: A form may ask to be sent back to the /newsletter landing page,
+  // which renders the outcome itself. Only that path is allowed (no open
+  // redirect).
+  const backToLanding = isForm && req.body?.redirect === "/newsletter";
+
   const fail = (status, error, details) =>
-    isForm
+    backToLanding
+      ? res.redirect(303, "/newsletter?error=1")
+      : isForm
       ? newsletterFormPage(
           res,
           status,
@@ -507,7 +514,9 @@ app.post(
       : res.status(status).json(details ? { error, details } : { error });
 
   const ok = (payload) =>
-    isForm
+    backToLanding
+      ? res.redirect(303, "/newsletter?subscribed=1")
+      : isForm
       ? newsletterFormPage(
           res,
           200,
