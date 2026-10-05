@@ -459,20 +459,74 @@ app.post("/api/v1/neynar/notify", async (req, res) => {
   }
 });
 
+// Plain HTML response for the no-JS newsletter form (feed sign-up card).
+function newsletterFormPage(res, status, heading, message) {
+  return res
+    .status(status)
+    .type("text/html")
+    .send(
+      "<!DOCTYPE html>" +
+        `<html lang="en"><head><meta charset="utf-8" />` +
+        `<meta name="viewport" content="width=device-width, initial-scale=1" />` +
+        `<meta name="robots" content="noindex" />` +
+        `<title>${heading} - Kiwi News</title></head>` +
+        `<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 480px; margin: 80px auto; padding: 0 16px; text-align: center;">` +
+        `<h1 style="font-size: 20px;">${heading}</h1>` +
+        `<p>${message}</p>` +
+        `<p><a href="/">Back to Kiwi News</a></p>` +
+        `</body></html>`,
+    );
+}
+
+const NEWSLETTER_EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 // Proxy endpoint for Buttondown newsletter subscriptions
 // Accepts: { email } and optionally { newsletter } as a tag (ignored if absent)
-app.post("/api/v1/newsletter/subscribe", async (req, res) => {
-  const { email, newsletter } = req.body || {};
+// as JSON, or as a urlencoded form post (the feed card without JS), in which
+// case it answers with a small HTML page instead of JSON.
+app.post(
+  "/api/v1/newsletter/subscribe",
+  express.urlencoded({ extended: false, limit: "2kb" }),
+  async (req, res) => {
+  const isForm = !!req.is("application/x-www-form-urlencoded");
+  const { newsletter } = req.body || {};
+  const email =
+    typeof req.body?.email === "string" ? req.body.email.trim() : req.body?.email;
+
+  const fail = (status, error, details) =>
+    isForm
+      ? newsletterFormPage(
+          res,
+          status,
+          "Something went wrong",
+          status === 400
+            ? "Please enter a valid email address and try again."
+            : "We couldn't sign you up right now. Please try again later.",
+        )
+      : res.status(status).json(details ? { error, details } : { error });
+
+  const ok = (payload) =>
+    isForm
+      ? newsletterFormPage(
+          res,
+          200,
+          "You're in.",
+          "Check your inbox to confirm. See you Sunday.",
+        )
+      : res.status(200).json(payload);
 
   if (!email) {
-    return res.status(400).json({ error: "Email is required" });
+    return fail(400, "Email is required");
+  }
+  if (typeof email !== "string" || !NEWSLETTER_EMAIL_RE.test(email)) {
+    return fail(400, "A valid email is required");
   }
 
   // Use BUTTON_DOWN_API_KEY (required)
   const apiKey = process.env.BUTTON_DOWN_API_KEY;
   if (!apiKey) {
     log("Buttondown API key missing: set env BUTTON_DOWN_API_KEY");
-    return res.status(500).json({ error: "Server not configured for newsletter" });
+    return fail(500, "Server not configured for newsletter");
   }
 
   try {
@@ -492,7 +546,7 @@ app.post("/api/v1/newsletter/subscribe", async (req, res) => {
 
     if (response.ok) {
       const data = await response.json().catch(() => ({}));
-      return res.status(200).json({ status: "subscribed", data });
+      return ok({ status: "subscribed", data });
     }
 
     // Handle common "already subscribed" scenarios gracefully
@@ -506,21 +560,17 @@ app.post("/api/v1/newsletter/subscribe", async (req, res) => {
     ) {
       // Treat as idempotent success so UI can continue smoothly
       log(`Buttondown already-subscribed case for ${email}: ${response.status}`);
-      return res.status(200).json({ status: "already_subscribed" });
+      return ok({ status: "already_subscribed" });
     }
 
     log(`Buttondown subscription failed: ${response.status} - ${errorText}`);
-    return res
-      .status(response.status)
-      .json({ error: "Newsletter subscription failed", details: errorText });
+    return fail(response.status, "Newsletter subscription failed", errorText);
   } catch (error) {
     log(`Newsletter subscription error: ${error.message}`);
-    return res.status(500).json({
-      error: "Failed to subscribe to newsletter",
-      details: error.message,
-    });
+    return fail(500, "Failed to subscribe to newsletter", error.message);
   }
-});
+  },
+);
 
 // NOTE: We use s-maxage for Cloudflare CDN caching, while max-age controls browser caching
 // Helper to build the Apple App Site Association payload
