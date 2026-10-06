@@ -197,10 +197,20 @@ export function isGenericTitle(title, hostname) {
 const genericImagePrefixes = [
   "https://static.arxiv.org/icons/",
   "https://abs.twimg.com/rweb/ssr/default",
+  // fxtwitter's og:image for a tweet without media is the author's avatar.
+  // The tweet itself has no image, so neither should the preview.
+  "https://pbs.twimg.com/profile_images/",
 ];
 export function isGenericImage(url) {
   if (!url) return false;
   return genericImagePrefixes.some((prefix) => url.startsWith(prefix));
+}
+
+// Entries cached before an image prefix was added above still carry it.
+function withoutGenericImage(entry) {
+  if (!entry?.image || !isGenericImage(entry.image)) return entry;
+  const { image, ...rest } = entry;
+  return rest;
 }
 
 const filtered = [
@@ -1165,7 +1175,7 @@ export const cachedMetadata = async (
     if (cached.result !== undefined) {
       // not a processed entry — fall through
     } else {
-      return cached;
+      return withoutGenericImage(cached);
     }
   }
 
@@ -1229,7 +1239,7 @@ export const metadata = async (
       // Final processed format written by cachedMetadata(): { image, ogTitle, domain, ... }
       // Return it directly to avoid losing the already-validated image URL
       log(`[metadata] Cache HIT has pre-processed format, returning directly`);
-      return fromCache;
+      return withoutGenericImage(fromCache);
     }
     // If fromCache.failed, fall through to the !result early return below
   } else {
