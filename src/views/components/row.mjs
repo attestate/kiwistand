@@ -650,14 +650,14 @@ const row = (
                         ${story.metadata.image
                           ? html`
                               <div
-                                style="margin-top: 12px; position: relative; width: 100%; aspect-ratio: 16 / 9; background: var(--button-bg); overflow: hidden; border-radius: 2px; border: 1px solid rgba(0,0,0,0.1);"
+                                style="margin-top: 12px; width: 100%; container-type: inline-size; background: var(--button-bg); overflow: hidden; border-radius: 2px; border: 1px solid rgba(0,0,0,0.1);"
                               >
                                 <img
                                   src="${DOMPurify.sanitize(transformImageUrl(story.metadata.image))}"
                                   alt="Tweet image"
                                   width="600"
                                   height="338"
-                                  style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block;"
+                                  style="width: 100%; height: auto; max-height: 600px; max-height: 125cqw; object-fit: cover; display: block;"
                                   loading="${getImageLoading(isAboveFold, story.metadata.image)}"
                                 />
                               </div>
@@ -808,13 +808,13 @@ const row = (
                         </p>
                         ${farcasterImageUrl
                           ? html`
-                              <div style="margin-top: 12px; position: relative; width: 100%; aspect-ratio: 16 / 9; background: var(--button-bg); border-radius: 2px; overflow: hidden;">
+                              <div style="margin-top: 12px; width: 100%; container-type: inline-size; background: var(--button-bg); border-radius: 2px; overflow: hidden;">
                                 <img
                                   src="${DOMPurify.sanitize(farcasterImageUrl)}"
                                   alt="Cast image"
                                   width="600"
                                   height="338"
-                                  style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 2px;"
+                                  style="width: 100%; height: auto; max-height: 600px; max-height: 125cqw; object-fit: cover; display: block; border-radius: 2px;"
                                   loading="${getImageLoading(isAboveFold, farcasterImageUrl)}"
                                 />
                               </div>
@@ -909,7 +909,7 @@ const row = (
                         story.metadata.blueskyPost.images[0]
                           ? html`
                               <div
-                                style="margin-top: 12px; position: relative; width: 100%; aspect-ratio: 16 / 9; background: var(--button-bg); border-radius: 2px; overflow: hidden;"
+                                style="margin-top: 12px; width: 100%; container-type: inline-size; background: var(--button-bg); border-radius: 2px; overflow: hidden;"
                               >
                                 <img
                                   src="${DOMPurify.sanitize(
@@ -918,7 +918,7 @@ const row = (
                                   alt="Post image"
                                   width="600"
                                   height="338"
-                                  style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 2px;"
+                                  style="width: 100%; height: auto; max-height: 600px; max-height: 125cqw; object-fit: cover; display: block; border-radius: 2px;"
                                   loading="${getImageLoading(isAboveFold, story.metadata.blueskyPost.images[0])}"
                                 />
                               </div>
