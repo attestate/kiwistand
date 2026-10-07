@@ -226,9 +226,8 @@ const anthropic = new Anthropic({
 
 // Titles for tweets and casts, title clean-up and the relevance check.
 // Claude Haiku 5.5: fast and cheap for these short, guideline-following
-// tasks. CLAUDE_TITLE_MODEL in .env switches back (e.g. to
-// "claude-sonnet-4-5") without a deploy of new code.
-export const TITLE_MODEL = env.CLAUDE_TITLE_MODEL || "claude-haiku-5-5";
+// tasks.
+export const TITLE_MODEL = "claude-haiku-5-5";
 
 // Added fxtwitter.com here so Claude title‐gen runs on fxtwitter links too
 export const twitterFrontends = [
