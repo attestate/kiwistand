@@ -84,6 +84,7 @@ import {
 } from "./cache.mjs";
 import normalizeUrl from "normalize-url";
 import * as interactions from "./interactions.mjs";
+import * as bookmarks from "./bookmarks.mjs";
 import appCache from "./cache.mjs"; // For LRU cache used by ENS profiles
 import frameSubscribe from "./views/frame-subscribe.mjs";
 import { sendNotification } from "./neynar.mjs";
@@ -2717,6 +2718,74 @@ export async function launch(trie, libp2p, isPrimary = true) {
       log(`Mini app upvote error: ${error.message}`);
       return sendError(reply, 500, "Internal Server Error", error.message);
     }
+  });
+
+  // Saved stories, private per account. See src/bookmarks.mjs for the
+  // signed message format.
+  app.post("/api/v1/bookmarks", async (request, reply) => {
+    reply.header("Cache-Control", "no-store");
+    const message = request.body;
+    let identity, index;
+    try {
+      identity = await bookmarks.verify(message, ["bookmark", "unbookmark"]);
+      index = bookmarks.storyIndex(message.href);
+      getSubmission(index);
+    } catch (err) {
+      const details = err.message.startsWith("Couldn't find")
+        ? "Story not found"
+        : err.message;
+      return sendError(reply, 400, "Bad Request", details);
+    }
+    try {
+      if (message.type === "bookmark") {
+        bookmarks.save(identity, index, message);
+      } else {
+        bookmarks.remove(identity, index);
+      }
+    } catch (err) {
+      return sendError(reply, 400, "Bad Request", err.message);
+    }
+    const saved = message.type === "bookmark";
+    return sendStatus(reply, 200, "OK", saved ? "Saved" : "Removed", {
+      index,
+      saved,
+    });
+  });
+
+  app.post("/api/v1/bookmarks/list", async (request, reply) => {
+    reply.header("Cache-Control", "no-store");
+    let identity;
+    try {
+      identity = await bookmarks.verify(request.body, ["bookmarks"]);
+    } catch (err) {
+      return sendError(reply, 401, "Unauthorized", err.message);
+    }
+    const stories = [];
+    for (const { index, timestamp: savedAt } of bookmarks.list(identity)) {
+      let story;
+      try {
+        story = getSubmission(index);
+      } catch {
+        continue;
+      }
+      const { comments, upvoters, ...rest } = story;
+      let submitter;
+      try {
+        submitter = await ens.resolve(story.identity);
+      } catch {}
+      stories.push({
+        ...rest,
+        upvoters: upvoters.map((upvoter) => upvoter.identity),
+        commentCount: comments.length,
+        metadata: (await cachedMetadata(story.href)) || {},
+        displayName: submitter?.displayName,
+        submitter,
+        savedAt,
+      });
+    }
+    return sendStatus(reply, 200, "OK", `${stories.length} saved stories`, {
+      stories,
+    });
   });
 
   // Record impressions and clicks for content
