@@ -223,6 +223,12 @@ const filtered = [
 const anthropic = new Anthropic({
   apiKey: env.ANTHROPIC_API_KEY,
 });
+
+// Titles for tweets and casts, title clean-up and the relevance check.
+// Claude Haiku 5.5: fast and cheap for these short, guideline-following
+// tasks.
+export const TITLE_MODEL = "claude-haiku-5-5";
+
 // Added fxtwitter.com here so Claude title‐gen runs on fxtwitter links too
 export const twitterFrontends = [
   "xcancel.com",
@@ -302,7 +308,7 @@ in the Crypto Twitter community which tend to just use false advertisement to
 promote bad articles.
 `;
 
-const GUIDELINES = `We have an opportunity to build our own corner of the onchain internet. With awesome people, links, resources, and learning.
+export const GUIDELINES = `We have an opportunity to build our own corner of the onchain internet. With awesome people, links, resources, and learning.
 
 Our content focuses on:
 - Technical resources, hacking, and awesome git repos
@@ -334,13 +340,13 @@ Title Guidelines:
 
 `;
 
-async function generateClaudeTitle(content) {
+export async function generateClaudeTitle(content, model = TITLE_MODEL) {
   let response;
   try {
     response = await anthropic.messages.create({
-      model: "claude-sonnet-4-5-20250929",
-      max_tokens: 100,
-      temperature: 0,
+      model,
+      // Room for the title (the Haiku 5.5 tokenizer counts ~30% more).
+      max_tokens: 300,
       tools: [
         {
           name: "generate_title",
@@ -398,9 +404,9 @@ async function fixTitle(title) {
   let response;
   try {
     response = await anthropic.messages.create({
-      model: "claude-sonnet-4-5-20250929",
-      max_tokens: 100,
-      temperature: 0,
+      model: TITLE_MODEL,
+      // Room for the title (the Haiku 5.5 tokenizer counts ~30% more).
+      max_tokens: 300,
       tools: [
         {
           name: "generate_title",
@@ -1816,9 +1822,11 @@ ${context}`;
   let responseText = "NO"; // Default to NO if anything fails
   try {
     const response = await anthropic.messages.create({
-      model: "claude-sonnet-4-5-20250929",
-      max_tokens: 200, // Just need YES or NO
-      temperature: 0, // Deterministic
+      model: TITLE_MODEL,
+      // Haiku 5.5 may think first; low effort keeps that short and the
+      // cap leaves room for it before the YES / NO.
+      max_tokens: 1024,
+      output_config: { effort: "low" },
       messages: [
         {
           role: "user",
@@ -1828,12 +1836,12 @@ ${context}`;
     });
 
     // Extract the text content, expecting "YES" or "NO"
-    if (
-      response.content &&
-      response.content.length > 0 &&
-      response.content[0].type === "text"
-    ) {
-      responseText = response.content[0].text.trim().toUpperCase();
+    // The answer is the text block; thinking blocks can come first.
+    const textBlock = response.content?.find((c) => c.type === "text");
+    if (response.stop_reason === "refusal") {
+      log(`Claude relevance check for ${link} was declined (${response.stop_details?.category})`);
+    } else if (textBlock) {
+      responseText = textBlock.text.trim().toUpperCase();
     } else {
       log(
         `Claude relevance check for ${link} produced unexpected response format: ${JSON.stringify(
