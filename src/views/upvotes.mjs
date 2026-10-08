@@ -148,6 +148,7 @@ export default async function (trie, theme, identity, tab = "submissions") {
           ${Sidebar(path)}
           ${RightColumn()}
           <div id="hnmain" class="scaled-hnmain">
+            <h1 class="visually-hidden">${ensData.displayName} on Kiwi News</h1>
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="var(--background-color0)">
               <tr>
                 ${Header(theme)}
