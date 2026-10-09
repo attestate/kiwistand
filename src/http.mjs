@@ -1963,15 +1963,44 @@ export async function launch(trie, libp2p, isPrimary = true) {
       })),
     }));
 
+    // Link preview (tweet / cast / OG card), like the feeds send. Without
+    // it, apps opening a story by index (e.g. from a notification) showed
+    // a bare link instead of the tweet.
+    let metadata = null;
+    try {
+      metadata = await cachedMetadata(submission.href);
+      if (metadata?.image) {
+        const href =
+          submission.href.startsWith("data:") ||
+          submission.href.startsWith("kiwi:")
+            ? submission.href
+            : normalizeUrl(submission.href, { stripWWW: false });
+        const policy = await moderation.getLists();
+        if (href && policy?.images?.includes(href)) {
+          metadata = { ...metadata };
+          delete metadata.image;
+        }
+      }
+    } catch (err) {
+      log(`/api/v1/stories: metadata failed for ${submission.href}: ${err.message}`);
+    }
+
+    // A story whose preview isn't in the cache yet (it's being fetched
+    // now) is cached briefly, so the edge doesn't keep it bare for a day.
+    const isLink =
+      !submission.href.startsWith("data:") && !submission.href.startsWith("kiwi:");
     reply.header(
       "Cache-Control",
-      "public, s-maxage=86400, max-age=0, stale-while-revalidate=31536000",
+      isLink && !metadata
+        ? "public, s-maxage=60, max-age=0"
+        : "public, s-maxage=86400, max-age=0, stale-while-revalidate=31536000",
     );
     const code = 200;
     const httpMessage = "OK";
     const details = "Responding with story queried by index";
     return sendStatus(reply, code, httpMessage, details, {
       ...submission,
+      metadata,
       comments: enrichedComments,
     });
   });
