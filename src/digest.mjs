@@ -11,6 +11,7 @@ import * as registry from "./chainstate/registry.mjs";
 import DOMPurify from "isomorphic-dompurify";
 import slugify from "slugify";
 import { countOutbounds, countComments } from "./cache.mjs";
+import { isLinkAlive } from "./linkcheck.mjs";
 
 function getSlug(title) {
   if (!title) {
@@ -93,7 +94,17 @@ export async function generateDigestData() {
 
     scoredStories.sort((a, b) => b._digestScore - a._digestScore);
 
-    const selectedStories = scoredStories.slice(0, desiredStoryCount);
+    // Skip stories whose link is gone (e.g. a deleted tweet) so we never
+    // email a dead link, even when it was the week's top story.
+    const selectedStories = [];
+    for (const story of scoredStories) {
+      if (selectedStories.length >= desiredStoryCount) break;
+      if (await isLinkAlive(story.href)) {
+        selectedStories.push(story);
+      } else {
+        log(`[digest] Skipping dead link: ${story.href}`);
+      }
+    }
     log(`Selected top ${selectedStories.length} stories.`);
 
     const generatedAt = new Date();
