@@ -21,6 +21,7 @@ import { twitterFrontends } from "../../parser.mjs";
 import ParagraphFullPost from "./paragraph-full-post.mjs";
 import * as karma from "../../karma.mjs";
 import { getImageLoading, transformImageUrl } from "../utils/imageLoading.mjs";
+import { splitQuote } from "../../quote.mjs";
 
 let domain = "https://news.kiwistand.com";
 if (env.CUSTOM_PROTOCOL && env.CUSTOM_HOST_NAME) {
@@ -639,7 +640,7 @@ const row = (
                                 return DOMPurify.sanitize(part);
                               });
                             };
-                            const desc = convertBrTagsToNewlines((story.metadata.ogDescription || "").trim()).replace(/\n\nQuoting .+$/s, "").trim();
+                            const desc = splitQuote(convertBrTagsToNewlines((story.metadata.ogDescription || "").trim())).text;
                             if (/^https?:\/\/\S+$/i.test(desc)) {
                               return html`<span style="text-decoration:underline;">${DOMPurify.sanitize(desc)}</span>`;
                             }
@@ -647,6 +648,18 @@ const row = (
                             return html`${nodes}`;
                           })()}
                         </p>
+                        ${(() => {
+                          const { quote } = splitQuote(convertBrTagsToNewlines((story.metadata.ogDescription || "").trim()));
+                          if (!quote) return "";
+                          return html`<div
+                            style="margin-top: 10px; padding: 10px; border: 1px solid rgba(0,0,0,0.1); border-radius: 2px;"
+                          >
+                            <div style="font-weight: 600; font-size: 13px; color: var(--embed-twitter-text); margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                              ${DOMPurify.sanitize(quote.author)}
+                            </div>
+                            <p style="white-space: pre-wrap; margin: 0; font-size: 14px; display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden;">${DOMPurify.sanitize(quote.text)}</p>
+                          </div>`;
+                        })()}
                         ${story.metadata.image
                           ? html`
                               <div
