@@ -367,6 +367,8 @@ test("weekPage renders the week", async (t) => {
   t.is(page.match(/<h1[ >]/g).length, 1);
   t.true(page.includes("<title>Top crypto stories, week 40 2026 (Sep 28–Oct 4) | Kiwi News</title>"));
   t.true(page.includes('<link rel="canonical" href="https://news.kiwistand.com/weekly/2026-W40"'));
+  // Relative stylesheet/script paths must not resolve under /weekly/.
+  t.true(page.includes('<base href="/"'));
   t.true(page.includes('<script type="application/ld+json">'));
   t.true(page.includes(`href="/stories/Story-3?index=0x${renderStories[2].index}"`));
   t.true(page.includes("Fusaka &amp; &quot;blobs&quot; &lt;explained&gt;"));
