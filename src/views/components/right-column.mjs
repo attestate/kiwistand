@@ -6,7 +6,9 @@ import { NewsletterCardElement } from "./newsletter-card.mjs";
 
 const html = htm.bind(vhtml);
 
-export default function RightColumn({ newsletter = false } = {}) {
+// The newsletter sign-up sits below the QR code on every page with a right
+// column (desktop only), except where a page opts out.
+export default function RightColumn({ newsletter = true } = {}) {
   return html`
     <div class="right-column" style="width:280px;flex-shrink:0;">
       <div id="testflight-qr-container">

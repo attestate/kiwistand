@@ -21,7 +21,7 @@ import { twitterFrontends } from "../../parser.mjs";
 import ParagraphFullPost from "./paragraph-full-post.mjs";
 import * as karma from "../../karma.mjs";
 import { getImageLoading, transformImageUrl } from "../utils/imageLoading.mjs";
-import { splitQuote } from "../../quote.mjs";
+import { splitQuote, isDeletedTweet, tweetHandle } from "../../quote.mjs";
 
 let domain = "https://news.kiwistand.com";
 if (env.CUSTOM_PROTOCOL && env.CUSTOM_HOST_NAME) {
@@ -430,8 +430,10 @@ const row = (
 
     // Check if we have what we need to render a tweet preview
     // Exclude tweets containing article links
+    const tweetDeleted = isTweet && isDeletedTweet(story.metadata);
     const canRenderTweetPreview =
       isTweet &&
+      !tweetDeleted &&
       story.metadata &&
       story.metadata.ogDescription &&
       !tweetContainsXArticle &&
@@ -1185,6 +1187,18 @@ const row = (
                     </span>
                   </span>
                   </span>
+                  ${tweetDeleted
+                    ? html`<div
+                        class="deleted-post-note"
+                        style="margin-top: 6px; display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-secondary); background: var(--bg-off-white); border: var(--border); border-radius: 2px; padding: 6px 8px; width: fit-content; max-width: 100%;"
+                      >
+                        <span aria-hidden="true">🗑️</span>
+                        <span>
+                          ${tweetHandle(story.title) || "The author"} deleted this
+                          post on X. The discussion stays here.
+                        </span>
+                      </div>`
+                    : ""}
                   <div
                     class="story-subtitle subtitle-flex"
                   style="font-size: 9pt; margin-top: ${ 

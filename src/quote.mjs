@@ -18,3 +18,16 @@ export function splitQuote(description) {
   if (!author || !quoted) return { text, quote: null };
   return { text, quote: { author, text: quoted } };
 }
+
+// fxtwitter answers a deleted (or no longer visible) post with this text,
+// which we cached as the tweet's description.
+export function isDeletedTweet(metadata) {
+  const description = metadata?.ogDescription || "";
+  return /^Sorry, that post (doesn't|does not) exist/i.test(description.trim());
+}
+
+// "@DeanEigenmann: Justin Drake calls…" -> "@DeanEigenmann"
+export function tweetHandle(title) {
+  const match = /^@([A-Za-z0-9_]{1,15}):/.exec(title || "");
+  return match ? `@${match[1]}` : null;
+}
