@@ -459,7 +459,7 @@ export async function page(
       </body>
     </html>
   `;
-  return content;
+  return "<!DOCTYPE html>" + content;
 }
 
 export async function data(

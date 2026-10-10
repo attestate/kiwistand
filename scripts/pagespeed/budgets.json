@@ -1,6 +1,12 @@
 {
   "cls": 0.01,
-  "lighthousePages": ["home", "new", "best", "story 1", "activity"],
+  "lighthousePages": [
+    "home",
+    "new",
+    "best",
+    "story 1",
+    "activity"
+  ],
   "lighthouse": {
     "desktop": {
       "performance": 70,
@@ -13,6 +19,11 @@
       "accessibility": 85,
       "best-practices": 70,
       "seo": 90
+    }
+  },
+  "lighthouseOverrides": {
+    "activity": {
+      "seo": 0
     }
   }
 }

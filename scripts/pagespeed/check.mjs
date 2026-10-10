@@ -271,7 +271,12 @@ if (!process.env.ONLY_CLS) {
         "best-practices": score("best-practices"),
         seo: score("seo"),
       };
-      const floors = budgets.lighthouse[device];
+      // NOTE: Overrides are for pages where a category doesn't apply, e.g.
+      // /activity is personal and kept out of search engines on purpose.
+      const floors = {
+        ...budgets.lighthouse[device],
+        ...budgets.lighthouseOverrides?.[name],
+      };
       const cells = Object.entries(scores).map(([k, v]) => {
         if (v < floors[k]) {
           failures.push(`lighthouse ${name} (${device}): ${k} ${v} < ${floors[k]}`);
