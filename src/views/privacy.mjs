@@ -36,7 +36,7 @@ export default async function (theme) {
               <tr>
                 <td style="padding: 1rem;">
                   <h1>Privacy Policy for Kiwi News</h1>
-                  <p>Last updated: 2025-03-31</p>
+                  <p>Last updated: 2026-10-10</p>
 
                   <h2>1. Introduction</h2>
                   <p>
@@ -69,10 +69,21 @@ export default async function (theme) {
                     </li>
                     <li>
                       <strong>PostHog:</strong> We use PostHog to track user
-                      interactions with our platform. For details, see
+                      interactions with our platform. When you connect a
+                      wallet, we link your PostHog activity to your Ethereum
+                      address (which is already public on Kiwi News) so we can
+                      measure how often people come back. For details, see
                       <a href="https://posthog.com/privacy"
                         >PostHog's privacy policy</a
                       >.
+                    </li>
+                    <li>
+                      <strong>Analytics ID cookie (<code>kiwi_did</code>):</strong>
+                      A random identifier, stored for up to 400 days, so
+                      PostHog can recognize a returning browser. It contains
+                      no personal data and is only set if you haven't opted
+                      out of analytics or enabled anon mode. You can delete it
+                      at any time by clearing your cookies.
                     </li>
                   </ul>
 
@@ -178,6 +189,26 @@ export default async function (theme) {
                       >Apple's privacy policy</a
                     >.
                   </p>
+                  <ul>
+                    <li>
+                      <strong>Analytics:</strong> The app uses the same
+                      PostHog analytics and <code>kiwi_did</code> cookie as
+                      the website (see 3.1). Events from the app are marked as
+                      coming from the iOS app, and when you connect a wallet
+                      your activity is linked to your Ethereum address.
+                    </li>
+                    <li>
+                      <strong>Push Notifications:</strong> If you allow
+                      notifications, we use OneSignal to send them. OneSignal
+                      stores a device token and, when you're logged in, your
+                      Ethereum address so we can send you notifications about
+                      replies and daily top stories. See
+                      <a href="https://onesignal.com/privacy_policy"
+                        >OneSignal's privacy policy</a
+                      >. You can turn notifications off at any time in iOS
+                      Settings.
+                    </li>
+                  </ul>
 
                   <h2>4. Peer-to-Peer Network and Content Distribution</h2>
                   <p>
@@ -276,6 +307,10 @@ export default async function (theme) {
                     <li>
                       <strong>Apple:</strong> For iOS app distribution and
                       TestFlight beta testing.
+                    </li>
+                    <li>
+                      <strong>OneSignal:</strong> For push notifications in
+                      the iOS app.
                     </li>
                   </ul>
 

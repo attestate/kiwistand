@@ -40,9 +40,11 @@ import { purgeCache } from "../cloudflarePurge.mjs";
 import * as preview from "../preview.mjs";
 import ShareIcon from "./components/shareicon.mjs";
 import Summary from "./components/summary.mjs";
+import { StoryNewsletterCard } from "./components/newsletter-card.mjs";
 import { warpcastSvg } from "./components/socialNetworkIcons.mjs";
 import { isBlocked } from "../linksafety.mjs";
 import { getSummary, scheduleSummary } from "../summaries.mjs";
+import { storyDescription, storyDocumentTitle } from "../seo.mjs";
 import * as isoweek from "../isoweek.mjs";
 
 const html = htm.bind(vhtml);
@@ -474,13 +476,13 @@ export default async function (trie, theme, index, value, referral, commentIndex
       frameImage = `${baseUrl}/previews/${index}-frame.jpg`;
     }
     
-    const source = value.href.startsWith("http")
-      ? ` (${extractDomain(value.href)})`
-      : "";
-    const fallback = textContent
-      ? textContent.slice(0, 160)
-      : summary || `${value.title}${source}, discussed on Kiwi News.`;
-    ogDescription = data && data.ogDescription ? data.ogDescription : fallback;
+    ogDescription = storyDescription({
+      title: value.title,
+      href: value.href,
+      summary,
+      articleDescription: data?.ogDescription,
+      textContent,
+    });
     ogTitle = value.title;
   }
   
@@ -543,7 +545,9 @@ export default async function (trie, theme, index, value, referral, commentIndex
           frameImage,
           null,
           {
-            documentTitle: `${ogTitle} | Kiwi News`,
+            documentTitle: commentIndex
+              ? `${ogTitle} | Kiwi News`
+              : storyDocumentTitle(value.title, value.href),
             ogType: "article",
             publishedTime: new Date(value.timestamp * 1000).toISOString(),
             author: `${baseUrl}/upvotes?address=${story.identity}`,
@@ -569,7 +573,7 @@ export default async function (trie, theme, index, value, referral, commentIndex
       >
         <div class="container">
           ${Sidebar(path)}
-          ${RightColumn()}
+          ${RightColumn({ newsletter: false })}
           <main id="hnmain" class="scaled-hnmain" role="main">
             <h1 class="visually-hidden">${value.title}</h1>
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="var(--background-color0)">
@@ -592,7 +596,7 @@ export default async function (trie, theme, index, value, referral, commentIndex
                   false, // isAboveFold = false for lazy loading
                 )({ ...story, index }, 0)}
               </tbody>
-              ${Summary(summary)}
+              ${Summary(summary)} ${StoryNewsletterCard()}
               ${upvoterProfiles.length > 0
                 ? html`<tr>
                     <td style="padding: 12px 0 28px 0;">

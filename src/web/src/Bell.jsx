@@ -10,6 +10,7 @@ import { TextConnectButton } from "./Navigation.jsx";
 import * as API from "./API.mjs";
 import { getLocalAccount, getCookie } from "./session.mjs";
 import { useProvider } from "./client.mjs";
+import { subscribe } from "./newsletter.mjs";
 import { dynamicPrefetch } from "./main.jsx";
 import { sdk } from "@farcaster/frame-sdk";
 import { showSpinnerOverlay } from "./spinnerOverlay.js";
@@ -79,20 +80,7 @@ const EmailSubscriptionForm = ({
 
       // Subscribe to newsletter (single Buttondown list)
       if (subscribeToNewsletter || subscribeToUpdates) {
-        const response = await fetch(
-          "/api/v1/newsletter/subscribe",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ email }),
-          },
-        );
-
-        if (!response.ok) {
-          throw new Error("Newsletter subscription failed");
-        }
+        await subscribe(email, "bell");
       }
 
       setStatus("success");

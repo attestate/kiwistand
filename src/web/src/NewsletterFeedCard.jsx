@@ -1,11 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
+import { EMAIL_RE, SUBSCRIBED_KEY, subscribe } from "./newsletter.mjs";
 
 const HEADLINE = "Get the best of Kiwi News weekly";
 const COPY =
   "Five stories the community upvoted most, every Sunday. No spam, unsubscribe anytime.";
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-const SUBSCRIBED_KEY = "newsletter-subscribed"; // shared with NewsletterScrollModal
 const DISMISSED_KEY = "newsletter-card-dismissed";
 
 function readFlag(key) {
@@ -37,7 +35,7 @@ export function shouldHideCard() {
   );
 }
 
-const NewsletterFeedCard = ({ source = "feed_card" }) => {
+const NewsletterFeedCard = ({ source = "feed_card", headline, copy }) => {
   const [hidden, setHidden] = useState(false);
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState("idle"); // idle | sending | success
@@ -82,16 +80,7 @@ const NewsletterFeedCard = ({ source = "feed_card" }) => {
     setError("");
     setStatus("sending");
     try {
-      const response = await fetch("/api/v1/newsletter/subscribe", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: value }),
-      });
-      if (!response.ok) throw new Error(`Status ${response.status}`);
-      writeFlag(SUBSCRIBED_KEY);
-      window.posthog?.capture?.("newsletter_subscribed", {
-        source,
-      });
+      await subscribe(value, source);
       setStatus("success");
     } catch (err) {
       console.error("Newsletter card subscription error:", err);
@@ -114,7 +103,7 @@ const NewsletterFeedCard = ({ source = "feed_card" }) => {
           ×
         </button>
       )}
-      <div className="newsletter-card-title">{HEADLINE}</div>
+      <div className="newsletter-card-title">{headline || HEADLINE}</div>
       {status === "success" ? (
         <p className="newsletter-card-copy newsletter-card-success">
           You're in. See you Sunday.
@@ -122,7 +111,7 @@ const NewsletterFeedCard = ({ source = "feed_card" }) => {
       ) : (
         <>
           <p className="newsletter-card-copy">
-            {COPY}{" "}
+            {copy || COPY}{" "}
             <a className="newsletter-card-more" href="/newsletter">
               What's in it?
             </a>

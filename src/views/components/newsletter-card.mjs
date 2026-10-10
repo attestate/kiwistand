@@ -13,14 +13,20 @@ export const copy =
 // one with the same card, submitted via fetch and with a dismiss button, or removes it
 // for readers who already subscribed or dismissed it.
 // The card itself. `source` tells the sign-ups apart in analytics:
-// "feed_card" in the hot feed, "sidebar" in the desktop right column.
-export function NewsletterCardElement(source = "feed_card") {
+// "feed_card" in the hot feed, "sidebar" in the desktop right column, "story"
+// below a story's summary. `title` and `text` override the headline and copy
+// (also passed to the client card through data-headline and data-copy).
+export function NewsletterCardElement(source = "feed_card", title, text) {
   return html`
-    <newsletter-card data-source=${source}>
+    <newsletter-card
+      data-source=${source}
+      data-headline=${title}
+      data-copy=${text}
+    >
       <div class="newsletter-card">
-        <div class="newsletter-card-title">${headline}</div>
+        <div class="newsletter-card-title">${title || headline}</div>
         <p class="newsletter-card-copy">
-          ${copy}${" "}<a class="newsletter-card-more" href="/newsletter">What's in it?</a>
+          ${text || copy}${" "}<a class="newsletter-card-more" href="/newsletter">What's in it?</a>
         </p>
         <form
           class="newsletter-card-form"
@@ -43,6 +49,22 @@ export function NewsletterCardElement(source = "feed_card") {
         </form>
       </div>
     </newsletter-card>
+  `;
+}
+
+export const storyHeadline =
+  "Liked this? Get the week's 5 most-upvoted stories every Sunday.";
+export const storyCopy = "Free, no spam, unsubscribe anytime.";
+
+// The story page's row, right below the summary. Shown on mobile and desktop
+// (the story page's right column has no card of its own).
+export function StoryNewsletterCard() {
+  return html`
+    <tr class="newsletter-story-row">
+      <td style="padding: 0 0 8px 0;">
+        ${NewsletterCardElement("story", storyHeadline, storyCopy)}
+      </td>
+    </tr>
   `;
 }
 

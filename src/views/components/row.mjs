@@ -530,6 +530,7 @@ const row = (
             style="${invert ? "display:none;" : ""} ${style}"
             data-content-id="${submissionId}"
             data-content-type="submission"
+            data-position="${(start || 0) + (i || 0) + 1}"
           >
             ${canRenderTweetPreview
               ? html`<a

@@ -185,6 +185,7 @@ function SignupForm(id) {
       aria-labelledby="${id}"
     >
       <input type="hidden" name="redirect" value="/newsletter" />
+      <input type="hidden" name="source" value="landing" />
       <input
         type="email"
         name="email"

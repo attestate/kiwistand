@@ -1,7 +1,7 @@
 // @format
 import React, { useState, useEffect, useRef } from "react";
 
-import posthog from "posthog-js";
+import { capture } from "./analytics.mjs";
 import { useAccount, WagmiProvider } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Wallet } from "@ethersproject/wallet";
@@ -19,6 +19,7 @@ import {
   useIsMiniApp,
 } from "./client.mjs";
 import theme from "./theme.jsx";
+import { maybeShowUpvoteNewsletterPrompt } from "./UpvoteNewsletterPrompt.jsx";
 import { getLocalAccount, isIOSApp } from "./session.mjs";
 import {
   openDelegationModalForAction,
@@ -299,8 +300,17 @@ const Vote = (props) => {
       triggerLocalHaptic("success");
       const isAnonMode = localStorage.getItem('anon-mode') === 'true';
       if (!isAnonMode) {
-        posthog.capture("upvote", { variant: getVariant() });
+        let storyProps = {};
+        try {
+          storyProps = props.getAnalyticsProps?.() || {};
+        } catch (_) {}
+        capture("upvote", {
+          href: props.href,
+          variant: getVariant(),
+          ...storyProps,
+        });
       }
+      maybeShowUpvoteNewsletterPrompt(toast);
     } else if (response.status === "error") {
       if (
         response.details.includes(

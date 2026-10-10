@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import Modal from "react-modal";
+import { EMAIL_RE, subscribe } from "./newsletter.mjs";
+
+const SOURCE = "scroll_modal";
 
 if (typeof document !== "undefined") {
   Modal.setAppElement("body");
@@ -31,6 +34,8 @@ const NewsletterScrollModal = ({ toast }) => {
   const [email, setEmail] = useState("");
   const [isSubscribing, setIsSubscribing] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [hint, setHint] = useState("");
+  const inputRef = useRef(null);
   const [shouldShow, setShouldShow] = useState(false);
   const dismissed = useRef(false);
   const triggerRef = useRef(null);
@@ -67,7 +72,9 @@ const NewsletterScrollModal = ({ toast }) => {
       if (rect.top <= window.innerHeight) {
         if (!hasTrackedShownRef.current) {
           hasTrackedShownRef.current = true;
-          window.posthog?.capture?.("newsletter_modal_shown");
+          window.posthog?.capture?.("newsletter_modal_shown", {
+            source: SOURCE,
+          });
         }
         setIsOpen(true);
       }
@@ -81,65 +88,40 @@ const NewsletterScrollModal = ({ toast }) => {
     };
   }, [shouldShow, isOpen]);
 
-  useEffect(() => {
-    if (!isOpen) return;
-
-    function preventScroll(e) {
-      e.preventDefault();
-    }
-
-    document.addEventListener("touchmove", preventScroll, {
-      passive: false,
-      capture: true,
-    });
-    document.addEventListener("wheel", preventScroll, {
-      passive: false,
-      capture: true,
-    });
-
-    return () => {
-      document.removeEventListener("touchmove", preventScroll, {
-        capture: true,
-      });
-      document.removeEventListener("wheel", preventScroll, { capture: true });
-    };
-  }, [isOpen]);
-
   const handleClose = () => {
     dismissed.current = true;
     setIsOpen(false);
     setShouldShow(false);
-    localStorage.setItem("newsletter-modal-dismissed", "true");
-    window.posthog?.capture?.("newsletter_modal_dismissed");
+    try {
+      localStorage.setItem("newsletter-modal-dismissed", "true");
+    } catch (err) {}
+    window.posthog?.capture?.("newsletter_modal_dismissed", { source: SOURCE });
   };
 
   const handleSubscribe = async (e) => {
     e.preventDefault();
-    if (!email || isSubscribing) return;
+    if (isSubscribing) return;
 
+    const value = email.trim();
+    if (!EMAIL_RE.test(value)) {
+      // Don't fail silently: point at the field and say what's missing.
+      setHint(
+        value
+          ? "Please enter a valid email address."
+          : "Enter your email address to subscribe.",
+      );
+      inputRef.current?.focus();
+      return;
+    }
+
+    setHint("");
     setIsSubscribing(true);
 
     try {
-      const response = await fetch(
-        "/api/v1/newsletter/subscribe",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ email }),
-        }
-      );
-
-      if (response.ok) {
-        localStorage.setItem("newsletter-subscribed", "true");
-        window.posthog?.capture?.("newsletter_subscribed", { source: "scroll_modal" });
-        toast.success("Successfully subscribed to Kiwi News Newsletter!");
-        setIsOpen(false);
-        setShouldShow(false);
-      } else {
-        toast.error("Failed to subscribe. Please try again.");
-      }
+      await subscribe(value, SOURCE);
+      toast.success("You're in. See you Sunday!");
+      setIsOpen(false);
+      setShouldShow(false);
     } catch (error) {
       console.error("Subscription error:", error);
       toast.error("Failed to subscribe. Please try again.");
@@ -229,6 +211,19 @@ const NewsletterScrollModal = ({ toast }) => {
           box-sizing: border-box;
         }
 
+        .newsletter-hint {
+          font-size: 10pt;
+          font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+          color: #b3261e;
+          margin: -2px 0 8px 0;
+        }
+
+        @media (prefers-color-scheme: dark) {
+          .newsletter-hint {
+            color: #ff8a80;
+          }
+        }
+
         .newsletter-input:focus {
           border-color: var(--accent-primary);
         }
@@ -301,26 +296,38 @@ const NewsletterScrollModal = ({ toast }) => {
         </h2>
 
         <p className="newsletter-social-proof">
-          Join 800+ readers
+          The week's 5 most-upvoted stories on Kiwi News.
         </p>
 
-        <form onSubmit={handleSubscribe}>
+        <form onSubmit={handleSubscribe} noValidate>
           <input
+            ref={inputRef}
             type="email"
             className="newsletter-input"
             placeholder="you@email.com"
+            autoComplete="email"
+            aria-label="Email address"
+            aria-invalid={hint ? "true" : undefined}
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              if (hint) setHint("");
+            }}
             disabled={isSubscribing}
             required
           />
+          {hint && (
+            <p className="newsletter-hint" role="alert">
+              {hint}
+            </p>
+          )}
 
           <button
             type="submit"
             className="newsletter-submit"
             disabled={isSubscribing}
           >
-            {isSubscribing ? "Joining..." : "Get Friday's digest"}
+            {isSubscribing ? "Joining..." : "Get Sunday's digest"}
           </button>
         </form>
 
