@@ -412,6 +412,22 @@ export function summaryInput(text) {
   return trimmed.slice(0, SUMMARY_MAX_CHARS);
 }
 
+// The article text is untrusted: a page can try to make the summary carry a
+// link, a wallet address or markup ("claim your airdrop at ..."). Rendering
+// escapes everything, but a summary like that shouldn't be shown at all.
+const UNSAFE_SUMMARY = [
+  /https?:\/\//i,
+  /\bwww\./i,
+  /\b0x[0-9a-f]{40}\b/i, // EVM address
+  /\b(bc1|[13])[a-zA-HJ-NP-Z0-9]{25,59}\b/, // Bitcoin address
+  /[<>{}`]/, // markup and code
+  /\b[a-z0-9-]+\.(xyz|io|com|net|org|app|finance|fi|gg|me|co)\/\S/i, // bare link with a path
+];
+
+export function isSafeSummary(summary) {
+  return !UNSAFE_SUMMARY.some((re) => re.test(summary));
+}
+
 // A short, factual summary of a linked article for its story page. Returns
 // null when there's no usable summary for this text; throws when the request
 // itself failed (rate limit, outage), so the caller can retry later instead
@@ -456,6 +472,10 @@ ${input}
   const textBlock = response.content?.find((c) => c.type === "text");
   const summary = textBlock?.text?.replace(/\s+/g, " ").trim();
   if (!summary || summary === "NONE" || summary.length > 1200) return null;
+  if (!isSafeSummary(summary)) {
+    log(`Story summary rejected as unsafe: ${summary.slice(0, 200)}`);
+    return null;
+  }
   return summary;
 }
 

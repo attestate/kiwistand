@@ -97,13 +97,7 @@ import { EIP712_MESSAGE } from "./constants.mjs";
 import { resolveIdentity } from "@attestate/delegator2";
 import { invalidateActivityCaches } from "./cloudflarePurge.mjs";
 import { getCastByHashAndConstructUrl } from "./parser.mjs";
-import { sendToChannel } from "./telegram-bot.mjs";
-import { 
-  sendTweet, 
-  sendCast, 
-  formatSubmissionForTwitter, 
-  formatSubmissionForFarcaster
-} from "./social-posting.mjs";
+import { postStory } from "./social-posting.mjs";
 import { sendBroadcastNotification } from "./onesignal.mjs";
 import { extractArticleCached } from "./lib/listen/extract.mjs";
 import { getSummary } from "./summaries.mjs";
@@ -410,59 +404,45 @@ app.post("/api/v1/neynar/notify", async (req, res) => {
     return sendError(res, 400, "Bad Request", `Failed to fetch story: ${err.message}`);
   }
   
+  // NOTE: Each step runs on its own, so a failing push notification can't
+  // stop the social posts (and vice versa).
+  let resp;
   try {
-    // Send Neynar notification
-    const resp = await sendNotification(target_url, notificationBody, notificationTitle);
-    
-    // Also broadcast via OneSignal to all subscribed users
-    try {
-      await sendBroadcastNotification({
-        title: notificationTitle,
-        body: notificationBody,
-        url: target_url,
-      });
-      log(`Successfully broadcasted OneSignal notification for tag: ${tag}`);
-    } catch (osErr) {
-      log(`Failed to broadcast OneSignal notification: ${osErr}`);
-    }
-    
-    // Extract domain from submission href
-    const domain = extractDomain(submission.href);
-    
-    // Also send to Telegram channel
-    const telegramMessage = `${submission.title} - ${domain}\n\n${target_url}`;
-    const tgResult = await sendToChannel(telegramMessage);
-    
-    if (!tgResult.success) {
-      log(`Failed to send to Telegram: ${tgResult.error}`);
-    } else {
-      log(`Successfully sent to Telegram channel`);
-    }
-    
-    // Post to Twitter
-    const tweet = formatSubmissionForTwitter(submission, domain, target_url);
-    const twitterResult = await sendTweet(tweet);
-    
-    if (!twitterResult.success) {
-      log(`Failed to send tweet: ${twitterResult.error}`);
-    } else {
-      log(`Successfully posted to Twitter`);
-    }
-    
-    // Post to Farcaster
-    const { text: castText, embeds } = formatSubmissionForFarcaster(submission, domain, target_url);
-    const farcasterResult = await sendCast(castText, embeds);
-    
-    if (!farcasterResult.success) {
-      log(`Failed to send cast: ${farcasterResult.error}`);
-    } else {
-      log(`Successfully posted to Farcaster`);
-    }
-    
-    return res.json(resp);
+    resp = await sendNotification(target_url, notificationBody, notificationTitle);
   } catch (err) {
-    return sendError(res, 500, "Internal Server Error", err.toString());
+    console.error(`neynar notify: Neynar notification failed: ${err.stack || err}`);
+    resp = { status: "error", message: err.toString() };
   }
+
+  try {
+    await sendBroadcastNotification({
+      title: notificationTitle,
+      body: notificationBody,
+      url: target_url,
+    });
+    log(`Successfully broadcasted OneSignal notification for tag: ${tag}`);
+  } catch (osErr) {
+    console.error(`neynar notify: OneSignal broadcast failed: ${osErr}`);
+  }
+
+  // NOTE: Posts to X, Farcaster and Telegram. postStory never throws, logs
+  // failures loudly and skips channels the story was already posted to (e.g.
+  // by the daily automatic post).
+  let social;
+  try {
+    social = await postStory(
+      {
+        index: submission.id.replace(/^kiwi:/, ""),
+        title: submission.title,
+        href: submission.href,
+      },
+      { url: target_url },
+    );
+  } catch (err) {
+    console.error(`neynar notify: social posting failed: ${err.stack || err}`);
+  }
+
+  return res.json({ ...resp, social });
 });
 
 // Plain HTML response for the no-JS newsletter form (feed sign-up card).

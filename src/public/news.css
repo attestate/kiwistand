@@ -2154,3 +2154,33 @@ newsletter-card {
     flex-direction: column;
   }
 }
+
+/* AI summary of a story's linked article (views/components/summary.mjs) */
+.story-summary {
+  margin: 0 11px;
+  font-size: 10pt;
+  color: var(--text-secondary);
+}
+.story-summary > summary {
+  cursor: pointer;
+  width: fit-content;
+  list-style: none;
+}
+.story-summary > summary::-webkit-details-marker {
+  display: none;
+}
+.story-summary > summary::before {
+  content: "▸ ";
+}
+.story-summary[open] > summary::before {
+  content: "▾ ";
+}
+.story-summary > summary:hover {
+  text-decoration: underline;
+}
+.story-summary > p {
+  margin: 6px 0 0 0;
+  line-height: 1.45;
+  color: var(--text-primary);
+  overflow-wrap: break-word;
+}
