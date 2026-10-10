@@ -413,7 +413,9 @@ export function summaryInput(text) {
 }
 
 // A short, factual summary of a linked article for its story page. Returns
-// null when there's too little text or anything goes wrong.
+// null when there's no usable summary for this text; throws when the request
+// itself failed (rate limit, outage), so the caller can retry later instead
+// of storing a failure.
 export async function generateStorySummary(title, text, client = anthropic) {
   const input = summaryInput(text);
   if (!input) return null;
@@ -441,13 +443,13 @@ ${input}
       model: TITLE_MODEL,
       // Haiku 5.5 thinks first; low effort keeps that short and the cap
       // leaves room for it before the ~150 token summary.
-      max_tokens: 1024,
+      max_tokens: 2048,
       output_config: { effort: "low" },
       messages: [{ role: "user", content: prompt }],
     });
   } catch (error) {
     log(`Story summary request failed: ${error}`);
-    return null;
+    throw error;
   }
 
   if (response?.stop_reason !== "end_turn") return null;

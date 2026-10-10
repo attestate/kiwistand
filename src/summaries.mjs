@@ -5,8 +5,10 @@
 //
 // Each story is summarized once and stored by its index. Failures are stored
 // too (summary NULL) so they don't retry on every page view, but they retry
-// after RETRY_AFTER. Rendering never waits on Claude: getSummary() only reads
-// the store and scheduleSummary() generates in the background.
+// after RETRY_AFTER. A failed Claude request (rate limit, outage) isn't
+// stored: generation pauses for PAUSE_AFTER_ERROR and the story is retried on
+// a later view. Rendering never waits on Claude: getSummary() only reads the
+// store and scheduleSummary() generates in the background.
 import { join } from "path";
 import { env } from "process";
 import Database from "better-sqlite3";
@@ -17,6 +19,11 @@ import { generateStorySummary } from "./parser.mjs";
 import { extractArticleCached } from "./lib/listen/extract.mjs";
 
 export const RETRY_AFTER = 7 * 24 * 60 * 60 * 1000;
+export const PAUSE_AFTER_ERROR = 10 * 60 * 1000;
+// Crawlers can open hundreds of old, unsummarized stories in a row; each job
+// fetches an article and calls Claude, so only a few run at a time and the
+// rest are picked up on a later view.
+export const MAX_JOBS = 2;
 
 let db;
 function open() {
@@ -82,6 +89,12 @@ export function needsSummary(index, now = Date.now()) {
 
 // Concurrent page views of the same story share one generation per process.
 const inflight = new Map();
+let pausedUntil = 0;
+
+// For tests.
+export function resetPause() {
+  pausedUntil = 0;
+}
 
 // Starts generating a summary if the story has none (or its last attempt
 // failed long enough ago). Returns the pending promise, or null when there's
@@ -90,6 +103,7 @@ export function scheduleSummary(index, title, href, deps = {}) {
   if (!env.ANTHROPIC_API_KEY || !isSummarizable(href)) return null;
   const k = key(index);
   if (inflight.has(k)) return inflight.get(k);
+  if (inflight.size >= MAX_JOBS || Date.now() < pausedUntil) return null;
   try {
     if (!needsSummary(k)) return null;
   } catch (err) {
@@ -100,12 +114,19 @@ export function scheduleSummary(index, title, href, deps = {}) {
   const { extract = extractArticleCached, summarize = generateStorySummary } =
     deps;
   const job = (async () => {
-    let summary = null;
+    let article;
     try {
-      const article = await extract(href);
-      summary = await summarize(title, article?.plainText);
+      article = await extract(href);
     } catch (err) {
       log(`Story summary for ${k} failed: ${err.message || err}`);
+    }
+    let summary = null;
+    try {
+      summary = await summarize(title, article?.plainText);
+    } catch (err) {
+      log(`Story summary for ${k} paused: ${err.message || err}`);
+      pausedUntil = Date.now() + PAUSE_AFTER_ERROR;
+      return null;
     }
     try {
       write(k, summary);

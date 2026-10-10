@@ -67,7 +67,7 @@ test("generateStorySummary sends truncated text and returns plain text", async (
   t.false(prompt.includes("y".repeat(SUMMARY_MAX_CHARS)));
 });
 
-test("generateStorySummary returns null on NONE, truncation, refusal and errors", async (t) => {
+test("generateStorySummary returns null on NONE, truncation and refusal", async (t) => {
   t.is(await generateStorySummary("T", ARTICLE, mockClient(answer("NONE"))), null);
   t.is(
     await generateStorySummary("T", ARTICLE, mockClient(answer(SUMMARY, "max_tokens"))),
@@ -77,9 +77,12 @@ test("generateStorySummary returns null on NONE, truncation, refusal and errors"
     await generateStorySummary("T", ARTICLE, mockClient(answer("", "refusal"))),
     null,
   );
-  t.is(
-    await generateStorySummary("T", ARTICLE, mockClient(new Error("overloaded"))),
-    null,
+});
+
+test("generateStorySummary throws when the request fails", async (t) => {
+  await t.throwsAsync(
+    generateStorySummary("T", ARTICLE, mockClient(new Error("overloaded"))),
+    { message: "overloaded" },
   );
 });
 
@@ -111,7 +114,7 @@ test("a failed attempt is stored and retried only after RETRY_AFTER", (t) => {
   t.true(summaries.needsSummary(index, 1001 + summaries.RETRY_AFTER));
 });
 
-test("scheduleSummary generates once, dedupes and stores the result", async (t) => {
+test.serial("scheduleSummary generates once, dedupes and stores the result", async (t) => {
   let extracts = 0;
   const deps = {
     extract: async () => {
@@ -130,7 +133,7 @@ test("scheduleSummary generates once, dedupes and stores the result", async (t) 
   t.is(summaries.scheduleSummary(INDEX, "Fork", href, deps), null);
 });
 
-test("scheduleSummary stores a failure and never throws", async (t) => {
+test.serial("scheduleSummary stores a failure and never throws", async (t) => {
   const index = `0x${"3".repeat(72)}`;
   const deps = {
     extract: async () => {
@@ -142,7 +145,46 @@ test("scheduleSummary stores a failure and never throws", async (t) => {
   t.is(summaries.read(index).summary, null);
 });
 
-test("scheduleSummary is a no-op without an API key or for text posts", (t) => {
+test.serial("a failed Claude request isn't stored and pauses generation", async (t) => {
+  const index = `0x${"5".repeat(72)}`;
+  const other = `0x${"6".repeat(72)}`;
+  const deps = {
+    extract: async () => ({ plainText: ARTICLE }),
+    summarize: async () => {
+      throw new Error("overloaded");
+    },
+  };
+  try {
+    t.is(await summaries.scheduleSummary(index, "T", "https://a.b/c", deps), null);
+    t.is(summaries.read(index), null);
+    t.is(summaries.scheduleSummary(other, "T", "https://a.b/d", deps), null);
+    t.is(summaries.read(other), null);
+  } finally {
+    summaries.resetPause();
+  }
+});
+
+test.serial("scheduleSummary runs at most MAX_JOBS jobs at a time", async (t) => {
+  let release;
+  const gate = new Promise((resolve) => (release = resolve));
+  const deps = {
+    extract: async () => {
+      await gate;
+      return { plainText: ARTICLE };
+    },
+    summarize: async () => SUMMARY,
+  };
+  const indexes = ["7", "8", "9"].map((c) => `0x${c.repeat(72)}`);
+  const jobs = indexes.map((i, n) => summaries.scheduleSummary(i, "T", `https://a.b/${n}`, deps));
+  t.truthy(jobs[0]);
+  t.truthy(jobs[1]);
+  t.is(jobs[2], null);
+  release();
+  await Promise.all(jobs.slice(0, 2));
+  t.is(summaries.read(indexes[2]), null);
+});
+
+test.serial("scheduleSummary is a no-op without an API key or for text posts", (t) => {
   const index = `0x${"4".repeat(72)}`;
   const deps = { extract: async () => t.fail() };
   t.is(summaries.scheduleSummary(index, "T", "data:text/plain,hi", deps), null);
