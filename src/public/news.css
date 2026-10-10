@@ -563,8 +563,11 @@ body {
  .hnname {
      margin-right: 5px;
 }
+ /* NOTE: px, not ch: 70ch is the width of 70 "0" glyphs, so the column
+    was ~521px with the fallback font and jumped to ~589px when Inter
+    loaded, shifting the whole page. 589px = 70ch in Inter at 10pt. */
  #hnmain {
-     min-width: 70ch;
+     min-width: 589px;
 }
  .title a {
      word-break: break-word;
@@ -1346,7 +1349,7 @@ body.react-loaded .comment-input-ssr-placeholder {
       white-space: nowrap;
     }
     #hnmain {
-      width: 70ch;
+      width: 589px;
       border-radius: 2px;
       border-left: var(--border-thin);
       border-right: var(--border-thin);
@@ -2183,4 +2186,16 @@ newsletter-card {
   line-height: 1.45;
   color: var(--text-primary);
   overflow-wrap: break-word;
+}
+
+/* Cross-fade between page loads (same-origin navigations) instead of a
+   white flash, so moving between Hot, New, Best and stories feels like an
+   app. Browsers without View Transitions ignore this. */
+@view-transition {
+  navigation: auto;
+}
+@media (prefers-reduced-motion: reduce) {
+  @view-transition {
+    navigation: none;
+  }
 }
