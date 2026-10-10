@@ -54,6 +54,9 @@ import best, * as bestAPI from "./views/best.mjs";
 import privacy from "./views/privacy.mjs";
 import guidelines from "./views/guidelines.mjs";
 import newsletterPage from "./views/newsletter.mjs";
+import * as weeklyViews from "./views/weekly.mjs";
+import * as weekly from "./weekly.mjs";
+import * as isoweek from "./isoweek.mjs";
 import upvotes, * as upvotesAPI from "./views/upvotes.mjs";
 
 import search from "./views/search.mjs";
@@ -274,7 +277,7 @@ app.use(
 // indexes src/public once at startup (including each file's Content-Length),
 // so it would serve stale lengths for rewritten sitemaps and 404 for new
 // months. Read them from disk on every request instead.
-app.get(/^\/sitemap(-static|-\d{4}-\d{2})?\.xml$/, async (req, res, next) => {
+app.get(/^\/sitemap(-static|-weekly|-\d{4}-\d{2})?\.xml$/, async (req, res, next) => {
   let xml;
   try {
     xml = await readFile(path.join("src/public", req.path));
@@ -2511,6 +2514,40 @@ export async function launch(trie, libp2p, isPrimary = true) {
       });
     }
     reply.header("Cache-Control", "no-cache");
+    return reply.status(200).type("text/html").send(content.valueOf());
+  });
+  app.get("/weekly", async (request, reply) => {
+    const content = await weeklyViews.indexPage(
+      reply.locals.theme,
+      weekly.getWeeks(),
+    );
+    reply.header(
+      "Cache-Control",
+      "public, s-maxage=3600, max-age=0, stale-while-revalidate=86400",
+    );
+    return reply.status(200).type("text/html").send(content.valueOf());
+  });
+  app.get("/weekly/:week", async (request, reply) => {
+    const resolved = isoweek.resolveRequest(request.params.week);
+    if (resolved.status === 308) {
+      return reply.redirect(308, resolved.location);
+    }
+    const data =
+      resolved.status === 200
+        ? await weekly.getWeek(resolved.week, resolved.isCurrent)
+        : null;
+    if (!data) {
+      return reply.status(404).type("text/plain").send("Week not found");
+    }
+    const content = await weeklyViews.weekPage(reply.locals.theme, data);
+    // NOTE: Past weeks barely change (a late upvote or comment), so the edge
+    // keeps them for a week; the current week changes as votes come in.
+    reply.header(
+      "Cache-Control",
+      resolved.isCurrent
+        ? "public, s-maxage=3600, max-age=0, stale-while-revalidate=86400"
+        : "public, s-maxage=604800, max-age=0, stale-while-revalidate=31536000",
+    );
     return reply.status(200).type("text/html").send(content.valueOf());
   });
   app.get("/privacy-policy", async (request, reply) => {

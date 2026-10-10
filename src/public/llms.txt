@@ -9,6 +9,7 @@ Use this file to find the right URL for what you need. Prefer the plain-text and
 - [Front page (hot)](https://news.kiwistand.com/): currently trending stories, ranked by community upvotes and recency
 - [New](https://news.kiwistand.com/new?cached=true): newest submissions
 - [Best](https://news.kiwistand.com/best?period=week): top stories; `period` is `day`, `week`, `month`, `year` or `all`
+- [Weekly archive](https://news.kiwistand.com/weekly): the top stories of every week since Kiwi News started, newest first. Each week has its own page at `/weekly/<YYYY>-W<ww>` (ISO week, e.g. [2026-W41](https://news.kiwistand.com/weekly/2026-W41)) with up to 20 stories, their upvotes and comments, and where available a short AI summary of each linked article
 - [Search](https://news.kiwistand.com/search?q=ethereum): search over stories, `q` is the query
 - [Newsletter](https://news.kiwistand.com/newsletter): Kiwi News Weekly, a free Sunday email with the five most-upvoted stories of the week; [past issues](https://buttondown.com/kiwi-news-weekly/archive/)
 - [Guidelines](https://news.kiwistand.com/guidelines): what belongs on Kiwi News and how to comment

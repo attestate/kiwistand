@@ -333,7 +333,8 @@ export default async function (theme, { status = null, picks = null } = {}) {
                           </p>`}
                       <h3>Recent issues</h3>
                       <p>
-                        <a class="nl-link" href="${ARCHIVE_URL}" target="_blank" rel="noopener">Read past issues of Kiwi News Weekly</a>${" "}in the archive.
+                        <a class="nl-link" href="${ARCHIVE_URL}" target="_blank" rel="noopener">Read past issues of Kiwi News Weekly</a>${" "}in the archive,
+                        or browse the${" "}<a class="nl-link" href="/weekly">top stories of every week</a>${" "}on Kiwi News.
                       </p>
 
                       <h2>Frequently asked questions</h2>

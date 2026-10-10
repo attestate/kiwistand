@@ -79,6 +79,7 @@ const footer = (theme, path) => html`
         <strong>Community</strong><br />
         <a href="/guidelines">Guidelines</a><br />
         <a href="/newsletter">Newsletter</a><br />
+        <a href="/weekly">Weekly archive</a><br />
         <a
           href="https://drive.google.com/drive/folders/1vH5vEcXCsbbrYfCpTIvimLSzDMgq1eIa?usp=sharing"
           target="_blank"
