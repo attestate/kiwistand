@@ -13,6 +13,16 @@ const ALL = {
   NEYNAR_API_KEY: "neynar-key",
   FC_SIGNER_UUID: "signer-uuid",
   TG_KEY: "123:tg-secret",
+  TG_CHANNEL_ID: "-100123",
+  // NOTE: Every day, so tests don't depend on today's weekday.
+  TELEGRAM_POST_WEEKDAYS: "0,1,2,3,4,5,6",
+};
+
+// A test key and the hub settings for the direct-to-hub path.
+const HUB = {
+  FC_FID: "1234",
+  FC_SIGNER_PRIVATE_KEY: "0x" + "11".repeat(32),
+  FC_HUB_URL: "https://hub.example.org:2281/",
 };
 
 const story = (index, upvotes = 5, title = `Story ${index}`) => ({
@@ -26,7 +36,13 @@ const story = (index, upvotes = 5, title = `Story ${index}`) => ({
 function mockFetch(answers = {}) {
   const calls = [];
   const fetch = async (url, options) => {
-    calls.push({ url, options, body: JSON.parse(options.body) });
+    let body;
+    try {
+      body = JSON.parse(options.body);
+    } catch (err) {
+      body = options.body;
+    }
+    calls.push({ url, options, body });
     const host = new URL(url).hostname;
     const answer = answers[host] || { status: 200, body: "{}" };
     if (answer.throws) throw new Error(answer.throws);
@@ -160,7 +176,7 @@ test("sendToTelegram treats ok:false as a failure and uses the channel id", asyn
   });
   const result = await social.sendToTelegram("hi", { fetch, vars: ALL });
   t.false(result.success);
-  t.is(calls[0].body.chat_id, social.DEFAULT_TG_CHANNEL_ID);
+  t.is(calls[0].body.chat_id, "-100123");
   t.regex(errors[0], /chat not found/);
 });
 
@@ -262,4 +278,66 @@ test("startScheduler stays off outside production and logs channel status", (t) 
   t.is(timer, null);
   t.true(logs.includes("social: X disabled (missing CONSUMER_KEY, CONSUMER_SECRET, TWITTER_ACCESS_TOKEN, TWITTER_ACCESS_TOKEN_SECRET)"));
   t.true(logs.some((l) => l.startsWith("social: automatic posting off")));
+});
+
+test("Telegram needs an explicit channel id, there is no default", (t) => {
+  const vars = { ...ALL, TG_CHANNEL_ID: "" };
+  t.deepEqual(social.missingEnv("telegram", vars), ["TG_CHANNEL_ID"]);
+  t.false(social.enabledChannels(vars).includes("telegram"));
+});
+
+test("Telegram posts only on its weekdays, Sundays by default", async (t) => {
+  t.deepEqual(social.telegramWeekdays({}), [0]);
+  const sunday = new Date("2026-10-11T16:00:00Z");
+  const saturday = new Date("2026-10-10T16:00:00Z");
+  t.true(social.postsOn("telegram", sunday, {}));
+  t.false(social.postsOn("telegram", saturday, {}));
+  t.true(social.postsOn("x", saturday, {}));
+
+  const { fetch, calls } = mockFetch();
+  const vars = { ...ALL, TELEGRAM_POST_WEEKDAYS: "0" };
+  const result = await social.postStory(story("0xbb"), {
+    fetch,
+    vars,
+    statePath,
+    channels: ["telegram"],
+    now: () => saturday.getTime(),
+  });
+  t.true(result.telegram.skipped);
+  t.is(calls.length, 0);
+});
+
+test("Farcaster is enabled by either Neynar or hub variables", (t) => {
+  t.deepEqual(social.missingEnv("farcaster", HUB), []);
+  t.deepEqual(social.missingEnv("farcaster", ALL), []);
+  t.regex(social.missingEnv("farcaster", {})[0], /NEYNAR_API_KEY, FC_SIGNER_UUID or FC_FID/);
+});
+
+test("sendCast falls back to the hub when Neynar fails", async (t) => {
+  const { fetch, calls } = mockFetch({
+    "api.neynar.com": { status: 402, body: '{"message":"payment required"}' },
+    "hub.example.org": { status: 200, body: '{"hash":"0xbeef"}' },
+  });
+  const result = await social.sendCast("hi - a.com", ["https://k.com/s"], {
+    fetch,
+    vars: { ...ALL, ...HUB },
+  });
+  t.true(result.success);
+  t.is(result.id, "0xbeef");
+  t.is(calls.length, 2);
+  t.is(calls[1].url, "https://hub.example.org:2281/v1/submitMessage");
+  t.is(calls[1].options.headers["content-type"], "application/octet-stream");
+  t.true(Buffer.isBuffer(calls[1].body) && calls[1].body.length > 64);
+  // The Neynar failure is still logged.
+  t.regex(errors[0], /Farcaster post failed: HTTP 402/);
+});
+
+test("sendCast uses the hub alone without Neynar variables", async (t) => {
+  const { fetch, calls } = mockFetch({
+    "hub.example.org": { status: 500, body: "hub down" },
+  });
+  const result = await social.sendCast("hi", [], { fetch, vars: HUB });
+  t.false(result.success);
+  t.is(calls.length, 1);
+  t.regex(errors[0], /HTTP 500 hub: hub down/);
 });

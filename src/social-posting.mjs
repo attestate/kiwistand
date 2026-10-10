@@ -7,11 +7,20 @@
 //   TWITTER_ACCESS_TOKEN_SECRET (get the access token with
 //   `node scripts/twitter-auth.mjs`). Posts via POST /2/tweets with OAuth 1.0a
 //   user context.
-// - Farcaster: NEYNAR_API_KEY, FC_SIGNER_UUID (an approved Neynar signer for
-//   the Kiwi account, see `node scripts/create-farcaster-signer.mjs`). The
-//   old FC_SEED_PHRASE path used Warpcast's private PUT /v2/auth, which now
-//   answers 404 "Path /v2/auth does not exist".
-// - Telegram: TG_KEY (bot token), optionally TG_CHANNEL_ID.
+// - Farcaster, either or both of:
+//   - Neynar: NEYNAR_API_KEY, FC_SIGNER_UUID (an approved Neynar signer for
+//     the Kiwi account, see `node scripts/create-farcaster-signer.mjs`).
+//   - A Farcaster hub directly, no paid API: FC_FID, FC_SIGNER_PRIVATE_KEY
+//     (an ed25519 key registered for the account, see
+//     `node scripts/create-farcaster-key.mjs`) and FC_HUB_URL (a hub's HTTP
+//     API, e.g. https://<hub>:2281).
+//   Neynar is tried first; when it fails (e.g. the plan lapsed) or isn't
+//   set up, the cast goes to the hub. The old FC_SEED_PHRASE path used
+//   Warpcast's private PUT /v2/auth, which now answers 404.
+// - Telegram: TG_KEY (bot token) and TG_CHANNEL_ID. There is no default
+//   channel on purpose: the old one is the Kiwi NFT holders' chat, which
+//   doesn't want daily posts. Telegram only posts on TELEGRAM_POST_WEEKDAYS
+//   (UTC days, 0 = Sunday; default "0", once a week).
 //
 // Posting happens in two places:
 // - startScheduler() runs in the primary process and posts the day's top
@@ -28,6 +37,12 @@ import { env } from "process";
 import { readFileSync, writeFileSync, renameSync, mkdirSync } from "fs";
 import path from "path";
 import OAuth from "oauth-1.0a";
+import {
+  makeCastAdd,
+  NobleEd25519Signer,
+  FarcasterNetwork,
+  Message,
+} from "@farcaster/hub-nodejs";
 
 import { getSlug } from "./utils.mjs";
 
@@ -42,12 +57,16 @@ const REQUIRED_ENV = {
     "TWITTER_ACCESS_TOKEN",
     "TWITTER_ACCESS_TOKEN_SECRET",
   ],
-  farcaster: ["NEYNAR_API_KEY", "FC_SIGNER_UUID"],
-  telegram: ["TG_KEY"],
+  telegram: ["TG_KEY", "TG_CHANNEL_ID"],
 };
 
-// NOTE: The "Kiwi News" Telegram channel.
-export const DEFAULT_TG_CHANNEL_ID = "-1001902081637";
+// NOTE: Farcaster works with either set of variables.
+const FARCASTER_NEYNAR_ENV = ["NEYNAR_API_KEY", "FC_SIGNER_UUID"];
+const FARCASTER_HUB_ENV = ["FC_FID", "FC_SIGNER_PRIVATE_KEY", "FC_HUB_URL"];
+
+function hasAll(names, vars) {
+  return names.every((name) => vars[name]);
+}
 
 export const X_ENDPOINT = "https://api.twitter.com/2/tweets";
 export const NEYNAR_CAST_ENDPOINT = "https://api.neynar.com/v2/farcaster/cast";
@@ -60,6 +79,13 @@ const X_URL_CHARS = 23;
 const FC_MAX_BYTES = 320;
 
 export function missingEnv(channel, vars = env) {
+  if (channel === "farcaster") {
+    if (hasAll(FARCASTER_NEYNAR_ENV, vars) || hasAll(FARCASTER_HUB_ENV, vars))
+      return [];
+    const neynar = FARCASTER_NEYNAR_ENV.filter((name) => !vars[name]);
+    const hub = FARCASTER_HUB_ENV.filter((name) => !vars[name]);
+    return [`${neynar.join(", ")} or ${hub.join(", ")}`];
+  }
   return REQUIRED_ENV[channel].filter((name) => !vars[name]);
 }
 
@@ -203,13 +229,24 @@ export async function sendTweet(text, { fetch = globalThis.fetch, vars = env } =
   }
 }
 
-export async function sendCast(
+// Neynar first, then the hub. A Neynar failure is still logged, so a lapsed
+// plan shows up in the logs even when the hub saves the post.
+export async function sendCast(text, embeds = [], options = {}) {
+  const vars = options.vars || env;
+  if (missingEnv("farcaster", vars).length)
+    return notConfigured("farcaster", vars);
+  if (hasAll(FARCASTER_NEYNAR_ENV, vars)) {
+    const result = await sendCastViaNeynar(text, embeds, options);
+    if (result.success || !hasAll(FARCASTER_HUB_ENV, vars)) return result;
+  }
+  return sendCastViaHub(text, embeds, options);
+}
+
+export async function sendCastViaNeynar(
   text,
   embeds = [],
   { fetch = globalThis.fetch, vars = env } = {},
 ) {
-  if (missingEnv("farcaster", vars).length)
-    return notConfigured("farcaster", vars);
   // NOTE: Neynar dedupes casts with the same idempotency key.
   const idem = crypto
     .createHash("sha256")
@@ -241,13 +278,58 @@ export async function sendCast(
   }
 }
 
+function hexToBytes(hex) {
+  return Uint8Array.from(Buffer.from(String(hex).replace(/^0x/, ""), "hex"));
+}
+
+// Signs the cast with our own registered key and submits it to a hub's HTTP
+// API, so posting doesn't depend on a paid Neynar plan.
+export async function sendCastViaHub(
+  text,
+  embeds = [],
+  { fetch = globalThis.fetch, vars = env } = {},
+) {
+  const fid = parseInt(vars.FC_FID, 10);
+  const key = hexToBytes(vars.FC_SIGNER_PRIVATE_KEY);
+  if (!Number.isInteger(fid) || key.length !== 32)
+    return failure("farcaster", null, "hub: FC_FID or FC_SIGNER_PRIVATE_KEY is malformed");
+  try {
+    const cast = await makeCastAdd(
+      {
+        text,
+        embeds: embeds.map((url) => ({ url })),
+        embedsDeprecated: [],
+        mentions: [],
+        mentionsPositions: [],
+      },
+      { fid, network: FarcasterNetwork.MAINNET },
+      new NobleEd25519Signer(key),
+    );
+    if (cast.isErr()) return failure("farcaster", null, `hub: ${cast.error.message}`);
+    const bytes = Buffer.from(Message.encode(cast.value).finish());
+    const hub = vars.FC_HUB_URL.replace(/\/+$/, "");
+    const response = await fetch(`${hub}/v1/submitMessage`, {
+      method: "POST",
+      headers: { "content-type": "application/octet-stream" },
+      body: bytes,
+    });
+    const body = await readBody(response);
+    if (!response.ok) return failure("farcaster", response.status, `hub: ${body}`);
+    const id = parseJSON(body)?.hash;
+    console.log(`social: Farcaster posted via hub ${id ? `cast ${id}` : "a cast"}`);
+    return { success: true, status: response.status, id };
+  } catch (err) {
+    return failure("farcaster", null, `hub: ${err.message}`);
+  }
+}
+
 export async function sendToTelegram(
   text,
   { fetch = globalThis.fetch, vars = env } = {},
 ) {
   if (missingEnv("telegram", vars).length)
     return notConfigured("telegram", vars);
-  const chatId = vars.TG_CHANNEL_ID || DEFAULT_TG_CHANNEL_ID;
+  const chatId = vars.TG_CHANNEL_ID;
   try {
     // NOTE: The URL contains the bot token, so it must never be logged.
     const response = await fetch(
@@ -352,6 +434,14 @@ export async function postStory(story, options = {}) {
       results[channel] = notConfigured(channel, vars);
       continue;
     }
+    if (!postsOn(channel, new Date(now()), vars)) {
+      results[channel] = {
+        success: false,
+        skipped: true,
+        error: `${LABELS[channel]} doesn't post today (TELEGRAM_POST_WEEKDAYS)`,
+      };
+      continue;
+    }
     const state = loadState(statePath);
     if (wasPosted(state, story, channel)) {
       results[channel] = { success: false, skipped: true, error: "already posted" };
@@ -381,6 +471,21 @@ export function postHours(vars = env) {
     .split(",")
     .map((h) => parseInt(h.trim(), 10))
     .filter((h) => Number.isInteger(h) && h >= 0 && h <= 23);
+}
+
+// UTC weekdays (0 = Sunday) on which Telegram posts. Default: Sundays only.
+export function telegramWeekdays(vars = env) {
+  const raw = vars.TELEGRAM_POST_WEEKDAYS ?? "0";
+  return raw
+    .split(",")
+    .map((d) => parseInt(d.trim(), 10))
+    .filter((d) => Number.isInteger(d) && d >= 0 && d <= 6);
+}
+
+// Whether a channel posts on this day. Only Telegram is limited.
+export function postsOn(channel, date, vars = env) {
+  if (channel !== "telegram") return true;
+  return telegramWeekdays(vars).includes(date.getUTCDay());
 }
 
 export function autopostEnabled(vars = env) {
@@ -435,7 +540,9 @@ export async function runOnce(options = {}) {
     return results;
   }
 
+  const today = new Date((options.now || (() => Date.now()))());
   for (const channel of channels) {
+    if (!postsOn(channel, today, vars)) continue;
     const state = loadState(statePath);
     const story = await pickStory(stories, channel, state, {
       min: minUpvotes(vars),
