@@ -101,6 +101,7 @@ import { extractArticleCached } from "./lib/listen/extract.mjs";
 import { getSummary } from "./summaries.mjs";
 import { hotFeed as hotFeedRSS, newFeed as newFeedRSS } from "./rss.mjs";
 import { readFile } from "fs/promises";
+import { resolveAnalyticsId, setAnalyticsIdCookie } from "./analytics-id.mjs";
 
 const app = express();
 
@@ -1231,6 +1232,14 @@ export async function launch(trie, libp2p, isPrimary = true) {
     const httpMessage = "OK";
     const details = "Successfully subscribed via push notifications";
     return sendStatus(reply, code, httpMessage, details);
+  });
+  // Issues the long-lived anonymous PostHog id as a server-set cookie (see
+  // src/analytics-id.mjs). Must never be cached: it's per-visitor.
+  app.get("/api/v1/analytics-id", (request, reply) => {
+    reply.header("Cache-Control", "private, no-store");
+    const id = resolveAnalyticsId(request.cookies);
+    setAnalyticsIdCookie(reply, id);
+    return sendStatus(reply, 200, "OK", "Analytics id issued", { id });
   });
   app.get("/api/v1/metadata", async (request, reply) => {
     reply.header("Cache-Control", "no-cache");

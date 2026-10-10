@@ -92,16 +92,50 @@ import theme from "./theme.jsx";
 // Check anon mode once at startup
 const isAnonMode = localStorage.getItem('anon-mode') === 'true';
 
+// Tie PostHog's person to the wallet identity (as resolved by delegator2,
+// checksummed, which matches the distinct_ids already in PostHog) so
+// retention is measured per user rather than per browser.
+function identifyPostHog(identity) {
+  const ph = window.posthog;
+  if (!ph?.__loaded || !identity) return;
+  if (ph.get_distinct_id?.() !== identity) ph.identify(identity);
+}
+
+// Only called when the wallet disconnects after having been identified on
+// this page, so logged-out loads and wagmi's reconnect phase don't reset.
+function resetPostHog() {
+  const ph = window.posthog;
+  if (ph?.__loaded && /^0x[0-9a-fA-F]{40}$/.test(ph.get_distinct_id?.() || "")) {
+    ph.reset();
+  }
+}
+
 // Defer PostHog initialization to avoid blocking main thread
 const analyticsConsent = localStorage.getItem("kiwi-analytics-consent");
 if (!isAnonMode && analyticsConsent !== "false") {
   const initPostHog = async () => {
     const { default: posthog } = await import("posthog-js");
+    // Long-lived anonymous id from a server-set cookie (Safari ITP wipes
+    // script-written storage after 7 days). posthog-js only uses
+    // get_device_id when it has no persisted id, so existing ids are kept.
+    let did = getCookie("kiwi_did");
+    if (!did) {
+      try {
+        const res = await fetch("/api/v1/analytics-id", {
+          credentials: "same-origin",
+        });
+        did = (await res.json())?.data?.id;
+      } catch (_) {}
+    }
     window.posthog = posthog;
     posthog.init("phc_F3mfkyH5tKKSVxnMbJf0ALcPA98s92s3Jw8a7eqpBGw", {
       api_host: "https://eu.i.posthog.com",
       person_profiles: "identified_only",
+      persistence: "localStorage+cookie",
+      get_device_id: (uuid) => did || uuid,
     });
+    // The wallet may have resolved before posthog-js finished loading.
+    if (window.__kiwiIdentity) identifyPostHog(window.__kiwiIdentity);
     // Register `is_ios_app` as a super property so every subsequent event
     // (story_impression, outbound_click, feed_page_view, etc.) is tagged
     // with whether the user is inside the native iOS app wrapper. This
@@ -1069,7 +1103,8 @@ async function startWatchAccount(delegations, account, isInIOSApp) {
       document.body.classList.add("kiwi-logged-in");
     } catch {}
     if (!isAnonMode) {
-      window.posthog?.identify?.(identity);
+      window.__kiwiIdentity = identity;
+      identifyPostHog(identity);
     }
 
     // Set iOS wallet for push notifications
@@ -1112,6 +1147,10 @@ async function startWatchAccount(delegations, account, isInIOSApp) {
       document.body.classList.remove("kiwi-logged-in");
     } catch {}
     hideDesktopLinks();
+    if (window.__kiwiIdentity) {
+      window.__kiwiIdentity = undefined;
+      resetPostHog();
+    }
 
     // Clear iOS wallet when disconnected
     if (isInIOSApp && window.clearKiwiWallet) {
