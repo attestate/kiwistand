@@ -39,6 +39,10 @@ const html = htm.bind(vhtml);
 // NOTE: The data the profile page is rendered from. Also served as JSON via
 // /upvotes?address=…&format=json, e.g. for the iOS app.
 export async function data(identity, tab = "submissions") {
+  // NOTE: Submissions and karma are stored under checksummed addresses and
+  // matched exactly, so a lowercase address in the URL showed an empty
+  // profile.
+  identity = utils.getAddress(identity);
   const profile = await ens.resolve(identity);
   const points = karma.resolve(identity);
   const limit = 30;

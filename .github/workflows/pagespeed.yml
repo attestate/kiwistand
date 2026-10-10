@@ -1,0 +1,61 @@
+name: Page speed
+
+# Layout shift and Lighthouse budgets for news.kiwistand.com
+# (scripts/pagespeed/check.mjs, budgets in scripts/pagespeed/budgets.json).
+#
+# - After every deploy and every 6 hours: measures the live site, every page
+#   type on desktop and phone. A failure means production got janky or slow.
+# - On pull requests that change the stylesheets: loads the live pages with
+#   the PR's news.css and inter.css swapped in, so a layout shift is caught
+#   before it ships. (Lighthouse is skipped there; it would score production.)
+
+on:
+  workflow_run:
+    workflows: [Deploy]
+    types: [completed]
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - "src/public/news.css"
+      - "src/public/fonts/**"
+      - "scripts/pagespeed/**"
+      - ".github/workflows/pagespeed.yml"
+
+concurrency:
+  group: pagespeed-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+      - run: npm ci --prefix scripts/pagespeed
+      - name: Install Chromium
+        working-directory: scripts/pagespeed
+        run: npx playwright install --with-deps chromium
+
+      # The server restarts at the end of a deploy; give it time to come up.
+      - name: Wait for the deploy
+        if: github.event_name == 'workflow_run'
+        run: sleep 180
+
+      - name: Check this PR's stylesheets on the live pages
+        if: github.event_name == 'pull_request'
+        env:
+          ONLY_CLS: "1"
+          LOCAL_CSS: src/public/news.css
+          LOCAL_INTER: src/public/fonts/inter.css
+        run: node scripts/pagespeed/check.mjs
+
+      - name: Check the live site
+        if: github.event_name != 'pull_request'
+        run: node scripts/pagespeed/check.mjs

@@ -1,6 +1,51 @@
+/* NOTE: Arial resized to Inter's metrics. Text renders in it until Inter
+   arrives, so lines wrap the same before and after and the page doesn't
+   jump (Verdana, the old fallback, is ~20% wider than Inter). Values:
+   Inter's average advance width over Arial's, then Inter's ascent and
+   descent divided by that; Regular/Medium over Arial, SemiBold/Bold over
+   Arial Bold. Liberation Sans has Arial's metrics (Linux). Here and not in
+   fonts/inter.css because that file's URL isn't versioned, so browsers
+   would keep an old copy for a day. */
+@font-face {
+     font-family: 'Inter Fallback';
+     font-weight: 100 400;
+     src: local('Arial'), local('ArialMT'), local('Liberation Sans'), local('LiberationSans');
+     size-adjust: 107.13%;
+     ascent-override: 90.43%;
+     descent-override: 22.52%;
+     line-gap-override: 0%;
+}
+@font-face {
+     font-family: 'Inter Fallback';
+     font-weight: 500;
+     src: local('Arial'), local('ArialMT'), local('Liberation Sans'), local('LiberationSans');
+     size-adjust: 108.29%;
+     ascent-override: 89.45%;
+     descent-override: 22.27%;
+     line-gap-override: 0%;
+}
+@font-face {
+     font-family: 'Inter Fallback';
+     font-weight: 600;
+     src: local('Arial Bold'), local('Arial-BoldMT'), local('Liberation Sans Bold'), local('LiberationSans-Bold');
+     size-adjust: 101.32%;
+     ascent-override: 95.61%;
+     descent-override: 23.81%;
+     line-gap-override: 0%;
+}
+@font-face {
+     font-family: 'Inter Fallback';
+     font-weight: 700 900;
+     src: local('Arial Bold'), local('Arial-BoldMT'), local('Liberation Sans Bold'), local('LiberationSans-Bold');
+     size-adjust: 102.38%;
+     ascent-override: 94.62%;
+     descent-override: 23.56%;
+     line-gap-override: 0%;
+}
+
 :root {
      /* LIGHT THEME - Default */
-     --font-family: 'Inter', Verdana, Geneva, sans-serif;
+     --font-family: 'Inter', 'Inter Fallback', Verdana, Geneva, sans-serif;
 
      /* Logo image - can be changed per theme */
      --logo-image: url('/kiwi-icon.webp');
@@ -196,7 +241,7 @@
 /* Anonymous Hacker Theme - Matrix/Terminal Style */
 [data-theme="anon"] {
      /* ANONYMOUS THEME */
-     --font-family: 'Inter', Verdana, Geneva, sans-serif;
+     --font-family: 'Inter', 'Inter Fallback', Verdana, Geneva, sans-serif;
 
      /* Logo image - can be changed per theme */
      --logo-image: url('/kiwi-icon-anon.png');
@@ -774,10 +819,13 @@ body.kiwi-logged-in .like-count {
     width: 100% !important;
   }
   .comment-input-desktop-ssr { display: none !important; }
-  /* Reserve space for comment input React mount to avoid jump */
+  /* Reserve space for comment input React mount to avoid jump. 123px is
+     what the mobile composer from CommentInput.jsx measures once mounted;
+     flow-root keeps its margins inside the host so the reserved height is
+     the height. */
   .comment-input-host { 
-    display: block; 
-    min-height: 64px;
+    display: flow-root; 
+    min-height: 123px;
     position: relative;
   }
   /* Strong gutters for content rows */
