@@ -315,6 +315,45 @@ export async function fetchENSData(address, forceFetch) {
 // Create a prefix for ENS cache entries to ensure uniqueness
 export const ENS_CACHE_PREFIX = "ens-profile-";
 
+// NOTE: ensdata's avatar proxy (avatar_small) refuses some images, e.g. with
+// a 403, that load fine from where they're hosted (avatar_url), which left a
+// broken image next to the person's name. Checked once per profile; on a
+// timeout or network error we keep the proxy URL.
+export async function workingAvatar(profile, fetchFn = fetch) {
+  const small = profile.avatar_small;
+  const original = profile.avatar_url;
+  if (
+    !small ||
+    profile.safeAvatar !== small ||
+    typeof original !== "string" ||
+    !original.startsWith("https")
+  ) {
+    return profile.safeAvatar;
+  }
+  let response;
+  try {
+    response = await fetchFn(small, { signal: AbortSignal.timeout(5000) });
+  } catch (err) {
+    return small;
+  }
+  response.body?.cancel?.().catch(() => {});
+  const type = response.headers.get("content-type") || "";
+  if (response.ok && type.startsWith("image/")) return small;
+  return DOMPurify.sanitize(original);
+}
+
+const avatarChecks = new Set();
+function checkAvatarLater(cacheKey, profile) {
+  if (profile.avatarChecked || avatarChecks.has(cacheKey)) return;
+  avatarChecks.add(cacheKey);
+  workingAvatar(profile)
+    .then((safeAvatar) =>
+      cache.set(cacheKey, { ...profile, safeAvatar, avatarChecked: true }),
+    )
+    .catch(() => {})
+    .finally(() => avatarChecks.delete(cacheKey));
+}
+
 export async function _resolve(normalizedAddress, forceFetch) {
   const ensProfile = await fetchENSData(normalizedAddress, forceFetch);
   const lensProfile = await fetchLensData(normalizedAddress, forceFetch);
@@ -371,6 +410,8 @@ export async function _resolve(normalizedAddress, forceFetch) {
     displayName,
     neynarScore,
   };
+  completeProfile.safeAvatar = await workingAvatar(completeProfile);
+  completeProfile.avatarChecked = true;
   return completeProfile;
 }
 
@@ -383,6 +424,7 @@ export async function resolve(address, forceFetch = false) {
   if (!forceFetch) {
     const cached = await cache.get(cacheKey);
     if (cached && (cached.ens || cached.farcaster || cached.lens || cached.neynar)) {
+      checkAvatarLater(cacheKey, cached);
       return cached;
     }
   }
@@ -430,6 +472,7 @@ export async function resolveForBatch(address) {
 
   const cached = await cache.get(cacheKey);
   if (cached && (cached.ens || cached.farcaster || cached.lens || cached.neynar)) {
+    checkAvatarLater(cacheKey, cached);
     return cached;
   }
 
