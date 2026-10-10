@@ -311,7 +311,10 @@ const CommentInput = (props) => {
     signer = result;
   }
 
-  const [isEligible, setIsEligible] = useState(null);
+  // NOTE: Without an address the answer is already known; starting at null
+  // rendered the textarea for a frame before the sign-in card, which made
+  // the page jump.
+  const [isEligible, setIsEligible] = useState(address ? null : false);
   const [preResolvedAvatar, setPreResolvedAvatar] = useState(null);
   const [preResolvedName, setPreResolvedName] = useState(null);
 
