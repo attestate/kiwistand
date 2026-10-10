@@ -103,6 +103,9 @@ export function weekJsonLd(week, stories, description) {
   return JSON.stringify(data).replace(/</g, "\\u003c");
 }
 
+// custom() links news.css, scripts and icons with relative paths. The
+// <base href="/"> keeps them from resolving under /weekly/ (404, unstyled
+// page), like on story pages.
 async function Page(
   { title, documentTitle, description, canonical, jsonLd, body },
   theme,
@@ -112,6 +115,7 @@ async function Page(
     html`
       <html lang="en" op="news">
         <head>
+          <base href="/" />
           ${custom(
             OG_IMAGE,
             title,
