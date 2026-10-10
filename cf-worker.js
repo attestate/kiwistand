@@ -208,6 +208,39 @@ const CACHE_CONTROL_HEADER = "Cache-Control";
 const CLIENT_CACHE_CONTROL_HEADER = "x-client-cache-control";
 const ORIGIN_CACHE_CONTROL_HEADER = "x-edge-origin-cache-control";
 
+const MAX_RETENTION_SECONDS = 7 * 24 * 60 * 60;
+
+// Shown when a page isn't cached at this edge and the origin is down or
+// restarting (deploys take ~10-30s). Reloads itself instead of leaving the
+// reader on Cloudflare's 504 page.
+function restartingResponse() {
+  const body = `<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="refresh" content="5"><meta name="robots" content="noindex">
+<title>Kiwi News is restarting</title>
+<style>body{font-family:system-ui,sans-serif;background:#f6f6ef;color:#10131d;
+display:flex;min-height:100vh;align-items:center;justify-content:center;margin:0}
+main{text-align:center;padding:24px}p{color:#606971}</style></head>
+<body><main><h1>🥝 Back in a moment</h1>
+<p>Kiwi News is restarting after an update. This page reloads by itself.</p>
+</main></body></html>`;
+  return new Response(body, {
+    status: 503,
+    headers: {
+      "content-type": "text/html; charset=utf-8",
+      "retry-after": "5",
+      "cache-control": "no-store",
+    },
+  });
+}
+
+function isHtmlNavigation(request) {
+  return (
+    request.method === "GET" &&
+    (request.headers.get("accept") || "").includes("text/html")
+  );
+}
+
 const CacheStatus = {
   HIT: "HIT",
   MISS: "MISS",
@@ -255,7 +288,16 @@ async function fetchAndCache({ cacheKey, request, event }) {
     rawOriginRes = await fetch(addCacheBustParam(request), { cf: { cacheEverything: false } });
   } catch (err) {
     console.error("SWR fetch failed:", err.message, request.url);
+    if (isHtmlNavigation(request)) return restartingResponse();
     return new Response("Origin fetch failed", { status: 502 });
+  }
+
+  // The origin is restarting or down and nothing is cached here: reload
+  // in a few seconds rather than showing Cloudflare's error page.
+  if ([502, 503, 504, 520, 521, 522, 523, 524].includes(rawOriginRes.status) &&
+      isHtmlNavigation(request)) {
+    console.error("SWR origin error:", rawOriginRes.status, request.url);
+    return restartingResponse();
   }
 
   console.log("SWR fetch:", request.url, "status:", rawOriginRes.status,
@@ -329,10 +371,16 @@ function resolveEdgeCacheControl({ sMaxage, staleWhileRevalidate }) {
     return { value: "immutable", staleAt };
   }
 
-  // Keep response in CF cache long enough for SWR to work. Use 10x
-  // sMaxage as retention — long enough to serve stale while revalidating,
-  // short enough that stuck entries self-heal.
-  const cacheSeconds = sMaxage * 10;
+  // Keep the copy for as long as the origin allows serving it stale
+  // (s-maxage + stale-while-revalidate), at least 10x s-maxage and at most
+  // a week. Revalidation still starts on the first request after staleAt;
+  // the long retention means a cached copy keeps answering while the origin
+  // restarts (deploys) instead of the page falling out after 10x s-maxage
+  // (200s for the 20s feeds) and turning into a 504.
+  const cacheSeconds = Math.min(
+    Math.max(sMaxage * 10, sMaxage + (staleWhileRevalidate || 0)),
+    MAX_RETENTION_SECONDS,
+  );
   return {
     value: `max-age=${cacheSeconds}`,
     staleAt
