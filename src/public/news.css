@@ -819,12 +819,13 @@ body.kiwi-logged-in .like-count {
     width: 100% !important;
   }
   .comment-input-desktop-ssr { display: none !important; }
-  /* Reserve space for comment input React mount to avoid jump. 103px is
-     the mobile composer CommentInput.jsx renders: 1rem margins around a
-     54px row (32px avatar + 10px padding + border) and 10px below it. */
+  /* Reserve space for comment input React mount to avoid jump. 123px is
+     what the mobile composer from CommentInput.jsx measures once mounted;
+     flow-root keeps its margins inside the host so the reserved height is
+     the height. */
   .comment-input-host { 
-    display: block; 
-    min-height: 103px;
+    display: flow-root; 
+    min-height: 123px;
     position: relative;
   }
   /* Strong gutters for content rows */
