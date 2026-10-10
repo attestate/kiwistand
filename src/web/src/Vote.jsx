@@ -19,6 +19,7 @@ import {
   useIsMiniApp,
 } from "./client.mjs";
 import theme from "./theme.jsx";
+import { maybeShowUpvoteNewsletterPrompt } from "./UpvoteNewsletterPrompt.jsx";
 import { getLocalAccount, isIOSApp } from "./session.mjs";
 import {
   openDelegationModalForAction,
@@ -301,6 +302,7 @@ const Vote = (props) => {
       if (!isAnonMode) {
         posthog.capture("upvote", { variant: getVariant() });
       }
+      maybeShowUpvoteNewsletterPrompt(toast);
     } else if (response.status === "error") {
       if (
         response.details.includes(

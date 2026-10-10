@@ -102,6 +102,7 @@ import { getSummary } from "./summaries.mjs";
 import { hotFeed as hotFeedRSS, newFeed as newFeedRSS } from "./rss.mjs";
 import { readFile } from "fs/promises";
 import { resolveAnalyticsId, setAnalyticsIdCookie } from "./analytics-id.mjs";
+import { sourceTag, parseButtondownError } from "./newsletter.mjs";
 
 const app = express();
 
@@ -461,15 +462,16 @@ function newsletterFormPage(res, status, heading, message) {
 const NEWSLETTER_EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // Proxy endpoint for Buttondown newsletter subscriptions
-// Accepts: { email } and optionally { newsletter } as a tag (ignored if absent)
-// as JSON, or as a urlencoded form post (the feed card without JS), in which
+// Accepts: { email } and optionally { source } (where the sign-up came from,
+// forwarded to Buttondown as a tag if it's in SOURCE_TAGS) as JSON, or as a urlencoded form post (the feed card without JS), in which
 // case it answers with a small HTML page instead of JSON.
 app.post(
   "/api/v1/newsletter/subscribe",
   express.urlencoded({ extended: false, limit: "2kb" }),
   async (req, res) => {
   const isForm = !!req.is("application/x-www-form-urlencoded");
-  const { newsletter } = req.body || {};
+  // NOTE: `newsletter` is the field's old name.
+  const source = req.body?.source ?? req.body?.newsletter;
   const email =
     typeof req.body?.email === "string" ? req.body.email.trim() : req.body?.email;
 
@@ -478,7 +480,9 @@ app.post(
   // redirect).
   const backToLanding = isForm && req.body?.redirect === "/newsletter";
 
-  const fail = (status, error, details) =>
+  // NOTE: `code` lets clients tell failures apart in analytics; Buttondown's
+  // own error text is only logged, never sent to the client.
+  const fail = (status, error, details, code) =>
     backToLanding
       ? res.redirect(303, "/newsletter?error=1")
       : isForm
@@ -490,7 +494,9 @@ app.post(
             ? "Please enter a valid email address and try again."
             : "We couldn't sign you up right now. Please try again later.",
         )
-      : res.status(status).json(details ? { error, details } : { error });
+      : res
+          .status(status)
+          .json({ error, ...(code && { code }), ...(details && { details }) });
 
   const ok = (payload) =>
     backToLanding
@@ -505,21 +511,22 @@ app.post(
       : res.status(200).json(payload);
 
   if (!email) {
-    return fail(400, "Email is required");
+    return fail(400, "Email is required", null, "missing_email");
   }
   if (typeof email !== "string" || !NEWSLETTER_EMAIL_RE.test(email)) {
-    return fail(400, "A valid email is required");
+    return fail(400, "A valid email is required", null, "invalid_email");
   }
 
   // Use BUTTON_DOWN_API_KEY (required)
   const apiKey = process.env.BUTTON_DOWN_API_KEY;
   if (!apiKey) {
     log("Buttondown API key missing: set env BUTTON_DOWN_API_KEY");
-    return fail(500, "Server not configured for newsletter");
+    return fail(500, "Server not configured for newsletter", null, "not_configured");
   }
 
-  try {
-    const response = await fetch("https://api.buttondown.email/v1/subscribers", {
+  const tag = sourceTag(source);
+  const subscribe = (tags) =>
+    fetch("https://api.buttondown.email/v1/subscribers", {
       method: "POST",
       headers: {
         Authorization: `Token ${apiKey}`,
@@ -527,36 +534,57 @@ app.post(
         "User-Agent": "KiwiNews/1.0",
       },
       body: JSON.stringify(
-        newsletter && typeof newsletter === "string" && newsletter.trim()
-          ? { email_address: email, tags: [newsletter.trim()] }
-          : { email_address: email }
+        tags ? { email_address: email, tags } : { email_address: email },
       ),
     });
+
+  try {
+    let response = await subscribe(tag ? [tag] : null);
+    let errorText = response.ok ? "" : await response.text();
+    let parsed = response.ok
+      ? null
+      : parseButtondownError(response.status, errorText);
+
+    // NOTE: If Buttondown refused the request for another reason while we sent
+    // a tag, try once more without it so a tag problem never costs a sign-up.
+    if (
+      tag &&
+      parsed &&
+      !parsed.alreadySubscribed &&
+      response.status >= 400 &&
+      response.status < 500
+    ) {
+      log(
+        `Buttondown rejected subscription with tag "${tag}": ${response.status} - ${errorText}; retrying without tag`,
+      );
+      response = await subscribe(null);
+      errorText = response.ok ? "" : await response.text();
+      parsed = response.ok
+        ? null
+        : parseButtondownError(response.status, errorText);
+    }
 
     if (response.ok) {
       const data = await response.json().catch(() => ({}));
       return ok({ status: "subscribed", data });
     }
 
-    // Handle common "already subscribed" scenarios gracefully
-    const errorText = await response.text();
-    const lower = (errorText || "").toLowerCase();
-    if (
-      response.status === 400 ||
-      response.status === 409 ||
-      lower.includes("already") ||
-      lower.includes("exists")
-    ) {
+    if (parsed.alreadySubscribed) {
       // Treat as idempotent success so UI can continue smoothly
-      log(`Buttondown already-subscribed case for ${email}: ${response.status}`);
+      log(`Buttondown already-subscribed case: ${response.status} ${parsed.code}`);
       return ok({ status: "already_subscribed" });
     }
 
-    log(`Buttondown subscription failed: ${response.status} - ${errorText}`);
-    return fail(response.status, "Newsletter subscription failed", errorText);
+    log(
+      `Buttondown subscription failed: ${response.status} - ${parsed.code} ${parsed.detail}`,
+    );
+    if (response.status >= 400 && response.status < 500) {
+      return fail(400, "Could not subscribe this email address", null, "rejected");
+    }
+    return fail(502, "Newsletter subscription failed", null, "upstream_error");
   } catch (error) {
     log(`Newsletter subscription error: ${error.message}`);
-    return fail(500, "Failed to subscribe to newsletter", error.message);
+    return fail(500, "Failed to subscribe to newsletter", null, "network_error");
   }
   },
 );

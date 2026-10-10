@@ -800,7 +800,11 @@ async function addNewsletterFeedCard() {
     }
     createRoot(elem).render(
       <StrictMode>
-        <NewsletterFeedCard source={elem.dataset.source || "feed_card"} />
+        <NewsletterFeedCard
+          source={elem.dataset.source || "feed_card"}
+          headline={elem.dataset.headline}
+          copy={elem.dataset.copy}
+        />
       </StrictMode>,
     );
   });
