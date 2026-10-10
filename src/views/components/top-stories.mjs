@@ -79,8 +79,11 @@ function TopStoryCard(story) {
               src="${image}"
               alt=""
               loading="lazy"
-              onerror="this.parentElement.style.display='none'"
+              onerror="this.style.display='none';this.nextElementSibling.style.display='';this.parentElement.classList.add('top-story-no-image')"
             />
+            <span class="top-story-domain-large" style="display:none"
+              >${domain}</span
+            >
           </div>`
         : html`<div class="top-story-image top-story-no-image">
             <span class="top-story-domain-large">${domain}</span>
