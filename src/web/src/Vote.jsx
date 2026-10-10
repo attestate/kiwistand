@@ -64,7 +64,7 @@ const queryClient = new QueryClient();
 const Container = (props) => {
   return (
     <QueryClientProvider client={queryClient}>
-      <WagmiProvider config={client}>
+      <WagmiProvider config={client} reconnectOnMount={false}>
         <RainbowKitProvider chains={chains}>
           <Vote {...props} />
         </RainbowKitProvider>

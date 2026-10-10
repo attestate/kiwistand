@@ -10,7 +10,7 @@ const queryClient = new QueryClient();
 const ProfileWithConfig = () => {
   return (
     <QueryClientProvider client={queryClient}>
-      <WagmiProvider config={client}>
+      <WagmiProvider config={client} reconnectOnMount={false}>
         <RainbowKitProvider chains={chains}>
           <ProfileDisplay />
         </RainbowKitProvider>
