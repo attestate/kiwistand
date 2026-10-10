@@ -167,29 +167,56 @@ function truncate(text, fits) {
   return `${chars.join("").trimEnd()}…`;
 }
 
-function headline(story) {
-  const title = String(story.title || "").trim();
-  const domain = domainOf(story.href);
-  return domain ? `${title} - ${domain}` : title;
+function capitalize(text) {
+  return text ? text[0].toUpperCase() + text.slice(1) : text;
+}
+
+// "via @handle" for posts on X, "via example.com" for links, nothing for
+// text posts.
+export function sourceOf(href) {
+  const domain = domainOf(href);
+  if (!domain) return "";
+  if (/^(x|twitter)\.com$/.test(domain)) {
+    const handle = new URL(href).pathname.split("/")[1];
+    if (handle && /^\w{1,15}$/.test(handle) && handle !== "i") {
+      return `via @${handle}`;
+    }
+  }
+  return `via ${domain}`;
+}
+
+// First sentence of the story's AI summary, as a hook under the title.
+export function hookOf(summary, max = 220) {
+  if (!summary) return "";
+  const flat = String(summary).replace(/\s+/g, " ").trim();
+  const first = flat.match(/^.+?[.!?](?=\s|$)/)?.[0] || flat;
+  return first.length > max ? "" : first;
+}
+
+// Title, an optional hook and the source; drops the hook first and then
+// shortens the title until the post fits.
+function compose(story, fits) {
+  const title = capitalize(String(story.title || "").trim());
+  const hook = hookOf(story.summary);
+  const source = sourceOf(story.href);
+  const join = (t, h) => [t, h, source].filter(Boolean).join("\n\n");
+  if (hook && fits(join(title, hook))) return join(title, hook);
+  return join(truncate(title, (t) => fits(join(t, ""))), "");
 }
 
 export function formatForX(story, url = storyUrl(story)) {
   // NOTE: Some characters (CJK, emoji) count double on X, so we leave room.
   const budget = X_MAX_CHARS - X_URL_CHARS - 2 - 10;
-  const head = truncate(headline(story), (s) => [...s].length <= budget);
-  return `${head}\n\n${url}`;
+  return `${compose(story, (s) => [...s].length <= budget)}\n\n${url}`;
 }
 
 export function formatForFarcaster(story, url = storyUrl(story)) {
-  const text = truncate(
-    headline(story),
-    (s) => Buffer.byteLength(s, "utf8") <= FC_MAX_BYTES,
-  );
+  const text = compose(story, (s) => Buffer.byteLength(s, "utf8") <= FC_MAX_BYTES);
   return { text, embeds: [url] };
 }
 
 export function formatForTelegram(story, url = storyUrl(story)) {
-  return `${headline(story)}\n\n${url}`;
+  return `${compose(story, () => true)}\n\n${url}`;
 }
 
 // --- Senders --------------------------------------------------------------
@@ -356,6 +383,18 @@ export async function sendToTelegram(
   }
 }
 
+// Adds the stored AI summary (already checked by isSafeSummary) so posts
+// can use its first sentence. Posting works the same without one.
+export async function withSummary(story) {
+  if (story.summary !== undefined) return story;
+  try {
+    const { getSummary } = await import("./summaries.mjs");
+    return { ...story, summary: getSummary(story.index) };
+  } catch (err) {
+    return { ...story, summary: null };
+  }
+}
+
 export function preview(channel, story, url = storyUrl(story)) {
   if (channel === "x") return { text: formatForX(story, url) };
   if (channel === "farcaster") return formatForFarcaster(story, url);
@@ -365,7 +404,7 @@ export function preview(channel, story, url = storyUrl(story)) {
 
 export async function sendStory(channel, story, options = {}) {
   const url = options.url || storyUrl(story);
-  const post = preview(channel, story, url);
+  const post = preview(channel, await withSummary(story), url);
   if (channel === "x") return sendTweet(post.text, options);
   if (channel === "farcaster") return sendCast(post.text, post.embeds, options);
   return sendToTelegram(post.text, options);

@@ -85,29 +85,57 @@ test("status lines name missing vars but never values", (t) => {
 });
 
 test("formats posts per channel", (t) => {
-  const s = { index: "abc", title: "Hello, World!", href: "https://www.example.com/a" };
+  const s = { index: "abc", title: "hello, World!", href: "https://www.example.com/a" };
   const url = social.storyUrl(s);
-  t.is(url, "https://news.kiwistand.com/stories/Hello-World?index=0xabc");
-  t.is(social.formatForX(s), `Hello, World! - example.com\n\n${url}`);
+  t.is(url, "https://news.kiwistand.com/stories/hello-World?index=0xabc");
+  t.is(social.formatForX(s), `Hello, World!\n\nvia example.com\n\n${url}`);
   t.deepEqual(social.formatForFarcaster(s), {
-    text: "Hello, World! - example.com",
+    text: "Hello, World!\n\nvia example.com",
     embeds: [url],
   });
-  t.is(social.formatForTelegram(s), `Hello, World! - example.com\n\n${url}`);
-  // NOTE: Text posts have no domain.
+  t.is(social.formatForTelegram(s), `Hello, World!\n\nvia example.com\n\n${url}`);
+  // NOTE: Text posts have no source.
   const text = { index: "def", title: "Ask Kiwi", href: "data:text/plain,hi" };
-  t.true(social.formatForX(text).startsWith("Ask Kiwi\n\n"));
+  t.true(social.formatForX(text).startsWith("Ask Kiwi\n\nhttps://"));
+});
+
+test("posts name the X handle and lead with the summary's first sentence", (t) => {
+  const s = {
+    index: "abc",
+    title: "how tampered Ledger devices steal seeds",
+    href: "https://x.com/joegrand/status/123",
+    summary: "A counterfeit Ledger Nano X hides an implant that reads seed words. It sends them out over 4G.",
+  };
+  t.is(social.sourceOf(s.href), "via @joegrand");
+  t.is(social.sourceOf("https://x.com/i/web/status/1"), "via x.com");
+  t.is(
+    social.formatForFarcaster(s).text,
+    "How tampered Ledger devices steal seeds\n\nA counterfeit Ledger Nano X hides an implant that reads seed words.\n\nvia @joegrand",
+  );
+});
+
+test("drops the hook before shortening the title", (t) => {
+  const s = {
+    index: "abc",
+    title: "t".repeat(200),
+    href: "https://a.com/x",
+    summary: `${"s".repeat(150)}.`,
+  };
+  const tweet = social.formatForX(s, "https://k.com/x");
+  t.false(tweet.includes("sss"));
+  t.true(tweet.startsWith(`T${"t".repeat(199)}`));
+  t.is(social.hookOf("x".repeat(300) + "."), "");
 });
 
 test("truncates long titles to the channel limits", (t) => {
   const long = { index: "abc", title: "ü".repeat(400), href: "https://a.com" };
   const tweet = social.formatForX(long, "https://k.com/x");
-  const [head] = tweet.split("\n\n");
+  const head = tweet.slice(0, tweet.lastIndexOf("\n\n"));
   t.true([...head].length <= 280 - 23 - 2);
-  t.true(head.endsWith("…"));
+  t.true(head.includes("…"));
   const { text } = social.formatForFarcaster(long);
   t.true(Buffer.byteLength(text) <= 320);
-  t.true(text.endsWith("…"));
+  t.true(text.includes("…"));
 });
 
 test("sendTweet posts to /2/tweets with OAuth 1.0a", async (t) => {

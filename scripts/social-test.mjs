@@ -22,6 +22,7 @@ import {
   statusLines,
   missingEnv,
   preview,
+  withSummary,
   postStory,
   minUpvotes,
   loadState,
@@ -87,8 +88,9 @@ if (!story) {
 const url = storyUrl(story);
 console.log(`\nTop story: ${story.title} (${story.upvotes} upvotes)\n${url}`);
 
+const enriched = await withSummary(story);
 for (const name of channel ? [channel] : CHANNELS) {
-  const post = preview(name, story, url);
+  const post = preview(name, enriched, url);
   const posted = wasPosted(state, story, name) ? " [already posted]" : "";
   console.log(`\n--- ${name}${posted} ---\n${post.text}`);
   if (post.embeds) console.log(`embeds: ${post.embeds.join(", ")}`);
