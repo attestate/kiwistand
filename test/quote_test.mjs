@@ -1,6 +1,6 @@
 import test from "ava";
 
-import { splitQuote } from "../src/quote.mjs";
+import { splitQuote, isDeletedTweet, tweetHandle } from "../src/quote.mjs";
 
 test("a quote tweet loses the bare quoted URL and keeps the quote", (t) => {
   const description =
@@ -25,4 +25,15 @@ test("other links stay, and the quote's own trailing post link goes", (t) => {
 test("a tweet that isn't a quote is left alone", (t) => {
   const description = "Read this https://x.com/a/status/1";
   t.deepEqual(splitQuote(description), { text: description, quote: null });
+});
+
+test("a deleted post is recognized from fxtwitter's text", (t) => {
+  t.true(isDeletedTweet({ ogDescription: "Sorry, that post doesn't exist :(" }));
+  t.false(isDeletedTweet({ ogDescription: "gm" }));
+  t.false(isDeletedTweet(undefined));
+});
+
+test("the handle comes from the story title", (t) => {
+  t.is(tweetHandle("@DeanEigenmann: Justin Drake calls for bunker mode"), "@DeanEigenmann");
+  t.is(tweetHandle("X-Ray: tool to track your Morpho exposure"), null);
 });
