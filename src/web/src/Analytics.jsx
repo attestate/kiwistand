@@ -168,7 +168,7 @@ const queryClient = new QueryClient();
 const Analytics = (props) => {
   return (
     <QueryClientProvider client={queryClient}>
-      <WagmiProvider config={client}>
+      <WagmiProvider config={client} reconnectOnMount={false}>
         <RainbowKitProvider chains={chains}>
           <AnalyticsInner {...props} />
         </RainbowKitProvider>

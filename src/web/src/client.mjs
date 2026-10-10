@@ -77,6 +77,19 @@ const projectId = "cd46d2fcf6d171fb7c017129868fa211";
 const appName = "Kiwi News";
 
 
+// NOTE: wagmi calls each connector's setup() as soon as the config is
+// created, and the WalletConnect, MetaMask and Coinbase connectors fetch
+// their SDKs there (~860KB, over a second of main-thread time on a phone)
+// on every page, for every visitor. setup() only lets a wallet connect
+// itself without user interaction; connect() and reconnect() load the SDK
+// when it's actually needed. Injected (browser extension) connectors are
+// cheap and keep it.
+const deferSetup = (connectorFn) => (config) => {
+  const connector = connectorFn(config);
+  if (connector.type === "injected") return connector;
+  return { ...connector, setup: undefined };
+};
+
 // Create wagmi config based on environment
 let client;
 
@@ -110,7 +123,7 @@ if (isAnonMode) {
       appName,
       projectId,
     }
-  );
+  ).map(deferSetup);
 
   client = createConfig({
     chains,
@@ -141,7 +154,7 @@ if (isAnonMode) {
       appName,
       projectId,
     }
-  );
+  ).map(deferSetup);
 
   // Add Farcaster mini app connector to the connectors array
   const connectors = [...walletConnectors, farcasterMiniApp()];
