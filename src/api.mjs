@@ -24,6 +24,7 @@ import * as best from "./views/best.mjs";
 let generatePreview = null;
 import { getSubmission, isReactionComment } from "./cache.mjs";
 import { triggerUpvoteNotification } from "./subscriptions.mjs";
+import * as indexnow from "./indexnow.mjs";
 
 // Global error handlers to catch crashes and log them properly
 process.on("uncaughtException", (err) => {
@@ -278,6 +279,16 @@ export function handleMessage(
           log(`Failed to trigger upvote notification: ${err}`);
         });
       });
+
+      // NOTE: Only new submissions have a row with this index; upvotes don't.
+      if (indexnow.key()) {
+        setImmediate(() => {
+          try {
+            const { title, href, identity } = getSubmission(`0x${index}`);
+            indexnow.queue({ index, title, href, identity });
+          } catch (err) {}
+        });
+      }
 
     }
     

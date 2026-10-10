@@ -104,6 +104,7 @@ import {
 import { sendBroadcastNotification } from "./onesignal.mjs";
 import { extractArticleCached } from "./lib/listen/extract.mjs";
 import { hotFeed as hotFeedRSS, newFeed as newFeedRSS } from "./rss.mjs";
+import * as indexnow from "./indexnow.mjs";
 import { readFile } from "fs/promises";
 
 const app = express();
@@ -268,6 +269,8 @@ app.use(
     },
   }),
 );
+
+app.get(/^\/[0-9a-f]{8,128}\.txt$/i, indexnow.serveKey);
 
 // NOTE: The primary process regenerates the sitemaps hourly (launch.mjs). sirv
 // indexes src/public once at startup (including each file's Content-Length),
