@@ -1,10 +1,11 @@
 import test from "ava";
+import { existsSync, readFileSync } from "fs";
 import { env } from "process";
 
 import * as indexnow from "../src/indexnow.mjs";
 import { buildMonthlySitemap } from "../src/sitemap.mjs";
 
-const KEY = "0123456789abcdef0123456789abcdef";
+const KEY = indexnow.KEY;
 const story = (index, title) => ({
   index,
   title,
@@ -22,11 +23,13 @@ test.beforeEach(() => {
     return { ok: true, status: 200 };
   };
 });
+const nodeEnv = env.NODE_ENV;
 test.afterEach.always(async () => {
-  env.INDEXNOW_KEY = KEY;
+  env.NODE_ENV = "production";
   await indexnow.flush(async () => []);
   globalThis.fetch = realFetch;
-  delete env.INDEXNOW_KEY;
+  if (nodeEnv === undefined) delete env.NODE_ENV;
+  else env.NODE_ENV = nodeEnv;
 });
 
 test("storyUrl matches the sitemap's story URLs", (t) => {
@@ -39,10 +42,10 @@ test("storyUrl matches the sitemap's story URLs", (t) => {
   t.true(buildMonthlySitemap([entry]).includes(`<loc>${url}</loc>`));
 });
 
-test("is a no-op without a valid key", async (t) => {
-  for (const value of [undefined, "", "abc", "not-hex-not-hex", "g".repeat(16)]) {
-    if (value === undefined) delete env.INDEXNOW_KEY;
-    else env.INDEXNOW_KEY = value;
+test("is a no-op outside production", async (t) => {
+  for (const value of [undefined, "development", "staging"]) {
+    if (value === undefined) delete env.NODE_ENV;
+    else env.NODE_ENV = value;
     t.is(indexnow.key(), null);
     indexnow.queue(story("01", "A story"));
     await indexnow.flush(keep);
@@ -51,7 +54,7 @@ test("is a no-op without a valid key", async (t) => {
 });
 
 test("batches queued stories into one request", async (t) => {
-  env.INDEXNOW_KEY = KEY;
+  env.NODE_ENV = "production";
   indexnow.queue(story("01", "First story"));
   indexnow.queue(story("02", "Second story"));
   await indexnow.flush(keep);
@@ -76,7 +79,7 @@ test("batches queued stories into one request", async (t) => {
 });
 
 test("skips stories the filter hides and doesn't send empty batches", async (t) => {
-  env.INDEXNOW_KEY = KEY;
+  env.NODE_ENV = "production";
   indexnow.queue(story("04", "Hidden"));
   indexnow.queue(story("05", "Shown"));
   await indexnow.flush(async (stories) =>
@@ -92,7 +95,7 @@ test("skips stories the filter hides and doesn't send empty batches", async (t) 
 });
 
 test("never throws when the request fails", async (t) => {
-  env.INDEXNOW_KEY = KEY;
+  env.NODE_ENV = "production";
   globalThis.fetch = async () => {
     throw new Error("network down");
   };
@@ -104,24 +107,9 @@ test("never throws when the request fails", async (t) => {
   await t.notThrowsAsync(indexnow.flush(keep));
 });
 
-function serve(path) {
-  const res = { body: undefined, contentType: undefined };
-  res.type = (value) => ((res.contentType = value), res);
-  res.send = (value) => ((res.body = value), res);
-  let nextCalled = false;
-  indexnow.serveKey({ path }, res, () => (nextCalled = true));
-  return { ...res, nextCalled };
-}
-
-test("serves the key file only for the configured key", (t) => {
-  env.INDEXNOW_KEY = KEY;
-  const hit = serve(`/${KEY}.txt`);
-  t.false(hit.nextCalled);
-  t.is(hit.contentType, "text/plain");
-  t.is(hit.body, KEY);
-
-  t.true(serve("/deadbeefdeadbeef.txt").nextCalled);
-
-  delete env.INDEXNOW_KEY;
-  t.true(serve(`/${KEY}.txt`).nextCalled);
+test("the key file in src/public contains the key", (t) => {
+  t.regex(KEY, /^[0-9a-f]{32}$/);
+  const file = `src/public/${KEY}.txt`;
+  t.true(existsSync(file));
+  t.is(readFileSync(file, "utf8").trim(), KEY);
 });

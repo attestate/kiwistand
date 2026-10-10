@@ -1,10 +1,10 @@
 // @format
 //
 // Tells IndexNow (Bing, Yandex, Seznam, Naver, ...) about new stories right
-// after this node accepts them. It only runs when INDEXNOW_KEY is set, which
-// only the production .env does, so dev nodes and other operators' nodes never
-// ping. api.mjs queues submissions accepted through this node's own API, never
-// messages synced from peers. https://www.indexnow.org/documentation
+// after this node accepts them. It only runs with NODE_ENV=production, so dev
+// nodes don't submit URLs of local test stories. api.mjs queues submissions
+// accepted through this node's own API, never messages synced from peers.
+// https://www.indexnow.org/documentation
 import { env } from "process";
 
 import log from "./logger.mjs";
@@ -19,9 +19,12 @@ const FLUSH_DELAY = 60 * 1000;
 let pending = [];
 let timer;
 
+// NOTE: Not a secret: IndexNow verifies that we own the host by fetching
+// src/public/<KEY>.txt, which has to contain the key.
+export const KEY = "b9674842be5435a92ee561b3b4db5b59";
+
 export function key() {
-  const value = env.INDEXNOW_KEY;
-  return value && /^[0-9a-f]{8,128}$/i.test(value) ? value : null;
+  return env.NODE_ENV === "production" ? KEY : null;
 }
 
 // NOTE: Must match the story URLs in sitemap.mjs.
@@ -74,11 +77,4 @@ export async function flush(filter = visible) {
   } catch (err) {
     log(`indexnow: submission failed: ${err.message}`);
   }
-}
-
-// Serves the key file IndexNow fetches to verify we own the host.
-export function serveKey(req, res, next) {
-  const indexNowKey = key();
-  if (!indexNowKey || req.path !== `/${indexNowKey}.txt`) return next();
-  res.type("text/plain").send(indexNowKey);
 }
