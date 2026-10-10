@@ -1,16 +1,19 @@
 #!/usr/bin/env node
 // @format
 //
-// Checks the social posting setup (X, Farcaster, Telegram) from the server.
+// Checks the social posting setup (X, Farcaster, Telegram) and the daily
+// push notifications (neynar: Farcaster mini app, onesignal: iOS app) from
+// the server.
 //
 //   node scripts/social-test.mjs
 //     Shows which channels are enabled. Posts nothing.
 //   node scripts/social-test.mjs --dry-run
-//     Also prints what would be posted for today's top story, per channel.
-//   node scripts/social-test.mjs --channel x|farcaster|telegram --send
-//     Sends ONE post of today's top story (not yet posted there) to that
-//     channel. It is recorded in
-//     the dedupe state, so the daily automatic post won't repeat it.
+//     Also prints what would be posted/pushed for today's top story, per
+//     channel.
+//   node scripts/social-test.mjs --channel x|farcaster|telegram|neynar|onesignal --send
+//     Sends ONE post (or push) of today's top story (not yet sent there) to
+//     that channel. It is recorded in the dedupe state, so neither the daily
+//     job nor the manual push route will repeat it.
 //
 // The top story comes from the public API (KIWI_API_URL, defaults to
 // https://news.kiwistand.com), so this works next to the running node.
@@ -18,8 +21,11 @@ import "dotenv/config";
 import { env, argv, exit } from "process";
 
 import {
-  CHANNELS,
+  ALL_CHANNELS as CHANNELS,
   statusLines,
+  autopostEnabled,
+  dailyPushEnabled,
+  isPush,
   missingEnv,
   preview,
   withSummary,
@@ -45,11 +51,14 @@ if (channel && !CHANNELS.includes(channel)) {
   exit(1);
 }
 if (send && !channel) {
-  console.error("--send needs --channel x|farcaster|telegram");
+  console.error(`--send needs --channel ${CHANNELS.join("|")}`);
   exit(1);
 }
 
 for (const line of statusLines()) console.log(line);
+console.log(
+  `daily social posts: ${autopostEnabled() ? "on" : "off"}, daily push: ${dailyPushEnabled() ? "on" : "off (DAILY_PUSH=false, or not production)"}`,
+);
 
 if (!dryRun && !send) {
   console.log(
@@ -91,7 +100,13 @@ console.log(`\nTop story: ${story.title} (${story.upvotes} upvotes)\n${url}`);
 const enriched = await withSummary(story);
 for (const name of channel ? [channel] : CHANNELS) {
   const post = preview(name, enriched, url);
-  const posted = wasPosted(state, story, name) ? " [already posted]" : "";
+  const posted = wasPosted(state, story, name) ? " [already sent]" : "";
+  if (isPush(name)) {
+    console.log(
+      `\n--- ${name} (push)${posted} ---\ntitle: ${post.title}\nbody: ${post.body}\ntarget: ${post.url}`,
+    );
+    continue;
+  }
   console.log(`\n--- ${name}${posted} ---\n${post.text}`);
   if (post.embeds) console.log(`embeds: ${post.embeds.join(", ")}`);
 }
