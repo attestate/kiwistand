@@ -1,123 +1,144 @@
-# Kiwistand
+# Kiwi News
 
-![Node.js badge](https://github.com/attestate/kiwistand/actions/workflows/node.js.yml/badge.svg)
+[![Node.js CI](https://github.com/attestate/kiwistand/actions/workflows/node.js.yml/badge.svg)](https://github.com/attestate/kiwistand/actions/workflows/node.js.yml)
 
-Kiwistand is a P2P node client for a web3-friendly Hacker News that nobody controls but everybody co-owns.
+This repository holds the code behind [Kiwi News](https://news.kiwistand.com), a community-curated news site for crypto, Ethereum and builder-focused tech links, similar to Hacker News.
 
-<img width="680" alt="Screenshot 2023-08-10 at 15 53 46" src="https://github.com/attestate/kiwistand/assets/2758453/d741ca3b-67a2-4356-822c-0c32df0dadc3">
+Every submission, upvote and comment on Kiwi News is a message signed with an Ethereum key. Nodes exchange these messages over an open peer-to-peer protocol, so all data is public and anyone can verify it. Anyone can run a node or build their own client on top of the same data. The package and protocol are called "kiwistand"; the site is called "Kiwi News".
 
-Kiwi stores links and upvotes on the protocol level. Thanks to that, users can create their own UIs and permissionlessly create apps on top of it (see: [awesome-kiwi for the list of apps and contributors](https://github.com/attestate/awesome-kiwinews)).
+## Using Kiwi News
 
-You can learn the story behind the project in this [4 min video by Tim Daubenschutz](https://www.youtube.com/watch?v=WujtU15yAyk).
+- Website: https://news.kiwistand.com ([new](https://news.kiwistand.com/new), [best](https://news.kiwistand.com/best), [guidelines](https://news.kiwistand.com/guidelines))
+- iOS app (beta, via TestFlight): https://testflight.apple.com/join/6jyvYECH
+- Newsletter: [Kiwi News Weekly](https://news.kiwistand.com/newsletter), a Sunday email with the week's most-upvoted stories ([past issues](https://buttondown.com/kiwi-news-weekly/archive/))
+- Weekly archive: https://news.kiwistand.com/weekly
+- RSS: [hot](https://news.kiwistand.com/feed.xml) and [new](https://news.kiwistand.com/new.xml)
+- Telegram: [community chat](https://t.me/+QGAviVT67m00Njc8), [developer chat](https://t.me/kiwinewsdevs)
+- X: [@KiwiNewsHQ](https://x.com/KiwiNewsHQ)
 
-## Requirements
+To post, upvote or comment you connect an Ethereum wallet. You can add an application key so the site signs on your behalf without a wallet prompt for every action (see [Protocol](#protocol)).
 
-#### Basic requirements:
+## Using the data
 
-- node >= 19 (best to check package.json value though)
-- RPC nodes on Ethereum Mainnet & Optimism
+All read endpoints are public and need no authentication. CORS is open (`Access-Control-Allow-Origin: *`), so browser apps can call them directly.
 
-It's highly likely that you'll need either a paid Alchemy account to make the node work because it is downloading a lot of block data. You might also try rate-limiting the speed at which the node tries to download event logs.
+- [`/llms.txt`](https://news.kiwistand.com/llms.txt): the main reference for developers and AI agents. It lists every endpoint, the response formats, how to cite Kiwi News, and how to sign and submit messages.
+- `GET /api/v1/feeds/hot`, `/api/v1/feeds/new`, `/api/v1/feeds/best?period=week`: feeds as JSON (`?page=0` paginates)
+- `GET /api/v1/stories?index=0x…`: one story with its comments
+- `GET /api/v1/profile/<address>`: ENS name, avatar and social links of an address
+- `GET /stories/context?index=0x…`: one story as plain-text Markdown (title, source URL, extracted article text, comments), meant as LLM context
+- Writes go to the node API on port 8443 (`POST /api/v1/messages`, `POST /api/v1/list`, `GET /api/v1/delegations`); see llms.txt for the EIP-712 message format.
 
-There's an option where you can just download one of the latest database backups manually and rename it to the right directory. For that visit [attestate/kiwinews-backups](https://github.com/attestate/kiwinews-backups) and please reach out if you need an up-to-date backup.
-
-Please reach out to us if you don't have access to an Alchemy account and we'll figure something out!
-
-## Getting started
-
-If you want to deploy Kiwi News with Terraform, check out [this repo](https://github.com/x4901/kiwi-news-deploy).
+Example:
 
 ```bash
-git clone git@github.com:attestate/kiwistand.git
+curl https://news.kiwistand.com/api/v1/feeds/hot
+```
+
+There is also an HTTP API reference at https://attestate.com/kiwistand/main/.
+
+### MCP client
+
+[`kiwimcp-client/`](kiwimcp-client/) is a Model Context Protocol server (published on npm as `kiwimcp-client`) that lets Claude Code and other MCP clients search Kiwi News, read feeds and stories with comments, and look up profiles and karma. Setup instructions are in [kiwimcp-client/README.md](kiwimcp-client/README.md).
+
+## Running a node
+
+![Architecture of a Kiwi News node](architecture-mar-2026.svg)
+
+### Requirements
+
+- Node.js 22 (`engines` in package.json; CI runs on 22.x)
+- An Optimism RPC endpoint. The node crawls delegation events from the delegation contract on Optimism. Free tiers can run into rate limits; you can spread the load across several providers (see `OPTIMISM_CRAWLER_RPC_HOSTS` below).
+- An Ethereum mainnet RPC endpoint, used to resolve ENS names.
+
+### Setup
+
+```bash
+git clone https://github.com/attestate/kiwistand.git
+cd kiwistand
 cp .env-copy .env
+mkdir anon cache
 npm i
-# and then for the frontend
 cd src/web && npm i && cd ../..
-npm run dev:anon
-# might error when trying to create the data dir, that's a bug right now, just run it again
 ```
 
-To set up the Kiwi node correctly, make sure to generate a valid Alchemy or Infura key (ideally paid because we're going to make a lot of requests).
-In your `.env` file, replace the value of `OPTIMISM_RPC_HTTP_HOST` with your full Alchemy key "https://opt-mainnet.g.alchemy.com/v2/abcd". Then run the node using `npm run dev:anon`. Please also add a `RPC_HTTP_HOST`, we need it to resolve ENS names.
+Then edit `.env`. The variables you have to set:
 
-**NOTE:** The `dev:anon` npm script overwrites several environment variables. And so do other `dev:...` commands. This is done to test the software in different situations. E.g. `dev:bootstrap` is not connecting the node to the online p2p network, meaning that its data won't be shared with the Kiwi News mainnet. But e.g. `dev:anon` runs directly on mainnet and synchronizes the node.
+| Variable | Purpose |
+| --- | --- |
+| `OPTIMISM_RPC_HTTP_HOST` | Optimism RPC URL (for example an Alchemy or Infura URL including your key) |
+| `OPTIMISM_CRAWLER_RPC_HOSTS` | Optional: comma-separated Optimism RPCs for the delegation crawler. The first is polled for new blocks; `eth_getLogs` rotates through all of them. |
+| `RPC_HTTP_HOST` | Ethereum mainnet RPC URL, for ENS |
+| `DATA_DIR`, `CACHE_DIR` | Where the message database (LMDB) and caches (SQLite and others) live; `anon` and `cache` by default |
 
-**NOTE2:** When the node is fully synchronized, it can take a while to load the feed pages like `/`, `/new` or `/best` when using e.g. `dev:anon`. This is because the server is caching all signature validations for the first time. To not have to wait for the server to cache all the signatures, you can also load e.g. `/welcome` or a page that doesn't require the database and hence doesn't need to validate signatures.
+The other values in `.env-copy` work as they are for local development. The social posting variables (X, Farcaster, Telegram) and Cloudflare keys are only needed on the production instance.
 
-**FINALLY:** If you don't use Alchemy or Infura and if your Ethereum RPC node is behind a custom reverse proxy with Authorization requirements, consider adding the @attestate/crawler RPC_API_KEY environment variable ([details](https://attestate.com/crawler/main/configuration.html#environment-variables)).
+### Scripts
 
-You can also watch the video explaining [how to get started editing the Kiwi News frontend](https://www.loom.com/share/e0e8866450d54c52b161e77907d1ccb9).
+The `dev:*` scripts and `watch` override some variables from `.env` to run the node in a particular mode, and start it together with the Vite dev server for `src/web`.
 
-## Syncing to the network
+| Script | What it does |
+| --- | --- |
+| `npm run dev:anon` | Joins the live network: binds `0.0.0.0`, peers with the public bootstrap node, uses `DATA_DIR=anon`. Site on port 4000, node API on 8443. |
+| `npm run watch` | Same settings as `dev:anon`, restarted by nodemon when `src/views` or `src/http.mjs` change. |
+| `npm run dev:bootstrap` | Runs a local bootstrap node (`IS_BOOTSTRAP_NODE=true`, binds `127.0.0.1`, `DATA_DIR=bootstrap`) that does not connect to the live network. Site on port 80. |
+| `npm run dev:anon:local` | Binds `127.0.0.1` and peers only with a local bootstrap node, so nothing reaches the live network. Uses `DATA_DIR=anonlocal`, site on port 4001. |
+| `npm run sync` | Crawls the delegation events from Optimism into `DATA_DIR`. It keeps polling for new blocks; stop it once it repeats the same block range. |
+| `npm run reconcile` | Syncs with the chain and the peer-to-peer network with the website disabled (`NODE_ENV=reconcile`). |
+| `npm run build` | Builds the production frontend bundle into `src/public`. |
 
-Kiwistand isn't venture capital funded and so its algorithm is a bit rough around the edges. Please don't expect a super polished piece of software! We're working with constraints. That said, despite all of the challenges, we're trying to keep the set reconciliation algorithm as best in shape as we can! If you're running into issues, please make sure to reach out to Tim on Telegram.
+To try submitting stories, use `dev:bootstrap` together with `dev:anon:local` instead of the live network.
 
-Now, for actually syncing the node, please follow the guide in `Contributing.md`!
+### Syncing a new node
 
-## Debugging
+1. `npm run sync` to crawl the delegation events from Optimism.
+2. `npm run reconcile` to download all messages from peers. It logs `Number of messages added: X` as it stores messages.
+3. `npm run dev:anon` (or `npm run watch`) to run the node with the website.
 
-Once you're up and running, you might want to submit new links to the network. However, we encourage you to NOT do that on the main net.
+The first page loads of `/`, `/new` and `/best` after a full sync can be slow, because the node verifies and caches every message signature once.
 
-Instead, if you must test submitting new links then run the node in bootstrap mode (no mainnet data) or in the "anon:local" mode that doesn't send data to the p2p network.
+[contributing.md](contributing.md) describes these steps in more detail.
+
+### Tests
 
 ```bash
-npm run dev:bootstrap
-
-# or
-
-npm run dev:anon:local
+npm run test:offline   # what CI runs; skips tests that call the live site
+npm test               # all tests, including the MCP client and compression tests against the live site
 ```
 
-## Testing
+### Deployment
 
-Run all tests:
-```bash
-npm test
-```
+[`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) runs the offline tests on every push to `main` and, when the `DEPLOY_ENABLED` repository variable is `"true"`, builds the frontend and rsyncs it to the production server, the same as `npm run deploy` does by hand.
 
-Run compression tests specifically:
-```bash
-npm run test:compression   # Test against 91.107.210.214
-```
+## Protocol
 
-For more information about compression testing, see [test/README-compression.md](test/README-compression.md).
+- **Signed messages.** Stories, upvotes and comments are [EIP-712](https://eips.ethereum.org/EIPS/eip-712) typed messages signed by an Ethereum key. A node checks the signature and the timestamp before storing a message.
+- **Identity and key delegation.** Any Ethereum address can sign messages for itself. An address can also authorize another key (for example an application key kept in the browser) through the delegation contract on Optimism; messages signed by that key are then attributed to the delegating address. The contract and SDK live in [attestate/delegator2](https://github.com/attestate/delegator2). Earlier versions required holding the Kiwi Pass NFT on Optimism to post; that requirement was removed in 0.12.0 (see [changelog.md](changelog.md)).
+- **Set reconciliation.** Each node stores all messages in a Merkle Patricia trie. Nodes connect over [libp2p](https://libp2p.io), gossip new messages and their trie roots, and when two roots differ they compare the tries level by level to find and exchange the missing messages.
+- **Versioning.** Breaking protocol changes bump the libp2p topic and protocol versions. Nodes on different versions do not sync, so all nodes need to upgrade together.
 
-## How does the protocol work
+More detail:
 
-- [Building decentralized social networks | Tim Daubenschütz at zusocial in Istanbul](https://www.youtube.com/watch?v=Rys5UEi2SWg)
+- [Protocol guide](docs/source/protocol-guide.rst): how set reconciliation with a Merkle Patricia trie works, step by step (its NFT section predates 0.12.0)
+- [Delegation](docs/source/delegation.rst): how application keys are authorized
+- Talk: [Building decentralized social networks](https://www.youtube.com/watch?v=Rys5UEi2SWg) (Tim Daubenschütz at zusocial, Istanbul)
+- Demos: [set reconciliation (40 s)](https://www.loom.com/share/abf43323b00547689bf11520f565f4bc), [algorithm explained (9 min)](https://www.loom.com/share/2a68f5e22d9843ab99edad2deaed9281)
 
-#### Demos:
+## Contributing
 
-- [Loom: Set Reconciliation demo (40 secs)](https://www.loom.com/share/abf43323b00547689bf11520f565f4bc)
-- [Loom: Set Reconciliation algorithm explained (9 mins)](https://www.loom.com/share/2a68f5e22d9843ab99edad2deaed9281)
-
-## Key features
-
-1. **Delegation-Based Access**: Users can act on their own behalf or through delegated addresses, enabling seamless interactions without repeated wallet confirmations.
-2. **Public Goods Infrastructure**: Data is shared across all nodes using a set reconciliation algorithm, preventing single-entity control.
-3. **Complete Open Source Package**: Kiwi News includes frontend, backend, and protocol code, all under GPL3.
-4. **Streamlined User Interaction**: Kiwi News supports key delegation, which allows automatic signing of user actions. This means users don't have to manually confirm each action via wallet connect or similar methods, making the user experience smoother.
-
-## API
-
-- [HTTP API](https://attestate.com/kiwistand/main/)
-
-## Node operators
-
-Since [https://news.kiwistand.com](https://news.kiwistand.com) is now running live as a p2p node, you're invited to run your own nodes and frontends.
-
-However, please consider joining a chat like the [attestate dev chat](https://t.me/kiwinewsdevs) to stay in touch for eventual upgrade announcements, as the protocol is far from being complete.
+- [contributing.md](contributing.md): setup and sync steps
+- [CONVENTIONS.md](CONVENTIONS.md): code style and architecture conventions
+- Issues and pull requests: https://github.com/attestate/kiwistand/issues
 
 ## Changelog
 
-See changelog.md file.
+Protocol and breaking changes are listed in [changelog.md](changelog.md).
 
 ## License
 
-GPL-3.0-only, see LICENSE file
+GPL-3.0-only, see [LICENSE](LICENSE). The MCP client in `kiwimcp-client/` is MIT-licensed according to its package.json.
 
-## Getting in Touch
+## Contact
 
-Kiwi Devs Telegram chat:
-
-- [Kiwi Devs Chat](https://t.me/kiwinewsdevs)
+- Developer chat on Telegram: https://t.me/kiwinewsdevs
+- GitHub issues: https://github.com/attestate/kiwistand/issues
