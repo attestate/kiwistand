@@ -4,6 +4,8 @@
 
 This repository holds the code behind [Kiwi News](https://news.kiwistand.com), a community-curated news site for crypto, Ethereum and builder-focused tech links, similar to Hacker News.
 
+<img width="680" alt="The Kiwi News front page in October 2026" src="docs/screenshot.png">
+
 Every submission, upvote and comment on Kiwi News is a message signed with an Ethereum key. Nodes exchange these messages over an open peer-to-peer protocol, so all data is public and anyone can verify it. Anyone can run a node or build their own client on top of the same data. The package and protocol are called "kiwistand"; the site is called "Kiwi News".
 
 ## Using Kiwi News
