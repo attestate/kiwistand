@@ -1180,6 +1180,73 @@ export function listSitemapEntries(month) {
   });
 }
 
+// The stories submitted in [start, end) with their upvotes, comments and
+// outbound clicks, ranked like the newsletter (src/digest.mjs): upvotes * 3 +
+// comments * 2 + clicks. The counts are correlated subqueries on indexed
+// columns (upvotes.href, comments.submission_id, fingerprints.url) and the
+// range uses idx_submissions_timestamp, so this only touches one week.
+export function getWeekStories(start, end, amount) {
+  const rows = db
+    .prepare(
+      `SELECT * FROM (
+         SELECT
+           s.*,
+           (SELECT COUNT(*) FROM upvotes u WHERE u.href = s.href) + 1 AS upvotes,
+           (SELECT COUNT(*) FROM comments c WHERE c.submission_id = s.id) AS comments,
+           (SELECT COUNT(DISTINCT f.hash) FROM fingerprints f WHERE f.url = s.href) AS clicks
+         FROM submissions s
+         WHERE s.timestamp >= ? AND s.timestamp < ?
+       )
+       ORDER BY upvotes * 3 + comments * 2 + clicks DESC, upvotes DESC, timestamp ASC
+       LIMIT ?`,
+    )
+    .all(start, end, amount);
+  return rows.map(({ id, ...row }) => ({ ...row, index: id.split("0x")[1] }));
+}
+
+// Timestamps of the last submission before `start` and the first one from
+// `end` on, to link a week to its non-empty neighbours.
+export function getNeighbourTimestamps(start, end) {
+  return db
+    .prepare(
+      `SELECT
+         (SELECT MAX(timestamp) FROM submissions WHERE timestamp < ?) AS previous,
+         (SELECT MIN(timestamp) FROM submissions WHERE timestamp >= ?) AS next`,
+    )
+    .get(start, end);
+}
+
+// One row per week (Monday to Sunday, UTC) with submissions, newest first.
+// The unix epoch was a Thursday, so shifting by 3 days aligns the buckets to
+// Mondays. With `activity`, also the latest submission, upvote or comment on
+// each week's stories (for the sitemap's lastmod).
+const MONDAY_OFFSET = 3 * 24 * 60 * 60;
+const WEEK_SECS = 7 * 24 * 60 * 60;
+export function listWeeks({ activity = false } = {}) {
+  const latest = activity
+    ? `MAX(
+         s.timestamp,
+         COALESCE((SELECT MAX(u.timestamp) FROM upvotes u WHERE u.href = s.href), 0),
+         COALESCE((SELECT MAX(c.timestamp) FROM comments c WHERE c.submission_id = s.id), 0)
+       )`
+    : "s.timestamp";
+  return db
+    .prepare(
+      `SELECT bucket, COUNT(*) AS stories, MAX(latest) AS lastActivity FROM (
+         SELECT (s.timestamp + ${MONDAY_OFFSET}) / ${WEEK_SECS} AS bucket, ${latest} AS latest
+         FROM submissions s
+       )
+       GROUP BY bucket
+       ORDER BY bucket DESC`,
+    )
+    .all()
+    .map(({ bucket, stories, lastActivity }) => ({
+      start: bucket * WEEK_SECS - MONDAY_OFFSET,
+      stories,
+      lastActivity,
+    }));
+}
+
 export function listNewest(limit = 30, lookbackUnixTime) {
   const query = `
      SELECT * FROM submissions

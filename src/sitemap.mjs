@@ -4,8 +4,9 @@ import { env } from "process";
 
 import Database from "better-sqlite3";
 
-import { listSitemapMonths, listSitemapEntries } from "./cache.mjs";
+import { listSitemapMonths, listSitemapEntries, listWeeks } from "./cache.mjs";
 import { getSlug } from "./utils.mjs";
+import * as isoweek from "./isoweek.mjs";
 import log from "./logger.mjs";
 
 const PUBLIC_DIR = "src/public";
@@ -55,9 +56,28 @@ ${urls.join("\n")}
 </urlset>`;
 }
 
-function buildSitemapIndex(months) {
+// The /weekly/<YYYY>-W<ww> pages, from listWeeks({ activity: true }). A
+// week's lastmod is the latest submission, upvote or comment on its stories.
+export function buildWeeklySitemap(weeks, now = Date.now()) {
+  const current = isoweek.current(now);
+  const urls = weeks
+    .map((row) => ({ ...row, week: isoweek.weekOf(row.start) }))
+    .filter(({ week }) => isoweek.compare(week, current) <= 0)
+    .map(({ week, lastActivity }) => {
+      const lastmod = new Date(lastActivity * 1000).toISOString().split("T")[0];
+      return `  <url><loc>${BASE_URL}${isoweek.path(week)}</loc><lastmod>${lastmod}</lastmod></url>`;
+    });
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls.join("\n")}
+</urlset>`;
+}
+
+export function buildSitemapIndex(months) {
   const entries = [
     `  <sitemap><loc>${BASE_URL}/sitemap-static.xml</loc></sitemap>`,
+    `  <sitemap><loc>${BASE_URL}/sitemap-weekly.xml</loc></sitemap>`,
     ...months.map(
       (month) =>
         `  <sitemap><loc>${BASE_URL}/sitemap-${month}.xml</loc></sitemap>`,
@@ -70,11 +90,12 @@ ${entries.join("\n")}
 </sitemapindex>`;
 }
 
-const STATIC_SITEMAP = `<?xml version="1.0" encoding="UTF-8"?>
+export const STATIC_SITEMAP = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>${BASE_URL}/</loc><changefreq>hourly</changefreq><priority>1.0</priority></url>
   <url><loc>${BASE_URL}/new?cached=true</loc><changefreq>hourly</changefreq><priority>0.9</priority></url>
   <url><loc>${BASE_URL}/best</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>${BASE_URL}/weekly</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
   <url><loc>${BASE_URL}/newsletter</loc><changefreq>weekly</changefreq><priority>0.6</priority></url>
   <url><loc>${BASE_URL}/guidelines</loc><changefreq>monthly</changefreq><priority>0.3</priority></url>
 </urlset>`;
@@ -98,6 +119,10 @@ export function generateSitemaps() {
   }
 
   writeAtomic("sitemap-static.xml", STATIC_SITEMAP);
+  writeAtomic(
+    "sitemap-weekly.xml",
+    buildWeeklySitemap(listWeeks({ activity: true })),
+  );
   writeAtomic("sitemap.xml", buildSitemapIndex(months));
 
   log(`Generated sitemaps for ${months.length} months`);

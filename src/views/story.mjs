@@ -43,6 +43,7 @@ import Summary from "./components/summary.mjs";
 import { warpcastSvg } from "./components/socialNetworkIcons.mjs";
 import { isBlocked } from "../linksafety.mjs";
 import { getSummary, scheduleSummary } from "../summaries.mjs";
+import * as isoweek from "../isoweek.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -873,6 +874,18 @@ export default async function (trie, theme, index, value, referral, commentIndex
                     </td>
                   </tr>`
                 : null}
+              <tr>
+                <td style="padding: 0 0 12px 0;">
+                  <div style="margin: 0 11px; font-size: 10pt;">
+                    <a
+                      class="meta-link"
+                      style="color: var(--text-secondary);"
+                      href="${isoweek.path(isoweek.weekOf(value.timestamp))}"
+                      >Top stories that week →</a
+                    >
+                  </div>
+                </td>
+              </tr>
               <tr style="height: 40px;"></tr>
             </table>
             <div class="desktop-only-footer">
