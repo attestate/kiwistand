@@ -3,7 +3,7 @@ name: Crawl check
 # Weekly check that crawlers and link-preview bots get the public pages.
 # Prints only status codes and robots headers, so it's fine in public logs.
 # The traffic report (Search Console, Cloudflare) runs in the private
-# attestate/kiwistand-metrics repo: this repo is public, and so are its logs.
+# attestate/metrics repo: this repo is public, and so are its logs.
 on:
   schedule:
     - cron: "17 5 * * 1"
