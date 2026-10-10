@@ -777,8 +777,13 @@ async function addNewsletterScrollModal(toast) {
   const isAnonMode = localStorage.getItem('anon-mode') === 'true';
   if (isAnonMode) return;
 
-  // The hot feed has an inline sign-up card; don't also pop up the modal there.
-  if (document.querySelector("newsletter-card")) return;
+  // A visible sign-up card (hot feed, or the desktop right column) already
+  // asks; don't also pop up the modal. Hidden ones (right column on mobile)
+  // don't count.
+  const visibleCard = [...document.querySelectorAll("newsletter-card")].some(
+    (elem) => elem.offsetParent !== null,
+  );
+  if (visibleCard) return;
 
   // Only show on feed pages where users are likely to be reading
   const path = window.location.pathname;
