@@ -247,7 +247,7 @@ export default async function index(theme, page, period, domain) {
               ${stories.map(
                 (story, i) =>
                   Row(
-                    null,
+                    page * parseInt(env.TOTAL_STORIES, 10),
                     "/best",
                     "margin-bottom: 20px;",
                     false,

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { isIOSApp } from './session.mjs';
+import { disableAnalytics } from './analytics.mjs';
 
 export default function AnalyticsConsent() {
   const [visible, setVisible] = useState(false);
@@ -93,6 +94,7 @@ export default function AnalyticsConsent() {
     if (window.posthog) {
       window.posthog.opt_out_capturing();
     }
+    disableAnalytics();
   };
 
   if (!visible) return null;

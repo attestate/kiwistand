@@ -921,6 +921,8 @@ export default async function (trie, theme, page, domain, identity, hash, varian
 
   // Destructure content
   const { originals, stories, start, pinnedStory } = content;
+  // The pinned story takes position 1, so ranked stories start after it.
+  const storiesStart = start + (pinnedStory ? 1 : 0);
 
   // Fetch top stories for the carousel (only on page 0, no domain filter)
   let topStories = [];
@@ -1034,7 +1036,7 @@ export default async function (trie, theme, page, domain, identity, hash, varian
                 .map(
                   (story, i) =>
                     Row(
-                      start, // Use start index from content
+                      storiesStart, // Use start index from content
                       "/",
                       "margin-bottom: 20px;",
                       null,
@@ -1051,7 +1053,7 @@ export default async function (trie, theme, page, domain, identity, hash, varian
                 .slice(3)
                 .map((story, i) => [
                   Row(
-                    start, // Use start index from content
+                    storiesStart, // Use start index from content
                     "/",
                     "margin-bottom: 20px;",
                     null,

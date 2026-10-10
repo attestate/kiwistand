@@ -85,6 +85,14 @@ async function applySafeAreaInsets() {
 
 import { isIOS, isRunningPWA, getCookie, getLocalAccount } from "./session.mjs";
 import theme from "./theme.jsx";
+import {
+  capture,
+  flushAnalytics,
+  disableAnalytics,
+  feedName,
+  getVariant,
+  storyProps,
+} from "./analytics.mjs";
 // posthog-js is loaded dynamically during idle time to keep it out of the
 // main bundle. window.posthog is set when it resolves. All callers use
 // window.posthog?.method?.() optional chaining for safety.
@@ -113,7 +121,7 @@ function resetPostHog() {
 // Defer PostHog initialization to avoid blocking main thread
 const analyticsConsent = localStorage.getItem("kiwi-analytics-consent");
 if (!isAnonMode && analyticsConsent !== "false") {
-  const initPostHog = async () => {
+  const loadPostHog = async () => {
     const { default: posthog } = await import("posthog-js");
     // Long-lived anonymous id from a server-set cookie (Safari ITP wipes
     // script-written storage after 7 days). posthog-js only uses
@@ -143,13 +151,29 @@ if (!isAnonMode && analyticsConsent !== "false") {
     try {
       posthog.register({ is_ios_app: isIOSApp() });
     } catch (_) {}
+    // Ensure the A/B variant is on all subsequent home feed events.
+    if (window.location.pathname === "/") {
+      try {
+        posthog.register({ variant: getVariant() });
+      } catch (_) {}
+    }
+    // Send events captured while posthog-js was still loading.
+    flushAnalytics();
   };
+  const initPostHog = () =>
+    loadPostHog().catch((err) => {
+      console.log("PostHog failed to load", err);
+      disableAnalytics();
+    });
 
   if (typeof requestIdleCallback !== "undefined") {
     requestIdleCallback(initPostHog, { timeout: 3000 });
   } else {
     setTimeout(initPostHog, 100);
   }
+} else {
+  // PostHog never loads in anon mode or without consent: don't buffer.
+  disableAnalytics();
 }
 
 // Sidebar toggle buttons open the SwipeableDrawer via window.openSidebar
@@ -336,6 +360,7 @@ async function addVotes(delegations, toast) {
                   upvoters={upvoters}
                   toast={toast}
                   editorPicks={editorPicks}
+                  getAnalyticsProps={() => storyProps(arrow)}
                 />
               </Providers>
             </StrictMode>,
@@ -1370,6 +1395,9 @@ function initTerminalAds() {
   });
 }
 
+// PostHog story_impression is deduplicated per href for this page load.
+const impressedHrefs = new Set();
+
 function trackLinkImpressions() {
   // Find all story links - both regular links and those with previews
   // Regular story links have class="story-link"
@@ -1381,6 +1409,7 @@ function trackLinkImpressions() {
 
   // Get current hostname for comparison
   const currentHostname = window.location.hostname;
+  const variant = getVariant();
 
   const observer = new IntersectionObserver(
     (entries) => {
@@ -1422,30 +1451,35 @@ function trackLinkImpressions() {
             }
           }
 
-          // Check if this URL has already been tracked in this session
-          const storageKey = `impression_${href}`;
-          if (sessionStorage.getItem(storageKey)) return;
-
-          // Mark this URL as tracked in this session
-          sessionStorage.setItem(storageKey, "tracked");
-
-          // Send impression beacon
-          try {
-            navigator.sendBeacon("/impression?url=" + encodeURIComponent(href));
-          } catch (err) {
-            console.log("Error tracking impression:", err);
+          // Stories have several observed links (image, title); capture
+          // one PostHog impression per story and page load so positions can
+          // be compared across feeds and reloads.
+          if (!impressedHrefs.has(href)) {
+            try {
+              if (
+                capture("story_impression", {
+                  href,
+                  variant,
+                  ...storyProps(link),
+                })
+              ) {
+                impressedHrefs.add(href);
+              }
+            } catch (_) {}
           }
 
-          // Also capture impression in PostHog with variant for A/B analysis
-          try {
-            if (!isAnonMode && typeof posthog !== "undefined") {
-              const variantMeta = document.querySelector(
-                'meta[name="kiwi-variant"]',
+          // The server-side impression beacon is counted once per session
+          const storageKey = `impression_${href}`;
+          if (!sessionStorage.getItem(storageKey)) {
+            sessionStorage.setItem(storageKey, "tracked");
+            try {
+              navigator.sendBeacon(
+                "/impression?url=" + encodeURIComponent(href),
               );
-              const variant = variantMeta?.content || "unknown";
-              posthog?.capture?.("story_impression", { href, variant });
+            } catch (err) {
+              console.log("Error tracking impression:", err);
             }
-          } catch (_) {}
+          }
 
           // Stop observing this link
           observer.unobserve(link);
@@ -1489,13 +1523,9 @@ function trackLinkImpressions() {
         }
       }
 
-      if (!isAnonMode && typeof posthog !== "undefined") {
+      if (!isAnonMode) {
         try {
-          const variantMeta = document.querySelector(
-            'meta[name="kiwi-variant"]',
-          );
-          const variant = variantMeta?.content || "unknown";
-          posthog?.capture?.("outbound_click", { href, variant });
+          capture("outbound_click", { href, variant, ...storyProps(link) });
         } catch (_) {}
       }
     });
@@ -1564,6 +1594,13 @@ function initEndlessScroll() {
       // Insert new rows before the sentinel's parent row
       const tempDiv = document.createElement('div');
       tempDiv.innerHTML = sanitizedHtml;
+
+      // Number the appended rows after those already on the page so
+      // data-position stays the 1-based rank in the scrolled feed.
+      let position = feedTable.querySelectorAll('[data-position]').length;
+      tempDiv.querySelectorAll('[data-position]').forEach((row) => {
+        row.setAttribute('data-position', String(++position));
+      });
 
       // Find the table body where stories are rendered
       const tableRows = feedTable.querySelectorAll('tr');
@@ -1676,24 +1713,20 @@ async function start() {
     trackLinkImpressions();
   }
 
-  // Ensure variant is available on all subsequent PostHog events
-  if (!isAnonMode && window.location.pathname === "/" && typeof posthog !== "undefined") {
-    try {
-      const variantMeta = document.querySelector('meta[name="kiwi-variant"]');
-      const variant = variantMeta?.content || "unknown";
-      posthog?.register?.({ variant });
-    } catch (_) {}
-  }
-
   // Initialize terminal ad animations
   initTerminalAds();
 
-  // Track A/B test variant via PostHog
-  if (!isAnonMode && window.location.pathname === "/" && typeof posthog !== "undefined") {
-    const variantMeta = document.querySelector('meta[name="kiwi-variant"]');
-    const variant = variantMeta?.content || "unknown";
-    posthog?.capture?.("feed_page_view", { variant });
-    console.log("caputred", variant);
+  // One feed_page_view per feed page load (queued until PostHog loads)
+  const feedPath = window.location.pathname;
+  if (
+    !isAnonMode &&
+    (feedPath === "/" || feedPath === "/new" || feedPath === "/best")
+  ) {
+    capture("feed_page_view", {
+      feed: feedName(feedPath),
+      page: parseInt(urlParams.get("page"), 10) || 0,
+      variant: getVariant(),
+    });
   }
   // NOTE: There are clients which had the identity cookie sent to 1 week and
   // they're now encountering the paywall. So in case this happens but their
