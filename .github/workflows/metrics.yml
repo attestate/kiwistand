@@ -1,14 +1,14 @@
-name: Metrics report
+name: Crawl check
 
-# Weekly traffic report from Cloudflare and Google Search Console (no Claude
-# connector for either). Printed to the job log; see scripts/metrics-report.mjs
-# for the credentials it needs. Sources without credentials are skipped.
+# Weekly check that crawlers and link-preview bots get the public pages.
+# Prints only status codes and robots headers, so it's fine in public logs.
+# The traffic report (Search Console, Cloudflare) runs in the private
+# attestate/metrics repo: this repo is public, and so are its logs.
 on:
   schedule:
     - cron: "17 5 * * 1"
   push:
     paths:
-      - scripts/metrics-report.mjs
       - scripts/crawl-check.mjs
       - .github/workflows/metrics.yml
   workflow_dispatch:
@@ -22,11 +22,5 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22.x
-      - run: node scripts/metrics-report.mjs | tee metrics-report.md
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ZONE_ID: ${{ vars.CLOUDFLARE_ZONE_ID }}
-          GSC_SERVICE_ACCOUNT: ${{ secrets.GSC_SERVICE_ACCOUNT }}
-          GSC_SITE_URL: ${{ vars.GSC_SITE_URL }}
-      - run: node scripts/crawl-check.mjs | tee -a metrics-report.md
-      - run: cat metrics-report.md >> "$GITHUB_STEP_SUMMARY"
+      - run: node scripts/crawl-check.mjs | tee crawl-check.md
+      - run: cat crawl-check.md >> "$GITHUB_STEP_SUMMARY"

@@ -103,6 +103,7 @@ import {
 } from "./social-posting.mjs";
 import { sendBroadcastNotification } from "./onesignal.mjs";
 import { extractArticleCached } from "./lib/listen/extract.mjs";
+import { getSummary } from "./summaries.mjs";
 import { hotFeed as hotFeedRSS, newFeed as newFeedRSS } from "./rss.mjs";
 import { readFile } from "fs/promises";
 
@@ -2212,8 +2213,15 @@ export async function launch(trie, libp2p, isPrimary = true) {
 
     let md = `# ${submission.title}\n\nSource: ${submission.href}\n`;
 
+    // The summary comes first so it isn't lost when a reader truncates; the
+    // article then needs its own heading to not read as part of it.
+    const summary = getSummary(index);
+    if (summary) {
+      md += `\n## Summary\n\n${summary}\n`;
+    }
+
     if (articleText) {
-      md += `\n${articleText}\n`;
+      md += summary ? `\n## Article\n\n${articleText}\n` : `\n${articleText}\n`;
     }
 
     if (comments.length > 0) {
