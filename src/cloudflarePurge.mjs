@@ -49,6 +49,43 @@ export async function purgeCache(url) {
 }
 
 /**
+ * Purges everything Cloudflare has cached for the zone, including what the
+ * worker (cf-worker.js) keeps in its own cache. Cached pages point at the
+ * news.css and JS bundles of the build that rendered them, so after a deploy
+ * they'd keep serving the old styles for days. Same credentials as
+ * purgeCache.
+ */
+export async function purgeEverything() {
+  const token = process.env.CF_API_TOKEN;
+  const zoneId = process.env.CF_ZONE_ID;
+  if (process.env.NODE_ENV !== "production") {
+    log("Cloudflare purge skipped: Not in production environment");
+    return;
+  }
+  if (!token || !zoneId) {
+    log("Cloudflare purge skipped: Missing API token or zone ID");
+    return;
+  }
+  const response = await fetch(
+    `https://api.cloudflare.com/client/v4/zones/${zoneId}/purge_cache`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ purge_everything: true }),
+    },
+  );
+  const data = await response.json();
+  if (!data.success) {
+    throw new Error(`Failed to purge everything: ${JSON.stringify(data)}`);
+  }
+  log("Successfully purged everything");
+  return data;
+}
+
+/**
  * Invalidates activity page caches for all users affected by a new message.
  * @param {Object} message - The message object
  */

@@ -47,3 +47,4 @@ scripts/tfjs_comments_model/
 test-cache
 test-data
 eval-titles.md
+scripts/pagespeed/lh-*.json

@@ -141,7 +141,7 @@ export function custom(
     <style>
       /* Critical CSS to prevent layout shift */
       :root {
-        --font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto,
+        --font-family: "Inter", "Inter Fallback", system-ui, -apple-system, "Segoe UI", Roboto,
           Helvetica, Arial, sans-serif;
       }
 

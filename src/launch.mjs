@@ -27,7 +27,7 @@ import * as best from "./views/best.mjs";
 import * as email from "./email.mjs";
 import * as moderation from "./views/moderation.mjs";
 import diskcheck from "./diskcheck.mjs";
-import { purgeCache } from "./cloudflarePurge.mjs";
+import { purgeCache, purgeEverything } from "./cloudflarePurge.mjs";
 import { generateDigestData } from "./digest.mjs";
 import { generateSitemaps } from "./sitemap.mjs";
 import * as social from "./social-posting.mjs";
@@ -137,6 +137,18 @@ if (cluster.isPrimary) {
             log(`Failed to purge homepage cache after 15 seconds: ${err}`),
           );
       }, 25000);
+
+      // NOTE: Pages cached before this start reference the previous build's
+      // news.css and JS, so drop the whole cache once the server is warm.
+      // Not right away: while workers boot, the edge's stale copies are what
+      // keeps visitors from seeing 504s.
+      setTimeout(
+        () =>
+          purgeEverything().catch((err) =>
+            log(`Failed to purge everything after startup: ${err}`),
+          ),
+        10 * 60 * 1000,
+      ).unref();
     }
   }
 
