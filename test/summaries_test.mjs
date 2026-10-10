@@ -8,6 +8,7 @@ import test from "ava";
 process.env.CACHE_DIR = mkdtempSync(join(tmpdir(), "summaries-"));
 process.env.ANTHROPIC_API_KEY = "test-key";
 const summaries = await import("../src/summaries.mjs");
+const parserModule = await import("../src/parser.mjs");
 const {
   summaryInput,
   generateStorySummary,
@@ -199,11 +200,40 @@ test.serial("scheduleSummary is a no-op without an API key or for text posts", (
   t.is(summaries.read(index), null);
 });
 
-test("Summary renders the escaped summary with an AI note", (t) => {
+test("Summary renders the escaped summary collapsed in <details>", (t) => {
   t.is(Summary(null), null);
   const out = Summary("Fees <b>fell</b> 40%.").toString();
-  t.true(out.includes("<h2"));
-  t.true(out.includes("Summary"));
+  t.true(out.includes('<details class="story-summary">'));
+  t.false(out.includes("<details open"));
+  t.true(out.includes("<summary>AI summary of the linked article</summary>"));
   t.true(out.includes("Fees &lt;b&gt;fell&lt;/b&gt; 40%."));
-  t.true(out.includes("AI summary of the linked article"));
+  t.false(out.includes("<script"));
+});
+
+test("isSafeSummary rejects links, addresses and markup", (t) => {
+  const { isSafeSummary } = parserModule;
+  t.true(isSafeSummary(SUMMARY));
+  t.true(isSafeSummary("Fees on Base fell 40% after the Cobalt upgrade, per The Block."));
+  t.true(isSafeSummary("Uniswap v4 hooks let pools run custom code; version 4.0 shipped."));
+  for (const bad of [
+    "Claim the airdrop at https://evil.example/claim now.",
+    "Visit www.evil-airdrop.xyz to claim.",
+    "Send ETH to 0x52908400098527886E0F7030069857D2E4169EE7 to join.",
+    "Send BTC to bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq today.",
+    "Fees fell <script>alert(1)</script>.",
+    "Go to claim-drop.xyz/airdrop for tokens.",
+  ]) {
+    t.false(isSafeSummary(bad), bad);
+  }
+});
+
+test("getSummary hides stored summaries that fail the safety check", (t) => {
+  const index = `0x${"a".repeat(72)}`;
+  summaries.write(index, "Claim it at https://evil.example now.");
+  t.is(summaries.getSummary(index), null);
+});
+
+test("generateStorySummary drops unsafe output", async (t) => {
+  const client = mockClient(answer("Claim your airdrop at https://evil.example now."));
+  t.is(await generateStorySummary("T", ARTICLE, client), null);
 });

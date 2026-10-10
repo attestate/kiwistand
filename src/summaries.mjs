@@ -15,7 +15,7 @@ import Database from "better-sqlite3";
 
 import log from "./logger.mjs";
 import { isCloudflareImage } from "./utils.mjs";
-import { generateStorySummary } from "./parser.mjs";
+import { generateStorySummary, isSafeSummary } from "./parser.mjs";
 import { extractArticleCached } from "./lib/listen/extract.mjs";
 
 export const RETRY_AFTER = 7 * 24 * 60 * 60 * 1000;
@@ -74,7 +74,9 @@ export function write(index, summary, now = Date.now()) {
 // Used while rendering, so a broken store only hides the summary.
 export function getSummary(index) {
   try {
-    return read(index)?.summary || null;
+    const summary = read(index)?.summary;
+    // NOTE: Also checked here so rows stored before a rule existed are hidden.
+    return summary && isSafeSummary(summary) ? summary : null;
   } catch (err) {
     log(`Reading story summary for ${key(index)} failed: ${err}`);
     return null;
