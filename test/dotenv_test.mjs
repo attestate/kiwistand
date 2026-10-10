@@ -67,6 +67,8 @@ test("that repo contains a .env-copy file with all possible configuration option
     "SOCIAL_AUTOPOST",
     "SOCIAL_POST_HOURS_UTC",
     "SOCIAL_MIN_UPVOTES",
+    "ONESIGNAL_API_KEY",
+    "DAILY_PUSH",
   ];
   try {
     await access(envPath, constants.F_OK);

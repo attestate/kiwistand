@@ -78,6 +78,8 @@ test("status lines name missing vars but never values", (t) => {
     "social: X disabled (missing CONSUMER_KEY)",
     "social: Farcaster enabled",
     "social: Telegram disabled (missing TG_KEY)",
+    "push: Farcaster mini app push disabled (missing NODE_ENV=production)",
+    "push: OneSignal (iOS app) push disabled (missing ONESIGNAL_API_KEY, NODE_ENV=production)",
   ]);
   t.false(lines.join("\n").includes("neynar-key"));
   t.deepEqual(social.enabledChannels({}), []);
@@ -368,4 +370,224 @@ test("sendCast uses the hub alone without Neynar variables", async (t) => {
   t.false(result.success);
   t.is(calls.length, 1);
   t.regex(errors[0], /HTTP 500 hub: hub down/);
+});
+
+// --- Daily push ----------------------------------------------------------
+
+const PUSH = {
+  NODE_ENV: "production",
+  NEYNAR_API_KEY: "neynar-key",
+  ONESIGNAL_API_KEY: "onesignal-key",
+};
+
+// Mocks of sendNotification (src/neynar.mjs) and sendBroadcastNotification
+// (src/onesignal.mjs) that record their calls.
+function mockPush({ neynar, onesignal } = {}) {
+  const calls = { neynar: [], onesignal: [] };
+  const push = {
+    sendNotification: async (target_url, body, title) => {
+      calls.neynar.push({ target_url, body, title });
+      if (neynar?.throws) throw new Error(neynar.throws);
+      return neynar?.response ?? { notification_deliveries: [{}, {}] };
+    },
+    sendBroadcastNotification: async (notification) => {
+      calls.onesignal.push(notification);
+      if (onesignal?.throws) throw new Error(onesignal.throws);
+      return "response" in (onesignal || {})
+        ? onesignal.response
+        : { id: "os-1", recipients: 20 };
+    },
+  };
+  return { push, calls };
+}
+
+test("push channels need their keys and production, and never log values", (t) => {
+  t.deepEqual(social.enabledPushChannels(PUSH), ["neynar", "onesignal"]);
+  t.deepEqual(social.enabledPushChannels({ ...PUSH, NODE_ENV: "test" }), []);
+  t.deepEqual(social.missingEnv("onesignal", { NODE_ENV: "production" }), [
+    "ONESIGNAL_API_KEY",
+  ]);
+  const lines = social.statusLines(PUSH);
+  t.true(lines.includes("push: Farcaster mini app push enabled"));
+  t.true(lines.includes("push: OneSignal (iOS app) push enabled"));
+  t.false(lines.join("\n").includes("onesignal-key"));
+  // NOTE: Push channels are not social channels.
+  t.deepEqual(social.enabledChannels(PUSH), []);
+});
+
+test("push uses the manual route's title and body and the story url", (t) => {
+  const s = { index: "abc", title: "hello, World!", href: "https://blog.example.co.uk/a" };
+  t.deepEqual(social.formatForPush(s), {
+    title: "Kiwi News: Top story of the day",
+    body: "Hello, World! - co.uk",
+    url: "https://news.kiwistand.com/stories/hello-World?index=0xabc",
+  });
+  const text = { index: "def", title: "Ask Kiwi", href: "data:text/plain,hi" };
+  t.deepEqual(social.formatForPush(text, "https://k.com/x", "Hot"), {
+    title: "Kiwi News: Hot",
+    body: "Ask Kiwi",
+    url: "https://k.com/x",
+  });
+});
+
+test("runOnce pushes the top story once per slot, and never again", async (t) => {
+  const { push, calls } = mockPush();
+  const vars = { ...PUSH };
+  const getStories = async () => [story("a", 1), story("b"), story("c")];
+
+  const first = await social.runOnce({ getStories, push, vars, statePath });
+  t.deepEqual(Object.keys(first), ["neynar", "onesignal"]);
+  t.is(first.neynar.story.index, "b");
+  t.true(first.neynar.success);
+  t.true(first.onesignal.success);
+  t.is(calls.neynar.length, 1);
+  t.is(calls.onesignal.length, 1);
+  const url = "https://news.kiwistand.com/stories/Story-b?index=0xb";
+  t.deepEqual(calls.neynar[0], {
+    target_url: url,
+    body: "Story b - example.com",
+    title: "Kiwi News: Top story of the day",
+  });
+  t.deepEqual(calls.onesignal[0], {
+    title: "Kiwi News: Top story of the day",
+    body: "Story b - example.com",
+    url,
+  });
+
+  // NOTE: As with the social channels, a story is never pushed twice.
+  const state = JSON.parse(readFileSync(statePath, "utf8"));
+  t.deepEqual(Object.keys(state.posted.b).sort(), ["neynar", "onesignal"]);
+  const second = await social.runOnce({ getStories, push, vars, statePath });
+  t.is(second.neynar.story.index, "c");
+  await social.runOnce({ getStories, push, vars, statePath });
+  t.is(calls.neynar.length, 2);
+  t.is(calls.onesignal.length, 2);
+});
+
+test("the daily push and the manual route never push the same story", async (t) => {
+  const { push, calls } = mockPush();
+  const vars = { ...PUSH };
+  const getStories = async () => [story("a"), story("b")];
+
+  // The manual route pushes "a" (same call as POST /api/v1/neynar/notify).
+  const manual = await social.postStory(story("0xa"), {
+    channels: social.PUSH_CHANNELS,
+    url: "https://news.kiwistand.com/stories/x?index=0xa",
+    tag: "Hot",
+    push,
+    vars,
+    statePath,
+  });
+  t.true(manual.neynar.success);
+  t.is(calls.neynar[0].title, "Kiwi News: Hot");
+
+  // The daily push moves on to "b".
+  const daily = await social.runOnce({ getStories, push, vars, statePath });
+  t.is(daily.neynar.story.index, "b");
+  t.is(daily.onesignal.story.index, "b");
+
+  // A manual push of "b" afterwards is skipped on both channels.
+  const again = await social.postStory(story("b"), {
+    channels: social.PUSH_CHANNELS,
+    tag: "Hot",
+    push,
+    vars,
+    statePath,
+  });
+  t.true(again.neynar.skipped);
+  t.true(again.onesignal.skipped);
+  t.is(calls.neynar.length, 2);
+  t.is(calls.onesignal.length, 2);
+});
+
+test("push is off without its env vars and with DAILY_PUSH=false", async (t) => {
+  const { push, calls } = mockPush();
+  const getStories = async () => [story("a")];
+  for (const vars of [
+    { NEYNAR_API_KEY: "k", ONESIGNAL_API_KEY: "k" },
+    { NODE_ENV: "production" },
+    { ...PUSH, DAILY_PUSH: "false" },
+  ]) {
+    t.deepEqual(await social.runOnce({ getStories, push, vars, statePath }), {});
+  }
+  t.is(calls.neynar.length + calls.onesignal.length, 0);
+
+  // Not configured: the manual route's call is skipped without a request.
+  const skipped = await social.postStory(story("a"), {
+    channels: social.PUSH_CHANNELS,
+    push,
+    vars: { NODE_ENV: "production" },
+    statePath,
+  });
+  t.true(skipped.neynar.skipped);
+  t.true(skipped.onesignal.skipped);
+  t.is(calls.neynar.length + calls.onesignal.length, 0);
+
+  t.true(social.dailyPushEnabled({ NODE_ENV: "production" }));
+  t.false(social.dailyPushEnabled({ NODE_ENV: "production", DAILY_PUSH: "false" }));
+  t.false(social.dailyPushEnabled({ NODE_ENV: "production", SOCIAL_AUTOPOST: "false" }));
+  t.false(social.dailyPushEnabled({ NODE_ENV: "test" }));
+  t.true(social.dailyPushEnabled({ NODE_ENV: "test", DAILY_PUSH: "true" }));
+});
+
+test("push failures are logged once each, not thrown, and retried", async (t) => {
+  const { push, calls } = mockPush({
+    neynar: { throws: "socket hang up" },
+    onesignal: { response: { errors: ["All included players are not subscribed"] } },
+  });
+  const vars = { ...PUSH };
+  const getStories = async () => [story("a")];
+  const result = await social.runOnce({ getStories, push, vars, statePath });
+  t.false(result.neynar.success);
+  t.false(result.onesignal.success);
+  t.deepEqual(errors, [
+    "push: Farcaster mini app push failed: socket hang up",
+    'push: OneSignal (iOS app) push failed: ["All included players are not subscribed"]',
+  ]);
+
+  // Neynar's API errors and a OneSignal call without a result fail too.
+  errors.length = 0;
+  const other = mockPush({
+    neynar: { response: { status: "error", code: 401, details: { message: "bad key" } } },
+    onesignal: { response: undefined },
+  });
+  const again = await social.runOnce({ getStories, push: other.push, vars, statePath });
+  t.false(again.neynar.success);
+  t.false(again.onesignal.success);
+  t.regex(errors[0], /^push: Farcaster mini app push failed: HTTP 401 .*bad key/);
+  t.regex(errors[1], /^push: OneSignal \(iOS app\) push failed: no response/);
+  t.is(errors.length, 2);
+
+  // Nothing was recorded, so the next run tries again.
+  t.deepEqual(social.loadState(statePath).posted, {});
+});
+
+test("the scheduler pushes once per slot, also across restarts", async (t) => {
+  const { push, calls } = mockPush();
+  const hour = String(new Date().getUTCHours());
+  const vars = { ...PUSH, SOCIAL_POST_HOURS_UTC: hour };
+  const getStories = async () => [story("a"), story("b")];
+  const options = { getStories, push, vars, statePath, intervalMs: 10 };
+
+  const timer = social.startScheduler(options);
+  t.truthy(timer);
+  t.true(logs.includes("push: Farcaster mini app push enabled"));
+  t.true(logs.some((l) => l.includes("automatic posting to neynar, onesignal")));
+  await new Promise((resolve) => setTimeout(resolve, 150));
+  clearInterval(timer);
+  t.is(calls.neynar.length, 1);
+  t.is(calls.onesignal.length, 1);
+
+  // A restart in the same slot doesn't push again.
+  const restarted = social.startScheduler(options);
+  await new Promise((resolve) => setTimeout(resolve, 100));
+  clearInterval(restarted);
+  t.is(calls.neynar.length, 1);
+  t.is(calls.onesignal.length, 1);
+
+  // DAILY_PUSH=false keeps the scheduler off when only push is configured.
+  logs.length = 0;
+  const off = social.startScheduler({ ...options, vars: { ...vars, DAILY_PUSH: "false" } });
+  t.is(off, null);
+  t.true(logs.includes("push: daily push off (DAILY_PUSH=false)"));
 });

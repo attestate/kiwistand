@@ -114,8 +114,10 @@ if (cluster.isPrimary) {
     const http = await import("./http.mjs");
     await http.launch(trie, node, true); // true indicates primary process
 
-    // NOTE: Daily post of the top story to X, Farcaster and Telegram. Runs in
-    // the primary only, so workers never post. Logs which channels are live.
+    // NOTE: Daily post of the top story to X, Farcaster and Telegram, and its
+    // push notification (Farcaster mini app + OneSignal iOS broadcast, off
+    // with DAILY_PUSH=false). Runs in the primary only, so workers never post.
+    // Logs which channels are live.
     social.startScheduler({
       getStories: () =>
         best.getStories(0, "day", "", { createStoryLink: true, amount: 10 }),

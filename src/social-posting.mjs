@@ -32,6 +32,18 @@
 //
 // Failures never throw: they print one "social: <channel> post failed: ..."
 // line to stderr with the HTTP status and a snippet of the response body.
+//
+// Push notifications are two more channels in the same dedupe state, so the
+// scheduler and the manual route never push the same story twice:
+// - neynar: the Farcaster mini app notification (sendNotification in
+//   src/neynar.mjs). Needs NEYNAR_API_KEY.
+// - onesignal: the iOS app broadcast (sendBroadcastNotification in
+//   src/onesignal.mjs). Needs ONESIGNAL_API_KEY (ONESIGNAL_APP_ID has a
+//   default).
+// Both senders only push when NODE_ENV=production, so the channels count as
+// disabled otherwise. The daily push runs in the same slot as the social
+// posts; DAILY_PUSH=false turns it off (the manual route keeps working).
+// Push failures print one "push: <channel> failed: ..." line.
 import crypto from "crypto";
 import { env } from "process";
 import { readFileSync, writeFileSync, renameSync, mkdirSync } from "fs";
@@ -47,8 +59,28 @@ import {
 import { getSlug } from "./utils.mjs";
 
 export const CHANNELS = ["x", "farcaster", "telegram"];
+export const PUSH_CHANNELS = ["neynar", "onesignal"];
+export const ALL_CHANNELS = [...CHANNELS, ...PUSH_CHANNELS];
 
-const LABELS = { x: "X", farcaster: "Farcaster", telegram: "Telegram" };
+const LABELS = {
+  x: "X",
+  farcaster: "Farcaster",
+  telegram: "Telegram",
+  neynar: "Farcaster mini app push",
+  onesignal: "OneSignal (iOS app) push",
+};
+
+export function isPush(channel) {
+  return PUSH_CHANNELS.includes(channel);
+}
+
+function prefix(channel) {
+  return isPush(channel) ? "push" : "social";
+}
+
+// NOTE: The title the manual route uses is "Kiwi News: <tag>"; the daily push
+// uses this tag.
+export const DAILY_PUSH_TAG = "Top story of the day";
 
 const REQUIRED_ENV = {
   x: [
@@ -58,6 +90,8 @@ const REQUIRED_ENV = {
     "TWITTER_ACCESS_TOKEN_SECRET",
   ],
   telegram: ["TG_KEY", "TG_CHANNEL_ID"],
+  neynar: ["NEYNAR_API_KEY"],
+  onesignal: ["ONESIGNAL_API_KEY"],
 };
 
 // NOTE: Farcaster works with either set of variables.
@@ -86,21 +120,31 @@ export function missingEnv(channel, vars = env) {
     const hub = FARCASTER_HUB_ENV.filter((name) => !vars[name]);
     return [`${neynar.join(", ")} or ${hub.join(", ")}`];
   }
-  return REQUIRED_ENV[channel].filter((name) => !vars[name]);
+  const missing = REQUIRED_ENV[channel].filter((name) => !vars[name]);
+  // NOTE: sendNotification and sendBroadcastNotification only push in
+  // production, anywhere else they simulate or skip.
+  if (isPush(channel) && vars.NODE_ENV !== "production")
+    missing.push("NODE_ENV=production");
+  return missing;
 }
 
-export function enabledChannels(vars = env) {
-  return CHANNELS.filter((channel) => missingEnv(channel, vars).length === 0);
+export function enabledChannels(vars = env, channels = CHANNELS) {
+  return channels.filter((channel) => missingEnv(channel, vars).length === 0);
+}
+
+export function enabledPushChannels(vars = env) {
+  return enabledChannels(vars, PUSH_CHANNELS);
 }
 
 // One line per channel, never with secret values, e.g.
 // "social: X disabled (missing CONSUMER_KEY, TWITTER_ACCESS_TOKEN)".
 export function statusLines(vars = env) {
-  return CHANNELS.map((channel) => {
+  return ALL_CHANNELS.map((channel) => {
     const missing = missingEnv(channel, vars);
+    const name = `${prefix(channel)}: ${LABELS[channel]}`;
     return missing.length === 0
-      ? `social: ${LABELS[channel]} enabled`
-      : `social: ${LABELS[channel]} disabled (missing ${missing.join(", ")})`;
+      ? `${name} enabled`
+      : `${name} disabled (missing ${missing.join(", ")})`;
   });
 }
 
@@ -113,7 +157,8 @@ function failure(channel, status, body) {
   const error = status
     ? `HTTP ${status} ${snippet(body)}`.trim()
     : snippet(body) || "unknown error";
-  console.error(`social: ${LABELS[channel]} post failed: ${error}`);
+  const what = isPush(channel) ? "" : " post";
+  console.error(`${prefix(channel)}: ${LABELS[channel]}${what} failed: ${error}`);
   return { success: false, status, error };
 }
 
@@ -217,6 +262,27 @@ export function formatForFarcaster(story, url = storyUrl(story)) {
 
 export function formatForTelegram(story, url = storyUrl(story)) {
   return `${compose(story, () => true)}\n\n${url}`;
+}
+
+// The same title and body as the manual push route: "Kiwi News: <tag>" and
+// "<story title> - <domain>" (just the title for text posts).
+export function formatForPush(story, url = storyUrl(story), tag = DAILY_PUSH_TAG) {
+  const title = tag ? `Kiwi News: ${tag}` : "Kiwi News";
+  const storyTitle = capitalize(String(story.title || "").trim());
+  const domain = pushDomainOf(story.href);
+  const body = domain ? `${storyTitle} - ${domain}` : storyTitle;
+  return { title, body, url };
+}
+
+// NOTE: Same as extractDomain in src/views/components/row.mjs (the manual
+// route's domain): the last two labels of the hostname.
+export function pushDomainOf(href) {
+  if (!href || href.startsWith("data:") || href.startsWith("kiwi:")) return "";
+  try {
+    return new URL(href).hostname.split(".").slice(-2).join(".");
+  } catch (err) {
+    return "";
+  }
 }
 
 // --- Senders --------------------------------------------------------------
@@ -350,6 +416,67 @@ export async function sendCastViaHub(
   }
 }
 
+// The senders are loaded lazily: src/neynar.mjs builds an API client when
+// imported, and tests pass mocks instead.
+async function pushSenders(options) {
+  const senders = { ...(options.push || {}) };
+  if (!senders.sendNotification) {
+    senders.sendNotification = (await import("./neynar.mjs")).sendNotification;
+  }
+  if (!senders.sendBroadcastNotification) {
+    senders.sendBroadcastNotification = (
+      await import("./onesignal.mjs")
+    ).sendBroadcastNotification;
+  }
+  return senders;
+}
+
+// Farcaster mini app notification to everyone who added the mini app.
+export async function sendNeynarPush(push, options = {}) {
+  try {
+    const { sendNotification } = await pushSenders(options);
+    const response = await sendNotification(push.url, push.body, push.title);
+    if (!response || response.status === "error") {
+      return failure(
+        "neynar",
+        response?.code,
+        JSON.stringify(response?.details ?? response?.message ?? "no response"),
+      );
+    }
+    const count = response.notification_deliveries?.length;
+    console.log(
+      `push: ${LABELS.neynar} sent${count !== undefined ? ` (${count} deliveries)` : ""}`,
+    );
+    return { success: true, response };
+  } catch (err) {
+    return failure("neynar", null, err.message);
+  }
+}
+
+// OneSignal broadcast to every iOS app user with notifications on.
+// sendBroadcastNotification logs and returns nothing when it fails.
+export async function sendOneSignalPush(push, options = {}) {
+  try {
+    const { sendBroadcastNotification } = await pushSenders(options);
+    const result = await sendBroadcastNotification(push);
+    if (!result?.id) {
+      return failure(
+        "onesignal",
+        null,
+        result
+          ? JSON.stringify(result.errors ?? result)
+          : "no response (see the OneSignal log line above)",
+      );
+    }
+    console.log(
+      `push: ${LABELS.onesignal} sent to ${result.recipients ?? "?"} users: ${result.id}`,
+    );
+    return { success: true, id: result.id, recipients: result.recipients };
+  } catch (err) {
+    return failure("onesignal", null, err.message);
+  }
+}
+
 export async function sendToTelegram(
   text,
   { fetch = globalThis.fetch, vars = env } = {},
@@ -395,15 +522,21 @@ export async function withSummary(story) {
   }
 }
 
-export function preview(channel, story, url = storyUrl(story)) {
+export function preview(channel, story, url = storyUrl(story), tag) {
   if (channel === "x") return { text: formatForX(story, url) };
   if (channel === "farcaster") return formatForFarcaster(story, url);
   if (channel === "telegram") return { text: formatForTelegram(story, url) };
+  if (isPush(channel)) return formatForPush(story, url, tag);
   throw new Error(`Unknown channel "${channel}"`);
 }
 
 export async function sendStory(channel, story, options = {}) {
   const url = options.url || storyUrl(story);
+  if (isPush(channel)) {
+    const push = preview(channel, story, url, options.tag);
+    if (channel === "neynar") return sendNeynarPush(push, options);
+    return sendOneSignalPush(push, options);
+  }
   const post = preview(channel, await withSummary(story), url);
   if (channel === "x") return sendTweet(post.text, options);
   if (channel === "farcaster") return sendCast(post.text, post.embeds, options);
@@ -562,12 +695,31 @@ export async function pickStory(stories, channel, state, options = {}) {
   return null;
 }
 
+// The daily push of the top story: on whenever automatic posting is on
+// (production, or SOCIAL_AUTOPOST), unless DAILY_PUSH=false.
+export function dailyPushEnabled(vars = env) {
+  if (vars.DAILY_PUSH === "false") return false;
+  if (vars.DAILY_PUSH === "true") return true;
+  return autopostEnabled(vars);
+}
+
+// The channels the daily job runs for: the enabled social channels, plus
+// the enabled push channels unless DAILY_PUSH=false.
+export function dailyChannels(vars = env) {
+  return [
+    ...enabledChannels(vars),
+    ...(vars.DAILY_PUSH === "false" ? [] : enabledPushChannels(vars)),
+  ];
+}
+
 // Posts the top unposted story of the day to each enabled channel.
 export async function runOnce(options = {}) {
   const { getStories, isAlive } = options;
   const vars = options.vars || env;
   const statePath = options.statePath || defaultStatePath(vars);
-  const channels = enabledChannels(vars);
+  const channels = (options.channels || dailyChannels(vars)).filter(
+    (channel) => missingEnv(channel, vars).length === 0,
+  );
   const results = {};
   if (channels.length === 0) return results;
 
@@ -588,7 +740,7 @@ export async function runOnce(options = {}) {
       isAlive,
     });
     if (!story) {
-      console.log(`social: ${LABELS[channel]} has no new story to post`);
+      console.log(`${prefix(channel)}: ${LABELS[channel]} has no new story to send`);
       continue;
     }
     const result = await postStory(story, {
@@ -608,20 +760,32 @@ export async function runOnce(options = {}) {
 export function startScheduler(options = {}) {
   const vars = options.vars || env;
   for (const line of statusLines(vars)) console.log(line);
-  if (!autopostEnabled(vars)) {
+  const autopost = autopostEnabled(vars);
+  const dailyPush = dailyPushEnabled(vars);
+  if (!autopost) {
     console.log(
       "social: automatic posting off (needs NODE_ENV=production or SOCIAL_AUTOPOST=true)",
     );
-    return null;
   }
+  if (!dailyPush) {
+    console.log(
+      vars.DAILY_PUSH === "false"
+        ? "push: daily push off (DAILY_PUSH=false)"
+        : "push: daily push off (needs NODE_ENV=production or DAILY_PUSH=true)",
+    );
+  }
+  const channels = [
+    ...(autopost ? enabledChannels(vars) : []),
+    ...(dailyPush ? enabledPushChannels(vars) : []),
+  ];
   const hours = postHours(vars);
-  if (enabledChannels(vars).length === 0 || hours.length === 0) {
+  if (channels.length === 0 || hours.length === 0) {
     console.log("social: automatic posting off (no channel enabled or no hours)");
     return null;
   }
   const statePath = options.statePath || defaultStatePath(vars);
   console.log(
-    `social: automatic posting at ${hours.map((h) => `${h}:00`).join(", ")} UTC, state in ${statePath}`,
+    `social: automatic posting to ${channels.join(", ")} at ${hours.map((h) => `${h}:00`).join(", ")} UTC, state in ${statePath}`,
   );
 
   let running = false;
@@ -634,7 +798,7 @@ export function startScheduler(options = {}) {
     try {
       state.lastSlot = slot;
       saveState(statePath, state);
-      await runOnce({ ...options, vars, statePath });
+      await runOnce({ ...options, vars, statePath, channels });
     } catch (err) {
       console.error(`social: automatic posting failed: ${err.stack || err}`);
     } finally {

@@ -90,15 +90,13 @@ import * as interactions from "./interactions.mjs";
 import * as bookmarks from "./bookmarks.mjs";
 import appCache from "./cache.mjs"; // For LRU cache used by ENS profiles
 import frameSubscribe from "./views/frame-subscribe.mjs";
-import { sendNotification } from "./neynar.mjs";
 import { timingSafeEqual } from "crypto";
 import { verify, ecrecover } from "./id.mjs";
 import { EIP712_MESSAGE } from "./constants.mjs";
 import { resolveIdentity } from "@attestate/delegator2";
 import { invalidateActivityCaches } from "./cloudflarePurge.mjs";
 import { getCastByHashAndConstructUrl } from "./parser.mjs";
-import { postStory } from "./social-posting.mjs";
-import { sendBroadcastNotification } from "./onesignal.mjs";
+import { postStory, PUSH_CHANNELS } from "./social-posting.mjs";
 import { extractArticleCached } from "./lib/listen/extract.mjs";
 import { getSummary } from "./summaries.mjs";
 import { hotFeed as hotFeedRSS, newFeed as newFeedRSS } from "./rss.mjs";
@@ -376,8 +374,6 @@ app.post("/api/v1/neynar/notify", async (req, res) => {
     );
   }
   
-  let notificationTitle;
-  let notificationBody;
   let submission;
   
   try {
@@ -394,10 +390,6 @@ app.post("/api/v1/neynar/notify", async (req, res) => {
     // Extract domain from submission href
     const domain = extractDomain(submission.href);
     
-    // Construct notification title and body
-    notificationTitle = `Kiwi News: ${tag}`;
-    notificationBody = `${submission.title} - ${domain}`;
-    
     log(`Sending notification for story: ${submission.title} (${domain}) with tag: ${tag}`);
   } catch (err) {
     log(`Error fetching submission: ${err.toString()}`);
@@ -405,24 +397,32 @@ app.post("/api/v1/neynar/notify", async (req, res) => {
   }
   
   // NOTE: Each step runs on its own, so a failing push notification can't
-  // stop the social posts (and vice versa).
-  let resp;
+  // stop the social posts (and vice versa). The pushes (Neynar mini app
+  // notification and OneSignal broadcast) go through postStory too, so a
+  // story the daily push already sent (or an earlier manual push) isn't
+  // pushed again. Same title and body as before, see formatForPush.
+  const pushStory = {
+    index: submission.id.replace(/^kiwi:/, ""),
+    title: submission.title,
+    href: submission.href,
+  };
+  let push;
   try {
-    resp = await sendNotification(target_url, notificationBody, notificationTitle);
-  } catch (err) {
-    console.error(`neynar notify: Neynar notification failed: ${err.stack || err}`);
-    resp = { status: "error", message: err.toString() };
-  }
-
-  try {
-    await sendBroadcastNotification({
-      title: notificationTitle,
-      body: notificationBody,
+    push = await postStory(pushStory, {
+      channels: PUSH_CHANNELS,
       url: target_url,
+      tag,
     });
+  } catch (err) {
+    console.error(`neynar notify: push failed: ${err.stack || err}`);
+    push = {};
+  }
+  const neynarPush = push.neynar || {};
+  const resp = neynarPush.success
+    ? neynarPush.response
+    : { status: "error", message: neynarPush.error };
+  if (push.onesignal?.success) {
     log(`Successfully broadcasted OneSignal notification for tag: ${tag}`);
-  } catch (osErr) {
-    console.error(`neynar notify: OneSignal broadcast failed: ${osErr}`);
   }
 
   // NOTE: Posts to X, Farcaster and Telegram. postStory never throws, logs
@@ -430,19 +430,12 @@ app.post("/api/v1/neynar/notify", async (req, res) => {
   // by the daily automatic post).
   let social;
   try {
-    social = await postStory(
-      {
-        index: submission.id.replace(/^kiwi:/, ""),
-        title: submission.title,
-        href: submission.href,
-      },
-      { url: target_url },
-    );
+    social = await postStory(pushStory, { url: target_url });
   } catch (err) {
     console.error(`neynar notify: social posting failed: ${err.stack || err}`);
   }
 
-  return res.json({ ...resp, social });
+  return res.json({ ...resp, push, social });
 });
 
 // Plain HTML response for the no-JS newsletter form (feed sign-up card).
