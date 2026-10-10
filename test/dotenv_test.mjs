@@ -52,6 +52,17 @@ test("that repo contains a .env-copy file with all possible configuration option
     "USER_AGENT",
     "CF_API_TOKEN",
     "CF_ZONE_ID",
+    "CONSUMER_KEY",
+    "CONSUMER_SECRET",
+    "TWITTER_ACCESS_TOKEN",
+    "TWITTER_ACCESS_TOKEN_SECRET",
+    "NEYNAR_API_KEY",
+    "FC_SIGNER_UUID",
+    "TG_KEY",
+    "TG_CHANNEL_ID",
+    "SOCIAL_AUTOPOST",
+    "SOCIAL_POST_HOURS_UTC",
+    "SOCIAL_MIN_UPVOTES",
   ];
   try {
     await access(envPath, constants.F_OK);

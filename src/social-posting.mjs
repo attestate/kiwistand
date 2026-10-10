@@ -1,255 +1,501 @@
-// Required environment variables:
-// - FC_SEED_PHRASE: Farcaster account seed phrase for posting casts
-// - CONSUMER_KEY: Twitter API consumer key
-// - CONSUMER_SECRET: Twitter API consumer secret
-// - TWITTER_ACCESS_TOKEN: Twitter access token (obtained via OAuth flow)
-// - TWITTER_ACCESS_TOKEN_SECRET: Twitter access token secret (obtained via OAuth flow)
-
+// @format
+//
+// Posts Kiwi News stories to X (Twitter), Farcaster and the Telegram channel.
+//
+// Each channel is enabled only when all of its env vars are set:
+// - X: CONSUMER_KEY, CONSUMER_SECRET, TWITTER_ACCESS_TOKEN,
+//   TWITTER_ACCESS_TOKEN_SECRET (get the access token with
+//   `node scripts/twitter-auth.mjs`). Posts via POST /2/tweets with OAuth 1.0a
+//   user context.
+// - Farcaster: NEYNAR_API_KEY, FC_SIGNER_UUID (an approved Neynar signer for
+//   the Kiwi account, see `node scripts/create-farcaster-signer.mjs`). The
+//   old FC_SEED_PHRASE path used Warpcast's private PUT /v2/auth, which now
+//   answers 404 "Path /v2/auth does not exist".
+// - Telegram: TG_KEY (bot token), optionally TG_CHANNEL_ID.
+//
+// Posting happens in two places:
+// - startScheduler() runs in the primary process and posts the day's top
+//   story once a day (SOCIAL_POST_HOURS_UTC).
+// - POST /api/v1/neynar/notify (the manual push) posts the pushed story.
+// Both go through postStory(), which records every successful post per
+// channel in a small JSON file, so a story is never posted twice to the same
+// channel.
+//
+// Failures never throw: they print one "social: <channel> post failed: ..."
+// line to stderr with the HTTP status and a snippet of the response body.
 import crypto from "crypto";
-import qs from "querystring";
-import { createInterface } from "readline";
 import { env } from "process";
+import { readFileSync, writeFileSync, renameSync, mkdirSync } from "fs";
+import path from "path";
 import OAuth from "oauth-1.0a";
-import log from "./logger.mjs";
 
-const readline = createInterface({
-  input: process.stdin,
-  output: process.stdout,
-});
+import { getSlug } from "./utils.mjs";
 
-const consumer_key = env.CONSUMER_KEY;
-const consumer_secret = env.CONSUMER_SECRET;
+export const CHANNELS = ["x", "farcaster", "telegram"];
 
-const endpointURL = `https://api.twitter.com/2/tweets`;
+const LABELS = { x: "X", farcaster: "Farcaster", telegram: "Telegram" };
 
-const requestTokenURL =
-  "https://api.twitter.com/oauth/request_token?oauth_callback=oob&x_auth_access_type=write";
-const authorizeURL = new URL("https://api.twitter.com/oauth/authorize");
-const accessTokenURL = "https://api.twitter.com/oauth/access_token";
+const REQUIRED_ENV = {
+  x: [
+    "CONSUMER_KEY",
+    "CONSUMER_SECRET",
+    "TWITTER_ACCESS_TOKEN",
+    "TWITTER_ACCESS_TOKEN_SECRET",
+  ],
+  farcaster: ["NEYNAR_API_KEY", "FC_SIGNER_UUID"],
+  telegram: ["TG_KEY"],
+};
 
-const oauth = OAuth({
-  consumer: {
-    key: consumer_key,
-    secret: consumer_secret,
-  },
-  signature_method: "HMAC-SHA1",
-  hash_function: (baseString, key) =>
-    crypto.createHmac("sha1", key).update(baseString).digest("base64"),
-});
+// NOTE: The "Kiwi News" Telegram channel.
+export const DEFAULT_TG_CHANNEL_ID = "-1001902081637";
 
-async function input(prompt) {
-  return new Promise(async (resolve, reject) => {
-    readline.question(prompt, (out) => {
-      readline.close();
-      resolve(out);
-    });
+export const X_ENDPOINT = "https://api.twitter.com/2/tweets";
+export const NEYNAR_CAST_ENDPOINT = "https://api.neynar.com/v2/farcaster/cast";
+const TELEGRAM_API = "https://api.telegram.org";
+
+// NOTE: X counts every URL as 23 characters and allows 280 per post.
+const X_MAX_CHARS = 280;
+const X_URL_CHARS = 23;
+// NOTE: Farcaster casts are limited to 320 bytes of text.
+const FC_MAX_BYTES = 320;
+
+export function missingEnv(channel, vars = env) {
+  return REQUIRED_ENV[channel].filter((name) => !vars[name]);
+}
+
+export function enabledChannels(vars = env) {
+  return CHANNELS.filter((channel) => missingEnv(channel, vars).length === 0);
+}
+
+// One line per channel, never with secret values, e.g.
+// "social: X disabled (missing CONSUMER_KEY, TWITTER_ACCESS_TOKEN)".
+export function statusLines(vars = env) {
+  return CHANNELS.map((channel) => {
+    const missing = missingEnv(channel, vars);
+    return missing.length === 0
+      ? `social: ${LABELS[channel]} enabled`
+      : `social: ${LABELS[channel]} disabled (missing ${missing.join(", ")})`;
   });
 }
 
-async function requestToken() {
-  const authHeader = oauth.toHeader(
-    oauth.authorize({
-      url: requestTokenURL,
-      method: "POST",
-    })
-  );
+export function snippet(text, max = 300) {
+  const flat = String(text ?? "").replace(/\s+/g, " ").trim();
+  return flat.length > max ? `${flat.slice(0, max)}...` : flat;
+}
 
-  const response = await fetch(requestTokenURL, {
-    method: "POST",
-    headers: {
-      Authorization: authHeader["Authorization"],
-    },
-  });
-  
-  if (response.ok) {
-    const body = await response.text();
-    return qs.parse(body);
-  } else {
-    throw new Error("Cannot get an OAuth request token");
+function failure(channel, status, body) {
+  const error = status
+    ? `HTTP ${status} ${snippet(body)}`.trim()
+    : snippet(body) || "unknown error";
+  console.error(`social: ${LABELS[channel]} post failed: ${error}`);
+  return { success: false, status, error };
+}
+
+function notConfigured(channel, vars) {
+  const missing = missingEnv(channel, vars);
+  return {
+    success: false,
+    skipped: true,
+    error: `${LABELS[channel]} not configured (missing ${missing.join(", ")})`,
+  };
+}
+
+async function readBody(response) {
+  try {
+    return await response.text();
+  } catch (err) {
+    return "";
   }
 }
 
-async function accessToken({ oauth_token, oauth_token_secret }, verifier) {
-  const authHeader = oauth.toHeader(
-    oauth.authorize({
-      url: accessTokenURL,
-      method: "POST",
-    })
-  );
-  const path = `https://api.twitter.com/oauth/access_token?oauth_verifier=${verifier}&oauth_token=${oauth_token}`;
-  const response = await fetch(path, {
-    method: "POST",
-    headers: {
-      Authorization: authHeader["Authorization"],
-    },
-  });
-  
-  if (response.ok) {
-    const body = await response.text();
-    return qs.parse(body);
-  } else {
-    throw new Error("Cannot get an OAuth access token");
+function parseJSON(text) {
+  try {
+    return JSON.parse(text);
+  } catch (err) {
+    return null;
   }
 }
 
-async function getRequest({ oauth_token, oauth_token_secret }, tweet) {
+// --- Formatting ---------------------------------------------------------
+
+export function domainOf(href) {
+  if (!href || href.startsWith("data:") || href.startsWith("kiwi:")) return "";
+  try {
+    return new URL(href).hostname.replace(/^www\./, "");
+  } catch (err) {
+    return "";
+  }
+}
+
+export function storyUrl({ title, index }) {
+  const hex = String(index).replace(/^0x/, "");
+  return `https://news.kiwistand.com/stories/${getSlug(title)}?index=0x${hex}`;
+}
+
+function truncate(text, fits) {
+  if (fits(text)) return text;
+  const chars = [...text];
+  while (chars.length > 0 && !fits(`${chars.join("").trimEnd()}…`)) {
+    chars.pop();
+  }
+  return `${chars.join("").trimEnd()}…`;
+}
+
+function headline(story) {
+  const title = String(story.title || "").trim();
+  const domain = domainOf(story.href);
+  return domain ? `${title} - ${domain}` : title;
+}
+
+export function formatForX(story, url = storyUrl(story)) {
+  // NOTE: Some characters (CJK, emoji) count double on X, so we leave room.
+  const budget = X_MAX_CHARS - X_URL_CHARS - 2 - 10;
+  const head = truncate(headline(story), (s) => [...s].length <= budget);
+  return `${head}\n\n${url}`;
+}
+
+export function formatForFarcaster(story, url = storyUrl(story)) {
+  const text = truncate(
+    headline(story),
+    (s) => Buffer.byteLength(s, "utf8") <= FC_MAX_BYTES,
+  );
+  return { text, embeds: [url] };
+}
+
+export function formatForTelegram(story, url = storyUrl(story)) {
+  return `${headline(story)}\n\n${url}`;
+}
+
+// --- Senders --------------------------------------------------------------
+
+export async function sendTweet(text, { fetch = globalThis.fetch, vars = env } = {}) {
+  if (missingEnv("x", vars).length) return notConfigured("x", vars);
+  const oauth = OAuth({
+    consumer: { key: vars.CONSUMER_KEY, secret: vars.CONSUMER_SECRET },
+    signature_method: "HMAC-SHA1",
+    hash_function: (baseString, key) =>
+      crypto.createHmac("sha1", key).update(baseString).digest("base64"),
+  });
   const token = {
-    key: oauth_token,
-    secret: oauth_token_secret,
+    key: vars.TWITTER_ACCESS_TOKEN,
+    secret: vars.TWITTER_ACCESS_TOKEN_SECRET,
   };
-
-  const authHeader = oauth.toHeader(
-    oauth.authorize(
-      {
-        url: endpointURL,
-        method: "POST",
+  const { Authorization } = oauth.toHeader(
+    oauth.authorize({ url: X_ENDPOINT, method: "POST" }, token),
+  );
+  try {
+    const response = await fetch(X_ENDPOINT, {
+      method: "POST",
+      headers: {
+        Authorization,
+        "content-type": "application/json",
+        accept: "application/json",
       },
-      token
-    )
-  );
-
-  const response = await fetch(endpointURL, {
-    method: "POST",
-    headers: {
-      Authorization: authHeader["Authorization"],
-      "user-agent": "v2CreateTweetJS",
-      "content-type": "application/json",
-      accept: "application/json",
-    },
-    body: JSON.stringify(tweet),
-  });
-
-  if (response.ok) {
-    return response.json();
-  } else {
-    throw new Error("Unsuccessful request");
+      body: JSON.stringify({ text }),
+    });
+    const body = await readBody(response);
+    if (!response.ok) return failure("x", response.status, body);
+    const id = parseJSON(body)?.data?.id;
+    console.log(`social: X posted ${id ? `tweet ${id}` : "a tweet"}`);
+    return { success: true, status: response.status, id };
+  } catch (err) {
+    return failure("x", null, err.message);
   }
 }
 
-async function login() {
-  // Get request token
-  const oAuthRequestToken = await requestToken();
-  // Get authorization
-  authorizeURL.searchParams.append(
-    "oauth_token",
-    oAuthRequestToken.oauth_token
-  );
-  console.log("Please go here and authorize:", authorizeURL.href);
-  const pin = await input("Paste the PIN here: ");
-  // Get the access token
-  return await accessToken(oAuthRequestToken, pin.trim());
-}
-
-export async function sendTweet(tweet) {
+export async function sendCast(
+  text,
+  embeds = [],
+  { fetch = globalThis.fetch, vars = env } = {},
+) {
+  if (missingEnv("farcaster", vars).length)
+    return notConfigured("farcaster", vars);
+  // NOTE: Neynar dedupes casts with the same idempotency key.
+  const idem = crypto
+    .createHash("sha256")
+    .update(`${text}\n${embeds.join("\n")}`)
+    .digest("hex")
+    .slice(0, 16);
   try {
-    // Check if we have the access tokens in env vars
-    if (!env.TWITTER_ACCESS_TOKEN || !env.TWITTER_ACCESS_TOKEN_SECRET) {
-      log("Twitter access tokens not found. Run the OAuth flow to get them.");
-      return { success: false, error: "Twitter not configured" };
+    const response = await fetch(NEYNAR_CAST_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "x-api-key": vars.NEYNAR_API_KEY,
+        "content-type": "application/json",
+        accept: "application/json",
+      },
+      body: JSON.stringify({
+        signer_uuid: vars.FC_SIGNER_UUID,
+        text,
+        embeds: embeds.map((url) => ({ url })),
+        idem,
+      }),
+    });
+    const body = await readBody(response);
+    if (!response.ok) return failure("farcaster", response.status, body);
+    const id = parseJSON(body)?.cast?.hash;
+    console.log(`social: Farcaster posted ${id ? `cast ${id}` : "a cast"}`);
+    return { success: true, status: response.status, id };
+  } catch (err) {
+    return failure("farcaster", null, err.message);
+  }
+}
+
+export async function sendToTelegram(
+  text,
+  { fetch = globalThis.fetch, vars = env } = {},
+) {
+  if (missingEnv("telegram", vars).length)
+    return notConfigured("telegram", vars);
+  const chatId = vars.TG_CHANNEL_ID || DEFAULT_TG_CHANNEL_ID;
+  try {
+    // NOTE: The URL contains the bot token, so it must never be logged.
+    const response = await fetch(
+      `${TELEGRAM_API}/bot${vars.TG_KEY}/sendMessage`,
+      {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text,
+          disable_web_page_preview: false,
+        }),
+      },
+    );
+    const body = await readBody(response);
+    const json = parseJSON(body);
+    if (!response.ok || json?.ok === false)
+      return failure("telegram", response.status, body);
+    const id = json?.result?.message_id;
+    console.log(`social: Telegram posted ${id ? `message ${id}` : "a message"}`);
+    return { success: true, status: response.status, id };
+  } catch (err) {
+    return failure("telegram", null, err.message);
+  }
+}
+
+export function preview(channel, story, url = storyUrl(story)) {
+  if (channel === "x") return { text: formatForX(story, url) };
+  if (channel === "farcaster") return formatForFarcaster(story, url);
+  if (channel === "telegram") return { text: formatForTelegram(story, url) };
+  throw new Error(`Unknown channel "${channel}"`);
+}
+
+export async function sendStory(channel, story, options = {}) {
+  const url = options.url || storyUrl(story);
+  const post = preview(channel, story, url);
+  if (channel === "x") return sendTweet(post.text, options);
+  if (channel === "farcaster") return sendCast(post.text, post.embeds, options);
+  return sendToTelegram(post.text, options);
+}
+
+// --- Dedupe state -------------------------------------------------------
+
+const KEEP_DAYS = 60;
+
+export function defaultStatePath(vars = env) {
+  return (
+    vars.SOCIAL_STATE_FILE ||
+    path.resolve(vars.CACHE_DIR || "cache", "social-posts.json")
+  );
+}
+
+export function loadState(file) {
+  try {
+    const state = JSON.parse(readFileSync(file, "utf8"));
+    return { posted: state.posted || {}, lastSlot: state.lastSlot || null };
+  } catch (err) {
+    return { posted: {}, lastSlot: null };
+  }
+}
+
+export function saveState(file, state, now = Date.now()) {
+  const cutoff = now - KEEP_DAYS * 24 * 60 * 60 * 1000;
+  const posted = {};
+  for (const [index, channels] of Object.entries(state.posted)) {
+    const times = Object.values(channels);
+    if (times.length && Math.max(...times) >= cutoff) posted[index] = channels;
+  }
+  state.posted = posted;
+  mkdirSync(path.dirname(file), { recursive: true });
+  const tmp = `${file}.${process.pid}.tmp`;
+  writeFileSync(tmp, JSON.stringify(state, null, 2));
+  renameSync(tmp, file);
+}
+
+function key(story) {
+  return String(story.index).replace(/^0x/, "");
+}
+
+export function wasPosted(state, story, channel) {
+  return Boolean(state.posted[key(story)]?.[channel]);
+}
+
+function markPosted(state, story, channel, now) {
+  const k = key(story);
+  state.posted[k] = { ...(state.posted[k] || {}), [channel]: now };
+}
+
+// Posts one story to the given channels, skipping disabled channels and
+// channels the story was already posted to. Records successes in the state
+// file right away.
+export async function postStory(story, options = {}) {
+  const {
+    channels = CHANNELS,
+    statePath = defaultStatePath(options.vars),
+    now = () => Date.now(),
+  } = options;
+  const vars = options.vars || env;
+  const results = {};
+  for (const channel of channels) {
+    if (missingEnv(channel, vars).length) {
+      results[channel] = notConfigured(channel, vars);
+      continue;
     }
-
-    const token = {
-      oauth_token: env.TWITTER_ACCESS_TOKEN,
-      oauth_token_secret: env.TWITTER_ACCESS_TOKEN_SECRET,
-    };
-
-    const response = await getRequest(token, { text: tweet });
-    log(`Tweet sent successfully: ${tweet.substring(0, 50)}...`);
-    return { success: true, data: response };
-  } catch (error) {
-    log(`Failed to send tweet: ${error.message}`);
-    return { success: false, error: error.message };
+    const state = loadState(statePath);
+    if (wasPosted(state, story, channel)) {
+      results[channel] = { success: false, skipped: true, error: "already posted" };
+      continue;
+    }
+    const result = await sendStory(channel, story, { ...options, vars });
+    results[channel] = result;
+    if (result.success) {
+      const latest = loadState(statePath);
+      markPosted(latest, story, channel, now());
+      saveState(statePath, latest, now());
+    }
   }
+  return results;
 }
 
-// Warpcast API implementation using seed phrase
-async function generateWarpcastToken() {
-  const { utils, Wallet } = await import("ethers");
-  const startTimestamp = Date.now();
+// --- Automatic posting --------------------------------------------------
 
-  const body = JSON.stringify({
-    method: "generateToken",
-    params: {
-      expiresAt: startTimestamp + 1000 * 60 * 60 * 24, // 24h
-      timestamp: startTimestamp,
-    },
-  });
-
-  const signature = Buffer.from(
-    utils.arrayify(
-      await Wallet.fromMnemonic(env.FC_SEED_PHRASE).signMessage(body)
-    )
-  ).toString("base64");
-
-  const authResponse = await fetch("https://api.warpcast.com/v2/auth", {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer eip191:${signature}`,
-    },
-    body,
-  });
-
-  const data = await authResponse.json();
-  if (!authResponse.ok) {
-    throw new Error(`Warpcast auth failed: ${JSON.stringify(data)}`);
-  }
-
-  return data.result.token.secret;
+export function minUpvotes(vars = env) {
+  const value = parseInt(vars.SOCIAL_MIN_UPVOTES, 10);
+  return Number.isNaN(value) ? 2 : value;
 }
 
-async function postCastViaWarpcast(text, embeds) {
-  const bearerToken = await generateWarpcastToken();
-  const url = "https://api.warpcast.com/v2/casts";
-  const headers = {
-    Accept: "application/json",
-    Authorization: `Bearer ${bearerToken}`,
-    "Content-Type": "application/json",
+export function postHours(vars = env) {
+  const raw = vars.SOCIAL_POST_HOURS_UTC ?? "16";
+  return raw
+    .split(",")
+    .map((h) => parseInt(h.trim(), 10))
+    .filter((h) => Number.isInteger(h) && h >= 0 && h <= 23);
+}
+
+export function autopostEnabled(vars = env) {
+  if (vars.SOCIAL_AUTOPOST === "false") return false;
+  if (vars.SOCIAL_AUTOPOST === "true") return true;
+  return vars.NODE_ENV === "production";
+}
+
+// Returns the slot ("YYYY-MM-DDTHH") to run now, or null when it's not one
+// of the posting hours or that slot already ran.
+export function dueSlot(date, hours, lastSlot) {
+  if (!hours.includes(date.getUTCHours())) return null;
+  const slot = date.toISOString().slice(0, 13);
+  return slot === lastSlot ? null : slot;
+}
+
+// Picks the highest ranked story that wasn't posted to the channel yet.
+export async function pickStory(stories, channel, state, options = {}) {
+  const { min = 2, isAlive } = options;
+  for (const story of stories) {
+    if (!story?.index || !story?.title) continue;
+    if ((story.upvotes || 0) < min) continue;
+    if (wasPosted(state, story, channel)) continue;
+    if (isAlive && story.href && /^https?:/.test(story.href)) {
+      let alive = true;
+      try {
+        alive = await isAlive(story.href);
+      } catch (err) {
+        alive = true;
+      }
+      if (!alive) continue;
+    }
+    return story;
+  }
+  return null;
+}
+
+// Posts the top unposted story of the day to each enabled channel.
+export async function runOnce(options = {}) {
+  const { getStories, isAlive } = options;
+  const vars = options.vars || env;
+  const statePath = options.statePath || defaultStatePath(vars);
+  const channels = enabledChannels(vars);
+  const results = {};
+  if (channels.length === 0) return results;
+
+  let stories;
+  try {
+    stories = await getStories();
+  } catch (err) {
+    console.error(`social: could not load stories: ${err.message}`);
+    return results;
+  }
+
+  for (const channel of channels) {
+    const state = loadState(statePath);
+    const story = await pickStory(stories, channel, state, {
+      min: minUpvotes(vars),
+      isAlive,
+    });
+    if (!story) {
+      console.log(`social: ${LABELS[channel]} has no new story to post`);
+      continue;
+    }
+    const result = await postStory(story, {
+      ...options,
+      vars,
+      statePath,
+      channels: [channel],
+    });
+    results[channel] = { story, ...result[channel] };
+  }
+  return results;
+}
+
+// Runs in the primary process only. Checks every few minutes whether one of
+// the posting hours started and, if so, runs runOnce() for that slot. The
+// slot is persisted, so restarts don't post twice.
+export function startScheduler(options = {}) {
+  const vars = options.vars || env;
+  for (const line of statusLines(vars)) console.log(line);
+  if (!autopostEnabled(vars)) {
+    console.log(
+      "social: automatic posting off (needs NODE_ENV=production or SOCIAL_AUTOPOST=true)",
+    );
+    return null;
+  }
+  const hours = postHours(vars);
+  if (enabledChannels(vars).length === 0 || hours.length === 0) {
+    console.log("social: automatic posting off (no channel enabled or no hours)");
+    return null;
+  }
+  const statePath = options.statePath || defaultStatePath(vars);
+  console.log(
+    `social: automatic posting at ${hours.map((h) => `${h}:00`).join(", ")} UTC, state in ${statePath}`,
+  );
+
+  let running = false;
+  const tick = async () => {
+    if (running) return;
+    const state = loadState(statePath);
+    const slot = dueSlot(new Date(), hours, state.lastSlot);
+    if (!slot) return;
+    running = true;
+    try {
+      state.lastSlot = slot;
+      saveState(statePath, state);
+      await runOnce({ ...options, vars, statePath });
+    } catch (err) {
+      console.error(`social: automatic posting failed: ${err.stack || err}`);
+    } finally {
+      running = false;
+    }
   };
-  
-  const body = JSON.stringify({
-    text,
-    embeds,
-  });
-
-  const response = await fetch(url, { method: "POST", headers, body });
-  const data = await response.json();
-  
-  if (!response.ok) {
-    throw new Error(`Warpcast cast failed: ${JSON.stringify(data)}`);
-  }
-  
-  return data;
-}
-
-export async function sendCast(text, embeds = []) {
-  try {
-    if (!env.FC_SEED_PHRASE) {
-      log("FC_SEED_PHRASE not configured");
-      return { success: false, error: "Farcaster not configured" };
-    }
-
-    const response = await postCastViaWarpcast(text, embeds);
-    log(`Cast sent successfully: ${text.substring(0, 50)}...`);
-    return { success: true, data: response };
-  } catch (error) {
-    log(`Failed to send cast: ${error.message}`);
-    return { success: false, error: error.message };
-  }
-}
-
-export function formatSubmissionForTwitter(submission, domain, targetUrl) {
-  const tweet = `${submission.title} - ${domain}
-
-${targetUrl}`;
-  
-  return tweet;
-}
-
-export function formatSubmissionForFarcaster(submission, domain, targetUrl) {
-  const text = `${submission.title} - ${domain}`;
-  
-  const embeds = [targetUrl];
-  
-  return { text, embeds };
+  const timer = setInterval(tick, options.intervalMs || 5 * 60 * 1000);
+  timer.unref?.();
+  return timer;
 }
