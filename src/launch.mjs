@@ -90,11 +90,15 @@ if (cluster.isPrimary) {
   await api.launch(trie, node);
 
   if (!reconcileMode) {
-    // Generate sitemaps before the HTTP server starts, then hourly so new
-    // stories and comments show up without a restart. generateSitemaps() is
-    // synchronous, so two runs can't overlap; errors are logged, not thrown,
-    // so a failed run can't crash the primary process. http.mjs serves the
-    // sitemap files from disk on each request (not via sirv's startup index).
+    // Regenerate sitemaps hourly so new stories and comments show up without
+    // a restart. generateSitemaps() is synchronous, so two runs can't
+    // overlap; errors are logged, not thrown, so a failed run can't crash the
+    // primary process. http.mjs serves the sitemap files from disk on each
+    // request (not via sirv's startup index), so the files from the previous
+    // run keep being served until the first run here. That first run waits
+    // a minute: rebuilding every month's sitemap blocks the event loop, and
+    // doing it before the HTTP server and workers start made every deploy's
+    // 504 window longer.
     const refreshSitemaps = () => {
       try {
         generateSitemaps();
@@ -102,7 +106,7 @@ if (cluster.isPrimary) {
         log(`Sitemap generation failed: ${err.stack || err}`);
       }
     };
-    refreshSitemaps();
+    setTimeout(refreshSitemaps, 60 * 1000).unref();
     setInterval(refreshSitemaps, 60 * 60 * 1000).unref();
 
     const http = await import("./http.mjs");
