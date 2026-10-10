@@ -22,6 +22,7 @@ import * as newest from "./views/new.mjs";
 import * as best from "./views/best.mjs";
 // Dynamic import for generatePreview - only loaded when not in reconcile mode
 let generatePreview = null;
+let summarizeNewStory = null;
 import { getSubmission, isReactionComment } from "./cache.mjs";
 import { triggerUpvoteNotification } from "./subscriptions.mjs";
 import * as indexnow from "./indexnow.mjs";
@@ -271,6 +272,7 @@ export function handleMessage(
             // NOTE: This can fail if the message is an upvote, not a submission.
           });
         }
+        if (summarizeNewStory) summarizeNewStory(`0x${index}`);
       });
 
       // Trigger upvote notification for the story author
@@ -388,6 +390,7 @@ export async function launch(trie, libp2p) {
     try {
       const storyModule = await import("./views/story.mjs");
       generatePreview = storyModule.generatePreview;
+      summarizeNewStory = storyModule.summarizeNewStory;
     } catch (err) {
       log(`Warning: Could not load story module: ${err.message}`);
     }

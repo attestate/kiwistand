@@ -39,8 +39,10 @@ import { getSubmission, getBest } from "../cache.mjs";
 import { purgeCache } from "../cloudflarePurge.mjs";
 import * as preview from "../preview.mjs";
 import ShareIcon from "./components/shareicon.mjs";
+import Summary from "./components/summary.mjs";
 import { warpcastSvg } from "./components/socialNetworkIcons.mjs";
 import { isBlocked } from "../linksafety.mjs";
+import { getSummary, scheduleSummary } from "../summaries.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -197,6 +199,29 @@ export async function generatePreview(index, commentIndex = null) {
   }
 }
 
+// Generates the story's summary in the background (if it has none yet) and
+// purges the cached story page once there's one to show.
+export function summarizeStory(index, submission) {
+  const job = scheduleSummary(index, submission.title, submission.href);
+  job?.then((summary) => {
+    if (!summary) return;
+    const hexIndex = String(index).replace(/^0x/, "");
+    const storyUrl = `https://news.kiwistand.com/stories/${getSlug(
+      submission.title,
+    )}?index=0x${hexIndex}`;
+    purgeCache(storyUrl).catch((err) =>
+      log(`Failed to purge story page cache after summary: ${err}`),
+    );
+  });
+}
+
+// Called for every new "amplify" message; upvotes have no submission under
+// their index, so generateStory throws and nothing happens.
+export async function summarizeNewStory(index) {
+  try {
+    summarizeStory(index, await generateStory(index));
+  } catch (err) {}
+}
 
 // NOTE: "More from <site>" links give crawlers and readers a path from a story
 // page to older story pages. It uses getBest(), the same query that powers
@@ -346,9 +371,16 @@ export default async function (trie, theme, index, value, referral, commentIndex
     }
   }
 
+  // Never wait for Claude here: without a stored summary the page renders
+  // without one and the next render (after the day-long CDN cache) has it.
+  const summary = getSummary(index);
+  if (!summary) summarizeStory(index, value);
+
   const start = 0;
-  // Only add margin-bottom when curator section won't be shown
-  const style = upvoterProfiles.length === 0 ? "margin-bottom: 28px;" : "";
+  // Only add margin-bottom when neither the summary nor the curator section
+  // will be shown
+  const style =
+    !summary && upvoterProfiles.length === 0 ? "margin-bottom: 28px;" : "";
 
   // Generate appropriate preview URLs based on whether this is a comment or story
   let ogImage, frameImage, ogDescription, ogTitle;
@@ -446,7 +478,7 @@ export default async function (trie, theme, index, value, referral, commentIndex
       : "";
     const fallback = textContent
       ? textContent.slice(0, 160)
-      : `${value.title}${source}, discussed on Kiwi News.`;
+      : summary || `${value.title}${source}, discussed on Kiwi News.`;
     ogDescription = data && data.ogDescription ? data.ogDescription : fallback;
     ogTitle = value.title;
   }
@@ -493,6 +525,7 @@ export default async function (trie, theme, index, value, referral, commentIndex
       })),
     } : {}),
     ...(ogDescription ? { "description": ogDescription } : {}),
+    ...(summary ? { "abstract": summary } : {}),
   }, { isJSON: true });
 
   return "<!DOCTYPE html>" + html`
@@ -558,6 +591,7 @@ export default async function (trie, theme, index, value, referral, commentIndex
                   false, // isAboveFold = false for lazy loading
                 )({ ...story, index }, 0)}
               </tbody>
+              ${Summary(summary)}
               ${upvoterProfiles.length > 0
                 ? html`<tr>
                     <td style="padding: 12px 0 28px 0;">
