@@ -340,9 +340,15 @@ export async function topstories(leaves, algorithm = 'control', skipNeynar = fal
               2,
             );
 
-            const adjustedPerformance = upvotePerformance * confidenceFactor;
+            // Blend toward 1 by confidence: with little data the story keeps
+            // its score. (Multiplying by performance * confidence instead
+            // shrank every score to ~0 and zeroed stories without clicks.)
+            const adjustedPerformance =
+              1 + (upvotePerformance - 1) * confidenceFactor;
 
-            score *= adjustedPerformance;
+            if (Number.isFinite(adjustedPerformance)) {
+              score *= adjustedPerformance;
+            }
           } catch (e) {
             // If Upvote-Click ratio can't be calculated, we just keep the current
             // score
@@ -361,9 +367,13 @@ export async function topstories(leaves, algorithm = 'control', skipNeynar = fal
               2,
             );
 
-            const adjustedPerformance = ctrPerformance * confidenceFactor;
+            // Blend toward 1, see the upvote/click ratio above.
+            const adjustedPerformance =
+              1 + (ctrPerformance - 1) * confidenceFactor;
 
-            score *= adjustedPerformance;
+            if (Number.isFinite(adjustedPerformance)) {
+              score *= adjustedPerformance;
+            }
           } catch (e) {
             // If CTR can't be calculated, we just keep the current score
           }
