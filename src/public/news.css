@@ -863,6 +863,14 @@ body.kiwi-logged-in .like-count {
   body.react-loaded .comment-input-host {
     min-height: auto;
   }
+  /* Signed out (set by theme-init.js), the app shows a "connect to comment"
+     card instead of the textarea, so reserve the card's height instead.
+     flow-root keeps its margins inside the host. */
+  html[data-signed-out] .comment-input-desktop-ssr { display: none !important; }
+  html[data-signed-out] .comment-input-host {
+    display: flow-root;
+    min-height: 123px;
+  }
 
 }
 
