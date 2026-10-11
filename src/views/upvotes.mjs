@@ -3,27 +3,19 @@ import url from "url";
 
 import htm from "htm";
 import vhtml from "vhtml";
-import normalizeUrl from "normalize-url";
 import { formatDistanceToNow } from "date-fns";
 import { utils } from "ethers";
 import DOMPurify from "isomorphic-dompurify";
 
 import Header from "./components/header.mjs";
-import { trophySVG, broadcastSVG } from "./components/secondheader.mjs";
 import Footer from "./components/footer.mjs";
 import Sidebar from "./components/sidebar.mjs";
 import { custom } from "./components/head.mjs";
 import { getSlug } from "../utils.mjs";
-import * as store from "../store.mjs";
 import * as ens from "../ens.mjs";
-import * as moderation from "./moderation.mjs";
 import * as karma from "../karma.mjs";
-import * as preview from "../preview.mjs";
-import Row from "./components/row.mjs";
 import RightColumn from "./components/right-column.mjs";
-import { getSubmissions, getSubmissionCount, getContributionsData } from "../cache.mjs";
-import { metadata } from "../parser.mjs";
-import { truncate } from "../utils.mjs";
+import { getSubmissions, getSubmissionCount } from "../cache.mjs";
 import {
   SocialButton,
   twitterSvg,

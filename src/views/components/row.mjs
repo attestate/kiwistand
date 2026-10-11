@@ -7,14 +7,8 @@ import {
 } from "date-fns";
 import { URL } from "url";
 import DOMPurify from "isomorphic-dompurify";
-import ethers from "ethers";
 import { getSlug, isCloudflareImage } from "../../utils.mjs";
 
-import ShareIcon from "./shareicon.mjs";
-import CopyIcon from "./copyicon.mjs";
-import FCIcon from "./farcastericon.mjs";
-import { warpcastSvg } from "./socialNetworkIcons.mjs";
-import theme from "../../theme.mjs";
 import { countOutbounds, countComments } from "../../cache.mjs";
 import log from "../../logger.mjs";
 import { twitterFrontends } from "../../parser.mjs";
@@ -30,18 +24,6 @@ if (env.CUSTOM_PROTOCOL && env.CUSTOM_HOST_NAME) {
 }
 
 const html = htm.bind(vhtml);
-
-export const iconSVG = html`
-  <svg
-    style="width: 35px;"
-    viewBox="0 0 200 200"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <path
-      d="M99.84 52.0801L55.04 96.8001L68.44 110.04L90.36 88.0401L90.3747 148H109.8V88.0401L131.84 110.04L144.96 96.8001L100.24 52.0801H99.84Z"
-    />
-  </svg>
-`;
 
 const heartSVG = html`
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
@@ -112,15 +94,6 @@ const aiSparkleSVG = html`
     <line x1="224" y1="72" x2="224" y2="104" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16" />
     <line x1="152" y1="40" x2="200" y2="40" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16" />
     <line x1="208" y1="88" x2="240" y2="88" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16" />
-  </svg>
-`;
-
-const heartFilledSVG = html`
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
-    <rect width="256" height="256" fill="none" />
-    <path
-      d="M240,102c0,70-103.79,126.66-108.21,129a8,8,0,0,1-7.58,0C119.79,228.66,16,172,16,102A62.07,62.07,0,0,1,78,40c20.65,0,38.73,8.88,50,23.89C139.27,48.88,157.35,40,178,40A62.07,62.07,0,0,1,240,102Z"
-    />
   </svg>
 `;
 
@@ -199,54 +172,6 @@ const convertBrTagsToNewlines = (text) => {
   if (!text) return text;
   return text.replace(/<br\s*\/?>/gi, '\n');
 };
-
-const ShuffleSVG = html`<svg
-  style="width: 24px; color: var(--text-primary);"
-  xmlns="http://www.w3.org/2000/svg"
-  viewBox="0 0 256 256"
->
-  <rect width="256" height="256" fill="none" />
-  <path
-    d="M32,72H55.06a64,64,0,0,1,52.08,26.8l41.72,58.4A64,64,0,0,0,200.94,184H232"
-    fill="none"
-    stroke="currentColor"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    stroke-width="16"
-  />
-  <polyline
-    points="208 48 232 72 208 96"
-    fill="none"
-    stroke="currentColor"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    stroke-width="16"
-  />
-  <polyline
-    points="208 160 232 184 208 208"
-    fill="none"
-    stroke="currentColor"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    stroke-width="16"
-  />
-  <path
-    d="M147.66,100.47l1.2-1.67A64,64,0,0,1,200.94,72H232"
-    fill="none"
-    stroke="currentColor"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    stroke-width="16"
-  />
-  <path
-    d="M32,184H55.06a64,64,0,0,0,52.08-26.8l1.2-1.67"
-    fill="none"
-    stroke="currentColor"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    stroke-width="16"
-  />
-</svg>`;
 
 // NOTE: An embed image is rendered at 100% width with height:auto, so its
 // width/height attributes set the box the browser reserves before the image
@@ -329,8 +254,6 @@ const blockedOGImageDomains = [
   "paulgraham.com",
 ];
 
-// Helper function to check if domain is a substack subdomain
-const isSubstackDomain = (domain) => domain.endsWith("substack.com");
 const knownBadOgImages = [
   "https://paragraph.xyz/share/share_img.jpg",
   "https://s.turbifycdn.com/aah/paulgraham/essays-5.gif",
@@ -1676,31 +1599,4 @@ const row = (
   };
 };
 
-export const ChatsSVG = (
-  style = "color: var(--text-tertiary); width: 25px;",
-) => html`
-  <svg
-    style="${style}"
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 256 256"
-  >
-    <rect width="256" height="256" fill="none" />
-    <path
-      d="M71.58,144,32,176V48a8,8,0,0,1,8-8H168a8,8,0,0,1,8,8v88a8,8,0,0,1-8,8Z"
-      fill="none"
-      stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="16"
-    />
-    <path
-      d="M80,144v40a8,8,0,0,0,8,8h96.42L224,224V96a8,8,0,0,0-8-8H176"
-      fill="none"
-      stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="16"
-    />
-  </svg>
-`;
 export default row;

@@ -1,17 +1,6 @@
-// @format
-import { decodeLog } from "eth-fun";
 import * as blockLogs from "@attestate/crawler-call-block-logs";
-import { ecrecover } from "../id.mjs";
 
 const { serialize } = blockLogs.loader;
-
-const receiptmsg = (txid, options) => ({
-  version: "0.0.1",
-  type: "json-rpc",
-  method: "eth_getTransactionReceipt",
-  params: [txid],
-  options,
-});
 
 export async function update({ message, execute, environment }) {
   const options = {

@@ -1,16 +1,10 @@
 //@format
 import { env } from "process";
-import { URL } from "url";
 
 import htm from "htm";
 import vhtml from "vhtml";
 import normalizeUrl from "normalize-url";
-import {
-  startOfYear,
-  sub,
-  differenceInMinutes,
-  differenceInSeconds,
-} from "date-fns";
+import { startOfYear, sub } from "date-fns";
 import DOMPurify from "isomorphic-dompurify";
 import slugify from "slugify";
 
@@ -22,12 +16,9 @@ import Sidebar from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
 import RightColumn from "./components/right-column.mjs";
 import { custom } from "./components/head.mjs";
-import * as store from "../store.mjs";
-import * as id from "../id.mjs";
 import * as moderation from "./moderation.mjs";
 import log from "../logger.mjs";
-import { EIP712_MESSAGE } from "../constants.mjs";
-import Row, { extractDomain } from "./components/row.mjs";
+import Row from "./components/row.mjs";
 import { getBest, getLastComment, countImpressions, lifetimeCache } from "../cache.mjs";
 import { metadata } from "../parser.mjs";
 

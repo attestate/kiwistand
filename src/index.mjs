@@ -7,7 +7,6 @@ import { createLibp2p } from "libp2p";
 import log from "./logger.mjs";
 import { bootstrap } from "./id.mjs";
 import * as sync from "./sync.mjs";
-import * as store from "./store.mjs";
 import { PROTOCOL } from "./constants.mjs";
 import { elog } from "./utils.mjs";
 

@@ -68,17 +68,6 @@ export async function sendPushNotification(addresses, notification) {
 }
 
 /**
- * Send test notification to specific External User ID
- */
-export async function sendTestNotification(address) {
-  return sendPushNotification([address], {
-    title: "Test Notification",
-    body: "This is a test notification from Kiwi News",
-    url: "https://news.kiwistand.com",
-  });
-}
-
-/**
  * Send a broadcast push notification to all subscribed users in OneSignal
  * This targets the "Subscribed Users" segment which includes all users who
  * have opted in to notifications for the configured app.

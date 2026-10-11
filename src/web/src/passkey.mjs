@@ -77,15 +77,6 @@ export function rpIdFor(hostname) {
   return undefined;
 }
 
-export function isSupported() {
-  return (
-    typeof window !== "undefined" &&
-    typeof window.PublicKeyCredential !== "undefined" &&
-    typeof navigator !== "undefined" &&
-    !!navigator.credentials
-  );
-}
-
 export function hasUsedPasskey() {
   try {
     return localStorage.getItem(USED_FLAG) === "true";

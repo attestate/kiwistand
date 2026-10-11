@@ -16,12 +16,8 @@ const cache = new SqliteCache({
 });
 export default cache;
 
-
-import { subYears, formatISO } from "date-fns";
 import Database from "better-sqlite3";
-import { add } from "date-fns";
 import normalizeUrl from "normalize-url";
-import { ethers } from "ethers";
 
 import log from "./logger.mjs";
 import { toDigest } from "./id.mjs";
@@ -377,45 +373,6 @@ export function getCommentAuthorById(commentId) {
   }
 }
 
-export async function getRecommendations(candidates, fingerprint, identity) {
-  if (identity) {
-    const commentedStories = db
-      .prepare(
-        `
-      SELECT DISTINCT submission_id 
-      FROM comments 
-      WHERE identity = ?
-    `,
-      )
-      .all(identity)
-      .map((row) => row.submission_id);
-
-    candidates = candidates.filter((story) => {
-      return (
-        story.identity !== identity &&
-        !story.upvoters.includes(identity) &&
-        !commentedStories.includes(`kiwi:0x${story.index}`)
-      );
-    });
-  }
-
-  const clickedUrls = db
-    .prepare(
-      `
-    SELECT DISTINCT url 
-    FROM fingerprints 
-    WHERE hash = ?
-  `,
-    )
-    .all(fingerprint)
-    .map((row) => row.url);
-
-  return candidates.filter(
-    (story) =>
-      !clickedUrls.includes(normalizeUrl(story.href, { stripWWW: false })),
-  );
-}
-
 export function getTimestamp(identity) {
   const row = db
     .prepare(`SELECT timestamp FROM notifications WHERE identity = ?`)
@@ -437,81 +394,6 @@ export function setTimestamp(identity, timestamp) {
      ON CONFLICT(identity) DO UPDATE SET timestamp = excluded.timestamp;
    `,
   ).run(identity, timestamp);
-}
-
-export function getContributionsData(identity) {
-  const endDate = new Date();
-  const startDate = new Date(new Date().getFullYear(), 0, 1);
-  const startTimestamp = Math.floor(startDate.getTime() / 1000);
-  const endTimestamp = Math.floor(endDate.getTime() / 1000);
-
-  const query = `
-     SELECT date(timestamp, 'unixepoch') AS date, COUNT(*) AS count
-     FROM (
-       SELECT timestamp FROM submissions WHERE timestamp BETWEEN ? AND ? AND identity = ?
-       UNION ALL
-       SELECT timestamp FROM upvotes WHERE timestamp BETWEEN ? AND ? AND identity = ?
-     )
-     GROUP BY date
-     ORDER BY date
-   `;
-  const params = [
-    startTimestamp,
-    endTimestamp,
-    identity,
-    startTimestamp,
-    endTimestamp,
-    identity,
-  ];
-  const rawData = db.prepare(query).all(params);
-
-  const contributions = rawData.map(({ date, count }) => ({
-    date,
-    count,
-    color: "#654515",
-    intensity: count,
-  }));
-
-  let contributionsData = {
-    years: [
-      {
-        year: startDate.getFullYear().toString(),
-        total: contributions.reduce((acc, curr) => acc + curr.count, 0),
-        range: {
-          start: formatISO(startDate, { representation: "date" }),
-          end: formatISO(endDate, { representation: "date" }),
-        },
-      },
-    ],
-    contributions,
-  };
-
-  return contributionsData;
-}
-
-export function getHashesPerDateRange(startDate, endDate) {
-  const start = new Date(startDate);
-  const end = new Date(endDate);
-  const dates = [];
-  const counts = [];
-
-  for (let day = start; day <= end; day = add(day, { days: 1 })) {
-    const dayStartTimestamp = Math.floor(day.getTime() / 1000);
-    const nextDay = add(day, { days: 1 });
-    const dayEndTimestamp = Math.floor(nextDay.getTime() / 1000) - 1;
-
-    const query = `
-        SELECT COUNT(DISTINCT hash) AS count
-        FROM fingerprints
-        WHERE timestamp >= ? AND timestamp <= ?
-      `;
-    const params = [dayStartTimestamp, dayEndTimestamp];
-    const result = db.prepare(query).get(params);
-    dates.push(day);
-    counts.push(result.count);
-  }
-
-  return { dates, counts };
 }
 
 export function countOutbounds(url) {
@@ -540,28 +422,6 @@ export function countImpressions(url) {
    `);
   const result = query.get(normalizedUrl);
   return result ? result.uniqueHashCount : 0;
-}
-
-export function getImpressionsWithTimestamps(startTimestamp, endTimestamp) {
-  const query = db.prepare(`
-    SELECT url, hash, timestamp
-    FROM impressions
-    WHERE timestamp >= ? AND timestamp <= ?
-    ORDER BY timestamp
-  `);
-
-  return query.all(startTimestamp, endTimestamp);
-}
-
-export function getOutboundsWithTimestamps(startTimestamp, endTimestamp) {
-  const query = db.prepare(`
-    SELECT url, hash, timestamp
-    FROM fingerprints
-    WHERE timestamp >= ? AND timestamp <= ?
-    ORDER BY timestamp
-  `);
-
-  return query.all(startTimestamp, endTimestamp);
 }
 
 export function trackOutbound(url, hash) {
@@ -663,24 +523,6 @@ export function countEngagements(hrefs) {
   return result;
 }
 
-export function getNumberOfOnlineUsers() {
-  const timestamp24HoursAgo = Math.floor(Date.now() / 1000 - 24 * 60 * 60);
-
-  const uniqueIdentities = new Set();
-
-  const tables = ["submissions", "upvotes", "comments"];
-  tables.forEach((table) => {
-    const stmt = db.prepare(`
-       SELECT DISTINCT identity FROM ${table}
-       WHERE timestamp > ?
-     `);
-    const identities = stmt.all(timestamp24HoursAgo);
-    identities.forEach((identity) => uniqueIdentities.add(identity.identity));
-  });
-
-  return uniqueIdentities.size;
-}
-
 // Calculate karma directly from SQLite database
 export function calculateKarmaFromDB(identity, endDate) {
   try {
@@ -755,40 +597,6 @@ export function getKarmaRanking() {
     }));
   } catch (err) {
     log(`Error in getKarmaRanking: ${err.toString()}`);
-    return [];
-  }
-}
-
-export function getKarmaRankingByDate(startDate, endDate) {
-  try {
-    const startTimestamp = Math.floor(new Date(startDate).getTime() / 1000);
-    const endTimestamp = Math.floor(new Date(endDate).getTime() / 1000);
-
-    const query = `
-      SELECT identity, count(*) as karma
-      FROM (
-        SELECT s.identity
-        FROM upvotes u
-        JOIN submissions s ON u.href = s.href
-        WHERE u.timestamp BETWEEN ? AND ?
-        UNION ALL
-        SELECT c.identity
-        FROM reactions r
-        JOIN comments c ON r.comment_id = c.id
-        WHERE r.timestamp BETWEEN ? AND ?
-      )
-      GROUP BY identity
-      ORDER BY karma DESC
-    `;
-
-    const params = [startTimestamp, endTimestamp, startTimestamp, endTimestamp];
-    const results = db.prepare(query).all(params);
-    return results.map((row) => ({
-      identity: row.identity,
-      karma: row.karma,
-    }));
-  } catch (err) {
-    log(`Error in getKarmaRankingByDate: ${err.toString()}`);
     return [];
   }
 }
@@ -920,38 +728,6 @@ export function getUpvotes(identity) {
       index: upvote.id.split("0x")[1],
     }));
   return [...submissions, ...upvotes];
-}
-
-export function getAllComments() {
-  const threeWeeksAgo = Math.floor(Date.now() / 1000) - 1814400;
-  return db
-    .prepare(
-      `
-     SELECT
-       c.*,
-       s.title AS submission_title
-     FROM
-       comments c
-     JOIN
-       submissions s ON c.submission_id = s.id
-     WHERE
-       c.timestamp >= ?
-     ORDER BY
-      timestamp DESC
-     LIMIT 30
-   `,
-    )
-    .all(threeWeeksAgo)
-    .map((comment) => {
-      const href = comment.submission_id;
-      delete comment.submission_id;
-
-      return {
-        ...comment,
-        href,
-        index: comment.id.split("0x")[1],
-      };
-    });
 }
 
 export function getReactionsToComments(identity) {
@@ -1624,30 +1400,5 @@ export async function storeMiniAppUpvote({ fid, href, title, timestamp, walletAd
   } catch (error) {
     log(`Error storing mini app upvote: ${error.message}`);
     throw error;
-  }
-}
-
-export async function getMiniAppUpvotes() {
-  try {
-    const stmt = db.prepare(`
-      SELECT href, timestamp, title, signer, identity 
-      FROM upvotes 
-      WHERE signer LIKE 'miniapp:%'
-      ORDER BY timestamp DESC
-    `);
-    
-    const upvotes = stmt.all();
-    
-    return upvotes.map(upvote => ({
-      href: upvote.href,
-      timestamp: upvote.timestamp,
-      title: upvote.title,
-      signer: upvote.signer,
-      identity: upvote.identity,
-      type: "amplify"
-    }));
-  } catch (error) {
-    log(`Error getting mini app upvotes: ${error.message}`);
-    return [];
   }
 }

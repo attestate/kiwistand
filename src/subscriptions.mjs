@@ -1,6 +1,5 @@
 import { env } from "process";
 import path from "path";
-import fs from "fs";
 
 import webpush from "web-push";
 import Database from "better-sqlite3";
