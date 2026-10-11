@@ -6,6 +6,7 @@ import { Wallet } from "@ethersproject/wallet";
 import { EIP712_DOMAIN } from "./API.mjs";
 import { getLocalAccount } from "./session.mjs";
 import { useSigner } from "./client.mjs";
+import { uploadImage } from "./uploadImage.mjs";
 
 // Same rules as src/profiles.mjs, so people see problems while typing.
 export const PROFILE_TYPES = {
@@ -103,22 +104,6 @@ export function useIdentity() {
   if (local) return { identity: local.identity, local };
   if (account.isConnected) return { identity: account.address };
   return {};
-}
-
-async function uploadImage(file) {
-  const tokenResponse = await fetch("/api/v1/image-upload-token");
-  if (!tokenResponse.ok) throw new Error("Failed to get upload token");
-  const token = await tokenResponse.json();
-  const { uploadURL, id } = token.data;
-
-  const form = new FormData();
-  form.append("file", file);
-  const upload = await fetch(uploadURL, { method: "POST", body: form });
-  if (!upload.ok) throw new Error("Failed to upload image");
-
-  // https://imagedelivery.net/[account hash]/[image id]/[variant]
-  const hash = uploadURL.split("/").slice(-2)[0];
-  return `https://imagedelivery.net/${hash}/${id}/public`;
 }
 
 export async function fetchProfile(address) {
