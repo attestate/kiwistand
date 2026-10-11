@@ -1379,6 +1379,7 @@ const row = (
                       data-title="${DOMPurify.sanitize(story.title)}"
                       data-href="${DOMPurify.sanitize(story.href)}"
                       data-upvoters="${JSON.stringify(story.upvoters)}"
+                      data-index="${story.index ? `0x${String(story.index).replace(/^0x/, "")}` : ""}"
                       class="like-button-container"
                       style="flex: 1; display: flex; justify-content: center;"
                     >

@@ -235,7 +235,9 @@ const delegations = await registry.delegations();
 const href = null;
 
 let upvotes = [],
-  comments = [];
+  comments = [],
+  anonJoins = [],
+  anonUpvotes = [];
 // Both primary and workers load posts for cache bootstrapping (SQLite + reaction markers)
 await Promise.allSettled([
   store
@@ -264,11 +266,41 @@ await Promise.allSettled([
     )
     .then((result) => (comments = result))
     .catch((error) => console.error("Comment posts error:", error)),
+  store
+    .posts(
+      trie,
+      from,
+      amount,
+      parser,
+      startDatetime,
+      delegations,
+      href,
+      "anon-join",
+    )
+    .then((result) => (anonJoins = result))
+    .catch((error) => console.error("Anon join posts error:", error)),
+  store
+    .posts(
+      trie,
+      from,
+      amount,
+      parser,
+      startDatetime,
+      delegations,
+      href,
+      "anon-upvote",
+    )
+    .then((result) => (anonUpvotes = result))
+    .catch((error) => console.error("Anon upvote posts error:", error)),
 ]);
 
 cache.initialize([...upvotes, ...comments]);
 cache.initializeNotifications();
 cache.initializeReactions();
+// NOTE: Anonymous upvotes go into the upvotes table, so they need the
+// submissions that cache.initialize inserts.
+cache.initializeAnon(anonJoins, anonUpvotes);
+anonJoins = anonUpvotes = null;
 cache.addCompoundIndexes();
 
 // Make upvote/reaction marker caching non-blocking to improve startup time

@@ -25,6 +25,7 @@ import { ethers } from "ethers";
 
 import log from "./logger.mjs";
 import { toDigest } from "./id.mjs";
+import { ANON_IDENTITY } from "./constants.mjs";
 
 const dbPath = join(process.env.CACHE_DIR, "database.db");
 const db = new Database(dbPath);
@@ -254,6 +255,103 @@ export function initializeReactions() {
     CREATE INDEX IF NOT EXISTS idx_reactions_timestamp ON reactions(timestamp);
     CREATE INDEX IF NOT EXISTS idx_reactions_identity ON reactions(identity);
   `);
+}
+
+// Anonymous upvotes (see src/anon.mjs).
+//
+// - anon_members: every accepted "anon-join" message. The group is built from
+//   these rows in (timestamp, id) order.
+// - anon_nullifiers: the nullifier of every accepted "anon-upvote", so a
+//   member can upvote a story only once.
+//
+// The upvote itself also goes into the upvotes table under ANON_IDENTITY, so
+// rankings and karma count it like any other upvote.
+let anonTablesReady = false;
+function ensureAnonTables() {
+  if (anonTablesReady) return;
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS anon_members (
+      id TEXT PRIMARY KEY NOT NULL,
+      identity TEXT NOT NULL,
+      commitment TEXT NOT NULL,
+      timestamp INTEGER NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_anon_members_order ON anon_members(timestamp, id);
+    CREATE INDEX IF NOT EXISTS idx_anon_members_identity ON anon_members(identity);
+    CREATE TABLE IF NOT EXISTS anon_nullifiers (
+      story_id TEXT NOT NULL,
+      nullifier TEXT NOT NULL,
+      id TEXT NOT NULL,
+      timestamp INTEGER NOT NULL,
+      PRIMARY KEY (story_id, nullifier)
+    );
+  `);
+  anonTablesReady = true;
+}
+
+export function initializeAnon(joins = [], anonUpvotes = []) {
+  const exists = db
+    .prepare(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name='anon_members'",
+    )
+    .get();
+  ensureAnonTables();
+  if (exists) {
+    log("Aborting cache.initializeAnon early because tables already exist");
+    return;
+  }
+  for (const message of [...joins, ...anonUpvotes]) {
+    try {
+      insertMessage(message);
+    } catch (err) {
+      log(`initializeAnon: Couldn't insert message: ${err.toString()}`);
+    }
+  }
+}
+
+// Every join in the order the group is built from.
+export function getAnonJoins() {
+  ensureAnonTables();
+  return db
+    .prepare(
+      `SELECT id, identity, commitment, timestamp FROM anon_members
+       ORDER BY timestamp ASC, id ASC`,
+    )
+    .all();
+}
+
+// Changes whenever a join is added, so the group can be cached by it.
+export function countAnonJoins() {
+  ensureAnonTables();
+  return db.prepare(`SELECT COUNT(*) AS count FROM anon_members`).get().count;
+}
+
+// The identity's latest commitment, or null.
+export function getAnonMember(identity) {
+  ensureAnonTables();
+  return (
+    db
+      .prepare(
+        `SELECT id, identity, commitment, timestamp FROM anon_members
+         WHERE identity = ? ORDER BY timestamp DESC, id DESC LIMIT 1`,
+      )
+      .get(identity) || null
+  );
+}
+
+export function isSubmission(storyId) {
+  return !!db.prepare(`SELECT 1 FROM submissions WHERE id = ?`).get(storyId);
+}
+
+// NOTE: The scope of an anonymous upvote is the hash of its story id, so
+// (story_id, nullifier) is one member's vote on one story.
+export function hasNullifier(storyId, nullifier) {
+  ensureAnonTables();
+  return !!db
+    .prepare(
+      `SELECT 1 FROM anon_nullifiers WHERE story_id = ? AND nullifier = ?`,
+    )
+    .get(storyId, nullifier);
 }
 
 export function isReactionComment(title) {
@@ -1396,6 +1494,30 @@ export function insertMessage(message) {
     } catch (err) {
       log(`Failing to insert comment "${title}", error: "${err.toString()}"`);
     }
+  } else if (type === "anon-join") {
+    ensureAnonTables();
+    db.prepare(
+      `INSERT OR IGNORE INTO anon_members (id, identity, commitment, timestamp) VALUES (?, ?, ?, ?)`,
+    ).run(`kiwi:0x${index}`, identity, message.commitment, timestamp);
+  } else if (type === "anon-upvote") {
+    ensureAnonTables();
+    // NOTE: href points at the story's submission; the upvotes table keys
+    // upvotes by the story's (normalized) link.
+    const story = db
+      .prepare(`SELECT href FROM submissions WHERE id = ?`)
+      .get(href);
+    if (!story) {
+      throw new Error(`Anonymous upvote of unknown story "${href}"`);
+    }
+    const id = `kiwi:0x${index}`;
+    db.transaction(() => {
+      db.prepare(
+        `INSERT INTO anon_nullifiers (story_id, nullifier, id, timestamp) VALUES (?, ?, ?, ?)`,
+      ).run(href, message.nullifier, id, timestamp);
+      db.prepare(
+        `INSERT INTO upvotes (id, href, timestamp, title, signer, identity) VALUES (?, ?, ?, ?, ?, ?)`,
+      ).run(id, story.href, timestamp, "", ANON_IDENTITY, ANON_IDENTITY);
+    })();
   } else {
     throw new Error("Unsupported message type");
   }

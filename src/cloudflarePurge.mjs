@@ -94,6 +94,15 @@ export function invalidateActivityCaches(message) {
     invalidateUpvoteActivityCaches(message);
   } else if (message.type === "comment") {
     invalidateCommentActivityCaches(message);
+  } else if (message.type === "anon-upvote") {
+    // NOTE: An anonymous upvote names the story by its id; the upvote
+    // invalidation looks the story up by its link.
+    try {
+      const { href } = getSubmission(message.href.replace(/^kiwi:/, ""));
+      invalidateUpvoteActivityCaches({ href });
+    } catch (err) {
+      log(`Error invalidating anonymous upvote caches: ${err}`);
+    }
   }
 }
 

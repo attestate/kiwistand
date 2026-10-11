@@ -15,8 +15,19 @@ import { utils } from "ethers";
 import canonicalize from "canonicalize";
 
 import { lifetimeCache as cache } from "./cache.mjs";
-import { SCHEMATA, EIP712_DOMAIN, EIP712_MESSAGE } from "./constants.mjs";
+import {
+  SCHEMATA,
+  EIP712_DOMAIN,
+  EIP712_MESSAGE,
+  EIP712_ANON_JOIN,
+} from "./constants.mjs";
 import log from "./logger.mjs";
+
+// The EIP-712 types a message is signed with: "anon-join" messages have no
+// title or href. "anon-upvote" messages aren't signed at all.
+export function eip712Types(message) {
+  return message?.type === "anon-join" ? EIP712_ANON_JOIN : EIP712_MESSAGE;
+}
 
 const ajv = new Ajv();
 addFormats(ajv);
@@ -128,5 +139,9 @@ export function verify(message) {
     throw new Error(errMessage);
   }
 
-  return ecrecover(message, EIP712_MESSAGE);
+  // NOTE: An anonymous upvote has no signer. Its Semaphore proof is checked
+  // in store.add (see src/anon.mjs).
+  if (message.type === "anon-upvote") return null;
+
+  return ecrecover(message, eip712Types(message));
 }

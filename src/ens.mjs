@@ -9,6 +9,7 @@ import { fetchCache } from "./utils.mjs";
 import cache from "./cache.mjs";
 import log from "./logger.mjs";
 import * as profiles from "./profiles.mjs";
+import { ANON_IDENTITY } from "./constants.mjs";
 
 const provider = new providers.JsonRpcProvider(env.RPC_HTTP_HOST);
 
@@ -436,7 +437,20 @@ export async function _resolve(normalizedAddress, forceFetch) {
   return completeProfile;
 }
 
+// NOTE: Anonymous upvotes are stored under ANON_IDENTITY; it has no profile
+// and is shown as "Someone".
+const anonProfile = {
+  address: ANON_IDENTITY,
+  truncatedAddress: "Someone",
+  displayName: "Someone",
+  safeAvatar: null,
+  anonymous: true,
+};
+
 export async function resolve(address, forceFetch = false) {
+  if (address && address.toLowerCase() === ANON_IDENTITY) {
+    return { ...anonProfile };
+  }
   // Normalize address for consistent cache keys and API calls
   const normalizedAddress = address.toLowerCase();
   const cacheKey = `${ENS_CACHE_PREFIX}${normalizedAddress}`;
@@ -491,6 +505,9 @@ export async function resolve(address, forceFetch = false) {
 // using the FS stale-while-revalidate cache so it's fast on repeat calls,
 // but returns the actual profile instead of a minimal placeholder.
 export async function resolveForBatch(address) {
+  if (address && address.toLowerCase() === ANON_IDENTITY) {
+    return { ...anonProfile };
+  }
   const normalizedAddress = address.toLowerCase();
   const cacheKey = `${ENS_CACHE_PREFIX}${normalizedAddress}`;
 

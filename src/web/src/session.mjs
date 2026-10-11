@@ -197,8 +197,9 @@ export async function logout() {
     console.log('Could not disconnect wallet:', err);
   }
 
-  // Clear wallet key(s) from localStorage
-  const walletKeySchema = /^-kiwi-news-(0x[a-fA-F0-9]{40})-key$/;
+  // Clear wallet key(s) and Semaphore secrets (anonymous upvotes) from
+  // localStorage
+  const walletKeySchema = /^-kiwi-news-(0x[a-fA-F0-9]{40})-(key|semaphore)$/;
   // Clear delegation modal dismissed flags
   const delegationModalSchema = /^delegation-modal-dismissed-0x[a-fA-F0-9]{40}$/;
 

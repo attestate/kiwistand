@@ -155,6 +155,60 @@ export async function triggerUpvoteNotification(message) {
   }
 }
 
+// NOTE: An anonymous upvote has no upvoter to name, so the notification says
+// "Someone" and reveals nothing else.
+export async function triggerAnonUpvoteNotification(message) {
+  if (message.type !== "anon-upvote") return;
+
+  try {
+    const submission = getSubmission(message.href.replace(/^kiwi:/, ""));
+    if (!submission || !submission.identity) return;
+
+    let receivers = [submission.identity];
+    try {
+      const policy = await moderation.getLists();
+      const bannedAddresses = policy.addresses || [];
+      receivers = receivers.filter(
+        (receiver) => !bannedAddresses.includes(receiver.toLowerCase()),
+      );
+    } catch (err) {
+      log(`Failed to get banned addresses for anon upvote notification: ${err}`);
+    }
+    if (receivers.length === 0) return;
+
+    const slug = getSlug(submission.title);
+    const url = `https://news.kiwistand.com/stories/${slug}?index=0x${submission.index}`;
+    const body = `Someone upvoted your story: ${submission.title.substring(0, 100)}`;
+
+    let targetFids = [];
+    try {
+      targetFids = await getFidsFromAddresses(receivers);
+    } catch (err) {
+      log(`Failed to get FIDs for anon upvote notification: ${err}`);
+    }
+    if (targetFids.length > 0 && env.NODE_ENV === "production") {
+      try {
+        await sendNotification(
+          url,
+          `Someone upvoted: ${submission.title.substring(0, 100)}`,
+          "New like",
+          targetFids,
+        );
+      } catch (err) {
+        log(`Failed to send anon upvote Neynar notification: ${err}`);
+      }
+    }
+
+    try {
+      await sendPushNotification(receivers, { title: "New like", body, url });
+    } catch (err) {
+      log(`Failed to send anon upvote OneSignal notification: ${err}`);
+    }
+  } catch (err) {
+    log(`Error in triggerAnonUpvoteNotification: ${err}`);
+  }
+}
+
 export async function triggerNotification(message) {
   if (message.type !== "comment") return;
 

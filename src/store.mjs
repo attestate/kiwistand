@@ -32,6 +32,7 @@ import { newWalk } from "./WalkController.mjs";
 import { purgeCache, invalidateActivityCaches } from "./cloudflarePurge.mjs";
 import { insertMessage, isReactionComment } from "./cache.mjs";
 import { triggerNotification } from "./subscriptions.mjs";
+import * as anon from "./anon.mjs";
 
 const maxReaders = 500;
 
@@ -320,7 +321,12 @@ export function upvoteID(identity, link, type, message = null) {
 
 let messagesAdded = 0;
 async function atomicPut(trie, message, identity, delegations) {
-  const marker = upvoteID(identity, message.href, message.type, message);
+  // NOTE: Only upvotes have a marker. Anonymous messages have no href
+  // ("anon-join") or no identity ("anon-upvote").
+  const marker =
+    message.type === "amplify"
+      ? upvoteID(identity, message.href, message.type, message)
+      : null;
   const { canonical, index } = toDigest(message);
   log(
     `Attempting to store message with index "${index}" and message: "${JSON.stringify(
@@ -350,14 +356,14 @@ async function atomicPut(trie, message, identity, delegations) {
   //
   // To check whether a comment exists and then aborting the routine now
   // prevents the above from happening.
-  if (message.type === "comment") {
+  if (message.type === "comment" || anon.isAnonType(message.type)) {
     const existingLeaf = await trie.get(Buffer.from(index, "hex"));
     if (existingLeaf) {
       const err = `Message with index "${index}" already exists in the trie. Skipping.`;
       log(err);
       throw new Error(err);
     }
-    if (isReactionComment(message.title)) {
+    if (message.type === "comment" && isReactionComment(message.title)) {
       const reactionMarker = upvoteID(identity, message.href, "reaction");
       const legit = await passesReaction(reactionMarker);
       if (!legit) {
@@ -534,7 +540,11 @@ async function _add({
   metadb = upvotes,
 }) {
   const address = verify(message);
-  const identity = resolveIdentity(delegations, address);
+  // NOTE: An anonymous upvote has no signer and hence no identity.
+  const identity =
+    message.type === "anon-upvote"
+      ? null
+      : resolveIdentity(delegations, address);
 
   const minTimestampSecs = parseInt(env.MIN_TIMESTAMP_SECS, 10);
   if (message.timestamp < minTimestampSecs) {
@@ -552,7 +562,7 @@ async function _add({
     throw new Error(err);
   }
 
-  if (message.type === "comment") {
+  if (message.type === "comment" || message.type === "anon-upvote") {
     let [_, hash] = message.href.split(":");
     if (!hash) {
       throw new Error("add: failed to extract hash from kiwi link");
@@ -573,6 +583,18 @@ async function _add({
         "add: child timestamp must be greater than parent timestamp",
       );
     }
+
+    if (message.type === "anon-upvote" && root.type !== "amplify") {
+      throw new Error("add: an anonymous upvote must point at a story");
+    }
+  }
+
+  if (message.type === "anon-join") {
+    anon.checkJoin(message, identity);
+  }
+  if (message.type === "anon-upvote") {
+    anon.checkStory(message.href);
+    await anon.checkUpvote(message);
   }
 
   const { index, canonical } = await atomicPut(
@@ -698,7 +720,9 @@ function enhance(delegations, cacheEnabled) {
       });
       return {
         ...result,
-        identity: resolveIdentity(delegations, result.signer),
+        identity: result.signer
+          ? resolveIdentity(delegations, result.signer)
+          : null,
       };
     };
 
@@ -722,9 +746,9 @@ export async function leaves(
   type = "amplify",
   root = trie.root(),
 ) {
-  if (type !== "amplify" && type !== "comment") {
+  if (type !== "amplify" && type !== "comment" && !anon.isAnonType(type)) {
     throw new Error(
-      "store leaves: Must be called with type 'amplify' or 'comment'",
+      "store leaves: Must be called with type 'amplify', 'comment', 'anon-join' or 'anon-upvote'",
     );
   }
   const nodes = [];
