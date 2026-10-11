@@ -89,7 +89,6 @@ import normalizeUrl from "normalize-url";
 import * as interactions from "./interactions.mjs";
 import * as bookmarks from "./bookmarks.mjs";
 import * as profiles from "./profiles.mjs";
-import * as price from "./price.mjs";
 import appCache from "./cache.mjs"; // For LRU cache used by ENS profiles
 import frameSubscribe from "./views/frame-subscribe.mjs";
 import { timingSafeEqual } from "crypto";
@@ -2860,24 +2859,6 @@ export async function launch(trie, libp2p, isPrimary = true) {
       return sendError(reply, 404, "Not Found", "Nobody has that name");
     }
     return sendStatus(reply, 200, "OK", "Name is taken", { address });
-  });
-
-  // NOTE: The browser used to read this Chainlink feed from a public RPC; the
-  // server's read doesn't tell an RPC provider who's visiting. See price.mjs.
-  app.get("/api/v1/price/eth-usd", async (request, reply) => {
-    let value;
-    try {
-      value = await price.ethUsd();
-    } catch (err) {
-      log(`Couldn't read the ETH/USD price: ${err.message}`);
-      reply.header("Cache-Control", "no-store");
-      return sendError(reply, 502, "Bad Gateway", "Couldn't read the price");
-    }
-    reply.header(
-      "Cache-Control",
-      "public, s-maxage=300, max-age=60, stale-while-revalidate=3600",
-    );
-    return sendStatus(reply, 200, "OK", "ETH/USD price", value);
   });
 
   // Saved stories, private per account. See src/bookmarks.mjs for the

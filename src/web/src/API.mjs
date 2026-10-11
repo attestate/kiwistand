@@ -209,70 +209,6 @@ export async function fetchNotifications(address) {
   return data.data.notifications;
 }
 
-const address = "0x66747bdc903d17c586fa09ee5d6b54cc85bbea45";
-const abi = [
-  {
-    inputs: [],
-    name: "saleDetails",
-    outputs: [
-      {
-        components: [
-          { internalType: "bool", name: "publicSaleActive", type: "bool" },
-          { internalType: "bool", name: "presaleActive", type: "bool" },
-          { internalType: "uint256", name: "publicSalePrice", type: "uint256" },
-          { internalType: "uint64", name: "publicSaleStart", type: "uint64" },
-          { internalType: "uint64", name: "publicSaleEnd", type: "uint64" },
-          { internalType: "uint64", name: "presaleStart", type: "uint64" },
-          { internalType: "uint64", name: "presaleEnd", type: "uint64" },
-          {
-            internalType: "bytes32",
-            name: "presaleMerkleRoot",
-            type: "bytes32",
-          },
-          {
-            internalType: "uint256",
-            name: "maxSalePurchasePerAddress",
-            type: "uint256",
-          },
-          { internalType: "uint256", name: "totalMinted", type: "uint256" },
-          { internalType: "uint256", name: "maxSupply", type: "uint256" },
-        ],
-        internalType: "struct IERC721Drop.SaleDetails",
-        name: "",
-        type: "tuple",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-];
-
-export async function fetchPrice() {
-  let response;
-  const publicSalePrice = BigInt("3000000000000");
-  try {
-    const current = BigInt("3000000000000");
-    const prices = {
-      min: publicSalePrice + 1n,
-      minPlusFee: publicSalePrice + 777000000000000n,
-      current,
-    };
-    if (prices.current <= prices.min) {
-      prices.authoritative = prices.min;
-      prices.difference = 0n;
-      prices.referralPrice = prices.min;
-    } else {
-      prices.authoritative = prices.current;
-      prices.difference = prices.current - prices.min;
-      prices.referralPrice = prices.authoritative - prices.difference / 2n;
-    }
-    return prices;
-  } catch (err) {
-    console.error(err);
-    return null;
-  }
-}
-
 export async function fetchStory(id, commentCount) {
   let response;
 
@@ -320,21 +256,6 @@ export async function fetchDelegations(cached = false) {
   }
 }
 
-
-// NOTE: Served by Kiwi's API (server-side Chainlink read, cached) so the
-// visitor's browser doesn't ask a public RPC. Returns the feed's int256
-// answer (8 decimals) as a BigInt, or null.
-export async function fetchEthUsdPrice() {
-  try {
-    const res = await fetch("/api/v1/price/eth-usd");
-    if (!res.ok) return null;
-    const { data } = await res.json();
-    return BigInt(data.answer);
-  } catch (err) {
-    console.error(err);
-    return null;
-  }
-}
 
 export async function sendMiniAppUpvote(value, fid, walletAddress, authToken) {
   // authToken is now REQUIRED
