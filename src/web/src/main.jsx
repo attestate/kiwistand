@@ -166,11 +166,35 @@ if (!isAnonMode && analyticsConsent !== "false") {
       disableAnalytics();
     });
 
-  if (typeof requestIdleCallback !== "undefined") {
-    requestIdleCallback(initPostHog, { timeout: 3000 });
-  } else {
-    setTimeout(initPostHog, 100);
-  }
+  // NOTE: posthog-js and the scripts it pulls in (session recording, web
+  // vitals) cost about half a second of main-thread time on a phone, so
+  // they start on the first interaction or 5s after the page has loaded,
+  // like Google Analytics (public/conditional-tracking.js). Events
+  // captured before then are queued and sent once it's loaded.
+  let started = false;
+  const triggers = ["pointerdown", "keydown", "scroll"];
+  const startPostHog = () => {
+    if (started) return;
+    started = true;
+    triggers.forEach((type) =>
+      window.removeEventListener(type, startPostHog, true),
+    );
+    // The visitor may have opted out on the consent banner in the meantime.
+    if (localStorage.getItem("kiwi-analytics-consent") === "false") {
+      disableAnalytics();
+      return;
+    }
+    initPostHog();
+  };
+  triggers.forEach((type) =>
+    window.addEventListener(type, startPostHog, {
+      capture: true,
+      passive: true,
+    }),
+  );
+  const afterLoad = () => setTimeout(startPostHog, 5000);
+  if (document.readyState === "complete") afterLoad();
+  else window.addEventListener("load", afterLoad, { once: true });
 } else {
   // PostHog never loads in anon mode or without consent: don't buffer.
   disableAnalytics();
