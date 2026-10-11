@@ -35,11 +35,13 @@
     "src/Navigation.jsx": 2200,
     "src/NewsletterFeedCard.jsx": 1500,
     "src/NewsletterScrollModal.jsx": 2600,
+    "src/PrivateRpcSetting.jsx": 2000,
     "src/Search.jsx": 1500,
     "src/SidebarDrawer.jsx": 1800,
     "src/SubmitButton.jsx": 6600,
     "src/TestFlightQR.jsx": 600,
-    "src/Vote.jsx": 4200
+    "src/Vote.jsx": 4200,
+    "src/anon-transport.mjs": 19200
   },
   "css": {
     "fonts/inter.css": 200,
