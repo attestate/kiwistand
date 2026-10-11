@@ -9,15 +9,15 @@
   ],
   "lighthouse": {
     "desktop": {
-      "performance": 70,
+      "performance": 80,
       "accessibility": 85,
-      "best-practices": 70,
+      "best-practices": 90,
       "seo": 90
     },
     "mobile": {
-      "performance": 30,
+      "performance": 65,
       "accessibility": 85,
-      "best-practices": 70,
+      "best-practices": 90,
       "seo": 90
     }
   },
