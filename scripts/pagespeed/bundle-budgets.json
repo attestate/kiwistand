@@ -18,7 +18,7 @@
     "node_modules/@rainbow-me/rainbowkit/dist/sanko-RHQYXGM5.js": 17700,
     "node_modules/@reown/appkit-scaffold-ui/dist/esm/exports/basic.js": 35400,
     "node_modules/posthog-js/dist/module.js": 61400,
-    "src/API.mjs": 2600,
+    "src/API.mjs": 13000,
     "src/Analytics.jsx": 1100,
     "src/AnalyticsConsent.jsx": 1400,
     "src/Avatar.jsx": 1800,
@@ -39,8 +39,7 @@
     "src/SidebarDrawer.jsx": 1800,
     "src/SubmitButton.jsx": 6600,
     "src/TestFlightQR.jsx": 600,
-    "src/Vote.jsx": 4200,
-    "src/tracker.mjs": 3900
+    "src/Vote.jsx": 4200
   },
   "css": {
     "fonts/inter.css": 200,

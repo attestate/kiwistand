@@ -83,7 +83,7 @@ async function applySafeAreaInsets() {
   }
 }
 
-import { isIOS, getCookie, getLocalAccount } from "./session.mjs";
+import { isIOS, getCookie } from "./session.mjs";
 import {
   capture,
   flushAnalytics,

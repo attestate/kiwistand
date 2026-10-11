@@ -1,5 +1,4 @@
 // @format
-import { messageFab } from "./API.mjs";
 
 // Queue for batching interactions
 let impressionQueue = [];
