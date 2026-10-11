@@ -115,7 +115,6 @@ const LoginModal = forwardRef((props, ref) => {
   const [isButtonHovered, setIsButtonHovered] = useState(false);
   const [isButtonActive, setIsButtonActive] = useState(false);
   const [isAnonButtonHovered, setIsAnonButtonHovered] = useState(false);
-  const [isWalletButtonHovered, setIsWalletButtonHovered] = useState(false);
   const [passkeyBusy, setPasskeyBusy] = useState(false);
   // "choose": passkey, wallet or anon; "passkey": sign in or create account.
   const [step, setStep] = useState("choose");

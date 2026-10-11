@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 
 import { EditProfileModal, useIdentity } from "./EditProfile.jsx";
-import { isIOSApp } from "./session.mjs";
 
 const DISMISSED = "kiwi-nickname-prompt-dismissed";
 // Set right after a passkey account is created (LoginModal) so the editor
