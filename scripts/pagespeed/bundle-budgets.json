@@ -1,0 +1,124 @@
+{
+  "eager": {
+    "react-vendor": 48800,
+    "src/main.jsx": 183600,
+    "ui-vendor": 40000,
+    "wallet-vendor": 257200
+  },
+  "lazy": {
+    "core": 146800,
+    "encode": 11300,
+    "index": 132900,
+    "index.es": 126600,
+    "node_modules/@base-org/account/dist/index.js": 103500,
+    "node_modules/@coinbase/wallet-sdk/dist/index.js": 73700,
+    "node_modules/@metamask/sdk/dist/browser/es/metamask-sdk.js": 179300,
+    "node_modules/@rainbow-me/rainbowkit/dist/Linux-OO4TNCLJ.js": 15900,
+    "node_modules/@rainbow-me/rainbowkit/dist/Macos-MW4AE7LN.js": 38400,
+    "node_modules/@rainbow-me/rainbowkit/dist/sanko-RHQYXGM5.js": 17700,
+    "node_modules/@reown/appkit-scaffold-ui/dist/esm/exports/basic.js": 35400,
+    "node_modules/posthog-js/dist/module.js": 61400,
+    "src/API.mjs": 2600,
+    "src/Analytics.jsx": 1100,
+    "src/AnalyticsConsent.jsx": 1400,
+    "src/Avatar.jsx": 1800,
+    "src/BackButton.jsx": 1000,
+    "src/Bell.jsx": 3600,
+    "src/ChatBubble.jsx": 1100,
+    "src/CommentInput.jsx": 4900,
+    "src/CommentSection.jsx": 21500,
+    "src/DelegateButton.jsx": 3800,
+    "src/DelegationModal.jsx": 2600,
+    "src/DesktopSearch.jsx": 1000,
+    "src/EmbedDrawer.jsx": 3000,
+    "src/FarcasterShareButton.jsx": 1400,
+    "src/ImageViewer.jsx": 600,
+    "src/Karma.jsx": 500,
+    "src/Navigation.jsx": 2200,
+    "src/NewsletterFeedCard.jsx": 1500,
+    "src/NewsletterScrollModal.jsx": 2600,
+    "src/ProfileWithConfig.jsx": 1300,
+    "src/Search.jsx": 1500,
+    "src/SidebarDrawer.jsx": 1800,
+    "src/SubmitButton.jsx": 6600,
+    "src/TestFlightQR.jsx": 600,
+    "src/Vote.jsx": 4200,
+    "src/tracker.mjs": 3900
+  },
+  "css": {
+    "fonts/inter.css": 200,
+    "news.css": 13400,
+    "node_modules/@rainbow-me/rainbowkit/dist/index.css": 4900
+  },
+  "totals": {
+    "eager": 529300,
+    "lazyOther": 267700,
+    "lazy": 1286800
+  },
+  "pages": {
+    "home": {
+      "desktop": 702900,
+      "mobile": 695400
+    },
+    "new": {
+      "desktop": 702900,
+      "mobile": 698000
+    },
+    "best": {
+      "desktop": 702900,
+      "mobile": 698000
+    },
+    "best week": {
+      "desktop": 702900,
+      "mobile": 698000
+    },
+    "notifications": {
+      "desktop": 661400,
+      "mobile": 653800
+    },
+    "submit": {
+      "desktop": 671800,
+      "mobile": 664200
+    },
+    "search": {
+      "desktop": 662400,
+      "mobile": 654800
+    },
+    "newsletter": {
+      "desktop": 661400,
+      "mobile": 653800
+    },
+    "weekly": {
+      "desktop": 662800,
+      "mobile": 655300
+    },
+    "guidelines": {
+      "desktop": 661400,
+      "mobile": 653800
+    },
+    "privacy": {
+      "desktop": 661400,
+      "mobile": 653800
+    },
+    "story 1": {
+      "desktop": 702900,
+      "mobile": 695400
+    },
+    "story 2": {
+      "desktop": 702900,
+      "mobile": 695400
+    },
+    "activity": {
+      "desktop": 662800,
+      "mobile": 655300
+    },
+    "profile": {
+      "desktop": 663300,
+      "mobile": 655700
+    },
+    "profile app": {
+      "desktop": 702900,
+      "mobile": 695400
+    }
+  }
+}
