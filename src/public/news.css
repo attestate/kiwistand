@@ -863,6 +863,14 @@ body.kiwi-logged-in .like-count {
   body.react-loaded .comment-input-host {
     min-height: auto;
   }
+  /* Signed out (set by theme-init.js), the app shows a "connect to comment"
+     card instead of the textarea, so reserve the card's height instead.
+     flow-root keeps its margins inside the host. */
+  html[data-signed-out] .comment-input-desktop-ssr { display: none !important; }
+  html[data-signed-out] .comment-input-host {
+    display: flow-root;
+    min-height: 123px;
+  }
 
 }
 
@@ -2246,4 +2254,74 @@ newsletter-card {
   @view-transition {
     navigation: none;
   }
+}
+
+/* "Kiwi News for iPhone" TestFlight card (components/testflight-card.mjs)
+   at the top of the feeds on phones. theme-init.js decides before first
+   paint, so it's either there from the start or not at all. */
+.tf-card-row {
+  display: none;
+}
+@media (max-width: 640px) {
+  html[data-tf-card]:not(.kiwi-ios-app) .tf-card-row {
+    display: table-row;
+  }
+}
+.tf-card {
+  position: relative;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin: 0 8px 14px;
+  padding: 14px 16px;
+  border: var(--border);
+  border-radius: 2px;
+  background: var(--bg-white);
+}
+.tf-card-icon {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background: #f6f6ef;
+  padding: 4px;
+  box-sizing: border-box;
+}
+.tf-card-body {
+  flex: 1;
+  min-width: 0;
+}
+.tf-card-title {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--text-primary);
+}
+.tf-card-copy {
+  margin-top: 2px;
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--text-secondary);
+}
+.tf-card-get {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 8px 14px;
+  border-radius: 2px;
+  background: #afc046;
+  color: #000 !important;
+  font-weight: 600;
+  font-size: 14px;
+  text-decoration: none;
+}
+.tf-card-close {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  background: none;
+  border: none;
+  font-size: 20px;
+  line-height: 1;
+  color: var(--text-secondary);
+  padding: 4px;
+  cursor: pointer;
 }

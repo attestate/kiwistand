@@ -1,6 +1,11 @@
 import React, { useState, useEffect, useImperativeHandle, forwardRef } from "react";
 import Modal from "react-modal";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
+import { Wallet } from "@ethersproject/wallet";
+
+import { setCookie, tenYearsInSeconds, isIOSApp } from "./session.mjs";
+import { EIP712_DOMAIN } from "./API.mjs";
+import { PROFILE_TYPES, nameProblem } from "./EditProfile.jsx";
 
 if (typeof document !== "undefined") {
   Modal.setAppElement("body");
@@ -27,15 +32,6 @@ const CloseIcon = () => (
   </svg>
 );
 
-const GhostIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="1.2em" height="1.2em">
-    <rect width="256" height="256" fill="none"/>
-    <circle cx="100" cy="116" r="12"/>
-    <circle cx="156" cy="116" r="12"/>
-    <path d="M216,216l-29.33-24-29.34,24L128,192,98.67,216,69.33,192,40,216V120a88,88,0,0,1,176,0Z" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="16"/>
-  </svg>
-);
-
 const WalletIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="1.2em" height="1.2em">
     <rect width="256" height="256" fill="none"/>
@@ -44,20 +40,195 @@ const WalletIcon = () => (
   </svg>
 );
 
+function canUsePasskey() {
+  if (typeof window === "undefined") return false;
+  if (typeof window.PublicKeyCredential === "undefined") return false;
+  // NOTE: The iOS app has its own native sign-in.
+  try {
+    if (isIOSApp()) return false;
+  } catch (err) {}
+  return true;
+}
+
+// NOTE: "Create account" asks for a nickname first, then makes the passkey
+// under that name and saves it as the profile; "Sign in" opens an existing
+// passkey; "I have my own wallet" is for wallet accounts. Never "Continue with
+// Apple/Google": that reads like Sign in with Apple or Google.
+
+// Saves the nickname as the new account's profile. Returns the server's
+// message when it fails, e.g. "That name is taken".
+async function saveNickname(privateKey, name) {
+  const value = {
+    name,
+    bio: "",
+    avatar: "",
+    timestamp: Math.floor(Date.now() / 1000),
+  };
+  const signature = await new Wallet(privateKey)._signTypedData(
+    EIP712_DOMAIN,
+    PROFILE_TYPES,
+    value,
+  );
+  const response = await fetch("/api/v1/profile", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ...value, signature }),
+  });
+  const body = await response.json().catch(() => ({}));
+  if (body.status === "success") return "";
+  return body.details || "Couldn't save your nickname. Please try another.";
+}
+
+const primaryStyle = {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  height: "38px",
+  backgroundColor: "var(--accent-primary)",
+  border: "1px solid var(--accent-primary)",
+  color: "var(--bg-black)",
+  borderRadius: "8px",
+  fontSize: "15px",
+  cursor: "pointer",
+  margin: "0 16px",
+  whiteSpace: "nowrap",
+};
+const secondaryStyle = {
+  ...primaryStyle,
+  backgroundColor: "transparent",
+  border: "var(--border-thin)",
+  color: "var(--text-primary)",
+};
+const tertiaryStyle = {
+  background: "transparent",
+  border: "none",
+  padding: "4px 16px",
+  color: "var(--text-secondary)",
+  fontSize: "14px",
+  cursor: "pointer",
+  textDecoration: "underline",
+};
+const errorStyle = {
+  margin: "0 16px",
+  fontSize: "13px",
+  lineHeight: "18px",
+  color: "var(--color-error, #c0392b)",
+};
+const rowStyle = { display: "flex", alignItems: "center", height: "100%", gap: "8px" };
+
 const LoginModal = forwardRef((props, ref) => {
-  const [showModal, setShowModal] = useState(false);
+  const [showModal, setShowModal] = useState(!!props.defaultOpen);
   const [isButtonHovered, setIsButtonHovered] = useState(false);
   const [isButtonActive, setIsButtonActive] = useState(false);
-  const [isAnonButtonHovered, setIsAnonButtonHovered] = useState(false);
+  const [passkeyBusy, setPasskeyBusy] = useState(false);
+  // "choose": create account, sign in or wallet; "create": pick a nickname.
+  const [step, setStep] = useState("choose");
+  const [nickname, setNickname] = useState("");
+  // "", "invalid", "checking", "available" or "taken"
+  const [nameState, setNameState] = useState("");
+  const [created, setCreated] = useState(null);
+
+  useEffect(() => {
+    const problem = nameProblem(nickname);
+    if (!nickname || problem) {
+      setNameState(nickname ? "invalid" : "");
+      return;
+    }
+    setNameState("checking");
+    const timer = setTimeout(async () => {
+      try {
+        const response = await fetch(
+          `/api/v1/profile-name/${encodeURIComponent(nickname)}`,
+        );
+        setNameState(response.status === 404 ? "available" : "taken");
+      } catch (err) {
+        setNameState("");
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [nickname]);
+  const [passkeyError, setPasskeyError] = useState("");
   const { openConnectModal } = useConnectModal();
+  const showPasskey = canUsePasskey();
 
   function openModal() {
+    setPasskeyError("");
     setShowModal(true);
   }
 
   function closeModal() {
     setShowModal(false);
+    setStep("choose");
+    setPasskeyError("");
+    if (props.onClose) props.onClose();
   }
+
+  // mode: "create" for a new account, "signIn" for an existing passkey
+  const failed = (passkey, err) => {
+    setPasskeyBusy(false);
+    if (passkey && passkey.isCancellation(err)) return;
+    if (passkey && err instanceof passkey.PrfUnsupportedError) {
+      setPasskeyError(err.message);
+      return;
+    }
+    console.error("Passkey sign-in failed", err);
+    setPasskeyError(
+      "Couldn't use your passkey. Please try again or use your wallet.",
+    );
+  };
+
+  const handleSignIn = async () => {
+    if (passkeyBusy) return;
+    setPasskeyError("");
+    setPasskeyBusy(true);
+    let passkey;
+    try {
+      passkey = await import("./passkey.mjs");
+      const account = await passkey.signIn();
+      passkey.storeAccount(account);
+      setCookie("identity", account.address, tenYearsInSeconds);
+      setShowModal(false);
+      window.location.reload();
+    } catch (err) {
+      failed(passkey, err);
+    }
+  };
+
+  // NOTE: The nickname comes first and is required: the passkey is saved
+  // under it ("<nickname>" on Kiwi News in the password manager) and it
+  // becomes the profile right away. If saving the name fails after the
+  // passkey exists (e.g. someone took it in the meantime), only the profile
+  // save is retried with a new name; no second passkey is made.
+  const handleCreate = async () => {
+    if (passkeyBusy || nameState !== "available") return;
+    setPasskeyError("");
+    setPasskeyBusy(true);
+    let passkey;
+    try {
+      passkey = await import("./passkey.mjs");
+      let account = created;
+      if (!account) {
+        account = await passkey.create({ name: nickname });
+        passkey.storeAccount(account);
+        setCookie("identity", account.address, tenYearsInSeconds);
+        // NOTE: The bell (Bell.jsx) stays hidden until there's a lastUpdate;
+        // a brand-new account has nothing to catch up on.
+        setCookie("lastUpdate", Math.floor(Date.now() / 1000));
+        setCreated(account);
+      }
+      const problem = await saveNickname(account.privateKey, nickname);
+      if (problem) {
+        setPasskeyBusy(false);
+        setNameState("taken");
+        setPasskeyError(problem);
+        return;
+      }
+      setShowModal(false);
+      window.location.reload();
+    } catch (err) {
+      failed(passkey, err);
+    }
+  };
 
   useImperativeHandle(ref, () => ({
     openModal,
@@ -71,15 +242,6 @@ const LoginModal = forwardRef((props, ref) => {
     }
   };
 
-  const handleAnonMode = () => {
-    // Enable anon mode
-    localStorage.setItem('anon-mode', 'true');
-    // Set the theme
-    document.documentElement.setAttribute('data-theme', 'anon');
-    closeModal();
-    // Reload to apply all anon mode changes
-    window.location.reload();
-  };
 
   // Modal settings
   const customStyles = {
@@ -268,6 +430,98 @@ const LoginModal = forwardRef((props, ref) => {
             flexDirection: "column",
             gap: "8px",
           }}>
+            {showPasskey ? (
+              <>
+            {step === "choose" ? (
+              <>
+                <button
+                  style={primaryStyle}
+                  onClick={() => {
+                    setPasskeyError("");
+                    setStep("create");
+                  }}
+                >
+                  Create account
+                </button>
+                <button
+                  style={{
+                    ...secondaryStyle,
+                    cursor: passkeyBusy ? "wait" : "pointer",
+                  }}
+                  onClick={handleSignIn}
+                  disabled={passkeyBusy}
+                >
+                  {passkeyBusy ? "Waiting for passkey..." : "Sign in"}
+                </button>
+                {passkeyError && <div role="alert" style={errorStyle}>{passkeyError}</div>}
+                <button style={tertiaryStyle} onClick={handleConnectWallet}>
+                  I have my own wallet
+                </button>
+              </>
+            ) : (
+              <>
+                <label
+                  htmlFor="kiwi-signup-name"
+                  style={{ margin: "0 16px", fontWeight: 600, fontSize: "15px" }}
+                >
+                  Pick a nickname
+                </label>
+                <input
+                  id="kiwi-signup-name"
+                  autoFocus
+                  autoComplete="username"
+                  autoCapitalize="none"
+                  spellCheck={false}
+                  placeholder="e.g. kiwi_fan"
+                  value={nickname}
+                  onChange={(e) => setNickname(e.target.value.trim())}
+                  onKeyDown={(e) => e.key === "Enter" && handleCreate()}
+                  disabled={passkeyBusy}
+                  style={{
+                    margin: "0 16px",
+                    padding: "9px 10px",
+                    fontSize: "16px",
+                    fontFamily: "inherit",
+                    border: "var(--border)",
+                    borderRadius: "2px",
+                    background: "var(--bg-white)",
+                    color: "var(--text-primary)",
+                  }}
+                />
+                <div style={{ margin: "-2px 16px 0", fontSize: "13px", minHeight: "18px", color: nameState === "available" ? "var(--accent-primary-dark, #5a7d0a)" : "var(--text-secondary)" }}>
+                  {nameState === "available" && "Available"}
+                  {nameState === "taken" && "That name is taken"}
+                  {nameState === "checking" && "Checking..."}
+                  {nameState === "invalid" && nameProblem(nickname)}
+                </div>
+                <button
+                  style={{
+                    ...primaryStyle,
+                    cursor: passkeyBusy ? "wait" : "pointer",
+                    opacity: nameState === "available" && !passkeyBusy ? 1 : 0.5,
+                  }}
+                  onClick={handleCreate}
+                  disabled={nameState !== "available" || passkeyBusy}
+                >
+                  {passkeyBusy ? "Waiting for passkey..." : "Create account"}
+                </button>
+                {passkeyError && <div role="alert" style={errorStyle}>{passkeyError}</div>}
+                {!created && (
+                  <button
+                    type="button"
+                    onClick={() => setStep("choose")}
+                    disabled={passkeyBusy}
+                    style={tertiaryStyle}
+                  >
+                    ← Back
+                  </button>
+                )}
+              </>
+            )}
+
+              </>
+            ) : (
+              <>
             {/* Primary button - Connect wallet */}
             <button
               style={{
@@ -302,33 +556,9 @@ const LoginModal = forwardRef((props, ref) => {
               </div>
             </button>
 
-            {/* Tertiary button - Anon mode */}
-            <button
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                height: "38px",
-                backgroundColor: isAnonButtonHovered ? "rgba(124, 152, 133, 0.1)" : "transparent",
-                border: isAnonButtonHovered ? "1px solid #7c9885" : "var(--border-thin)",
-                color: isAnonButtonHovered ? "#7c9885" : "var(--text-primary)",
-                borderRadius: "8px",
-                fontSize: "15px",
-                fontWeight: "normal",
-                cursor: "pointer",
-                transition: "all 0.15s ease",
-                margin: "0 16px",
-                whiteSpace: "nowrap",
-              }}
-              onClick={handleAnonMode}
-              onMouseEnter={() => setIsAnonButtonHovered(true)}
-              onMouseLeave={() => setIsAnonButtonHovered(false)}
-            >
-              <div style={{ display: "flex", alignItems: "center", height: "100%", gap: "8px" }}>
-                <GhostIcon />
-                <span>Anon mode</span>
-              </div>
-            </button>
+              </>
+            )}
+
           </div>
         </div>
       </div>

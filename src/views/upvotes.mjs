@@ -72,7 +72,9 @@ export default async function (trie, theme, identity, tab = "submissions") {
 
   let ogImage = ensData.safeAvatar;
 
-  const description = ensData.description
+  const description = ensData.kiwiProfile?.bio
+    ? ensData.kiwiProfile.bio
+    : ensData.description
     ? ensData.description
     : ensData.farcaster
     ? ensData.farcaster.bio
@@ -186,6 +188,10 @@ export default async function (trie, theme, identity, tab = "submissions") {
                           🥝)</span
                         >
                       </a>
+                      <kiwi-edit-profile
+                        data-address="${identity}"
+                        style="margin-left: auto; height: 24px; display: inline-flex; align-items: center;"
+                      ></kiwi-edit-profile>
                     </span>
                     
                     <!-- Stats bar like Reddit/HN -->

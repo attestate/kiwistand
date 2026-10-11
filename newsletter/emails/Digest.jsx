@@ -30,7 +30,8 @@ export default function DigestEmail({ stories = digestStories }) {
     Bluesky: BlueskyEmail,
   };
 
-  const bannedDomains = ['imagedelivery.net'];
+  // Uploaded pictures (imagedelivery.net) are rendered by Row.jsx now.
+  const bannedDomains = [];
   const sanitizeStories = stories.filter((story) => {
     const metadataDomain = story.metadata?.domain?.toLowerCase?.();
     let hrefDomain = null;

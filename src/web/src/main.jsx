@@ -166,11 +166,35 @@ if (!isAnonMode && analyticsConsent !== "false") {
       disableAnalytics();
     });
 
-  if (typeof requestIdleCallback !== "undefined") {
-    requestIdleCallback(initPostHog, { timeout: 3000 });
-  } else {
-    setTimeout(initPostHog, 100);
-  }
+  // NOTE: posthog-js and the scripts it pulls in (session recording, web
+  // vitals) cost about half a second of main-thread time on a phone, so
+  // they start on the first interaction or 5s after the page has loaded,
+  // like Google Analytics (public/conditional-tracking.js). Events
+  // captured before then are queued and sent once it's loaded.
+  let started = false;
+  const triggers = ["pointerdown", "keydown", "scroll"];
+  const startPostHog = () => {
+    if (started) return;
+    started = true;
+    triggers.forEach((type) =>
+      window.removeEventListener(type, startPostHog, true),
+    );
+    // The visitor may have opted out on the consent banner in the meantime.
+    if (localStorage.getItem("kiwi-analytics-consent") === "false") {
+      disableAnalytics();
+      return;
+    }
+    initPostHog();
+  };
+  triggers.forEach((type) =>
+    window.addEventListener(type, startPostHog, {
+      capture: true,
+      passive: true,
+    }),
+  );
+  const afterLoad = () => setTimeout(startPostHog, 5000);
+  if (document.readyState === "complete") afterLoad();
+  else window.addEventListener("load", afterLoad, { once: true });
 } else {
   // PostHog never loads in anon mode or without consent: don't buffer.
   disableAnalytics();
@@ -890,6 +914,37 @@ async function addAvatar() {
   }
 }
 
+// "Edit profile" on your own profile page (views/upvotes.mjs).
+async function addEditProfile(toast) {
+  const elem = document.querySelector("kiwi-edit-profile");
+  if (!elem) return;
+  const EditProfileButton = (await import("./EditProfile.jsx")).default;
+  createRoot(elem).render(
+    <StrictMode>
+      <Providers>
+        <EditProfileButton address={elem.dataset.address} toast={toast} />
+      </Providers>
+    </StrictMode>,
+  );
+}
+
+async function addNicknamePrompt(toast) {
+  if (isAnonMode || isIOSApp()) return;
+  // Only signed-in people can pick a name; don't load it for readers.
+  if (!getCookie("identity")) return;
+  const container = document.createElement("div");
+  container.id = "nickname-prompt-container";
+  document.body.appendChild(container);
+  const NicknamePrompt = (await import("./NicknamePrompt.jsx")).default;
+  createRoot(container).render(
+    <StrictMode>
+      <Providers>
+        <NicknamePrompt toast={toast} />
+      </Providers>
+    </StrictMode>,
+  );
+}
+
 async function addBackButton() {
   const backButtonElem = document.querySelector(".story-back-button");
   if (backButtonElem) {
@@ -937,7 +992,7 @@ async function addStoryEmojiReactions(delegations, toast) {
           <StrictMode>
             <Providers>
               <QueryClientProvider client={queryClient}>
-                <WagmiProvider config={client}>
+                <WagmiProvider config={client} reconnectOnMount={false}>
                   <RainbowKitProvider chains={chains}>
                     <EmojiReaction
                       comment={comment}
@@ -1658,12 +1713,62 @@ function initEndlessScroll() {
   document.head.appendChild(link);
 }
 
+// NOTE: wagmi's reconnect asks every connector for its provider, which
+// downloads and runs the WalletConnect, MetaMask and Coinbase SDKs: about
+// 1.2s of main-thread time on a mid-range phone. Most visitors have never
+// connected a wallet here, so only reconnect when wagmi remembers a
+// connector (it keeps recentConnectorId even after a disconnect), in the
+// iOS app, or inside a Farcaster mini app, whose connector signs in by
+// itself. Connecting later still loads everything on demand.
+async function shouldReconnectWallet() {
+  if (document.documentElement.classList.contains("kiwi-ios-app")) return true;
+  try {
+    if (localStorage.getItem("wagmi.recentConnectorId")) return true;
+  } catch {
+    return true;
+  }
+  try {
+    return await sdk.isInMiniApp();
+  } catch {
+    return false;
+  }
+}
+
+// The "Kiwi News for iPhone" card (components/testflight-card.mjs): remember
+// taps and dismissals (theme-init.js reads them) and measure it in PostHog.
+function initTestFlightCard() {
+  const card = document.querySelector(".tf-card");
+  const root = document.documentElement;
+  if (!card || !root.hasAttribute("data-tf-card") || isIOSApp()) return;
+  const props = { path: window.location.pathname };
+  capture("testflight_card_shown", props);
+  card.querySelector(".tf-card-get")?.addEventListener("click", () => {
+    try {
+      localStorage.setItem("kiwi-tf-card-tapped", String(Date.now()));
+    } catch {}
+    capture("testflight_card_clicked", props);
+  });
+  card.querySelector(".tf-card-close")?.addEventListener("click", () => {
+    try {
+      localStorage.setItem("kiwi-tf-card-dismissed", "1");
+    } catch {}
+    root.removeAttribute("data-tf-card");
+    capture("testflight_card_dismissed", props);
+  });
+}
+
 async function start() {
   // Manually trigger wagmi reconnect (deferred from mount via
   // reconnectOnMount={false} in providers.jsx to reduce TBT).
   // Fire-and-forget: don't await, so it doesn't block start().
-  Promise.all([import("@wagmi/core"), import("./client.mjs")])
-    .then(([{ reconnect }, { client }]) => reconnect(client))
+  shouldReconnectWallet()
+    .then((should) => {
+      if (!should) return;
+      return Promise.all([
+        import("@wagmi/core"),
+        import("./client.mjs"),
+      ]).then(([{ reconnect }, { client }]) => reconnect(client));
+    })
     .catch(() => {});
 
   initFarcasterFrame()
@@ -1671,6 +1776,7 @@ async function start() {
     .catch((err) => console.log(err));
 
   initSpinnerOverlay();
+  initTestFlightCard();
 
   // Apply safe area insets for mini app context
   console.log("Starting applySafeAreaInsets...");
@@ -1830,6 +1936,8 @@ async function start() {
     addNewsletterFeedCard(),
     addNewsletterScrollModal(toast),
     addAvatar(),
+    addEditProfile(toast),
+    addNicknamePrompt(toast),
     addBackButton(),
     addDelegateButton(await delegationsPromise, toast),
     addProfileDisplay(),

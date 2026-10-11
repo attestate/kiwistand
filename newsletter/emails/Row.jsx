@@ -131,6 +131,15 @@ export default function RowEmail({ story = {} }) {
       textPost = decodeURIComponent(href.replace(/^data:text\/plain,/, ""));
     } catch {}
   }
+  // Uploaded pictures: the link is the image itself on Cloudflare Images.
+  // Email clients get a JPEG (some can't show AVIF/WebP, which "public" may
+  // serve), at most 1160px wide (580px at 2x), uncropped.
+  const isUpload =
+    typeof href === "string" &&
+    /^https:\/\/imagedelivery\.net\//.test(href);
+  const uploadImage = isUpload
+    ? href.replace(/\/[^/]+$/, "/w=1160,fit=scale-down,f=jpeg")
+    : null;
   const extractedDomain = isTextPost ? "" : extractDomain(href);
   const isTweet = extractedDomain.includes("twitter.com") || extractedDomain.includes("x.com");
   const isFarcasterCast = extractedDomain.includes("warpcast.com") || extractedDomain.includes("farcaster.xyz");
@@ -152,7 +161,16 @@ export default function RowEmail({ story = {} }) {
   return (
     <>
       <Section style={container} className="k-card" bgcolor="#f6f6ef">
-        {displayImage ? (
+        {uploadImage ? (
+          <Link href={story.storyLink}>
+            <Img
+              src={uploadImage}
+              alt={title || ""}
+              width="100%"
+              style={{ width: '100%', height: 'auto', display: 'block' }}
+            />
+          </Link>
+        ) : displayImage ? (
           <Link href={story.storyLink}>
             <Img
               src={metadata.image}
@@ -181,7 +199,7 @@ export default function RowEmail({ story = {} }) {
           <Text className="k-muted" style={{ fontSize: '9pt', marginTop: '3px', marginBottom: '0', lineHeight: '1.4', color: '#666' }}>
             submitted by <Link href={submitterProfileLink} className="k-link" style={{ fontWeight: 600, color: '#000000', textDecoration: 'none' }}><span><span className="k-link" style={{ color: '#000000' }}>{displayName}</span></span></Link>
             {/* Text posts (data: links) have no domain. */}
-            {isTextPost ? ' • text post' : (
+            {isTextPost ? ' • text post' : isUpload ? ' • image' : (
               <>
                 {' • '}
                 <Link href={story.storyLink} className="k-link" style={{ color: '#000000', textDecoration: 'none' }}><span><span className="k-link" style={{ color: '#000000' }}>{extractedDomain}</span></span></Link>
