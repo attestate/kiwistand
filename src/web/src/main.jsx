@@ -1679,26 +1679,26 @@ async function shouldReconnectWallet() {
   }
 }
 
-// The "Kiwi News for iPhone" bar (components/nav.mjs): remember taps and
-// dismissals (theme-init.js reads them) and measure it in PostHog.
-function initTestFlightBar() {
-  const bar = document.querySelector(".tf-bar");
+// The "Kiwi News for iPhone" card (components/testflight-card.mjs): remember
+// taps and dismissals (theme-init.js reads them) and measure it in PostHog.
+function initTestFlightCard() {
+  const card = document.querySelector(".tf-card");
   const root = document.documentElement;
-  if (!bar || !root.hasAttribute("data-tf-bar") || isIOSApp()) return;
+  if (!card || !root.hasAttribute("data-tf-card") || isIOSApp()) return;
   const props = { path: window.location.pathname };
-  capture("testflight_bar_shown", props);
-  bar.querySelector(".tf-bar-get")?.addEventListener("click", () => {
+  capture("testflight_card_shown", props);
+  card.querySelector(".tf-card-get")?.addEventListener("click", () => {
     try {
-      localStorage.setItem("kiwi-tf-bar-tapped", String(Date.now()));
+      localStorage.setItem("kiwi-tf-card-tapped", String(Date.now()));
     } catch {}
-    capture("testflight_bar_clicked", props);
+    capture("testflight_card_clicked", props);
   });
-  bar.querySelector(".tf-bar-close")?.addEventListener("click", () => {
+  card.querySelector(".tf-card-close")?.addEventListener("click", () => {
     try {
-      localStorage.setItem("kiwi-tf-bar-dismissed", "1");
+      localStorage.setItem("kiwi-tf-card-dismissed", "1");
     } catch {}
-    root.removeAttribute("data-tf-bar");
-    capture("testflight_bar_dismissed", props);
+    root.removeAttribute("data-tf-card");
+    capture("testflight_card_dismissed", props);
   });
 }
 
@@ -1721,7 +1721,7 @@ async function start() {
     .catch((err) => console.log(err));
 
   initSpinnerOverlay();
-  initTestFlightBar();
+  initTestFlightCard();
 
   // Apply safe area insets for mini app context
   console.log("Starting applySafeAreaInsets...");

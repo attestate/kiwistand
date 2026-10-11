@@ -109,36 +109,7 @@ const notificationsfull = html`<svg
   />
 </svg>`;
 
-// NOTE: Shown only to iPhone Safari visitors (theme-init.js sets
-// <html data-tf-bar> before first paint, news.css shows it on phones, never
-// inside the iOS app). main.jsx remembers taps and dismissals.
-const testflightBar = html`
-  <div class="tf-bar" role="region" aria-label="Kiwi News for iPhone">
-    <img
-      class="tf-bar-icon"
-      src="/kiwi-icon-email-transparent.png"
-      alt=""
-      width="32"
-      height="32"
-    />
-    <div class="tf-bar-text">
-      <strong>Kiwi News for iPhone</strong>
-      <span>Native app, free beta</span>
-    </div>
-    <a
-      class="tf-bar-get"
-      data-no-instant
-      href="https://testflight.apple.com/join/6jyvYECH"
-      target="_blank"
-      rel="noopener"
-      >Get it</a
-    >
-    <button class="tf-bar-close" type="button" aria-label="Dismiss">×</button>
-  </div>
-`;
-
 const nav = (path) => html`
-  ${testflightBar}
   <div
     class="bottom-nav"
     style="display: flex; justify-content: space-around; position: fixed; bottom: 0px; width: 100%; background: var(--background-color0); box-shadow: 0 -2px 5px rgba(0,0,0,0.1); z-index: 110;"
