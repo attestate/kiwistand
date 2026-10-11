@@ -77,7 +77,13 @@ function hasUsedPasskey() {
 
 export function passkeyButtonLabel() {
   const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
-  if (/iPhone|iPad|iPod|Macintosh/i.test(ua)) return "Continue with Apple";
+  // NOTE: Chrome on a Mac may save the passkey to Google or to iCloud, so
+  // only Safari there says Apple.
+  if (/iPhone|iPad|iPod/i.test(ua)) return "Continue with Apple";
+  if (/Macintosh/i.test(ua) && !/Chrome|Chromium|Edg\/|Firefox/i.test(ua)) {
+    return "Continue with Apple";
+  }
+  if (/Macintosh/i.test(ua)) return "Continue with passkey";
   if (/Android/i.test(ua) || (/Chrome/i.test(ua) && !/Edg\//i.test(ua))) {
     return "Continue with Google";
   }

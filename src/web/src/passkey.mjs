@@ -171,6 +171,12 @@ export async function signIn({ hostname = location.hostname } = {}) {
 // Stores the derived key the same way delegated app keys are stored, so
 // getLocalAccount (session.mjs) and theme-init.js treat the user as logged in.
 export function storeAccount({ privateKey, address }) {
+  // NOTE: getLocalAccount only logs in with exactly one stored key, so an
+  // older app key left in this browser would otherwise log nobody in.
+  const schema = /^-kiwi-news-0x[a-fA-F0-9]{40}-key$/;
+  for (const key of Object.keys(localStorage)) {
+    if (schema.test(key)) localStorage.removeItem(key);
+  }
   localStorage.setItem(`-kiwi-news-${address}-key`, privateKey);
   try {
     localStorage.setItem(USED_FLAG, "true");
