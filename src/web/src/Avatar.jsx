@@ -292,7 +292,7 @@ const queryClient = new QueryClient();
 const Form = (props) => {
   return (
     <QueryClientProvider client={queryClient}>
-      <WagmiProvider config={client}>
+      <WagmiProvider config={client} reconnectOnMount={false}>
         <RainbowKitProvider chains={chains}>
           <Avatar {...props} />
         </RainbowKitProvider>

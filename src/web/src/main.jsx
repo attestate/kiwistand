@@ -937,7 +937,7 @@ async function addStoryEmojiReactions(delegations, toast) {
           <StrictMode>
             <Providers>
               <QueryClientProvider client={queryClient}>
-                <WagmiProvider config={client}>
+                <WagmiProvider config={client} reconnectOnMount={false}>
                   <RainbowKitProvider chains={chains}>
                     <EmojiReaction
                       comment={comment}
@@ -1658,12 +1658,39 @@ function initEndlessScroll() {
   document.head.appendChild(link);
 }
 
+// NOTE: wagmi's reconnect asks every connector for its provider, which
+// downloads and runs the WalletConnect, MetaMask and Coinbase SDKs: about
+// 1.2s of main-thread time on a mid-range phone. Most visitors have never
+// connected a wallet here, so only reconnect when wagmi remembers a
+// connector (it keeps recentConnectorId even after a disconnect), in the
+// iOS app, or inside a Farcaster mini app, whose connector signs in by
+// itself. Connecting later still loads everything on demand.
+async function shouldReconnectWallet() {
+  if (document.documentElement.classList.contains("kiwi-ios-app")) return true;
+  try {
+    if (localStorage.getItem("wagmi.recentConnectorId")) return true;
+  } catch {
+    return true;
+  }
+  try {
+    return await sdk.isInMiniApp();
+  } catch {
+    return false;
+  }
+}
+
 async function start() {
   // Manually trigger wagmi reconnect (deferred from mount via
   // reconnectOnMount={false} in providers.jsx to reduce TBT).
   // Fire-and-forget: don't await, so it doesn't block start().
-  Promise.all([import("@wagmi/core"), import("./client.mjs")])
-    .then(([{ reconnect }, { client }]) => reconnect(client))
+  shouldReconnectWallet()
+    .then((should) => {
+      if (!should) return;
+      return Promise.all([
+        import("@wagmi/core"),
+        import("./client.mjs"),
+      ]).then(([{ reconnect }, { client }]) => reconnect(client));
+    })
     .catch(() => {});
 
   initFarcasterFrame()
