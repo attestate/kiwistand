@@ -248,6 +248,7 @@ export function handleMessage(
     // - The message is a comment, but not an emoji reaction.
     if (
       message.type === "amplify" ||
+      isDeletion(message) ||
       (message.type === "comment" && !isReactionComment(message.title))
     ) {
       // Only send to cluster if not in reconcile mode (where there are no workers)
@@ -301,8 +302,7 @@ export function handleMessage(
     // Generate preview for comments (excluding emoji reactions)
     if (
       message.type === "comment" &&
-      !isReactionComment(message.title) &&
-      !isDeletion(message.title)
+      !isReactionComment(message.title)
     ) {
       // Use setImmediate to ensure preview generation is non-blocking
       setImmediate(() => {

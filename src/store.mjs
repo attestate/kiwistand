@@ -414,7 +414,7 @@ async function atomicPut(trie, message, identity, delegations) {
   //
   // To check whether a comment exists and then aborting the routine now
   // prevents the above from happening.
-  if (message.type === "comment") {
+  if (message.type === "comment" || isDeletion(message)) {
     const existingLeaf = await trie.get(Buffer.from(index, "hex"));
     if (existingLeaf) {
       const err = `Message with index "${index}" already exists in the trie. Skipping.`;
@@ -442,7 +442,7 @@ async function atomicPut(trie, message, identity, delegations) {
       // NOTE: A deletion (see cache.mjs) refreshes the pages that showed the
       // message, frees its upvote or reaction marker so its author can
       // upvote or react again, and notifies nobody.
-      if (message.type === "comment" && isDeletion(message.title)) {
+      if (isDeletion(message)) {
         const target = findMessage(message.href);
         const title = target?.storyId ? storyTitle(target.storyId) : null;
         const removed = insertMessage(enhancedMessage);
@@ -643,7 +643,7 @@ async function _add({
     throw new Error(err);
   }
 
-  if (message.type === "comment") {
+  if (message.type === "comment" || isDeletion(message)) {
     let [_, hash] = message.href.split(":");
     if (!hash) {
       throw new Error("add: failed to extract hash from kiwi link");
@@ -813,9 +813,9 @@ export async function leaves(
   type = "amplify",
   root = trie.root(),
 ) {
-  if (type !== "amplify" && type !== "comment") {
+  if (type !== "amplify" && type !== "comment" && type !== "delete") {
     throw new Error(
-      "store leaves: Must be called with type 'amplify' or 'comment'",
+      "store leaves: Must be called with type 'amplify', 'comment' or 'delete'",
     );
   }
   const nodes = [];

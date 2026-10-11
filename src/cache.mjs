@@ -261,18 +261,15 @@ export function isReactionComment(title) {
   return /^\p{Emoji}+$/u.test(trimmedTitle);
 }
 
-// NOTE: Deleting a message is a signed "comment" message on it (href
-// kiwi:0x<index of the message>) with this exact title. Any message can be
-// deleted this way: a story, an upvote, a comment or an emoji reaction. The
-// protocol only requires a comment's href to point at an older message in the
-// trie, so nodes running older code still accept and sync deletions. Nodes
-// that know the marker remove the message when the deletion is signed by its
-// own author (or their delegate key, which resolves to the same identity);
-// signed by anyone else, it removes nothing. Nobody types it by accident.
-export const DELETE = "kiwi:delete";
+// NOTE: A message of type "delete" removes the message at its href (a story,
+// an upvote, a comment or an emoji reaction) when it's signed by that
+// message's author (or their delegate key, which resolves to the same
+// identity). Signed by anyone else, it removes nothing. The deleted message
+// stays in the trie; nodes stop showing it.
+export const DELETE = "delete";
 
-export function isDeletion(title) {
-  return typeof title === "string" && title === DELETE;
+export function isDeletion(message) {
+  return message?.type === DELETE;
 }
 
 let deletionsReady = false;
@@ -1495,10 +1492,9 @@ export function insertMessage(message) {
         identity,
       );
     }
+  } else if (type === DELETE) {
+    return applyDeletion(href, identity, timestamp);
   } else if (type === "comment") {
-    if (isDeletion(title)) {
-      return applyDeletion(href, identity, timestamp);
-    }
     // A message its author already deleted (the deletion synced in first).
     if (isDeleted(`kiwi:0x${index}`, identity)) return null;
 

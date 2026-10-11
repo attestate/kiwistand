@@ -10,7 +10,7 @@ import Database from "better-sqlite3";
 import * as id from "../src/id.mjs";
 import { EIP712_MESSAGE } from "../src/constants.mjs";
 import * as store from "../src/store.mjs";
-import { findMessage, DELETE } from "../src/cache.mjs";
+import { findMessage } from "../src/cache.mjs";
 
 // Same tables as test/deletion_test.mjs.
 test.before(() => {
@@ -46,7 +46,7 @@ test.serial(
     await t.throwsAsync(() => add(voter, "A story", link, "amplify", now + 2));
 
     // Deleting the upvote is accepted by the protocol and frees the marker.
-    await add(voter, DELETE, `kiwi:0x${upvote}`, "comment", now + 3);
+    await add(voter, "", `kiwi:0x${upvote}`, "delete", now + 3);
     t.is(findMessage(`kiwi:0x${upvote}`), null);
     const again = await add(voter, "A story", link, "amplify", now + 4);
     t.is(findMessage(`kiwi:0x${again}`).kind, "upvote");
@@ -56,18 +56,33 @@ test.serial(
     await t.throwsAsync(() =>
       add(voter, "🔥", `kiwi:0x${comment}`, "comment", now + 7),
     );
-    await add(voter, DELETE, `kiwi:0x${reaction}`, "comment", now + 8);
+    await add(voter, "", `kiwi:0x${reaction}`, "delete", now + 8);
     t.is(findMessage(`kiwi:0x${reaction}`), null);
     const redo = await add(voter, "🔥", `kiwi:0x${comment}`, "comment", now + 9);
     t.is(findMessage(`kiwi:0x${redo}`).kind, "reaction");
 
     // Someone else can't delete the story; its author can.
-    await add(voter, DELETE, `kiwi:0x${story}`, "comment", now + 10);
+    await add(voter, "", `kiwi:0x${story}`, "delete", now + 10);
     t.is(findMessage(`kiwi:0x${story}`).kind, "story");
-    await add(author, DELETE, `kiwi:0x${story}`, "comment", now + 11);
+    await add(author, "", `kiwi:0x${story}`, "delete", now + 11);
     t.is(findMessage(`kiwi:0x${story}`), null);
     t.is(findMessage(`kiwi:0x${comment}`), null);
 
     await rm("dbtestDeletion", { recursive: true });
   },
 );
+
+test.serial("the protocol accepts delete messages only without text", async (t) => {
+  const signer = Wallet.createRandom();
+  const index = "ab".repeat(36);
+  const sign = async (title) =>
+    await id.sign(
+      signer,
+      id.create(title, `kiwi:0x${index}`, "delete", 1700000000),
+      EIP712_MESSAGE,
+    );
+  const ok = await sign("");
+  t.is(id.verify(ok), signer.address);
+  const withText = await sign("bye");
+  t.throws(() => id.verify(withText), { message: /Wrongly formatted message/ });
+});

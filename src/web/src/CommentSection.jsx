@@ -62,8 +62,6 @@ function truncateName(name) {
   return name.slice(0, maxLength) + "...";
 }
 
-// Must match DELETE in src/cache.mjs.
-const DELETE_COMMENT = "kiwi:delete";
 
 export const EmojiReaction = ({ comment, delegations, toast }) => {
   const [isReacting, setIsReacting] = useState(false);
@@ -312,9 +310,9 @@ export const EmojiReaction = ({ comment, delegations, toast }) => {
   // Don't allow reacting to your own comments, but do show reactions you've received
   const isOwnComment = comment.identity.address === address;
 
-  // NOTE: Deleting your own comment signs a "comment" message on it with the
-  // DELETE title (see src/cache.mjs); nodes hide the comment when
-  // the deletion comes from its author.
+  // NOTE: Deleting your own comment signs a "delete" message on it (see
+  // src/cache.mjs); nodes remove the comment when the deletion comes from its
+  // author.
   // Addresses can come checksummed or lowercase.
   const isOwnCommentForDelete =
     !!address &&
@@ -327,11 +325,7 @@ export const EmojiReaction = ({ comment, delegations, toast }) => {
     if (!window.confirm("Delete this comment? This can't be undone.")) return;
     setIsDeleting(true);
     try {
-      const value = API.messageFab(
-        DELETE_COMMENT,
-        `kiwi:0x${comment.index}`,
-        "comment",
-      );
+      const value = API.messageFab("", `kiwi:0x${comment.index}`, "delete");
       const signature = await signer._signTypedData(
         API.EIP712_DOMAIN,
         API.EIP712_TYPES,

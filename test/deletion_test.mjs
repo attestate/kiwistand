@@ -79,10 +79,10 @@ function thread(seed) {
     Object.entries(messages).map(([k, m]) => [k, `kiwi:0x${m.index}`]),
   );
   const del = (target, identity, n = "") => ({
-    type: "comment",
+    type: DELETE,
     href: ids[target],
     index: id(`d${target[0]}${n}`),
-    title: DELETE,
+    title: "",
     timestamp: 1010,
     signer: identity,
     identity,
@@ -189,9 +189,23 @@ test("older upvotes don't bring a deleted story back, a new submission may", (t)
   t.is(found.href, link);
 });
 
-test("only the exact marker counts as a deletion", (t) => {
-  t.true(isDeletion(DELETE));
-  t.false(isDeletion(` ${DELETE}`));
-  t.false(isDeletion("delete"));
-  t.false(isDeletion("kiwi:delete-comment"));
+test("only messages of type delete are deletions", (t) => {
+  t.true(isDeletion({ type: "delete" }));
+  t.false(isDeletion({ type: "comment", title: "kiwi:delete" }));
+  t.false(isDeletion(null));
+});
+
+test("a comment titled like the old marker is just a comment", (t) => {
+  const { ids, insert } = thread("8");
+  insert("story", "comment");
+  insertMessage({
+    type: "comment",
+    href: ids.comment,
+    index: hex("g8"),
+    title: "kiwi:delete",
+    timestamp: 1010,
+    signer: author,
+    identity: author,
+  });
+  t.is(present(ids).comment, "comment");
 });

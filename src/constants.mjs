@@ -9,22 +9,22 @@ export const PROTOCOL = {
     topics: {
       roots: {
         id: "roots",
-        version: "12.0.0",
+        version: "13.0.0",
       },
       messages: {
         id: "messages",
-        version: "12.0.0",
+        version: "13.0.0",
       },
     },
   },
   protocols: {
     leaves: {
       id: "leaves",
-      version: "15.0.0",
+      version: "16.0.0",
     },
     levels: {
       id: "levels",
-      version: "15.0.0",
+      version: "16.0.0",
     },
   },
 };
@@ -89,6 +89,37 @@ const comment = {
     title: {
       type: "string",
       maxLength: 10_000,
+    },
+    href: {
+      type: "string",
+      format: "uri",
+      pattern: "^kiwi:0x[a-fA-F0-9]{72}$",
+      maxLength: 81,
+    },
+    signature: {
+      type: "string",
+      pattern: "0x[a-fA-F0-9]+",
+    },
+  },
+  required: ["timestamp", "type", "title", "href", "signature"],
+};
+
+// NOTE: Deletes the message at href (a story, upvote, comment or reaction).
+// Nodes only apply it when it's signed by that message's author; it carries
+// no text. Added in protocol version 13 (pubsub) / 16 (sync).
+const deletion = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    timestamp: {
+      $comment: "unix timestamp",
+      type: "integer",
+    },
+    type: {
+      const: "delete",
+    },
+    title: {
+      const: "",
     },
     href: {
       type: "string",
@@ -173,12 +204,12 @@ export const SCHEMATA = {
         $comment:
           "The type of message that we should filter by in the request.",
         type: "string",
-        enum: ["amplify", "comment"],
+        enum: ["amplify", "comment", "delete"],
       },
     },
     required: ["from", "amount"],
   },
   message: {
-    oneOf: [upvote, comment],
+    oneOf: [upvote, comment, deletion],
   },
 };

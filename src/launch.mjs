@@ -235,7 +235,8 @@ const delegations = await registry.delegations();
 const href = null;
 
 let upvotes = [],
-  comments = [];
+  comments = [],
+  deletions = [];
 // Both primary and workers load posts for cache bootstrapping (SQLite + reaction markers)
 await Promise.allSettled([
   store
@@ -264,9 +265,23 @@ await Promise.allSettled([
     )
     .then((result) => (comments = result))
     .catch((error) => console.error("Comment posts error:", error)),
+  store
+    .posts(
+      trie,
+      from,
+      amount,
+      parser,
+      startDatetime,
+      delegations,
+      href,
+      "delete",
+    )
+    .then((result) => (deletions = result))
+    .catch((error) => console.error("Deletion posts error:", error)),
 ]);
 
-cache.initialize([...upvotes, ...comments]);
+// NOTE: Deletions go last so a rebuilt cache has their targets to remove.
+cache.initialize([...upvotes, ...comments, ...deletions]);
 cache.initializeNotifications();
 cache.initializeReactions();
 cache.addCompoundIndexes();
