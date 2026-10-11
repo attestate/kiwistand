@@ -58,7 +58,7 @@ const subtitle = (enabled, status, allowFallback) => {
   return "On";
 };
 
-const PrivateRpcSetting = () => {
+const PrivateRpcSetting = ({ variant }) => {
   const [settings, setSettings] = useState(() => readRpcSettings());
   const status = useWorkerStatus(settings.privateRpc);
 
@@ -70,7 +70,9 @@ const PrivateRpcSetting = () => {
   const failed = settings.privateRpc && status.state === "error";
 
   return (
-    <div className="private-rpc-setting">
+    <div
+      className={`private-rpc-setting${variant === "compact" ? " compact" : ""}`}
+    >
       <style>{`
         .sidebar-nav > .private-rpc-setting {
           cursor: default;
@@ -96,7 +98,8 @@ const PrivateRpcSetting = () => {
           font-size: 1.25rem;
           line-height: 1.2;
         }
-        .sidebar-nav .private-rpc-setting .private-rpc-sub {
+        .sidebar-nav .private-rpc-setting .private-rpc-sub,
+        .private-rpc-setting.compact .private-rpc-sub {
           font-size: 0.8rem;
           line-height: 1.3;
           color: var(--text-secondary);
@@ -104,9 +107,26 @@ const PrivateRpcSetting = () => {
           overflow: hidden;
           text-overflow: ellipsis;
         }
-        .sidebar-nav .private-rpc-setting .private-rpc-sub.error {
+        .sidebar-nav .private-rpc-setting .private-rpc-sub.error,
+        .private-rpc-setting.compact .private-rpc-sub.error {
           color: var(--color-alert);
           white-space: normal;
+        }
+        .private-rpc-setting.compact label.private-rpc-row {
+          gap: 10px;
+        }
+        .private-rpc-setting.compact svg {
+          width: 20px;
+          height: 20px;
+          flex-shrink: 0;
+        }
+        .private-rpc-setting.compact .private-rpc-title {
+          font-size: 1rem;
+          font-weight: 600;
+          color: var(--text-primary);
+        }
+        .private-rpc-setting.compact svg {
+          color: var(--text-primary);
         }
         .private-rpc-setting .private-rpc-direct {
           background: none;

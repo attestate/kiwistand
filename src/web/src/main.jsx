@@ -83,6 +83,7 @@ async function applySafeAreaInsets() {
   }
 }
 
+import { readRpcSettings } from "./rpc.mjs";
 import { isIOS, getCookie } from "./session.mjs";
 import {
   capture,
@@ -628,6 +629,23 @@ async function addSidebarDrawer(delegations, toast) {
       <Providers>
         <SidebarDrawer delegations={delegations} toast={toast} />
       </Providers>
+    </StrictMode>,
+  );
+}
+
+// NOTE: Desktop has no menu drawer, so the Private RPC switch sits below the
+// newsletter card in the right column there, or in the footer at widths that
+// have neither the drawer nor the right column. Mobile uses the drawer.
+async function addPrivateRpcDesktop() {
+  const container = ["private-rpc-card", "private-rpc-footer"]
+    .map((id) => document.getElementById(id))
+    .find((el) => el && el.offsetParent !== null);
+  if (!container) return;
+
+  const PrivateRpcSetting = (await import("./PrivateRpcSetting.jsx")).default;
+  createRoot(container).render(
+    <StrictMode>
+      <PrivateRpcSetting variant="compact" />
     </StrictMode>,
   );
 }
@@ -1662,6 +1680,19 @@ function initTestFlightCard() {
   });
 }
 
+// NOTE: Tor takes several seconds to connect. With Private RPC on, start that
+// as soon as the page is idle, so the first chain read (e.g. a delegation
+// check) doesn't wait for it. Visitors with it off load nothing.
+function warmUpPrivateRpc() {
+  if (!readRpcSettings().privateRpc) return;
+  const idle = window.requestIdleCallback || ((fn) => setTimeout(fn, 1));
+  idle(() => {
+    import("./anon-transport.mjs")
+      .then((m) => m.getWorker(m.selectNetwork()))
+      .catch((err) => console.warn("Private RPC warm-up failed:", err));
+  });
+}
+
 async function start() {
   // Manually trigger wagmi reconnect (deferred from mount via
   // reconnectOnMount={false} in providers.jsx to reduce TBT).
@@ -1675,6 +1706,8 @@ async function start() {
       ]).then(([{ reconnect }, { client }]) => reconnect(client));
     })
     .catch(() => {});
+
+  warmUpPrivateRpc();
 
   initFarcasterFrame()
     .then()
@@ -1832,6 +1865,7 @@ async function start() {
     addLeaderboardInteractions(),
     addEmbedDrawer(toast),
     addSidebarDrawer(await delegationsPromise, toast),
+    addPrivateRpcDesktop(),
     addImageViewer(),
     addSidebarDrawer(await delegationsPromise, toast),
     addNewsletterFeedCard(),
