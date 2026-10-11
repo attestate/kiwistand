@@ -130,6 +130,7 @@ More detail:
 
 - [contributing.md](contributing.md): setup and sync steps
 - [CONVENTIONS.md](CONVENTIONS.md): code style and architecture conventions
+- [SECURITY.md](SECURITY.md): how to report a vulnerability privately
 - Issues and pull requests: https://github.com/attestate/kiwistand/issues
 
 ## Changelog
