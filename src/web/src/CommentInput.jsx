@@ -87,7 +87,7 @@ const SiteExplainer = () => {
           fontSize: "10pt",
         }}
       >
-        Connect to comment
+        {isInIOSApp ? "Connect to comment" : "Sign in to comment"}
       </button>
 
       <LoginModal
