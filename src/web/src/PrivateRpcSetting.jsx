@@ -54,7 +54,7 @@ const subtitle = (enabled, status, allowFallback) => {
     return `On · via ${status.network.label}`;
   if (status.state === "ready") return "On · via Tor";
   if (status.state === "error")
-    return allowFallback ? "Tor unreachable · reading directly" : "Tor unreachable";
+    return allowFallback ? "Tor failed · reading directly" : "Tor failed";
   return "On";
 };
 
@@ -106,6 +106,7 @@ const PrivateRpcSetting = () => {
         }
         .sidebar-nav .private-rpc-setting .private-rpc-sub.error {
           color: var(--color-alert);
+          white-space: normal;
         }
         .private-rpc-setting .private-rpc-direct {
           background: none;
