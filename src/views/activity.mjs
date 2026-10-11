@@ -1,11 +1,8 @@
-//@format
-import { env } from "process";
-import url from "url";
 
 import htm from "htm";
 import vhtml from "vhtml";
 import normalizeUrl from "normalize-url";
-import { formatDistanceToNow, sub } from "date-fns";
+import { sub } from "date-fns";
 import { utils } from "ethers";
 import DOMPurify from "isomorphic-dompurify";
 
@@ -15,14 +12,10 @@ import Sidebar from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
 import RightColumn from "./components/right-column.mjs";
 import { custom } from "./components/head.mjs";
-import { iconSVG } from "./components/row.mjs";
 import { getSlug } from "../utils.mjs";
 // Define the brand green color directly
 const theme = { color: "#00b67a" };
-import * as store from "../store.mjs";
-import * as id from "../id.mjs";
-import * as moderation from "./moderation.mjs";
-import cache, {
+import {
   getUpvotes,
   getComments,
   getReactionsToComments,

@@ -37,10 +37,8 @@ export default defineConfig(({ mode }) => {
     optimizeDeps: {
       // Prebundle commonly used deps at startup to avoid on-demand 504s
       include: [
-        "@ethersproject/contracts",
         "@ethersproject/providers",
         "@ethersproject/wallet",
-        "@ethersproject/units",
         "@tanstack/react-query",
         "@rainbow-me/rainbowkit",
         "wagmi",

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Wallet } from "@ethersproject/wallet";
 import { useAccount, WagmiProvider } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { RainbowKitProvider, ConnectButton } from "@rainbow-me/rainbowkit";
+import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { resolveIdentity } from "@attestate/delegator2";
 import DOMPurify from "isomorphic-dompurify";
 import slugify from "slugify";
@@ -18,7 +18,6 @@ import {
   useIsMiniApp,
 } from "./client.mjs";
 import { getLocalAccount } from "./session.mjs";
-import { SimpleDisconnectButton } from "./Navigation.jsx";
 import ShareModal from "./ShareModal.jsx";
 import GuidelinesDrawer, { useGuidelinesCheck } from "./GuidelinesDrawer.jsx";
 import { openDelegationModalForAction, isDelegationModalNeeded } from "./delegationModalManager.js";

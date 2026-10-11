@@ -2,17 +2,14 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useAccount } from "wagmi";
 import { resolveIdentity } from "@attestate/delegator2";
-import SwipeableDrawer from "@mui/material/SwipeableDrawer";
 import { Wallet } from "@ethersproject/wallet";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 
-import { TextConnectButton } from "./Navigation.jsx";
 import * as API from "./API.mjs";
 import { getLocalAccount, getCookie } from "./session.mjs";
 import { useProvider } from "./client.mjs";
 import { subscribe } from "./newsletter.mjs";
 import { dynamicPrefetch } from "./main.jsx";
-import { sdk } from "@farcaster/frame-sdk";
 import { showSpinnerOverlay } from "./spinnerOverlay.js";
 import LoginModal from "./LoginModal.jsx";
 import { useWebHaptics } from "web-haptics/react";
@@ -203,57 +200,6 @@ const EmailSubscriptionForm = ({
 const ConnectedEmailSubscriptionForm = EmailSubscriptionForm;
 
 export { ConnectedEmailSubscriptionForm };
-
-const NotificationButton = ({ onEnabled }) => {
-  const [permissionStatus, setPermissionStatus] = useState("default");
-  const haptic = useWebHaptics();
-
-  useEffect(() => {
-    const handlePermissionResult = (event) => {
-      setPermissionStatus(event.detail);
-      if (event.detail === "granted" && onEnabled) {
-        onEnabled();
-      }
-    };
-
-    window.addEventListener(
-      "notificationPermissionResult",
-      handlePermissionResult,
-    );
-    return () => {
-      window.removeEventListener(
-        "notificationPermissionResult",
-        handlePermissionResult,
-      );
-    };
-  }, [onEnabled]);
-
-  const handleNotificationRequest = () => {
-    haptic.trigger("medium");
-    if (window.requestIOSNotifications) {
-      window.requestIOSNotifications();
-    }
-  };
-
-  return (
-    <button
-      onClick={handleNotificationRequest}
-      style={{
-        padding: "6px 12px",
-        background: "var(--button-primary-bg)",
-        color: "var(--button-primary-text)",
-        border: "1px solid var(--button-primary-bg)",
-        borderRadius: "2px",
-        cursor: "pointer",
-        fontSize: "10pt",
-      }}
-    >
-      {permissionStatus === "granted"
-        ? "Notifications Enabled"
-        : "Enable Notifications"}
-    </button>
-  );
-};
 
 let wasTitleSet = false;
 const Bell = (props) => {
@@ -652,44 +598,5 @@ const BellSVG = (props) => (
       strokeLinejoin="round"
       strokeWidth="16"
     />
-  </svg>
-);
-
-const PersonSVG = () => (
-  <svg
-    style={{ width: "24px", height: "24px", color: "var(--color-black)" }}
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 256 256"
-  >
-    <rect width="256" height="256" fill="none" />
-    <circle
-      cx="128"
-      cy="96"
-      r="64"
-      fill="none"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="16"
-    />
-    <path
-      d="M32,216c19.37-33.47,54.55-56,96-56s76.63,22.53,96,56"
-      fill="none"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="16"
-    />
-  </svg>
-);
-
-const PersonFullSVG = () => (
-  <svg
-    style={{ width: "24px", height: "24px", color: "var(--color-black)" }}
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 256 256"
-  >
-    <rect width="256" height="256" fill="none" />
-    <path d="M230.93,220a8,8,0,0,1-6.93,4H32a8,8,0,0,1-6.92-12c15.23-26.33,38.7-45.21,66.09-54.16a72,72,0,1,1,73.66,0c27.39,8.95,50.86,27.83,66.09,54.16A8,8,0,0,1,230.93,220Z" fill="currentColor" />
   </svg>
 );

@@ -4,8 +4,6 @@ import { createHash } from "crypto";
 import canonicalize from "canonicalize"; // Added import
 import { readFileSync } from "fs";
 
-import { differenceInDays } from "date-fns";
-import { utils } from "ethers";
 import { database } from "@attestate/crawler";
 import { organize } from "@attestate/delegator2";
 
