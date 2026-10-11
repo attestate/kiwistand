@@ -8,6 +8,7 @@ import { providers, utils } from "ethers";
 import { fetchCache } from "./utils.mjs";
 import cache from "./cache.mjs";
 import log from "./logger.mjs";
+import * as profiles from "./profiles.mjs";
 
 const provider = new providers.JsonRpcProvider(env.RPC_HTTP_HOST);
 
@@ -354,6 +355,26 @@ function checkAvatarLater(cacheKey, profile) {
     .finally(() => avatarChecks.delete(cacheKey));
 }
 
+// NOTE: The Kiwi profile (profiles.mjs) is applied when reading, on top of
+// the cached ENS/Farcaster profile, so updates show without invalidating it.
+// A Kiwi nickname wins: people chose it on Kiwi.
+export function overlay(address, profile) {
+  let kiwi;
+  try {
+    kiwi = profiles.get(address);
+  } catch (err) {
+    log(`Couldn't read Kiwi profile of ${address}: ${err.message}`);
+  }
+  if (!kiwi) return profile;
+  return {
+    ...profile,
+    ...(kiwi.name && { displayName: kiwi.name }),
+    ...(kiwi.avatar && { safeAvatar: kiwi.avatar }),
+    bio: kiwi.bio,
+    kiwiProfile: kiwi,
+  };
+}
+
 export async function _resolve(normalizedAddress, forceFetch) {
   const ensProfile = await fetchENSData(normalizedAddress, forceFetch);
   const lensProfile = await fetchLensData(normalizedAddress, forceFetch);
@@ -425,7 +446,7 @@ export async function resolve(address, forceFetch = false) {
     const cached = await cache.get(cacheKey);
     if (cached && (cached.ens || cached.farcaster || cached.lens || cached.neynar)) {
       checkAvatarLater(cacheKey, cached);
-      return cached;
+      return overlay(normalizedAddress, cached);
     }
   }
 
@@ -456,11 +477,14 @@ export async function resolve(address, forceFetch = false) {
       // Silently handle background fetch errors
     });
   } else {
-    return await _resolve(normalizedAddress, forceFetch);
+    return overlay(
+      normalizedAddress,
+      await _resolve(normalizedAddress, forceFetch),
+    );
   }
 
   // Return minimal profile immediately
-  return minimalProfile;
+  return overlay(normalizedAddress, minimalProfile);
 }
 
 // For batch/background jobs (e.g. recompute) — always awaits full resolution
@@ -473,10 +497,10 @@ export async function resolveForBatch(address) {
   const cached = await cache.get(cacheKey);
   if (cached && (cached.ens || cached.farcaster || cached.lens || cached.neynar)) {
     checkAvatarLater(cacheKey, cached);
-    return cached;
+    return overlay(normalizedAddress, cached);
   }
 
   const completeProfile = await _resolve(normalizedAddress);
   await cache.set(cacheKey, completeProfile);
-  return completeProfile;
+  return overlay(normalizedAddress, completeProfile);
 }

@@ -115,42 +115,10 @@ export function isIOSApp() {
   return document.documentElement.classList.contains("kiwi-ios-app");
 }
 
-export function isFirefox() {
-  const ua = navigator.userAgent;
-  return !!ua.match(/Firefox/i);
-}
-
-export function isLinux() {
-  const platform = navigator.platform;
-  return !!platform.match(/Linux/i);
-}
-
-export function isBraveOnIOS() {
-  const ua = navigator.userAgent;
-  const iOS = !!ua.match(/iPad/i) || !!ua.match(/iPhone/i);
-  const brave = !!ua.match(/Brave/i);
-  return iOS && brave;
-}
-
-export function isChromeOnIOS() {
-  const ua = navigator.userAgent;
-  const iOS = !!ua.match(/iPad/i) || !!ua.match(/iPhone/i);
-  const chrome = !!ua.match(/Chrome/i);
-  return iOS && chrome;
-}
-
-
 export function isAndroid() {
   const ua = navigator.userAgent;
   const android = !!ua.match(/Android/i);
   return android;
-}
-
-export function isSafariOnMacOS() {
-  const ua = navigator.userAgent;
-  const macOS = !!ua.match(/Macintosh/i);
-  const safari = !!ua.match(/Safari/i) && !ua.match(/Chrome/i);
-  return macOS && safari;
 }
 
 export function isSafariOnIOS() {
@@ -158,20 +126,6 @@ export function isSafariOnIOS() {
   const iOS = !!ua.match(/iPad/i) || !!ua.match(/iPhone/i);
   const webkit = !!ua.match(/WebKit/i);
   return iOS && webkit;
-}
-
-export function isChromeOnAndroid() {
-  const ua = navigator.userAgent;
-  const chrome = !!ua.match(/Chrome/i);
-  return isAndroid() && chrome;
-}
-
-export function isRunningPWA() {
-  return (
-    window.matchMedia("(display-mode: standalone)").matches ||
-    window.navigator.standalone ||
-    document.referrer.includes("android-app://")
-  );
 }
 
 // Check if user has a single localStorage wallet key (logged in without wallet connection)
@@ -221,34 +175,4 @@ export async function logout() {
 
   // Reload the page to reset app state
   window.location.reload();
-}
-
-// Helper to add auth params to URLs in mini app context
-export function addAuthParams(url) {
-  // Only modify URLs in iframe/mini app context
-  if (window.parent === window && !window.location.search.includes('miniapp=true')) {
-    return url;
-  }
-
-  try {
-    const urlObj = new URL(url, window.location.origin);
-    const identity = getCookie("identity");
-
-    // Always preserve miniapp param
-    if (window.location.search.includes('miniapp=true')) {
-      urlObj.searchParams.set('miniapp', 'true');
-    }
-
-    // Add identity if available and it's a protected path
-    const protectedPaths = ['/profile', '/submit', '/upvotes'];
-    const needsAuth = protectedPaths.some(path => urlObj.pathname.startsWith(path));
-
-    if (identity && needsAuth) {
-      urlObj.searchParams.set('identity', identity);
-    }
-
-    return urlObj.pathname + urlObj.search;
-  } catch (e) {
-    return url;
-  }
 }

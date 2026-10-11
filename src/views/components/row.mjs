@@ -7,14 +7,8 @@ import {
 } from "date-fns";
 import { URL } from "url";
 import DOMPurify from "isomorphic-dompurify";
-import ethers from "ethers";
 import { getSlug, isCloudflareImage } from "../../utils.mjs";
 
-import ShareIcon from "./shareicon.mjs";
-import CopyIcon from "./copyicon.mjs";
-import FCIcon from "./farcastericon.mjs";
-import { warpcastSvg } from "./socialNetworkIcons.mjs";
-import theme from "../../theme.mjs";
 import { countOutbounds, countComments } from "../../cache.mjs";
 import log from "../../logger.mjs";
 import { twitterFrontends } from "../../parser.mjs";
@@ -30,18 +24,6 @@ if (env.CUSTOM_PROTOCOL && env.CUSTOM_HOST_NAME) {
 }
 
 const html = htm.bind(vhtml);
-
-export const iconSVG = html`
-  <svg
-    style="width: 35px;"
-    viewBox="0 0 200 200"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <path
-      d="M99.84 52.0801L55.04 96.8001L68.44 110.04L90.36 88.0401L90.3747 148H109.8V88.0401L131.84 110.04L144.96 96.8001L100.24 52.0801H99.84Z"
-    />
-  </svg>
-`;
 
 const heartSVG = html`
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
@@ -112,15 +94,6 @@ const aiSparkleSVG = html`
     <line x1="224" y1="72" x2="224" y2="104" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16" />
     <line x1="152" y1="40" x2="200" y2="40" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16" />
     <line x1="208" y1="88" x2="240" y2="88" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16" />
-  </svg>
-`;
-
-const heartFilledSVG = html`
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
-    <rect width="256" height="256" fill="none" />
-    <path
-      d="M240,102c0,70-103.79,126.66-108.21,129a8,8,0,0,1-7.58,0C119.79,228.66,16,172,16,102A62.07,62.07,0,0,1,78,40c20.65,0,38.73,8.88,50,23.89C139.27,48.88,157.35,40,178,40A62.07,62.07,0,0,1,240,102Z"
-    />
   </svg>
 `;
 
@@ -200,53 +173,19 @@ const convertBrTagsToNewlines = (text) => {
   return text.replace(/<br\s*\/?>/gi, '\n');
 };
 
-const ShuffleSVG = html`<svg
-  style="width: 24px; color: var(--text-primary);"
-  xmlns="http://www.w3.org/2000/svg"
-  viewBox="0 0 256 256"
->
-  <rect width="256" height="256" fill="none" />
-  <path
-    d="M32,72H55.06a64,64,0,0,1,52.08,26.8l41.72,58.4A64,64,0,0,0,200.94,184H232"
-    fill="none"
-    stroke="currentColor"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    stroke-width="16"
-  />
-  <polyline
-    points="208 48 232 72 208 96"
-    fill="none"
-    stroke="currentColor"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    stroke-width="16"
-  />
-  <polyline
-    points="208 160 232 184 208 208"
-    fill="none"
-    stroke="currentColor"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    stroke-width="16"
-  />
-  <path
-    d="M147.66,100.47l1.2-1.67A64,64,0,0,1,200.94,72H232"
-    fill="none"
-    stroke="currentColor"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    stroke-width="16"
-  />
-  <path
-    d="M32,184H55.06a64,64,0,0,0,52.08-26.8l1.2-1.67"
-    fill="none"
-    stroke="currentColor"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    stroke-width="16"
-  />
-</svg>`;
+// NOTE: An embed image is rendered at 100% width with height:auto, so its
+// width/height attributes set the box the browser reserves before the image
+// loads. With a placeholder ratio, a taller image makes the row grow when it
+// arrives (layout shift). Use the real size when the metadata has it; older
+// cache entries without it keep the 16:9 placeholder.
+export function embedImageSize(width, height) {
+  const w = Number(width);
+  const h = Number(height);
+  if (Number.isFinite(w) && Number.isFinite(h) && w > 0 && h > 0) {
+    return { width: Math.round(w), height: Math.round(h) };
+  }
+  return { width: 600, height: 338 };
+}
 
 export function extractDomain(link) {
   // Return empty string for text posts (data: and kiwi: URLs)
@@ -315,8 +254,6 @@ const blockedOGImageDomains = [
   "paulgraham.com",
 ];
 
-// Helper function to check if domain is a substack subdomain
-const isSubstackDomain = (domain) => domain.endsWith("substack.com");
 const knownBadOgImages = [
   "https://paragraph.xyz/share/share_img.jpg",
   "https://s.turbifycdn.com/aah/paulgraham/essays-5.gif",
@@ -451,8 +388,19 @@ const row = (
     const canRenderBlueskyPreview =
       isBlueskyPost && story.metadata && story.metadata.blueskyPost;
 
+    // Real image sizes from the metadata (see embedImageSize)
+    const tweetImageSize = embedImageSize(
+      story.metadata?.imageWidth,
+      story.metadata?.imageHeight,
+    );
+    const blueskyImageSize = embedImageSize(
+      story.metadata?.blueskyPost?.imageSizes?.[0]?.width,
+      story.metadata?.blueskyPost?.imageSizes?.[0]?.height,
+    );
+
     // Extract first image from Farcaster cast embeds
     let farcasterImageUrl = null;
+    let farcasterImageSize = embedImageSize();
     if (canRenderFarcasterPreview && story.metadata.farcasterCast?.embeds) {
       const imageExtensions = [
         ".jpg",
@@ -473,6 +421,11 @@ const row = (
 
       if (imageEmbed) {
         farcasterImageUrl = imageEmbed.metadata?.image?.url || imageEmbed.url;
+        // Neynar reports the embed's image size as width_px/height_px.
+        farcasterImageSize = embedImageSize(
+          imageEmbed.metadata?.image?.width_px,
+          imageEmbed.metadata?.image?.height_px,
+        );
       }
     }
 
@@ -671,8 +624,8 @@ const row = (
                                 <img
                                   src="${DOMPurify.sanitize(transformImageUrl(story.metadata.image))}"
                                   alt="Tweet image"
-                                  width="600"
-                                  height="338"
+                                  width="${tweetImageSize.width}"
+                                  height="${tweetImageSize.height}"
                                   style="width: 100%; height: auto; max-height: 600px; max-height: 125cqw; object-fit: cover; display: block;"
                                   loading="${getImageLoading(isAboveFold, story.metadata.image)}"
                                 />
@@ -828,8 +781,8 @@ const row = (
                                 <img
                                   src="${DOMPurify.sanitize(farcasterImageUrl)}"
                                   alt="Cast image"
-                                  width="600"
-                                  height="338"
+                                  width="${farcasterImageSize.width}"
+                                  height="${farcasterImageSize.height}"
                                   style="width: 100%; height: auto; max-height: 600px; max-height: 125cqw; object-fit: cover; display: block; border-radius: 2px;"
                                   loading="${getImageLoading(isAboveFold, farcasterImageUrl)}"
                                 />
@@ -932,8 +885,8 @@ const row = (
                                     story.metadata.blueskyPost.images[0],
                                   )}"
                                   alt="Post image"
-                                  width="600"
-                                  height="338"
+                                  width="${blueskyImageSize.width}"
+                                  height="${blueskyImageSize.height}"
                                   style="width: 100%; height: auto; max-height: 600px; max-height: 125cqw; object-fit: cover; display: block; border-radius: 2px;"
                                   loading="${getImageLoading(isAboveFold, story.metadata.blueskyPost.images[0])}"
                                 />
@@ -1645,31 +1598,4 @@ const row = (
   };
 };
 
-export const ChatsSVG = (
-  style = "color: var(--text-tertiary); width: 25px;",
-) => html`
-  <svg
-    style="${style}"
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 256 256"
-  >
-    <rect width="256" height="256" fill="none" />
-    <path
-      d="M71.58,144,32,176V48a8,8,0,0,1,8-8H168a8,8,0,0,1,8,8v88a8,8,0,0,1-8,8Z"
-      fill="none"
-      stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="16"
-    />
-    <path
-      d="M80,144v40a8,8,0,0,0,8,8h96.42L224,224V96a8,8,0,0,0-8-8H176"
-      fill="none"
-      stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="16"
-    />
-  </svg>
-`;
 export default row;

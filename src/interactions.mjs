@@ -1,11 +1,10 @@
 // @format
 import { join } from "path";
 import Database from "better-sqlite3";
-import { utils } from "ethers";
 import { resolveIdentity } from "@attestate/delegator2";
 
 import log from "./logger.mjs";
-import { verify, ecrecover, toDigest } from "./id.mjs";
+import { ecrecover } from "./id.mjs";
 import { EIP712_MESSAGE } from "./constants.mjs";
 import * as registry from "./chainstate/registry.mjs";
 
@@ -328,32 +327,6 @@ export function getRecentInteractions(since) {
       impressions: [],
       clicks: []
     };
-  }
-}
-
-// Get interactions (impressions and clicks) for DAU calculation
-export function getInteractionsForDAU() {
-  try {
-    // Get both impressions and clicks with a UNION to combine them
-    const stmt = db.prepare(`
-      SELECT user_identity as identity, timestamp, 'impression' as type
-      FROM impressions
-      UNION ALL
-      SELECT user_identity as identity, timestamp, 'click' as type
-      FROM clicks
-      ORDER BY timestamp DESC
-    `);
-    
-    const interactions = stmt.all();
-    
-    return interactions.map(interaction => ({
-      identity: interaction.identity,
-      timestamp: interaction.timestamp,
-      type: interaction.type
-    }));
-  } catch (error) {
-    log(`Error getting interactions for DAU: ${error.message}`);
-    return [];
   }
 }
 

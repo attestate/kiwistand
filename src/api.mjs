@@ -10,7 +10,6 @@ import compression from "compression";
 import Ajv from "ajv";
 import addFormats from "ajv-formats";
 import morgan from "morgan";
-import { utils } from "ethers";
 
 import log from "./logger.mjs";
 import * as store from "./store.mjs";

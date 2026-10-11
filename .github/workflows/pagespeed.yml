@@ -8,6 +8,9 @@ name: Page speed
 # - On pull requests that change the stylesheets: loads the live pages with
 #   the PR's news.css and inter.css swapped in, so a layout shift is caught
 #   before it ships. (Lighthouse is skipped there; it would score production.)
+#
+# Every pull request also gets its own server measured, offline with fixed
+# data, and its bundle sizes checked: pagespeed-pr.yml.
 
 on:
   workflow_run:
@@ -58,4 +61,8 @@ jobs:
 
       - name: Check the live site
         if: github.event_name != 'pull_request'
+        env:
+          # A single phone Lighthouse run swings by 10+ points (e.g. /best
+          # 61 after a deploy), so the median of three counts.
+          MEDIAN_RUNS: "3"
         run: node scripts/pagespeed/check.mjs

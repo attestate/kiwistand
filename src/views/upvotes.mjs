@@ -3,26 +3,19 @@ import url from "url";
 
 import htm from "htm";
 import vhtml from "vhtml";
-import normalizeUrl from "normalize-url";
 import { formatDistanceToNow } from "date-fns";
 import { utils } from "ethers";
 import DOMPurify from "isomorphic-dompurify";
 
 import Header from "./components/header.mjs";
-import { trophySVG, broadcastSVG } from "./components/secondheader.mjs";
 import Footer from "./components/footer.mjs";
 import Sidebar from "./components/sidebar.mjs";
 import { custom } from "./components/head.mjs";
-import * as store from "../store.mjs";
+import { getSlug } from "../utils.mjs";
 import * as ens from "../ens.mjs";
-import * as moderation from "./moderation.mjs";
 import * as karma from "../karma.mjs";
-import * as preview from "../preview.mjs";
-import Row from "./components/row.mjs";
 import RightColumn from "./components/right-column.mjs";
-import { getSubmissions, getSubmissionCount, getContributionsData } from "../cache.mjs";
-import { metadata } from "../parser.mjs";
-import { truncate } from "../utils.mjs";
+import { getSubmissions, getSubmissionCount } from "../cache.mjs";
 import {
   SocialButton,
   twitterSvg,
@@ -72,7 +65,9 @@ export default async function (trie, theme, identity, tab = "submissions") {
 
   let ogImage = ensData.safeAvatar;
 
-  const description = ensData.description
+  const description = ensData.kiwiProfile?.bio
+    ? ensData.kiwiProfile.bio
+    : ensData.description
     ? ensData.description
     : ensData.farcaster
     ? ensData.farcaster.bio
@@ -169,6 +164,7 @@ export default async function (trie, theme, identity, tab = "submissions") {
                       html` <a href="${ensData.safeAvatar}" target="_blank">
                         <img
                           src="${ensData.safeAvatar}"
+                          alt=""
                           loading="lazy"
                           style="border: 1px solid var(--text-secondary); width: 30px; height: 30px; border-radius: 2px;"
                       /></a>`}
@@ -186,6 +182,10 @@ export default async function (trie, theme, identity, tab = "submissions") {
                           🥝)</span
                         >
                       </a>
+                      <kiwi-edit-profile
+                        data-address="${identity}"
+                        style="margin-left: auto; height: 24px; display: inline-flex; align-items: center;"
+                      ></kiwi-edit-profile>
                     </span>
                     
                     <!-- Stats bar like Reddit/HN -->
@@ -265,7 +265,7 @@ export default async function (trie, theme, identity, tab = "submissions") {
                               ${i + 1}. <a href="${story.href}" target="_blank">${story.title}</a> <span class="domain">(${new URL(story.href).hostname})</span>
                             </div>
                             <div class="submission-meta">
-                              ${story.upvotes} points | <a href="/stories/${story.title}?index=0x${story.index}">comments</a> | ${formatDistanceToNow(new Date(story.timestamp * 1000))} ago
+                              ${story.upvotes} points | <a href="/stories/${getSlug(story.title)}?index=0x${story.index}">comments</a> | ${formatDistanceToNow(new Date(story.timestamp * 1000))} ago
                             </div>
                           </div>
                         `)}

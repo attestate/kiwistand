@@ -13,9 +13,22 @@
 //   LOCAL_CSS=src/public/news.css LOCAL_INTER=src/public/fonts/inter.css \
 //     node scripts/pagespeed/check.mjs
 //
+// Pull requests are also checked against their own server, offline and with
+// fixed data (local.mjs starts it and runs this with the env below).
+//
 // Other env: BASE_URL (default https://news.kiwistand.com), ONLY_CLS=1 skips
-// Lighthouse, CHROME_PATH uses another Chromium, SUMMARY_FILE appends a
-// markdown report (GitHub sets GITHUB_STEP_SUMMARY).
+// Lighthouse and SKIP_CLS=1 the layout shifts, DEVICES=desktop or =mobile
+// checks only one of them, CHROME_PATH uses another Chromium, SUMMARY_FILE
+// appends a markdown report (GitHub sets GITHUB_STEP_SUMMARY).
+//
+// For the fixture server (local.mjs sets these): MEDIAN_RUNS (default 1) runs
+// Lighthouse that many times per page and scores the median, as single runs
+// are noisy. BUDGETS=local uses the floors in budgets.json's "local" (the
+// fixture server scores differently than production). OFFLINE=1 keeps the
+// browser off the internet: only localhost and 127.0.0.1 resolve, so third
+// parties (analytics, wallets, avatars) fail fast instead of making results
+// depend on them. PAGE_ASSETS_OUT writes which /assets/ files each page
+// loaded, for bundles.mjs.
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -23,9 +36,17 @@ import { execFileSync } from "child_process";
 import { chromium } from "playwright";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const budgets = JSON.parse(
+const allBudgets = JSON.parse(
   fs.readFileSync(path.join(here, "budgets.json"), "utf8"),
 );
+const budgets = process.env.BUDGETS
+  ? { ...allBudgets, ...allBudgets[process.env.BUDGETS] }
+  : allBudgets;
+const DEVICES = (process.env.DEVICES || "desktop,mobile").split(",");
+const MEDIAN_RUNS = Math.max(1, parseInt(process.env.MEDIAN_RUNS || "1", 10));
+// NOTE: Chromium's resolver then fails every other host right away.
+const OFFLINE_FLAG =
+  "--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE localhost, EXCLUDE 127.0.0.1";
 const BASE = (process.env.BASE_URL || "https://news.kiwistand.com").replace(
   /\/$/,
   "",
@@ -33,9 +54,9 @@ const BASE = (process.env.BASE_URL || "https://news.kiwistand.com").replace(
 const CHROME = process.env.CHROME_PATH || chromium.executablePath();
 const UA = {
   desktop:
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 KiwiPagespeed",
   mobile:
-    "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36",
+    "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36 KiwiPagespeed",
 };
 const VIEWPORT = {
   desktop: { width: 1440, height: 900 },
@@ -43,12 +64,13 @@ const VIEWPORT = {
 };
 
 // NOTE: Behind an intercepting proxy (e.g. a sandbox), go through it.
-const proxy = process.env.HTTPS_PROXY;
+const proxy = process.env.OFFLINE ? null : process.env.HTTPS_PROXY;
 const browser = await chromium.launch({
   executablePath: CHROME,
   ...(proxy
     ? { proxy: { server: proxy }, args: ["--ignore-certificate-errors"] }
     : {}),
+  ...(process.env.OFFLINE ? { args: [OFFLINE_FLAG] } : {}),
 });
 
 async function newContext(device) {
@@ -158,6 +180,13 @@ function fresh(url) {
 
 async function measure(ctx, url) {
   const page = await ctx.newPage();
+  const assets = new Set();
+  page.on("request", (req) => {
+    const { origin, pathname } = new URL(req.url());
+    if (origin === BASE && pathname.startsWith("/assets/")) {
+      assets.add(pathname.slice(1));
+    }
+  });
   const cdp = await ctx.newCDPSession(page);
   // Roughly a mid-range phone on a slow 4G connection.
   await cdp.send("Network.emulateNetworkConditions", {
@@ -183,15 +212,17 @@ async function measure(ctx, url) {
   return {
     cls: shifts.reduce((sum, s) => sum + s.value, 0),
     shifts: shifts.filter((s) => s.value >= 0.001),
+    assets: [...assets].sort(),
   };
 }
 
 const failures = [];
-const report = ["## Layout shift", "", "| Page | Desktop | Phone |", "|---|---|---|"];
+const report = [];
 
 const list = await pages();
 const results = {};
-for (const device of ["desktop", "mobile"]) {
+// NOTE: SKIP_CLS=1 only runs Lighthouse, so the two can run in parallel.
+for (const device of process.env.SKIP_CLS ? [] : DEVICES) {
   const ctx = await newContext(device);
   for (const [name, url] of list) {
     let result;
@@ -232,12 +263,27 @@ for (const device of ["desktop", "mobile"]) {
 }
 await browser.close();
 
+if (process.env.PAGE_ASSETS_OUT) {
+  const out = {};
+  for (const [name, r] of Object.entries(results)) {
+    for (const device of ["desktop", "mobile"]) {
+      if (r[device]?.assets) (out[name] ??= {})[device] = r[device].assets;
+    }
+  }
+  fs.writeFileSync(process.env.PAGE_ASSETS_OUT, JSON.stringify(out, null, 2));
+}
+
+if (!process.env.SKIP_CLS) {
+  report.push("## Layout shift", "", "| Page | Desktop | Phone |", "|---|---|---|");
+}
 for (const [name, r] of Object.entries(results)) {
   const cell = (x) =>
     !x ? "" : x.error ? "error" : `${x.cls > budgets.cls ? "❌ " : ""}${x.cls.toFixed(4)}`;
   report.push(`| [${name}](${BASE}${r.url}) | ${cell(r.desktop)} | ${cell(r.mobile)} |`);
 }
-report.push("", `Budget: ${budgets.cls} per page.`, "");
+if (!process.env.SKIP_CLS) {
+  report.push("", `Budget: ${budgets.cls} per page.`, "");
+}
 
 if (!process.env.ONLY_CLS) {
   report.push(
@@ -249,31 +295,47 @@ if (!process.env.ONLY_CLS) {
   const lighthouse = path.join(here, "node_modules", ".bin", "lighthouse");
   const lhPages = list.filter(([name]) => budgets.lighthousePages.includes(name));
   for (const [name, url] of lhPages) {
-    for (const device of ["desktop", "mobile"]) {
-      const out = path.join(here, `lh-${name.replace(/\W/g, "_")}-${device}.json`);
-      try {
-        execFileSync(
-          lighthouse,
-          [
-            BASE + url,
-            ...(device === "desktop" ? ["--preset=desktop"] : []),
-            "--output=json",
-            `--output-path=${out}`,
-            "--quiet",
-            "--chrome-flags=--headless=new --no-sandbox",
-          ],
-          { env: { ...process.env, CHROME_PATH: CHROME }, timeout: 180000 },
+    for (const device of DEVICES) {
+      // NOTE: Every run of a page is scored, then the median of each
+      // category (and of LCP and TBT) counts.
+      const runs = [];
+      for (let run = 0; run < MEDIAN_RUNS; run++) {
+        const out = path.join(
+          here,
+          `lh-${name.replace(/\W/g, "_")}-${device}${MEDIAN_RUNS > 1 ? `-${run + 1}` : ""}.json`,
         );
-      } catch (err) {
-        failures.push(`lighthouse ${name} (${device}): ${err.message.split("\n")[0]}`);
-        continue;
+        try {
+          execFileSync(
+            lighthouse,
+            [
+              BASE + url,
+              ...(device === "desktop" ? ["--preset=desktop"] : []),
+              "--output=json",
+              `--output-path=${out}`,
+              "--quiet",
+              `--chrome-flags=--headless=new --no-sandbox${process.env.OFFLINE ? ` "${OFFLINE_FLAG}"` : ""}`,
+            ],
+            { env: { ...process.env, CHROME_PATH: CHROME }, timeout: 180000 },
+          );
+        } catch (err) {
+          failures.push(`lighthouse ${name} (${device}): ${err.message.split("\n")[0]}`);
+          break;
+        }
+        const lhr = JSON.parse(fs.readFileSync(out, "utf8"));
+        if (lhr.runtimeError) {
+          failures.push(`lighthouse ${name} (${device}): ${lhr.runtimeError.code}`);
+          break;
+        }
+        runs.push(lhr);
       }
-      const lhr = JSON.parse(fs.readFileSync(out, "utf8"));
-      if (lhr.runtimeError) {
-        failures.push(`lighthouse ${name} (${device}): ${lhr.runtimeError.code}`);
-        continue;
-      }
-      const score = (k) => Math.round((lhr.categories[k]?.score ?? 0) * 100);
+      if (runs.length < MEDIAN_RUNS) continue;
+      const median = (values) => {
+        const sorted = [...values].sort((x, y) => x - y);
+        const mid = Math.floor(sorted.length / 2);
+        return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+      };
+      const score = (k) =>
+        Math.round(median(runs.map((r) => (r.categories[k]?.score ?? 0) * 100)));
       const scores = {
         performance: score("performance"),
         accessibility: score("accessibility"),
@@ -293,14 +355,25 @@ if (!process.env.ONLY_CLS) {
         }
         return String(v);
       });
-      const a = lhr.audits;
+      const metric = (id) =>
+        median(runs.map((r) => r.audits[id]?.numericValue ?? 0));
+      const lcp = `${(metric("largest-contentful-paint") / 1000).toFixed(1)} s`;
+      const tbt = `${Math.round(metric("total-blocking-time"))} ms`;
+      const perfRuns =
+        runs.length > 1
+          ? ` (runs: ${runs.map((r) => Math.round(r.categories.performance.score * 100)).join(", ")})`
+          : "";
       report.push(
-        `| ${name} | ${device} | ${cells.join(" | ")} | ${a["largest-contentful-paint"].displayValue} | ${a["total-blocking-time"].displayValue} |`,
+        `| ${name} | ${device} | ${cells.join(" | ")} | ${lcp} | ${tbt} |`,
       );
-      console.log(`lighthouse ${device.padEnd(8)} ${name.padEnd(14)} ${JSON.stringify(scores)}`);
+      console.log(`lighthouse ${device.padEnd(8)} ${name.padEnd(14)} ${JSON.stringify(scores)} LCP ${lcp} TBT ${tbt}${perfRuns}`);
     }
   }
-  report.push("", "Floors are in scripts/pagespeed/budgets.json.", "");
+  report.push(
+    "",
+    `Floors are in scripts/pagespeed/budgets.json${process.env.BUDGETS ? ` ("${process.env.BUDGETS}")` : ""}.${MEDIAN_RUNS > 1 ? ` Median of ${MEDIAN_RUNS} runs.` : ""}`,
+    "",
+  );
 }
 
 if (failures.length) {

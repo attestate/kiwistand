@@ -2,7 +2,6 @@
 import { env } from "process";
 import express from "express";
 import { createProxyMiddleware } from "http-proxy-middleware";
-import cluster from "cluster";
 import os from "os";
 import log from "./logger.mjs";
 import https from "https";

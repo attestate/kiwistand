@@ -599,10 +599,6 @@ function escapeHtml(str) {
     .replace(/"/g, "&quot;");
 }
 
-export function getCachedExtraction(url) {
-  return extractionCache.get(url) || null;
-}
-
 export async function extractArticleCached(url) {
   const cached = extractionCache.get(url);
   if (cached) {

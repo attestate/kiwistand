@@ -26,6 +26,7 @@ import {
   isDelegationModalNeeded,
 } from "./delegationModalManager.js";
 import { useWebHaptics } from "web-haptics/react";
+import LoginModal from "./LoginModal.jsx";
 
 export const iconSVG = (
   <svg
@@ -145,6 +146,7 @@ const Vote = (props) => {
   const { delegations, toast, isad } = props;
   const value = API.messageFab(props.title, props.href);
   const [showKarmaAnimation, setShowKarmaAnimation] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
   const animationContainerRef = useRef(null);
 
   let address;
@@ -334,6 +336,10 @@ const Vote = (props) => {
   };
 
   return (
+    <>
+    {showLogin && (
+      <LoginModal defaultOpen={true} onClose={() => setShowLogin(false)} />
+    )}
     <ConnectButton.Custom>
       {({ account, chain, mounted, openConnectModal }) => {
         const connected = account && chain && mounted;
@@ -370,10 +376,11 @@ const Vote = (props) => {
               if (!isEligible) {
                 if (isFarcasterClient) {
                   toast.error("Unable to access your Farcaster profile");
+                  triggerLocalHaptic("warning");
                 } else {
-                  toast.error("Connect your wallet to sign up");
+                  setShowLogin(true);
+                  triggerLocalHaptic("selection");
                 }
-                triggerLocalHaptic("warning");
                 return;
               }
 
@@ -455,6 +462,7 @@ const Vote = (props) => {
         );
       }}
     </ConnectButton.Custom>
+    </>
   );
 };
 

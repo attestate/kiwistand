@@ -6,7 +6,6 @@ import Footer from "./components/footer.mjs";
 import Sidebar from "./components/sidebar.mjs";
 import RightColumn from "./components/right-column.mjs";
 import { custom } from "./components/head.mjs";
-import Row, { extractDomain } from "./components/row.mjs";
 import * as parser from "../parser.mjs";
 
 const html = htm.bind(vhtml);
@@ -211,31 +210,6 @@ const inputStyle = `
    min-height: 50px;
    border-radius: 2px;
 `;
-
-const buttonStyle = `
-   width: 100%;
-   max-width: 600px;
-   margin-top: 0.5rem;
-   padding: 5px;
-   font-size: 16px;
-   cursor: pointer;
- `;
-
-const fileInputStyle = `
-   display: none;
- `;
-
-const fileInputLabelStyle = `
-   width: 33px;
-   height: 33px;
-   display: flex;
-   align-items: center;
-   justify-content: center;
-   background: var(--text-disabled);
-   color: var(--text-white);
-   border-radius: 2px;
-   cursor: pointer;
- `;
 
 const editableContent = `
    overflow-wrap: anywhere;

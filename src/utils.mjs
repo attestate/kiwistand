@@ -1,7 +1,7 @@
 import path from "path";
 import { fileURLToPath } from "url";
 
-import { Response, Request } from "node-fetch";
+import { Response } from "node-fetch";
 import { getCacheKey } from "node-fetch-cache";
 import DOMPurify from "isomorphic-dompurify";
 import slugify from "slugify";
@@ -105,35 +105,9 @@ export function getSlug(title) {
   return slugify(DOMPurify.sanitize(title), { strict: true });
 }
 
-let lastCall;
-export function logd(label = "") {
-  const now = Date.now();
-  if (lastCall === undefined) {
-    console.log(`${label}${label ? ": " : ""}Delta: 0ms`);
-  } else {
-    console.log(`${label}${label ? ": " : ""}Delta: ${now - lastCall}ms`);
-  }
-
-  if (label === "reset") {
-    lastCall = undefined;
-  } else {
-    lastCall = now;
-  }
-}
-
 function dirname() {
   const filename = fileURLToPath(import.meta.url);
   return path.dirname(filename);
-}
-
-export function truncate(comment, maxLength = 260) {
-  if (
-    !comment ||
-    (comment && comment.length <= maxLength) ||
-    (comment && comment.length === 0)
-  )
-    return comment;
-  return comment.slice(0, comment.lastIndexOf(" ", maxLength)) + "...";
 }
 
 export function truncateName(name) {

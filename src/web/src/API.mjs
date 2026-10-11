@@ -1,7 +1,4 @@
 // @format
-import { readContract } from "@wagmi/core";
-import { mainnet, optimism } from "wagmi/chains";
-import { client } from "./client.mjs";
 import { keccak256 } from "ethereum-cryptography/keccak.js";
 import { toHex } from "ethereum-cryptography/utils.js";
 import { encode } from "cbor-x";
@@ -212,70 +209,6 @@ export async function fetchNotifications(address) {
   return data.data.notifications;
 }
 
-const address = "0x66747bdc903d17c586fa09ee5d6b54cc85bbea45";
-const abi = [
-  {
-    inputs: [],
-    name: "saleDetails",
-    outputs: [
-      {
-        components: [
-          { internalType: "bool", name: "publicSaleActive", type: "bool" },
-          { internalType: "bool", name: "presaleActive", type: "bool" },
-          { internalType: "uint256", name: "publicSalePrice", type: "uint256" },
-          { internalType: "uint64", name: "publicSaleStart", type: "uint64" },
-          { internalType: "uint64", name: "publicSaleEnd", type: "uint64" },
-          { internalType: "uint64", name: "presaleStart", type: "uint64" },
-          { internalType: "uint64", name: "presaleEnd", type: "uint64" },
-          {
-            internalType: "bytes32",
-            name: "presaleMerkleRoot",
-            type: "bytes32",
-          },
-          {
-            internalType: "uint256",
-            name: "maxSalePurchasePerAddress",
-            type: "uint256",
-          },
-          { internalType: "uint256", name: "totalMinted", type: "uint256" },
-          { internalType: "uint256", name: "maxSupply", type: "uint256" },
-        ],
-        internalType: "struct IERC721Drop.SaleDetails",
-        name: "",
-        type: "tuple",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-];
-
-export async function fetchPrice() {
-  let response;
-  const publicSalePrice = BigInt("3000000000000");
-  try {
-    const current = BigInt("3000000000000");
-    const prices = {
-      min: publicSalePrice + 1n,
-      minPlusFee: publicSalePrice + 777000000000000n,
-      current,
-    };
-    if (prices.current <= prices.min) {
-      prices.authoritative = prices.min;
-      prices.difference = 0n;
-      prices.referralPrice = prices.min;
-    } else {
-      prices.authoritative = prices.current;
-      prices.difference = prices.current - prices.min;
-      prices.referralPrice = prices.authoritative - prices.difference / 2n;
-    }
-    return prices;
-  } catch (err) {
-    console.error(err);
-    return null;
-  }
-}
-
 export async function fetchStory(id, commentCount) {
   let response;
 
@@ -323,40 +256,6 @@ export async function fetchDelegations(cached = false) {
   }
 }
 
-
-const ETH_USD_PRICE_FEED_ADDRESS = "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419";
-
-const PRICE_FEED_ABI = [
-  {
-    name: "latestRoundData",
-    outputs: [
-      { type: "uint80", name: "roundId" },
-      { type: "int256", name: "answer" },
-      { type: "uint256", name: "startedAt" },
-      { type: "uint256", name: "updatedAt" },
-      { type: "uint80", name: "answeredInRound" },
-    ],
-    inputs: [],
-    stateMutability: "view",
-    type: "function",
-  },
-];
-
-export async function fetchEthUsdPrice() {
-  try {
-    const priceData = await readContract(client, {
-      address: ETH_USD_PRICE_FEED_ADDRESS,
-      abi: PRICE_FEED_ABI,
-      functionName: "latestRoundData",
-      chainId: mainnet.id,
-    });
-    const [_, answer] = priceData;
-    return answer;
-  } catch (err) {
-    console.error(err);
-    return null;
-  }
-}
 
 export async function sendMiniAppUpvote(value, fid, walletAddress, authToken) {
   // authToken is now REQUIRED

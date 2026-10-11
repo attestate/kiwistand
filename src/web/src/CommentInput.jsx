@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import posthog from "posthog-js";
 import { RainbowKitProvider, useConnectModal } from "@rainbow-me/rainbowkit";
@@ -14,7 +14,6 @@ import { useWebHaptics } from "web-haptics/react";
 import * as API from "./API.mjs";
 import { getLocalAccount } from "./session.mjs";
 import { chains, client, useProvider, useSigner, useIsMiniApp, isInIOSApp } from "./client.mjs";
-import { resolveAvatar } from "./Avatar.jsx";
 import { openDelegationModalForAction, isDelegationModalNeeded } from "./delegationModalManager.js";
 import LoginModal from "./LoginModal.jsx";
 
@@ -87,7 +86,7 @@ const SiteExplainer = () => {
           fontSize: "10pt",
         }}
       >
-        Connect to comment
+        {isInIOSApp ? "Connect to comment" : "Sign in to comment"}
       </button>
 
       <LoginModal

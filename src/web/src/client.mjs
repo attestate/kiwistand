@@ -5,18 +5,12 @@ import {
   FallbackProvider,
   JsonRpcProvider,
 } from "@ethersproject/providers";
-import { getDefaultConfig, connectorsForWallets } from "@rainbow-me/rainbowkit";
+import { connectorsForWallets } from "@rainbow-me/rainbowkit";
 import { farcasterMiniApp } from "@farcaster/miniapp-wagmi-connector";
 import { getPublicClient } from "@wagmi/core";
-import {
-  createConfig,
-  http,
-  useClient,
-  useConnectorClient,
-  createConnector,
-} from "wagmi";
+import { createConfig, http, useClient, useConnectorClient } from "wagmi";
 import { mainnet, optimism } from "wagmi/chains";
-import { createWalletClient, custom, getAddress } from "viem";
+import { createClient, createTransport } from "viem";
 import {
   injectedWallet,
   walletConnectWallet,
@@ -28,12 +22,11 @@ import {
 } from "@rainbow-me/rainbowkit/wallets";
 import { sdk } from "@farcaster/miniapp-sdk";
 
-const isDesktop = () => {
-  return (
-    !("ontouchstart" in window || navigator.maxTouchPoints) &&
-    window.innerWidth > 800
-  );
-};
+import {
+  RPC_URLS,
+  createRoutedRequest,
+  createKiwiEnsActions,
+} from "./rpc.mjs";
 
 // Setup chains and transports
 // NOTE: The frontend uses public RPCs on purpose. Any API key shipped in the
@@ -41,9 +34,62 @@ const isDesktop = () => {
 // only needs a handful of light calls (balance, ENS of the connected wallet,
 // delegation tx receipts), which public endpoints rate-limit per visitor IP.
 export const chains = [optimism, mainnet];
+
+// NOTE: Reads go to the public RPC directly, or through an anon-rpc worker if
+// the visitor turned on "Private RPC" (see rpc.mjs). value.url stays the
+// public URL: WalletConnect's rpcMap and the ethers providers below read it.
+// Those ethers providers only back app-key Wallets that sign EIP-712 messages
+// with hex addresses, which never touches the network.
+const notifyOnce = (() => {
+  const shown = new Set();
+  return (kind, message) => {
+    if (shown.has(kind)) return;
+    shown.add(kind);
+    if (typeof window !== "undefined") window.toast?.error?.(message);
+  };
+})();
+
+const kiwiTransport = (chainId) => (params) => {
+  const url = RPC_URLS[chainId];
+  const direct = http(url, { retryCount: 0 })(params);
+  const request = createRoutedRequest({
+    direct: (args) => direct.request(args),
+    loadAnon: () =>
+      import("./anon-transport.mjs").then((m) => m.anonRequest(chainId)),
+    onFallback: (err) => {
+      console.warn("Private RPC failed, read sent directly:", err);
+      notifyOnce("fallback", "Private RPC failed, using direct RPC");
+    },
+    onError: (err) => {
+      console.error(err);
+      notifyOnce("error", "Private RPC is unavailable. See the menu.");
+    },
+  });
+  return createTransport(
+    {
+      key: "kiwi",
+      name: "Kiwi RPC",
+      type: "kiwi",
+      request,
+      retryCount: params?.retryCount,
+    },
+    { url },
+  );
+};
+
 const transports = {
-  [optimism.id]: http("https://mainnet.optimism.io"),
-  [mainnet.id]: http("https://ethereum-rpc.publicnode.com"),
+  [optimism.id]: kiwiTransport(optimism.id),
+  [mainnet.id]: kiwiTransport(mainnet.id),
+};
+
+const ensActions = createKiwiEnsActions();
+const createKiwiClient = ({ chain }) => {
+  const base = createClient({
+    chain,
+    batch: { multicall: true },
+    transport: transports[chain.id],
+  });
+  return chain.id === mainnet.id ? base.extend(() => ensActions) : base;
 };
 
 export const useIsMiniApp = () => {
@@ -102,6 +148,7 @@ if (isAnonMode) {
     chains,
     connectors: [], // No connectors needed in anon mode
     transports,
+    client: createKiwiClient,
   });
 } else if (isInIOSApp) {
   // iOS app configuration
@@ -129,6 +176,7 @@ if (isAnonMode) {
     chains,
     connectors,
     transports,
+    client: createKiwiClient,
   });
 } else {
   // Standard configuration with Farcaster mini app support
@@ -163,6 +211,7 @@ if (isAnonMode) {
     chains,
     connectors,
     transports,
+    client: createKiwiClient,
   });
 }
 
