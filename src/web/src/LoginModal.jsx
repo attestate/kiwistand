@@ -1,7 +1,11 @@
 import React, { useState, useEffect, useImperativeHandle, forwardRef } from "react";
 import Modal from "react-modal";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
+import { Wallet } from "@ethersproject/wallet";
+
 import { setCookie, tenYearsInSeconds, isIOSApp } from "./session.mjs";
+import { EIP712_DOMAIN } from "./API.mjs";
+import { PROFILE_TYPES, nameProblem } from "./EditProfile.jsx";
 
 if (typeof document !== "undefined") {
   Modal.setAppElement("body");
@@ -36,18 +40,6 @@ const WalletIcon = () => (
   </svg>
 );
 
-const KeyIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="1.2em" height="1.2em">
-    <rect width="256" height="256" fill="none"/>
-    <path d="M93.17,122.83A71.68,71.68,0,0,1,88,95.91c0-38.58,31.08-70.64,69.64-71.87A72,72,0,0,1,232,98.36C230.73,136.92,198.67,168,160.09,168a71.68,71.68,0,0,1-26.92-5.17h0L120,176H96v24H72v24H40a8,8,0,0,1-8-8V187.31a8,8,0,0,1,2.34-5.65l58.83-58.83Z" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="16"/>
-    <circle cx="180" cy="76" r="12"/>
-  </svg>
-);
-
-// NOTE: Mirrors USED_FLAG in passkey.mjs; duplicated so the modal can pick
-// its default without loading that module up front.
-const PASSKEY_USED_FLAG = "-kiwi-news-passkey-used";
-
 function canUsePasskey() {
   if (typeof window === "undefined") return false;
   if (typeof window.PublicKeyCredential === "undefined") return false;
@@ -58,19 +50,34 @@ function canUsePasskey() {
   return true;
 }
 
-function hasUsedPasskey() {
-  try {
-    return localStorage.getItem(PASSKEY_USED_FLAG) === "true";
-  } catch (err) {
-    return false;
-  }
-}
+// NOTE: "Create account" asks for a nickname first, then makes the passkey
+// under that name and saves it as the profile; "Sign in" opens an existing
+// passkey; "I have my own wallet" is for wallet accounts. Never "Continue with
+// Apple/Google": that reads like Sign in with Apple or Google.
 
-// NOTE: Like Privy: "Sign in or sign up" (passkey) first, "I have my own
-// wallet" below. A passkey can't tell whether someone is new without showing
-// an empty "no passkeys" sheet, so the passkey step then asks "Create
-// account" or "Sign in". Never "Continue with Apple/Google": that reads like
-// Sign in with Apple or Google, which this isn't.
+// Saves the nickname as the new account's profile. Returns the server's
+// message when it fails, e.g. "That name is taken".
+async function saveNickname(privateKey, name) {
+  const value = {
+    name,
+    bio: "",
+    avatar: "",
+    timestamp: Math.floor(Date.now() / 1000),
+  };
+  const signature = await new Wallet(privateKey)._signTypedData(
+    EIP712_DOMAIN,
+    PROFILE_TYPES,
+    value,
+  );
+  const response = await fetch("/api/v1/profile", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ...value, signature }),
+  });
+  const body = await response.json().catch(() => ({}));
+  if (body.status === "success") return "";
+  return body.details || "Couldn't save your nickname. Please try another.";
+}
 
 const primaryStyle = {
   display: "inline-flex",
@@ -92,6 +99,21 @@ const secondaryStyle = {
   border: "var(--border-thin)",
   color: "var(--text-primary)",
 };
+const tertiaryStyle = {
+  background: "transparent",
+  border: "none",
+  padding: "4px 16px",
+  color: "var(--text-secondary)",
+  fontSize: "14px",
+  cursor: "pointer",
+  textDecoration: "underline",
+};
+const errorStyle = {
+  margin: "0 16px",
+  fontSize: "13px",
+  lineHeight: "18px",
+  color: "var(--color-error, #c0392b)",
+};
 const rowStyle = { display: "flex", alignItems: "center", height: "100%", gap: "8px" };
 
 const LoginModal = forwardRef((props, ref) => {
@@ -99,12 +121,35 @@ const LoginModal = forwardRef((props, ref) => {
   const [isButtonHovered, setIsButtonHovered] = useState(false);
   const [isButtonActive, setIsButtonActive] = useState(false);
   const [passkeyBusy, setPasskeyBusy] = useState(false);
-  // "choose": passkey or wallet; "passkey": sign in or create account.
+  // "choose": create account, sign in or wallet; "create": pick a nickname.
   const [step, setStep] = useState("choose");
+  const [nickname, setNickname] = useState("");
+  // "", "invalid", "checking", "available" or "taken"
+  const [nameState, setNameState] = useState("");
+  const [created, setCreated] = useState(null);
+
+  useEffect(() => {
+    const problem = nameProblem(nickname);
+    if (!nickname || problem) {
+      setNameState(nickname ? "invalid" : "");
+      return;
+    }
+    setNameState("checking");
+    const timer = setTimeout(async () => {
+      try {
+        const response = await fetch(
+          `/api/v1/profile-name/${encodeURIComponent(nickname)}`,
+        );
+        setNameState(response.status === 404 ? "available" : "taken");
+      } catch (err) {
+        setNameState("");
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [nickname]);
   const [passkeyError, setPasskeyError] = useState("");
   const { openConnectModal } = useConnectModal();
   const showPasskey = canUsePasskey();
-  const usedBefore = showPasskey && hasUsedPasskey();
 
   function openModal() {
     setPasskeyError("");
@@ -114,55 +159,74 @@ const LoginModal = forwardRef((props, ref) => {
   function closeModal() {
     setShowModal(false);
     setStep("choose");
+    setPasskeyError("");
     if (props.onClose) props.onClose();
   }
 
   // mode: "create" for a new account, "signIn" for an existing passkey
-  const handlePasskey = async (mode) => {
+  const failed = (passkey, err) => {
+    setPasskeyBusy(false);
+    if (passkey && passkey.isCancellation(err)) return;
+    if (passkey && err instanceof passkey.PrfUnsupportedError) {
+      setPasskeyError(err.message);
+      return;
+    }
+    console.error("Passkey sign-in failed", err);
+    setPasskeyError(
+      "Couldn't use your passkey. Please try again or use your wallet.",
+    );
+  };
+
+  const handleSignIn = async () => {
     if (passkeyBusy) return;
     setPasskeyError("");
     setPasskeyBusy(true);
     let passkey;
     try {
       passkey = await import("./passkey.mjs");
-      const account =
-        mode === "create" ? await passkey.create() : await passkey.signIn();
+      const account = await passkey.signIn();
       passkey.storeAccount(account);
       setCookie("identity", account.address, tenYearsInSeconds);
+      setShowModal(false);
+      window.location.reload();
+    } catch (err) {
+      failed(passkey, err);
+    }
+  };
 
-      let reload = true;
-      if (mode === "create") {
+  // NOTE: The nickname comes first and is required: the passkey is saved
+  // under it ("<nickname>" on Kiwi News in the password manager) and it
+  // becomes the profile right away. If saving the name fails after the
+  // passkey exists (e.g. someone took it in the meantime), only the profile
+  // save is retried with a new name; no second passkey is made.
+  const handleCreate = async () => {
+    if (passkeyBusy || nameState !== "available") return;
+    setPasskeyError("");
+    setPasskeyBusy(true);
+    let passkey;
+    try {
+      passkey = await import("./passkey.mjs");
+      let account = created;
+      if (!account) {
+        account = await passkey.create({ name: nickname });
+        passkey.storeAccount(account);
+        setCookie("identity", account.address, tenYearsInSeconds);
         // NOTE: The bell (Bell.jsx) stays hidden until there's a lastUpdate;
         // a brand-new account has nothing to catch up on.
         setCookie("lastUpdate", Math.floor(Date.now() / 1000));
-        // Opens the profile editor after the reload (NicknamePrompt.jsx).
-        try {
-          localStorage.setItem("kiwi-open-profile-editor", "true");
-        } catch (err) {}
-        // NOTE: Hook for the nickname prompt. A listener that wants to keep
-        // the page alive (e.g. to show the prompt first) can call
-        // preventDefault() and is then responsible for reloading.
-        const proceed = window.dispatchEvent(
-          new CustomEvent("kiwi:account-created", {
-            detail: { address: account.address },
-            cancelable: true,
-          }),
-        );
-        reload = proceed;
+        setCreated(account);
       }
-      setShowModal(false);
-      if (reload) window.location.reload();
-    } catch (err) {
-      setPasskeyBusy(false);
-      if (passkey && passkey.isCancellation(err)) return;
-      if (passkey && err instanceof passkey.PrfUnsupportedError) {
-        setPasskeyError(err.message);
+      const problem = await saveNickname(account.privateKey, nickname);
+      if (problem) {
+        setPasskeyBusy(false);
+        setNameState("taken");
+        setPasskeyError(problem);
         return;
       }
-      console.error("Passkey sign-in failed", err);
-      setPasskeyError(
-        "Couldn't sign in with your passkey. Please try again or connect a wallet.",
-      );
+      setShowModal(false);
+      window.location.reload();
+    } catch (err) {
+      failed(passkey, err);
     }
   };
 
@@ -374,71 +438,84 @@ const LoginModal = forwardRef((props, ref) => {
                   style={primaryStyle}
                   onClick={() => {
                     setPasskeyError("");
-                    setStep("passkey");
+                    setStep("create");
                   }}
                 >
-                  <div style={rowStyle}>
-                    <KeyIcon />
-                    <span>Sign in or sign up</span>
-                  </div>
+                  Create account
                 </button>
-                <button style={secondaryStyle} onClick={handleConnectWallet}>
-                  <div style={rowStyle}>
-                    <WalletIcon />
-                    <span>I have my own wallet</span>
-                  </div>
+                <button
+                  style={{
+                    ...secondaryStyle,
+                    cursor: passkeyBusy ? "wait" : "pointer",
+                  }}
+                  onClick={handleSignIn}
+                  disabled={passkeyBusy}
+                >
+                  {passkeyBusy ? "Waiting for passkey..." : "Sign in"}
+                </button>
+                {passkeyError && <div role="alert" style={errorStyle}>{passkeyError}</div>}
+                <button style={tertiaryStyle} onClick={handleConnectWallet}>
+                  I have my own wallet
                 </button>
               </>
             ) : (
               <>
-                {[usedBefore ? "signIn" : "create", usedBefore ? "create" : "signIn"].map(
-                  (mode, i) => (
-                    <button
-                      key={mode}
-                      style={{
-                        ...(i === 0 ? primaryStyle : secondaryStyle),
-                        cursor: passkeyBusy ? "wait" : "pointer",
-                        opacity: passkeyBusy ? 0.7 : 1,
-                      }}
-                      onClick={() => handlePasskey(mode)}
-                      disabled={passkeyBusy}
-                    >
-                      {passkeyBusy && i === 0
-                        ? "Waiting for passkey..."
-                        : mode === "create"
-                          ? "Create account"
-                          : "Sign in"}
-                    </button>
-                  ),
-                )}
-                {passkeyError && (
-                  <div
-                    role="alert"
-                    style={{
-                      margin: "0 16px",
-                      fontSize: "13px",
-                      lineHeight: "18px",
-                      color: "var(--color-error, #c0392b)",
-                    }}
-                  >
-                    {passkeyError}
-                  </div>
-                )}
-                <button
-                  type="button"
-                  onClick={() => setStep("choose")}
+                <label
+                  htmlFor="kiwi-signup-name"
+                  style={{ margin: "0 16px", fontWeight: 600, fontSize: "15px" }}
+                >
+                  Pick a nickname
+                </label>
+                <input
+                  id="kiwi-signup-name"
+                  autoFocus
+                  autoComplete="username"
+                  autoCapitalize="none"
+                  spellCheck={false}
+                  placeholder="e.g. kiwi_fan"
+                  value={nickname}
+                  onChange={(e) => setNickname(e.target.value.trim())}
+                  onKeyDown={(e) => e.key === "Enter" && handleCreate()}
                   disabled={passkeyBusy}
                   style={{
-                    background: "transparent",
-                    border: "none",
-                    padding: "2px 16px",
-                    color: "var(--text-secondary)",
-                    fontSize: "13px",
-                    cursor: "pointer",
+                    margin: "0 16px",
+                    padding: "9px 10px",
+                    fontSize: "16px",
+                    fontFamily: "inherit",
+                    border: "var(--border)",
+                    borderRadius: "2px",
+                    background: "var(--bg-white)",
+                    color: "var(--text-primary)",
                   }}
+                />
+                <div style={{ margin: "-2px 16px 0", fontSize: "13px", minHeight: "18px", color: nameState === "available" ? "var(--accent-primary-dark, #5a7d0a)" : "var(--text-secondary)" }}>
+                  {nameState === "available" && "Available"}
+                  {nameState === "taken" && "That name is taken"}
+                  {nameState === "checking" && "Checking..."}
+                  {nameState === "invalid" && nameProblem(nickname)}
+                </div>
+                <button
+                  style={{
+                    ...primaryStyle,
+                    cursor: passkeyBusy ? "wait" : "pointer",
+                    opacity: nameState === "available" && !passkeyBusy ? 1 : 0.5,
+                  }}
+                  onClick={handleCreate}
+                  disabled={nameState !== "available" || passkeyBusy}
                 >
-                  ← Other ways to sign in
+                  {passkeyBusy ? "Waiting for passkey..." : "Create account"}
                 </button>
+                {passkeyError && <div role="alert" style={errorStyle}>{passkeyError}</div>}
+                {!created && (
+                  <button
+                    type="button"
+                    onClick={() => setStep("choose")}
+                    disabled={passkeyBusy}
+                    style={tertiaryStyle}
+                  >
+                    ← Back
+                  </button>
+                )}
               </>
             )}
 

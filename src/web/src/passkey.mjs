@@ -117,7 +117,8 @@ async function getAssertion(rpId, allowCredentials) {
 }
 
 // Creates a new discoverable passkey and returns the derived account.
-export async function create({ hostname = location.hostname } = {}) {
+// `name` (the nickname) is what password managers show as the account.
+export async function create({ hostname = location.hostname, name } = {}) {
   const rpId = rpIdFor(hostname);
   const rp = { name: RP_NAME };
   if (rpId) rp.id = rpId;
@@ -127,8 +128,8 @@ export async function create({ hostname = location.hostname } = {}) {
       rp,
       user: {
         id: randomBytes(16),
-        name: USER_NAME,
-        displayName: USER_NAME,
+        name: name || USER_NAME,
+        displayName: name || USER_NAME,
       },
       challenge: randomBytes(32),
       pubKeyCredParams: [
