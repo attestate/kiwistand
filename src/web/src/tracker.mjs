@@ -1,7 +1,4 @@
 // @format
-import { messageFab, toDigest, send } from "./API.mjs";
-import { getCookie, getLocalAccount } from "./session.mjs";
-import { Wallet } from "@ethersproject/wallet";
 
 // Queue for batching interactions
 let impressionQueue = [];

@@ -188,8 +188,8 @@ export function custom(
 
       /* Remove custom @font-face to avoid double-loading Inter; use Google CSS above */
     </style>
-    <script src="theme-init.js"></script>
-    <script src="event-queue.js"></script>
+    <script src="/theme-init.js"></script>
+    <script src="/event-queue.js"></script>
     <meta charset="utf-8" />
     <meta name="referrer" content="origin" />
     <meta
@@ -197,6 +197,7 @@ export function custom(
       content="width=device-width, initial-scale=1, viewport-fit=cover"
     />
     <meta name="fc:frame" content="${embedMetaContent}" />
+    <meta name="msvalidate.01" content="CD33CB0E87D31D0A7DB7B55D65C9F024" />
     ${variant ? html`<meta name="kiwi-variant" content="${variant}" />` : ""}
     ${ogDescription
       ? html`<meta name="description" content="${ogDescription}" />`
@@ -221,9 +222,9 @@ export function custom(
     ${ogDescription
       ? html`<meta property="og:description" content="${ogDescription}" />`
       : ""}
-    <link rel="preload" href="news.css?v=${cssHash}" as="style" />
-    <link rel="stylesheet" href="news.css?v=${cssHash}" />
-    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
+    <link rel="preload" href="/news.css?v=${cssHash}" as="style" />
+    <link rel="stylesheet" href="/news.css?v=${cssHash}" />
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
     ${PwaLinks()}
     <title>${documentTitle}</title>
     ${rss
@@ -251,8 +252,5 @@ export function custom(
   `;
 }
 const regular = custom();
-
-export const prefetchHead = (prefetch) =>
-  custom(undefined, undefined, undefined, undefined, prefetch);
 
 export default regular;

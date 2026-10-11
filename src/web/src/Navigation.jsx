@@ -7,18 +7,10 @@ import { EthereumSVG } from "./icons.jsx";
 import {
   getLocalAccount,
   getCookie,
-  isSafariOnIOS,
-  isChromeOnAndroid,
-  isRunningPWA,
   hasSingleLocalStorageKey,
   hasStaleDelegationKeys,
   logout,
 } from "./session.mjs";
-
-const shorten = (address) =>
-  address.slice(0, 6) +
-  "..." +
-  address.slice(address.length - 4, address.length);
 
 const ProfileSVGFull = () => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
@@ -320,60 +312,6 @@ export const PrimaryActionButton = (props) => {
   );
 };
 
-export const TextConnectButton = ({
-  delegations,
-  required,
-  style,
-  className,
-  text = "Connect",
-}) => {
-  return (
-    <ConnectButton.Custom>
-      {({ account, chain, mounted, openConnectModal }) => {
-        if (!mounted) return;
-        const connected = account && chain;
-        // NOTE: We are checking the cookie before calling getLocalAccount
-        // because if the cookie expired, then the user will have been taken to
-        // the paywall and this means we'll have to reload the page.
-        const localAccount = getLocalAccount(
-          account && account.address
-        );
-
-        let address;
-        if (connected) {
-          address = account.address;
-        }
-        if (localAccount) {
-          address = localAccount.identity;
-        }
-        const isEligible = address && resolveIdentity(delegations, address);
-
-        const newIdentityCookie = getCookie("identity");
-        if (isEligible && newIdentityCookie && !window.initialIdentityCookie) {
-          console.log(
-            "Reloading because initial identity cookie was undefined but eligibly was recognized",
-          );
-          window.location.pathname = "/";
-        }
-
-        // Modal will handle showing UI for non-eligible users
-
-        if ((required && !connected) || (!connected && !isEligible)) {
-          return (
-            <span
-              style={{ color: "var(--text-primary)", ...style }}
-              onClick={openConnectModal}
-              className={`meta-link ${className}`}
-            >
-              {text}
-            </span>
-          );
-        }
-      }}
-    </ConnectButton.Custom>
-  );
-};
-
 export const CustomConnectButton = (props) => {
   return (
     <ConnectButton.Custom>
@@ -427,4 +365,3 @@ export const ConnectedProfile = Profile;
 export const ConnectedDisconnectButton = DisconnectButton;
 export const ConnectedSimpleDisconnectButton = SimpleDisconnectButton;
 export const ConnectedConnectButton = CustomConnectButton;
-export const ConnectedTextConnectButton = TextConnectButton;

@@ -9,7 +9,7 @@ import { resolveIdentity } from "@attestate/delegator2";
 import { useProvider } from "./client.mjs";
 import CommentInput from "./CommentInput.jsx";
 import * as API from "./API.mjs";
-import { getLocalAccount, isIOS, isAndroid, isRunningPWA } from "./session.mjs";
+import { getLocalAccount, isIOS, isAndroid } from "./session.mjs";
 import { resolveAvatar } from "./Avatar.jsx";
 import { dynamicPrefetch } from "./main.jsx";
 import { getSlug } from "./CommentInput.jsx"; // Import getSlug from CommentInput

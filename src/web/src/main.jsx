@@ -83,8 +83,8 @@ async function applySafeAreaInsets() {
   }
 }
 
-import { isIOS, isRunningPWA, getCookie, getLocalAccount } from "./session.mjs";
-import theme from "./theme.jsx";
+import { readRpcSettings } from "./rpc.mjs";
+import { isIOS, getCookie } from "./session.mjs";
 import {
   capture,
   flushAnalytics,
@@ -118,9 +118,15 @@ function resetPostHog() {
   }
 }
 
+// Our own page speed checks (scripts/pagespeed) and Lighthouse aren't
+// visitors; counting them showed up as a spike of ~70 users per run.
+const isSyntheticVisit = /KiwiPagespeed|Chrome-Lighthouse/.test(
+  navigator.userAgent,
+);
+
 // Defer PostHog initialization to avoid blocking main thread
 const analyticsConsent = localStorage.getItem("kiwi-analytics-consent");
-if (!isAnonMode && analyticsConsent !== "false") {
+if (!isAnonMode && !isSyntheticVisit && analyticsConsent !== "false") {
   const loadPostHog = async () => {
     const { default: posthog } = await import("posthog-js");
     // Long-lived anonymous id from a server-set cookie (Safari ITP wipes
@@ -327,27 +333,6 @@ async function addDynamicComments(delegations, toast) {
       );
     });
   }
-
-  const chatBubbles = document.querySelectorAll(".chat-bubble-container");
-  if (chatBubbles && chatBubbles.length > 0) {
-    const ChatBubble = (await import("./ChatBubble.jsx")).default;
-
-    chatBubbles.forEach((arrow) => {
-      const storyIndex = arrow.getAttribute("data-story-index");
-      const commentCount = arrow.getAttribute("data-comment-count");
-      createRoot(arrow).render(
-        <StrictMode>
-          <Providers>
-            <ChatBubble
-              delegations={delegations}
-              storyIndex={storyIndex}
-              commentCount={commentCount}
-            />
-          </Providers>
-        </StrictMode>,
-      );
-    });
-  }
 }
 
 async function addVotes(delegations, toast) {
@@ -424,54 +409,6 @@ async function addEmailSubscriptionForm(delegations, toast) {
   }
 }
 
-async function addProfileDisplay() {
-  const profileContainer = document.querySelector("#user-profile");
-  if (profileContainer) {
-    // Clear the placeholder content before mounting React
-    profileContainer.innerHTML = "";
-
-    const ProfileWithConfig = (await import("./ProfileWithConfig.jsx")).default;
-    createRoot(profileContainer).render(
-      <StrictMode>
-        <Providers>
-          <ProfileWithConfig />
-        </Providers>
-      </StrictMode>,
-    );
-  }
-}
-
-async function addCommentInput(toast, delegations) {
-  const commentInput = document.querySelector("nav-comment-input");
-  if (commentInput) {
-    const CommentInputComponent = (await import("./CommentInput.jsx")).default;
-
-    const storyIndex = commentInput.getAttribute("data-story-index");
-    const customStyleAttr = commentInput.getAttribute("data-custom-style");
-    let customStyle = {};
-    if (customStyleAttr) {
-      try {
-        customStyle = JSON.parse(customStyleAttr);
-      } catch (e) {
-        console.error("Failed to parse custom style", e);
-      }
-    }
-
-    createRoot(commentInput).render(
-      <StrictMode>
-        <Providers>
-          <CommentInputComponent
-            storyIndex={storyIndex}
-            toast={toast}
-            delegations={delegations}
-            style={customStyle}
-          />
-        </Providers>
-      </StrictMode>,
-    );
-  }
-}
-
 async function addDelegateButton(delegations, toast) {
   const delegateButtonContainer = document.querySelector(".delegate-button");
   if (delegateButtonContainer) {
@@ -496,21 +433,6 @@ async function addDelegateButton(delegations, toast) {
 }
 
 async function addConnectedComponents(delegations, toast) {
-  const connectButton = document.querySelector(".connect-button-wrapper");
-  if (connectButton) {
-    const { ConnectedTextConnectButton } = await import("./Navigation.jsx");
-    createRoot(connectButton).render(
-      <StrictMode>
-        <Providers>
-          <ConnectedTextConnectButton
-            delegations={delegations}
-            toast={toast}
-          />
-        </Providers>
-      </StrictMode>,
-    );
-  }
-
   // Check if we're on mobile based on the breakpoint in news.css (max-width: 640px)
   const isMobileView = window.innerWidth <= 640;
 
@@ -707,6 +629,23 @@ async function addSidebarDrawer(delegations, toast) {
       <Providers>
         <SidebarDrawer delegations={delegations} toast={toast} />
       </Providers>
+    </StrictMode>,
+  );
+}
+
+// NOTE: Desktop has no menu drawer, so the Private RPC switch sits below the
+// newsletter card in the right column there, or in the footer at widths that
+// have neither the drawer nor the right column. Mobile uses the drawer.
+async function addPrivateRpcDesktop() {
+  const container = ["private-rpc-card", "private-rpc-footer"]
+    .map((id) => document.getElementById(id))
+    .find((el) => el && el.offsetParent !== null);
+  if (!container) return;
+
+  const PrivateRpcSetting = (await import("./PrivateRpcSetting.jsx")).default;
+  createRoot(container).render(
+    <StrictMode>
+      <PrivateRpcSetting variant="compact" />
     </StrictMode>,
   );
 }
@@ -1391,22 +1330,6 @@ function makeCommentsVisited() {
   history.replaceState(null, "", origin);
 }
 
-function makeUpvoteNotificationsVisited() {
-  if (!window.location.pathname.startsWith("/activity")) return;
-
-  const links = document.querySelectorAll(".upvote-notification");
-  if (!links.length) return;
-
-  const origin = window.location.href;
-
-  for (const link of links) {
-    const href = link.getAttribute("href");
-    history.replaceState(null, "", href);
-  }
-
-  history.replaceState(null, "", origin);
-}
-
 const prefetchedUrls = new Set();
 export function dynamicPrefetch(url, priority = "auto") {
   if (prefetchedUrls.has(url)) return;
@@ -1757,6 +1680,19 @@ function initTestFlightCard() {
   });
 }
 
+// NOTE: Tor takes several seconds to connect. With Private RPC on, start that
+// as soon as the page is idle, so the first chain read (e.g. a delegation
+// check) doesn't wait for it. Visitors with it off load nothing.
+function warmUpPrivateRpc() {
+  if (!readRpcSettings().privateRpc) return;
+  const idle = window.requestIdleCallback || ((fn) => setTimeout(fn, 1));
+  idle(() => {
+    import("./anon-transport.mjs")
+      .then((m) => m.getWorker(m.selectNetwork()))
+      .catch((err) => console.warn("Private RPC warm-up failed:", err));
+  });
+}
+
 async function start() {
   // Manually trigger wagmi reconnect (deferred from mount via
   // reconnectOnMount={false} in providers.jsx to reduce TBT).
@@ -1770,6 +1706,8 @@ async function start() {
       ]).then(([{ reconnect }, { client }]) => reconnect(client));
     })
     .catch(() => {});
+
+  warmUpPrivateRpc();
 
   initFarcasterFrame()
     .then()
@@ -1847,9 +1785,6 @@ async function start() {
 
   makeCommentsVisited();
   window.addEventListener("hashchange", makeCommentsVisited);
-  window.addEventListener("beforeunload", makeUpvoteNotificationsVisited, {
-    once: true,
-  });
 
   updateLinkTargetsForIOSPWA();
 
@@ -1921,7 +1856,6 @@ async function start() {
       await delegationsPromise,
       toast,
     ),
-    addCommentInput(toast, await delegationsPromise),
     addEmailSubscriptionForm(
       await delegationsPromise,
       toast,
@@ -1931,6 +1865,7 @@ async function start() {
     addLeaderboardInteractions(),
     addEmbedDrawer(toast),
     addSidebarDrawer(await delegationsPromise, toast),
+    addPrivateRpcDesktop(),
     addImageViewer(),
     addSidebarDrawer(await delegationsPromise, toast),
     addNewsletterFeedCard(),
@@ -1940,7 +1875,6 @@ async function start() {
     addNicknamePrompt(toast),
     addBackButton(),
     addDelegateButton(await delegationsPromise, toast),
-    addProfileDisplay(),
     addConnectedComponents(
       await delegationsPromise,
       toast,

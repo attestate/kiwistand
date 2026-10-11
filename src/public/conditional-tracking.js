@@ -5,6 +5,12 @@
     return;
   }
 
+  // Our own page speed checks (scripts/pagespeed) and Lighthouse aren't
+  // visitors.
+  if (/KiwiPagespeed|Chrome-Lighthouse/.test(navigator.userAgent)) {
+    return;
+  }
+
   // Skip all tracking in iOS native app
   if (document.documentElement.classList.contains('kiwi-ios-app')) {
     return;

@@ -1,5 +1,4 @@
 import React, { useEffect } from "react";
-import DOMPurify from "isomorphic-dompurify";
 import { sdk } from "@farcaster/miniapp-sdk";
 
 const ShareModal = ({ isOpen, onClose, title, url, storyUrl }) => {

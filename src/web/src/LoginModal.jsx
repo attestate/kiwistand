@@ -6,6 +6,7 @@ import { Wallet } from "@ethersproject/wallet";
 import { setCookie, tenYearsInSeconds, isIOSApp } from "./session.mjs";
 import { EIP712_DOMAIN } from "./API.mjs";
 import { PROFILE_TYPES, nameProblem } from "./EditProfile.jsx";
+import { uploadImage } from "./uploadImage.mjs";
 
 if (typeof document !== "undefined") {
   Modal.setAppElement("body");
@@ -55,13 +56,14 @@ function canUsePasskey() {
 // passkey; "I have my own wallet" is for wallet accounts. Never "Continue with
 // Apple/Google": that reads like Sign in with Apple or Google.
 
-// Saves the nickname as the new account's profile. Returns the server's
-// message when it fails, e.g. "That name is taken".
-async function saveNickname(privateKey, name) {
+// Saves the new account's profile: first the nickname, later maybe a
+// picture. Returns the server's message when it fails, e.g. "That name is
+// taken".
+async function saveProfile(privateKey, name, avatar = "") {
   const value = {
     name,
     bio: "",
-    avatar: "",
+    avatar,
     timestamp: Math.floor(Date.now() / 1000),
   };
   const signature = await new Wallet(privateKey)._signTypedData(
@@ -76,6 +78,7 @@ async function saveNickname(privateKey, name) {
   });
   const body = await response.json().catch(() => ({}));
   if (body.status === "success") return "";
+  if (avatar) return body.details || "Couldn't save your picture.";
   return body.details || "Couldn't save your nickname. Please try another.";
 }
 
@@ -121,8 +124,11 @@ const LoginModal = forwardRef((props, ref) => {
   const [isButtonHovered, setIsButtonHovered] = useState(false);
   const [isButtonActive, setIsButtonActive] = useState(false);
   const [passkeyBusy, setPasskeyBusy] = useState(false);
-  // "choose": create account, sign in or wallet; "create": pick a nickname.
+  // "choose": create account, sign in or wallet; "create": pick a nickname;
+  // "avatar": the new account may add a profile picture (or skip it).
   const [step, setStep] = useState("choose");
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState("");
   const [nickname, setNickname] = useState("");
   // "", "invalid", "checking", "available" or "taken"
   const [nameState, setNameState] = useState("");
@@ -156,7 +162,20 @@ const LoginModal = forwardRef((props, ref) => {
     setShowModal(true);
   }
 
+  useEffect(() => {
+    if (!avatarFile) return;
+    const url = URL.createObjectURL(avatarFile);
+    setAvatarPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [avatarFile]);
+
   function closeModal() {
+    // NOTE: The account exists by now; reload so the page shows it signed in.
+    if (step === "avatar") {
+      setShowModal(false);
+      window.location.reload();
+      return;
+    }
     setShowModal(false);
     setStep("choose");
     setPasskeyError("");
@@ -216,17 +235,56 @@ const LoginModal = forwardRef((props, ref) => {
         setCookie("lastUpdate", Math.floor(Date.now() / 1000));
         setCreated(account);
       }
-      const problem = await saveNickname(account.privateKey, nickname);
+      const problem = await saveProfile(account.privateKey, nickname);
       if (problem) {
         setPasskeyBusy(false);
         setNameState("taken");
         setPasskeyError(problem);
         return;
       }
-      setShowModal(false);
-      window.location.reload();
+      setPasskeyBusy(false);
+      setStep("avatar");
     } catch (err) {
       failed(passkey, err);
+    }
+  };
+
+  const finish = () => {
+    setShowModal(false);
+    window.location.reload();
+  };
+
+  const handleAvatarFile = (e) => {
+    const file = e.target.files[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setPasskeyError("Please select an image file");
+      return;
+    }
+    setPasskeyError("");
+    setAvatarFile(file);
+  };
+
+  // NOTE: Re-signs the whole profile (name, empty bio, picture) with the new
+  // account's key, the same way EditProfile.jsx saves it.
+  const handleAvatarSave = async () => {
+    if (passkeyBusy || !avatarFile || !created) return;
+    setPasskeyError("");
+    setPasskeyBusy(true);
+    try {
+      const url = await uploadImage(avatarFile);
+      const problem = await saveProfile(created.privateKey, nickname, url);
+      if (problem) {
+        setPasskeyBusy(false);
+        setPasskeyError(problem);
+        return;
+      }
+      finish();
+    } catch (err) {
+      console.error("Profile picture upload failed", err);
+      setPasskeyBusy(false);
+      setPasskeyError(`Error uploading image: ${err.message}`);
     }
   };
 
@@ -398,7 +456,7 @@ const LoginModal = forwardRef((props, ref) => {
                 <SparkleIcon />
               </div>
               <div style={{ fontSize: "18px", fontWeight: "500", color: "var(--text-primary)" }}>
-                Welcome to Kiwi News!
+                {step === "avatar" ? "Add a profile picture" : "Welcome to Kiwi News!"}
               </div>
             </div>
           </div>
@@ -408,7 +466,9 @@ const LoginModal = forwardRef((props, ref) => {
         <div style={{ flexGrow: 1, padding: "0 12px 12px" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
             <div style={{ fontSize: "15px", color: "var(--text-primary)", lineHeight: "22px" }}>
-              Please sign in to continue
+              {step === "avatar"
+                ? "Help people recognize you next to your stories and comments. You can change it anytime in your profile."
+                : "Please sign in to continue"}
             </div>
           </div>
         </div>
@@ -456,6 +516,82 @@ const LoginModal = forwardRef((props, ref) => {
                 {passkeyError && <div role="alert" style={errorStyle}>{passkeyError}</div>}
                 <button style={tertiaryStyle} onClick={handleConnectWallet}>
                   I have my own wallet
+                </button>
+              </>
+            ) : step === "avatar" ? (
+              <>
+                {/* NOTE: Tapping the picture picks another one. */}
+                <div style={{ display: "flex", justifyContent: "center", margin: "0 16px 4px" }}>
+                  <label
+                    title="Choose a picture"
+                    style={{
+                      cursor: passkeyBusy ? "wait" : "pointer",
+                      width: "96px",
+                      height: "96px",
+                      borderRadius: "50%",
+                      overflow: "hidden",
+                      border: "var(--border-thin)",
+                      backgroundColor: "var(--color-badge-bg)",
+                      color: "var(--color-badge-icon)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "36px",
+                      fontWeight: 500,
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    {avatarPreview ? (
+                      <img
+                        src={avatarPreview}
+                        alt="Your profile picture"
+                        width="96"
+                        height="96"
+                        style={{ width: "96px", height: "96px", objectFit: "cover" }}
+                      />
+                    ) : (
+                      nickname.slice(0, 1)
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvatarFile}
+                      disabled={passkeyBusy}
+                      style={{ display: "none" }}
+                    />
+                  </label>
+                </div>
+                {avatarFile ? (
+                  <button
+                    style={{
+                      ...primaryStyle,
+                      cursor: passkeyBusy ? "wait" : "pointer",
+                      opacity: passkeyBusy ? 0.5 : 1,
+                    }}
+                    onClick={handleAvatarSave}
+                    disabled={passkeyBusy}
+                  >
+                    {passkeyBusy ? "Saving..." : "Save"}
+                  </button>
+                ) : (
+                  <label style={{ ...primaryStyle, boxSizing: "border-box" }}>
+                    Choose a picture
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvatarFile}
+                      style={{ display: "none" }}
+                    />
+                  </label>
+                )}
+                {passkeyError && <div role="alert" style={errorStyle}>{passkeyError}</div>}
+                <button
+                  type="button"
+                  onClick={finish}
+                  disabled={passkeyBusy}
+                  style={tertiaryStyle}
+                >
+                  Skip
                 </button>
               </>
             ) : (

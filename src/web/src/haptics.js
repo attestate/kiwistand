@@ -59,10 +59,3 @@ export function bindHapticsToElements(selector, preset = "medium") {
   });
 }
 
-export function resetHapticBindings(selector) {
-  if (typeof window === "undefined") return;
-  document.querySelectorAll(selector).forEach((element) => {
-    delete element.dataset.hapticsBound;
-  });
-}
-

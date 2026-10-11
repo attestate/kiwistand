@@ -5,9 +5,7 @@ import { env } from "process";
 import { fetchBuilder, FileSystemCache } from "node-fetch-cache";
 import normalizeUrl from "normalize-url";
 
-import * as id from "../id.mjs";
 import log from "../logger.mjs";
-import { EIP712_MESSAGE } from "../constants.mjs";
 import { fetchCache } from "../utils.mjs";
 import { isBlocked } from "../linksafety.mjs";
 
@@ -30,67 +28,6 @@ export async function getConfig(sheet) {
   } else {
     throw new Error("Couldn't convert to JSON");
   }
-}
-
-export async function getActiveCanons() {
-  let response;
-  try {
-    response = await getConfig("active_canons");
-  } catch (err) {
-    log(`active_canons: Couldn't get config: ${err.toString()}`);
-    return ["publicgoods", "protocols", "farcaster"];
-  }
-  const links = response.map(({ canon }) => canon);
-  return links;
-}
-
-export async function getFeedParameters() {
-  const defaultFeedParams = {
-    replacementFactor: 3,
-    oldHours: 22,
-    fold: 10,
-    replacementThreshold: 1,
-    decayStrength: 1,
-  };
-  let response;
-  try {
-    response = await getConfig("feed_parameters");
-  } catch (err) {
-    return defaultFeedParams;
-  }
-
-  if (response.length === 0) {
-    return defaultFeedParams;
-  }
-  const {
-    replacementFactor,
-    replacementThreshold,
-    oldHours,
-    fold,
-    decayStrength,
-  } = response[0];
-  return {
-    replacementFactor: parseInt(replacementFactor, 10),
-    oldHours: parseInt(oldHours, 10),
-    fold: parseInt(fold, 10),
-    replacementThreshold: parseInt(replacementThreshold, 10),
-    decayStrength: parseFloat(decayStrength),
-  };
-}
-
-export async function getFeeds() {
-  const feeds = [];
-
-  let response;
-  try {
-    response = await getConfig("feeds");
-  } catch (err) {
-    return feeds;
-  }
-  response.forEach(({ url }) => {
-    feeds.push(url);
-  });
-  return feeds;
 }
 
 export async function getWriters() {
@@ -360,17 +297,4 @@ export function moderate(leaves, config, path) {
     return { ...leaf, label: (config.labels && config.labels[norm]) || "" };
   });
   return result;
-}
-
-export async function getLabels() {
-  let labelsMapping = {};
-  try {
-    const response = await getConfig("labels");
-    response.forEach(({ links, labels }) => {
-      labelsMapping[normalizeUrl(links, { stripWWW: false })] = labels;
-    });
-  } catch (err) {
-    log(`labels: Couldn't get labels: ${err.toString()}`);
-  }
-  return labelsMapping;
 }
