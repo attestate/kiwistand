@@ -128,7 +128,7 @@ export async function fetchProfile(address) {
   return body.data;
 }
 
-function nameProblem(name) {
+export function nameProblem(name) {
   if (name === "") return "";
   if (!NAME.test(name)) {
     return "2 to 20 letters, digits or underscores (no dots or spaces)";
