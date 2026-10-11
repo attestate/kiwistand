@@ -48,7 +48,8 @@ const FAQ = [
 // past week by upvotes, comments and clicks), but only uses the SQLite cache
 // so rendering the page stays cheap. Results are memoized for a few minutes.
 const PICKS_TTL_MS = 10 * 60 * 1000;
-const BANNED_DOMAINS = ["imagedelivery.net"];
+// Uploaded pictures (imagedelivery.net) are in the issue too now.
+const BANNED_DOMAINS = [];
 let picksCache = { at: 0, picks: [] };
 
 function hostname(href) {
@@ -81,7 +82,11 @@ export async function getWeeklyPicks(amount = 5) {
         return {
           title: story.title,
           index: story.index,
-          domain: story.href.startsWith("data:") ? null : hostname(story.href),
+          domain: story.href.startsWith("data:")
+            ? null
+            : hostname(story.href) === "imagedelivery.net"
+              ? "image"
+              : hostname(story.href),
           upvotes: story.upvotes || 0,
           comments,
           score,

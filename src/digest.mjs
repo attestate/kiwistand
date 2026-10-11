@@ -28,7 +28,9 @@ export async function generateDigestData() {
   try {
     const desiredStoryCount = 5;
     const fetchAmount = 25;
-    const bannedDomains = new Set(["imagedelivery.net"]);
+    // NOTE: Uploaded pictures (imagedelivery.net) used to be banned here; the
+    // email now shows them as the card image (newsletter/emails/Row.jsx).
+    const bannedDomains = new Set();
     const bannedIndexes = new Set([
       "69809847cd276be92605e39bbe250aadb468bd4afb2ea05598fbf2905b4fb2cecd7a4505",
     ]);
