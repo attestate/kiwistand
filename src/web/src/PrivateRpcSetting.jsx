@@ -45,16 +45,17 @@ const useWorkerStatus = (enabled) => {
   return status;
 };
 
-const statusText = (status, allowFallback) => {
+// NOTE: One short line under the title, so the row stays the height of the
+// other menu items. The fallback choice only shows up once Tor actually fails.
+const subtitle = (enabled, status, allowFallback) => {
+  if (!enabled) return "Read the chain via Tor";
   if (status.state === "connecting") return "Connecting to Tor…";
   if (status.state === "ready" && status.network?.anonymizes === false)
-    return `Connected via ${status.network.label}`;
-  if (status.state === "ready") return "Connected via Tor";
+    return `On · via ${status.network.label}`;
+  if (status.state === "ready") return "On · via Tor";
   if (status.state === "error")
-    return allowFallback
-      ? "Couldn't connect to Tor. Chain reads go direct until it works."
-      : "Couldn't connect to Tor. Chain reads fail until it works.";
-  return "";
+    return allowFallback ? "Tor unreachable · reading directly" : "Tor unreachable";
+  return "On";
 };
 
 const PrivateRpcSetting = () => {
@@ -62,14 +63,16 @@ const PrivateRpcSetting = () => {
   const status = useWorkerStatus(settings.privateRpc);
 
   const update = (patch) => setSettings(writeRpcSettings(patch));
+  // NOTE: Turning it off also forgets "read directly", so the next time it's
+  // on, a Tor failure is visible again.
+  const toggle = (on) =>
+    update(on ? { privateRpc: true } : { privateRpc: false, allowFallback: false });
+  const failed = settings.privateRpc && status.state === "error";
 
   return (
     <div className="private-rpc-setting">
       <style>{`
         .sidebar-nav > .private-rpc-setting {
-          flex-direction: column;
-          align-items: stretch;
-          gap: 8px;
           cursor: default;
         }
         .sidebar-nav > .private-rpc-setting:active {
@@ -79,16 +82,46 @@ const PrivateRpcSetting = () => {
           display: flex;
           align-items: center;
           gap: 16px;
+          flex: 1;
+          min-width: 0;
           cursor: pointer;
         }
-        .private-rpc-setting .private-rpc-title {
+        .private-rpc-setting .private-rpc-text {
+          display: flex;
+          flex-direction: column;
           flex: 1;
+          min-width: 0;
+        }
+        .private-rpc-setting .private-rpc-title {
           font-size: 1.25rem;
+          line-height: 1.2;
+        }
+        .sidebar-nav .private-rpc-setting .private-rpc-sub {
+          font-size: 0.8rem;
+          line-height: 1.3;
+          color: var(--text-secondary);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .sidebar-nav .private-rpc-setting .private-rpc-sub.error {
+          color: var(--color-alert);
+        }
+        .private-rpc-setting .private-rpc-direct {
+          background: none;
+          border: none;
+          padding: 0;
+          margin: 0;
+          font: inherit;
+          font-size: 0.8rem;
+          color: var(--text-secondary);
+          text-decoration: underline;
+          cursor: pointer;
         }
         .private-rpc-setting .private-rpc-switch {
           position: relative;
-          width: 44px;
-          height: 26px;
+          width: 36px;
+          height: 20px;
           flex-shrink: 0;
         }
         .private-rpc-setting .private-rpc-switch input {
@@ -102,7 +135,7 @@ const PrivateRpcSetting = () => {
         .private-rpc-setting .private-rpc-track {
           position: absolute;
           inset: 0;
-          border-radius: 13px;
+          border-radius: 10px;
           background-color: var(--button-bg);
           border: var(--border-subtle);
           transition: background-color 0.15s;
@@ -113,8 +146,8 @@ const PrivateRpcSetting = () => {
           position: absolute;
           top: 2px;
           left: 2px;
-          width: 20px;
-          height: 20px;
+          width: 16px;
+          height: 16px;
           border-radius: 50%;
           background: white;
           box-shadow: 0 1px 2px rgba(0,0,0,0.3);
@@ -124,80 +157,53 @@ const PrivateRpcSetting = () => {
           background-color: var(--accent-primary);
         }
         .private-rpc-setting input:checked + .private-rpc-track::after {
-          transform: translateX(18px);
+          transform: translateX(16px);
         }
         .private-rpc-setting input:focus-visible + .private-rpc-track {
           outline: 2px solid var(--text-primary);
           outline-offset: 2px;
         }
-        .private-rpc-setting .private-rpc-details {
-          margin-left: 44px;
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-          font-size: 0.85rem;
-          line-height: 1.35;
-          color: var(--text-secondary);
-        }
-        .private-rpc-setting .private-rpc-details span {
-          font-size: 0.85rem;
-        }
-        .private-rpc-setting .private-rpc-fallback {
-          display: flex;
-          align-items: flex-start;
-          gap: 8px;
-          cursor: pointer;
-        }
-        .private-rpc-setting .private-rpc-fallback input {
-          margin: 2px 0 0 0;
-        }
-        .private-rpc-setting .private-rpc-status-error {
-          color: var(--color-alert);
-        }
       `}</style>
-      <label className="private-rpc-row">
+      <label
+        className="private-rpc-row"
+        title="Chain reads go through Tor (anon-rpc) so RPC providers can't tie them to your IP. Slower. Wallet transactions are unaffected."
+      >
         <ShieldSVG filled={settings.privateRpc} />
-        <span className="private-rpc-title">Private RPC (slower)</span>
+        <span className="private-rpc-text">
+          <span className="private-rpc-title">Private RPC</span>
+          <span
+            className={`private-rpc-sub${failed ? " error" : ""}`}
+            title={failed ? status.message : undefined}
+          >
+            {subtitle(settings.privateRpc, status, settings.allowFallback)}
+            {failed && !settings.allowFallback && (
+              <>
+                {" · "}
+                <button
+                  type="button"
+                  className="private-rpc-direct"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    update({ allowFallback: true });
+                  }}
+                >
+                  read directly
+                </button>
+              </>
+            )}
+          </span>
+        </span>
         <span className="private-rpc-switch">
           <input
             type="checkbox"
             role="switch"
-            aria-label="Private RPC (slower)"
+            aria-label="Private RPC"
             checked={settings.privateRpc}
-            onChange={(e) => update({ privateRpc: e.target.checked })}
+            onChange={(e) => toggle(e.target.checked)}
           />
           <span className="private-rpc-track" />
         </span>
       </label>
-      <div className="private-rpc-details">
-        <span>
-          {settings.privateRpc
-            ? "Chain reads go through Tor (anon-rpc), so RPC providers can't tie them to your IP. Your wallet's transactions are unaffected."
-            : "Send chain reads through Tor (anon-rpc) so RPC providers can't tie them to your IP."}
-        </span>
-        {settings.privateRpc && (
-          <>
-            {status.state !== "idle" && (
-              <span
-                className={
-                  status.state === "error" ? "private-rpc-status-error" : ""
-                }
-                title={status.state === "error" ? status.message : undefined}
-              >
-                {statusText(status, settings.allowFallback)}
-              </span>
-            )}
-            <label className="private-rpc-fallback">
-              <input
-                type="checkbox"
-                checked={settings.allowFallback}
-                onChange={(e) => update({ allowFallback: e.target.checked })}
-              />
-              <span>If Tor fails, read directly instead of showing an error</span>
-            </label>
-          </>
-        )}
-      </div>
     </div>
   );
 };
