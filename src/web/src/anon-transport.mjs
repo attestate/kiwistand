@@ -11,6 +11,7 @@
 import { AnonRpcWorker } from "@anon-rpc/browser-harness";
 
 import { RPC_URLS } from "./rpc.mjs";
+import { ANON_RPC_URLS, fetchWithFailover } from "./anon-endpoints.mjs";
 
 // From anon-rpc's adopters.json5.
 export const ANON_NETWORKS = {
@@ -123,16 +124,24 @@ export function getWorker(network = selectNetwork(), now = Date.now) {
 
 let nextId = 1;
 
+const endpointState = {};
+
 export function anonRequest(chainId) {
-  const url = RPC_URLS[chainId];
-  if (!url) throw new Error(`No RPC endpoint for chain ${chainId}`);
+  const urls = ANON_RPC_URLS[chainId];
+  if (!urls) throw new Error(`No RPC endpoint for chain ${chainId}`);
+  const state = (endpointState[chainId] ??= {});
   return async ({ method, params }) => {
     const worker = await getWorker();
-    const res = await worker.fetch(url, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ jsonrpc: "2.0", id: nextId++, method, params }),
-    });
+    const res = await fetchWithFailover(
+      (url, init) => worker.fetch(url, init),
+      urls,
+      {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ jsonrpc: "2.0", id: nextId++, method, params }),
+      },
+      state,
+    );
     if (!res.ok) throw new Error(`anon-rpc: endpoint answered HTTP ${res.status}`);
     const body = await res.json();
     if (body.error) {

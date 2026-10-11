@@ -59,7 +59,7 @@ export class PrivateRpcUnavailableError extends Error {
   constructor(cause) {
     super(
       `Private RPC is unavailable (${cause?.message ?? cause}). ` +
-        "Turn on the direct fallback or turn Private RPC off in the menu.",
+        "Turn on the direct fallback or turn Private RPC off (menu on mobile, page footer on desktop).",
     );
     this.name = "PrivateRpcUnavailableError";
     // EIP-1193 "disconnected": viem doesn't retry it, and retrying wouldn't

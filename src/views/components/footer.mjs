@@ -106,6 +106,7 @@ const footer = (theme, path) => html`
         ><br />
       </div>
     </div>
+    <div id="private-rpc-footer"></div>
     <div
       style="display: flex; justify-content: center; align-items: center; gap: 0.5rem;"
     >
