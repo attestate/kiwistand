@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense, lazy } from "react";
 import SwipeableDrawer from "@mui/material/SwipeableDrawer";
 import { ConnectedProfile, ConnectedDisconnectButton } from "./Navigation.jsx";
 
@@ -57,6 +57,10 @@ const AboutFullSVG = () => (
     />
   </svg>
 );
+
+// NOTE: Rendered only while the drawer is open (the drawer itself is mounted
+// on every page), so this chunk loads on first open, not with the page.
+const PrivateRpcSetting = lazy(() => import("./PrivateRpcSetting.jsx"));
 
 const iOS =
   typeof navigator !== "undefined" &&
@@ -188,6 +192,12 @@ const SidebarDrawer = ({ delegations, toast }) => {
           {path === "/welcome" ? <AboutFullSVG /> : <AboutSVG />}
           <span>Wiki</span>
         </a>
+
+        {open && (
+          <Suspense fallback={null}>
+            <PrivateRpcSetting />
+          </Suspense>
+        )}
 
         <ConnectedDisconnectButton toast={toast} />
       </div>

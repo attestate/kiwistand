@@ -1,7 +1,4 @@
 // @format
-import { readContract } from "@wagmi/core";
-import { mainnet, optimism } from "wagmi/chains";
-import { client } from "./client.mjs";
 import { keccak256 } from "ethereum-cryptography/keccak.js";
 import { toHex } from "ethereum-cryptography/utils.js";
 import { encode } from "cbor-x";
@@ -324,34 +321,15 @@ export async function fetchDelegations(cached = false) {
 }
 
 
-const ETH_USD_PRICE_FEED_ADDRESS = "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419";
-
-const PRICE_FEED_ABI = [
-  {
-    name: "latestRoundData",
-    outputs: [
-      { type: "uint80", name: "roundId" },
-      { type: "int256", name: "answer" },
-      { type: "uint256", name: "startedAt" },
-      { type: "uint256", name: "updatedAt" },
-      { type: "uint80", name: "answeredInRound" },
-    ],
-    inputs: [],
-    stateMutability: "view",
-    type: "function",
-  },
-];
-
+// NOTE: Served by Kiwi's API (server-side Chainlink read, cached) so the
+// visitor's browser doesn't ask a public RPC. Returns the feed's int256
+// answer (8 decimals) as a BigInt, or null.
 export async function fetchEthUsdPrice() {
   try {
-    const priceData = await readContract(client, {
-      address: ETH_USD_PRICE_FEED_ADDRESS,
-      abi: PRICE_FEED_ABI,
-      functionName: "latestRoundData",
-      chainId: mainnet.id,
-    });
-    const [_, answer] = priceData;
-    return answer;
+    const res = await fetch("/api/v1/price/eth-usd");
+    if (!res.ok) return null;
+    const { data } = await res.json();
+    return BigInt(data.answer);
   } catch (err) {
     console.error(err);
     return null;
