@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useImperativeHandle, forwardRef } from "react";
 import Modal from "react-modal";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
+import { setCookie, tenYearsInSeconds, isIOSApp } from "./session.mjs";
 
 if (typeof document !== "undefined") {
   Modal.setAppElement("body");
@@ -44,20 +45,114 @@ const WalletIcon = () => (
   </svg>
 );
 
+const KeyIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="1.2em" height="1.2em">
+    <rect width="256" height="256" fill="none"/>
+    <path d="M93.17,122.83A71.68,71.68,0,0,1,88,95.91c0-38.58,31.08-70.64,69.64-71.87A72,72,0,0,1,232,98.36C230.73,136.92,198.67,168,160.09,168a71.68,71.68,0,0,1-26.92-5.17h0L120,176H96v24H72v24H40a8,8,0,0,1-8-8V187.31a8,8,0,0,1,2.34-5.65l58.83-58.83Z" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="16"/>
+    <circle cx="180" cy="76" r="12"/>
+  </svg>
+);
+
+// NOTE: Mirrors USED_FLAG in passkey.mjs; duplicated so the modal can pick
+// its default without loading that module up front.
+const PASSKEY_USED_FLAG = "-kiwi-news-passkey-used";
+
+function canUsePasskey() {
+  if (typeof window === "undefined") return false;
+  if (typeof window.PublicKeyCredential === "undefined") return false;
+  // NOTE: The iOS app has its own native sign-in.
+  try {
+    if (isIOSApp()) return false;
+  } catch (err) {}
+  return true;
+}
+
+function hasUsedPasskey() {
+  try {
+    return localStorage.getItem(PASSKEY_USED_FLAG) === "true";
+  } catch (err) {
+    return false;
+  }
+}
+
+export function passkeyButtonLabel() {
+  const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
+  // NOTE: Chrome on a Mac may save the passkey to Google or to iCloud, so
+  // only Safari there says Apple.
+  if (/iPhone|iPad|iPod/i.test(ua)) return "Continue with Apple";
+  if (/Macintosh/i.test(ua) && !/Chrome|Chromium|Edg\/|Firefox/i.test(ua)) {
+    return "Continue with Apple";
+  }
+  if (/Macintosh/i.test(ua)) return "Continue with passkey";
+  if (/Android/i.test(ua) || (/Chrome/i.test(ua) && !/Edg\//i.test(ua))) {
+    return "Continue with Google";
+  }
+  return "Continue with passkey";
+}
+
 const LoginModal = forwardRef((props, ref) => {
-  const [showModal, setShowModal] = useState(false);
+  const [showModal, setShowModal] = useState(!!props.defaultOpen);
   const [isButtonHovered, setIsButtonHovered] = useState(false);
   const [isButtonActive, setIsButtonActive] = useState(false);
   const [isAnonButtonHovered, setIsAnonButtonHovered] = useState(false);
+  const [isWalletButtonHovered, setIsWalletButtonHovered] = useState(false);
+  const [passkeyBusy, setPasskeyBusy] = useState(false);
+  const [passkeyError, setPasskeyError] = useState("");
   const { openConnectModal } = useConnectModal();
+  const showPasskey = canUsePasskey();
+  const usedBefore = showPasskey && hasUsedPasskey();
 
   function openModal() {
+    setPasskeyError("");
     setShowModal(true);
   }
 
   function closeModal() {
     setShowModal(false);
+    if (props.onClose) props.onClose();
   }
+
+  // mode: "create" for a new account, "signIn" for an existing passkey
+  const handlePasskey = async (mode) => {
+    if (passkeyBusy) return;
+    setPasskeyError("");
+    setPasskeyBusy(true);
+    let passkey;
+    try {
+      passkey = await import("./passkey.mjs");
+      const account =
+        mode === "create" ? await passkey.create() : await passkey.signIn();
+      passkey.storeAccount(account);
+      setCookie("identity", account.address, tenYearsInSeconds);
+
+      let reload = true;
+      if (mode === "create") {
+        // NOTE: Hook for the nickname prompt. A listener that wants to keep
+        // the page alive (e.g. to show the prompt first) can call
+        // preventDefault() and is then responsible for reloading.
+        const proceed = window.dispatchEvent(
+          new CustomEvent("kiwi:account-created", {
+            detail: { address: account.address },
+            cancelable: true,
+          }),
+        );
+        reload = proceed;
+      }
+      setShowModal(false);
+      if (reload) window.location.reload();
+    } catch (err) {
+      setPasskeyBusy(false);
+      if (passkey && passkey.isCancellation(err)) return;
+      if (passkey && err instanceof passkey.PrfUnsupportedError) {
+        setPasskeyError(err.message);
+        return;
+      }
+      console.error("Passkey sign-in failed", err);
+      setPasskeyError(
+        "Couldn't sign in with your passkey. Please try again or connect a wallet.",
+      );
+    }
+  };
 
   useImperativeHandle(ref, () => ({
     openModal,
@@ -268,6 +363,107 @@ const LoginModal = forwardRef((props, ref) => {
             flexDirection: "column",
             gap: "8px",
           }}>
+            {showPasskey ? (
+              <>
+            {/* Primary button - Passkey */}
+            <button
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                height: "38px",
+                backgroundColor: isButtonHovered ? "var(--accent-primary-hover)" : "var(--accent-primary)",
+                border: isButtonHovered ? "1px solid var(--accent-primary-hover)" : "1px solid var(--accent-primary)",
+                color: "var(--bg-black)",
+                borderRadius: "8px",
+                fontSize: "15px",
+                fontWeight: "normal",
+                cursor: passkeyBusy ? "wait" : "pointer",
+                opacity: passkeyBusy ? 0.7 : 1,
+                transform: isButtonActive ? "translateY(1px)" : "translateY(0)",
+                transition: "background-color 0.15s ease, border-color 0.15s ease, transform 0.05s ease",
+                margin: "0 16px",
+                whiteSpace: "nowrap",
+              }}
+              onClick={() => handlePasskey(usedBefore ? "signIn" : "create")}
+              disabled={passkeyBusy}
+              onMouseEnter={() => setIsButtonHovered(true)}
+              onMouseLeave={() => {
+                setIsButtonHovered(false);
+                setIsButtonActive(false);
+              }}
+              onMouseDown={() => setIsButtonActive(true)}
+              onMouseUp={() => setIsButtonActive(false)}
+            >
+              <div style={{ display: "flex", alignItems: "center", height: "100%", gap: "8px" }}>
+                <KeyIcon />
+                <span>{passkeyBusy ? "Waiting for passkey..." : passkeyButtonLabel()}</span>
+              </div>
+            </button>
+
+            {/* Secondary action - the other passkey flow */}
+            <button
+              type="button"
+              onClick={() => handlePasskey(usedBefore ? "create" : "signIn")}
+              disabled={passkeyBusy}
+              style={{
+                background: "transparent",
+                border: "none",
+                padding: "2px 16px",
+                color: "var(--text-secondary)",
+                fontSize: "13px",
+                textDecoration: "underline",
+                cursor: passkeyBusy ? "wait" : "pointer",
+              }}
+            >
+              {usedBefore ? "Create a new account" : "I already have an account"}
+            </button>
+
+            {passkeyError && (
+              <div
+                role="alert"
+                style={{
+                  margin: "0 16px",
+                  fontSize: "13px",
+                  lineHeight: "18px",
+                  color: "var(--color-error, #c0392b)",
+                }}
+              >
+                {passkeyError}
+              </div>
+            )}
+
+            {/* Wallet connect */}
+            <button
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                height: "38px",
+                backgroundColor: isWalletButtonHovered ? "var(--bg-hover-minimal)" : "transparent",
+                border: "var(--border-thin)",
+                color: "var(--text-primary)",
+                borderRadius: "8px",
+                fontSize: "15px",
+                fontWeight: "normal",
+                cursor: "pointer",
+                transition: "all 0.15s ease",
+                margin: "0 16px",
+                whiteSpace: "nowrap",
+              }}
+              onClick={handleConnectWallet}
+              onMouseEnter={() => setIsWalletButtonHovered(true)}
+              onMouseLeave={() => setIsWalletButtonHovered(false)}
+            >
+              <div style={{ display: "flex", alignItems: "center", height: "100%", gap: "8px" }}>
+                <WalletIcon />
+                <span>Connect wallet</span>
+              </div>
+            </button>
+
+              </>
+            ) : (
+              <>
             {/* Primary button - Connect wallet */}
             <button
               style={{
@@ -301,6 +497,9 @@ const LoginModal = forwardRef((props, ref) => {
                 <span>Connect wallet</span>
               </div>
             </button>
+
+              </>
+            )}
 
             {/* Tertiary button - Anon mode */}
             <button
