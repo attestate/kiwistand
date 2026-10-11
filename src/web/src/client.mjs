@@ -5,16 +5,10 @@ import {
   FallbackProvider,
   JsonRpcProvider,
 } from "@ethersproject/providers";
-import { getDefaultConfig, connectorsForWallets } from "@rainbow-me/rainbowkit";
+import { connectorsForWallets } from "@rainbow-me/rainbowkit";
 import { farcasterMiniApp } from "@farcaster/miniapp-wagmi-connector";
 import { getPublicClient } from "@wagmi/core";
-import {
-  createConfig,
-  http,
-  useClient,
-  useConnectorClient,
-  createConnector,
-} from "wagmi";
+import { createConfig, http, useClient, useConnectorClient } from "wagmi";
 import { mainnet, optimism } from "wagmi/chains";
 import { createClient, createTransport } from "viem";
 import {
@@ -33,13 +27,6 @@ import {
   createRoutedRequest,
   createKiwiEnsActions,
 } from "./rpc.mjs";
-
-const isDesktop = () => {
-  return (
-    !("ontouchstart" in window || navigator.maxTouchPoints) &&
-    window.innerWidth > 800
-  );
-};
 
 // Setup chains and transports
 // NOTE: The frontend uses public RPCs on purpose. Any API key shipped in the

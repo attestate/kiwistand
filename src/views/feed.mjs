@@ -5,14 +5,7 @@ import { URL } from "url";
 import htm from "htm";
 import vhtml from "vhtml";
 import normalizeUrl from "normalize-url";
-import {
-  sub,
-  differenceInSeconds,
-  differenceInMinutes,
-  isBefore,
-  getUnixTime,
-} from "date-fns";
-import DOMPurify from "isomorphic-dompurify";
+import { sub, differenceInMinutes, getUnixTime } from "date-fns";
 
 import * as ens from "../ens.mjs";
 import Header from "./components/header.mjs";
@@ -21,14 +14,12 @@ import TestFlightCard from "./components/testflight-card.mjs";
 import Sidebar from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
 import { custom } from "./components/head.mjs";
-import * as id from "../id.mjs";
 import * as moderation from "./moderation.mjs";
-import cache, {
+import {
   countImpressions,
   countOutbounds,
   countShares,
   getLastComment,
-  getSubmission,
   listNewest,
   countComments,
   countCommentsBatch,
@@ -38,7 +29,6 @@ import cache, {
 import * as curation from "./curation.mjs";
 import RightColumn from "./components/right-column.mjs";
 import log from "../logger.mjs";
-import { EIP712_MESSAGE } from "../constants.mjs";
 import Row, { extractDomain } from "./components/row.mjs";
 import * as karma from "../karma.mjs";
 import { cachedMetadata, metadata } from "../parser.mjs";
@@ -100,7 +90,6 @@ const PREDICTION_REPLACEMENT_COUNT = 10; // Number of oldest stories to replace
 
 // NOTE: Only set this date in synchronicity with the src/launch.mjs date!!
 const cutoffDate = new Date("2025-01-15");
-const thresholdKarma = 5;
 // Minimum karma needed for a story to surface with only a single upvote
 const singleUpvoteKarmaThreshold = 50;
 
@@ -118,39 +107,6 @@ function cutoffKarma(identity) {
   cutoffKarmaCache.set(identity, { points, at: now });
   return points;
 }
-
-export function identityClassifier(upvoter) {
-  const karmaScore = cutoffKarma(upvoter.identity);
-  return {
-    ...upvoter,
-    isKiwi: karmaScore >= thresholdKarma,
-  };
-}
-export function identityFilter(upvoter, submitter) {
-  if (upvoter === submitter) {
-    return upvoter;
-  }
-  try {
-    upvoter = identityClassifier(upvoter);
-  } catch (err) {
-    log(`Error in identity classifier ${err.stack}`);
-    throw err;
-  }
-  if (upvoter.isKiwi) {
-    return upvoter;
-  }
-  throw new Error("Not eligible to upvote");
-}
-
-
-const formatAge = (ageInMinutes) => {
-  const hours = Math.floor(ageInMinutes / 60);
-  const days = Math.floor(hours / 24);
-  
-  if (days > 0) return `${days}d`;
-  if (hours > 0) return `${hours}h`;
-  return `${Math.floor(ageInMinutes)}m`;
-};
 
 const itemAge = (timestamp) => {
   const now = new Date();
@@ -829,30 +785,6 @@ export async function index(
     start,
   };
 }
-
-const expandSVG = html`<svg
-  style="height: 1rem;"
-  xmlns="http://www.w3.org/2000/svg"
-  viewBox="0 0 256 256"
->
-  <rect width="256" height="256" fill="none" />
-  <polyline
-    points="80 176 128 224 176 176"
-    fill="none"
-    stroke="currentColor"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    stroke-width="24"
-  />
-  <polyline
-    points="80 80 128 32 176 80"
-    fill="none"
-    stroke="currentColor"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    stroke-width="24"
-  />
-</svg>`;
 
 async function fetchTopStories(feedStoryHrefs) {
   const weekAgo = Math.floor(Date.now() / 1000) - 7 * 24 * 60 * 60;

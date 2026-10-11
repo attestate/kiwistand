@@ -1,7 +1,6 @@
 import htm from "htm";
 import vhtml from "vhtml";
 import DOMPurify from "isomorphic-dompurify";
-import { formatDistanceToNowStrict } from "date-fns";
 
 const html = htm.bind(vhtml);
 

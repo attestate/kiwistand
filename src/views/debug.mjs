@@ -1,7 +1,6 @@
 import htm from "htm";
 import vhtml from "vhtml";
 
-import SecondHeader from "./components/secondheader.mjs";
 import Sidebar from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
 import Header from "./components/header.mjs";

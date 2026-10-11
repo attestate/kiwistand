@@ -64,11 +64,6 @@ export function hideSpinnerOverlay() {
   overlay.innerHTML = "";
 }
 
-export function isSpinnerOverlayActive() {
-  const overlay = document.getElementById(OVERLAY_ID);
-  return overlay?.dataset.active === "true";
-}
-
 // Expose helpers globally so server-rendered onclick handlers can access them once React hydrates.
 if (typeof window !== "undefined") {
   window.showSpinnerOverlay = showSpinnerOverlay;

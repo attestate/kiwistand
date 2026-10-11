@@ -1,6 +1,3 @@
-//@format
-import { env } from "process";
-import url from "url";
 
 import htm from "htm";
 import vhtml from "vhtml";

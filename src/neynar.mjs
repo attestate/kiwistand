@@ -3,7 +3,6 @@ import {
   Configuration,
   isApiErrorResponse,
 } from "@neynar/nodejs-sdk";
-import { countImpressions } from "./cache.mjs";
 
 const config = new Configuration({
   apiKey: process.env.NEYNAR_API_KEY,

@@ -253,7 +253,4 @@ export function custom(
 }
 const regular = custom();
 
-export const prefetchHead = (prefetch) =>
-  custom(undefined, undefined, undefined, undefined, prefetch);
-
 export default regular;

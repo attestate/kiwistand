@@ -1,4 +1,3 @@
-import { env } from "process";
 import htm from "htm";
 import vhtml from "vhtml";
 import DOMPurify from "isomorphic-dompurify";

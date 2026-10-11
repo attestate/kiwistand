@@ -12,9 +12,7 @@
         "@attestate/delegator2": "0.7.0",
         "@emotion/react": "11.14.0",
         "@emotion/styled": "11.14.0",
-        "@ethersproject/contracts": "5.8.0",
         "@ethersproject/providers": "5.7.2",
-        "@ethersproject/units": "5.7.0",
         "@ethersproject/wallet": "5.7.0",
         "@farcaster/frame-sdk": "0.1.8",
         "@farcaster/miniapp-wagmi-connector": "^1.0.0",
@@ -28,7 +26,6 @@
         "isomorphic-dompurify": "2.12.0",
         "linkify-react": "4.1.3",
         "linkifyjs": "4.1.3",
-        "lodash.debounce": "4.0.8",
         "posthog-js": "1.222.0",
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
@@ -1161,72 +1158,6 @@
         "@scure/bip39": "1.3.0"
       }
     },
-    "node_modules/@ethersproject/abi": {
-      "version": "5.8.0",
-      "resolved": "https://registry.npmjs.org/@ethersproject/abi/-/abi-5.8.0.tgz",
-      "integrity": "sha512-b9YS/43ObplgyV6SlyQsG53/vkSal0MNA1fskSC4mbnCMi8R+NkcH8K9FPYNESf6jUefBUniE4SOKms0E/KK1Q==",
-      "funding": [
-        {
-          "type": "individual",
-          "url": "https://gitcoin.co/grants/13/ethersjs-complete-simple-and-tiny-2"
-        },
-        {
-          "type": "individual",
-          "url": "https://www.buymeacoffee.com/ricmoo"
-        }
-      ],
-      "dependencies": {
-        "@ethersproject/address": "^5.8.0",
-        "@ethersproject/bignumber": "^5.8.0",
-        "@ethersproject/bytes": "^5.8.0",
-        "@ethersproject/constants": "^5.8.0",
-        "@ethersproject/hash": "^5.8.0",
-        "@ethersproject/keccak256": "^5.8.0",
-        "@ethersproject/logger": "^5.8.0",
-        "@ethersproject/properties": "^5.8.0",
-        "@ethersproject/strings": "^5.8.0"
-      }
-    },
-    "node_modules/@ethersproject/abi/node_modules/@ethersproject/address": {
-      "version": "5.8.0",
-      "resolved": "https://registry.npmjs.org/@ethersproject/address/-/address-5.8.0.tgz",
-      "integrity": "sha512-GhH/abcC46LJwshoN+uBNoKVFPxUuZm6dA257z0vZkKmU1+t8xTn8oK7B9qrj8W2rFRMch4gbJl6PmVxjxBEBA==",
-      "funding": [
-        {
-          "type": "individual",
-          "url": "https://gitcoin.co/grants/13/ethersjs-complete-simple-and-tiny-2"
-        },
-        {
-          "type": "individual",
-          "url": "https://www.buymeacoffee.com/ricmoo"
-        }
-      ],
-      "dependencies": {
-        "@ethersproject/bignumber": "^5.8.0",
-        "@ethersproject/bytes": "^5.8.0",
-        "@ethersproject/keccak256": "^5.8.0",
-        "@ethersproject/logger": "^5.8.0",
-        "@ethersproject/rlp": "^5.8.0"
-      }
-    },
-    "node_modules/@ethersproject/abi/node_modules/@ethersproject/bytes": {
-      "version": "5.8.0",
-      "resolved": "https://registry.npmjs.org/@ethersproject/bytes/-/bytes-5.8.0.tgz",
-      "integrity": "sha512-vTkeohgJVCPVHu5c25XWaWQOZ4v+DkGoC42/TS2ond+PARCxTJvgTFUNDZovyQ/uAQ4EcpqqowKydcdmRKjg7A==",
-      "funding": [
-        {
-          "type": "individual",
-          "url": "https://gitcoin.co/grants/13/ethersjs-complete-simple-and-tiny-2"
-        },
-        {
-          "type": "individual",
-          "url": "https://www.buymeacoffee.com/ricmoo"
-        }
-      ],
-      "dependencies": {
-        "@ethersproject/logger": "^5.8.0"
-      }
-    },
     "node_modules/@ethersproject/abstract-provider": {
       "version": "5.8.0",
       "resolved": "https://registry.npmjs.org/@ethersproject/abstract-provider/-/abstract-provider-5.8.0.tgz",
@@ -1458,73 +1389,6 @@
       ],
       "dependencies": {
         "@ethersproject/bignumber": "^5.8.0"
-      }
-    },
-    "node_modules/@ethersproject/contracts": {
-      "version": "5.8.0",
-      "resolved": "https://registry.npmjs.org/@ethersproject/contracts/-/contracts-5.8.0.tgz",
-      "integrity": "sha512-0eFjGz9GtuAi6MZwhb4uvUM216F38xiuR0yYCjKJpNfSEy4HUM8hvqqBj9Jmm0IUz8l0xKEhWwLIhPgxNY0yvQ==",
-      "funding": [
-        {
-          "type": "individual",
-          "url": "https://gitcoin.co/grants/13/ethersjs-complete-simple-and-tiny-2"
-        },
-        {
-          "type": "individual",
-          "url": "https://www.buymeacoffee.com/ricmoo"
-        }
-      ],
-      "dependencies": {
-        "@ethersproject/abi": "^5.8.0",
-        "@ethersproject/abstract-provider": "^5.8.0",
-        "@ethersproject/abstract-signer": "^5.8.0",
-        "@ethersproject/address": "^5.8.0",
-        "@ethersproject/bignumber": "^5.8.0",
-        "@ethersproject/bytes": "^5.8.0",
-        "@ethersproject/constants": "^5.8.0",
-        "@ethersproject/logger": "^5.8.0",
-        "@ethersproject/properties": "^5.8.0",
-        "@ethersproject/transactions": "^5.8.0"
-      }
-    },
-    "node_modules/@ethersproject/contracts/node_modules/@ethersproject/address": {
-      "version": "5.8.0",
-      "resolved": "https://registry.npmjs.org/@ethersproject/address/-/address-5.8.0.tgz",
-      "integrity": "sha512-GhH/abcC46LJwshoN+uBNoKVFPxUuZm6dA257z0vZkKmU1+t8xTn8oK7B9qrj8W2rFRMch4gbJl6PmVxjxBEBA==",
-      "funding": [
-        {
-          "type": "individual",
-          "url": "https://gitcoin.co/grants/13/ethersjs-complete-simple-and-tiny-2"
-        },
-        {
-          "type": "individual",
-          "url": "https://www.buymeacoffee.com/ricmoo"
-        }
-      ],
-      "dependencies": {
-        "@ethersproject/bignumber": "^5.8.0",
-        "@ethersproject/bytes": "^5.8.0",
-        "@ethersproject/keccak256": "^5.8.0",
-        "@ethersproject/logger": "^5.8.0",
-        "@ethersproject/rlp": "^5.8.0"
-      }
-    },
-    "node_modules/@ethersproject/contracts/node_modules/@ethersproject/bytes": {
-      "version": "5.8.0",
-      "resolved": "https://registry.npmjs.org/@ethersproject/bytes/-/bytes-5.8.0.tgz",
-      "integrity": "sha512-vTkeohgJVCPVHu5c25XWaWQOZ4v+DkGoC42/TS2ond+PARCxTJvgTFUNDZovyQ/uAQ4EcpqqowKydcdmRKjg7A==",
-      "funding": [
-        {
-          "type": "individual",
-          "url": "https://gitcoin.co/grants/13/ethersjs-complete-simple-and-tiny-2"
-        },
-        {
-          "type": "individual",
-          "url": "https://www.buymeacoffee.com/ricmoo"
-        }
-      ],
-      "dependencies": {
-        "@ethersproject/logger": "^5.8.0"
       }
     },
     "node_modules/@ethersproject/hash": {
@@ -2015,26 +1879,6 @@
       ],
       "dependencies": {
         "@ethersproject/logger": "^5.8.0"
-      }
-    },
-    "node_modules/@ethersproject/units": {
-      "version": "5.7.0",
-      "resolved": "https://registry.npmjs.org/@ethersproject/units/-/units-5.7.0.tgz",
-      "integrity": "sha512-pD3xLMy3SJu9kG5xDGI7+xhTEmGXlEqXU4OfNapmfnxLVY4EMSSRp7j1k7eezutBPH7RBN/7QPnwR7hzNlEFeg==",
-      "funding": [
-        {
-          "type": "individual",
-          "url": "https://gitcoin.co/grants/13/ethersjs-complete-simple-and-tiny-2"
-        },
-        {
-          "type": "individual",
-          "url": "https://www.buymeacoffee.com/ricmoo"
-        }
-      ],
-      "dependencies": {
-        "@ethersproject/bignumber": "^5.7.0",
-        "@ethersproject/constants": "^5.7.0",
-        "@ethersproject/logger": "^5.7.0"
       }
     },
     "node_modules/@ethersproject/wallet": {
@@ -8940,11 +8784,6 @@
       "resolved": "https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz",
       "integrity": "sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==",
       "license": "MIT"
-    },
-    "node_modules/lodash.debounce": {
-      "version": "4.0.8",
-      "resolved": "https://registry.npmjs.org/lodash.debounce/-/lodash.debounce-4.0.8.tgz",
-      "integrity": "sha512-FT1yDzDYEoYWhnSGnpE/4Kj1fLZkDFyqRb7fNt6FdYOSxlUWAtp42Eh6Wb0rGIv/m9Bgo7x4GhQbm5Ys4SG5ow=="
     },
     "node_modules/loose-envify": {
       "version": "1.4.0",

@@ -5,7 +5,6 @@ import { Worker } from "worker_threads";
 import { fileURLToPath } from "url";
 
 import DOMPurify from "isomorphic-dompurify";
-import ogs from "open-graph-scraper-lite";
 import htm from "htm";
 import vhtml from "vhtml";
 import { parse as parser } from "node-html-parser";
@@ -262,50 +261,6 @@ Format this title according to these rules:
  5. Keep any existing dash (-) or colon (:) formatting
  6. Format dates as YYYY-MM-DD
  7. Don't include the hosting platform in titles (e.g., "GitHub - bitcoin/bitcoin") as we already show the domain (DO: e.g. "bitcoin/bitcoin")
-`;
-
-// Added Kiwi News Submission Guidelines
-const KIWI_NEWS_GUIDELINES = `
-Why guidelines are important
-We have an opportunity to build our own corner of the onchain internet. With awesome people, links, resources, and learning. To ensure this corner is valuable, we need to follow some submission guidelines.
-
-What to submit?
-On topic:
-Anything that gratifies the intellectual curiosities of builders, engineers, hackers.
-We are an Ethereum-first community, but other resources are interesting to us as well.
-
-That includes:
-
-Technical resources, hacking, and awesome git repos
-Dune dashboards, reports, data-driven articles
-Startups, cryptocurrencies, cryptography
-Networking, privacy, decentralization
-Hardware, open source, economics, game theory, privacy
-
-For tweet-style content, it'll come from multiple places: ${twitterFrontends.join(
-  " ",
-)}. Tweet-style content that is super short should most likely NOT be submitted. Usually if it is low effort r just a random person's point of view.
-Consider the above rules. We are a tech, hacker community. We don't want everyone's random thoughts. Especially not if they're low-effort.
-
-
-Other off topic submissions include: 
-Sensationalist journalism for the sake of ad revenue (including overly optimized click-bait, rage-bait, fluff headlines, clickthrough optimized headlines, cliffhanger headlines, posts with no substance)
-Mediocre resources
-Old stories we all read and that have been widely shared elsewhere
-Shilling if it's for the wrong projects, e.g., HYPE, HYPERLIQUID, Cardano, BNB, centralized projects, scams, KOL-promoted fake projects
-Fund raise announcements of projects which are not closely associated with Ethereum
-
-# Are promotional/shilling links allowed?
-
-Generally no. But for Ethereum and Ethereum-based projects which have a long standing history of legitimacy, it's fine. But it's really
-important that we only allow promotions of the right projects: Projects
-
-Bitcoin, Ethereum, USDT, Solana, USDC, Lido, Chainlink, Sky, USDT, Circle, USDC, Monero, Coinbase, Base, Farcaster, Warpcast, Uniswap, Aave, TRUMP, Arbitrum, Worldcoin, Maker, Optimism, Railgun, Railway, Curve, ENS, Paragraph, Zora, Flashbots, Unichain, ZKsync, Starknet, Scroll, Gnosis, GHO, EURC, Monerium, Gnosis Pay, Celo, It's super important to strictly adhere to this list and only diverge if it happens to be non exhaustive with regards to Ethereum-related projects which haven't accidentially been mentioned.
-It may also be fine if highly trustworthy individuals from the Ethereum community say something.
-
-For shilling more generally: No content that is specifically direct to retards
-in the Crypto Twitter community which tend to just use false advertisement to
-promote bad articles.
 `;
 
 export const GUIDELINES = `We have an opportunity to build our own corner of the onchain internet. With awesome people, links, resources, and learning.
@@ -641,82 +596,6 @@ export async function getCastByHashAndConstructUrl(castHash) {
   }
 
   return null;
-}
-
-// Convert TipTap JSON to HTML
-function convertTipTapToHTML(doc) {
-  if (!doc || !doc.content) return '';
-  
-  const convertNode = (node) => {
-    if (!node) return '';
-    
-    // Handle text nodes
-    if (node.type === 'text') {
-      let text = node.text || '';
-      // Apply marks (bold, italic, links, etc.)
-      if (node.marks && node.marks.length > 0) {
-        node.marks.forEach(mark => {
-          switch (mark.type) {
-            case 'bold':
-              text = `<strong>${text}</strong>`;
-              break;
-            case 'italic':
-              text = `<em>${text}</em>`;
-              break;
-            case 'underline':
-              text = `<u>${text}</u>`;
-              break;
-            case 'link':
-              text = `<a href="${mark.attrs.href}" target="${mark.attrs.target || '_blank'}" rel="${mark.attrs.rel || 'noopener noreferrer'}">${text}</a>`;
-              break;
-          }
-        });
-      }
-      return text;
-    }
-    
-    // Handle different node types
-    const children = node.content ? node.content.map(convertNode).join('') : '';
-    
-    switch (node.type) {
-      case 'doc':
-        return children;
-      case 'paragraph':
-        return `<p>${children}</p>`;
-      case 'heading':
-        const level = node.attrs?.level || 2;
-        return `<h${level}>${children}</h${level}>`;
-      case 'blockquote':
-        return `<blockquote>${children}</blockquote>`;
-      case 'bulletList':
-        return `<ul>${children}</ul>`;
-      case 'orderedList':
-        return `<ol>${children}</ol>`;
-      case 'listItem':
-        return `<li>${children}</li>`;
-      case 'codeBlock':
-        return `<pre><code>${children}</code></pre>`;
-      case 'image':
-        const imgAttrs = node.attrs || {};
-        // Ensure we have a valid image source
-        if (imgAttrs.src) {
-          return `<img src="${imgAttrs.src}" alt="${imgAttrs.alt || ''}" ${imgAttrs.title ? `title="${imgAttrs.title}"` : ''} style="max-width: 100%; height: auto;">`;
-        }
-        return '';
-      case 'figure':
-        // Figures often contain images, ensure proper styling
-        return `<figure style="margin: 1em 0; text-align: center;">${children}</figure>`;
-      case 'figcaption':
-        return `<figcaption style="margin-top: 0.5em; font-style: italic; color: #666;">${children}</figcaption>`;
-      case 'hardBreak':
-        return '<br>';
-      default:
-        // For unknown types, just return the children
-        return children;
-    }
-  };
-  
-  return convertNode(doc);
 }
 
 export async function extractInterfaceContent(url, ogImageUrl) {
@@ -1852,132 +1731,6 @@ export const metadata = async (
 
   return output;
 };
-
-/**
- * Checks if a link is relevant to Kiwi News using Claude Haiku.
- * @param {string} link - The URL to check.
- * @param {object} [metadataContext] - Optional metadata context from the caller (e.g., Telegram).
- * @param {string} [metadataContext.title] - Title from OG, Telegram, etc.
- * @param {string} [metadataContext.description] - Description from OG, Telegram, etc.
- * @returns {Promise<boolean>} - True if the link is deemed relevant.
- */
-export async function isRelevantToKiwiNews(
-  link,
-  metadataContext = {},
-  raw = false,
-) {
-  const normalizedUrl = normalizeUrl(link, { stripWWW: false });
-  const cacheKey = `relevance-${normalizedUrl}`;
-
-  // Check LRU cache first
-  if (!raw) {
-    const cachedRelevance = await cache.get(cacheKey);
-    if (cachedRelevance !== undefined) {
-      // LRUCache returns undefined for a cache miss
-      log(`Relevance LRU cache hit for ${link}: ${cachedRelevance}`);
-      return cachedRelevance;
-    }
-  }
-
-  // Fetch metadata, generating title and processing submittedTitle (from metadataContext.title)
-  let fetchedMeta = {};
-  try {
-    // Pass metadataContext.title as submittedTitle to the metadata function
-    fetchedMeta = await metadata(link, true, metadataContext.title, raw);
-  } catch (error) {
-    log(
-      `Error fetching metadata in isRelevantToKiwiNews for ${link}: ${error.message}`,
-    );
-    // Proceed with empty fetchedMeta, fallbacks will be used
-  }
-
-  let context = `URL: ${link}
-`;
-
-  // Prioritize title from fetchedMeta (compliantTitle, then ogTitle), then fallback to metadataContext.title
-  const titleForClaude =
-    fetchedMeta.compliantTitle || fetchedMeta.ogTitle || metadataContext.title;
-  if (titleForClaude) {
-    context += `Title: ${titleForClaude}
-`;
-  }
-
-  // Prioritize description from fetchedMeta, then fallback to metadataContext.description
-  const descriptionForClaude =
-    fetchedMeta.ogDescription || metadataContext.description;
-  if (descriptionForClaude) {
-    const descSnippet = descriptionForClaude.substring(0, 300);
-    context += `Description: ${descSnippet}${ 
-      descriptionForClaude.length > 300 ? "..." : ""
-    }
-`;
-  }
-  log(
-    `Relevance LRU cache miss. Checking relevance with Claude for: ${JSON.stringify(
-      context,
-    )}`,
-  );
-
-  // Simple prompt asking for a yes/no decision based on guidelines
-  const prompt = `Here are the Kiwi News submission guidelines:
-
-${KIWI_NEWS_GUIDELINES}
-
-Based *only* on these guidelines, is the content described below likely to be "On topic" and suitable for submission to Kiwi News? Answer with only "YES" or "NO".
-
-Content Context:
-${context}`;
-
-  let responseText = "NO"; // Default to NO if anything fails
-  try {
-    const response = await anthropic.messages.create({
-      model: TITLE_MODEL,
-      // Haiku 5.5 may think first; low effort keeps that short and the
-      // cap leaves room for it before the YES / NO.
-      max_tokens: 1024,
-      output_config: { effort: "low" },
-      messages: [
-        {
-          role: "user",
-          content: prompt,
-        },
-      ],
-    });
-
-    // Extract the text content, expecting "YES" or "NO"
-    // The answer is the text block; thinking blocks can come first.
-    const textBlock = response.content?.find((c) => c.type === "text");
-    if (response.stop_reason === "refusal") {
-      log(`Claude relevance check for ${link} was declined (${response.stop_details?.category})`);
-    } else if (textBlock) {
-      responseText = textBlock.text.trim().toUpperCase();
-    } else {
-      log(
-        `Claude relevance check for ${link} produced unexpected response format: ${JSON.stringify(
-          response,
-        )}`,
-      );
-    }
-  } catch (error) {
-    log(`Claude relevance check API request failed for ${link}: ${error}`);
-    // Keep default "NO"
-  }
-
-  // *** FIX: Check if the response STARTS WITH "YES" ***
-  const isRelevant = responseText.startsWith("YES");
-  // Add clear log before returning
-  log(
-    `Claude relevance raw response: "${responseText}". Final decision for ${link}: ${isRelevant}`,
-  );
-
-  // Cache the result in LRU cache
-  if (!raw) {
-    cache.set(cacheKey, isRelevant).catch(() => {});
-  }
-
-  return isRelevant;
-}
-
 
 function safeExtractDomain(link) {
   // Return empty string for text posts (data: and kiwi: URLs)

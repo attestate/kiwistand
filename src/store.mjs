@@ -1,7 +1,6 @@
 // @format
-import process, { env } from "process";
+import { env } from "process";
 import { resolve } from "path";
-import cluster from "cluster";
 
 import Piscina from "piscina";
 import fastq from "fastq";
@@ -17,15 +16,13 @@ import {
 import rlp from "@ethereumjs/rlp";
 import { keccak256 } from "ethereum-cryptography/keccak.js";
 import { decode } from "cbor-x";
-import { open } from "lmdb";
 import { resolveIdentity } from "@attestate/delegator2";
 import canonicalize from "canonicalize";
 
 import log from "./logger.mjs";
 import LMDB from "./lmdb.mjs";
 import { getSlug } from "./utils.mjs";
-import { verify, ecrecover, toDigest, cacheResultAsync } from "./id.mjs";
-import { EIP712_MESSAGE } from "./constants.mjs";
+import { verify, toDigest, cacheResultAsync } from "./id.mjs";
 import { elog } from "./utils.mjs";
 import * as messages from "./topics/messages.mjs";
 import { newWalk } from "./WalkController.mjs";

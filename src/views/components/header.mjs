@@ -1,7 +1,6 @@
 //@format
 import htm from "htm";
 import vhtml from "vhtml";
-import { utils } from "ethers";
 
 const html = htm.bind(vhtml);
 

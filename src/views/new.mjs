@@ -1,9 +1,6 @@
-//@format
-import { env } from "process";
 
 import htm from "htm";
 import vhtml from "vhtml";
-import { sub } from "date-fns";
 import normalizeUrl from "normalize-url";
 
 import * as ens from "../ens.mjs";
@@ -14,10 +11,9 @@ import Sidebar from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
 import RightColumn from "./components/right-column.mjs";
 import { custom } from "./components/head.mjs";
-import * as store from "../store.mjs";
 import * as moderation from "./moderation.mjs";
 import { getLastComment, listNewest, countImpressions, lifetimeCache } from "../cache.mjs";
-import Row, { extractDomain } from "./components/row.mjs";
+import Row from "./components/row.mjs";
 import log from "../logger.mjs";
 import { purgeCache } from "../cloudflarePurge.mjs";
 import { cachedMetadata, metadata } from "../parser.mjs";
@@ -53,13 +49,6 @@ function hasUsableMetadata(metadata) {
 let stories = [];
 export function getStories() {
   return stories;
-}
-
-export function getLatestTimestamp() {
-  if (stories.length === 0) {
-    throw new Error("No stories available");
-  }
-  return stories[0].timestamp;
 }
 
 const HTML_CACHE_KEY = "new-html";
