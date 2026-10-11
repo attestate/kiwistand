@@ -75,22 +75,39 @@ function hasUsedPasskey() {
   }
 }
 
-// NOTE: Not "Continue with Apple/Google": that reads like Sign in with Apple
-// or Google, which this isn't. The hint below says where the passkey lives.
-export function passkeyButtonLabel() {
-  return "Continue with passkey";
-}
+// NOTE: The modal names who each button is for: "Create account" (new,
+// passkey), "Log in" (passkey accounts), "Log in with wallet" (existing
+// wallet accounts). Not "Continue with Apple/Google": that reads like Sign
+// in with Apple or Google, which this isn't.
+const PASSKEY_HINT = "Face ID or fingerprint, saved with your passwords. No wallet needed.";
 
-export function passkeyHint() {
-  const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
-  if (/iPhone|iPad|iPod/i.test(ua)) {
-    return "Saved in your Apple Passwords, unlocked with Face ID. No wallet needed.";
-  }
-  if (/Android/i.test(ua)) {
-    return "Saved in your Google Password Manager. No wallet needed.";
-  }
-  return "Saved in your Apple or Google passwords. No wallet needed.";
-}
+const primaryStyle = {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  height: "38px",
+  backgroundColor: "var(--accent-primary)",
+  border: "1px solid var(--accent-primary)",
+  color: "var(--bg-black)",
+  borderRadius: "8px",
+  fontSize: "15px",
+  cursor: "pointer",
+  margin: "0 16px",
+  whiteSpace: "nowrap",
+};
+const secondaryStyle = {
+  ...primaryStyle,
+  backgroundColor: "transparent",
+  border: "var(--border-thin)",
+  color: "var(--text-primary)",
+};
+const rowStyle = { display: "flex", alignItems: "center", height: "100%", gap: "8px" };
+const hintStyle = {
+  margin: "-2px 16px 4px",
+  fontSize: "12px",
+  color: "var(--text-secondary)",
+  textAlign: "center",
+};
 
 const LoginModal = forwardRef((props, ref) => {
   const [showModal, setShowModal] = useState(!!props.defaultOpen);
@@ -99,6 +116,8 @@ const LoginModal = forwardRef((props, ref) => {
   const [isAnonButtonHovered, setIsAnonButtonHovered] = useState(false);
   const [isWalletButtonHovered, setIsWalletButtonHovered] = useState(false);
   const [passkeyBusy, setPasskeyBusy] = useState(false);
+  // "choose": passkey, wallet or anon; "passkey": sign in or create account.
+  const [step, setStep] = useState("choose");
   const [passkeyError, setPasskeyError] = useState("");
   const { openConnectModal } = useConnectModal();
   const showPasskey = canUsePasskey();
@@ -111,6 +130,7 @@ const LoginModal = forwardRef((props, ref) => {
 
   function closeModal() {
     setShowModal(false);
+    setStep("choose");
     if (props.onClose) props.onClose();
   }
 
@@ -374,112 +394,80 @@ const LoginModal = forwardRef((props, ref) => {
           }}>
             {showPasskey ? (
               <>
-            {/* Primary button - Passkey */}
-            <button
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                height: "38px",
-                backgroundColor: isButtonHovered ? "var(--accent-primary-hover)" : "var(--accent-primary)",
-                border: isButtonHovered ? "1px solid var(--accent-primary-hover)" : "1px solid var(--accent-primary)",
-                color: "var(--bg-black)",
-                borderRadius: "8px",
-                fontSize: "15px",
-                fontWeight: "normal",
-                cursor: passkeyBusy ? "wait" : "pointer",
-                opacity: passkeyBusy ? 0.7 : 1,
-                transform: isButtonActive ? "translateY(1px)" : "translateY(0)",
-                transition: "background-color 0.15s ease, border-color 0.15s ease, transform 0.05s ease",
-                margin: "0 16px",
-                whiteSpace: "nowrap",
-              }}
-              onClick={() => handlePasskey(usedBefore ? "signIn" : "create")}
-              disabled={passkeyBusy}
-              onMouseEnter={() => setIsButtonHovered(true)}
-              onMouseLeave={() => {
-                setIsButtonHovered(false);
-                setIsButtonActive(false);
-              }}
-              onMouseDown={() => setIsButtonActive(true)}
-              onMouseUp={() => setIsButtonActive(false)}
-            >
-              <div style={{ display: "flex", alignItems: "center", height: "100%", gap: "8px" }}>
-                <KeyIcon />
-                <span>{passkeyBusy ? "Waiting for passkey..." : passkeyButtonLabel()}</span>
-              </div>
-            </button>
-
-            <div
-              style={{
-                margin: "-2px 16px 0",
-                fontSize: "12px",
-                color: "var(--text-secondary)",
-                textAlign: "center",
-              }}
-            >
-              {passkeyHint()}
-            </div>
-
-            {/* Secondary action - the other passkey flow */}
-            <button
-              type="button"
-              onClick={() => handlePasskey(usedBefore ? "create" : "signIn")}
-              disabled={passkeyBusy}
-              style={{
-                background: "transparent",
-                border: "none",
-                padding: "2px 16px",
-                color: "var(--text-secondary)",
-                fontSize: "13px",
-                textDecoration: "underline",
-                cursor: passkeyBusy ? "wait" : "pointer",
-              }}
-            >
-              {usedBefore ? "Create a new account" : "I already have an account"}
-            </button>
-
-            {passkeyError && (
-              <div
-                role="alert"
-                style={{
-                  margin: "0 16px",
-                  fontSize: "13px",
-                  lineHeight: "18px",
-                  color: "var(--color-error, #c0392b)",
-                }}
-              >
-                {passkeyError}
-              </div>
+            {step === "choose" ? (
+              <>
+                <button
+                  style={primaryStyle}
+                  onClick={() => {
+                    setPasskeyError("");
+                    setStep("passkey");
+                  }}
+                >
+                  <div style={rowStyle}>
+                    <KeyIcon />
+                    <span>Passkey</span>
+                  </div>
+                </button>
+                <div style={hintStyle}>{PASSKEY_HINT}</div>
+                <button style={secondaryStyle} onClick={handleConnectWallet}>
+                  <div style={rowStyle}>
+                    <WalletIcon />
+                    <span>Wallet</span>
+                  </div>
+                </button>
+              </>
+            ) : (
+              <>
+                {[usedBefore ? "signIn" : "create", usedBefore ? "create" : "signIn"].map(
+                  (mode, i) => (
+                    <button
+                      key={mode}
+                      style={{
+                        ...(i === 0 ? primaryStyle : secondaryStyle),
+                        cursor: passkeyBusy ? "wait" : "pointer",
+                        opacity: passkeyBusy ? 0.7 : 1,
+                      }}
+                      onClick={() => handlePasskey(mode)}
+                      disabled={passkeyBusy}
+                    >
+                      {passkeyBusy && i === 0
+                        ? "Waiting for passkey..."
+                        : mode === "create"
+                          ? "Create account"
+                          : "Sign in"}
+                    </button>
+                  ),
+                )}
+                {passkeyError && (
+                  <div
+                    role="alert"
+                    style={{
+                      margin: "0 16px",
+                      fontSize: "13px",
+                      lineHeight: "18px",
+                      color: "var(--color-error, #c0392b)",
+                    }}
+                  >
+                    {passkeyError}
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setStep("choose")}
+                  disabled={passkeyBusy}
+                  style={{
+                    background: "transparent",
+                    border: "none",
+                    padding: "2px 16px",
+                    color: "var(--text-secondary)",
+                    fontSize: "13px",
+                    cursor: "pointer",
+                  }}
+                >
+                  ← Other ways to sign in
+                </button>
+              </>
             )}
-
-            {/* Wallet connect */}
-            <button
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                height: "38px",
-                backgroundColor: isWalletButtonHovered ? "var(--bg-hover-minimal)" : "transparent",
-                border: "var(--border-thin)",
-                color: "var(--text-primary)",
-                borderRadius: "8px",
-                fontSize: "15px",
-                fontWeight: "normal",
-                cursor: "pointer",
-                transition: "all 0.15s ease",
-                margin: "0 16px",
-                whiteSpace: "nowrap",
-              }}
-              onClick={handleConnectWallet}
-              onMouseEnter={() => setIsWalletButtonHovered(true)}
-              onMouseLeave={() => setIsWalletButtonHovered(false)}
-            >
-              <div style={{ display: "flex", alignItems: "center", height: "100%", gap: "8px" }}>
-                <WalletIcon />
-                <span>Connect wallet</span>
-              </div>
-            </button>
 
               </>
             ) : (
@@ -522,6 +510,7 @@ const LoginModal = forwardRef((props, ref) => {
             )}
 
             {/* Tertiary button - Anon mode */}
+            {(!showPasskey || step === "choose") && (
             <button
               style={{
                 display: "inline-flex",
@@ -548,6 +537,7 @@ const LoginModal = forwardRef((props, ref) => {
                 <span>Anon mode</span>
               </div>
             </button>
+            )}
           </div>
         </div>
       </div>
