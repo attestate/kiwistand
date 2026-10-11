@@ -8,7 +8,15 @@ import Sidebar from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
 import { custom } from "./components/head.mjs";
 import * as moderation from "./moderation.mjs";
-import { getBest, countOutbounds, countComments } from "../cache.mjs";
+import {
+  getBest,
+  countOutbounds,
+  countComments,
+  getPreviousSubmission,
+} from "../cache.mjs";
+import * as ens from "../ens.mjs";
+import { creditForStory } from "../credit.mjs";
+import CreditLine, { styles as creditStyles } from "./components/credit.mjs";
 import { getSlug } from "../utils.mjs";
 import log from "../logger.mjs";
 
@@ -82,6 +90,8 @@ export async function getWeeklyPicks(amount = 5) {
         return {
           title: story.title,
           index: story.index,
+          identity: story.identity,
+          timestamp: story.timestamp,
           domain: story.href.startsWith("data:")
             ? null
             : hostname(story.href) === "imagedelivery.net"
@@ -94,6 +104,24 @@ export async function getWeeklyPicks(amount = 5) {
       })
       .sort((a, b) => b.score - a.score)
       .slice(0, amount);
+
+    // Credit new and returning curators, like the email (src/credit.mjs).
+    // ens.resolve doesn't wait for the network: without a cached name there
+    // is no credit.
+    await Promise.all(
+      picks.map(async (pick) => {
+        try {
+          const profile = await ens.resolve(pick.identity);
+          pick.credit = creditForStory(
+            pick,
+            profile?.displayName,
+            getPreviousSubmission,
+          );
+        } catch (err) {
+          pick.credit = null;
+        }
+      }),
+    );
 
     picksCache = { at: Date.now(), picks };
     return picks;
@@ -179,7 +207,7 @@ const styles = `
   .nl-picks a { color: var(--text-primary); }
   .nl-meta { color: var(--text-secondary); font-size: 0.85rem; }
   .nl-page a.nl-link { text-decoration: underline; }
-`;
+${creditStyles}`;
 
 function SignupForm(id) {
   return html`
@@ -329,6 +357,7 @@ export default async function (theme, { status = null, picks = null } = {}) {
                                   <span class="nl-meta">
                                     ${pick.domain ? `${pick.domain} · ` : ""}${pick.upvotes} ${pick.upvotes === 1 ? "upvote" : "upvotes"}${pick.comments ? ` · ${pick.comments} ${pick.comments === 1 ? "comment" : "comments"}` : ""}
                                   </span>
+                                  ${CreditLine(pick.credit, pick.identity)}
                                 </li>
                               `,
                             )}

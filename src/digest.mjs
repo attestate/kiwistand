@@ -10,7 +10,12 @@ import * as store from "./store.mjs";
 import * as registry from "./chainstate/registry.mjs";
 import DOMPurify from "isomorphic-dompurify";
 import slugify from "slugify";
-import { countOutbounds, countComments } from "./cache.mjs";
+import {
+  countOutbounds,
+  countComments,
+  getPreviousSubmission,
+} from "./cache.mjs";
+import { creditForStory, creditText } from "./credit.mjs";
 import { isLinkAlive } from "./linkcheck.mjs";
 
 function getSlug(title) {
@@ -144,10 +149,20 @@ export async function generateDigestData() {
         }
       }
 
+      // "First story from alice — welcome!" / "alice is back after 5
+      // months" (src/credit.mjs); null without a name or anything to say.
+      const credit = creditForStory(
+        story,
+        story.displayName,
+        getPreviousSubmission,
+      );
+      if (credit) log(`[digest] credit: ${creditText(credit)}`);
+
       return {
         ...story,
         storyLink: trackedStoryLink,
         submitterLink,
+        credit,
       };
     });
 

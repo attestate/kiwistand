@@ -12,6 +12,7 @@ import { custom } from "./components/head.mjs";
 import * as isoweek from "../isoweek.mjs";
 import { autoIntro, hostname } from "../weekly.mjs";
 import { getSlug } from "../utils.mjs";
+import CreditLine, { styles as creditStyles } from "./components/credit.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -39,7 +40,7 @@ const styles = `
   .wk-weeks { list-style: none; padding: 0; margin: 0; }
   .wk-weeks li { margin: 0 0 0.3rem 0; }
   .wk-page newsletter-card .newsletter-card { margin: 1.5rem 0 0 0; }
-`;
+${creditStyles}`;
 
 function storyPath(story) {
   return `/stories/${getSlug(story.title)}?index=0x${story.index}`;
@@ -174,6 +175,7 @@ function Story(story) {
       ${" "}· by${" "}
       <a href="/upvotes?address=${story.identity}">${story.displayName}</a>
     </div>
+    ${CreditLine(story.credit, story.identity)}
     ${story.summary
       ? html`<p class="wk-summary">${story.summary}</p>`
       : null}

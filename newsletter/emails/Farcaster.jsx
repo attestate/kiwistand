@@ -1,5 +1,6 @@
 import React from "react";
 import { Head, Html, Body, Container, Tailwind, Text, Link, Img, Row, Column, Section } from "@react-email/components";
+import Credit from "./_components/Credit.jsx";
 
 // --- Helper functions ---
 const truncateLongWords = (text, maxLength = 20) => {
@@ -129,6 +130,7 @@ export default function FarcasterEmail({ story = { metadata: { farcasterCast: { 
             {story.comments ? ` • ${story.comments} comments` : ''}
             {story.clicks ? ` • ${story.clicks} clicks` : ''}
           </Text>
+          <Credit story={story} />
         </Section>
       </Section>
       <Section style={{ padding: '12px 0' }}>

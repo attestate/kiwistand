@@ -755,6 +755,21 @@ export function getSubmissionCount(identity) {
   return result ? result.count : 0;
 }
 
+// Timestamp of the identity's latest submission before `timestamp`, or null
+// if `timestamp` is their first. Used to credit new and returning curators
+// in the newsletter (src/credit.mjs). Served by
+// idx_submissions_identity_timestamp (addCompoundIndexes), else by
+// idx_submissions_identity.
+export function getPreviousSubmission(identity, timestamp) {
+  const row = db
+    .prepare(
+      `SELECT MAX(timestamp) AS previous FROM submissions
+       WHERE identity = ? AND timestamp < ?`,
+    )
+    .get(identity, timestamp);
+  return row?.previous ?? null;
+}
+
 export function getSubmissions(identity, amount, from, orderBy, domains) {
   let orderClause = "upvotesCount DESC";
   if (orderBy === "new") {
@@ -1310,6 +1325,9 @@ export function addCompoundIndexes() {
       
       -- Upvotes table indexes
       CREATE INDEX IF NOT EXISTS idx_upvotes_href_identity ON upvotes(href, identity);
+
+      -- Submissions: a curator's previous story (getPreviousSubmission)
+      CREATE INDEX IF NOT EXISTS idx_submissions_identity_timestamp ON submissions(identity, timestamp);
     `);
     log("Successfully created compound indexes");
   } catch (error) {
