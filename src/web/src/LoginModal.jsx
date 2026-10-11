@@ -75,19 +75,21 @@ function hasUsedPasskey() {
   }
 }
 
+// NOTE: Not "Continue with Apple/Google": that reads like Sign in with Apple
+// or Google, which this isn't. The hint below says where the passkey lives.
 export function passkeyButtonLabel() {
-  const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
-  // NOTE: Chrome on a Mac may save the passkey to Google or to iCloud, so
-  // only Safari there says Apple.
-  if (/iPhone|iPad|iPod/i.test(ua)) return "Continue with Apple";
-  if (/Macintosh/i.test(ua) && !/Chrome|Chromium|Edg\/|Firefox/i.test(ua)) {
-    return "Continue with Apple";
-  }
-  if (/Macintosh/i.test(ua)) return "Continue with passkey";
-  if (/Android/i.test(ua) || (/Chrome/i.test(ua) && !/Edg\//i.test(ua))) {
-    return "Continue with Google";
-  }
   return "Continue with passkey";
+}
+
+export function passkeyHint() {
+  const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
+  if (/iPhone|iPad|iPod/i.test(ua)) {
+    return "Saved in your Apple Passwords, unlocked with Face ID. No wallet needed.";
+  }
+  if (/Android/i.test(ua)) {
+    return "Saved in your Google Password Manager. No wallet needed.";
+  }
+  return "Saved in your Apple or Google passwords. No wallet needed.";
 }
 
 const LoginModal = forwardRef((props, ref) => {
@@ -407,6 +409,17 @@ const LoginModal = forwardRef((props, ref) => {
                 <span>{passkeyBusy ? "Waiting for passkey..." : passkeyButtonLabel()}</span>
               </div>
             </button>
+
+            <div
+              style={{
+                margin: "-2px 16px 0",
+                fontSize: "12px",
+                color: "var(--text-secondary)",
+                textAlign: "center",
+              }}
+            >
+              {passkeyHint()}
+            </div>
 
             {/* Secondary action - the other passkey flow */}
             <button
