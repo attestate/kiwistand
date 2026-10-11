@@ -61,4 +61,8 @@ jobs:
 
       - name: Check the live site
         if: github.event_name != 'pull_request'
+        env:
+          # A single phone Lighthouse run swings by 10+ points (e.g. /best
+          # 61 after a deploy), so the median of three counts.
+          MEDIAN_RUNS: "3"
         run: node scripts/pagespeed/check.mjs
