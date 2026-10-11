@@ -914,6 +914,37 @@ async function addAvatar() {
   }
 }
 
+// "Edit profile" on your own profile page (views/upvotes.mjs).
+async function addEditProfile(toast) {
+  const elem = document.querySelector("kiwi-edit-profile");
+  if (!elem) return;
+  const EditProfileButton = (await import("./EditProfile.jsx")).default;
+  createRoot(elem).render(
+    <StrictMode>
+      <Providers>
+        <EditProfileButton address={elem.dataset.address} toast={toast} />
+      </Providers>
+    </StrictMode>,
+  );
+}
+
+async function addNicknamePrompt(toast) {
+  if (isAnonMode || isIOSApp()) return;
+  // Only signed-in people can pick a name; don't load it for readers.
+  if (!getCookie("identity")) return;
+  const container = document.createElement("div");
+  container.id = "nickname-prompt-container";
+  document.body.appendChild(container);
+  const NicknamePrompt = (await import("./NicknamePrompt.jsx")).default;
+  createRoot(container).render(
+    <StrictMode>
+      <Providers>
+        <NicknamePrompt toast={toast} />
+      </Providers>
+    </StrictMode>,
+  );
+}
+
 async function addBackButton() {
   const backButtonElem = document.querySelector(".story-back-button");
   if (backButtonElem) {
@@ -1905,6 +1936,8 @@ async function start() {
     addNewsletterFeedCard(),
     addNewsletterScrollModal(toast),
     addAvatar(),
+    addEditProfile(toast),
+    addNicknamePrompt(toast),
     addBackButton(),
     addDelegateButton(await delegationsPromise, toast),
     addProfileDisplay(),

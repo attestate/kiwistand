@@ -197,3 +197,31 @@ function invalidateCommentActivityCaches(message) {
     log(`Error invalidating comment activity cache: ${error}`);
   }
 }
+
+/**
+ * Invalidates the profile page and profile API after a Kiwi profile update
+ * (src/profiles.mjs), in the address spellings clients use.
+ */
+export function invalidateProfile(address) {
+  const spellings = new Set([address, address.toLowerCase()]);
+  try {
+    spellings.add(utils.getAddress(address));
+  } catch {}
+  const base = "https://news.kiwistand.com";
+  for (const spelling of spellings) {
+    const urls = [
+      `${base}/api/v1/profile/${spelling}`,
+      `${base}/upvotes?address=${spelling}`,
+      `${base}/upvotes?address=${spelling}&format=json`,
+    ];
+    for (const tab of ["submissions", "top"]) {
+      urls.push(`${base}/upvotes?address=${spelling}&tab=${tab}`);
+      urls.push(`${base}/upvotes?address=${spelling}&format=json&tab=${tab}`);
+    }
+    urls.forEach((url) =>
+      purgeCache(url).catch((err) =>
+        log(`Failed to purge profile cache: ${err}`),
+      ),
+    );
+  }
+}
