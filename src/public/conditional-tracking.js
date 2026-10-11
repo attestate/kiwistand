@@ -1,4 +1,6 @@
-// Conditionally load tracking scripts only if not in anon mode
+// Conditionally load tracking scripts only if not in anon mode. Google
+// Analytics also stays off after "Opt Out" on the consent banner and while
+// anon-rpc is on (window.kiwiTrackingOff, see theme-init.js).
 (function() {
   if (typeof localStorage !== 'undefined' && localStorage.getItem('anon-mode') === 'true') {
     // Skip all tracking in anon mode
@@ -21,13 +23,24 @@
   // on a phone. It now loads on the first interaction, or 5s after the page
   // has loaded. Visits that leave sooner without touching the page aren't
   // counted. Same rule for PostHog in src/web/src/main.jsx.
-  var analyticsLoaded = false;
-  function loadAnalytics() {
+  function trackingOff() {
+    return Boolean(window.kiwiTrackingOff && window.kiwiTrackingOff());
+  }
+  var analyticsLoaded = trackingOff();
+  // NOTE: Touching "Opt Out" or the anon-rpc switch is no reason to start
+  // Google Analytics: the pointerdown comes before the click that turns
+  // tracking off.
+  var PRIVACY_CONTROLS = '#analytics-consent-container, .private-rpc-setting';
+  function loadAnalytics(event) {
     if (analyticsLoaded) return;
+    var target = event && event.target;
+    if (target && target.closest && target.closest(PRIVACY_CONTROLS)) return;
     analyticsLoaded = true;
     ['pointerdown', 'keydown', 'scroll'].forEach(function (type) {
       window.removeEventListener(type, loadAnalytics, true);
     });
+    // The visitor may have opted out or turned anon-rpc on in the meantime.
+    if (trackingOff()) return;
 
     // Load Google Tag Manager
     var gtag = document.createElement('script');
@@ -41,14 +54,16 @@
     ga.src = 'ga.js';
     document.body.appendChild(ga);
   }
-  ['pointerdown', 'keydown', 'scroll'].forEach(function (type) {
-    window.addEventListener(type, loadAnalytics, { capture: true, passive: true });
-  });
-  function afterLoad() {
-    setTimeout(loadAnalytics, 5000);
+  if (!analyticsLoaded) {
+    ['pointerdown', 'keydown', 'scroll'].forEach(function (type) {
+      window.addEventListener(type, loadAnalytics, { capture: true, passive: true });
+    });
+    var afterLoad = function () {
+      setTimeout(loadAnalytics, 5000);
+    };
+    if (document.readyState === 'complete') afterLoad();
+    else window.addEventListener('load', afterLoad, { once: true });
   }
-  if (document.readyState === 'complete') afterLoad();
-  else window.addEventListener('load', afterLoad, { once: true });
 
   // Load instantpage.js
   var instant = document.createElement('script');

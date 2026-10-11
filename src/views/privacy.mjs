@@ -33,7 +33,7 @@ export default async function (theme) {
               <tr>
                 <td style="padding: 1rem;">
                   <h1>Privacy Policy for Kiwi News</h1>
-                  <p>Last updated: 2026-10-10</p>
+                  <p>Last updated: 2026-10-11</p>
 
                   <h2>1. Introduction</h2>
                   <p>
@@ -66,7 +66,8 @@ export default async function (theme) {
                     </li>
                     <li>
                       <strong>PostHog:</strong> We use PostHog to track user
-                      interactions with our platform. When you connect a
+                      interactions with our platform, including session
+                      recordings of how you use the site. When you connect a
                       wallet, we link your PostHog activity to your Ethereum
                       address (which is already public on Kiwi News) so we can
                       measure how often people come back. For details, see
@@ -79,10 +80,20 @@ export default async function (theme) {
                       A random identifier, stored for up to 400 days, so
                       PostHog can recognize a returning browser. It contains
                       no personal data and is only set if you haven't opted
-                      out of analytics or enabled anon mode. You can delete it
-                      at any time by clearing your cookies.
+                      out of analytics or enabled anon mode or anon-rpc. You
+                      can delete it at any time by clearing your cookies.
                     </li>
                   </ul>
+                  <p>
+                    <strong>Opting out:</strong> Choosing "Opt Out" on the
+                    analytics banner, using anon mode, or turning on anon-rpc
+                    (in the menu) turns off Google Analytics, PostHog
+                    (including session recordings), the impressions and clicks
+                    we record for signed-in accounts, and the usage
+                    fingerprinting described in 3.3 in your browser. The
+                    choice is stored in your browser's local storage, so it
+                    applies per browser and is lost if you clear site data.
+                  </p>
 
                   <h3>3.2. Blockchain and Web3 Data</h3>
                   <ul>
@@ -132,7 +143,7 @@ export default async function (theme) {
                       rankings. This method is designed to maintain anonymity—we
                       cannot identify which specific user interacted with which
                       content, and we only store anonymized aggregate
-                      statistics.
+                      statistics. It is not used if you opted out (see 3.1).
                     </li>
                   </ul>
 

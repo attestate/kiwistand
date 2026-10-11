@@ -16,6 +16,7 @@ import { getLocalAccount } from "./session.mjs";
 import { chains, client, useProvider, useSigner, useIsMiniApp, isInIOSApp } from "./client.mjs";
 import { openDelegationModalForAction, isDelegationModalNeeded } from "./delegationModalManager.js";
 import LoginModal from "./LoginModal.jsx";
+import { isTrackingAllowed } from "./tracking.mjs";
 
 // Configure slugify extension
 slugify.extend({ "′": "", "'": "" });
@@ -556,8 +557,7 @@ const CommentInput = (props) => {
         API.send(value, signature, false); // Fire and forget
         toast.success("Comment added successfully!"); // Confirmation of *sending*
         haptic.trigger("success");
-        const isAnonMode = localStorage.getItem('anon-mode') === 'true';
-        if (!isAnonMode) {
+        if (isTrackingAllowed()) {
           posthog.capture("comment_created", { variant: getFeedVariant() });
         }
       } catch (err) {
@@ -594,8 +594,7 @@ const CommentInput = (props) => {
         // Success! Clear local state and reload
         toast.success("Comment submitted successfully!");
         haptic.trigger("success");
-        const isAnonMode = localStorage.getItem('anon-mode') === 'true';
-        if (!isAnonMode) {
+        if (isTrackingAllowed()) {
           posthog.capture("comment_created", { variant: getFeedVariant() });
         }
         localStorage.removeItem(`-kiwi-news-comment-${address}-${index}`);

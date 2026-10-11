@@ -7,7 +7,7 @@ import { NewsletterCardElement } from "./newsletter-card.mjs";
 const html = htm.bind(vhtml);
 
 // The newsletter sign-up sits below the QR code on every page with a right
-// column (desktop only), except where a page opts out. The Private RPC switch
+// column (desktop only), except where a page opts out. The anon-rpc switch
 // goes last (desktop has no menu drawer).
 export default function RightColumn({ newsletter = true } = {}) {
   return html`

@@ -1,5 +1,5 @@
 // @format
-// NOTE: Loaded with import() only when a visitor turned "Private RPC" on and a
+// NOTE: Loaded with import() only when a visitor turned "anon-rpc" on and a
 // read happens; never part of the initial bundle.
 //
 // anon-rpc (https://github.com/ethereum/anon-rpc, spec 0.3.2): the harness

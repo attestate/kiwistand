@@ -27,6 +27,7 @@ import {
 } from "./delegationModalManager.js";
 import { useWebHaptics } from "web-haptics/react";
 import LoginModal from "./LoginModal.jsx";
+import { isTrackingAllowed } from "./tracking.mjs";
 
 export const iconSVG = (
   <svg
@@ -300,8 +301,7 @@ const Vote = (props) => {
       setUpvotes(upvotes + 1);
       toast.success("Thanks for your like! Have a 🥝");
       triggerLocalHaptic("success");
-      const isAnonMode = localStorage.getItem('anon-mode') === 'true';
-      if (!isAnonMode) {
+      if (isTrackingAllowed()) {
         let storyProps = {};
         try {
           storyProps = props.getAnalyticsProps?.() || {};

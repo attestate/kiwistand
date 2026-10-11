@@ -36,7 +36,7 @@ import {
 export const chains = [optimism, mainnet];
 
 // NOTE: Reads go to the public RPC directly, or through an anon-rpc worker if
-// the visitor turned on "Private RPC" (see rpc.mjs). value.url stays the
+// the visitor turned on "anon-rpc" (see rpc.mjs). value.url stays the
 // public URL: WalletConnect's rpcMap and the ethers providers below read it.
 // Those ethers providers only back app-key Wallets that sign EIP-712 messages
 // with hex addresses, which never touches the network.
@@ -57,12 +57,12 @@ const kiwiTransport = (chainId) => (params) => {
     loadAnon: () =>
       import("./anon-transport.mjs").then((m) => m.anonRequest(chainId)),
     onFallback: (err) => {
-      console.warn("Private RPC failed, read sent directly:", err);
-      notifyOnce("fallback", "Private RPC failed, using direct RPC");
+      console.warn("anon-rpc failed, read sent directly:", err);
+      notifyOnce("fallback", "anon-rpc failed, using direct RPC");
     },
     onError: (err) => {
       console.error(err);
-      notifyOnce("error", "Private RPC is unavailable. See the menu.");
+      notifyOnce("error", "anon-rpc is unavailable. See the menu.");
     },
   });
   return createTransport(

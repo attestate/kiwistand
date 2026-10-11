@@ -15,6 +15,7 @@ import { dynamicPrefetch } from "./main.jsx";
 import { getSlug } from "./CommentInput.jsx"; // Import getSlug from CommentInput
 import { openDelegationModalForAction, isDelegationModalNeeded } from "./delegationModalManager.js";
 import { showSpinnerOverlay } from "./spinnerOverlay.js";
+import { isTrackingAllowed } from "./tracking.mjs";
 
 function ShareIcon(style) {
   return (
@@ -282,8 +283,7 @@ export const EmojiReaction = ({ comment, delegations, toast }) => {
       const response = await API.send(value, signature);
       if (response.status === "success") {
         toast.success("Reaction added!");
-        const isAnonMode = localStorage.getItem('anon-mode') === 'true';
-        if (!isAnonMode) {
+        if (isTrackingAllowed()) {
           let variant = "unknown";
           try {
             const el = document.querySelector('meta[name="kiwi-variant"]');

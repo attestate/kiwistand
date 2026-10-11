@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
 
 import { readRpcSettings, writeRpcSettings } from "./rpc.mjs";
+import { stopTracking } from "./tracking.mjs";
+
+const ABOUT_URL = "https://ethereum.github.io/anon-rpc/";
 
 const ShieldSVG = ({ filled }) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
@@ -35,7 +38,7 @@ const useWorkerStatus = (enabled) => {
         if (!cancelled) setStatus({ state: "ready", network });
       })
       .catch((err) => {
-        console.error("Private RPC:", err);
+        console.error("anon-rpc:", err);
         if (!cancelled) setStatus({ state: "error", message: err.message });
       });
     return () => {
@@ -65,8 +68,13 @@ const PrivateRpcSetting = ({ variant }) => {
   const update = (patch) => setSettings(writeRpcSettings(patch));
   // NOTE: Turning it off also forgets "read directly", so the next time it's
   // on, a Tor failure is visible again.
-  const toggle = (on) =>
+  // NOTE: With anon-rpc on, tracking is off as if the visitor had opted out
+  // (tracking.mjs reads the same setting). Stop what already runs on this
+  // page right away; once it's off again, tracking resumes on the next load.
+  const toggle = (on) => {
     update(on ? { privateRpc: true } : { privateRpc: false, allowFallback: false });
+    if (on) stopTracking();
+  };
   const failed = settings.privateRpc && status.state === "error";
 
   return (
@@ -97,6 +105,16 @@ const PrivateRpcSetting = ({ variant }) => {
         .private-rpc-setting .private-rpc-title {
           font-size: 1.25rem;
           line-height: 1.2;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .private-rpc-setting .private-rpc-about {
+          margin-left: 8px;
+          font-size: 0.75rem;
+          font-weight: 400;
+          color: var(--text-secondary);
+          text-decoration: underline;
         }
         .sidebar-nav .private-rpc-setting .private-rpc-sub,
         .private-rpc-setting.compact .private-rpc-sub {
@@ -187,11 +205,26 @@ const PrivateRpcSetting = ({ variant }) => {
       `}</style>
       <label
         className="private-rpc-row"
-        title="Chain reads go through Tor (anon-rpc) so RPC providers can't tie them to your IP. Slower. Wallet transactions are unaffected."
+        title="anon-rpc reads the chain through Tor, so RPC providers can't tie your reads to your IP. Slower. While it's on, analytics and session recording are off too. Wallet transactions are unaffected."
       >
         <ShieldSVG filled={settings.privateRpc} />
         <span className="private-rpc-text">
-          <span className="private-rpc-title">Private RPC</span>
+          <span className="private-rpc-title">
+            anon-rpc
+            {/* NOTE: A link inside a <label> doesn't toggle the switch (it's
+                interactive content), and stopPropagation keeps the row's
+                handlers out of it too. */}
+            <a
+              className="private-rpc-about"
+              href={ABOUT_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              title="What's anon-rpc? (opens in a new tab)"
+              onClick={(e) => e.stopPropagation()}
+            >
+              about
+            </a>
+          </span>
           <span
             className={`private-rpc-sub${failed ? " error" : ""}`}
             title={failed ? status.message : undefined}
@@ -218,7 +251,7 @@ const PrivateRpcSetting = ({ variant }) => {
           <input
             type="checkbox"
             role="switch"
-            aria-label="Private RPC"
+            aria-label="anon-rpc"
             checked={settings.privateRpc}
             onChange={(e) => toggle(e.target.checked)}
           />
