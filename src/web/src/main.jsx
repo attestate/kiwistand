@@ -118,9 +118,15 @@ function resetPostHog() {
   }
 }
 
+// Our own page speed checks (scripts/pagespeed) and Lighthouse aren't
+// visitors; counting them showed up as a spike of ~70 users per run.
+const isSyntheticVisit = /KiwiPagespeed|Chrome-Lighthouse/.test(
+  navigator.userAgent,
+);
+
 // Defer PostHog initialization to avoid blocking main thread
 const analyticsConsent = localStorage.getItem("kiwi-analytics-consent");
-if (!isAnonMode && analyticsConsent !== "false") {
+if (!isAnonMode && !isSyntheticVisit && analyticsConsent !== "false") {
   const loadPostHog = async () => {
     const { default: posthog } = await import("posthog-js");
     // Long-lived anonymous id from a server-set cookie (Safari ITP wipes

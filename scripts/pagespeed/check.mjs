@@ -54,9 +54,9 @@ const BASE = (process.env.BASE_URL || "https://news.kiwistand.com").replace(
 const CHROME = process.env.CHROME_PATH || chromium.executablePath();
 const UA = {
   desktop:
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 KiwiPagespeed",
   mobile:
-    "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36",
+    "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36 KiwiPagespeed",
 };
 const VIEWPORT = {
   desktop: { width: 1440, height: 900 },
