@@ -197,6 +197,7 @@ export function custom(
       content="width=device-width, initial-scale=1, viewport-fit=cover"
     />
     <meta name="fc:frame" content="${embedMetaContent}" />
+    <meta name="msvalidate.01" content="CD33CB0E87D31D0A7DB7B55D65C9F024" />
     ${variant ? html`<meta name="kiwi-variant" content="${variant}" />` : ""}
     ${ogDescription
       ? html`<meta name="description" content="${ogDescription}" />`
