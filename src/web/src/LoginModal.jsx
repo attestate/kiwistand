@@ -28,15 +28,6 @@ const CloseIcon = () => (
   </svg>
 );
 
-const GhostIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="1.2em" height="1.2em">
-    <rect width="256" height="256" fill="none"/>
-    <circle cx="100" cy="116" r="12"/>
-    <circle cx="156" cy="116" r="12"/>
-    <path d="M216,216l-29.33-24-29.34,24L128,192,98.67,216,69.33,192,40,216V120a88,88,0,0,1,176,0Z" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="16"/>
-  </svg>
-);
-
 const WalletIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="1.2em" height="1.2em">
     <rect width="256" height="256" fill="none"/>
@@ -80,7 +71,6 @@ function hasUsedPasskey() {
 // an empty "no passkeys" sheet, so the passkey step then asks "Create
 // account" or "Sign in". Never "Continue with Apple/Google": that reads like
 // Sign in with Apple or Google, which this isn't.
-const PASSKEY_HINT = "Face ID or fingerprint. No wallet needed.";
 
 const primaryStyle = {
   display: "inline-flex",
@@ -103,20 +93,13 @@ const secondaryStyle = {
   color: "var(--text-primary)",
 };
 const rowStyle = { display: "flex", alignItems: "center", height: "100%", gap: "8px" };
-const hintStyle = {
-  margin: "-2px 16px 4px",
-  fontSize: "12px",
-  color: "var(--text-secondary)",
-  textAlign: "center",
-};
 
 const LoginModal = forwardRef((props, ref) => {
   const [showModal, setShowModal] = useState(!!props.defaultOpen);
   const [isButtonHovered, setIsButtonHovered] = useState(false);
   const [isButtonActive, setIsButtonActive] = useState(false);
-  const [isAnonButtonHovered, setIsAnonButtonHovered] = useState(false);
   const [passkeyBusy, setPasskeyBusy] = useState(false);
-  // "choose": passkey, wallet or anon; "passkey": sign in or create account.
+  // "choose": passkey or wallet; "passkey": sign in or create account.
   const [step, setStep] = useState("choose");
   const [passkeyError, setPasskeyError] = useState("");
   const { openConnectModal } = useConnectModal();
@@ -195,15 +178,6 @@ const LoginModal = forwardRef((props, ref) => {
     }
   };
 
-  const handleAnonMode = () => {
-    // Enable anon mode
-    localStorage.setItem('anon-mode', 'true');
-    // Set the theme
-    document.documentElement.setAttribute('data-theme', 'anon');
-    closeModal();
-    // Reload to apply all anon mode changes
-    window.location.reload();
-  };
 
   // Modal settings
   const customStyles = {
@@ -408,7 +382,6 @@ const LoginModal = forwardRef((props, ref) => {
                     <span>Sign in or sign up</span>
                   </div>
                 </button>
-                <div style={hintStyle}>{PASSKEY_HINT}</div>
                 <button style={secondaryStyle} onClick={handleConnectWallet}>
                   <div style={rowStyle}>
                     <WalletIcon />
@@ -509,35 +482,6 @@ const LoginModal = forwardRef((props, ref) => {
               </>
             )}
 
-            {/* Tertiary button - Anon mode */}
-            {(!showPasskey || step === "choose") && (
-            <button
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                height: "38px",
-                backgroundColor: isAnonButtonHovered ? "rgba(124, 152, 133, 0.1)" : "transparent",
-                border: isAnonButtonHovered ? "1px solid #7c9885" : "var(--border-thin)",
-                color: isAnonButtonHovered ? "#7c9885" : "var(--text-primary)",
-                borderRadius: "8px",
-                fontSize: "15px",
-                fontWeight: "normal",
-                cursor: "pointer",
-                transition: "all 0.15s ease",
-                margin: "0 16px",
-                whiteSpace: "nowrap",
-              }}
-              onClick={handleAnonMode}
-              onMouseEnter={() => setIsAnonButtonHovered(true)}
-              onMouseLeave={() => setIsAnonButtonHovered(false)}
-            >
-              <div style={{ display: "flex", alignItems: "center", height: "100%", gap: "8px" }}>
-                <GhostIcon />
-                <span>Anon mode</span>
-              </div>
-            </button>
-            )}
           </div>
         </div>
       </div>
