@@ -195,12 +195,21 @@ for (const device of ["desktop", "mobile"]) {
   const ctx = await newContext(device);
   for (const [name, url] of list) {
     let result;
-    // One retry: a page sometimes renders while a request stalls.
-    for (let attempt = 0; attempt < 2; attempt++) {
+    // One retry: a page sometimes renders while a request stalls. A 5xx
+    // means the server is restarting (a deploy): wait it out, up to three
+    // times, instead of failing the run.
+    for (let attempt = 0, restarts = 0; attempt < 2; attempt++) {
       try {
         result = await measure(ctx, url);
       } catch (err) {
         result = { error: err.message.split("\n")[0] };
+      }
+      if (/^HTTP 5\d\d$/.test(result.error || "") && restarts < 3) {
+        restarts++;
+        attempt--;
+        console.log(`${device.padEnd(8)} ${name.padEnd(14)} ${result.error}, retrying in 15s`);
+        await new Promise((resolve) => setTimeout(resolve, 15000));
+        continue;
       }
       if (!result.error && result.cls <= budgets.cls) break;
     }
