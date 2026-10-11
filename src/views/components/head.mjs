@@ -188,8 +188,8 @@ export function custom(
 
       /* Remove custom @font-face to avoid double-loading Inter; use Google CSS above */
     </style>
-    <script src="theme-init.js"></script>
-    <script src="event-queue.js"></script>
+    <script src="/theme-init.js"></script>
+    <script src="/event-queue.js"></script>
     <meta charset="utf-8" />
     <meta name="referrer" content="origin" />
     <meta
@@ -222,9 +222,9 @@ export function custom(
     ${ogDescription
       ? html`<meta property="og:description" content="${ogDescription}" />`
       : ""}
-    <link rel="preload" href="news.css?v=${cssHash}" as="style" />
-    <link rel="stylesheet" href="news.css?v=${cssHash}" />
-    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
+    <link rel="preload" href="/news.css?v=${cssHash}" as="style" />
+    <link rel="stylesheet" href="/news.css?v=${cssHash}" />
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
     ${PwaLinks()}
     <title>${documentTitle}</title>
     ${rss

@@ -110,7 +110,8 @@ export default async function (theme) {
                     <div class="image-left">
                       <img
                         style="background-color: var(--bg-hover-subtle); border-radius: 2px; border: 1px solid var(--text-secondary);"
-                        src="crypto-aligned.png"
+                        src="/crypto-aligned.png"
+                        alt="Crypto-aligned"
                         loading="lazy"
                       />
                     </div>
@@ -137,7 +138,8 @@ export default async function (theme) {
                     <div class="image-right">
                       <img
                         style="background-color: var(--bg-hover-subtle); border-radius: 2px; border: 1px solid var(--text-secondary);"
-                        src="text-to-speech.png"
+                        src="/text-to-speech.png"
+                        alt="Text to speech"
                         loading="lazy"
                       />
                     </div>
@@ -148,7 +150,8 @@ export default async function (theme) {
                     <div class="image-left">
                       <img
                         style="border-radius: 2px; border: 1px solid var(--text-secondary);"
-                        src="bell-curve.png"
+                        src="/bell-curve.png"
+                        alt="Bell curve"
                         loading="lazy"
                       />
                     </div>

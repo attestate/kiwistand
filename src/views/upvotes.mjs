@@ -13,6 +13,7 @@ import { trophySVG, broadcastSVG } from "./components/secondheader.mjs";
 import Footer from "./components/footer.mjs";
 import Sidebar from "./components/sidebar.mjs";
 import { custom } from "./components/head.mjs";
+import { getSlug } from "../utils.mjs";
 import * as store from "../store.mjs";
 import * as ens from "../ens.mjs";
 import * as moderation from "./moderation.mjs";
@@ -171,6 +172,7 @@ export default async function (trie, theme, identity, tab = "submissions") {
                       html` <a href="${ensData.safeAvatar}" target="_blank">
                         <img
                           src="${ensData.safeAvatar}"
+                          alt=""
                           loading="lazy"
                           style="border: 1px solid var(--text-secondary); width: 30px; height: 30px; border-radius: 2px;"
                       /></a>`}
@@ -271,7 +273,7 @@ export default async function (trie, theme, identity, tab = "submissions") {
                               ${i + 1}. <a href="${story.href}" target="_blank">${story.title}</a> <span class="domain">(${new URL(story.href).hostname})</span>
                             </div>
                             <div class="submission-meta">
-                              ${story.upvotes} points | <a href="/stories/${story.title}?index=0x${story.index}">comments</a> | ${formatDistanceToNow(new Date(story.timestamp * 1000))} ago
+                              ${story.upvotes} points | <a href="/stories/${getSlug(story.title)}?index=0x${story.index}">comments</a> | ${formatDistanceToNow(new Date(story.timestamp * 1000))} ago
                             </div>
                           </div>
                         `)}
