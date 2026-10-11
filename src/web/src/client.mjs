@@ -16,13 +16,7 @@ import {
   createConnector,
 } from "wagmi";
 import { mainnet, optimism } from "wagmi/chains";
-import {
-  createWalletClient,
-  createClient,
-  createTransport,
-  custom,
-  getAddress,
-} from "viem";
+import { createClient, createTransport } from "viem";
 import {
   injectedWallet,
   walletConnectWallet,
