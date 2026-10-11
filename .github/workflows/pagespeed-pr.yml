@@ -1,0 +1,39 @@
+name: Page speed (PR)
+
+# Checks a pull request's own code before it ships (pagespeed.yml measures
+# production after the deploy):
+#
+# - bundles: builds the client with vite and checks the gzipped size of every
+#   chunk and stylesheet against scripts/pagespeed/bundle-budgets.json
+#   (scripts/pagespeed/bundles.mjs). Fails when a chunk grows past its budget
+#   or a new chunk is loaded on every page without one.
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: pagespeed-pr-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  bundles:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: npm
+          cache-dependency-path: src/web/npm-shrinkwrap.json
+      - run: npm ci
+        working-directory: src/web
+      - name: Build the client
+        working-directory: src/web
+        env:
+          NODE_ENV: production
+        run: npx vite build
+      - name: Check bundle sizes
+        run: node scripts/pagespeed/bundles.mjs
