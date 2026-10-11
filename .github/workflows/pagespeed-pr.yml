@@ -7,6 +7,13 @@ name: Page speed (PR)
 #   chunk and stylesheet against scripts/pagespeed/bundle-budgets.json
 #   (scripts/pagespeed/bundles.mjs). Fails when a chunk grows past its budget
 #   or a new chunk is loaded on every page without one.
+# - layout-shift and lighthouse: start this PR's server offline with the
+#   fixture in test/fixtures/pagespeed (scripts/pagespeed/local.mjs) and run
+#   check.mjs against it: layout shift on every page type, desktop and phone,
+#   and the JS each page type loads (budgets in bundle-budgets.json "pages");
+#   Lighthouse on the main pages, median of 3 runs, floors in budgets.json
+#   "local". Each check and device is its own job, side by side, to keep
+#   the wait short (about 10 minutes).
 
 on:
   pull_request:
@@ -31,9 +38,49 @@ jobs:
       - run: npm ci
         working-directory: src/web
       - name: Build the client
-        working-directory: src/web
-        env:
-          NODE_ENV: production
-        run: npx vite build
+        run: npm run build
       - name: Check bundle sizes
         run: node scripts/pagespeed/bundles.mjs
+
+  pages:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        check: [layout-shift, lighthouse]
+        device: [desktop, mobile]
+    name: ${{ matrix.check }} (${{ matrix.device }})
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            src/web/npm-shrinkwrap.json
+            scripts/pagespeed/package-lock.json
+      - run: npm ci
+      - run: npm ci
+        working-directory: src/web
+      - name: Build the client
+        run: npm run build
+      - run: npm ci --prefix scripts/pagespeed
+      - name: Install Chromium
+        working-directory: scripts/pagespeed
+        run: npx playwright install --with-deps chromium
+      - name: Check this PR's pages
+        env:
+          WORK_DIR: ${{ runner.temp }}/pagespeed
+          ONLY_CLS: ${{ matrix.check == 'layout-shift' && '1' || '' }}
+          SKIP_CLS: ${{ matrix.check == 'lighthouse' && '1' || '' }}
+          DEVICES: ${{ matrix.device }}
+          MEDIAN_RUNS: "3"
+        run: node scripts/pagespeed/local.mjs
+      - name: Keep the server log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pagespeed-${{ matrix.check }}-${{ matrix.device }}-server-log
+          path: ${{ runner.temp }}/pagespeed/server.log

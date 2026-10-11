@@ -25,5 +25,22 @@
     "activity": {
       "seo": 0
     }
+  },
+  "local": {
+    "//": "Floors for the PR check against the fixture server (local.mjs, median of 3 runs). Set a few points below the medians measured on main; phone performance has a wider margin as it varies most between runs.",
+    "lighthouse": {
+      "desktop": {
+        "performance": 90,
+        "accessibility": 84,
+        "best-practices": 93,
+        "seo": 89
+      },
+      "mobile": {
+        "performance": 50,
+        "accessibility": 83,
+        "best-practices": 93,
+        "seo": 89
+      }
+    }
   }
 }

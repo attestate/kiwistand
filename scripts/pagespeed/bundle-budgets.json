@@ -54,5 +54,71 @@
     "eager": 529300,
     "lazyOther": 267700,
     "lazy": 1286800
+  },
+  "pages": {
+    "home": {
+      "desktop": 702900,
+      "mobile": 695400
+    },
+    "new": {
+      "desktop": 702900,
+      "mobile": 698000
+    },
+    "best": {
+      "desktop": 702900,
+      "mobile": 698000
+    },
+    "best week": {
+      "desktop": 702900,
+      "mobile": 698000
+    },
+    "notifications": {
+      "desktop": 661400,
+      "mobile": 653800
+    },
+    "submit": {
+      "desktop": 671800,
+      "mobile": 664200
+    },
+    "search": {
+      "desktop": 662400,
+      "mobile": 654800
+    },
+    "newsletter": {
+      "desktop": 661400,
+      "mobile": 653800
+    },
+    "weekly": {
+      "desktop": 662800,
+      "mobile": 655300
+    },
+    "guidelines": {
+      "desktop": 661400,
+      "mobile": 653800
+    },
+    "privacy": {
+      "desktop": 661400,
+      "mobile": 653800
+    },
+    "story 1": {
+      "desktop": 702900,
+      "mobile": 695400
+    },
+    "story 2": {
+      "desktop": 702900,
+      "mobile": 695400
+    },
+    "activity": {
+      "desktop": 662800,
+      "mobile": 655300
+    },
+    "profile": {
+      "desktop": 663300,
+      "mobile": 655700
+    },
+    "profile app": {
+      "desktop": 702900,
+      "mobile": 695400
+    }
   }
 }
