@@ -88,13 +88,17 @@ import {
 import normalizeUrl from "normalize-url";
 import * as interactions from "./interactions.mjs";
 import * as bookmarks from "./bookmarks.mjs";
+import * as profiles from "./profiles.mjs";
 import appCache from "./cache.mjs"; // For LRU cache used by ENS profiles
 import frameSubscribe from "./views/frame-subscribe.mjs";
 import { timingSafeEqual } from "crypto";
 import { verify, ecrecover } from "./id.mjs";
 import { EIP712_MESSAGE } from "./constants.mjs";
 import { resolveIdentity } from "@attestate/delegator2";
-import { invalidateActivityCaches } from "./cloudflarePurge.mjs";
+import {
+  invalidateActivityCaches,
+  invalidateProfile,
+} from "./cloudflarePurge.mjs";
 import { getCastByHashAndConstructUrl } from "./parser.mjs";
 import { postStory, PUSH_CHANNELS } from "./social-posting.mjs";
 import { extractArticleCached } from "./lib/listen/extract.mjs";
@@ -2802,6 +2806,34 @@ export async function launch(trie, libp2p, isPrimary = true) {
       log(`Mini app upvote error: ${error.message}`);
       return sendError(reply, 500, "Internal Server Error", error.message);
     }
+  });
+
+  // Kiwi profiles (nickname, avatar, bio). See src/profiles.mjs.
+  app.post("/api/v1/profile", async (request, reply) => {
+    reply.header("Cache-Control", "no-store");
+    let result;
+    try {
+      result = await profiles.update(request.body);
+    } catch (err) {
+      const code = err.status || 500;
+      if (code === 500) {
+        log(`Error saving profile: ${err.toString()}`);
+        return sendError(reply, 500, "Internal Server Error", "Couldn't save");
+      }
+      const message = { 401: "Unauthorized", 409: "Conflict" }[code];
+      return sendError(reply, code, message || "Bad Request", err.message);
+    }
+    invalidateProfile(result.identity);
+    return sendStatus(reply, 200, "OK", "Profile saved", result.profile);
+  });
+
+  app.get("/api/v1/profile-name/:name", async (request, reply) => {
+    reply.header("Cache-Control", "no-store");
+    const address = profiles.byName(request.params.name);
+    if (!address) {
+      return sendError(reply, 404, "Not Found", "Nobody has that name");
+    }
+    return sendStatus(reply, 200, "OK", "Name is taken", { address });
   });
 
   // Saved stories, private per account. See src/bookmarks.mjs for the
