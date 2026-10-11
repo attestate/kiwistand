@@ -600,10 +600,17 @@ export async function extractBlueskyContent(url) {
     const data = await response.json();
     const post = data?.thread?.post;
     if (!post) return null;
-    const images =
-      post.embed?.images
-        ?.map((img) => img.thumb || img.fullsize)
-        .filter(Boolean) || [];
+    const embedded = (post.embed?.images || []).filter(
+      (img) => img.thumb || img.fullsize,
+    );
+    const images = embedded.map((img) => img.thumb || img.fullsize);
+    // NOTE: Bluesky reports each image's aspect ratio; the feed uses it to
+    // reserve the image's box before it loads (no layout shift).
+    const imageSizes = embedded.map((img) =>
+      img.aspectRatio?.width > 0 && img.aspectRatio?.height > 0
+        ? { width: img.aspectRatio.width, height: img.aspectRatio.height }
+        : null,
+    );
     return {
       author: {
         handle: post.author.handle,
@@ -612,6 +619,7 @@ export async function extractBlueskyContent(url) {
       },
       text: post.record?.text || "",
       images,
+      imageSizes,
     };
   } catch (err) {
     log(`Failed to fetch Bluesky post: ${err.message}`);
@@ -1054,6 +1062,57 @@ async function extractCanonicalLink(html, pageURL) {
 const CRAWLER_UA =
   "facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)";
 
+// Reads an image's real dimensions and checks them against the preview
+// requirements. Returns { width, height } for a usable image, null otherwise.
+// NOTE: The dimensions are stored next to the image in the story metadata so
+// the feed can give the <img> its real aspect ratio before it loads; a
+// placeholder ratio makes the row grow when the image arrives (layout shift).
+export const measureImage = async (buffer, url = "") => {
+  const metadata = await sharp(buffer).metadata();
+  // NOTE: EXIF orientations 5-8 rotate by 90 degrees, and browsers display
+  // the image rotated, so its displayed width is the stored height.
+  const rotated = metadata.orientation >= 5;
+  const width = rotated ? metadata.height : metadata.width;
+  const height = rotated ? metadata.width : metadata.height;
+
+  if (!width || !height) {
+    log(`Rejecting image with missing dimension metadata: ${url}`);
+    return null;
+  }
+
+  // Twitter summary_large_image requirements
+  const minWidth = 300;
+  const minHeight = 157;
+  const maxWidth = 4096;
+  const maxHeight = 4096;
+
+  if (width < minWidth || height < minHeight) {
+    log(
+      `Rejecting image smaller than minimum dimensions (${width}x${height} vs ${minWidth}x${minHeight}): ${url}`,
+    );
+    return null;
+  }
+
+  if (width > maxWidth || height > maxHeight) {
+    log(
+      `Rejecting image larger than maximum dimensions (${width}x${height} vs ${maxWidth}x${maxHeight}): ${url}`,
+    );
+    return null;
+  }
+
+  // Only reject extremely narrow slivers (banners < 0.1 ratio)
+  const aspectRatio = width / height;
+  if (aspectRatio < 0.1) {
+    log(
+      `Rejecting image with extreme aspect ratio (${width}x${height}, ratio: ${aspectRatio.toFixed(2)}): ${url}`,
+    );
+    return null;
+  }
+
+  return { width, height };
+};
+
+// Returns the image's { width, height } when it is usable, false otherwise.
 const checkOgImage = async (url, userAgent = env.USER_AGENT) => {
   // NOTE: Multi-megabyte PNGs (blog.ethereum.org's cards are ~3MB) do not
   // finish inside 5s from the server, and the preview was dropped.
@@ -1100,44 +1159,7 @@ const checkOgImage = async (url, userAgent = env.USER_AGENT) => {
 
     // Buffer the entire image to avoid stream memory leaks
     const buffer = await res.arrayBuffer();
-    const metadata = await sharp(Buffer.from(buffer)).metadata();
-    const { width, height } = metadata;
-
-    if (!width || !height) {
-      log(`Rejecting image with missing dimension metadata: ${url}`);
-      return false;
-    }
-
-    // Twitter summary_large_image requirements
-    const minWidth = 300;
-    const minHeight = 157;
-    const maxWidth = 4096;
-    const maxHeight = 4096;
-
-    if (width < minWidth || height < minHeight) {
-      log(
-        `Rejecting image smaller than minimum dimensions (${width}x${height} vs ${minWidth}x${minHeight}): ${url}`,
-      );
-      return false;
-    }
-
-    if (width > maxWidth || height > maxHeight) {
-      log(
-        `Rejecting image larger than maximum dimensions (${width}x${height} vs ${maxWidth}x${maxHeight}): ${url}`,
-      );
-      return false;
-    }
-
-    // Only reject extremely narrow slivers (banners < 0.1 ratio)
-    const aspectRatio = width / height;
-    if (aspectRatio < 0.1) {
-      log(
-        `Rejecting image with extreme aspect ratio (${width}x${height}, ratio: ${aspectRatio.toFixed(2)}): ${url}`,
-      );
-      return false;
-    }
-
-    return true;
+    return (await measureImage(Buffer.from(buffer), url)) || false;
   } catch (err) {
     log(`Error checking image dimensions for ${url}: ${err.message}`);
     return false;
@@ -1765,10 +1787,12 @@ export const metadata = async (
   });
   for (const candidate of candidates) {
     log(`[metadata] Checking image: ${candidate}`);
-    const exists = await checkOgImage(candidate);
-    log(`[metadata] checkOgImage result: ${exists}`);
-    if (exists) {
+    const size = await checkOgImage(candidate);
+    log(`[metadata] checkOgImage result: ${JSON.stringify(size)}`);
+    if (size) {
       output.image = DOMPurify.sanitize(candidate);
+      output.imageWidth = size.width;
+      output.imageHeight = size.height;
       log(`[metadata] Image added to output: ${output.image}`);
       break;
     }
@@ -1779,8 +1803,11 @@ export const metadata = async (
     if (parts.length >= 2) {
       const card = `https://opengraph.githubassets.com/1/${parts[0]}/${parts[1]}`;
       log(`[metadata] Trying GitHub social card: ${card}`);
-      if (await checkOgImage(card)) {
+      const size = await checkOgImage(card);
+      if (size) {
         output.image = card;
+        output.imageWidth = size.width;
+        output.imageHeight = size.height;
       }
     }
   }

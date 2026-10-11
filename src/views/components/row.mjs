@@ -248,6 +248,20 @@ const ShuffleSVG = html`<svg
   />
 </svg>`;
 
+// NOTE: An embed image is rendered at 100% width with height:auto, so its
+// width/height attributes set the box the browser reserves before the image
+// loads. With a placeholder ratio, a taller image makes the row grow when it
+// arrives (layout shift). Use the real size when the metadata has it; older
+// cache entries without it keep the 16:9 placeholder.
+export function embedImageSize(width, height) {
+  const w = Number(width);
+  const h = Number(height);
+  if (Number.isFinite(w) && Number.isFinite(h) && w > 0 && h > 0) {
+    return { width: Math.round(w), height: Math.round(h) };
+  }
+  return { width: 600, height: 338 };
+}
+
 export function extractDomain(link) {
   // Return empty string for text posts (data: and kiwi: URLs)
   if (link.startsWith('data:') || link.startsWith('kiwi:')) {
@@ -451,8 +465,19 @@ const row = (
     const canRenderBlueskyPreview =
       isBlueskyPost && story.metadata && story.metadata.blueskyPost;
 
+    // Real image sizes from the metadata (see embedImageSize)
+    const tweetImageSize = embedImageSize(
+      story.metadata?.imageWidth,
+      story.metadata?.imageHeight,
+    );
+    const blueskyImageSize = embedImageSize(
+      story.metadata?.blueskyPost?.imageSizes?.[0]?.width,
+      story.metadata?.blueskyPost?.imageSizes?.[0]?.height,
+    );
+
     // Extract first image from Farcaster cast embeds
     let farcasterImageUrl = null;
+    let farcasterImageSize = embedImageSize();
     if (canRenderFarcasterPreview && story.metadata.farcasterCast?.embeds) {
       const imageExtensions = [
         ".jpg",
@@ -473,6 +498,11 @@ const row = (
 
       if (imageEmbed) {
         farcasterImageUrl = imageEmbed.metadata?.image?.url || imageEmbed.url;
+        // Neynar reports the embed's image size as width_px/height_px.
+        farcasterImageSize = embedImageSize(
+          imageEmbed.metadata?.image?.width_px,
+          imageEmbed.metadata?.image?.height_px,
+        );
       }
     }
 
@@ -671,8 +701,8 @@ const row = (
                                 <img
                                   src="${DOMPurify.sanitize(transformImageUrl(story.metadata.image))}"
                                   alt="Tweet image"
-                                  width="600"
-                                  height="338"
+                                  width="${tweetImageSize.width}"
+                                  height="${tweetImageSize.height}"
                                   style="width: 100%; height: auto; max-height: 600px; max-height: 125cqw; object-fit: cover; display: block;"
                                   loading="${getImageLoading(isAboveFold, story.metadata.image)}"
                                 />
@@ -828,8 +858,8 @@ const row = (
                                 <img
                                   src="${DOMPurify.sanitize(farcasterImageUrl)}"
                                   alt="Cast image"
-                                  width="600"
-                                  height="338"
+                                  width="${farcasterImageSize.width}"
+                                  height="${farcasterImageSize.height}"
                                   style="width: 100%; height: auto; max-height: 600px; max-height: 125cqw; object-fit: cover; display: block; border-radius: 2px;"
                                   loading="${getImageLoading(isAboveFold, farcasterImageUrl)}"
                                 />
@@ -932,8 +962,8 @@ const row = (
                                     story.metadata.blueskyPost.images[0],
                                   )}"
                                   alt="Post image"
-                                  width="600"
-                                  height="338"
+                                  width="${blueskyImageSize.width}"
+                                  height="${blueskyImageSize.height}"
                                   style="width: 100%; height: auto; max-height: 600px; max-height: 125cqw; object-fit: cover; display: block; border-radius: 2px;"
                                   loading="${getImageLoading(isAboveFold, story.metadata.blueskyPost.images[0])}"
                                 />
