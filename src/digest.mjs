@@ -3,23 +3,9 @@ import fs from "fs";
 
 import { getStories } from "./views/best.mjs";
 import { metadata } from "./parser.mjs";
-import { resolve } from "./ens.mjs";
 import log from "./logger.mjs";
-import { sub } from "date-fns";
-import * as store from "./store.mjs";
-import * as registry from "./chainstate/registry.mjs";
-import DOMPurify from "isomorphic-dompurify";
-import slugify from "slugify";
 import { countOutbounds, countComments } from "./cache.mjs";
 import { isLinkAlive } from "./linkcheck.mjs";
-
-function getSlug(title) {
-  if (!title) {
-    return "";
-  }
-  // This mimics the logic from the main codebase
-  return slugify(DOMPurify.sanitize(title), { strict: true });
-}
 
 export async function generateDigestData() {
   log("Starting digest generation...");

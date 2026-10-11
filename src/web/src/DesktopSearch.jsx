@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useRef } from "react";
-import { isIOS, isSafariOnMacOS } from "./session.mjs";
 import { showSpinnerOverlay } from "./spinnerOverlay.js";
 
 const DesktopSearch = () => {

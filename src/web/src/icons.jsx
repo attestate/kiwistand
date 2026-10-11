@@ -60,33 +60,4 @@ export const EthereumSVG = (props) => (
     />
   </svg>
 );
-export const CheckmarkSVG = (props) => (
-  <svg
-    style={props.style}
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 256 256"
-  >
-    <rect width="256" height="256" fill="none" />
-    <polyline
-      points="88 136 112 160 168 104"
-      fill="none"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="16"
-    />
-    <rect
-      x="40"
-      y="40"
-      width="176"
-      height="176"
-      rx="8"
-      fill="none"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="16"
-    />
-  </svg>
-);
 

@@ -6,21 +6,15 @@ import {
   useSwitchChain,
 } from "wagmi";
 import posthog from "posthog-js";
-import React, { useMemo, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Wallet } from "@ethersproject/wallet";
 import { optimism } from "wagmi/chains";
-import { create, resolveIdentity } from "@attestate/delegator2";
+import { create } from "@attestate/delegator2";
 import useLocalStorageState from "use-local-storage-state";
 import { getAddress } from "@ethersproject/address";
 
 import { useProvider } from "./client.mjs";
-import { CheckmarkSVG } from "./icons.jsx";
-import theme from "./theme.jsx";
-import {
-  ConnectedSimpleDisconnectButton,
-  ConnectedConnectButton,
-} from "./Navigation.jsx";
-import { resolveAvatar } from "./Avatar.jsx";
+import { ConnectedConnectButton } from "./Navigation.jsx";
 import { fetchDelegations } from "./API.mjs";
 import { getLocalAccount } from "./session.mjs";
 
@@ -46,38 +40,6 @@ const abi = [
     type: "function",
   },
 ];
-
-export const ProgressBar = (props) => {
-  const progress = props.progress || 0;
-  return (
-    <div style={{ display: "flex", height: "5px", marginBottom: "20px" }}>
-      <div
-        style={{
-          flex: 1,
-          backgroundColor: progress >= 0 ? theme.color : "var(--text-secondary)",
-        }}
-      ></div>
-      <div
-        style={{
-          flex: 1,
-          backgroundColor: progress >= 1 ? theme.color : "var(--text-secondary)",
-        }}
-      ></div>
-      <div
-        style={{
-          flex: 1,
-          backgroundColor: progress >= 2 ? theme.color : "var(--text-secondary)",
-        }}
-      ></div>
-      <div
-        style={{
-          flex: 1,
-          backgroundColor: progress >= 3 ? theme.color : "var(--text-secondary)",
-        }}
-      ></div>
-    </div>
-  );
-};
 
 const SparkleIcon = () => (
   <svg viewBox="0 0 256 256" width="1.2em" height="1.2em" style={{ width: "18px", height: "18px" }}>

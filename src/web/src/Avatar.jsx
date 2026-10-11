@@ -2,10 +2,9 @@ import React, { useState, useEffect } from "react";
 import { WagmiProvider, useAccount } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
-import { resolveIdentity } from "@attestate/delegator2";
 
 import { getLocalAccount } from "./session.mjs";
-import { client, chains, getProvider, useIsMiniApp } from "./client.mjs";
+import { client, chains, useIsMiniApp } from "./client.mjs";
 import { fetchKarma } from "./API.mjs";
 
 export const resolveAvatar = async (address) => {

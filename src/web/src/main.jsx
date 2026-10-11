@@ -83,8 +83,7 @@ async function applySafeAreaInsets() {
   }
 }
 
-import { isIOS, isRunningPWA, getCookie, getLocalAccount } from "./session.mjs";
-import theme from "./theme.jsx";
+import { isIOS, getCookie, getLocalAccount } from "./session.mjs";
 import {
   capture,
   flushAnalytics,
@@ -333,27 +332,6 @@ async function addDynamicComments(delegations, toast) {
       );
     });
   }
-
-  const chatBubbles = document.querySelectorAll(".chat-bubble-container");
-  if (chatBubbles && chatBubbles.length > 0) {
-    const ChatBubble = (await import("./ChatBubble.jsx")).default;
-
-    chatBubbles.forEach((arrow) => {
-      const storyIndex = arrow.getAttribute("data-story-index");
-      const commentCount = arrow.getAttribute("data-comment-count");
-      createRoot(arrow).render(
-        <StrictMode>
-          <Providers>
-            <ChatBubble
-              delegations={delegations}
-              storyIndex={storyIndex}
-              commentCount={commentCount}
-            />
-          </Providers>
-        </StrictMode>,
-      );
-    });
-  }
 }
 
 async function addVotes(delegations, toast) {
@@ -430,54 +408,6 @@ async function addEmailSubscriptionForm(delegations, toast) {
   }
 }
 
-async function addProfileDisplay() {
-  const profileContainer = document.querySelector("#user-profile");
-  if (profileContainer) {
-    // Clear the placeholder content before mounting React
-    profileContainer.innerHTML = "";
-
-    const ProfileWithConfig = (await import("./ProfileWithConfig.jsx")).default;
-    createRoot(profileContainer).render(
-      <StrictMode>
-        <Providers>
-          <ProfileWithConfig />
-        </Providers>
-      </StrictMode>,
-    );
-  }
-}
-
-async function addCommentInput(toast, delegations) {
-  const commentInput = document.querySelector("nav-comment-input");
-  if (commentInput) {
-    const CommentInputComponent = (await import("./CommentInput.jsx")).default;
-
-    const storyIndex = commentInput.getAttribute("data-story-index");
-    const customStyleAttr = commentInput.getAttribute("data-custom-style");
-    let customStyle = {};
-    if (customStyleAttr) {
-      try {
-        customStyle = JSON.parse(customStyleAttr);
-      } catch (e) {
-        console.error("Failed to parse custom style", e);
-      }
-    }
-
-    createRoot(commentInput).render(
-      <StrictMode>
-        <Providers>
-          <CommentInputComponent
-            storyIndex={storyIndex}
-            toast={toast}
-            delegations={delegations}
-            style={customStyle}
-          />
-        </Providers>
-      </StrictMode>,
-    );
-  }
-}
-
 async function addDelegateButton(delegations, toast) {
   const delegateButtonContainer = document.querySelector(".delegate-button");
   if (delegateButtonContainer) {
@@ -502,21 +432,6 @@ async function addDelegateButton(delegations, toast) {
 }
 
 async function addConnectedComponents(delegations, toast) {
-  const connectButton = document.querySelector(".connect-button-wrapper");
-  if (connectButton) {
-    const { ConnectedTextConnectButton } = await import("./Navigation.jsx");
-    createRoot(connectButton).render(
-      <StrictMode>
-        <Providers>
-          <ConnectedTextConnectButton
-            delegations={delegations}
-            toast={toast}
-          />
-        </Providers>
-      </StrictMode>,
-    );
-  }
-
   // Check if we're on mobile based on the breakpoint in news.css (max-width: 640px)
   const isMobileView = window.innerWidth <= 640;
 
@@ -1397,22 +1312,6 @@ function makeCommentsVisited() {
   history.replaceState(null, "", origin);
 }
 
-function makeUpvoteNotificationsVisited() {
-  if (!window.location.pathname.startsWith("/activity")) return;
-
-  const links = document.querySelectorAll(".upvote-notification");
-  if (!links.length) return;
-
-  const origin = window.location.href;
-
-  for (const link of links) {
-    const href = link.getAttribute("href");
-    history.replaceState(null, "", href);
-  }
-
-  history.replaceState(null, "", origin);
-}
-
 const prefetchedUrls = new Set();
 export function dynamicPrefetch(url, priority = "auto") {
   if (prefetchedUrls.has(url)) return;
@@ -1853,9 +1752,6 @@ async function start() {
 
   makeCommentsVisited();
   window.addEventListener("hashchange", makeCommentsVisited);
-  window.addEventListener("beforeunload", makeUpvoteNotificationsVisited, {
-    once: true,
-  });
 
   updateLinkTargetsForIOSPWA();
 
@@ -1927,7 +1823,6 @@ async function start() {
       await delegationsPromise,
       toast,
     ),
-    addCommentInput(toast, await delegationsPromise),
     addEmailSubscriptionForm(
       await delegationsPromise,
       toast,
@@ -1946,7 +1841,6 @@ async function start() {
     addNicknamePrompt(toast),
     addBackButton(),
     addDelegateButton(await delegationsPromise, toast),
-    addProfileDisplay(),
     addConnectedComponents(
       await delegationsPromise,
       toast,

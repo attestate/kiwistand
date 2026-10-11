@@ -8,7 +8,7 @@ import SecondHeader from "./components/secondheader.mjs";
 import Footer from "./components/footer.mjs";
 import { custom } from "./components/head.mjs";
 import Row from "./components/row.mjs";
-import cache, { getSubmission } from "../cache.mjs";
+import { getSubmission } from "../cache.mjs";
 const html = htm.bind(vhtml);
 
 async function processSearchResults(results) {
