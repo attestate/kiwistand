@@ -1679,6 +1679,29 @@ async function shouldReconnectWallet() {
   }
 }
 
+// The "Kiwi News for iPhone" card (components/testflight-card.mjs): remember
+// taps and dismissals (theme-init.js reads them) and measure it in PostHog.
+function initTestFlightCard() {
+  const card = document.querySelector(".tf-card");
+  const root = document.documentElement;
+  if (!card || !root.hasAttribute("data-tf-card") || isIOSApp()) return;
+  const props = { path: window.location.pathname };
+  capture("testflight_card_shown", props);
+  card.querySelector(".tf-card-get")?.addEventListener("click", () => {
+    try {
+      localStorage.setItem("kiwi-tf-card-tapped", String(Date.now()));
+    } catch {}
+    capture("testflight_card_clicked", props);
+  });
+  card.querySelector(".tf-card-close")?.addEventListener("click", () => {
+    try {
+      localStorage.setItem("kiwi-tf-card-dismissed", "1");
+    } catch {}
+    root.removeAttribute("data-tf-card");
+    capture("testflight_card_dismissed", props);
+  });
+}
+
 async function start() {
   // Manually trigger wagmi reconnect (deferred from mount via
   // reconnectOnMount={false} in providers.jsx to reduce TBT).
@@ -1698,6 +1721,7 @@ async function start() {
     .catch((err) => console.log(err));
 
   initSpinnerOverlay();
+  initTestFlightCard();
 
   // Apply safe area insets for mini app context
   console.log("Starting applySafeAreaInsets...");
