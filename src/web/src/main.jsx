@@ -1679,6 +1679,29 @@ async function shouldReconnectWallet() {
   }
 }
 
+// The "Kiwi News for iPhone" bar (components/nav.mjs): remember taps and
+// dismissals (theme-init.js reads them) and measure it in PostHog.
+function initTestFlightBar() {
+  const bar = document.querySelector(".tf-bar");
+  const root = document.documentElement;
+  if (!bar || !root.hasAttribute("data-tf-bar") || isIOSApp()) return;
+  const props = { path: window.location.pathname };
+  capture("testflight_bar_shown", props);
+  bar.querySelector(".tf-bar-get")?.addEventListener("click", () => {
+    try {
+      localStorage.setItem("kiwi-tf-bar-tapped", String(Date.now()));
+    } catch {}
+    capture("testflight_bar_clicked", props);
+  });
+  bar.querySelector(".tf-bar-close")?.addEventListener("click", () => {
+    try {
+      localStorage.setItem("kiwi-tf-bar-dismissed", "1");
+    } catch {}
+    root.removeAttribute("data-tf-bar");
+    capture("testflight_bar_dismissed", props);
+  });
+}
+
 async function start() {
   // Manually trigger wagmi reconnect (deferred from mount via
   // reconnectOnMount={false} in providers.jsx to reduce TBT).
@@ -1698,6 +1721,7 @@ async function start() {
     .catch((err) => console.log(err));
 
   initSpinnerOverlay();
+  initTestFlightBar();
 
   // Apply safe area insets for mini app context
   console.log("Starting applySafeAreaInsets...");
