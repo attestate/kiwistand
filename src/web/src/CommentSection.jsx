@@ -325,10 +325,10 @@ export const EmojiReaction = ({ comment, delegations, toast }) => {
     if (!window.confirm("Delete this comment? This can't be undone.")) return;
     setIsDeleting(true);
     try {
-      const value = API.messageFab("", `kiwi:0x${comment.index}`, "delete");
+      const value = API.deletionFab(`kiwi:0x${comment.index}`);
       const signature = await signer._signTypedData(
         API.EIP712_DOMAIN,
-        API.EIP712_TYPES,
+        API.EIP712_DELETE_TYPES,
         value,
       );
       const response = await API.send(value, signature);

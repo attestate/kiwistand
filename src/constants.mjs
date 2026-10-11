@@ -52,6 +52,15 @@ export const EIP712_MESSAGE = {
   ],
 };
 
+// NOTE: A "delete" message has no title, so it's signed without one.
+export const EIP712_DELETE = {
+  Message: [
+    { name: "href", type: "string" },
+    { name: "type", type: "string" },
+    { name: "timestamp", type: "uint256" },
+  ],
+};
+
 const node = {
   type: "object",
   additionalProperties: false,
@@ -105,8 +114,9 @@ const comment = {
 };
 
 // NOTE: Deletes the message at href (a story, upvote, comment or reaction).
-// Nodes only apply it when it's signed by that message's author; it carries
-// no text. Added in protocol version 13 (pubsub) / 16 (sync).
+// Nodes only apply it when it's signed by that message's author. It has no
+// title and is signed with EIP712_DELETE. Added in protocol version 13
+// (pubsub) / 16 (sync).
 const deletion = {
   type: "object",
   additionalProperties: false,
@@ -117,9 +127,6 @@ const deletion = {
     },
     type: {
       const: "delete",
-    },
-    title: {
-      const: "",
     },
     href: {
       type: "string",
@@ -132,7 +139,7 @@ const deletion = {
       pattern: "0x[a-fA-F0-9]+",
     },
   },
-  required: ["timestamp", "type", "title", "href", "signature"],
+  required: ["timestamp", "type", "href", "signature"],
 };
 
 const upvote = {

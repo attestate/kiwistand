@@ -82,7 +82,6 @@ function thread(seed) {
     type: DELETE,
     href: ids[target],
     index: id(`d${target[0]}${n}`),
-    title: "",
     timestamp: 1010,
     signer: identity,
     identity,

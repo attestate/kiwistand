@@ -8,7 +8,7 @@ import { Wallet } from "ethers";
 import Database from "better-sqlite3";
 
 import * as id from "../src/id.mjs";
-import { EIP712_MESSAGE } from "../src/constants.mjs";
+import { EIP712_MESSAGE, EIP712_DELETE } from "../src/constants.mjs";
 import * as store from "../src/store.mjs";
 import { findMessage } from "../src/cache.mjs";
 
@@ -39,6 +39,12 @@ test.serial(
       const signed = await id.sign(signer, message, EIP712_MESSAGE);
       return await store.add(trie, signed, null, delegations);
     };
+    // A deletion has no title and its own EIP-712 type.
+    const del = async (signer, href, timestamp) => {
+      const message = { href, type: "delete", timestamp };
+      const signed = await id.sign(signer, message, EIP712_DELETE);
+      return await store.add(trie, signed, null, delegations);
+    };
 
     const link = `https://example.com/deletion-store-${now}`;
     const story = await add(author, "A story", link, "amplify", now);
@@ -46,7 +52,7 @@ test.serial(
     await t.throwsAsync(() => add(voter, "A story", link, "amplify", now + 2));
 
     // Deleting the upvote is accepted by the protocol and frees the marker.
-    await add(voter, "", `kiwi:0x${upvote}`, "delete", now + 3);
+    await del(voter, `kiwi:0x${upvote}`, now + 3);
     t.is(findMessage(`kiwi:0x${upvote}`), null);
     const again = await add(voter, "A story", link, "amplify", now + 4);
     t.is(findMessage(`kiwi:0x${again}`).kind, "upvote");
@@ -56,15 +62,15 @@ test.serial(
     await t.throwsAsync(() =>
       add(voter, "🔥", `kiwi:0x${comment}`, "comment", now + 7),
     );
-    await add(voter, "", `kiwi:0x${reaction}`, "delete", now + 8);
+    await del(voter, `kiwi:0x${reaction}`, now + 8);
     t.is(findMessage(`kiwi:0x${reaction}`), null);
     const redo = await add(voter, "🔥", `kiwi:0x${comment}`, "comment", now + 9);
     t.is(findMessage(`kiwi:0x${redo}`).kind, "reaction");
 
     // Someone else can't delete the story; its author can.
-    await add(voter, "", `kiwi:0x${story}`, "delete", now + 10);
+    await del(voter, `kiwi:0x${story}`, now + 10);
     t.is(findMessage(`kiwi:0x${story}`).kind, "story");
-    await add(author, "", `kiwi:0x${story}`, "delete", now + 11);
+    await del(author, `kiwi:0x${story}`, now + 11);
     t.is(findMessage(`kiwi:0x${story}`), null);
     t.is(findMessage(`kiwi:0x${comment}`), null);
 
@@ -72,17 +78,19 @@ test.serial(
   },
 );
 
-test.serial("the protocol accepts delete messages only without text", async (t) => {
+test.serial("delete messages have no title and their own signing type", async (t) => {
   const signer = Wallet.createRandom();
-  const index = "ab".repeat(36);
-  const sign = async (title) =>
-    await id.sign(
-      signer,
-      id.create(title, `kiwi:0x${index}`, "delete", 1700000000),
-      EIP712_MESSAGE,
-    );
-  const ok = await sign("");
+  const href = `kiwi:0x${"ab".repeat(36)}`;
+  const deletion = { href, type: "delete", timestamp: 1700000000 };
+
+  const ok = await id.sign(signer, deletion, EIP712_DELETE);
   t.is(id.verify(ok), signer.address);
-  const withText = await sign("bye");
-  t.throws(() => id.verify(withText), { message: /Wrongly formatted message/ });
+
+  // A title isn't allowed on a delete message.
+  const withTitle = await id.sign(
+    signer,
+    { ...deletion, title: "" },
+    EIP712_MESSAGE,
+  );
+  t.throws(() => id.verify(withTitle), { message: /Wrongly formatted message/ });
 });

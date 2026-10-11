@@ -421,7 +421,7 @@ async function atomicPut(trie, message, identity, delegations) {
       log(err);
       throw new Error(err);
     }
-    if (isReactionComment(message.title)) {
+    if (message.type === "comment" && isReactionComment(message.title)) {
       const reactionMarker = upvoteID(identity, message.href, "reaction");
       const legit = await passesReaction(reactionMarker);
       if (!legit) {
