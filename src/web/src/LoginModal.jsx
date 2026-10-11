@@ -127,6 +127,13 @@ const LoginModal = forwardRef((props, ref) => {
 
       let reload = true;
       if (mode === "create") {
+        // NOTE: The bell (Bell.jsx) stays hidden until there's a lastUpdate;
+        // a brand-new account has nothing to catch up on.
+        setCookie("lastUpdate", Math.floor(Date.now() / 1000));
+        // Opens the profile editor after the reload (NicknamePrompt.jsx).
+        try {
+          localStorage.setItem("kiwi-open-profile-editor", "true");
+        } catch (err) {}
         // NOTE: Hook for the nickname prompt. A listener that wants to keep
         // the page alive (e.g. to show the prompt first) can call
         // preventDefault() and is then responsible for reloading.

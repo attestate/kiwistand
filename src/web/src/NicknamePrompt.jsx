@@ -1,9 +1,22 @@
 import React, { useState, useEffect } from "react";
 
-import { EditProfileModal, useIdentity, fetchProfile } from "./EditProfile.jsx";
+import { EditProfileModal, useIdentity } from "./EditProfile.jsx";
 import { isIOSApp } from "./session.mjs";
 
 const DISMISSED = "kiwi-nickname-prompt-dismissed";
+// Set right after a passkey account is created (LoginModal) so the editor
+// opens once the page has reloaded.
+export const OPEN_EDITOR = "kiwi-open-profile-editor";
+
+function takeOpenFlag() {
+  try {
+    const flag = localStorage.getItem(OPEN_EDITOR);
+    localStorage.removeItem(OPEN_EDITOR);
+    return flag === "true";
+  } catch {
+    return false;
+  }
+}
 const WEEK = 7 * 24 * 60 * 60 * 1000;
 
 function dismissedRecently() {
@@ -34,7 +47,7 @@ export default function NicknamePrompt({ toast }) {
   const [unnamed, setUnnamed] = useState(false);
   const [hidden, setHidden] = useState(dismissedRecently);
   const [waiting, setWaiting] = useState(consentPending);
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditing] = useState(takeOpenFlag);
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 641);
 
   useEffect(() => {
@@ -54,13 +67,11 @@ export default function NicknamePrompt({ toast }) {
   useEffect(() => {
     setUnnamed(false);
     if (!identity) return;
-    fetchProfile(identity)
-      .then((profile) =>
-        setUnnamed(
-          !profile.kiwiProfile?.name &&
-            profile.displayName === profile.truncatedAddress,
-        ),
-      )
+    fetch(`/api/v1/profile-status/${identity}`)
+      .then((response) => (response.ok ? response.json() : null))
+      .then((body) => {
+        if (body?.data) setUnnamed(!body.data.hasName);
+      })
       .catch(() => {});
   }, [identity]);
 

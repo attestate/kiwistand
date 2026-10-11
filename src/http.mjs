@@ -2827,6 +2827,31 @@ export async function launch(trie, libp2p, isPrimary = true) {
     return sendStatus(reply, 200, "OK", "Profile saved", result.profile);
   });
 
+  // NOTE: Whether an account shows up with a name (Kiwi nickname, ENS,
+  // Farcaster…), for the nickname prompt. Unlike /api/v1/profile it waits for
+  // the full resolution and isn't cached, so an ENS name that isn't cached
+  // yet doesn't read as "no name".
+  app.get("/api/v1/profile-status/:address", async (request, reply) => {
+    reply.header("Cache-Control", "no-store");
+    const { address } = request.params;
+    if (!/^0x[a-fA-F0-9]{40}$/.test(address)) {
+      return sendError(reply, 400, "Bad Request", "Invalid address");
+    }
+    let profile;
+    try {
+      profile = await ens.resolveForBatch(address);
+    } catch (err) {
+      return sendError(reply, 502, "Bad Gateway", "Couldn't resolve the name");
+    }
+    const truncated = `${address.slice(0, 6)}...${address.slice(-4)}`;
+    const hasName = Boolean(
+      profile?.kiwiProfile?.name ||
+        (profile?.displayName &&
+          profile.displayName.toLowerCase() !== truncated.toLowerCase()),
+    );
+    return sendStatus(reply, 200, "OK", "Profile status", { hasName });
+  });
+
   app.get("/api/v1/profile-name/:name", async (request, reply) => {
     reply.header("Cache-Control", "no-store");
     const address = profiles.byName(request.params.name);

@@ -930,6 +930,8 @@ async function addEditProfile(toast) {
 
 async function addNicknamePrompt(toast) {
   if (isAnonMode || isIOSApp()) return;
+  // Only signed-in people can pick a name; don't load it for readers.
+  if (!getCookie("identity")) return;
   const container = document.createElement("div");
   container.id = "nickname-prompt-container";
   document.body.appendChild(container);

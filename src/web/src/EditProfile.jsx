@@ -62,6 +62,7 @@ const inputStyle = {
   boxSizing: "border-box",
   padding: "8px 10px",
   fontSize: "16px",
+  fontFamily: "inherit",
   border: "var(--border)",
   borderRadius: 2,
   background: "var(--bg-white)",
