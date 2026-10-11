@@ -21,6 +21,7 @@ export function SocialButton(url, icon, text, isImg) {
       ${isImg
         ? html`<img
             src="${icon}"
+            alt=""
             style="display: inline; ${defaultIconStyle}"
           />`
         : icon}
