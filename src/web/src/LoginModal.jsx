@@ -75,11 +75,12 @@ function hasUsedPasskey() {
   }
 }
 
-// NOTE: The modal names who each button is for: "Create account" (new,
-// passkey), "Log in" (passkey accounts), "Log in with wallet" (existing
-// wallet accounts). Not "Continue with Apple/Google": that reads like Sign
-// in with Apple or Google, which this isn't.
-const PASSKEY_HINT = "Face ID or fingerprint, saved with your passwords. No wallet needed.";
+// NOTE: Like Privy: "Sign in or sign up" (passkey) first, "I have my own
+// wallet" below. A passkey can't tell whether someone is new without showing
+// an empty "no passkeys" sheet, so the passkey step then asks "Create
+// account" or "Sign in". Never "Continue with Apple/Google": that reads like
+// Sign in with Apple or Google, which this isn't.
+const PASSKEY_HINT = "Face ID or fingerprint. No wallet needed.";
 
 const primaryStyle = {
   display: "inline-flex",
@@ -405,14 +406,14 @@ const LoginModal = forwardRef((props, ref) => {
                 >
                   <div style={rowStyle}>
                     <KeyIcon />
-                    <span>Passkey</span>
+                    <span>Sign in or sign up</span>
                   </div>
                 </button>
                 <div style={hintStyle}>{PASSKEY_HINT}</div>
                 <button style={secondaryStyle} onClick={handleConnectWallet}>
                   <div style={rowStyle}>
                     <WalletIcon />
-                    <span>Wallet</span>
+                    <span>I have my own wallet</span>
                   </div>
                 </button>
               </>
