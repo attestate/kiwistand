@@ -168,8 +168,7 @@ const Vote = (props) => {
   // Anonymous upvotes (Semaphore): a long press or right click on the heart
   // opens a menu with "Upvote anonymously". The sheet (AnonUpvote.jsx) and
   // the prover are only loaded when the user picks it.
-  const [anonMenu, setAnonMenu] = useState(false);
-  const [AnonSheet, setAnonSheet] = useState(null);
+  const [AnonMenu, setAnonMenu] = useState(null);
   const longPress = useRef({ timer: null, fired: false });
   const storyIndex = () =>
     animationContainerRef.current?.closest(".like-button-container")?.dataset
@@ -209,19 +208,12 @@ const Vote = (props) => {
   const openAnonMenu = (e) => {
     if (!canAnon() || hasUpvoted) return false;
     e?.preventDefault?.();
-    setAnonMenu(true);
     triggerLocalHaptic("selection");
+    import("./AnonMenu.jsx").then(
+      ({ default: Menu }) => setAnonMenu(() => Menu),
+      () => toast.error("Couldn't load anonymous upvotes"),
+    );
     return true;
-  };
-
-  const openAnonSheet = async () => {
-    setAnonMenu(false);
-    try {
-      const { default: Sheet } = await import("./AnonUpvote.jsx");
-      setAnonSheet(() => Sheet);
-    } catch (err) {
-      toast.error("Couldn't load anonymous upvotes");
-    }
   };
 
   const longPressHandlers = {
@@ -401,53 +393,23 @@ const Vote = (props) => {
     {showLogin && (
       <LoginModal defaultOpen={true} onClose={() => setShowLogin(false)} />
     )}
-    {AnonSheet && (
-      <AnonSheet
-        account={localAccount}
-        storyIndex={storyIndex()}
-        onClose={() => setAnonSheet(null)}
-        onUpvoted={() => {
-          setHasUpvoted(true);
-          setUpvotes((count) => count + 1);
-          triggerLocalHaptic("success");
-        }}
-      />
-    )}
     <ConnectButton.Custom>
       {({ account, chain, mounted, openConnectModal }) => {
         const connected = account && chain && mounted;
         return (
           <span style={{ position: "relative", display: "inline-flex" }}>
-          {anonMenu && (
-            <>
-              {/* NOTE: Closes on pointerdown, not click: after a long press
-                  the browser may send a click that would close it at once. */}
-              <span
-                onPointerDown={() => setAnonMenu(false)}
-                style={{ position: "fixed", inset: 0, zIndex: 20 }}
-              />
-              <button
-                className="anon-upvote-menu-item"
-                onClick={openAnonSheet}
-                style={{
-                  position: "absolute",
-                  bottom: "calc(100% + 4px)",
-                  left: 0,
-                  zIndex: 21,
-                  whiteSpace: "nowrap",
-                  padding: "8px 12px",
-                  fontSize: "14px",
-                  color: "var(--text-primary)",
-                  background: "var(--bg-white)",
-                  border: "var(--border-thin)",
-                  borderRadius: "8px",
-                  boxShadow: "var(--shadow-default)",
-                  cursor: "pointer",
-                }}
-              >
-                Upvote anonymously
-              </button>
-            </>
+          {AnonMenu && (
+            <AnonMenu
+              account={localAccount}
+              storyIndex={storyIndex()}
+              toast={toast}
+              onClose={() => setAnonMenu(null)}
+              onUpvoted={() => {
+                setHasUpvoted(true);
+                setUpvotes((count) => count + 1);
+                triggerLocalHaptic("success");
+              }}
+            />
           )}
           <button
             ref={animationContainerRef}
