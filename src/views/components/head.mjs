@@ -243,12 +243,12 @@ export function custom(
     ${canonicalUrl
       ? html`<link rel="canonical" href="${canonicalUrl}" />`
       : null}
-    ${prefetch.map(
-      (url) => html`
-        <link rel="prefetch" href="${url}" as="document" fetchpriority="high" />
-      `,
-    )}
   `;
+  // NOTE: Pages used to add <link rel="prefetch"> for the pages they link to
+  // (prefetch above), but Cloudflare refuses prefetches of pages our worker
+  // serves ("cf-speculation-refused: prefetch refused: disabled for worker
+  // requests"): every page fired requests that came back 503 and logged
+  // console errors. Navigation is already fast from the edge cache.
 }
 const regular = custom();
 

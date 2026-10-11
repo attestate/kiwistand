@@ -23,7 +23,11 @@ import * as best from "./views/best.mjs";
 // Dynamic import for generatePreview - only loaded when not in reconcile mode
 let generatePreview = null;
 let summarizeNewStory = null;
-import { getSubmission, isReactionComment } from "./cache.mjs";
+import {
+  getSubmission,
+  isReactionComment,
+  isDeletion,
+} from "./cache.mjs";
 import { triggerUpvoteNotification } from "./subscriptions.mjs";
 import * as indexnow from "./indexnow.mjs";
 
@@ -295,7 +299,11 @@ export function handleMessage(
     }
     
     // Generate preview for comments (excluding emoji reactions)
-    if (message.type === "comment" && !isReactionComment(message.title)) {
+    if (
+      message.type === "comment" &&
+      !isReactionComment(message.title) &&
+      !isDeletion(message.title)
+    ) {
       // Use setImmediate to ensure preview generation is non-blocking
       setImmediate(() => {
         // For comments, we need to pass both the story index and comment index

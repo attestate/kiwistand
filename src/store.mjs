@@ -30,7 +30,14 @@ import { elog } from "./utils.mjs";
 import * as messages from "./topics/messages.mjs";
 import { newWalk } from "./WalkController.mjs";
 import { purgeCache, invalidateActivityCaches } from "./cloudflarePurge.mjs";
-import { insertMessage, isReactionComment } from "./cache.mjs";
+import {
+  insertMessage,
+  isReactionComment,
+  isDeletion,
+  isDeleted,
+  findMessage,
+  getSubmission,
+} from "./cache.mjs";
 import { triggerNotification } from "./subscriptions.mjs";
 
 const maxReaders = 500;
@@ -70,9 +77,10 @@ export async function cache(upvotes, comments) {
 
   // Process upvotes with periodic yields
   for (let i = 0; i < upvotes.length; i++) {
-    const { identity, href, type } = upvotes[i];
-    const marker = upvoteID(identity, href, type);
-    passes(marker);
+    const { identity, href, type, index } = upvotes[i];
+    if (!(index && isDeleted(`kiwi:0x${index}`, identity))) {
+      passes(upvoteID(identity, href, type));
+    }
 
     // Yield to the event loop every 100 items
     if (i % 100 === 0 && i > 0) {
@@ -82,8 +90,11 @@ export async function cache(upvotes, comments) {
 
   // Process comments with periodic yields
   for (let i = 0; i < comments.length; i++) {
-    const { href, title, identity } = comments[i];
-    if (isReactionComment(title)) {
+    const { href, title, identity, index } = comments[i];
+    if (
+      isReactionComment(title) &&
+      !(index && isDeleted(`kiwi:0x${index}`, identity))
+    ) {
       const reactionMarker = upvoteID(identity, href, "reaction");
       passesReaction(reactionMarker);
     }
@@ -318,6 +329,59 @@ export function upvoteID(identity, link, type, message = null) {
   return `${utils.getAddress(identity)}|${normalizedLink}|${type}`;
 }
 
+function storyTitle(submissionId) {
+  try {
+    return getSubmission(submissionId.replace(/^kiwi:0x/, ""))?.title || null;
+  } catch (err) {
+    log(`Failed to find story for purging: ${err}`);
+    return null;
+  }
+}
+
+function purgeStoryPages(submissionId, title) {
+  const index = submissionId.replace(/^kiwi:/, "");
+  if (title) {
+    purgeCache(
+      `https://news.kiwistand.com/stories/${getSlug(title)}?index=${index}`,
+    ).catch((err) => log(`Failed to purge story page: ${err}`));
+  }
+  for (const path of ["api/v1/stories", "stories/context"]) {
+    purgeCache(`https://news.kiwistand.com/${path}?index=${index}`).catch(
+      (err) => log(`Failed to purge ${path}: ${err}`),
+    );
+  }
+}
+
+// The markers that keep someone from upvoting a link or reacting to a comment
+// twice; a deleted upvote or reaction mustn't keep blocking them.
+async function freeMarkers(trie, removed) {
+  if (removed.kind !== "upvote" && removed.kind !== "story" && removed.kind !== "reaction") {
+    return;
+  }
+  let original;
+  try {
+    const hash = removed.id.replace(/^kiwi:0x/, "");
+    original = await leaf(trie, Buffer.from(hash, "hex"), JSON.parse);
+  } catch (err) {
+    log(`freeMarkers: Couldn't read "${removed.id}": ${err}`);
+    return;
+  }
+  try {
+    if (removed.kind === "reaction") {
+      reactions.delete(upvoteID(removed.identity, original.href, "reaction"));
+      return;
+    }
+    upvotes.delete(
+      upvoteID(removed.identity, original.href, original.type, original),
+    );
+    for (const upvoter of removed.upvoters || []) {
+      upvotes.delete(upvoteID(upvoter, original.href, original.type, original));
+    }
+  } catch (err) {
+    log(`freeMarkers: ${err}`);
+  }
+}
+
 let messagesAdded = 0;
 async function atomicPut(trie, message, identity, delegations) {
   const marker = upvoteID(identity, message.href, message.type, message);
@@ -374,6 +438,33 @@ async function atomicPut(trie, message, identity, delegations) {
       const cacheEnabled = false;
       const enhancer = enhance(delegations, cacheEnabled);
       const enhancedMessage = await enhancer(message);
+
+      // NOTE: A deletion (see cache.mjs) refreshes the pages that showed the
+      // message, frees its upvote or reaction marker so its author can
+      // upvote or react again, and notifies nobody.
+      if (message.type === "comment" && isDeletion(message.title)) {
+        const target = findMessage(message.href);
+        const title = target?.storyId ? storyTitle(target.storyId) : null;
+        const removed = insertMessage(enhancedMessage);
+        if (removed) {
+          await freeMarkers(trie, removed);
+          if (removed.storyId) purgeStoryPages(removed.storyId, title);
+          if (removed.kind === "story") {
+            for (const path of ["", "new", "best"]) {
+              purgeCache(`https://news.kiwistand.com/${path}`).catch((err) =>
+                log(`Failed to purge /${path}: ${err}`),
+              );
+            }
+          }
+        }
+        log(
+          `Stored deletion for "${message.href}" (${
+            removed ? `removed ${removed.kind}` : "nothing removed"
+          })`,
+        );
+        return { index, canonical };
+      }
+
       insertMessage(enhancedMessage);
 
       // Only purge cache for regular comments, not for upvotes or emoji reactions
