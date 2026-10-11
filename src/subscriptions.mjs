@@ -161,8 +161,9 @@ export async function triggerAnonUpvoteNotification(message) {
   if (message.type !== "anon-upvote") return;
 
   try {
+    // NOTE: getSubmission throws for an unknown index; the catch below
+    // handles it.
     const submission = getSubmission(message.href.replace(/^kiwi:/, ""));
-    if (!submission || !submission.identity) return;
 
     let receivers = [submission.identity];
     try {
