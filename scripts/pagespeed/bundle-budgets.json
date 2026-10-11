@@ -21,6 +21,8 @@
     "src/API.mjs": 13000,
     "src/Analytics.jsx": 1100,
     "src/AnalyticsConsent.jsx": 1400,
+    "src/AnonMenu.jsx": 800,
+    "src/AnonUpvote.jsx": 3900,
     "src/Avatar.jsx": 1800,
     "src/BackButton.jsx": 1000,
     "src/Bell.jsx": 3600,
@@ -39,7 +41,9 @@
     "src/SidebarDrawer.jsx": 1800,
     "src/SubmitButton.jsx": 6600,
     "src/TestFlightQR.jsx": 600,
-    "src/Vote.jsx": 4200
+    "src/Vote.jsx": 4900,
+    "src/anon-upvote.mjs": 112600,
+    "src/tracker.mjs": 3900
   },
   "css": {
     "fonts/inter.css": 200,
@@ -49,7 +53,7 @@
   "totals": {
     "eager": 529300,
     "lazyOther": 267700,
-    "lazy": 1286800
+    "lazy": 1404800
   },
   "pages": {
     "home": {

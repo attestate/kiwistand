@@ -165,6 +165,14 @@ const Vote = (props) => {
     props.upvoters.includes(address),
   );
   const [upvotes, setUpvotes] = useState(props.upvoters.length);
+  // Anonymous upvotes (Semaphore): a long press or right click on the heart
+  // opens a menu with "Upvote anonymously". The sheet (AnonUpvote.jsx) and
+  // the prover are only loaded when the user picks it.
+  const [AnonMenu, setAnonMenu] = useState(null);
+  const longPress = useRef({ timer: null, fired: false });
+  const storyIndex = () =>
+    animationContainerRef.current?.closest(".like-button-container")?.dataset
+      ?.index || "";
   const triggerLocalHaptic = (preset) => {
     if (!isFarcasterClient) {
       haptic.trigger(preset);
@@ -178,6 +186,51 @@ const Vote = (props) => {
   } else {
     signer = result;
   }
+
+  // NOTE: Only accounts with a key in this browser can join and prove; the
+  // old "anon-mode" throwaway wallets can't.
+  const canAnon = () =>
+    isLocal &&
+    !isMiniApp &&
+    !props.isad &&
+    localStorage.getItem("anon-mode") !== "true" &&
+    !!storyIndex();
+
+  useEffect(() => {
+    try {
+      const index = storyIndex();
+      if (index && localStorage.getItem(`-kiwi-news-anon-upvoted-${index}`)) {
+        setHasUpvoted(true);
+      }
+    } catch (err) {}
+  }, []);
+
+  const openAnonMenu = (e) => {
+    if (!canAnon() || hasUpvoted) return false;
+    e?.preventDefault?.();
+    triggerLocalHaptic("selection");
+    import("./AnonMenu.jsx").then(
+      ({ default: Menu }) => setAnonMenu(() => Menu),
+      () => toast.error("Couldn't load anonymous upvotes"),
+    );
+    return true;
+  };
+
+  const longPressHandlers = {
+    onTouchStart: () => {
+      longPress.current.fired = false;
+      clearTimeout(longPress.current.timer);
+      longPress.current.timer = setTimeout(() => {
+        longPress.current.fired = openAnonMenu();
+      }, 500);
+    },
+    onTouchEnd: () => clearTimeout(longPress.current.timer),
+    onTouchMove: () => clearTimeout(longPress.current.timer),
+    onContextMenu: (e) => {
+      if (canAnon() && !hasUpvoted) e.preventDefault();
+      if (!longPress.current.fired) openAnonMenu(e);
+    },
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -344,9 +397,28 @@ const Vote = (props) => {
       {({ account, chain, mounted, openConnectModal }) => {
         const connected = account && chain && mounted;
         return (
+          <span style={{ position: "relative", display: "inline-flex" }}>
+          {AnonMenu && (
+            <AnonMenu
+              account={localAccount}
+              storyIndex={storyIndex()}
+              toast={toast}
+              onClose={() => setAnonMenu(null)}
+              onUpvoted={() => {
+                setHasUpvoted(true);
+                setUpvotes((count) => count + 1);
+                triggerLocalHaptic("success");
+              }}
+            />
+          )}
           <button
             ref={animationContainerRef}
+            {...longPressHandlers}
             onClick={async (e) => {
+              if (longPress.current.fired) {
+                longPress.current.fired = false;
+                return;
+              }
               if (hasUpvoted || isad || window.location.pathname === "/submit")
                 return;
 
@@ -424,6 +496,10 @@ const Vote = (props) => {
               gap: "6px",
               transition: "all 0.15s ease",
               position: "relative", // For positioning the animation
+              // NOTE: A long press opens the anonymous upvote menu, not the
+              // browser's callout or text selection.
+              WebkitTouchCallout: "none",
+              userSelect: "none",
             }}
             onMouseOver={(e) =>
               !hasUpvoted &&
@@ -459,6 +535,7 @@ const Vote = (props) => {
               {upvotes}
             </span>
           </button>
+          </span>
         );
       }}
     </ConnectButton.Custom>

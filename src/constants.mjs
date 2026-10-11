@@ -9,22 +9,22 @@ export const PROTOCOL = {
     topics: {
       roots: {
         id: "roots",
-        version: "12.0.0",
+        version: "14.0.0",
       },
       messages: {
         id: "messages",
-        version: "12.0.0",
+        version: "14.0.0",
       },
     },
   },
   protocols: {
     leaves: {
       id: "leaves",
-      version: "15.0.0",
+      version: "17.0.0",
     },
     levels: {
       id: "levels",
-      version: "15.0.0",
+      version: "17.0.0",
     },
   },
 };
@@ -51,6 +51,35 @@ export const EIP712_MESSAGE = {
     { name: "timestamp", type: "uint256" },
   ],
 };
+
+// NOTE: An "anon-join" message registers a Semaphore identity commitment for
+// the signer's identity. It has no title or href, so it's signed with its own
+// type. Added in protocol version 14 (pubsub) / 17 (sync).
+export const EIP712_ANON_JOIN = {
+  Message: [
+    { name: "commitment", type: "uint256" },
+    { name: "type", type: "string" },
+    { name: "timestamp", type: "uint256" },
+  ],
+};
+
+// Anonymous upvotes (Semaphore v4). See src/anon.mjs.
+//
+// An identity needs at least this much karma (counted from messages with a
+// timestamp at or before the "anon-join" message) to join the group.
+export const ANON_MIN_KARMA = 10;
+// A proof must use the root of one of the last ANON_ROOT_HISTORY group states
+// (a state is the group after one join) ...
+export const ANON_ROOT_HISTORY = 16;
+// ... among the joins that are at least ANON_ROOT_SETTLE_SECS older than the
+// upvote. Joins younger than that are ignored when checking an upvote, so a
+// join that's still propagating between nodes can't make them disagree on
+// which roots are valid.
+export const ANON_ROOT_SETTLE_SECS = 300;
+// Anonymous upvotes are stored in the cache's upvotes table under this
+// identity, so they count for ranking and for the submitter's karma but give
+// no one curator credit.
+export const ANON_IDENTITY = "0x0000000000000000000000000000000000000000";
 
 const node = {
   type: "object",
@@ -104,6 +133,81 @@ const comment = {
   required: ["timestamp", "type", "title", "href", "signature"],
 };
 
+const uint256String = {
+  type: "string",
+  pattern: "^(0|[1-9][0-9]{0,77})$",
+};
+
+const anonJoin = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    timestamp: {
+      $comment: "unix timestamp",
+      type: "integer",
+    },
+    type: {
+      const: "anon-join",
+    },
+    commitment: {
+      $comment: "Semaphore v4 identity commitment, decimal",
+      ...uint256String,
+    },
+    signature: {
+      type: "string",
+      pattern: "0x[a-fA-F0-9]+",
+    },
+  },
+  required: ["timestamp", "type", "commitment", "signature"],
+};
+
+// NOTE: An anonymous upvote carries no signature and no address. It's
+// authorized by a Semaphore proof that its sender is a member of the group.
+const anonUpvote = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    timestamp: {
+      $comment: "unix timestamp",
+      type: "integer",
+    },
+    type: {
+      const: "anon-upvote",
+    },
+    href: {
+      $comment: "The upvoted story, kiwi:0x<index of its submission>",
+      type: "string",
+      format: "uri",
+      pattern: "^kiwi:0x[a-fA-F0-9]{72}$",
+      maxLength: 81,
+    },
+    depth: {
+      $comment: "The Merkle tree depth the proof was generated for",
+      type: "integer",
+      minimum: 1,
+      maximum: 32,
+    },
+    merkleRoot: uint256String,
+    nullifier: uint256String,
+    proof: {
+      $comment: "Packed Groth16 proof (8 field elements)",
+      type: "array",
+      minItems: 8,
+      maxItems: 8,
+      items: uint256String,
+    },
+  },
+  required: [
+    "timestamp",
+    "type",
+    "href",
+    "depth",
+    "merkleRoot",
+    "nullifier",
+    "proof",
+  ],
+};
+
 const upvote = {
   type: "object",
   additionalProperties: false,
@@ -135,6 +239,8 @@ const upvote = {
   },
   required: ["timestamp", "type", "title", "href", "signature"],
 };
+
+export const ANON_TYPES = ["anon-join", "anon-upvote"];
 
 export const SCHEMATA = {
   comparison: {
@@ -173,12 +279,12 @@ export const SCHEMATA = {
         $comment:
           "The type of message that we should filter by in the request.",
         type: "string",
-        enum: ["amplify", "comment"],
+        enum: ["amplify", "comment", "anon-join", "anon-upvote"],
       },
     },
     required: ["from", "amount"],
   },
   message: {
-    oneOf: [upvote, comment],
+    oneOf: [upvote, comment, anonJoin, anonUpvote],
   },
 };

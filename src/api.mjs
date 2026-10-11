@@ -10,6 +10,7 @@ import compression from "compression";
 import Ajv from "ajv";
 import addFormats from "ajv-formats";
 import morgan from "morgan";
+import { utils } from "ethers";
 
 import log from "./logger.mjs";
 import * as store from "./store.mjs";
@@ -23,7 +24,16 @@ import * as best from "./views/best.mjs";
 let generatePreview = null;
 let summarizeNewStory = null;
 import { getSubmission, isReactionComment } from "./cache.mjs";
-import { triggerUpvoteNotification } from "./subscriptions.mjs";
+import {
+  triggerUpvoteNotification,
+  triggerAnonUpvoteNotification,
+} from "./subscriptions.mjs";
+import * as anon from "./anon.mjs";
+import {
+  ANON_MIN_KARMA,
+  ANON_ROOT_HISTORY,
+  ANON_ROOT_SETTLE_SECS,
+} from "./constants.mjs";
 import * as indexnow from "./indexnow.mjs";
 
 // Global error handlers to catch crashes and log them properly
@@ -293,6 +303,16 @@ export function handleMessage(
 
     }
     
+    // NOTE: An anonymous upvote notifies the story's author without naming
+    // anyone.
+    if (message.type === "anon-upvote") {
+      setImmediate(() => {
+        triggerAnonUpvoteNotification(message).catch((err) => {
+          log(`Failed to trigger anon upvote notification: ${err}`);
+        });
+      });
+    }
+
     // Generate preview for comments (excluding emoji reactions)
     if (message.type === "comment" && !isReactionComment(message.title)) {
       // Use setImmediate to ensure preview generation is non-blocking
@@ -376,6 +396,61 @@ export function listMessages(trie, getDelegations) {
   };
 }
 
+// The group clients prove membership in: the commitments of every settled
+// join, in tree order, and its root.
+export function anonGroup() {
+  return async (request, reply) => {
+    const { group, pending } = anon.settledGroup();
+    reply.header("Cache-Control", "no-store");
+    return sendStatus(reply, 200, "OK", "Returning anonymous upvote group", {
+      root: group.size > 0 ? group.root.toString() : null,
+      depth: group.depth,
+      size: group.size,
+      members: group.members.map((member) => member.toString()),
+      pending,
+      minKarma: ANON_MIN_KARMA,
+      rootHistory: ANON_ROOT_HISTORY,
+      settleSecs: ANON_ROOT_SETTLE_SECS,
+    });
+  };
+}
+
+export function anonStatus() {
+  return async (request, reply) => {
+    const { address } = request.query;
+    if (!address || !utils.isAddress(address)) {
+      return sendError(reply, 400, "Bad Request", "Invalid address");
+    }
+    reply.header("Cache-Control", "no-store");
+    return sendStatus(
+      reply,
+      200,
+      "OK",
+      "Returning anonymous upvote status",
+      anon.status(utils.getAddress(address)),
+    );
+  };
+}
+
+export function anonArtifact(dir = `${env.CACHE_DIR}/semaphore-artifacts`) {
+  return async (request, reply) => {
+    const parsed = anon.parseArtifactName(request.params.name);
+    if (!parsed) {
+      return sendError(reply, 404, "Not Found", "Unknown artifact");
+    }
+    let file;
+    try {
+      file = await anon.ensureArtifact(parsed.depth, parsed.kind, dir);
+    } catch (err) {
+      log(`anonArtifact: ${err.toString()}`);
+      return sendError(reply, 502, "Bad Gateway", "Artifact unavailable");
+    }
+    reply.header("Cache-Control", "public, max-age=31536000, immutable");
+    reply.type(parsed.kind === "wasm" ? "application/wasm" : "application/octet-stream");
+    return reply.sendFile(file, { root: "/" });
+  };
+}
+
 export async function launch(trie, libp2p) {
   // Load sendToCluster and generatePreview only when not in reconcile mode
   if (env.NODE_ENV !== "reconcile") {
@@ -406,6 +481,12 @@ export async function launch(trie, libp2p) {
     listMessages(trie, registry.delegations),
   );
   api.get("/delegations", listDelegations(registry.delegations));
+  api.get("/anon/group", anonGroup());
+  api.get("/anon/status", anonStatus());
+  api.get(
+    `/anon/artifacts/${anon.ARTIFACTS_VERSION}/:name`,
+    anonArtifact(),
+  );
   api.post(
     "/messages",
     handleMessage(

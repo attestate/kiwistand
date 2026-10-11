@@ -11,6 +11,8 @@
 import { keccak256 } from "@ethersproject/keccak256";
 import { Wallet } from "@ethersproject/wallet";
 
+import { secretFromPrf, storageKey } from "./semaphore-secret.mjs";
+
 export const RP_ID = "news.kiwistand.com";
 export const RP_NAME = "Kiwi News";
 export const USER_NAME = "Kiwi News";
@@ -59,7 +61,11 @@ export function derive(prfBytes) {
     privateKey = keccak256(privateKey);
   }
   const { address } = new Wallet(privateKey);
-  return { privateKey, address };
+  // NOTE: The secret of the account's Semaphore identity (anonymous upvotes)
+  // comes from the same PRF output under its own domain tag, see
+  // semaphore-secret.mjs.
+  const semaphoreSecret = secretFromPrf(input);
+  return { privateKey, address, semaphoreSecret };
 }
 
 // Only use the production relying party ID on the production host; anywhere
@@ -69,6 +75,14 @@ export function rpIdFor(hostname) {
     return RP_ID;
   }
   return undefined;
+}
+
+export function hasUsedPasskey() {
+  try {
+    return localStorage.getItem(USED_FLAG) === "true";
+  } catch (err) {
+    return false;
+  }
 }
 
 export function isCancellation(err) {
@@ -154,14 +168,17 @@ export async function signIn({ hostname = location.hostname } = {}) {
 
 // Stores the derived key the same way delegated app keys are stored, so
 // getLocalAccount (session.mjs) and theme-init.js treat the user as logged in.
-export function storeAccount({ privateKey, address }) {
+export function storeAccount({ privateKey, address, semaphoreSecret }) {
   // NOTE: getLocalAccount only logs in with exactly one stored key, so an
   // older app key left in this browser would otherwise log nobody in.
-  const schema = /^-kiwi-news-0x[a-fA-F0-9]{40}-key$/;
+  const schema = /^-kiwi-news-0x[a-fA-F0-9]{40}-(key|semaphore)$/;
   for (const key of Object.keys(localStorage)) {
     if (schema.test(key)) localStorage.removeItem(key);
   }
   localStorage.setItem(`-kiwi-news-${address}-key`, privateKey);
+  if (semaphoreSecret) {
+    localStorage.setItem(storageKey(address), semaphoreSecret);
+  }
   try {
     localStorage.setItem(USED_FLAG, "true");
     localStorage.removeItem("anon-mode");
