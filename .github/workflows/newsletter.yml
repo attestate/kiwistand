@@ -13,8 +13,10 @@ name: Newsletter
 
 on:
   schedule:
-    # Sundays 14:43 UTC (16:43 in Berlin, 10:43 in New York).
-    - cron: "43 14 * * 0"
+    # Sundays 08:43 UTC (10:43 in Berlin). GitHub starts scheduled runs
+    # hours late under load (14:43 ran at 18:23 and 19:11), so the early
+    # slot still lands on Sunday daytime in Europe and the US.
+    - cron: "43 8 * * 0"
   workflow_dispatch:
     inputs:
       send:
