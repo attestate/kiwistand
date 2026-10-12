@@ -946,13 +946,19 @@ export function listSitemapMonths() {
 
 export function listSitemapEntries(month) {
   const rows = db.prepare(`
-    SELECT id, title, timestamp FROM submissions
+    SELECT id, title, timestamp, href, identity FROM submissions
     WHERE strftime('%Y-%m', timestamp, 'unixepoch') = ?
     ORDER BY timestamp DESC
   `).all(month);
   return rows.map((row) => {
     const [, index] = row.id.split("0x");
-    return { index, title: row.title, timestamp: row.timestamp };
+    return {
+      index,
+      title: row.title,
+      timestamp: row.timestamp,
+      href: row.href,
+      identity: row.identity,
+    };
   });
 }
 
