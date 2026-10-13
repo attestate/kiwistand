@@ -12,6 +12,7 @@ import { custom, expectTopbar } from "./components/head.mjs";
 import * as isoweek from "../isoweek.mjs";
 import { autoIntro, hostname } from "../weekly.mjs";
 import { getSlug } from "../utils.mjs";
+import { cutWords, DESC_MAX } from "../seo.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -59,10 +60,11 @@ export function weekDescription(week, stories) {
   let text = lead;
   for (const [i, story] of stories.entries()) {
     const next = `${i === 0 ? "" : "; "}${story.title}`;
-    if ((text + next).length > 155) break;
+    if ((text + next).length > DESC_MAX) break;
     text += next;
   }
-  return text === lead ? `${lead}${stories[0].title}` : text;
+  // The first title alone doesn't fit: cut it rather than overflow the snippet.
+  return text === lead ? cutWords(`${lead}${stories[0].title}`, DESC_MAX) : text;
 }
 
 export function weekJsonLd(week, stories, description) {
@@ -96,6 +98,36 @@ export function weekJsonLd(week, stories, description) {
         position: i + 1,
         url: `${BASE_URL}${storyPath(story)}`,
         name: story.title,
+      })),
+    },
+  };
+  // NOTE: Escape "<" so no string can close the script element.
+  return JSON.stringify(data).replace(/</g, "\\u003c");
+}
+
+// The archive index: a CollectionPage listing every week's page, newest first.
+export function indexJsonLd(weeks, description) {
+  const data = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "@id": INDEX_URL,
+    url: INDEX_URL,
+    name: "Kiwi News weekly archive",
+    description,
+    inLanguage: "en",
+    publisher: {
+      "@type": "Organization",
+      name: "Kiwi News",
+      url: `${BASE_URL}/`,
+    },
+    mainEntity: {
+      "@type": "ItemList",
+      numberOfItems: weeks.length,
+      itemListElement: weeks.map(({ week }, i) => ({
+        "@type": "ListItem",
+        position: i + 1,
+        url: `${BASE_URL}${isoweek.path(week)}`,
+        name: weekTitle(week),
       })),
     },
   };
@@ -317,7 +349,7 @@ export async function indexPage(theme, weeks, now = Date.now()) {
       documentTitle: `${title} | Kiwi News`,
       description,
       canonical: INDEX_URL,
-      jsonLd: null,
+      jsonLd: indexJsonLd(weeks, description),
       body,
     },
     theme,

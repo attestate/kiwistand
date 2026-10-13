@@ -31,6 +31,8 @@ import {
   indexPage,
   weekJsonLd,
   weekTitle,
+  weekDescription,
+  indexJsonLd,
   groupWeeks,
 } from "../src/views/weekly.mjs";
 
@@ -415,4 +417,29 @@ test("indexPage groups weeks by year and month", async (t) => {
   t.true(page.includes("Week 41: Oct 5–11"));
   t.true(page.includes("(this week)"));
   t.true(page.includes("since December 2025"));
+  const ld = page.match(
+    /<script type="application\/ld\+json"[^>]*>(.*?)<\/script>/s,
+  );
+  t.truthy(ld);
+  const data = JSON.parse(ld[1]);
+  t.is(data["@type"], "CollectionPage");
+  t.is(data.url, "https://news.kiwistand.com/weekly");
+  t.is(data.mainEntity.numberOfItems, 4);
+  t.is(
+    data.mainEntity.itemListElement[0].url,
+    "https://news.kiwistand.com/weekly/2026-W41",
+  );
+});
+
+test("indexJsonLd escapes < so it can't close the script element", (t) => {
+  t.false(indexJsonLd([{ week: W(2026, 41) }], "a </script> b").includes("<"));
+});
+
+test("weekDescription stays within 155 characters with a long first title", (t) => {
+  const long = { title: "A".repeat(20) + " " + "word ".repeat(30) };
+  const desc = weekDescription(W(2026, 41), [long]);
+  t.true(desc.length <= 155);
+  t.true(desc.endsWith("…"));
+  const short = weekDescription(W(2026, 41), [{ title: "Short" }]);
+  t.true(short.endsWith("Short"));
 });
