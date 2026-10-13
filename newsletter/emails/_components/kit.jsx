@@ -377,11 +377,21 @@ export function hostname(link) {
   }
 }
 
+// Shortens very long words (hashes, addresses). URLs stay whole: the text
+// boxes wrap them (word-break), and a shortened URL turns into a broken link
+// when mail apps auto-link it. Splitting on any whitespace keeps line breaks
+// and the word after a URL.
+const isUrl = (word) => /^(https?:\/\/|www\.|[\w-]+(\.[\w-]+)+\/)/i.test(word);
+
 const truncateLongWords = (text, maxLength = 30) =>
   (text || "")
-    .split(" ")
-    .map((word) => (word.length > maxLength ? `${word.substring(0, maxLength)}…` : word))
-    .join(" ");
+    .split(/(\s+)/)
+    .map((part) =>
+      /^\s/.test(part) || part.length <= maxLength || isUrl(part)
+        ? part
+        : `${part.substring(0, maxLength)}…`,
+    )
+    .join("");
 
 // Long posts are cut at the end of a sentence where possible, otherwise at
 // a word, and end in "…".
@@ -396,9 +406,13 @@ export function clip(text, max = 280) {
     head.lastIndexOf(".\n"),
     head.lastIndexOf("\n\n"),
   );
-  const cut = sentenceEnd > max * 0.4 ? sentenceEnd + 1 : head.lastIndexOf(" ");
+  const lastSpace = head.search(/\s\S*$/);
+  const cut = sentenceEnd > max * 0.4 ? sentenceEnd + 1 : lastSpace;
   const clipped = value.slice(0, cut > 0 ? cut : max).trim().replace(/[.,;:\s]+$/, "");
-  return truncateLongWords(clipped) + "…";
+  const short = truncateLongWords(clipped);
+  if (short.endsWith("…")) return short;
+  // A space keeps the "…" out of a trailing URL when mail apps auto-link it.
+  return isUrl(short.split(/\s+/).pop()) ? `${short} …` : `${short}…`;
 }
 
 // Uploaded pictures live on Cloudflare Images; email clients get a JPEG
