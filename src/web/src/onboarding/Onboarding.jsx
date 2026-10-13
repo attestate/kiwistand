@@ -7,7 +7,7 @@ import React, {
   useState,
 } from "react";
 import { createPortal } from "react-dom";
-import { useAccount } from "wagmi";
+import { useAccount, useDisconnect } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { Wallet } from "@ethersproject/wallet";
 
@@ -17,6 +17,7 @@ import {
   tenYearsInSeconds,
   isIOSApp,
   getLocalAccount,
+  announceAccountChange,
 } from "../session.mjs";
 import { PROFILE_TYPES, nameProblem } from "../EditProfile.jsx";
 import { uploadImage } from "../uploadImage.mjs";
@@ -243,8 +244,16 @@ export default function Onboarding({ onClose }) {
   const [error, setError] = useState("");
   const [doc, setDoc] = useState(false);
   const { openConnectModal, connectModalOpen } = useConnectModal();
+  const { disconnectAsync } = useDisconnect();
+  const pickerPending = useRef(false);
+  useEffect(() => {
+    if (pickerPending.current && openConnectModal) {
+      pickerPending.current = false;
+      openConnectModal();
+    }
+  }, [openConnectModal]);
   // The account exists (passkey made, signed in or wallet delegated):
-  // closing reloads so the page shows it signed in.
+  // closing tells the page's islands, so it shows it signed in.
   const [made, setMade] = useState(false);
   // The passkey account (new or signed in); kept so a failed name save
   // doesn't make a second passkey.
@@ -263,10 +272,18 @@ export default function Onboarding({ onClose }) {
   const steps = stepsFor(path, emailDone);
   const index = steps.indexOf(step);
 
+  // NOTE: No reload: the header's islands (bell, avatar, tab bar) re-read
+  // the new account in place (announceAccountChange in session.mjs).
+  // Forms that were rendered for a logged-out reader (the story page's
+  // comment box, the submit form) only pick the account up on a fresh
+  // mount, so those pages still reload, after the header has updated.
   const finish = useCallback(() => {
     if (made) {
-      window.location.reload();
-      return;
+      announceAccountChange();
+      if (document.querySelector(".comment-input-host, #submit-button")) {
+        window.location.reload();
+        return;
+      }
     }
     onClose();
   }, [made, onClose]);
@@ -585,10 +602,26 @@ export default function Onboarding({ onClose }) {
     setPath("create");
     go("nickname");
   };
-  const startWallet = () => {
+  // NOTE: RainbowKit only offers its picker (openConnectModal) while wagmi
+  // is disconnected. A wallet that is stuck reconnecting (e.g. two wallet
+  // extensions fighting over window.ethereum) left "I have my own wallet"
+  // doing nothing: reset that half-made connection, then open the picker.
+  const startWallet = async () => {
     setError("");
     setPath("wallet");
-    if (openConnectModal) openConnectModal();
+    if (openConnectModal) {
+      openConnectModal();
+      return;
+    }
+    if (account.isConnected && account.address && account.status === "connected") {
+      return; // The effect below continues to "Enable one-tap actions".
+    }
+    pickerPending.current = true;
+    try {
+      await disconnectAsync();
+    } catch (err) {
+      console.warn("Couldn't reset the wallet connection", err);
+    }
   };
   const waiting = path === "wallet" && connectModalOpen;
   const walletLabel = waiting ? "Waiting for your wallet…" : null;
@@ -603,7 +636,10 @@ export default function Onboarding({ onClose }) {
             : "Connect your wallet. Reading never needs an account."}
         </p>
       </Heading>
-      <div className="kob-row kob-actions">
+      {/* NOTE: Tim's order and levels: "Create account" (primary), the
+          passkey sign-in as an outlined button of the same size, then the
+          wallet as a plain text link right below. */}
+      <div className="kob-join-actions">
         <button
           type="button"
           className="kob-btn"
@@ -615,7 +651,7 @@ export default function Onboarding({ onClose }) {
         {passkeys && (
           <button
             type="button"
-            className="kob-textlink"
+            className="kob-btn kob-btn-outline"
             onClick={handleSignIn}
             disabled={busy}
           >
@@ -624,16 +660,18 @@ export default function Onboarding({ onClose }) {
               : "Already have an account? Log in"}
           </button>
         )}
+        {passkeys && (
+          <button
+            type="button"
+            className="kob-textlink kob-join-wallet"
+            onClick={startWallet}
+            disabled={busy}
+          >
+            {walletLabel || "Have a wallet? Connect it instead"}
+          </button>
+        )}
       </div>
       <ErrorText>{error}</ErrorText>
-      {passkeys && (
-        <Skip
-          desk
-          label={walletLabel || "Have a wallet? Connect it instead"}
-          onClick={startWallet}
-          disabled={busy}
-        />
-      )}
     </>
   ) : (
     <>

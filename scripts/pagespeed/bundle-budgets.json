@@ -49,7 +49,7 @@
   },
   "css": {
     "fonts/inter.css": 200,
-    "news.css": 21400,
+    "news.css": 25000,
     "node_modules/@rainbow-me/rainbowkit/dist/index.css": 4900,
     "src/onboarding/onboarding.css": 3500
   },

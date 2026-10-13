@@ -805,6 +805,12 @@ body.n2 #hnmain > table.n2-table {
   text-decoration: none;
   -webkit-tap-highlight-color: transparent;
 }
+/* NOTE: news.css colours visited .notification links; these rows keep the
+   design's colours either way. */
+.n2 a.n2-notif-link.notification:visited,
+.n2 a.n2-notif-link.notification:link {
+  color: var(--n2-text) !important;
+}
 .n2-notif:not(.is-new) a.n2-notif-link::after {
   content: "";
   position: absolute;
@@ -825,7 +831,7 @@ body.n2 #hnmain > table.n2-table {
   flex-direction: column;
   align-items: center;
   gap: 2px;
-  color: var(--n2-accent-strong);
+  color: var(--kn-voted);
 }
 .n2 .n2-notif-like .n2-icon,
 .n2 .n2-notif-spark .n2-icon {
@@ -833,7 +839,7 @@ body.n2 #hnmain > table.n2-table {
   height: 24px;
 }
 .n2-notif-spark {
-  color: var(--n2-accent-strong);
+  color: var(--kn-voted);
 }
 .n2-notif-karma {
   font-size: 11px;
@@ -865,7 +871,7 @@ body.n2 #hnmain > table.n2-table {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--n2-accent-strong);
+  color: var(--kn-voted);
 }
 .n2 .n2-notif-box .n2-icon {
   width: 16px;
@@ -904,13 +910,13 @@ body.n2 #hnmain > table.n2-table {
   margin-top: 6px;
   border-radius: 50%;
   flex-shrink: 0;
-  background: var(--n2-accent-strong);
+  background: var(--kn-notification-dot);
 }
 .n2-notifs-toolbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 0 16px 0;
+  padding: 0 0 24px 0;
 }
 .n2 a.n2-mark-read {
   font-size: 14px;
@@ -934,14 +940,17 @@ body.n2 #hnmain > table.n2-table {
   .n2-q::after {
     content: "\201D";
   }
+  /* NOTE: Each row has its own separator stroke, drawn over the row's
+     unread tint like in the design (the rows overlap by the 1px). */
   .n2-notif-list {
     gap: 0;
-    border: 1px solid var(--n2-separator);
-    border-bottom: none;
   }
   .n2-notif {
     border-radius: 0;
-    border-bottom: 1px solid var(--n2-separator);
+    border: 1px solid var(--n2-separator);
+  }
+  .n2-notif + .n2-notif {
+    margin-top: -1px;
   }
   .n2 a.n2-notif-link {
     gap: 14px;
@@ -966,7 +975,7 @@ body.n2 #hnmain > table.n2-table {
     color: var(--n2-text-2);
   }
   .n2 a.n2-notif-link:hover {
-    background: rgba(0, 0, 0, 0.02);
+    background: var(--kn-hover-minimal);
   }
 }
 
@@ -1157,6 +1166,41 @@ body.n2 #hnmain > table.n2-table {
   }
 }
 
+/* NOTE: The rows views/settings.mjs renders until Settings.jsx mounts:
+   the same rows at the same sizes. Both versions of "Account" are there;
+   theme-init.js's data-signed-out picks one before the first paint. */
+.n2-set-ssr-in {
+  display: contents;
+}
+html[data-signed-out] .n2-set-ssr-in,
+html:not([data-signed-out]) .n2-set-ssr-out {
+  display: none;
+}
+.n2-set-rpc-ssr {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  line-height: 1.3;
+}
+.n2-set-rpc-ssr-sub {
+  font-family: var(--n2-mono);
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--n2-text-2);
+}
+/* The anon-rpc row is two lines (title and status) once
+   PrivateRpcSetting.jsx has loaded; while it loads (Settings.jsx's Suspense
+   fallback) it keeps that height. */
+.n2 .n2-set-rpc {
+  min-height: calc(16px + 15px * 1.3 + 12px * 1.4);
+}
+@media (min-width: 641px) {
+  .n2 .n2-set-rpc {
+    min-height: calc(20.5px + 15px * 1.3 + 12px * 1.4);
+  }
+}
+
 /* --------------------------------------------------------------- profile */
 
 .n2-profile {
@@ -1263,12 +1307,20 @@ body.n2 #hnmain > table.n2-table {
   flex-direction: column;
   gap: 8px;
 }
-/* NOTE: EditProfile.jsx renders its button only on your own profile. */
-.n2-own:not(:has(kiwi-edit-profile button)) {
+/* NOTE: Only on your own profile: theme-init.js marks it before the first
+   paint (html[data-own-profile]), so the rows are there from the start;
+   EditProfile.jsx then swaps the "Edit profile" stand-in for its button
+   (also the fallback when the mark is missing, e.g. a wallet session). */
+html:not([data-own-profile]) .n2-own:not(:has(kiwi-edit-profile button)) {
   display: none;
 }
-body.n2-profile-page:not(:has(kiwi-edit-profile button)) .n2-own-only {
+html:not([data-own-profile])
+  body.n2-profile-page:not(:has(kiwi-edit-profile button))
+  .n2-own-only {
   visibility: hidden;
+}
+.n2 .n2-own-row.n2-own-ssr {
+  cursor: default;
 }
 .n2 kiwi-edit-profile,
 .n2 kiwi-edit-profile > div {

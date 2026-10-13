@@ -123,7 +123,22 @@ const header = (theme, path) => {
         >
           ${ms("add", 16)}<span>Submit</span>
         </a>
-        <div id="bell" class="kn-account kn-only-desktop"></div>
+        <div id="bell" class="kn-account kn-only-desktop">
+          ${
+            // NOTE: Stand-ins until Bell.jsx mounts, the same size as what
+            // it renders, so nothing shifts: the bell and the avatar, or
+            // "Log in" for browsers without a Kiwi key (theme-init.js sets
+            // data-signed-out before the first paint; news.css picks one).
+            ""
+          }
+          <span class="kn-account-ph kn-account-ph-in" aria-hidden="true">
+            <span class="kn-iconbtn">${ms("notifications", 18)}</span>
+            <span class="kn-account-avatar">${ms("person", 18)}</span>
+          </span>
+          <span class="kn-account-ph kn-account-ph-out" aria-hidden="true">
+            <span class="kn-btn kn-btn-outline">Log in</span>
+          </span>
+        </div>
         <button
           type="button"
           class="kn-iconbtn sidebar-toggle kn-only-desktop"

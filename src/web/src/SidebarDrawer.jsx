@@ -6,7 +6,6 @@ import MS from "./ms.jsx";
 
 // NOTE: Rendered only while the drawer is open (the drawer itself is mounted
 // on every page), so these chunks load on first open, not with the page.
-const PrivateRpcSetting = lazy(() => import("./PrivateRpcSetting.jsx"));
 const LoginModal = lazy(() => import("./LoginModal.jsx"));
 
 const iOS =
@@ -31,8 +30,8 @@ const Item = ({ href, icon, label, active, external, onClick }) => (
 
 // The NEU 2 menu (iOS "Menu" frames): a bottom sheet on phones, a panel from
 // the right on wider screens. Home, Profile, Saved stories, Settings; then
-// Guidelines, Privacy Policy, Wiki; then Log out (or Log in). The Private
-// RPC switch stays in it (phones have no right column for it).
+// Guidelines, Privacy Policy, Wiki; then Log out (or Log in). The anon-rpc
+// switch lives only on /settings (Settings is the first group's last item).
 const SidebarDrawer = ({ delegations, toast }) => {
   const [open, setOpen] = useState(false);
   const [login, setLogin] = useState(false);
@@ -126,13 +125,6 @@ const SidebarDrawer = ({ delegations, toast }) => {
               onClick={close}
             />
           </div>
-          {open && (
-            <div className="kn-menu-group kn-menu-rpc">
-              <Suspense fallback={null}>
-                <PrivateRpcSetting />
-              </Suspense>
-            </div>
-          )}
           <div className="kn-menu-group kn-menu-account">
             {loggedIn ? (
               <ConnectedDisconnectButton toast={toast} />

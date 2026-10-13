@@ -10,7 +10,9 @@ const spinner =
 
 // The phone tab bar of the NEU 2 design (same as the iOS app): a floating
 // glass bar with Home, New, Submit and Notifications. Bell.jsx mounts the
-// Notifications (or Log in) tab into .mobile-bell-container.
+// Notifications (or Log in) tab into .mobile-bell-container; until then the
+// matching stand-in shows (html[data-signed-out], news.css), like iOS's
+// Notifications / Log In tab.
 const tab = (href, icon, label, active, dataIcon) => html`
   <a
     data-no-instant
@@ -31,8 +33,12 @@ const nav = (path) => html`
     ${tab("/new?cached=true", "sensors", "New", path === "/new", "newest")}
     ${tab("/submit", "edit_square", "Submit", path === "/submit", "submit")}
     <div class="mobile-bell-container kn-tab">
-      ${ms("notifications", 22)}
-      <span>Notifications</span>
+      <span class="kn-tab-ph kn-tab-ph-in"
+        >${ms("notifications", 22)}<span>Notifications</span></span
+      >
+      <span class="kn-tab-ph kn-tab-ph-out"
+        >${ms("person", 22)}<span>Log in</span></span
+      >
     </div>
   </nav>
 `;

@@ -316,6 +316,7 @@ async function addDynamicComments(delegations, toast) {
       );
       const hasPreview = arrow.getAttribute("data-has-preview") === "true";
       const alwaysShown = arrow.getAttribute("data-always-shown") === "true";
+      const firstComment = arrow.getAttribute("data-first-comment") === "true";
       createRoot(arrow).render(
         <StrictMode>
           <Providers>
@@ -325,6 +326,7 @@ async function addDynamicComments(delegations, toast) {
               storyTitle={storyTitle}
               hasPreview={hasPreview}
               alwaysShown={alwaysShown}
+              firstComment={firstComment}
               delegations={delegations}
               toast={toast}
             />
@@ -715,23 +717,6 @@ async function addSidebarDrawer(delegations, toast) {
       <Providers>
         <SidebarDrawer delegations={delegations} toast={toast} />
       </Providers>
-    </StrictMode>,
-  );
-}
-
-// NOTE: Desktop has no menu drawer, so the Private RPC switch sits below the
-// newsletter card in the right column there, or in the footer at widths that
-// have neither the drawer nor the right column. Mobile uses the drawer.
-async function addPrivateRpcDesktop() {
-  const container = ["private-rpc-card", "private-rpc-footer"]
-    .map((id) => document.getElementById(id))
-    .find((el) => el && el.offsetParent !== null);
-  if (!container) return;
-
-  const PrivateRpcSetting = (await import("./PrivateRpcSetting.jsx")).default;
-  createRoot(container).render(
-    <StrictMode>
-      <PrivateRpcSetting variant="compact" />
     </StrictMode>,
   );
 }
@@ -1334,6 +1319,11 @@ async function startWatchAccount(delegations, account, isInIOSApp) {
 }
 
 function hideDesktopLinks() {
+  // NOTE: Greys out the header's Submit for readers without an account,
+  // like before the redesign (news.css, .kn-no-account). theme-init.js's
+  // data-signed-out already does it before the first paint for browsers
+  // without a Kiwi key; announceAccountChange (session.mjs) undoes both.
+  document.documentElement.classList.add("kn-no-account");
   const desktopNav = document.querySelector(".desktop-nav");
   if (desktopNav) {
     const submitLink = desktopNav.querySelector('.meta-link[href="/submit"]');
@@ -1992,7 +1982,6 @@ async function start() {
     addLeaderboardInteractions(),
     addEmbedDrawer(toast),
     addSidebarDrawer(await delegationsPromise, toast),
-    addPrivateRpcDesktop(),
     addSaveButtons(await delegationsPromise, toast),
     addSavedStories(await delegationsPromise, toast),
     addImageViewer(),

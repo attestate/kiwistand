@@ -1238,8 +1238,10 @@ const row = (
                         </div>`
         : "";
 
-    // NOTE: User content: main's markup and layout, unchanged (NEU 2 only
-    // recolours it, see .kn-comment-preview in news.css).
+    // NOTE: The design's comment strip ("comment-preview" / "Latest
+    // comment"): round avatar, name and time in mono, the comment's text.
+    // The text keeps main's wrapping and truncation (user content); see
+    // .kn-cp in news.css.
     const commentPreview = displayCommentPreview
       ? html` <div
                   class="comment-preview kn-comment-preview comment-preview-0x${story.index} ${displayImage ||
@@ -1260,100 +1262,47 @@ const row = (
                       ? `/#0x${story.lastComment.index}`
                       : `/new?cached=true#0x${story.lastComment.index}`}"
                     onclick="var si=this.dataset.storyIdx; (function(a,b){history.replaceState(null,'',a);history.replaceState(null,'',b);})(this.dataset.altHashA,this.dataset.altHashB),document.querySelector('.comment-preview-0x'+si).style.opacity = 0.5,window.addToQueue(new CustomEvent('open-comments-0x'+si,{detail:{source:'comment-preview'}}));window.dispatchEvent(new HashChangeEvent('hashchange'));var cb=document.getElementById('chat-bubble-'+si);if(cb)cb.classList.toggle('comment-button-active');"
-                    style="margin: 0; padding: 12px 16px; display: flex; width: 100%; background-color: var(--background-color1);"
+                    style="margin: 0; display: flex; width: 100%;"
                   >
                     <a
-                      class="comment-preview-anchor"
+                      class="comment-preview-anchor kn-cp"
                       href="${path === "/" ? "" : path}${query}#0x${story
                         .lastComment.index}"
-                      style="width: 100%; display: flex; pointer-events: none;"
                     >
-                      <div style="width:90%;">
-                        ${story.lastComment.previousParticipants &&
-                        story.lastComment.previousParticipants.length > 0 &&
-                        html`
-                          <div
-                            style="opacity: 0.7; margin-bottom: 8px; display: flex; align-items: center;"
-                          >
-                            <div
-                              style="display: inline-flex; position:relative;"
-                            >
-                              ${story.lastComment.previousParticipants.map(
-                                (participant, index) => html`
-                                  <img
-                                    loading="${getImageLoading(isAboveFold, participant.safeAvatar)}"
-                                    src="${DOMPurify.sanitize(
-                                      participant.safeAvatar,
-                                    )}"
-                                    alt="previous participant"
-                                    width="${size}"
-                                    height="${size}"
-                                    style="z-index: ${index}; width: ${size}px; height: ${size}px; border: 1px solid var(--text-secondary); border-radius: 2px; margin-left: ${index ===
-                                    0
-                                      ? "0"
-                                      : "5px"};"
-                                  />
-                                `,
-                              )}
-                            </div>
-                            <span
-                              style="margin-left: 10px; font-size: 9pt; color: var(--text-tertiary);"
-                            >
-                              Previous in thread
-                            </span>
-                          </div>
-                        `}
-                        <div style="display: flex; align-items: flex-start;">
-                          ${story.lastComment.identity.safeAvatar &&
-                          html`<div
-                            style="width: 32px; flex-shrink: 0; margin-right: 14px;"
-                          >
-                            <img
+                      <span class="kn-cp-avatar">
+                        ${story.lastComment.identity.safeAvatar
+                          ? html`<img
                               loading="${getImageLoading(isAboveFold, story.lastComment.identity.safeAvatar)}"
                               src="${DOMPurify.sanitize(
                                 story.lastComment.identity.safeAvatar,
                               )}"
-                              alt="avatar"
-                              width="32"
-                              height="32"
-                              style="width: 32px; height: 32px; border: 1px solid var(--text-secondary); border-radius: 0;"
-                            />
-                          </div>`}
-                          <div style="flex: 1; min-width: 0;">
-                            <div
-                              style="display: flex; align-items: center; gap: 5px; margin-bottom: 3px;"
-                            >
-                              <span
-                                style="font-size: 10pt; touch-action: manipulation;user-select: none; font-weight: 500;"
-                                >${DOMPurify.sanitize(
-                                  story.lastComment.identity.displayName,
-                                )}</span
-                              >
-                              <span style="opacity:0.6; white-space: pre;"> • </span>
-                              <span style="font-size: 9pt; opacity: 0.9;">
-                                ${formatDistanceToNowStrict(
-                                  new Date(story.lastComment.timestamp * 1000),
-                                )}
-                                <span> </span>
-                                ago
-                              </span>
-                            </div>
-                            <span
-                              class="comment-preview-text"
-                              style="display: block; white-space: pre-wrap; word-break: break-word; touch-action: manipulation;user-select: none;"
-                              >${truncateComment(
-                                DOMPurify.sanitize(story.lastComment.title),
-                              )}</span
-                            >
-                          </div>
-                        </div>
-                        <span> </span>
-                      </div>
-                      <div
-                        style="width:10%; display: flex; align-items: center; justify-content: end; padding-right: 7px;"
-                      >
-                        ${expandSVG}
-                      </div>
+                              alt=""
+                              width="28"
+                              height="28"
+                            />`
+                          : ms("person", 16)}
+                      </span>
+                      <span class="kn-cp-body">
+                        <span class="kn-cp-head">
+                          <span class="kn-cp-name"
+                            >${DOMPurify.sanitize(
+                              story.lastComment.identity.displayName,
+                            )}</span
+                          >
+                          <span class="kn-cp-when"
+                            >· ${formatDistanceToNowStrict(
+                              new Date(story.lastComment.timestamp * 1000),
+                            )}${" "}ago</span
+                          >
+                        </span>
+                        <span
+                          class="comment-preview-text kn-cp-text"
+                          >${truncateComment(
+                            DOMPurify.sanitize(story.lastComment.title),
+                          )}</span
+                        >
+                      </span>
+                      <span class="kn-cp-expand">${expandSVG}</span>
                     </a>
                   </div>
                 </div>`
