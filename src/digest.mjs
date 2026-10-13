@@ -4,7 +4,12 @@ import fs from "fs";
 import { getStories } from "./views/best.mjs";
 import { metadata } from "./parser.mjs";
 import log from "./logger.mjs";
-import { countOutbounds, countComments } from "./cache.mjs";
+import {
+  countOutbounds,
+  countComments,
+  getPreviousSubmission,
+} from "./cache.mjs";
+import { creditForStory, creditText } from "./credit.mjs";
 import { isLinkAlive } from "./linkcheck.mjs";
 
 export async function generateDigestData() {
@@ -130,10 +135,20 @@ export async function generateDigestData() {
         }
       }
 
+      // "First story from alice — welcome!" / "alice is back after 5
+      // months" (src/credit.mjs); null without a name or anything to say.
+      const credit = creditForStory(
+        story,
+        story.displayName,
+        getPreviousSubmission,
+      );
+      if (credit) log(`[digest] credit: ${creditText(credit)}`);
+
       return {
         ...story,
         storyLink: trackedStoryLink,
         submitterLink,
+        credit,
       };
     });
 

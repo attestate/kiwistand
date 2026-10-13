@@ -1,5 +1,6 @@
 import React from "react";
 import { Text, Link, Img, Row, Column, Section } from "@react-email/components";
+import Credit from "./_components/Credit.jsx";
 
 function extractDomain(link) {
   try {
@@ -70,6 +71,7 @@ export default function BlueskyEmail({ story = { metadata: {} } }) {
             {story.comments ? ` • ${story.comments} comments` : ''}
             {story.clicks ? ` • ${story.clicks} clicks` : ''}
           </Text>
+          <Credit story={story} />
         </Section>
       </Section>
       <Section style={{ padding: '12px 0' }}>

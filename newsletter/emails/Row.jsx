@@ -1,5 +1,6 @@
 import React from "react";
 import { Head, Html, Body, Container, Tailwind, Text, Link, Img, Row, Column, Section } from "@react-email/components";
+import Credit from "./_components/Credit.jsx";
 import {
   differenceInHours,
   formatDistanceToNowStrict as originalFormatDistance,
@@ -208,6 +209,7 @@ export default function RowEmail({ story = {} }) {
             {upvotes ? ` • ${upvotes} upvote${upvotes === 1 ? '' : 's'}` : ''}
             {comments ? ` • ${comments} comment${comments === 1 ? '' : 's'}` : ''}
           </Text>
+          <Credit story={story} />
         </Section>
       </Section>
       <Section style={{ padding: '12px 0' }}>

@@ -1,5 +1,6 @@
 import React from "react";
 import { Head, Html, Body, Tailwind, Text, Link, Img, Row, Column, Section } from "@react-email/components";
+import Credit from "./_components/Credit.jsx";
 
 // --- Helper functions ---
 const convertBrTagsToNewlines = (text) => {
@@ -113,6 +114,7 @@ export default function TweetEmail({ story = { metadata: {} } }) {
                 {story.comments ? ` • ${story.comments} comments` : ''}
                 {story.clicks ? ` • ${story.clicks} clicks` : ''}
               </Text>
+              <Credit story={story} />
             </Section>
           </Column>
         </Row>

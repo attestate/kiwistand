@@ -8,7 +8,13 @@ import path from "path";
 import * as isoweek from "./isoweek.mjs";
 import * as ens from "./ens.mjs";
 import * as moderation from "./views/moderation.mjs";
-import { getWeekStories, getNeighbourTimestamps, listWeeks } from "./cache.mjs";
+import {
+  getWeekStories,
+  getNeighbourTimestamps,
+  listWeeks,
+  getPreviousSubmission,
+} from "./cache.mjs";
+import { creditForStory } from "./credit.mjs";
 import { getSummary } from "./summaries.mjs";
 import { isCloudflareImage } from "./utils.mjs";
 import log from "./logger.mjs";
@@ -119,6 +125,12 @@ export async function getWeek(week, isCurrent = false) {
       return {
         ...story,
         displayName: submitter.displayName,
+        // Like the newsletter: first story ever, or back after a long break.
+        credit: creditForStory(
+          story,
+          submitter.displayName,
+          getPreviousSubmission,
+        ),
         summary: getSummary(story.index),
       };
     }),
