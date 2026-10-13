@@ -316,6 +316,7 @@ async function addDynamicComments(delegations, toast) {
       );
       const hasPreview = arrow.getAttribute("data-has-preview") === "true";
       const alwaysShown = arrow.getAttribute("data-always-shown") === "true";
+      const firstComment = arrow.getAttribute("data-first-comment") === "true";
       createRoot(arrow).render(
         <StrictMode>
           <Providers>
@@ -325,6 +326,7 @@ async function addDynamicComments(delegations, toast) {
               storyTitle={storyTitle}
               hasPreview={hasPreview}
               alwaysShown={alwaysShown}
+              firstComment={firstComment}
               delegations={delegations}
               toast={toast}
             />

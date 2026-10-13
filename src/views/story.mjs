@@ -850,26 +850,20 @@ export default async function (trie, theme, index, value, referral, commentIndex
                     class="comment-input-host"
                     id=${story.comments.length > 0 ? null : "comments"}
                   >
-                    <div class="comment-input-ssr-placeholder" style="margin: 0 11px 16px 11px;">
-                      <div class="comment-input-desktop-ssr">
-                        <textarea
-                          style="font-size: 1rem; border: var(--border); background-color: var(--bg-white); color: var(--text-primary); display: block; width: 100%; box-sizing: border-box; padding: 10px; border-radius: 2px; resize: vertical;"
-                          rows="12"
-                          disabled
-                        ></textarea>
-                        <span style="color: var(--text-secondary); font-size: 10pt;">Characters remaining: 10,000</span>
-                        <br />
-                        <br />
-                        <div style="display: flex; align-items: center; justify-content: space-between;">
-                          <button
-                            style="width: auto; padding: 8px 16px; background-color: var(--hn-orange); color: var(--bg-white); border: none; border-radius: 2px; font-size: 10pt; cursor: not-allowed; opacity: 0.5; margin-bottom: 10px;"
-                            id="button-onboarding"
-                            disabled
-                          >
-                            Loading...
-                          </button>
-                          <span class="meta-link drawer-link" style="font-size: 0.8rem; color: var(--text-secondary);">comment guidelines</span>
-                        </div>
+                    <div class="comment-input-ssr-placeholder" aria-hidden="true">
+                      <div class="kn-composer comment-input-desktop-ssr">
+                        <span class="kn-composer-field kn-composer-ssr-text"
+                          >${story.comments.length > 0
+                            ? "Add a comment…"
+                            : "Be the first to comment…"}</span
+                        >
+                        <span class="kn-composer-post">Post</span>
+                      </div>
+                      <div class="kn-composer-loggedout comment-input-loggedout-ssr">
+                        <span class="kn-composer-loggedout-text"
+                          >Log in to join the discussion.</span
+                        >
+                        <span class="kn-composer-login">Log in</span>
                       </div>
                     </div>
                     <div
@@ -878,6 +872,7 @@ export default async function (trie, theme, index, value, referral, commentIndex
                       data-story-title="${value.title}"
                       data-comment-count="0"
                       data-always-shown="true"
+                      data-first-comment="${story.comments.length === 0}"
                       data-has-preview="false"
                     ></div>
                   </div>

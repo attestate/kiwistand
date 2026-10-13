@@ -9,7 +9,7 @@ import { resolveIdentity } from "@attestate/delegator2";
 import { useProvider } from "./client.mjs";
 import CommentInput from "./CommentInput.jsx";
 import * as API from "./API.mjs";
-import { getLocalAccount, isIOS, isAndroid } from "./session.mjs";
+import { getLocalAccount, isIOS } from "./session.mjs";
 import { resolveAvatar } from "./Avatar.jsx";
 import { dynamicPrefetch } from "./main.jsx";
 import { getSlug } from "./CommentInput.jsx"; // Import getSlug from CommentInput
@@ -595,161 +595,6 @@ export const EmojiReaction = ({ comment, delegations, toast }) => {
   );
 };
 
-function NotificationOptIn(props) {
-  const account = useAccount();
-  const localAccount = getLocalAccount(account.address);
-  const [isMiniApp, setIsMiniApp] = useState(null); // Start with null to indicate loading state
-
-  // Compute eligibility synchronously when possible to avoid pop-in
-  const identity =
-    localAccount?.identity &&
-    resolveIdentity(props.delegations, localAccount.identity);
-
-  useEffect(() => {
-    let mounted = true;
-    async function checkMiniApp() {
-      try {
-        const miniAppStatus = await window.sdk?.isInMiniApp();
-        if (mounted) setIsMiniApp(Boolean(miniAppStatus));
-      } catch (error) {
-        if (mounted) setIsMiniApp(false);
-      }
-    }
-    checkMiniApp();
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
-  // Don't show in anon mode
-  const isAnonMode = localStorage.getItem('anon-mode') === 'true';
-  if (isAnonMode) return null;
-
-  // Don't render until we know the mini app status to avoid flash
-  if (!identity || isMiniApp === null || isMiniApp === true) return null;
-
-  // Only show on desktop (hide on mobile)
-  if (isIOS() || isAndroid()) return null;
-  return (
-    <div
-      style={{
-        padding: "0.75rem",
-        marginBottom: "28px",
-        backgroundColor: "var(--middle-beige)",
-        border: "var(--border)",
-        borderRadius: "2px",
-      }}
-    >
-      <p
-        style={{
-          fontSize: "11pt",
-          margin: "0 0 8px 0",
-          color: "var(--text-tertiary)",
-        }}
-      >
-        Get email notifications when someone replies to your comments or
-        submissions
-      </p>
-
-      <EmailNotificationLink {...props} />
-    </div>
-  );
-}
-
-const EmailNotificationLink = (props) => {
-  const [status, setStatus] = useState("");
-  const [email, setEmail] = useState("");
-  const account = useAccount();
-  const localAccount = getLocalAccount(account.address);
-  const provider = useProvider();
-  const identity =
-    account.address &&
-    localAccount?.address &&
-    resolveIdentity(props.delegations, localAccount.address);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    console.log("Submit triggered");
-    setStatus("sending");
-
-    const value = API.messageFab(email, email, "EMAILAUTH");
-
-    let signature;
-    try {
-      const signer = new Wallet(localAccount.privateKey, provider);
-      signature = await signer._signTypedData(
-        API.EIP712_DOMAIN,
-        API.EIP712_TYPES,
-        value,
-      );
-    } catch (err) {
-      console.error("Signing failed:", err);
-      setStatus("error");
-      return;
-    }
-
-    const wait = null;
-    const endpoint = "/api/v1/email-notifications";
-    const port = window.location.port;
-
-    try {
-      const response = await API.send(value, signature, wait, endpoint, port);
-      if (response.status === "success") {
-        setStatus("success");
-        setEmail("");
-      } else {
-        console.error("API error:", response.details);
-        setStatus("error");
-      }
-    } catch (err) {
-      console.error("Network request failed:", err);
-      setStatus("error");
-    }
-  };
-
-  return (
-    <form
-      onSubmit={handleSubmit}
-      style={{
-        display: "flex",
-        gap: "8px",
-      }}
-    >
-      <input
-        type="email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        placeholder="Enter your email"
-        style={{
-          flex: 1,
-          padding: "6px 8px",
-          border: "var(--border-thin)",
-          borderRadius: "2px",
-          fontSize: "10pt",
-          backgroundColor: "var(--bg-white)",
-          color: "var(--text-primary)",
-        }}
-        required
-      />
-      <button
-        type="submit"
-        disabled={status === "sending" || !localAccount}
-        style={{
-          padding: "6px 12px",
-          background: status === "sending" ? "var(--text-secondary)" : "var(--button-primary-bg)",
-          color: status === "sending" ? "var(--bg-white)" : "var(--button-primary-text)",
-          border: status === "sending" ? "var(--border)" : "1px solid var(--button-primary-bg)",
-          borderRadius: "2px",
-          cursor: "pointer",
-          fontSize: "10pt",
-        }}
-      >
-        {status === "sending" ? "Subscribing..." : "Subscribe"}
-      </button>
-    </form>
-  );
-};
-
 const Comment = React.forwardRef(
   ({ comment, storyIndex, storyTitle, delegations, toast, isLastComment }, ref) => {
     const [isCollapsed, setIsCollapsed] = useState(false);
@@ -799,7 +644,7 @@ const Comment = React.forwardRef(
           padding: `0.75rem`,
           borderRadius: "2px",
           display: "block",
-          marginBottom: isLastComment ? "28px" : "12px",
+          marginBottom: isLastComment ? "20px" : "12px",
           whiteSpace: "pre-wrap",
           lineHeight: "1.3",
           wordBreak: "break-word",
@@ -1073,15 +918,21 @@ const CommentsSection = (props) => {
   return (
     <div
       className="comment-section"
-      style={{
-        marginLeft: "11px",
-        marginRight: "11px",
-        marginTop: alwaysShown ? "-12px" : "0",
-        marginBottom: "10px",
-        backgroundColor: "transparent",
-        padding: "0",
-        fontSize: "1rem",
-      }}
+      // NOTE: On the story page the composer's box lines up with the server
+      // rendered comment cards (.kn-comments); .comment-input-host in
+      // news.css gives it the same edges, so no margins here.
+      style={
+        alwaysShown
+          ? { padding: "0", fontSize: "1rem" }
+          : {
+              marginLeft: "11px",
+              marginRight: "11px",
+              marginBottom: "10px",
+              backgroundColor: "transparent",
+              padding: "0",
+              fontSize: "1rem",
+            }
+      }
     >
       {comments.length > 0 &&
         comments.map((comment, index) => (
@@ -1095,11 +946,15 @@ const CommentsSection = (props) => {
             isLastComment={index === comments.length - 1}
           />
         ))}
-      <NotificationOptIn {...props} />
       <CommentInput
         {...props}
         comments={comments}
         setComments={setComments}
+        placeholder={
+          (alwaysShown ? props.firstComment : comments.length === 0)
+            ? "Be the first to comment…"
+            : "Add a comment…"
+        }
         style={{ margin: "0" }}
       />
     </div>
