@@ -1,5 +1,5 @@
 import React from "react";
-import { Head, Html, Body, Container, Tailwind, Hr, Img, Text, Row, Column, Section, Link } from "@react-email/components";
+import { Head, Html, Body } from "@react-email/components";
 import fs from "fs";
 import path from "path";
 
@@ -7,22 +7,32 @@ import RowEmail from "./Row.jsx";
 import TweetEmail from "./Tweet.jsx";
 import FarcasterEmail from "./Farcaster.jsx";
 import BlueskyEmail from "./Bluesky.jsx";
+import { Hairline, LinkText, emailCSS, fontCSS, light, font } from "./_components/kit.jsx";
 
 // Load digest data
 let digestStories = [];
+let digestGeneratedAt = null;
+let digestIssue = null;
 try {
   const digestDataPath = process.env.DIGEST_DATA
     ? path.resolve(process.env.DIGEST_DATA)
     : path.join(process.cwd(), '..', 'digest-data.json');
   const digestData = JSON.parse(fs.readFileSync(digestDataPath, 'utf-8'));
   digestStories = digestData.stories || [];
+  digestGeneratedAt = digestData.generatedAt || null;
+  // Optional issue number; without it the header shows the week.
+  digestIssue = digestData.issue || null;
 } catch (error) {
   console.error('Failed to load digest-data.json:', error);
 }
 
 // --- Main Component ---
 
-export default function DigestEmail({ stories = digestStories }) {
+export default function DigestEmail({
+  stories = digestStories,
+  generatedAt = digestGeneratedAt,
+  issue = digestIssue,
+}) {
   const components = {
     Row: RowEmail,
     Tweet: TweetEmail,
@@ -77,6 +87,8 @@ export default function DigestEmail({ stories = digestStories }) {
     return 'Row';
   };
 
+  const date = issueDate(generatedAt);
+
   return (
     <Html lang="en">
       <Head>
@@ -84,80 +96,180 @@ export default function DigestEmail({ stories = digestStories }) {
         <meta name="x-apple-disable-message-reformatting" />
         <meta name="color-scheme" content="light dark" />
         <meta name="supported-color-schemes" content="light dark" />
-        <style>{darkModeCSS}</style>
+        <style>{fontCSS}</style>
+        <style>{emailCSS}</style>
       </Head>
-      <Tailwind>
-        <Body style={main} className="k-body" bgcolor="#fffffa">
-          <Container style={container}>
-            <Text style={preheader}>
-              {preheaderText(storiesToRender)}
-            </Text>
-            <Section style={{ marginTop: '10px', marginBottom: '15px' }}>
-              <Row>
-                <Column width="44">
-                  <Img src="https://news.kiwistand.com/kiwi-icon-email-transparent.png" alt="" width="35" height="35" />
-                </Column>
-                <Column>
-                  {/* The website's wordmark. Black "news" for light mode; mail
-                      apps that support dark mode swap in the light version
-                      (see .k-wm-* in darkModeStyles). */}
-                  <Img className="k-wm-light" src="https://news.kiwistand.com/kiwi-wordmark-email-light.png" alt="Kiwi News" width="176" height="25" />
-                  <div className="k-wm-dark" style={{ display: 'none', maxHeight: 0, overflow: 'hidden', msoHide: 'all' }}>
-                    <Img src="https://news.kiwistand.com/kiwi-wordmark-email-dark.png" alt="Kiwi News" width="176" height="25" />
-                  </div>
-                </Column>
-              </Row>
-            </Section>
-            <Img src="https://news.kiwistand.com/banner-email.jpg" alt="Kiwi News weekly" width="580" style={{ width: '100%', height: 'auto' }} />
-            <Text style={introGreeting} className="k-text">
-              <strong>GM,</strong>
-            </Text>
-            <Text style={introBody} className="k-text">
-              Here are the {countWord(storiesToRender.length)} stories the Kiwi community upvoted most this week.
-              Liked one? Upvote it or leave a comment on Kiwi: that's how the best
-              links rise to the top.
-            </Text>
+      {/* NOTE: No background color in the Body's style: react-email copies
+          it onto a wrapper cell that the dark-mode classes can't reach. The
+          page color comes from the bgcolor attributes. */}
+      <Body className="k-body" bgcolor={light.page} style={{ margin: 0, padding: 0, color: light.text, fontFamily: font }}>
+        <div style={preheader}>{preheaderText(storiesToRender)}</div>
+        <table role="presentation" className="k-page" width="100%" cellPadding="0" cellSpacing="0" border="0" bgcolor={light.page} style={{ borderCollapse: "collapse", backgroundColor: light.page }}>
+          <tbody>
+            <tr>
+              <td align="center" className="k-page-pad" style={{ padding: "32px 40px" }}>
+                <table role="presentation" className="k-card k-frame" width="100%" cellPadding="0" cellSpacing="0" border="0" bgcolor={light.card} style={{ maxWidth: "600px", margin: "0 auto", borderCollapse: "separate", backgroundColor: light.card, border: `1px solid ${light.border}`, borderRadius: "8px" }}>
+                  <tbody>
+                    <tr>
+                      <td className="k-card-pad" style={{ padding: "28px 32px 36px 32px", fontFamily: font, textAlign: "left" }}>
+                        <Header issue={issue} date={date} />
+                        <Hairline />
+                        <Intro date={date} count={storiesToRender.length} />
 
-            <Section style={appSection} className="k-card" bgcolor="#f6f6ef">
-              <Text style={appKicker} className="k-kiwi">NEW</Text>
-              <Text style={appTitle} className="k-text">Kiwi News for iPhone, rebuilt from scratch</Text>
-              <Text style={appBody} className="k-text">
-                The iOS app is now fully native: a faster feed, comments and
-                reactions, notifications, and sharing links straight from Safari.
-                It's in beta on TestFlight, and we'd love your feedback.
-              </Text>
-              <Link href={TESTFLIGHT_URL} className="k-button" style={buttonStyle}><span><span className="k-button-text" style={{ color: '#ffffff' }}>Get the beta</span></span></Link>
-            </Section>
+                        {storiesToRender.map((story, index) => {
+                          const Component = components[getComponentForStory(story)];
+                          return (
+                            <React.Fragment key={story.href}>
+                              {index > 0 && <Hairline />}
+                              <Component story={story} rank={index + 1} hero={index === 0} />
+                            </React.Fragment>
+                          );
+                        })}
 
-            {storiesToRender.map((story, index) => {
-              const Component = components[getComponentForStory(story)];
-              return (
-                <React.Fragment key={story.href}>
-                  <Component story={story} />
-                  {index < storiesToRender.length - 1 && <Hr style={hr} className="k-hr" />}
-                </React.Fragment>
-              );
-            })}
-
-            <Hr style={hr} className="k-hr" />
-
-            <Section style={footerSection}>
-              <Text style={footerText} className="k-text">
-                More every day on <Link href={withUtm("https://news.kiwistand.com/", "footer")} className="k-link" style={footerLink}><span><span className="k-link" style={{ color: '#000000' }}>news.kiwistand.com</span></span></Link>.
-                On a computer? Scan the code to get the iPhone beta:
-              </Text>
-              <Img
-                src="https://news.kiwistand.com/testflight-qr.png"
-                alt="QR code for the Kiwi News TestFlight beta"
-                width="120"
-                height="120"
-              />
-            </Section>
-          </Container>
-        </Body>
-      </Tailwind>
+                        <Hairline />
+                        <AppBox />
+                        <Footer />
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </Body>
     </Html>
   );
+}
+
+// Logo and wordmark on the left, the issue (or week) on the right.
+function Header({ issue, date }) {
+  const label = issue ? `ISSUE #${issue}` : `WEEK ${date.week}`;
+  return (
+    <table role="presentation" width="100%" cellPadding="0" cellSpacing="0" border="0" style={{ borderCollapse: "collapse" }}>
+      <tbody>
+        <tr>
+          <td style={{ padding: "0 0 18px 0", verticalAlign: "middle" }}>
+            <a href={withUtm("https://news.kiwistand.com/", "logo")} style={{ textDecoration: "none" }}>
+              <table role="presentation" cellPadding="0" cellSpacing="0" border="0" style={{ borderCollapse: "collapse" }}>
+                <tbody>
+                  <tr>
+                    <td width="29" style={{ width: "29px", verticalAlign: "middle" }}>
+                      <img src="https://news.kiwistand.com/kiwi-icon-email-transparent.png" alt="" width="29" height="29" style={{ display: "block", border: 0 }} />
+                    </td>
+                    <td style={{ padding: "0 0 0 8px", verticalAlign: "middle", lineHeight: 0 }}>
+                      {/* "Kiwi" brown and "news" lime; mail apps that support
+                          dark mode swap in the dark theme's colors. */}
+                      <img className="k-light-img" src="https://news.kiwistand.com/kiwi-wordmark-email-2-light.png" alt="Kiwi News" width="112" height="16" style={{ display: "block", border: 0 }} />
+                      <div className="k-dark-img" style={{ display: "none", maxHeight: 0, overflow: "hidden", msoHide: "all" }}>
+                        <img src="https://news.kiwistand.com/kiwi-wordmark-email-2-dark.png" alt="Kiwi News" width="112" height="16" style={{ display: "block", border: 0 }} />
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </a>
+          </td>
+          <td align="right" className="k-muted" style={{ padding: "0 0 18px 0", verticalAlign: "middle", textAlign: "right", fontFamily: font, fontSize: "11px", lineHeight: "14px", fontWeight: 500, letterSpacing: "1px", color: light.secondary, whiteSpace: "nowrap" }}>
+            {label}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  );
+}
+
+// "SUNDAY, 11 OCT" / "The week's five."
+function Intro({ date, count }) {
+  const headline = `The week's ${countWord(count)}.`;
+  return (
+    <div style={{ padding: "24px 0 20px 0" }}>
+      <div className="k-muted" style={{ fontFamily: font, fontSize: "11px", lineHeight: "14px", fontWeight: 500, letterSpacing: "1px", color: light.secondary, margin: "0 0 8px 0" }}>
+        {date.label}
+      </div>
+      <h1 className="k-text k-headline" style={{ fontFamily: font, fontSize: "40px", lineHeight: "48px", fontWeight: 800, letterSpacing: "-1.4px", color: light.text, margin: 0 }}>
+        {headline}
+      </h1>
+    </div>
+  );
+}
+
+// The iOS app: text on the left, the TestFlight QR code on the right
+// (below it on phones).
+function AppBox() {
+  const href = TESTFLIGHT_URL;
+  return (
+    <table role="presentation" className="k-strip" width="100%" cellPadding="0" cellSpacing="0" border="0" bgcolor={light.strip} style={{ borderCollapse: "separate", backgroundColor: light.strip, borderRadius: "8px" }}>
+      <tbody>
+        <tr>
+          <td className="k-stack k-app-text" valign="middle" style={{ padding: "20px 0 20px 20px", verticalAlign: "middle" }}>
+            <table role="presentation" cellPadding="0" cellSpacing="0" border="0" style={{ borderCollapse: "separate" }}>
+              <tbody>
+                <tr>
+                  <td bgcolor={light.accent} style={{ backgroundColor: light.accent, color: light.accentText, borderRadius: "4px", padding: "2px 6px", fontFamily: font, fontSize: "10px", lineHeight: "13px", fontWeight: 600, letterSpacing: "1px" }}>
+                    NEW
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <div className="k-row-title" style={{ margin: "8px 0 0 0", fontFamily: font, fontSize: "18px", lineHeight: "23px", fontWeight: 700 }}>
+              <LinkText href={href}>Kiwi News for iPhone, rebuilt from scratch</LinkText>
+            </div>
+            <div className="k-tertiary" style={{ margin: "8px 0 0 0", fontFamily: font, fontSize: "14px", lineHeight: "21px", color: light.tertiary }}>
+              The iOS app is now fully native: a faster feed, comments and
+              reactions, notifications, and sharing links straight from Safari.
+              It's in beta on TestFlight, and we'd love your feedback.
+            </div>
+          </td>
+          <td className="k-stack-gap" width="20" style={{ width: "20px", fontSize: 0, lineHeight: 0 }}>&nbsp;</td>
+          <td className="k-stack k-qr" align="center" valign="middle" width="138" style={{ padding: "20px 20px 20px 0", width: "138px", verticalAlign: "middle", textAlign: "center" }}>
+            <a href={href} style={{ display: "inline-block", textDecoration: "none" }}>
+              <table role="presentation" cellPadding="0" cellSpacing="0" border="0" style={{ borderCollapse: "separate" }}>
+                <tbody>
+                  <tr>
+                    <td bgcolor="#FFFFFF" style={{ backgroundColor: "#FFFFFF", border: `1px solid ${light.border}`, borderRadius: "6px", padding: "6px" }}>
+                      <img src="https://news.kiwistand.com/testflight-qr.png" alt="QR code for the Kiwi News TestFlight beta" width="112" height="112" style={{ display: "block", border: 0 }} />
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </a>
+            <div className="k-muted" style={{ margin: "8px 0 0 0", fontFamily: font, fontSize: "11px", lineHeight: "14px", color: light.secondary, whiteSpace: "nowrap" }}>
+              Scan for the iPhone beta
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  );
+}
+
+// Buttondown adds its own Subscribe / Unsubscribe / View online links
+// below this.
+function Footer() {
+  return (
+    <div className="k-tertiary" style={{ padding: "24px 0 0 0", fontFamily: font, fontSize: "14px", lineHeight: "20px", color: light.tertiary }}>
+      More every day on{" "}
+      <LinkText href={withUtm("https://news.kiwistand.com/", "footer")} style={{ fontWeight: 600, color: light.text }}>
+        news.kiwistand.com
+      </LinkText>
+    </div>
+  );
+}
+
+// "SUNDAY, 11 OCT" and the ISO week of the day the digest was made.
+function issueDate(generatedAt) {
+  let day = new Date(generatedAt || Date.now());
+  if (Number.isNaN(day.getTime())) day = new Date();
+  const weekday = day.toLocaleDateString("en-GB", { weekday: "long", timeZone: "UTC" });
+  const month = day.toLocaleDateString("en-GB", { month: "short", timeZone: "UTC" });
+  const label = `${weekday}, ${day.getUTCDate()} ${month}`.toUpperCase();
+  // ISO 8601 week number.
+  const thursday = new Date(Date.UTC(day.getUTCFullYear(), day.getUTCMonth(), day.getUTCDate()));
+  thursday.setUTCDate(thursday.getUTCDate() + 3 - ((thursday.getUTCDay() + 6) % 7));
+  const firstThursday = new Date(Date.UTC(thursday.getUTCFullYear(), 0, 4));
+  const week = 1 + Math.round(((thursday - firstThursday) / 86400000 - 3 + ((firstThursday.getUTCDay() + 6) % 7)) / 7);
+  return { label, week };
 }
 
 function countWord(n) {
@@ -189,134 +301,14 @@ function preheaderText(stories) {
     : "This week's top stories on Kiwi News, plus the new native iPhone app";
 }
 
-// Clients that honor prefers-color-scheme (Apple Mail, iOS Mail, Outlook
-// for Mac/iOS) get a designed dark theme; [data-ogsc]/[data-ogsb] are
-// Outlook.com's dark-mode hooks. Clients that invert colors on their own
-// (Gmail apps, Outlook Windows) ignore this; the layout uses live text and
-// opaque images so inversion stays readable there too.
-const darkModeCSS = `
-  :root { color-scheme: light dark; supported-color-schemes: light dark; }
-  @media (prefers-color-scheme: dark) {
-    .k-body, body { background-color: #161614 !important; color: #ecece6 !important; }
-    .k-card { background-color: #23231f !important; border-color: #3a3a34 !important; }
-    .k-embed { background-color: #2b2b27 !important; border-color: #3a3a34 !important; }
-    .k-text { color: #ecece6 !important; }
-    .k-link { color: #ffffff !important; }
-    .k-muted { color: #a8a89e !important; }
-    .k-kiwi { color: #b5cc3a !important; }
-    .k-hr { border-color: #3a3a34 !important; }
-    .k-button { background-color: #ecece6 !important; color: #111111 !important; }
-    .k-button-text { color: #111111 !important; }
-    .k-wm-light { display: none !important; }
-    .k-wm-dark { display: block !important; max-height: none !important; }
-  }
-  [data-ogsc] .k-wm-light { display: none !important; }
-  [data-ogsc] .k-wm-dark { display: block !important; max-height: none !important; }
-  [data-ogsc] .k-text { color: #ecece6 !important; }
-  [data-ogsc] .k-link { color: #ffffff !important; }
-  [data-ogsc] .k-muted { color: #a8a89e !important; }
-  [data-ogsc] .k-kiwi { color: #b5cc3a !important; }
-  [data-ogsb] .k-card { background-color: #23231f !important; }
-  [data-ogsb] .k-embed { background-color: #2b2b27 !important; }
-  [data-ogsb] .k-button { background-color: #ecece6 !important; }
-  [data-ogsc] .k-button, [data-ogsc] .k-button-text { color: #111111 !important; }
-`;
-
-// --- Styles ---
-// NOTE: No background color here: react-email copies the Body's style onto
-// a wrapper cell that the dark-mode classes can't reach. The light
-// background comes from the body's bgcolor attribute.
-const main = {
-  color: "#111111",
-  fontFamily:
-    "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, 'Apple Color Emoji', 'Segoe UI Emoji', sans-serif",
-};
-
-const container = {
-  margin: "0 auto",
-  padding: "0 0 48px",
-  maxWidth: "580px",
-};
-
-const hr = {
-  borderColor: "#cccccc",
-  margin: "20px 0",
-};
-
-const introGreeting = {
-  fontSize: "14px",
-  lineHeight: "24px",
-  textAlign: "left",
-  margin: "20px 0 10px 0",
-};
-
-const introBody = {
-  fontSize: "14px",
-  lineHeight: "24px",
-  textAlign: "left",
-  margin: "0 0 20px 0",
-};
-
 const preheader = {
   fontSize: "1px",
   lineHeight: "1px",
-  color: "#fffffa",
+  color: light.page,
   display: "none",
   maxHeight: 0,
   maxWidth: 0,
   opacity: 0,
   overflow: "hidden",
-};
-
-
-const appSection = {
-  border: "1px solid #e6e6df",
-  borderRadius: "3px",
-  padding: "4px 16px 16px",
-  margin: "0 0 24px 0",
-};
-
-const appKicker = {
-  fontSize: "11px",
-  fontWeight: "700",
-  letterSpacing: "1px",
-  color: "#7a8f1c",
-  margin: "12px 0 0 0",
-};
-
-const appTitle = {
-  fontSize: "17px",
-  fontWeight: "600",
-  lineHeight: "22px",
-  margin: "4px 0 6px 0",
-};
-
-const appBody = {
-  fontSize: "14px",
-  lineHeight: "22px",
-  margin: "0 0 14px 0",
-};
-
-const buttonStyle = {
-  backgroundColor: "#000000",
-  color: "#ffffff",
-  padding: "10px 20px",
-  textDecoration: "none",
-  display: "inline-block",
-  fontSize: "14px",
-};
-
-const footerSection = {
-  padding: "8px 0 0 0",
-};
-
-const footerText = {
-  fontSize: "13px",
-  lineHeight: "20px",
-  margin: "0 0 12px 0",
-};
-
-const footerLink = {
-  color: "#000000",
-  textDecoration: "underline",
+  msoHide: "all",
 };
