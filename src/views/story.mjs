@@ -499,9 +499,10 @@ export default async function (trie, theme, index, value, referral, commentIndex
   const related = await moreFromSite(value.href, index);
 
   const slug = getSlug(value.title);
-  const canonicalUrl = commentIndex 
-    ? `${baseUrl}/stories/${slug}?index=0x${index}&commentIndex=${commentIndex}`
-    : `${baseUrl}/stories/${slug}?index=0x${index}`;
+  const storyUrl = `${baseUrl}/stories/${slug}?index=0x${index}`;
+  const canonicalUrl = commentIndex
+    ? `${storyUrl}&commentIndex=${commentIndex}`
+    : storyUrl;
 
   const jsonLd = serialize({
     "@context": "https://schema.org",
@@ -513,6 +514,7 @@ export default async function (trie, theme, index, value, referral, commentIndex
     "author": {
       "@type": "Person",
       "name": story.submitter.displayName,
+      "url": `${baseUrl}/upvotes?address=${story.identity}`,
     },
     ...(value.href.startsWith("http") ? {
       "sharedContent": {
@@ -530,10 +532,15 @@ export default async function (trie, theme, index, value, referral, commentIndex
       "comment": story.comments.slice(0, 5).map((c) => ({
         "@type": "Comment",
         "text": c.title,
-        "dateCreated": new Date(c.timestamp * 1000).toISOString(),
+        // Google's forum markup requires datePublished on every Comment.
+        "datePublished": new Date(c.timestamp * 1000).toISOString(),
+        ...(c.index ? { "url": `${storyUrl}#0x${c.index}` } : {}),
         "author": {
           "@type": "Person",
           "name": c.displayName,
+          ...(c.identity?.address
+            ? { "url": `${baseUrl}/upvotes?address=${c.identity.address}` }
+            : {}),
         },
       })),
     } : {}),
