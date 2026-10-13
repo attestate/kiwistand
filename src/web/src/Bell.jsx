@@ -6,13 +6,18 @@ import { Wallet } from "@ethersproject/wallet";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 
 import * as API from "./API.mjs";
-import { getLocalAccount, getCookie } from "./session.mjs";
+import {
+  getLocalAccount,
+  getCookie,
+  ACCOUNT_CHANGE_EVENT,
+} from "./session.mjs";
 import { useProvider } from "./client.mjs";
 import { subscribe } from "./newsletter.mjs";
 import { dynamicPrefetch } from "./main.jsx";
 import { showSpinnerOverlay } from "./spinnerOverlay.js";
 import LoginModal from "./LoginModal.jsx";
 import MS from "./ms.jsx";
+import useAccountChange from "./useAccountChange.js";
 import { useWebHaptics } from "web-haptics/react";
 import { openDelegationModalForAction } from "./delegationModalManager.js";
 
@@ -202,9 +207,30 @@ const ConnectedEmailSubscriptionForm = EmailSubscriptionForm;
 
 export { ConnectedEmailSubscriptionForm };
 
+// NOTE: Re-renders on a login without a page load (announceAccountChange
+// in session.mjs) and then also fetches the delegations again (uncached), so
+// a key delegated during the onboarding counts.
+function useFreshDelegations(initial) {
+  const [delegations, setDelegations] = useState(initial);
+  useEffect(() => setDelegations(initial), [initial]);
+  useEffect(() => {
+    const refresh = async () => {
+      try {
+        const fresh = await API.fetchDelegations(false);
+        if (fresh && typeof fresh === "object") setDelegations(fresh);
+      } catch (err) {}
+    };
+    window.addEventListener(ACCOUNT_CHANGE_EVENT, refresh);
+    return () => window.removeEventListener(ACCOUNT_CHANGE_EVENT, refresh);
+  }, []);
+  return delegations;
+}
+
 let wasTitleSet = false;
 const Bell = (props) => {
   let address;
+  const delegations = useFreshDelegations(props.delegations);
+  useAccountChange();
   const account = useAccount();
   const localAccount = getLocalAccount(account.address);
   const loginModalRef = useRef();
@@ -216,8 +242,7 @@ const Bell = (props) => {
   } else if (account.isConnected) {
     address = account.address;
   }
-  const isEligible =
-    address && resolveIdentity(props.delegations, address);
+  const isEligible = address && resolveIdentity(delegations, address);
   const needsDelegation = isEligible && !localAccount && account?.isConnected;
 
   const localLastUpdate = parseInt(getCookie("lastUpdate"), 10);
@@ -288,8 +313,10 @@ const Bell = (props) => {
     };
   }, [address, props.mobile]);
 
+  // NOTE: A signed-in account without notifications yet (e.g. right after a
+  // passkey sign-in, which sets no lastUpdate) still gets its bell and
+  // avatar; returning nothing here left an empty gap in the header.
   if (
-    (!needsDelegation && isEligible && !lastUpdate && readNotifications === 0) ||
     window.location.pathname === "/indexing" ||
     window.location.pathname === "/demonstration" ||
     window.location.pathname === "/invite" ||
@@ -365,7 +392,7 @@ const Bell = (props) => {
         )}
         <LoginModal
           ref={loginModalRef}
-          delegations={props.delegations}
+          delegations={delegations}
           toast={props.toast}
         />
       </>

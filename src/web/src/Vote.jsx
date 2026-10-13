@@ -21,6 +21,7 @@ import {
 import theme from "./theme.jsx";
 import { maybeShowUpvoteNewsletterPrompt } from "./UpvoteNewsletterPrompt.jsx";
 import { getLocalAccount, isIOSApp } from "./session.mjs";
+import useAccountChange from "./useAccountChange.js";
 import {
   openDelegationModalForAction,
   isDelegationModalNeeded,
@@ -151,6 +152,7 @@ const Vote = (props) => {
 
   let address;
   const account = useAccount();
+  useAccountChange();
   const localAccount = getLocalAccount(account.address);
   if (account.isConnected) {
     address = account.address;

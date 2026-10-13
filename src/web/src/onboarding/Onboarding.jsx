@@ -17,6 +17,7 @@ import {
   tenYearsInSeconds,
   isIOSApp,
   getLocalAccount,
+  announceAccountChange,
 } from "../session.mjs";
 import { PROFILE_TYPES, nameProblem } from "../EditProfile.jsx";
 import { uploadImage } from "../uploadImage.mjs";
@@ -244,7 +245,7 @@ export default function Onboarding({ onClose }) {
   const [doc, setDoc] = useState(false);
   const { openConnectModal, connectModalOpen } = useConnectModal();
   // The account exists (passkey made, signed in or wallet delegated):
-  // closing reloads so the page shows it signed in.
+  // closing tells the page's islands, so it shows it signed in.
   const [made, setMade] = useState(false);
   // The passkey account (new or signed in); kept so a failed name save
   // doesn't make a second passkey.
@@ -263,10 +264,18 @@ export default function Onboarding({ onClose }) {
   const steps = stepsFor(path, emailDone);
   const index = steps.indexOf(step);
 
+  // NOTE: No reload: the header's islands (bell, avatar, tab bar) re-read
+  // the new account in place (announceAccountChange in session.mjs).
+  // Forms that were rendered for a logged-out reader (the story page's
+  // comment box, the submit form) only pick the account up on a fresh
+  // mount, so those pages still reload, after the header has updated.
   const finish = useCallback(() => {
     if (made) {
-      window.location.reload();
-      return;
+      announceAccountChange();
+      if (document.querySelector(".comment-section, #submit-button")) {
+        window.location.reload();
+        return;
+      }
     }
     onClose();
   }, [made, onClose]);
@@ -603,7 +612,10 @@ export default function Onboarding({ onClose }) {
             : "Connect your wallet. Reading never needs an account."}
         </p>
       </Heading>
-      <div className="kob-row kob-actions">
+      {/* NOTE: Tim's order and levels: "Create account" (primary), the
+          passkey sign-in as an outlined button of the same size, then the
+          wallet as a plain text link right below. */}
+      <div className="kob-join-actions">
         <button
           type="button"
           className="kob-btn"
@@ -615,7 +627,7 @@ export default function Onboarding({ onClose }) {
         {passkeys && (
           <button
             type="button"
-            className="kob-textlink"
+            className="kob-btn kob-btn-outline"
             onClick={handleSignIn}
             disabled={busy}
           >
@@ -624,16 +636,18 @@ export default function Onboarding({ onClose }) {
               : "Already have an account? Log in"}
           </button>
         )}
+        {passkeys && (
+          <button
+            type="button"
+            className="kob-textlink kob-join-wallet"
+            onClick={startWallet}
+            disabled={busy}
+          >
+            {walletLabel || "Have a wallet? Connect it instead"}
+          </button>
+        )}
       </div>
       <ErrorText>{error}</ErrorText>
-      {passkeys && (
-        <Skip
-          desk
-          label={walletLabel || "Have a wallet? Connect it instead"}
-          onClick={startWallet}
-          disabled={busy}
-        />
-      )}
     </>
   ) : (
     <>

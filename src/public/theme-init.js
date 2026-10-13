@@ -29,6 +29,22 @@
     document.documentElement.setAttribute('data-signed-out', '');
   }
 
+  // NOTE: Your own profile page (/upvotes?address=<you>) shows "Edit
+  // profile", "Saved stories" and the settings gear (views/upvotes.mjs).
+  // The page is cached for everyone, so this marks it before the first
+  // paint, from this browser's Kiwi key (same key names as above); pages.css
+  // then shows them right away instead of when EditProfile.jsx mounts.
+  try {
+    if (!anonMode && hasKey && location.pathname === '/upvotes') {
+      const address = (urlParams.get('address') || '').toLowerCase();
+      const own = Object.keys(localStorage).some(function (key) {
+        const match = key.match(/^-kiwi-news-(0x[a-fA-F0-9]{40})-key$/);
+        return match && match[1].toLowerCase() === address;
+      });
+      if (own) document.documentElement.setAttribute('data-own-profile', '');
+    }
+  } catch (err) {}
+
   // NOTE: The "Kiwi News for iPhone" TestFlight card (testflight-card.mjs) is for iPhone
   // Safari visitors, not inside a Farcaster mini app (an iframe) or a home
   // screen web app. Hidden for good after "x", and for 30 days after a tap.

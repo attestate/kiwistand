@@ -105,8 +105,9 @@ export default async function (trie, theme, identity, tab = "submissions") {
 
   // NOTE: The settings gear, "Edit profile" and "Saved stories" are only for
   // your own profile. The page is the same for everyone (it's cached), so
-  // EditProfile.jsx decides: it renders into <kiwi-edit-profile> only on
-  // your profile, and public/pages.css shows the other two when it did.
+  // theme-init.js marks your own profile (html[data-own-profile]) before
+  // the first paint and public/pages.css shows them then; EditProfile.jsx
+  // replaces the "Edit profile" stand-in below with the real button.
   const gear = html`<a
     class="n2-glass n2-own-only"
     href="/settings"
@@ -173,10 +174,11 @@ export default async function (trie, theme, identity, tab = "submissions") {
           : null}
       </div>
       <div class="n2-own">
-        <kiwi-edit-profile
-          data-address="${identity}"
-          data-variant="row"
-        ></kiwi-edit-profile>
+        <kiwi-edit-profile data-address="${identity}" data-variant="row"
+          ><span class="n2-own-row n2-own-ssr"
+            >${Icon("edit")}<span>Edit profile</span></span
+          ></kiwi-edit-profile
+        >
         <a class="n2-own-row n2-own-only" href="/saved"
           >${Icon("bookmark")}<span>Saved stories</span></a
         >

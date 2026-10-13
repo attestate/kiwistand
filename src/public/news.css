@@ -2446,29 +2446,6 @@ newsletter-card {
   cursor: pointer;
 }
 
-/* Private RPC switch on desktop (mobile has it in the menu drawer): a card
-   below the newsletter in the right column, or a footer row at widths with
-   neither the drawer nor the right column. */
-#private-rpc-card:not(:empty) {
-  background-color: var(--bg-white);
-  border: var(--border);
-  border-radius: 2px;
-  padding: 12px 16px;
-}
-#private-rpc-footer {
-  display: none;
-}
-@media (min-width: 641px) and (max-width: 1100px) {
-  #private-rpc-footer {
-    display: flex;
-    justify-content: center;
-    padding: 0 1rem 0.75rem;
-  }
-  #private-rpc-footer > * {
-    width: 300px;
-  }
-}
-
 /* ==========================================================================
    NEU 2 redesign (Oct 2026): top bar, tab bar, feeds, story cards, right
    column, saved stories. Uses the --kn-* tokens at the top of this file.
@@ -3260,21 +3237,25 @@ body {
 .kn-right {
   font-family: var(--kn-font);
 }
+/* NOTE: The design gives the newsletter box a fill and the iPhone box a
+   border; Tim wants one look for every box in the column, so all of them
+   get both: the comment-strip fill, the card border, radius-lg, 20px. */
 .kn-right .newsletter-card,
 .kn-side-box {
   box-sizing: border-box;
+  width: 100%;
   margin: 0;
   padding: 20px;
   border-radius: var(--kn-radius-lg);
+  background: var(--kn-comment-strip);
+  border: 1px solid var(--kn-card-border);
+  box-shadow: none;
 }
 .kn-right .newsletter-card {
   position: relative;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  background: var(--kn-comment-strip);
-  border: 0;
-  box-shadow: none;
 }
 .newsletter-card-eyebrow {
   font-family: var(--kn-font-mono);
@@ -3342,7 +3323,6 @@ body {
   display: flex;
   align-items: center;
   gap: 16px;
-  border: 1px solid var(--kn-card-border);
 }
 .kn-qr-tile {
   flex: 0 0 auto;
@@ -3463,11 +3443,30 @@ body {
   .kn-topbar-right {
     gap: 12px;
   }
-  .kn-account {
-    min-width: 92px;
-    justify-content: flex-end;
+  /* NOTE: One gap between every item on the right (search, Submit, the
+     bell and avatar or "Log in", the menu), whichever of them are there:
+     #bell holds its own items with the same gap and no reserved width. */
+  .kn-account,
+  .kn-account-ph {
+    display: flex;
     align-items: center;
     gap: 12px;
+  }
+  .kn-account.kn-only-desktop:empty {
+    display: none !important;
+  }
+  /* Submit is greyed out for readers without an account, as before the
+     redesign (hideDesktopLinks in main.jsx). */
+  html[data-signed-out] .kn-topbar a.kn-btn-accent[href="/submit"],
+  html.kn-no-account .kn-topbar a.kn-btn-accent[href="/submit"] {
+    opacity: 0.2;
+    pointer-events: none;
+    cursor: default;
+  }
+  html[data-signed-out] .kn-account-ph-in,
+  html:not([data-signed-out]) .kn-account-ph-out,
+  html[data-theme="anon"] .kn-account-ph {
+    display: none;
   }
   #hnmain {
     width: 768px;
@@ -4024,34 +4023,6 @@ body {
 .kn-menu .kn-menu-logout:link {
   color: var(--kn-alert);
 }
-.kn-menu-rpc .private-rpc-setting {
-  display: flex;
-  align-items: center;
-  min-height: 52px;
-  padding: 4px 20px;
-  box-sizing: border-box;
-}
-.kn-menu-rpc .private-rpc-setting label.private-rpc-row {
-  gap: 14px;
-}
-.kn-menu-rpc .private-rpc-setting svg {
-  box-sizing: content-box;
-  width: 22px;
-  height: 22px;
-  padding: 3px;
-  flex-shrink: 0;
-  color: var(--kn-text-primary);
-}
-.kn-menu-rpc .private-rpc-setting .private-rpc-title {
-  font-size: 16px;
-  line-height: 1.25;
-  color: var(--kn-text-primary);
-}
-.kn-menu-rpc .private-rpc-setting .private-rpc-sub {
-  font-size: 12px;
-  color: var(--kn-text-secondary);
-}
-
 .kn-hidden {
   display: none !important;
 }
@@ -4081,6 +4052,25 @@ body {
 }
 kiwi-saved-stories {
   display: block;
+}
+/* NOTE: The server-rendered first state (views/saved.mjs): the loading
+   rows with a Kiwi key, the "Log in" prompt without one. */
+.kn-saved-ssr-in {
+  display: contents;
+}
+html[data-signed-out] .kn-saved-ssr-in,
+html:not([data-signed-out]) .kn-saved-ssr-out,
+html[data-theme="anon"] .kn-saved-ssr-in {
+  display: none;
+}
+html[data-theme="anon"] .kn-saved-ssr-out {
+  display: flex;
+}
+/* NOTE: How many stories are saved isn't known until the list arrives, so
+   the list gets the window's height: the footer stays below it instead of
+   jumping down when the rows come in. */
+html:not([data-signed-out]):not([data-theme="anon"]) kiwi-saved-stories {
+  min-height: 100vh;
 }
 .kn-saved-list {
   margin: 12px 0 0;
