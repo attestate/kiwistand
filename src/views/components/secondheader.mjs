@@ -2,6 +2,8 @@ import htm from "htm";
 import vhtml from "vhtml";
 import DOMPurify from "isomorphic-dompurify";
 
+import { ms } from "./icons.mjs";
+
 const html = htm.bind(vhtml);
 
 const style = "width: 1rem; position: relative; top: 0.15rem;";
@@ -176,210 +178,159 @@ export const fireSVG = html`
   </svg>
 `;
 
-const periodIconStyle = (theme, period, category) =>
-  `color: ${
-    period === category ? "var(--text-primary)" : "var(--text-secondary)"
-  }; font-weight: bold; border: none; text-decoration: ${period === category ? "none" : "underline"}; font-size: 1.01rem; border-radius: 2px; cursor: pointer; padding: 5px 15px; background-color: transparent;`;
+const spinner =
+  "if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block';}";
 
-const animation = `
-  var initialWidth = this.offsetWidth;
-  this.style.width = initialWidth + 'px';
-  var dots = ['\u25CF', '\u25CB'];
-  var i = 0;
-  var animate = function() { dots.unshift(dots.pop()); this.textContent = dots.join(' '); i++
-  if (i > 5) clearInterval(intervalId); }.bind(this);
-  animate();
-  var intervalId = setInterval(animate, 500);
- `;
+const periods = [
+  ["all", "All", "All time"],
+  ["year", "Year", "This year"],
+  ["month", "Month", "This month"],
+  ["week", "Week", "This week"],
+  ["day", "Day", "Today"],
+];
 
+const months = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+];
+const days = [
+  "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday",
+];
+
+// "6-12 OCT" for the past seven days, in UTC like the feeds.
+export function weekRange(now = new Date()) {
+  const start = new Date(now.getTime() - 6 * 24 * 60 * 60 * 1000);
+  const end = `${now.getUTCDate()} ${months[now.getUTCMonth()]}`;
+  const from =
+    start.getUTCMonth() === now.getUTCMonth()
+      ? `${start.getUTCDate()}`
+      : `${start.getUTCDate()} ${months[start.getUTCMonth()]}`;
+  return `${from}\u2013${end}`.toUpperCase();
+}
+
+export function today(now = new Date()) {
+  return `${days[now.getUTCDay()]}, ${now.getUTCDate()} ${
+    months[now.getUTCMonth()]
+  }`.toUpperCase();
+}
+
+// The desktop page header above a feed (NEU 2 "Page header").
+function pageHead(site, period) {
+  let eyebrow, headline, sub, meta;
+  if (site === "top") {
+    eyebrow = `${today()} \u00b7 HOT`;
+    headline = "Good stories. Curious people.";
+    sub = "The best of crypto, tech and the open web. Curated by humans.";
+    meta = "RANKED BY UPVOTES AND AGE";
+  } else if (site === "new") {
+    eyebrow = `${today()} \u00b7 NEW`;
+    headline = "Fresh from the community.";
+    sub = "Every story as it is submitted, newest first.";
+    meta = "NEWEST FIRST";
+  } else if (site === "best") {
+    const label = {
+      all: ["BEST \u00b7 ALL TIME", "The best of all time.", "since Kiwi News began"],
+      year: ["BEST \u00b7 PAST YEAR", "The best of the year.", "over the past year"],
+      month: ["BEST \u00b7 PAST MONTH", "The best of the month.", "over the past month"],
+      week: [`BEST \u00b7 ${weekRange()}`, "The best of the week.", "over the past seven days"],
+      day: [`BEST \u00b7 ${today()}`, "The best of the day.", "over the past day"],
+    }[period] || ["BEST", "The best of Kiwi News.", "of all time"];
+    eyebrow = label[0];
+    headline = label[1];
+    sub = `The stories the Kiwi community upvoted most ${label[2]}.`;
+    meta = "RANKED BY UPVOTES";
+  } else {
+    return null;
+  }
+  return { eyebrow, headline, sub, meta };
+}
+
+// Hot / New / Best above the feeds, plus Best's time frames: buttons next
+// to the tabs on desktop, a dropdown below them on phones (like the iOS app).
 const secondheader = (theme, site, period, domain, query) => {
   period = DOMPurify.sanitize(period);
   domain = DOMPurify.sanitize(domain);
+  const isFeed =
+    site === "search" || site === "top" || site === "new" || site === "best";
+  if (!isFeed) return html`<td></td>`;
+  const head = pageHead(site, period);
+  const tab = (href, label, active) => html`
+    <a
+      data-no-instant
+      href="${href}"
+      class="kn-seg feed-button${active ? " kn-seg-active active" : ""}"
+      aria-current="${active ? "page" : "false"}"
+      onclick="${spinner}"
+      >${label}</a
+    >
+  `;
+  const periodHref = (key) =>
+    `/best?period=${key}${domain ? `&domain=${domain}` : ""}`;
+  const current = periods.find(([key]) => key === period) || periods[3];
   return html`
-    <td>
-      <div
-        class="second-header"
-        style="min-height: 40px; display: flex; justify-content: space-between; align-items: center; padding: 10px 11px; color: var(--text-white);"
-      >
-        <div style="display: flex; align-items: center;">
-          ${site === "search" ||
-          site === "top" ||
-          site === "new" ||
-          site === "best"
-            ? html`
-                <a data-no-instant class="feed-button-link" href="/">
-                  <button
-                    onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block'; ${animation}}"
-                    class="feed-button${site === "top" ? " active" : ""}"
-                    style=${`font-size: 1.01rem; outline: none; border-radius: 2px; cursor: pointer; padding: 5px 14px; background-color: ${
-                      site === "top" ? "var(--accent-primary)" : "transparent"
-                    }; border: 1px solid ${
-                      site === "top" ? "var(--accent-primary)" : "var(--accent-primary-bright)"
-                    }; color: ${
-                      site === "top" ? "#000" : "var(--text-primary)"
-                    };`}
-                  >
-                    <span>
-                      ${site === "top" ? fireFullSVG : fireSVG} Hot
-                    </span>
-                  </button>
-                </a>
-              `
-            : ""}
-          ${site === "search" ||
-          site === "top" ||
-          site === "new" ||
-          site === "best"
-            ? html`
-                <a
-                  data-no-instant
-                  class="feed-button-link"
-                  href="/new?cached=true"
-                >
-                  <button
-                    onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block'; ${animation}}"
-                    class="feed-button${site === "new" ? " active" : ""}"
-                    style=${`margin-left: 10px; font-size: 1.01rem; outline: none; border-radius: 2px; cursor: pointer; padding: 5px 14px; background-color: ${
-                      site === "new" ? "var(--accent-primary)" : "transparent"
-                    }; border: 1px solid ${
-                      site === "new" ? "var(--accent-primary)" : "var(--accent-primary-bright)"
-                    }; color: ${
-                      site === "new" ? "#000" : "var(--text-primary)"
-                    }; position:relative;`}
-                  >
-                    <span
-                      id="new-dot"
-                      style="display: none; position: absolute; top: -5px; right: -5px; width: 8px; height: 8px; border-radius: 2px; background-color: var(--color-notification);"
-                    ></span>
-                    <span>
-                      ${site === "new" ? broadcastFullSVG : broadcastSVG(style)}
-                      <span> New </span>
-                    </span>
-                  </button>
-                </a>
-              `
-            : ""}
-          ${site === "search" ||
-          site === "top" ||
-          site === "new" ||
-          site === "best"
-            ? html`
-                <a
-                  data-no-instant
-                  class="feed-button-link"
-                  href="/best"
-                >
-                  <button
-                    onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block'; ${animation}}"
-                    class="feed-button${site === "best" ? " active" : ""}"
-                    style=${`margin-left: 10px; font-size: 1.01rem; outline: none; border-radius: 2px; cursor: pointer; padding: 5px 14px; background-color: ${
-                      site === "best" ? "var(--accent-primary)" : "transparent"
-                    }; border: 1px solid ${
-                      site === "best" ? "var(--accent-primary)" : "var(--accent-primary-bright)"
-                    }; color: ${
-                      site === "best" ? "#000" : "var(--text-primary)"
-                    };`}
-                  >
-                    <span>
-                      ${site === "best" ? trophyFullSVG : trophySVG} Best
-                    </span>
-                  </button>
-                </a>
-              `
-            : ""}
+    <td class="kn-feedhead">
+      ${head
+        ? html`<div class="kn-pagehead kn-only-desktop">
+            <div class="kn-eyebrow">${head.eyebrow}</div>
+            <h2 class="kn-headline">${head.headline}</h2>
+            <p class="kn-sub">${head.sub}</p>
+          </div>`
+        : null}
+      <div class="kn-toolbar">
+        <div class="kn-toolbar-left">
+          <nav class="kn-segmented" aria-label="Feeds">
+            ${tab("/", "Hot", site === "top")}
+            ${tab("/new?cached=true", "New", site === "new")}
+            ${tab("/best", "Best", site === "best")}
+          </nav>
+          ${site === "best"
+            ? html`<span class="kn-divider kn-only-desktop"></span>
+                <nav class="kn-periods kn-only-desktop" aria-label="Time frame">
+                  ${periods.map(
+                    ([key, label]) => html`<a
+                      data-no-instant
+                      href="${periodHref(key)}"
+                      class="kn-period${key === period ? " kn-period-active" : ""}"
+                      aria-current="${key === period ? "page" : "false"}"
+                      onclick="${spinner}"
+                      >${label}</a
+                    >`,
+                  )}
+                </nav>`
+            : null}
         </div>
-        ${site === "search" ||
-        site === "top" ||
-        site === "new" ||
-        site === "best"
-          ? html`
-              <div
-                id="static-desktop-search"
-                style="display: flex; align-items: center;"
-              >
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  value="${site === "search" ? query : ""}"
-                  disabled
-                  style="width: 200px; height: 32px; padding: 4px 4px 4px 32px; font-size: 0.75rem; font-variant: small-caps; border: var(--border-thin);"
-                />
-              </div>
-            `
-          : ""}
+        ${head
+          ? html`<span class="kn-toolbar-meta kn-only-desktop"
+              >${head.meta}</span
+            >`
+          : null}
       </div>
       ${site === "best"
-        ? html`
-            <div
-              class="second-header"
-              style="min-height: 40px; display: flex; justify-content: space-between; align-items: center; padding: 0 15px 10px 15px; color: var(--text-white);"
-            >
-              <div>
-                <a
+        ? html`<details class="kn-dropdown kn-only-mobile">
+            <summary class="kn-dropdown-summary">
+              <span>${current[2]}</span>
+              ${ms("keyboard_arrow_down", 18)}
+            </summary>
+            <div class="kn-dropdown-menu">
+              ${periods.map(
+                ([key, , long]) => html`<a
                   data-no-instant
-                  href="/best?period=all${domain ? `&domain=${domain}` : ""}"
-                >
-                  <button
-                    onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block';}"
-                    style="${periodIconStyle(theme, period, "all")}"
-                  >
-                    <span>All</span>
-                  </button>
-                </a>
-                <a
-                  data-no-instant
-                  href="/best?period=year${domain ? `&domain=${domain}` : ""}"
-                >
-                  <button
-                    onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block';}"
-                    style="${periodIconStyle(theme, period, "year")}"
-                  >
-                    <span>Year</span>
-                  </button>
-                </a>
-                <a
-                  data-no-instant
-                  href="/best?period=month${domain ? `&domain=${domain}` : ""}"
-                >
-                  <button
-                    onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block';}"
-                    style="${periodIconStyle(theme, period, "month")}"
-                  >
-                    <span>Month</span>
-                  </button>
-                </a>
-                <a
-                  data-no-instant
-                  href="/best?period=week${domain ? `&domain=${domain}` : ""}"
-                >
-                  <button
-                    onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block';}"
-                    style="${periodIconStyle(theme, period, "week")}"
-                  >
-                    <span>Week</span>
-                  </button>
-                </a>
-                <a
-                  data-no-instant
-                  href="/best?period=day${domain ? `&domain=${domain}` : ""}"
-                >
-                  <button
-                    onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block';}"
-                    style="${periodIconStyle(theme, period, "day")}"
-                  >
-                    <span>Day</span>
-                  </button>
-                </a>
-              </div>
-              ${domain
-                ? html`<a
-                    style="text-decoration:underline;"
-                    href="/best?period=${period}"
-                    >Clear filter</a
-                  >`
-                : null}
+                  href="${periodHref(key)}"
+                  class="kn-dropdown-item${key === current[0]
+                    ? " kn-dropdown-item-active"
+                    : ""}"
+                  onclick="${spinner}"
+                  >${long}${key === current[0] ? ms("check", 18) : null}</a
+                >`,
+              )}
             </div>
-          `
+          </details>`
+        : null}
+      ${site === "best" && domain
+        ? html`<div class="kn-filter">
+            <span>${domain}</span>
+            <a href="/best?period=${period}">Clear filter</a>
+          </div>`
         : null}
     </td>
   `;

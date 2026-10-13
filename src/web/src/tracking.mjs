@@ -77,3 +77,41 @@ export function stopTracking(win = typeof window === "undefined" ? null : window
     win.dispatchEvent?.(new Event(TRACKING_CHANGE_EVENT));
   } catch (_) {}
 }
+
+// The "Share usage analytics" switch in Settings (Settings.jsx): the same
+// choice as the consent banner. Off takes stopTracking's path; on grants
+// Google Analytics and PostHog again, but only if nothing else (anon mode,
+// anon-rpc) keeps tracking off.
+export function setAnalyticsConsent(
+  on,
+  win = typeof window === "undefined" ? null : window,
+  storage,
+) {
+  let s = storage;
+  try {
+    if (s === undefined) s = typeof localStorage === "undefined" ? null : localStorage;
+    s?.setItem(CONSENT_KEY, on ? "true" : "false");
+  } catch (_) {}
+  try {
+    win?.dispatchEvent?.(new Event("analyticsConsentChange"));
+  } catch (_) {}
+  if (!on) return stopTracking(win);
+  if (!win || !isTrackingAllowed(s)) return;
+  win[`ga-disable-${GA_MEASUREMENT_ID}`] = false;
+  try {
+    win.gtag?.("consent", "update", { analytics_storage: "granted" });
+  } catch (_) {}
+  try {
+    win.posthog?.opt_in_capturing?.();
+  } catch (_) {}
+  try {
+    win.dispatchEvent?.(new Event(TRACKING_CHANGE_EVENT));
+  } catch (_) {}
+}
+
+// Why the Settings switch is held off, if it is.
+export function analyticsOffReason(state) {
+  if (state.privateRpc) return "Off while anon-rpc is on";
+  if (state.anonMode) return "Off in anon mode";
+  return null;
+}

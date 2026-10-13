@@ -105,28 +105,16 @@ function getNewKey() {
   }
   return newKey;
 }
-const DelegateButton = (props) => {
+// NOTE: The delegation itself: a new app key, the "etch" transaction on
+// Optimism and waiting until the key is indexed. Shared by DelegateButton and
+// the onboarding (onboarding/Onboarding.jsx). With `onIndexed` the caller
+// decides what happens once the key is indexed; otherwise `callback` runs and
+// the page goes to "/" as before.
+export function useDelegation(props) {
   const chainId = useChainId();
   const from = useAccount();
   const { switchChain } = useSwitchChain();
   const [keyName, setKeyName] = useState(null);
-
-  // Modal wrapper
-  const wrapperStyle = {
-    backgroundColor: "transparent",
-    maxWidth: "100%",
-    width: "100%",
-    display: "flex",
-    flexDirection: "column",
-    padding: "0",
-    borderRadius: "0",
-    boxShadow: "none",
-    border: "none",
-    fontSize: "15px",
-    lineHeight: "1.325",
-    fontFamily: "ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'",
-    ...props.style,
-  };
 
   useEffect(() => {
     if (from.address) {
@@ -146,8 +134,6 @@ const DelegateButton = (props) => {
 
   const [confirmation, setConfirmation] = useState("");
   const provider = useProvider();
-  const [isButtonHovered, setIsButtonHovered] = useState(false);
-  const [isButtonActive, setIsButtonActive] = useState(false);
 
   const [payload, setPayload] = useState(null);
   const [indexedDelegation, setIndexedDelegation] = useState(false);
@@ -209,7 +195,15 @@ const DelegateButton = (props) => {
           if (Object.keys(delegations).includes(wallet.address)) {
             setIndexedDelegation(true);
             clearInterval(intervalId);
-            if (props.callback && typeof props.callback === "function") {
+            if (props.onIndexed) {
+              if (isTrackingAllowed()) {
+                posthog.capture("delegation_performed");
+              }
+              props.onIndexed();
+            } else if (
+              props.callback &&
+              typeof props.callback === "function"
+            ) {
               if (isTrackingAllowed()) {
                 posthog.capture("delegation_performed");
               }
@@ -229,6 +223,57 @@ const DelegateButton = (props) => {
       return () => clearInterval(intervalId);
     })();
   }, [key, wallet, from.address, props]);
+
+  return {
+    chainId,
+    from,
+    switchChain,
+    key,
+    wallet,
+    isPersistent,
+    indexedDelegation,
+    isLoading,
+    isError,
+    isSuccess,
+    config,
+    writeContract,
+  };
+}
+
+const DelegateButton = (props) => {
+  const {
+    chainId,
+    from,
+    switchChain,
+    key,
+    wallet,
+    isPersistent,
+    indexedDelegation,
+    isLoading,
+    isError,
+    isSuccess,
+    config,
+    writeContract,
+  } = useDelegation(props);
+  const [isButtonHovered, setIsButtonHovered] = useState(false);
+  const [isButtonActive, setIsButtonActive] = useState(false);
+
+  // Modal wrapper
+  const wrapperStyle = {
+    backgroundColor: "transparent",
+    maxWidth: "100%",
+    width: "100%",
+    display: "flex",
+    flexDirection: "column",
+    padding: "0",
+    borderRadius: "0",
+    boxShadow: "none",
+    border: "none",
+    fontSize: "15px",
+    lineHeight: "1.325",
+    fontFamily: "ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'",
+    ...props.style,
+  };
 
   const localAccount = getLocalAccount(from.address);
 

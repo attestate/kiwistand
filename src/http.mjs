@@ -53,6 +53,8 @@ import newest, * as newAPI from "./views/new.mjs";
 import best, * as bestAPI from "./views/best.mjs";
 import privacy from "./views/privacy.mjs";
 import guidelines from "./views/guidelines.mjs";
+import saved from "./views/saved.mjs";
+import settings from "./views/settings.mjs";
 import newsletterPage from "./views/newsletter.mjs";
 import * as weeklyViews from "./views/weekly.mjs";
 import * as weekly from "./weekly.mjs";
@@ -2500,7 +2502,11 @@ export async function launch(trie, libp2p, isPrimary = true) {
     // Cookie version - not cacheable
     const address = request.cookies.identity;
     if (!address) {
-      return reply.redirect(301, `/`);
+      // NOTE: Logged out: a page asking to log in, like the apps'
+      // notifications tab (it used to redirect to /).
+      const content = await activity.loggedOutPage(reply.locals.theme);
+      reply.header("Cache-Control", "no-cache");
+      return reply.status(200).type("text/html").send(content.valueOf());
     }
 
     let data;
@@ -2572,8 +2578,28 @@ export async function launch(trie, libp2p, isPrimary = true) {
     );
     return reply.status(200).type("text/html").send(content.valueOf());
   });
+  // Saved stories. The page is the same for everyone (the list loads in
+  // the browser with a signed request), so it caches like /guidelines.
+  app.get("/saved", async (request, reply) => {
+    const content = await saved(reply.locals.theme);
+    reply.header(
+      "Cache-Control",
+      "public, s-maxage=86400, max-age=0, stale-while-revalidate=600000",
+    );
+    return reply.status(200).type("text/html").send(content.valueOf());
+  });
   app.get("/guidelines", async (request, reply) => {
     const content = await guidelines(reply.locals.theme);
+    reply.header(
+      "Cache-Control",
+      "public, s-maxage=86400, max-age=0, stale-while-revalidate=600000",
+    );
+    return reply.status(200).type("text/html").send(content.valueOf());
+  });
+  // NOTE: The same for everyone: what depends on the visitor (account,
+  // analytics, Private RPC) is rendered in the browser (Settings.jsx).
+  app.get("/settings", async (request, reply) => {
+    const content = await settings(reply.locals.theme);
     reply.header(
       "Cache-Control",
       "public, s-maxage=86400, max-age=0, stale-while-revalidate=600000",

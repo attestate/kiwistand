@@ -13,6 +13,8 @@ import {
   readTrackingState,
   isTrackingAllowed,
   stopTracking,
+  setAnalyticsConsent,
+  analyticsOffReason,
 } from "../src/web/src/tracking.mjs";
 import { PRIVATE_RPC_KEY } from "../src/web/src/rpc.mjs";
 
@@ -227,21 +229,98 @@ test("conditional-tracking.js doesn't load Google Analytics after anon-rpc is tu
   t.false(loadsGoogle(appended));
 });
 
-test("conditional-tracking.js ignores the pointerdown on Opt Out or the anon-rpc switch", (t) => {
-  const storage = memoryStorage();
-  const env = browserContext(storage);
-  vm.runInContext(publicScript("theme-init.js"), env.context);
-  vm.runInContext(publicScript("conditional-tracking.js"), env.context);
-  const onPrivacyControl = {
-    target: {
-      closest: (sel) =>
-        sel.includes("#analytics-consent-container") ? {} : null,
+for (const control of [
+  "#analytics-consent-container",
+  ".private-rpc-setting",
+  ".n2-set-analytics",
+]) {
+  test(`conditional-tracking.js ignores the pointerdown on ${control}`, (t) => {
+    const storage = memoryStorage();
+    const env = browserContext(storage);
+    vm.runInContext(publicScript("theme-init.js"), env.context);
+    vm.runInContext(publicScript("conditional-tracking.js"), env.context);
+    const onPrivacyControl = {
+      target: {
+        closest: (sel) =>
+          sel.split(",").map((s) => s.trim()).includes(control) ? {} : null,
+      },
+    };
+    for (const fn of env.listeners.pointerdown || []) fn(onPrivacyControl);
+    t.false(loadsGoogle(env.appended));
+    // The click then opts out; the page's load timer finds tracking off.
+    storage.setItem(CONSENT_KEY, "false");
+    for (const fn of env.listeners.load || []) fn();
+    t.false(loadsGoogle(env.appended));
+  });
+}
+
+// The "Share usage analytics" switch in Settings.
+const fakeWindow = () => {
+  const calls = [];
+  const events = [];
+  return {
+    calls,
+    events,
+    gtag: (...args) => calls.push(["gtag", ...args]),
+    posthog: {
+      __loaded: true,
+      stopSessionRecording: () => calls.push(["stopSessionRecording"]),
+      opt_out_capturing: () => calls.push(["opt_out_capturing"]),
+      opt_in_capturing: () => calls.push(["opt_in_capturing"]),
     },
+    dispatchEvent: (e) => events.push(e.type),
   };
-  for (const fn of env.listeners.pointerdown || []) fn(onPrivacyControl);
-  t.false(loadsGoogle(env.appended));
-  // The click then opts out; the page's load timer finds tracking off.
-  storage.setItem(CONSENT_KEY, "false");
-  for (const fn of env.listeners.load || []) fn();
-  t.false(loadsGoogle(env.appended));
+};
+
+test("setAnalyticsConsent(false) stores the opt-out and stops tracking", (t) => {
+  const storage = memoryStorage();
+  const win = fakeWindow();
+  setAnalyticsConsent(false, win, storage);
+  t.is(storage.getItem(CONSENT_KEY), "false");
+  t.false(isTrackingAllowed(storage));
+  t.true(win[`ga-disable-${GA_MEASUREMENT_ID}`]);
+  t.deepEqual(win.calls, [
+    ["gtag", "consent", "update", { analytics_storage: "denied" }],
+    ["stopSessionRecording"],
+    ["opt_out_capturing"],
+  ]);
+  t.deepEqual(win.events, ["analyticsConsentChange", TRACKING_CHANGE_EVENT]);
+});
+
+test("setAnalyticsConsent(true) grants GA and PostHog again", (t) => {
+  const storage = memoryStorage({ [CONSENT_KEY]: "false" });
+  const win = fakeWindow();
+  win[`ga-disable-${GA_MEASUREMENT_ID}`] = true;
+  setAnalyticsConsent(true, win, storage);
+  t.is(storage.getItem(CONSENT_KEY), "true");
+  t.false(win[`ga-disable-${GA_MEASUREMENT_ID}`]);
+  t.deepEqual(win.calls, [
+    ["gtag", "consent", "update", { analytics_storage: "granted" }],
+    ["opt_in_capturing"],
+  ]);
+  t.deepEqual(win.events, ["analyticsConsentChange", TRACKING_CHANGE_EVENT]);
+});
+
+for (const [key, label] of [
+  [PRIVATE_RPC_KEY, "anon-rpc"],
+  [ANON_MODE_KEY, "anon mode"],
+]) {
+  test(`setAnalyticsConsent(true) grants nothing while ${label} is on`, (t) => {
+    const storage = memoryStorage({ [key]: "true", [CONSENT_KEY]: "false" });
+    const win = fakeWindow();
+    setAnalyticsConsent(true, win, storage);
+    t.is(storage.getItem(CONSENT_KEY), "true");
+    t.false(isTrackingAllowed(storage));
+    t.deepEqual(win.calls, []);
+    t.is(win[`ga-disable-${GA_MEASUREMENT_ID}`], undefined);
+  });
+}
+
+test("analyticsOffReason explains why the Settings switch is held off", (t) => {
+  for (const state of combos) {
+    const reason = analyticsOffReason(state);
+    if (state.privateRpc) t.is(reason, "Off while anon-rpc is on");
+    else if (state.anonMode) t.is(reason, "Off in anon mode");
+    else t.is(reason, null);
+  }
 });

@@ -3,10 +3,8 @@ import htm from "htm";
 import vhtml from "vhtml";
 import { sub } from "date-fns";
 
-import Header from "./components/header.mjs";
-import Sidebar from "./components/sidebar.mjs";
-import Footer from "./components/footer.mjs";
 import { custom } from "./components/head.mjs";
+import { Page, Icon } from "./components/n2.mjs";
 import * as moderation from "./moderation.mjs";
 import { getBest, countOutbounds, countComments } from "../cache.mjs";
 import { getSlug } from "../utils.mjs";
@@ -158,29 +156,6 @@ function jsonLd() {
   return JSON.stringify(data).replace(/</g, "\\u003c");
 }
 
-const styles = `
-  .nl-page { padding: 1.5rem 1rem 2rem 1rem; max-width: 640px; color: var(--text-primary); line-height: 1.55; }
-  .nl-page h1 { font-size: 1.6rem; line-height: 1.25; margin: 0 0 0.5rem 0; }
-  .nl-page h2 { font-size: 1.15rem; margin: 2rem 0 0.5rem 0; }
-  .nl-page h3 { font-size: 1rem; margin: 1rem 0 0.25rem 0; }
-  .nl-page p, .nl-page li { font-size: 1rem; }
-  .nl-lede { color: var(--text-tertiary); margin: 0 0 1.25rem 0; }
-  .nl-form { display: flex; gap: 0.5rem; flex-wrap: wrap; margin: 0.5rem 0 0.25rem 0; }
-  .nl-form input[type="email"] { flex: 1 1 220px; min-width: 0; font-size: 1rem; padding: 0.55rem 0.7rem; border: var(--border-thick); border-radius: 2px; background: var(--bg-white); color: var(--text-primary); font-family: var(--font-family); }
-  .nl-form input[type="email"]:focus { outline: 2px solid var(--accent-primary-focus); outline-offset: 0; }
-  .nl-form button { font-size: 1rem; padding: 0.55rem 1.1rem; border: none; border-radius: 2px; background: var(--button-primary-bg); color: var(--button-primary-text); cursor: pointer; font-family: var(--font-family); font-weight: 600; }
-  .nl-form button:hover { background: var(--button-primary-bg-hover); }
-  .nl-fineprint { font-size: 0.85rem; color: var(--text-secondary); margin: 0.25rem 0 0 0; }
-  .nl-status { padding: 0.6rem 0.8rem; border-radius: 2px; margin: 0 0 1rem 0; border: var(--border-thick); }
-  .nl-status-ok { background: var(--accent-primary-light); }
-  .nl-status-error { background: var(--color-warning-bg); color: var(--color-warning-text); }
-  .nl-picks { padding-left: 1.4rem; }
-  .nl-picks li { margin-bottom: 0.5rem; }
-  .nl-picks a { color: var(--text-primary); }
-  .nl-meta { color: var(--text-secondary); font-size: 0.85rem; }
-  .nl-page a.nl-link { text-decoration: underline; }
-`;
-
 function SignupForm(id) {
   return html`
     <form
@@ -192,6 +167,7 @@ function SignupForm(id) {
       <input type="hidden" name="redirect" value="/newsletter" />
       <input type="hidden" name="source" value="landing" />
       <input
+        class="n2-input"
         type="email"
         name="email"
         required
@@ -200,7 +176,7 @@ function SignupForm(id) {
         placeholder="you@example.com"
         aria-label="Email address"
       />
-      <button type="submit">Subscribe</button>
+      <button type="submit" class="n2-btn">Subscribe</button>
     </form>
   `;
 }
@@ -221,148 +197,154 @@ function Status(status) {
   return null;
 }
 
+const Bullets = (items) => html`<ul class="nl-bullets">
+  ${items.map(
+    ([bold, text]) => html`<li>
+      ${bold ? html`<strong>${bold}</strong>` : null}
+      ${text ? html`<span>${text}</span>` : null}
+    </li>`,
+  )}
+</ul>`;
+
 export default async function (theme, { status = null, picks = null } = {}) {
   const weeklyPicks = picks || (await getWeeklyPicks());
+  const pad = (n) => String(n).padStart(2, "0");
 
-  return (
-    "<!DOCTYPE html>" +
-    html`
-      <html lang="en" op="news">
-        <head>
-          ${custom(
-            OG_IMAGE,
-            "Kiwi News Weekly: the best Ethereum & web3 links for builders",
-            DESCRIPTION,
-            "summary_large_image",
-            [],
-            CANONICAL,
-            null,
-            null,
-            { documentTitle: TITLE, ogType: "website" },
+  return Page({
+    theme,
+    path: "/newsletter",
+    head: html`${custom(
+        OG_IMAGE,
+        "Kiwi News Weekly: the best Ethereum & web3 links for builders",
+        DESCRIPTION,
+        "summary_large_image",
+        [],
+        CANONICAL,
+        null,
+        null,
+        { documentTitle: TITLE, ogType: "website" },
+      )}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML=${{ __html: jsonLd() }}
+      ></script>`,
+    body: html`<div class="nl-page">
+      <header class="nl-hero">
+        <p class="n2-eyebrow">Kiwi News Weekly · Every Sunday</p>
+        <h1 class="nl-title">
+          <span class="visually-hidden">Kiwi News Weekly: </span>The Ethereum
+          and web3 links builders actually read
+        </h1>
+        <p class="nl-lede">
+          Every Sunday, the five stories the Kiwi News community upvoted most
+          that week. Free, one email, unsubscribe anytime.
+        </p>
+        ${Status(status)}
+        <h2 id="subscribe" class="visually-hidden">Get it in your inbox</h2>
+        ${SignupForm("subscribe")}
+        <p class="nl-fineprint">
+          Sent via Buttondown. We only use your address to send the
+          newsletter.${" "}<a class="nl-link" href="/privacy-policy"
+            >Privacy policy</a
+          >.
+        </p>
+      </header>
+
+      <section class="nl-section">
+        <h2>What is Kiwi News Weekly?</h2>
+        <p>
+          <a class="nl-link" href="/">Kiwi News</a> is a community-curated link
+          aggregator for Ethereum and web3, similar to Hacker News. Links are
+          submitted and upvoted by Kiwi Pass holders: developers, researchers,
+          founders and people who spend their days onchain. Every submission
+          and upvote is a signed, public message.
+        </p>
+        <p>
+          Kiwi News Weekly is the short version. Each Sunday we take the
+          stories that got the most upvotes, comments and clicks over the past
+          seven days and send you the top five. No algorithmic feed, no paid
+          placements, no price talk for its own sake.
+        </p>
+      </section>
+
+      <section class="nl-section nl-columns">
+        <div>
+          <h2>Who it's for</h2>
+          ${Bullets([
+            [null, "Ethereum and web3 developers who want to know which new tools, EIPs and repos are worth their time"],
+            [null, "Researchers following protocol design, cryptography, MEV and scaling"],
+            [null, "Founders and product people who need to keep up without living on X or Farcaster"],
+            [null, "Anyone who prefers a few good links over an endless timeline"],
+          ])}
+        </div>
+        <div>
+          <h2>What's in an issue</h2>
+          ${Bullets([
+            ["The week's top five links", "With a preview, the source and who submitted it. Expect new tools and releases, research, deep dives and the occasional essay."],
+            ["Notable discussions", "Upvote and comment counts, and a link to each story's Kiwi comment thread where builders discuss it."],
+            ["Posts from X, Farcaster and Bluesky", "Shown inline when one made the list, so you can read them without an account."],
+            ["Kiwi News updates", html`Such as the native iOS app, currently in${" "}<a class="nl-link" href="${TESTFLIGHT_URL}" target="_blank" rel="noopener">public beta on TestFlight</a>.`],
+          ])}
+        </div>
+      </section>
+
+      <section class="nl-section">
+        <h2>This week's picks</h2>
+        <p class="nl-sub">
+          A live preview: these are the stories leading this week's issue right
+          now, based on the past seven days of community votes.
+        </p>
+        ${weeklyPicks.length
+          ? html`<ol class="nl-picks">
+              ${weeklyPicks.map(
+                (pick, i) => html`
+                  <li>
+                    <span class="nl-rank" aria-hidden="true">${pad(i + 1)}</span>
+                    <span class="nl-pick">
+                      <a href="/stories/${getSlug(pick.title)}?index=0x${pick.index}">${pick.title}</a>
+                      <span class="nl-meta">
+                        ${pick.domain ? `${pick.domain} · ` : ""}${pick.upvotes} ${pick.upvotes === 1 ? "upvote" : "upvotes"}${pick.comments ? ` · ${pick.comments} ${pick.comments === 1 ? "comment" : "comments"}` : ""}
+                      </span>
+                    </span>
+                  </li>
+                `,
+              )}
+            </ol>`
+          : html`<p>
+              See the${" "}
+              <a class="nl-link" href="/best?period=week">top stories of the week</a>.
+            </p>`}
+      </section>
+
+      <section class="nl-section">
+        <h2>Recent issues</h2>
+        <p class="nl-links">
+          <a class="n2-arrow-link" href="${ARCHIVE_URL}" target="_blank" rel="noopener"
+            >Read past issues in the archive${Icon("arrow")}</a
+          >
+          <a class="n2-arrow-link" href="/weekly"
+            >Top stories of every week${Icon("arrow")}</a
+          >
+        </p>
+      </section>
+
+      <section class="nl-section">
+        <h2>Frequently asked questions</h2>
+        <dl class="nl-faq">
+          ${FAQ.map(
+            ({ q, a }) => html`<div>
+              <dt>${q}</dt>
+              <dd>${a}</dd>
+            </div>`,
           )}
-          <script
-            type="application/ld+json"
-            dangerouslySetInnerHTML=${{ __html: jsonLd() }}
-          ></script>
-          <style dangerouslySetInnerHTML=${{ __html: styles }}></style>
-        </head>
-        <body>
-          <div class="container">
-            ${Sidebar()}
-            <div id="hnmain" class="scaled-hnmain">
-              <table
-                border="0"
-                cellpadding="0"
-                cellspacing="0"
-                bgcolor="var(--background-color0)"
-              >
-                <tr>
-                  ${await Header(theme)}
-                </tr>
-                <tr>
-                  <td>
-                    <main class="nl-page">
-                      <h1>Kiwi News Weekly: the Ethereum and web3 links builders actually read</h1>
-                      <p class="nl-lede">
-                        Every Sunday, the five stories the Kiwi News community
-                        upvoted most that week. Free, one email, unsubscribe
-                        anytime.
-                      </p>
-                      ${Status(status)}
-                      <h2 id="subscribe">Get it in your inbox</h2>
-                      ${SignupForm("subscribe")}
-                      <p class="nl-fineprint">
-                        Sent via Buttondown. We only use your address to send
-                        the newsletter. <a class="nl-link" href="/privacy-policy">Privacy policy</a>.
-                      </p>
+        </dl>
+      </section>
 
-                      <h2>What is Kiwi News Weekly?</h2>
-                      <p>
-                        <a class="nl-link" href="/">Kiwi News</a> is a
-                        community-curated link aggregator for Ethereum and web3,
-                        similar to Hacker News. Links are submitted and upvoted
-                        by Kiwi Pass holders: developers, researchers, founders
-                        and people who spend their days onchain. Every
-                        submission and upvote is a signed, public message.
-                      </p>
-                      <p>
-                        Kiwi News Weekly is the short version. Each Sunday we
-                        take the stories that got the most upvotes, comments and
-                        clicks over the past seven days and send you the top
-                        five. No algorithmic feed, no paid placements, no
-                        price talk for its own sake.
-                      </p>
-
-                      <h2>Who it's for</h2>
-                      <ul>
-                        <li>Ethereum and web3 developers who want to know which new tools, EIPs and repos are worth their time</li>
-                        <li>Researchers following protocol design, cryptography, MEV and scaling</li>
-                        <li>Founders and product people who need to keep up without living on X or Farcaster</li>
-                        <li>Anyone who prefers a few good links over an endless timeline</li>
-                      </ul>
-
-                      <h2>What's in an issue</h2>
-                      <ul>
-                        <li><strong>The week's top five links</strong>, with a preview, the source and who submitted it. Expect new tools and releases, research, deep dives and the occasional essay</li>
-                        <li><strong>Notable discussions</strong>: upvote and comment counts, and a link to each story's Kiwi comment thread where builders discuss it</li>
-                        <li><strong>Posts from X, Farcaster and Bluesky</strong> shown inline when one made the list, so you can read them without an account</li>
-                        <li>
-                          <strong>Kiwi News updates</strong>, such as the native
-                          iOS app, currently in${" "}
-                          <a class="nl-link" href="${TESTFLIGHT_URL}" target="_blank" rel="noopener">public beta on TestFlight</a>
-                        </li>
-                      </ul>
-
-                      <h2>This week's picks</h2>
-                      <p>
-                        A live preview: these are the stories leading this
-                        week's issue right now, based on the past seven days of
-                        community votes.
-                      </p>
-                      ${weeklyPicks.length
-                        ? html`<ol class="nl-picks">
-                            ${weeklyPicks.map(
-                              (pick) => html`
-                                <li>
-                                  <a href="/stories/${getSlug(pick.title)}?index=0x${pick.index}">${pick.title}</a>
-                                  <br />
-                                  <span class="nl-meta">
-                                    ${pick.domain ? `${pick.domain} · ` : ""}${pick.upvotes} ${pick.upvotes === 1 ? "upvote" : "upvotes"}${pick.comments ? ` · ${pick.comments} ${pick.comments === 1 ? "comment" : "comments"}` : ""}
-                                  </span>
-                                </li>
-                              `,
-                            )}
-                          </ol>`
-                        : html`<p>
-                            See the${" "}
-                            <a class="nl-link" href="/best?period=week">top stories of the week</a>.
-                          </p>`}
-                      <h3>Recent issues</h3>
-                      <p>
-                        <a class="nl-link" href="${ARCHIVE_URL}" target="_blank" rel="noopener">Read past issues of Kiwi News Weekly</a>${" "}in the archive,
-                        or browse the${" "}<a class="nl-link" href="/weekly">top stories of every week</a>${" "}on Kiwi News.
-                      </p>
-
-                      <h2>Frequently asked questions</h2>
-                      ${FAQ.map(
-                        ({ q, a }) => html`
-                          <h3>${q}</h3>
-                          <p>${a}</p>
-                        `,
-                      )}
-
-                      <h2 id="subscribe-bottom">Subscribe to Kiwi News Weekly</h2>
-                      ${SignupForm("subscribe-bottom")}
-                      <p class="nl-fineprint">Free. Every Sunday. Unsubscribe anytime.</p>
-                    </main>
-                  </td>
-                </tr>
-              </table>
-              ${Footer(theme)}
-            </div>
-          </div>
-        </body>
-      </html>
-    `
-  );
+      <section class="nl-cta">
+        <h2 id="subscribe-bottom">Subscribe to Kiwi News Weekly</h2>
+        ${SignupForm("subscribe-bottom")}
+        <p class="nl-fineprint">Free. Every Sunday. Unsubscribe anytime.</p>
+      </section>
+    </div>`,
+  });
 }

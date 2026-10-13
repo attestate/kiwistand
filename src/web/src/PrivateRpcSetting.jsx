@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 
 import { readRpcSettings, writeRpcSettings } from "./rpc.mjs";
-import { stopTracking } from "./tracking.mjs";
+import { stopTracking, TRACKING_CHANGE_EVENT } from "./tracking.mjs";
 
 const ABOUT_URL = "https://ethereum.github.io/anon-rpc/";
 
@@ -74,6 +74,8 @@ const PrivateRpcSetting = ({ variant }) => {
   const toggle = (on) => {
     update(on ? { privateRpc: true } : { privateRpc: false, allowFallback: false });
     if (on) stopTracking();
+    // Lets the Settings analytics switch follow along on the same page.
+    else window.dispatchEvent(new Event(TRACKING_CHANGE_EVENT));
   };
   const failed = settings.privateRpc && status.state === "error";
 
@@ -105,16 +107,6 @@ const PrivateRpcSetting = ({ variant }) => {
         .private-rpc-setting .private-rpc-title {
           font-size: 1.25rem;
           line-height: 1.2;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .private-rpc-setting .private-rpc-about {
-          margin-left: 8px;
-          font-size: 0.75rem;
-          font-weight: 400;
-          color: var(--text-secondary);
-          text-decoration: underline;
         }
         .sidebar-nav .private-rpc-setting .private-rpc-sub,
         .private-rpc-setting.compact .private-rpc-sub {
@@ -156,6 +148,10 @@ const PrivateRpcSetting = ({ variant }) => {
           color: var(--text-secondary);
           text-decoration: underline;
           cursor: pointer;
+        }
+        .private-rpc-setting .private-rpc-about {
+          color: inherit;
+          text-decoration: underline;
         }
         .private-rpc-setting .private-rpc-switch {
           position: relative;
@@ -209,22 +205,7 @@ const PrivateRpcSetting = ({ variant }) => {
       >
         <ShieldSVG filled={settings.privateRpc} />
         <span className="private-rpc-text">
-          <span className="private-rpc-title">
-            anon-rpc
-            {/* NOTE: A link inside a <label> doesn't toggle the switch (it's
-                interactive content), and stopPropagation keeps the row's
-                handlers out of it too. */}
-            <a
-              className="private-rpc-about"
-              href={ABOUT_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              title="What's anon-rpc? (opens in a new tab)"
-              onClick={(e) => e.stopPropagation()}
-            >
-              about
-            </a>
-          </span>
+          <span className="private-rpc-title">anon-rpc</span>
           <span
             className={`private-rpc-sub${failed ? " error" : ""}`}
             title={failed ? status.message : undefined}
@@ -243,6 +224,24 @@ const PrivateRpcSetting = ({ variant }) => {
                 >
                   read directly
                 </button>
+              </>
+            )}
+            {/* NOTE: A link inside a <label> doesn't toggle the switch (it's
+                interactive content), and stopPropagation keeps the row's
+                handlers out of it too. */}
+            {!failed && (
+              <>
+                {" · "}
+                <a
+                  className="private-rpc-about"
+                  href={ABOUT_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="What's anon-rpc? (opens in a new tab)"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  about
+                </a>
               </>
             )}
           </span>

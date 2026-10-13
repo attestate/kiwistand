@@ -27,10 +27,10 @@
     return Boolean(window.kiwiTrackingOff && window.kiwiTrackingOff());
   }
   var analyticsLoaded = trackingOff();
-  // NOTE: Touching "Opt Out" or the anon-rpc switch is no reason to start
-  // Google Analytics: the pointerdown comes before the click that turns
-  // tracking off.
-  var PRIVACY_CONTROLS = '#analytics-consent-container, .private-rpc-setting';
+  // NOTE: Touching "Opt Out", the Settings analytics switch or the anon-rpc
+  // switch is no reason to start Google Analytics: the pointerdown comes
+  // before the click that turns tracking off.
+  var PRIVACY_CONTROLS = '#analytics-consent-container, .private-rpc-setting, .n2-set-analytics';
   function loadAnalytics(event) {
     if (analyticsLoaded) return;
     var target = event && event.target;

@@ -110,15 +110,22 @@ export default function AnalyticsConsent() {
 
   return (
     <div style={{
+      // NOTE: A floating card like the redesign's tab bar; on phones it sits
+      // above the tab bar (62px + 16px margin).
       position: 'fixed',
-      bottom: isDesktop ? 0 : 'calc(45px + env(safe-area-inset-bottom, 0px))', // Match mobile bottom nav height
-      left: 0,
-      right: 0,
+      bottom: isDesktop ? '16px' : 'calc(86px + env(safe-area-inset-bottom, 0px))', // Above the mobile tab bar
+      left: '16px',
+      right: '16px',
+      maxWidth: isDesktop ? '720px' : 'none',
+      margin: '0 auto',
+      boxSizing: 'border-box',
       backgroundColor: 'var(--background-color0)',
-      borderTop: 'var(--border)',
-      padding: '12px 15px',
+      border: 'var(--border)',
+      borderRadius: '8px',
+      padding: isDesktop ? '14px 16px' : '14px 16px 16px 16px',
       zIndex: 1000,
-      boxShadow: '0 -2px 5px rgba(0, 0, 0, 0.05)'
+      fontFamily: 'Inter, "Inter Fallback", -apple-system, BlinkMacSystemFont, sans-serif',
+      boxShadow: '0 4px 20px rgba(54, 67, 32, 0.08)'
     }}>
       <div style={{
         maxWidth: '1200px',
@@ -127,7 +134,7 @@ export default function AnalyticsConsent() {
         flexDirection: isDesktop ? 'row' : 'column',
         alignItems: isDesktop ? 'center' : 'flex-start',
         justifyContent: 'space-between',
-        gap: isDesktop ? '0' : '10px'
+        gap: isDesktop ? '16px' : '12px'
       }}>
         <div>
           <p style={{ margin: 0, fontSize: '14px', color: 'var(--text-primary)' }}>
@@ -145,13 +152,17 @@ export default function AnalyticsConsent() {
             onClick={declineAnalytics}
             className="analytics-consent-decline"
             style={{
-              backgroundColor: 'var(--bg-white)',
+              backgroundColor: 'transparent',
               color: 'var(--text-primary)',
-              border: 'var(--border-thin)',
-              padding: '8px 12px',
+              border: 'var(--border)',
+              height: '36px',
+              padding: '0 14px',
               cursor: 'pointer',
+              fontFamily: 'inherit',
               fontSize: '14px',
-              borderRadius: '2px'
+              fontWeight: 500,
+              borderRadius: '6px',
+              flex: isDesktop ? 'none' : 1
             }}
           >
             Opt Out
@@ -163,10 +174,14 @@ export default function AnalyticsConsent() {
               backgroundColor: 'var(--button-primary-bg)',
               color: 'var(--button-primary-text)',
               border: '1px solid var(--button-primary-bg)',
-              padding: '8px 12px',
+              height: '36px',
+              padding: '0 14px',
               cursor: 'pointer',
+              fontFamily: 'inherit',
               fontSize: '14px',
-              borderRadius: '2px'
+              fontWeight: 600,
+              borderRadius: '6px',
+              flex: isDesktop ? 'none' : 1
             }}
           >
             Continue
