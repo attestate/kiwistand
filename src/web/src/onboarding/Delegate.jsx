@@ -1,0 +1,140 @@
+import React, { useMemo } from "react";
+
+import { useDelegation } from "../DelegateButton.jsx";
+import { Icon, Tile, Heading, Skip, Status, ErrorText } from "./ui.jsx";
+
+// Loaded only on the "I have a wallet" path, so the passkey path doesn't
+// download the delegation code.
+
+// "Enable one-tap actions": the delegation (useDelegation in
+// DelegateButton.jsx) with the onboarding's look. onIndexed runs once the
+// new key is indexed.
+export default function DelegateStep({ desk, onIndexed, onSkip }) {
+  const options = useMemo(() => ({ onIndexed }), [onIndexed]);
+  const {
+    chainId,
+    switchChain,
+    key,
+    wallet,
+    isPersistent,
+    isLoading,
+    isError,
+    isSuccess,
+    config,
+    writeContract,
+  } = useDelegation(options);
+
+  let action;
+  if (!isPersistent) {
+    action = (
+      <ErrorText>Your browser isn't supporting key storage.</ErrorText>
+    );
+  } else if (key && wallet) {
+    action = (
+      <Status
+        title="Adding your key on Optimism…"
+        hint="This takes 1 to 2 minutes. Keep this open; we continue on our own."
+        chain={desk ? "Optimism" : ""}
+      />
+    );
+  } else if (isLoading || isSuccess) {
+    action = desk ? (
+      <Status
+        title="Waiting for wallet confirmation…"
+        hint="Open your wallet app to approve, then return here."
+        chain="Optimism"
+      />
+    ) : (
+      <Status
+        title="Confirm in your wallet"
+        hint="Approve the transaction in your wallet app, then come back."
+      />
+    );
+  } else if (chainId !== 10) {
+    action = (
+      <div className="kob-actions">
+        <button
+          type="button"
+          className="kob-btn"
+          onClick={() => switchChain?.({ chainId: 10 })}
+        >
+          Switch to Optimism
+        </button>
+      </div>
+    );
+  } else {
+    action = (
+      <>
+        <div className="kob-actions">
+          <button
+            type="button"
+            className="kob-btn"
+            disabled={!config || !writeContract}
+            onClick={() => config && writeContract(config.request)}
+          >
+            Approve in wallet
+          </button>
+        </div>
+        {isError && (
+          <ErrorText>
+            Couldn't prepare the transaction. You need a little ETH on
+            Optimism for the network fee.
+          </ErrorText>
+        )}
+      </>
+    );
+  }
+
+  return (
+    <>
+      <Tile icon="touch_app" desk={desk} />
+      {desk ? (
+        <Heading title="Enable one-tap actions">
+          <p>
+            Like and comment without confirming every action in your wallet.
+            Approve once on Optimism. Only network fees apply; no funds are
+            moved.
+          </p>
+        </Heading>
+      ) : (
+        <Heading
+          title={
+            <>
+              Enable
+              <br />
+              one-tap actions
+            </>
+          }
+        >
+          <p>
+            So you don't have to confirm every like and comment in your
+            wallet, Kiwi News creates a key in this browser.
+          </p>
+          <p>
+            Your wallet approves it once with a free-of-value transaction on
+            Optimism (only network fees apply).
+          </p>
+          <p>No funds are moved.</p>
+        </Heading>
+      )}
+      {desk && (
+        <a
+          className="kob-howto"
+          href="https://github.com/attestate/delegator2"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          How it works
+          <Icon name="arrow_outward" size={13} />
+        </a>
+      )}
+      {action}
+      <Skip
+        desk={desk}
+        label="Not now"
+        deskLabel="Skip for now"
+        onClick={onSkip}
+      />
+    </>
+  );
+}
