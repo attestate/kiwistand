@@ -15,7 +15,17 @@ import { utils } from "ethers";
 import canonicalize from "canonicalize";
 
 import { lifetimeCache as cache } from "./cache.mjs";
-import { SCHEMATA, EIP712_DOMAIN, EIP712_MESSAGE } from "./constants.mjs";
+import {
+  SCHEMATA,
+  EIP712_DOMAIN,
+  EIP712_MESSAGE,
+  EIP712_DELETE,
+} from "./constants.mjs";
+
+// The EIP-712 types a message is signed with: "delete" messages have no title.
+export function eip712Types(message) {
+  return message?.type === "delete" ? EIP712_DELETE : EIP712_MESSAGE;
+}
 import log from "./logger.mjs";
 
 const ajv = new Ajv();
@@ -128,5 +138,5 @@ export function verify(message) {
     throw new Error(errMessage);
   }
 
-  return ecrecover(message, EIP712_MESSAGE);
+  return ecrecover(message, eip712Types(message));
 }

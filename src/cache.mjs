@@ -257,6 +257,139 @@ export function isReactionComment(title) {
   return /^\p{Emoji}+$/u.test(trimmedTitle);
 }
 
+// NOTE: A message of type "delete" removes the message at its href (a story,
+// an upvote, a comment or an emoji reaction) when it's signed by that
+// message's author (or their delegate key, which resolves to the same
+// identity). Signed by anyone else, it removes nothing. The deleted message
+// stays in the trie; nodes stop showing it.
+export const DELETE = "delete";
+
+export function isDeletion(message) {
+  return message?.type === DELETE;
+}
+
+let deletionsReady = false;
+let deletedStmt, deletedStoryStmt;
+function ensureDeletions() {
+  if (deletionsReady) return;
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS deletions (
+      target_id TEXT NOT NULL,
+      identity TEXT NOT NULL,
+      timestamp INTEGER NOT NULL,
+      PRIMARY KEY (target_id, identity)
+    );
+    CREATE TABLE IF NOT EXISTS deleted_stories (
+      href TEXT PRIMARY KEY NOT NULL,
+      timestamp INTEGER NOT NULL
+    );
+  `);
+  deletedStmt = db.prepare(
+    `SELECT 1 FROM deletions WHERE target_id = ? AND lower(identity) = lower(?)`,
+  );
+  deletedStoryStmt = db.prepare(
+    `SELECT timestamp FROM deleted_stories WHERE href = ?`,
+  );
+  deletionsReady = true;
+}
+
+// Whether the message's author deleted it. Kept separately so a message that
+// syncs in after its deletion doesn't come back.
+export function isDeleted(targetId, identity) {
+  ensureDeletions();
+  return !!deletedStmt.get(targetId, identity);
+}
+
+// What a message id is in the cache and which story it belongs to, e.g. to
+// refresh the story's page after a deletion. null if it isn't there.
+export function findMessage(id) {
+  try {
+    const submission = db
+      .prepare(`SELECT id, href, identity FROM submissions WHERE id = ?`)
+      .get(id);
+    if (submission) return { kind: "story", storyId: id, ...submission };
+    const upvote = db
+      .prepare(
+        `SELECT u.id, u.href, u.identity, s.id AS storyId
+         FROM upvotes u LEFT JOIN submissions s ON s.href = u.href
+         WHERE u.id = ?`,
+      )
+      .get(id);
+    if (upvote) return { kind: "upvote", ...upvote };
+    const comment = db
+      .prepare(
+        `SELECT id, submission_id AS storyId, identity FROM comments WHERE id = ?`,
+      )
+      .get(id);
+    if (comment) return { kind: "comment", ...comment };
+    const reaction = db
+      .prepare(
+        `SELECT r.id, r.comment_id, r.identity, c.submission_id AS storyId
+         FROM reactions r LEFT JOIN comments c ON c.id = r.comment_id
+         WHERE r.id = ?`,
+      )
+      .get(id);
+    if (reaction) return { kind: "reaction", ...reaction };
+  } catch (err) {
+    log(`findMessage failed for "${id}": ${err}`);
+  }
+  return null;
+}
+
+// Applies a deletion signed by `identity` to the message `targetId`. Returns
+// what was removed (see findMessage, plus the upvoters of a removed story) or
+// null when nothing was, e.g. because someone else signed it.
+function applyDeletion(targetId, identity, timestamp) {
+  ensureDeletions();
+  db.prepare(
+    `INSERT OR IGNORE INTO deletions (target_id, identity, timestamp) VALUES (?, ?, ?)`,
+  ).run(targetId, identity, timestamp);
+
+  const target = findMessage(targetId);
+  if (!target || target.identity.toLowerCase() !== identity.toLowerCase()) {
+    return null;
+  }
+
+  // NOTE: Rows go children first: reactions reference comments, comments and
+  // upvotes reference the story.
+  db.transaction(() => {
+    if (target.kind === "reaction") {
+      db.prepare(`DELETE FROM reactions WHERE id = ?`).run(targetId);
+    } else if (target.kind === "comment") {
+      db.prepare(`DELETE FROM reactions WHERE comment_id = ?`).run(targetId);
+      db.prepare(`DELETE FROM comments WHERE id = ?`).run(targetId);
+    } else if (target.kind === "upvote") {
+      db.prepare(`DELETE FROM upvotes WHERE id = ?`).run(targetId);
+    } else if (target.kind === "story") {
+      // A deleted story takes its whole thread with it. Its upvoters are
+      // returned so their upvote markers can be freed (store.mjs).
+      target.upvoters = db
+        .prepare(`SELECT identity FROM upvotes WHERE href = ?`)
+        .all(target.href)
+        .map(({ identity }) => identity);
+      db.prepare(
+        `DELETE FROM reactions WHERE comment_id IN
+           (SELECT id FROM comments WHERE submission_id = ?)`,
+      ).run(targetId);
+      db.prepare(`DELETE FROM comments WHERE submission_id = ?`).run(targetId);
+      db.prepare(`DELETE FROM upvotes WHERE href = ?`).run(target.href);
+      db.prepare(`DELETE FROM submissions WHERE id = ?`).run(targetId);
+      // Upvotes of the link signed before the deletion that sync in later
+      // mustn't bring the story back; a new submission after it may.
+      db.prepare(
+        `INSERT OR REPLACE INTO deleted_stories (href, timestamp) VALUES (?, ?)`,
+      ).run(target.href, timestamp);
+    }
+  })();
+  return target;
+}
+
+function isStoryDeletedAfter(href, timestamp) {
+  ensureDeletions();
+  const row = deletedStoryStmt.get(href);
+  return !!row && timestamp < row.timestamp;
+}
+
 export function getCommentAuthorById(commentId) {
   try {
     const [, commentHex] = commentId.split(":");
@@ -1102,6 +1235,8 @@ export function insertMessage(message) {
     const normalizedHref = (href.startsWith('data:') || href.startsWith('kiwi:'))
       ? href
       : normalizeUrl(href, { stripWWW: false });
+    if (isDeleted(`kiwi:0x${index}`, identity)) return null;
+    if (isStoryDeletedAfter(normalizedHref, timestamp)) return null;
     const submissionExists =
       db
         .prepare(`SELECT COUNT(*) AS count FROM submissions WHERE href = ?`)
@@ -1133,7 +1268,12 @@ export function insertMessage(message) {
         identity,
       );
     }
+  } else if (type === DELETE) {
+    return applyDeletion(href, identity, timestamp);
   } else if (type === "comment") {
+    // A message its author already deleted (the deletion synced in first).
+    if (isDeleted(`kiwi:0x${index}`, identity)) return null;
+
     if (isReactionComment(title)) {
       // Insert reaction
       const insertReaction = db.prepare(

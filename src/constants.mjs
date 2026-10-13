@@ -9,22 +9,22 @@ export const PROTOCOL = {
     topics: {
       roots: {
         id: "roots",
-        version: "12.0.0",
+        version: "13.0.0",
       },
       messages: {
         id: "messages",
-        version: "12.0.0",
+        version: "13.0.0",
       },
     },
   },
   protocols: {
     leaves: {
       id: "leaves",
-      version: "15.0.0",
+      version: "16.0.0",
     },
     levels: {
       id: "levels",
-      version: "15.0.0",
+      version: "16.0.0",
     },
   },
 };
@@ -46,6 +46,15 @@ export const EIP712_DOMAIN = {
 export const EIP712_MESSAGE = {
   Message: [
     { name: "title", type: "string" },
+    { name: "href", type: "string" },
+    { name: "type", type: "string" },
+    { name: "timestamp", type: "uint256" },
+  ],
+};
+
+// NOTE: A "delete" message has no title, so it's signed without one.
+export const EIP712_DELETE = {
+  Message: [
     { name: "href", type: "string" },
     { name: "type", type: "string" },
     { name: "timestamp", type: "uint256" },
@@ -102,6 +111,35 @@ const comment = {
     },
   },
   required: ["timestamp", "type", "title", "href", "signature"],
+};
+
+// NOTE: Deletes the message at href (a story, upvote, comment or reaction).
+// Nodes only apply it when it's signed by that message's author. It has no
+// title and is signed with EIP712_DELETE. Added in protocol version 13
+// (pubsub) / 16 (sync).
+const deletion = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    timestamp: {
+      $comment: "unix timestamp",
+      type: "integer",
+    },
+    type: {
+      const: "delete",
+    },
+    href: {
+      type: "string",
+      format: "uri",
+      pattern: "^kiwi:0x[a-fA-F0-9]{72}$",
+      maxLength: 81,
+    },
+    signature: {
+      type: "string",
+      pattern: "0x[a-fA-F0-9]+",
+    },
+  },
+  required: ["timestamp", "type", "href", "signature"],
 };
 
 const upvote = {
@@ -173,12 +211,12 @@ export const SCHEMATA = {
         $comment:
           "The type of message that we should filter by in the request.",
         type: "string",
-        enum: ["amplify", "comment"],
+        enum: ["amplify", "comment", "delete"],
       },
     },
     required: ["from", "amount"],
   },
   message: {
-    oneOf: [upvote, comment],
+    oneOf: [upvote, comment, deletion],
   },
 };

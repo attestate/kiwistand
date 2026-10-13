@@ -21,6 +21,23 @@ export const EIP712_TYPES = {
   ],
 };
 
+// Must match EIP712_DELETE in src/constants.mjs: deletions have no title.
+export const EIP712_DELETE_TYPES = {
+  Message: [
+    { name: "href", type: "string" },
+    { name: "type", type: "string" },
+    { name: "timestamp", type: "uint256" },
+  ],
+};
+
+export function deletionFab(href) {
+  return {
+    href,
+    type: "delete",
+    timestamp: Math.floor(Date.now() / 1000),
+  };
+}
+
 export function messageFab(title, href, type = "amplify") {
   return {
     title,

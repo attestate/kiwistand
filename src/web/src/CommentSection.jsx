@@ -62,6 +62,7 @@ function truncateName(name) {
   return name.slice(0, maxLength) + "...";
 }
 
+
 export const EmojiReaction = ({ comment, delegations, toast }) => {
   const [isReacting, setIsReacting] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -308,6 +309,49 @@ export const EmojiReaction = ({ comment, delegations, toast }) => {
 
   // Don't allow reacting to your own comments, but do show reactions you've received
   const isOwnComment = comment.identity.address === address;
+
+  // NOTE: Deleting your own comment signs a "delete" message on it (see
+  // src/cache.mjs); nodes remove the comment when the deletion comes from its
+  // author.
+  // Addresses can come checksummed or lowercase.
+  const isOwnCommentForDelete =
+    !!address &&
+    String(comment.identity?.address || comment.identity || "").toLowerCase() ===
+      address.toLowerCase();
+  const [isDeleting, setIsDeleting] = useState(false);
+  const containerRef = useRef(null);
+  const handleDelete = async () => {
+    if (!signer || isDeleting) return;
+    if (!window.confirm("Delete this comment? This can't be undone.")) return;
+    setIsDeleting(true);
+    try {
+      const value = API.deletionFab(`kiwi:0x${comment.index}`);
+      const signature = await signer._signTypedData(
+        API.EIP712_DOMAIN,
+        API.EIP712_DELETE_TYPES,
+        value,
+      );
+      const response = await API.send(value, signature);
+      if (response.status !== "success") {
+        toast.error(response.details || "Couldn't delete the comment");
+        return;
+      }
+      toast.success("Comment deleted");
+      // The comment's card: story pages give it the comment's id, the
+      // feed's comment previews a data attribute.
+      const el =
+        document.getElementById(`0x${comment.index}`) ||
+        containerRef.current?.closest(
+          `[data-comment-card="0x${comment.index}"]`,
+        );
+      if (el) el.style.display = "none";
+    } catch (err) {
+      console.error("Delete error:", err);
+      toast.error("Couldn't delete the comment");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
   
   const reactionCounts = {
     "🥝": kiwis.length,
@@ -341,6 +385,7 @@ export const EmojiReaction = ({ comment, delegations, toast }) => {
   
   return (
     <div
+      ref={containerRef}
       className="reactions-container"
       style={{
         display: "flex",
@@ -352,6 +397,25 @@ export const EmojiReaction = ({ comment, delegations, toast }) => {
       }}
       onClick={(e) => e.stopPropagation()}
     >
+      {isOwnCommentForDelete && signer && (
+        <button
+          type="button"
+          onClick={handleDelete}
+          disabled={isDeleting}
+          style={{
+            order: 99,
+            marginLeft: "auto",
+            background: "none",
+            border: "none",
+            padding: "4px 2px",
+            fontSize: "12px",
+            color: "var(--text-secondary)",
+            cursor: "pointer",
+          }}
+        >
+          {isDeleting ? "Deleting…" : "Delete"}
+        </button>
+      )}
       {/* Existing reactions - clickable and larger */}
       {existingReactions.length > 0 && (
         <div
@@ -789,6 +853,7 @@ const Comment = React.forwardRef(
     return (
       <span
         ref={ref}
+        data-comment-card={`0x${comment.index}`}
         style={{
           boxShadow: isTargeted
             ? "0 0 0 2px var(--accent-primary)"
