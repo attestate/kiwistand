@@ -220,7 +220,7 @@ export default async function index(theme, page, period, domain) {
             </h1>
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="var(--background-color0)">
               <tr>
-                ${await Header(theme)}
+                ${await Header(theme, "/best")}
               </tr>
               <tr>
                 ${SecondHeader(theme, "best", period, domain)}

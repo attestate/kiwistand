@@ -53,6 +53,7 @@ import newest, * as newAPI from "./views/new.mjs";
 import best, * as bestAPI from "./views/best.mjs";
 import privacy from "./views/privacy.mjs";
 import guidelines from "./views/guidelines.mjs";
+import saved from "./views/saved.mjs";
 import newsletterPage from "./views/newsletter.mjs";
 import * as weeklyViews from "./views/weekly.mjs";
 import * as weekly from "./weekly.mjs";
@@ -2566,6 +2567,16 @@ export async function launch(trie, libp2p, isPrimary = true) {
   });
   app.get("/privacy-policy", async (request, reply) => {
     const content = await privacy(reply.locals.theme);
+    reply.header(
+      "Cache-Control",
+      "public, s-maxage=86400, max-age=0, stale-while-revalidate=600000",
+    );
+    return reply.status(200).type("text/html").send(content.valueOf());
+  });
+  // Saved stories. The page is the same for everyone (the list loads in
+  // the browser with a signed request), so it caches like /guidelines.
+  app.get("/saved", async (request, reply) => {
+    const content = await saved(reply.locals.theme);
     reply.header(
       "Cache-Control",
       "public, s-maxage=86400, max-age=0, stale-while-revalidate=600000",

@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { resolveIdentity } from "@attestate/delegator2";
 
 import { EthereumSVG } from "./icons.jsx";
+import MS from "./ms.jsx";
 import {
   getLocalAccount,
   getCookie,
@@ -11,49 +12,6 @@ import {
   hasStaleDelegationKeys,
   logout,
 } from "./session.mjs";
-
-const ProfileSVGFull = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
-    <rect width="256" height="256" fill="none" />
-    <path d="M172,120a44,44,0,1,1-44-44A44,44,0,0,1,172,120Zm52-72V208a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V48A16,16,0,0,1,48,32H208A16,16,0,0,1,224,48ZM208,208V48H48V208h3.67a80.58,80.58,0,0,1,26.07-38.25q3.08-2.48,6.36-4.62a4,4,0,0,1,4.81.33,59.82,59.82,0,0,0,78.18,0,4,4,0,0,1,4.81-.33q3.28,2.15,6.36,4.62A80.58,80.58,0,0,1,204.33,208H208Z" />
-  </svg>
-);
-
-const ProfileSVG = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
-    <rect width="256" height="256" fill="none" />
-    <circle
-      cx="128"
-      cy="120"
-      r="40"
-      fill="none"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="16"
-    />
-    <rect
-      x="40"
-      y="40"
-      width="176"
-      height="176"
-      rx="8"
-      fill="none"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="16"
-    />
-    <path
-      d="M57.78,216a72,72,0,0,1,140.44,0"
-      fill="none"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="16"
-    />
-  </svg>
-);
 
 const Profile = (props) => {
   let address;
@@ -70,28 +28,17 @@ const Profile = (props) => {
 
   const isEnabled = isEligible || account.isConnected;
   if (!isEnabled) return null;
+  const active =
+    window.location.pathname.includes("/upvotes") ||
+    window.location.href.endsWith(".eth");
   return (
     <a
       title="Profile"
-      href={isEnabled ? "/upvotes?address=" + address : ""}
-      style={{
-        pointerEvents: isEnabled ? "auto" : "none",
-        color: isEnabled ? "var(--text-primary)" : "var(--text-disabled)",
-        textDecoration: "none",
-        display: "block",
-      }}
+      href={"/upvotes?address=" + address}
+      className={`kn-menu-item${active ? " kn-menu-item-active" : ""}`}
     >
-      <div style={{ display: "flex", alignItems: "center" }}>
-        <div className="svg-container">
-          {window.location.pathname.includes("/upvotes") ||
-          window.location.href.endsWith(".eth") ? (
-            <ProfileSVGFull />
-          ) : (
-            <ProfileSVG />
-          )}
-        </div>
-        <span>Profile</span>
-      </div>
+      <MS name="account_box" size={22} />
+      <span>Profile</span>
     </a>
   );
 };
@@ -174,28 +121,15 @@ const DisconnectButton = () => {
   // If in anon mode, show logout button
   if (isAnonMode) {
     return (
-      <div
-        title="Log out"
-        onClick={logout}
-        style={{
-          color: "var(--text-primary)",
-          cursor: "pointer",
-        }}
-        className="sidebar-div"
-      >
-        <div
-          style={{
-            fontVariant: "small-caps",
-            display: "flex",
-            alignItems: "center",
-          }}
-        >
-          <div className="svg-container">
-            <EthereumSVG />
-          </div>
-          <span>Log out</span>
-        </div>
-      </div>
+      <button
+              type="button"
+              title="Log out"
+              onClick={logout}
+              className="kn-menu-item kn-menu-logout"
+            >
+              <MS name="logout" size={22} />
+              <span>Log out</span>
+            </button>
     );
   }
 
@@ -207,81 +141,42 @@ const DisconnectButton = () => {
         // If not connected to wallet but has local key, show logout
         if (!connected && hasSingleLocalStorageKey()) {
           return (
-            <div
+            <button
+              type="button"
               title="Log out"
               onClick={logout}
-              style={{
-                color: "var(--text-primary)",
-                cursor: "pointer",
-              }}
-              className="sidebar-div"
+              className="kn-menu-item kn-menu-logout"
             >
-              <div
-                style={{
-                  fontVariant: "small-caps",
-                  display: "flex",
-                  alignItems: "center",
-                }}
-              >
-                <div className="svg-container">
-                  <EthereumSVG />
-                </div>
-                <span>Log out</span>
-              </div>
-            </div>
+              <MS name="logout" size={22} />
+              <span>Log out</span>
+            </button>
           );
         }
 
         if (!connected && staleAuth) {
           return (
-            <div
+            <button
+              type="button"
               title="Log out"
               onClick={logout}
-              style={{
-                color: "var(--text-primary)",
-                cursor: "pointer",
-              }}
-              className="sidebar-div"
+              className="kn-menu-item kn-menu-logout"
             >
-              <div
-                style={{
-                  fontVariant: "small-caps",
-                  display: "flex",
-                  alignItems: "center",
-                }}
-              >
-                <div className="svg-container">
-                  <EthereumSVG />
-                </div>
-                <span>Log out</span>
-              </div>
-            </div>
+              <MS name="logout" size={22} />
+              <span>Log out</span>
+            </button>
           );
         }
         if (!connected) return null;
         return (
-          <div
+          <button
+            type="button"
             title="Disconnect Wallet"
-            onClick={connected && openAccountModal}
-            style={{
-              color: connected ? "var(--text-primary)" : "var(--text-disabled)",
-              pointerEvents: connected ? "auto" : "none",
-            }}
-            className="sidebar-div"
+            onClick={openAccountModal}
+            className="kn-menu-item kn-menu-logout"
           >
-            <div
-              style={{
-                fontVariant: "small-caps",
-                display: "flex",
-                alignItems: "center",
-              }}
-            >
-              <div className="svg-container">
-                <EthereumSVG />
-              </div>
-              <span>Disconnect</span>
-            </div>
-          </div>
+            <MS name="logout" size={22} />
+            <span>Disconnect</span>
+          </button>
         );
       }}
     </ConnectButton.Custom>
