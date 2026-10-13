@@ -4780,7 +4780,7 @@ body.kn-dock-typing .bottom-nav {
 /* The last comment stays clear of the docked composer and the tab bar. */
 @media (max-width: 640px) {
   body.kn-has-dock #hnmain,
-  html:not([data-signed-out]) #hnmain:has(.comment-input-host) {
+  #hnmain:has(.comment-input-host) {
     padding-bottom: calc(58px + 48px + env(safe-area-inset-bottom, 0px));
   }
   /* Signed in, the composer is the docked bar: nothing to reserve inline. */
@@ -4814,3 +4814,40 @@ body.kn-dock-typing .bottom-nav {
   margin-right: -10px !important;
 }
 .kn-actions .comment-button-active, .kn-actions .comment-button-active .kn-count { color: var(--kn-text-primary) !important; }
+
+/* Signed out, the story page's docked bar is the design's logged-out state
+   made compact: "Log in to join the discussion." and a Log in button, in
+   the same glass bar above the tab bar (server-rendered card and the app's
+   SiteExplainer alike). */
+@media (max-width: 640px) {
+  .comment-input-host .kn-composer-loggedout {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: calc(58px + env(safe-area-inset-bottom, 0px));
+    z-index: 109;
+    width: auto;
+    gap: 12px;
+    padding: 6px 12px;
+    border-top: 0.5px solid var(--kn-separator);
+    border-radius: 0;
+    background: var(--kn-glass);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+  }
+  body:has(.bottom-nav[style*="display: none"]) .comment-input-host .kn-composer-loggedout {
+    bottom: 0;
+    padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px));
+  }
+  .comment-input-host .kn-composer-loggedout-text {
+    font-size: 15px;
+  }
+  .comment-input-host .kn-composer-login {
+    height: 32px;
+    padding: 0 14px;
+    font-size: 13px;
+  }
+  html[data-signed-out] .comment-input-host {
+    min-height: 0;
+  }
+}
