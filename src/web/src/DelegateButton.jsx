@@ -112,7 +112,7 @@ function getNewKey() {
 export function useDelegation(props) {
   const chainId = useChainId();
   const from = useAccount();
-  const { switchChain } = useSwitchChain();
+  const { switchChain, switchChainAsync } = useSwitchChain();
   const [keyName, setKeyName] = useState(null);
 
   useEffect(() => {
@@ -164,11 +164,49 @@ export function useDelegation(props) {
   const {
     data: writeData,
     writeContract,
+    writeContractAsync,
     isPending: isWriteLoading,
     isSuccess: isWriteContractSuccess,
   } = useWriteContract();
 
-  const isLoading = isWriteLoading;
+  // NOTE: One tap: switch the wallet to Optimism if needed, then send the
+  // etch transaction. The button used to wait for (and only work with) the
+  // simulation's result, `config`. When that read hadn't come back (e.g. a
+  // WalletConnect wallet whose connector client wasn't ready, or a slow or
+  // failing RPC), the tap was a silent no-op, and wallet errors were never
+  // shown. Now it falls back to sending the call itself (the wallet estimates
+  // the gas) and every failure ends up in `delegateError`.
+  const [isSwitching, setIsSwitching] = useState(false);
+  const [delegateError, setDelegateError] = useState("");
+  const delegate = async () => {
+    if (!payload || !from.address) return;
+    setDelegateError("");
+    try {
+      if (chainId !== optimism.id) {
+        setIsSwitching(true);
+        try {
+          await switchChainAsync({ chainId: optimism.id });
+        } finally {
+          setIsSwitching(false);
+        }
+      }
+      const request =
+        config && config.request
+          ? config.request
+          : { ...prepArgs, account: from.address };
+      await writeContractAsync({ ...request, chainId: optimism.id });
+    } catch (err) {
+      console.error("Delegation failed", err);
+      const message = err?.shortMessage || err?.message || String(err);
+      setDelegateError(
+        /reject|denied|cancel/i.test(message)
+          ? "You cancelled it in your wallet."
+          : message,
+      );
+    }
+  };
+
+  const isLoading = isWriteLoading || isSwitching;
   const data = writeData;
   const isSuccess = isWriteContractSuccess && data;
   if (isSuccess) {
@@ -238,6 +276,9 @@ export function useDelegation(props) {
     isSuccess,
     config,
     writeContract,
+    payload,
+    delegate,
+    delegateError,
   };
 }
 
@@ -255,6 +296,9 @@ const DelegateButton = (props) => {
     isSuccess,
     config,
     writeContract,
+    payload,
+    delegate,
+    delegateError,
   } = useDelegation(props);
   const [isButtonHovered, setIsButtonHovered] = useState(false);
   const [isButtonActive, setIsButtonActive] = useState(false);
@@ -357,15 +401,9 @@ const DelegateButton = (props) => {
   let content;
   let activity;
   let handler;
-  if (chainId === 10) {
-    content = isLoading ? "Please sign in wallet" : <span>Enable</span>;
-    activity = !writeContract || (!writeContract && !isError) || isLoading || isSuccess;
-    handler = () => config && writeContract(config.request);
-  } else {
-    content = <span>Switch to Optimism</span>;
-    activity = false;
-    handler = () => switchChain?.({ chainId: 10 });
-  }
+  content = isLoading ? "Please sign in wallet" : <span>Enable</span>;
+  activity = !payload || isLoading || isSuccess;
+  handler = delegate;
   // Notify parent that we're not in indexing state (showing delegation button)
   if (props.onIndexingStateChange) {
     props.onIndexingStateChange(false);
@@ -436,6 +474,12 @@ const DelegateButton = (props) => {
                 </div>
               </button>
             </div>
+
+            {delegateError && (
+              <div style={{ padding: "0 16px", fontSize: "13px", color: "var(--color-error, #c0392b)", overflowWrap: "anywhere" }}>
+                {delegateError}
+              </div>
+            )}
 
             {/* Account section */}
             <div style={{

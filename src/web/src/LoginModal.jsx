@@ -32,7 +32,7 @@ const Onboarding = lazy(() =>
 // "Enable one-tap actions".
 let open = null;
 
-function show(onClose) {
+function show(onClose, start) {
   if (open) return;
   const host = document.createElement("div");
   document.body.appendChild(host);
@@ -48,10 +48,16 @@ function show(onClose) {
   root.render(
     <Providers>
       <Suspense fallback={null}>
-        <Onboarding onClose={close} />
+        <Onboarding onClose={close} start={start} />
       </Suspense>
     </Providers>,
   );
+}
+
+// Opens the onboarding from outside a LoginModal, e.g. at its "Enable
+// one-tap actions" step (start: "delegate") for DelegationModal.jsx.
+export function openOnboarding({ start, onClose } = {}) {
+  show(onClose, start);
 }
 
 function hide() {
