@@ -7,6 +7,7 @@ import * as ens from "../ens.mjs";
 import Header from "./components/header.mjs";
 import SecondHeader from "./components/secondheader.mjs";
 import TestFlightCard from "./components/testflight-card.mjs";
+import StoryGroup from "./components/story-group.mjs";
 import Sidebar from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
 import RightColumn from "./components/right-column.mjs";
@@ -17,6 +18,7 @@ import Row from "./components/row.mjs";
 import log from "../logger.mjs";
 import { purgeCache } from "../cloudflarePurge.mjs";
 import { cachedMetadata, metadata } from "../parser.mjs";
+import { arrange, getGroups } from "../clusters.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -225,20 +227,21 @@ async function renderPage(theme) {
                 ${SecondHeader(theme, "new")}
               </tr>
               ${TestFlightCard()}
-              ${items.map(
-                (item, i) =>
-                  Row(
-                    null,
-                    "/new",
-                    "margin-bottom: 20px;",
-                    null,
-                    null,
-                    null,
-                    false,
-                    query,
-                    false, // debugMode
-                    false, // isAboveFold = false for lazy loading
-                  )(item, i),
+              ${arrange(items, getGroups()).map((entry, i) =>
+                entry.type === "group"
+                  ? StoryGroup(entry.group)
+                  : Row(
+                      null,
+                      "/new",
+                      "margin-bottom: 20px;",
+                      null,
+                      null,
+                      null,
+                      false,
+                      query,
+                      false, // debugMode
+                      false, // isAboveFold = false for lazy loading
+                    )(entry.story, i),
               )}
               <tr>
                 <td style="text-align: center; padding: 20px 0;">

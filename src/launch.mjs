@@ -27,6 +27,7 @@ import diskcheck from "./diskcheck.mjs";
 import { purgeCache, purgeEverything } from "./cloudflarePurge.mjs";
 import { generateSitemaps } from "./sitemap.mjs";
 import * as social from "./social-posting.mjs";
+import * as clusters from "./clusters.mjs";
 import { isLinkAlive } from "./linkcheck.mjs";
 
 // Monitor event loop blocking - grep logs for "Event loop blocked" to find offenders
@@ -118,6 +119,19 @@ if (cluster.isPrimary) {
       getStories: () =>
         best.getStories(0, "day", "", { createStoryLink: true, amount: 10 }),
       isAlive: isLinkAlive,
+    });
+
+    // NOTE: Groups stories about the same news event for /new (one Haiku
+    // request every 10 minutes, only when the stories changed). Runs in the
+    // primary only; the workers read the stored groups when they render.
+    clusters.startScheduler({
+      getStories: () => newest.getStories(),
+      onChange: () => {
+        http.sendToCluster("recompute-new-feed");
+        newest
+          .recompute(trie)
+          .catch((err) => log(`/new recompute after grouping failed: ${err}`));
+      },
     });
     // Purge homepage cache on server restart in production
     if (productionMode) {
