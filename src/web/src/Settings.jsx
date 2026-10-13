@@ -116,11 +116,11 @@ export default function Settings({ delegations, toast }) {
         </label>
       </Section>
       <Section
-        label="Private RPC"
+        label="anon-rpc"
         hint="Chain reads go through Tor so RPC providers can’t tie them to your IP. Slower. Wallet transactions are unaffected."
       >
         <div className="n2-set-row n2-set-rpc">
-          <Suspense fallback={<span>Private RPC</span>}>
+          <Suspense fallback={<span>anon-rpc</span>}>
             <PrivateRpcSetting variant="settings" />
           </Suspense>
         </div>
