@@ -4476,9 +4476,19 @@ html:not([data-signed-out]):not([data-theme="anon"]) kiwi-saved-stories {
   .kn-curators,
   .story-summary,
   .comment-input-host,
-  .kn-top-week {
+  .kn-top-week,
+  .newsletter-card-row .newsletter-card,
+  .newsletter-story-row .newsletter-card {
     margin-left: 20px;
     margin-right: 20px;
+  }
+  /* The newsletter boxes in the feed and on the story page: the right
+     column's box look (Tim: one look for these boxes). */
+  .newsletter-card-row .newsletter-card,
+  .newsletter-story-row .newsletter-card {
+    border: 1px solid var(--kn-card-border);
+    border-radius: var(--kn-radius-lg);
+    background: var(--kn-comment-strip);
   }
 }
 
@@ -4490,10 +4500,10 @@ html:not([data-signed-out]):not([data-theme="anon"]) kiwi-saved-stories {
   --w3m-z-index: 2147483647;
   --wcm-z-index: 2147483647;
 }
+/* (The modal element is position: fixed itself; only its layer changes.) */
 w3m-modal,
 wcm-modal,
 appkit-modal {
-  position: relative;
   z-index: 2147483647 !important;
 }
 
