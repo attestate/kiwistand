@@ -939,14 +939,18 @@ body.kiwi-logged-in .like-count {
     width: 100% !important;
   }
   .comment-input-desktop-ssr { display: none !important; }
-  /* Reserve space for comment input React mount to avoid jump. 123px is
+  /* Reserve space for comment input React mount to avoid jump. 64px is
      what the mobile composer from CommentInput.jsx measures once mounted;
      flow-root keeps its margins inside the host so the reserved height is
-     the height. */
+     the height. Signed out, the server already renders the "Log in to join
+     the discussion." card at its final height. */
   .comment-input-host { 
     display: flow-root; 
-    min-height: 123px;
+    min-height: 64px;
     position: relative;
+  }
+  html[data-signed-out] .comment-input-host {
+    min-height: 0;
   }
   /* Strong gutters for content rows */
   .content-row .mobile-information-row { padding-left: 16px !important; padding-right: 16px !important; box-sizing: border-box; }
@@ -974,22 +978,17 @@ body.kiwi-logged-in .like-count {
 /* Desktop defaults for SSR comment input placeholders */
 @media (min-width: 641px) {
 
-  .comment-input-desktop-ssr { display: block !important; }
-  /* Desktop: Reserve appropriate height when SSR placeholder is present */
-  .comment-input-host:has(.comment-input-ssr-placeholder) {
-    min-height: 380px;
+  /* The server renders the composer box (or, signed out, the "Log in to
+     join the discussion." card) at the height the app's one has, and the
+     host keeps that height while the app swaps it in. */
+  .comment-input-desktop-ssr { display: flex !important; }
+  .comment-input-host {
+    display: flow-root;
+    min-height: 58px;
   }
-  /* Once React loads and hides the placeholder, reduce the min-height */
-  body.react-loaded .comment-input-host {
-    min-height: auto;
-  }
-  /* Signed out (set by theme-init.js), the app shows a "connect to comment"
-     card instead of the textarea, so reserve the card's height instead.
-     flow-root keeps its margins inside the host. */
   html[data-signed-out] .comment-input-desktop-ssr { display: none !important; }
   html[data-signed-out] .comment-input-host {
-    display: flow-root;
-    min-height: 123px;
+    min-height: 72px;
   }
 
 }
@@ -3698,7 +3697,7 @@ body {
 }
 .kn-comments {
   margin: 0 11px;
-  padding: 12px 0;
+  padding: 12px 0 4px;
   font-size: 1rem;
 }
 .kn-comment {
@@ -3779,6 +3778,125 @@ body {
   gap: 6px;
   min-height: 48px;
   margin-top: 8px;
+}
+
+/* -- Comment composer (CommentInput.jsx, story.mjs placeholder) ------------
+   NEU 2 "Composer · bottom" (Web 2 · Desktop · Story): one card, 1px border,
+   6px radius, 12px padding, 12px gap; the field's placeholder is 15px muted
+   and "Post" is a 32px lime button (13px/600) inside it on the right.
+   Signed out it is "Logged out · bottom": a comment-strip card, 16px
+   padding, 15px tertiary text and a 40px lime "Log in" (14px/600). On the
+   story page the host has the comment cards' edges and sits 20px below the
+   last card (the card's 16px margin + .kn-comments' 4px bottom padding). */
+.comment-input-host {
+  margin: 0 11px 16px;
+}
+.comment-input-loggedout-ssr {
+  display: none !important;
+}
+html[data-signed-out] .comment-input-loggedout-ssr {
+  display: flex !important;
+}
+.kn-composer {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  margin: 0;
+  padding: 12px;
+  box-sizing: border-box;
+  width: 100%;
+  border: 1px solid var(--kn-border);
+  border-radius: var(--kn-radius);
+  background: var(--kn-card);
+  font-family: var(--kn-font);
+}
+.kn-composer:focus-within {
+  border-color: var(--kn-text-muted);
+}
+.kn-composer-field {
+  display: block;
+  flex: 1;
+  min-width: 0;
+  min-height: 32px;
+  max-height: 50vh;
+  margin: 0;
+  padding: 6px 0;
+  box-sizing: border-box;
+  border: 0;
+  outline: none;
+  resize: none;
+  overflow-y: auto;
+  background: transparent;
+  font-family: var(--kn-font);
+  font-size: 15px;
+  line-height: 20px;
+  color: var(--kn-text-primary);
+}
+.kn-composer-field::placeholder,
+.kn-composer-ssr-text {
+  color: var(--kn-text-muted);
+  opacity: 1;
+}
+.kn-composer-field:disabled {
+  background: transparent;
+  color: var(--kn-text-primary);
+}
+.kn-composer-post,
+.kn-composer-login {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  margin: 0;
+  padding: 0 16px;
+  box-sizing: border-box;
+  border: 0;
+  border-radius: var(--kn-radius);
+  background: var(--kn-accent);
+  font-family: var(--kn-font);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--kn-accent-text);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.kn-composer-post:hover,
+.kn-composer-login:hover {
+  background: var(--kn-accent-hover);
+}
+.kn-composer-post:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+.kn-composer-count {
+  margin-top: 6px;
+  font-family: var(--kn-font);
+  font-size: 12px;
+  color: var(--kn-text-muted);
+}
+.kn-composer-loggedout {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0;
+  padding: 16px;
+  box-sizing: border-box;
+  width: 100%;
+  border-radius: var(--kn-radius);
+  background: var(--kn-comment-strip);
+  font-family: var(--kn-font);
+}
+.kn-composer-loggedout-text {
+  font-size: 15px;
+  line-height: 20px;
+  color: var(--kn-text-tertiary);
+}
+.kn-composer-login {
+  height: 40px;
+  font-size: 14px;
 }
 
 /* "Recommended by n curators" */
@@ -3919,7 +4037,8 @@ body {
   }
   .kn-comments,
   .kn-curators,
-  .story-summary {
+  .story-summary,
+  .comment-input-host {
     margin-left: 0;
     margin-right: 0;
   }

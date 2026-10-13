@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import posthog from "posthog-js";
 import { RainbowKitProvider, useConnectModal } from "@rainbow-me/rainbowkit";
@@ -36,6 +36,9 @@ function truncateName(name) {
   return name.slice(0, maxLength) + "...";
 }
 
+// NOTE: NEU 2 "Logged out · bottom" (Web 2 · Desktop · Story · logged out):
+// a calm strip with "Log in to join the discussion." and a lime "Log in".
+// Styles: .kn-composer-loggedout in news.css.
 const SiteExplainer = () => {
   const loginModalRef = useRef();
   const { openConnectModal } = useConnectModal();
@@ -52,41 +55,16 @@ const SiteExplainer = () => {
   };
 
   return (
-    <div
-      className="site-explainer"
-      style={{
-        padding: "0.75rem",
-        marginTop: "1rem",
-        marginBottom: "1rem",
-        backgroundColor: "var(--middle-beige)",
-        borderRadius: "2px",
-        border: "var(--border)",
-      }}
-    >
-      <p
-        style={{
-          fontSize: "11pt",
-          margin: "0 0 12px 0",
-          color: "var(--text-tertiary)",
-        }}
-      >
-        Want to leave a comment, like this link or join our community of 500+
-        hackers and builders?
-      </p>
-
+    <div className="site-explainer kn-composer-loggedout">
+      <span className="kn-composer-loggedout-text">
+        Log in to join the discussion.
+      </span>
       <button
+        type="button"
+        className="kn-composer-login"
         onClick={handleConnect}
-        style={{
-          padding: "6px 12px",
-          background: "var(--button-primary-bg)",
-          color: "var(--button-primary-text)",
-          border: "1px solid var(--button-primary-bg)",
-          borderRadius: "2px",
-          cursor: "pointer",
-          fontSize: "10pt",
-        }}
       >
-        {isInIOSApp ? "Connect to comment" : "Sign in to comment"}
+        {isInIOSApp ? "Connect" : "Log in"}
       </button>
 
       <LoginModal
@@ -646,6 +624,15 @@ const CommentInput = (props) => {
     }
   }
   const textareaRef = useRef(null);
+
+  // The desktop composer's field starts one line high and grows with the
+  // text (capped in news.css, where it scrolls).
+  useLayoutEffect(() => {
+    const field = textareaRef.current;
+    if (!field || isMobile) return;
+    field.style.height = "auto";
+    field.style.height = `${field.scrollHeight}px`;
+  }, [text, isMobile, isEligible]);
   
   // Auto-focus the textarea when component mounts (desktop only, and only if no existing comments)
   useEffect(() => {
@@ -712,24 +699,17 @@ const CommentInput = (props) => {
 
   if (isEligible === false) {
     return (
-      <div
-        style={{
-          margin: "0 1rem 1rem 1rem",
-          ...props.style,
-        }}
-      >
+      <div className="kn-composer-host" style={props.style}>
         <SiteExplainer />
       </div>
     );
   }
 
+  const canPost = !isLoading && address && isEligible;
+  const remaining = characterLimit - text.length;
+
   return (
-    <div
-      style={{
-        margin: isMobile ? "1rem 1rem 1rem 1rem" : "0 1rem 1rem 1rem",
-        ...props.style,
-      }}
-    >
+    <div className="kn-composer-host" style={props.style}>
       {showMobileComposer && isMobile ? (
         createPortal(
           <MobileComposer
@@ -813,60 +793,15 @@ const CommentInput = (props) => {
               </span>
             </div>
           ) : (
-            <textarea
-              ref={textareaRef}
-              onFocus={(e) => {
-                toggleNavigationItems();
-              }}
-              onBlur={toggleNavigationItems}
-              rows="12"
-              cols="80"
-              style={{
-                display: "block",
-                width: "100%",
-                boxSizing: "border-box",
-                border: "var(--border)",
-                backgroundColor: "var(--bg-white)",
-                color: "var(--text-primary)",
-                fontSize: "1rem",
-                borderRadius: "2px",
-                resize: "vertical",
-                padding: "10px",
-              }}
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              disabled={isLoading || !address || !isEligible}
-            ></textarea>
-          )}
-          {!isMobile && (
+            // NOTE: NEU 2 "Composer · bottom" (Web 2 · Desktop · Story): one
+            // card with the text field and a lime "Post" inside on the
+            // right. The field grows with the text. Styles: .kn-composer in
+            // news.css.
             <>
-              <span>
-                Characters remaining:{" "}
-                {(characterLimit - text.length).toLocaleString()}
-              </span>
-              <br />
-              <br />
-            </>
-          )}
-          {!isMobile && (
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-              }}
-            >
-              <button
-                id="button-onboarding"
-                style={{
-                  marginBottom: "10px",
-                  width: "auto",
-                  backgroundColor: "var(--button-primary-bg)",
-                  color: "var(--button-primary-text)",
-                  border: "1px solid var(--button-primary-bg)"
-                }}
-                disabled={isLoading || !address || !isEligible}
-                onClick={async (e) => {
+              <form
+                className="kn-composer"
+                onSubmit={async (e) => {
+                  e.preventDefault();
                   // Add haptic feedback for comment submission only in frames
                   if (isMiniApp) {
                     try {
@@ -879,9 +814,34 @@ const CommentInput = (props) => {
                   handleSubmit(e);
                 }}
               >
-                {isLoading ? "Submitting..." : "Add comment"}
-              </button>
-            </div>
+                <textarea
+                  ref={textareaRef}
+                  className="kn-composer-field"
+                  onFocus={(e) => {
+                    toggleNavigationItems();
+                  }}
+                  onBlur={toggleNavigationItems}
+                  rows="1"
+                  placeholder={props.placeholder || "Add a comment…"}
+                  aria-label="Add a comment"
+                  value={text}
+                  onChange={(e) => setText(e.target.value)}
+                  disabled={isLoading || !address || !isEligible}
+                ></textarea>
+                <button
+                  type="submit"
+                  className="kn-composer-post"
+                  disabled={!canPost}
+                >
+                  {isLoading ? "Posting…" : "Post"}
+                </button>
+              </form>
+              {remaining < 1000 && (
+                <div className="kn-composer-count">
+                  {remaining.toLocaleString()} characters remaining
+                </div>
+              )}
+            </>
           )}
         </>
       )}
