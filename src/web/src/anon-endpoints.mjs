@@ -1,5 +1,5 @@
 // @format
-// NOTE: Which public RPCs Private RPC reads go to, over Tor. Some providers
+// NOTE: Which public RPCs anon-rpc reads go to, over Tor. Some providers
 // block Tor exits (mainnet.optimism.io answers 403 through Cloudflare), so
 // each chain has a list and a read moves on to the next endpoint when one
 // refuses. Kept apart from anon-transport.mjs so it can be tested without the

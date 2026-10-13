@@ -1,6 +1,7 @@
 import React from "react";
 import { sdk } from "@farcaster/miniapp-sdk";
 import Fcicon from "./fcicon.jsx";
+import { isTrackingAllowed } from "./tracking.mjs";
 
 const buttonStyle = {
   minWidth: "40px",
@@ -21,9 +22,8 @@ export default function FarcasterShareButton({ title, slug, index, onShared }) {
 
   const handleClick = async (e) => {
     e.preventDefault();
-    // Skip share tracking in anon mode
-    const isAnonMode = localStorage.getItem('anon-mode') === 'true';
-    if (!isAnonMode) {
+    // Skip share tracking when tracking is off (tracking.mjs)
+    if (isTrackingAllowed()) {
       try {
         if (navigator.sendBeacon) {
           const url = new URL(window.location.origin + "/share");

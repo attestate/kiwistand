@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { isIOSApp } from './session.mjs';
-import { disableAnalytics } from './analytics.mjs';
+import {
+  isTrackingAllowed,
+  readTrackingState,
+  shouldShowConsentBanner,
+  stopTracking,
+  TRACKING_CHANGE_EVENT,
+} from './tracking.mjs';
 
 export default function AnalyticsConsent() {
   const [visible, setVisible] = useState(false);
@@ -13,9 +19,9 @@ export default function AnalyticsConsent() {
         return;
       }
 
-      // Don't show analytics consent in anon mode
-      const isAnonMode = localStorage.getItem('anon-mode') === 'true';
-      if (isAnonMode) {
+      // Don't ask (or track) in anon mode, after "Opt Out", or with
+      // anon-rpc on: tracking is off there anyway (tracking.mjs).
+      if (!isTrackingAllowed()) {
         return;
       }
 
@@ -31,7 +37,7 @@ export default function AnalyticsConsent() {
         return;
       }
 
-      if (analyticsConsent === null) {
+      if (shouldShowConsentBanner(readTrackingState())) {
         // Analytics are enabled by default, but we still show the banner
         setVisible(true);
         enableAnalytics(); // Enable analytics by default
@@ -50,11 +56,21 @@ export default function AnalyticsConsent() {
       setIsDesktop(window.innerWidth >= 641);
     };
     
+    // Turning anon-rpc on turns tracking off: stop asking.
+    const handleTrackingChange = () => {
+      if (!isTrackingAllowed()) setVisible(false);
+    };
+
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener(TRACKING_CHANGE_EVENT, handleTrackingChange);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener(TRACKING_CHANGE_EVENT, handleTrackingChange);
+    };
   }, []);
 
   const enableAnalytics = () => {
+    if (!isTrackingAllowed()) return;
     // Send consent to Google Analytics
     if (window.gtag) {
       window.gtag('consent', 'update', {
@@ -82,19 +98,12 @@ export default function AnalyticsConsent() {
     localStorage.setItem('kiwi-analytics-consent', 'false');
     setVisible(false);
     window.dispatchEvent(new Event('analyticsConsentChange'));
-    
-    // Disable analytics
-    if (window.gtag) {
-      window.gtag('consent', 'update', {
-        analytics_storage: 'denied'
-      });
-    }
-    
-    // Disable PostHog
-    if (window.posthog) {
-      window.posthog.opt_out_capturing();
-    }
-    disableAnalytics();
+
+    // Stop Google Analytics, PostHog (incl. session recording) and the
+    // event queue on this page. The stored "false" keeps them, the
+    // impression/click tracking and the share/outbound beacons off on every
+    // later page (tracking.mjs, theme-init.js).
+    stopTracking();
   };
 
   if (!visible) return null;
@@ -129,7 +138,7 @@ export default function AnalyticsConsent() {
       }}>
         <div>
           <p style={{ margin: 0, fontSize: '14px', color: 'var(--text-primary)' }}>
-            We use analytics cookies to improve our site. You can opt out if you prefer.
+            We use analytics cookies and session recordings to improve our site. You can opt out if you prefer.
             See our <a href="/privacy-policy">Privacy Policy</a>.
           </p>
         </div>

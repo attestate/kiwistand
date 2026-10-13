@@ -1,4 +1,5 @@
 // @format
+import { isTrackingAllowed } from "./tracking.mjs";
 
 // Queue for batching interactions
 let impressionQueue = [];
@@ -123,6 +124,8 @@ async function createInteractionMessage(
 
 // Add an impression to the queue
 export async function trackImpression(contentId, contentType = "submission") {
+  // Not after "Opt Out" or with anon-rpc on (tracking.mjs)
+  if (!isTrackingAllowed()) return;
   // Skip if already impressed in this session
   const key = `${contentType}-${contentId}`;
   if (sessionImpressions.has(key)) {
@@ -200,7 +203,9 @@ export async function trackClick(contentId, contentType = "submission") {
     console.error("Error updating localStorage with click:", error);
   }
   
-  // Now do the async operations for server sync
+  // Now do the async operations for server sync. Not after "Opt Out" or
+  // with anon-rpc on (tracking.mjs); the click stays marked locally.
+  if (!isTrackingAllowed()) return;
   const interaction = await createInteractionMessage(
     contentId,
     contentType,
@@ -227,6 +232,11 @@ function scheduleBatch() {
 // Send the batch to the server
 async function sendBatch() {
   if (isProcessing) return;
+  if (!isTrackingAllowed()) {
+    impressionQueue = [];
+    clickQueue = [];
+    return;
+  }
 
   // Check if we have anything to send
   if (impressionQueue.length === 0 && clickQueue.length === 0) {
@@ -283,6 +293,10 @@ async function sendBatch() {
 
 // Send any remaining interactions before page unload
 export function flushInteractions() {
+  if (!isTrackingAllowed()) {
+    impressionQueue = [];
+    clickQueue = [];
+  }
   if (impressionQueue.length === 0 && clickQueue.length === 0) {
     return;
   }

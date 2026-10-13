@@ -13,6 +13,23 @@
     window.history.replaceState({}, '', newUrl);
   }
 
+  // NOTE: Whether this browser may be tracked (Google Analytics, PostHog,
+  // the /impression, /outbound and /share beacons). Off after "Opt Out" on the
+  // consent banner, in anon mode, and while anon-rpc is on. Same rule as
+  // trackingAllowed in src/web/src/tracking.mjs; read on every call, so
+  // turning anon-rpc on takes effect without a reload.
+  window.kiwiTrackingOff = function () {
+    try {
+      return (
+        localStorage.getItem('anon-mode') === 'true' ||
+        localStorage.getItem('kiwi-private-rpc') === 'true' ||
+        localStorage.getItem('kiwi-analytics-consent') === 'false'
+      );
+    } catch (err) {
+      return false;
+    }
+  };
+
   const anonMode = localStorage.getItem('anon-mode') === 'true';
   if (anonMode) {
     document.documentElement.setAttribute('data-theme', 'anon');

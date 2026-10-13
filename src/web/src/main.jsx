@@ -93,6 +93,7 @@ import {
   getVariant,
   storyProps,
 } from "./analytics.mjs";
+import { isTrackingAllowed } from "./tracking.mjs";
 // posthog-js is loaded dynamically during idle time to keep it out of the
 // main bundle. window.posthog is set when it resolves. All callers use
 // window.posthog?.method?.() optional chaining for safety.
@@ -124,11 +125,12 @@ const isSyntheticVisit = /KiwiPagespeed|Chrome-Lighthouse/.test(
   navigator.userAgent,
 );
 
-// Defer PostHog initialization to avoid blocking main thread
-const analyticsConsent = localStorage.getItem("kiwi-analytics-consent");
-if (!isAnonMode && !isSyntheticVisit && analyticsConsent !== "false") {
+// Defer PostHog initialization to avoid blocking main thread. Not loaded at
+// all in anon mode, after "Opt Out" or with anon-rpc on (tracking.mjs).
+if (isTrackingAllowed() && !isSyntheticVisit) {
   const loadPostHog = async () => {
     const { default: posthog } = await import("posthog-js");
+    if (!isTrackingAllowed()) return disableAnalytics();
     // Long-lived anonymous id from a server-set cookie (Safari ITP wipes
     // script-written storage after 7 days). posthog-js only uses
     // get_device_id when it has no persisted id, so existing ids are kept.
@@ -148,6 +150,14 @@ if (!isAnonMode && !isSyntheticVisit && analyticsConsent !== "false") {
       persistence: "localStorage+cookie",
       get_device_id: (uuid) => did || uuid,
     });
+    // NOTE: Turning anon-rpc on mid-session opts posthog-js out
+    // (stopTracking in tracking.mjs), which it remembers. Once anon-rpc is
+    // off again, tracking.mjs decides, so forget that.
+    try {
+      if (posthog.has_opted_out_capturing?.()) {
+        posthog.clear_opt_in_out_capturing();
+      }
+    } catch (_) {}
     // The wallet may have resolved before posthog-js finished loading.
     if (window.__kiwiIdentity) identifyPostHog(window.__kiwiIdentity);
     // Register `is_ios_app` as a super property so every subsequent event
@@ -179,14 +189,24 @@ if (!isAnonMode && !isSyntheticVisit && analyticsConsent !== "false") {
   // captured before then are queued and sent once it's loaded.
   let started = false;
   const triggers = ["pointerdown", "keydown", "scroll"];
-  const startPostHog = () => {
+  // Touching "Opt Out", the Settings analytics switch or the anon-rpc switch
+  // doesn't count: the pointerdown comes before the click that turns
+  // tracking off.
+  const startPostHog = (event) => {
     if (started) return;
+    if (
+      event?.target?.closest?.(
+        "#analytics-consent-container, .private-rpc-setting, .n2-set-analytics",
+      )
+    )
+      return;
     started = true;
     triggers.forEach((type) =>
       window.removeEventListener(type, startPostHog, true),
     );
-    // The visitor may have opted out on the consent banner in the meantime.
-    if (localStorage.getItem("kiwi-analytics-consent") === "false") {
+    // The visitor may have opted out on the consent banner or turned
+    // anon-rpc on in the meantime.
+    if (!isTrackingAllowed()) {
       disableAnalytics();
       return;
     }
@@ -202,7 +222,7 @@ if (!isAnonMode && !isSyntheticVisit && analyticsConsent !== "false") {
   if (document.readyState === "complete") afterLoad();
   else window.addEventListener("load", afterLoad, { once: true });
 } else {
-  // PostHog never loads in anon mode or without consent: don't buffer.
+  // PostHog never loads when tracking is off: don't buffer.
   disableAnalytics();
 }
 
@@ -719,7 +739,7 @@ async function addSidebarDrawer(delegations, toast) {
   );
 }
 
-// NOTE: Desktop has no menu drawer, so the Private RPC switch sits below the
+// NOTE: Desktop has no menu drawer, so the anon-rpc switch sits below the
 // newsletter card in the right column there, or in the footer at widths that
 // have neither the drawer nor the right column. Mobile uses the drawer.
 async function addPrivateRpcDesktop() {
@@ -1252,7 +1272,7 @@ async function startWatchAccount(delegations, account, isInIOSApp) {
     try {
       document.body.classList.add("kiwi-logged-in");
     } catch {}
-    if (!isAnonMode) {
+    if (isTrackingAllowed()) {
       window.__kiwiIdentity = identity;
       identifyPostHog(identity);
     }
@@ -1271,7 +1291,7 @@ async function startWatchAccount(delegations, account, isInIOSApp) {
       );
     };
 
-    if (shouldLoadTracker() && !isAnonMode) {
+    if (shouldLoadTracker() && isTrackingAllowed()) {
       import("./tracker.mjs")
         .then((tracker) => {
           // Initialize once; afterwards only update signer/identity
@@ -1315,7 +1335,7 @@ async function startWatchAccount(delegations, account, isInIOSApp) {
         p === "/" || p === "/new" || p === "/best" || p.startsWith("/stories")
       );
     };
-    if (shouldLoadTracker() && !isAnonMode) {
+    if (shouldLoadTracker() && isTrackingAllowed()) {
       import("./tracker.mjs")
         .then((tracker) => {
           if (!window.__kiwiTrackerInit) {
@@ -1575,7 +1595,7 @@ function trackLinkImpressions() {
 
           // The server-side impression beacon is counted once per session
           const storageKey = `impression_${href}`;
-          if (!sessionStorage.getItem(storageKey)) {
+          if (isTrackingAllowed() && !sessionStorage.getItem(storageKey)) {
             sessionStorage.setItem(storageKey, "tracked");
             try {
               navigator.sendBeacon(
@@ -1628,7 +1648,7 @@ function trackLinkImpressions() {
         }
       }
 
-      if (!isAnonMode) {
+      if (isTrackingAllowed()) {
         try {
           capture("outbound_click", { href, variant, ...storyProps(link) });
         } catch (_) {}
@@ -1807,7 +1827,7 @@ function initTestFlightCard() {
   });
 }
 
-// NOTE: Tor takes several seconds to connect. With Private RPC on, start that
+// NOTE: Tor takes several seconds to connect. With anon-rpc on, start that
 // as soon as the page is idle, so the first chain read (e.g. a delegation
 // check) doesn't wait for it. Visitors with it off load nothing.
 function warmUpPrivateRpc() {
@@ -1816,7 +1836,7 @@ function warmUpPrivateRpc() {
   idle(() => {
     import("./anon-transport.mjs")
       .then((m) => m.getWorker(m.selectNetwork()))
-      .catch((err) => console.warn("Private RPC warm-up failed:", err));
+      .catch((err) => console.warn("anon-rpc warm-up failed:", err));
   });
 }
 
@@ -1879,8 +1899,8 @@ async function start() {
     sdk.actions.addFrame();
   }
 
-  // Initialize link impression tracking (skip in anon mode)
-  if (!isAnonMode) {
+  // Initialize link impression tracking (skip when tracking is off)
+  if (isTrackingAllowed()) {
     trackLinkImpressions();
   }
 
@@ -1890,7 +1910,7 @@ async function start() {
   // One feed_page_view per feed page load (queued until PostHog loads)
   const feedPath = window.location.pathname;
   if (
-    !isAnonMode &&
+    isTrackingAllowed() &&
     (feedPath === "/" || feedPath === "/new" || feedPath === "/best")
   ) {
     capture("feed_page_view", {
@@ -2058,8 +2078,8 @@ async function start() {
       addDynamicComments(delegations, toast),
       addFarcasterShareButtons(),
     ]);
-    // Re-track impressions for new links (skip in anon mode)
-    if (!isAnonMode) {
+    // Re-track impressions for new links (skip when tracking is off)
+    if (isTrackingAllowed()) {
       trackLinkImpressions();
     }
     addAiButtonHandlers();

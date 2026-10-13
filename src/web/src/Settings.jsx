@@ -1,7 +1,13 @@
-import React, { Suspense, lazy, useState } from "react";
+import React, { Suspense, lazy, useEffect, useState } from "react";
 
 import { getCookie, getLocalAccount, logout } from "./session.mjs";
-import { disableAnalytics } from "./analytics.mjs";
+import {
+  TRACKING_CHANGE_EVENT,
+  analyticsOffReason,
+  readTrackingState,
+  setAnalyticsConsent,
+  trackingAllowed,
+} from "./tracking.mjs";
 import LoginButton from "./LoginButton.jsx";
 
 const PrivateRpcSetting = lazy(() => import("./PrivateRpcSetting.jsx"));
@@ -18,41 +24,30 @@ const Section = ({ label, hint, children }) => (
   </section>
 );
 
-// NOTE: The same choice as the cookie banner (AnalyticsConsent.jsx): it
-// stores "kiwi-analytics-consent", which main.jsx reads on every page load
-// before it starts Google Analytics and PostHog. Opting out also stops them
-// on this page, like the banner's "Opt Out".
-const readAnalytics = () => {
-  try {
-    return localStorage.getItem("kiwi-analytics-consent") !== "false";
-  } catch (err) {
-    return true;
-  }
+// NOTE: The same choice as the cookie banner (AnalyticsConsent.jsx), see
+// setAnalyticsConsent. Whether anything is tracked is decided by
+// tracking.mjs, which also counts anon mode and anon-rpc, so the switch shows
+// that answer and not just the stored consent. It follows the stored choices,
+// also when anon-rpc is toggled on this page.
+const useTrackingState = () => {
+  const [state, setState] = useState(readTrackingState);
+  useEffect(() => {
+    const refresh = () => setState(readTrackingState());
+    const events = [TRACKING_CHANGE_EVENT, "analyticsConsentChange", "storage"];
+    events.forEach((e) => window.addEventListener(e, refresh));
+    return () => events.forEach((e) => window.removeEventListener(e, refresh));
+  }, []);
+  return [state, () => setState(readTrackingState())];
 };
 
-function setAnalytics(on) {
-  localStorage.setItem("kiwi-analytics-consent", on ? "true" : "false");
-  window.dispatchEvent(new Event("analyticsConsentChange"));
-  if (window.gtag) {
-    window.gtag("consent", "update", {
-      analytics_storage: on ? "granted" : "denied",
-    });
-  }
-  if (on) {
-    window.posthog?.opt_in_capturing?.();
-  } else {
-    window.posthog?.opt_out_capturing?.();
-    disableAnalytics();
-  }
-}
-
-const Switch = ({ label, checked, onChange }) => (
+const Switch = ({ label, checked, disabled, onChange }) => (
   <span className="n2-toggle">
     <input
       type="checkbox"
       role="switch"
       aria-label={label}
       checked={checked}
+      disabled={disabled}
       onChange={(e) => onChange(e.target.checked)}
     />
     <span className="n2-toggle-track" />
@@ -64,7 +59,8 @@ const Switch = ({ label, checked, onChange }) => (
 export default function Settings({ delegations, toast }) {
   const local = getLocalAccount();
   const identity = local?.identity || getCookie("identity");
-  const [analytics, setAnalyticsState] = useState(readAnalytics);
+  const [tracking, refreshTracking] = useTrackingState();
+  const analyticsOff = analyticsOffReason(tracking);
 
   return (
     <>
@@ -103,21 +99,27 @@ export default function Settings({ delegations, toast }) {
         label="Privacy"
         hint="Anonymous usage data (screens viewed, likes, comments) helps us improve Kiwi News. Once you’re logged in it’s linked to your address. No ads, no cross-app tracking."
       >
-        <label className="n2-set-row">
-          <span>Share usage analytics</span>
+        <label
+          className={`n2-set-row n2-set-analytics${analyticsOff ? " n2-set-disabled" : ""}`}
+        >
+          <span className="n2-set-text">
+            <span>Share usage analytics</span>
+            {analyticsOff && <span className="n2-set-note">{analyticsOff}</span>}
+          </span>
           <Switch
             label="Share usage analytics"
-            checked={analytics}
+            checked={trackingAllowed(tracking)}
+            disabled={Boolean(analyticsOff)}
             onChange={(on) => {
-              setAnalyticsState(on);
-              setAnalytics(on);
+              setAnalyticsConsent(on);
+              refreshTracking();
             }}
           />
         </label>
       </Section>
       <Section
         label="anon-rpc"
-        hint="Chain reads go through Tor so RPC providers can’t tie them to your IP. Slower. Wallet transactions are unaffected."
+        hint="Chain reads go through Tor so RPC providers can’t tie them to your IP. Slower. While it’s on, analytics and session recording are off too. Wallet transactions are unaffected."
       >
         <div className="n2-set-row n2-set-rpc">
           <Suspense fallback={<span>anon-rpc</span>}>

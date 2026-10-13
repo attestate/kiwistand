@@ -1,13 +1,13 @@
 // @format
 // NOTE: How the browser reaches the chain. This file is in the main bundle, so
 // it must stay tiny and import nothing heavy: the anon-rpc harness is only
-// loaded (via loadAnon) once a visitor turned "Private RPC" on and a read
+// loaded (via loadAnon) once a visitor turned "anon-rpc" on and a read
 // actually happens.
 //
 // - Reads that Kiwi's own API can answer (ENS names) don't go to a public RPC
 //   at all, see createKiwiEnsActions.
-// - All other reads go to the public RPC directly (default) or, with Private
-//   RPC on, through an anon-rpc worker (see anon-transport.mjs).
+// - All other reads go to the public RPC directly (default) or, with anon-rpc
+//   on, through an anon-rpc worker (see anon-transport.mjs).
 // - Writes and signatures never pass through here: they go to the user's
 //   wallet (connector), as before.
 
@@ -58,8 +58,8 @@ export function routeFor(settings) {
 export class PrivateRpcUnavailableError extends Error {
   constructor(cause) {
     super(
-      `Private RPC is unavailable (${cause?.message ?? cause}). ` +
-        "Turn on the direct fallback or turn Private RPC off where you turned it on.",
+      `anon-rpc is unavailable (${cause?.message ?? cause}). ` +
+        "Turn on the direct fallback or turn anon-rpc off where you turned it on.",
     );
     this.name = "PrivateRpcUnavailableError";
     // EIP-1193 "disconnected": viem doesn't retry it, and retrying wouldn't

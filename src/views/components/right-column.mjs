@@ -53,7 +53,7 @@ export const SideFooter = () => html`
 // The desktop right column (1101px and up): the newsletter sign-up, the
 // iPhone beta and the footer links. A page can opt out of the sign-up
 // (`newsletter: false`) or put its own boxes in (`children`, e.g. the story
-// page's "More from Hot"). The Private RPC switch goes last.
+// page's "More from Hot"). The anon-rpc switch goes last.
 export default function RightColumn({ newsletter = true, children = null } = {}) {
   return html`
     <aside class="right-column kn-right">

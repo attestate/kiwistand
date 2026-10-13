@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 
 import { readRpcSettings, writeRpcSettings } from "./rpc.mjs";
+import { stopTracking, TRACKING_CHANGE_EVENT } from "./tracking.mjs";
 
 const ABOUT_URL = "https://ethereum.github.io/anon-rpc/";
 
@@ -37,7 +38,7 @@ const useWorkerStatus = (enabled) => {
         if (!cancelled) setStatus({ state: "ready", network });
       })
       .catch((err) => {
-        console.error("Private RPC:", err);
+        console.error("anon-rpc:", err);
         if (!cancelled) setStatus({ state: "error", message: err.message });
       });
     return () => {
@@ -67,8 +68,15 @@ const PrivateRpcSetting = ({ variant }) => {
   const update = (patch) => setSettings(writeRpcSettings(patch));
   // NOTE: Turning it off also forgets "read directly", so the next time it's
   // on, a Tor failure is visible again.
-  const toggle = (on) =>
+  // NOTE: With anon-rpc on, tracking is off as if the visitor had opted out
+  // (tracking.mjs reads the same setting). Stop what already runs on this
+  // page right away; once it's off again, tracking resumes on the next load.
+  const toggle = (on) => {
     update(on ? { privateRpc: true } : { privateRpc: false, allowFallback: false });
+    if (on) stopTracking();
+    // Lets the Settings analytics switch follow along on the same page.
+    else window.dispatchEvent(new Event(TRACKING_CHANGE_EVENT));
+  };
   const failed = settings.privateRpc && status.state === "error";
 
   return (
@@ -193,7 +201,7 @@ const PrivateRpcSetting = ({ variant }) => {
       `}</style>
       <label
         className="private-rpc-row"
-        title="Chain reads go through Tor (anon-rpc) so RPC providers can't tie them to your IP. Slower. Wallet transactions are unaffected."
+        title="anon-rpc reads the chain through Tor, so RPC providers can't tie your reads to your IP. Slower. While it's on, analytics and session recording are off too. Wallet transactions are unaffected."
       >
         <ShieldSVG filled={settings.privateRpc} />
         <span className="private-rpc-text">

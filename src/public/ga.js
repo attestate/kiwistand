@@ -1,3 +1,10 @@
+// NOTE: conditional-tracking.js only loads this when tracking is allowed.
+// Should that change before it runs (Opt Out, anon-rpc turned on), Google's
+// opt-out switch keeps gtag.js from sending anything.
+if (window.kiwiTrackingOff && window.kiwiTrackingOff()) {
+  window["ga-disable-G-21BKTD0NKN"] = true;
+}
+
 window.dataLayer = window.dataLayer || [];
 function gtag() {
   dataLayer.push(arguments);

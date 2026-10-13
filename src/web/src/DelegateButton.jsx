@@ -17,6 +17,7 @@ import { useProvider } from "./client.mjs";
 import { ConnectedConnectButton } from "./Navigation.jsx";
 import { fetchDelegations } from "./API.mjs";
 import { getLocalAccount } from "./session.mjs";
+import { isTrackingAllowed } from "./tracking.mjs";
 
 const abi = [
   {
@@ -195,8 +196,7 @@ export function useDelegation(props) {
             setIndexedDelegation(true);
             clearInterval(intervalId);
             if (props.onIndexed) {
-              const isAnonMode = localStorage.getItem('anon-mode') === 'true';
-              if (!isAnonMode) {
+              if (isTrackingAllowed()) {
                 posthog.capture("delegation_performed");
               }
               props.onIndexed();
@@ -204,8 +204,7 @@ export function useDelegation(props) {
               props.callback &&
               typeof props.callback === "function"
             ) {
-              const isAnonMode = localStorage.getItem('anon-mode') === 'true';
-              if (!isAnonMode) {
+              if (isTrackingAllowed()) {
                 posthog.capture("delegation_performed");
               }
               props.callback();
