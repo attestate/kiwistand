@@ -162,46 +162,34 @@ const UrlInput = (props) => {
     }
   }, [textContent, isTextMode]);
 
+  // NOTE: The page's subtitle and layout differ between the Link and Text
+  // tabs (views/submit.mjs, public/pages.css).
+  useEffect(() => {
+    document
+      .getElementById("n2-submit-form")
+      ?.classList.toggle("is-text", isTextMode);
+  }, [isTextMode]);
+
+  const textRemaining = 2048 - textContent.length;
+
   return (
-    <div style={{ maxWidth: "600px" }}>
-      {/* Tabs */}
-      <div style={{
-        display: "flex",
-        gap: 0,
-        borderBottom: "1px solid var(--text-secondary)",
-        marginBottom: "15px"
-      }}>
+    <>
+      <div className="n2-tabs" role="tablist">
         <button
           type="button"
-          className="tab-button tab-link"
+          role="tab"
+          aria-selected={!isTextMode}
+          className={`n2-tab${!isTextMode ? " is-active" : ""}`}
           onClick={() => setIsTextMode(false)}
-          style={{
-            padding: "10px 20px",
-            fontSize: "14px",
-            backgroundColor: "transparent",
-            color: "var(--text-primary)",
-            border: "none",
-            borderBottom: !isTextMode ? "2px solid var(--hn-orange)" : "2px solid transparent",
-            cursor: "pointer",
-            fontWeight: !isTextMode ? "600" : "normal",
-          }}
         >
           Link
         </button>
         <button
           type="button"
-          className="tab-button tab-text"
+          role="tab"
+          aria-selected={isTextMode}
+          className={`n2-tab${isTextMode ? " is-active" : ""}`}
           onClick={() => setIsTextMode(true)}
-          style={{
-            padding: "10px 20px",
-            fontSize: "14px",
-            backgroundColor: "transparent",
-            color: "var(--text-primary)",
-            border: "none",
-            borderBottom: isTextMode ? "2px solid var(--hn-orange)" : "2px solid transparent",
-            cursor: "pointer",
-            fontWeight: isTextMode ? "600" : "normal",
-          }}
         >
           Text
         </button>
@@ -209,109 +197,98 @@ const UrlInput = (props) => {
 
       {/* Link Tab Content */}
       <div
-        className="tab-content tab-content-link"
-        style={{ display: !isTextMode ? "block" : "none" }}
+        className="n2-field n2-field-link"
+        style={{ display: !isTextMode ? undefined : "none" }}
       >
-        <div style={{ display: "flex", alignItems: "center" }}>
-          <input
-            placeholder="Enter or paste article URL"
-            id="urlInput"
-            type="text"
-            name="link"
-            size="50"
-            maxLength="2048"
-            required
-            style={{
-              borderRadius: "2px",
-              border:
-                url.length > 2048 ||
-                url.length === 0 ||
-                (!url.startsWith("https://") && !url.startsWith("http://") && !url.startsWith("data:text/plain,"))
-                  ? "2px solid var(--text-primary)"
-                  : "1px solid var(--accent-primary)",
-              color: "var(--text-primary)",
-              width: "80%",
-              padding: "12px 16px",
-              fontSize: "16px",
-              boxSizing: "border-box",
-              background: "var(--bg-white)",
-              minHeight: "50px",
-            }}
-            value={url}
-            onChange={(e) => setURL(e.target.value)}
-          />
-          <input
-            type="file"
-            id="imageUpload"
-            accept="image/*"
-            onChange={handleImageUpload}
-            style={{ display: "none" }}
-          />
-          <label
-            htmlFor="imageUpload"
-            style={{
-              marginLeft: "10px",
-              padding: "0 16px",
-              backgroundColor: "var(--button-primary-bg)",
-              color: "var(--button-primary-text)",
-              borderRadius: "2px",
-              cursor: "pointer",
-              fontSize: "14px",
-              height: "50px",
-              boxSizing: "border-box",
-              display: "flex",
-              textAlign: "center",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            {isUploading ? "Uploading..." : "Upload Image"}
-          </label>
+        <label htmlFor="urlInput" className="n2-label n2-d">
+          Link
+        </label>
+        <input
+          placeholder="Enter or paste article URL"
+          id="urlInput"
+          className="n2-input"
+          type="text"
+          name="link"
+          size="50"
+          maxLength="2048"
+          required
+          value={url}
+          onChange={(e) => setURL(e.target.value)}
+        />
+        <div className="n2-hint-row n2-d">
+          <span className="n2-hint">Paste the link to the original source.</span>
         </div>
+      </div>
+      <div
+        className="n2-upload-row"
+        style={{ display: !isTextMode ? undefined : "none" }}
+      >
+        <input
+          type="file"
+          id="imageUpload"
+          accept="image/*"
+          onChange={handleImageUpload}
+          style={{ display: "none" }}
+        />
+        <label htmlFor="imageUpload" className="n2-btn-outline n2-upload">
+          <AddPhotoSVG />
+          {isUploading ? (
+            "Uploading..."
+          ) : (
+            <>
+              <span className="n2-d">Upload image</span>
+              <span className="n2-m">Upload Image</span>
+            </>
+          )}
+        </label>
+        <span className="n2-hint n2-d">
+          Optional. Replaces the preview image from the link.
+        </span>
       </div>
 
       {/* Text Tab Content */}
       <div
-        className="tab-content tab-content-text"
-        style={{ display: isTextMode ? "block" : "none" }}
+        className="n2-field n2-field-text"
+        style={{ display: isTextMode ? undefined : "none" }}
       >
-        <div style={{ display: "flex", alignItems: "flex-start" }}>
-          <textarea
-            placeholder="Enter your text content here..."
-            id="textInput"
-            rows="6"
-            maxLength="2048"
-            required
-            style={{
-              borderRadius: "2px",
-              border: "2px solid var(--text-primary)",
-              color: "var(--text-primary)",
-              width: "100%",
-              padding: "12px 16px",
-              fontSize: "16px",
-              boxSizing: "border-box",
-              background: "var(--bg-white)",
-              resize: "vertical",
-              fontFamily: "inherit",
-              minHeight: "50px",
-            }}
-            value={textContent}
-            onChange={(e) => setTextContent(e.target.value)}
-          />
+        <label htmlFor="textInput" className="n2-label n2-d">
+          Text
+        </label>
+        <textarea
+          placeholder="Enter your text content here..."
+          id="textInput"
+          className="n2-input n2-textarea"
+          rows="6"
+          maxLength="2048"
+          required
+          value={textContent}
+          onChange={(e) => setTextContent(e.target.value)}
+        />
+        <div className="n2-hint-row">
+          <span className="n2-count">
+            <span className="n2-m">Characters remaining: </span>
+            {textRemaining}
+            <span className="n2-d"> characters left</span>
+          </span>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 
-const buttonStyles = {
-  width: "100%",
-  maxWidth: "600px",
-  marginTop: "2rem",
-  padding: "5px",
-  fontSize: "16px",
-  cursor: "pointer",
-};
+// NOTE: Material Symbols Rounded "add_photo_alternate".
+const AddPhotoSVG = () => (
+  <svg
+    className="n2-icon"
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 -960 960 960"
+    fill="currentColor"
+    aria-hidden="true"
+  >
+    <path d="M480-480ZM180-120q-24 0-42-18t-18-42v-600q0-24 18-42t42-18h335q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H180v600h600v-335q0-12.75 8.68-21.38 8.67-8.62 21.5-8.62 12.82 0 21.32 8.62 8.5 8.63 8.5 21.38v335q0 24-18 42t-42 18H180Zm60-162h480L576-474 449-307l-94-124-115 149Zm453-410h-58q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h58v-58q0-12.75 8.68-21.38 8.67-8.62 21.5-8.62 12.82 0 21.32 8.62 8.5 8.63 8.5 21.38v58h57q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5h-57v57q0 12.75-8.68 21.37-8.67 8.63-21.5 8.63-12.82 0-21.32-8.63-8.5-8.62-8.5-21.37v-57Z" />
+  </svg>
+);
+
 
 const SubmitButton = (props) => {
   const { toast, url } = props;
@@ -606,7 +583,7 @@ const SubmitButton = (props) => {
   };
 
   return (
-    <div style={{ position: "relative" }}>
+    <div className="n2-actions" style={{ position: "relative" }}>
       {isGeneratingTitle && (
         <>
           <style>
@@ -686,7 +663,7 @@ const SubmitButton = (props) => {
       <>
         <button
           id="button-onboarding"
-          style={buttonStyles}
+          className="n2-btn"
           onClick={async (e) => {
             // Add haptic feedback for submit action only in frames
             if (isMiniApp) {
@@ -714,6 +691,9 @@ const SubmitButton = (props) => {
               : "Submitting..."
             : "Submit"}
         </button>
+        <span className="n2-note n2-d">
+          Your submission is signed with your account and is public.
+        </span>
       </>
       {showShareModal && storyData && (
         <ShareModal
