@@ -24,6 +24,7 @@ import {
 import {
   buildWeeklySitemap,
   buildSitemapIndex,
+  newestLastmod,
   STATIC_SITEMAP,
 } from "../src/sitemap.mjs";
 import {
@@ -329,6 +330,35 @@ test("weekly sitemap lists past and current weeks", (t) => {
     ),
   );
   t.true(STATIC_SITEMAP.includes("<loc>https://news.kiwistand.com/weekly</loc>"));
+});
+
+test("the sitemap index carries each child's newest lastmod", (t) => {
+  t.is(
+    newestLastmod(
+      "<url><lastmod>2026-09-30</lastmod></url><url><lastmod>2026-10-12</lastmod></url><url><lastmod>2026-10-01</lastmod></url>",
+    ),
+    "2026-10-12",
+  );
+  t.is(newestLastmod("<urlset></urlset>"), null);
+  const index = buildSitemapIndex(["2026-10", "2026-09"], {
+    "sitemap-2026-10.xml": "2026-10-13",
+    "sitemap-weekly.xml": "2026-10-12",
+  });
+  t.true(
+    index.includes(
+      "<sitemap><loc>https://news.kiwistand.com/sitemap-2026-10.xml</loc><lastmod>2026-10-13</lastmod></sitemap>",
+    ),
+  );
+  t.true(
+    index.includes(
+      "<sitemap><loc>https://news.kiwistand.com/sitemap-weekly.xml</loc><lastmod>2026-10-12</lastmod></sitemap>",
+    ),
+  );
+  t.true(
+    index.includes(
+      "<sitemap><loc>https://news.kiwistand.com/sitemap-2026-09.xml</loc></sitemap>",
+    ),
+  );
 });
 
 const renderStories = [
