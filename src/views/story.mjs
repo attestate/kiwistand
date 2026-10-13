@@ -27,7 +27,13 @@ import { purgeCache } from "../cloudflarePurge.mjs";
 import * as preview from "../preview.mjs";
 import ShareIcon from "./components/shareicon.mjs";
 import Summary from "./components/summary.mjs";
-import { StoryNewsletterCard } from "./components/newsletter-card.mjs";
+import {
+  StoryNewsletterCard,
+  NewsletterCardElement,
+  storyHeadline,
+  storyCopy,
+} from "./components/newsletter-card.mjs";
+import { ms } from "./components/icons.mjs";
 import { isBlocked } from "../linksafety.mjs";
 import { getSummary, scheduleSummary } from "../summaries.mjs";
 import { storyDescription, storyDocumentTitle } from "../seo.mjs";
@@ -239,6 +245,24 @@ export async function moreFromSite(href, index, limit = 5) {
     log(`moreFromSite failed for ${site}: ${err.toString()}`);
     return { site, stories: [] };
   }
+}
+
+// "More from <site>" as a box of the desktop right column (the design's
+// "More from Hot" box). Phones and tablets show the same list below the
+// comments (.kn-related-row).
+function RelatedBox(related) {
+  return html`<div class="kn-side-box kn-related-box">
+    <span class="kn-eyebrow">More from ${related.site}</span>
+    <ul class="kn-related-list">
+      ${related.stories.map(
+        (item) => html`<li>
+          <a href="/stories/${getSlug(item.title)}?index=0x${item.index}"
+            >${item.title}</a
+          >
+        </li>`,
+      )}
+    </ul>
+  </div>`;
 }
 
 export default async function (trie, theme, index, value, referral, commentIndex = null) {
@@ -559,7 +583,13 @@ export default async function (trie, theme, index, value, referral, commentIndex
       >
         <div class="container">
           ${Sidebar(path)}
-          ${RightColumn({ newsletter: false })}
+          ${RightColumn({
+            newsletter: false,
+            children: [
+              NewsletterCardElement("story", storyHeadline, storyCopy),
+              related.stories.length > 0 ? RelatedBox(related) : null,
+            ],
+          })}
           <main id="hnmain" class="scaled-hnmain" role="main">
             <h1 class="visually-hidden">${value.title}</h1>
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="var(--background-color0)">
@@ -584,40 +614,40 @@ export default async function (trie, theme, index, value, referral, commentIndex
               </tbody>
               ${Summary(summary)} ${StoryNewsletterCard()}
               ${upvoterProfiles.length > 0
-                ? html`<tr>
-                    <td style="padding: 12px 0 28px 0;">
-                      <div style="margin: 0 11px;">
-                        <div style="font-size: 10pt; font-weight: 500; margin-bottom: 12px; color: var(--text-secondary);">
-                          Recommended by ${upvoterProfiles.length} ${upvoterProfiles.length === 1 ? 'curator' : 'curators'}
+                ? html`<tr class="kn-curators-row">
+                    <td>
+                      <div class="kn-curators">
+                        <div class="kn-curators-label">
+                          Recommended by ${upvoterProfiles.length}${" "}${upvoterProfiles.length === 1 ? "curator" : "curators"}
                         </div>
-                        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                        <div class="kn-curators-list">
                           ${upvoterProfiles.slice(0, 20).map(
                             (upvoter) =>
                               html`<a
+                                class="kn-curator"
                                 href="/upvotes?address=${upvoter.address}"
-                                style="display: flex; align-items: center; text-decoration: none; color: inherit; background-color: var(--bg-white); padding: 4px 8px; border: var(--border); border-radius: 2px; transition: all 0.2s; font-size: 10pt;"
-                                onmouseover="this.style.borderColor='var(--hn-orange-border)'; this.style.backgroundColor='var(--bg-off-white)';"
-                                onmouseout="this.style.borderColor='var(--border-color)'; this.style.backgroundColor='var(--bg-white)';"
                               >
                                 ${upvoter.safeAvatar
                                   ? html`<img
+                                      class="kn-avatar"
                                       loading="lazy"
                                       src="${upvoter.safeAvatar}"
-                                      alt="${upvoter.displayName}"
-                                      style="width: 20px; height: 20px; border-radius: 2px; margin-right: 6px;"
+                                      alt=""
+                                      width="16"
+                                      height="16"
                                     />`
-                                  : null}
-                                <span style="color: var(--contrast-color);">
-                                  ${upvoter.displayName}
-                                </span>
+                                  : html`<span class="kn-avatar kn-avatar-empty"
+                                      >${ms("person", 11)}</span
+                                    >`}
+                                <span class="kn-curator-name"
+                                  >${upvoter.displayName}</span
+                                >
                               </a>`,
                           )}
                           ${upvoterProfiles.length > 20
-                            ? html`<div
-                                style="display: flex; align-items: center; padding: 4px 8px; color: var(--text-secondary); font-size: 10pt;"
-                              >
-                                +${upvoterProfiles.length - 20} more
-                              </div>`
+                            ? html`<span class="kn-curators-more"
+                                >+${upvoterProfiles.length - 20} more</span
+                              >`
                             : null}
                         </div>
                       </div>
@@ -625,23 +655,30 @@ export default async function (trie, theme, index, value, referral, commentIndex
                   </tr>`
                 : null}
               ${story.comments.length > 0
-                ? html`<tr>
+                ? html`<tr class="kn-comments-row" id="comments">
                     <td>
-                      <div style="margin: 0 11px; padding: 12px 0; font-size: 1rem;">
+                      <div class="kn-comments">
+                        <div class="kn-section-label">
+                          <span
+                            >${story.comments.length}${" "}${story.comments
+                              .length === 1
+                              ? "comment"
+                              : "comments"}</span
+                          >
+                        </div>
                         ${story.comments.map(
                           (comment) =>
                             html`<span
                               id="0x${comment.index}"
-                              class="${story?.metadata?.image
+                              class="kn-comment ${story?.metadata?.image
                                 ? "scroll-margin-with-image"
-                                : "scroll-margin-base"}"
-                              style="${comment.flagged
-                                ? "opacity: 0.5"
-                                : ""}; color: var(--text-primary); border: var(--border); background-color: var(--bg-white); padding: 0.75rem; border-radius: 2px; display: block; margin-bottom: 16px; white-space: pre-wrap; line-height: 1.3; word-break: break-word; overflow-wrap: break-word;"
+                                : "scroll-margin-base"}${comment.flagged
+                                ? " kn-comment-flagged"
+                                : ""}"
                             >
-                              <div style="display: flex; align-items: flex-start;">
+                              <div class="kn-comment-inner">
                                 ${comment.avatar
-                                  ? html`<div style="width: 32px; flex-shrink: 0; margin-right: 12px;">
+                                  ? html`<div class="kn-comment-avatar">
                                       <a
                                         href="/upvotes?address=${comment.identity.address}"
                                       >
@@ -651,27 +688,32 @@ export default async function (trie, theme, index, value, referral, commentIndex
                                           alt="avatar"
                                           width="32"
                                           height="32"
-                                          style="width: 32px; height: 32px; border: var(--border); border-radius: 2px;"
                                         />
                                       </a>
                                     </div>`
                                   : null}
-                                <div style="flex: 1; min-width: 0;">
-                                  <div
-                                    style="white-space: nowrap; gap: 3px; margin-bottom: 8px; display: inline-flex; align-items: center; font-size: 10pt;"
-                                  >
-                                    <b
-                                      >${!comment.flagged
-                                        ? html`<a
-                                            style="color: var(--contrast-color); font-weight: 500;"
-                                            href="/upvotes?address=${comment
-                                              .identity.address}"
-                                            >${truncateName(comment.displayName)}</a
-                                          >`
-                                        : truncateName(comment.displayName)}</b
-                                    >
-                                    <span class="inverse-share-container" style="opacity: 0.6;">
-                                      <span> • </span>
+                                <div class="kn-comment-main">
+                                  <div class="kn-comment-head">
+                                    ${!comment.flagged
+                                      ? html`<a
+                                          class="kn-comment-name"
+                                          href="/upvotes?address=${comment
+                                            .identity.address}"
+                                          >${truncateName(comment.displayName)}</a
+                                        >`
+                                      : html`<span class="kn-comment-name"
+                                          >${truncateName(comment.displayName)}</span
+                                        >`}
+                                    ${comment.identity?.address &&
+                                    story.identity &&
+                                    comment.identity.address.toLowerCase() ===
+                                      story.identity.toLowerCase()
+                                      ? html`<span class="kn-comment-tag"
+                                          >Submitter</span
+                                        >`
+                                      : null}
+                                    <span class="inverse-share-container kn-comment-time">
+                                      <span>· </span>
                                       <a
                                         class="meta-link"
                                         href="/stories/${getSlug(value.title)}?index=0x${index}&commentIndex=${comment.index}#0x${comment.index}"
@@ -684,8 +726,8 @@ export default async function (trie, theme, index, value, referral, commentIndex
                                         <span> ago</span>
                                       </a>
                                     </span>
-                                    <span class="share-container" style="opacity: 0.6;">
-                                      <span> • </span>
+                                    <span class="share-container kn-comment-time">
+                                      <span>· </span>
                                       <a
                                         href="#"
                                         class="caster-link share-link"
@@ -721,7 +763,7 @@ export default async function (trie, theme, index, value, referral, commentIndex
                                           }}
                                         ></span>
                                         <div
-                                          class="reactions-container"
+                                          class="reactions-container kn-reactions"
                                           data-comment-index="${comment.index}"
                                           data-comment="${JSON.stringify({
                                             ...comment,
@@ -734,7 +776,6 @@ export default async function (trie, theme, index, value, referral, commentIndex
                                                 reaction.reactorProfiles,
                                             })),
                                           })}"
-                                          style="display: flex; align-items: center; gap: 6px; min-height: 48px; margin-top: 8px; position: relative;"
                                         >
                                           ${comment.reactions && comment.reactions.filter((r) => r.reactors && r.reactors.length > 0).length > 0
                                             ? html`
@@ -805,7 +846,10 @@ export default async function (trie, theme, index, value, referral, commentIndex
                 : null}
               <tr>
                 <td>
-                  <div class="comment-input-host">
+                  <div
+                    class="comment-input-host"
+                    id=${story.comments.length > 0 ? null : "comments"}
+                  >
                     <div class="comment-input-ssr-placeholder" style="margin: 0 11px 16px 11px;">
                       <div class="comment-input-desktop-ssr">
                         <textarea
@@ -840,7 +884,7 @@ export default async function (trie, theme, index, value, referral, commentIndex
                 </td>
               </tr>
               ${related.stories.length > 0
-                ? html`<tr>
+                ? html`<tr class="kn-related-row">
                     <td style="padding: 0 0 12px 0;">
                       <div style="margin: 0 11px;">
                         <h2

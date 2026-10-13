@@ -103,6 +103,7 @@ const NewsletterFeedCard = ({ source = "feed_card", headline, copy }) => {
           ×
         </button>
       )}
+      <div className="newsletter-card-eyebrow">Kiwi weekly</div>
       <div className="newsletter-card-title">{headline || HEADLINE}</div>
       {status === "success" ? (
         <p className="newsletter-card-copy newsletter-card-success">

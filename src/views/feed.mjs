@@ -942,7 +942,7 @@ export default async function (trie, theme, page, domain, identity, hash, varian
             </h1>
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="#f8f8f7">
               <tr>
-                ${await Header(theme)}
+                ${await Header(theme, path)}
               </tr>
               <tr>
                 ${SecondHeader(theme, "top")}

@@ -219,7 +219,7 @@ async function renderPage(theme) {
             <h1 class="visually-hidden">New crypto stories on Kiwi News</h1>
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="var(--background-color0)">
               <tr>
-                ${Header(theme)}
+                ${Header(theme, "/new")}
               </tr>
               <tr>
                 ${SecondHeader(theme, "new")}
