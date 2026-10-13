@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 
 import { readRpcSettings, writeRpcSettings } from "./rpc.mjs";
 
+const ABOUT_URL = "https://ethereum.github.io/anon-rpc/";
+
 const ShieldSVG = ({ filled }) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
     <rect width="256" height="256" fill="none" />
@@ -139,6 +141,10 @@ const PrivateRpcSetting = ({ variant }) => {
           text-decoration: underline;
           cursor: pointer;
         }
+        .private-rpc-setting .private-rpc-about {
+          color: inherit;
+          text-decoration: underline;
+        }
         .private-rpc-setting .private-rpc-switch {
           position: relative;
           width: 36px;
@@ -191,7 +197,7 @@ const PrivateRpcSetting = ({ variant }) => {
       >
         <ShieldSVG filled={settings.privateRpc} />
         <span className="private-rpc-text">
-          <span className="private-rpc-title">Private RPC</span>
+          <span className="private-rpc-title">anon-rpc</span>
           <span
             className={`private-rpc-sub${failed ? " error" : ""}`}
             title={failed ? status.message : undefined}
@@ -212,13 +218,31 @@ const PrivateRpcSetting = ({ variant }) => {
                 </button>
               </>
             )}
+            {/* NOTE: A link inside a <label> doesn't toggle the switch (it's
+                interactive content), and stopPropagation keeps the row's
+                handlers out of it too. */}
+            {!failed && (
+              <>
+                {" · "}
+                <a
+                  className="private-rpc-about"
+                  href={ABOUT_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="What's anon-rpc? (opens in a new tab)"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  about
+                </a>
+              </>
+            )}
           </span>
         </span>
         <span className="private-rpc-switch">
           <input
             type="checkbox"
             role="switch"
-            aria-label="Private RPC"
+            aria-label="anon-rpc"
             checked={settings.privateRpc}
             onChange={(e) => toggle(e.target.checked)}
           />

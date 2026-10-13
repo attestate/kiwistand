@@ -2,36 +2,26 @@
 import htm from "htm";
 import vhtml from "vhtml";
 
-import Header from "./components/header.mjs";
-import Sidebar from "./components/sidebar.mjs";
-import Footer from "./components/footer.mjs";
 import { custom } from "./components/head.mjs";
+import { Page, BackBar } from "./components/n2.mjs";
 
 const html = htm.bind(vhtml);
 
 export default async function (theme) {
-  return "<!DOCTYPE html>" + html`
-    <html lang="en" op="news">
-      <head>
-        ${custom(
-          undefined,
-          "Privacy Policy | Kiwi News",
-          "How Kiwi News collects, uses and protects your data.",
-          undefined,
-          [],
-          "https://news.kiwistand.com/privacy-policy",
-        )}
-      </head>
-      <body>
-        <div class="container">
-          ${Sidebar()}
-          <div id="hnmain" class="scaled-hnmain">
-            <table border="0" cellpadding="0" cellspacing="0" bgcolor="var(--background-color0)">
-              <tr>
-                ${await Header(theme)}
-              </tr>
-              <tr>
-                <td style="padding: 1rem;">
+  return Page({
+    theme,
+    path: "/privacy-policy",
+    backbar: BackBar("", "/"),
+    head: custom(
+      undefined,
+      "Privacy Policy | Kiwi News",
+      "How Kiwi News collects, uses and protects your data.",
+      undefined,
+      [],
+      "https://news.kiwistand.com/privacy-policy",
+    ),
+    body: html`<article class="n2-doc n2-privacy">
+                  <div class="n2-doc-title" aria-hidden="true">Privacy Policy</div>
                   <h1>Privacy Policy for Kiwi News</h1>
                   <p>Last updated: 2026-10-10</p>
 
@@ -392,13 +382,6 @@ export default async function (theme) {
                     Tim Daubenschütz<br />
                     Email: tim@daubenschuetz.de
                   </p>
-                </td>
-              </tr>
-            </table>
-            ${Footer(theme)}
-          </div>
-        </div>
-      </body>
-    </html>
-  `;
+    </article>`,
+  });
 }

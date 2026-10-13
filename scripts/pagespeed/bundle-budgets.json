@@ -6,6 +6,7 @@
     "wallet-vendor": 257200
   },
   "lazy": {
+    "Onboarding": 12700,
     "core": 146800,
     "encode": 11300,
     "index": 132900,
@@ -36,17 +37,21 @@
     "src/NewsletterFeedCard.jsx": 1500,
     "src/NewsletterScrollModal.jsx": 2600,
     "src/PrivateRpcSetting.jsx": 2200,
+    "src/SavedStories.jsx": 2100,
     "src/Search.jsx": 1500,
     "src/SidebarDrawer.jsx": 1800,
     "src/SubmitButton.jsx": 6600,
     "src/TestFlightQR.jsx": 600,
     "src/Vote.jsx": 4200,
-    "src/anon-transport.mjs": 19200
+    "src/anon-transport.mjs": 19200,
+    "src/bookmarks.mjs": 1100,
+    "src/onboarding/Delegate.jsx": 1300
   },
   "css": {
     "fonts/inter.css": 200,
-    "news.css": 13400,
-    "node_modules/@rainbow-me/rainbowkit/dist/index.css": 4900
+    "news.css": 21400,
+    "node_modules/@rainbow-me/rainbowkit/dist/index.css": 4900,
+    "src/onboarding/onboarding.css": 3500
   },
   "totals": {
     "eager": 529300,

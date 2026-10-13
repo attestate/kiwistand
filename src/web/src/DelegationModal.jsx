@@ -20,6 +20,10 @@ const SimpleModal = forwardRef((props, ref) => {
   const MODAL_DISMISSED_KEY = `delegation-modal-dismissed-${account.address}`;
 
   function openModal(forceOpen = false) {
+    // NOTE: The onboarding (onboarding/Onboarding.jsx) has its own
+    // "Enable one-tap actions" step.
+    if (!forceOpen && window.kiwiOnboardingOpen) return;
+
     if (!account.isConnected) {
       closeModal();
       return;

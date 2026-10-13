@@ -619,6 +619,92 @@ async function addTestFlightQR() {
   );
 }
 
+// The bookmark button under each story (views/components/row.mjs) saves it
+// to the account's saved stories (/saved), with the existing signed
+// bookmarks API. Logged out, it opens the login modal.
+async function addSaveButtons(delegations, toast) {
+  const buttons = document.querySelectorAll(".kn-save[data-story-index]");
+  if (buttons.length === 0) return;
+  const { bookmarkAccount, cachedIndexes, isSaved, listBookmarks, setBookmark } =
+    await import("./bookmarks.mjs");
+  const account = bookmarkAccount();
+
+  const mark = () =>
+    buttons.forEach((button) => {
+      const saved = isSaved(button.dataset.storyIndex);
+      button.setAttribute("aria-pressed", saved ? "true" : "false");
+      button.setAttribute("aria-label", saved ? "Remove from saved" : "Save story");
+    });
+  if (account) {
+    mark();
+    const cached = cachedIndexes();
+    if (!cached || Date.now() - cached.at > 5 * 60 * 1000) {
+      listBookmarks(account)
+        .then(mark)
+        .catch((err) => console.error("Couldn't load saved stories", err));
+    }
+  }
+
+  let loginRoot;
+  const openLogin = async () => {
+    const LoginModal = (await import("./LoginModal.jsx")).default;
+    if (!loginRoot) {
+      const container = document.createElement("div");
+      document.body.appendChild(container);
+      loginRoot = createRoot(container);
+    }
+    loginRoot.render(
+      <StrictMode>
+        <Providers>
+          <LoginModal
+            key={Date.now()}
+            defaultOpen={true}
+            delegations={delegations}
+            toast={toast}
+          />
+        </Providers>
+      </StrictMode>,
+    );
+  };
+
+  buttons.forEach((button) => {
+    button.addEventListener("click", async (event) => {
+      event.preventDefault();
+      if (!account) {
+        openLogin();
+        return;
+      }
+      if (button.dataset.busy) return;
+      button.dataset.busy = "true";
+      const saved = button.getAttribute("aria-pressed") !== "true";
+      button.setAttribute("aria-pressed", saved ? "true" : "false");
+      try {
+        await setBookmark(account, button.dataset.storyIndex, saved);
+        mark();
+        toast.success(saved ? "Saved" : "Removed from saved stories");
+      } catch (err) {
+        button.setAttribute("aria-pressed", saved ? "false" : "true");
+        toast.error(err.message);
+      } finally {
+        delete button.dataset.busy;
+      }
+    });
+  });
+}
+
+async function addSavedStories(delegations, toast) {
+  const container = document.querySelector("kiwi-saved-stories");
+  if (!container) return;
+  const SavedStories = (await import("./SavedStories.jsx")).default;
+  createRoot(container).render(
+    <StrictMode>
+      <Providers>
+        <SavedStories delegations={delegations} toast={toast} />
+      </Providers>
+    </StrictMode>,
+  );
+}
+
 async function addSidebarDrawer(delegations, toast) {
   const container = document.getElementById("sidebar-drawer");
   if (!container) return;
@@ -854,6 +940,43 @@ async function addAvatar() {
 }
 
 // "Edit profile" on your own profile page (views/upvotes.mjs).
+// NOTE: /settings (views/settings.mjs): account, analytics and Private RPC.
+async function addSettings(delegations, toast) {
+  const elem = document.getElementById("n2-settings");
+  if (!elem) return;
+  const Settings = (await import("./Settings.jsx")).default;
+  createRoot(elem).render(
+    <StrictMode>
+      <Providers>
+        <Settings delegations={delegations} toast={toast} />
+      </Providers>
+    </StrictMode>,
+  );
+}
+
+// NOTE: <kiwi-login-button> on server-rendered pages (e.g. the logged-out
+// notifications page): a button that opens the login.
+async function addLoginButtons(delegations, toast) {
+  const elems = document.querySelectorAll("kiwi-login-button");
+  if (elems.length === 0) return;
+  const LoginButton = (await import("./LoginButton.jsx")).default;
+  elems.forEach((elem) => {
+    createRoot(elem).render(
+      <StrictMode>
+        <Providers>
+          <LoginButton
+            className={elem.dataset.class}
+            delegations={delegations}
+            toast={toast}
+          >
+            {elem.textContent.trim() || "Log in"}
+          </LoginButton>
+        </Providers>
+      </StrictMode>,
+    );
+  });
+}
+
 async function addEditProfile(toast) {
   const elem = document.querySelector("kiwi-edit-profile");
   if (!elem) return;
@@ -861,7 +984,11 @@ async function addEditProfile(toast) {
   createRoot(elem).render(
     <StrictMode>
       <Providers>
-        <EditProfileButton address={elem.dataset.address} toast={toast} />
+        <EditProfileButton
+          address={elem.dataset.address}
+          variant={elem.dataset.variant}
+          toast={toast}
+        />
       </Providers>
     </StrictMode>,
   );
@@ -1866,12 +1993,16 @@ async function start() {
     addEmbedDrawer(toast),
     addSidebarDrawer(await delegationsPromise, toast),
     addPrivateRpcDesktop(),
+    addSaveButtons(await delegationsPromise, toast),
+    addSavedStories(await delegationsPromise, toast),
     addImageViewer(),
     addSidebarDrawer(await delegationsPromise, toast),
     addNewsletterFeedCard(),
     addNewsletterScrollModal(toast),
     addAvatar(),
     addEditProfile(toast),
+    addSettings(await delegationsPromise, toast),
+    addLoginButtons(await delegationsPromise, toast),
     addNicknamePrompt(toast),
     addBackButton(),
     addDelegateButton(await delegationsPromise, toast),
