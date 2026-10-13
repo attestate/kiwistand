@@ -13,79 +13,39 @@
 
 /* ---------------------------------------------------------------- tokens */
 
-/* NOTE: The design's mono face ($font.mono) for counters, timestamps,
-   addresses and small uppercase labels; Inter for everything else. Latin
-   subset from @fontsource/jetbrains-mono 5.0.20, SIL Open Font License
-   (github.com/JetBrains/JetBrainsMono). news.css declares the same files. */
-@font-face {
-  font-family: "JetBrains Mono";
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url("/fonts/jetbrains-mono-latin-400.woff2") format("woff2");
-}
-@font-face {
-  font-family: "JetBrains Mono";
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url("/fonts/jetbrains-mono-latin-500.woff2") format("woff2");
-}
-
+/* NOTE: Colours, radii and the mono face (JetBrains Mono, $font.mono) come
+   from news.css, which every page loads: the --n2-* names below point at its
+   --kn-* tokens (light and dark), so all redesigned pages share one set of
+   values. */
 .n2 {
-  --n2-page: #f8f9f4;
-  --n2-text: #10131d;
-  --n2-text-2: #78818a;
-  --n2-text-3: #606971;
-  --n2-muted: #858d94;
-  --n2-surface: #ffffff;
-  --n2-card: #ffffff;
-  --n2-card-border: #eceee7;
-  --n2-border: #e6e9df;
-  --n2-separator: rgba(60, 60, 67, 0.29);
-  --n2-accent: #d4ec37;
-  --n2-accent-text: #000000;
-  --n2-accent-strong: #adc724;
-  --n2-vote-default: #737e85;
-  --n2-green-light: rgba(212, 236, 55, 0.2);
-  --n2-tab-selected: #eef6c8;
-  --n2-track: #eeefea;
-  --n2-placeholder: #e9e7dd;
-  --n2-button-bg: rgba(0, 0, 0, 0.08);
-  --n2-glass: rgba(255, 255, 255, 0.96);
-  --n2-alert: #ff0000;
-  --n2-radius-sm: 4px;
-  --n2-radius: 6px;
-  --n2-radius-lg: 8px;
-  --n2-radius-xl: 14px;
+  --n2-page: var(--kn-page);
+  --n2-text: var(--kn-text-primary);
+  --n2-text-2: var(--kn-text-secondary);
+  --n2-text-3: var(--kn-text-tertiary);
+  --n2-muted: var(--kn-text-muted);
+  --n2-surface: var(--kn-surface);
+  --n2-card: var(--kn-card);
+  --n2-card-border: var(--kn-card-border);
+  --n2-border: var(--kn-border);
+  --n2-separator: var(--kn-separator);
+  --n2-accent: var(--kn-accent);
+  --n2-accent-text: var(--kn-accent-text);
+  --n2-accent-strong: var(--kn-accent-strong);
+  --n2-vote-default: var(--kn-vote-default);
+  --n2-green-light: var(--kn-kiwi-green-light);
+  --n2-tab-selected: var(--kn-tab-selected);
+  --n2-track: var(--kn-segment-track);
+  --n2-placeholder: var(--kn-placeholder);
+  --n2-button-bg: var(--kn-button-bg);
+  --n2-glass: var(--kn-glass);
+  --n2-alert: var(--kn-alert);
+  --n2-radius-sm: var(--kn-radius-sm);
+  --n2-radius: var(--kn-radius);
+  --n2-radius-lg: var(--kn-radius-lg);
+  --n2-radius-xl: var(--kn-radius-xl);
   --n2-font: "Inter", "Inter Fallback", -apple-system, BlinkMacSystemFont,
     "Segoe UI", sans-serif;
-  --n2-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas,
-    monospace;
-}
-
-@media (prefers-color-scheme: dark) {
-  .n2 {
-    --n2-page: #191d17;
-    --n2-text: #f4f6ef;
-    --n2-text-2: #b3bcae;
-    --n2-text-3: #c1c9ba;
-    --n2-muted: #abb5a5;
-    --n2-surface: #2c3328;
-    --n2-card: #252b22;
-    --n2-card-border: #3a4433;
-    --n2-border: #414b38;
-    --n2-separator: rgba(84, 84, 88, 0.6);
-    --n2-accent-strong: #d4ec37;
-    --n2-vote-default: #b8c3af;
-    --n2-green-light: rgba(212, 236, 55, 0.15);
-    --n2-tab-selected: #47541a;
-    --n2-track: #2e3529;
-    --n2-placeholder: #333333;
-    --n2-button-bg: rgba(255, 255, 255, 0.12);
-    --n2-glass: rgba(41, 49, 36, 0.96);
-    --n2-alert: #ff6b6b;
-  }
+  --n2-mono: var(--kn-font-mono);
 }
 
 /* ----------------------------------------------------------------- shell */

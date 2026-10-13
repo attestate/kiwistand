@@ -47,7 +47,8 @@
    Latin subset from @fontsource/jetbrains-mono 5.0.20, SIL Open Font
    License (github.com/JetBrains/JetBrainsMono). The design uses 400, 500,
    600 and 700; 600 resolves to the 700 file. Browsers only fetch a weight
-   once text on the page uses it. */
+   once text on the page uses it. pages.css and the onboarding's
+   onboarding.css use these declarations too (every page loads news.css). */
 @font-face {
      font-family: 'JetBrains Mono';
      font-style: normal;

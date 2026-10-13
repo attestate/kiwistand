@@ -3,43 +3,38 @@
    (kiwi-news.pen): mobile follows the iOS "Onboarding · …" frames, desktop
    the "Web 2 · Desktop · Onboarding · …" modal. */
 
-/* The design's mono face ($font.mono): the nickname field, the
-   "GET STARTED · 0n / 05" label and the step numbers. */
-@font-face {
-  font-family: "JetBrains Mono";
-  font-style: normal;
-  font-weight: 400 500;
-  font-display: swap;
-  src: url("/fonts/jetbrains-mono-latin-400.woff2") format("woff2");
-}
+/* Colours, radii and the mono face (JetBrains Mono, $font.mono, used for the
+   nickname field, the "GET STARTED · 0n / 05" label and the step numbers)
+   come from news.css, which every page loads: the --kob-* names point at its
+   --kn-* tokens (light and dark). */
 
 .kob {
-  --kob-page: #f8f9f4;
-  --kob-card: #ffffff;
-  --kob-card-border: #eceee7;
-  --kob-strip: #f4f5ef;
-  --kob-surface: #ffffff;
-  --kob-text: #10131d;
-  --kob-text2: #78818a;
-  --kob-text3: #606971;
-  --kob-muted: #858d94;
-  --kob-accent: #d4ec37;
-  --kob-accent-text: #000000;
-  --kob-accent-strong: #adc724;
-  --kob-track: #eeefea;
-  --kob-btnbg: rgba(0, 0, 0, 0.08);
-  --kob-border: #e6e9df;
-  --kob-separator: rgba(60, 60, 67, 0.29);
-  --kob-alert: #ff0000;
-  --kob-green-light: rgba(212, 236, 55, 0.2);
-  --kob-brown: #55391b;
-  --kob-glass: rgba(255, 255, 255, 0.96);
-  --kob-glass-border: rgba(0, 0, 0, 0.06);
+  --kob-page: var(--kn-page);
+  --kob-card: var(--kn-card);
+  --kob-card-border: var(--kn-card-border);
+  --kob-strip: var(--kn-comment-strip);
+  --kob-surface: var(--kn-surface);
+  --kob-text: var(--kn-text-primary);
+  --kob-text2: var(--kn-text-secondary);
+  --kob-text3: var(--kn-text-tertiary);
+  --kob-muted: var(--kn-text-muted);
+  --kob-accent: var(--kn-accent);
+  --kob-accent-text: var(--kn-accent-text);
+  --kob-accent-strong: var(--kn-accent-strong);
+  --kob-track: var(--kn-segment-track);
+  --kob-btnbg: var(--kn-button-bg);
+  --kob-border: var(--kn-border);
+  --kob-separator: var(--kn-separator);
+  --kob-alert: var(--kn-alert);
+  --kob-green-light: var(--kn-kiwi-green-light);
+  --kob-brown: var(--kn-wordmark-brown);
+  --kob-glass: var(--kn-glass);
+  --kob-glass-border: var(--kn-glass-border);
   --kob-handle: rgba(0, 0, 0, 0.25);
-  --kob-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
-  --kob-r: 6px;
-  --kob-r-sm: 4px;
-  --kob-r-xl: 14px;
+  --kob-mono: var(--kn-font-mono);
+  --kob-r: var(--kn-radius);
+  --kob-r-sm: var(--kn-radius-sm);
+  --kob-r-xl: var(--kn-radius-xl);
   position: fixed;
   inset: 0;
   z-index: 1100;
@@ -51,25 +46,6 @@
 
 @media (prefers-color-scheme: dark) {
   .kob {
-    --kob-page: #191d17;
-    --kob-card: #252b22;
-    --kob-card-border: #3a4433;
-    --kob-strip: #30372a;
-    --kob-surface: #2c3328;
-    --kob-text: #f4f6ef;
-    --kob-text2: #b3bcae;
-    --kob-text3: #c1c9ba;
-    --kob-muted: #abb5a5;
-    --kob-accent-strong: #d4ec37;
-    --kob-track: #2e3529;
-    --kob-btnbg: rgba(255, 255, 255, 0.12);
-    --kob-border: #414b38;
-    --kob-separator: rgba(84, 84, 88, 0.6);
-    --kob-alert: #ff6b6b;
-    --kob-green-light: rgba(212, 236, 55, 0.15);
-    --kob-brown: #d9965a;
-    --kob-glass: rgba(41, 49, 36, 0.96);
-    --kob-glass-border: rgba(255, 255, 255, 0.1);
     --kob-handle: rgba(255, 255, 255, 0.3);
   }
 }
