@@ -263,6 +263,117 @@ const MobileComposer = ({
   );
 };
 
+// NOTE: Phones (the tab bar's breakpoint) on a story page: the iOS "Story"
+// frame's composer, a bar docked right above the tab bar. While typing, the
+// tab bar hides and the bar rides on top of the keyboard (visualViewport,
+// for iOS Safari). The field grows with the text up to a few lines.
+const usePhone = () => {
+  const query = "(max-width: 640px)";
+  const [phone, setPhone] = useState(
+    () => typeof window !== "undefined" && window.matchMedia(query).matches,
+  );
+  useEffect(() => {
+    const media = window.matchMedia(query);
+    const onChange = () => setPhone(media.matches);
+    media.addEventListener?.("change", onChange);
+    return () => media.removeEventListener?.("change", onChange);
+  }, []);
+  return phone;
+};
+
+const DockComposer = ({
+  text,
+  setText,
+  onSubmit,
+  isLoading,
+  canPost,
+  onBeforeFocus,
+  placeholder,
+}) => {
+  const fieldRef = useRef(null);
+  const [typing, setTyping] = useState(false);
+  const [keyboard, setKeyboard] = useState(0);
+
+  useLayoutEffect(() => {
+    const field = fieldRef.current;
+    if (!field) return;
+    field.style.height = "auto";
+    field.style.height = `${Math.min(field.scrollHeight, 120)}px`;
+  }, [text]);
+
+  useEffect(() => {
+    document.body.classList.add("kn-has-dock");
+    return () => document.body.classList.remove("kn-has-dock");
+  }, []);
+
+  useEffect(() => {
+    document.body.classList.toggle("kn-dock-typing", typing);
+    const viewport = window.visualViewport;
+    if (!typing || !viewport) {
+      setKeyboard(0);
+      return () => document.body.classList.remove("kn-dock-typing");
+    }
+    const update = () =>
+      setKeyboard(
+        Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop),
+      );
+    update();
+    viewport.addEventListener("resize", update);
+    viewport.addEventListener("scroll", update);
+    return () => {
+      viewport.removeEventListener("resize", update);
+      viewport.removeEventListener("scroll", update);
+      document.body.classList.remove("kn-dock-typing");
+    };
+  }, [typing]);
+
+  const ready = canPost && text.trim().length > 0;
+  return (
+    <form
+      className={`kn-dock${typing ? " kn-dock-active" : ""}`}
+      style={typing ? { bottom: `${keyboard}px` } : undefined}
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (ready) onSubmit(e);
+      }}
+    >
+      <textarea
+        ref={fieldRef}
+        className="kn-dock-field"
+        rows="1"
+        placeholder={placeholder}
+        aria-label="Post your reply"
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        onFocus={(e) => {
+          if (onBeforeFocus && onBeforeFocus() === false) {
+            e.target.blur();
+            return;
+          }
+          setTyping(true);
+        }}
+        onBlur={() => setTyping(false)}
+        disabled={isLoading}
+      ></textarea>
+      <button
+        type="submit"
+        className="kn-dock-send"
+        aria-label="Post"
+        disabled={!ready || isLoading}
+        // Keep the field focused (and the keyboard up) while tapping send.
+        onMouseDown={(e) => e.preventDefault()}
+      >
+        <svg viewBox="0 -960 960 960" width="18" height="18" aria-hidden="true">
+          <path
+            fill="currentColor"
+            d="M457.31-683.15 290.92-516.77q-6.69 6.69-15.8 6.58-9.12-.12-16.2-7.19-6.69-7.08-6.88-16 .19-8.93 6.88-15.62l199.39-199.38q5.61-5.62 10.84-7.93 5.23-2.31 11.66-2.31 6.42 0 11.65 2.31 5.23 2.31 10.85 7.93L702.69-549q6.31 6.31 6.5 15.42.19 9.12-6.5 16.2-7.08 7.07-16.19 7.07-9.12 0-16.19-7.07L502.69-683.15v448.84q0 9.66-6.56 16.18-6.57 6.52-16.31 6.52-9.74 0-16.13-6.52-6.38-6.52-6.38-16.18v-448.84Z"
+          />
+        </svg>
+      </button>
+    </form>
+  );
+};
+
 const CommentInput = (props) => {
   const { toast, delegations } = props;
   const { isMiniApp, loading } = useIsMiniApp();
@@ -361,6 +472,10 @@ const CommentInput = (props) => {
   const [disableAutoOpen, setDisableAutoOpen] = useState(false);
   const [storyTitle, setStoryTitle] = useState(null);
   const isMobile = useIsMobile();
+  const phone = usePhone();
+  const isStoryPageNow =
+    typeof window !== "undefined" &&
+    window.location.pathname.startsWith("/stories");
   useEffect(() => {
     localStorage.setItem(`-kiwi-news-comment-${address}-${getIndex()}`, text);
   }, [text]);
@@ -707,6 +822,28 @@ const CommentInput = (props) => {
 
   const canPost = !isLoading && address && isEligible;
   const remaining = characterLimit - text.length;
+
+  if (phone && isStoryPageNow && address && isEligible) {
+    return (
+      <div className="kn-composer-host" style={props.style}>
+        <DockComposer
+          text={text}
+          setText={setText}
+          onSubmit={handleSubmit}
+          isLoading={isLoading}
+          canPost={canPost}
+          placeholder="Post your reply…"
+          onBeforeFocus={() => {
+            if (isDelegationModalNeeded(address)) {
+              openDelegationModalForAction();
+              return false;
+            }
+            return true;
+          }}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="kn-composer-host" style={props.style}>

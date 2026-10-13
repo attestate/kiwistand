@@ -20,7 +20,7 @@ import * as id from "../id.mjs";
 import * as moderation from "./moderation.mjs";
 import log from "../logger.mjs";
 import Row, { extractDomain } from "./components/row.mjs";
-import { truncateName, getSlug, isCloudflareImage } from "../utils.mjs";
+import { getSlug, isCloudflareImage } from "../utils.mjs";
 import { cachedMetadata } from "../parser.mjs";
 import { getSubmission, getBest } from "../cache.mjs";
 import { purgeCache } from "../cloudflarePurge.mjs";
@@ -699,10 +699,10 @@ export default async function (trie, theme, index, value, referral, commentIndex
                                           class="kn-comment-name"
                                           href="/upvotes?address=${comment
                                             .identity.address}"
-                                          >${truncateName(comment.displayName)}</a
+                                          >${comment.displayName}</a
                                         >`
                                       : html`<span class="kn-comment-name"
-                                          >${truncateName(comment.displayName)}</span
+                                          >${comment.displayName}</span
                                         >`}
                                     ${comment.identity?.address &&
                                     story.identity &&
@@ -785,10 +785,10 @@ export default async function (trie, theme, index, value, referral, commentIndex
                                                     .map(
                                                       (reaction) => html`
                                                         <button
-                                                          style="display: inline-flex; align-items: center; gap: 4px; background-color: var(--bg-hover-minimal); border: none; border-radius: 20px; padding: 6px 12px; min-height: 40px; cursor: pointer; font-family: var(--font-family);"
+                                                          style="display: inline-flex; align-items: center; gap: 4px; box-sizing: border-box; background-color: transparent; border: 1px solid var(--kn-border); border-radius: var(--kn-radius-sm); padding: 2px 8px; min-height: 28px; cursor: pointer; font-family: var(--font-family);"
                                                           disabled
                                                         >
-                                                          <span style="font-size: 16px;">${reaction.emoji}</span>
+                                                          <span style="font-size: 13px; line-height: 1;">${reaction.emoji}</span>
                                                           ${reaction.reactorProfiles
                                                             ?.filter((profile) => profile.safeAvatar)
                                                             .slice(0, 2)
@@ -800,12 +800,12 @@ export default async function (trie, theme, index, value, referral, commentIndex
                                                                   alt=""
                                                                   width="16"
                                                                   height="16"
-                                                                  style="width: 16px; height: 16px; border-radius: 50%; margin-left: ${i === 0 ? "0" : "-6px"}; border: 1.5px solid var(--bg-white);"
+                                                                  style="width: 16px; height: 16px; border-radius: 50%; margin-left: ${i === 0 ? "0" : "-6px"}; border: 1.5px solid var(--kn-card);"
                                                                 />
                                                               `,
                                                             )}
                                                           ${reaction.reactors.length > 1
-                                                            ? html`<span style="color: var(--text-tertiary); font-size: 13px; font-weight: 500;">${reaction.reactors.length}</span>`
+                                                            ? html`<span style="color: var(--kn-text-secondary); font-family: var(--kn-font-mono); font-size: 12px;">${reaction.reactors.length}</span>`
                                                             : null}
                                                         </button>
                                                       `,
@@ -815,10 +815,10 @@ export default async function (trie, theme, index, value, referral, commentIndex
                                             : null}
                                           <button
                                             class="react-toggle-btn"
-                                            style="display: inline-flex; align-items: center; justify-content: center; padding: 8px 14px; min-width: 48px; min-height: 40px; background: transparent; border: none; border-radius: 20px; font-size: 16px; color: var(--text-muted); cursor: pointer; font-family: var(--font-family);"
+                                            style="display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; padding: 2px 8px; min-width: 28px; min-height: 28px; background: transparent; border: 1px solid var(--kn-border); border-radius: var(--kn-radius-sm); font-size: 14px; color: var(--kn-text-secondary); cursor: pointer; font-family: var(--font-family);"
                                             disabled
                                           >
-                                            <span style="font-size: 20px; line-height: 1;">+</span>
+                                            <span style="font-size: 15px; line-height: 1;">+</span>
                                           </button>
                                           <div
                                             class="emoji-picker-options"
@@ -905,7 +905,7 @@ export default async function (trie, theme, index, value, referral, commentIndex
                 : null}
               <tr>
                 <td style="padding: 0 0 12px 0;">
-                  <div style="margin: 0 11px; font-size: 10pt;">
+                  <div class="kn-top-week">
                     <a
                       class="meta-link"
                       style="color: var(--text-secondary);"

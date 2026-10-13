@@ -107,9 +107,9 @@ const footer = (theme, path) => html`
       </div>
     </div>
     <div
-      style="display: flex; justify-content: center; align-items: center; gap: 0.5rem;"
+      style="display: flex; justify-content: center; align-items: center; gap: 0.5rem; padding: 0 16px;"
     >
-      <div>
+      <div style="text-align: center;">
         <span>This instance of Kiwi News is hosted by </span>
         <a
           style="text-decoration: underline;"

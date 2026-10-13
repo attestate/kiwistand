@@ -7,7 +7,7 @@ import React, {
   useState,
 } from "react";
 import { createPortal } from "react-dom";
-import { useAccount } from "wagmi";
+import { useAccount, useDisconnect } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { Wallet } from "@ethersproject/wallet";
 
@@ -244,6 +244,14 @@ export default function Onboarding({ onClose }) {
   const [error, setError] = useState("");
   const [doc, setDoc] = useState(false);
   const { openConnectModal, connectModalOpen } = useConnectModal();
+  const { disconnectAsync } = useDisconnect();
+  const pickerPending = useRef(false);
+  useEffect(() => {
+    if (pickerPending.current && openConnectModal) {
+      pickerPending.current = false;
+      openConnectModal();
+    }
+  }, [openConnectModal]);
   // The account exists (passkey made, signed in or wallet delegated):
   // closing tells the page's islands, so it shows it signed in.
   const [made, setMade] = useState(false);
@@ -272,7 +280,7 @@ export default function Onboarding({ onClose }) {
   const finish = useCallback(() => {
     if (made) {
       announceAccountChange();
-      if (document.querySelector(".comment-section, #submit-button")) {
+      if (document.querySelector(".comment-input-host, #submit-button")) {
         window.location.reload();
         return;
       }
@@ -594,10 +602,26 @@ export default function Onboarding({ onClose }) {
     setPath("create");
     go("nickname");
   };
-  const startWallet = () => {
+  // NOTE: RainbowKit only offers its picker (openConnectModal) while wagmi
+  // is disconnected. A wallet that is stuck reconnecting (e.g. two wallet
+  // extensions fighting over window.ethereum) left "I have my own wallet"
+  // doing nothing: reset that half-made connection, then open the picker.
+  const startWallet = async () => {
     setError("");
     setPath("wallet");
-    if (openConnectModal) openConnectModal();
+    if (openConnectModal) {
+      openConnectModal();
+      return;
+    }
+    if (account.isConnected && account.address && account.status === "connected") {
+      return; // The effect below continues to "Enable one-tap actions".
+    }
+    pickerPending.current = true;
+    try {
+      await disconnectAsync();
+    } catch (err) {
+      console.warn("Couldn't reset the wallet connection", err);
+    }
   };
   const waiting = path === "wallet" && connectModalOpen;
   const walletLabel = waiting ? "Waiting for your wallet…" : null;

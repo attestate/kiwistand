@@ -2391,11 +2391,14 @@ newsletter-card {
   display: flex;
   gap: 12px;
   align-items: center;
-  margin: 0 8px 14px;
+  /* NEU 2 look (no frame of its own): the right column's box style, in
+     the 20px content margin, 12px below the Hot/New/Best switch. */
+  margin: 12px 20px 0;
   padding: 14px 16px;
-  border: var(--border);
-  border-radius: 2px;
-  background: var(--bg-white);
+  border: 1px solid var(--kn-card-border);
+  border-radius: var(--kn-radius-lg);
+  background: var(--kn-comment-strip);
+  font-family: var(--kn-font);
 }
 .tf-card-icon {
   width: 44px;
@@ -2413,21 +2416,21 @@ newsletter-card {
 .tf-card-title {
   font-weight: 700;
   font-size: 15px;
-  color: var(--text-primary);
+  color: var(--kn-text-primary);
 }
 .tf-card-copy {
   margin-top: 2px;
   font-size: 13px;
   line-height: 1.35;
-  color: var(--text-secondary);
+  color: var(--kn-text-tertiary);
 }
 .tf-card-get {
   display: inline-block;
   margin-top: 10px;
   padding: 8px 14px;
-  border-radius: 2px;
-  background: #afc046;
-  color: #000 !important;
+  border-radius: var(--kn-radius);
+  background: var(--kn-accent);
+  color: var(--kn-accent-text) !important;
   font-weight: 600;
   font-size: 14px;
   text-decoration: none;
@@ -2724,23 +2727,28 @@ body {
 }
 
 /* -- Tab bar (phones) ---------------------------------------------------- */
+/* NOTE: Docked to the bottom edge like main before the redesign (and the
+   iOS system tab bar): full width, the safe area below the tabs, hidden
+   while scrolling down in iOS Safari (main.jsx). Only the look is NEU 2:
+   translucent glass with a hairline on top. */
 .bottom-nav {
   box-sizing: border-box;
   position: fixed;
-  left: 16px;
-  right: 16px;
-  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
-  width: auto;
-  height: 62px;
-  padding: 4px !important;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: auto;
+  padding: 4px 8px calc(4px + env(safe-area-inset-bottom, 0px)) !important;
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 0;
   background: var(--kn-glass);
-  border: 1px solid var(--kn-border);
-  border-radius: var(--kn-radius-lg);
-  box-shadow: var(--kn-shadow-tabbar);
+  border: 0;
+  border-top: 0.5px solid var(--kn-separator);
+  border-radius: 0;
+  box-shadow: none;
   z-index: 110;
   -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
@@ -2750,7 +2758,7 @@ body {
 .kn-tab-inner {
   box-sizing: border-box;
   flex: 1 1 0;
-  height: 54px;
+  height: 50px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -2776,12 +2784,25 @@ body {
   font-size: 10px;
   color: var(--kn-text-primary);
 }
+/* A light tint for the selected tab (the design's solid tile was heavy,
+   above all in dark mode). */
 .kn-tab-active,
 .kn-tab-inner.kn-tab-active {
-  background: var(--kn-tab-selected);
+  background: var(--kn-kiwi-green-light);
 }
 .mobile-bell-container.kn-tab {
   padding: 0;
+}
+.kn-tab-ph {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+html[data-signed-out] .kn-tab-ph-in,
+html:not([data-signed-out]) .kn-tab-ph-out {
+  display: none;
 }
 .mobile-bell-container > .kn-tab-inner {
   width: 100%;
@@ -3385,18 +3406,12 @@ body {
 
 /* -- Phones -------------------------------------------------------------- */
 @media (max-width: 640px) {
+  /* The docked tab bar: 50px tabs, 8px padding, the safe area. */
   #hnmain {
-    padding-bottom: 96px;
+    padding-bottom: calc(58px + env(safe-area-inset-bottom, 0px));
   }
   .kn-only-mobile {
     display: flex;
-  }
-  /* Phones: user content spans the row edge to edge, as on main. */
-  .kn-story-embed .kn-story-media,
-  .kn-story-image .kn-story-media,
-  .kn-comment-preview {
-    margin-left: -20px !important;
-    margin-right: -20px !important;
   }
 }
 
@@ -3695,6 +3710,12 @@ body {
   height: 1px;
   background: var(--kn-border);
 }
+/* "Top stories that week →" under the comments, on the comment cards'
+   edges (the phone and desktop rules below set the edges). */
+.kn-top-week {
+  margin: 0 11px;
+  font-size: 10pt;
+}
 .kn-comments {
   margin: 0 11px;
   padding: 12px 0 4px;
@@ -3736,20 +3757,33 @@ body {
   flex: 1;
   min-width: 0;
 }
+/* NOTE: Full names (no JS truncation); only when a name doesn't fit next
+   to the time (narrow phones) it ends in an ellipsis. */
 .kn-comment-head {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 3px;
+  max-width: 100%;
+  min-width: 0;
   margin-bottom: 8px;
   white-space: nowrap;
   font-family: var(--kn-font-mono);
   font-size: 12px;
 }
+.kn-comment-head > * {
+  flex-shrink: 0;
+}
+.kn-comment-head > .kn-comment-name {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .kn-comment-name,
 .kn-comment-name:link,
 .kn-comment-name:visited {
   font-weight: 500;
-  color: var(--kn-contrast);
+  color: var(--kn-text-primary);
   text-decoration: none;
 }
 .kn-comment-tag {
@@ -3770,6 +3804,42 @@ body {
 }
 .kn-comment .comment-text {
   font-family: var(--kn-font);
+}
+/* NOTE: The feed's expanded comments (CommentSection.jsx) use these same
+   cards; they sit in the row's content column, no extra side margins. */
+.kn-comment {
+  border-radius: var(--kn-radius);
+}
+.kn-comment-time a,
+.kn-comment-time a:link,
+.kn-comment-time a:visited {
+  text-decoration: none;
+}
+/* The old share glyph before the time (story.mjs, phones) is gone. */
+.kn-comment-time .caster-link svg {
+  display: none;
+}
+.kn-comment-targeted {
+  border-color: var(--kn-voted);
+  box-shadow: 0 0 0 1px var(--kn-voted);
+  background: linear-gradient(var(--kn-kiwi-green-light), var(--kn-kiwi-green-light)),
+    var(--kn-card);
+}
+.kn-feed-comments {
+  margin: 4px 0 10px;
+  padding: 0;
+  font-size: 1rem;
+}
+.kn-feed-comments .kn-comment {
+  margin-bottom: 12px;
+}
+.kn-comment-loading {
+  color: var(--kn-text-tertiary);
+}
+/* The story page's own row has no separator under its actions: the summary
+   box (or the comments' label rule) follows, as in the design. */
+#hnmain .content-row.kn-story.kn-story-detail {
+  border-bottom: 0 !important;
 }
 .kn-reactions {
   position: relative;
@@ -4038,11 +4108,13 @@ html[data-signed-out] .comment-input-loggedout-ssr {
   .kn-comments,
   .kn-curators,
   .story-summary,
-  .comment-input-host {
+  .comment-input-host,
+  .kn-top-week {
     margin-left: 0;
     margin-right: 0;
   }
 }
+
 
 /* With the right column (1101px and up) the story's newsletter card and
    "More from" list move there. */
@@ -4393,3 +4465,342 @@ html:not([data-signed-out]):not([data-theme="anon"]) kiwi-saved-stories {
 .kn-related-box {
   border: 1px solid var(--kn-card-border);
 }
+
+/* -- Phones: the content margin --------------------------------------------
+   Everything sits in the iOS frames' 20px content margin ("Content" padding
+   [0, 20]), like the rows: pictures, embeds, the comment strip, the story
+   page's summary, comments, composer and links. Last in the file so it wins
+   over the 11px of the older rules. */
+@media (max-width: 640px) {
+  .kn-comments,
+  .kn-curators,
+  .story-summary,
+  .comment-input-host,
+  .kn-top-week {
+    margin-left: 20px;
+    margin-right: 20px;
+  }
+}
+
+/* NOTE: WalletConnect's own QR / deep-link modal (opened from RainbowKit's
+   "WalletConnect" option) defaults to z-index 999, which put it behind the
+   onboarding sheet (1100): the picker looked like it did nothing. Lift it
+   above everything, like RainbowKit's own modal. */
+:root {
+  --w3m-z-index: 2147483647;
+  --wcm-z-index: 2147483647;
+}
+w3m-modal,
+wcm-modal,
+appkit-modal {
+  position: relative;
+  z-index: 2147483647 !important;
+}
+
+/* -- Feed rows: the comment strip (row.mjs, .kn-cp) ----------------------
+   iOS "comment-preview" and Web 2 "Latest comment": a comment-strip box
+   with radius-sm in the row's content column (its edges line up with the
+   picture and the actions), a round avatar, name and time in mono. */
+.kn-comment-preview {
+  margin: 0 !important;
+}
+.kn-comment-preview > .interaction-element {
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+}
+.kn-cp,
+.kn-cp:link,
+.kn-cp:visited {
+  box-sizing: border-box;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  padding: 9px;
+  border-radius: var(--kn-radius-sm);
+  background: var(--kn-comment-strip);
+  color: var(--kn-text-primary);
+  text-decoration: none;
+  /* The strip's own onclick (row.mjs) opens the comments. */
+  pointer-events: none;
+}
+.kn-cp-avatar {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--kn-button-bg);
+  color: var(--kn-text-muted);
+}
+.kn-cp-avatar img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.kn-cp-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.kn-cp-head {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  font-family: var(--kn-font-mono);
+  font-size: 11px;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+.kn-cp-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--kn-text-tertiary);
+}
+.kn-cp-when {
+  flex-shrink: 0;
+  color: var(--kn-text-secondary);
+}
+/* The comment itself keeps main's wrapping (user content). */
+.kn-cp-text {
+  display: block;
+  font-family: var(--kn-font);
+  font-size: 13px;
+  line-height: 1.35;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--kn-text-primary);
+}
+.kn-cp-expand {
+  /* Not in the designs; the whole strip is the tap target. */
+  display: none;
+}
+@media (min-width: 641px) {
+  .kn-cp,
+  .kn-cp:link,
+  .kn-cp:visited {
+    padding: 12px;
+  }
+  .kn-cp-avatar {
+    width: 24px;
+    height: 24px;
+  }
+  .kn-cp-head {
+    gap: 6px;
+    font-size: 12px;
+  }
+  .kn-cp-text {
+    font-size: 14px;
+    line-height: 1.45;
+  }
+}
+
+/* -- Top stories carousel (components/top-stories.mjs) --------------------
+   No frame in the design: the NEU 2 tokens on main's layout. The heading
+   is an eyebrow like the feed's, the cards use the right column's card
+   border and radius, titles in Inter and the counts in JetBrains Mono.
+   Pictures keep their box (user content). */
+.top-stories-section {
+  padding: 12px 20px 8px;
+  font-family: var(--kn-font);
+}
+.top-stories-title {
+  font-family: var(--kn-font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  font-variant: normal;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--kn-text-secondary);
+}
+.top-stories-arrow {
+  box-sizing: border-box;
+  border: 1px solid var(--kn-border);
+  border-radius: var(--kn-radius-sm);
+  background: transparent;
+  color: var(--kn-text-primary);
+}
+.top-stories-arrow:hover {
+  background: var(--kn-hover-minimal);
+}
+.top-story-card {
+  border: 1px solid var(--kn-card-border);
+  border-radius: var(--kn-radius-lg);
+  background: var(--kn-card);
+  color: var(--kn-text-primary);
+}
+.top-story-card:hover {
+  box-shadow: none;
+  border-color: var(--kn-border);
+}
+.top-story-card:visited {
+  color: var(--kn-text-tertiary);
+}
+.top-story-no-image {
+  background: var(--kn-comment-strip);
+}
+.top-story-domain-large {
+  font-family: var(--kn-font-mono);
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--kn-text-secondary);
+}
+.top-story-title {
+  font-family: var(--kn-font);
+  font-size: 14px;
+  line-height: 1.3;
+}
+.top-story-avatar {
+  border-color: var(--kn-card);
+}
+.top-story-stats {
+  font-family: var(--kn-font-mono);
+  font-size: 11px;
+  color: var(--kn-text-secondary);
+}
+@media (max-width: 640px) {
+  .top-stories-section {
+    padding: 12px 20px 8px;
+  }
+}
+@media (min-width: 641px) {
+  .top-stories-section {
+    padding: 12px 0 8px;
+  }
+}
+
+/* -- Story page composer on phones (CommentInput.jsx, DockComposer) -------
+   iOS "Story" frame's composer: glass with a hairline on top, docked right
+   above the tab bar; a 38px field (surface, separator border, radius) and
+   a 28px square send button in a 44px tap target, green once it can send.
+   While typing the tab bar hides and the bar sits on the keyboard. */
+.kn-dock {
+  box-sizing: border-box;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(58px + env(safe-area-inset-bottom, 0px));
+  z-index: 109;
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  margin: 0;
+  padding: 6px 12px 4px;
+  border-top: 0.5px solid var(--kn-separator);
+  background: var(--kn-glass);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  font-family: var(--kn-font);
+}
+/* The tab bar hides while scrolling down in iOS Safari (main.jsx). */
+body:has(.bottom-nav[style*="display: none"]) .kn-dock:not(.kn-dock-active) {
+  bottom: 0;
+  padding-bottom: calc(4px + env(safe-area-inset-bottom, 0px));
+}
+.kn-dock.kn-dock-active {
+  padding-bottom: 6px;
+}
+body.kn-dock-typing .bottom-nav {
+  display: none !important;
+}
+.kn-dock-field {
+  box-sizing: border-box;
+  flex: 1;
+  min-width: 0;
+  min-height: 38px;
+  max-height: 120px;
+  margin: 0;
+  padding: 8px 14px;
+  border: 1px solid var(--kn-separator);
+  border-radius: var(--kn-radius);
+  background: var(--kn-surface);
+  color: var(--kn-text-primary);
+  font-family: var(--kn-font);
+  /* 17px like the frame (and no zoom on focus in iOS Safari). */
+  font-size: 17px;
+  line-height: 20px;
+  resize: none;
+  outline: none;
+  overflow-y: auto;
+}
+.kn-dock-field::placeholder {
+  color: var(--kn-text-muted);
+}
+.kn-dock-send {
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  margin: -3px 0;
+  padding: 8px;
+  border: 0;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.kn-dock-send svg {
+  box-sizing: border-box;
+  width: 28px;
+  height: 28px;
+  padding: 5px;
+  border-radius: var(--kn-radius-sm);
+  background: var(--kn-separator);
+  color: var(--kn-surface);
+}
+.kn-dock-send:not(:disabled) svg {
+  background: var(--kn-accent);
+  color: var(--kn-accent-text);
+}
+.kn-dock-send:disabled {
+  cursor: default;
+}
+/* The last comment stays clear of the docked composer and the tab bar. */
+@media (max-width: 640px) {
+  body.kn-has-dock #hnmain,
+  html:not([data-signed-out]) #hnmain:has(.comment-input-host) {
+    padding-bottom: calc(58px + 48px + env(safe-area-inset-bottom, 0px));
+  }
+  /* Signed in, the composer is the docked bar: nothing to reserve inline. */
+  html:not([data-signed-out]) .comment-input-host {
+    min-height: 0;
+  }
+}
+
+/* Embeds in rows: no bottom line of their own (main drew the row border
+   under the card); only the row's separator remains, as in the design. */
+.kn-story .tweet-embed-container,
+.kn-story .farcaster-embed-container,
+.kn-story .bluesky-embed-container {
+  border-bottom: 0;
+}
+
+/* Rows: the heart's glyph starts on the picture's (or embed's) left edge
+   and the bookmark's ends on its right edge, on phones and desktop (Tim's
+   rule from iOS). The story page keeps "Read original article" there. */
+@media (min-width: 641px) {
+  .kn-story:not(.kn-story-detail) .kn-actions .kn-action-save {
+    margin-left: auto;
+  }
+}
+/* The tap targets reach 10px past the glyphs (negative margins), so the
+   glyphs themselves stay on those edges. */
+.kn-story .kn-actions .interaction-button {
+  padding-left: 10px !important;
+  padding-right: 10px !important;
+  margin-left: -10px !important;
+  margin-right: -10px !important;
+}
+.kn-actions .comment-button-active, .kn-actions .comment-button-active .kn-count { color: var(--kn-text-primary) !important; }

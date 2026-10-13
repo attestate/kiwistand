@@ -37,6 +37,9 @@
   --kob-r-xl: var(--kn-radius-xl);
   position: fixed;
   inset: 0;
+  /* NOTE: The wallet overlays it opens stack above it: RainbowKit's picker
+     (2147483646) and WalletConnect's QR/deep-link modal, which news.css
+     lifts (its own default, 999, put it behind this sheet). */
   z-index: 1100;
   font-family: "Inter", var(--font-family, sans-serif);
   color: var(--kob-text);
